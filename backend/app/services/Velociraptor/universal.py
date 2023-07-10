@@ -1,20 +1,22 @@
-from app.models.agents import (
-    AgentMetadata,
-    agent_metadata_schema,
-    agent_metadatas_schema,
-)
-from typing import Dict, List
-from app import db
+import json
 from datetime import datetime
-import requests
-from loguru import logger
-from elasticsearch7 import Elasticsearch
-from app.models.connectors import connector_factory, Connector
+from typing import Dict
+from typing import List
+
+import grpc
 import pyvelociraptor
+import requests
+from elasticsearch7 import Elasticsearch
+from loguru import logger
 from pyvelociraptor import api_pb2
 from pyvelociraptor import api_pb2_grpc
-import grpc
-import json
+
+from app import db
+from app.models.agents import AgentMetadata
+from app.models.agents import agent_metadata_schema
+from app.models.agents import agent_metadatas_schema
+from app.models.connectors import Connector
+from app.models.connectors import connector_factory
 
 
 class UniversalService:
@@ -33,7 +35,9 @@ class UniversalService:
         Args:
             connector_name (str): The name of the Velociraptor connector.
         """
-        self.connector_url, self.connector_api_key = self.collect_velociraptor_details(connector_name)
+        self.connector_url, self.connector_api_key = self.collect_velociraptor_details(
+            connector_name,
+        )
         self.config = pyvelociraptor.LoadConfigFile(self.connector_api_key)
 
     def collect_velociraptor_details(self, connector_name: str):
@@ -67,7 +71,11 @@ class UniversalService:
             certificate_chain=self.config["client_cert"].encode("utf8"),
         )
         options = (("grpc.ssl_target_name_override", "VelociraptorServer"),)
-        self.channel = grpc.secure_channel(self.config["api_connection_string"], creds, options)
+        self.channel = grpc.secure_channel(
+            self.config["api_connection_string"],
+            creds,
+            options,
+        )
         self.stub = api_pb2_grpc.APIStub(self.channel)
 
     def create_vql_request(self, vql: str):
@@ -117,7 +125,6 @@ class UniversalService:
                 "message": f"Failed to execute query: {e}",
             }
 
-
     def watch_flow_completion(self, flow_id: str):
         """
         Watch for the completion of a flow.
@@ -131,7 +138,12 @@ class UniversalService:
         vql = f"SELECT * FROM watch_monitoring(artifact='System.Flow.Completion') WHERE FlowId='{flow_id}' LIMIT 1"
         return self.execute_query(vql)
 
-    def read_collection_results(self, client_id: str, flow_id: str, artifact: str = 'Generic.Client.Info/BasicInformation'):
+    def read_collection_results(
+        self,
+        client_id: str,
+        flow_id: str,
+        artifact: str = "Generic.Client.Info/BasicInformation",
+    ):
         """
         Read the results of a collection.
 
@@ -158,20 +170,22 @@ class UniversalService:
         """
         # Formulate queries
         try:
-            vql_client_id = f"select client_id from clients(search='host:{client_name}')"
-            vql_last_seen_at = f"select last_seen_at from clients(search='host:{client_name}')"
-            
+            vql_client_id = (
+                f"select client_id from clients(search='host:{client_name}')"
+            )
+            vql_last_seen_at = (
+                f"select last_seen_at from clients(search='host:{client_name}')"
+            )
+
             # Get the last seen timestamp
             last_seen_at = self._get_last_seen_timestamp(vql_last_seen_at)
-            
+
             # if last_seen_at is longer than 30 seconds from now, return False
             if self._is_offline(last_seen_at):
                 return {
                     "success": False,
                     "message": f"{client_name} has not been seen in the last 30 seconds and may not be online with the Velociraptor server.",
-                    "results": [
-                        {"client_id": None}
-                    ]
+                    "results": [{"client_id": None}],
                 }
 
             return self.execute_query(vql_client_id)
@@ -179,9 +193,7 @@ class UniversalService:
             return {
                 "success": False,
                 "message": f"Failed to get Client ID for {client_name}: {e}",
-                "results": [
-                    {"client_id": None}
-                ]
+                "results": [{"client_id": None}],
             }
 
     def _get_last_seen_timestamp(self, vql: str):
@@ -206,4 +218,6 @@ class UniversalService:
         Returns:
             bool: True if the client is offline, False otherwise.
         """
-        return (datetime.now() - datetime.fromtimestamp(last_seen_at / 1000000)).total_seconds() > 30
+        return (
+            datetime.now() - datetime.fromtimestamp(last_seen_at / 1000000)
+        ).total_seconds() > 30

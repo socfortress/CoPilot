@@ -1,6 +1,9 @@
-from loguru import logger
 import requests
-from app.models.connectors import connector_factory, Connector
+from loguru import logger
+
+from app.models.connectors import Connector
+from app.models.connectors import connector_factory
+
 
 class UniversalService:
     """
@@ -47,7 +50,7 @@ class UniversalService:
         auth_token = response.json()["data"]["token"]
         logger.info(f"Authentication token: {auth_token}")
         return auth_token
-    
+
     def restart_service(self):
         """
         Restart the Wazuh Manager service.
@@ -63,11 +66,11 @@ class UniversalService:
                 verify=False,
             )
             if response.status_code == 200:
-                logger.info(f"Wazuh Manager service restarted")
+                logger.info("Wazuh Manager service restarted")
                 return {"message": "Wazuh Manager service restarted", "success": True}
             else:
                 logger.error(
-                    f"Wazuh Manager service restart failed with error: {response.text}"
+                    f"Wazuh Manager service restart failed with error: {response.text}",
                 )
                 return {
                     "message": "Wazuh Manager service restart failed",

@@ -1,9 +1,11 @@
+import json
 from typing import Dict
+
 from loguru import logger
 from pyvelociraptor import api_pb2
 from werkzeug.utils import secure_filename
+
 from app.services.Velociraptor.universal import UniversalService
-import json
 
 
 class ArtifactsService:
@@ -80,7 +82,7 @@ class ArtifactsService:
 
     def collect_artifacts_windows(self):
         return self.collect_artifacts_prefixed("Windows.")
-    
+
     def collect_artifacts_macos(self):
         return self.collect_artifacts_prefixed("MacOS.")
 
@@ -97,7 +99,7 @@ class ArtifactsService:
         """
         try:
             query = self._create_query(
-                f"SELECT collect_client(client_id='{client_id}', artifacts=['{artifact}']) FROM scope()"
+                f"SELECT collect_client(client_id='{client_id}', artifacts=['{artifact}']) FROM scope()",
             )
             flow = self.universal_service.execute_query(query)
             logger.info(f"Successfully ran artifact collection on {flow}")
@@ -110,7 +112,9 @@ class ArtifactsService:
             logger.info(f"Successfully watched flow completion on {completed}")
 
             results = self.universal_service.read_collection_results(
-                client_id, flow_id, artifact
+                client_id,
+                flow_id,
+                artifact,
             )
             return results
         except Exception as err:

@@ -1,9 +1,11 @@
+from typing import Dict
+from typing import List
+
 from elasticsearch7 import Elasticsearch
 from loguru import logger
-from typing import Dict, List
 
-from app.services.WazuhIndexer.universal import UniversalService
 from app.services.WazuhIndexer.index import IndexService
+from app.services.WazuhIndexer.universal import UniversalService
 
 
 class AlertsService:
@@ -47,7 +49,7 @@ class AlertsService:
             Dict[str, object]: A dictionary containing success status and alerts or an error message.
         """
         if not all(
-            [self.connector_url, self.connector_username, self.connector_password]
+            [self.connector_url, self.connector_username, self.connector_password],
         ):
             return {
                 "message": "Failed to collect Wazuh-Indexer details",
@@ -70,7 +72,7 @@ class AlertsService:
                         "index_name": index_name,
                         "total_alerts": len(alerts["alerts"]),
                         "last_10_alerts": alerts["alerts"],
-                    }
+                    },
                 )
 
         return {
@@ -113,8 +115,8 @@ class AlertsService:
                     "should": [
                         {"range": {"rule_level": {"gte": 12}}},
                         {"match": {"syslog_level": "ALERT"}},
-                    ]
-                }
+                    ],
+                },
             },
             "sort": [{"timestamp_utc": {"order": "desc"}}],
         }

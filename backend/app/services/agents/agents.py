@@ -1,14 +1,16 @@
 # services.py
-from app.models.agents import (
-    AgentMetadata,
-    agent_metadata_schema,
-    agent_metadatas_schema,
-)
-from app import db
 from datetime import datetime
+
 import requests
 from loguru import logger
-from app.models.connectors import connector_factory, Connector, WazuhManagerConnector
+
+from app import db
+from app.models.agents import AgentMetadata
+from app.models.agents import agent_metadata_schema
+from app.models.agents import agent_metadatas_schema
+from app.models.connectors import Connector
+from app.models.connectors import WazuhManagerConnector
+from app.models.connectors import connector_factory
 
 
 class AgentService:
@@ -34,7 +36,8 @@ class AgentService:
             agent_id (str): The ID of the agent to retrieve.
 
         Returns:
-            dict: A dictionary representing the serialized data of the agent if found, otherwise a message indicating that the agent was not found.
+            dict: A dictionary representing the serialized data of the agent if found, otherwise a message indicating
+            that the agent was not found.
         """
         agent = db.session.query(AgentMetadata).filter_by(agent_id=agent_id).first()
         if agent is None:
@@ -49,7 +52,8 @@ class AgentService:
             agent_id (str): The ID of the agent to mark as critical.
 
         Returns:
-            dict: A dictionary representing a success message if the operation was successful, otherwise an error message.
+            dict: A dictionary representing a success message if the operation was successful, otherwise an error
+            message.
         """
         agent = db.session.query(AgentMetadata).filter_by(agent_id=agent_id).first()
 
@@ -58,7 +62,7 @@ class AgentService:
 
         agent.mark_as_critical()
         agent_details = agent_metadata_schema.dump(agent)
-        if agent_details["critical_asset"] == False:
+        if agent_details["critical_asset"] is False:
             return {
                 "message": f"Agent {agent_id} failed to mark agent as critical",
                 "success": False,
@@ -73,7 +77,8 @@ class AgentService:
             agent_id (str): The ID of the agent to mark as non-critical.
 
         Returns:
-            dict: A dictionary representing a success message if the operation was successful, otherwise an error message.
+            dict: A dictionary representing a success message if the operation was successful, otherwise an error
+            message.
         """
         agent = db.session.query(AgentMetadata).filter_by(agent_id=agent_id).first()
 
@@ -82,7 +87,7 @@ class AgentService:
 
         agent.mark_as_non_critical()
         agent_details = agent_metadata_schema.dump(agent)
-        if agent_details["critical_asset"] == True:
+        if agent_details["critical_asset"] is True:
             return {
                 "message": f"Agent {agent_id} failed to mark agent as non-critical",
                 "success": False,
@@ -101,14 +106,16 @@ class AgentService:
         """
         try:
             agent_last_seen = datetime.strptime(
-                agent["agent_last_seen"], "%Y-%m-%dT%H:%M:%S+00:00"
+                agent["agent_last_seen"],
+                "%Y-%m-%dT%H:%M:%S+00:00",
             )  # Convert to datetime
         except ValueError:
             logger.info(
-                f"Invalid format for agent_last_seen: {agent['agent_last_seen']}. Fixing..."
+                f"Invalid format for agent_last_seen: {agent['agent_last_seen']}. Fixing...",
             )
             agent_last_seen = datetime.strptime(
-                "1970-01-01T00:00:00+00:00", "%Y-%m-%dT%H:%M:%S+00:00"
+                "1970-01-01T00:00:00+00:00",
+                "%Y-%m-%dT%H:%M:%S+00:00",
             )  # Use the epoch time as default
 
         agent_metadata = AgentMetadata(
@@ -137,7 +144,8 @@ class AgentService:
             agent_id (str): The ID of the agent to delete.
 
         Returns:
-            dict: A dictionary representing a success message if the operation was successful, otherwise an error message.
+            dict: A dictionary representing a success message if the operation was successful, otherwise an error
+            message.
         """
         agent = db.session.query(AgentMetadata).filter_by(agent_id=agent_id).first()
         if agent is None:
@@ -189,7 +197,9 @@ class AgentSyncService:
             headers = {"Authorization": f"Bearer {wazuh_auth_token}"}
             limit = 1000
             agents_collected = requests.get(
-                f"{connection_url}/agents?limit={limit}", headers=headers, verify=False
+                f"{connection_url}/agents?limit={limit}",
+                headers=headers,
+                verify=False,
             )
             if agents_collected.status_code == 200:
                 wazuh_agents_list = []

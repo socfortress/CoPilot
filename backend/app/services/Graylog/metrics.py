@@ -1,14 +1,17 @@
-from app.models.agents import (
-    AgentMetadata,
-    agent_metadata_schema,
-    agent_metadatas_schema,
-)
-from typing import Dict, List
-from app import db
 from datetime import datetime
+from typing import Dict
+from typing import List
+
 import requests
 from loguru import logger
-from app.models.connectors import connector_factory, Connector, GraylogConnector
+
+from app import db
+from app.models.agents import AgentMetadata
+from app.models.agents import agent_metadata_schema
+from app.models.agents import agent_metadatas_schema
+from app.models.connectors import Connector
+from app.models.connectors import GraylogConnector
+from app.models.connectors import connector_factory
 from app.services.Graylog.universal import UniversalService
 
 
@@ -49,7 +52,9 @@ class MetricsService:
             return {"message": "Failed to collect Graylog details", "success": False}
         else:
             journal_size = self._collect_metrics_uncommitted_journal_size(
-                connector_url, connector_username, connector_password
+                connector_url,
+                connector_username,
+                connector_password,
             )
 
             if journal_size["success"] is False:
@@ -83,7 +88,9 @@ class MetricsService:
             return {"message": "Failed to collect Graylog details", "success": False}
         else:
             throughput_usage = self._collect_metrics_throughput_usage(
-                connector_url, connector_username, connector_password
+                connector_url,
+                connector_username,
+                connector_password,
             )
 
             if throughput_usage["success"] is False:
@@ -91,7 +98,10 @@ class MetricsService:
             return throughput_usage
 
     def _collect_metrics_uncommitted_journal_size(
-        self, connector_url: str, connector_username: str, connector_password: str
+        self,
+        connector_url: str,
+        connector_username: str,
+        connector_password: str,
     ):
         """
         Collects the journal size of uncommitted messages from Graylog.
@@ -117,13 +127,14 @@ class MetricsService:
             uncommitted_journal_size = uncommitted_journal_size_response.json()
 
             logger.info(
-                f"Received {uncommitted_journal_size} uncommitted journal entries from Graylog"
+                f"Received {uncommitted_journal_size} uncommitted journal entries from Graylog",
             )
             return {
                 "message": "Successfully retrieved journal size",
                 "success": True,
                 "uncommitted_journal_entries": uncommitted_journal_size.get(
-                    "uncommitted_journal_entries", 0
+                    "uncommitted_journal_entries",
+                    0,
                 ),
             }
         except Exception as e:
@@ -134,7 +145,10 @@ class MetricsService:
             }
 
     def _collect_metrics_throughput_usage(
-        self, connector_url: str, connector_username: str, connector_password: str
+        self,
+        connector_url: str,
+        connector_username: str,
+        connector_password: str,
     ) -> Dict[str, object]:
         """
         Collects throughput usage from Graylog.
@@ -151,7 +165,10 @@ class MetricsService:
 
         try:
             throughput_metrics = self._make_throughput_api_call(
-                connector_url, self.HEADERS, connector_username, connector_password
+                connector_url,
+                self.HEADERS,
+                connector_username,
+                connector_password,
             )
             return self._parse_throughput_metrics(throughput_metrics)
         except Exception as e:
@@ -194,7 +211,8 @@ class MetricsService:
         return throughput_metrics
 
     def _parse_throughput_metrics(
-        self, throughput_metrics: Dict[str, object]
+        self,
+        throughput_metrics: Dict[str, object],
     ) -> Dict[str, object]:
         """
         Parses throughput metrics.
@@ -218,7 +236,7 @@ class MetricsService:
                     results[variable_name] = value
 
         logger.info(
-            f"Received throughput usage from Graylog: {throughput_metrics_list}"
+            f"Received throughput usage from Graylog: {throughput_metrics_list}",
         )
         return {
             "message": "Successfully retrieved throughput usage",

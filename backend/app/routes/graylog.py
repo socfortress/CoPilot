@@ -1,11 +1,14 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint
+from flask import jsonify
+from flask import request
 from loguru import logger
-from app.models.connectors import Connector, WazuhManagerConnector
 
-from app.services.Graylog.messages import MessagesService
-from app.services.Graylog.metrics import MetricsService
+from app.models.connectors import Connector
+from app.models.connectors import WazuhManagerConnector
 from app.services.Graylog.index import IndexService
 from app.services.Graylog.inputs import InputsService
+from app.services.Graylog.messages import MessagesService
+from app.services.Graylog.metrics import MetricsService
 from app.services.WazuhManager.wazuhmanager import WazuhManagerService
 
 bp = Blueprint("graylog", __name__)
@@ -36,7 +39,7 @@ def get_metrics():
     uncommitted_journal_size = service.collect_uncommitted_journal_size()
     metrics = service.collect_throughput_metrics()
     return jsonify(
-        {"uncommitted_journal_size": uncommitted_journal_size, "metrics": metrics}
+        {"uncommitted_journal_size": uncommitted_journal_size, "metrics": metrics},
     )
 
 
@@ -81,5 +84,5 @@ def get_inputs():
     running_inputs = service.collect_running_inputs()
     configured_inputs = service.collect_configured_inputs()
     return jsonify(
-        {"running_inputs": running_inputs, "configured_inputs": configured_inputs}
+        {"running_inputs": running_inputs, "configured_inputs": configured_inputs},
     )

@@ -1,23 +1,26 @@
 import importlib
 import json
 import os
-import pika
+from abc import ABC
+from abc import abstractmethod
 from dataclasses import dataclass
-import requests
-from abc import ABC, abstractmethod
-from elasticsearch7 import Elasticsearch
-from loguru import logger
-from sqlalchemy.orm.exc import NoResultFound
+
+import grpc
+import pika
 import pyvelociraptor
+import requests
+from elasticsearch7 import Elasticsearch
+from flask import current_app
+from loguru import logger
 from pyvelociraptor import api_pb2
 from pyvelociraptor import api_pb2_grpc
-from werkzeug.utils import secure_filename
-import grpc
-
 from sqlalchemy.exc import SQLAlchemyError
-from flask import current_app
+from sqlalchemy.orm.exc import NoResultFound
+from werkzeug.utils import secure_filename
 
-from app.models.models import Connectors, connectors_schema, ConnectorsAvailable
+from app.models.models import Connectors
+from app.models.models import ConnectorsAvailable
+from app.models.models import connectors_schema
 
 
 def dynamic_import(module_name, class_name):
@@ -98,7 +101,7 @@ class WazuhIndexerConnector(Connector):
         :return: A dictionary containing the status of the connection attempt and information about the cluster's health.
         """
         logger.info(
-            f"Verifying the wazuh-indexer connection to {self.attributes['connector_url']}"
+            f"Verifying the wazuh-indexer connection to {self.attributes['connector_url']}",
         )
         try:
             es = Elasticsearch(
@@ -117,7 +120,7 @@ class WazuhIndexerConnector(Connector):
             return {"connectionSuccessful": True}
         except Exception as e:
             logger.error(
-                f"Connection to {self.attributes['connector_url']} failed with error: {e}"
+                f"Connection to {self.attributes['connector_url']} failed with error: {e}",
             )
             return {"connectionSuccessful": False, "clusterHealth": None}
 
@@ -140,7 +143,7 @@ class GraylogConnector(Connector):
             dict: A dictionary containing 'connectionSuccessful' status and 'roles' if the connection is successful.
         """
         logger.info(
-            f"Verifying the graylog connection to {self.attributes['connector_url']}"
+            f"Verifying the graylog connection to {self.attributes['connector_url']}",
         )
         try:
             graylog_roles = requests.get(
@@ -153,17 +156,17 @@ class GraylogConnector(Connector):
             )
             if graylog_roles.status_code == 200:
                 logger.info(
-                    f"Connection to {self.attributes['connector_url']} successful"
+                    f"Connection to {self.attributes['connector_url']} successful",
                 )
                 return {"connectionSuccessful": True}
             else:
                 logger.error(
-                    f"Connection to {self.attributes['connector_url']} failed with error: {graylog_roles.text}"
+                    f"Connection to {self.attributes['connector_url']} failed with error: {graylog_roles.text}",
                 )
                 return {"connectionSuccessful": False, "roles": None}
         except Exception as e:
             logger.error(
-                f"Connection to {self.attributes['connector_url']} failed with error: {e}"
+                f"Connection to {self.attributes['connector_url']} failed with error: {e}",
             )
             return {"connectionSuccessful": False, "roles": None}
 
@@ -186,7 +189,7 @@ class WazuhManagerConnector(Connector):
             dict: A dictionary containing 'connectionSuccessful' status and 'authToken' if the connection is successful.
         """
         logger.info(
-            f"Verifying the wazuh-manager connection to {self.attributes['connector_url']}"
+            f"Verifying the wazuh-manager connection to {self.attributes['connector_url']}",
         )
         try:
             wazuh_auth_token = requests.get(
@@ -204,12 +207,12 @@ class WazuhManagerConnector(Connector):
                 return {"connectionSuccessful": True, "authToken": wazuh_auth_token}
             else:
                 logger.error(
-                    f"Connection to {self.attributes['connector_url']} failed with error: {wazuh_auth_token.text}"
+                    f"Connection to {self.attributes['connector_url']} failed with error: {wazuh_auth_token.text}",
                 )
                 return {"connectionSuccessful": False, "authToken": None}
         except Exception as e:
             logger.error(
-                f"Connection to {self.attributes['connector_url']} failed with error: {e}"
+                f"Connection to {self.attributes['connector_url']} failed with error: {e}",
             )
             return {"connectionSuccessful": False, "authToken": None}
 
@@ -241,11 +244,11 @@ class ShuffleConnector(Connector):
             dict: A dictionary containing 'connectionSuccessful' status and 'apps' if the connection is successful.
         """
         logger.info(
-            f"Verifying the shuffle connection to {self.attributes['connector_url']}"
+            f"Verifying the shuffle connection to {self.attributes['connector_url']}",
         )
         try:
             headers = {
-                "Authorization": f"Bearer {self.attributes['connector_api_key']}"
+                "Authorization": f"Bearer {self.attributes['connector_api_key']}",
             }
             shuffle_apps = requests.get(
                 f"{self.attributes['connector_url']}/api/v1/apps",
@@ -254,17 +257,17 @@ class ShuffleConnector(Connector):
             )
             if shuffle_apps.status_code == 200:
                 logger.info(
-                    f"Connection to {self.attributes['connector_url']} successful"
+                    f"Connection to {self.attributes['connector_url']} successful",
                 )
                 return {"connectionSuccessful": True}
             else:
                 logger.error(
-                    f"Connection to {self.attributes['connector_url']} failed with error: {shuffle_apps.text}"
+                    f"Connection to {self.attributes['connector_url']} failed with error: {shuffle_apps.text}",
                 )
                 return {"connectionSuccessful": False}
         except Exception as e:
             logger.error(
-                f"Connection to {self.attributes['connector_url']} failed with error: {e}"
+                f"Connection to {self.attributes['connector_url']} failed with error: {e}",
             )
             return {"connectionSuccessful": False}
 
@@ -287,11 +290,11 @@ class DfirIrisConnector(Connector):
             dict: A dictionary containing 'connectionSuccessful' status and 'response' if the connection is successful.
         """
         logger.info(
-            f"Verifying the dfir-iris connection to {self.attributes['connector_url']}"
+            f"Verifying the dfir-iris connection to {self.attributes['connector_url']}",
         )
         try:
             headers = {
-                "Authorization": f"Bearer {self.attributes['connector_api_key']}"
+                "Authorization": f"Bearer {self.attributes['connector_api_key']}",
             }
             dfir_iris = requests.get(
                 f"{self.attributes['connector_url']}/api/ping",
@@ -301,17 +304,17 @@ class DfirIrisConnector(Connector):
             # See if 200 is returned
             if dfir_iris.status_code == 200:
                 logger.info(
-                    f"Connection to {self.attributes['connector_url']} successful"
+                    f"Connection to {self.attributes['connector_url']} successful",
                 )
                 return {"connectionSuccessful": True}
             else:
                 logger.error(
-                    f"Connection to {self.attributes['connector_url']} failed with error: {dfir_iris.text}"
+                    f"Connection to {self.attributes['connector_url']} failed with error: {dfir_iris.text}",
                 )
                 return {"connectionSuccessful": False, "response": None}
         except Exception as e:
             logger.error(
-                f"Connection to {self.attributes['connector_url']} failed with error: {e}"
+                f"Connection to {self.attributes['connector_url']} failed with error: {e}",
             )
             return {"connectionSuccessful": False, "response": None}
 
@@ -351,7 +354,9 @@ class VelociraptorConnector(Connector):
                 options = (("grpc.ssl_target_name_override", "VelociraptorServer"),)
 
                 with grpc.secure_channel(
-                    config["api_connection_string"], creds, options
+                    config["api_connection_string"],
+                    creds,
+                    options,
                 ) as channel:
                     stub = api_pb2_grpc.APIStub(channel)
                     client_query = "SELECT * FROM info()"
@@ -395,7 +400,7 @@ class RabbitMQConnector(Connector):
         Verifies the connection to RabbitMQ service.
         """
         logger.info(
-            f"Verifying the rabbitmq connection to {self.attributes['connector_url']}"
+            f"Verifying the rabbitmq connection to {self.attributes['connector_url']}",
         )
         try:
             # For the connector_url, strip out the host and port and use that for the connection
@@ -415,7 +420,7 @@ class RabbitMQConnector(Connector):
             connection = pika.BlockingConnection(parameters)
             if connection.is_open:
                 logger.info(
-                    f"Connection to {self.attributes['connector_url']} successful"
+                    f"Connection to {self.attributes['connector_url']} successful",
                 )
                 return {"connectionSuccessful": True}
             else:
@@ -423,7 +428,7 @@ class RabbitMQConnector(Connector):
                 return {"connectionSuccessful": False, "response": None}
         except Exception as e:
             logger.error(
-                f"Connection to {self.attributes['connector_url']} failed with error: {e}"
+                f"Connection to {self.attributes['connector_url']} failed with error: {e}",
             )
             return {"connectionSuccessful": False, "response": None}
 

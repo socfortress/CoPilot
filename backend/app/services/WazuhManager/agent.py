@@ -1,12 +1,19 @@
-from typing import Dict, Optional, List, Any
-from loguru import logger
-from app.services.WazuhManager.universal import UniversalService
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+
 import requests
+from loguru import logger
+
+from app.services.WazuhManager.universal import UniversalService
+
 
 class WazuhHttpRequests:
     """
     Class to handle HTTP requests to the Wazuh API.
     """
+
     def __init__(self, connector_url: str, wazuh_auth_token: str) -> None:
         """
         Args:
@@ -17,7 +24,11 @@ class WazuhHttpRequests:
         self.wazuh_auth_token = wazuh_auth_token
         self.headers = {"Authorization": f"Bearer {wazuh_auth_token}"}
 
-    def delete_request(self, endpoint: str, params: Optional[Dict[str, str]] = None) -> Dict[str, bool]:
+    def delete_request(
+        self,
+        endpoint: str,
+        params: Optional[Dict[str, str]] = None,
+    ) -> Dict[str, bool]:
         """
         Function to handle DELETE requests.
 
@@ -43,10 +54,12 @@ class WazuhHttpRequests:
             logger.error(f"Failed to delete {endpoint}: {e}")
             return {"agentDeleted": False}
 
+
 class WazuhManagerAgentService:
     """
     A service class that encapsulates the logic for handling agent related operations in Wazuh Manager.
     """
+
     def __init__(self, universal_service: UniversalService) -> None:
         """
         Args:
@@ -54,7 +67,10 @@ class WazuhManagerAgentService:
         """
         self.universal_service = universal_service
         self.auth_token = universal_service.get_auth_token()
-        self.wazuh_http_requests = WazuhHttpRequests(self.universal_service.connector_url, self.auth_token)
+        self.wazuh_http_requests = WazuhHttpRequests(
+            self.universal_service.connector_url,
+            self.auth_token,
+        )
 
     def collect_agents(self) -> Optional[List[Dict[str, str]]]:
         """
@@ -85,7 +101,9 @@ class WazuhManagerAgentService:
         headers = {"Authorization": f"Bearer {self.auth_token}"}
         limit = 1000
         response = requests.get(
-            f"{self.universal_service.connector_url}/agents?limit={limit}", headers=headers, verify=False
+            f"{self.universal_service.connector_url}/agents?limit={limit}",
+            headers=headers,
+            verify=False,
         )
         if response.status_code == 200:
             return response.json()["data"]["affected_items"]

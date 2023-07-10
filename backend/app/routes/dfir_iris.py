@@ -1,15 +1,18 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint
+from flask import jsonify
+from flask import request
 from loguru import logger
-from app.models.connectors import Connector, WazuhManagerConnector
 
-from app.services.Graylog.messages import MessagesService
-from app.services.Graylog.metrics import MetricsService
-from app.services.Graylog.index import IndexService
-from app.services.Graylog.inputs import InputsService
+from app.models.connectors import Connector
+from app.models.connectors import WazuhManagerConnector
+from app.services.DFIR_IRIS.alerts import AlertsService
+from app.services.DFIR_IRIS.assets import AssetsService
 from app.services.DFIR_IRIS.cases import CasesService
 from app.services.DFIR_IRIS.notes import NotesService
-from app.services.DFIR_IRIS.assets import AssetsService
-from app.services.DFIR_IRIS.alerts import AlertsService
+from app.services.Graylog.index import IndexService
+from app.services.Graylog.inputs import InputsService
+from app.services.Graylog.messages import MessagesService
+from app.services.Graylog.metrics import MetricsService
 
 bp = Blueprint("dfir_iris", __name__)
 
@@ -26,6 +29,7 @@ def get_cases():
     cases = service.list_cases()
     return cases
 
+
 @bp.route("/dfir_iris/cases/<case_id>", methods=["GET"])
 def get_case(case_id):
     """
@@ -41,6 +45,7 @@ def get_case(case_id):
         return case_id_exists
     case = service.get_case(case_id=case_id)
     return case
+
 
 @bp.route("/dfir_iris/cases/<case_id>/notes", methods=["GET"])
 def get_case_notes(case_id):
@@ -60,6 +65,7 @@ def get_case_notes(case_id):
     notes = notes_service.get_case_notes(search_term=search_term, cid=int(case_id))
     return notes
 
+
 @bp.route("/dfir_iris/cases/<case_id>/note", methods=["POST"])
 def create_case_note(case_id):
     """
@@ -76,8 +82,13 @@ def create_case_note(case_id):
     case_id_exists = case_service.check_case_id(case_id=case_id)
     if case_id_exists["success"] == False:
         return case_id_exists
-    created_note = notes_service.create_case_note(cid=int(case_id), note_title=note_title, note_content=note_content)
+    created_note = notes_service.create_case_note(
+        cid=int(case_id),
+        note_title=note_title,
+        note_content=note_content,
+    )
     return created_note
+
 
 @bp.route("/dfir_iris/cases/<case_id>/assets", methods=["GET"])
 def get_case_assets(case_id):
@@ -95,6 +106,7 @@ def get_case_assets(case_id):
         return case_id_exists
     assets = asset_service.get_case_assets(cid=int(case_id))
     return assets
+
 
 @bp.route("/dfir_iris/alerts", methods=["GET"])
 def get_alerts():

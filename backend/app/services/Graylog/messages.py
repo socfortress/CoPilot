@@ -1,13 +1,15 @@
-from app.models.agents import (
-    AgentMetadata,
-    agent_metadata_schema,
-    agent_metadatas_schema,
-)
-from app import db
 from datetime import datetime
+
 import requests
 from loguru import logger
-from app.models.connectors import connector_factory, Connector, GraylogConnector
+
+from app import db
+from app.models.agents import AgentMetadata
+from app.models.agents import agent_metadata_schema
+from app.models.agents import agent_metadatas_schema
+from app.models.connectors import Connector
+from app.models.connectors import GraylogConnector
+from app.models.connectors import connector_factory
 from app.services.Graylog.universal import UniversalService
 
 
@@ -46,7 +48,7 @@ class MessagesService:
                 # If the response is successful, return the messages as a list
                 if graylog_messages.status_code == 200:
                     logger.info(
-                        f"Received {len(graylog_messages.json()['messages'])} messages from Graylog"
+                        f"Received {len(graylog_messages.json()['messages'])} messages from Graylog",
                     )
                     return {
                         "message": "Successfully retrieved messages",
@@ -56,7 +58,7 @@ class MessagesService:
                 # Otherwise, return an error message
                 else:
                     logger.error(
-                        f"Failed to collect messages from Graylog: {graylog_messages.json()}"
+                        f"Failed to collect messages from Graylog: {graylog_messages.json()}",
                     )
                     return {
                         "message": "Failed to collect messages from Graylog",

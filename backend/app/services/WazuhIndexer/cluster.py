@@ -1,7 +1,9 @@
 from typing import Dict
+
 import requests
 from elasticsearch7 import Elasticsearch
 from loguru import logger
+
 from app.services.WazuhIndexer.universal import UniversalService
 
 
@@ -15,7 +17,11 @@ class ClusterService:
         self._initialize_es_client()
 
     def _collect_wazuhindexer_details(self):
-        self.connector_url, self.connector_username, self.connector_password = UniversalService().collect_wazuhindexer_details("Wazuh-Indexer")
+        (
+            self.connector_url,
+            self.connector_username,
+            self.connector_password,
+        ) = UniversalService().collect_wazuhindexer_details("Wazuh-Indexer")
 
     def _initialize_es_client(self):
         self.es = Elasticsearch(
@@ -28,7 +34,9 @@ class ClusterService:
         )
 
     def _are_details_collected(self) -> bool:
-        return all([self.connector_url, self.connector_username, self.connector_password])
+        return all(
+            [self.connector_url, self.connector_username, self.connector_password],
+        )
 
     def collect_node_allocation(self) -> Dict[str, object]:
         """
@@ -83,7 +91,7 @@ class ClusterService:
             }
             for node in node_allocation
         ]
-    
+
     def collect_cluster_health(self) -> Dict[str, object]:
         """
         Collects the cluster health from the Wazuh-Indexer.
@@ -106,7 +114,7 @@ class ClusterService:
             "success": True,
             "cluster_health": index_summary["cluster_health"],
         }
-    
+
     def _collect_cluster_health(self) -> Dict[str, object]:
         """
         Collects the cluster health from the Wazuh-Indexer.
@@ -124,7 +132,7 @@ class ClusterService:
         except Exception as e:
             logger.error(f"Failed to collect cluster health: {e}")
             return {"message": "Failed to collect cluster health", "success": False}
-        
+
     def collect_shards(self) -> Dict[str, object]:
         """
         Collects the shards from the Wazuh-Indexer.
@@ -147,7 +155,7 @@ class ClusterService:
             "success": True,
             "shards": index_summary["shards"],
         }
-    
+
     def _collect_shards(self) -> Dict[str, object]:
         """
         Collects the shards from the Wazuh-Indexer.
@@ -166,7 +174,7 @@ class ClusterService:
         except Exception as e:
             logger.error(f"Failed to collect shards: {e}")
             return {"message": "Failed to collect shards", "success": False}
-        
+
     def _format_shards(self, shards):
         return [
             {
@@ -178,4 +186,3 @@ class ClusterService:
             }
             for shard in shards
         ]
-    

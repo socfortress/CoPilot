@@ -1,13 +1,13 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint
+from flask import jsonify
+from flask import request
 from loguru import logger
-from app.models.models import (
-    ConnectorsAvailable,
-    Connectors,
-    connectors_available_schema,
-)
 
-from app.services.connectors.connectors import ConnectorService
 from app import db
+from app.models.models import Connectors
+from app.models.models import ConnectorsAvailable
+from app.models.models import connectors_available_schema
+from app.services.connectors.connectors import ConnectorService
 
 bp = Blueprint("connectors", __name__)
 
@@ -48,7 +48,7 @@ def get_connector_details(id):
     # Call service function instead of direct function call
     service = ConnectorService(db)
     connector_validated = service.validate_connector_exists(
-        int(id)
+        int(id),
     )  # convert id to integer
     logger.info(connector_validated)
     if connector_validated["success"] == False:
@@ -70,14 +70,16 @@ def update_connector_route(id):
         id (str): The id of the connector to be updated.
 
     Returns:
-        json: A JSON response containing the success status of the update operation and a message indicating the status. If the update operation was successful, it returns the connector name and the status of the connection verification.
+        json: A JSON response containing the success status of the update operation and
+        a message indicating the status. If the update operation was successful,
+        it returns the connector name and the status of the connection verification.
     """
     api_key_connector = ["Shuffle", "DFIR-IRIS", "Velociraptor"]
 
     request_data = request.get_json()
     service = ConnectorService(db)
     connector_validated = service.validate_connector_exists(
-        int(id)
+        int(id),
     )  # convert id to integer
     logger.info(connector_validated)
     if connector_validated["success"] == False:

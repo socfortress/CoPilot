@@ -79,7 +79,6 @@ classDiagram
     }
 ```
 
-
 # Connector Classes
 
 ```mermaid
@@ -132,7 +131,7 @@ classDiagram
     }
 ```
 
-# Routes 
+# Routes
 
 ```mermaid
 graph TD;
@@ -165,4 +164,3 @@ graph TD;
     O --> V[Return Data]
 
 ```
-

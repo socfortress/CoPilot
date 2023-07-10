@@ -1,10 +1,12 @@
 from typing import Dict
+
 import requests
-from loguru import logger
-from app.services.DFIR_IRIS.universal import UniversalService
+from dfir_iris_client.alert import Alert
 from dfir_iris_client.helper.utils import assert_api_resp
 from dfir_iris_client.helper.utils import get_data_from_resp
-from dfir_iris_client.alert import Alert
+from loguru import logger
+
+from app.services.DFIR_IRIS.universal import UniversalService
 
 
 class AlertsService:
@@ -15,12 +17,12 @@ class AlertsService:
     def __init__(self):
         self.universal_service = UniversalService("DFIR-IRIS")
         session_result = self.universal_service.create_session()
-        
-        if not session_result['success']:
-            logger.error(session_result['message'])
+
+        if not session_result["success"]:
+            logger.error(session_result["message"])
             self.iris_session = None
         else:
-            self.iris_session = session_result['session']
+            self.iris_session = session_result["session"]
 
     def list_alerts(self) -> Dict[str, object]:
         """
@@ -37,9 +39,19 @@ class AlertsService:
 
         logger.info("Collecting cases from DFIR-IRIS")
         alert = Alert(session=self.iris_session)
-        result = self.universal_service.fetch_and_parse_data(self.iris_session, alert.filter_alerts)
+        result = self.universal_service.fetch_and_parse_data(
+            self.iris_session,
+            alert.filter_alerts,
+        )
 
         if not result["success"]:
-            return {"success": False, "message": "Failed to collect cases from DFIR-IRIS"}
+            return {
+                "success": False,
+                "message": "Failed to collect cases from DFIR-IRIS",
+            }
 
-        return {"success": True, "message": "Successfully collected cases from DFIR-IRIS", "results": result["data"]}
+        return {
+            "success": True,
+            "message": "Successfully collected cases from DFIR-IRIS",
+            "results": result["data"],
+        }

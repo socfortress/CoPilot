@@ -1,7 +1,9 @@
 from typing import Dict
+
 import requests
 from elasticsearch7 import Elasticsearch
 from loguru import logger
+
 from app.services.WazuhIndexer.universal import UniversalService
 
 
@@ -15,7 +17,11 @@ class IndexService:
         self._initialize_es_client()
 
     def _collect_wazuhindexer_details(self):
-        self.connector_url, self.connector_username, self.connector_password = UniversalService().collect_wazuhindexer_details("Wazuh-Indexer")
+        (
+            self.connector_url,
+            self.connector_username,
+            self.connector_password,
+        ) = UniversalService().collect_wazuhindexer_details("Wazuh-Indexer")
 
     def _initialize_es_client(self):
         self.es = Elasticsearch(
@@ -28,7 +34,9 @@ class IndexService:
         )
 
     def _are_details_collected(self) -> bool:
-        return all([self.connector_url, self.connector_username, self.connector_password])
+        return all(
+            [self.connector_url, self.connector_username, self.connector_password],
+        )
 
     def collect_indices_summary(self) -> Dict[str, object]:
         """
@@ -38,8 +46,11 @@ class IndexService:
             dict: A dictionary containing the success status, a message, and potentially the indices.
         """
         if not self._are_details_collected():
-            return {"message": "Failed to collect Wazuh-Indexer details", "success": False}
-        
+            return {
+                "message": "Failed to collect Wazuh-Indexer details",
+                "success": False,
+            }
+
         index_summary = self._collect_indices()
         if not index_summary["success"]:
             return index_summary
@@ -73,7 +84,11 @@ class IndexService:
         """
         try:
             indices = self.es.cat.indices(format="json")
-            return {"message": "Successfully collected indices", "success": True, "indices": indices}
+            return {
+                "message": "Successfully collected indices",
+                "success": True,
+                "indices": indices,
+            }
         except Exception as e:
             logger.error(e)
             return {"message": "Failed to collect indices", "success": False}

@@ -1,9 +1,8 @@
-from flask import Flask
-from app import db
-from app import app
-
+# from flask import Flask
 from loguru import logger
 
+from app import app
+from app import db
 
 logger.add(
     "debug.log",

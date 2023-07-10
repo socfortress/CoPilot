@@ -1,6 +1,8 @@
 from typing import Dict
+
 import requests
 from loguru import logger
+
 from app.services.Shuffle.universal import UniversalService
 
 
@@ -12,10 +14,15 @@ class WorkflowsService:
     def __init__(self):
         self._collect_shuffle_details()
         self.session = requests.Session()
-        self.session.headers.update({"Authorization" : f"Bearer {self.connector_api_key}"})
+        self.session.headers.update(
+            {"Authorization": f"Bearer {self.connector_api_key}"},
+        )
 
     def _collect_shuffle_details(self):
-        self.connector_url, self.connector_api_key = UniversalService().collect_shuffle_details("Shuffle")
+        (
+            self.connector_url,
+            self.connector_api_key,
+        ) = UniversalService().collect_shuffle_details("Shuffle")
 
     def _are_details_collected(self) -> bool:
         return all([self.connector_url, self.connector_api_key])
@@ -74,7 +81,7 @@ class WorkflowsService:
             "success": True,
             "workflows": response.json(),
         }
-    
+
     def collect_workflow_details(self) -> Dict[str, object]:
         """
         Collects the workflow ID and workflow name from Shuffle.
@@ -97,7 +104,7 @@ class WorkflowsService:
             "success": True,
             "workflows": workflows["workflows"],
         }
-    
+
     def _collect_workflow_details(self) -> Dict[str, object]:
         """
         Collects the workflow ID and workflow name from Shuffle.
@@ -114,10 +121,9 @@ class WorkflowsService:
         workflows = response.json()
         workflow_details = []
         for workflow in workflows:
-            workflow_details.append({
-                "workflow_id": workflow["id"],
-                "workflow_name": workflow["name"]
-            })
+            workflow_details.append(
+                {"workflow_id": workflow["id"], "workflow_name": workflow["name"]},
+            )
 
         return {
             "message": "Successfully collected workflow details from Shuffle",
@@ -148,7 +154,10 @@ class WorkflowsService:
             "executions": executions["executions"],
         }
 
-    def _collect_workflow_executions_status(self, workflow_id: str) -> Dict[str, object]:
+    def _collect_workflow_executions_status(
+        self,
+        workflow_id: str,
+    ) -> Dict[str, object]:
         """
         Collects the execution status of a Shuffle Workflow by its ID.
 
@@ -156,7 +165,9 @@ class WorkflowsService:
             dict: A dictionary containing the success status, a message and potentially the workflow execution status.
         """
         try:
-            response = self._send_request(f"{self.connector_url}/api/v1/workflows/{workflow_id}/executions")
+            response = self._send_request(
+                f"{self.connector_url}/api/v1/workflows/{workflow_id}/executions",
+            )
             response.raise_for_status()
         except requests.exceptions.HTTPError as err:
             return self._handle_request_error(err)
@@ -174,5 +185,4 @@ class WorkflowsService:
             "message": "Successfully collected workflow executions from Shuffle",
             "success": True,
             "executions": status,
-            
         }

@@ -1,14 +1,15 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint
+from flask import jsonify
+from flask import request
 from loguru import logger
-from app.models.connectors import Connector, WazuhManagerConnector
 
-from app.services.agents.agents import AgentService, AgentSyncService
-
-from app.services.WazuhManager.universal import UniversalService
+from app.models.connectors import Connector
+from app.models.connectors import WazuhManagerConnector
+from app.services.agents.agents import AgentService
+from app.services.agents.agents import AgentSyncService
 from app.services.WazuhManager.agent import WazuhManagerAgentService
+from app.services.WazuhManager.universal import UniversalService
 from app.services.WazuhManager.vulnerability import VulnerabilityService
-
-
 
 bp = Blueprint("agents", __name__)
 

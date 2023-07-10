@@ -1,8 +1,12 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint
+from flask import jsonify
+from flask import request
 from loguru import logger
-from app.models.connectors import Connector, WazuhManagerConnector
 
-from app.services.agents.agents import AgentService, AgentSyncService
+from app.models.connectors import Connector
+from app.models.connectors import WazuhManagerConnector
+from app.services.agents.agents import AgentService
+from app.services.agents.agents import AgentSyncService
 from app.services.Shuffle.workflows import WorkflowsService
 
 bp = Blueprint("shuffle", __name__)
@@ -20,6 +24,7 @@ def get_workflows():
     workflows = service.collect_workflows()
     return workflows
 
+
 @bp.route("/shuffle/workflows/executions", methods=["GET"])
 def get_workflows_executions():
     """
@@ -34,8 +39,11 @@ def get_workflows_executions():
         message = "No workflows found"
         return jsonify({"message": message, "success": False}), 500
     for workflow in workflow_details["workflows"]:
-        workflow["status"] = service.collect_workflow_executions_status(workflow["workflow_id"])
+        workflow["status"] = service.collect_workflow_executions_status(
+            workflow["workflow_id"],
+        )
     return workflow_details
+
 
 @bp.route("/shuffle/workflows/executions/<workflow_id>", methods=["GET"])
 def get_workflow_executions(workflow_id):

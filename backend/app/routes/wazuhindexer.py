@@ -1,11 +1,15 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint
+from flask import jsonify
+from flask import request
 from loguru import logger
-from app.models.connectors import Connector, WazuhManagerConnector
 
-from app.services.agents.agents import AgentService, AgentSyncService
+from app.models.connectors import Connector
+from app.models.connectors import WazuhManagerConnector
+from app.services.agents.agents import AgentService
+from app.services.agents.agents import AgentSyncService
 from app.services.WazuhIndexer.alerts import AlertsService
-from app.services.WazuhIndexer.index import IndexService
 from app.services.WazuhIndexer.cluster import ClusterService
+from app.services.WazuhIndexer.index import IndexService
 
 bp = Blueprint("wazuh_indexer", __name__)
 
@@ -30,6 +34,7 @@ def get_indices_summary():
     indices = service.collect_indices_summary()
     return indices
 
+
 @bp.route("/wazuh_indexer/allocation", methods=["GET"])
 def get_node_allocation():
     """
@@ -50,6 +55,7 @@ def get_node_allocation():
     indices = service.collect_node_allocation()
     return indices
 
+
 @bp.route("/wazuh_indexer/health", methods=["GET"])
 def get_cluster_health():
     """
@@ -61,6 +67,7 @@ def get_cluster_health():
     service = ClusterService()
     indices = service.collect_cluster_health()
     return indices
+
 
 @bp.route("/wazuh_indexer/shards", methods=["GET"])
 def get_shards():

@@ -1,8 +1,14 @@
-from app.models.connectors import connector_factory, Connector, ConnectorFactory
-from app.models.models import Connectors, connectors_schema, ConnectorsAvailable
-from sqlalchemy.exc import SQLAlchemyError
-from loguru import logger
 from flask import current_app
+from loguru import logger
+from sqlalchemy.exc import SQLAlchemyError
+
+# from app.models.connectors import ConnectorFactory
+from app.models.connectors import Connector
+from app.models.connectors import connector_factory
+from app.models.models import Connectors
+
+# from app.models.models import ConnectorsAvailable
+# from app.models.models import connectors_schema
 
 
 class ConnectorService:
@@ -53,7 +59,8 @@ class ConnectorService:
 
     def validate_connector_exists(self, connector_id: int):
         """
-        Validates that a connector exists in the database. Returns a dictionary containing the validation status and a message indicating the status.
+        Validates that a connector exists in the database. Returns a dictionary containing the validation status
+        and a message indicating the status.
 
         Args:
             connector_id (int): The id of the connector to be validated.
@@ -91,7 +98,8 @@ class ConnectorService:
             updated_data (dict): A dictionary containing the updated data for the connector.
 
         Returns:
-            dict: A dictionary containing the success status and a message indicating the status. If the update operation was successful, it returns the connector name.
+            dict: A dictionary containing the success status and a message indicating the status.
+            If the update operation was successful, it returns the connector name.
         """
         try:
             connector = (
@@ -126,7 +134,8 @@ class ConnectorService:
             connector_id (int): The id of the connector to be verified.
 
         Returns:
-            dict: A dictionary containing the success status and a message indicating the status. If the verification operation was successful, it returns the connector name.
+            dict: A dictionary containing the success status and a message indicating the status. If the verification
+            operation was successful, it returns the connector name.
         """
         try:
             connector = (
@@ -138,7 +147,8 @@ class ConnectorService:
                     "success": False,
                 }
             connector_instance = connector_factory.create(
-                connector.connector_name, connector.connector_name
+                connector.connector_name,
+                connector.connector_name,
             )
             connection_successful = connector_instance.verify_connection()
             # Connection successful: {'connectionSuccessful': False}
@@ -160,7 +170,8 @@ class ConnectorService:
 
     def validate_request_data(self, request_data: dict):
         """
-        Validates the request data to ensure `connector_url`, `connector_username` and `connector_password` are present. Returns a dictionary containing the validation status and a message indicating the status.
+        Validates the request data to ensure `connector_url`, `connector_username` and `connector_password` are present.
+        Returns a dictionary containing the validation status and a message indicating the status.
 
         Args:
             request_data (dict): A dictionary containing the request data.
@@ -176,13 +187,15 @@ class ConnectorService:
             return {"message": "Request data is valid", "success": True}
         else:
             return {
-                "message": "Request data is invalid. Ensure connector_url, connector_username and connector_password are present",
+                "message": "Request data is invalid. Ensure connector_url, connector_username and connector_password "
+                "are present",
                 "success": False,
             }
 
     def validate_request_data_api_key(self, request_data: dict):
         """
-        Validates the request data to ensure `connector_url` and `connector_api_key` are present. Returns a dictionary containing the validation status and a message indicating the status.
+        Validates the request data to ensure `connector_url` and `connector_api_key` are present. Returns a dictionary
+        containing the validation status and a message indicating the status.
 
         Args:
             request_data (dict): A dictionary containing the request data.
@@ -191,7 +204,8 @@ class ConnectorService:
             dict: A dictionary containing the validation status and a message indicating the status.
         """
         if request_data.get("connector_url", None) and request_data.get(
-            "connector_api_key", None
+            "connector_api_key",
+            None,
         ):
             return {"message": "Request data is valid", "success": True}
         else:
