@@ -1,0 +1,62 @@
+repos:
+    - repo: https://github.com/pre-commit/pre-commit-hooks
+      rev: v4.4.0
+      hooks:
+          - id: check-merge-conflict
+          - id: check-yaml
+            args: ["--unsafe"]
+          - id: end-of-file-fixer
+          - id: check-json
+          - id: trailing-whitespace
+          - id: check-added-large-files
+          - id: detect-private-key
+          - id: requirements-txt-fixer
+            args: ["backend/requirements.txt", "backend/requirements.in"]
+    - repo: https://github.com/PyCQA/isort
+      rev: 5.12.0
+      hooks:
+          - id: isort
+            name: Sort python imports (shows diff)
+            args: ["-c", "--diff"]
+          - id: isort
+            name: Sort python imports (fixes files)
+
+    - repo: https://github.com/psf/black
+      rev: 23.3.0
+      hooks:
+          - id: black
+            language_version: python3.9
+
+    - repo: https://github.com/asottile/setup-cfg-fmt
+      rev: v2.3.0
+      hooks:
+          - id: setup-cfg-fmt
+
+    - repo: https://github.com/asottile/add-trailing-comma
+      rev: v2.4.0
+      hooks:
+          - id: add-trailing-comma
+
+    - repo: https://github.com/PyCQA/flake8
+      rev: 6.0.0
+      hooks:
+          - id: flake8
+            name: Check project styling
+
+    - repo: https://github.com/pre-commit/mirrors-prettier
+      rev: "v3.0.0-alpha.6"
+      hooks:
+          - id: prettier
+
+    - repo: https://github.com/pre-commit/mirrors-eslint
+      rev: v8.41.0
+      hooks:
+          - id: eslint
+            files: \.([cjt]sx?|[cm]ts|[cm]js|cvue)$ # *.js, *.jsx, *.ts, *.tsx and *.vue
+            additional_dependencies:
+                - "@rushstack/eslint-patch@1.2.0"
+                - eslint@8.39.0
+                - "@vue/eslint-config-prettier@7.1.0"
+                - "@vue/eslint-config-typescript@11.0.2"
+                - eslint-plugin-cypress@2.13.3
+                - eslint-plugin-vue@9.11.1
