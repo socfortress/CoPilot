@@ -1,0 +1,1945 @@
+{
+    "openapi": "3.0.3",
+    "info": {
+        "title": "SOCFortress CoPilot",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:5000"
+        }
+    ],
+    "tags": [
+        {
+          "name": "Connectors",
+          "description": "Everything about your Connectors",
+          "externalDocs": {
+            "description": "Find out more",
+            "url": "http://swagger.io"
+          }
+        },
+        {
+          "name": "Agents",
+          "description": "Everything about your Agents",
+          "externalDocs": {
+            "description": "Find out more",
+            "url": "http://swagger.io"
+          }
+        },
+        {
+          "name": "Rules",
+          "description": "Everything about your Wazuh Rules",
+          "externalDocs": {
+            "description": "Find out more",
+            "url": "http://swagger.io"
+          }
+        },
+        {
+          "name": "Graylog",
+          "description": "Everything about Graylog",
+          "externalDocs": {
+            "description": "Find out more",
+            "url": "http://swagger.io"
+          }
+        },
+        {
+          "name": "Wazuh-Indexer",
+          "description": "Everything about Wazuh-Indexer",
+          "externalDocs": {
+            "description": "Find out more",
+            "url": "http://swagger.io"
+          }
+        },
+        {
+          "name": "Shuffle",
+          "description": "Everything about Shuffle",
+          "externalDocs": {
+            "description": "Find out more",
+            "url": "http://swagger.io"
+          }
+        },
+        {
+          "name": "Velociraptor",
+          "description": "Everything about Velociraptor",
+          "externalDocs": {
+            "description": "Find out more",
+            "url": "http://swagger.io"
+          }
+        },
+        {
+          "name": "DFIR-IRIS",
+          "description": "Everything about DFIR-IRIS",
+          "externalDocs": {
+            "description": "Find out more",
+            "url": "http://swagger.io"
+          }
+        }
+      ],
+    "paths": {
+        "/connectors": {
+            "get": {
+                "tags": [
+                    "Connectors"
+                  ],
+                "summary": "List all available connectors",
+                "description": "Endpoint to list all available connectors. It processes each connector to verify the connection and returns the results.",
+                "responses": {
+                    "200": {
+                        "description": "A JSON response containing the list of all available connectors along with their connection verification status.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "connectionSuccessful": {
+                                                "type": "boolean"
+                                              },
+                                              "connector_api_key": {
+                                                "type": "string",
+                                                "nullable": true
+                                              },
+                                              "connector_last_updated": {
+                                                "type": "string",
+                                                "format": "date-time"
+                                              },
+                                              "connector_name": {
+                                                "type": "string"
+                                              },
+                                              "connector_password": {
+                                                "type": "string",
+                                                "nullable": true
+                                              },
+                                              "connector_type": {
+                                                "type": "string"
+                                              },
+                                              "connector_url": {
+                                                "type": "string"
+                                              },
+                                              "connector_username": {
+                                                "type": "string",
+                                                "nullable": true
+                                              },
+                                              "id": {
+                                                "type": "integer"
+                                              },
+                                              "name": {
+                                                "type": "string"
+                                              }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/connectors/{id}": {
+            "get": {
+              "tags": [
+                "Connectors"
+              ],
+              "summary": "Get the details of a specific connector.",
+              "operationId": "getConnectorDetails",
+              "parameters": [
+                {
+                  "name": "id",
+                  "in": "path",
+                  "description": "The id of the connector to be fetched.",
+                  "required": true,
+                  "schema": {
+                    "type": "integer"
+                  }
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "A JSON response containing the details of the connector.",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "connectionSuccessful": {
+                            "type": "boolean"
+                          },
+                          "connector_api_key": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "connector_last_updated": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "connector_name": {
+                            "type": "string"
+                          },
+                          "connector_password": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "connector_type": {
+                            "type": "string"
+                          },
+                          "connector_url": {
+                            "type": "string"
+                          },
+                          "connector_username": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "id": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "404": {
+                  "description": "The connector could not be found."
+                }
+              }
+            },
+            "put": {
+                "tags": [
+                    "Connectors"
+                ],
+                "summary": "Update a connector",
+                "description": "Endpoint to update a connector. If the update operation was successful, it returns the connection verification status for the updated connector.",
+                "operationId": "update_connector_route",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "The id of the connector to be updated.",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "connector_url": {
+                                        "type": "string"
+                                    },
+                                    "connector_username": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "connector_password": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "connector_api_key": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "A JSON response containing the connection verification status of the updated connector.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "type": "string"
+                                        },
+                                        "connected": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "If the request data is invalid, it returns a 400 status with an error message.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "success": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "If the connector is not found, it returns a 404 status with an error message.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "success": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/agents": {
+            "get": {
+                "tags": [
+                    "Agents"
+                ],
+                "summary": "List all available agents",
+                "description": "Endpoint to list all available agents. It processes each agent to verify the connection and returns the results.",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Agent"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/agents/{id}": {
+            "get": {
+                "tags": [
+                    "Agents"
+                ],
+                "summary": "Get details of a specific agent",
+                "description": "Endpoint to get the details of an agent.",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "description": "ID of the agent to be fetched",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Agent"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/agents/{id}/critical": {
+            "post": {
+              "tags": [
+                "Agents"
+              ],
+              "summary": "Marks an agent as critical",
+              "description": "Marks an agent as a critical asset in the database.",
+              "parameters": [
+                {
+                  "name": "id",
+                  "in": "path",
+                  "description": "ID of the agent to be marked as critical",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "Agent marked as critical",
+                  "schema": {
+                    "$ref": "#/definitions/Agent"
+                  }
+                },
+                "400": {
+                  "description": "Invalid ID supplied"
+                },
+                "404": {
+                  "description": "Agent not found"
+                }
+              }
+            }
+          },
+        "/agents/{id}/delete": {
+            "post": {
+              "tags": [
+                "Agents"
+              ],
+              "summary": "Deletes an agent",
+              "description": "Deletes an agent from the database.",
+              "parameters": [
+                {
+                  "name": "id",
+                  "in": "path",
+                  "description": "ID of the agent to be deleted",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "Agent deleted",
+                  "schema": {
+                    "$ref": "#/definitions/Agent"
+                  }
+                },
+                "400": {
+                  "description": "Invalid ID supplied"
+                },
+                "404": {
+                  "description": "Agent not found"
+                }
+              }
+            }
+
+        },
+          "/agents/{id}/noncritical": {
+            "post": {
+              "tags": [
+                "Agents"
+              ],
+              "summary": "Unmarks an agent as critical",
+              "description": "Marks an agent as a non-critical asset in the database.",
+              "parameters": [
+                {
+                  "name": "id",
+                  "in": "path",
+                  "description": "ID of the agent to be unmarked as critical",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "Agent unmarked as critical",
+                  "schema": {
+                    "$ref": "#/definitions/Agent"
+                  }
+                },
+                "400": {
+                  "description": "Invalid ID supplied"
+                },
+                "404": {
+                  "description": "Agent not found"
+                }
+              }
+            }
+          },
+          "/agents/sync": {
+            "post": {
+              "summary": "Sync all agents",
+              "description": "Endpoint to sync all agents.",
+              "responses": {
+                "200": {
+                  "description": "Successful operation",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string",
+                            "description": "Operation message"
+                          },
+                          "success": {
+                            "type": "boolean",
+                            "description": "Indicates if the operation was successful"
+                          },
+                          "agents_added": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "description": "Agent details"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "default": {
+                  "description": "Unexpected error",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    }
+                  }
+                }
+              },
+              "operationId": "syncAgents",
+              "tags": [
+                "Agents"
+              ]
+            }
+          },
+          "/agents/{id}/vulnerabilities": {
+            "get": {
+              "tags": [
+                "Agents"
+              ],
+              "summary": "Get vulnerabilities of a specific agent",
+              "description": "Endpoint to get the vulnerabilities of an agent.",
+              "parameters": [
+                {
+                  "name": "id",
+                  "in": "path",
+                  "required": true,
+                  "description": "ID of the agent to be fetched",
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "Successful operation",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/components/schemas/Vulnerability"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+          }
+          },
+          "/rule/disable": {
+            "post": {
+              "summary": "Disable a rule",
+              "description": "Endpoint to disable a rule.",
+              "requestBody": {
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "rule_id": {
+                          "type": "string",
+                          "description": "The ID of the rule to be disabled."
+                        },
+                        "reason": {
+                          "type": "string",
+                          "description": "The reason for disabling the rule."
+                        },
+                        "length_of_time": {
+                          "type": "integer",
+                          "description": "The length of time the rule should be disabled for."
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "responses": {
+                "200": {
+                  "description": "Successful operation",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string",
+                            "description": "Operation message"
+                          },
+                          "success": {
+                            "type": "boolean",
+                            "description": "Indicates if the operation was successful"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "default": {
+                  "description": "Unexpected error",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    }
+                  }
+                }
+              },
+              "operationId": "disableRule",
+              "tags": [
+                "Rules"
+              ]
+            }
+          },
+          "/rule/enable": {
+            "post": {
+              "summary": "Enable a rule",
+              "description": "Endpoint to enable a rule.",
+              "requestBody": {
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "rule_id": {
+                          "type": "string",
+                          "description": "The ID of the rule to be enabled."
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "responses": {
+                "200": {
+                  "description": "Successful operation",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string",
+                            "description": "Operation message"
+                          },
+                          "success": {
+                            "type": "boolean",
+                            "description": "Indicates if the operation was successful"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "default": {
+                  "description": "Unexpected error",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    }
+                  }
+                }
+              },
+              "operationId": "enableRule",
+              "tags": [
+                "Rules"
+              ]
+            }
+          },
+          "/graylog/messages": {
+            "get": {
+              "summary": "Get messages from Graylog",
+              "description": "Endpoint to get messages from Graylog.",
+              "responses": {
+                "200": {
+                  "description": "Successful operation",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "messages": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "description": "Message details"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "default": {
+                  "description": "Unexpected error",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    }
+                  }
+                }
+              },
+              "operationId": "getGraylogMessages",
+              "tags": [
+                "Graylog"
+              ]
+            }
+          },
+          "/graylog/metrics": {
+            "get": {
+              "summary": "Get metrics from Graylog",
+              "description": "Endpoint to get metrics from Graylog.",
+              "responses": {
+                "200": {
+                  "description": "Successful operation",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "metrics": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "description": "Metric details"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "default": {
+                  "description": "Unexpected error",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    }
+                  }
+                }
+              },
+              "operationId": "getGraylogMetrics",
+              "tags": [
+                "Graylog"
+              ]
+            }
+          },
+          "/graylog/indices": {
+            "get": {
+              "summary": "Get indices from Graylog",
+              "description": "Endpoint to get indices from Graylog.",
+              "responses": {
+                "200": {
+                  "description": "Successful operation",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "indices": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "description": "Index details"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "default": {
+                  "description": "Unexpected error",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    }
+                  }
+                }
+              },
+              "operationId": "getGraylogIndices",
+              "tags": [
+                "Graylog"
+              ]
+            }
+          },
+          "/graylog/indices/{index_name}/delete": {
+            "delete": {
+              "tags": [
+                "Graylog"
+              ],
+              "summary": "Deletes a Graylog index",
+              "description": "Endpoint to delete a Graylog index.",
+              "parameters": [
+                {
+                  "name": "index_name",
+                  "in": "path",
+                  "description": "The name of the index to be deleted.",
+                  "required": true,
+                  "type": "string"
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "Successful operation",
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                },
+                "400": {
+                  "description": "Bad request",
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                },
+                "404": {
+                  "description": "Index not found",
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "message": {
+                        "type": "string"
+                      },
+                      "success": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "/graylog/inputs": {
+            "get": {
+              "summary": "Get inputs from Graylog",
+              "description": "Endpoint to get inputs from Graylog.",
+              "responses": {
+                "200": {
+                  "description": "Successful operation",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "inputs": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "description": "Input details"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "default": {
+                  "description": "Unexpected error",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    }
+                  }
+                }
+              },
+              "operationId": "getGraylogInputs",
+              "tags": [
+                "Graylog"
+              ]
+            }
+          },
+          "/alerts": {
+            "get": {
+              "summary": "Get alerts",
+              "description": "Endpoint to get alerts.",
+              "responses": {
+                "200": {
+                  "description": "Successful operation",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "alerts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "description": "Alert details"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "default": {
+                  "description": "Unexpected error",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    }
+                  }
+                }
+              },
+              "operationId": "getAlerts",
+              "tags": [
+                "Wazuh-Indexer"
+              ]
+            }
+          },    
+          "/wazuh_indexer/allocation": {
+            "get": {
+              "summary": "Get node allocation of the Wazuh-Indexer nodes",
+              "description": "Endpoint to get node allocation.",
+              "responses": {
+                "200": {
+                  "description": "Successful operation",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "indices": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "description": "Node details"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "default": {
+                  "description": "Unexpected error",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    }
+                  }
+                }
+              },
+              "operationId": "getNodeAllocation",
+              "tags": [
+                "Wazuh-Indexer"
+              ]
+            }
+          },
+          "/wazuh_indexer/indices": {
+            "get": {
+              "summary": "Get indices from Wazuh-Indexer",
+              "description": "Endpoint to get indices from Wazuh-Indexer.",
+              "responses": {
+                "200": {
+                  "description": "Successful operation",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "indices": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "description": "Index details"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "default": {
+                  "description": "Unexpected error",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    }
+                  }
+                }
+              },
+              "operationId": "getWazuhIndices",
+              "tags": [
+                "Wazuh-Indexer"
+              ]
+            }
+          },
+          "/wazuh_indexer/health": {
+            "get": {
+              "summary": "Get health of the Wazuh-Indexer nodes",
+              "description": "Endpoint to get health.",
+              "responses": {
+                "200": {
+                  "description": "Successful operation",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "cluster_name": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string"
+                          },
+                          "number_of_nodes": {
+                            "type": "integer"
+                          },
+                          "number_of_data_nodes": {
+                            "type": "integer"
+                          },
+                          "active_primary_shards": {
+                            "type": "integer"
+                          },
+                          "active_shards": {
+                            "type": "integer"
+                          },
+                          "relocating_shards": {
+                            "type": "integer"
+                          },
+                          "initializing_shards": {
+                            "type": "integer"
+                          },
+                          "unassigned_shards": {
+                            "type": "integer"
+                          },
+                          "delayed_unassigned_shards": {
+                            "type": "integer"
+                          },
+                          "number_of_pending_tasks": {
+                            "type": "integer"
+                          },
+                          "number_of_in_flight_fetch": {
+                            "type": "integer"
+                          },
+                          "task_max_waiting_in_queue_millis": {
+                            "type": "integer"
+                          },
+                          "active_shards_percent_as_number": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "default": {
+                  "description": "Unexpected error",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    }
+                  }
+                }
+              },
+              "operationId": "getHealth",
+              "tags": [
+                "Wazuh-Indexer"
+              ]
+            }
+          },
+          "/wazuh_indexer/shards": {
+            "get": {
+              "summary": "Get shards from Wazuh-Indexer",
+              "description": "Endpoint to get shards from Wazuh-Indexer.",
+              "responses": {
+                "200": {
+                  "description": "Successful operation",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "shards": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "description": "Shard details"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "default": {
+                  "description": "Unexpected error",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    }
+                  }
+                }
+              },
+              "operationId": "getShards",
+              "tags": [
+                "Wazuh-Indexer"
+              ]
+            }
+          },
+          "/shuffle/workflows": {
+            "get": {
+              "summary": "Get all workflows",
+              "description": "Endpoint to get all workflows.",
+              "responses": {
+                "200": {
+                  "description": "Successful operation",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "workflows": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "description": "Workflow details"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "default": {
+                  "description": "Unexpected error",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    }
+                  }
+                }
+              },
+              "operationId": "getAllWorkflows",
+              "tags": [
+                "Shuffle"
+              ]
+            }
+          },
+          "/shuffle/workflows/executions": {
+            "get": {
+              "summary": "Get all workflow executions",
+              "description": "Endpoint to get all workflow executions.",
+              "responses": {
+                "200": {
+                  "description": "Successful operation",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "executions": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "description": "Workflow execution details"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "default": {
+                  "description": "Unexpected error",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    }
+                  }
+                }
+              },
+              "operationId": "getAllWorkflowExecutions",
+              "tags": [
+                "Shuffle"
+              ]
+            }
+          },
+          "/shuffle/workflows/executions/{workflow_id}": {
+            "get": {
+              "summary": "Get workflow executions by workflow id",
+              "description": "Endpoint to get workflow executions by workflow id.",
+              "parameters": [
+                {
+                  "name": "workflow_id",
+                  "in": "path",
+                  "description": "The workflow id",
+                  "required": true,
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "Successful operation",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "executions": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "description": "Workflow execution details"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "default": {
+                  "description": "Unexpected error",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    }
+                  }
+                }
+              },
+              "operationId": "getWorkflowExecutionsByWorkflowId",
+              "tags": [
+                "Shuffle"
+              ]
+            }
+          },
+          "/velociraptor/artifacts": {
+            "get": {
+              "summary": "Get all artifacts",
+              "description": "Endpoint to get all artifacts.",
+              "responses": {
+                "200": {
+                  "description": "Successful operation",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "artifacts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "description": "Artifact details"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "default": {
+                  "description": "Unexpected error",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    }
+                  }
+                }
+              },
+              "operationId": "getAllArtifacts",
+              "tags": [
+                "Velociraptor"
+              ]
+            }
+          },
+          "/velociraptor/artifacts/linux": {
+            "get": {
+              "summary": "Get all linux artifacts",
+              "description": "Endpoint to get all linux artifacts.",
+              "responses": {
+                "200": {
+                  "description": "Successful operation",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "artifacts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "description": "Artifact details"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "default": {
+                  "description": "Unexpected error",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    }
+                  }
+                }
+              },
+              "operationId": "getAllLinuxArtifacts",
+              "tags": [
+                "Velociraptor"
+              ]
+            }
+          },
+          "/velociraptor/artifacts/windows": {
+            "get": {
+              "summary": "Get all windows artifacts",
+              "description": "Endpoint to get all windows artifacts.",
+              "responses": {
+                "200": {
+                  "description": "Successful operation",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "artifacts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "description": "Artifact details"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "default": {
+                  "description": "Unexpected error",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    }
+                  }
+                }
+              },
+              "operationId": "getAllWindowsArtifacts",
+              "tags": [
+                "Velociraptor"
+              ]
+            }
+          },
+          "/velociraptor/artifacts/mac": {
+            "get": {
+              "summary": "Get all mac artifacts",
+              "description": "Endpoint to get all mac artifacts.",
+              "responses": {
+                "200": {
+                  "description": "Successful operation",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "artifacts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "description": "Artifact details"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "default": {
+                  "description": "Unexpected error",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    }
+                  }
+                }
+              },
+              "operationId": "getAllMacArtifacts",
+              "tags": [
+                "Velociraptor"
+              ]
+            }
+          },
+          "/velociraptor/artifacts/collection": {
+            "post": {
+              "summary": "Create a new artifact collection",
+              "description": "Endpoint to create a new artifact collection.",
+              "requestBody": {
+                "description": "Artifact collection details",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "artifact_name": {
+                          "type": "string",
+                          "description": "The name of the artifact collection."
+                        },
+                        "client_name": {
+                          "type": "string",
+                          "description": "The name of the client to collect the artifact for."
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "responses": {
+                "200": {
+                  "description": "Successful operation",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "collection": {
+                            "type": "object",
+                            "description": "Artifact collection details"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "default": {
+                  "description": "Unexpected error",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    }
+                  }
+                }
+              },
+              "operationId": "createArtifactCollection",
+              "tags": [
+                "Velociraptor"
+              ]
+            }
+          },
+          "/dfir_iris/cases": {
+            "get": {
+              "summary": "Get all cases",
+              "description": "Endpoint to get all cases.",
+              "responses": {
+                "200": {
+                  "description": "Successful operation",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "cases": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "description": "Case details"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "default": {
+                  "description": "Unexpected error",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    }
+                  }
+                }
+              },
+              "operationId": "getAllCases",
+              "tags": [
+                "DFIR Iris"
+              ]
+            }
+          },
+          "/dfir_iris/cases/{case_id}": {
+            "get": {
+              "summary": "Get a case",
+              "description": "Endpoint to get a case.",
+              "parameters": [
+                {
+                  "name": "case_id",
+                  "in": "path",
+                  "description": "The ID of the case.",
+                  "required": true,
+                  "schema": {
+                    "type": "integer"
+                  }
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "Successful operation",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "case": {
+                            "type": "object",
+                            "description": "Case details"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "404": {
+                  "description": "Case not found",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    }
+                  }
+                },
+                "default": {
+                  "description": "Unexpected error",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    }
+                  }
+                }
+              },
+              "operationId": "getCase",
+              "tags": [
+                "DFIR Iris"
+              ]
+            }
+          },
+          "/dfir_iris/cases/{case_id}/notes": {
+            "get": {
+              "summary": "Get all notes for a case",
+              "description": "Endpoint to get all notes for a case.",
+              "parameters": [
+                {
+                  "name": "case_id",
+                  "in": "path",
+                  "description": "The ID of the case.",
+                  "required": true,
+                  "schema": {
+                    "type": "integer"
+                  }
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "Successful operation",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "notes": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "description": "Note details"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "404": {
+                  "description": "Case not found",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    }
+                  }
+                },
+                "default": {
+                  "description": "Unexpected error",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    }
+                  }
+                }
+              },
+              "operationId": "getAllNotesForCase",
+              "tags": [
+                "DFIR Iris"
+              ]
+            }
+          },
+          "/dfir_iris/cases/{case_id}/note": {
+            "post": {
+              "summary": "Create a note for a case",
+              "description": "Endpoint to create a note for a case.",
+              "parameters": [
+                {
+                  "name": "case_id",
+                  "in": "path",
+                  "description": "The ID of the case.",
+                  "required": true,
+                  "schema": {
+                    "type": "integer"
+                  }
+                }
+              ],
+              "requestBody": {
+                "description": "Note details",
+                "content": {
+                  "application/json": {
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "note_title": {
+                          "type": "string",
+                          "description": "The title of the note"
+                        },
+                        "note_content": {
+                          "type": "string",
+                          "description": "The content of the note"
+                        }
+                      },
+                      "description": "Note details"
+                    }
+                  }
+                }
+              },
+              "responses": {
+                "200": {
+                  "description": "Successful operation",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "note": {
+                            "type": "object",
+                            "properties": {
+                              "title": {
+                                "type": "string",
+                                "description": "The title of the note"
+                              },
+                              "content": {
+                                "type": "string",
+                                "description": "The content of the note"
+                              }
+                            },
+                            "description": "Note details"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "404": {
+                  "description": "Case not found",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    }
+                  }
+                },
+                "default": {
+                  "description": "Unexpected error",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    }
+                  }
+                }
+              },
+              "operationId": "createNoteForCase",
+              "tags": [
+                "DFIR Iris"
+              ]
+            }
+          },
+          "/dfir_iris/cases/{case_id}/assets": {
+            "get": {
+              "summary": "Get all assets for a case",
+              "description": "Endpoint to get all assets for a case.",
+              "parameters": [
+                {
+                  "name": "case_id",
+                  "in": "path",
+                  "description": "The ID of the case.",
+                  "required": true,
+                  "schema": {
+                    "type": "integer"
+                  }
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "Successful operation",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "assets": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "description": "Asset details"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "404": {
+                  "description": "Case not found",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    }
+                  }
+                },
+                "default": {
+                  "description": "Unexpected error",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    }
+                  }
+                }
+              },
+              "operationId": "getAllAssetsForCase",
+              "tags": [
+                "DFIR Iris"
+              ]
+            }
+          },
+          "/dfir_iris/alerts": {
+            "get": {
+              "summary": "Get all alerts",
+              "description": "Endpoint to get all alerts.",
+              "parameters": [
+                {
+                  "name": "limit",
+                  "in": "query",
+                  "description": "The maximum number of alerts to return.",
+                  "required": false,
+                  "schema": {
+                    "type": "integer"
+                  }
+                },
+                {
+                  "name": "offset",
+                  "in": "query",
+                  "description": "The offset to start returning alerts from.",
+                  "required": false,
+                  "schema": {
+                    "type": "integer"
+                  }
+                },
+                {
+                  "name": "sort",
+                  "in": "query",
+                  "description": "The field to sort alerts by.",
+                  "required": false,
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "name": "order",
+                  "in": "query",
+                  "description": "The order to sort alerts by.",
+                  "required": false,
+                  "schema": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "name": "filter",
+                  "in": "query",
+                  "description": "The filter to apply to the alerts.",
+                  "required": false,
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "responses": {
+                "200": {
+                  "description": "Successful operation",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "alerts": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "description": "Alert details"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "default": {
+                  "description": "Unexpected error",
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    }
+                  }
+                }
+              },
+              "operationId": "getAllAlerts",
+              "tags": [
+                "DFIR Iris"
+              ]
+            }
+          }
+    },
+    "components": {
+        "schemas": {
+            "Agent": {
+                "type": "object",
+                "properties": {
+                    "agent_id": {
+                        "type": "string",
+                        "description": "The ID of the agent."
+                    },
+                    "critical_asset": {
+                        "type": "boolean",
+                        "description": "Flag indicating if the agent is a critical asset."
+                    },
+                    "hostname": {
+                        "type": "string",
+                        "description": "The hostname of the agent."
+                    },
+                    "id": {
+                        "type": "integer",
+                        "description": "The primary key of the agent."
+                    },
+                    "ip_address": {
+                        "type": "string",
+                        "description": "The IP address of the agent."
+                    },
+                    "last_seen": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "The last time the agent was seen."
+                    },
+                    "os": {
+                        "type": "string",
+                        "description": "The operating system of the agent."
+                    }
+                },
+                "required": [
+                    "agent_id",
+                    "hostname",
+                    "id",
+                    "ip_address",
+                    "last_seen",
+                    "os"
+                ]
+            }
+        }
+    }    
+}
