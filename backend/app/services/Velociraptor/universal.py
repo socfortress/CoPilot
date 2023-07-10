@@ -1,22 +1,24 @@
 import json
 from datetime import datetime
-from typing import Dict
-from typing import List
 
 import grpc
 import pyvelociraptor
-import requests
-from elasticsearch7 import Elasticsearch
-from loguru import logger
+
+# import requests
+# from elasticsearch7 import Elasticsearch
+# from loguru import logger
 from pyvelociraptor import api_pb2
 from pyvelociraptor import api_pb2_grpc
 
-from app import db
-from app.models.agents import AgentMetadata
-from app.models.agents import agent_metadata_schema
-from app.models.agents import agent_metadatas_schema
+# from app import db
+# from app.models.agents import AgentMetadata
+# from app.models.agents import agent_metadata_schema
+# from app.models.agents import agent_metadatas_schema
 from app.models.connectors import Connector
 from app.models.connectors import connector_factory
+
+# from typing import Dict
+# from typing import List
 
 
 class UniversalService:
@@ -184,7 +186,8 @@ class UniversalService:
             if self._is_offline(last_seen_at):
                 return {
                     "success": False,
-                    "message": f"{client_name} has not been seen in the last 30 seconds and may not be online with the Velociraptor server.",
+                    "message": f"{client_name} has not been seen in the last 30 seconds and "
+                    "may not be online with the Velociraptor server.",
                     "results": [{"client_id": None}],
                 }
 

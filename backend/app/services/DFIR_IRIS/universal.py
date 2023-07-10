@@ -1,24 +1,17 @@
-from datetime import datetime
-from typing import Any
-from typing import Dict
-from typing import List
 from typing import Optional
-from typing import Set
-from typing import Tuple
 
-import dfir_iris_client
-import requests
-from dfir_iris_client.case import Case
+# from dfir_iris_client.case import Case
 from dfir_iris_client.helper.utils import assert_api_resp
 from dfir_iris_client.helper.utils import get_data_from_resp
 from dfir_iris_client.session import ClientSession
-from elasticsearch7 import Elasticsearch
+
+# from elasticsearch7 import Elasticsearch
 from loguru import logger
 
-from app import db
-from app.models.agents import AgentMetadata
-from app.models.agents import agent_metadata_schema
-from app.models.agents import agent_metadatas_schema
+# from app import db
+# from app.models.agents import AgentMetadata
+# from app.models.agents import agent_metadata_schema
+# from app.models.agents import agent_metadatas_schema
 from app.models.connectors import Connector
 from app.models.connectors import connector_factory
 

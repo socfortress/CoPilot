@@ -1,13 +1,15 @@
 from flask import Blueprint
 from flask import jsonify
-from flask import request
-from loguru import logger
 
-from app.models.connectors import Connector
-from app.models.connectors import WazuhManagerConnector
-from app.services.agents.agents import AgentService
-from app.services.agents.agents import AgentSyncService
+# from app.models.connectors import Connector
+# from app.models.connectors import WazuhManagerConnector
+# from app.services.agents.agents import AgentService
+# from app.services.agents.agents import AgentSyncService
 from app.services.Shuffle.workflows import WorkflowsService
+
+# from flask import request
+# from loguru import logger
+
 
 bp = Blueprint("shuffle", __name__)
 

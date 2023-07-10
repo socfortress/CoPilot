@@ -19,7 +19,8 @@ def list_connectors_available():
     It processes each connector to verify the connection and returns the results.
 
     Returns:
-        json: A JSON response containing the list of all available connectors along with their connection verification status.
+        json: A JSON response containing the list of all available connectors along
+        with their connection verification status.
     """
     connectors_service = ConnectorService(db)
     connectors = ConnectorsAvailable.query.all()
@@ -51,7 +52,7 @@ def get_connector_details(id):
         int(id),
     )  # convert id to integer
     logger.info(connector_validated)
-    if connector_validated["success"] == False:
+    if connector_validated["success"] is False:
         return jsonify(connector_validated), 404
 
     # Fetch connector using the ID
@@ -82,19 +83,19 @@ def update_connector_route(id):
         int(id),
     )  # convert id to integer
     logger.info(connector_validated)
-    if connector_validated["success"] == False:
+    if connector_validated["success"] is False:
         return jsonify(connector_validated), 404
 
     if connector_validated["connector_name"] in api_key_connector:
         data_validated = service.validate_request_data_api_key(request_data)
-        if data_validated["success"] == False:
+        if data_validated["success"] is False:
             return jsonify(data_validated), 400
         else:
             service.update_connector(int(id), request_data)
             return service.verify_connector_connection(int(id))
 
     data_validated = service.validate_request_data(request_data)
-    if data_validated["success"] == False:
+    if data_validated["success"] is False:
         return jsonify(data_validated), 400
 
     service.update_connector(int(id), request_data)

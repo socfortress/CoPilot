@@ -1,3 +1,4 @@
+blueprint
 elasticsearch7==7.10.1
 environs
 flask
@@ -5,6 +6,8 @@ flask-cors
 flask-marshmallow
 flask-migrate
 flask-sqlalchemy
+flask-swagger-ui
+flask_cors
 loguru
 marshmallow-sqlalchemy
 mitreattack-python
@@ -14,6 +17,3 @@ psycopg2-binary
 pyvelociraptor~=0.1
 requests
 xmltodict
-blueprint
-flask-swagger-ui
-flask_cors

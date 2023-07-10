@@ -1,6 +1,5 @@
 import importlib
 import json
-import os
 from abc import ABC
 from abc import abstractmethod
 from dataclasses import dataclass
@@ -14,13 +13,11 @@ from flask import current_app
 from loguru import logger
 from pyvelociraptor import api_pb2
 from pyvelociraptor import api_pb2_grpc
-from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm.exc import NoResultFound
-from werkzeug.utils import secure_filename
 
 from app.models.models import Connectors
-from app.models.models import ConnectorsAvailable
-from app.models.models import connectors_schema
+
+# from werkzeug.utils import secure_filename
 
 
 def dynamic_import(module_name, class_name):
@@ -64,7 +61,8 @@ class Connector(ABC):
         This method retrieves connector information from the database.
 
         :param connector_name: A string that specifies the name of the connector whose information is to be retrieved.
-        :return: A dictionary of the connector's attributes if the connector exists. Otherwise, it raises a NoResultFound exception.
+        :return: A dictionary of the connector's attributes if the connector exists. Otherwise, it raises a
+        NoResultFound exception.
         Raises:
             NoResultFound: If the connector_name is not found in the database.
         """
@@ -98,7 +96,8 @@ class WazuhIndexerConnector(Connector):
         """
         This method verifies the connection to the Wazuh indexer service.
 
-        :return: A dictionary containing the status of the connection attempt and information about the cluster's health.
+        :return: A dictionary containing the status of the connection attempt and information about
+        the cluster's health.
         """
         logger.info(
             f"Verifying the wazuh-indexer connection to {self.attributes['connector_url']}",
@@ -115,7 +114,7 @@ class WazuhIndexerConnector(Connector):
                 max_retries=10,
                 retry_on_timeout=False,
             )
-            cluster_health = es.cluster.health()
+            es.cluster.health()
             logger.info(f"Connection to {self.attributes['connector_url']} successful")
             return {"connectionSuccessful": True}
         except Exception as e:
@@ -341,7 +340,7 @@ class VelociraptorConnector(Connector):
             connector_api_key = self.attributes["connector_api_key"]
 
             with open(connector_api_key, "r") as f:
-                api_key = f.read()
+                f.read()
 
             try:
                 config = pyvelociraptor.LoadConfigFile(connector_api_key)

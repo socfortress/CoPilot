@@ -1,15 +1,16 @@
+# from flask import jsonify
 from flask import Blueprint
-from flask import jsonify
 from flask import request
 from loguru import logger
 
-from app.models.connectors import Connector
-from app.models.connectors import WazuhManagerConnector
-from app.models.rules import DisabledRules
+# from app.models.connectors import Connector
+# from app.models.connectors import WazuhManagerConnector
+# from app.models.rules import DisabledRules
 from app.services.WazuhManager.disabled_rule import DisableRuleService
 from app.services.WazuhManager.enabled_rule import EnableRuleService
 from app.services.WazuhManager.universal import UniversalService
-from app.services.WazuhManager.wazuhmanager import WazuhManagerService
+
+# from app.services.WazuhManager.wazuhmanager import WazuhManagerService
 
 bp = Blueprint("rules", __name__)
 

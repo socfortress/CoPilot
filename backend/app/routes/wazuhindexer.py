@@ -1,15 +1,17 @@
 from flask import Blueprint
-from flask import jsonify
-from flask import request
-from loguru import logger
 
-from app.models.connectors import Connector
-from app.models.connectors import WazuhManagerConnector
-from app.services.agents.agents import AgentService
-from app.services.agents.agents import AgentSyncService
-from app.services.WazuhIndexer.alerts import AlertsService
+# from app.models.connectors import Connector
+# from app.models.connectors import WazuhManagerConnector
+# from app.services.agents.agents import AgentService
+# from app.services.agents.agents import AgentSyncService
+# from app.services.WazuhIndexer.alerts import AlertsService
 from app.services.WazuhIndexer.cluster import ClusterService
 from app.services.WazuhIndexer.index import IndexService
+
+# from flask import jsonify
+# from flask import request
+# from loguru import logger
+
 
 bp = Blueprint("wazuh_indexer", __name__)
 
@@ -28,7 +30,8 @@ def get_indices_summary():
     It processes each alert to verify the connection and returns the results.
 
     Returns:
-        json: A JSON response containing the list of all available indices along with their connection verification status.
+        json: A JSON response containing the list of all available indices along with their connection verification
+        status.
     """
     service = IndexService()
     indices = service.collect_indices_summary()
@@ -49,7 +52,8 @@ def get_node_allocation():
     },
 
     Returns:
-        json: A JSON response containing the list of all available alerts along with their connection verification status.
+        json: A JSON response containing the list of all available alerts along with their connection verification
+        status.
     """
     service = ClusterService()
     indices = service.collect_node_allocation()
@@ -62,7 +66,8 @@ def get_cluster_health():
     Endpoint to collect Wazuh-Indexer cluster health.
 
     Returns:
-        json: A JSON response containing the list of all available alerts along with their connection verification status.
+        json: A JSON response containing the list of all available alerts along with their connection verification
+        status.
     """
     service = ClusterService()
     indices = service.collect_cluster_health()
@@ -75,7 +80,8 @@ def get_shards():
     Endpoint to collect Wazuh-Indexer shards.
 
     Returns:
-        json: A JSON response containing the list of all available alerts along with their connection verification status.
+        json: A JSON response containing the list of all available alerts along with their connection verification
+        status.
     """
     service = ClusterService()
     indices = service.collect_shards()

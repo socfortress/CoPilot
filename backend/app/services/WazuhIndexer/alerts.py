@@ -1,11 +1,12 @@
 from typing import Dict
-from typing import List
 
 from elasticsearch7 import Elasticsearch
 from loguru import logger
 
-from app.services.WazuhIndexer.index import IndexService
+# from app.services.WazuhIndexer.index import IndexService
 from app.services.WazuhIndexer.universal import UniversalService
+
+# from typing import List
 
 
 class AlertsService:
@@ -42,7 +43,8 @@ class AlertsService:
 
     def collect_alerts(self) -> Dict[str, object]:
         """
-        Collects the alerts from the Wazuh-Indexer where the index name starts with "wazuh_" and is not in the SKIP_INDEX_NAMES list.
+        Collects the alerts from the Wazuh-Indexer where the index name starts with "wazuh_"
+        and is not in the SKIP_INDEX_NAMES list.
         Returns the 10 previous alerts based on the `timestamp_utc` field.
 
         Returns:

@@ -1,6 +1,6 @@
 from typing import Dict
 
-import requests
+# import requests
 from elasticsearch7 import Elasticsearch
 from loguru import logger
 

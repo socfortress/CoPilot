@@ -1,14 +1,16 @@
 from flask import Blueprint
 from flask import jsonify
 from flask import request
-from loguru import logger
 
-from app.models.connectors import Connector
-from app.models.connectors import WazuhManagerConnector
-from app.services.agents.agents import AgentService
-from app.services.agents.agents import AgentSyncService
+# from app.models.connectors import Connector
+# from app.models.connectors import WazuhManagerConnector
+# from app.services.agents.agents import AgentService
+# from app.services.agents.agents import AgentSyncService
 from app.services.Velociraptor.artifacts import ArtifactsService
 from app.services.Velociraptor.universal import UniversalService
+
+# from loguru import logger
+
 
 bp = Blueprint("velociraptor", __name__)
 
@@ -20,7 +22,8 @@ def get_artifacts():
     It processes each artifact to verify the connection and returns the results.
 
     Returns:
-        json: A JSON response containing the list of all available artifacts along with their connection verification status.
+        json: A JSON response containing the list of all available artifacts along with their connection verification
+        status.
     """
     service = ArtifactsService()
     artifacts = service.collect_artifacts()
@@ -35,7 +38,8 @@ def get_artifacts_linux():
     begins with `Linux`.
 
     Returns:
-        json: A JSON response containing the list of all available artifacts along with their connection verification status.
+        json: A JSON response containing the list of all available artifacts along with their connection verification
+        status.
     """
     service = ArtifactsService()
     linux_artifacts = service.collect_artifacts_linux()
@@ -50,7 +54,8 @@ def get_artifacts_windows():
     begins with `Windows`.
 
     Returns:
-        json: A JSON response containing the list of all available artifacts along with their connection verification status.
+        json: A JSON response containing the list of all available artifacts along with their connection verification
+        status.
     """
     service = ArtifactsService()
     windows_artifacts = service.collect_artifacts_windows()
@@ -65,7 +70,8 @@ def get_artifacts_mac():
     begins with `MacOS`.
 
     Returns:
-        json: A JSON response containing the list of all available artifacts along with their connection verification status.
+        json: A JSON response containing the list of all available artifacts along with their connection verification
+        status.
     """
     service = ArtifactsService()
     mac_artifacts = service.collect_artifacts_macos()
@@ -79,7 +85,8 @@ def collect_artifact():
     It collects the artifact name and client name from the request body and returns the results.
 
     Returns:
-        json: A JSON response containing the list of all available artifacts along with their connection verification status.
+        json: A JSON response containing the list of all available artifacts along with their connection verification
+        status.
     """
     req_data = request.get_json()
     artifact_name = req_data["artifact_name"]
@@ -92,7 +99,8 @@ def collect_artifact():
         return (
             jsonify(
                 {
-                    "message": f"{client_name} has not been seen in the last 30 seconds and may not be online with the Velociraptor server.",
+                    "message": f"{client_name} has not been seen in the last 30 seconds and may not be online with the "
+                    "Velociraptor server.",
                     "success": False,
                 },
             ),

@@ -1,17 +1,17 @@
-from datetime import datetime
+# from datetime import datetime
 from typing import Dict
 from typing import List
 
 import requests
 from loguru import logger
 
-from app import db
-from app.models.agents import AgentMetadata
-from app.models.agents import agent_metadata_schema
-from app.models.agents import agent_metadatas_schema
-from app.models.connectors import Connector
-from app.models.connectors import GraylogConnector
-from app.models.connectors import connector_factory
+# from app import db
+# from app.models.agents import AgentMetadata
+# from app.models.agents import agent_metadata_schema
+# from app.models.agents import agent_metadatas_schema
+# from app.models.connectors import Connector
+# from app.models.connectors import GraylogConnector
+# from app.models.connectors import connector_factory
 from app.services.Graylog.universal import UniversalService
 
 
@@ -133,7 +133,7 @@ class IndexService:
             dict: A dictionary containing the response.
         """
         try:
-            delete_index_response = requests.delete(
+            requests.delete(
                 f"{self.connector_url}/api/system/indexer/indices/{index_name}",
                 headers=self.HEADERS,
                 auth=(self.connector_username, self.connector_password),
@@ -146,6 +146,7 @@ class IndexService:
         except Exception as e:
             logger.error(f"Failed to delete index {index_name} from Graylog: {e}")
             return {
-                "message": f"Failed to delete index {index_name} from Graylog. If this is the current index, it cannot be deleted.",
+                "message": f"Failed to delete index {index_name} from Graylog. If this is the current index, "
+                "it cannot be deleted.",
                 "success": False,
             }

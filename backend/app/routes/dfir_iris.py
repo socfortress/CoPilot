@@ -1,18 +1,13 @@
 from flask import Blueprint
-from flask import jsonify
 from flask import request
-from loguru import logger
 
-from app.models.connectors import Connector
-from app.models.connectors import WazuhManagerConnector
 from app.services.DFIR_IRIS.alerts import AlertsService
 from app.services.DFIR_IRIS.assets import AssetsService
 from app.services.DFIR_IRIS.cases import CasesService
 from app.services.DFIR_IRIS.notes import NotesService
-from app.services.Graylog.index import IndexService
-from app.services.Graylog.inputs import InputsService
-from app.services.Graylog.messages import MessagesService
-from app.services.Graylog.metrics import MetricsService
+
+# from loguru import logger
+
 
 bp = Blueprint("dfir_iris", __name__)
 
@@ -41,7 +36,7 @@ def get_case(case_id):
     # Get the Case ID from the URL
     service = CasesService()
     case_id_exists = service.check_case_id(case_id=case_id)
-    if case_id_exists["success"] == False:
+    if case_id_exists["success"] is False:
         return case_id_exists
     case = service.get_case(case_id=case_id)
     return case
@@ -60,7 +55,7 @@ def get_case_notes(case_id):
     notes_service = NotesService()
     search_term = "%"
     case_id_exists = case_service.check_case_id(case_id=case_id)
-    if case_id_exists["success"] == False:
+    if case_id_exists["success"] is False:
         return case_id_exists
     notes = notes_service.get_case_notes(search_term=search_term, cid=int(case_id))
     return notes
@@ -80,7 +75,7 @@ def create_case_note(case_id):
     case_service = CasesService()
     notes_service = NotesService()
     case_id_exists = case_service.check_case_id(case_id=case_id)
-    if case_id_exists["success"] == False:
+    if case_id_exists["success"] is False:
         return case_id_exists
     created_note = notes_service.create_case_note(
         cid=int(case_id),
@@ -102,7 +97,7 @@ def get_case_assets(case_id):
     case_service = CasesService()
 
     case_id_exists = case_service.check_case_id(case_id=case_id)
-    if case_id_exists["success"] == False:
+    if case_id_exists["success"] is False:
         return case_id_exists
     assets = asset_service.get_case_assets(cid=int(case_id))
     return assets

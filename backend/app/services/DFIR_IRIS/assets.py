@@ -1,10 +1,11 @@
 from typing import Dict
 
-import requests
+# import requests
 from dfir_iris_client.case import Case
-from dfir_iris_client.helper.utils import assert_api_resp
-from dfir_iris_client.helper.utils import get_data_from_resp
-from dfir_iris_client.session import ClientSession
+
+# from dfir_iris_client.helper.utils import assert_api_resp
+# from dfir_iris_client.helper.utils import get_data_from_resp
+# from dfir_iris_client.session import ClientSession
 from loguru import logger
 
 from app.services.DFIR_IRIS.universal import UniversalService

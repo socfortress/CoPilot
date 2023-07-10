@@ -1,6 +1,6 @@
-import json
-import xml.etree.ElementTree as ET
-from typing import Any
+# import json
+# import xml.etree.ElementTree as ET
+# from typing import Any
 from typing import Dict
 from typing import List
 from typing import Optional
@@ -12,8 +12,9 @@ import xmltodict
 from loguru import logger
 
 from app import db
-from app.models.connectors import Connector
-from app.models.connectors import connector_factory
+
+# from app.models.connectors import Connector
+# from app.models.connectors import connector_factory
 from app.models.rules import DisabledRules
 from app.services.WazuhManager.universal import UniversalService
 

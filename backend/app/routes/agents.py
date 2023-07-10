@@ -1,15 +1,14 @@
 from flask import Blueprint
 from flask import jsonify
-from flask import request
-from loguru import logger
 
-from app.models.connectors import Connector
-from app.models.connectors import WazuhManagerConnector
 from app.services.agents.agents import AgentService
 from app.services.agents.agents import AgentSyncService
 from app.services.WazuhManager.agent import WazuhManagerAgentService
 from app.services.WazuhManager.universal import UniversalService
 from app.services.WazuhManager.vulnerability import VulnerabilityService
+
+# from loguru import logger
+
 
 bp = Blueprint("agents", __name__)
 
@@ -21,12 +20,10 @@ def get_agents():
     It processes each agent to verify the connection and returns the results.
 
     Returns:
-        json: A JSON response containing the list of all available agents along with their connection verification status.
+        json: A JSON response containing the list of all available agents along with their connection
+        verification status.
     """
     service = AgentService()
-    universal_service = UniversalService()
-    auth_token = universal_service.get_auth_token()
-    return jsonify(auth_token)
     agents = service.get_all_agents()
     return agents
 
@@ -112,7 +109,7 @@ def delete_agent(agent_id):
 
     # Pass universal_service to WazuhManagerAgentService
     agent_service = WazuhManagerAgentService(universal_service)
-    agent_deleted = agent_service.delete_agent(agent_id)
+    agent_service.delete_agent(agent_id)
 
     return result
 
