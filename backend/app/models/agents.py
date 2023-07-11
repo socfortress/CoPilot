@@ -1,7 +1,7 @@
 # from datetime import datetime
 
 # from loguru import logger
-# from sqlalchemy.dialects.postgresql import JSONB  # Add this line
+from sqlalchemy.dialects.postgresql import JSONB  # Add this line
 
 from app import db
 from app import ma

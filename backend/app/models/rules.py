@@ -4,7 +4,7 @@ from app import db
 from app import ma
 
 # from loguru import logger
-# from sqlalchemy.dialects.postgresql import JSONB  # Add this line
+from sqlalchemy.dialects.postgresql import JSONB  # Add this line
 
 
 # Class for the disabled rule IDs which will store the rule ID, previous configuration, new configuration, reason for

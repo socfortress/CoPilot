@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from loguru import logger
-from sqlalchemy.dialects.postgresql import JSONB  # Add this line
+from sqlalchemy.dialects.postgresql import TEXT  # Add this line
 
 from app import db
 from app import ma
@@ -285,7 +285,7 @@ cases_schema = CaseSchema(many=True)
 class Artifact(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     artifact_name = db.Column(db.String(100))
-    artifact_results = db.Column(JSONB)
+    artifact_results = db.Column(TEXT)
     hostname = db.Column(db.String(100))
 
     def __init__(self, artifact_name, artifact_results, hostname):
