@@ -56,7 +56,7 @@ def mark_as_critical(agent_id):
         json: A JSON response containing the updated agent information.
     """
     service = AgentService()
-    result = service.mark_agent_as_critical(agent_id)
+    result = service.mark_agent_as_critical(agent_id=agent_id)
     return result
 
 
@@ -72,7 +72,7 @@ def unmark_agent_critical(agent_id):
         json: A JSON response containing the updated agent information.
     """
     service = AgentService()
-    result = service.mark_agent_as_non_critical(agent_id)
+    result = service.mark_agent_as_non_critical(agent_id=agent_id)
     return result
 
 
@@ -101,7 +101,7 @@ def delete_agent(agent_id):
         json: A JSON response containing the updated agent information.
     """
     service = AgentService()
-    result = service.delete_agent_db(agent_id)
+    result = service.delete_agent_db(agent_id=agent_id)
 
     # Delete from WazuhManager
     # Create instance of UniversalService
@@ -109,7 +109,7 @@ def delete_agent(agent_id):
 
     # Pass universal_service to WazuhManagerAgentService
     agent_service = WazuhManagerAgentService(universal_service)
-    agent_service.delete_agent(agent_id)
+    agent_service.delete_agent(agent_id=agent_id)
 
     return result
 
@@ -131,5 +131,5 @@ def get_agent_vulnerabilities(agent_id):
     # Pass universal_service to VulnerabilityService
     vulnerability_service = VulnerabilityService(universal_service)
 
-    agent_vulnerabilities = vulnerability_service.agent_vulnerabilities(agent_id)
+    agent_vulnerabilities = vulnerability_service.agent_vulnerabilities(agent_id=agent_id)
     return agent_vulnerabilities
