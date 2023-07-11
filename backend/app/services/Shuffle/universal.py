@@ -16,7 +16,7 @@ from app.models.connectors import connector_factory
 
 class UniversalService:
     """
-    A service class that encapsulates the logic for polling messages from the Wazuh-Indexer.
+    A service class that encapsulates the logic for polling messages from Shuffle.
     """
 
     def __init__(self) -> None:

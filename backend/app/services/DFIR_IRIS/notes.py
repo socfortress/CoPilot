@@ -13,10 +13,16 @@ from app.services.DFIR_IRIS.universal import UniversalService
 
 class NotesService:
     """
-    A service class that encapsulates the logic for pulling case notes from DFIR-IRIS.
+    A service class that encapsulates the logic for pulling and managing case notes from DFIR-IRIS. This class handles
+    fetching and creating case notes. It creates a DFIR-IRIS session upon initialization and uses it to interact with
+    the DFIR-IRIS case notes.
     """
 
     def __init__(self):
+        """
+        Initializes the NotesService by creating a UniversalService object for "DFIR-IRIS" and establishing a session.
+        If the session creation is unsuccessful, an error is logged and the iris_session attribute is set to None.
+        """
         self.universal_service = UniversalService("DFIR-IRIS")
         session_result = self.universal_service.create_session()
 
@@ -28,14 +34,19 @@ class NotesService:
 
     def get_case_notes(self, search_term: str, cid: int) -> Dict[str, object]:
         """
-        Gets a case's notes from DFIR-IRIS and return the ID and Title
+        Retrieves the notes of a specific case from DFIR-IRIS. If the iris_session attribute is None, this indicates
+        that the session creation was unsuccessful, and a dictionary with "success" set to False is returned. Otherwise,
+        it attempts to fetch and parse the notes data for the case specified by the `cid` parameter.
 
-        ARGS:
-            cid: The case ID to search for
-            search_term: The search term to use
+        Args:
+            search_term (str): The search term to use when fetching case notes.
+            cid (int): The ID of the case for which to retrieve notes.
 
         Returns:
-            dict: A dictionary containing the success status, a message and potentially the notes of a given case.
+            dict: A dictionary containing the success status, a message, and potentially the fetched notes. The
+            "success" key is a boolean indicating whether the operation was successful. The "message" key is a string
+            providing details about the operation. If "success" is True, the dictionary also contains the "data" key
+            with the fetched notes.
         """
         if self.iris_session is None:
             return {
@@ -73,14 +84,20 @@ class NotesService:
 
     def _get_case_note_details(self, note_id: int, cid: int) -> Dict[str, object]:
         """
-        Gets a case's notes from DFIR-IRIS and returns the note details such as the content
+        Retrieves the details of a specific note of a specific case from DFIR-IRIS. If the iris_session attribute is None,
+        this indicates that the session creation was unsuccessful, and a dictionary with "success" set to False is
+        returned. Otherwise, it attempts to fetch and parse the note data for the note specified by the `note_id`
+        parameter and the case specified by the `cid` parameter.
 
-        ARGS:
-            cid: The case ID to search for
-            note_id: The note ID to search for
+        Args:
+            note_id (int): The ID of the note for which to retrieve details.
+            cid (int): The ID of the case for which to retrieve the note details.
 
         Returns:
-            dict: A dictionary containing the success status, a message and potentially the notes of a given case.
+            dict: A dictionary containing the success status, a message, and potentially the fetched note details. The
+            "success" key is a boolean indicating whether the operation was successful. The "message" key is a string
+            providing details about the operation. If "success" is True, the dictionary also contains the "notes" key
+            with the fetched note details.
         """
         if self.iris_session is None:
             return {
@@ -116,15 +133,21 @@ class NotesService:
         note_content: str,
     ) -> Dict[str, object]:
         """
-        Creates a case note in DFIR-IRIS
+        Creates a note for a specific case in DFIR-IRIS. If the iris_session attribute is None, this indicates that
+        the session creation was unsuccessful, and a dictionary with "success" set to False is returned. Otherwise,
+        it attempts to create a note with the specified `note_title` and `note_content` for the case specified by the
+        `cid` parameter.
 
-        ARGS:
-            cid: The case ID to search for
-            title: The title of the note
-            content: The content of the note
+        Args:
+            cid (int): The ID of the case for which to create a note.
+            note_title (str): The title of the note to create.
+            note_content (str): The content of the note to create.
 
         Returns:
-            dict: A dictionary containing the success status, a message and potentially the notes of a given case.
+            dict: A dictionary containing the success status, a message, and potentially the created note. The
+            "success" key is a boolean indicating whether the operation was successful. The "message" key is a string
+            providing details about the operation. If "success" is True, the dictionary also contains the "notes" key
+            with the created note.
         """
         if self.iris_session is None:
             return {

@@ -1,5 +1,9 @@
 import requests
 from loguru import logger
+from typing import Optional
+from typing import Tuple
+from typing import Dict
+from typing import Union
 
 from app.models.connectors import Connector
 from app.models.connectors import connector_factory
@@ -7,17 +11,36 @@ from app.models.connectors import connector_factory
 
 class UniversalService:
     """
-    A service class that encapsulates the logic for polling messages from the Wazuh-Manager API.
+    A service class to manage operations with the Wazuh-Manager API.
+
+    Attributes:
+        connector_url (str): The URL of the Wazuh Manager.
+        connector_username (str): The username for the Wazuh Manager.
+        connector_password (str): The password for the Wazuh Manager.
     """
 
     def __init__(self) -> None:
+        """
+        Initialize an UniversalService instance.
+
+        The Wazuh-Manager details are collected upon initialization.
+        """
         (
             self.connector_url,
             self.connector_username,
             self.connector_password,
         ) = self.collect_wazuhmanager_details("Wazuh-Manager")
 
-    def collect_wazuhmanager_details(self, connector_name: str):
+    def collect_wazuhmanager_details(self, connector_name: str) -> Tuple[Optional[str], Optional[str], Optional[str]]:
+        """
+        Collect the details of the Wazuh Manager.
+
+        Args:
+            connector_name (str): The name of the connector, in this case "Wazuh-Manager".
+
+        Returns:
+            Tuple[Optional[str], Optional[str], Optional[str]]: The URL, username, and password of the Wazuh Manager.
+        """
         connector_instance = connector_factory.create(connector_name, connector_name)
         if connector_instance.verify_connection():
             connection_details = Connector.get_connector_info_from_db(connector_name)
@@ -30,12 +53,12 @@ class UniversalService:
             logger.error(f"Connection to {connector_name} failed.")
             return None, None, None
 
-    def get_auth_token(self):
+    def get_auth_token(self) -> Optional[str]:
         """
-        Gets the authentication token from the Wazuh-Manager API.
+        Get the authentication token from the Wazuh-Manager API.
 
         Returns:
-            str: The authentication token.
+            Optional[str]: The authentication token. If the request fails, returns None.
         """
         try:
             response = requests.get(
@@ -51,12 +74,12 @@ class UniversalService:
         logger.info(f"Authentication token: {auth_token}")
         return auth_token
 
-    def restart_service(self):
+    def restart_service(self) -> Dict[str, Union[str, bool]]:
         """
         Restart the Wazuh Manager service.
 
         Returns:
-            json: A JSON response containing the updated agent information.
+            Dict[str, Union[str, bool]]: A dictionary containing the status of the operation.
         """
         headers = {"Authorization": f"Bearer {self.get_auth_token()}"}
         try:

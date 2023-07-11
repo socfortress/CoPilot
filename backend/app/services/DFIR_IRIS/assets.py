@@ -13,10 +13,15 @@ from app.services.DFIR_IRIS.universal import UniversalService
 
 class AssetsService:
     """
-    A service class that encapsulates the logic for pulling case assets from DFIR-IRIS.
+    A service class that encapsulates the logic for pulling case assets from DFIR-IRIS. It creates a DFIR-IRIS session upon
+    initialization and uses it to fetch case assets.
     """
 
     def __init__(self):
+        """
+        Initializes the AssetsService by creating a UniversalService object for "DFIR-IRIS" and establishing a session.
+        If the session creation is unsuccessful, an error is logged and the iris_session attribute is set to None.
+        """
         self.universal_service = UniversalService("DFIR-IRIS")
         session_result = self.universal_service.create_session()
 
@@ -28,13 +33,18 @@ class AssetsService:
 
     def get_case_assets(self, cid: int) -> Dict[str, object]:
         """
-        Gets a case's assets from DFIR-IRIS
+        Retrieves the assets of a specific case from DFIR-IRIS. If the iris_session attribute is None, this indicates
+        that the session creation was unsuccessful, and a dictionary with "success" set to False is returned. Otherwise,
+        it attempts to fetch and parse the assets data for the case specified by the `cid` parameter.
 
-        ARGS:
-            cid: The case ID to search for
+        Args:
+            cid (int): The ID of the case for which to retrieve assets.
 
         Returns:
-            dict: A dictionary containing the success status, a message and potentially the notes of a given case.
+            dict: A dictionary containing the success status, a message, and potentially the fetched assets. The
+            "success" key is a boolean indicating whether the operation was successful. The "message" key is a string
+            providing details about the operation. If "success" is True, the dictionary also contains the "data" key
+            with the fetched assets.
         """
         if self.iris_session is None:
             return {

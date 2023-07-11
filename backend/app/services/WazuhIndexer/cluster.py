@@ -13,10 +13,16 @@ class ClusterService:
     """
 
     def __init__(self):
+        """
+        Initialize the ClusterService with the details of the Wazuh-Indexer and initialize the Elasticsearch client.
+        """
         self._collect_wazuhindexer_details()
         self._initialize_es_client()
 
     def _collect_wazuhindexer_details(self):
+        """
+        Collect details of the Wazuh-Indexer. These details include the connector URL, username, and password.
+        """
         (
             self.connector_url,
             self.connector_username,
@@ -24,6 +30,9 @@ class ClusterService:
         ) = UniversalService().collect_wazuhindexer_details("Wazuh-Indexer")
 
     def _initialize_es_client(self):
+        """
+        Initialize the Elasticsearch client with the details of the Wazuh-Indexer.
+        """
         self.es = Elasticsearch(
             [self.connector_url],
             http_auth=(self.connector_username, self.connector_password),
@@ -34,16 +43,22 @@ class ClusterService:
         )
 
     def _are_details_collected(self) -> bool:
+        """
+        Check whether the details of the Wazuh-Indexer have been collected.
+
+        Returns:
+            bool: True if all details have been collected, False otherwise.
+        """
         return all(
             [self.connector_url, self.connector_username, self.connector_password],
         )
 
     def collect_node_allocation(self) -> Dict[str, object]:
         """
-        Collects the node allocation from the Wazuh-Indexer.
+        Collect node allocation details from the Wazuh-Indexer's Elasticsearch cluster.
 
         Returns:
-            dict: A dictionary containing the success status, a message and potentially the index allocation.
+            dict: A dictionary containing success status, a message, and potentially the node allocation details.
         """
         if not self._are_details_collected():
             return {
@@ -63,10 +78,10 @@ class ClusterService:
 
     def _collect_node_allocation(self) -> Dict[str, object]:
         """
-        Collects the node allocation from the Wazuh-Indexer.
+        Collect node allocation details from the Wazuh-Indexer's Elasticsearch cluster.
 
         Returns:
-            dict: A dictionary containing the success status, a message and potentially the index allocation.
+            dict: A dictionary containing success status, a message, and potentially the node allocation details.
         """
         try:
             node_allocation = self.es.cat.allocation(format="json")
@@ -81,6 +96,15 @@ class ClusterService:
             return {"message": "Failed to collect node allocation", "success": False}
 
     def _format_node_allocation(self, node_allocation):
+        """
+        Format the node allocation details into a list of dictionaries. Each dictionary contains disk used, disk available, total disk, disk usage percentage, and node name.
+
+        Args:
+            node_allocation: Node allocation details from Elasticsearch.
+
+        Returns:
+            list: A list of dictionaries containing formatted node allocation details.
+        """
         return [
             {
                 "disk_used": node["disk.used"],
@@ -94,10 +118,10 @@ class ClusterService:
 
     def collect_cluster_health(self) -> Dict[str, object]:
         """
-        Collects the cluster health from the Wazuh-Indexer.
+        Collect health details of the Elasticsearch cluster from the Wazuh-Indexer.
 
         Returns:
-            dict: A dictionary containing the success status, a message and potentially the cluster health.
+            dict: A dictionary containing success status, a message, and potentially the cluster health details.
         """
         if not self._are_details_collected():
             return {
@@ -117,10 +141,10 @@ class ClusterService:
 
     def _collect_cluster_health(self) -> Dict[str, object]:
         """
-        Collects the cluster health from the Wazuh-Indexer.
+        Collect health details of the Elasticsearch cluster from the Wazuh-Indexer.
 
         Returns:
-            dict: A dictionary containing the success status, a message and potentially the cluster health.
+            dict: A dictionary containing success status, a message, and potentially the cluster health details.
         """
         try:
             cluster_health = self.es.cluster.health()
@@ -135,10 +159,10 @@ class ClusterService:
 
     def collect_shards(self) -> Dict[str, object]:
         """
-        Collects the shards from the Wazuh-Indexer.
+        Collect shard details from the Wazuh-Indexer's Elasticsearch cluster.
 
         Returns:
-            dict: A dictionary containing the success status, a message and potentially the shards.
+            dict: A dictionary containing success status, a message, and potentially the shard details.
         """
         if not self._are_details_collected():
             return {
@@ -158,10 +182,10 @@ class ClusterService:
 
     def _collect_shards(self) -> Dict[str, object]:
         """
-        Collects the shards from the Wazuh-Indexer.
+        Collect shard details from the Wazuh-Indexer's Elasticsearch cluster.
 
         Returns:
-            dict: A dictionary containing the success status, a message and potentially the shards.
+            dict: A dictionary containing success status, a message, and potentially the shard details.
         """
         try:
             shards = self.es.cat.shards(format="json")
@@ -176,6 +200,15 @@ class ClusterService:
             return {"message": "Failed to collect shards", "success": False}
 
     def _format_shards(self, shards):
+        """
+        Format the shard details into a list of dictionaries. Each dictionary contains index name, shard number, shard state, shard size, and node name.
+
+        Args:
+            shards: Shard details from Elasticsearch.
+
+        Returns:
+            list: A list of dictionaries containing formatted shard details.
+        """
         return [
             {
                 "index": shard["index"],
