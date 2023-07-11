@@ -21,11 +21,18 @@ from app.services.WazuhManager.universal import UniversalService
 
 class WazuhHttpRequests:
     """
-    Class to handle HTTP requests to the Wazuh API.
+    This class helps to send HTTP requests to the Wazuh API.
+
+    Attributes:
+        connector_url (str): The URL of the Wazuh Manager.
+        wazuh_auth_token (str): The Wazuh API authentication token.
+        headers (Dict[str, str]): The headers for HTTP requests.
     """
 
     def __init__(self, connector_url: str, wazuh_auth_token: str) -> None:
         """
+        Initialize a WazuhHttpRequests instance.
+
         Args:
             connector_url (str): The URL of the Wazuh Manager.
             wazuh_auth_token (str): The Wazuh API authentication token.
@@ -40,14 +47,14 @@ class WazuhHttpRequests:
         params: Optional[Dict[str, str]] = None,
     ) -> Dict[str, Union[str, bool]]:
         """
-        Function to handle GET requests.
+        Send a GET request to the specified endpoint.
 
         Args:
-            endpoint (str): The endpoint to make a GET request to.
-            params (Optional[Dict[str, str]]): Any parameters to pass in the GET request.
+            endpoint (str): The endpoint to send the GET request to.
+            params (Optional[Dict[str, str]]): Additional parameters to include in the request.
 
         Returns:
-            Dict[str, Union[str, bool]]: A dictionary with the requested data or error message.
+            Dict[str, Union[str, bool]]: The response from the endpoint. It contains the data from the response or an error message.
         """
         try:
             response = requests.get(
@@ -73,15 +80,15 @@ class WazuhHttpRequests:
         params: Optional[Dict[str, str]] = None,
     ) -> Dict[str, bool]:
         """
-        Function to handle PUT requests.
+        Send a PUT request to the specified endpoint.
 
         Args:
-            endpoint (str): The endpoint to make a PUT request to.
-            data (str): Data to be updated on the PUT request.
-            params (Optional[Dict[str, str]]): Any parameters to pass in the PUT request.
+            endpoint (str): The endpoint to send the PUT request to.
+            data (str): The data to be updated in the PUT request.
+            params (Optional[Dict[str, str]]): Additional parameters to include in the request.
 
         Returns:
-            Dict[str, bool]: A dictionary indicating the success of the operation.
+            Dict[str, bool]: A dictionary indicating the success or failure of the operation.
         """
         try:
             headers = self.headers.copy()
@@ -104,11 +111,18 @@ class WazuhHttpRequests:
 
 class DisableRuleService:
     """
-    A service class that encapsulates the logic for handling rule disabling related operations in Wazuh Manager.
+    This class handles rule disabling related operations in Wazuh Manager.
+
+    Attributes:
+        universal_service (UniversalService): An instance of UniversalService.
+        auth_token (str): The Wazuh API authentication token.
+        wazuh_http_requests (WazuhHttpRequests): An instance of WazuhHttpRequests.
     """
 
     def __init__(self, universal_service: UniversalService) -> None:
         """
+        Initialize a DisableRuleService instance.
+
         Args:
             universal_service (UniversalService): The UniversalService instance to use.
         """
@@ -123,6 +137,15 @@ class DisableRuleService:
         self,
         request: Dict[str, Union[str, int]],
     ) -> Dict[str, Union[str, bool]]:
+        """
+        Disable a rule in Wazuh Manager.
+
+        Args:
+            request (Dict[str, Union[str, int]]): The request to disable a rule. It should contain 'rule_id', 'reason', and 'length_of_time'.
+
+        Returns:
+            Dict[str, Union[str, bool]]: A dictionary indicating the success or failure of the operation.
+        """
         try:
             self._validate_request(request)
             rule_id = request["rule_id"]
@@ -150,7 +173,16 @@ class DisableRuleService:
             logger.error(str(e))
             return {"message": str(e), "success": False}
 
-    def _validate_request(self, request: Dict[str, Union[str, int]]):
+    def _validate_request(self, request: Dict[str, Union[str, int]]) -> None:
+        """
+        Validate the request to disable a rule.
+
+        Args:
+            request (Dict[str, Union[str, int]]): The request to disable a rule.
+
+        Raises:
+            ValueError: If any of the required fields ('rule_id', 'reason', 'length_of_time') are missing in the request.
+        """
         logger.info(f"Validating disable rule request: {request}")
         if "rule_id" not in request:
             raise ValueError("Request missing rule_id")
@@ -161,6 +193,18 @@ class DisableRuleService:
         request["length_of_time"] = int(request["length_of_time"])
 
     def _fetch_filename(self, rule_id: str) -> str:
+        """
+        Fetch the filename from the Wazuh-Manager that contains the rule to be disabled.
+
+        Args:
+            rule_id (str): The id of the rule to be disabled.
+
+        Returns:
+            str: The filename that contains the rule.
+
+        Raises:
+            ValueError: If the filename could not be fetched successfully.
+        """
         filename_data = self.wazuh_http_requests.get_request(
             "rules",
             {"rule_ids": rule_id},
@@ -173,6 +217,18 @@ class DisableRuleService:
         self,
         filename: str,
     ) -> Union[Dict[str, str], List[Dict[str, str]]]:
+        """
+        Fetch the content of the file that contains the rule to be disabled.
+
+        Args:
+            filename (str): The filename that contains the rule.
+
+        Returns:
+            Union[Dict[str, str], List[Dict[str, str]]]: The content of the file.
+
+        Raises:
+            ValueError: If the file content could not be fetched successfully.
+        """
         file_content_data = self.wazuh_http_requests.get_request(
             f"rules/files/{filename}",
         )
@@ -185,6 +241,16 @@ class DisableRuleService:
         file_content: Union[Dict[str, str], List[Dict[str, str]]],
         rule_id: str,
     ) -> Tuple[str, Union[Dict[str, str], List[Dict[str, str]]]]:
+        """
+        Set the level of the rule to 1.
+
+        Args:
+            file_content (Union[Dict[str, str], List[Dict[str, str]]]): The content of the file that contains the rule.
+            rule_id (str): The id of the rule to be disabled.
+
+        Returns:
+            Tuple[str, Union[Dict[str, str], List[Dict[str, str]]]]: A tuple containing the previous level of the rule and the updated file content.
+        """
         logger.info(
             f"Setting rule {rule_id} level to 1 for file_content: {file_content}",
         )
@@ -208,6 +274,15 @@ class DisableRuleService:
         self,
         updated_file_content: Union[Dict[str, str], List[Dict[str, str]]],
     ) -> str:
+        """
+        Convert the updated file content to XML format.
+
+        Args:
+            updated_file_content (Union[Dict[str, str], List[Dict[str, str]]]): The updated file content.
+
+        Returns:
+            str: The updated file content in XML format.
+        """
         logger.info(f"Received updated_file_content: {updated_file_content}")
         xml_content_list = []
         for group in updated_file_content:
@@ -228,7 +303,16 @@ class DisableRuleService:
         previous_level: str,
         reason: str,
         length_of_time: str,
-    ):
+    ) -> None:
+        """
+        Store information about the disabled rule in the database.
+
+        Args:
+            rule_id (str): The id of the rule.
+            previous_level (str): The previous level of the rule before it was disabled.
+            reason (str): The reason for disabling the rule.
+            length_of_time (str): The length of time for which the rule will be disabled.
+        """
         disabled_rule = DisabledRules(
             rule_id=rule_id,
             previous_level=previous_level,
@@ -240,6 +324,16 @@ class DisableRuleService:
         db.session.commit()
 
     def _upload_updated_rule(self, filename: str, xml_content: str):
+        """
+        Upload the updated rule to the Wazuh Manager.
+
+        Args:
+            filename (str): The filename that contains the rule.
+            xml_content (str): The updated rule in XML format.
+
+        Raises:
+            ValueError: If the updated rule could not be uploaded successfully.
+        """
         response = self.wazuh_http_requests.put_request(
             f"rules/files/{filename}",
             xml_content,

@@ -39,7 +39,6 @@ nav:
     - Artifacts: artifacts.md
     - Cases: cases.md
     - Graylog: graylog.md
-    - Wazuh-Manager: wazuhmanager.md
 
 markdown_extensions:
     - pymdownx.highlight:

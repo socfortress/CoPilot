@@ -11,13 +11,18 @@ from app.services.WazuhManager.universal import UniversalService
 
 class WazuhHttpRequests:
     """
-    Class to handle HTTP requests to the Wazuh API.
+    A class to handle HTTP requests to the Wazuh API.
+
+    This class is initialized with the URL for the Wazuh connector and an authentication token.
+    It provides a method to make HTTP DELETE requests to the specified Wazuh API endpoint.
     """
 
     def __init__(self, connector_url: str, wazuh_auth_token: str) -> None:
         """
+        Initializes a WazuhHttpRequests instance.
+
         Args:
-            connector_url (str): The URL of the Wazuh Manager.
+            connector_url (str): The URL for the Wazuh connector.
             wazuh_auth_token (str): The Wazuh API authentication token.
         """
         self.connector_url = connector_url
@@ -30,14 +35,15 @@ class WazuhHttpRequests:
         params: Optional[Dict[str, str]] = None,
     ) -> Dict[str, bool]:
         """
-        Function to handle DELETE requests.
+        Makes an HTTP DELETE request to a specified Wazuh API endpoint.
 
         Args:
             endpoint (str): The endpoint to make a DELETE request to.
             params (Optional[Dict[str, str]]): Any parameters to pass in the DELETE request.
 
         Returns:
-            Dict[str, bool]: A dictionary indicating the success of the operation.
+            Dict[str, bool]: A dictionary indicating the success of the operation. If the request was successful,
+                             `{"agentDeleted": True}` is returned. If it failed, `{"agentDeleted": False}` is returned.
         """
         try:
             response = requests.delete(
@@ -57,13 +63,18 @@ class WazuhHttpRequests:
 
 class WazuhManagerAgentService:
     """
-    A service class that encapsulates the logic for handling agent related operations in Wazuh Manager.
+    A service class that encapsulates the logic for handling agent-related operations in the Wazuh Manager.
+
+    This class uses the UniversalService to get authentication tokens and URLs, and WazuhHttpRequests to make HTTP requests.
+    It provides methods to collect all agents from Wazuh Manager and to delete a specific agent.
     """
 
     def __init__(self, universal_service: UniversalService) -> None:
         """
+        Initializes a WazuhManagerAgentService instance.
+
         Args:
-            universal_service (UniversalService): The UniversalService instance to use.
+            universal_service (UniversalService): An instance of UniversalService.
         """
         self.universal_service = universal_service
         self.auth_token = universal_service.get_auth_token()
@@ -74,10 +85,11 @@ class WazuhManagerAgentService:
 
     def collect_agents(self) -> Optional[List[Dict[str, str]]]:
         """
-        Collect all agents from Wazuh Manager.
+        Collects all agents from the Wazuh Manager.
 
         Returns:
-            Optional[List[Dict[str, str]]]: A list of dictionaries containing agent data, or None on failure.
+            Optional[List[Dict[str, str]]]: A list of dictionaries where each dictionary contains data about an agent.
+                                            If the operation fails, it returns None.
         """
         logger.info("Collecting Wazuh Agents")
         try:
@@ -93,10 +105,10 @@ class WazuhManagerAgentService:
 
     def _get_agent_data(self) -> Optional[Dict[str, Any]]:
         """
-        Get agent data from Wazuh Manager.
+        Retrieves agent data from the Wazuh Manager.
 
         Returns:
-            Optional[Dict[str, Any]]: A dictionary containing agent data, or None on failure.
+            Optional[Dict[str, Any]]: A dictionary containing data about agents. If the operation fails, it returns None.
         """
         headers = {"Authorization": f"Bearer {self.auth_token}"}
         limit = 1000
@@ -112,13 +124,13 @@ class WazuhManagerAgentService:
 
     def _build_agent_list(self, agent_data: Dict[str, Any]) -> List[Dict[str, str]]:
         """
-        Build a list of agent data dictionaries.
+        Builds a list of dictionaries with agent data.
 
         Args:
             agent_data (Dict[str, Any]): The raw agent data.
 
         Returns:
-            List[Dict[str, str]]: A list of dictionaries containing agent data.
+            List[Dict[str, str]]: A list of dictionaries where each dictionary contains data about an agent.
         """
         wazuh_agents_list = []
         for agent in agent_data:
@@ -138,13 +150,14 @@ class WazuhManagerAgentService:
 
     def delete_agent(self, agent_id: str) -> Dict[str, bool]:
         """
-        Delete an agent from Wazuh Manager.
+        Deletes an agent from the Wazuh Manager.
 
         Args:
             agent_id (str): The id of the agent to be deleted.
 
         Returns:
-            Dict[str, bool]: A dictionary indicating the success of the operation.
+            Dict[str, bool]: A dictionary indicating the success of the operation. If the operation was successful,
+                             `{"agentDeleted": True}` is returned. If it failed, `{"agentDeleted": False}` is returned.
         """
         params = {
             "purge": True,
