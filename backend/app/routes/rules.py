@@ -1,9 +1,10 @@
 # from flask import jsonify
+from typing import Any
+from typing import Dict
+
 from flask import Blueprint
 from flask import request
 from loguru import logger
-from typing import Any
-from typing import Dict
 
 from app.services.WazuhManager.disabled_rule import DisableRuleService
 from app.services.WazuhManager.enabled_rule import EnableRuleService
@@ -12,6 +13,7 @@ from app.services.WazuhManager.universal import UniversalService
 # from app.services.WazuhManager.wazuhmanager import WazuhManagerService
 
 bp = Blueprint("rules", __name__)
+
 
 @bp.route("/rule/disable", methods=["POST"])
 def disable_rule() -> str:
@@ -59,4 +61,3 @@ def enable_rule() -> str:
     enable_service: EnableRuleService = EnableRuleService(universal_service)
     result: str = enable_service.enable_rule(data)
     return result
-

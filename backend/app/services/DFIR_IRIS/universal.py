@@ -1,5 +1,8 @@
+from typing import Callable
+from typing import Dict
 from typing import Optional
-from typing import Tuple, Dict, Callable, Union
+from typing import Tuple
+from typing import Union
 
 # from dfir_iris_client.case import Case
 from dfir_iris_client.helper.utils import assert_api_resp
@@ -34,7 +37,10 @@ class UniversalService:
             connector_name,
         )
 
-    def collect_iris_details(self, connector_name: str) -> Tuple[Optional[str], Optional[str]]:
+    def collect_iris_details(
+        self,
+        connector_name: str,
+    ) -> Tuple[Optional[str], Optional[str]]:
         """
         Collects the details of the DFIR-IRIS connector.
 
@@ -84,7 +90,9 @@ class UniversalService:
                 "message": "Connection to DFIR-IRIS unsuccessful.",
             }
 
-    def fetch_and_parse_data(self, session: ClientSession, action: Callable, *args) -> Dict[str, Union[bool, Optional[Dict]]]:
+    def fetch_and_parse_data(
+        self, session: ClientSession, action: Callable, *args
+    ) -> Dict[str, Union[bool, Optional[Dict]]]:
         """
         Fetches and parses data from DFIR-IRIS using a specified action.
 

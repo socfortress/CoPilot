@@ -1,711 +1,498 @@
-
 <!doctype html>
 <html lang="en" class="no-js">
-  <head>
-    
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width,initial-scale=1">
-      
-      
-      
-      
-        <link rel="prev" href="../velociraptor/">
-      
-      
-      <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.18">
-    
-    
-      
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+        <link rel="prev" href="../velociraptor/" />
+
+        <link rel="icon" href="../assets/images/favicon.png" />
+        <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.18" />
+
         <title>Shuffle - SOCFortress CoPilot</title>
-      
-    
-    
-      <link rel="stylesheet" href="../assets/stylesheets/main.26e3688c.min.css">
-      
-        
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ecc896b0.min.css">
-      
-      
 
-    
-    
-    
-      
-        
-        
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
-        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
-      
-    
-    
-      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
-    
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
-    
-      
+        <link rel="stylesheet" href="../assets/stylesheets/main.26e3688c.min.css" />
 
-    
-    
-    
-  </head>
-  
-  
-    
-    
-      
-    
-    
-    
-    
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ecc896b0.min.css" />
+
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            rel="stylesheet"
+            href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback"
+        />
+        <style>
+            :root {
+                --md-text-font: "Roboto";
+                --md-code-font: "Roboto Mono";
+            }
+        </style>
+
+        <link rel="stylesheet" href="../assets/_mkdocstrings.css" />
+
+        <script>
+            ;(__md_scope = new URL("..", location)),
+                (__md_hash = e => [...e].reduce((e, _) => (e << 5) - e + _.charCodeAt(0), 0)),
+                (__md_get = (e, _ = localStorage, t = __md_scope) => JSON.parse(_.getItem(t.pathname + "." + e))),
+                (__md_set = (e, _, t = localStorage, a = __md_scope) => {
+                    try {
+                        t.setItem(a.pathname + "." + e, JSON.stringify(_))
+                    } catch (e) {}
+                })
+        </script>
+    </head>
+
     <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="purple">
-  
-    
-    
-      <script>var palette=__md_get("__palette");if(palette&&"object"==typeof palette.color)for(var key of Object.keys(palette.color))document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
-    
-    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
-    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
-    <label class="md-overlay" for="__drawer"></label>
-    <div data-md-component="skip">
-      
-        
-        <a href="#shuffle-overview" class="md-skip">
-          Skip to content
-        </a>
-      
-    </div>
-    <div data-md-component="announce">
-      
-    </div>
-    
-    
-      
+        <script>
+            var palette = __md_get("__palette")
+            if (palette && "object" == typeof palette.color)
+                for (var key of Object.keys(palette.color))
+                    document.body.setAttribute("data-md-color-" + key, palette.color[key])
+        </script>
 
-<header class="md-header" data-md-component="header">
-  <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="SOCFortress CoPilot" class="md-header__button md-logo" aria-label="SOCFortress CoPilot" data-md-component="logo">
-      
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
-
-    </a>
-    <label class="md-header__button md-icon" for="__drawer">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
-    </label>
-    <div class="md-header__title" data-md-component="header-title">
-      <div class="md-header__ellipsis">
-        <div class="md-header__topic">
-          <span class="md-ellipsis">
-            SOCFortress CoPilot
-          </span>
+        <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off" />
+        <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off" />
+        <label class="md-overlay" for="__drawer"></label>
+        <div data-md-component="skip">
+            <a href="#shuffle-overview" class="md-skip"> Skip to content </a>
         </div>
-        <div class="md-header__topic" data-md-component="header-topic">
-          <span class="md-ellipsis">
-            
-              Shuffle
-            
-          </span>
-        </div>
-      </div>
-    </div>
-    
-      
-        <form class="md-header__option" data-md-component="palette">
-          
-            
-            
-            
-            <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="purple"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
-            
-              <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 6H7c-3.31 0-6 2.69-6 6s2.69 6 6 6h10c3.31 0 6-2.69 6-6s-2.69-6-6-6zm0 10H7c-2.21 0-4-1.79-4-4s1.79-4 4-4h10c2.21 0 4 1.79 4 4s-1.79 4-4 4zM7 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
-              </label>
-            
-          
-            
-            
-            
-            <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="lime"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
-            
-              <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 7H7a5 5 0 0 0-5 5 5 5 0 0 0 5 5h10a5 5 0 0 0 5-5 5 5 0 0 0-5-5m0 8a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3Z"/></svg>
-              </label>
-            
-          
-        </form>
-      
-    
-    
-    
-    
-  </nav>
-  
-</header>
-    
-    <div class="md-container" data-md-component="container">
-      
-      
-        
-          
-            
-<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
-  <div class="md-grid">
-    <ul class="md-tabs__list">
-      
-        
-  
-  
+        <div data-md-component="announce"></div>
 
-
-  <li class="md-tabs__item">
-    <a href=".." class="md-tabs__link">
-      Home
-    </a>
-  </li>
-
-      
-        
-  
-  
-
-
-  <li class="md-tabs__item">
-    <a href="../connectors/" class="md-tabs__link">
-      Connectors
-    </a>
-  </li>
-
-      
-        
-  
-  
-
-
-  <li class="md-tabs__item">
-    <a href="../agents/" class="md-tabs__link">
-      Agents
-    </a>
-  </li>
-
-      
-        
-  
-  
-
-
-  <li class="md-tabs__item">
-    <a href="../wazuhindexer/" class="md-tabs__link">
-      Wazuh-Indexer
-    </a>
-  </li>
-
-      
-        
-  
-  
-
-
-  <li class="md-tabs__item">
-    <a href="../dfiriris/" class="md-tabs__link">
-      Dfir-Iris
-    </a>
-  </li>
-
-      
-        
-  
-  
-
-
-  <li class="md-tabs__item">
-    <a href="../graylog/" class="md-tabs__link">
-      Graylog
-    </a>
-  </li>
-
-      
-        
-  
-  
-
-
-  <li class="md-tabs__item">
-    <a href="../wazuhmanager/" class="md-tabs__link">
-      Wazuh-Manager
-    </a>
-  </li>
-
-      
-        
-  
-  
-
-
-  <li class="md-tabs__item">
-    <a href="../velociraptor/" class="md-tabs__link">
-      Velociraptor
-    </a>
-  </li>
-
-      
-        
-  
-  
-    
-  
-
-
-  <li class="md-tabs__item">
-    <a href="./" class="md-tabs__link md-tabs__link--active">
-      Shuffle
-    </a>
-  </li>
-
-      
-    </ul>
-  </div>
-</nav>
-          
-        
-      
-      <main class="md-main" data-md-component="main">
-        <div class="md-main__inner md-grid">
-          
-            
-              
-              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
-                <div class="md-sidebar__scrollwrap">
-                  <div class="md-sidebar__inner">
-                    
-
-  
-
-
-  
-
-<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
-  <label class="md-nav__title" for="__drawer">
-    <a href=".." title="SOCFortress CoPilot" class="md-nav__button md-logo" aria-label="SOCFortress CoPilot" data-md-component="logo">
-      
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
-
-    </a>
-    SOCFortress CoPilot
-  </label>
-  
-  <ul class="md-nav__list" data-md-scrollfix>
-    
-      
-      
-      
-
-  
-  
-  
-    <li class="md-nav__item">
-      <a href=".." class="md-nav__link">
-        Home
-      </a>
-    </li>
-  
-
-    
-      
-      
-      
-
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../connectors/" class="md-nav__link">
-        Connectors
-      </a>
-    </li>
-  
-
-    
-      
-      
-      
-
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../agents/" class="md-nav__link">
-        Agents
-      </a>
-    </li>
-  
-
-    
-      
-      
-      
-
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../wazuhindexer/" class="md-nav__link">
-        Wazuh-Indexer
-      </a>
-    </li>
-  
-
-    
-      
-      
-      
-
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../dfiriris/" class="md-nav__link">
-        Dfir-Iris
-      </a>
-    </li>
-  
-
-    
-      
-      
-      
-
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../graylog/" class="md-nav__link">
-        Graylog
-      </a>
-    </li>
-  
-
-    
-      
-      
-      
-
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../wazuhmanager/" class="md-nav__link">
-        Wazuh-Manager
-      </a>
-    </li>
-  
-
-    
-      
-      
-      
-
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../velociraptor/" class="md-nav__link">
-        Velociraptor
-      </a>
-    </li>
-  
-
-    
-      
-      
-      
-
-  
-  
-    
-  
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          Shuffle
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
-        Shuffle
-      </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#shuffle-overview" class="md-nav__link">
-    Shuffle Overview
-  </a>
-  
-    <nav class="md-nav" aria-label="Shuffle Overview">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#shuffle-routes" class="md-nav__link">
-    Shuffle Routes
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#app.routes.shuffle" class="md-nav__link">
-    app.routes.shuffle
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#app.routes.shuffle.get_workflow_executions" class="md-nav__link">
-    get_workflow_executions()
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#app.routes.shuffle.get_workflows" class="md-nav__link">
-    get_workflows()
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#app.routes.shuffle.get_workflows_executions" class="md-nav__link">
-    get_workflows_executions()
-  </a>
-  
-    <nav class="md-nav" aria-label="get_workflows_executions()">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#workflows-services" class="md-nav__link">
-    Workflows Services
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#app.services.Shuffle.workflows" class="md-nav__link">
-    app.services.Shuffle.workflows
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#app.services.Shuffle.workflows.WorkflowsService" class="md-nav__link">
-    WorkflowsService
-  </a>
-  
-    <nav class="md-nav" aria-label="WorkflowsService">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#app.services.Shuffle.workflows.WorkflowsService.collect_workflow_details" class="md-nav__link">
-    collect_workflow_details()
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#app.services.Shuffle.workflows.WorkflowsService.collect_workflow_executions_status" class="md-nav__link">
-    collect_workflow_executions_status()
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#app.services.Shuffle.workflows.WorkflowsService.collect_workflows" class="md-nav__link">
-    collect_workflows()
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#universal-services" class="md-nav__link">
-    Universal Services
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#app.services.Shuffle.universal" class="md-nav__link">
-    app.services.Shuffle.universal
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#app.services.Shuffle.universal.UniversalService" class="md-nav__link">
-    UniversalService
-  </a>
-  
-    <nav class="md-nav" aria-label="UniversalService">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#app.services.Shuffle.universal.UniversalService.collect_shuffle_details" class="md-nav__link">
-    collect_shuffle_details()
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
-    </li>
-  
-
-    
-  </ul>
-</nav>
-                  </div>
+        <header class="md-header" data-md-component="header">
+            <nav class="md-header__inner md-grid" aria-label="Header">
+                <a
+                    href=".."
+                    title="SOCFortress CoPilot"
+                    class="md-header__button md-logo"
+                    aria-label="SOCFortress CoPilot"
+                    data-md-component="logo"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path
+                            d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"
+                        />
+                    </svg>
+                </a>
+                <label class="md-header__button md-icon" for="__drawer">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z" />
+                    </svg>
+                </label>
+                <div class="md-header__title" data-md-component="header-title">
+                    <div class="md-header__ellipsis">
+                        <div class="md-header__topic">
+                            <span class="md-ellipsis"> SOCFortress CoPilot </span>
+                        </div>
+                        <div class="md-header__topic" data-md-component="header-topic">
+                            <span class="md-ellipsis"> Shuffle </span>
+                        </div>
+                    </div>
                 </div>
-              </div>
-            
-            
-          
-          
-            <div class="md-content" data-md-component="content">
-              <article class="md-content__inner md-typeset">
-                
-                  
 
+                <form class="md-header__option" data-md-component="palette">
+                    <input
+                        class="md-option"
+                        data-md-color-media=""
+                        data-md-color-scheme="default"
+                        data-md-color-primary="teal"
+                        data-md-color-accent="purple"
+                        aria-label="Switch to dark mode"
+                        type="radio"
+                        name="__palette"
+                        id="__palette_1"
+                    />
 
-  <h1>Shuffle</h1>
+                    <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path
+                                d="M17 6H7c-3.31 0-6 2.69-6 6s2.69 6 6 6h10c3.31 0 6-2.69 6-6s-2.69-6-6-6zm0 10H7c-2.21 0-4-1.79-4-4s1.79-4 4-4h10c2.21 0 4 1.79 4 4s-1.79 4-4 4zM7 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"
+                            />
+                        </svg>
+                    </label>
 
-<h2 id="shuffle-overview">Shuffle Overview</h2>
-<h3 id="shuffle-routes"><span style="color:green">Shuffle Routes</span></h3>
+                    <input
+                        class="md-option"
+                        data-md-color-media=""
+                        data-md-color-scheme="slate"
+                        data-md-color-primary="teal"
+                        data-md-color-accent="lime"
+                        aria-label="Switch to light mode"
+                        type="radio"
+                        name="__palette"
+                        id="__palette_2"
+                    />
 
+                    <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path
+                                d="M17 7H7a5 5 0 0 0-5 5 5 5 0 0 0 5 5h10a5 5 0 0 0 5-5 5 5 0 0 0-5-5m0 8a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3Z"
+                            />
+                        </svg>
+                    </label>
+                </form>
+            </nav>
+        </header>
 
-<div class="doc doc-object doc-module">
+        <div class="md-container" data-md-component="container">
+            <nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+                <div class="md-grid">
+                    <ul class="md-tabs__list">
+                        <li class="md-tabs__item">
+                            <a href=".." class="md-tabs__link"> Home </a>
+                        </li>
 
+                        <li class="md-tabs__item">
+                            <a href="../connectors/" class="md-tabs__link"> Connectors </a>
+                        </li>
 
-<a id="app.routes.shuffle"></a>
-  <div class="doc doc-contents first">
+                        <li class="md-tabs__item">
+                            <a href="../agents/" class="md-tabs__link"> Agents </a>
+                        </li>
 
-  
+                        <li class="md-tabs__item">
+                            <a href="../wazuhindexer/" class="md-tabs__link"> Wazuh-Indexer </a>
+                        </li>
 
-  <div class="doc doc-children">
+                        <li class="md-tabs__item">
+                            <a href="../dfiriris/" class="md-tabs__link"> Dfir-Iris </a>
+                        </li>
 
+                        <li class="md-tabs__item">
+                            <a href="../graylog/" class="md-tabs__link"> Graylog </a>
+                        </li>
 
+                        <li class="md-tabs__item">
+                            <a href="../wazuhmanager/" class="md-tabs__link"> Wazuh-Manager </a>
+                        </li>
 
+                        <li class="md-tabs__item">
+                            <a href="../velociraptor/" class="md-tabs__link"> Velociraptor </a>
+                        </li>
 
+                        <li class="md-tabs__item">
+                            <a href="./" class="md-tabs__link md-tabs__link--active"> Shuffle </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
 
+            <main class="md-main" data-md-component="main">
+                <div class="md-main__inner md-grid">
+                    <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
+                        <div class="md-sidebar__scrollwrap">
+                            <div class="md-sidebar__inner">
+                                <nav
+                                    class="md-nav md-nav--primary md-nav--lifted md-nav--integrated"
+                                    aria-label="Navigation"
+                                    data-md-level="0"
+                                >
+                                    <label class="md-nav__title" for="__drawer">
+                                        <a
+                                            href=".."
+                                            title="SOCFortress CoPilot"
+                                            class="md-nav__button md-logo"
+                                            aria-label="SOCFortress CoPilot"
+                                            data-md-component="logo"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                <path
+                                                    d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"
+                                                />
+                                            </svg>
+                                        </a>
+                                        SOCFortress CoPilot
+                                    </label>
 
+                                    <ul class="md-nav__list" data-md-scrollfix>
+                                        <li class="md-nav__item">
+                                            <a href=".." class="md-nav__link"> Home </a>
+                                        </li>
 
+                                        <li class="md-nav__item">
+                                            <a href="../connectors/" class="md-nav__link"> Connectors </a>
+                                        </li>
 
+                                        <li class="md-nav__item">
+                                            <a href="../agents/" class="md-nav__link"> Agents </a>
+                                        </li>
 
-<div class="doc doc-object doc-function">
+                                        <li class="md-nav__item">
+                                            <a href="../wazuhindexer/" class="md-nav__link"> Wazuh-Indexer </a>
+                                        </li>
 
+                                        <li class="md-nav__item">
+                                            <a href="../dfiriris/" class="md-nav__link"> Dfir-Iris </a>
+                                        </li>
 
+                                        <li class="md-nav__item">
+                                            <a href="../graylog/" class="md-nav__link"> Graylog </a>
+                                        </li>
 
-<h2 id="app.routes.shuffle.get_workflow_executions" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">get_workflow_executions</span><span class="p">(</span><span class="n">workflow_id</span><span class="p">)</span></code>
+                                        <li class="md-nav__item">
+                                            <a href="../wazuhmanager/" class="md-nav__link"> Wazuh-Manager </a>
+                                        </li>
 
-</h2>
+                                        <li class="md-nav__item">
+                                            <a href="../velociraptor/" class="md-nav__link"> Velociraptor </a>
+                                        </li>
 
+                                        <li class="md-nav__item md-nav__item--active">
+                                            <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc" />
 
-  <div class="doc doc-contents ">
-  
-      <p>Endpoint to list execution status of a specified Shuffle workflow.</p>
-<p>This endpoint retrieves the status of the most recent execution for a specific workflow in Shuffle.</p>
+                                            <label class="md-nav__link md-nav__link--active" for="__toc">
+                                                Shuffle
+                                                <span class="md-nav__icon md-icon"></span>
+                                            </label>
 
-  <p><strong>Parameters:</strong></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Default</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-          <td><code>workflow_id</code></td>
-          <td>
-                <code>str</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>The ID of the workflow to retrieve the execution status for.</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-    </tbody>
-  </table>
+                                            <a href="./" class="md-nav__link md-nav__link--active"> Shuffle </a>
 
-  <p><strong>Returns:</strong></p>
-  <table>
-    <thead>
-      <tr>
-<th>Name</th>        <th>Type</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-<td><code>jsonify</code></td>          <td>
-                <code><span title="flask.jsonify">jsonify</span></code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>A JSON response containing the last execution status of the specified workflow.</p>
-            </div>
-          </td>
-        </tr>
-    </tbody>
-  </table>
+                                            <nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+                                                <label class="md-nav__title" for="__toc">
+                                                    <span class="md-nav__icon md-icon"></span>
+                                                    Table of contents
+                                                </label>
+                                                <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+                                                    <li class="md-nav__item">
+                                                        <a href="#shuffle-overview" class="md-nav__link">
+                                                            Shuffle Overview
+                                                        </a>
 
-      <details class="quote">
-        <summary>Source code in <code>app\routes\shuffle.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-52">52</a></span>
+                                                        <nav class="md-nav" aria-label="Shuffle Overview">
+                                                            <ul class="md-nav__list">
+                                                                <li class="md-nav__item">
+                                                                    <a href="#shuffle-routes" class="md-nav__link">
+                                                                        Shuffle Routes
+                                                                    </a>
+                                                                </li>
+                                                            </ul>
+                                                        </nav>
+                                                    </li>
+
+                                                    <li class="md-nav__item">
+                                                        <a href="#app.routes.shuffle" class="md-nav__link">
+                                                            app.routes.shuffle
+                                                        </a>
+                                                    </li>
+
+                                                    <li class="md-nav__item">
+                                                        <a
+                                                            href="#app.routes.shuffle.get_workflow_executions"
+                                                            class="md-nav__link"
+                                                        >
+                                                            get_workflow_executions()
+                                                        </a>
+                                                    </li>
+
+                                                    <li class="md-nav__item">
+                                                        <a
+                                                            href="#app.routes.shuffle.get_workflows"
+                                                            class="md-nav__link"
+                                                        >
+                                                            get_workflows()
+                                                        </a>
+                                                    </li>
+
+                                                    <li class="md-nav__item">
+                                                        <a
+                                                            href="#app.routes.shuffle.get_workflows_executions"
+                                                            class="md-nav__link"
+                                                        >
+                                                            get_workflows_executions()
+                                                        </a>
+
+                                                        <nav class="md-nav" aria-label="get_workflows_executions()">
+                                                            <ul class="md-nav__list">
+                                                                <li class="md-nav__item">
+                                                                    <a href="#workflows-services" class="md-nav__link">
+                                                                        Workflows Services
+                                                                    </a>
+                                                                </li>
+                                                            </ul>
+                                                        </nav>
+                                                    </li>
+
+                                                    <li class="md-nav__item">
+                                                        <a href="#app.services.Shuffle.workflows" class="md-nav__link">
+                                                            app.services.Shuffle.workflows
+                                                        </a>
+                                                    </li>
+
+                                                    <li class="md-nav__item">
+                                                        <a
+                                                            href="#app.services.Shuffle.workflows.WorkflowsService"
+                                                            class="md-nav__link"
+                                                        >
+                                                            WorkflowsService
+                                                        </a>
+
+                                                        <nav class="md-nav" aria-label="WorkflowsService">
+                                                            <ul class="md-nav__list">
+                                                                <li class="md-nav__item">
+                                                                    <a
+                                                                        href="#app.services.Shuffle.workflows.WorkflowsService.collect_workflow_details"
+                                                                        class="md-nav__link"
+                                                                    >
+                                                                        collect_workflow_details()
+                                                                    </a>
+                                                                </li>
+
+                                                                <li class="md-nav__item">
+                                                                    <a
+                                                                        href="#app.services.Shuffle.workflows.WorkflowsService.collect_workflow_executions_status"
+                                                                        class="md-nav__link"
+                                                                    >
+                                                                        collect_workflow_executions_status()
+                                                                    </a>
+                                                                </li>
+
+                                                                <li class="md-nav__item">
+                                                                    <a
+                                                                        href="#app.services.Shuffle.workflows.WorkflowsService.collect_workflows"
+                                                                        class="md-nav__link"
+                                                                    >
+                                                                        collect_workflows()
+                                                                    </a>
+                                                                </li>
+
+                                                                <li class="md-nav__item">
+                                                                    <a href="#universal-services" class="md-nav__link">
+                                                                        Universal Services
+                                                                    </a>
+                                                                </li>
+                                                            </ul>
+                                                        </nav>
+                                                    </li>
+
+                                                    <li class="md-nav__item">
+                                                        <a href="#app.services.Shuffle.universal" class="md-nav__link">
+                                                            app.services.Shuffle.universal
+                                                        </a>
+                                                    </li>
+
+                                                    <li class="md-nav__item">
+                                                        <a
+                                                            href="#app.services.Shuffle.universal.UniversalService"
+                                                            class="md-nav__link"
+                                                        >
+                                                            UniversalService
+                                                        </a>
+
+                                                        <nav class="md-nav" aria-label="UniversalService">
+                                                            <ul class="md-nav__list">
+                                                                <li class="md-nav__item">
+                                                                    <a
+                                                                        href="#app.services.Shuffle.universal.UniversalService.collect_shuffle_details"
+                                                                        class="md-nav__link"
+                                                                    >
+                                                                        collect_shuffle_details()
+                                                                    </a>
+                                                                </li>
+                                                            </ul>
+                                                        </nav>
+                                                    </li>
+                                                </ul>
+                                            </nav>
+                                        </li>
+                                    </ul>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="md-content" data-md-component="content">
+                        <article class="md-content__inner md-typeset">
+                            <h1>Shuffle</h1>
+
+                            <h2 id="shuffle-overview">Shuffle Overview</h2>
+                            <h3 id="shuffle-routes"><span style="color: green">Shuffle Routes</span></h3>
+
+                            <div class="doc doc-object doc-module">
+                                <a id="app.routes.shuffle"></a>
+                                <div class="doc doc-contents first">
+                                    <div class="doc doc-children">
+                                        <div class="doc doc-object doc-function">
+                                            <h2 id="app.routes.shuffle.get_workflow_executions" class="doc doc-heading">
+                                                <code class="highlight language-python"
+                                                    ><span class="n">get_workflow_executions</span
+                                                    ><span class="p">(</span><span class="n">workflow_id</span
+                                                    ><span class="p">)</span></code
+                                                >
+                                            </h2>
+
+                                            <div class="doc doc-contents">
+                                                <p>
+                                                    Endpoint to list execution status of a specified Shuffle workflow.
+                                                </p>
+                                                <p>
+                                                    This endpoint retrieves the status of the most recent execution for
+                                                    a specific workflow in Shuffle.
+                                                </p>
+
+                                                <p><strong>Parameters:</strong></p>
+                                                <table>
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Name</th>
+                                                            <th>Type</th>
+                                                            <th>Description</th>
+                                                            <th>Default</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td><code>workflow_id</code></td>
+                                                            <td>
+                                                                <code>str</code>
+                                                            </td>
+                                                            <td>
+                                                                <div class="doc-md-description">
+                                                                    <p>
+                                                                        The ID of the workflow to retrieve the execution
+                                                                        status for.
+                                                                    </p>
+                                                                </div>
+                                                            </td>
+                                                            <td>
+                                                                <em>required</em>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+
+                                                <p><strong>Returns:</strong></p>
+                                                <table>
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Name</th>
+                                                            <th>Type</th>
+                                                            <th>Description</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td><code>jsonify</code></td>
+                                                            <td>
+                                                                <code><span title="flask.jsonify">jsonify</span></code>
+                                                            </td>
+                                                            <td>
+                                                                <div class="doc-md-description">
+                                                                    <p>
+                                                                        A JSON response containing the last execution
+                                                                        status of the specified workflow.
+                                                                    </p>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+
+                                                <details class="quote">
+                                                    <summary>Source code in <code>app\routes\shuffle.py</code></summary>
+                                                    <div class="highlight">
+                                                        <table class="highlighttable">
+                                                            <tr>
+                                                                <td class="linenos">
+                                                                    <div class="linenodiv">
+                                                                        <pre><span></span><span class="normal"><a href="#__codelineno-0-52">52</a></span>
 <span class="normal"><a href="#__codelineno-0-53">53</a></span>
 <span class="normal"><a href="#__codelineno-0-54">54</a></span>
 <span class="normal"><a href="#__codelineno-0-55">55</a></span>
@@ -720,7 +507,12 @@
 <span class="normal"><a href="#__codelineno-0-64">64</a></span>
 <span class="normal"><a href="#__codelineno-0-65">65</a></span>
 <span class="normal"><a href="#__codelineno-0-66">66</a></span>
-<span class="normal"><a href="#__codelineno-0-67">67</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-52" name="__codelineno-0-52"></a><span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/shuffle/workflows/executions/&lt;workflow_id&gt;&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">])</span>
+<span class="normal"><a href="#__codelineno-0-67">67</a></span></pre>
+                                                                    </div>
+                                                                </td>
+                                                                <td class="code">
+                                                                    <div>
+                                                                        <pre><span></span><code><a id="__codelineno-0-52" name="__codelineno-0-52"></a><span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/shuffle/workflows/executions/&lt;workflow_id&gt;&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">])</span>
 <a id="__codelineno-0-53" name="__codelineno-0-53"></a><span class="k">def</span> <span class="nf">get_workflow_executions</span><span class="p">(</span><span class="n">workflow_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">jsonify</span><span class="p">:</span>
 <a id="__codelineno-0-54" name="__codelineno-0-54"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-55" name="__codelineno-0-55"></a><span class="sd">    Endpoint to list execution status of a specified Shuffle workflow.</span>
@@ -736,51 +528,61 @@
 <a id="__codelineno-0-65" name="__codelineno-0-65"></a>    <span class="n">service</span> <span class="o">=</span> <span class="n">WorkflowsService</span><span class="p">()</span>
 <a id="__codelineno-0-66" name="__codelineno-0-66"></a>    <span class="n">workflow_details</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="n">collect_workflow_executions_status</span><span class="p">(</span><span class="n">workflow_id</span><span class="p">)</span>
 <a id="__codelineno-0-67" name="__codelineno-0-67"></a>    <span class="k">return</span> <span class="n">workflow_details</span>
-</code></pre></div></td></tr></table></div>
-      </details>
-  </div>
+</code></pre>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </div>
+                                                </details>
+                                            </div>
+                                        </div>
 
-</div>
+                                        <div class="doc doc-object doc-function">
+                                            <h2 id="app.routes.shuffle.get_workflows" class="doc doc-heading">
+                                                <code class="highlight language-python"
+                                                    ><span class="n">get_workflows</span><span class="p">()</span></code
+                                                >
+                                            </h2>
 
-<div class="doc doc-object doc-function">
+                                            <div class="doc doc-contents">
+                                                <p>Endpoint to list all available Shuffle workflows.</p>
 
+                                                <p><strong>Returns:</strong></p>
+                                                <table>
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Name</th>
+                                                            <th>Type</th>
+                                                            <th>Description</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td><code>jsonify</code></td>
+                                                            <td>
+                                                                <code><span title="flask.jsonify">jsonify</span></code>
+                                                            </td>
+                                                            <td>
+                                                                <div class="doc-md-description">
+                                                                    <p>
+                                                                        A JSON response containing the list of all
+                                                                        configured Workflows in Shuffle.
+                                                                    </p>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
 
-
-<h2 id="app.routes.shuffle.get_workflows" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">get_workflows</span><span class="p">()</span></code>
-
-</h2>
-
-
-  <div class="doc doc-contents ">
-  
-      <p>Endpoint to list all available Shuffle workflows.</p>
-
-  <p><strong>Returns:</strong></p>
-  <table>
-    <thead>
-      <tr>
-<th>Name</th>        <th>Type</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-<td><code>jsonify</code></td>          <td>
-                <code><span title="flask.jsonify">jsonify</span></code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>A JSON response containing the list of all configured Workflows in Shuffle.</p>
-            </div>
-          </td>
-        </tr>
-    </tbody>
-  </table>
-
-      <details class="quote">
-        <summary>Source code in <code>app\routes\shuffle.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-17">17</a></span>
+                                                <details class="quote">
+                                                    <summary>Source code in <code>app\routes\shuffle.py</code></summary>
+                                                    <div class="highlight">
+                                                        <table class="highlighttable">
+                                                            <tr>
+                                                                <td class="linenos">
+                                                                    <div class="linenodiv">
+                                                                        <pre><span></span><span class="normal"><a href="#__codelineno-0-17">17</a></span>
 <span class="normal"><a href="#__codelineno-0-18">18</a></span>
 <span class="normal"><a href="#__codelineno-0-19">19</a></span>
 <span class="normal"><a href="#__codelineno-0-20">20</a></span>
@@ -790,7 +592,12 @@
 <span class="normal"><a href="#__codelineno-0-24">24</a></span>
 <span class="normal"><a href="#__codelineno-0-25">25</a></span>
 <span class="normal"><a href="#__codelineno-0-26">26</a></span>
-<span class="normal"><a href="#__codelineno-0-27">27</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-17" name="__codelineno-0-17"></a><span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/shuffle/workflows&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">])</span>
+<span class="normal"><a href="#__codelineno-0-27">27</a></span></pre>
+                                                                    </div>
+                                                                </td>
+                                                                <td class="code">
+                                                                    <div>
+                                                                        <pre><span></span><code><a id="__codelineno-0-17" name="__codelineno-0-17"></a><span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/shuffle/workflows&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">])</span>
 <a id="__codelineno-0-18" name="__codelineno-0-18"></a><span class="k">def</span> <span class="nf">get_workflows</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">jsonify</span><span class="p">:</span>
 <a id="__codelineno-0-19" name="__codelineno-0-19"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-20" name="__codelineno-0-20"></a><span class="sd">    Endpoint to list all available Shuffle workflows.</span>
@@ -801,52 +608,70 @@
 <a id="__codelineno-0-25" name="__codelineno-0-25"></a>    <span class="n">service</span> <span class="o">=</span> <span class="n">WorkflowsService</span><span class="p">()</span>
 <a id="__codelineno-0-26" name="__codelineno-0-26"></a>    <span class="n">workflows</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="n">collect_workflows</span><span class="p">()</span>
 <a id="__codelineno-0-27" name="__codelineno-0-27"></a>    <span class="k">return</span> <span class="n">workflows</span>
-</code></pre></div></td></tr></table></div>
-      </details>
-  </div>
+</code></pre>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </div>
+                                                </details>
+                                            </div>
+                                        </div>
 
-</div>
+                                        <div class="doc doc-object doc-function">
+                                            <h2
+                                                id="app.routes.shuffle.get_workflows_executions"
+                                                class="doc doc-heading"
+                                            >
+                                                <code class="highlight language-python"
+                                                    ><span class="n">get_workflows_executions</span
+                                                    ><span class="p">()</span></code
+                                                >
+                                            </h2>
 
-<div class="doc doc-object doc-function">
+                                            <div class="doc doc-contents">
+                                                <p>Endpoint to list all available Shuffle workflow execution status.</p>
+                                                <p>
+                                                    This endpoint retrieves the status of the most recent execution for
+                                                    each workflow in Shuffle.
+                                                </p>
 
+                                                <p><strong>Returns:</strong></p>
+                                                <table>
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Name</th>
+                                                            <th>Type</th>
+                                                            <th>Description</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td><code>jsonify</code></td>
+                                                            <td>
+                                                                <code><span title="flask.jsonify">jsonify</span></code>
+                                                            </td>
+                                                            <td>
+                                                                <div class="doc-md-description">
+                                                                    <p>
+                                                                        A JSON response containing the list of all
+                                                                        configured workflows and their last execution
+                                                                        status.
+                                                                    </p>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
 
-
-<h2 id="app.routes.shuffle.get_workflows_executions" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">get_workflows_executions</span><span class="p">()</span></code>
-
-</h2>
-
-
-  <div class="doc doc-contents ">
-  
-      <p>Endpoint to list all available Shuffle workflow execution status.</p>
-<p>This endpoint retrieves the status of the most recent execution for each workflow in Shuffle.</p>
-
-  <p><strong>Returns:</strong></p>
-  <table>
-    <thead>
-      <tr>
-<th>Name</th>        <th>Type</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-<td><code>jsonify</code></td>          <td>
-                <code><span title="flask.jsonify">jsonify</span></code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>A JSON response containing the list of all configured workflows and their last execution status.</p>
-            </div>
-          </td>
-        </tr>
-    </tbody>
-  </table>
-
-      <details class="quote">
-        <summary>Source code in <code>app\routes\shuffle.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-30">30</a></span>
+                                                <details class="quote">
+                                                    <summary>Source code in <code>app\routes\shuffle.py</code></summary>
+                                                    <div class="highlight">
+                                                        <table class="highlighttable">
+                                                            <tr>
+                                                                <td class="linenos">
+                                                                    <div class="linenodiv">
+                                                                        <pre><span></span><span class="normal"><a href="#__codelineno-0-30">30</a></span>
 <span class="normal"><a href="#__codelineno-0-31">31</a></span>
 <span class="normal"><a href="#__codelineno-0-32">32</a></span>
 <span class="normal"><a href="#__codelineno-0-33">33</a></span>
@@ -865,7 +690,12 @@
 <span class="normal"><a href="#__codelineno-0-46">46</a></span>
 <span class="normal"><a href="#__codelineno-0-47">47</a></span>
 <span class="normal"><a href="#__codelineno-0-48">48</a></span>
-<span class="normal"><a href="#__codelineno-0-49">49</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-30" name="__codelineno-0-30"></a><span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/shuffle/workflows/executions&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">])</span>
+<span class="normal"><a href="#__codelineno-0-49">49</a></span></pre>
+                                                                    </div>
+                                                                </td>
+                                                                <td class="code">
+                                                                    <div>
+                                                                        <pre><span></span><code><a id="__codelineno-0-30" name="__codelineno-0-30"></a><span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/shuffle/workflows/executions&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">])</span>
 <a id="__codelineno-0-31" name="__codelineno-0-31"></a><span class="k">def</span> <span class="nf">get_workflows_executions</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">jsonify</span><span class="p">:</span>
 <a id="__codelineno-0-32" name="__codelineno-0-32"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-33" name="__codelineno-0-33"></a><span class="sd">    Endpoint to list all available Shuffle workflow execution status.</span>
@@ -885,118 +715,119 @@
 <a id="__codelineno-0-47" name="__codelineno-0-47"></a>            <span class="n">workflow</span><span class="p">[</span><span class="s2">&quot;workflow_id&quot;</span><span class="p">],</span>
 <a id="__codelineno-0-48" name="__codelineno-0-48"></a>        <span class="p">)</span>
 <a id="__codelineno-0-49" name="__codelineno-0-49"></a>    <span class="k">return</span> <span class="n">workflow_details</span>
-</code></pre></div></td></tr></table></div>
-      </details>
-  </div>
+</code></pre>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </div>
+                                                </details>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <p><br /></p>
+                            <h3 id="workflows-services"><span style="color: red">Workflows Services</span></h3>
 
-</div>
+                            <div class="doc doc-object doc-module">
+                                <a id="app.services.Shuffle.workflows"></a>
+                                <div class="doc doc-contents first">
+                                    <div class="doc doc-children">
+                                        <div class="doc doc-object doc-class">
+                                            <h2
+                                                id="app.services.Shuffle.workflows.WorkflowsService"
+                                                class="doc doc-heading"
+                                            >
+                                                <code>WorkflowsService</code>
+                                            </h2>
 
+                                            <div class="doc doc-contents">
+                                                <p>
+                                                    A service class that encapsulates the logic for retrieving workflow
+                                                    information from Shuffle.
+                                                </p>
 
+                                                <p><strong>Attributes:</strong></p>
+                                                <table>
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Name</th>
+                                                            <th>Type</th>
+                                                            <th>Description</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td><code>connector_url</code></td>
+                                                            <td>
+                                                                <code>str</code>
+                                                            </td>
+                                                            <td>
+                                                                <div class="doc-md-description">
+                                                                    <p>The URL of the Shuffle instance.</p>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><code>connector_api_key</code></td>
+                                                            <td>
+                                                                <code>str</code>
+                                                            </td>
+                                                            <td>
+                                                                <div class="doc-md-description">
+                                                                    <p>The API key used for the Shuffle instance.</p>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><code>session</code></td>
+                                                            <td>
+                                                                <code
+                                                                    >requests.<span title="requests.Session"
+                                                                        >Session</span
+                                                                    ></code
+                                                                >
+                                                            </td>
+                                                            <td>
+                                                                <div class="doc-md-description">
+                                                                    <p>A requests session for making HTTP requests.</p>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
 
-  </div>
+                                                <details class="methods" open>
+                                                    <summary>Methods</summary>
+                                                    <p>
+                                                        _collect_shuffle_details: Collects the details of the Shuffle
+                                                        connector. _are_details_collected: Checks whether the details
+                                                        for the Shuffle connector were successfully collected.
+                                                        _send_request: Sends a GET request to a provided URL.
+                                                        collect_workflows: Collects the workflows from Shuffle.
+                                                        _handle_request_error: Handles any errors that occur during a
+                                                        request. _collect_workflows: Collects the workflows from
+                                                        Shuffle. collect_workflow_details: Collects the workflow ID and
+                                                        workflow name from Shuffle. _collect_workflow_details: Collects
+                                                        the workflow ID and workflow name from Shuffle.
+                                                        collect_workflow_executions_status: Collects the execution
+                                                        status of a Shuffle Workflow by its ID.
+                                                        _collect_workflow_executions_status: Collects the execution
+                                                        status of a Shuffle Workflow by its ID.
+                                                    </p>
+                                                </details>
 
-  </div>
-
-</div><p><br></p>
-<h3 id="workflows-services"><span style="color:red">Workflows Services</span></h3>
-
-
-<div class="doc doc-object doc-module">
-
-
-<a id="app.services.Shuffle.workflows"></a>
-  <div class="doc doc-contents first">
-
-  
-
-  <div class="doc doc-children">
-
-
-
-
-
-
-
-
-<div class="doc doc-object doc-class">
-
-
-
-<h2 id="app.services.Shuffle.workflows.WorkflowsService" class="doc doc-heading">
-        <code>WorkflowsService</code>
-
-
-</h2>
-
-
-  <div class="doc doc-contents ">
-
-  
-      <p>A service class that encapsulates the logic for retrieving workflow information from Shuffle.</p>
-
-  <p><strong>Attributes:</strong></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-          <td><code>connector_url</code></td>
-          <td>
-                <code>str</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>The URL of the Shuffle instance.</p>
-            </div>
-          </td>
-        </tr>
-        <tr>
-          <td><code>connector_api_key</code></td>
-          <td>
-                <code>str</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>The API key used for the Shuffle instance.</p>
-            </div>
-          </td>
-        </tr>
-        <tr>
-          <td><code>session</code></td>
-          <td>
-                <code>requests.<span title="requests.Session">Session</span></code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>A requests session for making HTTP requests.</p>
-            </div>
-          </td>
-        </tr>
-    </tbody>
-  </table>
-
-<details class="methods" open>
-  <summary>Methods</summary>
-  <p>_collect_shuffle_details: Collects the details of the Shuffle connector.
-_are_details_collected: Checks whether the details for the Shuffle connector were successfully collected.
-_send_request: Sends a GET request to a provided URL.
-collect_workflows: Collects the workflows from Shuffle.
-_handle_request_error: Handles any errors that occur during a request.
-_collect_workflows: Collects the workflows from Shuffle.
-collect_workflow_details: Collects the workflow ID and workflow name from Shuffle.
-_collect_workflow_details: Collects the workflow ID and workflow name from Shuffle.
-collect_workflow_executions_status: Collects the execution status of a Shuffle Workflow by its ID.
-_collect_workflow_executions_status: Collects the execution status of a Shuffle Workflow by its ID.</p>
-</details>
-
-        <details class="quote">
-          <summary>Source code in <code>app\services\Shuffle\workflows.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-9">  9</a></span>
+                                                <details class="quote">
+                                                    <summary>
+                                                        Source code in <code>app\services\Shuffle\workflows.py</code>
+                                                    </summary>
+                                                    <div class="highlight">
+                                                        <table class="highlighttable">
+                                                            <tr>
+                                                                <td class="linenos">
+                                                                    <div class="linenodiv">
+                                                                        <pre><span></span><span class="normal"><a href="#__codelineno-0-9">  9</a></span>
 <span class="normal"><a href="#__codelineno-0-10"> 10</a></span>
 <span class="normal"><a href="#__codelineno-0-11"> 11</a></span>
 <span class="normal"><a href="#__codelineno-0-12"> 12</a></span>
@@ -1224,7 +1055,12 @@ _collect_workflow_executions_status: Collects the execution status of a Shuffle 
 <span class="normal"><a href="#__codelineno-0-234">234</a></span>
 <span class="normal"><a href="#__codelineno-0-235">235</a></span>
 <span class="normal"><a href="#__codelineno-0-236">236</a></span>
-<span class="normal"><a href="#__codelineno-0-237">237</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-9" name="__codelineno-0-9"></a><span class="k">class</span> <span class="nc">WorkflowsService</span><span class="p">:</span>
+<span class="normal"><a href="#__codelineno-0-237">237</a></span></pre>
+                                                                    </div>
+                                                                </td>
+                                                                <td class="code">
+                                                                    <div>
+                                                                        <pre><span></span><code><a id="__codelineno-0-9" name="__codelineno-0-9"></a><span class="k">class</span> <span class="nc">WorkflowsService</span><span class="p">:</span>
 <a id="__codelineno-0-10" name="__codelineno-0-10"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-11" name="__codelineno-0-11"></a><span class="sd">    A service class that encapsulates the logic for retrieving workflow information from Shuffle.</span>
 <a id="__codelineno-0-12" name="__codelineno-0-12"></a>
@@ -1453,60 +1289,73 @@ _collect_workflow_executions_status: Collects the execution status of a Shuffle 
 <a id="__codelineno-0-235" name="__codelineno-0-235"></a>            <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
 <a id="__codelineno-0-236" name="__codelineno-0-236"></a>            <span class="s2">&quot;executions&quot;</span><span class="p">:</span> <span class="n">status</span><span class="p">,</span>
 <a id="__codelineno-0-237" name="__codelineno-0-237"></a>        <span class="p">}</span>
-</code></pre></div></td></tr></table></div>
-        </details>
+</code></pre>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </div>
+                                                </details>
 
-  
+                                                <div class="doc doc-children">
+                                                    <div class="doc doc-object doc-function">
+                                                        <h3
+                                                            id="app.services.Shuffle.workflows.WorkflowsService.collect_workflow_details"
+                                                            class="doc doc-heading"
+                                                        >
+                                                            <code class="highlight language-python"
+                                                                ><span class="n">collect_workflow_details</span
+                                                                ><span class="p">()</span></code
+                                                            >
+                                                        </h3>
 
-  <div class="doc doc-children">
+                                                        <div class="doc doc-contents">
+                                                            <p>
+                                                                Collects the workflow ID and workflow name from Shuffle.
+                                                            </p>
 
+                                                            <p><strong>Returns:</strong></p>
+                                                            <table>
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th>Name</th>
+                                                                        <th>Type</th>
+                                                                        <th>Description</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    <tr>
+                                                                        <td><code>dict</code></td>
+                                                                        <td>
+                                                                            <code
+                                                                                ><span title="typing.Dict">Dict</span
+                                                                                >[str, object]</code
+                                                                            >
+                                                                        </td>
+                                                                        <td>
+                                                                            <div class="doc-md-description">
+                                                                                <p>
+                                                                                    A dictionary containing the success
+                                                                                    status, a message, and potentially
+                                                                                    the workflow IDs.
+                                                                                </p>
+                                                                            </div>
+                                                                        </td>
+                                                                    </tr>
+                                                                </tbody>
+                                                            </table>
 
-
-
-
-
-
-
-
-<div class="doc doc-object doc-function">
-
-
-
-<h3 id="app.services.Shuffle.workflows.WorkflowsService.collect_workflow_details" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">collect_workflow_details</span><span class="p">()</span></code>
-
-</h3>
-
-
-  <div class="doc doc-contents ">
-  
-      <p>Collects the workflow ID and workflow name from Shuffle.</p>
-
-  <p><strong>Returns:</strong></p>
-  <table>
-    <thead>
-      <tr>
-<th>Name</th>        <th>Type</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-<td><code>dict</code></td>          <td>
-                <code><span title="typing.Dict">Dict</span>[str, object]</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>A dictionary containing the success status, a message, and potentially the workflow IDs.</p>
-            </div>
-          </td>
-        </tr>
-    </tbody>
-  </table>
-
-      <details class="quote">
-        <summary>Source code in <code>app\services\Shuffle\workflows.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-134">134</a></span>
+                                                            <details class="quote">
+                                                                <summary>
+                                                                    Source code in
+                                                                    <code>app\services\Shuffle\workflows.py</code>
+                                                                </summary>
+                                                                <div class="highlight">
+                                                                    <table class="highlighttable">
+                                                                        <tr>
+                                                                            <td class="linenos">
+                                                                                <div class="linenodiv">
+                                                                                    <pre><span></span><span class="normal"><a href="#__codelineno-0-134">134</a></span>
 <span class="normal"><a href="#__codelineno-0-135">135</a></span>
 <span class="normal"><a href="#__codelineno-0-136">136</a></span>
 <span class="normal"><a href="#__codelineno-0-137">137</a></span>
@@ -1527,7 +1376,12 @@ _collect_workflow_executions_status: Collects the execution status of a Shuffle 
 <span class="normal"><a href="#__codelineno-0-152">152</a></span>
 <span class="normal"><a href="#__codelineno-0-153">153</a></span>
 <span class="normal"><a href="#__codelineno-0-154">154</a></span>
-<span class="normal"><a href="#__codelineno-0-155">155</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-134" name="__codelineno-0-134"></a><span class="k">def</span> <span class="nf">collect_workflow_details</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+<span class="normal"><a href="#__codelineno-0-155">155</a></span></pre>
+                                                                                </div>
+                                                                            </td>
+                                                                            <td class="code">
+                                                                                <div>
+                                                                                    <pre><span></span><code><a id="__codelineno-0-134" name="__codelineno-0-134"></a><span class="k">def</span> <span class="nf">collect_workflow_details</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
 <a id="__codelineno-0-135" name="__codelineno-0-135"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-136" name="__codelineno-0-136"></a><span class="sd">    Collects the workflow ID and workflow name from Shuffle.</span>
 <a id="__codelineno-0-137" name="__codelineno-0-137"></a>
@@ -1549,51 +1403,78 @@ _collect_workflow_executions_status: Collects the execution status of a Shuffle 
 <a id="__codelineno-0-153" name="__codelineno-0-153"></a>        <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
 <a id="__codelineno-0-154" name="__codelineno-0-154"></a>        <span class="s2">&quot;workflows&quot;</span><span class="p">:</span> <span class="n">workflows</span><span class="p">[</span><span class="s2">&quot;workflows&quot;</span><span class="p">],</span>
 <a id="__codelineno-0-155" name="__codelineno-0-155"></a>    <span class="p">}</span>
-</code></pre></div></td></tr></table></div>
-      </details>
-  </div>
+</code></pre>
+                                                                                </div>
+                                                                            </td>
+                                                                        </tr>
+                                                                    </table>
+                                                                </div>
+                                                            </details>
+                                                        </div>
+                                                    </div>
 
-</div>
+                                                    <div class="doc doc-object doc-function">
+                                                        <h3
+                                                            id="app.services.Shuffle.workflows.WorkflowsService.collect_workflow_executions_status"
+                                                            class="doc doc-heading"
+                                                        >
+                                                            <code class="highlight language-python"
+                                                                ><span class="n"
+                                                                    >collect_workflow_executions_status</span
+                                                                ><span class="p">(</span
+                                                                ><span class="n">workflow_id</span
+                                                                ><span class="p">)</span></code
+                                                            >
+                                                        </h3>
 
-<div class="doc doc-object doc-function">
+                                                        <div class="doc doc-contents">
+                                                            <p>
+                                                                Collects the execution status of a Shuffle Workflow by
+                                                                its ID.
+                                                            </p>
 
+                                                            <p><strong>Returns:</strong></p>
+                                                            <table>
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th>Name</th>
+                                                                        <th>Type</th>
+                                                                        <th>Description</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    <tr>
+                                                                        <td><code>dict</code></td>
+                                                                        <td>
+                                                                            <code
+                                                                                ><span title="typing.Dict">Dict</span
+                                                                                >[str, object]</code
+                                                                            >
+                                                                        </td>
+                                                                        <td>
+                                                                            <div class="doc-md-description">
+                                                                                <p>
+                                                                                    A dictionary containing the success
+                                                                                    status, a message, and potentially
+                                                                                    the workflow execution status.
+                                                                                </p>
+                                                                            </div>
+                                                                        </td>
+                                                                    </tr>
+                                                                </tbody>
+                                                            </table>
 
-
-<h3 id="app.services.Shuffle.workflows.WorkflowsService.collect_workflow_executions_status" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">collect_workflow_executions_status</span><span class="p">(</span><span class="n">workflow_id</span><span class="p">)</span></code>
-
-</h3>
-
-
-  <div class="doc doc-contents ">
-  
-      <p>Collects the execution status of a Shuffle Workflow by its ID.</p>
-
-  <p><strong>Returns:</strong></p>
-  <table>
-    <thead>
-      <tr>
-<th>Name</th>        <th>Type</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-<td><code>dict</code></td>          <td>
-                <code><span title="typing.Dict">Dict</span>[str, object]</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>A dictionary containing the success status, a message, and potentially the workflow execution status.</p>
-            </div>
-          </td>
-        </tr>
-    </tbody>
-  </table>
-
-      <details class="quote">
-        <summary>Source code in <code>app\services\Shuffle\workflows.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-183">183</a></span>
+                                                            <details class="quote">
+                                                                <summary>
+                                                                    Source code in
+                                                                    <code>app\services\Shuffle\workflows.py</code>
+                                                                </summary>
+                                                                <div class="highlight">
+                                                                    <table class="highlighttable">
+                                                                        <tr>
+                                                                            <td class="linenos">
+                                                                                <div class="linenodiv">
+                                                                                    <pre><span></span><span class="normal"><a href="#__codelineno-0-183">183</a></span>
 <span class="normal"><a href="#__codelineno-0-184">184</a></span>
 <span class="normal"><a href="#__codelineno-0-185">185</a></span>
 <span class="normal"><a href="#__codelineno-0-186">186</a></span>
@@ -1614,7 +1495,12 @@ _collect_workflow_executions_status: Collects the execution status of a Shuffle 
 <span class="normal"><a href="#__codelineno-0-201">201</a></span>
 <span class="normal"><a href="#__codelineno-0-202">202</a></span>
 <span class="normal"><a href="#__codelineno-0-203">203</a></span>
-<span class="normal"><a href="#__codelineno-0-204">204</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-183" name="__codelineno-0-183"></a><span class="k">def</span> <span class="nf">collect_workflow_executions_status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">workflow_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+<span class="normal"><a href="#__codelineno-0-204">204</a></span></pre>
+                                                                                </div>
+                                                                            </td>
+                                                                            <td class="code">
+                                                                                <div>
+                                                                                    <pre><span></span><code><a id="__codelineno-0-183" name="__codelineno-0-183"></a><span class="k">def</span> <span class="nf">collect_workflow_executions_status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">workflow_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
 <a id="__codelineno-0-184" name="__codelineno-0-184"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-185" name="__codelineno-0-185"></a><span class="sd">    Collects the execution status of a Shuffle Workflow by its ID.</span>
 <a id="__codelineno-0-186" name="__codelineno-0-186"></a>
@@ -1636,51 +1522,72 @@ _collect_workflow_executions_status: Collects the execution status of a Shuffle 
 <a id="__codelineno-0-202" name="__codelineno-0-202"></a>        <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
 <a id="__codelineno-0-203" name="__codelineno-0-203"></a>        <span class="s2">&quot;executions&quot;</span><span class="p">:</span> <span class="n">executions</span><span class="p">[</span><span class="s2">&quot;executions&quot;</span><span class="p">],</span>
 <a id="__codelineno-0-204" name="__codelineno-0-204"></a>    <span class="p">}</span>
-</code></pre></div></td></tr></table></div>
-      </details>
-  </div>
+</code></pre>
+                                                                                </div>
+                                                                            </td>
+                                                                        </tr>
+                                                                    </table>
+                                                                </div>
+                                                            </details>
+                                                        </div>
+                                                    </div>
 
-</div>
+                                                    <div class="doc doc-object doc-function">
+                                                        <h3
+                                                            id="app.services.Shuffle.workflows.WorkflowsService.collect_workflows"
+                                                            class="doc doc-heading"
+                                                        >
+                                                            <code class="highlight language-python"
+                                                                ><span class="n">collect_workflows</span
+                                                                ><span class="p">()</span></code
+                                                            >
+                                                        </h3>
 
-<div class="doc doc-object doc-function">
+                                                        <div class="doc doc-contents">
+                                                            <p>Collects the workflows from Shuffle.</p>
 
+                                                            <p><strong>Returns:</strong></p>
+                                                            <table>
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th>Name</th>
+                                                                        <th>Type</th>
+                                                                        <th>Description</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    <tr>
+                                                                        <td><code>dict</code></td>
+                                                                        <td>
+                                                                            <code
+                                                                                ><span title="typing.Dict">Dict</span
+                                                                                >[str, object]</code
+                                                                            >
+                                                                        </td>
+                                                                        <td>
+                                                                            <div class="doc-md-description">
+                                                                                <p>
+                                                                                    A dictionary containing the success
+                                                                                    status, a message, and potentially
+                                                                                    the workflows.
+                                                                                </p>
+                                                                            </div>
+                                                                        </td>
+                                                                    </tr>
+                                                                </tbody>
+                                                            </table>
 
-
-<h3 id="app.services.Shuffle.workflows.WorkflowsService.collect_workflows" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">collect_workflows</span><span class="p">()</span></code>
-
-</h3>
-
-
-  <div class="doc doc-contents ">
-  
-      <p>Collects the workflows from Shuffle.</p>
-
-  <p><strong>Returns:</strong></p>
-  <table>
-    <thead>
-      <tr>
-<th>Name</th>        <th>Type</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-<td><code>dict</code></td>          <td>
-                <code><span title="typing.Dict">Dict</span>[str, object]</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>A dictionary containing the success status, a message, and potentially the workflows.</p>
-            </div>
-          </td>
-        </tr>
-    </tbody>
-  </table>
-
-      <details class="quote">
-        <summary>Source code in <code>app\services\Shuffle\workflows.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-76">76</a></span>
+                                                            <details class="quote">
+                                                                <summary>
+                                                                    Source code in
+                                                                    <code>app\services\Shuffle\workflows.py</code>
+                                                                </summary>
+                                                                <div class="highlight">
+                                                                    <table class="highlighttable">
+                                                                        <tr>
+                                                                            <td class="linenos">
+                                                                                <div class="linenodiv">
+                                                                                    <pre><span></span><span class="normal"><a href="#__codelineno-0-76">76</a></span>
 <span class="normal"><a href="#__codelineno-0-77">77</a></span>
 <span class="normal"><a href="#__codelineno-0-78">78</a></span>
 <span class="normal"><a href="#__codelineno-0-79">79</a></span>
@@ -1701,7 +1608,12 @@ _collect_workflow_executions_status: Collects the execution status of a Shuffle 
 <span class="normal"><a href="#__codelineno-0-94">94</a></span>
 <span class="normal"><a href="#__codelineno-0-95">95</a></span>
 <span class="normal"><a href="#__codelineno-0-96">96</a></span>
-<span class="normal"><a href="#__codelineno-0-97">97</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-76" name="__codelineno-0-76"></a><span class="k">def</span> <span class="nf">collect_workflows</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+<span class="normal"><a href="#__codelineno-0-97">97</a></span></pre>
+                                                                                </div>
+                                                                            </td>
+                                                                            <td class="code">
+                                                                                <div>
+                                                                                    <pre><span></span><code><a id="__codelineno-0-76" name="__codelineno-0-76"></a><span class="k">def</span> <span class="nf">collect_workflows</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
 <a id="__codelineno-0-77" name="__codelineno-0-77"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-78" name="__codelineno-0-78"></a><span class="sd">    Collects the workflows from Shuffle.</span>
 <a id="__codelineno-0-79" name="__codelineno-0-79"></a>
@@ -1723,68 +1635,52 @@ _collect_workflow_executions_status: Collects the execution status of a Shuffle 
 <a id="__codelineno-0-95" name="__codelineno-0-95"></a>        <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
 <a id="__codelineno-0-96" name="__codelineno-0-96"></a>        <span class="s2">&quot;workflows&quot;</span><span class="p">:</span> <span class="n">workflows</span><span class="p">[</span><span class="s2">&quot;workflows&quot;</span><span class="p">],</span>
 <a id="__codelineno-0-97" name="__codelineno-0-97"></a>    <span class="p">}</span>
-</code></pre></div></td></tr></table></div>
-      </details>
-  </div>
+</code></pre>
+                                                                                </div>
+                                                                            </td>
+                                                                        </tr>
+                                                                    </table>
+                                                                </div>
+                                                            </details>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <p><br /></p>
+                            <h3 id="universal-services"><span style="color: red">Universal Services</span></h3>
 
-</div>
+                            <div class="doc doc-object doc-module">
+                                <a id="app.services.Shuffle.universal"></a>
+                                <div class="doc doc-contents first">
+                                    <div class="doc doc-children">
+                                        <div class="doc doc-object doc-class">
+                                            <h2
+                                                id="app.services.Shuffle.universal.UniversalService"
+                                                class="doc doc-heading"
+                                            >
+                                                <code>UniversalService</code>
+                                            </h2>
 
+                                            <div class="doc doc-contents">
+                                                <p>
+                                                    A service class that encapsulates the logic for polling messages
+                                                    from Shuffle.
+                                                </p>
 
-
-  </div>
-
-  </div>
-
-</div>
-
-
-
-
-  </div>
-
-  </div>
-
-</div><p><br></p>
-<h3 id="universal-services"><span style="color:red">Universal Services</span></h3>
-
-
-<div class="doc doc-object doc-module">
-
-
-<a id="app.services.Shuffle.universal"></a>
-  <div class="doc doc-contents first">
-
-  
-
-  <div class="doc doc-children">
-
-
-
-
-
-
-
-
-<div class="doc doc-object doc-class">
-
-
-
-<h2 id="app.services.Shuffle.universal.UniversalService" class="doc doc-heading">
-        <code>UniversalService</code>
-
-
-</h2>
-
-
-  <div class="doc doc-contents ">
-
-  
-      <p>A service class that encapsulates the logic for polling messages from Shuffle.</p>
-
-
-        <details class="quote">
-          <summary>Source code in <code>app\services\Shuffle\universal.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-17">17</a></span>
+                                                <details class="quote">
+                                                    <summary>
+                                                        Source code in <code>app\services\Shuffle\universal.py</code>
+                                                    </summary>
+                                                    <div class="highlight">
+                                                        <table class="highlighttable">
+                                                            <tr>
+                                                                <td class="linenos">
+                                                                    <div class="linenodiv">
+                                                                        <pre><span></span><span class="normal"><a href="#__codelineno-0-17">17</a></span>
 <span class="normal"><a href="#__codelineno-0-18">18</a></span>
 <span class="normal"><a href="#__codelineno-0-19">19</a></span>
 <span class="normal"><a href="#__codelineno-0-20">20</a></span>
@@ -1815,7 +1711,12 @@ _collect_workflow_executions_status: Collects the execution status of a Shuffle 
 <span class="normal"><a href="#__codelineno-0-45">45</a></span>
 <span class="normal"><a href="#__codelineno-0-46">46</a></span>
 <span class="normal"><a href="#__codelineno-0-47">47</a></span>
-<span class="normal"><a href="#__codelineno-0-48">48</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-17" name="__codelineno-0-17"></a><span class="k">class</span> <span class="nc">UniversalService</span><span class="p">:</span>
+<span class="normal"><a href="#__codelineno-0-48">48</a></span></pre>
+                                                                    </div>
+                                                                </td>
+                                                                <td class="code">
+                                                                    <div>
+                                                                        <pre><span></span><code><a id="__codelineno-0-17" name="__codelineno-0-17"></a><span class="k">class</span> <span class="nc">UniversalService</span><span class="p">:</span>
 <a id="__codelineno-0-18" name="__codelineno-0-18"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-19" name="__codelineno-0-19"></a><span class="sd">    A service class that encapsulates the logic for polling messages from Shuffle.</span>
 <a id="__codelineno-0-20" name="__codelineno-0-20"></a><span class="sd">    &quot;&quot;&quot;</span>
@@ -1847,87 +1748,97 @@ _collect_workflow_executions_status: Collects the execution status of a Shuffle 
 <a id="__codelineno-0-46" name="__codelineno-0-46"></a>            <span class="p">)</span>
 <a id="__codelineno-0-47" name="__codelineno-0-47"></a>        <span class="k">else</span><span class="p">:</span>
 <a id="__codelineno-0-48" name="__codelineno-0-48"></a>            <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
-</code></pre></div></td></tr></table></div>
-        </details>
+</code></pre>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </div>
+                                                </details>
 
-  
+                                                <div class="doc doc-children">
+                                                    <div class="doc doc-object doc-function">
+                                                        <h3
+                                                            id="app.services.Shuffle.universal.UniversalService.collect_shuffle_details"
+                                                            class="doc doc-heading"
+                                                        >
+                                                            <code class="highlight language-python"
+                                                                ><span class="n">collect_shuffle_details</span
+                                                                ><span class="p">(</span
+                                                                ><span class="n">connector_name</span
+                                                                ><span class="p">)</span></code
+                                                            >
+                                                        </h3>
 
-  <div class="doc doc-children">
+                                                        <div class="doc doc-contents">
+                                                            <p>Collects the details of the Shuffle connector.</p>
 
+                                                            <p><strong>Parameters:</strong></p>
+                                                            <table>
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th>Name</th>
+                                                                        <th>Type</th>
+                                                                        <th>Description</th>
+                                                                        <th>Default</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    <tr>
+                                                                        <td><code>connector_name</code></td>
+                                                                        <td>
+                                                                            <code>str</code>
+                                                                        </td>
+                                                                        <td>
+                                                                            <div class="doc-md-description">
+                                                                                <p>
+                                                                                    The name of the Shuffle connector.
+                                                                                </p>
+                                                                            </div>
+                                                                        </td>
+                                                                        <td>
+                                                                            <em>required</em>
+                                                                        </td>
+                                                                    </tr>
+                                                                </tbody>
+                                                            </table>
 
+                                                            <p><strong>Returns:</strong></p>
+                                                            <table>
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th>Name</th>
+                                                                        <th>Type</th>
+                                                                        <th>Description</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    <tr>
+                                                                        <td><code>tuple</code></td>
+                                                                        <td></td>
+                                                                        <td>
+                                                                            <div class="doc-md-description">
+                                                                                <p>
+                                                                                    A tuple containing the connection
+                                                                                    URL, and api key.
+                                                                                </p>
+                                                                            </div>
+                                                                        </td>
+                                                                    </tr>
+                                                                </tbody>
+                                                            </table>
 
-
-
-
-
-
-
-<div class="doc doc-object doc-function">
-
-
-
-<h3 id="app.services.Shuffle.universal.UniversalService.collect_shuffle_details" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">collect_shuffle_details</span><span class="p">(</span><span class="n">connector_name</span><span class="p">)</span></code>
-
-</h3>
-
-
-  <div class="doc doc-contents ">
-  
-      <p>Collects the details of the Shuffle connector.</p>
-
-  <p><strong>Parameters:</strong></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Default</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-          <td><code>connector_name</code></td>
-          <td>
-                <code>str</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>The name of the Shuffle connector.</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-    </tbody>
-  </table>
-
-  <p><strong>Returns:</strong></p>
-  <table>
-    <thead>
-      <tr>
-<th>Name</th>        <th>Type</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-<td><code>tuple</code></td>          <td>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>A tuple containing the connection URL, and api key.</p>
-            </div>
-          </td>
-        </tr>
-    </tbody>
-  </table>
-
-      <details class="quote">
-        <summary>Source code in <code>app\services\Shuffle\universal.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-29">29</a></span>
+                                                            <details class="quote">
+                                                                <summary>
+                                                                    Source code in
+                                                                    <code>app\services\Shuffle\universal.py</code>
+                                                                </summary>
+                                                                <div class="highlight">
+                                                                    <table class="highlighttable">
+                                                                        <tr>
+                                                                            <td class="linenos">
+                                                                                <div class="linenodiv">
+                                                                                    <pre><span></span><span class="normal"><a href="#__codelineno-0-29">29</a></span>
 <span class="normal"><a href="#__codelineno-0-30">30</a></span>
 <span class="normal"><a href="#__codelineno-0-31">31</a></span>
 <span class="normal"><a href="#__codelineno-0-32">32</a></span>
@@ -1946,7 +1857,12 @@ _collect_workflow_executions_status: Collects the execution status of a Shuffle 
 <span class="normal"><a href="#__codelineno-0-45">45</a></span>
 <span class="normal"><a href="#__codelineno-0-46">46</a></span>
 <span class="normal"><a href="#__codelineno-0-47">47</a></span>
-<span class="normal"><a href="#__codelineno-0-48">48</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-29" name="__codelineno-0-29"></a><span class="k">def</span> <span class="nf">collect_shuffle_details</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">connector_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="normal"><a href="#__codelineno-0-48">48</a></span></pre>
+                                                                                </div>
+                                                                            </td>
+                                                                            <td class="code">
+                                                                                <div>
+                                                                                    <pre><span></span><code><a id="__codelineno-0-29" name="__codelineno-0-29"></a><span class="k">def</span> <span class="nf">collect_shuffle_details</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">connector_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 <a id="__codelineno-0-30" name="__codelineno-0-30"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-31" name="__codelineno-0-31"></a><span class="sd">    Collects the details of the Shuffle connector.</span>
 <a id="__codelineno-0-32" name="__codelineno-0-32"></a>
@@ -1966,82 +1882,103 @@ _collect_workflow_executions_status: Collects the execution status of a Shuffle 
 <a id="__codelineno-0-46" name="__codelineno-0-46"></a>        <span class="p">)</span>
 <a id="__codelineno-0-47" name="__codelineno-0-47"></a>    <span class="k">else</span><span class="p">:</span>
 <a id="__codelineno-0-48" name="__codelineno-0-48"></a>        <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
-</code></pre></div></td></tr></table></div>
-      </details>
-  </div>
+</code></pre>
+                                                                                </div>
+                                                                            </td>
+                                                                        </tr>
+                                                                    </table>
+                                                                </div>
+                                                            </details>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
 
-</div>
+                    <script>
+                        var tabs = __md_get("__tabs")
+                        if (Array.isArray(tabs))
+                            e: for (var set of document.querySelectorAll(".tabbed-set")) {
+                                var tab,
+                                    labels = set.querySelector(".tabbed-labels")
+                                for (tab of tabs)
+                                    for (var label of labels.getElementsByTagName("label"))
+                                        if (label.innerText.trim() === tab) {
+                                            var input = document.getElementById(label.htmlFor)
+                                            input.checked = !0
+                                            continue e
+                                        }
+                            }
+                    </script>
+                </div>
 
+                <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z" />
+                    </svg>
+                    Back to top
+                </button>
+            </main>
 
+            <footer class="md-footer">
+                <div class="md-footer-meta md-typeset">
+                    <div class="md-footer-meta__inner md-grid">
+                        <div class="md-copyright">
+                            <div class="md-copyright__highlight">
+                                &copy; 2023
+                                <a href="https://github.com/socfortress/CoPilot" target="_blank" rel="noopener"
+                                    >SOCFortress CoPilot</a
+                                >
+                            </div>
 
-  </div>
-
-  </div>
-
-</div>
-
-
-
-
-  </div>
-
-  </div>
-
-</div>
-
-
-
-
-
-                
-              </article>
-            </div>
-          
-          
-  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var tab,labels=set.querySelector(".tabbed-labels");for(tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
-
+                            Made with
+                            <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+                                Material for MkDocs
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </footer>
         </div>
-        
-          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"/></svg>
-            Back to top
-          </button>
-        
-      </main>
-      
-        <footer class="md-footer">
-  
-  <div class="md-footer-meta md-typeset">
-    <div class="md-footer-meta__inner md-grid">
-      <div class="md-copyright">
-  
-    <div class="md-copyright__highlight">
-      &copy; 2023 <a href="https://github.com/socfortress/CoPilot"  target="_blank" rel="noopener">SOCFortress CoPilot</a>
+        <div class="md-dialog" data-md-component="dialog">
+            <div class="md-dialog__inner md-typeset"></div>
+        </div>
 
-    </div>
-  
-  
-    Made with
-    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
-      Material for MkDocs
-    </a>
-  
-</div>
-      
-    </div>
-  </div>
-</footer>
-      
-    </div>
-    <div class="md-dialog" data-md-component="dialog">
-      <div class="md-dialog__inner md-typeset"></div>
-    </div>
-    
-    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.tabs", "navigation.sections", "toc.integrate", "navigation.top", "search.suggest", "search.highlight", "content.tabs.link", "content.code.annotation", "content.code.copy"], "search": "../assets/javascripts/workers/search.74e28a9f.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
-    
-    
-      <script src="../assets/javascripts/bundle.220ee61c.min.js"></script>
-      
-    
-  </body>
+        <script id="__config" type="application/json">
+            {
+                "base": "..",
+                "features": [
+                    "navigation.tabs",
+                    "navigation.sections",
+                    "toc.integrate",
+                    "navigation.top",
+                    "search.suggest",
+                    "search.highlight",
+                    "content.tabs.link",
+                    "content.code.annotation",
+                    "content.code.copy"
+                ],
+                "search": "../assets/javascripts/workers/search.74e28a9f.min.js",
+                "translations": {
+                    "clipboard.copied": "Copied to clipboard",
+                    "clipboard.copy": "Copy to clipboard",
+                    "search.result.more.one": "1 more on this page",
+                    "search.result.more.other": "# more on this page",
+                    "search.result.none": "No matching documents",
+                    "search.result.one": "1 matching document",
+                    "search.result.other": "# matching documents",
+                    "search.result.placeholder": "Type to start searching",
+                    "search.result.term.missing": "Missing",
+                    "select.version": "Select version"
+                }
+            }
+        </script>
+
+        <script src="../assets/javascripts/bundle.220ee61c.min.js"></script>
+    </body>
 </html>

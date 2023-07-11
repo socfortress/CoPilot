@@ -1,9 +1,10 @@
-import requests
-from loguru import logger
+from typing import Dict
 from typing import Optional
 from typing import Tuple
-from typing import Dict
 from typing import Union
+
+import requests
+from loguru import logger
 
 from app.models.connectors import Connector
 from app.models.connectors import connector_factory
@@ -31,7 +32,10 @@ class UniversalService:
             self.connector_password,
         ) = self.collect_wazuhmanager_details("Wazuh-Manager")
 
-    def collect_wazuhmanager_details(self, connector_name: str) -> Tuple[Optional[str], Optional[str], Optional[str]]:
+    def collect_wazuhmanager_details(
+        self,
+        connector_name: str,
+    ) -> Tuple[Optional[str], Optional[str], Optional[str]]:
         """
         Collect the details of the Wazuh Manager.
 

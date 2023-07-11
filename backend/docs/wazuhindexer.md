@@ -1,10 +1,12 @@
 ## Wazuh-Indexer Overview
 
 ### <span style="color:green">Alert Routes</span>
+
 ::: app.routes.alerts
 <br>
 
 ### <span style="color:green">Wazuh-Indexer Routes</span>
+
 ::: app.routes.wazuhindexer
 <br>
 
