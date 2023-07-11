@@ -40,7 +40,7 @@ def get_agent(agent_id):
         json: A JSON response containing the details of the agent.
     """
     service = AgentService()
-    agent = service.get_agent(agent_id)
+    agent = service.get_agent(agent_id=agent_id)
     return agent
 
 

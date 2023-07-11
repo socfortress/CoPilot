@@ -3,6 +3,8 @@ import json
 from abc import ABC
 from abc import abstractmethod
 from dataclasses import dataclass
+from typing import Any
+from typing import Dict
 
 import grpc
 import pika
@@ -17,10 +19,8 @@ from sqlalchemy.orm.exc import NoResultFound
 
 from app.models.models import Connectors
 
-# from werkzeug.utils import secure_filename
 
-
-def dynamic_import(module_name, class_name):
+def dynamic_import(module_name: str, class_name: str) -> Any:
     """
     This function dynamically imports a module and returns a specific class from it.
 
@@ -43,10 +43,10 @@ class Connector(ABC):
     :param attributes: A dictionary of attributes necessary for the connector to connect to the service or system.
     """
 
-    attributes: dict
+    attributes: Dict[str, Any]
 
     @abstractmethod
-    def verify_connection(self):
+    def verify_connection(self) -> Dict[str, Any]:
         """
         This abstract method should be implemented by all subclasses of Connector. It is meant to verify the
         connection to the service or system the connector is designed to connect to.
@@ -56,7 +56,7 @@ class Connector(ABC):
         pass
 
     @staticmethod
-    def get_connector_info_from_db(connector_name):
+    def get_connector_info_from_db(connector_name: str) -> Dict[str, Any]:
         """
         This method retrieves connector information from the database.
 
@@ -89,10 +89,10 @@ class WazuhIndexerConnector(Connector):
     :param connector_name: A string that specifies the name of the connector.
     """
 
-    def __init__(self, connector_name):
+    def __init__(self, connector_name: str):
         super().__init__(attributes=self.get_connector_info_from_db(connector_name))
 
-    def verify_connection(self):
+    def verify_connection(self) -> Dict[str, Any]:
         """
         This method verifies the connection to the Wazuh indexer service.
 
@@ -131,10 +131,10 @@ class GraylogConnector(Connector):
     :param connector_name: A string that specifies the name of the connector.
     """
 
-    def __init__(self, connector_name):
+    def __init__(self, connector_name: str):
         super().__init__(attributes=self.get_connector_info_from_db(connector_name))
 
-    def verify_connection(self):
+    def verify_connection(self) -> Dict[str, Any]:
         """
         Verifies the connection to Graylog service.
 
@@ -177,10 +177,10 @@ class WazuhManagerConnector(Connector):
     :param connector_name: A string that specifies the name of the connector.
     """
 
-    def __init__(self, connector_name):
+    def __init__(self, connector_name: str):
         super().__init__(attributes=self.get_connector_info_from_db(connector_name))
 
-    def verify_connection(self):
+    def verify_connection(self) -> Dict[str, Any]:
         """
         Verifies the connection to Wazuh manager service.
 
@@ -215,7 +215,7 @@ class WazuhManagerConnector(Connector):
             )
             return {"connectionSuccessful": False, "authToken": None}
 
-    def get_auth_token(self):
+    def get_auth_token(self) -> str:
         """
         Returns the authentication token for the Wazuh manager service.
 
@@ -232,10 +232,10 @@ class ShuffleConnector(Connector):
     :param connector_name: A string that specifies the name of the connector.
     """
 
-    def __init__(self, connector_name):
+    def __init__(self, connector_name: str):
         super().__init__(attributes=self.get_connector_info_from_db(connector_name))
 
-    def verify_connection(self):
+    def verify_connection(self) -> Dict[str, Any]:
         """
         Verifies the connection to Shuffle service.
 
@@ -278,10 +278,10 @@ class DfirIrisConnector(Connector):
     :param connector_name: A string that specifies the name of the connector.
     """
 
-    def __init__(self, connector_name):
+    def __init__(self, connector_name: str):
         super().__init__(attributes=self.get_connector_info_from_db(connector_name))
 
-    def verify_connection(self):
+    def verify_connection(self) -> Dict[str, Any]:
         """
         Verifies the connection to DFIR IRIS service.
 
@@ -326,10 +326,10 @@ class VelociraptorConnector(Connector):
         connector_name (str): The name of the connector.
     """
 
-    def __init__(self, connector_name):
+    def __init__(self, connector_name: str):
         super().__init__(attributes=self.get_connector_info_from_db(connector_name))
 
-    def verify_connection(self):
+    def verify_connection(self) -> Dict[str, Any]:
         """
         Verifies the connection to Velociraptor service.
 
@@ -391,10 +391,10 @@ class RabbitMQConnector(Connector):
         connector_name (str): The name of the connector.
     """
 
-    def __init__(self, connector_name):
+    def __init__(self, connector_name: str):
         super().__init__(attributes=self.get_connector_info_from_db(connector_name))
 
-    def verify_connection(self):
+    def verify_connection(self) -> Dict[str, Any]:
         """
         Verifies the connection to RabbitMQ service.
         """
