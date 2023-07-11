@@ -39,3 +39,4 @@ wheels/
 # Local development artifacts
 *.db
 .env
+*.sqbpro
