@@ -1,16 +1,11 @@
 # from datetime import datetime
 from typing import Dict
+from typing import List
+from typing import Union
 
 import requests
 from loguru import logger
 
-# from app import db
-# from app.models.agents import AgentMetadata
-# from app.models.agents import agent_metadata_schema
-# from app.models.agents import agent_metadatas_schema
-# from app.models.connectors import Connector
-# from app.models.connectors import GraylogConnector
-# from app.models.connectors import connector_factory
 from app.services.Graylog.universal import UniversalService
 
 # from typing import List
@@ -24,18 +19,23 @@ class InputsService:
     HEADERS: Dict[str, str] = {"X-Requested-By": "CoPilot"}
 
     def __init__(self):
+        """
+        Initializes the InputsService by collecting Graylog details.
+        """
         (
             self.connector_url,
             self.connector_username,
             self.connector_password,
         ) = UniversalService().collect_graylog_details("Graylog")
 
-    def collect_running_inputs(self):
+    def collect_running_inputs(
+        self,
+    ) -> Dict[str, Union[bool, str, List[Dict[str, Union[str, int]]]]]:
         """
         Collects the running inputs that are managed by Graylog.
 
         Returns:
-            list: A list containing the inputs.
+            dict: A dictionary containing the success status, a message, and potentially a list of running inputs.
         """
         if (
             self.connector_url is None
@@ -49,12 +49,14 @@ class InputsService:
         if running_inputs["success"]:
             return running_inputs
 
-    def _collect_running_inputs(self) -> Dict[str, object]:
+    def _collect_running_inputs(
+        self,
+    ) -> Dict[str, Union[bool, str, List[Dict[str, Union[str, int]]]]]:
         """
         Collects the running inputs that are managed by Graylog.
 
         Returns:
-            dict: A dictionary containing the success status, a message and potentially the inputs.
+            dict: A dictionary containing the success status, a message, and potentially a list of running inputs.
         """
         try:
             running_inputs = requests.get(
@@ -81,12 +83,14 @@ class InputsService:
             logger.error(f"Failed to collect running inputs: {e}")
             return {"message": "Failed to collect running inputs", "success": False}
 
-    def collect_configured_inputs(self):
+    def collect_configured_inputs(
+        self,
+    ) -> Dict[str, Union[bool, str, List[Dict[str, Union[str, int]]]]]:
         """
         Collects the configured inputs that are managed by Graylog.
 
         Returns:
-            list: A list containing the inputs.
+            dict: A dictionary containing the success status, a message, and potentially a list of configured inputs.
         """
         if (
             self.connector_url is None
@@ -100,12 +104,14 @@ class InputsService:
         if configured_inputs["success"]:
             return configured_inputs
 
-    def _collect_configured_inputs(self) -> Dict[str, object]:
+    def _collect_configured_inputs(
+        self,
+    ) -> Dict[str, Union[bool, str, List[Dict[str, Union[str, int]]]]]:
         """
         Collects the configured inputs that are managed by Graylog.
 
         Returns:
-            dict: A dictionary containing the success status, a message and potentially the inputs.
+            dict: A dictionary containing the success status, a message, and potentially a list of configured inputs.
         """
         try:
             configured_inputs = requests.get(

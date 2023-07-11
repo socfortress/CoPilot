@@ -96,7 +96,8 @@ class Connectors(db.Model):
     connector_type: Column[String] = db.Column(db.String(100))
     connector_url: Column[String] = db.Column(db.String(100))
     connector_last_updated: Column[DateTime] = db.Column(
-        db.DateTime, default=datetime.utcnow,
+        db.DateTime,
+        default=datetime.utcnow,
     )
     connector_username: Column[String] = db.Column(db.String(100))
     connector_password: Column[String] = db.Column(db.String(100))

@@ -45,6 +45,7 @@ class NotesService:
 
         logger.info(f"Collecting case {cid} from DFIR-IRIS")
         case = Case(session=self.iris_session)
+        cid = int(cid)
         result = self.universal_service.fetch_and_parse_data(
             self.iris_session,
             case.search_notes,
@@ -133,6 +134,7 @@ class NotesService:
 
         logger.info(f"Creating case {cid} note in DFIR-IRIS")
         case = Case(session=self.iris_session)
+        cid = int(cid)
         # Creating Group for New Note
         note_group = self.universal_service.fetch_and_parse_data(
             self.iris_session,

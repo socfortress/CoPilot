@@ -3,15 +3,18 @@ from typing import Dict
 from elasticsearch7 import Elasticsearch
 from loguru import logger
 
-# from app.services.WazuhIndexer.index import IndexService
 from app.services.WazuhIndexer.universal import UniversalService
-
-# from typing import List
 
 
 class AlertsService:
     """
     A service class that encapsulates the logic for pulling alerts from the Wazuh-Indexer.
+
+    Attributes:
+        connector_url (str): The url to the Wazuh-Indexer.
+        connector_username (str): The username for the Wazuh-Indexer.
+        connector_password (str): The password for the Wazuh-Indexer.
+        es (Elasticsearch): The Elasticsearch client.
     """
 
     SKIP_INDEX_NAMES: Dict[str, bool] = {
@@ -20,6 +23,9 @@ class AlertsService:
     }
 
     def __init__(self):
+        """
+        Initializes the service by collecting Wazuh-Indexer details and creating an Elasticsearch client.
+        """
         (
             self.connector_url,
             self.connector_username,
@@ -35,7 +41,15 @@ class AlertsService:
         )
 
     def is_index_skipped(self, index_name: str) -> bool:
-        """Check if the index should be skipped."""
+        """
+        Checks whether the given index name should be skipped.
+
+        Args:
+            index_name (str): The name of the index.
+
+        Returns:
+            bool: True if the index should be skipped, False otherwise.
+        """
         for skipped in self.SKIP_INDEX_NAMES:
             if index_name.startswith(skipped):
                 return True
@@ -110,7 +124,13 @@ class AlertsService:
 
     @staticmethod
     def _build_query() -> Dict[str, object]:
-        """Builds and returns the query."""
+        """
+        Builds the Elasticsearch query to get the 10 most recent alerts where the `rule_level` is 12 or higher or
+        the `syslog_level` field is `ALERT`.
+
+        Returns:
+            Dict[str, object]: A dictionary representing the Elasticsearch query.
+        """
         return {
             "query": {
                 "bool": {

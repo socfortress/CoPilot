@@ -12,10 +12,34 @@ from app.models.models import Connectors
 
 
 class ConnectorService:
+    """
+    Service class for Connector operations. This class contains methods for updating and processing connectors,
+    validating connector existence and data, and verifying connector connections.
+    """
+
     def __init__(self, db):
+        """
+        Initializes the ConnectorService with a database session.
+
+        Args:
+            db: The database session to be used for connector operations.
+        """
         self.db = db
 
     def update_connector_in_db(self, connector_id: int, updated_data: dict):
+        """
+        Updates a connector in the database with the provided data.
+
+        Args:
+            connector_id (int): The ID of the connector to update.
+            updated_data (dict): The new data for the connector.
+
+        Returns:
+            dict: A dictionary containing the success status and a message indicating the status.
+                  If the update operation was successful, it returns the connector name.
+                  If the connector was not found, it returns a message indicating so.
+                  If a database error occurred, it returns the error message.
+        """
         logger.info(f"Updating connector {connector_id} with data {updated_data}")
         try:
             connector = (
@@ -59,14 +83,16 @@ class ConnectorService:
 
     def validate_connector_exists(self, connector_id: int):
         """
-        Validates that a connector exists in the database. Returns a dictionary containing the validation status
-        and a message indicating the status.
+        Validates that a connector exists in the database.
 
         Args:
-            connector_id (int): The id of the connector to be validated.
+            connector_id (int): The ID of the connector to validate.
 
         Returns:
-            dict: A dictionary containing the validation status and a message indicating the status.
+            dict: A dictionary containing the success status and a message indicating the status.
+                  If the connector exists, it also returns the connector name.
+                  If the connector was not found, it returns a message indicating so.
+                  If a database error occurred, it returns the error message.
         """
         try:
             connector = (
@@ -91,15 +117,17 @@ class ConnectorService:
 
     def update_connector(self, connector_id: int, updated_data: dict):
         """
-        Updates a connector in the database.
+        Updates a connector in the database with the provided data.
 
         Args:
-            connector_id (int): The id of the connector to be updated.
-            updated_data (dict): A dictionary containing the updated data for the connector.
+            connector_id (int): The ID of the connector to update.
+            updated_data (dict): The new data for the connector.
 
         Returns:
             dict: A dictionary containing the success status and a message indicating the status.
-            If the update operation was successful, it returns the connector name.
+                  If the update operation was successful, it returns the connector name.
+                  If the connector was not found, it returns a message indicating so.
+                  If a database error occurred, it returns the error message.
         """
         try:
             connector = (
@@ -131,11 +159,13 @@ class ConnectorService:
         Verifies the connection of a connector.
 
         Args:
-            connector_id (int): The id of the connector to be verified.
+            connector_id (int): The ID of the connector to verify.
 
         Returns:
-            dict: A dictionary containing the success status and a message indicating the status. If the verification
-            operation was successful, it returns the connector name.
+            dict: A dictionary containing the success status and a message indicating the status.
+                  If the connection was verified successfully, it returns the connector name and the connection status.
+                  If the connector was not found, it returns a message indicating so.
+                  If a database error occurred, it returns the error message.
         """
         try:
             connector = (
@@ -170,14 +200,15 @@ class ConnectorService:
 
     def validate_request_data(self, request_data: dict):
         """
-        Validates the request data to ensure `connector_url`, `connector_username` and `connector_password` are present.
-        Returns a dictionary containing the validation status and a message indicating the status.
+        Validates the request data to ensure `connector_url`, `connector_username`, and `connector_password` are present.
 
         Args:
-            request_data (dict): A dictionary containing the request data.
+            request_data (dict): The request data to validate.
 
         Returns:
-            dict: A dictionary containing the validation status and a message indicating the status.
+            dict: A dictionary containing the success status and a message indicating the status.
+                  If the data is valid, it returns a message indicating so.
+                  If the data is invalid, it returns a message indicating so.
         """
         if (
             request_data.get("connector_url", None)
@@ -194,14 +225,15 @@ class ConnectorService:
 
     def validate_request_data_api_key(self, request_data: dict):
         """
-        Validates the request data to ensure `connector_url` and `connector_api_key` are present. Returns a dictionary
-        containing the validation status and a message indicating the status.
+        Validates the request data to ensure `connector_url` and `connector_api_key` are present.
 
         Args:
-            request_data (dict): A dictionary containing the request data.
+            request_data (dict): The request data to validate.
 
         Returns:
-            dict: A dictionary containing the validation status and a message indicating the status.
+            dict: A dictionary containing the success status and a message indicating the status.
+                  If the data is valid, it returns a message indicating so.
+                  If the data is invalid, it returns a message indicating so.
         """
         if request_data.get("connector_url", None) and request_data.get(
             "connector_api_key",
