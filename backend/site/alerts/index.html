@@ -1,0 +1,1371 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../agents/">
+      
+      
+        <link rel="next" href="../artifacts/">
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.18">
+    
+    
+      
+        <title>Alerts - SOCFortress CoPilot</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.26e3688c.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ecc896b0.min.css">
+      
+      
+
+    
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="purple">
+  
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&"object"==typeof palette.color)for(var key of Object.keys(palette.color))document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#alerts-overview" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="SOCFortress CoPilot" class="md-header__button md-logo" aria-label="SOCFortress CoPilot" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            SOCFortress CoPilot
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Alerts
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+          
+            
+            
+            
+            <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="purple"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+            
+              <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 6H7c-3.31 0-6 2.69-6 6s2.69 6 6 6h10c3.31 0 6-2.69 6-6s-2.69-6-6-6zm0 10H7c-2.21 0-4-1.79-4-4s1.79-4 4-4h10c2.21 0 4 1.79 4 4s-1.79 4-4 4zM7 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+              </label>
+            
+          
+            
+            
+            
+            <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="lime"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
+            
+              <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 7H7a5 5 0 0 0-5 5 5 5 0 0 0 5 5h10a5 5 0 0 0 5-5 5 5 0 0 0-5-5m0 8a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3Z"/></svg>
+              </label>
+            
+          
+        </form>
+      
+    
+    
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+
+
+  <li class="md-tabs__item">
+    <a href=".." class="md-tabs__link">
+      Home
+    </a>
+  </li>
+
+      
+        
+  
+  
+
+
+  <li class="md-tabs__item">
+    <a href="../connectors/" class="md-tabs__link">
+      Connectors
+    </a>
+  </li>
+
+      
+        
+  
+  
+
+
+  <li class="md-tabs__item">
+    <a href="../agents/" class="md-tabs__link">
+      Agents
+    </a>
+  </li>
+
+      
+        
+  
+  
+    
+  
+
+
+  <li class="md-tabs__item">
+    <a href="./" class="md-tabs__link md-tabs__link--active">
+      Alerts
+    </a>
+  </li>
+
+      
+        
+  
+  
+
+
+  <li class="md-tabs__item">
+    <a href="../artifacts/" class="md-tabs__link">
+      Artifacts
+    </a>
+  </li>
+
+      
+        
+  
+  
+
+
+  <li class="md-tabs__item">
+    <a href="../cases/" class="md-tabs__link">
+      Cases
+    </a>
+  </li>
+
+      
+        
+  
+  
+
+
+  <li class="md-tabs__item">
+    <a href="../graylog/" class="md-tabs__link">
+      Graylog
+    </a>
+  </li>
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="SOCFortress CoPilot" class="md-nav__button md-logo" aria-label="SOCFortress CoPilot" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    SOCFortress CoPilot
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        Home
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../connectors/" class="md-nav__link">
+        Connectors
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../agents/" class="md-nav__link">
+        Agents
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Alerts
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        Alerts
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#alerts-overview" class="md-nav__link">
+    Alerts Overview
+  </a>
+  
+    <nav class="md-nav" aria-label="Alerts Overview">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#alert-routes" class="md-nav__link">
+    Alert Routes
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#app.routes.alerts" class="md-nav__link">
+    app.routes.alerts
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#app.routes.alerts.get_alerts" class="md-nav__link">
+    get_alerts()
+  </a>
+  
+    <nav class="md-nav" aria-label="get_alerts()">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#alert-services" class="md-nav__link">
+    Alert Services
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#app.services.WazuhIndexer.alerts" class="md-nav__link">
+    app.services.WazuhIndexer.alerts
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#app.services.WazuhIndexer.alerts.AlertsService" class="md-nav__link">
+    AlertsService
+  </a>
+  
+    <nav class="md-nav" aria-label="AlertsService">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#app.services.WazuhIndexer.alerts.AlertsService.__init__" class="md-nav__link">
+    __init__()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#app.services.WazuhIndexer.alerts.AlertsService.collect_alerts" class="md-nav__link">
+    collect_alerts()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#app.services.WazuhIndexer.alerts.AlertsService.is_index_skipped" class="md-nav__link">
+    is_index_skipped()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../artifacts/" class="md-nav__link">
+        Artifacts
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cases/" class="md-nav__link">
+        Cases
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../graylog/" class="md-nav__link">
+        Graylog
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  <h1>Alerts</h1>
+
+<h2 id="alerts-overview">Alerts Overview</h2>
+<h3 id="alert-routes"><span style="color:green">Alert Routes</span></h3>
+
+
+<div class="doc doc-object doc-module">
+
+
+<a id="app.routes.alerts"></a>
+  <div class="doc doc-contents first">
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h2 id="app.routes.alerts.get_alerts" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">get_alerts</span><span class="p">()</span></code>
+
+</h2>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Retrieves all alerts from the AlertsService.</p>
+<p>This endpoint retrieves all available alerts from the AlertsService. It does this by creating an instance of
+the AlertsService class and calling its <code>collect_alerts</code> method. The result is a list of all alerts currently
+available.</p>
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+<th>Name</th>        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+<td><code>jsonify</code></td>          <td>
+                <code><span title="flask.jsonify">jsonify</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>A JSON response containing a list of alerts. Each item in the list is a dictionary representing an alert,</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+<td></td>          <td>
+                <code><span title="flask.jsonify">jsonify</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>containing all its associated data.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+      <details class="quote">
+        <summary>Source code in <code>app\routes\alerts.py</code></summary>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-6"> 6</a></span>
+<span class="normal"><a href="#__codelineno-0-7"> 7</a></span>
+<span class="normal"><a href="#__codelineno-0-8"> 8</a></span>
+<span class="normal"><a href="#__codelineno-0-9"> 9</a></span>
+<span class="normal"><a href="#__codelineno-0-10">10</a></span>
+<span class="normal"><a href="#__codelineno-0-11">11</a></span>
+<span class="normal"><a href="#__codelineno-0-12">12</a></span>
+<span class="normal"><a href="#__codelineno-0-13">13</a></span>
+<span class="normal"><a href="#__codelineno-0-14">14</a></span>
+<span class="normal"><a href="#__codelineno-0-15">15</a></span>
+<span class="normal"><a href="#__codelineno-0-16">16</a></span>
+<span class="normal"><a href="#__codelineno-0-17">17</a></span>
+<span class="normal"><a href="#__codelineno-0-18">18</a></span>
+<span class="normal"><a href="#__codelineno-0-19">19</a></span>
+<span class="normal"><a href="#__codelineno-0-20">20</a></span>
+<span class="normal"><a href="#__codelineno-0-21">21</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-6" name="__codelineno-0-6"></a><span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/alerts&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">])</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7"></a><span class="k">def</span> <span class="nf">get_alerts</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">jsonify</span><span class="p">:</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9"></a><span class="sd">    Retrieves all alerts from the AlertsService.</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10"></a>
+<a id="__codelineno-0-11" name="__codelineno-0-11"></a><span class="sd">    This endpoint retrieves all available alerts from the AlertsService. It does this by creating an instance of</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12"></a><span class="sd">    the AlertsService class and calling its `collect_alerts` method. The result is a list of all alerts currently</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13"></a><span class="sd">    available.</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14"></a>
+<a id="__codelineno-0-15" name="__codelineno-0-15"></a><span class="sd">    Returns:</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16"></a><span class="sd">        jsonify: A JSON response containing a list of alerts. Each item in the list is a dictionary representing an alert,</span>
+<a id="__codelineno-0-17" name="__codelineno-0-17"></a><span class="sd">        containing all its associated data.</span>
+<a id="__codelineno-0-18" name="__codelineno-0-18"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19"></a>    <span class="n">service</span> <span class="o">=</span> <span class="n">AlertsService</span><span class="p">()</span>
+<a id="__codelineno-0-20" name="__codelineno-0-20"></a>    <span class="n">alerts</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="n">collect_alerts</span><span class="p">()</span>
+<a id="__codelineno-0-21" name="__codelineno-0-21"></a>    <span class="k">return</span> <span class="n">jsonify</span><span class="p">(</span><span class="n">alerts</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+      </details>
+  </div>
+
+</div>
+
+
+
+  </div>
+
+  </div>
+
+</div><p><br></p>
+<h3 id="alert-services"><span style="color:red">Alert Services</span></h3>
+
+
+<div class="doc doc-object doc-module">
+
+
+<a id="app.services.WazuhIndexer.alerts"></a>
+  <div class="doc doc-contents first">
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="app.services.WazuhIndexer.alerts.AlertsService" class="doc doc-heading">
+        <code>AlertsService</code>
+
+
+</h2>
+
+
+  <div class="doc doc-contents ">
+
+  
+      <p>A service class that encapsulates the logic for pulling alerts from the Wazuh-Indexer.</p>
+
+  <p><strong>Attributes:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>connector_url</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>The url to the Wazuh-Indexer.</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><code>connector_username</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>The username for the Wazuh-Indexer.</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><code>connector_password</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>The password for the Wazuh-Indexer.</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><code>es</code></td>
+          <td>
+                <code><span title="elasticsearch7.Elasticsearch">Elasticsearch</span></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>The Elasticsearch client.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+        <details class="quote">
+          <summary>Source code in <code>app\services\WazuhIndexer\alerts.py</code></summary>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-8">  8</a></span>
+<span class="normal"><a href="#__codelineno-0-9">  9</a></span>
+<span class="normal"><a href="#__codelineno-0-10"> 10</a></span>
+<span class="normal"><a href="#__codelineno-0-11"> 11</a></span>
+<span class="normal"><a href="#__codelineno-0-12"> 12</a></span>
+<span class="normal"><a href="#__codelineno-0-13"> 13</a></span>
+<span class="normal"><a href="#__codelineno-0-14"> 14</a></span>
+<span class="normal"><a href="#__codelineno-0-15"> 15</a></span>
+<span class="normal"><a href="#__codelineno-0-16"> 16</a></span>
+<span class="normal"><a href="#__codelineno-0-17"> 17</a></span>
+<span class="normal"><a href="#__codelineno-0-18"> 18</a></span>
+<span class="normal"><a href="#__codelineno-0-19"> 19</a></span>
+<span class="normal"><a href="#__codelineno-0-20"> 20</a></span>
+<span class="normal"><a href="#__codelineno-0-21"> 21</a></span>
+<span class="normal"><a href="#__codelineno-0-22"> 22</a></span>
+<span class="normal"><a href="#__codelineno-0-23"> 23</a></span>
+<span class="normal"><a href="#__codelineno-0-24"> 24</a></span>
+<span class="normal"><a href="#__codelineno-0-25"> 25</a></span>
+<span class="normal"><a href="#__codelineno-0-26"> 26</a></span>
+<span class="normal"><a href="#__codelineno-0-27"> 27</a></span>
+<span class="normal"><a href="#__codelineno-0-28"> 28</a></span>
+<span class="normal"><a href="#__codelineno-0-29"> 29</a></span>
+<span class="normal"><a href="#__codelineno-0-30"> 30</a></span>
+<span class="normal"><a href="#__codelineno-0-31"> 31</a></span>
+<span class="normal"><a href="#__codelineno-0-32"> 32</a></span>
+<span class="normal"><a href="#__codelineno-0-33"> 33</a></span>
+<span class="normal"><a href="#__codelineno-0-34"> 34</a></span>
+<span class="normal"><a href="#__codelineno-0-35"> 35</a></span>
+<span class="normal"><a href="#__codelineno-0-36"> 36</a></span>
+<span class="normal"><a href="#__codelineno-0-37"> 37</a></span>
+<span class="normal"><a href="#__codelineno-0-38"> 38</a></span>
+<span class="normal"><a href="#__codelineno-0-39"> 39</a></span>
+<span class="normal"><a href="#__codelineno-0-40"> 40</a></span>
+<span class="normal"><a href="#__codelineno-0-41"> 41</a></span>
+<span class="normal"><a href="#__codelineno-0-42"> 42</a></span>
+<span class="normal"><a href="#__codelineno-0-43"> 43</a></span>
+<span class="normal"><a href="#__codelineno-0-44"> 44</a></span>
+<span class="normal"><a href="#__codelineno-0-45"> 45</a></span>
+<span class="normal"><a href="#__codelineno-0-46"> 46</a></span>
+<span class="normal"><a href="#__codelineno-0-47"> 47</a></span>
+<span class="normal"><a href="#__codelineno-0-48"> 48</a></span>
+<span class="normal"><a href="#__codelineno-0-49"> 49</a></span>
+<span class="normal"><a href="#__codelineno-0-50"> 50</a></span>
+<span class="normal"><a href="#__codelineno-0-51"> 51</a></span>
+<span class="normal"><a href="#__codelineno-0-52"> 52</a></span>
+<span class="normal"><a href="#__codelineno-0-53"> 53</a></span>
+<span class="normal"><a href="#__codelineno-0-54"> 54</a></span>
+<span class="normal"><a href="#__codelineno-0-55"> 55</a></span>
+<span class="normal"><a href="#__codelineno-0-56"> 56</a></span>
+<span class="normal"><a href="#__codelineno-0-57"> 57</a></span>
+<span class="normal"><a href="#__codelineno-0-58"> 58</a></span>
+<span class="normal"><a href="#__codelineno-0-59"> 59</a></span>
+<span class="normal"><a href="#__codelineno-0-60"> 60</a></span>
+<span class="normal"><a href="#__codelineno-0-61"> 61</a></span>
+<span class="normal"><a href="#__codelineno-0-62"> 62</a></span>
+<span class="normal"><a href="#__codelineno-0-63"> 63</a></span>
+<span class="normal"><a href="#__codelineno-0-64"> 64</a></span>
+<span class="normal"><a href="#__codelineno-0-65"> 65</a></span>
+<span class="normal"><a href="#__codelineno-0-66"> 66</a></span>
+<span class="normal"><a href="#__codelineno-0-67"> 67</a></span>
+<span class="normal"><a href="#__codelineno-0-68"> 68</a></span>
+<span class="normal"><a href="#__codelineno-0-69"> 69</a></span>
+<span class="normal"><a href="#__codelineno-0-70"> 70</a></span>
+<span class="normal"><a href="#__codelineno-0-71"> 71</a></span>
+<span class="normal"><a href="#__codelineno-0-72"> 72</a></span>
+<span class="normal"><a href="#__codelineno-0-73"> 73</a></span>
+<span class="normal"><a href="#__codelineno-0-74"> 74</a></span>
+<span class="normal"><a href="#__codelineno-0-75"> 75</a></span>
+<span class="normal"><a href="#__codelineno-0-76"> 76</a></span>
+<span class="normal"><a href="#__codelineno-0-77"> 77</a></span>
+<span class="normal"><a href="#__codelineno-0-78"> 78</a></span>
+<span class="normal"><a href="#__codelineno-0-79"> 79</a></span>
+<span class="normal"><a href="#__codelineno-0-80"> 80</a></span>
+<span class="normal"><a href="#__codelineno-0-81"> 81</a></span>
+<span class="normal"><a href="#__codelineno-0-82"> 82</a></span>
+<span class="normal"><a href="#__codelineno-0-83"> 83</a></span>
+<span class="normal"><a href="#__codelineno-0-84"> 84</a></span>
+<span class="normal"><a href="#__codelineno-0-85"> 85</a></span>
+<span class="normal"><a href="#__codelineno-0-86"> 86</a></span>
+<span class="normal"><a href="#__codelineno-0-87"> 87</a></span>
+<span class="normal"><a href="#__codelineno-0-88"> 88</a></span>
+<span class="normal"><a href="#__codelineno-0-89"> 89</a></span>
+<span class="normal"><a href="#__codelineno-0-90"> 90</a></span>
+<span class="normal"><a href="#__codelineno-0-91"> 91</a></span>
+<span class="normal"><a href="#__codelineno-0-92"> 92</a></span>
+<span class="normal"><a href="#__codelineno-0-93"> 93</a></span>
+<span class="normal"><a href="#__codelineno-0-94"> 94</a></span>
+<span class="normal"><a href="#__codelineno-0-95"> 95</a></span>
+<span class="normal"><a href="#__codelineno-0-96"> 96</a></span>
+<span class="normal"><a href="#__codelineno-0-97"> 97</a></span>
+<span class="normal"><a href="#__codelineno-0-98"> 98</a></span>
+<span class="normal"><a href="#__codelineno-0-99"> 99</a></span>
+<span class="normal"><a href="#__codelineno-0-100">100</a></span>
+<span class="normal"><a href="#__codelineno-0-101">101</a></span>
+<span class="normal"><a href="#__codelineno-0-102">102</a></span>
+<span class="normal"><a href="#__codelineno-0-103">103</a></span>
+<span class="normal"><a href="#__codelineno-0-104">104</a></span>
+<span class="normal"><a href="#__codelineno-0-105">105</a></span>
+<span class="normal"><a href="#__codelineno-0-106">106</a></span>
+<span class="normal"><a href="#__codelineno-0-107">107</a></span>
+<span class="normal"><a href="#__codelineno-0-108">108</a></span>
+<span class="normal"><a href="#__codelineno-0-109">109</a></span>
+<span class="normal"><a href="#__codelineno-0-110">110</a></span>
+<span class="normal"><a href="#__codelineno-0-111">111</a></span>
+<span class="normal"><a href="#__codelineno-0-112">112</a></span>
+<span class="normal"><a href="#__codelineno-0-113">113</a></span>
+<span class="normal"><a href="#__codelineno-0-114">114</a></span>
+<span class="normal"><a href="#__codelineno-0-115">115</a></span>
+<span class="normal"><a href="#__codelineno-0-116">116</a></span>
+<span class="normal"><a href="#__codelineno-0-117">117</a></span>
+<span class="normal"><a href="#__codelineno-0-118">118</a></span>
+<span class="normal"><a href="#__codelineno-0-119">119</a></span>
+<span class="normal"><a href="#__codelineno-0-120">120</a></span>
+<span class="normal"><a href="#__codelineno-0-121">121</a></span>
+<span class="normal"><a href="#__codelineno-0-122">122</a></span>
+<span class="normal"><a href="#__codelineno-0-123">123</a></span>
+<span class="normal"><a href="#__codelineno-0-124">124</a></span>
+<span class="normal"><a href="#__codelineno-0-125">125</a></span>
+<span class="normal"><a href="#__codelineno-0-126">126</a></span>
+<span class="normal"><a href="#__codelineno-0-127">127</a></span>
+<span class="normal"><a href="#__codelineno-0-128">128</a></span>
+<span class="normal"><a href="#__codelineno-0-129">129</a></span>
+<span class="normal"><a href="#__codelineno-0-130">130</a></span>
+<span class="normal"><a href="#__codelineno-0-131">131</a></span>
+<span class="normal"><a href="#__codelineno-0-132">132</a></span>
+<span class="normal"><a href="#__codelineno-0-133">133</a></span>
+<span class="normal"><a href="#__codelineno-0-134">134</a></span>
+<span class="normal"><a href="#__codelineno-0-135">135</a></span>
+<span class="normal"><a href="#__codelineno-0-136">136</a></span>
+<span class="normal"><a href="#__codelineno-0-137">137</a></span>
+<span class="normal"><a href="#__codelineno-0-138">138</a></span>
+<span class="normal"><a href="#__codelineno-0-139">139</a></span>
+<span class="normal"><a href="#__codelineno-0-140">140</a></span>
+<span class="normal"><a href="#__codelineno-0-141">141</a></span>
+<span class="normal"><a href="#__codelineno-0-142">142</a></span>
+<span class="normal"><a href="#__codelineno-0-143">143</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-8" name="__codelineno-0-8"></a><span class="k">class</span> <span class="nc">AlertsService</span><span class="p">:</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10"></a><span class="sd">    A service class that encapsulates the logic for pulling alerts from the Wazuh-Indexer.</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11"></a>
+<a id="__codelineno-0-12" name="__codelineno-0-12"></a><span class="sd">    Attributes:</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13"></a><span class="sd">        connector_url (str): The url to the Wazuh-Indexer.</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14"></a><span class="sd">        connector_username (str): The username for the Wazuh-Indexer.</span>
+<a id="__codelineno-0-15" name="__codelineno-0-15"></a><span class="sd">        connector_password (str): The password for the Wazuh-Indexer.</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16"></a><span class="sd">        es (Elasticsearch): The Elasticsearch client.</span>
+<a id="__codelineno-0-17" name="__codelineno-0-17"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-18" name="__codelineno-0-18"></a>
+<a id="__codelineno-0-19" name="__codelineno-0-19"></a>    <span class="n">SKIP_INDEX_NAMES</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+<a id="__codelineno-0-20" name="__codelineno-0-20"></a>        <span class="s2">&quot;wazuh-statistics&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+<a id="__codelineno-0-21" name="__codelineno-0-21"></a>        <span class="s2">&quot;wazuh-monitoring&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+<a id="__codelineno-0-22" name="__codelineno-0-22"></a>    <span class="p">}</span>
+<a id="__codelineno-0-23" name="__codelineno-0-23"></a>
+<a id="__codelineno-0-24" name="__codelineno-0-24"></a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<a id="__codelineno-0-25" name="__codelineno-0-25"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-26" name="__codelineno-0-26"></a><span class="sd">        Initializes the service by collecting Wazuh-Indexer details and creating an Elasticsearch client.</span>
+<a id="__codelineno-0-27" name="__codelineno-0-27"></a><span class="sd">        &quot;&quot;&quot;</span>
+<a id="__codelineno-0-28" name="__codelineno-0-28"></a>        <span class="p">(</span>
+<a id="__codelineno-0-29" name="__codelineno-0-29"></a>            <span class="bp">self</span><span class="o">.</span><span class="n">connector_url</span><span class="p">,</span>
+<a id="__codelineno-0-30" name="__codelineno-0-30"></a>            <span class="bp">self</span><span class="o">.</span><span class="n">connector_username</span><span class="p">,</span>
+<a id="__codelineno-0-31" name="__codelineno-0-31"></a>            <span class="bp">self</span><span class="o">.</span><span class="n">connector_password</span><span class="p">,</span>
+<a id="__codelineno-0-32" name="__codelineno-0-32"></a>        <span class="p">)</span> <span class="o">=</span> <span class="n">UniversalService</span><span class="p">()</span><span class="o">.</span><span class="n">collect_wazuhindexer_details</span><span class="p">(</span><span class="s2">&quot;Wazuh-Indexer&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-33" name="__codelineno-0-33"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">es</span> <span class="o">=</span> <span class="n">Elasticsearch</span><span class="p">(</span>
+<a id="__codelineno-0-34" name="__codelineno-0-34"></a>            <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">connector_url</span><span class="p">],</span>
+<a id="__codelineno-0-35" name="__codelineno-0-35"></a>            <span class="n">http_auth</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connector_username</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">connector_password</span><span class="p">),</span>
+<a id="__codelineno-0-36" name="__codelineno-0-36"></a>            <span class="n">verify_certs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<a id="__codelineno-0-37" name="__codelineno-0-37"></a>            <span class="n">timeout</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
+<a id="__codelineno-0-38" name="__codelineno-0-38"></a>            <span class="n">max_retries</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+<a id="__codelineno-0-39" name="__codelineno-0-39"></a>            <span class="n">retry_on_timeout</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<a id="__codelineno-0-40" name="__codelineno-0-40"></a>        <span class="p">)</span>
+<a id="__codelineno-0-41" name="__codelineno-0-41"></a>
+<a id="__codelineno-0-42" name="__codelineno-0-42"></a>    <span class="k">def</span> <span class="nf">is_index_skipped</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<a id="__codelineno-0-43" name="__codelineno-0-43"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-44" name="__codelineno-0-44"></a><span class="sd">        Checks whether the given index name should be skipped.</span>
+<a id="__codelineno-0-45" name="__codelineno-0-45"></a>
+<a id="__codelineno-0-46" name="__codelineno-0-46"></a><span class="sd">        Args:</span>
+<a id="__codelineno-0-47" name="__codelineno-0-47"></a><span class="sd">            index_name (str): The name of the index.</span>
+<a id="__codelineno-0-48" name="__codelineno-0-48"></a>
+<a id="__codelineno-0-49" name="__codelineno-0-49"></a><span class="sd">        Returns:</span>
+<a id="__codelineno-0-50" name="__codelineno-0-50"></a><span class="sd">            bool: True if the index should be skipped, False otherwise.</span>
+<a id="__codelineno-0-51" name="__codelineno-0-51"></a><span class="sd">        &quot;&quot;&quot;</span>
+<a id="__codelineno-0-52" name="__codelineno-0-52"></a>        <span class="k">for</span> <span class="n">skipped</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">SKIP_INDEX_NAMES</span><span class="p">:</span>
+<a id="__codelineno-0-53" name="__codelineno-0-53"></a>            <span class="k">if</span> <span class="n">index_name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">skipped</span><span class="p">):</span>
+<a id="__codelineno-0-54" name="__codelineno-0-54"></a>                <span class="k">return</span> <span class="kc">True</span>
+<a id="__codelineno-0-55" name="__codelineno-0-55"></a>        <span class="k">return</span> <span class="kc">False</span>
+<a id="__codelineno-0-56" name="__codelineno-0-56"></a>
+<a id="__codelineno-0-57" name="__codelineno-0-57"></a>    <span class="k">def</span> <span class="nf">collect_alerts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+<a id="__codelineno-0-58" name="__codelineno-0-58"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-59" name="__codelineno-0-59"></a><span class="sd">        Collects the alerts from the Wazuh-Indexer where the index name starts with &quot;wazuh_&quot;</span>
+<a id="__codelineno-0-60" name="__codelineno-0-60"></a><span class="sd">        and is not in the SKIP_INDEX_NAMES list.</span>
+<a id="__codelineno-0-61" name="__codelineno-0-61"></a><span class="sd">        Returns the 10 previous alerts based on the `timestamp_utc` field.</span>
+<a id="__codelineno-0-62" name="__codelineno-0-62"></a>
+<a id="__codelineno-0-63" name="__codelineno-0-63"></a><span class="sd">        Returns:</span>
+<a id="__codelineno-0-64" name="__codelineno-0-64"></a><span class="sd">            Dict[str, object]: A dictionary containing success status and alerts or an error message.</span>
+<a id="__codelineno-0-65" name="__codelineno-0-65"></a><span class="sd">        &quot;&quot;&quot;</span>
+<a id="__codelineno-0-66" name="__codelineno-0-66"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span>
+<a id="__codelineno-0-67" name="__codelineno-0-67"></a>            <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">connector_url</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">connector_username</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">connector_password</span><span class="p">],</span>
+<a id="__codelineno-0-68" name="__codelineno-0-68"></a>        <span class="p">):</span>
+<a id="__codelineno-0-69" name="__codelineno-0-69"></a>            <span class="k">return</span> <span class="p">{</span>
+<a id="__codelineno-0-70" name="__codelineno-0-70"></a>                <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Failed to collect Wazuh-Indexer details&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-71" name="__codelineno-0-71"></a>                <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+<a id="__codelineno-0-72" name="__codelineno-0-72"></a>            <span class="p">}</span>
+<a id="__codelineno-0-73" name="__codelineno-0-73"></a>
+<a id="__codelineno-0-74" name="__codelineno-0-74"></a>        <span class="n">indices_list</span> <span class="o">=</span> <span class="n">UniversalService</span><span class="p">()</span><span class="o">.</span><span class="n">collect_indices</span><span class="p">()</span>
+<a id="__codelineno-0-75" name="__codelineno-0-75"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">indices_list</span><span class="p">[</span><span class="s2">&quot;success&quot;</span><span class="p">]:</span>
+<a id="__codelineno-0-76" name="__codelineno-0-76"></a>            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Failed to collect indices&quot;</span><span class="p">,</span> <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
+<a id="__codelineno-0-77" name="__codelineno-0-77"></a>
+<a id="__codelineno-0-78" name="__codelineno-0-78"></a>        <span class="n">alerts_summary</span> <span class="o">=</span> <span class="p">[]</span>
+<a id="__codelineno-0-79" name="__codelineno-0-79"></a>        <span class="k">for</span> <span class="n">index_name</span> <span class="ow">in</span> <span class="n">indices_list</span><span class="p">[</span><span class="s2">&quot;indices_list&quot;</span><span class="p">]:</span>
+<a id="__codelineno-0-80" name="__codelineno-0-80"></a>            <span class="k">if</span> <span class="ow">not</span> <span class="n">index_name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;wazuh_&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_index_skipped</span><span class="p">(</span><span class="n">index_name</span><span class="p">):</span>
+<a id="__codelineno-0-81" name="__codelineno-0-81"></a>                <span class="k">continue</span>
+<a id="__codelineno-0-82" name="__codelineno-0-82"></a>
+<a id="__codelineno-0-83" name="__codelineno-0-83"></a>            <span class="n">alerts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_collect_alerts</span><span class="p">(</span><span class="n">index_name</span><span class="p">)</span>
+<a id="__codelineno-0-84" name="__codelineno-0-84"></a>            <span class="k">if</span> <span class="n">alerts</span><span class="p">[</span><span class="s2">&quot;success&quot;</span><span class="p">]</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">alerts</span><span class="p">[</span><span class="s2">&quot;alerts&quot;</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+<a id="__codelineno-0-85" name="__codelineno-0-85"></a>                <span class="n">alerts_summary</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+<a id="__codelineno-0-86" name="__codelineno-0-86"></a>                    <span class="p">{</span>
+<a id="__codelineno-0-87" name="__codelineno-0-87"></a>                        <span class="s2">&quot;index_name&quot;</span><span class="p">:</span> <span class="n">index_name</span><span class="p">,</span>
+<a id="__codelineno-0-88" name="__codelineno-0-88"></a>                        <span class="s2">&quot;total_alerts&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">alerts</span><span class="p">[</span><span class="s2">&quot;alerts&quot;</span><span class="p">]),</span>
+<a id="__codelineno-0-89" name="__codelineno-0-89"></a>                        <span class="s2">&quot;last_10_alerts&quot;</span><span class="p">:</span> <span class="n">alerts</span><span class="p">[</span><span class="s2">&quot;alerts&quot;</span><span class="p">],</span>
+<a id="__codelineno-0-90" name="__codelineno-0-90"></a>                    <span class="p">},</span>
+<a id="__codelineno-0-91" name="__codelineno-0-91"></a>                <span class="p">)</span>
+<a id="__codelineno-0-92" name="__codelineno-0-92"></a>
+<a id="__codelineno-0-93" name="__codelineno-0-93"></a>        <span class="k">return</span> <span class="p">{</span>
+<a id="__codelineno-0-94" name="__codelineno-0-94"></a>            <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Successfully collected alerts&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-95" name="__codelineno-0-95"></a>            <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+<a id="__codelineno-0-96" name="__codelineno-0-96"></a>            <span class="s2">&quot;alerts_summary&quot;</span><span class="p">:</span> <span class="n">alerts_summary</span><span class="p">,</span>
+<a id="__codelineno-0-97" name="__codelineno-0-97"></a>        <span class="p">}</span>
+<a id="__codelineno-0-98" name="__codelineno-0-98"></a>
+<a id="__codelineno-0-99" name="__codelineno-0-99"></a>    <span class="k">def</span> <span class="nf">_collect_alerts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+<a id="__codelineno-0-100" name="__codelineno-0-100"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-101" name="__codelineno-0-101"></a><span class="sd">        Elasticsearch query to get the 10 most recent alerts where the `rule_level` is 12 or higher or the</span>
+<a id="__codelineno-0-102" name="__codelineno-0-102"></a><span class="sd">        `syslog_level` field is `ALERT` and return the results in descending order by the `timestamp_utc` field.</span>
+<a id="__codelineno-0-103" name="__codelineno-0-103"></a>
+<a id="__codelineno-0-104" name="__codelineno-0-104"></a><span class="sd">        Args:</span>
+<a id="__codelineno-0-105" name="__codelineno-0-105"></a><span class="sd">            index_name (str): The name of the index to query.</span>
+<a id="__codelineno-0-106" name="__codelineno-0-106"></a>
+<a id="__codelineno-0-107" name="__codelineno-0-107"></a><span class="sd">        Returns:</span>
+<a id="__codelineno-0-108" name="__codelineno-0-108"></a><span class="sd">            Dict[str, object]: A dictionary containing success status and alerts or an error message.</span>
+<a id="__codelineno-0-109" name="__codelineno-0-109"></a><span class="sd">        &quot;&quot;&quot;</span>
+<a id="__codelineno-0-110" name="__codelineno-0-110"></a>        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Collecting alerts from </span><span class="si">{</span><span class="n">index_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-111" name="__codelineno-0-111"></a>        <span class="n">query</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_query</span><span class="p">()</span>
+<a id="__codelineno-0-112" name="__codelineno-0-112"></a>        <span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-0-113" name="__codelineno-0-113"></a>            <span class="n">alerts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">es</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">index_name</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="n">query</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<a id="__codelineno-0-114" name="__codelineno-0-114"></a>            <span class="n">alerts_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">alert</span> <span class="k">for</span> <span class="n">alert</span> <span class="ow">in</span> <span class="n">alerts</span><span class="p">[</span><span class="s2">&quot;hits&quot;</span><span class="p">][</span><span class="s2">&quot;hits&quot;</span><span class="p">]]</span>
+<a id="__codelineno-0-115" name="__codelineno-0-115"></a>            <span class="k">return</span> <span class="p">{</span>
+<a id="__codelineno-0-116" name="__codelineno-0-116"></a>                <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Successfully collected alerts&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-117" name="__codelineno-0-117"></a>                <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+<a id="__codelineno-0-118" name="__codelineno-0-118"></a>                <span class="s2">&quot;alerts&quot;</span><span class="p">:</span> <span class="n">alerts_list</span><span class="p">,</span>
+<a id="__codelineno-0-119" name="__codelineno-0-119"></a>            <span class="p">}</span>
+<a id="__codelineno-0-120" name="__codelineno-0-120"></a>        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<a id="__codelineno-0-121" name="__codelineno-0-121"></a>            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed to collect alerts: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-122" name="__codelineno-0-122"></a>            <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Failed to collect alerts&quot;</span><span class="p">,</span> <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
+<a id="__codelineno-0-123" name="__codelineno-0-123"></a>
+<a id="__codelineno-0-124" name="__codelineno-0-124"></a>    <span class="nd">@staticmethod</span>
+<a id="__codelineno-0-125" name="__codelineno-0-125"></a>    <span class="k">def</span> <span class="nf">_build_query</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+<a id="__codelineno-0-126" name="__codelineno-0-126"></a><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-127" name="__codelineno-0-127"></a><span class="sd">        Builds the Elasticsearch query to get the 10 most recent alerts where the `rule_level` is 12 or higher or</span>
+<a id="__codelineno-0-128" name="__codelineno-0-128"></a><span class="sd">        the `syslog_level` field is `ALERT`.</span>
+<a id="__codelineno-0-129" name="__codelineno-0-129"></a>
+<a id="__codelineno-0-130" name="__codelineno-0-130"></a><span class="sd">        Returns:</span>
+<a id="__codelineno-0-131" name="__codelineno-0-131"></a><span class="sd">            Dict[str, object]: A dictionary representing the Elasticsearch query.</span>
+<a id="__codelineno-0-132" name="__codelineno-0-132"></a><span class="sd">        &quot;&quot;&quot;</span>
+<a id="__codelineno-0-133" name="__codelineno-0-133"></a>        <span class="k">return</span> <span class="p">{</span>
+<a id="__codelineno-0-134" name="__codelineno-0-134"></a>            <span class="s2">&quot;query&quot;</span><span class="p">:</span> <span class="p">{</span>
+<a id="__codelineno-0-135" name="__codelineno-0-135"></a>                <span class="s2">&quot;bool&quot;</span><span class="p">:</span> <span class="p">{</span>
+<a id="__codelineno-0-136" name="__codelineno-0-136"></a>                    <span class="s2">&quot;should&quot;</span><span class="p">:</span> <span class="p">[</span>
+<a id="__codelineno-0-137" name="__codelineno-0-137"></a>                        <span class="p">{</span><span class="s2">&quot;range&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;rule_level&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;gte&quot;</span><span class="p">:</span> <span class="mi">12</span><span class="p">}}},</span>
+<a id="__codelineno-0-138" name="__codelineno-0-138"></a>                        <span class="p">{</span><span class="s2">&quot;match&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;syslog_level&quot;</span><span class="p">:</span> <span class="s2">&quot;ALERT&quot;</span><span class="p">}},</span>
+<a id="__codelineno-0-139" name="__codelineno-0-139"></a>                    <span class="p">],</span>
+<a id="__codelineno-0-140" name="__codelineno-0-140"></a>                <span class="p">},</span>
+<a id="__codelineno-0-141" name="__codelineno-0-141"></a>            <span class="p">},</span>
+<a id="__codelineno-0-142" name="__codelineno-0-142"></a>            <span class="s2">&quot;sort&quot;</span><span class="p">:</span> <span class="p">[{</span><span class="s2">&quot;timestamp_utc&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;order&quot;</span><span class="p">:</span> <span class="s2">&quot;desc&quot;</span><span class="p">}}],</span>
+<a id="__codelineno-0-143" name="__codelineno-0-143"></a>        <span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+        </details>
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="app.services.WazuhIndexer.alerts.AlertsService.__init__" class="doc doc-heading">
+<code class="highlight language-python"><span class="fm">__init__</span><span class="p">()</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Initializes the service by collecting Wazuh-Indexer details and creating an Elasticsearch client.</p>
+
+      <details class="quote">
+        <summary>Source code in <code>app\services\WazuhIndexer\alerts.py</code></summary>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-24">24</a></span>
+<span class="normal"><a href="#__codelineno-0-25">25</a></span>
+<span class="normal"><a href="#__codelineno-0-26">26</a></span>
+<span class="normal"><a href="#__codelineno-0-27">27</a></span>
+<span class="normal"><a href="#__codelineno-0-28">28</a></span>
+<span class="normal"><a href="#__codelineno-0-29">29</a></span>
+<span class="normal"><a href="#__codelineno-0-30">30</a></span>
+<span class="normal"><a href="#__codelineno-0-31">31</a></span>
+<span class="normal"><a href="#__codelineno-0-32">32</a></span>
+<span class="normal"><a href="#__codelineno-0-33">33</a></span>
+<span class="normal"><a href="#__codelineno-0-34">34</a></span>
+<span class="normal"><a href="#__codelineno-0-35">35</a></span>
+<span class="normal"><a href="#__codelineno-0-36">36</a></span>
+<span class="normal"><a href="#__codelineno-0-37">37</a></span>
+<span class="normal"><a href="#__codelineno-0-38">38</a></span>
+<span class="normal"><a href="#__codelineno-0-39">39</a></span>
+<span class="normal"><a href="#__codelineno-0-40">40</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-24" name="__codelineno-0-24"></a><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<a id="__codelineno-0-25" name="__codelineno-0-25"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-26" name="__codelineno-0-26"></a><span class="sd">    Initializes the service by collecting Wazuh-Indexer details and creating an Elasticsearch client.</span>
+<a id="__codelineno-0-27" name="__codelineno-0-27"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-28" name="__codelineno-0-28"></a>    <span class="p">(</span>
+<a id="__codelineno-0-29" name="__codelineno-0-29"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">connector_url</span><span class="p">,</span>
+<a id="__codelineno-0-30" name="__codelineno-0-30"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">connector_username</span><span class="p">,</span>
+<a id="__codelineno-0-31" name="__codelineno-0-31"></a>        <span class="bp">self</span><span class="o">.</span><span class="n">connector_password</span><span class="p">,</span>
+<a id="__codelineno-0-32" name="__codelineno-0-32"></a>    <span class="p">)</span> <span class="o">=</span> <span class="n">UniversalService</span><span class="p">()</span><span class="o">.</span><span class="n">collect_wazuhindexer_details</span><span class="p">(</span><span class="s2">&quot;Wazuh-Indexer&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-33" name="__codelineno-0-33"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">es</span> <span class="o">=</span> <span class="n">Elasticsearch</span><span class="p">(</span>
+<a id="__codelineno-0-34" name="__codelineno-0-34"></a>        <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">connector_url</span><span class="p">],</span>
+<a id="__codelineno-0-35" name="__codelineno-0-35"></a>        <span class="n">http_auth</span><span class="o">=</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">connector_username</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">connector_password</span><span class="p">),</span>
+<a id="__codelineno-0-36" name="__codelineno-0-36"></a>        <span class="n">verify_certs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<a id="__codelineno-0-37" name="__codelineno-0-37"></a>        <span class="n">timeout</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span>
+<a id="__codelineno-0-38" name="__codelineno-0-38"></a>        <span class="n">max_retries</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+<a id="__codelineno-0-39" name="__codelineno-0-39"></a>        <span class="n">retry_on_timeout</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<a id="__codelineno-0-40" name="__codelineno-0-40"></a>    <span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+      </details>
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="app.services.WazuhIndexer.alerts.AlertsService.collect_alerts" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">collect_alerts</span><span class="p">()</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Collects the alerts from the Wazuh-Indexer where the index name starts with "wazuh_"
+and is not in the SKIP_INDEX_NAMES list.
+Returns the 10 previous alerts based on the <code>timestamp_utc</code> field.</p>
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+                <code><span title="typing.Dict">Dict</span>[str, object]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>Dict[str, object]: A dictionary containing success status and alerts or an error message.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+      <details class="quote">
+        <summary>Source code in <code>app\services\WazuhIndexer\alerts.py</code></summary>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-57">57</a></span>
+<span class="normal"><a href="#__codelineno-0-58">58</a></span>
+<span class="normal"><a href="#__codelineno-0-59">59</a></span>
+<span class="normal"><a href="#__codelineno-0-60">60</a></span>
+<span class="normal"><a href="#__codelineno-0-61">61</a></span>
+<span class="normal"><a href="#__codelineno-0-62">62</a></span>
+<span class="normal"><a href="#__codelineno-0-63">63</a></span>
+<span class="normal"><a href="#__codelineno-0-64">64</a></span>
+<span class="normal"><a href="#__codelineno-0-65">65</a></span>
+<span class="normal"><a href="#__codelineno-0-66">66</a></span>
+<span class="normal"><a href="#__codelineno-0-67">67</a></span>
+<span class="normal"><a href="#__codelineno-0-68">68</a></span>
+<span class="normal"><a href="#__codelineno-0-69">69</a></span>
+<span class="normal"><a href="#__codelineno-0-70">70</a></span>
+<span class="normal"><a href="#__codelineno-0-71">71</a></span>
+<span class="normal"><a href="#__codelineno-0-72">72</a></span>
+<span class="normal"><a href="#__codelineno-0-73">73</a></span>
+<span class="normal"><a href="#__codelineno-0-74">74</a></span>
+<span class="normal"><a href="#__codelineno-0-75">75</a></span>
+<span class="normal"><a href="#__codelineno-0-76">76</a></span>
+<span class="normal"><a href="#__codelineno-0-77">77</a></span>
+<span class="normal"><a href="#__codelineno-0-78">78</a></span>
+<span class="normal"><a href="#__codelineno-0-79">79</a></span>
+<span class="normal"><a href="#__codelineno-0-80">80</a></span>
+<span class="normal"><a href="#__codelineno-0-81">81</a></span>
+<span class="normal"><a href="#__codelineno-0-82">82</a></span>
+<span class="normal"><a href="#__codelineno-0-83">83</a></span>
+<span class="normal"><a href="#__codelineno-0-84">84</a></span>
+<span class="normal"><a href="#__codelineno-0-85">85</a></span>
+<span class="normal"><a href="#__codelineno-0-86">86</a></span>
+<span class="normal"><a href="#__codelineno-0-87">87</a></span>
+<span class="normal"><a href="#__codelineno-0-88">88</a></span>
+<span class="normal"><a href="#__codelineno-0-89">89</a></span>
+<span class="normal"><a href="#__codelineno-0-90">90</a></span>
+<span class="normal"><a href="#__codelineno-0-91">91</a></span>
+<span class="normal"><a href="#__codelineno-0-92">92</a></span>
+<span class="normal"><a href="#__codelineno-0-93">93</a></span>
+<span class="normal"><a href="#__codelineno-0-94">94</a></span>
+<span class="normal"><a href="#__codelineno-0-95">95</a></span>
+<span class="normal"><a href="#__codelineno-0-96">96</a></span>
+<span class="normal"><a href="#__codelineno-0-97">97</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-57" name="__codelineno-0-57"></a><span class="k">def</span> <span class="nf">collect_alerts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+<a id="__codelineno-0-58" name="__codelineno-0-58"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-59" name="__codelineno-0-59"></a><span class="sd">    Collects the alerts from the Wazuh-Indexer where the index name starts with &quot;wazuh_&quot;</span>
+<a id="__codelineno-0-60" name="__codelineno-0-60"></a><span class="sd">    and is not in the SKIP_INDEX_NAMES list.</span>
+<a id="__codelineno-0-61" name="__codelineno-0-61"></a><span class="sd">    Returns the 10 previous alerts based on the `timestamp_utc` field.</span>
+<a id="__codelineno-0-62" name="__codelineno-0-62"></a>
+<a id="__codelineno-0-63" name="__codelineno-0-63"></a><span class="sd">    Returns:</span>
+<a id="__codelineno-0-64" name="__codelineno-0-64"></a><span class="sd">        Dict[str, object]: A dictionary containing success status and alerts or an error message.</span>
+<a id="__codelineno-0-65" name="__codelineno-0-65"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-66" name="__codelineno-0-66"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span>
+<a id="__codelineno-0-67" name="__codelineno-0-67"></a>        <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">connector_url</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">connector_username</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">connector_password</span><span class="p">],</span>
+<a id="__codelineno-0-68" name="__codelineno-0-68"></a>    <span class="p">):</span>
+<a id="__codelineno-0-69" name="__codelineno-0-69"></a>        <span class="k">return</span> <span class="p">{</span>
+<a id="__codelineno-0-70" name="__codelineno-0-70"></a>            <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Failed to collect Wazuh-Indexer details&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-71" name="__codelineno-0-71"></a>            <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+<a id="__codelineno-0-72" name="__codelineno-0-72"></a>        <span class="p">}</span>
+<a id="__codelineno-0-73" name="__codelineno-0-73"></a>
+<a id="__codelineno-0-74" name="__codelineno-0-74"></a>    <span class="n">indices_list</span> <span class="o">=</span> <span class="n">UniversalService</span><span class="p">()</span><span class="o">.</span><span class="n">collect_indices</span><span class="p">()</span>
+<a id="__codelineno-0-75" name="__codelineno-0-75"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">indices_list</span><span class="p">[</span><span class="s2">&quot;success&quot;</span><span class="p">]:</span>
+<a id="__codelineno-0-76" name="__codelineno-0-76"></a>        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Failed to collect indices&quot;</span><span class="p">,</span> <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
+<a id="__codelineno-0-77" name="__codelineno-0-77"></a>
+<a id="__codelineno-0-78" name="__codelineno-0-78"></a>    <span class="n">alerts_summary</span> <span class="o">=</span> <span class="p">[]</span>
+<a id="__codelineno-0-79" name="__codelineno-0-79"></a>    <span class="k">for</span> <span class="n">index_name</span> <span class="ow">in</span> <span class="n">indices_list</span><span class="p">[</span><span class="s2">&quot;indices_list&quot;</span><span class="p">]:</span>
+<a id="__codelineno-0-80" name="__codelineno-0-80"></a>        <span class="k">if</span> <span class="ow">not</span> <span class="n">index_name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;wazuh_&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_index_skipped</span><span class="p">(</span><span class="n">index_name</span><span class="p">):</span>
+<a id="__codelineno-0-81" name="__codelineno-0-81"></a>            <span class="k">continue</span>
+<a id="__codelineno-0-82" name="__codelineno-0-82"></a>
+<a id="__codelineno-0-83" name="__codelineno-0-83"></a>        <span class="n">alerts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_collect_alerts</span><span class="p">(</span><span class="n">index_name</span><span class="p">)</span>
+<a id="__codelineno-0-84" name="__codelineno-0-84"></a>        <span class="k">if</span> <span class="n">alerts</span><span class="p">[</span><span class="s2">&quot;success&quot;</span><span class="p">]</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">alerts</span><span class="p">[</span><span class="s2">&quot;alerts&quot;</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+<a id="__codelineno-0-85" name="__codelineno-0-85"></a>            <span class="n">alerts_summary</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+<a id="__codelineno-0-86" name="__codelineno-0-86"></a>                <span class="p">{</span>
+<a id="__codelineno-0-87" name="__codelineno-0-87"></a>                    <span class="s2">&quot;index_name&quot;</span><span class="p">:</span> <span class="n">index_name</span><span class="p">,</span>
+<a id="__codelineno-0-88" name="__codelineno-0-88"></a>                    <span class="s2">&quot;total_alerts&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">alerts</span><span class="p">[</span><span class="s2">&quot;alerts&quot;</span><span class="p">]),</span>
+<a id="__codelineno-0-89" name="__codelineno-0-89"></a>                    <span class="s2">&quot;last_10_alerts&quot;</span><span class="p">:</span> <span class="n">alerts</span><span class="p">[</span><span class="s2">&quot;alerts&quot;</span><span class="p">],</span>
+<a id="__codelineno-0-90" name="__codelineno-0-90"></a>                <span class="p">},</span>
+<a id="__codelineno-0-91" name="__codelineno-0-91"></a>            <span class="p">)</span>
+<a id="__codelineno-0-92" name="__codelineno-0-92"></a>
+<a id="__codelineno-0-93" name="__codelineno-0-93"></a>    <span class="k">return</span> <span class="p">{</span>
+<a id="__codelineno-0-94" name="__codelineno-0-94"></a>        <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Successfully collected alerts&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-95" name="__codelineno-0-95"></a>        <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+<a id="__codelineno-0-96" name="__codelineno-0-96"></a>        <span class="s2">&quot;alerts_summary&quot;</span><span class="p">:</span> <span class="n">alerts_summary</span><span class="p">,</span>
+<a id="__codelineno-0-97" name="__codelineno-0-97"></a>    <span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+      </details>
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="app.services.WazuhIndexer.alerts.AlertsService.is_index_skipped" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">is_index_skipped</span><span class="p">(</span><span class="n">index_name</span><span class="p">)</span></code>
+
+</h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Checks whether the given index name should be skipped.</p>
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>index_name</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>The name of the index.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+<th>Name</th>        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+<td><code>bool</code></td>          <td>
+                <code>bool</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>True if the index should be skipped, False otherwise.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+      <details class="quote">
+        <summary>Source code in <code>app\services\WazuhIndexer\alerts.py</code></summary>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-42">42</a></span>
+<span class="normal"><a href="#__codelineno-0-43">43</a></span>
+<span class="normal"><a href="#__codelineno-0-44">44</a></span>
+<span class="normal"><a href="#__codelineno-0-45">45</a></span>
+<span class="normal"><a href="#__codelineno-0-46">46</a></span>
+<span class="normal"><a href="#__codelineno-0-47">47</a></span>
+<span class="normal"><a href="#__codelineno-0-48">48</a></span>
+<span class="normal"><a href="#__codelineno-0-49">49</a></span>
+<span class="normal"><a href="#__codelineno-0-50">50</a></span>
+<span class="normal"><a href="#__codelineno-0-51">51</a></span>
+<span class="normal"><a href="#__codelineno-0-52">52</a></span>
+<span class="normal"><a href="#__codelineno-0-53">53</a></span>
+<span class="normal"><a href="#__codelineno-0-54">54</a></span>
+<span class="normal"><a href="#__codelineno-0-55">55</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-42" name="__codelineno-0-42"></a><span class="k">def</span> <span class="nf">is_index_skipped</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<a id="__codelineno-0-43" name="__codelineno-0-43"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-44" name="__codelineno-0-44"></a><span class="sd">    Checks whether the given index name should be skipped.</span>
+<a id="__codelineno-0-45" name="__codelineno-0-45"></a>
+<a id="__codelineno-0-46" name="__codelineno-0-46"></a><span class="sd">    Args:</span>
+<a id="__codelineno-0-47" name="__codelineno-0-47"></a><span class="sd">        index_name (str): The name of the index.</span>
+<a id="__codelineno-0-48" name="__codelineno-0-48"></a>
+<a id="__codelineno-0-49" name="__codelineno-0-49"></a><span class="sd">    Returns:</span>
+<a id="__codelineno-0-50" name="__codelineno-0-50"></a><span class="sd">        bool: True if the index should be skipped, False otherwise.</span>
+<a id="__codelineno-0-51" name="__codelineno-0-51"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-52" name="__codelineno-0-52"></a>    <span class="k">for</span> <span class="n">skipped</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">SKIP_INDEX_NAMES</span><span class="p">:</span>
+<a id="__codelineno-0-53" name="__codelineno-0-53"></a>        <span class="k">if</span> <span class="n">index_name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">skipped</span><span class="p">):</span>
+<a id="__codelineno-0-54" name="__codelineno-0-54"></a>            <span class="k">return</span> <span class="kc">True</span>
+<a id="__codelineno-0-55" name="__codelineno-0-55"></a>    <span class="k">return</span> <span class="kc">False</span>
+</code></pre></div></td></tr></table></div>
+      </details>
+  </div>
+
+</div>
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var tab,labels=set.querySelector(".tabbed-labels");for(tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"/></svg>
+            Back to top
+          </button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      &copy; 2023 <a href="https://github.com/socfortress/CoPilot"  target="_blank" rel="noopener">SOCFortress CoPilot</a>
+
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.tabs", "navigation.sections", "toc.integrate", "navigation.top", "search.suggest", "search.highlight", "content.tabs.link", "content.code.annotation", "content.code.copy"], "search": "../assets/javascripts/workers/search.74e28a9f.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.220ee61c.min.js"></script>
+      
+    
+  </body>
+</html>

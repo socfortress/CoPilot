@@ -1,17 +1,11 @@
 # from datetime import datetime
 from typing import Dict
 from typing import List
+from typing import Union
 
 import requests
 from loguru import logger
 
-# from app import db
-# from app.models.agents import AgentMetadata
-# from app.models.agents import agent_metadata_schema
-# from app.models.agents import agent_metadatas_schema
-# from app.models.connectors import Connector
-# from app.models.connectors import GraylogConnector
-# from app.models.connectors import connector_factory
 from app.services.Graylog.universal import UniversalService
 
 
@@ -23,18 +17,21 @@ class IndexService:
     HEADERS: Dict[str, str] = {"X-Requested-By": "CoPilot"}
 
     def __init__(self):
+        """
+        Initializes the IndexService by collecting Graylog details.
+        """
         (
             self.connector_url,
             self.connector_username,
             self.connector_password,
         ) = UniversalService().collect_graylog_details("Graylog")
 
-    def collect_indices(self):
+    def collect_indices(self) -> Dict[str, Union[bool, str, Dict]]:
         """
         Collects the indices that are managed by Graylog.
 
         Returns:
-            list: A list containing the indices.
+            dict: A dictionary containing the success status, a message, and potentially a dictionary with indices.
         """
         if (
             self.connector_url is None
@@ -51,12 +48,12 @@ class IndexService:
 
         return managed_indices
 
-    def _collect_managed_indices(self) -> Dict[str, object]:
+    def _collect_managed_indices(self) -> Dict[str, Union[bool, str, Dict]]:
         """
         Collects the indices that are managed by Graylog.
 
         Returns:
-            dict: A dictionary containing the success status, a message and potentially the indices.
+            dict: A dictionary containing the success status, a message, and potentially a dictionary with indices.
         """
         try:
             managed_indices = requests.get(
@@ -87,7 +84,7 @@ class IndexService:
         index_names = list(response.get("indices", {}).keys())
         return index_names
 
-    def delete_index(self, index_name: str) -> Dict[str, object]:
+    def delete_index(self, index_name: str) -> Dict[str, Union[bool, str]]:
         """
         Deletes the specified index from Graylog.
 
@@ -122,7 +119,7 @@ class IndexService:
             "success": False,
         }
 
-    def _delete_index(self, index_name: str) -> Dict[str, object]:
+    def _delete_index(self, index_name: str) -> Dict[str, Union[bool, str]]:
         """
         Deletes the specified index from Graylog.
 

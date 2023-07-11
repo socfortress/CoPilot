@@ -44,6 +44,7 @@ class AssetsService:
 
         logger.info(f"Collecting case {cid} assets from DFIR-IRIS")
         case = Case(session=self.iris_session)
+        cid = int(cid)
         result = self.universal_service.fetch_and_parse_data(
             self.iris_session,
             case.list_assets,

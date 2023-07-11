@@ -1,4 +1,5 @@
 from flask import Blueprint
+from flask import jsonify
 
 from app.services.WazuhIndexer.alerts import AlertsService
 
@@ -6,15 +7,18 @@ bp = Blueprint("alerts", __name__)
 
 
 @bp.route("/alerts", methods=["GET"])
-def get_alerts():
+def get_alerts() -> jsonify:
     """
-    Endpoint to list all available alerts.
-    It processes each alert to verify the connection and returns the results.
+    Retrieves all alerts from the AlertsService.
+
+    This endpoint retrieves all available alerts from the AlertsService. It does this by creating an instance of
+    the AlertsService class and calling its `collect_alerts` method. The result is a list of all alerts currently
+    available.
 
     Returns:
-        json: A JSON response containing the list of all available alerts along with their connection
-        verification status.
+        jsonify: A JSON response containing a list of alerts. Each item in the list is a dictionary representing an alert,
+        containing all its associated data.
     """
     service = AlertsService()
     alerts = service.collect_alerts()
-    return alerts
+    return jsonify(alerts)

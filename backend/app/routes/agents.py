@@ -1,3 +1,5 @@
+from typing import Any
+
 from flask import Blueprint
 from flask import jsonify
 
@@ -7,21 +9,15 @@ from app.services.WazuhManager.agent import WazuhManagerAgentService
 from app.services.WazuhManager.universal import UniversalService
 from app.services.WazuhManager.vulnerability import VulnerabilityService
 
-# from loguru import logger
-
-
 bp = Blueprint("agents", __name__)
 
 
 @bp.route("/agents", methods=["GET"])
-def get_agents():
+def get_agents() -> Any:
     """
-    Endpoint to list all available agents.
-    It processes each agent to verify the connection and returns the results.
-
+    Endpoint to get a list of all agents. It processes each agent and returns the results.
     Returns:
-        json: A JSON response containing the list of all available agents along with their connection
-        verification status.
+        json: A JSON response containing the list of all available agents along with their connection verification status.
     """
     service = AgentService()
     agents = service.get_all_agents()
@@ -29,13 +25,11 @@ def get_agents():
 
 
 @bp.route("/agents/<agent_id>", methods=["GET"])
-def get_agent(agent_id):
+def get_agent(agent_id: str) -> Any:
     """
-    Endpoint to get the details of a agent.
-
+    Endpoint to get the details of a specific agent.
     Args:
-        id (str): The id of the agent to be fetched.
-
+        agent_id (str): The ID of the agent to retrieve.
     Returns:
         json: A JSON response containing the details of the agent.
     """
@@ -45,15 +39,13 @@ def get_agent(agent_id):
 
 
 @bp.route("/agents/<agent_id>/critical", methods=["POST"])
-def mark_as_critical(agent_id):
+def mark_as_critical(agent_id: str) -> Any:
     """
-    Endpoint to mark a agent as critical.
-
+    Endpoint to mark an agent as critical.
     Args:
-        id (str): The id of the agent to be marked as critical.
-
+        agent_id (str): The ID of the agent to mark as critical.
     Returns:
-        json: A JSON response containing the updated agent information.
+        json: A JSON response containing the updated agent information after being marked as critical.
     """
     service = AgentService()
     result = service.mark_agent_as_critical(agent_id=agent_id)
@@ -61,15 +53,13 @@ def mark_as_critical(agent_id):
 
 
 @bp.route("/agents/<agent_id>/noncritical", methods=["POST"])
-def unmark_agent_critical(agent_id):
+def unmark_agent_critical(agent_id: str) -> Any:
     """
-    Endpoint to unmark a agent as critical.
-
+    Endpoint to unmark an agent as critical.
     Args:
-        id (str): The id of the agent to be unmarked as critical.
-
+        agent_id (str): The ID of the agent to unmark as critical.
     Returns:
-        json: A JSON response containing the updated agent information.
+        json: A JSON response containing the updated agent information after being unmarked as critical.
     """
     service = AgentService()
     result = service.mark_agent_as_non_critical(agent_id=agent_id)
@@ -77,12 +67,11 @@ def unmark_agent_critical(agent_id):
 
 
 @bp.route("/agents/sync", methods=["POST"])
-def sync_agents():
+def sync_agents() -> Any:
     """
-    Endpoint to sync all agents.
-
+    Endpoint to synchronize all agents.
     Returns:
-        json: A JSON response containing the updated agent information.
+        json: A JSON response containing the updated information of all synchronized agents.
     """
     service = AgentSyncService()
     result = service.sync_agents()
@@ -90,24 +79,18 @@ def sync_agents():
 
 
 @bp.route("/agents/<agent_id>/delete", methods=["POST"])
-def delete_agent(agent_id):
+def delete_agent(agent_id: str) -> Any:
     """
-    Endpoint to delete a agent.
-
+    Endpoint to delete an agent.
     Args:
-        id (str): The id of the agent to be deleted.
-
+        agent_id (str): The ID of the agent to be deleted.
     Returns:
-        json: A JSON response containing the updated agent information.
+        json: A JSON response indicating whether the deletion was successful.
     """
     service = AgentService()
     result = service.delete_agent_db(agent_id=agent_id)
 
-    # Delete from WazuhManager
-    # Create instance of UniversalService
     universal_service = UniversalService()
-
-    # Pass universal_service to WazuhManagerAgentService
     agent_service = WazuhManagerAgentService(universal_service)
     agent_service.delete_agent(agent_id=agent_id)
 
@@ -115,21 +98,18 @@ def delete_agent(agent_id):
 
 
 @bp.route("/agents/<agent_id>/vulnerabilities", methods=["GET"])
-def get_agent_vulnerabilities(agent_id):
+def get_agent_vulnerabilities(agent_id: str) -> Any:
     """
-    Endpoint to get the vulnerabilities of a agent.
-
+    Endpoint to get the vulnerabilities of a specific agent.
     Args:
-        id (str): The id of the agent to be fetched.
-
+        agent_id (str): The ID of the agent whose vulnerabilities are to be fetched.
     Returns:
         json: A JSON response containing the vulnerabilities of the agent.
     """
-    # Create instance of UniversalService
     universal_service = UniversalService()
-
-    # Pass universal_service to VulnerabilityService
     vulnerability_service = VulnerabilityService(universal_service)
 
-    agent_vulnerabilities = vulnerability_service.agent_vulnerabilities(agent_id=agent_id)
+    agent_vulnerabilities = vulnerability_service.agent_vulnerabilities(
+        agent_id=agent_id,
+    )
     return agent_vulnerabilities

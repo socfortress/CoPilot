@@ -15,12 +15,10 @@ bp = Blueprint("connectors", __name__)
 @bp.route("/connectors", methods=["GET"])
 def list_connectors_available():
     """
-    Endpoint to list all available connectors.
-    It processes each connector to verify the connection and returns the results.
+    Endpoint to retrieve all available connectors.
 
     Returns:
-        json: A JSON response containing the list of all available connectors along
-        with their connection verification status.
+        json: A JSON response containing the list of all available connectors along with their connection verification status.
     """
     connectors_service = ConnectorService(db)
     connectors = ConnectorsAvailable.query.all()
@@ -36,67 +34,59 @@ def list_connectors_available():
 
 
 @bp.route("/connectors/<id>", methods=["GET"])
-def get_connector_details(id):
+def get_connector_details(id: str):
     """
-    Endpoint to get the details of a connector.
+    Endpoint to retrieve the details of a connector.
 
     Args:
-        id (str): The id of the connector to be fetched.
+        id (str): The ID of the connector to retrieve.
 
     Returns:
         json: A JSON response containing the details of the connector.
     """
-    # Call service function instead of direct function call
     service = ConnectorService(db)
-    connector_validated = service.validate_connector_exists(
-        int(id),
-    )  # convert id to integer
-    logger.info(connector_validated)
-    if connector_validated["success"] is False:
-        return jsonify(connector_validated), 404
+    connector = service.validate_connector_exists(int(id))
 
-    # Fetch connector using the ID
-    connector = Connectors.query.get(id)
-    # Call service function instead of direct function call
-    instantiated_connector = service.process_connector(connector.connector_name)
-    return jsonify(instantiated_connector)
+    if connector["success"]:
+        connector = Connectors.query.get(id)
+        instantiated_connector = service.process_connector(connector.connector_name)
+        return jsonify(instantiated_connector)
+    else:
+        return jsonify(connector), 404
 
 
 @bp.route("/connectors/<id>", methods=["PUT"])
-def update_connector_route(id):
+def update_connector_route(id: str):
     """
-    Endpoint to update a connector.
+    Endpoint to update the details of a connector.
 
     Args:
-        id (str): The id of the connector to be updated.
+        id (str): The ID of the connector to update.
 
     Returns:
-        json: A JSON response containing the success status of the update operation and
-        a message indicating the status. If the update operation was successful,
-        it returns the connector name and the status of the connection verification.
+        json: A JSON response containing the success status of the update operation and a message indicating the status.
+        If the update operation was successful, it returns the connector name and the status of the connection verification.
     """
     api_key_connector = ["Shuffle", "DFIR-IRIS", "Velociraptor"]
 
     request_data = request.get_json()
     service = ConnectorService(db)
-    connector_validated = service.validate_connector_exists(
-        int(id),
-    )  # convert id to integer
-    logger.info(connector_validated)
-    if connector_validated["success"] is False:
-        return jsonify(connector_validated), 404
+    connector = service.validate_connector_exists(int(id))
 
-    if connector_validated["connector_name"] in api_key_connector:
-        data_validated = service.validate_request_data_api_key(request_data)
-        if data_validated["success"] is False:
-            return jsonify(data_validated), 400
+    if connector["success"]:
+        if connector["connector_name"] in api_key_connector:
+            data_validated = service.validate_request_data_api_key(request_data)
+            if data_validated["success"]:
+                service.update_connector(int(id), request_data)
+                return service.verify_connector_connection(int(id))
+            else:
+                return jsonify(data_validated), 400
         else:
-            service.update_connector(int(id), request_data)
-            return service.verify_connector_connection(int(id))
-
-    data_validated = service.validate_request_data(request_data)
-    if data_validated["success"] is False:
-        return jsonify(data_validated), 400
-
-    service.update_connector(int(id), request_data)
-    return service.verify_connector_connection(int(id))
+            data_validated = service.validate_request_data(request_data)
+            if data_validated["success"]:
+                service.update_connector(int(id), request_data)
+                return service.verify_connector_connection(int(id))
+            else:
+                return jsonify(data_validated), 400
+    else:
+        return jsonify(connector), 404

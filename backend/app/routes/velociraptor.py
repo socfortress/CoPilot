@@ -2,15 +2,8 @@ from flask import Blueprint
 from flask import jsonify
 from flask import request
 
-# from app.models.connectors import Connector
-# from app.models.connectors import WazuhManagerConnector
-# from app.services.agents.agents import AgentService
-# from app.services.agents.agents import AgentSyncService
 from app.services.Velociraptor.artifacts import ArtifactsService
 from app.services.Velociraptor.universal import UniversalService
-
-# from loguru import logger
-
 
 bp = Blueprint("velociraptor", __name__)
 
@@ -33,12 +26,12 @@ def get_artifacts():
 @bp.route("/velociraptor/artifacts/linux", methods=["GET"])
 def get_artifacts_linux():
     """
-    Endpoint to list all available artifacts.
+    Endpoint to list all available Linux artifacts.
     It processes each artifact to verify the connection and returns the results where the name
     begins with `Linux`.
 
     Returns:
-        json: A JSON response containing the list of all available artifacts along with their connection verification
+        json: A JSON response containing the list of all available Linux artifacts along with their connection verification
         status.
     """
     service = ArtifactsService()
@@ -49,12 +42,12 @@ def get_artifacts_linux():
 @bp.route("/velociraptor/artifacts/windows", methods=["GET"])
 def get_artifacts_windows():
     """
-    Endpoint to list all available artifacts.
+    Endpoint to list all available Windows artifacts.
     It processes each artifact to verify the connection and returns the results where the name
     begins with `Windows`.
 
     Returns:
-        json: A JSON response containing the list of all available artifacts along with their connection verification
+        json: A JSON response containing the list of all available Windows artifacts along with their connection verification
         status.
     """
     service = ArtifactsService()
@@ -65,12 +58,12 @@ def get_artifacts_windows():
 @bp.route("/velociraptor/artifacts/mac", methods=["GET"])
 def get_artifacts_mac():
     """
-    Endpoint to list all available artifacts.
+    Endpoint to list all available MacOS artifacts.
     It processes each artifact to verify the connection and returns the results where the name
     begins with `MacOS`.
 
     Returns:
-        json: A JSON response containing the list of all available artifacts along with their connection verification
+        json: A JSON response containing the list of all available MacOS artifacts along with their connection verification
         status.
     """
     service = ArtifactsService()
@@ -85,8 +78,7 @@ def collect_artifact():
     It collects the artifact name and client name from the request body and returns the results.
 
     Returns:
-        json: A JSON response containing the list of all available artifacts along with their connection verification
-        status.
+        json: A JSON response containing the result of the artifact collection operation.
     """
     req_data = request.get_json()
     artifact_name = req_data["artifact_name"]

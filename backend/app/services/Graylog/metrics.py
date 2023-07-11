@@ -1,16 +1,12 @@
 # from datetime import datetime
+from typing import Any
 from typing import Dict
+from typing import List
+from typing import Union
 
 import requests
 from loguru import logger
 
-# from app import db
-# from app.models.agents import AgentMetadata
-# from app.models.agents import agent_metadata_schema
-# from app.models.agents import agent_metadatas_schema
-# from app.models.connectors import Connector
-# from app.models.connectors import GraylogConnector
-# from app.models.connectors import connector_factory
 from app.services.Graylog.universal import UniversalService
 
 # from typing import List
@@ -33,36 +29,43 @@ class MetricsService:
 
     HEADERS: Dict[str, str] = {"X-Requested-By": "CoPilot"}
 
-    def collect_uncommitted_journal_size(self):
+    def __init__(self):
+        """
+        Initializes the MetricsService with Graylog details.
+        """
+        (
+            self.connector_url,
+            self.connector_username,
+            self.connector_password,
+        ) = UniversalService().collect_graylog_details("Graylog")
+
+    def collect_uncommitted_journal_size(self) -> Dict[str, Union[str, bool, int]]:
         """
         Collects the journal size of uncommitted messages from Graylog.
 
         Returns:
-            list: A list containing the metrics.
+            dict: A dictionary containing the success status, a message, and the size of uncommitted journal entries.
         """
-        (
-            connector_url,
-            connector_username,
-            connector_password,
-        ) = UniversalService().collect_graylog_details("Graylog")
         if (
-            connector_url is None
-            or connector_username is None
-            or connector_password is None
+            self.connector_url is None
+            or self.connector_username is None
+            or self.connector_password is None
         ):
             return {"message": "Failed to collect Graylog details", "success": False}
-        else:
-            journal_size = self._collect_metrics_uncommitted_journal_size(
-                connector_url,
-                connector_username,
-                connector_password,
-            )
 
-            if journal_size["success"] is False:
-                return journal_size
+        journal_size = self._collect_metrics_uncommitted_journal_size(
+            self.connector_url,
+            self.connector_username,
+            self.connector_password,
+        )
+
+        if journal_size["success"] is False:
             return journal_size
+        return journal_size
 
-    def collect_throughput_metrics(self):
+    def collect_throughput_metrics(
+        self,
+    ) -> Dict[str, Union[str, bool, List[Dict[str, Any]]]]:
         """
         Collects the following Graylog Metrics:
         - Input Usage
@@ -74,36 +77,31 @@ class MetricsService:
         - Total Output
 
         Returns:
-            list: A list containing the metrics.
+            dict: A dictionary containing the success status, a message, and the list of throughput metrics.
         """
-        (
-            connector_url,
-            connector_username,
-            connector_password,
-        ) = UniversalService().collect_graylog_details("Graylog")
         if (
-            connector_url is None
-            or connector_username is None
-            or connector_password is None
+            self.connector_url is None
+            or self.connector_username is None
+            or self.connector_password is None
         ):
             return {"message": "Failed to collect Graylog details", "success": False}
-        else:
-            throughput_usage = self._collect_metrics_throughput_usage(
-                connector_url,
-                connector_username,
-                connector_password,
-            )
 
-            if throughput_usage["success"] is False:
-                return throughput_usage
+        throughput_usage = self._collect_metrics_throughput_usage(
+            self.connector_url,
+            self.connector_username,
+            self.connector_password,
+        )
+
+        if throughput_usage["success"] is False:
             return throughput_usage
+        return throughput_usage
 
     def _collect_metrics_uncommitted_journal_size(
         self,
         connector_url: str,
         connector_username: str,
         connector_password: str,
-    ):
+    ) -> Dict[str, Union[str, bool, int]]:
         """
         Collects the journal size of uncommitted messages from Graylog.
 
@@ -113,7 +111,7 @@ class MetricsService:
             connector_password (str): The password of the Graylog connector.
 
         Returns:
-            int: The journal size.
+            dict: A dictionary containing the success status, a message, and the size of uncommitted journal entries.
         """
         try:
             logger.info("Collecting journal size from Graylog")
@@ -150,7 +148,7 @@ class MetricsService:
         connector_url: str,
         connector_username: str,
         connector_password: str,
-    ) -> Dict[str, object]:
+    ) -> Dict[str, Union[str, bool, List[Dict[str, Any]]]]:
         """
         Collects throughput usage from Graylog.
 
@@ -160,7 +158,7 @@ class MetricsService:
             connector_password (str): The password of the Graylog connector.
 
         Returns:
-            dict: A dictionary containing the throughput usage.
+            dict: A dictionary containing the success status, a message, and the list of throughput usage metrics.
         """
         logger.info("Collecting throughput usage from Graylog")
 
@@ -214,7 +212,7 @@ class MetricsService:
     def _parse_throughput_metrics(
         self,
         throughput_metrics: Dict[str, object],
-    ) -> Dict[str, object]:
+    ) -> Dict[str, Union[str, bool, List[Dict[str, Any]]]]:
         """
         Parses throughput metrics.
 
@@ -222,7 +220,7 @@ class MetricsService:
             throughput_metrics (dict): The dictionary containing throughput metrics.
 
         Returns:
-            dict: The dictionary with parsed throughput metrics.
+            dict: A dictionary containing the success status, a message, and the list of parsed throughput metrics.
         """
         throughput_metrics_list = []
         results = {}

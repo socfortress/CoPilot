@@ -1,5 +1,10 @@
 # services.py
 from datetime import datetime
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Union
 
 import requests
 from loguru import logger
@@ -18,7 +23,7 @@ class AgentService:
     A service class that encapsulates the logic for managing agents.
     """
 
-    def get_all_agents(self):
+    def get_all_agents(self) -> List[Dict[str, Union[str, bool]]]:
         """
         Retrieves all agents from the database.
 
@@ -28,7 +33,7 @@ class AgentService:
         agents = db.session.query(AgentMetadata).all()
         return agent_metadatas_schema.dump(agents)
 
-    def get_agent(self, agent_id):
+    def get_agent(self, agent_id: str) -> Dict[str, Union[str, bool]]:
         """
         Retrieves a specific agent from the database using its ID.
 
@@ -44,7 +49,7 @@ class AgentService:
             return {"message": f"Agent with ID {agent_id} not found"}
         return agent_metadata_schema.dump(agent)
 
-    def mark_agent_as_critical(self, agent_id):
+    def mark_agent_as_critical(self, agent_id: str) -> Dict[str, Union[str, bool]]:
         """
         Marks a specific agent as critical.
 
@@ -69,7 +74,7 @@ class AgentService:
             }
         return {"message": f"Agent {agent_id} marked as critical", "success": True}
 
-    def mark_agent_as_non_critical(self, agent_id):
+    def mark_agent_as_non_critical(self, agent_id: str) -> Dict[str, Union[str, bool]]:
         """
         Marks a specific agent as non-critical.
 
@@ -94,7 +99,7 @@ class AgentService:
             }
         return {"message": f"Agent {agent_id} marked as non-critical", "success": True}
 
-    def create_agent(self, agent):
+    def create_agent(self, agent: Dict[str, str]) -> Optional[AgentMetadata]:
         """
         Creates a new agent in the database.
 
@@ -136,7 +141,7 @@ class AgentService:
             logger.error(f"Failed to create agent: {e}")
             return None
 
-    def delete_agent_db(self, agent_id):
+    def delete_agent_db(self, agent_id: str) -> Dict[str, Union[str, bool]]:
         """
         Deletes a specific agent from the database using its ID.
 
@@ -166,7 +171,10 @@ class AgentSyncService:
     def __init__(self):
         self.agent_service = AgentService()
 
-    def collect_wazuh_details(self, connector_name: str):
+    def collect_wazuh_details(
+        self,
+        connector_name: str,
+    ) -> Tuple[Optional[str], Optional[str], Optional[str]]:
         """
         Collects the information of all Wazuh API credentials using the WazuhIndexerConnector class details.
 
@@ -185,7 +193,11 @@ class AgentSyncService:
         else:
             return None, None, None
 
-    def collect_wazuh_agents(self, connection_url: str, wazuh_auth_token: str):
+    def collect_wazuh_agents(
+        self,
+        connection_url: str,
+        wazuh_auth_token: str,
+    ) -> Optional[List[Dict[str, str]]]:
         """
         Collects the information of all agents from the Wazuh API.
 
@@ -223,7 +235,7 @@ class AgentSyncService:
             logger.error(f"Failed to collect Wazuh Agents: {e}")
             return None
 
-    def sync_agents(self):
+    def sync_agents(self) -> Dict[str, Union[str, bool, List[Dict[str, str]]]]:
         (
             connection_url,
             connection_username,

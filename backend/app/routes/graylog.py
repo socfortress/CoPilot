@@ -13,12 +13,12 @@ bp = Blueprint("graylog", __name__)
 
 
 @bp.route("/graylog/messages", methods=["GET"])
-def get_messages():
+def get_messages() -> dict:
     """
     Endpoint to collect the latest 10 messages from Graylog.
 
     Returns:
-        json: A JSON response containing the list of all the messages.
+        dict: A JSON object containing the list of all the messages.
     """
     service = MessagesService()
     messages = service.collect_messages()
@@ -26,12 +26,13 @@ def get_messages():
 
 
 @bp.route("/graylog/metrics", methods=["GET"])
-def get_metrics():
+def get_metrics() -> dict:
     """
     Endpoint to collect Graylog metrics.
 
     Returns:
-        json: A JSON response containing the list of all metrics
+        dict: A JSON object containing the list of all metrics,
+              including the uncommitted journal size.
     """
     service = MetricsService()
     uncommitted_journal_size = service.collect_uncommitted_journal_size()
@@ -42,12 +43,12 @@ def get_metrics():
 
 
 @bp.route("/graylog/indices", methods=["GET"])
-def get_indices():
+def get_indices() -> dict:
     """
     Endpoint to collect Graylog indices.
 
     Returns:
-        json: A JSON response containing the list of all indices
+        dict: A JSON object containing the list of all indices.
     """
     service = IndexService()
     indices = service.collect_indices()
@@ -55,7 +56,7 @@ def get_indices():
 
 
 @bp.route("/graylog/indices/<index_name>/delete", methods=["DELETE"])
-def delete_index(index_name):
+def delete_index(index_name: str) -> dict:
     """
     Endpoint to delete a Graylog index.
 
@@ -63,7 +64,7 @@ def delete_index(index_name):
         index_name (str): The name of the index to be deleted.
 
     Returns:
-        json: A JSON response containing the result of the deletion.
+        dict: A JSON object containing the result of the deletion operation.
     """
     service = IndexService()
     result = service.delete_index(index_name)
@@ -71,12 +72,12 @@ def delete_index(index_name):
 
 
 @bp.route("/graylog/inputs", methods=["GET"])
-def get_inputs():
+def get_inputs() -> dict:
     """
     Endpoint to collect Graylog inputs.
 
     Returns:
-        json: A JSON response containing the list of all inputs
+        dict: A JSON object containing the list of all running and configured inputs.
     """
     service = InputsService()
     running_inputs = service.collect_running_inputs()

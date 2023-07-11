@@ -1,13 +1,3 @@
-# from datetime import datetime
-
-# import requests
-# from loguru import logger
-
-# from app.models.connectors import GraylogConnector
-# from app import db
-# from app.models.agents import AgentMetadata
-# from app.models.agents import agent_metadata_schema
-# from app.models.agents import agent_metadatas_schema
 from app.models.connectors import Connector
 from app.models.connectors import connector_factory
 
@@ -20,7 +10,7 @@ class UniversalService:
     def __init__(self) -> None:
         self.collect_graylog_details("Graylog")
 
-    def collect_graylog_details(self, connector_name: str):
+    def collect_graylog_details(self, connector_name: str) -> tuple:
         """
         Collects the details of the Graylog connector.
 

@@ -1,12 +1,6 @@
-# import json
-# from typing import Dict
-
 from loguru import logger
 
 from app.services.Velociraptor.universal import UniversalService
-
-# from pyvelociraptor import api_pb2
-# from werkzeug.utils import secure_filename
 
 
 class ArtifactsService:
@@ -17,7 +11,7 @@ class ArtifactsService:
     def __init__(self):
         self.universal_service = UniversalService()
 
-    def _create_query(self, query: str):
+    def _create_query(self, query: str) -> str:
         """
         Create a query string.
 
@@ -29,7 +23,7 @@ class ArtifactsService:
         """
         return query
 
-    def _get_artifact_key(self, client_id: str, artifact: str):
+    def _get_artifact_key(self, client_id: str, artifact: str) -> str:
         """
         Construct the artifact key.
 
@@ -42,7 +36,7 @@ class ArtifactsService:
         """
         return f"collect_client(client_id='{client_id}', artifacts=['{artifact}'])"
 
-    def collect_artifacts(self):
+    def collect_artifacts(self) -> dict:
         """
         Collect the artifacts from Velociraptor.
 
@@ -52,7 +46,7 @@ class ArtifactsService:
         query = self._create_query("SELECT name FROM artifact_definitions()")
         return self.universal_service.execute_query(query)
 
-    def collect_artifacts_prefixed(self, prefix: str):
+    def collect_artifacts_prefixed(self, prefix: str) -> dict:
         """
         Collect the artifacts from Velociraptor that have a name beginning with a specific prefix.
 
@@ -78,16 +72,34 @@ class ArtifactsService:
             "artifacts": filtered_artifacts,
         }
 
-    def collect_artifacts_linux(self):
+    def collect_artifacts_linux(self) -> dict:
+        """
+        Collect the artifacts from Velociraptor that have a name beginning with `Linux`.
+
+        Returns:
+            dict: A dictionary with the success status, a message, and potentially the artifacts.
+        """
         return self.collect_artifacts_prefixed("Linux.")
 
-    def collect_artifacts_windows(self):
+    def collect_artifacts_windows(self) -> dict:
+        """
+        Collect the artifacts from Velociraptor that have a name beginning with `Windows`.
+
+        Returns:
+            dict: A dictionary with the success status, a message, and potentially the artifacts.
+        """
         return self.collect_artifacts_prefixed("Windows.")
 
-    def collect_artifacts_macos(self):
+    def collect_artifacts_macos(self) -> dict:
+        """
+        Collect the artifacts from Velociraptor that have a name beginning with `MacOS`.
+
+        Returns:
+            dict: A dictionary with the success status, a message, and potentially the artifacts.
+        """
         return self.collect_artifacts_prefixed("MacOS.")
 
-    def run_artifact_collection(self, client_id: str, artifact: str):
+    def run_artifact_collection(self, client_id: str, artifact: str) -> dict:
         """
         Run an artifact collection on a specific client.
 
