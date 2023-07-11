@@ -1,7 +1,6 @@
 from datetime import datetime
 
 from loguru import logger
-from sqlalchemy.dialects.postgresql import TEXT  # Add this line
 
 from app import db
 from app import ma
@@ -150,162 +149,162 @@ connectors_schema = ConnectorsSchema(many=True)
 # Class for Wazuh Indexer allocation which stores disk stats and the host.
 # Generate timestamp for each entry and invoke every 5 minutes.
 # Path: backend\app\models.py
-class WazuhIndexerAllocation(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    node = db.Column(db.String(100))
-    disk_used = db.Column(db.Float)
-    disk_available = db.Column(db.Float)
-    disk_total = db.Column(db.Float)
-    disk_percent = db.Column(db.Float)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+# class WazuhIndexerAllocation(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     node = db.Column(db.String(100))
+#     disk_used = db.Column(db.Float)
+#     disk_available = db.Column(db.Float)
+#     disk_total = db.Column(db.Float)
+#     disk_percent = db.Column(db.Float)
+#     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
-    def __init__(
-        self,
-        node,
-        disk_used,
-        disk_available,
-        disk_total,
-        disk_percent,
-    ):
-        self.node = node
-        self.disk_used = disk_used
-        self.disk_available = disk_available
-        self.disk_total = disk_total
-        self.disk_percent = disk_percent
+#     def __init__(
+#         self,
+#         node,
+#         disk_used,
+#         disk_available,
+#         disk_total,
+#         disk_percent,
+#     ):
+#         self.node = node
+#         self.disk_used = disk_used
+#         self.disk_available = disk_available
+#         self.disk_total = disk_total
+#         self.disk_percent = disk_percent
 
-    def __repr__(self):
-        return f"<WazuhIndexerAllocation {self.node}>"
-
-
-class WazuhIndexerAllocationSchema(ma.Schema):
-    class Meta:
-        fields = (
-            "id",
-            "node",
-            "disk_used",
-            "disk_available",
-            "disk_total",
-            "disk_percent",
-            "timestamp",
-        )
+#     def __repr__(self):
+#         return f"<WazuhIndexerAllocation {self.node}>"
 
 
-wazuh_indexer_allocation_schema = WazuhIndexerAllocationSchema()
-wazuh_indexer_allocations_schema = WazuhIndexerAllocationSchema(many=True)
+# class WazuhIndexerAllocationSchema(ma.Schema):
+#     class Meta:
+#         fields = (
+#             "id",
+#             "node",
+#             "disk_used",
+#             "disk_available",
+#             "disk_total",
+#             "disk_percent",
+#             "timestamp",
+#         )
 
 
-# Class for Graylog allocation which stores throughput metrics
-# Generate timestamp for each entry and invoke every 5 minutes.
-# Path: backend\app\models.py
-class GraylogMetricsAllocation(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    input_usage = db.Column(db.Float)
-    output_usage = db.Column(db.Float)
-    processor_usage = db.Column(db.Float)
-    input_1_sec_rate = db.Column(db.Float)
-    output_1_sec_rate = db.Column(db.Float)
-    total_input = db.Column(db.Float)
-    total_output = db.Column(db.Float)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
-
-    def __init__(
-        self,
-        input_usage,
-        output_usage,
-        processor_usage,
-        input_1_sec_rate,
-        output_1_sec_rate,
-        total_input,
-        total_output,
-    ):
-        self.input_usage = input_usage
-        self.output_usage = output_usage
-        self.processor_usage = processor_usage
-        self.input_1_sec_rate = input_1_sec_rate
-        self.output_1_sec_rate = output_1_sec_rate
-        self.total_input = total_input
-        self.total_output = total_output
-
-    def __repr__(self):
-        return f"<GraylogMetricsAllocation {self.id}>"
+# wazuh_indexer_allocation_schema = WazuhIndexerAllocationSchema()
+# wazuh_indexer_allocations_schema = WazuhIndexerAllocationSchema(many=True)
 
 
-class GraylogMetricsAllocationSchema(ma.Schema):
-    class Meta:
-        fields = (
-            "id",
-            "input_usage",
-            "output_usage",
-            "processor_usage",
-            "input_1_sec_rate",
-            "output_1_sec_rate",
-            "total_input",
-            "total_output",
-            "timestamp",
-        )
+# # Class for Graylog allocation which stores throughput metrics
+# # Generate timestamp for each entry and invoke every 5 minutes.
+# # Path: backend\app\models.py
+# class GraylogMetricsAllocation(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     input_usage = db.Column(db.Float)
+#     output_usage = db.Column(db.Float)
+#     processor_usage = db.Column(db.Float)
+#     input_1_sec_rate = db.Column(db.Float)
+#     output_1_sec_rate = db.Column(db.Float)
+#     total_input = db.Column(db.Float)
+#     total_output = db.Column(db.Float)
+#     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+#     def __init__(
+#         self,
+#         input_usage,
+#         output_usage,
+#         processor_usage,
+#         input_1_sec_rate,
+#         output_1_sec_rate,
+#         total_input,
+#         total_output,
+#     ):
+#         self.input_usage = input_usage
+#         self.output_usage = output_usage
+#         self.processor_usage = processor_usage
+#         self.input_1_sec_rate = input_1_sec_rate
+#         self.output_1_sec_rate = output_1_sec_rate
+#         self.total_input = total_input
+#         self.total_output = total_output
+
+#     def __repr__(self):
+#         return f"<GraylogMetricsAllocation {self.id}>"
 
 
-graylog_metrics_allocation_schema = GraylogMetricsAllocationSchema()
-graylog_metrics_allocations_schema = GraylogMetricsAllocationSchema(many=True)
+# class GraylogMetricsAllocationSchema(ma.Schema):
+#     class Meta:
+#         fields = (
+#             "id",
+#             "input_usage",
+#             "output_usage",
+#             "processor_usage",
+#             "input_1_sec_rate",
+#             "output_1_sec_rate",
+#             "total_input",
+#             "total_output",
+#             "timestamp",
+#         )
+
+
+# graylog_metrics_allocation_schema = GraylogMetricsAllocationSchema()
+# graylog_metrics_allocations_schema = GraylogMetricsAllocationSchema(many=True)
 
 
 # Class for cases which stores the case ID, case name, list of agents
 # Path: backend\app\models.py
-class Case(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    case_id = db.Column(db.Integer)
-    case_name = db.Column(db.String(100))
-    agents = db.Column(db.String(1000))
+# class Case(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     case_id = db.Column(db.Integer)
+#     case_name = db.Column(db.String(100))
+#     agents = db.Column(db.String(1000))
 
-    def __init__(self, case_id, case_name, agents):
-        self.case_id = case_id
-        self.case_name = case_name
-        self.agents = agents
+#     def __init__(self, case_id, case_name, agents):
+#         self.case_id = case_id
+#         self.case_name = case_name
+#         self.agents = agents
 
-    def __repr__(self):
-        return f"<Case {self.case_id}>"
-
-
-class CaseSchema(ma.Schema):
-    class Meta:
-        fields = (
-            "id",
-            "case_id",
-            "case_name",
-            "agents",
-        )
+#     def __repr__(self):
+#         return f"<Case {self.case_id}>"
 
 
-case_schema = CaseSchema()
-cases_schema = CaseSchema(many=True)
+# class CaseSchema(ma.Schema):
+#     class Meta:
+#         fields = (
+#             "id",
+#             "case_id",
+#             "case_name",
+#             "agents",
+#         )
 
 
-# Class for artifacts collected which stores the artifact name, artificat results (json), hostname
-# Path: backend\app\models.py
-class Artifact(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    artifact_name = db.Column(db.String(100))
-    artifact_results = db.Column(TEXT)
-    hostname = db.Column(db.String(100))
-
-    def __init__(self, artifact_name, artifact_results, hostname):
-        self.artifact_name = artifact_name
-        self.artifact_results = artifact_results
-        self.hostname = hostname
-
-    def __repr__(self):
-        return f"<Artifact {self.artifact_name}>"
+# case_schema = CaseSchema()
+# cases_schema = CaseSchema(many=True)
 
 
-class ArtifactSchema(ma.Schema):
-    class Meta:
-        fields = (
-            "id",
-            "artifact_name",
-            "artifact_results",
-            "hostname",
-        )
+# # Class for artifacts collected which stores the artifact name, artificat results (json), hostname
+# # Path: backend\app\models.py
+# class Artifact(db.Model):
+#     id = db.Column(db.Integer, primary_key=True)
+#     artifact_name = db.Column(db.String(100))
+#     artifact_results = db.Column(TEXT)
+#     hostname = db.Column(db.String(100))
+
+#     def __init__(self, artifact_name, artifact_results, hostname):
+#         self.artifact_name = artifact_name
+#         self.artifact_results = artifact_results
+#         self.hostname = hostname
+
+#     def __repr__(self):
+#         return f"<Artifact {self.artifact_name}>"
 
 
-artifact_schema = ArtifactSchema()
-artifacts_schema = ArtifactSchema(many=True)
+# class ArtifactSchema(ma.Schema):
+#     class Meta:
+#         fields = (
+#             "id",
+#             "artifact_name",
+#             "artifact_results",
+#             "hostname",
+#         )
+
+
+# artifact_schema = ArtifactSchema()
+# artifacts_schema = ArtifactSchema(many=True)
