@@ -1,661 +1,469 @@
-
 <!doctype html>
 <html lang="en" class="no-js">
-  <head>
-    
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width,initial-scale=1">
-      
-      
-      
-      
-        <link rel="prev" href="../artifacts/">
-      
-      
-        <link rel="next" href="../graylog/">
-      
-      <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.18">
-    
-    
-      
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+        <link rel="prev" href="../artifacts/" />
+
+        <link rel="next" href="../graylog/" />
+
+        <link rel="icon" href="../assets/images/favicon.png" />
+        <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.18" />
+
         <title>Cases - SOCFortress CoPilot</title>
-      
-    
-    
-      <link rel="stylesheet" href="../assets/stylesheets/main.26e3688c.min.css">
-      
-        
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ecc896b0.min.css">
-      
-      
 
-    
-    
-    
-      
-        
-        
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
-        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
-      
-    
-    
-      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
-    
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
-    
-      
+        <link rel="stylesheet" href="../assets/stylesheets/main.26e3688c.min.css" />
 
-    
-    
-    
-  </head>
-  
-  
-    
-    
-      
-    
-    
-    
-    
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ecc896b0.min.css" />
+
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            rel="stylesheet"
+            href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback"
+        />
+        <style>
+            :root {
+                --md-text-font: "Roboto";
+                --md-code-font: "Roboto Mono";
+            }
+        </style>
+
+        <link rel="stylesheet" href="../assets/_mkdocstrings.css" />
+
+        <script>
+            ;(__md_scope = new URL("..", location)),
+                (__md_hash = e => [...e].reduce((e, _) => (e << 5) - e + _.charCodeAt(0), 0)),
+                (__md_get = (e, _ = localStorage, t = __md_scope) => JSON.parse(_.getItem(t.pathname + "." + e))),
+                (__md_set = (e, _, t = localStorage, a = __md_scope) => {
+                    try {
+                        t.setItem(a.pathname + "." + e, JSON.stringify(_))
+                    } catch (e) {}
+                })
+        </script>
+    </head>
+
     <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="purple">
-  
-    
-    
-      <script>var palette=__md_get("__palette");if(palette&&"object"==typeof palette.color)for(var key of Object.keys(palette.color))document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
-    
-    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
-    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
-    <label class="md-overlay" for="__drawer"></label>
-    <div data-md-component="skip">
-      
-        
-        <a href="#cases-overview" class="md-skip">
-          Skip to content
-        </a>
-      
-    </div>
-    <div data-md-component="announce">
-      
-    </div>
-    
-    
-      
+        <script>
+            var palette = __md_get("__palette")
+            if (palette && "object" == typeof palette.color)
+                for (var key of Object.keys(palette.color))
+                    document.body.setAttribute("data-md-color-" + key, palette.color[key])
+        </script>
 
-<header class="md-header" data-md-component="header">
-  <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="SOCFortress CoPilot" class="md-header__button md-logo" aria-label="SOCFortress CoPilot" data-md-component="logo">
-      
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
-
-    </a>
-    <label class="md-header__button md-icon" for="__drawer">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
-    </label>
-    <div class="md-header__title" data-md-component="header-title">
-      <div class="md-header__ellipsis">
-        <div class="md-header__topic">
-          <span class="md-ellipsis">
-            SOCFortress CoPilot
-          </span>
+        <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off" />
+        <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off" />
+        <label class="md-overlay" for="__drawer"></label>
+        <div data-md-component="skip">
+            <a href="#cases-overview" class="md-skip"> Skip to content </a>
         </div>
-        <div class="md-header__topic" data-md-component="header-topic">
-          <span class="md-ellipsis">
-            
-              Cases
-            
-          </span>
-        </div>
-      </div>
-    </div>
-    
-      
-        <form class="md-header__option" data-md-component="palette">
-          
-            
-            
-            
-            <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="purple"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
-            
-              <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 6H7c-3.31 0-6 2.69-6 6s2.69 6 6 6h10c3.31 0 6-2.69 6-6s-2.69-6-6-6zm0 10H7c-2.21 0-4-1.79-4-4s1.79-4 4-4h10c2.21 0 4 1.79 4 4s-1.79 4-4 4zM7 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
-              </label>
-            
-          
-            
-            
-            
-            <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="lime"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
-            
-              <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 7H7a5 5 0 0 0-5 5 5 5 0 0 0 5 5h10a5 5 0 0 0 5-5 5 5 0 0 0-5-5m0 8a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3Z"/></svg>
-              </label>
-            
-          
-        </form>
-      
-    
-    
-    
-    
-  </nav>
-  
-</header>
-    
-    <div class="md-container" data-md-component="container">
-      
-      
-        
-          
-            
-<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
-  <div class="md-grid">
-    <ul class="md-tabs__list">
-      
-        
-  
-  
+        <div data-md-component="announce"></div>
 
-
-  <li class="md-tabs__item">
-    <a href=".." class="md-tabs__link">
-      Home
-    </a>
-  </li>
-
-      
-        
-  
-  
-
-
-  <li class="md-tabs__item">
-    <a href="../connectors/" class="md-tabs__link">
-      Connectors
-    </a>
-  </li>
-
-      
-        
-  
-  
-
-
-  <li class="md-tabs__item">
-    <a href="../agents/" class="md-tabs__link">
-      Agents
-    </a>
-  </li>
-
-      
-        
-  
-  
-
-
-  <li class="md-tabs__item">
-    <a href="../alerts/" class="md-tabs__link">
-      Alerts
-    </a>
-  </li>
-
-      
-        
-  
-  
-
-
-  <li class="md-tabs__item">
-    <a href="../artifacts/" class="md-tabs__link">
-      Artifacts
-    </a>
-  </li>
-
-      
-        
-  
-  
-    
-  
-
-
-  <li class="md-tabs__item">
-    <a href="./" class="md-tabs__link md-tabs__link--active">
-      Cases
-    </a>
-  </li>
-
-      
-        
-  
-  
-
-
-  <li class="md-tabs__item">
-    <a href="../graylog/" class="md-tabs__link">
-      Graylog
-    </a>
-  </li>
-
-      
-    </ul>
-  </div>
-</nav>
-          
-        
-      
-      <main class="md-main" data-md-component="main">
-        <div class="md-main__inner md-grid">
-          
-            
-              
-              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
-                <div class="md-sidebar__scrollwrap">
-                  <div class="md-sidebar__inner">
-                    
-
-  
-
-
-  
-
-<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
-  <label class="md-nav__title" for="__drawer">
-    <a href=".." title="SOCFortress CoPilot" class="md-nav__button md-logo" aria-label="SOCFortress CoPilot" data-md-component="logo">
-      
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
-
-    </a>
-    SOCFortress CoPilot
-  </label>
-  
-  <ul class="md-nav__list" data-md-scrollfix>
-    
-      
-      
-      
-
-  
-  
-  
-    <li class="md-nav__item">
-      <a href=".." class="md-nav__link">
-        Home
-      </a>
-    </li>
-  
-
-    
-      
-      
-      
-
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../connectors/" class="md-nav__link">
-        Connectors
-      </a>
-    </li>
-  
-
-    
-      
-      
-      
-
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../agents/" class="md-nav__link">
-        Agents
-      </a>
-    </li>
-  
-
-    
-      
-      
-      
-
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../alerts/" class="md-nav__link">
-        Alerts
-      </a>
-    </li>
-  
-
-    
-      
-      
-      
-
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../artifacts/" class="md-nav__link">
-        Artifacts
-      </a>
-    </li>
-  
-
-    
-      
-      
-      
-
-  
-  
-    
-  
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          Cases
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
-        Cases
-      </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#cases-overview" class="md-nav__link">
-    Cases Overview
-  </a>
-  
-    <nav class="md-nav" aria-label="Cases Overview">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#cases-model" class="md-nav__link">
-    Cases Model
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#app.models.cases" class="md-nav__link">
-    app.models.cases
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#app.models.cases.Case" class="md-nav__link">
-    Case
-  </a>
-  
-    <nav class="md-nav" aria-label="Case">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#app.models.cases.Case.__init__" class="md-nav__link">
-    __init__()
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#app.models.cases.Case.__repr__" class="md-nav__link">
-    __repr__()
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#app.models.cases.CaseSchema" class="md-nav__link">
-    CaseSchema
-  </a>
-  
-    <nav class="md-nav" aria-label="CaseSchema">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#app.models.cases.CaseSchema.Meta" class="md-nav__link">
-    Meta
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#cases-routes" class="md-nav__link">
-    Cases Routes
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#app.routes.dfir_iris" class="md-nav__link">
-    app.routes.dfir_iris
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#app.routes.dfir_iris.create_case_note" class="md-nav__link">
-    create_case_note()
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#app.routes.dfir_iris.get_alerts" class="md-nav__link">
-    get_alerts()
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#app.routes.dfir_iris.get_case" class="md-nav__link">
-    get_case()
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#app.routes.dfir_iris.get_case_assets" class="md-nav__link">
-    get_case_assets()
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#app.routes.dfir_iris.get_case_notes" class="md-nav__link">
-    get_case_notes()
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#app.routes.dfir_iris.get_cases" class="md-nav__link">
-    get_cases()
-  </a>
-  
-    <nav class="md-nav" aria-label="get_cases()">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#cases-services" class="md-nav__link">
-    Cases Services
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#app.services.DFIR_IRIS.cases" class="md-nav__link">
-    app.services.DFIR_IRIS.cases
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#app.services.DFIR_IRIS.cases.CasesService" class="md-nav__link">
-    CasesService
-  </a>
-  
-    <nav class="md-nav" aria-label="CasesService">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#app.services.DFIR_IRIS.cases.CasesService.check_case_id" class="md-nav__link">
-    check_case_id()
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#app.services.DFIR_IRIS.cases.CasesService.get_case" class="md-nav__link">
-    get_case()
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#app.services.DFIR_IRIS.cases.CasesService.list_cases" class="md-nav__link">
-    list_cases()
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
-    </li>
-  
-
-    
-      
-      
-      
-
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../graylog/" class="md-nav__link">
-        Graylog
-      </a>
-    </li>
-  
-
-    
-  </ul>
-</nav>
-                  </div>
+        <header class="md-header" data-md-component="header">
+            <nav class="md-header__inner md-grid" aria-label="Header">
+                <a
+                    href=".."
+                    title="SOCFortress CoPilot"
+                    class="md-header__button md-logo"
+                    aria-label="SOCFortress CoPilot"
+                    data-md-component="logo"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path
+                            d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"
+                        />
+                    </svg>
+                </a>
+                <label class="md-header__button md-icon" for="__drawer">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z" />
+                    </svg>
+                </label>
+                <div class="md-header__title" data-md-component="header-title">
+                    <div class="md-header__ellipsis">
+                        <div class="md-header__topic">
+                            <span class="md-ellipsis"> SOCFortress CoPilot </span>
+                        </div>
+                        <div class="md-header__topic" data-md-component="header-topic">
+                            <span class="md-ellipsis"> Cases </span>
+                        </div>
+                    </div>
                 </div>
-              </div>
-            
-            
-          
-          
-            <div class="md-content" data-md-component="content">
-              <article class="md-content__inner md-typeset">
-                
-                  
 
+                <form class="md-header__option" data-md-component="palette">
+                    <input
+                        class="md-option"
+                        data-md-color-media=""
+                        data-md-color-scheme="default"
+                        data-md-color-primary="teal"
+                        data-md-color-accent="purple"
+                        aria-label="Switch to dark mode"
+                        type="radio"
+                        name="__palette"
+                        id="__palette_1"
+                    />
 
-  <h1>Cases</h1>
+                    <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path
+                                d="M17 6H7c-3.31 0-6 2.69-6 6s2.69 6 6 6h10c3.31 0 6-2.69 6-6s-2.69-6-6-6zm0 10H7c-2.21 0-4-1.79-4-4s1.79-4 4-4h10c2.21 0 4 1.79 4 4s-1.79 4-4 4zM7 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"
+                            />
+                        </svg>
+                    </label>
 
-<h2 id="cases-overview">Cases Overview</h2>
-<h3 id="cases-model"><span style="color:blue">Cases Model</span></h3>
+                    <input
+                        class="md-option"
+                        data-md-color-media=""
+                        data-md-color-scheme="slate"
+                        data-md-color-primary="teal"
+                        data-md-color-accent="lime"
+                        aria-label="Switch to light mode"
+                        type="radio"
+                        name="__palette"
+                        id="__palette_2"
+                    />
 
+                    <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path
+                                d="M17 7H7a5 5 0 0 0-5 5 5 5 0 0 0 5 5h10a5 5 0 0 0 5-5 5 5 0 0 0-5-5m0 8a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3Z"
+                            />
+                        </svg>
+                    </label>
+                </form>
+            </nav>
+        </header>
 
-<div class="doc doc-object doc-module">
+        <div class="md-container" data-md-component="container">
+            <nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+                <div class="md-grid">
+                    <ul class="md-tabs__list">
+                        <li class="md-tabs__item">
+                            <a href=".." class="md-tabs__link"> Home </a>
+                        </li>
 
+                        <li class="md-tabs__item">
+                            <a href="../connectors/" class="md-tabs__link"> Connectors </a>
+                        </li>
 
-<a id="app.models.cases"></a>
-  <div class="doc doc-contents first">
+                        <li class="md-tabs__item">
+                            <a href="../agents/" class="md-tabs__link"> Agents </a>
+                        </li>
 
-  
+                        <li class="md-tabs__item">
+                            <a href="../alerts/" class="md-tabs__link"> Alerts </a>
+                        </li>
 
-  <div class="doc doc-children">
+                        <li class="md-tabs__item">
+                            <a href="../artifacts/" class="md-tabs__link"> Artifacts </a>
+                        </li>
 
+                        <li class="md-tabs__item">
+                            <a href="./" class="md-tabs__link md-tabs__link--active"> Cases </a>
+                        </li>
 
+                        <li class="md-tabs__item">
+                            <a href="../graylog/" class="md-tabs__link"> Graylog </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
 
+            <main class="md-main" data-md-component="main">
+                <div class="md-main__inner md-grid">
+                    <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
+                        <div class="md-sidebar__scrollwrap">
+                            <div class="md-sidebar__inner">
+                                <nav
+                                    class="md-nav md-nav--primary md-nav--lifted md-nav--integrated"
+                                    aria-label="Navigation"
+                                    data-md-level="0"
+                                >
+                                    <label class="md-nav__title" for="__drawer">
+                                        <a
+                                            href=".."
+                                            title="SOCFortress CoPilot"
+                                            class="md-nav__button md-logo"
+                                            aria-label="SOCFortress CoPilot"
+                                            data-md-component="logo"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                <path
+                                                    d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"
+                                                />
+                                            </svg>
+                                        </a>
+                                        SOCFortress CoPilot
+                                    </label>
 
+                                    <ul class="md-nav__list" data-md-scrollfix>
+                                        <li class="md-nav__item">
+                                            <a href=".." class="md-nav__link"> Home </a>
+                                        </li>
 
+                                        <li class="md-nav__item">
+                                            <a href="../connectors/" class="md-nav__link"> Connectors </a>
+                                        </li>
 
+                                        <li class="md-nav__item">
+                                            <a href="../agents/" class="md-nav__link"> Agents </a>
+                                        </li>
 
+                                        <li class="md-nav__item">
+                                            <a href="../alerts/" class="md-nav__link"> Alerts </a>
+                                        </li>
 
-<div class="doc doc-object doc-class">
+                                        <li class="md-nav__item">
+                                            <a href="../artifacts/" class="md-nav__link"> Artifacts </a>
+                                        </li>
 
+                                        <li class="md-nav__item md-nav__item--active">
+                                            <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc" />
 
+                                            <label class="md-nav__link md-nav__link--active" for="__toc">
+                                                Cases
+                                                <span class="md-nav__icon md-icon"></span>
+                                            </label>
 
-<h2 id="app.models.cases.Case" class="doc doc-heading">
-        <code>Case</code>
+                                            <a href="./" class="md-nav__link md-nav__link--active"> Cases </a>
 
+                                            <nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+                                                <label class="md-nav__title" for="__toc">
+                                                    <span class="md-nav__icon md-icon"></span>
+                                                    Table of contents
+                                                </label>
+                                                <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+                                                    <li class="md-nav__item">
+                                                        <a href="#cases-overview" class="md-nav__link">
+                                                            Cases Overview
+                                                        </a>
 
-</h2>
+                                                        <nav class="md-nav" aria-label="Cases Overview">
+                                                            <ul class="md-nav__list">
+                                                                <li class="md-nav__item">
+                                                                    <a href="#cases-model" class="md-nav__link">
+                                                                        Cases Model
+                                                                    </a>
+                                                                </li>
+                                                            </ul>
+                                                        </nav>
+                                                    </li>
 
+                                                    <li class="md-nav__item">
+                                                        <a href="#app.models.cases" class="md-nav__link">
+                                                            app.models.cases
+                                                        </a>
+                                                    </li>
 
-  <div class="doc doc-contents ">
-      <p class="doc doc-class-bases">
-        Bases: <code><span title="app.db">db</span>.<span title="app.db.Model">Model</span></code></p>
+                                                    <li class="md-nav__item">
+                                                        <a href="#app.models.cases.Case" class="md-nav__link"> Case </a>
 
-  
-      <p>Class for cases which stores the case ID, case name, and a list of agents.
-This class inherits from SQLAlchemy's Model class.</p>
+                                                        <nav class="md-nav" aria-label="Case">
+                                                            <ul class="md-nav__list">
+                                                                <li class="md-nav__item">
+                                                                    <a
+                                                                        href="#app.models.cases.Case.__init__"
+                                                                        class="md-nav__link"
+                                                                    >
+                                                                        __init__()
+                                                                    </a>
+                                                                </li>
 
+                                                                <li class="md-nav__item">
+                                                                    <a
+                                                                        href="#app.models.cases.Case.__repr__"
+                                                                        class="md-nav__link"
+                                                                    >
+                                                                        __repr__()
+                                                                    </a>
+                                                                </li>
+                                                            </ul>
+                                                        </nav>
+                                                    </li>
 
-        <details class="quote">
-          <summary>Source code in <code>app\models\cases.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-10">10</a></span>
+                                                    <li class="md-nav__item">
+                                                        <a href="#app.models.cases.CaseSchema" class="md-nav__link">
+                                                            CaseSchema
+                                                        </a>
+
+                                                        <nav class="md-nav" aria-label="CaseSchema">
+                                                            <ul class="md-nav__list">
+                                                                <li class="md-nav__item">
+                                                                    <a
+                                                                        href="#app.models.cases.CaseSchema.Meta"
+                                                                        class="md-nav__link"
+                                                                    >
+                                                                        Meta
+                                                                    </a>
+                                                                </li>
+
+                                                                <li class="md-nav__item">
+                                                                    <a href="#cases-routes" class="md-nav__link">
+                                                                        Cases Routes
+                                                                    </a>
+                                                                </li>
+                                                            </ul>
+                                                        </nav>
+                                                    </li>
+
+                                                    <li class="md-nav__item">
+                                                        <a href="#app.routes.dfir_iris" class="md-nav__link">
+                                                            app.routes.dfir_iris
+                                                        </a>
+                                                    </li>
+
+                                                    <li class="md-nav__item">
+                                                        <a
+                                                            href="#app.routes.dfir_iris.create_case_note"
+                                                            class="md-nav__link"
+                                                        >
+                                                            create_case_note()
+                                                        </a>
+                                                    </li>
+
+                                                    <li class="md-nav__item">
+                                                        <a href="#app.routes.dfir_iris.get_alerts" class="md-nav__link">
+                                                            get_alerts()
+                                                        </a>
+                                                    </li>
+
+                                                    <li class="md-nav__item">
+                                                        <a href="#app.routes.dfir_iris.get_case" class="md-nav__link">
+                                                            get_case()
+                                                        </a>
+                                                    </li>
+
+                                                    <li class="md-nav__item">
+                                                        <a
+                                                            href="#app.routes.dfir_iris.get_case_assets"
+                                                            class="md-nav__link"
+                                                        >
+                                                            get_case_assets()
+                                                        </a>
+                                                    </li>
+
+                                                    <li class="md-nav__item">
+                                                        <a
+                                                            href="#app.routes.dfir_iris.get_case_notes"
+                                                            class="md-nav__link"
+                                                        >
+                                                            get_case_notes()
+                                                        </a>
+                                                    </li>
+
+                                                    <li class="md-nav__item">
+                                                        <a href="#app.routes.dfir_iris.get_cases" class="md-nav__link">
+                                                            get_cases()
+                                                        </a>
+
+                                                        <nav class="md-nav" aria-label="get_cases()">
+                                                            <ul class="md-nav__list">
+                                                                <li class="md-nav__item">
+                                                                    <a href="#cases-services" class="md-nav__link">
+                                                                        Cases Services
+                                                                    </a>
+                                                                </li>
+                                                            </ul>
+                                                        </nav>
+                                                    </li>
+
+                                                    <li class="md-nav__item">
+                                                        <a href="#app.services.DFIR_IRIS.cases" class="md-nav__link">
+                                                            app.services.DFIR_IRIS.cases
+                                                        </a>
+                                                    </li>
+
+                                                    <li class="md-nav__item">
+                                                        <a
+                                                            href="#app.services.DFIR_IRIS.cases.CasesService"
+                                                            class="md-nav__link"
+                                                        >
+                                                            CasesService
+                                                        </a>
+
+                                                        <nav class="md-nav" aria-label="CasesService">
+                                                            <ul class="md-nav__list">
+                                                                <li class="md-nav__item">
+                                                                    <a
+                                                                        href="#app.services.DFIR_IRIS.cases.CasesService.check_case_id"
+                                                                        class="md-nav__link"
+                                                                    >
+                                                                        check_case_id()
+                                                                    </a>
+                                                                </li>
+
+                                                                <li class="md-nav__item">
+                                                                    <a
+                                                                        href="#app.services.DFIR_IRIS.cases.CasesService.get_case"
+                                                                        class="md-nav__link"
+                                                                    >
+                                                                        get_case()
+                                                                    </a>
+                                                                </li>
+
+                                                                <li class="md-nav__item">
+                                                                    <a
+                                                                        href="#app.services.DFIR_IRIS.cases.CasesService.list_cases"
+                                                                        class="md-nav__link"
+                                                                    >
+                                                                        list_cases()
+                                                                    </a>
+                                                                </li>
+                                                            </ul>
+                                                        </nav>
+                                                    </li>
+                                                </ul>
+                                            </nav>
+                                        </li>
+
+                                        <li class="md-nav__item">
+                                            <a href="../graylog/" class="md-nav__link"> Graylog </a>
+                                        </li>
+                                    </ul>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="md-content" data-md-component="content">
+                        <article class="md-content__inner md-typeset">
+                            <h1>Cases</h1>
+
+                            <h2 id="cases-overview">Cases Overview</h2>
+                            <h3 id="cases-model"><span style="color: blue">Cases Model</span></h3>
+
+                            <div class="doc doc-object doc-module">
+                                <a id="app.models.cases"></a>
+                                <div class="doc doc-contents first">
+                                    <div class="doc doc-children">
+                                        <div class="doc doc-object doc-class">
+                                            <h2 id="app.models.cases.Case" class="doc doc-heading">
+                                                <code>Case</code>
+                                            </h2>
+
+                                            <div class="doc doc-contents">
+                                                <p class="doc doc-class-bases">
+                                                    Bases:
+                                                    <code
+                                                        ><span title="app.db">db</span>.<span title="app.db.Model"
+                                                            >Model</span
+                                                        ></code
+                                                    >
+                                                </p>
+
+                                                <p>
+                                                    Class for cases which stores the case ID, case name, and a list of
+                                                    agents. This class inherits from SQLAlchemy's Model class.
+                                                </p>
+
+                                                <details class="quote">
+                                                    <summary>Source code in <code>app\models\cases.py</code></summary>
+                                                    <div class="highlight">
+                                                        <table class="highlighttable">
+                                                            <tr>
+                                                                <td class="linenos">
+                                                                    <div class="linenodiv">
+                                                                        <pre><span></span><span class="normal"><a href="#__codelineno-0-10">10</a></span>
 <span class="normal"><a href="#__codelineno-0-11">11</a></span>
 <span class="normal"><a href="#__codelineno-0-12">12</a></span>
 <span class="normal"><a href="#__codelineno-0-13">13</a></span>
@@ -684,7 +492,12 @@ This class inherits from SQLAlchemy's Model class.</p>
 <span class="normal"><a href="#__codelineno-0-36">36</a></span>
 <span class="normal"><a href="#__codelineno-0-37">37</a></span>
 <span class="normal"><a href="#__codelineno-0-38">38</a></span>
-<span class="normal"><a href="#__codelineno-0-39">39</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-10" name="__codelineno-0-10"></a><span class="k">class</span> <span class="nc">Case</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+<span class="normal"><a href="#__codelineno-0-39">39</a></span></pre>
+                                                                    </div>
+                                                                </td>
+                                                                <td class="code">
+                                                                    <div>
+                                                                        <pre><span></span><code><a id="__codelineno-0-10" name="__codelineno-0-10"></a><span class="k">class</span> <span class="nc">Case</span><span class="p">(</span><span class="n">db</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
 <a id="__codelineno-0-11" name="__codelineno-0-11"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-12" name="__codelineno-0-12"></a><span class="sd">    Class for cases which stores the case ID, case name, and a list of agents.</span>
 <a id="__codelineno-0-13" name="__codelineno-0-13"></a><span class="sd">    This class inherits from SQLAlchemy&#39;s Model class.</span>
@@ -714,41 +527,44 @@ This class inherits from SQLAlchemy's Model class.</p>
 <a id="__codelineno-0-37" name="__codelineno-0-37"></a><span class="sd">        :return: A string representation of the case ID.</span>
 <a id="__codelineno-0-38" name="__codelineno-0-38"></a><span class="sd">        &quot;&quot;&quot;</span>
 <a id="__codelineno-0-39" name="__codelineno-0-39"></a>        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&lt;Case </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">case_id</span><span class="si">}</span><span class="s2">&gt;&quot;</span>
-</code></pre></div></td></tr></table></div>
-        </details>
+</code></pre>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </div>
+                                                </details>
 
-  
+                                                <div class="doc doc-children">
+                                                    <div class="doc doc-object doc-function">
+                                                        <h3 id="app.models.cases.Case.__init__" class="doc doc-heading">
+                                                            <code class="highlight language-python"
+                                                                ><span class="fm">__init__</span><span class="p">(</span
+                                                                ><span class="n">case_id</span><span class="p">,</span>
+                                                                <span class="n">case_name</span
+                                                                ><span class="p">,</span> <span class="n">agents</span
+                                                                ><span class="p">)</span></code
+                                                            >
+                                                        </h3>
 
-  <div class="doc doc-children">
+                                                        <div class="doc doc-contents">
+                                                            <p>Initialize a new instance of the Case class.</p>
+                                                            <p>
+                                                                :param case_id: The ID of the case. :param case_name:
+                                                                The name of the case. :param agents: A comma-separated
+                                                                string of agents associated with the case.
+                                                            </p>
 
-
-
-
-
-
-
-
-
-<div class="doc doc-object doc-function">
-
-
-
-<h3 id="app.models.cases.Case.__init__" class="doc doc-heading">
-<code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="n">case_id</span><span class="p">,</span> <span class="n">case_name</span><span class="p">,</span> <span class="n">agents</span><span class="p">)</span></code>
-
-</h3>
-
-
-  <div class="doc doc-contents ">
-  
-      <p>Initialize a new instance of the Case class.</p>
-<p>:param case_id: The ID of the case.
-:param case_name: The name of the case.
-:param agents: A comma-separated string of agents associated with the case.</p>
-
-      <details class="quote">
-        <summary>Source code in <code>app\models\cases.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-21">21</a></span>
+                                                            <details class="quote">
+                                                                <summary>
+                                                                    Source code in <code>app\models\cases.py</code>
+                                                                </summary>
+                                                                <div class="highlight">
+                                                                    <table class="highlighttable">
+                                                                        <tr>
+                                                                            <td class="linenos">
+                                                                                <div class="linenodiv">
+                                                                                    <pre><span></span><span class="normal"><a href="#__codelineno-0-21">21</a></span>
 <span class="normal"><a href="#__codelineno-0-22">22</a></span>
 <span class="normal"><a href="#__codelineno-0-23">23</a></span>
 <span class="normal"><a href="#__codelineno-0-24">24</a></span>
@@ -758,7 +574,12 @@ This class inherits from SQLAlchemy's Model class.</p>
 <span class="normal"><a href="#__codelineno-0-28">28</a></span>
 <span class="normal"><a href="#__codelineno-0-29">29</a></span>
 <span class="normal"><a href="#__codelineno-0-30">30</a></span>
-<span class="normal"><a href="#__codelineno-0-31">31</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-21" name="__codelineno-0-21"></a><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">case_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">case_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">agents</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="normal"><a href="#__codelineno-0-31">31</a></span></pre>
+                                                                                </div>
+                                                                            </td>
+                                                                            <td class="code">
+                                                                                <div>
+                                                                                    <pre><span></span><code><a id="__codelineno-0-21" name="__codelineno-0-21"></a><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">case_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">case_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">agents</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 <a id="__codelineno-0-22" name="__codelineno-0-22"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-23" name="__codelineno-0-23"></a><span class="sd">    Initialize a new instance of the Case class.</span>
 <a id="__codelineno-0-24" name="__codelineno-0-24"></a>
@@ -769,78 +590,96 @@ This class inherits from SQLAlchemy's Model class.</p>
 <a id="__codelineno-0-29" name="__codelineno-0-29"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">case_id</span> <span class="o">=</span> <span class="n">case_id</span>
 <a id="__codelineno-0-30" name="__codelineno-0-30"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">case_name</span> <span class="o">=</span> <span class="n">case_name</span>
 <a id="__codelineno-0-31" name="__codelineno-0-31"></a>    <span class="bp">self</span><span class="o">.</span><span class="n">agents</span> <span class="o">=</span> <span class="n">agents</span>
-</code></pre></div></td></tr></table></div>
-      </details>
-  </div>
+</code></pre>
+                                                                                </div>
+                                                                            </td>
+                                                                        </tr>
+                                                                    </table>
+                                                                </div>
+                                                            </details>
+                                                        </div>
+                                                    </div>
 
-</div>
+                                                    <div class="doc doc-object doc-function">
+                                                        <h3 id="app.models.cases.Case.__repr__" class="doc doc-heading">
+                                                            <code class="highlight language-python"
+                                                                ><span class="fm">__repr__</span
+                                                                ><span class="p">()</span></code
+                                                            >
+                                                        </h3>
 
-<div class="doc doc-object doc-function">
+                                                        <div class="doc doc-contents">
+                                                            <p>Returns a string representation of the Case instance.</p>
+                                                            <p>:return: A string representation of the case ID.</p>
 
-
-
-<h3 id="app.models.cases.Case.__repr__" class="doc doc-heading">
-<code class="highlight language-python"><span class="fm">__repr__</span><span class="p">()</span></code>
-
-</h3>
-
-
-  <div class="doc doc-contents ">
-  
-      <p>Returns a string representation of the Case instance.</p>
-<p>:return: A string representation of the case ID.</p>
-
-      <details class="quote">
-        <summary>Source code in <code>app\models\cases.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-33">33</a></span>
+                                                            <details class="quote">
+                                                                <summary>
+                                                                    Source code in <code>app\models\cases.py</code>
+                                                                </summary>
+                                                                <div class="highlight">
+                                                                    <table class="highlighttable">
+                                                                        <tr>
+                                                                            <td class="linenos">
+                                                                                <div class="linenodiv">
+                                                                                    <pre><span></span><span class="normal"><a href="#__codelineno-0-33">33</a></span>
 <span class="normal"><a href="#__codelineno-0-34">34</a></span>
 <span class="normal"><a href="#__codelineno-0-35">35</a></span>
 <span class="normal"><a href="#__codelineno-0-36">36</a></span>
 <span class="normal"><a href="#__codelineno-0-37">37</a></span>
 <span class="normal"><a href="#__codelineno-0-38">38</a></span>
-<span class="normal"><a href="#__codelineno-0-39">39</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-33" name="__codelineno-0-33"></a><span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="normal"><a href="#__codelineno-0-39">39</a></span></pre>
+                                                                                </div>
+                                                                            </td>
+                                                                            <td class="code">
+                                                                                <div>
+                                                                                    <pre><span></span><code><a id="__codelineno-0-33" name="__codelineno-0-33"></a><span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <a id="__codelineno-0-34" name="__codelineno-0-34"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-35" name="__codelineno-0-35"></a><span class="sd">    Returns a string representation of the Case instance.</span>
 <a id="__codelineno-0-36" name="__codelineno-0-36"></a>
 <a id="__codelineno-0-37" name="__codelineno-0-37"></a><span class="sd">    :return: A string representation of the case ID.</span>
 <a id="__codelineno-0-38" name="__codelineno-0-38"></a><span class="sd">    &quot;&quot;&quot;</span>
 <a id="__codelineno-0-39" name="__codelineno-0-39"></a>    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;&lt;Case </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">case_id</span><span class="si">}</span><span class="s2">&gt;&quot;</span>
-</code></pre></div></td></tr></table></div>
-      </details>
-  </div>
+</code></pre>
+                                                                                </div>
+                                                                            </td>
+                                                                        </tr>
+                                                                    </table>
+                                                                </div>
+                                                            </details>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
 
-</div>
+                                        <div class="doc doc-object doc-class">
+                                            <h2 id="app.models.cases.CaseSchema" class="doc doc-heading">
+                                                <code>CaseSchema</code>
+                                            </h2>
 
+                                            <div class="doc doc-contents">
+                                                <p class="doc doc-class-bases">
+                                                    Bases:
+                                                    <code
+                                                        ><span title="app.ma">ma</span>.<span title="app.ma.Schema"
+                                                            >Schema</span
+                                                        ></code
+                                                    >
+                                                </p>
 
+                                                <p>
+                                                    Schema for serializing and deserializing instances of the Case
+                                                    class.
+                                                </p>
 
-  </div>
-
-  </div>
-
-</div>
-
-<div class="doc doc-object doc-class">
-
-
-
-<h2 id="app.models.cases.CaseSchema" class="doc doc-heading">
-        <code>CaseSchema</code>
-
-
-</h2>
-
-
-  <div class="doc doc-contents ">
-      <p class="doc doc-class-bases">
-        Bases: <code><span title="app.ma">ma</span>.<span title="app.ma.Schema">Schema</span></code></p>
-
-  
-      <p>Schema for serializing and deserializing instances of the Case class.</p>
-
-
-        <details class="quote">
-          <summary>Source code in <code>app\models\cases.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-42">42</a></span>
+                                                <details class="quote">
+                                                    <summary>Source code in <code>app\models\cases.py</code></summary>
+                                                    <div class="highlight">
+                                                        <table class="highlighttable">
+                                                            <tr>
+                                                                <td class="linenos">
+                                                                    <div class="linenodiv">
+                                                                        <pre><span></span><span class="normal"><a href="#__codelineno-0-42">42</a></span>
 <span class="normal"><a href="#__codelineno-0-43">43</a></span>
 <span class="normal"><a href="#__codelineno-0-44">44</a></span>
 <span class="normal"><a href="#__codelineno-0-45">45</a></span>
@@ -855,7 +694,12 @@ This class inherits from SQLAlchemy's Model class.</p>
 <span class="normal"><a href="#__codelineno-0-54">54</a></span>
 <span class="normal"><a href="#__codelineno-0-55">55</a></span>
 <span class="normal"><a href="#__codelineno-0-56">56</a></span>
-<span class="normal"><a href="#__codelineno-0-57">57</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-42" name="__codelineno-0-42"></a><span class="k">class</span> <span class="nc">CaseSchema</span><span class="p">(</span><span class="n">ma</span><span class="o">.</span><span class="n">Schema</span><span class="p">):</span>
+<span class="normal"><a href="#__codelineno-0-57">57</a></span></pre>
+                                                                    </div>
+                                                                </td>
+                                                                <td class="code">
+                                                                    <div>
+                                                                        <pre><span></span><code><a id="__codelineno-0-42" name="__codelineno-0-42"></a><span class="k">class</span> <span class="nc">CaseSchema</span><span class="p">(</span><span class="n">ma</span><span class="o">.</span><span class="n">Schema</span><span class="p">):</span>
 <a id="__codelineno-0-43" name="__codelineno-0-43"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-44" name="__codelineno-0-44"></a><span class="sd">    Schema for serializing and deserializing instances of the Case class.</span>
 <a id="__codelineno-0-45" name="__codelineno-0-45"></a><span class="sd">    &quot;&quot;&quot;</span>
@@ -871,40 +715,39 @@ This class inherits from SQLAlchemy's Model class.</p>
 <a id="__codelineno-0-55" name="__codelineno-0-55"></a>            <span class="s2">&quot;case_name&quot;</span><span class="p">,</span>
 <a id="__codelineno-0-56" name="__codelineno-0-56"></a>            <span class="s2">&quot;agents&quot;</span><span class="p">,</span>
 <a id="__codelineno-0-57" name="__codelineno-0-57"></a>        <span class="p">)</span>
-</code></pre></div></td></tr></table></div>
-        </details>
+</code></pre>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </div>
+                                                </details>
 
-  
+                                                <div class="doc doc-children">
+                                                    <div class="doc doc-object doc-class">
+                                                        <h3
+                                                            id="app.models.cases.CaseSchema.Meta"
+                                                            class="doc doc-heading"
+                                                        >
+                                                            <code>Meta</code>
+                                                        </h3>
 
-  <div class="doc doc-children">
+                                                        <div class="doc doc-contents">
+                                                            <p>
+                                                                Meta class defines the fields to be
+                                                                serialized/deserialized.
+                                                            </p>
 
-
-
-
-
-
-
-
-<div class="doc doc-object doc-class">
-
-
-
-<h3 id="app.models.cases.CaseSchema.Meta" class="doc doc-heading">
-        <code>Meta</code>
-
-
-</h3>
-
-
-  <div class="doc doc-contents ">
-
-  
-      <p>Meta class defines the fields to be serialized/deserialized.</p>
-
-
-        <details class="quote">
-          <summary>Source code in <code>app\models\cases.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-47">47</a></span>
+                                                            <details class="quote">
+                                                                <summary>
+                                                                    Source code in <code>app\models\cases.py</code>
+                                                                </summary>
+                                                                <div class="highlight">
+                                                                    <table class="highlighttable">
+                                                                        <tr>
+                                                                            <td class="linenos">
+                                                                                <div class="linenodiv">
+                                                                                    <pre><span></span><span class="normal"><a href="#__codelineno-0-47">47</a></span>
 <span class="normal"><a href="#__codelineno-0-48">48</a></span>
 <span class="normal"><a href="#__codelineno-0-49">49</a></span>
 <span class="normal"><a href="#__codelineno-0-50">50</a></span>
@@ -914,7 +757,12 @@ This class inherits from SQLAlchemy's Model class.</p>
 <span class="normal"><a href="#__codelineno-0-54">54</a></span>
 <span class="normal"><a href="#__codelineno-0-55">55</a></span>
 <span class="normal"><a href="#__codelineno-0-56">56</a></span>
-<span class="normal"><a href="#__codelineno-0-57">57</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-47" name="__codelineno-0-47"></a><span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+<span class="normal"><a href="#__codelineno-0-57">57</a></span></pre>
+                                                                                </div>
+                                                                            </td>
+                                                                            <td class="code">
+                                                                                <div>
+                                                                                    <pre><span></span><code><a id="__codelineno-0-47" name="__codelineno-0-47"></a><span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
 <a id="__codelineno-0-48" name="__codelineno-0-48"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-49" name="__codelineno-0-49"></a><span class="sd">    Meta class defines the fields to be serialized/deserialized.</span>
 <a id="__codelineno-0-50" name="__codelineno-0-50"></a><span class="sd">    &quot;&quot;&quot;</span>
@@ -925,133 +773,104 @@ This class inherits from SQLAlchemy's Model class.</p>
 <a id="__codelineno-0-55" name="__codelineno-0-55"></a>        <span class="s2">&quot;case_name&quot;</span><span class="p">,</span>
 <a id="__codelineno-0-56" name="__codelineno-0-56"></a>        <span class="s2">&quot;agents&quot;</span><span class="p">,</span>
 <a id="__codelineno-0-57" name="__codelineno-0-57"></a>    <span class="p">)</span>
-</code></pre></div></td></tr></table></div>
-        </details>
+</code></pre>
+                                                                                </div>
+                                                                            </td>
+                                                                        </tr>
+                                                                    </table>
+                                                                </div>
+                                                            </details>
 
-  
+                                                            <div class="doc doc-children"></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <p><br /></p>
+                            <h3 id="cases-routes"><span style="color: green">Cases Routes</span></h3>
 
-  <div class="doc doc-children">
+                            <div class="doc doc-object doc-module">
+                                <a id="app.routes.dfir_iris"></a>
+                                <div class="doc doc-contents first">
+                                    <div class="doc doc-children">
+                                        <div class="doc doc-object doc-function">
+                                            <h2 id="app.routes.dfir_iris.create_case_note" class="doc doc-heading">
+                                                <code class="highlight language-python"
+                                                    ><span class="n">create_case_note</span><span class="p">(</span
+                                                    ><span class="n">case_id</span><span class="p">)</span></code
+                                                >
+                                            </h2>
 
+                                            <div class="doc doc-contents">
+                                                <p>Endpoint to create a note for a specific case in DFIR IRIS.</p>
 
+                                                <p><strong>Parameters:</strong></p>
+                                                <table>
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Name</th>
+                                                            <th>Type</th>
+                                                            <th>Description</th>
+                                                            <th>Default</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td><code>case_id</code></td>
+                                                            <td>
+                                                                <code>str</code>
+                                                            </td>
+                                                            <td>
+                                                                <div class="doc-md-description">
+                                                                    <p>The ID of the case to create a note for.</p>
+                                                                </div>
+                                                            </td>
+                                                            <td>
+                                                                <em>required</em>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
 
+                                                <p><strong>Returns:</strong></p>
+                                                <table>
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Name</th>
+                                                            <th>Type</th>
+                                                            <th>Description</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td><code>json</code></td>
+                                                            <td></td>
+                                                            <td>
+                                                                <div class="doc-md-description">
+                                                                    <p>
+                                                                        A JSON response containing the result of the
+                                                                        note creation operation.
+                                                                    </p>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
 
-
-
-
-
-
-
-
-  </div>
-
-  </div>
-
-</div>
-
-
-
-
-  </div>
-
-  </div>
-
-</div>
-
-
-
-
-  </div>
-
-  </div>
-
-</div><p><br></p>
-<h3 id="cases-routes"><span style="color:green">Cases Routes</span></h3>
-
-
-<div class="doc doc-object doc-module">
-
-
-<a id="app.routes.dfir_iris"></a>
-  <div class="doc doc-contents first">
-
-  
-
-  <div class="doc doc-children">
-
-
-
-
-
-
-
-
-
-<div class="doc doc-object doc-function">
-
-
-
-<h2 id="app.routes.dfir_iris.create_case_note" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">create_case_note</span><span class="p">(</span><span class="n">case_id</span><span class="p">)</span></code>
-
-</h2>
-
-
-  <div class="doc doc-contents ">
-  
-      <p>Endpoint to create a note for a specific case in DFIR IRIS.</p>
-
-  <p><strong>Parameters:</strong></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Default</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-          <td><code>case_id</code></td>
-          <td>
-                <code>str</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>The ID of the case to create a note for.</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-    </tbody>
-  </table>
-
-  <p><strong>Returns:</strong></p>
-  <table>
-    <thead>
-      <tr>
-<th>Name</th>        <th>Type</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-<td><code>json</code></td>          <td>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>A JSON response containing the result of the note creation operation.</p>
-            </div>
-          </td>
-        </tr>
-    </tbody>
-  </table>
-
-      <details class="quote">
-        <summary>Source code in <code>app\routes\dfir_iris.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-57">57</a></span>
+                                                <details class="quote">
+                                                    <summary>
+                                                        Source code in <code>app\routes\dfir_iris.py</code>
+                                                    </summary>
+                                                    <div class="highlight">
+                                                        <table class="highlighttable">
+                                                            <tr>
+                                                                <td class="linenos">
+                                                                    <div class="linenodiv">
+                                                                        <pre><span></span><span class="normal"><a href="#__codelineno-0-57">57</a></span>
 <span class="normal"><a href="#__codelineno-0-58">58</a></span>
 <span class="normal"><a href="#__codelineno-0-59">59</a></span>
 <span class="normal"><a href="#__codelineno-0-60">60</a></span>
@@ -1070,7 +889,12 @@ This class inherits from SQLAlchemy's Model class.</p>
 <span class="normal"><a href="#__codelineno-0-73">73</a></span>
 <span class="normal"><a href="#__codelineno-0-74">74</a></span>
 <span class="normal"><a href="#__codelineno-0-75">75</a></span>
-<span class="normal"><a href="#__codelineno-0-76">76</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-57" name="__codelineno-0-57"></a><span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/dfir_iris/cases/&lt;case_id&gt;/note&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;POST&quot;</span><span class="p">])</span>
+<span class="normal"><a href="#__codelineno-0-76">76</a></span></pre>
+                                                                    </div>
+                                                                </td>
+                                                                <td class="code">
+                                                                    <div>
+                                                                        <pre><span></span><code><a id="__codelineno-0-57" name="__codelineno-0-57"></a><span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/dfir_iris/cases/&lt;case_id&gt;/note&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;POST&quot;</span><span class="p">])</span>
 <a id="__codelineno-0-58" name="__codelineno-0-58"></a><span class="k">def</span> <span class="nf">create_case_note</span><span class="p">(</span><span class="n">case_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 <a id="__codelineno-0-59" name="__codelineno-0-59"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-60" name="__codelineno-0-60"></a><span class="sd">    Endpoint to create a note for a specific case in DFIR IRIS.</span>
@@ -1090,50 +914,60 @@ This class inherits from SQLAlchemy's Model class.</p>
 <a id="__codelineno-0-74" name="__codelineno-0-74"></a>        <span class="n">note_content</span><span class="o">=</span><span class="n">note_content</span><span class="p">,</span>
 <a id="__codelineno-0-75" name="__codelineno-0-75"></a>    <span class="p">)</span>
 <a id="__codelineno-0-76" name="__codelineno-0-76"></a>    <span class="k">return</span> <span class="n">created_note</span>
-</code></pre></div></td></tr></table></div>
-      </details>
-  </div>
+</code></pre>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </div>
+                                                </details>
+                                            </div>
+                                        </div>
 
-</div>
+                                        <div class="doc doc-object doc-function">
+                                            <h2 id="app.routes.dfir_iris.get_alerts" class="doc doc-heading">
+                                                <code class="highlight language-python"
+                                                    ><span class="n">get_alerts</span><span class="p">()</span></code
+                                                >
+                                            </h2>
 
-<div class="doc doc-object doc-function">
+                                            <div class="doc doc-contents">
+                                                <p>Endpoint to retrieve all alerts from DFIR IRIS.</p>
 
+                                                <p><strong>Returns:</strong></p>
+                                                <table>
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Name</th>
+                                                            <th>Type</th>
+                                                            <th>Description</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td><code>json</code></td>
+                                                            <td></td>
+                                                            <td>
+                                                                <div class="doc-md-description">
+                                                                    <p>
+                                                                        A JSON response containing the list of alerts.
+                                                                    </p>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
 
-
-<h2 id="app.routes.dfir_iris.get_alerts" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">get_alerts</span><span class="p">()</span></code>
-
-</h2>
-
-
-  <div class="doc doc-contents ">
-  
-      <p>Endpoint to retrieve all alerts from DFIR IRIS.</p>
-
-  <p><strong>Returns:</strong></p>
-  <table>
-    <thead>
-      <tr>
-<th>Name</th>        <th>Type</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-<td><code>json</code></td>          <td>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>A JSON response containing the list of alerts.</p>
-            </div>
-          </td>
-        </tr>
-    </tbody>
-  </table>
-
-      <details class="quote">
-        <summary>Source code in <code>app\routes\dfir_iris.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-95"> 95</a></span>
+                                                <details class="quote">
+                                                    <summary>
+                                                        Source code in <code>app\routes\dfir_iris.py</code>
+                                                    </summary>
+                                                    <div class="highlight">
+                                                        <table class="highlighttable">
+                                                            <tr>
+                                                                <td class="linenos">
+                                                                    <div class="linenodiv">
+                                                                        <pre><span></span><span class="normal"><a href="#__codelineno-0-95"> 95</a></span>
 <span class="normal"><a href="#__codelineno-0-96"> 96</a></span>
 <span class="normal"><a href="#__codelineno-0-97"> 97</a></span>
 <span class="normal"><a href="#__codelineno-0-98"> 98</a></span>
@@ -1143,7 +977,12 @@ This class inherits from SQLAlchemy's Model class.</p>
 <span class="normal"><a href="#__codelineno-0-102">102</a></span>
 <span class="normal"><a href="#__codelineno-0-103">103</a></span>
 <span class="normal"><a href="#__codelineno-0-104">104</a></span>
-<span class="normal"><a href="#__codelineno-0-105">105</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-95" name="__codelineno-0-95"></a><span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/dfir_iris/alerts&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">])</span>
+<span class="normal"><a href="#__codelineno-0-105">105</a></span></pre>
+                                                                    </div>
+                                                                </td>
+                                                                <td class="code">
+                                                                    <div>
+                                                                        <pre><span></span><code><a id="__codelineno-0-95" name="__codelineno-0-95"></a><span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/dfir_iris/alerts&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">])</span>
 <a id="__codelineno-0-96" name="__codelineno-0-96"></a><span class="k">def</span> <span class="nf">get_alerts</span><span class="p">():</span>
 <a id="__codelineno-0-97" name="__codelineno-0-97"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-98" name="__codelineno-0-98"></a><span class="sd">    Endpoint to retrieve all alerts from DFIR IRIS.</span>
@@ -1154,78 +993,87 @@ This class inherits from SQLAlchemy's Model class.</p>
 <a id="__codelineno-0-103" name="__codelineno-0-103"></a>    <span class="n">service</span> <span class="o">=</span> <span class="n">AlertsService</span><span class="p">()</span>
 <a id="__codelineno-0-104" name="__codelineno-0-104"></a>    <span class="n">alerts</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="n">list_alerts</span><span class="p">()</span>
 <a id="__codelineno-0-105" name="__codelineno-0-105"></a>    <span class="k">return</span> <span class="n">alerts</span>
-</code></pre></div></td></tr></table></div>
-      </details>
-  </div>
+</code></pre>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </div>
+                                                </details>
+                                            </div>
+                                        </div>
 
-</div>
+                                        <div class="doc doc-object doc-function">
+                                            <h2 id="app.routes.dfir_iris.get_case" class="doc doc-heading">
+                                                <code class="highlight language-python"
+                                                    ><span class="n">get_case</span><span class="p">(</span
+                                                    ><span class="n">case_id</span><span class="p">)</span></code
+                                                >
+                                            </h2>
 
-<div class="doc doc-object doc-function">
+                                            <div class="doc doc-contents">
+                                                <p>Endpoint to retrieve a specific case from DFIR IRIS.</p>
 
+                                                <p><strong>Parameters:</strong></p>
+                                                <table>
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Name</th>
+                                                            <th>Type</th>
+                                                            <th>Description</th>
+                                                            <th>Default</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td><code>case_id</code></td>
+                                                            <td>
+                                                                <code>str</code>
+                                                            </td>
+                                                            <td>
+                                                                <div class="doc-md-description">
+                                                                    <p>The ID of the case to retrieve.</p>
+                                                                </div>
+                                                            </td>
+                                                            <td>
+                                                                <em>required</em>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
 
+                                                <p><strong>Returns:</strong></p>
+                                                <table>
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Name</th>
+                                                            <th>Type</th>
+                                                            <th>Description</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td><code>json</code></td>
+                                                            <td></td>
+                                                            <td>
+                                                                <div class="doc-md-description">
+                                                                    <p>A JSON response containing the case data.</p>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
 
-<h2 id="app.routes.dfir_iris.get_case" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">get_case</span><span class="p">(</span><span class="n">case_id</span><span class="p">)</span></code>
-
-</h2>
-
-
-  <div class="doc doc-contents ">
-  
-      <p>Endpoint to retrieve a specific case from DFIR IRIS.</p>
-
-  <p><strong>Parameters:</strong></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Default</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-          <td><code>case_id</code></td>
-          <td>
-                <code>str</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>The ID of the case to retrieve.</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-    </tbody>
-  </table>
-
-  <p><strong>Returns:</strong></p>
-  <table>
-    <thead>
-      <tr>
-<th>Name</th>        <th>Type</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-<td><code>json</code></td>          <td>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>A JSON response containing the case data.</p>
-            </div>
-          </td>
-        </tr>
-    </tbody>
-  </table>
-
-      <details class="quote">
-        <summary>Source code in <code>app\routes\dfir_iris.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-25">25</a></span>
+                                                <details class="quote">
+                                                    <summary>
+                                                        Source code in <code>app\routes\dfir_iris.py</code>
+                                                    </summary>
+                                                    <div class="highlight">
+                                                        <table class="highlighttable">
+                                                            <tr>
+                                                                <td class="linenos">
+                                                                    <div class="linenodiv">
+                                                                        <pre><span></span><span class="normal"><a href="#__codelineno-0-25">25</a></span>
 <span class="normal"><a href="#__codelineno-0-26">26</a></span>
 <span class="normal"><a href="#__codelineno-0-27">27</a></span>
 <span class="normal"><a href="#__codelineno-0-28">28</a></span>
@@ -1238,7 +1086,12 @@ This class inherits from SQLAlchemy's Model class.</p>
 <span class="normal"><a href="#__codelineno-0-35">35</a></span>
 <span class="normal"><a href="#__codelineno-0-36">36</a></span>
 <span class="normal"><a href="#__codelineno-0-37">37</a></span>
-<span class="normal"><a href="#__codelineno-0-38">38</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-25" name="__codelineno-0-25"></a><span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/dfir_iris/cases/&lt;case_id&gt;&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">])</span>
+<span class="normal"><a href="#__codelineno-0-38">38</a></span></pre>
+                                                                    </div>
+                                                                </td>
+                                                                <td class="code">
+                                                                    <div>
+                                                                        <pre><span></span><code><a id="__codelineno-0-25" name="__codelineno-0-25"></a><span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/dfir_iris/cases/&lt;case_id&gt;&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">])</span>
 <a id="__codelineno-0-26" name="__codelineno-0-26"></a><span class="k">def</span> <span class="nf">get_case</span><span class="p">(</span><span class="n">case_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 <a id="__codelineno-0-27" name="__codelineno-0-27"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-28" name="__codelineno-0-28"></a><span class="sd">    Endpoint to retrieve a specific case from DFIR IRIS.</span>
@@ -1252,78 +1105,90 @@ This class inherits from SQLAlchemy's Model class.</p>
 <a id="__codelineno-0-36" name="__codelineno-0-36"></a>    <span class="n">service</span> <span class="o">=</span> <span class="n">CasesService</span><span class="p">()</span>
 <a id="__codelineno-0-37" name="__codelineno-0-37"></a>    <span class="n">case</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="n">get_case</span><span class="p">(</span><span class="n">case_id</span><span class="o">=</span><span class="n">case_id</span><span class="p">)</span>
 <a id="__codelineno-0-38" name="__codelineno-0-38"></a>    <span class="k">return</span> <span class="n">case</span>
-</code></pre></div></td></tr></table></div>
-      </details>
-  </div>
+</code></pre>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </div>
+                                                </details>
+                                            </div>
+                                        </div>
 
-</div>
+                                        <div class="doc doc-object doc-function">
+                                            <h2 id="app.routes.dfir_iris.get_case_assets" class="doc doc-heading">
+                                                <code class="highlight language-python"
+                                                    ><span class="n">get_case_assets</span><span class="p">(</span
+                                                    ><span class="n">case_id</span><span class="p">)</span></code
+                                                >
+                                            </h2>
 
-<div class="doc doc-object doc-function">
+                                            <div class="doc doc-contents">
+                                                <p>Endpoint to retrieve assets of a specific case from DFIR IRIS.</p>
 
+                                                <p><strong>Parameters:</strong></p>
+                                                <table>
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Name</th>
+                                                            <th>Type</th>
+                                                            <th>Description</th>
+                                                            <th>Default</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td><code>case_id</code></td>
+                                                            <td>
+                                                                <code>str</code>
+                                                            </td>
+                                                            <td>
+                                                                <div class="doc-md-description">
+                                                                    <p>The ID of the case to retrieve assets from.</p>
+                                                                </div>
+                                                            </td>
+                                                            <td>
+                                                                <em>required</em>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
 
+                                                <p><strong>Returns:</strong></p>
+                                                <table>
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Name</th>
+                                                            <th>Type</th>
+                                                            <th>Description</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td><code>json</code></td>
+                                                            <td></td>
+                                                            <td>
+                                                                <div class="doc-md-description">
+                                                                    <p>
+                                                                        A JSON response containing the list of assets
+                                                                        for the case.
+                                                                    </p>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
 
-<h2 id="app.routes.dfir_iris.get_case_assets" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">get_case_assets</span><span class="p">(</span><span class="n">case_id</span><span class="p">)</span></code>
-
-</h2>
-
-
-  <div class="doc doc-contents ">
-  
-      <p>Endpoint to retrieve assets of a specific case from DFIR IRIS.</p>
-
-  <p><strong>Parameters:</strong></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Default</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-          <td><code>case_id</code></td>
-          <td>
-                <code>str</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>The ID of the case to retrieve assets from.</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-    </tbody>
-  </table>
-
-  <p><strong>Returns:</strong></p>
-  <table>
-    <thead>
-      <tr>
-<th>Name</th>        <th>Type</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-<td><code>json</code></td>          <td>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>A JSON response containing the list of assets for the case.</p>
-            </div>
-          </td>
-        </tr>
-    </tbody>
-  </table>
-
-      <details class="quote">
-        <summary>Source code in <code>app\routes\dfir_iris.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-79">79</a></span>
+                                                <details class="quote">
+                                                    <summary>
+                                                        Source code in <code>app\routes\dfir_iris.py</code>
+                                                    </summary>
+                                                    <div class="highlight">
+                                                        <table class="highlighttable">
+                                                            <tr>
+                                                                <td class="linenos">
+                                                                    <div class="linenodiv">
+                                                                        <pre><span></span><span class="normal"><a href="#__codelineno-0-79">79</a></span>
 <span class="normal"><a href="#__codelineno-0-80">80</a></span>
 <span class="normal"><a href="#__codelineno-0-81">81</a></span>
 <span class="normal"><a href="#__codelineno-0-82">82</a></span>
@@ -1336,7 +1201,12 @@ This class inherits from SQLAlchemy's Model class.</p>
 <span class="normal"><a href="#__codelineno-0-89">89</a></span>
 <span class="normal"><a href="#__codelineno-0-90">90</a></span>
 <span class="normal"><a href="#__codelineno-0-91">91</a></span>
-<span class="normal"><a href="#__codelineno-0-92">92</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-79" name="__codelineno-0-79"></a><span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/dfir_iris/cases/&lt;case_id&gt;/assets&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">])</span>
+<span class="normal"><a href="#__codelineno-0-92">92</a></span></pre>
+                                                                    </div>
+                                                                </td>
+                                                                <td class="code">
+                                                                    <div>
+                                                                        <pre><span></span><code><a id="__codelineno-0-79" name="__codelineno-0-79"></a><span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/dfir_iris/cases/&lt;case_id&gt;/assets&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">])</span>
 <a id="__codelineno-0-80" name="__codelineno-0-80"></a><span class="k">def</span> <span class="nf">get_case_assets</span><span class="p">(</span><span class="n">case_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 <a id="__codelineno-0-81" name="__codelineno-0-81"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-82" name="__codelineno-0-82"></a><span class="sd">    Endpoint to retrieve assets of a specific case from DFIR IRIS.</span>
@@ -1350,78 +1220,90 @@ This class inherits from SQLAlchemy's Model class.</p>
 <a id="__codelineno-0-90" name="__codelineno-0-90"></a>    <span class="n">asset_service</span> <span class="o">=</span> <span class="n">AssetsService</span><span class="p">()</span>
 <a id="__codelineno-0-91" name="__codelineno-0-91"></a>    <span class="n">assets</span> <span class="o">=</span> <span class="n">asset_service</span><span class="o">.</span><span class="n">get_case_assets</span><span class="p">(</span><span class="n">cid</span><span class="o">=</span><span class="n">case_id</span><span class="p">)</span>
 <a id="__codelineno-0-92" name="__codelineno-0-92"></a>    <span class="k">return</span> <span class="n">assets</span>
-</code></pre></div></td></tr></table></div>
-      </details>
-  </div>
+</code></pre>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </div>
+                                                </details>
+                                            </div>
+                                        </div>
 
-</div>
+                                        <div class="doc doc-object doc-function">
+                                            <h2 id="app.routes.dfir_iris.get_case_notes" class="doc doc-heading">
+                                                <code class="highlight language-python"
+                                                    ><span class="n">get_case_notes</span><span class="p">(</span
+                                                    ><span class="n">case_id</span><span class="p">)</span></code
+                                                >
+                                            </h2>
 
-<div class="doc doc-object doc-function">
+                                            <div class="doc doc-contents">
+                                                <p>Endpoint to retrieve notes of a specific case from DFIR IRIS.</p>
 
+                                                <p><strong>Parameters:</strong></p>
+                                                <table>
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Name</th>
+                                                            <th>Type</th>
+                                                            <th>Description</th>
+                                                            <th>Default</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td><code>case_id</code></td>
+                                                            <td>
+                                                                <code>str</code>
+                                                            </td>
+                                                            <td>
+                                                                <div class="doc-md-description">
+                                                                    <p>The ID of the case to retrieve notes from.</p>
+                                                                </div>
+                                                            </td>
+                                                            <td>
+                                                                <em>required</em>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
 
+                                                <p><strong>Returns:</strong></p>
+                                                <table>
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Name</th>
+                                                            <th>Type</th>
+                                                            <th>Description</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td><code>json</code></td>
+                                                            <td></td>
+                                                            <td>
+                                                                <div class="doc-md-description">
+                                                                    <p>
+                                                                        A JSON response containing the list of notes for
+                                                                        the case.
+                                                                    </p>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
 
-<h2 id="app.routes.dfir_iris.get_case_notes" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">get_case_notes</span><span class="p">(</span><span class="n">case_id</span><span class="p">)</span></code>
-
-</h2>
-
-
-  <div class="doc doc-contents ">
-  
-      <p>Endpoint to retrieve notes of a specific case from DFIR IRIS.</p>
-
-  <p><strong>Parameters:</strong></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Default</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-          <td><code>case_id</code></td>
-          <td>
-                <code>str</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>The ID of the case to retrieve notes from.</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-    </tbody>
-  </table>
-
-  <p><strong>Returns:</strong></p>
-  <table>
-    <thead>
-      <tr>
-<th>Name</th>        <th>Type</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-<td><code>json</code></td>          <td>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>A JSON response containing the list of notes for the case.</p>
-            </div>
-          </td>
-        </tr>
-    </tbody>
-  </table>
-
-      <details class="quote">
-        <summary>Source code in <code>app\routes\dfir_iris.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-41">41</a></span>
+                                                <details class="quote">
+                                                    <summary>
+                                                        Source code in <code>app\routes\dfir_iris.py</code>
+                                                    </summary>
+                                                    <div class="highlight">
+                                                        <table class="highlighttable">
+                                                            <tr>
+                                                                <td class="linenos">
+                                                                    <div class="linenodiv">
+                                                                        <pre><span></span><span class="normal"><a href="#__codelineno-0-41">41</a></span>
 <span class="normal"><a href="#__codelineno-0-42">42</a></span>
 <span class="normal"><a href="#__codelineno-0-43">43</a></span>
 <span class="normal"><a href="#__codelineno-0-44">44</a></span>
@@ -1434,7 +1316,12 @@ This class inherits from SQLAlchemy's Model class.</p>
 <span class="normal"><a href="#__codelineno-0-51">51</a></span>
 <span class="normal"><a href="#__codelineno-0-52">52</a></span>
 <span class="normal"><a href="#__codelineno-0-53">53</a></span>
-<span class="normal"><a href="#__codelineno-0-54">54</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-41" name="__codelineno-0-41"></a><span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/dfir_iris/cases/&lt;case_id&gt;/notes&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">])</span>
+<span class="normal"><a href="#__codelineno-0-54">54</a></span></pre>
+                                                                    </div>
+                                                                </td>
+                                                                <td class="code">
+                                                                    <div>
+                                                                        <pre><span></span><code><a id="__codelineno-0-41" name="__codelineno-0-41"></a><span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/dfir_iris/cases/&lt;case_id&gt;/notes&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">])</span>
 <a id="__codelineno-0-42" name="__codelineno-0-42"></a><span class="k">def</span> <span class="nf">get_case_notes</span><span class="p">(</span><span class="n">case_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
 <a id="__codelineno-0-43" name="__codelineno-0-43"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-44" name="__codelineno-0-44"></a><span class="sd">    Endpoint to retrieve notes of a specific case from DFIR IRIS.</span>
@@ -1448,50 +1335,58 @@ This class inherits from SQLAlchemy's Model class.</p>
 <a id="__codelineno-0-52" name="__codelineno-0-52"></a>    <span class="n">notes_service</span> <span class="o">=</span> <span class="n">NotesService</span><span class="p">()</span>
 <a id="__codelineno-0-53" name="__codelineno-0-53"></a>    <span class="n">notes</span> <span class="o">=</span> <span class="n">notes_service</span><span class="o">.</span><span class="n">get_case_notes</span><span class="p">(</span><span class="n">search_term</span><span class="o">=</span><span class="s2">&quot;%&quot;</span><span class="p">,</span> <span class="n">cid</span><span class="o">=</span><span class="n">case_id</span><span class="p">)</span>
 <a id="__codelineno-0-54" name="__codelineno-0-54"></a>    <span class="k">return</span> <span class="n">notes</span>
-</code></pre></div></td></tr></table></div>
-      </details>
-  </div>
+</code></pre>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </div>
+                                                </details>
+                                            </div>
+                                        </div>
 
-</div>
+                                        <div class="doc doc-object doc-function">
+                                            <h2 id="app.routes.dfir_iris.get_cases" class="doc doc-heading">
+                                                <code class="highlight language-python"
+                                                    ><span class="n">get_cases</span><span class="p">()</span></code
+                                                >
+                                            </h2>
 
-<div class="doc doc-object doc-function">
+                                            <div class="doc doc-contents">
+                                                <p>Endpoint to retrieve all the cases from DFIR IRIS.</p>
 
+                                                <p><strong>Returns:</strong></p>
+                                                <table>
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Name</th>
+                                                            <th>Type</th>
+                                                            <th>Description</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td><code>json</code></td>
+                                                            <td></td>
+                                                            <td>
+                                                                <div class="doc-md-description">
+                                                                    <p>A JSON response containing the list of cases.</p>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
 
-
-<h2 id="app.routes.dfir_iris.get_cases" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">get_cases</span><span class="p">()</span></code>
-
-</h2>
-
-
-  <div class="doc doc-contents ">
-  
-      <p>Endpoint to retrieve all the cases from DFIR IRIS.</p>
-
-  <p><strong>Returns:</strong></p>
-  <table>
-    <thead>
-      <tr>
-<th>Name</th>        <th>Type</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-<td><code>json</code></td>          <td>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>A JSON response containing the list of cases.</p>
-            </div>
-          </td>
-        </tr>
-    </tbody>
-  </table>
-
-      <details class="quote">
-        <summary>Source code in <code>app\routes\dfir_iris.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-12">12</a></span>
+                                                <details class="quote">
+                                                    <summary>
+                                                        Source code in <code>app\routes\dfir_iris.py</code>
+                                                    </summary>
+                                                    <div class="highlight">
+                                                        <table class="highlighttable">
+                                                            <tr>
+                                                                <td class="linenos">
+                                                                    <div class="linenodiv">
+                                                                        <pre><span></span><span class="normal"><a href="#__codelineno-0-12">12</a></span>
 <span class="normal"><a href="#__codelineno-0-13">13</a></span>
 <span class="normal"><a href="#__codelineno-0-14">14</a></span>
 <span class="normal"><a href="#__codelineno-0-15">15</a></span>
@@ -1501,7 +1396,12 @@ This class inherits from SQLAlchemy's Model class.</p>
 <span class="normal"><a href="#__codelineno-0-19">19</a></span>
 <span class="normal"><a href="#__codelineno-0-20">20</a></span>
 <span class="normal"><a href="#__codelineno-0-21">21</a></span>
-<span class="normal"><a href="#__codelineno-0-22">22</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-12" name="__codelineno-0-12"></a><span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/dfir_iris/cases&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">])</span>
+<span class="normal"><a href="#__codelineno-0-22">22</a></span></pre>
+                                                                    </div>
+                                                                </td>
+                                                                <td class="code">
+                                                                    <div>
+                                                                        <pre><span></span><code><a id="__codelineno-0-12" name="__codelineno-0-12"></a><span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/dfir_iris/cases&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">])</span>
 <a id="__codelineno-0-13" name="__codelineno-0-13"></a><span class="k">def</span> <span class="nf">get_cases</span><span class="p">():</span>
 <a id="__codelineno-0-14" name="__codelineno-0-14"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-15" name="__codelineno-0-15"></a><span class="sd">    Endpoint to retrieve all the cases from DFIR IRIS.</span>
@@ -1512,59 +1412,46 @@ This class inherits from SQLAlchemy's Model class.</p>
 <a id="__codelineno-0-20" name="__codelineno-0-20"></a>    <span class="n">service</span> <span class="o">=</span> <span class="n">CasesService</span><span class="p">()</span>
 <a id="__codelineno-0-21" name="__codelineno-0-21"></a>    <span class="n">cases</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="n">list_cases</span><span class="p">()</span>
 <a id="__codelineno-0-22" name="__codelineno-0-22"></a>    <span class="k">return</span> <span class="n">cases</span>
-</code></pre></div></td></tr></table></div>
-      </details>
-  </div>
+</code></pre>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </div>
+                                                </details>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <p><br /></p>
+                            <h3 id="cases-services"><span style="color: red">Cases Services</span></h3>
 
-</div>
+                            <div class="doc doc-object doc-module">
+                                <a id="app.services.DFIR_IRIS.cases"></a>
+                                <div class="doc doc-contents first">
+                                    <div class="doc doc-children">
+                                        <div class="doc doc-object doc-class">
+                                            <h2 id="app.services.DFIR_IRIS.cases.CasesService" class="doc doc-heading">
+                                                <code>CasesService</code>
+                                            </h2>
 
+                                            <div class="doc doc-contents">
+                                                <p>
+                                                    A service class that encapsulates the logic for pulling cases from
+                                                    DFIR-IRIS.
+                                                </p>
 
-
-  </div>
-
-  </div>
-
-</div><p><br></p>
-<h3 id="cases-services"><span style="color:red">Cases Services</span></h3>
-
-
-<div class="doc doc-object doc-module">
-
-
-<a id="app.services.DFIR_IRIS.cases"></a>
-  <div class="doc doc-contents first">
-
-  
-
-  <div class="doc doc-children">
-
-
-
-
-
-
-
-
-<div class="doc doc-object doc-class">
-
-
-
-<h2 id="app.services.DFIR_IRIS.cases.CasesService" class="doc doc-heading">
-        <code>CasesService</code>
-
-
-</h2>
-
-
-  <div class="doc doc-contents ">
-
-  
-      <p>A service class that encapsulates the logic for pulling cases from DFIR-IRIS.</p>
-
-
-        <details class="quote">
-          <summary>Source code in <code>app\services\DFIR_IRIS\cases.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-14"> 14</a></span>
+                                                <details class="quote">
+                                                    <summary>
+                                                        Source code in <code>app\services\DFIR_IRIS\cases.py</code>
+                                                    </summary>
+                                                    <div class="highlight">
+                                                        <table class="highlighttable">
+                                                            <tr>
+                                                                <td class="linenos">
+                                                                    <div class="linenodiv">
+                                                                        <pre><span></span><span class="normal"><a href="#__codelineno-0-14"> 14</a></span>
 <span class="normal"><a href="#__codelineno-0-15"> 15</a></span>
 <span class="normal"><a href="#__codelineno-0-16"> 16</a></span>
 <span class="normal"><a href="#__codelineno-0-17"> 17</a></span>
@@ -1651,7 +1538,12 @@ This class inherits from SQLAlchemy's Model class.</p>
 <span class="normal"><a href="#__codelineno-0-98"> 98</a></span>
 <span class="normal"><a href="#__codelineno-0-99"> 99</a></span>
 <span class="normal"><a href="#__codelineno-0-100">100</a></span>
-<span class="normal"><a href="#__codelineno-0-101">101</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-14" name="__codelineno-0-14"></a><span class="k">class</span> <span class="nc">CasesService</span><span class="p">:</span>
+<span class="normal"><a href="#__codelineno-0-101">101</a></span></pre>
+                                                                    </div>
+                                                                </td>
+                                                                <td class="code">
+                                                                    <div>
+                                                                        <pre><span></span><code><a id="__codelineno-0-14" name="__codelineno-0-14"></a><span class="k">class</span> <span class="nc">CasesService</span><span class="p">:</span>
 <a id="__codelineno-0-15" name="__codelineno-0-15"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-16" name="__codelineno-0-16"></a><span class="sd">    A service class that encapsulates the logic for pulling cases from DFIR-IRIS.</span>
 <a id="__codelineno-0-17" name="__codelineno-0-17"></a><span class="sd">    &quot;&quot;&quot;</span>
@@ -1739,67 +1631,81 @@ This class inherits from SQLAlchemy's Model class.</p>
 <a id="__codelineno-0-99" name="__codelineno-0-99"></a><span class="sd">            dict: A dictionary containing the success status, a message and potentially the case.</span>
 <a id="__codelineno-0-100" name="__codelineno-0-100"></a><span class="sd">        &quot;&quot;&quot;</span>
 <a id="__codelineno-0-101" name="__codelineno-0-101"></a>        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_case</span><span class="p">(</span><span class="n">case_id</span><span class="p">)</span>
-</code></pre></div></td></tr></table></div>
-        </details>
+</code></pre>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </div>
+                                                </details>
 
-  
+                                                <div class="doc doc-children">
+                                                    <div class="doc doc-object doc-function">
+                                                        <h3
+                                                            id="app.services.DFIR_IRIS.cases.CasesService.check_case_id"
+                                                            class="doc doc-heading"
+                                                        >
+                                                            <code class="highlight language-python"
+                                                                ><span class="n">check_case_id</span
+                                                                ><span class="p">(</span><span class="n">case_id</span
+                                                                ><span class="p">)</span></code
+                                                            >
+                                                        </h3>
 
-  <div class="doc doc-children">
+                                                        <div class="doc doc-contents">
+                                                            <p>Checks if a case exists in DFIR-IRIS</p>
 
+                                                            <p><strong>Returns:</strong></p>
+                                                            <table>
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th>Name</th>
+                                                                        <th>Type</th>
+                                                                        <th>Description</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    <tr>
+                                                                        <td><code>dict</code></td>
+                                                                        <td>
+                                                                            <code>bool</code>
+                                                                        </td>
+                                                                        <td>
+                                                                            <div class="doc-md-description">
+                                                                                <p>
+                                                                                    A dictionary containing the success
+                                                                                    status, a message and potentially
+                                                                                    the case.
+                                                                                </p>
+                                                                            </div>
+                                                                        </td>
+                                                                    </tr>
+                                                                </tbody>
+                                                            </table>
 
-
-
-
-
-
-
-
-<div class="doc doc-object doc-function">
-
-
-
-<h3 id="app.services.DFIR_IRIS.cases.CasesService.check_case_id" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">check_case_id</span><span class="p">(</span><span class="n">case_id</span><span class="p">)</span></code>
-
-</h3>
-
-
-  <div class="doc doc-contents ">
-  
-      <p>Checks if a case exists in DFIR-IRIS</p>
-
-  <p><strong>Returns:</strong></p>
-  <table>
-    <thead>
-      <tr>
-<th>Name</th>        <th>Type</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-<td><code>dict</code></td>          <td>
-                <code>bool</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>A dictionary containing the success status, a message and potentially the case.</p>
-            </div>
-          </td>
-        </tr>
-    </tbody>
-  </table>
-
-      <details class="quote">
-        <summary>Source code in <code>app\services\DFIR_IRIS\cases.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-94"> 94</a></span>
+                                                            <details class="quote">
+                                                                <summary>
+                                                                    Source code in
+                                                                    <code>app\services\DFIR_IRIS\cases.py</code>
+                                                                </summary>
+                                                                <div class="highlight">
+                                                                    <table class="highlighttable">
+                                                                        <tr>
+                                                                            <td class="linenos">
+                                                                                <div class="linenodiv">
+                                                                                    <pre><span></span><span class="normal"><a href="#__codelineno-0-94"> 94</a></span>
 <span class="normal"><a href="#__codelineno-0-95"> 95</a></span>
 <span class="normal"><a href="#__codelineno-0-96"> 96</a></span>
 <span class="normal"><a href="#__codelineno-0-97"> 97</a></span>
 <span class="normal"><a href="#__codelineno-0-98"> 98</a></span>
 <span class="normal"><a href="#__codelineno-0-99"> 99</a></span>
 <span class="normal"><a href="#__codelineno-0-100">100</a></span>
-<span class="normal"><a href="#__codelineno-0-101">101</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-94" name="__codelineno-0-94"></a><span class="k">def</span> <span class="nf">check_case_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">case_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="normal"><a href="#__codelineno-0-101">101</a></span></pre>
+                                                                                </div>
+                                                                            </td>
+                                                                            <td class="code">
+                                                                                <div>
+                                                                                    <pre><span></span><code><a id="__codelineno-0-94" name="__codelineno-0-94"></a><span class="k">def</span> <span class="nf">check_case_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">case_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <a id="__codelineno-0-95" name="__codelineno-0-95"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-96" name="__codelineno-0-96"></a><span class="sd">    Checks if a case exists in DFIR-IRIS</span>
 <a id="__codelineno-0-97" name="__codelineno-0-97"></a>
@@ -1807,51 +1713,72 @@ This class inherits from SQLAlchemy's Model class.</p>
 <a id="__codelineno-0-99" name="__codelineno-0-99"></a><span class="sd">        dict: A dictionary containing the success status, a message and potentially the case.</span>
 <a id="__codelineno-0-100" name="__codelineno-0-100"></a><span class="sd">    &quot;&quot;&quot;</span>
 <a id="__codelineno-0-101" name="__codelineno-0-101"></a>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_case</span><span class="p">(</span><span class="n">case_id</span><span class="p">)</span>
-</code></pre></div></td></tr></table></div>
-      </details>
-  </div>
+</code></pre>
+                                                                                </div>
+                                                                            </td>
+                                                                        </tr>
+                                                                    </table>
+                                                                </div>
+                                                            </details>
+                                                        </div>
+                                                    </div>
 
-</div>
+                                                    <div class="doc doc-object doc-function">
+                                                        <h3
+                                                            id="app.services.DFIR_IRIS.cases.CasesService.get_case"
+                                                            class="doc doc-heading"
+                                                        >
+                                                            <code class="highlight language-python"
+                                                                ><span class="n">get_case</span><span class="p">(</span
+                                                                ><span class="n">case_id</span
+                                                                ><span class="p">)</span></code
+                                                            >
+                                                        </h3>
 
-<div class="doc doc-object doc-function">
+                                                        <div class="doc doc-contents">
+                                                            <p>
+                                                                Gets a case from DFIR-IRIS and returns all the details
+                                                            </p>
 
+                                                            <p><strong>Returns:</strong></p>
+                                                            <table>
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th>Name</th>
+                                                                        <th>Type</th>
+                                                                        <th>Description</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    <tr>
+                                                                        <td><code>dict</code></td>
+                                                                        <td>
+                                                                            <code>bool</code>
+                                                                        </td>
+                                                                        <td>
+                                                                            <div class="doc-md-description">
+                                                                                <p>
+                                                                                    A dictionary containing the success
+                                                                                    status, a message and potentially
+                                                                                    the case.
+                                                                                </p>
+                                                                            </div>
+                                                                        </td>
+                                                                    </tr>
+                                                                </tbody>
+                                                            </table>
 
-
-<h3 id="app.services.DFIR_IRIS.cases.CasesService.get_case" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">get_case</span><span class="p">(</span><span class="n">case_id</span><span class="p">)</span></code>
-
-</h3>
-
-
-  <div class="doc doc-contents ">
-  
-      <p>Gets a case from DFIR-IRIS and returns all the details</p>
-
-  <p><strong>Returns:</strong></p>
-  <table>
-    <thead>
-      <tr>
-<th>Name</th>        <th>Type</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-<td><code>dict</code></td>          <td>
-                <code>bool</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>A dictionary containing the success status, a message and potentially the case.</p>
-            </div>
-          </td>
-        </tr>
-    </tbody>
-  </table>
-
-      <details class="quote">
-        <summary>Source code in <code>app\services\DFIR_IRIS\cases.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-61">61</a></span>
+                                                            <details class="quote">
+                                                                <summary>
+                                                                    Source code in
+                                                                    <code>app\services\DFIR_IRIS\cases.py</code>
+                                                                </summary>
+                                                                <div class="highlight">
+                                                                    <table class="highlighttable">
+                                                                        <tr>
+                                                                            <td class="linenos">
+                                                                                <div class="linenodiv">
+                                                                                    <pre><span></span><span class="normal"><a href="#__codelineno-0-61">61</a></span>
 <span class="normal"><a href="#__codelineno-0-62">62</a></span>
 <span class="normal"><a href="#__codelineno-0-63">63</a></span>
 <span class="normal"><a href="#__codelineno-0-64">64</a></span>
@@ -1882,7 +1809,12 @@ This class inherits from SQLAlchemy's Model class.</p>
 <span class="normal"><a href="#__codelineno-0-89">89</a></span>
 <span class="normal"><a href="#__codelineno-0-90">90</a></span>
 <span class="normal"><a href="#__codelineno-0-91">91</a></span>
-<span class="normal"><a href="#__codelineno-0-92">92</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-61" name="__codelineno-0-61"></a><span class="k">def</span> <span class="nf">get_case</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">case_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="normal"><a href="#__codelineno-0-92">92</a></span></pre>
+                                                                                </div>
+                                                                            </td>
+                                                                            <td class="code">
+                                                                                <div>
+                                                                                    <pre><span></span><code><a id="__codelineno-0-61" name="__codelineno-0-61"></a><span class="k">def</span> <span class="nf">get_case</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">case_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <a id="__codelineno-0-62" name="__codelineno-0-62"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-63" name="__codelineno-0-63"></a><span class="sd">    Gets a case from DFIR-IRIS and returns all the details</span>
 <a id="__codelineno-0-64" name="__codelineno-0-64"></a>
@@ -1914,51 +1846,72 @@ This class inherits from SQLAlchemy's Model class.</p>
 <a id="__codelineno-0-90" name="__codelineno-0-90"></a>        <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;Successfully collected case </span><span class="si">{</span><span class="n">case_id</span><span class="si">}</span><span class="s2"> from DFIR-IRIS&quot;</span><span class="p">,</span>
 <a id="__codelineno-0-91" name="__codelineno-0-91"></a>        <span class="s2">&quot;case&quot;</span><span class="p">:</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">],</span>
 <a id="__codelineno-0-92" name="__codelineno-0-92"></a>    <span class="p">}</span>
-</code></pre></div></td></tr></table></div>
-      </details>
-  </div>
+</code></pre>
+                                                                                </div>
+                                                                            </td>
+                                                                        </tr>
+                                                                    </table>
+                                                                </div>
+                                                            </details>
+                                                        </div>
+                                                    </div>
 
-</div>
+                                                    <div class="doc doc-object doc-function">
+                                                        <h3
+                                                            id="app.services.DFIR_IRIS.cases.CasesService.list_cases"
+                                                            class="doc doc-heading"
+                                                        >
+                                                            <code class="highlight language-python"
+                                                                ><span class="n">list_cases</span
+                                                                ><span class="p">()</span></code
+                                                            >
+                                                        </h3>
 
-<div class="doc doc-object doc-function">
+                                                        <div class="doc doc-contents">
+                                                            <p>Lists all cases from DFIR-IRIS</p>
 
+                                                            <p><strong>Returns:</strong></p>
+                                                            <table>
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th>Name</th>
+                                                                        <th>Type</th>
+                                                                        <th>Description</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    <tr>
+                                                                        <td><code>dict</code></td>
+                                                                        <td>
+                                                                            <code
+                                                                                ><span title="typing.Dict">Dict</span
+                                                                                >[str, object]</code
+                                                                            >
+                                                                        </td>
+                                                                        <td>
+                                                                            <div class="doc-md-description">
+                                                                                <p>
+                                                                                    A dictionary containing the success
+                                                                                    status, a message and potentially
+                                                                                    the cases.
+                                                                                </p>
+                                                                            </div>
+                                                                        </td>
+                                                                    </tr>
+                                                                </tbody>
+                                                            </table>
 
-
-<h3 id="app.services.DFIR_IRIS.cases.CasesService.list_cases" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">list_cases</span><span class="p">()</span></code>
-
-</h3>
-
-
-  <div class="doc doc-contents ">
-  
-      <p>Lists all cases from DFIR-IRIS</p>
-
-  <p><strong>Returns:</strong></p>
-  <table>
-    <thead>
-      <tr>
-<th>Name</th>        <th>Type</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-<td><code>dict</code></td>          <td>
-                <code><span title="typing.Dict">Dict</span>[str, object]</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>A dictionary containing the success status, a message and potentially the cases.</p>
-            </div>
-          </td>
-        </tr>
-    </tbody>
-  </table>
-
-      <details class="quote">
-        <summary>Source code in <code>app\services\DFIR_IRIS\cases.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-29">29</a></span>
+                                                            <details class="quote">
+                                                                <summary>
+                                                                    Source code in
+                                                                    <code>app\services\DFIR_IRIS\cases.py</code>
+                                                                </summary>
+                                                                <div class="highlight">
+                                                                    <table class="highlighttable">
+                                                                        <tr>
+                                                                            <td class="linenos">
+                                                                                <div class="linenodiv">
+                                                                                    <pre><span></span><span class="normal"><a href="#__codelineno-0-29">29</a></span>
 <span class="normal"><a href="#__codelineno-0-30">30</a></span>
 <span class="normal"><a href="#__codelineno-0-31">31</a></span>
 <span class="normal"><a href="#__codelineno-0-32">32</a></span>
@@ -1988,7 +1941,12 @@ This class inherits from SQLAlchemy's Model class.</p>
 <span class="normal"><a href="#__codelineno-0-56">56</a></span>
 <span class="normal"><a href="#__codelineno-0-57">57</a></span>
 <span class="normal"><a href="#__codelineno-0-58">58</a></span>
-<span class="normal"><a href="#__codelineno-0-59">59</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-29" name="__codelineno-0-29"></a><span class="k">def</span> <span class="nf">list_cases</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+<span class="normal"><a href="#__codelineno-0-59">59</a></span></pre>
+                                                                                </div>
+                                                                            </td>
+                                                                            <td class="code">
+                                                                                <div>
+                                                                                    <pre><span></span><code><a id="__codelineno-0-29" name="__codelineno-0-29"></a><span class="k">def</span> <span class="nf">list_cases</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
 <a id="__codelineno-0-30" name="__codelineno-0-30"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-31" name="__codelineno-0-31"></a><span class="sd">    Lists all cases from DFIR-IRIS</span>
 <a id="__codelineno-0-32" name="__codelineno-0-32"></a>
@@ -2019,82 +1977,103 @@ This class inherits from SQLAlchemy's Model class.</p>
 <a id="__codelineno-0-57" name="__codelineno-0-57"></a>        <span class="s2">&quot;message&quot;</span><span class="p">:</span> <span class="s2">&quot;Successfully collected cases from DFIR-IRIS&quot;</span><span class="p">,</span>
 <a id="__codelineno-0-58" name="__codelineno-0-58"></a>        <span class="s2">&quot;cases&quot;</span><span class="p">:</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;data&quot;</span><span class="p">],</span>
 <a id="__codelineno-0-59" name="__codelineno-0-59"></a>    <span class="p">}</span>
-</code></pre></div></td></tr></table></div>
-      </details>
-  </div>
+</code></pre>
+                                                                                </div>
+                                                                            </td>
+                                                                        </tr>
+                                                                    </table>
+                                                                </div>
+                                                            </details>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
 
-</div>
+                    <script>
+                        var tabs = __md_get("__tabs")
+                        if (Array.isArray(tabs))
+                            e: for (var set of document.querySelectorAll(".tabbed-set")) {
+                                var tab,
+                                    labels = set.querySelector(".tabbed-labels")
+                                for (tab of tabs)
+                                    for (var label of labels.getElementsByTagName("label"))
+                                        if (label.innerText.trim() === tab) {
+                                            var input = document.getElementById(label.htmlFor)
+                                            input.checked = !0
+                                            continue e
+                                        }
+                            }
+                    </script>
+                </div>
 
+                <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z" />
+                    </svg>
+                    Back to top
+                </button>
+            </main>
 
+            <footer class="md-footer">
+                <div class="md-footer-meta md-typeset">
+                    <div class="md-footer-meta__inner md-grid">
+                        <div class="md-copyright">
+                            <div class="md-copyright__highlight">
+                                &copy; 2023
+                                <a href="https://github.com/socfortress/CoPilot" target="_blank" rel="noopener"
+                                    >SOCFortress CoPilot</a
+                                >
+                            </div>
 
-  </div>
-
-  </div>
-
-</div>
-
-
-
-
-  </div>
-
-  </div>
-
-</div>
-
-
-
-
-
-                
-              </article>
-            </div>
-          
-          
-  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var tab,labels=set.querySelector(".tabbed-labels");for(tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
-
+                            Made with
+                            <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+                                Material for MkDocs
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </footer>
         </div>
-        
-          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"/></svg>
-            Back to top
-          </button>
-        
-      </main>
-      
-        <footer class="md-footer">
-  
-  <div class="md-footer-meta md-typeset">
-    <div class="md-footer-meta__inner md-grid">
-      <div class="md-copyright">
-  
-    <div class="md-copyright__highlight">
-      &copy; 2023 <a href="https://github.com/socfortress/CoPilot"  target="_blank" rel="noopener">SOCFortress CoPilot</a>
+        <div class="md-dialog" data-md-component="dialog">
+            <div class="md-dialog__inner md-typeset"></div>
+        </div>
 
-    </div>
-  
-  
-    Made with
-    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
-      Material for MkDocs
-    </a>
-  
-</div>
-      
-    </div>
-  </div>
-</footer>
-      
-    </div>
-    <div class="md-dialog" data-md-component="dialog">
-      <div class="md-dialog__inner md-typeset"></div>
-    </div>
-    
-    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.tabs", "navigation.sections", "toc.integrate", "navigation.top", "search.suggest", "search.highlight", "content.tabs.link", "content.code.annotation", "content.code.copy"], "search": "../assets/javascripts/workers/search.74e28a9f.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
-    
-    
-      <script src="../assets/javascripts/bundle.220ee61c.min.js"></script>
-      
-    
-  </body>
+        <script id="__config" type="application/json">
+            {
+                "base": "..",
+                "features": [
+                    "navigation.tabs",
+                    "navigation.sections",
+                    "toc.integrate",
+                    "navigation.top",
+                    "search.suggest",
+                    "search.highlight",
+                    "content.tabs.link",
+                    "content.code.annotation",
+                    "content.code.copy"
+                ],
+                "search": "../assets/javascripts/workers/search.74e28a9f.min.js",
+                "translations": {
+                    "clipboard.copied": "Copied to clipboard",
+                    "clipboard.copy": "Copy to clipboard",
+                    "search.result.more.one": "1 more on this page",
+                    "search.result.more.other": "# more on this page",
+                    "search.result.none": "No matching documents",
+                    "search.result.one": "1 matching document",
+                    "search.result.other": "# matching documents",
+                    "search.result.placeholder": "Type to start searching",
+                    "search.result.term.missing": "Missing",
+                    "select.version": "Select version"
+                }
+            }
+        </script>
+
+        <script src="../assets/javascripts/bundle.220ee61c.min.js"></script>
+    </body>
 </html>

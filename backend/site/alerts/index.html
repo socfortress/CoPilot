@@ -1,595 +1,411 @@
-
 <!doctype html>
 <html lang="en" class="no-js">
-  <head>
-    
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width,initial-scale=1">
-      
-      
-      
-      
-        <link rel="prev" href="../agents/">
-      
-      
-        <link rel="next" href="../artifacts/">
-      
-      <link rel="icon" href="../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.18">
-    
-    
-      
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+        <link rel="prev" href="../agents/" />
+
+        <link rel="next" href="../artifacts/" />
+
+        <link rel="icon" href="../assets/images/favicon.png" />
+        <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.18" />
+
         <title>Alerts - SOCFortress CoPilot</title>
-      
-    
-    
-      <link rel="stylesheet" href="../assets/stylesheets/main.26e3688c.min.css">
-      
-        
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ecc896b0.min.css">
-      
-      
 
-    
-    
-    
-      
-        
-        
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
-        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
-      
-    
-    
-      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
-    
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
-    
-      
+        <link rel="stylesheet" href="../assets/stylesheets/main.26e3688c.min.css" />
 
-    
-    
-    
-  </head>
-  
-  
-    
-    
-      
-    
-    
-    
-    
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ecc896b0.min.css" />
+
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            rel="stylesheet"
+            href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback"
+        />
+        <style>
+            :root {
+                --md-text-font: "Roboto";
+                --md-code-font: "Roboto Mono";
+            }
+        </style>
+
+        <link rel="stylesheet" href="../assets/_mkdocstrings.css" />
+
+        <script>
+            ;(__md_scope = new URL("..", location)),
+                (__md_hash = e => [...e].reduce((e, _) => (e << 5) - e + _.charCodeAt(0), 0)),
+                (__md_get = (e, _ = localStorage, t = __md_scope) => JSON.parse(_.getItem(t.pathname + "." + e))),
+                (__md_set = (e, _, t = localStorage, a = __md_scope) => {
+                    try {
+                        t.setItem(a.pathname + "." + e, JSON.stringify(_))
+                    } catch (e) {}
+                })
+        </script>
+    </head>
+
     <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="purple">
-  
-    
-    
-      <script>var palette=__md_get("__palette");if(palette&&"object"==typeof palette.color)for(var key of Object.keys(palette.color))document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
-    
-    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
-    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
-    <label class="md-overlay" for="__drawer"></label>
-    <div data-md-component="skip">
-      
-        
-        <a href="#alerts-overview" class="md-skip">
-          Skip to content
-        </a>
-      
-    </div>
-    <div data-md-component="announce">
-      
-    </div>
-    
-    
-      
+        <script>
+            var palette = __md_get("__palette")
+            if (palette && "object" == typeof palette.color)
+                for (var key of Object.keys(palette.color))
+                    document.body.setAttribute("data-md-color-" + key, palette.color[key])
+        </script>
 
-<header class="md-header" data-md-component="header">
-  <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="SOCFortress CoPilot" class="md-header__button md-logo" aria-label="SOCFortress CoPilot" data-md-component="logo">
-      
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
-
-    </a>
-    <label class="md-header__button md-icon" for="__drawer">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
-    </label>
-    <div class="md-header__title" data-md-component="header-title">
-      <div class="md-header__ellipsis">
-        <div class="md-header__topic">
-          <span class="md-ellipsis">
-            SOCFortress CoPilot
-          </span>
+        <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off" />
+        <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off" />
+        <label class="md-overlay" for="__drawer"></label>
+        <div data-md-component="skip">
+            <a href="#alerts-overview" class="md-skip"> Skip to content </a>
         </div>
-        <div class="md-header__topic" data-md-component="header-topic">
-          <span class="md-ellipsis">
-            
-              Alerts
-            
-          </span>
-        </div>
-      </div>
-    </div>
-    
-      
-        <form class="md-header__option" data-md-component="palette">
-          
-            
-            
-            
-            <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="teal" data-md-color-accent="purple"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
-            
-              <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 6H7c-3.31 0-6 2.69-6 6s2.69 6 6 6h10c3.31 0 6-2.69 6-6s-2.69-6-6-6zm0 10H7c-2.21 0-4-1.79-4-4s1.79-4 4-4h10c2.21 0 4 1.79 4 4s-1.79 4-4 4zM7 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
-              </label>
-            
-          
-            
-            
-            
-            <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="teal" data-md-color-accent="lime"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_2">
-            
-              <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 7H7a5 5 0 0 0-5 5 5 5 0 0 0 5 5h10a5 5 0 0 0 5-5 5 5 0 0 0-5-5m0 8a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3Z"/></svg>
-              </label>
-            
-          
-        </form>
-      
-    
-    
-    
-    
-  </nav>
-  
-</header>
-    
-    <div class="md-container" data-md-component="container">
-      
-      
-        
-          
-            
-<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
-  <div class="md-grid">
-    <ul class="md-tabs__list">
-      
-        
-  
-  
+        <div data-md-component="announce"></div>
 
-
-  <li class="md-tabs__item">
-    <a href=".." class="md-tabs__link">
-      Home
-    </a>
-  </li>
-
-      
-        
-  
-  
-
-
-  <li class="md-tabs__item">
-    <a href="../connectors/" class="md-tabs__link">
-      Connectors
-    </a>
-  </li>
-
-      
-        
-  
-  
-
-
-  <li class="md-tabs__item">
-    <a href="../agents/" class="md-tabs__link">
-      Agents
-    </a>
-  </li>
-
-      
-        
-  
-  
-    
-  
-
-
-  <li class="md-tabs__item">
-    <a href="./" class="md-tabs__link md-tabs__link--active">
-      Alerts
-    </a>
-  </li>
-
-      
-        
-  
-  
-
-
-  <li class="md-tabs__item">
-    <a href="../artifacts/" class="md-tabs__link">
-      Artifacts
-    </a>
-  </li>
-
-      
-        
-  
-  
-
-
-  <li class="md-tabs__item">
-    <a href="../cases/" class="md-tabs__link">
-      Cases
-    </a>
-  </li>
-
-      
-        
-  
-  
-
-
-  <li class="md-tabs__item">
-    <a href="../graylog/" class="md-tabs__link">
-      Graylog
-    </a>
-  </li>
-
-      
-    </ul>
-  </div>
-</nav>
-          
-        
-      
-      <main class="md-main" data-md-component="main">
-        <div class="md-main__inner md-grid">
-          
-            
-              
-              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
-                <div class="md-sidebar__scrollwrap">
-                  <div class="md-sidebar__inner">
-                    
-
-  
-
-
-  
-
-<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
-  <label class="md-nav__title" for="__drawer">
-    <a href=".." title="SOCFortress CoPilot" class="md-nav__button md-logo" aria-label="SOCFortress CoPilot" data-md-component="logo">
-      
-  
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
-
-    </a>
-    SOCFortress CoPilot
-  </label>
-  
-  <ul class="md-nav__list" data-md-scrollfix>
-    
-      
-      
-      
-
-  
-  
-  
-    <li class="md-nav__item">
-      <a href=".." class="md-nav__link">
-        Home
-      </a>
-    </li>
-  
-
-    
-      
-      
-      
-
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../connectors/" class="md-nav__link">
-        Connectors
-      </a>
-    </li>
-  
-
-    
-      
-      
-      
-
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../agents/" class="md-nav__link">
-        Agents
-      </a>
-    </li>
-  
-
-    
-      
-      
-      
-
-  
-  
-    
-  
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          Alerts
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
-        Alerts
-      </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#alerts-overview" class="md-nav__link">
-    Alerts Overview
-  </a>
-  
-    <nav class="md-nav" aria-label="Alerts Overview">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#alert-routes" class="md-nav__link">
-    Alert Routes
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#app.routes.alerts" class="md-nav__link">
-    app.routes.alerts
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#app.routes.alerts.get_alerts" class="md-nav__link">
-    get_alerts()
-  </a>
-  
-    <nav class="md-nav" aria-label="get_alerts()">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#alert-services" class="md-nav__link">
-    Alert Services
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#app.services.WazuhIndexer.alerts" class="md-nav__link">
-    app.services.WazuhIndexer.alerts
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#app.services.WazuhIndexer.alerts.AlertsService" class="md-nav__link">
-    AlertsService
-  </a>
-  
-    <nav class="md-nav" aria-label="AlertsService">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#app.services.WazuhIndexer.alerts.AlertsService.__init__" class="md-nav__link">
-    __init__()
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#app.services.WazuhIndexer.alerts.AlertsService.collect_alerts" class="md-nav__link">
-    collect_alerts()
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#app.services.WazuhIndexer.alerts.AlertsService.is_index_skipped" class="md-nav__link">
-    is_index_skipped()
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
-    </li>
-  
-
-    
-      
-      
-      
-
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../artifacts/" class="md-nav__link">
-        Artifacts
-      </a>
-    </li>
-  
-
-    
-      
-      
-      
-
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../cases/" class="md-nav__link">
-        Cases
-      </a>
-    </li>
-  
-
-    
-      
-      
-      
-
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../graylog/" class="md-nav__link">
-        Graylog
-      </a>
-    </li>
-  
-
-    
-  </ul>
-</nav>
-                  </div>
+        <header class="md-header" data-md-component="header">
+            <nav class="md-header__inner md-grid" aria-label="Header">
+                <a
+                    href=".."
+                    title="SOCFortress CoPilot"
+                    class="md-header__button md-logo"
+                    aria-label="SOCFortress CoPilot"
+                    data-md-component="logo"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path
+                            d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"
+                        />
+                    </svg>
+                </a>
+                <label class="md-header__button md-icon" for="__drawer">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z" />
+                    </svg>
+                </label>
+                <div class="md-header__title" data-md-component="header-title">
+                    <div class="md-header__ellipsis">
+                        <div class="md-header__topic">
+                            <span class="md-ellipsis"> SOCFortress CoPilot </span>
+                        </div>
+                        <div class="md-header__topic" data-md-component="header-topic">
+                            <span class="md-ellipsis"> Alerts </span>
+                        </div>
+                    </div>
                 </div>
-              </div>
-            
-            
-          
-          
-            <div class="md-content" data-md-component="content">
-              <article class="md-content__inner md-typeset">
-                
-                  
 
+                <form class="md-header__option" data-md-component="palette">
+                    <input
+                        class="md-option"
+                        data-md-color-media=""
+                        data-md-color-scheme="default"
+                        data-md-color-primary="teal"
+                        data-md-color-accent="purple"
+                        aria-label="Switch to dark mode"
+                        type="radio"
+                        name="__palette"
+                        id="__palette_1"
+                    />
 
-  <h1>Alerts</h1>
+                    <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_2" hidden>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path
+                                d="M17 6H7c-3.31 0-6 2.69-6 6s2.69 6 6 6h10c3.31 0 6-2.69 6-6s-2.69-6-6-6zm0 10H7c-2.21 0-4-1.79-4-4s1.79-4 4-4h10c2.21 0 4 1.79 4 4s-1.79 4-4 4zM7 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"
+                            />
+                        </svg>
+                    </label>
 
-<h2 id="alerts-overview">Alerts Overview</h2>
-<h3 id="alert-routes"><span style="color:green">Alert Routes</span></h3>
+                    <input
+                        class="md-option"
+                        data-md-color-media=""
+                        data-md-color-scheme="slate"
+                        data-md-color-primary="teal"
+                        data-md-color-accent="lime"
+                        aria-label="Switch to light mode"
+                        type="radio"
+                        name="__palette"
+                        id="__palette_2"
+                    />
 
+                    <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path
+                                d="M17 7H7a5 5 0 0 0-5 5 5 5 0 0 0 5 5h10a5 5 0 0 0 5-5 5 5 0 0 0-5-5m0 8a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3Z"
+                            />
+                        </svg>
+                    </label>
+                </form>
+            </nav>
+        </header>
 
-<div class="doc doc-object doc-module">
+        <div class="md-container" data-md-component="container">
+            <nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+                <div class="md-grid">
+                    <ul class="md-tabs__list">
+                        <li class="md-tabs__item">
+                            <a href=".." class="md-tabs__link"> Home </a>
+                        </li>
 
+                        <li class="md-tabs__item">
+                            <a href="../connectors/" class="md-tabs__link"> Connectors </a>
+                        </li>
 
-<a id="app.routes.alerts"></a>
-  <div class="doc doc-contents first">
+                        <li class="md-tabs__item">
+                            <a href="../agents/" class="md-tabs__link"> Agents </a>
+                        </li>
 
-  
+                        <li class="md-tabs__item">
+                            <a href="./" class="md-tabs__link md-tabs__link--active"> Alerts </a>
+                        </li>
 
-  <div class="doc doc-children">
+                        <li class="md-tabs__item">
+                            <a href="../artifacts/" class="md-tabs__link"> Artifacts </a>
+                        </li>
 
+                        <li class="md-tabs__item">
+                            <a href="../cases/" class="md-tabs__link"> Cases </a>
+                        </li>
 
+                        <li class="md-tabs__item">
+                            <a href="../graylog/" class="md-tabs__link"> Graylog </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
 
+            <main class="md-main" data-md-component="main">
+                <div class="md-main__inner md-grid">
+                    <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
+                        <div class="md-sidebar__scrollwrap">
+                            <div class="md-sidebar__inner">
+                                <nav
+                                    class="md-nav md-nav--primary md-nav--lifted md-nav--integrated"
+                                    aria-label="Navigation"
+                                    data-md-level="0"
+                                >
+                                    <label class="md-nav__title" for="__drawer">
+                                        <a
+                                            href=".."
+                                            title="SOCFortress CoPilot"
+                                            class="md-nav__button md-logo"
+                                            aria-label="SOCFortress CoPilot"
+                                            data-md-component="logo"
+                                        >
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                                                <path
+                                                    d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"
+                                                />
+                                            </svg>
+                                        </a>
+                                        SOCFortress CoPilot
+                                    </label>
 
+                                    <ul class="md-nav__list" data-md-scrollfix>
+                                        <li class="md-nav__item">
+                                            <a href=".." class="md-nav__link"> Home </a>
+                                        </li>
 
+                                        <li class="md-nav__item">
+                                            <a href="../connectors/" class="md-nav__link"> Connectors </a>
+                                        </li>
 
+                                        <li class="md-nav__item">
+                                            <a href="../agents/" class="md-nav__link"> Agents </a>
+                                        </li>
 
+                                        <li class="md-nav__item md-nav__item--active">
+                                            <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc" />
 
+                                            <label class="md-nav__link md-nav__link--active" for="__toc">
+                                                Alerts
+                                                <span class="md-nav__icon md-icon"></span>
+                                            </label>
 
-<div class="doc doc-object doc-function">
+                                            <a href="./" class="md-nav__link md-nav__link--active"> Alerts </a>
 
+                                            <nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+                                                <label class="md-nav__title" for="__toc">
+                                                    <span class="md-nav__icon md-icon"></span>
+                                                    Table of contents
+                                                </label>
+                                                <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+                                                    <li class="md-nav__item">
+                                                        <a href="#alerts-overview" class="md-nav__link">
+                                                            Alerts Overview
+                                                        </a>
 
+                                                        <nav class="md-nav" aria-label="Alerts Overview">
+                                                            <ul class="md-nav__list">
+                                                                <li class="md-nav__item">
+                                                                    <a href="#alert-routes" class="md-nav__link">
+                                                                        Alert Routes
+                                                                    </a>
+                                                                </li>
+                                                            </ul>
+                                                        </nav>
+                                                    </li>
 
-<h2 id="app.routes.alerts.get_alerts" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">get_alerts</span><span class="p">()</span></code>
+                                                    <li class="md-nav__item">
+                                                        <a href="#app.routes.alerts" class="md-nav__link">
+                                                            app.routes.alerts
+                                                        </a>
+                                                    </li>
 
-</h2>
+                                                    <li class="md-nav__item">
+                                                        <a href="#app.routes.alerts.get_alerts" class="md-nav__link">
+                                                            get_alerts()
+                                                        </a>
 
+                                                        <nav class="md-nav" aria-label="get_alerts()">
+                                                            <ul class="md-nav__list">
+                                                                <li class="md-nav__item">
+                                                                    <a href="#alert-services" class="md-nav__link">
+                                                                        Alert Services
+                                                                    </a>
+                                                                </li>
+                                                            </ul>
+                                                        </nav>
+                                                    </li>
 
-  <div class="doc doc-contents ">
-  
-      <p>Retrieves all alerts from the AlertsService.</p>
-<p>This endpoint retrieves all available alerts from the AlertsService. It does this by creating an instance of
-the AlertsService class and calling its <code>collect_alerts</code> method. The result is a list of all alerts currently
-available.</p>
+                                                    <li class="md-nav__item">
+                                                        <a
+                                                            href="#app.services.WazuhIndexer.alerts"
+                                                            class="md-nav__link"
+                                                        >
+                                                            app.services.WazuhIndexer.alerts
+                                                        </a>
+                                                    </li>
 
-  <p><strong>Returns:</strong></p>
-  <table>
-    <thead>
-      <tr>
-<th>Name</th>        <th>Type</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-<td><code>jsonify</code></td>          <td>
-                <code><span title="flask.jsonify">jsonify</span></code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>A JSON response containing a list of alerts. Each item in the list is a dictionary representing an alert,</p>
-            </div>
-          </td>
-        </tr>
-        <tr>
-<td></td>          <td>
-                <code><span title="flask.jsonify">jsonify</span></code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>containing all its associated data.</p>
-            </div>
-          </td>
-        </tr>
-    </tbody>
-  </table>
+                                                    <li class="md-nav__item">
+                                                        <a
+                                                            href="#app.services.WazuhIndexer.alerts.AlertsService"
+                                                            class="md-nav__link"
+                                                        >
+                                                            AlertsService
+                                                        </a>
 
-      <details class="quote">
-        <summary>Source code in <code>app\routes\alerts.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-9"> 9</a></span>
+                                                        <nav class="md-nav" aria-label="AlertsService">
+                                                            <ul class="md-nav__list">
+                                                                <li class="md-nav__item">
+                                                                    <a
+                                                                        href="#app.services.WazuhIndexer.alerts.AlertsService.__init__"
+                                                                        class="md-nav__link"
+                                                                    >
+                                                                        __init__()
+                                                                    </a>
+                                                                </li>
+
+                                                                <li class="md-nav__item">
+                                                                    <a
+                                                                        href="#app.services.WazuhIndexer.alerts.AlertsService.collect_alerts"
+                                                                        class="md-nav__link"
+                                                                    >
+                                                                        collect_alerts()
+                                                                    </a>
+                                                                </li>
+
+                                                                <li class="md-nav__item">
+                                                                    <a
+                                                                        href="#app.services.WazuhIndexer.alerts.AlertsService.is_index_skipped"
+                                                                        class="md-nav__link"
+                                                                    >
+                                                                        is_index_skipped()
+                                                                    </a>
+                                                                </li>
+                                                            </ul>
+                                                        </nav>
+                                                    </li>
+                                                </ul>
+                                            </nav>
+                                        </li>
+
+                                        <li class="md-nav__item">
+                                            <a href="../artifacts/" class="md-nav__link"> Artifacts </a>
+                                        </li>
+
+                                        <li class="md-nav__item">
+                                            <a href="../cases/" class="md-nav__link"> Cases </a>
+                                        </li>
+
+                                        <li class="md-nav__item">
+                                            <a href="../graylog/" class="md-nav__link"> Graylog </a>
+                                        </li>
+                                    </ul>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="md-content" data-md-component="content">
+                        <article class="md-content__inner md-typeset">
+                            <h1>Alerts</h1>
+
+                            <h2 id="alerts-overview">Alerts Overview</h2>
+                            <h3 id="alert-routes"><span style="color: green">Alert Routes</span></h3>
+
+                            <div class="doc doc-object doc-module">
+                                <a id="app.routes.alerts"></a>
+                                <div class="doc doc-contents first">
+                                    <div class="doc doc-children">
+                                        <div class="doc doc-object doc-function">
+                                            <h2 id="app.routes.alerts.get_alerts" class="doc doc-heading">
+                                                <code class="highlight language-python"
+                                                    ><span class="n">get_alerts</span><span class="p">()</span></code
+                                                >
+                                            </h2>
+
+                                            <div class="doc doc-contents">
+                                                <p>Retrieves all alerts from the AlertsService.</p>
+                                                <p>
+                                                    This endpoint retrieves all available alerts from the AlertsService.
+                                                    It does this by creating an instance of the AlertsService class and
+                                                    calling its <code>collect_alerts</code> method. The result is a list
+                                                    of all alerts currently available.
+                                                </p>
+
+                                                <p><strong>Returns:</strong></p>
+                                                <table>
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Name</th>
+                                                            <th>Type</th>
+                                                            <th>Description</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td><code>jsonify</code></td>
+                                                            <td>
+                                                                <code><span title="flask.jsonify">jsonify</span></code>
+                                                            </td>
+                                                            <td>
+                                                                <div class="doc-md-description">
+                                                                    <p>
+                                                                        A JSON response containing a list of alerts.
+                                                                        Each item in the list is a dictionary
+                                                                        representing an alert,
+                                                                    </p>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td></td>
+                                                            <td>
+                                                                <code><span title="flask.jsonify">jsonify</span></code>
+                                                            </td>
+                                                            <td>
+                                                                <div class="doc-md-description">
+                                                                    <p>containing all its associated data.</p>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+
+                                                <details class="quote">
+                                                    <summary>Source code in <code>app\routes\alerts.py</code></summary>
+                                                    <div class="highlight">
+                                                        <table class="highlighttable">
+                                                            <tr>
+                                                                <td class="linenos">
+                                                                    <div class="linenodiv">
+                                                                        <pre><span></span><span class="normal"><a href="#__codelineno-0-9"> 9</a></span>
 <span class="normal"><a href="#__codelineno-0-10">10</a></span>
 <span class="normal"><a href="#__codelineno-0-11">11</a></span>
 <span class="normal"><a href="#__codelineno-0-12">12</a></span>
@@ -604,7 +420,12 @@ available.</p>
 <span class="normal"><a href="#__codelineno-0-21">21</a></span>
 <span class="normal"><a href="#__codelineno-0-22">22</a></span>
 <span class="normal"><a href="#__codelineno-0-23">23</a></span>
-<span class="normal"><a href="#__codelineno-0-24">24</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-9" name="__codelineno-0-9"></a><span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/alerts&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">])</span>
+<span class="normal"><a href="#__codelineno-0-24">24</a></span></pre>
+                                                                    </div>
+                                                                </td>
+                                                                <td class="code">
+                                                                    <div>
+                                                                        <pre><span></span><code><a id="__codelineno-0-9" name="__codelineno-0-9"></a><span class="nd">@bp</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/alerts&quot;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;GET&quot;</span><span class="p">])</span>
 <a id="__codelineno-0-10" name="__codelineno-0-10"></a><span class="k">def</span> <span class="nf">get_alerts</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">jsonify</span><span class="p">:</span>
 <a id="__codelineno-0-11" name="__codelineno-0-11"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-12" name="__codelineno-0-12"></a><span class="sd">    Retrieves all alerts from the AlertsService.</span>
@@ -620,116 +441,110 @@ available.</p>
 <a id="__codelineno-0-22" name="__codelineno-0-22"></a>    <span class="n">service</span> <span class="o">=</span> <span class="n">AlertsService</span><span class="p">()</span>
 <a id="__codelineno-0-23" name="__codelineno-0-23"></a>    <span class="n">alerts</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="n">collect_alerts</span><span class="p">()</span>
 <a id="__codelineno-0-24" name="__codelineno-0-24"></a>    <span class="k">return</span> <span class="n">jsonify</span><span class="p">(</span><span class="n">alerts</span><span class="p">)</span>
-</code></pre></div></td></tr></table></div>
-      </details>
-  </div>
+</code></pre>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </div>
+                                                </details>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <p><br /></p>
+                            <h3 id="alert-services"><span style="color: red">Alert Services</span></h3>
 
-</div>
+                            <div class="doc doc-object doc-module">
+                                <a id="app.services.WazuhIndexer.alerts"></a>
+                                <div class="doc doc-contents first">
+                                    <div class="doc doc-children">
+                                        <div class="doc doc-object doc-class">
+                                            <h2
+                                                id="app.services.WazuhIndexer.alerts.AlertsService"
+                                                class="doc doc-heading"
+                                            >
+                                                <code>AlertsService</code>
+                                            </h2>
 
+                                            <div class="doc doc-contents">
+                                                <p>
+                                                    A service class that encapsulates the logic for pulling alerts from
+                                                    the Wazuh-Indexer.
+                                                </p>
 
+                                                <p><strong>Attributes:</strong></p>
+                                                <table>
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Name</th>
+                                                            <th>Type</th>
+                                                            <th>Description</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td><code>connector_url</code></td>
+                                                            <td>
+                                                                <code>str</code>
+                                                            </td>
+                                                            <td>
+                                                                <div class="doc-md-description">
+                                                                    <p>The url to the Wazuh-Indexer.</p>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><code>connector_username</code></td>
+                                                            <td>
+                                                                <code>str</code>
+                                                            </td>
+                                                            <td>
+                                                                <div class="doc-md-description">
+                                                                    <p>The username for the Wazuh-Indexer.</p>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><code>connector_password</code></td>
+                                                            <td>
+                                                                <code>str</code>
+                                                            </td>
+                                                            <td>
+                                                                <div class="doc-md-description">
+                                                                    <p>The password for the Wazuh-Indexer.</p>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><code>es</code></td>
+                                                            <td>
+                                                                <code
+                                                                    ><span title="elasticsearch7.Elasticsearch"
+                                                                        >Elasticsearch</span
+                                                                    ></code
+                                                                >
+                                                            </td>
+                                                            <td>
+                                                                <div class="doc-md-description">
+                                                                    <p>The Elasticsearch client.</p>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
 
-  </div>
-
-  </div>
-
-</div><p><br></p>
-<h3 id="alert-services"><span style="color:red">Alert Services</span></h3>
-
-
-<div class="doc doc-object doc-module">
-
-
-<a id="app.services.WazuhIndexer.alerts"></a>
-  <div class="doc doc-contents first">
-
-  
-
-  <div class="doc doc-children">
-
-
-
-
-
-
-
-
-<div class="doc doc-object doc-class">
-
-
-
-<h2 id="app.services.WazuhIndexer.alerts.AlertsService" class="doc doc-heading">
-        <code>AlertsService</code>
-
-
-</h2>
-
-
-  <div class="doc doc-contents ">
-
-  
-      <p>A service class that encapsulates the logic for pulling alerts from the Wazuh-Indexer.</p>
-
-  <p><strong>Attributes:</strong></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-          <td><code>connector_url</code></td>
-          <td>
-                <code>str</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>The url to the Wazuh-Indexer.</p>
-            </div>
-          </td>
-        </tr>
-        <tr>
-          <td><code>connector_username</code></td>
-          <td>
-                <code>str</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>The username for the Wazuh-Indexer.</p>
-            </div>
-          </td>
-        </tr>
-        <tr>
-          <td><code>connector_password</code></td>
-          <td>
-                <code>str</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>The password for the Wazuh-Indexer.</p>
-            </div>
-          </td>
-        </tr>
-        <tr>
-          <td><code>es</code></td>
-          <td>
-                <code><span title="elasticsearch7.Elasticsearch">Elasticsearch</span></code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>The Elasticsearch client.</p>
-            </div>
-          </td>
-        </tr>
-    </tbody>
-  </table>
-
-
-        <details class="quote">
-          <summary>Source code in <code>app\services\WazuhIndexer\alerts.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-9">  9</a></span>
+                                                <details class="quote">
+                                                    <summary>
+                                                        Source code in <code>app\services\WazuhIndexer\alerts.py</code>
+                                                    </summary>
+                                                    <div class="highlight">
+                                                        <table class="highlighttable">
+                                                            <tr>
+                                                                <td class="linenos">
+                                                                    <div class="linenodiv">
+                                                                        <pre><span></span><span class="normal"><a href="#__codelineno-0-9">  9</a></span>
 <span class="normal"><a href="#__codelineno-0-10"> 10</a></span>
 <span class="normal"><a href="#__codelineno-0-11"> 11</a></span>
 <span class="normal"><a href="#__codelineno-0-12"> 12</a></span>
@@ -864,7 +679,12 @@ available.</p>
 <span class="normal"><a href="#__codelineno-0-141">141</a></span>
 <span class="normal"><a href="#__codelineno-0-142">142</a></span>
 <span class="normal"><a href="#__codelineno-0-143">143</a></span>
-<span class="normal"><a href="#__codelineno-0-144">144</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-9" name="__codelineno-0-9"></a><span class="k">class</span> <span class="nc">AlertsService</span><span class="p">:</span>
+<span class="normal"><a href="#__codelineno-0-144">144</a></span></pre>
+                                                                    </div>
+                                                                </td>
+                                                                <td class="code">
+                                                                    <div>
+                                                                        <pre><span></span><code><a id="__codelineno-0-9" name="__codelineno-0-9"></a><span class="k">class</span> <span class="nc">AlertsService</span><span class="p">:</span>
 <a id="__codelineno-0-10" name="__codelineno-0-10"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-11" name="__codelineno-0-11"></a><span class="sd">    A service class that encapsulates the logic for pulling alerts from the Wazuh-Indexer.</span>
 <a id="__codelineno-0-12" name="__codelineno-0-12"></a>
@@ -1000,38 +820,43 @@ available.</p>
 <a id="__codelineno-0-142" name="__codelineno-0-142"></a>            <span class="p">},</span>
 <a id="__codelineno-0-143" name="__codelineno-0-143"></a>            <span class="s2">&quot;sort&quot;</span><span class="p">:</span> <span class="p">[{</span><span class="s2">&quot;timestamp_utc&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;order&quot;</span><span class="p">:</span> <span class="s2">&quot;desc&quot;</span><span class="p">}}],</span>
 <a id="__codelineno-0-144" name="__codelineno-0-144"></a>        <span class="p">}</span>
-</code></pre></div></td></tr></table></div>
-        </details>
+</code></pre>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </div>
+                                                </details>
 
-  
+                                                <div class="doc doc-children">
+                                                    <div class="doc doc-object doc-function">
+                                                        <h3
+                                                            id="app.services.WazuhIndexer.alerts.AlertsService.__init__"
+                                                            class="doc doc-heading"
+                                                        >
+                                                            <code class="highlight language-python"
+                                                                ><span class="fm">__init__</span
+                                                                ><span class="p">()</span></code
+                                                            >
+                                                        </h3>
 
-  <div class="doc doc-children">
+                                                        <div class="doc doc-contents">
+                                                            <p>
+                                                                Initializes the service by collecting Wazuh-Indexer
+                                                                details and creating an Elasticsearch client.
+                                                            </p>
 
-
-
-
-
-
-
-
-
-<div class="doc doc-object doc-function">
-
-
-
-<h3 id="app.services.WazuhIndexer.alerts.AlertsService.__init__" class="doc doc-heading">
-<code class="highlight language-python"><span class="fm">__init__</span><span class="p">()</span></code>
-
-</h3>
-
-
-  <div class="doc doc-contents ">
-  
-      <p>Initializes the service by collecting Wazuh-Indexer details and creating an Elasticsearch client.</p>
-
-      <details class="quote">
-        <summary>Source code in <code>app\services\WazuhIndexer\alerts.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-25">25</a></span>
+                                                            <details class="quote">
+                                                                <summary>
+                                                                    Source code in
+                                                                    <code>app\services\WazuhIndexer\alerts.py</code>
+                                                                </summary>
+                                                                <div class="highlight">
+                                                                    <table class="highlighttable">
+                                                                        <tr>
+                                                                            <td class="linenos">
+                                                                                <div class="linenodiv">
+                                                                                    <pre><span></span><span class="normal"><a href="#__codelineno-0-25">25</a></span>
 <span class="normal"><a href="#__codelineno-0-26">26</a></span>
 <span class="normal"><a href="#__codelineno-0-27">27</a></span>
 <span class="normal"><a href="#__codelineno-0-28">28</a></span>
@@ -1047,7 +872,12 @@ available.</p>
 <span class="normal"><a href="#__codelineno-0-38">38</a></span>
 <span class="normal"><a href="#__codelineno-0-39">39</a></span>
 <span class="normal"><a href="#__codelineno-0-40">40</a></span>
-<span class="normal"><a href="#__codelineno-0-41">41</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-25" name="__codelineno-0-25"></a><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="normal"><a href="#__codelineno-0-41">41</a></span></pre>
+                                                                                </div>
+                                                                            </td>
+                                                                            <td class="code">
+                                                                                <div>
+                                                                                    <pre><span></span><code><a id="__codelineno-0-25" name="__codelineno-0-25"></a><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <a id="__codelineno-0-26" name="__codelineno-0-26"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-27" name="__codelineno-0-27"></a><span class="sd">    Initializes the service by collecting Wazuh-Indexer details and creating an Elasticsearch client.</span>
 <a id="__codelineno-0-28" name="__codelineno-0-28"></a><span class="sd">    &quot;&quot;&quot;</span>
@@ -1064,53 +894,75 @@ available.</p>
 <a id="__codelineno-0-39" name="__codelineno-0-39"></a>        <span class="n">max_retries</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
 <a id="__codelineno-0-40" name="__codelineno-0-40"></a>        <span class="n">retry_on_timeout</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
 <a id="__codelineno-0-41" name="__codelineno-0-41"></a>    <span class="p">)</span>
-</code></pre></div></td></tr></table></div>
-      </details>
-  </div>
+</code></pre>
+                                                                                </div>
+                                                                            </td>
+                                                                        </tr>
+                                                                    </table>
+                                                                </div>
+                                                            </details>
+                                                        </div>
+                                                    </div>
 
-</div>
+                                                    <div class="doc doc-object doc-function">
+                                                        <h3
+                                                            id="app.services.WazuhIndexer.alerts.AlertsService.collect_alerts"
+                                                            class="doc doc-heading"
+                                                        >
+                                                            <code class="highlight language-python"
+                                                                ><span class="n">collect_alerts</span
+                                                                ><span class="p">()</span></code
+                                                            >
+                                                        </h3>
 
-<div class="doc doc-object doc-function">
+                                                        <div class="doc doc-contents">
+                                                            <p>
+                                                                Collects the alerts from the Wazuh-Indexer where the
+                                                                index name starts with "wazuh_" and is not in the
+                                                                SKIP_INDEX_NAMES list. Returns the 10 previous alerts
+                                                                based on the <code>timestamp_utc</code> field.
+                                                            </p>
 
+                                                            <p><strong>Returns:</strong></p>
+                                                            <table>
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th>Type</th>
+                                                                        <th>Description</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    <tr>
+                                                                        <td>
+                                                                            <code
+                                                                                ><span title="typing.Dict">Dict</span
+                                                                                >[str, object]</code
+                                                                            >
+                                                                        </td>
+                                                                        <td>
+                                                                            <div class="doc-md-description">
+                                                                                <p>
+                                                                                    Dict[str, object]: A dictionary
+                                                                                    containing success status and alerts
+                                                                                    or an error message.
+                                                                                </p>
+                                                                            </div>
+                                                                        </td>
+                                                                    </tr>
+                                                                </tbody>
+                                                            </table>
 
-
-<h3 id="app.services.WazuhIndexer.alerts.AlertsService.collect_alerts" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">collect_alerts</span><span class="p">()</span></code>
-
-</h3>
-
-
-  <div class="doc doc-contents ">
-  
-      <p>Collects the alerts from the Wazuh-Indexer where the index name starts with "wazuh_"
-and is not in the SKIP_INDEX_NAMES list.
-Returns the 10 previous alerts based on the <code>timestamp_utc</code> field.</p>
-
-  <p><strong>Returns:</strong></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Type</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-          <td>
-                <code><span title="typing.Dict">Dict</span>[str, object]</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>Dict[str, object]: A dictionary containing success status and alerts or an error message.</p>
-            </div>
-          </td>
-        </tr>
-    </tbody>
-  </table>
-
-      <details class="quote">
-        <summary>Source code in <code>app\services\WazuhIndexer\alerts.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-58">58</a></span>
+                                                            <details class="quote">
+                                                                <summary>
+                                                                    Source code in
+                                                                    <code>app\services\WazuhIndexer\alerts.py</code>
+                                                                </summary>
+                                                                <div class="highlight">
+                                                                    <table class="highlighttable">
+                                                                        <tr>
+                                                                            <td class="linenos">
+                                                                                <div class="linenodiv">
+                                                                                    <pre><span></span><span class="normal"><a href="#__codelineno-0-58">58</a></span>
 <span class="normal"><a href="#__codelineno-0-59">59</a></span>
 <span class="normal"><a href="#__codelineno-0-60">60</a></span>
 <span class="normal"><a href="#__codelineno-0-61">61</a></span>
@@ -1150,7 +1002,12 @@ Returns the 10 previous alerts based on the <code>timestamp_utc</code> field.</p
 <span class="normal"><a href="#__codelineno-0-95">95</a></span>
 <span class="normal"><a href="#__codelineno-0-96">96</a></span>
 <span class="normal"><a href="#__codelineno-0-97">97</a></span>
-<span class="normal"><a href="#__codelineno-0-98">98</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-58" name="__codelineno-0-58"></a><span class="k">def</span> <span class="nf">collect_alerts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
+<span class="normal"><a href="#__codelineno-0-98">98</a></span></pre>
+                                                                                </div>
+                                                                            </td>
+                                                                            <td class="code">
+                                                                                <div>
+                                                                                    <pre><span></span><code><a id="__codelineno-0-58" name="__codelineno-0-58"></a><span class="k">def</span> <span class="nf">collect_alerts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">object</span><span class="p">]:</span>
 <a id="__codelineno-0-59" name="__codelineno-0-59"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-60" name="__codelineno-0-60"></a><span class="sd">    Collects the alerts from the Wazuh-Indexer where the index name starts with &quot;wazuh_&quot;</span>
 <a id="__codelineno-0-61" name="__codelineno-0-61"></a><span class="sd">    and is not in the SKIP_INDEX_NAMES list.</span>
@@ -1191,79 +1048,100 @@ Returns the 10 previous alerts based on the <code>timestamp_utc</code> field.</p
 <a id="__codelineno-0-96" name="__codelineno-0-96"></a>        <span class="s2">&quot;success&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
 <a id="__codelineno-0-97" name="__codelineno-0-97"></a>        <span class="s2">&quot;alerts_summary&quot;</span><span class="p">:</span> <span class="n">alerts_summary</span><span class="p">,</span>
 <a id="__codelineno-0-98" name="__codelineno-0-98"></a>    <span class="p">}</span>
-</code></pre></div></td></tr></table></div>
-      </details>
-  </div>
+</code></pre>
+                                                                                </div>
+                                                                            </td>
+                                                                        </tr>
+                                                                    </table>
+                                                                </div>
+                                                            </details>
+                                                        </div>
+                                                    </div>
 
-</div>
+                                                    <div class="doc doc-object doc-function">
+                                                        <h3
+                                                            id="app.services.WazuhIndexer.alerts.AlertsService.is_index_skipped"
+                                                            class="doc doc-heading"
+                                                        >
+                                                            <code class="highlight language-python"
+                                                                ><span class="n">is_index_skipped</span
+                                                                ><span class="p">(</span
+                                                                ><span class="n">index_name</span
+                                                                ><span class="p">)</span></code
+                                                            >
+                                                        </h3>
 
-<div class="doc doc-object doc-function">
+                                                        <div class="doc doc-contents">
+                                                            <p>
+                                                                Checks whether the given index name should be skipped.
+                                                            </p>
 
+                                                            <p><strong>Parameters:</strong></p>
+                                                            <table>
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th>Name</th>
+                                                                        <th>Type</th>
+                                                                        <th>Description</th>
+                                                                        <th>Default</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    <tr>
+                                                                        <td><code>index_name</code></td>
+                                                                        <td>
+                                                                            <code>str</code>
+                                                                        </td>
+                                                                        <td>
+                                                                            <div class="doc-md-description">
+                                                                                <p>The name of the index.</p>
+                                                                            </div>
+                                                                        </td>
+                                                                        <td>
+                                                                            <em>required</em>
+                                                                        </td>
+                                                                    </tr>
+                                                                </tbody>
+                                                            </table>
 
+                                                            <p><strong>Returns:</strong></p>
+                                                            <table>
+                                                                <thead>
+                                                                    <tr>
+                                                                        <th>Name</th>
+                                                                        <th>Type</th>
+                                                                        <th>Description</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    <tr>
+                                                                        <td><code>bool</code></td>
+                                                                        <td>
+                                                                            <code>bool</code>
+                                                                        </td>
+                                                                        <td>
+                                                                            <div class="doc-md-description">
+                                                                                <p>
+                                                                                    True if the index should be skipped,
+                                                                                    False otherwise.
+                                                                                </p>
+                                                                            </div>
+                                                                        </td>
+                                                                    </tr>
+                                                                </tbody>
+                                                            </table>
 
-<h3 id="app.services.WazuhIndexer.alerts.AlertsService.is_index_skipped" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">is_index_skipped</span><span class="p">(</span><span class="n">index_name</span><span class="p">)</span></code>
-
-</h3>
-
-
-  <div class="doc doc-contents ">
-  
-      <p>Checks whether the given index name should be skipped.</p>
-
-  <p><strong>Parameters:</strong></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Default</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-          <td><code>index_name</code></td>
-          <td>
-                <code>str</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>The name of the index.</p>
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-    </tbody>
-  </table>
-
-  <p><strong>Returns:</strong></p>
-  <table>
-    <thead>
-      <tr>
-<th>Name</th>        <th>Type</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-<td><code>bool</code></td>          <td>
-                <code>bool</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              <p>True if the index should be skipped, False otherwise.</p>
-            </div>
-          </td>
-        </tr>
-    </tbody>
-  </table>
-
-      <details class="quote">
-        <summary>Source code in <code>app\services\WazuhIndexer\alerts.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-43">43</a></span>
+                                                            <details class="quote">
+                                                                <summary>
+                                                                    Source code in
+                                                                    <code>app\services\WazuhIndexer\alerts.py</code>
+                                                                </summary>
+                                                                <div class="highlight">
+                                                                    <table class="highlighttable">
+                                                                        <tr>
+                                                                            <td class="linenos">
+                                                                                <div class="linenodiv">
+                                                                                    <pre><span></span><span class="normal"><a href="#__codelineno-0-43">43</a></span>
 <span class="normal"><a href="#__codelineno-0-44">44</a></span>
 <span class="normal"><a href="#__codelineno-0-45">45</a></span>
 <span class="normal"><a href="#__codelineno-0-46">46</a></span>
@@ -1276,7 +1154,12 @@ Returns the 10 previous alerts based on the <code>timestamp_utc</code> field.</p
 <span class="normal"><a href="#__codelineno-0-53">53</a></span>
 <span class="normal"><a href="#__codelineno-0-54">54</a></span>
 <span class="normal"><a href="#__codelineno-0-55">55</a></span>
-<span class="normal"><a href="#__codelineno-0-56">56</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-43" name="__codelineno-0-43"></a><span class="k">def</span> <span class="nf">is_index_skipped</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="normal"><a href="#__codelineno-0-56">56</a></span></pre>
+                                                                                </div>
+                                                                            </td>
+                                                                            <td class="code">
+                                                                                <div>
+                                                                                    <pre><span></span><code><a id="__codelineno-0-43" name="__codelineno-0-43"></a><span class="k">def</span> <span class="nf">is_index_skipped</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <a id="__codelineno-0-44" name="__codelineno-0-44"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <a id="__codelineno-0-45" name="__codelineno-0-45"></a><span class="sd">    Checks whether the given index name should be skipped.</span>
 <a id="__codelineno-0-46" name="__codelineno-0-46"></a>
@@ -1290,82 +1173,103 @@ Returns the 10 previous alerts based on the <code>timestamp_utc</code> field.</p
 <a id="__codelineno-0-54" name="__codelineno-0-54"></a>        <span class="k">if</span> <span class="n">index_name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="n">skipped</span><span class="p">):</span>
 <a id="__codelineno-0-55" name="__codelineno-0-55"></a>            <span class="k">return</span> <span class="kc">True</span>
 <a id="__codelineno-0-56" name="__codelineno-0-56"></a>    <span class="k">return</span> <span class="kc">False</span>
-</code></pre></div></td></tr></table></div>
-      </details>
-  </div>
+</code></pre>
+                                                                                </div>
+                                                                            </td>
+                                                                        </tr>
+                                                                    </table>
+                                                                </div>
+                                                            </details>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
 
-</div>
+                    <script>
+                        var tabs = __md_get("__tabs")
+                        if (Array.isArray(tabs))
+                            e: for (var set of document.querySelectorAll(".tabbed-set")) {
+                                var tab,
+                                    labels = set.querySelector(".tabbed-labels")
+                                for (tab of tabs)
+                                    for (var label of labels.getElementsByTagName("label"))
+                                        if (label.innerText.trim() === tab) {
+                                            var input = document.getElementById(label.htmlFor)
+                                            input.checked = !0
+                                            continue e
+                                        }
+                            }
+                    </script>
+                </div>
 
+                <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z" />
+                    </svg>
+                    Back to top
+                </button>
+            </main>
 
+            <footer class="md-footer">
+                <div class="md-footer-meta md-typeset">
+                    <div class="md-footer-meta__inner md-grid">
+                        <div class="md-copyright">
+                            <div class="md-copyright__highlight">
+                                &copy; 2023
+                                <a href="https://github.com/socfortress/CoPilot" target="_blank" rel="noopener"
+                                    >SOCFortress CoPilot</a
+                                >
+                            </div>
 
-  </div>
-
-  </div>
-
-</div>
-
-
-
-
-  </div>
-
-  </div>
-
-</div>
-
-
-
-
-
-                
-              </article>
-            </div>
-          
-          
-  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var tab,labels=set.querySelector(".tabbed-labels");for(tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
-
+                            Made with
+                            <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+                                Material for MkDocs
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </footer>
         </div>
-        
-          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"/></svg>
-            Back to top
-          </button>
-        
-      </main>
-      
-        <footer class="md-footer">
-  
-  <div class="md-footer-meta md-typeset">
-    <div class="md-footer-meta__inner md-grid">
-      <div class="md-copyright">
-  
-    <div class="md-copyright__highlight">
-      &copy; 2023 <a href="https://github.com/socfortress/CoPilot"  target="_blank" rel="noopener">SOCFortress CoPilot</a>
+        <div class="md-dialog" data-md-component="dialog">
+            <div class="md-dialog__inner md-typeset"></div>
+        </div>
 
-    </div>
-  
-  
-    Made with
-    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
-      Material for MkDocs
-    </a>
-  
-</div>
-      
-    </div>
-  </div>
-</footer>
-      
-    </div>
-    <div class="md-dialog" data-md-component="dialog">
-      <div class="md-dialog__inner md-typeset"></div>
-    </div>
-    
-    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.tabs", "navigation.sections", "toc.integrate", "navigation.top", "search.suggest", "search.highlight", "content.tabs.link", "content.code.annotation", "content.code.copy"], "search": "../assets/javascripts/workers/search.74e28a9f.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
-    
-    
-      <script src="../assets/javascripts/bundle.220ee61c.min.js"></script>
-      
-    
-  </body>
+        <script id="__config" type="application/json">
+            {
+                "base": "..",
+                "features": [
+                    "navigation.tabs",
+                    "navigation.sections",
+                    "toc.integrate",
+                    "navigation.top",
+                    "search.suggest",
+                    "search.highlight",
+                    "content.tabs.link",
+                    "content.code.annotation",
+                    "content.code.copy"
+                ],
+                "search": "../assets/javascripts/workers/search.74e28a9f.min.js",
+                "translations": {
+                    "clipboard.copied": "Copied to clipboard",
+                    "clipboard.copy": "Copy to clipboard",
+                    "search.result.more.one": "1 more on this page",
+                    "search.result.more.other": "# more on this page",
+                    "search.result.none": "No matching documents",
+                    "search.result.one": "1 matching document",
+                    "search.result.other": "# matching documents",
+                    "search.result.placeholder": "Type to start searching",
+                    "search.result.term.missing": "Missing",
+                    "select.version": "Select version"
+                }
+            }
+        </script>
+
+        <script src="../assets/javascripts/bundle.220ee61c.min.js"></script>
+    </body>
 </html>
