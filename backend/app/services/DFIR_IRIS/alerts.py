@@ -12,10 +12,15 @@ from app.services.DFIR_IRIS.universal import UniversalService
 
 class AlertsService:
     """
-    A service class that encapsulates the logic for pulling alerts from DFIR-IRIS.
+    A service class that encapsulates the logic for pulling alerts from DFIR-IRIS. It creates a DFIR-IRIS session upon
+    initialization and uses it to fetch alerts.
     """
 
     def __init__(self):
+        """
+        Initializes the AlertsService by creating a UniversalService object for "DFIR-IRIS" and establishing a session.
+        If the session creation is unsuccessful, an error is logged and the iris_session attribute is set to None.
+        """
         self.universal_service = UniversalService("DFIR-IRIS")
         session_result = self.universal_service.create_session()
 
@@ -27,10 +32,15 @@ class AlertsService:
 
     def list_alerts(self) -> Dict[str, object]:
         """
-        Lists all alerts from DFIR-IRIS
+        List all alerts from DFIR-IRIS. If the iris_session attribute is None, this indicates that the session creation
+        was unsuccessful, and a dictionary with "success" set to False is returned. Otherwise, it attempts to fetch and
+        parse the alerts data.
 
         Returns:
-            dict: A dictionary containing the success status, a message and potentially the cases.
+            dict: A dictionary containing the success status, a message, and potentially the fetched alerts. The
+            "success" key is a boolean indicating whether the operation was successful. The "message" key is a string
+            providing details about the operation. The "results" key, included when "success" is True, contains the
+            fetched alerts data.
         """
         if self.iris_session is None:
             return {

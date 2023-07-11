@@ -15,12 +15,12 @@ bp = Blueprint("shuffle", __name__)
 
 
 @bp.route("/shuffle/workflows", methods=["GET"])
-def get_workflows():
+def get_workflows() -> jsonify:
     """
     Endpoint to list all available Shuffle workflows.
 
     Returns:
-        json: A JSON response containing the list of all configured Workflows.
+        jsonify: A JSON response containing the list of all configured Workflows in Shuffle.
     """
     service = WorkflowsService()
     workflows = service.collect_workflows()
@@ -28,12 +28,14 @@ def get_workflows():
 
 
 @bp.route("/shuffle/workflows/executions", methods=["GET"])
-def get_workflows_executions():
+def get_workflows_executions() -> jsonify:
     """
     Endpoint to list all available Shuffle workflow execution status.
 
+    This endpoint retrieves the status of the most recent execution for each workflow in Shuffle.
+
     Returns:
-        json: A JSON response containing the list of all configured workflows last execution status.
+        jsonify: A JSON response containing the list of all configured workflows and their last execution status.
     """
     service = WorkflowsService()
     workflow_details = service.collect_workflow_details()
@@ -48,12 +50,17 @@ def get_workflows_executions():
 
 
 @bp.route("/shuffle/workflows/executions/<workflow_id>", methods=["GET"])
-def get_workflow_executions(workflow_id):
+def get_workflow_executions(workflow_id: str) -> jsonify:
     """
     Endpoint to list execution status of a specified Shuffle workflow.
 
+    This endpoint retrieves the status of the most recent execution for a specific workflow in Shuffle.
+
+    Args:
+        workflow_id (str): The ID of the workflow to retrieve the execution status for.
+
     Returns:
-        json: A JSON response containing the last execution status of the specified workflow.
+        jsonify: A JSON response containing the last execution status of the specified workflow.
     """
     service = WorkflowsService()
     workflow_details = service.collect_workflow_executions_status(workflow_id)

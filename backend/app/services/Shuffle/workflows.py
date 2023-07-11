@@ -8,7 +8,24 @@ from app.services.Shuffle.universal import UniversalService
 
 class WorkflowsService:
     """
-    A service class that encapsulates the logic for pulling workflows from Shuffle.
+    A service class that encapsulates the logic for retrieving workflow information from Shuffle.
+
+    Attributes:
+        connector_url (str): The URL of the Shuffle instance.
+        connector_api_key (str): The API key used for the Shuffle instance.
+        session (requests.Session): A requests session for making HTTP requests.
+
+    Methods:
+        _collect_shuffle_details: Collects the details of the Shuffle connector.
+        _are_details_collected: Checks whether the details for the Shuffle connector were successfully collected.
+        _send_request: Sends a GET request to a provided URL.
+        collect_workflows: Collects the workflows from Shuffle.
+        _handle_request_error: Handles any errors that occur during a request.
+        _collect_workflows: Collects the workflows from Shuffle.
+        collect_workflow_details: Collects the workflow ID and workflow name from Shuffle.
+        _collect_workflow_details: Collects the workflow ID and workflow name from Shuffle.
+        collect_workflow_executions_status: Collects the execution status of a Shuffle Workflow by its ID.
+        _collect_workflow_executions_status: Collects the execution status of a Shuffle Workflow by its ID.
     """
 
     def __init__(self):
@@ -19,15 +36,38 @@ class WorkflowsService:
         )
 
     def _collect_shuffle_details(self):
+        """
+        Collects the details of the Shuffle connector.
+
+        The details are collected from a universal service which pulls connector details from a database.
+
+        Returns:
+            tuple: A tuple containing the connection URL and API key of the Shuffle connector.
+        """
         (
             self.connector_url,
             self.connector_api_key,
         ) = UniversalService().collect_shuffle_details("Shuffle")
 
     def _are_details_collected(self) -> bool:
+        """
+        Checks whether the details for the Shuffle connector were successfully collected.
+
+        Returns:
+            bool: True if all details were collected, False otherwise.
+        """
         return all([self.connector_url, self.connector_api_key])
 
     def _send_request(self, url: str):
+        """
+        Sends a GET request to a provided URL.
+
+        Args:
+            url (str): The URL to send the GET request to.
+
+        Returns:
+            requests.Response: The response from the GET request.
+        """
         return self.session.get(
             url,
             verify=False,
@@ -38,7 +78,7 @@ class WorkflowsService:
         Collects the workflows from Shuffle.
 
         Returns:
-            dict: A dictionary containing the success status, a message and potentially the workflows.
+            dict: A dictionary containing the success status, a message, and potentially the workflows.
         """
         if not self._are_details_collected():
             return {
@@ -56,7 +96,16 @@ class WorkflowsService:
             "workflows": workflows["workflows"],
         }
 
-    def _handle_request_error(self, err):
+    def _handle_request_error(self, err: Exception) -> Dict[str, object]:
+        """
+        Handles any errors that occur during a request.
+
+        Args:
+            err (Exception): The exception that occurred.
+
+        Returns:
+            dict: A dictionary containing the success status and an error message.
+        """
         logger.error(f"Failed to collect workflows from Shuffle: {err}")
         return {
             "message": "Failed to collect workflows from Shuffle",
@@ -68,7 +117,7 @@ class WorkflowsService:
         Collects the workflows from Shuffle.
 
         Returns:
-            dict: A dictionary containing the success status, a message and potentially the workflows.
+            dict: A dictionary containing the success status, a message, and potentially the workflows.
         """
         try:
             response = self._send_request(f"{self.connector_url}/api/v1/workflows")
@@ -87,7 +136,7 @@ class WorkflowsService:
         Collects the workflow ID and workflow name from Shuffle.
 
         Returns:
-            dict: A dictionary containing the success status, a message and potentially the workflow IDs.
+            dict: A dictionary containing the success status, a message, and potentially the workflow IDs.
         """
         if not self._are_details_collected():
             return {
@@ -110,7 +159,7 @@ class WorkflowsService:
         Collects the workflow ID and workflow name from Shuffle.
 
         Returns:
-            dict: A dictionary containing the success status, a message and potentially the workflow IDs.
+            dict: A dictionary containing the success status, a message, and potentially the workflow IDs.
         """
         try:
             response = self._send_request(f"{self.connector_url}/api/v1/workflows")
@@ -136,7 +185,7 @@ class WorkflowsService:
         Collects the execution status of a Shuffle Workflow by its ID.
 
         Returns:
-            dict: A dictionary containing the success status, a message and potentially the workflow execution status.
+            dict: A dictionary containing the success status, a message, and potentially the workflow execution status.
         """
         if not self._are_details_collected():
             return {
@@ -162,7 +211,7 @@ class WorkflowsService:
         Collects the execution status of a Shuffle Workflow by its ID.
 
         Returns:
-            dict: A dictionary containing the success status, a message and potentially the workflow execution status.
+            dict: A dictionary containing the success status, a message, and potentially the workflow execution status.
         """
         try:
             response = self._send_request(

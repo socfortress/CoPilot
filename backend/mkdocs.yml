@@ -35,11 +35,12 @@ nav:
     - Home: index.md
     - Connectors: connectors.md
     - Agents: agents.md
-    - Alerts: alerts.md
-    - Artifacts: artifacts.md
-    - Cases: cases.md
+    - Wazuh-Indexer: wazuhindexer.md
+    - Dfir-Iris: dfiriris.md
     - Graylog: graylog.md
     - Wazuh-Manager: wazuhmanager.md
+    - Velociraptor: velociraptor.md
+    - Shuffle: shuffle.md
 
 markdown_extensions:
     - pymdownx.highlight:

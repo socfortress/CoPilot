@@ -1,4 +1,5 @@
 from typing import Optional
+from typing import Tuple, Dict, Callable, Union
 
 # from dfir_iris_client.case import Case
 from dfir_iris_client.helper.utils import assert_api_resp
@@ -18,15 +19,22 @@ from app.models.connectors import connector_factory
 
 class UniversalService:
     """
-    A service class that encapsulates the logic for polling messages from DFIR-IRIS.
+    A service class that encapsulates the logic for interfacing with DFIR-IRIS. This class handles tasks like creating a session,
+    fetching and parsing data, and retrieving connector details.
     """
 
     def __init__(self, connector_name: str) -> None:
+        """
+        Initializes the UniversalService by collecting DFIR-IRIS details associated with the specified connector name.
+
+        Args:
+            connector_name (str): The name of the DFIR-IRIS connector.
+        """
         self.connector_url, self.connector_api_key = self.collect_iris_details(
             connector_name,
         )
 
-    def collect_iris_details(self, connector_name: str):
+    def collect_iris_details(self, connector_name: str) -> Tuple[Optional[str], Optional[str]]:
         """
         Collects the details of the DFIR-IRIS connector.
 
@@ -34,7 +42,7 @@ class UniversalService:
             connector_name (str): The name of the DFIR-IRIS connector.
 
         Returns:
-            tuple: A tuple containing the connection URL, and api key.
+            tuple: A tuple containing the connection URL and API key. If the connection is not successful, both elements of the tuple are None.
         """
         connector_instance = connector_factory.create(connector_name, connector_name)
         connection_successful = connector_instance.verify_connection()
@@ -47,15 +55,15 @@ class UniversalService:
         else:
             return None, None
 
-    def create_session(self) -> Optional[ClientSession]:
+    def create_session(self) -> Dict[str, Union[bool, Optional[ClientSession], str]]:
         """
-        Create a session with DFIR-IRIS.
+        Creates a session with DFIR-IRIS.
 
-        This method creates a session with DFIR-IRIS and returns the session object.
-        If a session cannot be established, an error is logged and None is returned.
+        This method creates a session with DFIR-IRIS and returns a dictionary with a success status and the session object.
+        If a session cannot be established, an error is logged and a dictionary with "success" set to False and an error message is returned.
 
         Returns:
-            session: A session object for DFIR-IRIS.
+            dict: A dictionary containing the success status and either the session object or an error message.
         """
         try:
             logger.info("Creating session with DFIR-IRIS.")
@@ -76,17 +84,17 @@ class UniversalService:
                 "message": "Connection to DFIR-IRIS unsuccessful.",
             }
 
-    def fetch_and_parse_data(self, session, action, *args):
+    def fetch_and_parse_data(self, session: ClientSession, action: Callable, *args) -> Dict[str, Union[bool, Optional[Dict]]]:
         """
-        General method to fetch and parse data from DFIR-IRIS.
+        Fetches and parses data from DFIR-IRIS using a specified action.
 
         Args:
-            session: ClientSession object.
-            action: callable, the action to be performed (e.g., list_cases or get_case)
-            args: arguments for the action callable
+            session (ClientSession): The DFIR-IRIS session object.
+            action (Callable): The function to execute to fetch data from DFIR-IRIS. This function should accept *args.
+            args: The arguments to pass to the action function.
 
         Returns:
-            dict: A dictionary containing the data and a success status.
+            dict: A dictionary containing the success status and either the fetched data or None if the operation was unsuccessful.
         """
         try:
             logger.info(f"Executing {action.__name__}... on args: {args}")

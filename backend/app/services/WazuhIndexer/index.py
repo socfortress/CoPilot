@@ -13,10 +13,16 @@ class IndexService:
     """
 
     def __init__(self):
+        """
+        Initialize the IndexService with the details of the Wazuh-Indexer and initialize the Elasticsearch client.
+        """
         self._collect_wazuhindexer_details()
         self._initialize_es_client()
 
     def _collect_wazuhindexer_details(self):
+        """
+        Collect details of the Wazuh-Indexer. These details include the connector URL, username, and password.
+        """
         (
             self.connector_url,
             self.connector_username,
@@ -24,6 +30,9 @@ class IndexService:
         ) = UniversalService().collect_wazuhindexer_details("Wazuh-Indexer")
 
     def _initialize_es_client(self):
+        """
+        Initialize the Elasticsearch client with the details of the Wazuh-Indexer.
+        """
         self.es = Elasticsearch(
             [self.connector_url],
             http_auth=(self.connector_username, self.connector_password),
@@ -34,16 +43,22 @@ class IndexService:
         )
 
     def _are_details_collected(self) -> bool:
+        """
+        Check whether the details of the Wazuh-Indexer have been collected.
+
+        Returns:
+            bool: True if all details have been collected, False otherwise.
+        """
         return all(
             [self.connector_url, self.connector_username, self.connector_password],
         )
 
     def collect_indices_summary(self) -> Dict[str, object]:
         """
-        Collects summary information for each index from the Wazuh-Indexer.
+        Collect summary information for each index from the Wazuh-Indexer's Elasticsearch cluster.
 
         Returns:
-            dict: A dictionary containing the success status, a message, and potentially the indices.
+            dict: A dictionary containing success status, a message, and potentially the indices summary.
         """
         if not self._are_details_collected():
             return {
@@ -64,6 +79,15 @@ class IndexService:
         }
 
     def _format_indices_summary(self, indices: Dict[str, object]) -> Dict[str, object]:
+        """
+        Format the indices summary into a list of dictionaries. Each dictionary contains index name, health status, document count, store size, and replica count.
+
+        Args:
+            indices (dict): Indices summary from Elasticsearch.
+
+        Returns:
+            list: A list of dictionaries containing formatted indices summary.
+        """
         return [
             {
                 "index": index["index"],
@@ -77,10 +101,10 @@ class IndexService:
 
     def _collect_indices(self) -> Dict[str, object]:
         """
-        Collects the indices from the Wazuh-Indexer.
+        Collect indices from the Wazuh-Indexer's Elasticsearch cluster.
 
         Returns:
-            dict: A dictionary containing the success status, a message and potentially the indices.
+            dict: A dictionary containing success status, a message, and potentially the indices.
         """
         try:
             indices = self.es.cat.indices(format="json")

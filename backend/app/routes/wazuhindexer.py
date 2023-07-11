@@ -1,17 +1,7 @@
 from flask import Blueprint
 
-# from app.models.connectors import Connector
-# from app.models.connectors import WazuhManagerConnector
-# from app.services.agents.agents import AgentService
-# from app.services.agents.agents import AgentSyncService
-# from app.services.WazuhIndexer.alerts import AlertsService
 from app.services.WazuhIndexer.cluster import ClusterService
 from app.services.WazuhIndexer.index import IndexService
-
-# from flask import jsonify
-# from flask import request
-# from loguru import logger
-
 
 bp = Blueprint("wazuh_indexer", __name__)
 
@@ -19,19 +9,17 @@ bp = Blueprint("wazuh_indexer", __name__)
 @bp.route("/wazuh_indexer/indices", methods=["GET"])
 def get_indices_summary():
     """
-    Endpoint to list all available indices and collect.
-    {
-                        "index": index["index"],
-                        "health": index["health"],
-                        "docs_count": index["docs.count"],
-                        "store_size": index["store.size"],
-                        "replica_count": index["rep"],
-                    },
-    It processes each alert to verify the connection and returns the results.
+    HTTP GET endpoint to list all available indices and collect relevant information for each.
+
+    This includes:
+    - Index name
+    - Index health status
+    - Document count in the index
+    - Size of the index
+    - Number of replicas for the index
 
     Returns:
-        json: A JSON response containing the list of all available indices along with their connection verification
-        status.
+        json: A JSON response containing a list of all available indices along with their respective details.
     """
     service = IndexService()
     indices = service.collect_indices_summary()
@@ -41,19 +29,17 @@ def get_indices_summary():
 @bp.route("/wazuh_indexer/allocation", methods=["GET"])
 def get_node_allocation():
     """
-    Endpoint to list all available indices allocation.
-    Returns:
-    {
-                        "disk_used": index["disk.used"],
-                        "disk_available": index["disk.avail"],
-                        "disk_total": index["disk.total"],
-                        "disk_percent": index["disk.percent"],
-                        "node": index["node"],
-    },
+    HTTP GET endpoint to list all available indices allocation.
+
+    This includes:
+    - Disk space used by the index
+    - Available disk space
+    - Total disk space
+    - Disk usage percentage
+    - Node on which the index resides
 
     Returns:
-        json: A JSON response containing the list of all available alerts along with their connection verification
-        status.
+        json: A JSON response containing a list of all available indices along with their respective allocation details.
     """
     service = ClusterService()
     indices = service.collect_node_allocation()
@@ -63,11 +49,10 @@ def get_node_allocation():
 @bp.route("/wazuh_indexer/health", methods=["GET"])
 def get_cluster_health():
     """
-    Endpoint to collect Wazuh-Indexer cluster health.
+    HTTP GET endpoint to collect Wazuh-Indexer cluster health information.
 
     Returns:
-        json: A JSON response containing the list of all available alerts along with their connection verification
-        status.
+        json: A JSON response containing health information for the Wazuh-Indexer cluster.
     """
     service = ClusterService()
     indices = service.collect_cluster_health()
@@ -77,11 +62,10 @@ def get_cluster_health():
 @bp.route("/wazuh_indexer/shards", methods=["GET"])
 def get_shards():
     """
-    Endpoint to collect Wazuh-Indexer shards.
+    HTTP GET endpoint to collect information about Wazuh-Indexer shards.
 
     Returns:
-        json: A JSON response containing the list of all available alerts along with their connection verification
-        status.
+        json: A JSON response containing information about the shards in the Wazuh-Indexer.
     """
     service = ClusterService()
     indices = service.collect_shards()
