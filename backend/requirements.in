@@ -1,4 +1,5 @@
 blueprint
+dfir_iris_client
 elasticsearch7==7.10.1
 environs
 flask
