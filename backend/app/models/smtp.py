@@ -1,10 +1,13 @@
 from datetime import datetime
+
 from sqlalchemy import Column
 from sqlalchemy import DateTime
 from sqlalchemy import Integer
 from sqlalchemy import String
+
 from app import db
 from app import ma
+
 
 # Path: backend\app\models.py
 class EmailCredentials(db.Model):
