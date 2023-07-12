@@ -5,8 +5,6 @@ from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from flask_swagger_ui import get_swaggerui_blueprint
 
-# from app.routes import bp  # Import the blueprint
-
 app = Flask(__name__)
 
 SWAGGER_URL = "/api/docs"  # URL for exposing Swagger UI (without trailing '/')
@@ -27,25 +25,23 @@ swaggerui_blueprint = get_swaggerui_blueprint(
 )
 
 app.register_blueprint(swaggerui_blueprint)
-
 CORS(app)
-
-
 app.config.from_object("settings")
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 ma = Marshmallow(app)
 
-from app.routes.agents import bp as agents_bp  # Import the blueprint
-from app.routes.alerts import bp as alerts_bp  # Import the blueprint
-from app.routes.connectors import bp as connectors_bp  # Import the blueprint
-from app.routes.dfir_iris import bp as dfir_iris_bp  # Import the blueprint
-from app.routes.graylog import bp as graylog_bp  # Import the blueprint
-from app.routes.rules import bp as rules_bp  # Import the blueprint
-from app.routes.shuffle import bp as shuffle_bp  # Import the blueprint
-from app.routes.velociraptor import bp as velociraptor_bp  # Import the blueprint
-from app.routes.wazuhindexer import bp as wazuhindexer_bp  # Import the blueprint
+
+from app.routes.agents import bp as agents_bp
+from app.routes.alerts import bp as alerts_bp
+from app.routes.connectors import bp as connectors_bp
+from app.routes.dfir_iris import bp as dfir_iris_bp
+from app.routes.graylog import bp as graylog_bp
+from app.routes.rules import bp as rules_bp
+from app.routes.shuffle import bp as shuffle_bp
+from app.routes.velociraptor import bp as velociraptor_bp
+from app.routes.wazuhindexer import bp as wazuhindexer_bp
 
 app.register_blueprint(connectors_bp)  # Register the connectors blueprint
 app.register_blueprint(agents_bp)  # Register the agents blueprint

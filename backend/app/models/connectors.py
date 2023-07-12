@@ -66,17 +66,9 @@ class Connector(ABC):
         Raises:
             NoResultFound: If the connector_name is not found in the database.
         """
-        connector = (
-            current_app.extensions["sqlalchemy"]
-            .db.session.query(Connectors)
-            .filter_by(connector_name=connector_name)
-            .first()
-        )
+        connector = current_app.extensions["sqlalchemy"].db.session.query(Connectors).filter_by(connector_name=connector_name).first()
         if connector:
-            attributes = {
-                col.name: getattr(connector, col.name)
-                for col in Connectors.__table__.columns
-            }
+            attributes = {col.name: getattr(connector, col.name) for col in Connectors.__table__.columns}
             return attributes
         else:
             raise NoResultFound

@@ -172,12 +172,8 @@ class UniversalService:
         """
         # Formulate queries
         try:
-            vql_client_id = (
-                f"select client_id from clients(search='host:{client_name}')"
-            )
-            vql_last_seen_at = (
-                f"select last_seen_at from clients(search='host:{client_name}')"
-            )
+            vql_client_id = f"select client_id from clients(search='host:{client_name}')"
+            vql_last_seen_at = f"select last_seen_at from clients(search='host:{client_name}')"
 
             # Get the last seen timestamp
             last_seen_at = self._get_last_seen_timestamp(vql_last_seen_at)
@@ -221,6 +217,4 @@ class UniversalService:
         Returns:
             bool: True if the client is offline, False otherwise.
         """
-        return (
-            datetime.now() - datetime.fromtimestamp(last_seen_at / 1000000)
-        ).total_seconds() > 30
+        return (datetime.now() - datetime.fromtimestamp(last_seen_at / 1000000)).total_seconds() > 30

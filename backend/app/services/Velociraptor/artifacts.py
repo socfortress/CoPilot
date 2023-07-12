@@ -60,11 +60,7 @@ class ArtifactsService:
         if not artifacts_response["success"]:
             return artifacts_response
 
-        filtered_artifacts = [
-            artifact
-            for artifact in artifacts_response["results"]
-            if artifact["name"].startswith(prefix)
-        ]
+        filtered_artifacts = [artifact for artifact in artifacts_response["results"] if artifact["name"].startswith(prefix)]
 
         return {
             "success": True,

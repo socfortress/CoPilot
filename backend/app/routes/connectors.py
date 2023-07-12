@@ -20,6 +20,7 @@ def list_connectors_available():
     Returns:
         json: A JSON response containing the list of all available connectors along with their connection verification status.
     """
+    logger.info("Received request to get all available connectors")
     connectors_service = ConnectorService(db)
     connectors = ConnectorsAvailable.query.all()
     result = connectors_available_schema.dump(connectors)
@@ -44,6 +45,7 @@ def get_connector_details(id: str):
     Returns:
         json: A JSON response containing the details of the connector.
     """
+    logger.info("Received request to get a connector details")
     service = ConnectorService(db)
     connector = service.validate_connector_exists(int(id))
 
@@ -67,6 +69,7 @@ def update_connector_route(id: str):
         json: A JSON response containing the success status of the update operation and a message indicating the status.
         If the update operation was successful, it returns the connector name and the status of the connection verification.
     """
+    logger.info("Received request to update connector")
     api_key_connector = ["Shuffle", "DFIR-IRIS", "Velociraptor"]
 
     request_data = request.get_json()

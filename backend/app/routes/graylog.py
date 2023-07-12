@@ -1,13 +1,11 @@
 from flask import Blueprint
 from flask import jsonify
+from loguru import logger
 
 from app.services.Graylog.index import IndexService
 from app.services.Graylog.inputs import InputsService
 from app.services.Graylog.messages import MessagesService
 from app.services.Graylog.metrics import MetricsService
-
-# from loguru import logger
-
 
 bp = Blueprint("graylog", __name__)
 
@@ -20,6 +18,7 @@ def get_messages() -> dict:
     Returns:
         dict: A JSON object containing the list of all the messages.
     """
+    logger.info("Received request to get graylog messages")
     service = MessagesService()
     messages = service.collect_messages()
     return messages
@@ -34,6 +33,7 @@ def get_metrics() -> dict:
         dict: A JSON object containing the list of all metrics,
               including the uncommitted journal size.
     """
+    logger.info("Received request to get graylog metrics")
     service = MetricsService()
     uncommitted_journal_size = service.collect_uncommitted_journal_size()
     metrics = service.collect_throughput_metrics()
@@ -50,6 +50,7 @@ def get_indices() -> dict:
     Returns:
         dict: A JSON object containing the list of all indices.
     """
+    logger.info("Received request to get graylog indexes")
     service = IndexService()
     indices = service.collect_indices()
     return indices
@@ -66,6 +67,7 @@ def delete_index(index_name: str) -> dict:
     Returns:
         dict: A JSON object containing the result of the deletion operation.
     """
+    logger.info("Received request to delete index")
     service = IndexService()
     result = service.delete_index(index_name)
     return result
@@ -79,6 +81,7 @@ def get_inputs() -> dict:
     Returns:
         dict: A JSON object containing the list of all running and configured inputs.
     """
+    logger.info("Received request to get graylog inputs")
     service = InputsService()
     running_inputs = service.collect_running_inputs()
     configured_inputs = service.collect_configured_inputs()

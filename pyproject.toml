@@ -1,5 +1,5 @@
 [tool.black]
-line-length = 120
+line-length = 140
 target-version = ['py38', 'py39']
 include = '\.pyi?$'
 exclude = '''
@@ -15,3 +15,8 @@ exclude = '''
   | dist
 )/
 '''
+
+[tool.isort]
+profile = "black"
+force_single_line = true
+src_paths = "backend"

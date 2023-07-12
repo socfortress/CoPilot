@@ -48,11 +48,7 @@ class MessagesService:
         Returns:
             dict: A dictionary containing the success status, a message, and potentially a list of Graylog messages.
         """
-        if (
-            self.connector_url is None
-            or self.connector_username is None
-            or self.connector_password is None
-        ):
+        if self.connector_url is None or self.connector_username is None or self.connector_password is None:
             return {"message": "Failed to collect Graylog details", "success": False}
         else:
             try:

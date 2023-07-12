@@ -88,9 +88,5 @@ class GraylogMetricsAllocationSchema(ma.Schema):
         )
 
 
-graylog_metrics_allocation_schema: GraylogMetricsAllocationSchema = (
-    GraylogMetricsAllocationSchema()
-)
-graylog_metrics_allocations_schema: GraylogMetricsAllocationSchema = (
-    GraylogMetricsAllocationSchema(many=True)
-)
+graylog_metrics_allocation_schema: GraylogMetricsAllocationSchema = GraylogMetricsAllocationSchema()
+graylog_metrics_allocations_schema: GraylogMetricsAllocationSchema = GraylogMetricsAllocationSchema(many=True)

@@ -33,11 +33,7 @@ class IndexService:
         Returns:
             dict: A dictionary containing the success status, a message, and potentially a dictionary with indices.
         """
-        if (
-            self.connector_url is None
-            or self.connector_username is None
-            or self.connector_password is None
-        ):
+        if self.connector_url is None or self.connector_username is None or self.connector_password is None:
             return {"message": "Failed to collect Graylog details", "success": False}
 
         managed_indices = self._collect_managed_indices()
@@ -95,11 +91,7 @@ class IndexService:
             dict: A dictionary containing the response.
         """
         logger.info(f"Deleting index {index_name} from Graylog")
-        if (
-            self.connector_url is None
-            or self.connector_username is None
-            or self.connector_password is None
-        ):
+        if self.connector_url is None or self.connector_username is None or self.connector_password is None:
             return {"message": "Failed to collect Graylog details", "success": False}
 
         # Check if the index exists in Graylog
@@ -143,7 +135,6 @@ class IndexService:
         except Exception as e:
             logger.error(f"Failed to delete index {index_name} from Graylog: {e}")
             return {
-                "message": f"Failed to delete index {index_name} from Graylog. If this is the current index, "
-                "it cannot be deleted.",
+                "message": f"Failed to delete index {index_name} from Graylog. If this is the current index, " "it cannot be deleted.",
                 "success": False,
             }
