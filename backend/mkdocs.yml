@@ -41,6 +41,7 @@ nav:
     - Wazuh-Manager: wazuhmanager.md
     - Velociraptor: velociraptor.md
     - Shuffle: shuffle.md
+    - Sublime: sublime.md
 
 markdown_extensions:
     - pymdownx.highlight:
