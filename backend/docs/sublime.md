@@ -12,16 +12,16 @@ This Python module defines a database model and corresponding schema for handlin
 
 The table has the following columns:
 
-- `id`: This is the primary key, an integer which is unique for each alert.
-- `message_id`: This is a string column, which stores the ID of the message associated with the alert.
-- `timestamp`: This column stores the datetime when the alert was created. The default value is the current time in UTC.
+-   `id`: This is the primary key, an integer which is unique for each alert.
+-   `message_id`: This is a string column, which stores the ID of the message associated with the alert.
+-   `timestamp`: This column stores the datetime when the alert was created. The default value is the current time in UTC.
 
 ### Methods
 
 This class has the following methods:
 
-- `__init__(self, message_id: str)`: This is the constructor method. It is used to initialize a new instance of the `SublimeAlerts` class with a given `message_id`.
-- `__repr__(self) -> str`: This method returns a string representation of an instance of the `SublimeAlerts` class. This can be useful for debugging and logging.
+-   `__init__(self, message_id: str)`: This is the constructor method. It is used to initialize a new instance of the `SublimeAlerts` class with a given `message_id`.
+-   `__repr__(self) -> str`: This method returns a string representation of an instance of the `SublimeAlerts` class. This can be useful for debugging and logging.
 
 ## Class: SublimeAlertsSchema
 
@@ -89,17 +89,17 @@ This class manages a session and connection to the Sublime server. It uses the r
 
 This class provides services for handling Sublime alerts. It uses an instance of the `SublimeSession` class to make HTTP requests and provides methods to perform the following operations:
 
-- Create an instance of `SublimeAlertsService` using connector details.
-- Validate a payload received from a Sublime alert webhook.
-- Store an alert in the database.
-- Collect alerts from Sublime and the database.
-- Check whether the details for the Sublime connector were successfully collected.
-- Collect alerts from the database.
-- Collect alerts from Sublime.
-- Handle a request error.
-- Collect messages from Sublime.
+-   Create an instance of `SublimeAlertsService` using connector details.
+-   Validate a payload received from a Sublime alert webhook.
+-   Store an alert in the database.
+-   Collect alerts from Sublime and the database.
+-   Check whether the details for the Sublime connector were successfully collected.
+-   Collect alerts from the database.
+-   Collect alerts from Sublime.
+-   Handle a request error.
+-   Collect messages from Sublime.
 
-The methods that start with an underscore (_) are considered private methods and are intended for internal use within the class.
+The methods that start with an underscore (\_) are considered private methods and are intended for internal use within the class.
 
 Please note that this module also interacts with other parts of the larger application, such as the `db` object for interacting with the database, the `SublimeAlerts` model for the structure of the alerts, and the `UniversalService` for fetching Sublime details.
 
