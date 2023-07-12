@@ -40,3 +40,4 @@ wheels/
 *.db
 .env
 *.sqbpro
+site/

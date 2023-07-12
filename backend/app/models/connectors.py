@@ -375,6 +375,56 @@ class VelociraptorConnector(Connector):
             return {"connectionSuccessful": False, "response": None}
 
 
+class SublimeConnector(Connector):
+    """
+    A connector for the Sublime service, a subclass of Connector.
+
+    Args:
+        connector_name (str): The name of the connector.
+    """
+
+    def __init__(self, connector_name: str):
+        super().__init__(attributes=self.get_connector_info_from_db(connector_name))
+
+    def verify_connection(self) -> Dict[str, Any]:
+        """
+        Verifies the connection to Sublime service.
+
+        Returns:
+            dict: A dictionary containing 'connectionSuccessful' status and 'response' if the connection is successful.
+        """
+        logger.info(
+            f"Verifying the sublime connection to {self.attributes['connector_url']}",
+        )
+        try:
+            headers = {
+                "Authorization": f"Bearer {self.attributes['connector_api_key']}",
+                "Content-Type": "application/json",
+            }
+            params = {"limit": 1}
+            sublime = requests.get(
+                f"{self.attributes['connector_url']}/v0/rules",
+                headers=headers,
+                params=params,
+                verify=False,
+            )
+            if sublime.status_code == 200:
+                logger.info(
+                    f"Connection to {self.attributes['connector_url']} successful",
+                )
+                return {"connectionSuccessful": True}
+            else:
+                logger.error(
+                    f"Connection to {self.attributes['connector_url']} failed with error: {sublime.text}",
+                )
+                return {"connectionSuccessful": False, "response": None}
+        except Exception as e:
+            logger.error(
+                f"Connection to {self.attributes['connector_url']} failed with error: {e}",
+            )
+            return {"connectionSuccessful": False, "response": None}
+
+
 class RabbitMQConnector(Connector):
     """
     A connector for the RabbitMQ service, a subclass of Connector.
@@ -477,3 +527,4 @@ connector_factory.register_creator("DFIR-IRIS", "DfirIrisConnector")
 connector_factory.register_creator("Velociraptor", "VelociraptorConnector")
 connector_factory.register_creator("RabbitMQ", "RabbitMQConnector")
 connector_factory.register_creator("Shuffle", "ShuffleConnector")
+connector_factory.register_creator("Sublime", "SublimeConnector")
