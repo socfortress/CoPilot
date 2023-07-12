@@ -73,6 +73,14 @@
                 "description": "Find out more",
                 "url": "http://swagger.io"
             }
+        },
+        {
+            "name": "Sublime",
+            "description": "Everything about Sublime",
+            "externalDocs": {
+                "description": "Find out more",
+                "url": "http://swagger.io"
+            }
         }
     ],
     "paths": {
@@ -1820,6 +1828,195 @@
                 },
                 "operationId": "getAllAlerts",
                 "tags": ["DFIR Iris"]
+            }
+        },
+        "/sublime/alerts": {
+            "get": {
+                "summary": "Get all alerts",
+                "description": "Endpoint to get all alerts.",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "alerts": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "description": "Alert details"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                },
+                "operationId": "getAllAlerts",
+                "tags": ["Sublime"]
+            }
+        },
+        "/sublime/alert": {
+            "post": {
+                "summary": "Create an alert",
+                "description": "Endpoint to create an alert.",
+                "requestBody": {
+                    "description": "Alert details",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "api_version": {
+                                        "type": "string",
+                                        "example": "1"
+                                    },
+                                    "created_at": {
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "example": "2023-06-28T20:45:01.619833409Z"
+                                    },
+                                    "data": {
+                                        "type": "object",
+                                        "properties": {
+                                            "flagged_rules": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "string",
+                                                            "example": "1845f3e6-e446-4f1a-b256-83539f850ed3"
+                                                        },
+                                                        "name": {
+                                                            "type": "string",
+                                                            "example": "Test rule"
+                                                        },
+                                                        "severity": {
+                                                            "type": "string",
+                                                            "nullable": true
+                                                        },
+                                                        "tags": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "string"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            "message": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "canonical_id": {
+                                                        "type": "string",
+                                                        "example": "c6a577585601e9ac17c949a33f73956ec7ee9f2ad1c4209d7e69dda819a62969"
+                                                    },
+                                                    "external_id": {
+                                                        "type": "string",
+                                                        "example": "29082"
+                                                    },
+                                                    "id": {
+                                                        "type": "string",
+                                                        "example": "4a29ffda-3efe-4418-b9a0-c4e40878b7c5"
+                                                    },
+                                                    "mailbox": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "external_id": {
+                                                                "type": "string",
+                                                                "nullable": true
+                                                            },
+                                                            "id": {
+                                                                "type": "string",
+                                                                "example": "e921c909-e72a-4c9c-b56c-0dd59c7f49c3"
+                                                            }
+                                                        }
+                                                    },
+                                                    "message_source_id": {
+                                                        "type": "string",
+                                                        "example": "d4bc5aef-ee26-4c54-a43e-de5faa794575"
+                                                    }
+                                                }
+                                            },
+                                            "triggered_actions": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "string",
+                                                            "example": "2c16da90-6f79-496b-886a-bf382423762a"
+                                                        },
+                                                        "name": {
+                                                            "type": "string",
+                                                            "example": "Shuffle"
+                                                        },
+                                                        "type": {
+                                                            "type": "string",
+                                                            "example": "webhook"
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                                    "id": {
+                                        "type": "string",
+                                        "example": "30aae129-ec7a-4797-bcd4-a1e6e924e5db"
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "example": "message.flagged"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "alert": {
+                                            "type": "object",
+                                            "description": "Alert details"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                },
+                "operationId": "createAlert",
+                "tags": ["Sublime"]
             }
         }
     },
