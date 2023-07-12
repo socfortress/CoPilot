@@ -103,6 +103,14 @@ class Connectors(db.Model):
     connector_password: Column[String] = db.Column(db.String(100))
     connector_api_key: Column[String] = db.Column(db.String(100))
 
+    # Define a dictionary for connectors that need an API key
+    api_key_required_connectors = {
+        "shuffle": True,
+        "dfir-irs": True,
+        "velociraptor": True,
+        "sublime": True,
+    }
+
     def __init__(
         self,
         connector_name: str,
@@ -128,7 +136,8 @@ class Connectors(db.Model):
         self.connector_username = connector_username
         self.connector_password = connector_password
 
-        if connector_name.lower() == "shuffle" or connector_name.lower() == "dfir-irs" or connector_name.lower() == "velociraptor":
+        # Check if the connector needs an API key
+        if self.api_key_required_connectors.get(connector_name.lower()):
             logger.info(f"Setting the API key for {connector_name}")
             self.connector_api_key = connector_api_key
         else:
