@@ -23,7 +23,8 @@ def disable_rule() -> str:
     This endpoint accepts a POST request with a JSON body containing the rule to be disabled.
 
     Returns:
-        str: A JSON string response containing the updated rule information. The actual content of the response depends on the implementation of `DisableRuleService.disable_rule`.
+        str: A JSON string response containing the updated rule information. The actual content of the response depends on the
+        implementation of `DisableRuleService.disable_rule`.
 
     Example Request Body:
         {
@@ -48,7 +49,8 @@ def enable_rule() -> str:
     This endpoint accepts a POST request with a JSON body containing the rule to be enabled.
 
     Returns:
-        str: A JSON string response containing the updated rule information. The actual content of the response depends on the implementation of `EnableRuleService.enable_rule`.
+        str: A JSON string response containing the updated rule information. The actual content of the response depends on the
+        implementation of `EnableRuleService.enable_rule`.
 
     Example Request Body:
         {
