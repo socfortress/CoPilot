@@ -28,10 +28,10 @@ def put_alert() -> jsonify:
     try:
         message_id = service.validate_payload(data=data)
         service.store_alert(message_id=message_id)
-        return jsonify({"message": "Successfully stored payload.", "success": True}), 200
+        return jsonify({"message": "Successfully stored message ID.", "success": True}), 200
     except InvalidPayloadError:
-        logger.error("Received invalid payload.")
-        return jsonify({"message": "Invalid payload.", "success": False}), 400
+        logger.error("Received invalid payload. No message ID found.")
+        return jsonify({"message": "Invalid payload. No message ID found", "success": False}), 400
 
 
 @bp.route("/sublime/alerts", methods=["GET"])
