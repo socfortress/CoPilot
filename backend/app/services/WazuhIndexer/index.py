@@ -80,7 +80,8 @@ class IndexService:
 
     def _format_indices_summary(self, indices: Dict[str, object]) -> Dict[str, object]:
         """
-        Format the indices summary into a list of dictionaries. Each dictionary contains index name, health status, document count, store size, and replica count.
+        Format the indices summary into a list of dictionaries. Each dictionary contains index name, health status, document count, store
+        size, and replica count.
 
         Args:
             indices (dict): Indices summary from Elasticsearch.

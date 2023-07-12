@@ -48,7 +48,8 @@ class UniversalService:
             connector_name (str): The name of the DFIR-IRIS connector.
 
         Returns:
-            tuple: A tuple containing the connection URL and API key. If the connection is not successful, both elements of the tuple are None.
+            tuple: A tuple containing the connection URL and API key. If the connection is not successful, both elements of the tuple are
+            None.
         """
         connector_instance = connector_factory.create(connector_name, connector_name)
         connection_successful = connector_instance.verify_connection()
@@ -66,7 +67,8 @@ class UniversalService:
         Creates a session with DFIR-IRIS.
 
         This method creates a session with DFIR-IRIS and returns a dictionary with a success status and the session object.
-        If a session cannot be established, an error is logged and a dictionary with "success" set to False and an error message is returned.
+        If a session cannot be established, an error is logged and a dictionary with "success" set to False and an error message is
+        returned.
 
         Returns:
             dict: A dictionary containing the success status and either the session object or an error message.

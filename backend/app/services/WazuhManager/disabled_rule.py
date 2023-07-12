@@ -141,7 +141,8 @@ class DisableRuleService:
         Disable a rule in Wazuh Manager.
 
         Args:
-            request (Dict[str, Union[str, int]]): The request to disable a rule. It should contain 'rule_id', 'reason', and 'length_of_time'.
+            request (Dict[str, Union[str, int]]): The request to disable a rule. It should contain 'rule_id', 'reason', and
+            'length_of_time'.
 
         Returns:
             Dict[str, Union[str, bool]]: A dictionary indicating the success or failure of the operation.
@@ -249,7 +250,8 @@ class DisableRuleService:
             rule_id (str): The id of the rule to be disabled.
 
         Returns:
-            Tuple[str, Union[Dict[str, str], List[Dict[str, str]]]]: A tuple containing the previous level of the rule and the updated file content.
+            Tuple[str, Union[Dict[str, str], List[Dict[str, str]]]]: A tuple containing the previous level of the rule and the updated file
+            content.
         """
         logger.info(
             f"Setting rule {rule_id} level to 1 for file_content: {file_content}",

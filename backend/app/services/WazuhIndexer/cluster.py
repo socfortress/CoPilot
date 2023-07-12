@@ -97,7 +97,8 @@ class ClusterService:
 
     def _format_node_allocation(self, node_allocation):
         """
-        Format the node allocation details into a list of dictionaries. Each dictionary contains disk used, disk available, total disk, disk usage percentage, and node name.
+        Format the node allocation details into a list of dictionaries. Each dictionary contains disk used, disk available, total disk, disk
+        usage percentage, and node name.
 
         Args:
             node_allocation: Node allocation details from Elasticsearch.
@@ -201,7 +202,8 @@ class ClusterService:
 
     def _format_shards(self, shards):
         """
-        Format the shard details into a list of dictionaries. Each dictionary contains index name, shard number, shard state, shard size, and node name.
+        Format the shard details into a list of dictionaries. Each dictionary contains index name, shard number, shard state, shard size,
+        and node name.
 
         Args:
             shards: Shard details from Elasticsearch.
