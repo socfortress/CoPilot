@@ -8,22 +8,22 @@ from loguru import logger
 
 from app.services.Sublime.alerts import InvalidPayloadError
 from app.services.Sublime.alerts import SublimeAlertsService
-from app.services.Sublime.messages import MessagesService
 
 bp = Blueprint("sublime", __name__)
 
 
 @bp.route("/sublime/alert", methods=["POST"])
-def get_alerts() -> jsonify:
+def put_alert() -> jsonify:
     """
     Endpoint to store alert in the `sublime_alerts` table.
+    Invoked by the Sublime alert webhook which is configured in the Sublime UI.
 
     Returns:
         jsonify: A JSON response containing if the alert was stored successfully.
     """
     logger.info("Received request to store Sublime alert")
     data: Dict[str, Any] = request.get_json()
-    service = SublimeAlertsService()
+    service = SublimeAlertsService.from_connector_details("Sublime")
 
     try:
         message_id = service.validate_payload(data=data)
@@ -34,15 +34,15 @@ def get_alerts() -> jsonify:
         return jsonify({"message": "Invalid payload.", "success": False}), 400
 
 
-@bp.route("/sublime/messages", methods=["GET"])
-def get_messages() -> jsonify:
+@bp.route("/sublime/alerts", methods=["GET"])
+def get_alerts() -> jsonify:
     """
-    Endpoint to list all available messages from Sublime.
+    Endpoint to list all alerts from the `sublime_alerts` table.
 
     Returns:
-        jsonify: A JSON response containing the list of all messages from Sublime.
+        jsonify: A JSON response containing the list of all alerts from Sublime.
     """
-    logger.info("Received request to get all Sublime messages")
-    service = MessagesService()
-    messages = service.collect_messages()
-    return messages
+    logger.info("Received request to get all Sublime alerts")
+    service = SublimeAlertsService.from_connector_details("Sublime")
+    alerts = service.collect_alerts()
+    return jsonify(alerts)
