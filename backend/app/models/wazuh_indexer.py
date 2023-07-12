@@ -87,9 +87,5 @@ class WazuhIndexerAllocationSchema(ma.Schema):
         )
 
 
-wazuh_indexer_allocation_schema: WazuhIndexerAllocationSchema = (
-    WazuhIndexerAllocationSchema()
-)
-wazuh_indexer_allocations_schema: WazuhIndexerAllocationSchema = (
-    WazuhIndexerAllocationSchema(many=True)
-)
+wazuh_indexer_allocation_schema: WazuhIndexerAllocationSchema = WazuhIndexerAllocationSchema()
+wazuh_indexer_allocations_schema: WazuhIndexerAllocationSchema = WazuhIndexerAllocationSchema(many=True)

@@ -128,11 +128,7 @@ class Connectors(db.Model):
         self.connector_username = connector_username
         self.connector_password = connector_password
 
-        if (
-            connector_name.lower() == "shuffle"
-            or connector_name.lower() == "dfir-irs"
-            or connector_name.lower() == "velociraptor"
-        ):
+        if connector_name.lower() == "shuffle" or connector_name.lower() == "dfir-irs" or connector_name.lower() == "velociraptor":
             logger.info(f"Setting the API key for {connector_name}")
             self.connector_api_key = connector_api_key
         else:

@@ -1,15 +1,8 @@
 from flask import Blueprint
 from flask import jsonify
+from loguru import logger
 
-# from app.models.connectors import Connector
-# from app.models.connectors import WazuhManagerConnector
-# from app.services.agents.agents import AgentService
-# from app.services.agents.agents import AgentSyncService
 from app.services.Shuffle.workflows import WorkflowsService
-
-# from flask import request
-# from loguru import logger
-
 
 bp = Blueprint("shuffle", __name__)
 
@@ -22,6 +15,7 @@ def get_workflows() -> jsonify:
     Returns:
         jsonify: A JSON response containing the list of all configured Workflows in Shuffle.
     """
+    logger.info("Received request to get all Shuffle workflows")
     service = WorkflowsService()
     workflows = service.collect_workflows()
     return workflows
@@ -37,6 +31,7 @@ def get_workflows_executions() -> jsonify:
     Returns:
         jsonify: A JSON response containing the list of all configured workflows and their last execution status.
     """
+    logger.info("Received request to get all Shuffle workflow execution status")
     service = WorkflowsService()
     workflow_details = service.collect_workflow_details()
     if "workflows" not in workflow_details:
@@ -62,6 +57,7 @@ def get_workflow_executions(workflow_id: str) -> jsonify:
     Returns:
         jsonify: A JSON response containing the last execution status of the specified workflow.
     """
+    logger.info("Received request to get a Shuffle workflow")
     service = WorkflowsService()
     workflow_details = service.collect_workflow_executions_status(workflow_id)
     return workflow_details

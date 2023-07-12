@@ -90,9 +90,7 @@ class UniversalService:
                 "message": "Connection to DFIR-IRIS unsuccessful.",
             }
 
-    def fetch_and_parse_data(
-        self, session: ClientSession, action: Callable, *args
-    ) -> Dict[str, Union[bool, Optional[Dict]]]:
+    def fetch_and_parse_data(self, session: ClientSession, action: Callable, *args) -> Dict[str, Union[bool, Optional[Dict]]]:
         """
         Fetches and parses data from DFIR-IRIS using a specified action.
 

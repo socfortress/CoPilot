@@ -46,11 +46,7 @@ class MetricsService:
         Returns:
             dict: A dictionary containing the success status, a message, and the size of uncommitted journal entries.
         """
-        if (
-            self.connector_url is None
-            or self.connector_username is None
-            or self.connector_password is None
-        ):
+        if self.connector_url is None or self.connector_username is None or self.connector_password is None:
             return {"message": "Failed to collect Graylog details", "success": False}
 
         journal_size = self._collect_metrics_uncommitted_journal_size(
@@ -79,11 +75,7 @@ class MetricsService:
         Returns:
             dict: A dictionary containing the success status, a message, and the list of throughput metrics.
         """
-        if (
-            self.connector_url is None
-            or self.connector_username is None
-            or self.connector_password is None
-        ):
+        if self.connector_url is None or self.connector_username is None or self.connector_password is None:
             return {"message": "Failed to collect Graylog details", "success": False}
 
         throughput_usage = self._collect_metrics_throughput_usage(

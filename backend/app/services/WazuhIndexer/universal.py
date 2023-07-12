@@ -67,11 +67,7 @@ class UniversalService:
         Returns:
             list: A list containing the indices.
         """
-        if (
-            self.connector_url is None
-            or self.connector_username is None
-            or self.connector_password is None
-        ):
+        if self.connector_url is None or self.connector_username is None or self.connector_password is None:
             return {
                 "message": "Failed to collect Wazuh-Indexer details",
                 "success": False,

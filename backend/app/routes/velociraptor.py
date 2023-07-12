@@ -84,9 +84,7 @@ def collect_artifact():
     artifact_name = req_data["artifact_name"]
     client_name = req_data["client_name"]
     service = UniversalService()
-    client_id = service.get_client_id(client_name=client_name)["results"][0][
-        "client_id"
-    ]
+    client_id = service.get_client_id(client_name=client_name)["results"][0]["client_id"]
     if client_id is None:
         return (
             jsonify(

@@ -3,7 +3,8 @@
 max-line-length = 180
 #select = B,C,E,F,W,T4,B9
 #ignore = E203, E266, E501, W503, F403, F401
-ignore = W503, E231, W605
+ignore = E402, W503, E231, W605
+    # E402, # module level import not at top of file (using isort)
     # W503, # line break before binary operator
     # E231, # missing whitespace after ',' (caused by black style)
     # W605, # invalid escape sequence (caused by regex)

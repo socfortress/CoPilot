@@ -1,8 +1,8 @@
+# from app.models.connectors import ConnectorFactory
 from flask import current_app
 from loguru import logger
 from sqlalchemy.exc import SQLAlchemyError
 
-# from app.models.connectors import ConnectorFactory
 from app.models.connectors import Connector
 from app.models.connectors import connector_factory
 from app.models.models import Connectors
@@ -42,9 +42,7 @@ class ConnectorService:
         """
         logger.info(f"Updating connector {connector_id} with data {updated_data}")
         try:
-            connector = (
-                self.db.session.query(Connectors).filter_by(id=connector_id).first()
-            )
+            connector = self.db.session.query(Connectors).filter_by(id=connector_id).first()
             if connector:
                 for key, value in updated_data.items():
                     if hasattr(connector, key):
@@ -95,12 +93,7 @@ class ConnectorService:
                   If a database error occurred, it returns the error message.
         """
         try:
-            connector = (
-                current_app.extensions["sqlalchemy"]
-                .db.session.query(Connectors)
-                .filter_by(id=connector_id)
-                .first()
-            )
+            connector = current_app.extensions["sqlalchemy"].db.session.query(Connectors).filter_by(id=connector_id).first()
             if connector:
                 return {
                     "message": "Connector exists",
@@ -130,9 +123,7 @@ class ConnectorService:
                   If a database error occurred, it returns the error message.
         """
         try:
-            connector = (
-                self.db.session.query(Connectors).filter_by(id=connector_id).first()
-            )
+            connector = self.db.session.query(Connectors).filter_by(id=connector_id).first()
             if connector is None:
                 return {
                     "message": f"No connector found with id {connector_id}",
@@ -168,9 +159,7 @@ class ConnectorService:
                   If a database error occurred, it returns the error message.
         """
         try:
-            connector = (
-                self.db.session.query(Connectors).filter_by(id=connector_id).first()
-            )
+            connector = self.db.session.query(Connectors).filter_by(id=connector_id).first()
             if connector is None:
                 return {
                     "message": f"No connector found with id {connector_id}",
@@ -218,8 +207,7 @@ class ConnectorService:
             return {"message": "Request data is valid", "success": True}
         else:
             return {
-                "message": "Request data is invalid. Ensure connector_url, connector_username and connector_password "
-                "are present",
+                "message": "Request data is invalid. Ensure connector_url, connector_username and connector_password " "are present",
                 "success": False,
             }
 
