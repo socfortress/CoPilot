@@ -4,53 +4,53 @@ import requests
 from loguru import logger
 
 from app import db
-
-from app.services.Sublime.universal import UniversalService
 from app.models.sublime_alerts import SublimeAlerts
+from app.services.Sublime.universal import UniversalService
+
+
+class InvalidPayloadError(Exception):
+    """Exception to be raised when the payload is invalid."""
+
+    pass
 
 
 class SublimeAlertsService:
     """
     A service class that encapsulates the logic for receiving alerts from Sublime.
 
-    First we verify the received payload contains `{data: {message: {"id"}}}`.
-
-    Then we submit the payload to the database table `sublime_alerts`.
+    The service verifies the received payload contains `{data: {message: {"id"}}}`.
+    Then it submits the payload to the database table `sublime_alerts`.
     """
 
-    def verify_payload(self, data: Dict[str, object]) -> bool:
+    def validate_payload(self, data: Dict[str, object]) -> str:
         """
-        Verify the received payload contains `{data: {message: {"id"}}}`.
+        Validate the received payload contains `{data: {message: {"id"}}}`.
 
         Args:
-            payload (Dict[str, object]): The payload received from Sublime.
+            data (Dict[str, object]): The payload received from Sublime.
 
         Returns:
-            bool: True if the payload is valid, False otherwise.
+            str: The message ID if the payload is valid.
+
+        Raises:
+            InvalidPayloadError: If the payload is not valid.
         """
         try:
-            data["data"]["message"]["id"]
+            message_id = data["data"]["message"]["id"]
         except KeyError:
-            return {"success": False, "message": "Invalid payload."}
-        return {"success": True, "message": "Valid payload.", "message_id": data["data"]["message"]["id"]}
+            raise InvalidPayloadError("Invalid payload.")
 
-    def store_sublime_alert(self, message_id: str) -> Dict[str, object]:
+        return message_id
+
+    def store_alert(self, message_id: str):
         """
         Store the received payload in the database table `sublime_alerts`.
 
         Args:
             message_id (str): The message ID of the payload received from Sublime.
-
-        Returns:
-            Dict[str, object]: A dictionary containing the success status and a message.
         """
-        # Verify the payload is valid.
-        sublime_alert = SublimeAlerts(
-            message_id=message_id,
-
-        )
+        sublime_alert = SublimeAlerts(message_id=message_id)
         db.session.add(sublime_alert)
         db.session.commit()
 
-        return {"success": True, "message": "Successfully stored payload."}
-
+        logger.info(f"Successfully stored payload with message ID {message_id}.")

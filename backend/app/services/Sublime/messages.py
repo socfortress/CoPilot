@@ -28,8 +28,7 @@ class MessagesService:
         self._collect_sublime_details()
         self.session = requests.Session()
         self.session.headers.update(
-            {"Authorization": f"Bearer {self.connector_api_key}",
-             "Content-Type": "application/json"},
+            {"Authorization": f"Bearer {self.connector_api_key}", "Content-Type": "application/json"},
         )
 
     def _collect_sublime_details(self):

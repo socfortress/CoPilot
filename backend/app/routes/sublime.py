@@ -1,12 +1,14 @@
-from flask import Blueprint
-from flask import jsonify
-from loguru import logger
-from flask import request
 from typing import Any
 from typing import Dict
 
-from app.services.Sublime.messages import MessagesService
+from flask import Blueprint
+from flask import jsonify
+from flask import request
+from loguru import logger
+
+from app.services.Sublime.alerts import InvalidPayloadError
 from app.services.Sublime.alerts import SublimeAlertsService
+from app.services.Sublime.messages import MessagesService
 
 bp = Blueprint("sublime", __name__)
 
@@ -22,11 +24,15 @@ def get_alerts() -> jsonify:
     logger.info("Received request to store Sublime alert")
     data: Dict[str, Any] = request.get_json()
     service = SublimeAlertsService()
-    verify_payload = service.verify_payload(data=data)
-    if verify_payload["success"] is False:
-        return jsonify(verify_payload)
-    alert_stored = service.store_sublime_alert(message_id=verify_payload["message_id"])
-    return alert_stored
+
+    try:
+        message_id = service.validate_payload(data=data)
+        service.store_alert(message_id=message_id)
+        return jsonify({"message": "Successfully stored payload.", "success": True}), 200
+    except InvalidPayloadError:
+        logger.error("Received invalid payload.")
+        return jsonify({"message": "Invalid payload.", "success": False}), 400
+
 
 @bp.route("/sublime/messages", methods=["GET"])
 def get_messages() -> jsonify:

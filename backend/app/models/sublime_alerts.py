@@ -1,8 +1,9 @@
+from datetime import datetime
+
 from sqlalchemy import Column
+from sqlalchemy import DateTime
 from sqlalchemy import Integer
 from sqlalchemy import String
-from sqlalchemy import DateTime
-from datetime import datetime
 
 from app import db
 from app import ma
