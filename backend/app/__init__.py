@@ -29,8 +29,19 @@ CORS(app)
 app.config.from_object("settings")
 
 db = SQLAlchemy(app)
-migrate = Migrate(app, db)
 ma = Marshmallow(app)
+from app.models import agents  # noqa: F401
+from app.models import artifacts  # noqa: F401
+from app.models import cases  # noqa: F401
+from app.models import connectors  # noqa: F401
+from app.models import graylog  # noqa: F401
+from app.models import models  # noqa: F401
+from app.models import rules  # noqa: F401
+from app.models import smtp  # noqa: F401
+from app.models import sublime_alerts  # noqa: F401
+from app.models import wazuh_indexer  # noqa: F401
+
+migrate = Migrate(app, db)
 
 
 from app.routes.agents import bp as agents_bp
