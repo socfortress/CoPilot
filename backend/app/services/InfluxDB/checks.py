@@ -5,7 +5,6 @@ from typing import Union
 import requests
 from loguru import logger
 
-from app import db
 from app.services.InfluxDB.universal import UniversalService
 
 
@@ -53,6 +52,7 @@ class InfluxDBSession:
             requests.Response: The response object from the GET request.
         """
         return self.session.get(url, params=params, verify=verify)
+
 
 class InfluxDBChecksService:
     """
@@ -116,7 +116,7 @@ class InfluxDBChecksService:
                     "check_type": check.get("type"),
                     "check_status": check.get("status"),
                     "check_last_triggered": check.get("latestCompleted"),
-                }
+                },
             )
         logger.info("Successfully collected checks from InfluxDB")
         return {"success": True, "message": "Checks received", "checks": checks}

@@ -1,9 +1,5 @@
-from typing import Any
-from typing import Dict
-
 from flask import Blueprint
 from flask import jsonify
-from flask import request
 from loguru import logger
 
 from app.services.InfluxDB.checks import InfluxDBChecksService
