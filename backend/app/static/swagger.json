@@ -81,6 +81,14 @@
                 "description": "Find out more",
                 "url": "http://swagger.io"
             }
+        },
+        {
+            "name": "InfluxDB",
+            "description": "Everything about InfluxDB",
+            "externalDocs": {
+                "description": "Find out more",
+                "url": "http://swagger.io"
+            }
         }
     ],
     "paths": {
@@ -2017,6 +2025,45 @@
                 },
                 "operationId": "createAlert",
                 "tags": ["Sublime"]
+            }
+        },
+        "/influxdb/checks": {
+            "get": {
+                "summary": "Get all checks",
+                "description": "Endpoint to get all checks.",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "checks": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "description": "Check details"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                },
+                "operationId": "getAllChecks",
+                "tags": ["InfluxDB"]
             }
         }
     },
