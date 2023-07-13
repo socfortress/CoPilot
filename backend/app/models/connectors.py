@@ -425,6 +425,55 @@ class SublimeConnector(Connector):
             return {"connectionSuccessful": False, "response": None}
 
 
+class InfluxDBConnector(Connector):
+    """
+    A connector for the InfluxDB service, a subclass of Connector.
+
+    Args:
+        connector_name (str): The name of the connector.
+    """
+
+    def __init__(self, connector_name: str):
+        super().__init__(attributes=self.get_connector_info_from_db(connector_name))
+
+    def verify_connection(self) -> Dict[str, Any]:
+        """
+        Verifies the connection to InfluxDB service.
+
+        Returns:
+            dict: A dictionary containing 'connectionSuccessful' status and 'response' if the connection is successful.
+        """
+        logger.info(
+            f"Verifying the InfluxDB connection to {self.attributes['connector_url']}",
+        )
+        try:
+            headers = {
+                "Authorization": f"Token {self.attributes['connector_api_key']}",
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+            }
+            influxdb = requests.get(
+                f"{self.attributes['connector_url']}/api/v2/buckets",
+                headers=headers,
+                verify=False,
+            )
+            if influxdb.status_code == 200:
+                logger.info(
+                    f"Connection to {self.attributes['connector_url']} successful",
+                )
+                return {"connectionSuccessful": True}
+            else:
+                logger.error(
+                    f"Connection to {self.attributes['connector_url']} failed with error: {influxdb.text}",
+                )
+                return {"connectionSuccessful": False, "response": None}
+        except Exception as e:
+            logger.error(
+                f"Connection to {self.attributes['connector_url']} failed with error: {e}",
+            )
+            return {"connectionSuccessful": False, "response": None}
+
+
 class RabbitMQConnector(Connector):
     """
     A connector for the RabbitMQ service, a subclass of Connector.
@@ -528,3 +577,4 @@ connector_factory.register_creator("Velociraptor", "VelociraptorConnector")
 connector_factory.register_creator("RabbitMQ", "RabbitMQConnector")
 connector_factory.register_creator("Shuffle", "ShuffleConnector")
 connector_factory.register_creator("Sublime", "SublimeConnector")
+connector_factory.register_creator("InfluxDB", "InfluxDBConnector")
