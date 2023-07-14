@@ -2632,12 +2632,12 @@
                             "schema": {
                                 "type": "object",
                                 "properties": {
-                                    "template_name": {
+                                    "to_email": {
                                         "type": "string",
-                                        "description": "Name of report template"
+                                        "description": "Name of recipient"
                                     }
                                 },
-                                "required": ["template_name"]
+                                "required": ["to_email"]
                             }
                         }
                     }

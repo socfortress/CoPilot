@@ -3,54 +3,69 @@ from email import encoders
 from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from typing import List
 
 from app.services.smtp.create_report import create_alerts_by_host_pdf
+from app.services.smtp.create_report import create_alerts_by_rules_pdf
 from app.services.smtp.universal import EmailTemplate
 from app.services.smtp.universal import UniversalEmailCredentials
 
 
-def create_email_message(subject: str, from_email: str, to_email: str, body: str) -> MIMEMultipart:
-    msg = MIMEMultipart()
-    msg["From"] = from_email
-    msg["To"] = to_email
-    msg["Subject"] = subject
-    msg.attach(MIMEText(body, "html"))
-    return msg
+class EmailReportSender:
+    def __init__(self, to_email: str):
+        self.to_email = to_email
 
+    def _get_credentials(self) -> dict:
+        try:
+            return UniversalEmailCredentials.read_all()["emails_configured"][0]
+        except IndexError:
+            return {"error": "No email credentials found"}
 
-def attach_pdf(msg: MIMEMultipart, filename: str) -> MIMEMultipart:
-    with open(filename, "rb") as attachment_file:
-        part = MIMEBase("application", "octet-stream")
-        part.set_payload(attachment_file.read())
-        encoders.encode_base64(part)
-        part.add_header("Content-Disposition", f"attachment; filename= {filename}")
-        msg.attach(part)
-    return msg
+    def create_email_message(self, subject: str, body: str) -> MIMEMultipart:
+        msg = MIMEMultipart()
+        credentials = self._get_credentials()
+        if "error" in credentials:
+            return credentials
+        msg["From"] = credentials["email"]
+        msg["To"] = self.to_email
+        msg["Subject"] = subject
+        msg.attach(MIMEText(body, "html"))
+        return msg
 
+    def attach_pdfs(self, msg: MIMEMultipart, filenames: List[str]) -> MIMEMultipart:
+        for filename in filenames:
+            with open(filename, "rb") as attachment_file:
+                part = MIMEBase("application", "octet-stream")
+                part.set_payload(attachment_file.read())
+                encoders.encode_base64(part)
+                part.add_header("Content-Disposition", f"attachment; filename= {filename}")
+                msg.attach(part)
+        return msg
 
-def send_email_with_pdf():
-    # Generate the PDF report
-    create_alerts_by_host_pdf()
+    def send_email_with_pdf(self):
+        # Generate the PDF reports
+        create_alerts_by_host_pdf()
+        create_alerts_by_rules_pdf()
 
-    # Get email credentials
-    try:
-        credentials = UniversalEmailCredentials.read_all()["emails_configured"][0]
-    except IndexError:
-        raise Exception("No email credentials found in the database.")
+        # Render the email body
+        template = EmailTemplate("email_template")
+        body = template.render_html_body(template_name="email_template")
 
-    # Render the email body
-    template = EmailTemplate("email_template")
-    body = template.render_html_body(template_name="email_template")
+        # Create the email message and attach the PDFs
+        msg = self.create_email_message("Test Report", body)
+        if isinstance(msg, dict) and "error" in msg:
+            return {"message": msg["error"], "success": False}
+        msg = self.attach_pdfs(msg, ["alerts_by_host_report.pdf", "alerts_by_rule_report.pdf"])
 
-    # Create the email message and attach the PDF
-    msg = create_email_message("Test Report", credentials["email"], "walton.taylor23@gmail.com", body)
-    msg = attach_pdf(msg, "report.pdf")
+        credentials = self._get_credentials()
+        if "error" in credentials:
+            return {"message": credentials["error"], "success": False}
 
-    # Send the email
-    with smtplib.SMTP(credentials["smtp_server"], credentials["smtp_port"]) as server:
-        server.starttls()
-        server.login(credentials["email"], credentials["password"])
-        text = msg.as_string()
-        server.sendmail(credentials["email"], "walton.taylor23@gmail.com", text)
+        # Send the email
+        with smtplib.SMTP(credentials["smtp_server"], credentials["smtp_port"]) as server:
+            server.starttls()
+            server.login(credentials["email"], credentials["password"])
+            text = msg.as_string()
+            server.sendmail(credentials["email"], self.to_email, text)
 
-    return {"message": "Report sent successfully", "success": True}
+        return {"message": "Report sent successfully", "success": True}
