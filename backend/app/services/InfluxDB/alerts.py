@@ -1,10 +1,10 @@
 from typing import Dict
-from typing import List
-from typing import Union
 
 import requests
 from loguru import logger
 
+from app import db
+from app.models.influxdb_alerts import InfluxDBAlerts
 from app.services.InfluxDB.universal import UniversalService
 
 # OrgID for the InfluxDB server
@@ -67,7 +67,7 @@ class InfluxDBSession:
         return self.session.get(url, params=params, verify=verify)
 
 
-class InfluxDBChecksService:
+class InfluxDBAlertsService:
     """
     Class to handle operations related to InfluxDB alerts.
 
@@ -79,7 +79,7 @@ class InfluxDBChecksService:
 
     def __init__(self, session: InfluxDBSession, connector_url: str, connector_api_key: str):
         """
-        Initializes InfluxDBChecksService with the session, connector URL, and API key.
+        Initializes InfluxDBAlertsService with the session, connector URL, and API key.
 
         Args:
             session: InfluxDBSession object for making HTTP requests.
@@ -91,70 +91,49 @@ class InfluxDBChecksService:
         self.connector_api_key = connector_api_key
 
     @classmethod
-    def from_connector_details(cls, connector_name: str) -> "InfluxDBChecksService":
+    def from_connector_details(cls, connector_name: str) -> "InfluxDBAlertsService":
         """
-        Creates an instance of InfluxDBChecksService using connector details.
+        Creates an instance of InfluxDBAlertsService using connector details.
 
         Args:
             connector_name: string representing the name of the connector.
 
         Returns:
-            An instance of the InfluxDBChecksService class.
+            An instance of the InfluxDBAlertsService class.
         """
         connector_url, connector_api_key = UniversalService().collect_influxdb_details(connector_name)
         session = InfluxDBSession(connector_url, connector_api_key)
         return cls(session, connector_url, connector_api_key)
 
-    def collect_checks(self) -> List[Dict[str, Union[str, int]]]:
+    def validate_payload(self, data: Dict[str, object]) -> str:
         """
-        Collects all checks from InfluxDB.
-
-        Returns:
-            A list of dictionaries, where each dictionary represents a check from InfluxDB. Each dictionary includes
-            'check_id', 'check_name', 'check_type', 'check_status', 'check_last_triggered' keys.
-            Additionally, a 'success' key is included in the returned list to indicate if the checks were successfully
-            collected, and a 'message' key is included to provide additional information.
-        """
-        logger.info("Collecting checks from InfluxDB")
-        url = f"{self.connector_url}/api/v2/checks"
-        params = {"orgID": ORG_ID}  # Using the extracted variable
-        response = self.session.send_request(url=url, params=params)
-        if response.status_code != 200:
-            logger.error("Failed to collect checks from InfluxDB")
-            logger.error(response.text)
-            raise ChecksCollectionError("Failed to collect checks from InfluxDB")  # Using the new exception
-        checks = []
-        for check in response.json().get("checks"):
-            checks.append(
-                {
-                    "check_id": check.get("id"),
-                    "check_name": check.get("name"),
-                    "check_type": check.get("type"),
-                    "check_status": check.get("status"),
-                    "check_last_triggered": check.get("latestCompleted"),
-                },
-            )
-        logger.info("Successfully collected checks from InfluxDB")
-        return {"success": True, "message": "Checks received", "checks": checks}
-
-    def collect_check_query(self, check_id: str) -> Dict[str, Union[str, int]]:
-        """
-        Collects the query for a specific check from InfluxDB.
+        Validates the payload received from the Sublime alert webhook.
 
         Args:
-            check_id: string representing the ID of the check.
+            data (Dict[str, object]): The data received from the webhook.
 
         Returns:
-            A dictionary representing the query for the check. The dictionary includes 'query' and 'success' keys.
-            Additionally, a 'message' key is included to provide additional information.
+            str: The message ID from the payload.
+
+        Raises:
+            InvalidPayloadError: If the payload is invalid.
         """
-        logger.info(f"Collecting query for check {check_id} from InfluxDB")
-        url = f"{self.connector_url}/api/v2/checks/{check_id}"
-        params = {"orgID": ORG_ID}
-        response = self.session.send_request(url=url, params=params)
-        if response.status_code != 200:
-            logger.error(f"Failed to collect query for check {check_id} from InfluxDB")
-            logger.error(response.text)
-            raise ChecksCollectionError(f"Failed to collect query for check {check_id} from InfluxDB")
-        logger.info(f"Successfully collected query for check {check_id} from InfluxDB")
-        return {"success": True, "message": "Query received", "query": response.json()}
+        try:
+            check_name = data["_check_name"]
+            message = data["_message"]
+            return check_name, message
+        except KeyError:
+            raise InvalidPayloadError("Invalid payload.")
+
+    def store_alerts(self, check_name: str, message: str) -> None:
+        """
+        Stores the alerts in the database.
+
+        Args:
+            check_name: string representing the name of the check.
+            message: string representing the message of the alert.
+        """
+        logger.info("Storing alerts in the database.")
+        influxbd_alert = InfluxDBAlerts(check_name=check_name, message=message)
+        db.session.add(influxbd_alert)
+        db.session.commit()

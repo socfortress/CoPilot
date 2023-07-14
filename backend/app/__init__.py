@@ -35,6 +35,7 @@ from app.models import artifacts  # noqa: F401
 from app.models import cases  # noqa: F401
 from app.models import connectors  # noqa: F401
 from app.models import graylog  # noqa: F401
+from app.models import influxdb_alerts  # noqa: F401
 from app.models import models  # noqa: F401
 from app.models import rules  # noqa: F401
 from app.models import smtp  # noqa: F401

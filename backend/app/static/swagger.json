@@ -2065,6 +2065,122 @@
                 "operationId": "getAllChecks",
                 "tags": ["InfluxDB"]
             }
+        },
+        "/influxdb/checks/{check_id}": {
+            "get": {
+                "summary": "Get check query",
+                "description": "Endpoint to get check query.",
+                "parameters": [
+                    {
+                        "name": "check_id",
+                        "in": "path",
+                        "description": "The ID of the check.",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "query": {
+                                            "type": "string",
+                                            "description": "The query of the check."
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                },
+                "operationId": "getCheckQuery",
+                "tags": ["InfluxDB"]
+            }
+        },
+        "/influxdb/alert": {
+            "post": {
+                "tags": ["InfluxDB"],
+                "summary": "Create alert",
+                "description": "Endpoint to create alert.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "_check_name": {
+                                        "type": "string",
+                                        "description": "The name of the check."
+                                    },
+                                    "_message": {
+                                        "type": "string",
+                                        "description": "The alert message."
+                                    }
+                                },
+                                "required": ["_check_name", "_message"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successfully stored alert.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successfully stored alert."
+                                        },
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid payload.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Invalid payload."
+                                        },
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "components": {
