@@ -14,7 +14,6 @@
 
 ### <span style="color:red">Checks Services</span>
 
-
 ::: app.services.InfluxDB.checks
 
 ### <span style="color:red">Alerts Services</span>

@@ -18,7 +18,6 @@
 
 ### <span style="color:red">Send Report Services</span>
 
-
 ::: app.services.smtp.send_report
 
 ### <span style="color:red">Universal Services</span>
