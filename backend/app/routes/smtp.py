@@ -15,7 +15,9 @@ def put_credentials() -> jsonify:
     Endpoint to store credentials into `smtp_credentials` table.
 
     Returns:
-        jsonify: A JSON response containing if the credentials were stored successfully.
+        Tuple[jsonify, int]: A Tuple where the first element is a JSON response
+        indicating if the credentials were stored successfully and the second element
+        is the HTTP status code.
     """
     if not request.is_json:
         return jsonify({"message": "Missing JSON in request", "success": False}), 400
@@ -52,7 +54,9 @@ def send_report() -> jsonify:
     Endpoint to send a report via email.
 
     Returns:
-        jsonify: A JSON response containing if the report was sent successfully.
+        Tuple[jsonify, int]: A Tuple where the first element is a JSON response
+        indicating if the report was sent successfully and the second element
+        is the HTTP status code.
     """
     logger.info("Received request to send a report via email")
     if not request.is_json:

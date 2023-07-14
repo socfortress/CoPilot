@@ -42,6 +42,8 @@ nav:
     - Velociraptor: velociraptor.md
     - Shuffle: shuffle.md
     - Sublime: sublime.md
+    - InfluxDB: influxdb.md
+    - SMTP: smtp.md
 
 markdown_extensions:
     - pymdownx.highlight:

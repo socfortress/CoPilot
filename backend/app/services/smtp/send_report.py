@@ -11,16 +11,44 @@ from app.services.smtp.universal import UniversalEmailCredentials
 
 
 class EmailReportSender:
+    """
+    Class for sending an email report with PDF attachments.
+    """
+
     def __init__(self, to_email: str):
+        """
+        Constructor for the EmailReportSender class.
+
+        Args:
+            to_email (str): The email address to send the report to.
+        """
         self.to_email = to_email
 
     def _get_credentials(self) -> dict:
+        """
+        Fetches the email credentials.
+
+        Returns:
+            dict: A dictionary containing the email credentials. If no credentials are found,
+            the dictionary contains an "error" key.
+        """
         try:
             return UniversalEmailCredentials.read_all()["emails_configured"][0]
         except IndexError:
             return {"error": "No email credentials found"}
 
     def create_email_message(self, subject: str, body: str) -> MIMEMultipart:
+        """
+        Creates an email message with the provided subject and body.
+
+        Args:
+            subject (str): The subject of the email.
+            body (str): The body of the email.
+
+        Returns:
+            MIMEMultipart: An email message object. If an error occurs while fetching credentials,
+            the return value is a dictionary containing an "error" key.
+        """
         msg = MIMEMultipart()
         credentials = self._get_credentials()
         if "error" in credentials:
@@ -32,6 +60,16 @@ class EmailReportSender:
         return msg
 
     def attach_pdfs(self, msg: MIMEMultipart, filenames: List[str]) -> MIMEMultipart:
+        """
+        Attaches PDF files to an email message.
+
+        Args:
+            msg (MIMEMultipart): The email message to attach the PDFs to.
+            filenames (List[str]): A list of filenames of the PDFs to attach.
+
+        Returns:
+            MIMEMultipart: The email message with the attached PDFs.
+        """
         for filename in filenames:
             with open(filename, "rb") as attachment_file:
                 part = MIMEBase("application", "octet-stream")
@@ -42,6 +80,13 @@ class EmailReportSender:
         return msg
 
     def send_email_with_pdf(self):
+        """
+        Sends an email with a PDF report.
+
+        Returns:
+            dict: A dictionary containing a "message" key describing the result of the operation
+            and a "success" key indicating whether the operation was successful.
+        """
         # Generate the PDF report
         create_alerts_report_pdf()
 
