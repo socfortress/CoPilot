@@ -1,9 +1,17 @@
+import urllib.request
 from typing import List
 
 import matplotlib
 from loguru import logger
 from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.units import inch
+
+# from reportlab.pdfgen import canvas
+from reportlab.platypus import Image
+from reportlab.platypus import Paragraph
+from reportlab.platypus import SimpleDocTemplate
+from reportlab.platypus import Spacer
 
 matplotlib.use(
     "Agg",
@@ -46,7 +54,7 @@ def create_bar_chart(alerts: dict, title: str, output_filename: str) -> None:
     entities = [alert["hostname"] for alert in alerts["alerts_by_host"]]
     num_alerts = [alert["number_of_alerts"] for alert in alerts["alerts_by_host"]]
 
-    plt.figure(figsize=(10, 6))
+    plt.figure(figsize=(10, 10))
     plt.barh(entities, num_alerts, color="blue")
     plt.xlabel("Number of Alerts")
     plt.ylabel("Hostnames")
@@ -89,15 +97,29 @@ def create_pdf(title: str, image_filenames: List[str], pdf_filename: str) -> Non
     Returns:
         None
     """
-    c = canvas.Canvas(pdf_filename, pagesize=letter)
-    width, height = letter
-    c.setFont("Helvetica", 24)
-    c.drawString(30, height - 50, title)
+    # Download the SOC Fortress logo
+    logo_url = "https://socfortress-images.s3.amazonaws.com/socfortress_logo_orange.png"
+    logo_filename = "socfortress_logo_orange.png"
+    urllib.request.urlretrieve(logo_url, logo_filename)
 
-    image_height = height / 2
+    doc = SimpleDocTemplate(pdf_filename, pagesize=letter)
+    styles = getSampleStyleSheet()
+    Story = []
+
+    # Add a cover page
+    Story.append(Spacer(1, 2 * inch))
+    Story.append(Image(logo_filename, 5 * inch, 5 * inch))  # Adjust size as needed
+    Story.append(Spacer(1, 1 * inch))
+    style = styles["Title"]
+    Story.append(Paragraph(title, style))
+    Story.append(Spacer(1, 2 * inch))
+
+    # Add the images
     for i, image_filename in enumerate(image_filenames):
-        c.drawImage(image_filename, 50, image_height - i * 300, width=400, height=300)
-    c.save()
+        Story.append(Image(image_filename, 6 * inch, 4 * inch))  # Adjust size as needed
+        Story.append(Spacer(1, 0.2 * inch))
+
+    doc.build(Story)
 
 
 def create_alerts_report_pdf() -> None:
