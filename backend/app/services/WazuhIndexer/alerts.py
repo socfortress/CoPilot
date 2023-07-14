@@ -89,6 +89,24 @@ class AlertsService:
             "alerts_summary": alerts_summary,
         }
 
+    def collect_alerts_by_index(self, index_name: str, size: int) -> Dict[str, Any]:
+        """
+        Collects alerts from the given index.
+        """
+        if not self.is_valid_index(index_name):
+            return self._error_response("Invalid index name")
+
+        alerts = self._collect_alerts(index_name=index_name, size=size)
+        if not alerts["success"]:
+            return alerts
+
+        return {
+            "message": f"Successfully collected top {size} alerts from {index_name}",
+            "success": True,
+            "alerts": alerts["alerts"],
+            "total_alerts": len(alerts["alerts"]),
+        }
+
     def collect_alerts_by_host(self) -> Dict[str, int]:
         """
         Collects the number of alerts per host.
@@ -111,6 +129,59 @@ class AlertsService:
             "message": "Successfully collected alerts by host",
             "success": True,
             "alerts_by_host": alerts_by_host_list,
+        }
+
+    def collect_alerts_by_rule(self) -> Dict[str, int]:
+        """
+        Collects the number of alerts per rule.
+        """
+        indices_validation = self._collect_indices_and_validate()
+        if not indices_validation["success"]:
+            return indices_validation
+
+        alerts_by_rule_dict = {}
+        for index_name in indices_validation["indices"]:
+            alerts = self._collect_alerts(index_name=index_name, size=1000)
+            if alerts["success"]:
+                for alert in alerts["alerts"]:
+                    rule = alert["_source"]["rule_description"]
+                    alerts_by_rule_dict[rule] = alerts_by_rule_dict.get(rule, 0) + 1
+
+        alerts_by_rule_list = [{"rule": rule, "number_of_alerts": count} for rule, count in alerts_by_rule_dict.items()]
+
+        return {
+            "message": "Successfully collected alerts by rule",
+            "success": True,
+            "alerts_by_rule": alerts_by_rule_list,
+        }
+
+    def collect_alerts_by_rule_per_host(self) -> Dict[str, int]:
+        """
+        Collects the number of alerts per rule per host.
+        """
+        indices_validation = self._collect_indices_and_validate()
+        if not indices_validation["success"]:
+            return indices_validation
+
+        alerts_by_rule_per_host_dict = {}
+        for index_name in indices_validation["indices"]:
+            alerts = self._collect_alerts(index_name=index_name, size=1000)
+            if alerts["success"]:
+                for alert in alerts["alerts"]:
+                    rule = alert["_source"]["rule_description"]
+                    host = alert["_source"]["agent_name"]
+                    alerts_by_rule_per_host_dict[rule] = alerts_by_rule_per_host_dict.get(rule, {})
+                    alerts_by_rule_per_host_dict[rule][host] = alerts_by_rule_per_host_dict[rule].get(host, 0) + 1
+
+        alerts_by_rule_per_host_list = []
+        for rule, hosts in alerts_by_rule_per_host_dict.items():
+            for host, count in hosts.items():
+                alerts_by_rule_per_host_list.append({"rule": rule, "hostname": host, "number_of_alerts": count})
+
+        return {
+            "message": "Successfully collected alerts by rule per host",
+            "success": True,
+            "alerts_by_rule_per_host": alerts_by_rule_per_host_list,
         }
 
     @staticmethod

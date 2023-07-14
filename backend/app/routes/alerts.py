@@ -27,7 +27,7 @@ def get_alerts() -> jsonify:
 @bp.route("/alerts/top_10", methods=["GET"])
 def get_top_10_alerts() -> jsonify:
     """
-    Retrieves top 10 alerts from the AlertsService.
+    Retrieves top 10 alerts from the AlertsService per index.
 
     This endpoint retrieves top 10 alerts from the AlertsService. It does this by creating an instance of
     the AlertsService class and calling its `collect_alerts` method. The result is a list of top 10 alerts currently
@@ -39,6 +39,24 @@ def get_top_10_alerts() -> jsonify:
     """
     service = AlertsService()
     alerts = service.collect_alerts(size=10)  # replace `collect_top_10_alerts` with `collect_alerts(size=10)`
+    return jsonify(alerts)
+
+
+@bp.route("/alerts/index/<index_name>", methods=["GET"])
+def get_alerts_by_index(index_name: str) -> jsonify:
+    """
+    Retrieves all alerts from the AlertsService by index name.
+
+    This endpoint retrieves all available alerts from the AlertsService. It does this by creating an instance of
+    the AlertsService class and calling its `collect_alerts_by_index` method. The result is a list of all alerts currently
+    available.
+
+    Returns:
+        jsonify: A JSON response containing a list of alerts. Each item in the list is a dictionary representing an alert,
+        containing all its associated data.
+    """
+    service = AlertsService()
+    alerts = service.collect_alerts_by_index(index_name=index_name, size=1000)
     return jsonify(alerts)
 
 
@@ -58,3 +76,39 @@ def get_hosts() -> jsonify:
     service = AlertsService()
     hosts = service.collect_alerts_by_host()
     return jsonify(hosts)
+
+
+@bp.route("/alerts/rules", methods=["GET"])
+def get_rules() -> jsonify:
+    """
+    Retrieves all rules from the AlertsService that have an alert.
+
+    This endpoint retrieves all available rules from the AlertsService. It does this by creating an instance of
+    the AlertsService class and calling its `collect_alerts_by_rule` method. The result is a list of all rules currently
+    available.
+
+    Returns:
+        jsonify: A JSON response containing a list of rules. Each item in the list is a dictionary representing a rule,
+        containing all its associated data.
+    """
+    service = AlertsService()
+    rules = service.collect_alerts_by_rule()
+    return jsonify(rules)
+
+
+@bp.route("/alerts/rules/host", methods=["GET"])
+def get_rules_by_host() -> jsonify:
+    """
+    Retrieves all rules from the AlertsService that have an alert and organizes by host.
+
+    This endpoint retrieves all available rules from the AlertsService. It does this by creating an instance of
+    the AlertsService class and calling its `collect_alerts_by_rule_per_host` method. The result is a list of all rules currently
+    available.
+
+    Returns:
+        jsonify: A JSON response containing a list of rules. Each item in the list is a dictionary representing a rule,
+        containing all its associated data.
+    """
+    service = AlertsService()
+    rules = service.collect_alerts_by_rule_per_host()
+    return jsonify(rules)

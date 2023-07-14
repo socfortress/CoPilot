@@ -3,7 +3,7 @@ from flask import jsonify
 from flask import request
 from loguru import logger
 
-from app.services.smtp.send_report import send_email_with_pdf
+from app.services.smtp.send_report import EmailReportSender
 from app.services.smtp.universal import UniversalEmailCredentials
 
 bp = Blueprint("smtp", __name__)
@@ -58,6 +58,9 @@ def send_report() -> jsonify:
     if not request.is_json:
         return jsonify({"message": "Missing JSON in request", "success": False}), 400
 
-    # template_name = request.json.get("template_name", None)
-    send_report = send_email_with_pdf()
+    to_email = request.json.get("to_email", None)
+    if not to_email:
+        return jsonify({"message": "Missing 'to_email' in request", "success": False}), 400
+
+    send_report = EmailReportSender(to_email).send_email_with_pdf()
     return jsonify(send_report), 201
