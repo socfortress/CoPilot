@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>{{ title }}</title>
+    <style type="text/css">
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      td {
+        padding: 10px;
+        vertical-align: top;
+        border: 1px solid #ccc;
+      }
+      .container {
+        width: 800px;
+        margin: 0 auto;
+        background-color: #fff;
+        box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        border-radius: 5px;
+      }
+      .header {
+        background-color: #1e2d3b;
+        color: #fff;
+      }
+      .logo {
+        width: 75px;
+        height: 75px;
+      }
+      .title {
+        font-size: 24px;
+        color: orange;
+        font-weight: bold;
+        text-align: center;
+        padding: 20px 0;
+      }
+      .socfortress {
+        font-size: 24px;
+        color: white;
+        font-weight: bold;
+        text-align: center;
+        padding: 20px 0;
+      }
+      .alerts {
+        font-size: 18px;
+        color: orange;
+        font-weight: bold;
+        padding: 20px 0;
+        text-align: center;
+      }
+      .alert-item {
+        margin-bottom: 10px;
+      }
+      .alert-item-title {
+        font-weight: bold;
+        text-align: center;
+      }
+      .button-container {
+        text-align: center;
+        padding: 20px 0;
+      }
+      .button {
+        background-color: red;
+        color: black;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        text-align: center;
+      }
+      .button:hover {
+        background-color: #ff8b7c;
+      }
+    </style>
+  </head>
+  <body style="margin:0;padding:0;">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+      <tr>
+        <td>
+          <table class="header" width="100%">
+            <tr>
+              <td width="25%">
+                <a href="https://www.socfortress.co/contact_form.html">
+                  <img class="logo" src="{{ logo }}" alt="SOCFortress Logo" width="75" height="75">
+                </a>
+                <h1 class="socfortress">{{ header }} </h1>
+              </td>
+              <td width="50%">
+                <h1 class="title">{{ heading }}</h1>
+                <h2 class="title">Email Subject: {{ subject }}</h2>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <table class="container" width="100%">
+            <tr>
+              <td>
+                <h2 class="alerts">Alerts Detected:</h2>
+                <table>
+                  {% for rule_name, rule_severity in rule_info %}
+                  <tr class="alert-item">
+                    <td class="alert-item-title">{{ rule_name }} | Severity: {{ rule_severity }}</td>
+                  </tr>
+                  {% endfor %}
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td class="button-container">
+                <a href="https://www.socfortress.co/contact_form.html">
+                    <button class="button">FREE SIEM Tools</button>
+                </a>
+              </td>
+            </tr>
+          </table>
+        </td>
+       </table>
+      </body>
+     </html>

@@ -89,6 +89,14 @@
                 "description": "Find out more",
                 "url": "http://swagger.io"
             }
+        },
+        {
+            "name": "SMTP",
+            "description": "Everything about SMTP",
+            "externalDocs": {
+                "description": "Find out more",
+                "url": "http://swagger.io"
+            }
         }
     ],
     "paths": {
@@ -2219,6 +2227,187 @@
                 },
                 "operationId": "getAllAlerts",
                 "tags": ["InfluxDB"]
+            }
+        },
+        "/smtp/credential": {
+            "post": {
+                "tags": ["SMTP"],
+                "summary": "Create credentials to store in database",
+                "description": "Endpoint to create credentials to store in database.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "description": "Email Address"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "description": "Password"
+                                    },
+                                    "smtp_server": {
+                                        "type": "string",
+                                        "description": "SMTP Server"
+                                    },
+                                    "smtp_port": {
+                                        "type": "string",
+                                        "description": "SMTP Port"
+                                    }
+                                },
+                                "required": ["email", "password", "smtp_server", "smtp_port"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successfully stored credentials.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successfully stored credentials."
+                                        },
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid payload.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Invalid payload."
+                                        },
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/smtp/credentials": {
+            "get": {
+                "summary": "Get all credentials",
+                "description": "Endpoint to get all credentials.",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "credentials": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "description": "Credentials details"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                },
+                "operationId": "getAllCredentials",
+                "tags": ["SMTP"]
+            }
+        },
+        "/smtp/report": {
+            "post": {
+                "tags": ["SMTP"],
+                "summary": "Send report",
+                "description": "Send report",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "template_name": {
+                                        "type": "string",
+                                        "description": "Name of report template"
+                                    }
+                                },
+                                "required": ["template_name"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successfully stored credentials.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successfully stored credentials."
+                                        },
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid payload.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Invalid payload."
+                                        },
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     },

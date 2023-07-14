@@ -16,5 +16,6 @@ openai
 pika
 psycopg2-binary
 pyvelociraptor~=0.1
+reportlab
 requests
 xmltodict
