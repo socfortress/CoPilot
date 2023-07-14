@@ -4,7 +4,7 @@ from email.mime.base import MIMEBase
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-from app.services.smtp.create_report import create_pdf
+from app.services.smtp.create_report import create_alerts_by_host_pdf
 from app.services.smtp.universal import EmailTemplate
 from app.services.smtp.universal import UniversalEmailCredentials
 
@@ -30,7 +30,7 @@ def attach_pdf(msg: MIMEMultipart, filename: str) -> MIMEMultipart:
 
 def send_email_with_pdf():
     # Generate the PDF report
-    create_pdf()
+    create_alerts_by_host_pdf()
 
     # Get email credentials
     try:
