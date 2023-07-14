@@ -1,7 +1,12 @@
+import os
 from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Union
+
+from jinja2 import Environment
+from jinja2 import FileSystemLoader
+from loguru import logger
 
 from app import db
 from app.models.smtp import EmailCredentials
@@ -119,3 +124,39 @@ class UniversalEmailCredentials:
         """
         EmailCredentials.query.filter(EmailCredentials.id != id).delete()
         db.session.commit()
+
+
+class EmailTemplate:
+    def __init__(self, template_name: str):  # add template_name argument
+        self.template_name = template_name  # add this line
+        self.env = Environment(
+            loader=FileSystemLoader(
+                os.path.join(os.path.dirname(__file__), "templates"),
+            ),
+        )
+
+    def render_html_body(self, template_name: str):
+        """
+        Renders the HTML body of the email
+
+        Returns:
+            str: The rendered HTML string.
+        """
+        logger.info("Rendering HTML body...")
+        try:
+            rule_names = ["test"]
+            rule_severities = ["test"]
+            subject = "URGENT: Potential Phishing Attempt Detected"
+            template = self.env.get_template(f"{template_name}.jinja")
+            logger.info(f"Template: {template}")
+            return template.render(
+                title="test",
+                logo="test",
+                header="test",
+                heading="URGENT: Potential Phishing Attempt Detected",
+                rule_info=zip(rule_names, rule_severities),
+                subject=subject,
+            )
+        except Exception as e:
+            logger.error(f"Error rendering HTML body: {e}")
+            raise Exception(f"Error rendering HTML body: {e}")  # raise an exception instead of returning a dictionary

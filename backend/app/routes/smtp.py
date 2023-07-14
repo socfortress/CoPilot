@@ -3,6 +3,7 @@ from flask import jsonify
 from flask import request
 from loguru import logger
 
+from app.services.smtp.send_report import send_email_with_pdf
 from app.services.smtp.universal import UniversalEmailCredentials
 
 bp = Blueprint("smtp", __name__)
@@ -43,3 +44,20 @@ def get_credentials() -> jsonify:
     logger.info("Received request to get all SMTP credentials")
     credentials = UniversalEmailCredentials.read_all()
     return jsonify(credentials)
+
+
+@bp.route("/smtp/report", methods=["POST"])
+def send_report() -> jsonify:
+    """
+    Endpoint to send a report via email.
+
+    Returns:
+        jsonify: A JSON response containing if the report was sent successfully.
+    """
+    logger.info("Received request to send a report via email")
+    if not request.is_json:
+        return jsonify({"message": "Missing JSON in request", "success": False}), 400
+
+    # template_name = request.json.get("template_name", None)
+    send_report = send_email_with_pdf()
+    return jsonify(send_report), 201
