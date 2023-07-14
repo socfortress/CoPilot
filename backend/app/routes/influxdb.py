@@ -43,6 +43,18 @@ def get_check_query(check_id: str) -> jsonify:
     check_query = service.collect_check_query(check_id)
     return jsonify(check_query)
 
+@bp.route("/influxdb/alerts", methods=["GET"])
+def get_alerts() -> jsonify:
+    """
+    Endpoint to list all alerts from the `influxdb_alerts` table.
+
+    Returns:
+        jsonify: A JSON response containing the list of all alerts from InfluxDB.
+    """
+    logger.info("Received request to get all InfluxDB alerts")
+    service = InfluxDBAlertsService.from_connector_details("InfluxDB")
+    alerts = service.collect_alerts()
+    return jsonify(alerts)
 
 @bp.route("/influxdb/alert", methods=["POST"])
 def put_alert() -> jsonify:

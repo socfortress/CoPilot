@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Union, List
 
 import requests
 from loguru import logger
@@ -107,7 +107,7 @@ class InfluxDBAlertsService:
 
     def validate_payload(self, data: Dict[str, object]) -> str:
         """
-        Validates the payload received from the Sublime alert webhook.
+        Validates the payload received from the influxdb alert webhook.
 
         Args:
             data (Dict[str, object]): The data received from the webhook.
@@ -137,3 +137,65 @@ class InfluxDBAlertsService:
         influxbd_alert = InfluxDBAlerts(check_name=check_name, message=message)
         db.session.add(influxbd_alert)
         db.session.commit()
+
+    def collect_alerts(self) -> Dict[str, Union[bool, str, List[Dict[str, str]]]]:
+        """
+        Collects alerts from `influxdb_alerts` table in the database.
+
+        Returns:
+            Dict[str, Union[bool, str, List[Dict[str, str]]]]: A dictionary containing the success status,
+                a message, and potentially the message details.
+        """
+        if not self._are_influxdb_details_collected():
+            return {
+                "message": "Failed to collect influxdb details",
+                "success": False,
+            }
+
+        alerts = self._collect_alerts_from_db()
+        if alerts["success"] is False:
+            return alerts
+
+        return {
+            "message": "Successfully collected alerts",
+            "success": True,
+            "alerts": alerts["alerts"],
+        }
+
+    def _are_influxdb_details_collected(self) -> bool:
+        """
+        Checks whether the details for the influxdb connector were successfully collected.
+
+        Returns:
+            bool: True if all details were collected, False otherwise.
+        """
+        return all([self.connector_url, self.connector_api_key])
+
+    def _collect_alerts_from_db(self) -> Dict[str, Union[bool, str, List[Dict[str, str]]]]:
+        """
+        Collects alerts from `influxdb_alerts` table in the database.
+
+        Returns:
+            Dict[str, Union[bool, str, List[Dict[str, str]]]]: A dictionary containing the success status,
+                a message, and potentially the message details.
+        """
+        try:
+            alerts = InfluxDBAlerts.query.all()
+        except Exception as e:
+            logger.error(f"Failed to collect alerts from database. Error: {e}")
+            return {
+                "message": "Failed to collect alerts from database",
+                "success": False,
+            }
+
+        return {
+            "message": "Successfully collected alerts from database",
+            "success": True,
+            "alerts": [
+                {
+                    "check_name": alert.check_name,
+                    "message": alert.message,
+                }
+                for alert in alerts
+            ],
+        }
