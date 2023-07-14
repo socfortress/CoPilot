@@ -5,8 +5,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from typing import List
 
-from app.services.smtp.create_report import create_alerts_by_host_pdf
-from app.services.smtp.create_report import create_alerts_by_rules_pdf
+from app.services.smtp.create_report import create_alerts_report_pdf
 from app.services.smtp.universal import EmailTemplate
 from app.services.smtp.universal import UniversalEmailCredentials
 
@@ -43,19 +42,18 @@ class EmailReportSender:
         return msg
 
     def send_email_with_pdf(self):
-        # Generate the PDF reports
-        create_alerts_by_host_pdf()
-        create_alerts_by_rules_pdf()
+        # Generate the PDF report
+        create_alerts_report_pdf()
 
         # Render the email body
         template = EmailTemplate("email_template")
         body = template.render_html_body(template_name="email_template")
 
-        # Create the email message and attach the PDFs
+        # Create the email message and attach the PDF
         msg = self.create_email_message("Test Report", body)
         if isinstance(msg, dict) and "error" in msg:
             return {"message": msg["error"], "success": False}
-        msg = self.attach_pdfs(msg, ["alerts_by_host_report.pdf", "alerts_by_rule_report.pdf"])
+        msg = self.attach_pdfs(msg, ["alerts_report.pdf"])
 
         credentials = self._get_credentials()
         if "error" in credentials:
