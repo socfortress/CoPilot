@@ -7,10 +7,23 @@ from loguru import logger
 
 from app.services.InfluxDB.universal import UniversalService
 
+# OrgID for the InfluxDB server
+ORG_ID = "a1b203a448a55d31"
+
 
 class InvalidPayloadError(Exception):
     """
-    Exception to be raised when the payload is invalid.
+    Custom exception to be raised when the payload is invalid.
+    Inherits from the base Exception class.
+    """
+
+    pass
+
+
+class ChecksCollectionError(Exception):
+    """
+    Custom exception to be raised when there is a failure in collecting checks from InfluxDB.
+    Inherits from the base Exception class.
     """
 
     pass
@@ -18,20 +31,20 @@ class InvalidPayloadError(Exception):
 
 class InfluxDBSession:
     """
-    Handles the session and connection to the InfluxDB server.
+    Class to handle the session and connection to the InfluxDB server.
 
     Attributes:
-        session (requests.Session): The session object for making HTTP requests.
-        connector_url (str): The base URL for the InfluxDB API.
+        session: requests.Session object for making HTTP requests.
+        connector_url: string representing the base URL for the InfluxDB API.
     """
 
     def __init__(self, connector_url: str, connector_api_key: str):
         """
-        The constructor for InfluxDBSession class.
+        Initializes InfluxDBSession with the connector URL and API key.
 
         Args:
-            connector_url (str): The base URL for the InfluxDB API.
-            connector_api_key (str): The API key for the InfluxDB API.
+            connector_url: string representing the base URL for the InfluxDB API.
+            connector_api_key: string representing the API key for the InfluxDB API.
         """
         self.session = requests.Session()
         self.session.headers.update(
@@ -44,34 +57,34 @@ class InfluxDBSession:
         Sends a GET request to a specific URL.
 
         Args:
-            url (str): The URL to send the GET request to.
-            params (Dict, optional): The params to send with the GET request. Defaults to None.
-            verify (bool, optional): Whether to verify the SSL certificate. Defaults to False.
+            url: string representing the URL to send the GET request to.
+            params: dictionary representing the params to send with the GET request. Defaults to None.
+            verify: boolean representing whether to verify the SSL certificate. Defaults to False.
 
         Returns:
-            requests.Response: The response object from the GET request.
+            Response object from the GET request.
         """
         return self.session.get(url, params=params, verify=verify)
 
 
 class InfluxDBChecksService:
     """
-    Handles operations related to InfluxDB alerts.
+    Class to handle operations related to InfluxDB alerts.
 
     Attributes:
-        session (InfluxDBSession): The session object for making HTTP requests.
-        connector_url (str): The base URL for the InfluxDB API.
-        connector_api_key (str): The API key for the InfluxDB API.
+        session: InfluxDBSession object for making HTTP requests.
+        connector_url: string representing the base URL for the InfluxDB API.
+        connector_api_key: string representing the API key for the InfluxDB API.
     """
 
     def __init__(self, session: InfluxDBSession, connector_url: str, connector_api_key: str):
         """
-        The constructor for InfluxDBChecksService class.
+        Initializes InfluxDBChecksService with the session, connector URL, and API key.
 
         Args:
-            session (InfluxDBSession): The session object for making HTTP requests.
-            connector_url (str): The base URL for the InfluxDB API.
-            connector_api_key (str): The API key for the InfluxDB API.
+            session: InfluxDBSession object for making HTTP requests.
+            connector_url: string representing the base URL for the InfluxDB API.
+            connector_api_key: string representing the API key for the InfluxDB API.
         """
         self.session = session
         self.connector_url = connector_url
@@ -83,10 +96,10 @@ class InfluxDBChecksService:
         Creates an instance of InfluxDBChecksService using connector details.
 
         Args:
-            connector_name (str): The name of the connector.
+            connector_name: string representing the name of the connector.
 
         Returns:
-            InfluxDBChecksService: An instance of the class.
+            An instance of the InfluxDBChecksService class.
         """
         connector_url, connector_api_key = UniversalService().collect_influxdb_details(connector_name)
         session = InfluxDBSession(connector_url, connector_api_key)
@@ -97,16 +110,19 @@ class InfluxDBChecksService:
         Collects all checks from InfluxDB.
 
         Returns:
-            List[Dict[str, Union[str, int]]]: A list of all checks from InfluxDB.
+            A list of dictionaries, where each dictionary represents a check from InfluxDB. Each dictionary includes
+            'check_id', 'check_name', 'check_type', 'check_status', 'check_last_triggered' keys.
+            Additionally, a 'success' key is included in the returned list to indicate if the checks were successfully
+            collected, and a 'message' key is included to provide additional information.
         """
         logger.info("Collecting checks from InfluxDB")
         url = f"{self.connector_url}/api/v2/checks"
-        params = {"orgID": "a1b203a448a55d31"}
+        params = {"orgID": ORG_ID}  # Using the extracted variable
         response = self.session.send_request(url=url, params=params)
         if response.status_code != 200:
             logger.error("Failed to collect checks from InfluxDB")
             logger.error(response.text)
-            raise Exception("Failed to collect checks from InfluxDB")
+            raise ChecksCollectionError("Failed to collect checks from InfluxDB")  # Using the new exception
         checks = []
         for check in response.json().get("checks"):
             checks.append(
