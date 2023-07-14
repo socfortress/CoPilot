@@ -925,6 +925,282 @@
                 "tags": ["Wazuh-Indexer"]
             }
         },
+        "/alerts/top_10": {
+            "get": {
+                "summary": "Get top 10 alerts",
+                "description": "Endpoint to get top 10 alerts.",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "alerts": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "description": "Alert details"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                },
+                "operationId": "getTop10Alerts",
+                "tags": ["Wazuh-Indexer"]
+            }
+        },
+        "/alerts/index/{index_name}": {
+            "get": {
+                "summary": "Get alerts from an index",
+                "description": "Endpoint to get alerts from an index.",
+                "parameters": [
+                    {
+                        "name": "index_name",
+                        "in": "path",
+                        "description": "The name of the index to get alerts from.",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "alerts": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "description": "Alert details"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "success": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Index not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "success": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                },
+                "operationId": "getAlertsFromIndex",
+                "tags": ["Wazuh-Indexer"]
+            }
+        },
+        "/alerts/hosts": {
+            "get": {
+                "summary": "Get hosts with alerts",
+                "description": "Endpoint to get hosts with alerts.",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "hosts": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "description": "Host details"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                },
+                "operationId": "getHostsWithAlerts",
+                "tags": ["Wazuh-Indexer"]
+            }
+        },
+        "/alerts/rules": {
+            "get": {
+                "summary": "Get rules with alerts",
+                "description": "Endpoint to get rules with alerts.",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "rules": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "description": "Rule details"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                },
+                "operationId": "getRulesWithAlerts",
+                "tags": ["Wazuh-Indexer"]
+            }
+        },
+        "/alerts/rules/host": {
+            "get": {
+                "summary": "Get rules with alerts per host",
+                "description": "Endpoint to get rules with alerts per host",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "rules": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "description": "Rule details"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "success": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Host not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "success": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                },
+                "operationId": "getRulesWithAlertsFromHost",
+                "tags": ["Wazuh-Indexer"]
+            }
+        },
         "/wazuh_indexer/allocation": {
             "get": {
                 "summary": "Get node allocation of the Wazuh-Indexer nodes",
