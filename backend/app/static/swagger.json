@@ -2181,6 +2181,45 @@
                     }
                 }
             }
+        },
+        "/influxdb/alerts": {
+            "get": {
+                "summary": "Get all alerts",
+                "description": "Endpoint to get all alerts.",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "alerts": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "description": "Alert details"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                },
+                "operationId": "getAllAlerts",
+                "tags": ["InfluxDB"]
+            }
         }
     },
     "components": {
