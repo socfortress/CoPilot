@@ -30,7 +30,6 @@ class InfluxDBAlerts(db.Model):
         self.check_name = check_name
         self.message = message
 
-
     def __repr__(self) -> str:
         """
         Returns a string representation of the Alert instance.

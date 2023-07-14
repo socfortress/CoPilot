@@ -1,3 +1,6 @@
+from typing import Any
+from typing import Dict
+
 from flask import Blueprint
 from flask import jsonify
 from flask import request
@@ -51,15 +54,13 @@ def put_alert() -> jsonify:
         jsonify: A JSON response containing if the alert was stored successfully.
     """
     logger.info("Received request to store InfluxDB alert")
-    data = request.get_json()
+    data: Dict[str, Any] = request.get_json()
     logger.info(data)
     service = InfluxDBAlertsService.from_connector_details("InfluxDB")
 
     try:
-        alert = service.validate_payload(data=data)
-        if alert is False:
-            return jsonify({"message": "Invalid payload.", "success": False}), 400
-        service.store_alert(alert=alert)
+        check_name, message = service.validate_payload(data=data)
+        service.store_alerts(check_name=check_name, message=message)
         return jsonify({"message": "Successfully stored alert.", "success": True}), 200
     except Exception as e:
         logger.error(f"Received invalid payload. {e}")

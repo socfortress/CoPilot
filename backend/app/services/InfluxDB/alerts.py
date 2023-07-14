@@ -1,10 +1,10 @@
 from typing import Dict
-from typing import List
-from typing import Union
 
 import requests
 from loguru import logger
 
+from app import db
+from app.models.influxdb_alerts import InfluxDBAlerts
 from app.services.InfluxDB.universal import UniversalService
 
 # OrgID for the InfluxDB server
@@ -105,15 +105,35 @@ class InfluxDBAlertsService:
         session = InfluxDBSession(connector_url, connector_api_key)
         return cls(session, connector_url, connector_api_key)
 
-    def validate_payload(self, payload: Dict) -> bool:
+    def validate_payload(self, data: Dict[str, object]) -> str:
         """
-        Validates the payload by checking if it has the required keys.
+        Validates the payload received from the Sublime alert webhook.
 
         Args:
-            payload: dictionary representing the payload to validate.
+            data (Dict[str, object]): The data received from the webhook.
 
         Returns:
-            True if the payload is valid, False otherwise.
+            str: The message ID from the payload.
+
+        Raises:
+            InvalidPayloadError: If the payload is invalid.
         """
-        required_keys = ["_check_name", "_message"]
-        return all(key in payload for key in required_keys)
+        try:
+            check_name = data["_check_name"]
+            message = data["_message"]
+            return check_name, message
+        except KeyError:
+            raise InvalidPayloadError("Invalid payload.")
+
+    def store_alerts(self, check_name: str, message: str) -> None:
+        """
+        Stores the alerts in the database.
+
+        Args:
+            check_name: string representing the name of the check.
+            message: string representing the message of the alert.
+        """
+        logger.info("Storing alerts in the database.")
+        influxbd_alert = InfluxDBAlerts(check_name=check_name, message=message)
+        db.session.add(influxbd_alert)
+        db.session.commit()
