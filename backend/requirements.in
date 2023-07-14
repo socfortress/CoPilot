@@ -11,6 +11,7 @@ flask-swagger-ui
 flask_cors
 loguru
 marshmallow-sqlalchemy
+matplotlib
 mitreattack-python
 openai
 pika
