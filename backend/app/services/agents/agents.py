@@ -1,4 +1,4 @@
-# agents.py
+# Here is the improved version of the code:
 from datetime import datetime
 from typing import Dict
 from typing import List
@@ -24,6 +24,22 @@ class AgentService:
     A service class that encapsulates the logic for managing agents.
     """
 
+    def parse_date(self, date_string: str) -> datetime:
+        """
+        Parses a date string into a datetime object.
+
+        Args:
+            date_string (str): The date string to parse.
+
+        Returns:
+            datetime: The parsed datetime object.
+        """
+        try:
+            return datetime.strptime(date_string, "%Y-%m-%dT%H:%M:%S+00:00")
+        except ValueError:
+            logger.info(f"Invalid format for date: {date_string}. Using the epoch time as default.")
+            return datetime.strptime("1970-01-01T00:00:00+00:00", "%Y-%m-%dT%H:%M:%S+00:00")
+
     def get_all_agents(self) -> List[Dict[str, Union[str, bool]]]:
         """
         Retrieves all agents from the database.
@@ -34,7 +50,7 @@ class AgentService:
         agents = db.session.query(AgentMetadata).all()
         return agent_metadatas_schema.dump(agents)
 
-    def get_agent(self, agent_id: str) -> Dict[str, Union[str, bool]]:
+    def get_agent(self, agent_id: str) -> Optional[AgentMetadata]:
         """
         Retrieves a specific agent from the database using its ID.
 
@@ -42,151 +58,84 @@ class AgentService:
             agent_id (str): The ID of the agent to retrieve.
 
         Returns:
-            dict: A dictionary representing the serialized data of the agent if found, otherwise a message indicating
-            that the agent was not found.
+            AgentMetadata: The agent object if found, otherwise None.
         """
-        agent = db.session.query(AgentMetadata).filter_by(agent_id=agent_id).first()
-        if agent is None:
-            return {"message": f"Agent with ID {agent_id} not found"}
-        return agent_metadata_schema.dump(agent)
+        return db.session.query(AgentMetadata).filter_by(agent_id=agent_id).first()
 
-    def mark_agent_as_critical(self, agent_id: str) -> Dict[str, Union[str, bool]]:
+    def mark_agent_criticality(self, agent_id: str, critical: bool) -> Dict[str, Union[str, bool]]:
         """
-        Marks a specific agent as critical.
+        Marks a specific agent as critical or non-critical.
 
         Args:
-            agent_id (str): The ID of the agent to mark as critical.
+            agent_id (str): The ID of the agent to mark.
+            critical (bool): Whether to mark the agent as critical.
 
         Returns:
-            dict: A dictionary representing a success message if the operation was successful, otherwise an error
-            message.
+            dict: A dictionary representing a success message if the operation was successful, otherwise an error message.
         """
-        agent = db.session.query(AgentMetadata).filter_by(agent_id=agent_id).first()
+        agent = self.get_agent(agent_id)
 
         if agent is None:
             return {"message": f"Agent {agent_id} not found", "success": False}
 
-        agent.mark_as_critical()
+        if critical:
+            agent.mark_as_critical()
+        else:
+            agent.mark_as_non_critical()
+
         agent_details = agent_metadata_schema.dump(agent)
-        if agent_details["critical_asset"] is False:
+        if agent_details["critical_asset"] is not critical:
             return {
-                "message": f"Agent {agent_id} failed to mark agent as critical",
+                "message": f"Agent {agent_id} failed to mark agent as {'critical' if critical else 'non-critical'}",
                 "success": False,
             }
-        return {"message": f"Agent {agent_id} marked as critical", "success": True}
+        return {"message": f"Agent {agent_id} marked as {'critical' if critical else 'non-critical'}", "success": True}
 
-    def mark_agent_as_non_critical(self, agent_id: str) -> Dict[str, Union[str, bool]]:
+    def create_or_update_agent(self, agent: Dict[str, str]) -> Optional[AgentMetadata]:
         """
-        Marks a specific agent as non-critical.
-
-        Args:
-            agent_id (str): The ID of the agent to mark as non-critical.
-
-        Returns:
-            dict: A dictionary representing a success message if the operation was successful, otherwise an error
-            message.
-        """
-        agent = db.session.query(AgentMetadata).filter_by(agent_id=agent_id).first()
-
-        if agent is None:
-            return {"message": f"Agent {agent_id} not found", "success": False}
-
-        agent.mark_as_non_critical()
-        agent_details = agent_metadata_schema.dump(agent)
-        if agent_details["critical_asset"] is True:
-            return {
-                "message": f"Agent {agent_id} failed to mark agent as non-critical",
-                "success": False,
-            }
-        return {"message": f"Agent {agent_id} marked as non-critical", "success": True}
-
-    def create_agent(self, agent: Dict[str, str]) -> Optional[AgentMetadata]:
-        """
-        Creates a new agent in the database.
+        Creates or updates an agent in the database.
 
         Args:
             agent (dict): A dictionary containing the information of an agent.
 
         Returns:
-            The agent object if the agent was successfully created, None otherwise.
+            The agent object if the agent was successfully created or updated, None otherwise.
         """
-        try:
-            agent_last_seen = datetime.strptime(
-                agent["agent_last_seen"],
-                "%Y-%m-%dT%H:%M:%S+00:00",
-            )  # Convert to datetime
-        except ValueError:
-            logger.info(
-                f"Invalid format for agent_last_seen: {agent['agent_last_seen']}. Fixing...",
-            )
-            agent_last_seen = datetime.strptime(
-                "1970-01-01T00:00:00+00:00",
-                "%Y-%m-%dT%H:%M:%S+00:00",
-            )  # Use the epoch time as default
+        agent_last_seen = self.parse_date(agent["agent_last_seen"])
 
-        agent_metadata = AgentMetadata(
+        existing_agent = self.get_agent(agent["agent_id"])
+        if existing_agent is not None:
+            existing_agent.hostname = agent["agent_name"]
+            existing_agent.ip_address = agent["agent_ip"]
+            existing_agent.os = agent["agent_os"]
+            existing_agent.last_seen = agent_last_seen
+            existing_agent.client_id = agent["client_id"]
+            existing_agent.client_last_seen = agent["client_last_seen"]
+            try:
+                db.session.commit()
+                return existing_agent
+            except Exception as e:
+                logger.error(f"Failed to update agent: {e}")
+                return None
+
+        new_agent = AgentMetadata(
             agent_id=agent["agent_id"],
             hostname=agent["agent_name"],
             ip_address=agent["agent_ip"],
             os=agent["agent_os"],
-            last_seen=agent_last_seen,  # Use the datetime object
+            last_seen=agent_last_seen,
             critical_asset=False,
             client_id=agent["client_id"],
             client_last_seen=agent["client_last_seen"],
         )
-        logger.info(f"Agent metadata: {agent_metadata}")
+        logger.info(f"Agent metadata: {new_agent}")
 
         try:
-            db.session.add(agent_metadata)
+            db.session.add(new_agent)
             db.session.commit()
-            return agent_metadata
+            return new_agent
         except Exception as e:
             logger.error(f"Failed to create agent: {e}")
-            return None
-
-    def update_agent(self, agent: Dict[str, str]) -> Optional[AgentMetadata]:
-        """
-        Updates an agent in the database.
-
-        Args:
-            agent (dict): A dictionary containing the information of an agent.
-
-        Returns:
-            The agent object if the agent was successfully updated, None otherwise.
-        """
-        try:
-            agent_last_seen = datetime.strptime(
-                agent["agent_last_seen"],
-                "%Y-%m-%dT%H:%M:%S+00:00",
-            )  # Convert to datetime
-        except ValueError:
-            logger.info(
-                f"Invalid format for agent_last_seen: {agent['agent_last_seen']}. Fixing...",
-            )
-
-            agent_last_seen = datetime.strptime(
-                "1970-01-01T00:00:00+00:00",
-                "%Y-%m-%dT%H:%M:%S+00:00",
-            )
-
-        agent_metadata = db.session.query(AgentMetadata).filter_by(agent_id=agent["agent_id"]).first()
-        if agent_metadata is None:
-            return None
-
-        agent_metadata.hostname = agent["agent_name"]
-        agent_metadata.ip_address = agent["agent_ip"]
-        agent_metadata.os = agent["agent_os"]
-        agent_metadata.last_seen = agent_last_seen  # Use the datetime object
-        agent_metadata.critical_asset = False
-        agent_metadata.client_id = agent["client_id"]
-        agent_metadata.client_last_seen = agent["client_last_seen"]
-        logger.info(f"Agent metadata: {agent_metadata}")
-
-        try:
-            db.session.commit()
-            return agent_metadata
-        except Exception as e:
-            logger.error(f"Failed to update agent: {e}")
             return None
 
     def delete_agent_db(self, agent_id: str) -> Dict[str, Union[str, bool]]:
@@ -197,10 +146,9 @@ class AgentService:
             agent_id (str): The ID of the agent to delete.
 
         Returns:
-            dict: A dictionary representing a success message if the operation was successful, otherwise an error
-            message.
+            dict: A dictionary representing a success message if the operation was successful, otherwise an error message.
         """
-        agent = db.session.query(AgentMetadata).filter_by(agent_id=agent_id).first()
+        agent = self.get_agent(agent_id)
         if agent is None:
             return {"message": f"Agent with ID {agent_id} not found", "success": False}
         try:
@@ -235,10 +183,7 @@ class AgentService:
             return client_id, client_last_seen
         except Exception as e:
             logger.error(f"Failed to get last seen at from Velociraptor. Setting to default time. Error: {e}")
-            client_last_seen = datetime.strptime(
-                "1970-01-01T00:00:00+00:00",
-                "%Y-%m-%dT%H:%M:%S+00:00",
-            )
+            client_last_seen = self.parse_date("1970-01-01T00:00:00+00:00")
             return client_id, client_last_seen
 
 
@@ -337,19 +282,16 @@ class AgentSyncService:
                 "success": False,
             }
 
-        logger.info(f"Collected {wazuh_agents_list} Wazuh Agents")
+        logger.info(f"Collected {len(wazuh_agents_list)} Wazuh Agents")
 
         agents_added_list = []
         for agent in wazuh_agents_list:
-            agent_info = self.agent_service.get_agent(agent["agent_id"])
-            logger.info(f"Agent info: {agent_info}")
             client_id, client_last_seen = self.agent_service.get_velo_metadata(agent["agent_name"])
             agent["client_id"] = client_id
             agent["client_last_seen"] = client_last_seen
-            self.agent_service.update_agent(agent)
-            if "message" in agent_info:
-                self.agent_service.create_agent(agent)
-                agents_added_list.append(agent)
+            agent_obj = self.agent_service.create_or_update_agent(agent)
+            if agent_obj is not None:
+                agents_added_list.append(agent_metadata_schema.dump(agent_obj))
 
         return {
             "message": "Successfully synced agents.",

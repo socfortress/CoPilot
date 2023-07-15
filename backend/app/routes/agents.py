@@ -3,6 +3,7 @@ from typing import Any
 from flask import Blueprint
 from flask import jsonify
 
+from app.models.agents import agent_metadata_schema
 from app.services.agents.agents import AgentService
 from app.services.agents.agents import AgentSyncService
 from app.services.WazuhManager.agent import WazuhManagerAgentService
@@ -21,7 +22,7 @@ def get_agents() -> Any:
     """
     service = AgentService()
     agents = service.get_all_agents()
-    return agents
+    return jsonify(agents)
 
 
 @bp.route("/agents/<agent_id>", methods=["GET"])
@@ -35,7 +36,11 @@ def get_agent(agent_id: str) -> Any:
     """
     service = AgentService()
     agent = service.get_agent(agent_id=agent_id)
-    return agent
+    if agent is None:
+        return jsonify({"message": "Agent not found", "success": False}), 404
+    else:
+        agent_dict = agent_metadata_schema.dump(agent)
+        return jsonify(agent_dict)
 
 
 @bp.route("/agents/<agent_id>/critical", methods=["POST"])
@@ -48,8 +53,8 @@ def mark_as_critical(agent_id: str) -> Any:
         json: A JSON response containing the updated agent information after being marked as critical.
     """
     service = AgentService()
-    result = service.mark_agent_as_critical(agent_id=agent_id)
-    return result
+    result = service.mark_agent_criticality(agent_id=agent_id, critical=True)
+    return jsonify(result)
 
 
 @bp.route("/agents/<agent_id>/noncritical", methods=["POST"])
@@ -62,8 +67,8 @@ def unmark_agent_critical(agent_id: str) -> Any:
         json: A JSON response containing the updated agent information after being unmarked as critical.
     """
     service = AgentService()
-    result = service.mark_agent_as_non_critical(agent_id=agent_id)
-    return result
+    result = service.mark_agent_criticality(agent_id=agent_id, critical=False)
+    return jsonify(result)
 
 
 @bp.route("/agents/sync", methods=["POST"])
@@ -94,7 +99,7 @@ def delete_agent(agent_id: str) -> Any:
     agent_service = WazuhManagerAgentService(universal_service)
     agent_service.delete_agent(agent_id=agent_id)
 
-    return result
+    return jsonify(result)
 
 
 @bp.route("/agents/<agent_id>/vulnerabilities", methods=["GET"])
@@ -112,4 +117,4 @@ def get_agent_vulnerabilities(agent_id: str) -> Any:
     agent_vulnerabilities = vulnerability_service.agent_vulnerabilities(
         agent_id=agent_id,
     )
-    return agent_vulnerabilities
+    return jsonify(agent_vulnerabilities)
