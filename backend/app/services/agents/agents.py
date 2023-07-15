@@ -1,4 +1,4 @@
-# services.py
+# agents.py
 from datetime import datetime
 from typing import Dict
 from typing import List
@@ -16,6 +16,7 @@ from app.models.agents import agent_metadatas_schema
 from app.models.connectors import Connector
 from app.models.connectors import WazuhManagerConnector
 from app.models.connectors import connector_factory
+from app.services.Velociraptor.universal import UniversalService
 
 
 class AgentService:
@@ -130,6 +131,8 @@ class AgentService:
             os=agent["agent_os"],
             last_seen=agent_last_seen,  # Use the datetime object
             critical_asset=False,
+            client_id=agent["client_id"],
+            client_last_seen=agent["client_last_seen"],
         )
         logger.info(f"Agent metadata: {agent_metadata}")
 
@@ -175,6 +178,8 @@ class AgentService:
         agent_metadata.os = agent["agent_os"]
         agent_metadata.last_seen = agent_last_seen  # Use the datetime object
         agent_metadata.critical_asset = False
+        agent_metadata.client_id = agent["client_id"]
+        agent_metadata.client_last_seen = agent["client_last_seen"]
         logger.info(f"Agent metadata: {agent_metadata}")
 
         try:
@@ -208,6 +213,33 @@ class AgentService:
                 "message": f"Failed to delete agent with ID {agent_id}",
                 "success": False,
             }
+
+    def get_velo_metadata(self, agent_name: str) -> Optional[str]:
+        """
+        Retrieves the client ID  and last_seen_at based on the agent name from Velociraptor.
+
+        Args:
+            agent_name (str): The name of the agent.
+
+        Returns:
+            str: The client ID if found, None otherwise.
+            str: The last seen at timestamp if found, Default timsetamp otherwise.
+        """
+        client_id = UniversalService().get_client_id(agent_name)["results"][0]["client_id"]
+        try:
+            vql_last_seen_at = f"select last_seen_at from clients(search='host:{agent_name}')"
+            last_seen_at = UniversalService()._get_last_seen_timestamp(vql_last_seen_at)
+            client_last_seen = datetime.fromtimestamp(
+                int(last_seen_at) / 1000000,
+            )
+            return client_id, client_last_seen
+        except Exception as e:
+            logger.error(f"Failed to get last seen at from Velociraptor. Setting to default time. Error: {e}")
+            client_last_seen = datetime.strptime(
+                "1970-01-01T00:00:00+00:00",
+                "%Y-%m-%dT%H:%M:%S+00:00",
+            )
+            return client_id, client_last_seen
 
 
 class AgentSyncService:
@@ -311,6 +343,9 @@ class AgentSyncService:
         for agent in wazuh_agents_list:
             agent_info = self.agent_service.get_agent(agent["agent_id"])
             logger.info(f"Agent info: {agent_info}")
+            client_id, client_last_seen = self.agent_service.get_velo_metadata(agent["agent_name"])
+            agent["client_id"] = client_id
+            agent["client_last_seen"] = client_last_seen
             self.agent_service.update_agent(agent)
             if "message" in agent_info:
                 self.agent_service.create_agent(agent)
