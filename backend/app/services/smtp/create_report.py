@@ -80,6 +80,7 @@ def create_pie_chart(alerts: dict, title: str, output_filename: str) -> None:
 
     plt.figure(figsize=(10, 6))
     plt.pie(num_alerts, labels=entities, autopct="%1.1f%%")
+    plt.legend(entities, loc="lower right", bbox_to_anchor=(1.0, 1.0))  # Add this line to include a legend
     plt.title(title)
     plt.tight_layout()
     plt.savefig(output_filename)
