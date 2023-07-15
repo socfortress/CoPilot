@@ -1676,6 +1676,56 @@
                 "tags": ["Velociraptor"]
             }
         },
+        "/velociraptor/artifacts/{hostname}": {
+            "get": {
+                "summary": "Get all artifacts for a hostname",
+                "description": "Endpoint to get all artifacts for a hostname.",
+                "parameters": [
+                    {
+                        "name": "hostname",
+                        "in": "path",
+                        "description": "The hostname",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "artifacts": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "description": "Artifact details"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                },
+                "operationId": "getAllArtifactsForHostname",
+                "tags": ["Velociraptor"]
+            }
+        },
         "/velociraptor/artifacts/collection": {
             "post": {
                 "summary": "Create a new artifact collection",
