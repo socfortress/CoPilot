@@ -141,6 +141,49 @@ class AgentService:
             logger.error(f"Failed to create agent: {e}")
             return None
 
+    def update_agent(self, agent: Dict[str, str]) -> Optional[AgentMetadata]:
+        """
+        Updates an agent in the database.
+
+        Args:
+            agent (dict): A dictionary containing the information of an agent.
+
+        Returns:
+            The agent object if the agent was successfully updated, None otherwise.
+        """
+        try:
+            agent_last_seen = datetime.strptime(
+                agent["agent_last_seen"],
+                "%Y-%m-%dT%H:%M:%S+00:00",
+            )  # Convert to datetime
+        except ValueError:
+            logger.info(
+                f"Invalid format for agent_last_seen: {agent['agent_last_seen']}. Fixing...",
+            )
+
+            agent_last_seen = datetime.strptime(
+                "1970-01-01T00:00:00+00:00",
+                "%Y-%m-%dT%H:%M:%S+00:00",
+            )
+
+        agent_metadata = db.session.query(AgentMetadata).filter_by(agent_id=agent["agent_id"]).first()
+        if agent_metadata is None:
+            return None
+
+        agent_metadata.hostname = agent["agent_name"]
+        agent_metadata.ip_address = agent["agent_ip"]
+        agent_metadata.os = agent["agent_os"]
+        agent_metadata.last_seen = agent_last_seen  # Use the datetime object
+        agent_metadata.critical_asset = False
+        logger.info(f"Agent metadata: {agent_metadata}")
+
+        try:
+            db.session.commit()
+            return agent_metadata
+        except Exception as e:
+            logger.error(f"Failed to update agent: {e}")
+            return None
+
     def delete_agent_db(self, agent_id: str) -> Dict[str, Union[str, bool]]:
         """
         Deletes a specific agent from the database using its ID.
@@ -268,6 +311,7 @@ class AgentSyncService:
         for agent in wazuh_agents_list:
             agent_info = self.agent_service.get_agent(agent["agent_id"])
             logger.info(f"Agent info: {agent_info}")
+            self.agent_service.update_agent(agent)
             if "message" in agent_info:
                 self.agent_service.create_agent(agent)
                 agents_added_list.append(agent)
