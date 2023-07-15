@@ -71,6 +71,21 @@ def get_artifacts_mac():
     return mac_artifacts
 
 
+@bp.route("/velociraptor/artifacts/<hostname>", methods=["GET"])
+def get_artifacts_by_hostname(hostname):
+    """
+    Endpoint to list all available artifacts for a given hostname.
+    It looks up the `os` for the provided `hostname` in the `agent_metadata` table and returns the artifacts for that OS.
+
+    Returns:
+        json: A JSON response containing the list of all available artifacts along with their connection verification
+        status.
+    """
+    service = ArtifactsService()
+    artifacts = service.collect_artifacts_by_hostname(hostname=hostname)
+    return artifacts
+
+
 @bp.route("/velociraptor/artifacts/collection", methods=["POST"])
 def collect_artifact():
     """

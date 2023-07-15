@@ -1,5 +1,6 @@
 from loguru import logger
 
+from app.models.agents import AgentMetadata
 from app.services.Velociraptor.universal import UniversalService
 
 
@@ -94,6 +95,36 @@ class ArtifactsService:
             dict: A dictionary with the success status, a message, and potentially the artifacts.
         """
         return self.collect_artifacts_prefixed("MacOS.")
+
+    def collect_artifacts_by_hostname(self, hostname: str) -> dict:
+        """
+        Queries the `agent_metadata` table for the `os` field for the given `hostname` and returns the artifacts for that OS.
+
+        Args:
+            hostname (str): The hostname of the client.
+
+        Returns:
+            dict: A dictionary with the success status, a message, and potentially the artifacts.
+        """
+        agent_metadata = AgentMetadata.query.filter_by(hostname=hostname).first()
+        if not agent_metadata:
+            return {
+                "success": False,
+                "message": f"Agent with hostname {hostname} not found",
+            }
+
+        os = agent_metadata.os
+        if "Linux" in os:
+            return self.collect_artifacts_linux()
+        elif "Windows" in os:
+            return self.collect_artifacts_windows()
+        elif "MacOS" in os:
+            return self.collect_artifacts_macos()
+        else:
+            return {
+                "success": False,
+                "message": f"OS {os} not supported",
+            }
 
     def run_artifact_collection(self, client_id: str, artifact: str) -> dict:
         """
