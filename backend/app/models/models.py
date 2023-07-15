@@ -109,6 +109,7 @@ class Connectors(db.Model):
         "dfir-irs": True,
         "velociraptor": True,
         "sublime": True,
+        "influxdb": True,
     }
 
     def __init__(
