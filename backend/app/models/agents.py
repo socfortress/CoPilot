@@ -24,6 +24,8 @@ class AgentMetadata(db.Model):
     hostname: Column[String] = db.Column(db.String(100))
     critical_asset: Column[Boolean] = db.Column(db.Boolean, default=False)
     last_seen: Column[DateTime] = db.Column(db.DateTime)
+    client_id: Column[String] = db.Column(db.String(100))
+    client_last_seen: Column[DateTime] = db.Column(db.DateTime)
 
     def __init__(
         self,
@@ -33,6 +35,8 @@ class AgentMetadata(db.Model):
         hostname: str,
         critical_asset: bool,
         last_seen: datetime,
+        client_id: str,
+        client_last_seen: datetime,
     ):
         """
         Initialize a new instance of the AgentMetadata class.
@@ -43,6 +47,8 @@ class AgentMetadata(db.Model):
         :param hostname: Hostname of the agent.
         :param critical_asset: Boolean value indicating if the agent is a critical asset.
         :param last_seen: Timestamp of when the agent was last seen.
+        :param client_id: Unique ID for the client stored in Velociraptor.
+        :param client_last_seen: Timestamp of when the client was last seen in Velociraptor.
         """
         self.agent_id = agent_id
         self.ip_address = ip_address
@@ -50,6 +56,8 @@ class AgentMetadata(db.Model):
         self.hostname = hostname
         self.critical_asset = critical_asset
         self.last_seen = last_seen
+        self.client_id = client_id
+        self.client_last_seen = client_last_seen
 
     def __repr__(self) -> str:
         """
@@ -99,6 +107,8 @@ class AgentMetadataSchema(ma.Schema):
             "hostname",
             "critical_asset",
             "last_seen",
+            "client_id",
+            "client_last_seen",
         )
 
 
