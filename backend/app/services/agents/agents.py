@@ -1,4 +1,3 @@
-# Here is the improved version of the code:
 from datetime import datetime
 from typing import Dict
 from typing import List
