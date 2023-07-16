@@ -91,6 +91,14 @@
             }
         },
         {
+            "name": "Healthcheck",
+            "description": "Everything about Healthcheck",
+            "externalDocs": {
+                "description": "Find out more",
+                "url": "http://swagger.io"
+            }
+        },
+        {
             "name": "SMTP",
             "description": "Everything about SMTP",
             "externalDocs": {
@@ -2734,6 +2742,273 @@
                         }
                     }
                 }
+            }
+        },
+        "/healthcheck/agent/full": {
+            "get": {
+                "summary": "Get full agent healthcheck",
+                "description": "Endpoint to get full agent healthcheck.",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "agent_healthcheck": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "description": "Agent healthcheck details"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                },
+                "operationId": "getFullAgentHealthcheck",
+                "tags": ["Healthcheck"]
+            }
+        },
+        "/healthcheck/agent/{agent_id}/full": {
+            "get": {
+                "summary": "Get full agent healthcheck by agent ID",
+                "description": "Endpoint to get full agent healthcheck by agent ID.",
+                "parameters": [
+                    {
+                        "name": "agent_id",
+                        "in": "path",
+                        "description": "The ID of the agent.",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "agent_healthcheck": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "description": "Agent healthcheck details"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                },
+                "operationId": "getFullAgentHealthcheckByAgentID",
+                "tags": ["Healthcheck"]
+            }
+        },
+        "/healthcheck/agent/wazuh": {
+            "get": {
+                "summary": "Get Wazuh agent healthcheck",
+                "description": "Endpoint to get Wazuh agent healthcheck.",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "agent_healthcheck": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "description": "Agent healthcheck details"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                },
+                "operationId": "getWazuhAgentHealthcheck",
+                "tags": ["Healthcheck"]
+            }
+        },
+        "/healthcheck/agent/{agent_id}/wazuh": {
+            "get": {
+                "summary": "Get Wazuh agent healthcheck by agent ID",
+                "description": "Endpoint to get Wazuh agent healthcheck by agent ID.",
+                "parameters": [
+                    {
+                        "name": "agent_id",
+                        "in": "path",
+                        "description": "The ID of the agent.",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "agent_healthcheck": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "description": "Agent healthcheck details"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                },
+                "operationId": "getWazuhAgentHealthcheckByAgentID",
+                "tags": ["Healthcheck"]
+            }
+        },
+        "/healthcheck/agent/velociraptor": {
+            "get": {
+                "summary": "Get Velociraptor agent healthcheck",
+                "description": "Endpoint to get Velociraptor agent healthcheck.",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "agent_healthcheck": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "description": "Agent healthcheck details"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                },
+                "operationId": "getVelociraptorAgentHealthcheck",
+                "tags": ["Healthcheck"]
+            }
+        },
+        "/healthcheck/agent/{agent_id}/velociraptor": {
+            "get": {
+                "summary": "Get Velociraptor agent healthcheck by agent ID",
+                "description": "Endpoint to get Velociraptor agent healthcheck by agent ID.",
+                "parameters": [
+                    {
+                        "name": "agent_id",
+                        "in": "path",
+                        "description": "The ID of the agent.",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "agent_healthcheck": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "description": "Agent healthcheck details"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                },
+                "operationId": "getVelociraptorAgentHealthcheckByAgentID",
+                "tags": ["Healthcheck"]
             }
         }
     },

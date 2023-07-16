@@ -98,3 +98,55 @@ class UniversalService:
         except Exception as e:
             logger.error(f"Failed to collect indices: {e}")
             return {"message": "Failed to collect indices", "success": False}
+
+    def run_query(self, query: str, index: str, size: int = 10000):
+        """
+        Runs a query against the Wazuh-Indexer.
+
+        Args:
+            query (str): The query to run against the Wazuh-Indexer.
+            index (str): The index to run the query against.
+            size (int): The number of results to return.
+
+        Returns:
+            dict: A dictionary containing the results of the query.
+        """
+        if self.connector_url is None or self.connector_username is None or self.connector_password is None:
+            return {
+                "message": "Failed to collect Wazuh-Indexer details",
+                "success": False,
+            }
+
+        query_results = self._run_query(query, index, size)
+
+        if query_results["success"]:
+            return query_results
+
+        return {"message": "Failed to run query", "success": False}
+
+    def _run_query(self, query: str, index: str, size: int = 10000):
+        """
+        Wazuh-Indexer query to run a query against the Wazuh-Indexer.
+
+        Args:
+            query (str): The query to run against the Wazuh-Indexer.
+            index (str): The index to run the query against.
+            size (int): The number of results to return.
+
+        Returns:
+            dict: A dictionary containing the results of the query.
+        """
+        try:
+            query_results = self.es.search(
+                index=index,
+                body=query,
+                size=size,
+            )
+            return {
+                "message": "Successfully ran query",
+                "success": True,
+                "query_results": query_results,
+            }
+        except Exception as e:
+            logger.error(f"Failed to run query: {e}")
+            return {"message": "Failed to run query", "success": False}

@@ -50,6 +50,7 @@ from app.routes.alerts import bp as alerts_bp
 from app.routes.connectors import bp as connectors_bp
 from app.routes.dfir_iris import bp as dfir_iris_bp
 from app.routes.graylog import bp as graylog_bp
+from app.routes.healthchecks import bp as healthchecks_bp
 from app.routes.influxdb import bp as influxdb_bp
 from app.routes.rules import bp as rules_bp
 from app.routes.shuffle import bp as shuffle_bp
@@ -70,3 +71,4 @@ app.register_blueprint(dfir_iris_bp)  # Register the dfir_iris blueprint
 app.register_blueprint(sublime_bp)  # Register the sublime blueprint
 app.register_blueprint(influxdb_bp)  # Register the influxdb blueprint
 app.register_blueprint(smtp_bp)  # Register the smtp blueprint
+app.register_blueprint(healthchecks_bp)  # Register the healthchecks blueprint
