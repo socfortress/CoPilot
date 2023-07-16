@@ -6,18 +6,16 @@ from loguru import logger
 
 from app.models.agents import agent_metadata_schema
 from app.services.agents.agents import AgentService
-from app.services.agents.agents import AgentSyncService
-from app.services.WazuhManager.agent import WazuhManagerAgentService
-from app.services.WazuhManager.universal import UniversalService
-from app.services.WazuhManager.vulnerability import VulnerabilityService
 from app.services.Healthchecks.agents import HealthcheckAgentsService
 
 bp = Blueprint("healthchecks", __name__)
 
+
 @bp.route("/healthcheck/agent/full", methods=["GET"])
 def get_agents_full() -> Any:
     """
-    Endpoint to get a list of all agents who have sent logs within the last 15 minutes. Also returns a list of agents who have not sent logs within the last 15 minutes.
+    Endpoint to get a list of all agents who have sent logs within the last 15 minutes. Also returns a list of agents who have not sent
+    logs within the last 15 minutes.
     Returns:
         json: A JSON response containing the list of all available agents along with their log existence status.
     """
@@ -26,6 +24,7 @@ def get_agents_full() -> Any:
     healthcheck_service = HealthcheckAgentsService()
     agent_health = healthcheck_service.perform_healthcheck_full(agents, check_logs=True)
     return jsonify(agent_health)
+
 
 @bp.route("/healthcheck/agent/<agent_id>/full", methods=["GET"])
 def get_agent_full(agent_id: str) -> Any:
@@ -46,6 +45,7 @@ def get_agent_full(agent_id: str) -> Any:
     agent_health = healthcheck_service.perform_healthcheck_full([agent], check_logs=True)
     return jsonify(agent_health)
 
+
 @bp.route("/healthcheck/agent/wazuh", methods=["GET"])
 def get_agents_wazuh() -> Any:
     """
@@ -58,6 +58,7 @@ def get_agents_wazuh() -> Any:
     healthcheck_service = HealthcheckAgentsService()
     agent_health = healthcheck_service.perform_healthcheck_wazuh(agents)
     return jsonify(agent_health)
+
 
 @bp.route("/healthcheck/agent/<agent_id>/wazuh", methods=["GET"])
 def get_agent_wazuh(agent_id: str) -> Any:
@@ -79,10 +80,12 @@ def get_agent_wazuh(agent_id: str) -> Any:
     health = healthcheck_service.perform_healthcheck_wazuh(agent)
     return jsonify(health)
 
+
 @bp.route("/healthcheck/agent/velociraptor", methods=["GET"])
 def get_agents_velociraptor() -> Any:
     """
-    Endpoint to get a list of all agents whose Velociraptor service is running. Also returns a list of agents whose Velociraptor service is not running.
+    Endpoint to get a list of all agents whose Velociraptor service is running. Also returns a list of agents whose Velociraptor
+    service is not running.
     Returns:
         json: A JSON response containing the list of all available agents along with their Velociraptor service status.
     """
@@ -91,6 +94,7 @@ def get_agents_velociraptor() -> Any:
     healthcheck_service = HealthcheckAgentsService()
     agent_health = healthcheck_service.perform_healthcheck_velociraptor(agents)
     return jsonify(agent_health)
+
 
 @bp.route("/healthcheck/agent/<agent_id>/velociraptor", methods=["GET"])
 def get_agent_velociraptor(agent_id: str) -> Any:
