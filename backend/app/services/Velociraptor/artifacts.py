@@ -24,18 +24,22 @@ class ArtifactsService:
         """
         return query
 
-    def _get_artifact_key(self, client_id: str, artifact: str) -> str:
+    def _get_artifact_key(self, client_id: str, artifact: str, command: str = None) -> str:
         """
         Construct the artifact key.
 
         Args:
             client_id (str): The ID of the client.
             artifact (str): The name of the artifact.
+            command (str): The command that was run, if applicable.
 
         Returns:
             str: The constructed artifact key.
         """
-        return f"collect_client(client_id='{client_id}', artifacts=['{artifact}'])"
+        if command:
+            return f"collect_client(client_id='{client_id}', urgent=true, artifacts=['{artifact}'], env=dict(Command='{command}'))"
+        else:
+            return f"collect_client(client_id='{client_id}', artifacts=['{artifact}'])"
 
     def collect_artifacts(self) -> dict:
         """
@@ -145,6 +149,47 @@ class ArtifactsService:
             logger.info(f"Successfully ran artifact collection on {flow}")
 
             artifact_key = self._get_artifact_key(client_id, artifact)
+            flow_id = flow["results"][0][artifact_key]["flow_id"]
+            logger.info(f"Successfully ran artifact collection on {flow_id}")
+
+            completed = self.universal_service.watch_flow_completion(flow_id)
+            logger.info(f"Successfully watched flow completion on {completed}")
+
+            results = self.universal_service.read_collection_results(
+                client_id,
+                flow_id,
+                artifact,
+            )
+            return results
+        except Exception as err:
+            logger.error(f"Failed to run artifact collection: {err}")
+            return {
+                "message": "Failed to run artifact collection",
+                "success": False,
+            }
+
+    def run_remote_command(self, client_id: str, artifact: str, command: str) -> dict:
+        """
+        Run a remote command on a specific client.
+        Accepted artifact names are `Windows.System.PowerShell`, `Windows.System.CmdShell`.
+
+        Args:
+            client_id (str): The ID of the client.
+            artifact (str): The name of the artifact.
+            command (str): The command to be executed.
+
+        Returns:
+            dict: A dictionary with the success status, a message, and potentially the results.
+        """
+        try:
+            query = self._create_query(
+                f"SELECT collect_client(client_id='{client_id}', urgent=true, artifacts=['{artifact}'], env=dict(Command='{command}')) "
+                "FROM scope()",
+            )
+            flow = self.universal_service.execute_query(query)
+            logger.info(f"Successfully ran artifact collection on {flow}")
+
+            artifact_key = self._get_artifact_key(client_id, artifact, command)
             flow_id = flow["results"][0][artifact_key]["flow_id"]
             logger.info(f"Successfully ran artifact collection on {flow_id}")
 

@@ -1734,9 +1734,9 @@
                 "description": "Endpoint to get all artifacts for a hostname.",
                 "parameters": [
                     {
-                        "name": "hostname",
+                        "name": "client_name",
                         "in": "path",
-                        "description": "The hostname",
+                        "description": "The client name",
                         "required": true,
                         "schema": {
                             "type": "string"
@@ -1831,6 +1831,69 @@
                     }
                 },
                 "operationId": "createArtifactCollection",
+                "tags": ["Velociraptor"]
+            }
+        },
+        "/velociraptor/remotecommand": {
+            "post": {
+                "summary": "Run a remote command",
+                "description": "Endpoint to run a remote command.",
+                "requestBody": {
+                    "description": "Remote command details",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "client_name": {
+                                        "type": "string",
+                                        "value": "WIN-39O01J5F7G5",
+                                        "description": "The hostname of the client to run the command on."
+                                    },
+                                    "artifact_name": {
+                                        "type": "string",
+                                        "value": "Windows.System.PowerShell",
+                                        "description": "The name of the artifact to run."
+                                    },
+                                    "command": {
+                                        "type": "string",
+                                        "value": "ping 8.8.8.8",
+                                        "description": "The powershell command to run."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "output": {
+                                            "type": "string",
+                                            "description": "The output of the command."
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                },
+                "operationId": "runPowershellCommand",
                 "tags": ["Velociraptor"]
             }
         },
