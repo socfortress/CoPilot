@@ -29,18 +29,22 @@ def validate_and_update_connector(id, request_data, service, api_key=False):
 
 @bp.route("/connectors", methods=["GET"])
 def list_connectors_available():
-    logger.info("Received request to get all available connectors")
-    connectors_service = ConnectorService(db)
-    connectors = ConnectorsAvailable.query.all()
-    result = connectors_available_schema.dump(connectors)
+    try:
+        logger.info("Received request to get all available connectors")
+        connectors_service = ConnectorService(db)
+        connectors = ConnectorsAvailable.query.all()
+        result = connectors_available_schema.dump(connectors)
 
-    instantiated_connectors = [
-        connectors_service.process_connector(connector["connector_name"])
-        for connector in result
-        if connectors_service.process_connector(connector["connector_name"])
-    ]
+        instantiated_connectors = [
+            connectors_service.process_connector(connector["connector_name"])
+            for connector in result
+            if connectors_service.process_connector(connector["connector_name"])
+        ]
 
-    return jsonify(instantiated_connectors)
+        return {"message": "All available connectors", "connectors": instantiated_connectors, "success": True}
+    except Exception as e:
+        logger.error(f"Error while getting all available connectors: {e}")
+        return {"message": "Error while getting all available connectors", "success": False}, 500
 
 
 @bp.route("/connectors/<id>", methods=["GET"])
@@ -52,9 +56,9 @@ def get_connector_details(id: str):
     if connector["success"]:
         connector = Connectors.query.get(id)
         instantiated_connector = service.process_connector(connector.connector_name)
-        return jsonify(instantiated_connector)
+        return {"message": "Connector details", "connector": instantiated_connector, "success": True}
     else:
-        return jsonify(connector), 404
+        return {"message": "Connector not found", "success": False}, 404
 
 
 @bp.route("/connectors/<id>", methods=["PUT"])
