@@ -43,6 +43,7 @@ nav:
     - Shuffle: shuffle.md
     - Sublime: sublime.md
     - InfluxDB: influxdb.md
+    - Healthcehcks: healthchecks.md
     - SMTP: smtp.md
 
 markdown_extensions:
