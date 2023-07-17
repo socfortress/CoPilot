@@ -560,6 +560,50 @@
                 }
             }
         },
+        "/agents/wazuh/outdated": {
+            "get": {
+                "tags": ["Agents"],
+                "summary": "Get outdated Wazuh agents",
+                "description": "Endpoint to get the outdated Wazuh agents.",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Agent"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/agents/velociraptor/outdated": {
+            "get": {
+                "tags": ["Agents"],
+                "summary": "Get outdated Velociraptor agents",
+                "description": "Endpoint to get the outdated Velociraptor agents.",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Agent"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/rule/disable": {
             "post": {
                 "summary": "Disable a rule",

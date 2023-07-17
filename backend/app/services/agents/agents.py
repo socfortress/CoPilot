@@ -61,6 +61,47 @@ class AgentService:
         """
         return db.session.query(AgentMetadata).filter_by(agent_id=agent_id).first()
 
+    def get_outdated_agents_wazuh(self) -> List[Dict[str, Union[str, bool]]]:
+        """
+        Retrieves all agents with outdated Wazuh agent versions from the database.
+
+        Returns:
+            List[dict]: A list of dictionaries where each dictionary represents the serialized data of an outdated agent.
+        """
+        wazuh_manager = self.get_agent("000")
+        if wazuh_manager is None:
+            logger.error("Wazuh Manager with agent_id '000' not found.")
+            return {"message": "Wazuh Manager with agent_id '000' not found.", "success": False}
+
+        outdated_wazuh_agents = []
+        agents = db.session.query(AgentMetadata).filter(AgentMetadata.agent_id != "000").all()
+        for agent in agents:
+            if agent.wazuh_agent_version != wazuh_manager.wazuh_agent_version:
+                outdated_wazuh_agents.append(agent_metadata_schema.dump(agent))
+
+        return {"message": "Outdated Wazuh agents retrieved successfully", "success": True, "outdated_wazuh_agents": outdated_wazuh_agents}
+
+    def get_outdated_agents_velociraptor(self) -> List[Dict[str, Union[str, bool]]]:
+        """
+        Retrieves all agents with outdated Velociraptor client versions from the database.
+
+        Returns:
+            List[dict]: A list of dictionaries where each dictionary represents the serialized data of an outdated agent.
+        """
+        outdated_velociraptor_agents = []
+        vql_server_version = "select * from config"
+        server_version = UniversalService()._get_server_version(vql_server_version)
+        agents = db.session.query(AgentMetadata).all()
+        for agent in agents:
+            if agent.velociraptor_client_version != server_version:
+                outdated_velociraptor_agents.append(agent_metadata_schema.dump(agent))
+
+        return {
+            "message": "Outdated Velociraptor agents retrieved successfully",
+            "success": True,
+            "outdated_velociraptor_agents": outdated_velociraptor_agents,
+        }
+
     def mark_agent_criticality(self, agent_id: str, critical: bool) -> Dict[str, Union[str, bool]]:
         """
         Marks a specific agent as critical or non-critical.
@@ -167,7 +208,7 @@ class AgentService:
 
     def get_velo_metadata(self, agent_name: str) -> Optional[str]:
         """
-        Retrieves the client ID  and last_seen_at based on the agent name from Velociraptor.
+        Retrieves the client ID, last_seen_at and client version based on the agent name from Velociraptor.
 
         Args:
             agent_name (str): The name of the agent.
