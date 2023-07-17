@@ -48,7 +48,7 @@ class ArtifactsService:
         Returns:
             dict: A dictionary with the success status, a message, and potentially the artifacts.
         """
-        query = self._create_query("SELECT name FROM artifact_definitions()")
+        query = self._create_query("SELECT name,description FROM artifact_definitions()")
         return self.universal_service.execute_query(query)
 
     def collect_artifacts_prefixed(self, prefix: str) -> dict:
