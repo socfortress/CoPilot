@@ -118,3 +118,39 @@ def collect_artifact():
         artifact=artifact_name,
     )
     return artifact_results
+
+
+@bp.route("/velociraptor/remotecommand", methods=["POST"])
+def run_remote_command():
+    """
+    Endpoint to run a remote command.
+    It collects the command and client name from the request body and returns the results.
+
+    Returns:
+        json: A JSON response containing the result of the PowerShell command execution.
+    """
+    req_data = request.get_json()
+    command = req_data["command"]
+    client_name = req_data["client_name"]
+    artifact_name = req_data["artifact_name"]
+    service = UniversalService()
+    client_id = service.get_client_id(client_name=client_name)["results"][0]["client_id"]
+    if client_id is None:
+        return (
+            jsonify(
+                {
+                    "message": f"{client_name} has not been seen in the last 30 seconds and may not be online with the "
+                    "Velociraptor server.",
+                    "success": False,
+                },
+            ),
+            500,
+        )
+
+    artifact_service = ArtifactsService()
+    artifact_results = artifact_service.run_remote_command(
+        client_id=client_id,
+        artifact=artifact_name,
+        command=command,
+    )
+    return artifact_results
