@@ -24,7 +24,7 @@ This endpoint retrieves the log existence status of a specific agent.
 
 #### Parameters
 
-- `agent_id`: The ID of the agent.
+-   `agent_id`: The ID of the agent.
 
 #### Response
 
@@ -48,7 +48,7 @@ This endpoint retrieves the Wazuh-Agent status of a specific agent.
 
 #### Parameters
 
-- `agent_id`: The ID of the agent.
+-   `agent_id`: The ID of the agent.
 
 #### Response
 
@@ -72,7 +72,7 @@ This endpoint retrieves the Velociraptor service status of a specific agent.
 
 #### Parameters
 
-- `agent_id`: The ID of the agent.
+-   `agent_id`: The ID of the agent.
 
 #### Response
 
@@ -101,11 +101,11 @@ This method converts a string into a datetime object.
 
 #### Parameters
 
-- `date_string`: The date string to be converted.
+-   `date_string`: The date string to be converted.
 
 #### Returns
 
-- The converted datetime object.
+-   The converted datetime object.
 
 ---
 
@@ -115,12 +115,12 @@ This method determines if an agent is unhealthy based on the last seen time of t
 
 #### Parameters
 
-- `agent`: The agent data.
-- `current_time`: The current time.
+-   `agent`: The agent data.
+-   `current_time`: The current time.
 
 #### Returns
 
-- A boolean indicating if the agent is unhealthy.
+-   A boolean indicating if the agent is unhealthy.
 
 ---
 
@@ -130,7 +130,7 @@ This method returns a list of all indices in the Wazuh-Indexer.
 
 #### Returns
 
-- A list of all indices.
+-   A list of all indices.
 
 ---
 
@@ -140,12 +140,12 @@ This method checks if an agent has recent logs.
 
 #### Parameters
 
-- `agent`: The agent data.
-- `indices`: The indices to be checked.
+-   `agent`: The agent data.
+-   `indices`: The indices to be checked.
 
 #### Returns
 
-- A boolean indicating if the agent has recent logs.
+-   A boolean indicating if the agent has recent logs.
 
 ---
 
@@ -155,12 +155,12 @@ This method performs a full healthcheck on all agents.
 
 #### Parameters
 
-- `agents`: A list of all agents.
-- `check_logs`: Whether to check if agents have recent logs.
+-   `agents`: A list of all agents.
+-   `check_logs`: Whether to check if agents have recent logs.
 
 #### Returns
 
-- A dictionary containing the healthcheck results for all agents.
+-   A dictionary containing the healthcheck results for all agents.
 
 ---
 
@@ -170,11 +170,11 @@ This method checks the health of Wazuh agents.
 
 #### Parameters
 
-- `agents`: Either a list of agents or a single agent.
+-   `agents`: Either a list of agents or a single agent.
 
 #### Returns
 
-- A dictionary containing the healthcheck results for Wazuh agents.
+-   A dictionary containing the healthcheck results for Wazuh agents.
 
 ---
 
@@ -184,11 +184,11 @@ This method checks the health of Velociraptor clients.
 
 #### Parameters
 
-- `agents`: Either a list of agents or a single agent.
+-   `agents`: Either a list of agents or a single agent.
 
 #### Returns
 
-- A dictionary containing the healthcheck results for Velociraptor clients.
+-   A dictionary containing the healthcheck results for Velociraptor clients.
 
 ::: app.services.Healthchecks.agents
 <br>
