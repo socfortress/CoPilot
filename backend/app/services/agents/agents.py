@@ -46,8 +46,12 @@ class AgentService:
         Returns:
             List[dict]: A list of dictionaries where each dictionary represents the serialized data of an agent.
         """
-        agents = db.session.query(AgentMetadata).all()
-        return agent_metadatas_schema.dump(agents)
+        try:
+            agents = db.session.query(AgentMetadata).all()
+            return {"message": "Agents retrieved successfully", "success": True, "agents": agent_metadatas_schema.dump(agents)}
+        except Exception as e:
+            logger.error(f"Failed to retrieve agents: {e}")
+            return {"message": "Failed to retrieve agents.", "success": False}
 
     def get_agent(self, agent_id: str) -> Optional[AgentMetadata]:
         """

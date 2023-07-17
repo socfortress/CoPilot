@@ -2,6 +2,7 @@ from typing import Any
 
 from flask import Blueprint
 from flask import jsonify
+from loguru import logger
 
 from app.models.agents import agent_metadata_schema
 from app.services.agents.agents import AgentService
@@ -39,8 +40,12 @@ def get_agent(agent_id: str) -> Any:
     if agent is None:
         return jsonify({"message": "Agent not found", "success": False}), 404
     else:
-        agent_dict = agent_metadata_schema.dump(agent)
-        return jsonify(agent_dict)
+        try:
+            agent_dict = agent_metadata_schema.dump(agent)
+            return {"agent": agent_dict, "success": True, "message": "Agent found"}
+        except Exception as e:
+            logger.error(f"Error returning agent: {e}")
+            return jsonify({"message": "Error returning agent", "success": False}), 500
 
 
 @bp.route("/agents/<agent_id>/critical", methods=["POST"])
