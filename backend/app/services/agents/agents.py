@@ -110,6 +110,8 @@ class AgentService:
             existing_agent.last_seen = agent_last_seen
             existing_agent.client_id = agent["client_id"]
             existing_agent.client_last_seen = agent["client_last_seen"]
+            existing_agent.wazuh_agent_version = agent["wazuh_agent_version"]
+            existing_agent.velociraptor_client_version = agent["velociraptor_client_version"]
             try:
                 db.session.commit()
                 return existing_agent
@@ -126,6 +128,8 @@ class AgentService:
             critical_asset=False,
             client_id=agent["client_id"],
             client_last_seen=agent["client_last_seen"],
+            wazuh_agent_version=agent["wazuh_agent_version"],
+            velociraptor_client_version=agent["velociraptor_client_version"],
         )
         logger.info(f"Agent metadata: {new_agent}")
 
@@ -179,11 +183,14 @@ class AgentService:
             client_last_seen = datetime.fromtimestamp(
                 int(last_seen_at) / 1000000,
             )
-            return client_id, client_last_seen
+            vql_client_version = f"select * from clients(search='host:{agent_name}')"
+            client_version = UniversalService()._get_client_version(vql_client_version)
+            return client_id, client_last_seen, client_version
         except Exception as e:
             logger.error(f"Failed to get last seen at from Velociraptor. Setting to default time. Error: {e}")
             client_last_seen = self.parse_date("1970-01-01T00:00:00+00:00")
-            return client_id, client_last_seen
+            client_version = "Unknown"
+            return client_id, client_last_seen, client_version
 
 
 class AgentSyncService:
@@ -244,6 +251,7 @@ class AgentSyncService:
                             "agent_ip": agent["ip"],
                             "agent_os": os_name,
                             "agent_last_seen": last_keep_alive,
+                            "wazuh_agent_version": agent["version"],
                         },
                     )
                     logger.info(f"Collected Wazuh Agent: {agent['name']}")
@@ -285,9 +293,10 @@ class AgentSyncService:
 
         agents_added_list = []
         for agent in wazuh_agents_list:
-            client_id, client_last_seen = self.agent_service.get_velo_metadata(agent["agent_name"])
+            client_id, client_last_seen, client_version = self.agent_service.get_velo_metadata(agent["agent_name"])
             agent["client_id"] = client_id
             agent["client_last_seen"] = client_last_seen
+            agent["velociraptor_client_version"] = client_version
             agent_obj = self.agent_service.create_or_update_agent(agent)
             if agent_obj is not None:
                 agents_added_list.append(agent_metadata_schema.dump(agent_obj))

@@ -3,17 +3,9 @@ from datetime import datetime
 
 import grpc
 import pyvelociraptor
-
-# import requests
-# from elasticsearch7 import Elasticsearch
-# from loguru import logger
 from pyvelociraptor import api_pb2
 from pyvelociraptor import api_pb2_grpc
 
-# from app import db
-# from app.models.agents import AgentMetadata
-# from app.models.agents import agent_metadata_schema
-# from app.models.agents import agent_metadatas_schema
 from app.models.connectors import Connector
 from app.models.connectors import connector_factory
 
@@ -206,6 +198,18 @@ class UniversalService:
             float: The last_seen_at timestamp.
         """
         return self.execute_query(vql)["results"][0]["last_seen_at"]
+
+    def _get_client_version(self, vql: str):
+        """
+        Executes the VQL query and returns the `agent_information``version` field
+
+        Args:
+            vql (str): The VQL query.
+
+        Returns:
+            str: The client version.
+        """
+        return self.execute_query(vql)["results"][0]["agent_information"]["version"]
 
     def _is_offline(self, last_seen_at: float):
         """

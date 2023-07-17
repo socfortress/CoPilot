@@ -26,6 +26,8 @@ class AgentMetadata(db.Model):
     last_seen: Column[DateTime] = db.Column(db.DateTime)
     client_id: Column[String] = db.Column(db.String(100))
     client_last_seen: Column[DateTime] = db.Column(db.DateTime)
+    wazuh_agent_version: Column[String] = db.Column(db.String(100))
+    velociraptor_client_version: Column[String] = db.Column(db.String(100))
 
     def __init__(
         self,
@@ -37,6 +39,8 @@ class AgentMetadata(db.Model):
         last_seen: datetime,
         client_id: str,
         client_last_seen: datetime,
+        wazuh_agent_version: str,
+        velociraptor_client_version: str,
     ):
         """
         Initialize a new instance of the AgentMetadata class.
@@ -58,6 +62,8 @@ class AgentMetadata(db.Model):
         self.last_seen = last_seen
         self.client_id = client_id
         self.client_last_seen = client_last_seen
+        self.wazuh_agent_version = wazuh_agent_version
+        self.velociraptor_client_version = velociraptor_client_version
 
     def __repr__(self) -> str:
         """
@@ -109,6 +115,8 @@ class AgentMetadataSchema(ma.Schema):
             "last_seen",
             "client_id",
             "client_last_seen",
+            "wazuh_agent_version",
+            "velociraptor_client_version",
         )
 
 
