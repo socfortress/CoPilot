@@ -118,3 +118,27 @@ def get_agent_vulnerabilities(agent_id: str) -> Any:
         agent_id=agent_id,
     )
     return jsonify(agent_vulnerabilities)
+
+
+@bp.route("/agents/wazuh/outdated", methods=["GET"])
+def get_outdated_wazuh_agents() -> Any:
+    """
+    Endpoint to get the outdated Wazuh agents.
+    Returns:
+        json: A JSON response containing the list of outdated Wazuh agents.
+    """
+    service = AgentService()
+    agents = service.get_outdated_agents_wazuh()
+    return jsonify(agents)
+
+
+@bp.route("/agents/velociraptor/outdated", methods=["GET"])
+def get_outdated_velociraptor_agents() -> Any:
+    """
+    Endpoint to get the outdated Velociraptor agents.
+    Returns:
+        json: A JSON response containing the list of outdated Velociraptor agents.
+    """
+    service = AgentService()
+    agents = service.get_outdated_agents_velociraptor()
+    return jsonify(agents)

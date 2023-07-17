@@ -211,6 +211,18 @@ class UniversalService:
         """
         return self.execute_query(vql)["results"][0]["agent_information"]["version"]
 
+    def _get_server_version(self, vql: str):
+        """
+        Executes the VQL query and returns the velociraptor server version.
+
+        Args:
+            vql (str): The VQL query.
+
+        Returns:
+            str: The server version.
+        """
+        return self.execute_query(vql)["results"][0]["version"]["version"]
+
     def _is_offline(self, last_seen_at: float):
         """
         Determines if the client is offline based on the last_seen_at timestamp.
