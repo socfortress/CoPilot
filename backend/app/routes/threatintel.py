@@ -3,6 +3,7 @@ from flask import jsonify
 from flask import request
 from loguru import logger
 
+from app.models.connectors import SocfortressThreatIntelConnector
 from app.services.threat_intel.socfortress.universal import (
     SocfortressThreatIntelService,
 )
@@ -24,7 +25,7 @@ def get_socfortress_threatintel(ioc_value: str) -> jsonify:
     return jsonify(ioc_enriched)
 
 
-@bp.route("/threatintel/search/wazuh", methods=["POST"])
+@bp.route("/threatintel/socfortress/search/wazuh", methods=["POST"])
 def search_wazuh_threatintel() -> jsonify:
     """
     Endpoint to search IoC in Wazuh Threat Intel.
@@ -36,5 +37,12 @@ def search_wazuh_threatintel() -> jsonify:
     service = IocSearchService()
     field_name = request.json.get("field_name")
     time_range = request.json.get("time_range")
-    ioc_searched = service.search_ioc(field_name=field_name, time_range=time_range)
-    return jsonify(ioc_searched)
+    # verify connection to SOCFortress Threat Intel
+    verified_connection = SocfortressThreatIntelConnector("SocfortressThreatIntel").verify_connection()
+    try:
+        if verified_connection["response"] is None:
+            message = {"message": "Connection to SOCFortress Threat Intel failed", "success": False}
+            return jsonify(message)
+    except Exception:
+        ioc_searched = service.search_ioc(field_name=field_name, time_range=time_range)
+        return jsonify(ioc_searched)

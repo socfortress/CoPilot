@@ -1,10 +1,12 @@
-from typing import Any, Dict
-from datetime import datetime, timedelta
+from typing import Any
+from typing import Dict
 
 from elasticsearch7 import Elasticsearch
 from loguru import logger
 
-from app.services.threat_intel.socfortress.universal import SocfortressThreatIntelService
+from app.services.threat_intel.socfortress.universal import (
+    SocfortressThreatIntelService,
+)
 from app.services.WazuhIndexer.universal import UniversalService
 
 
@@ -19,15 +21,15 @@ class IocSearchService:
     }
 
     INVALID_DOMAINS = [
-        '.internal',
-        '.home',
-        '.local',
-        '.lan',
-        '.corp',
-        '.localdomain',
-        '.intranet',
-        '.localnet',
-        '.priv',
+        ".internal",
+        ".home",
+        ".local",
+        ".lan",
+        ".corp",
+        ".localdomain",
+        ".intranet",
+        ".localnet",
+        ".priv",
     ]
 
     def __init__(self):
@@ -193,16 +195,16 @@ class IocSearchService:
                         {
                             "exists": {
                                 "field": field_name,
-                            }
+                            },
                         },
                         {
                             "range": {
                                 "timestamp": {
                                     "gte": f"now-{time_range}",
-                                }
-                            }
-                        }
-                    ]
-                }
-            }
+                                },
+                            },
+                        },
+                    ],
+                },
+            },
         }

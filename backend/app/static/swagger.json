@@ -3176,7 +3176,7 @@
                 "tags": ["Threat Intel"]
             }
         },
-        "/threatintel/search/wazuh": {
+        "/threatintel/socfortress/search/wazuh": {
             "post": {
                 "tags": ["Threat Intel"],
                 "summary": "Search field name for IoCs in Wazuh Indicies",
