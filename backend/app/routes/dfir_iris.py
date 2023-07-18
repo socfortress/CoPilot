@@ -1,7 +1,7 @@
 from flask import Blueprint
 from flask import request
 
-from app.services.DFIR_IRIS.alerts import AlertsService
+from app.services.DFIR_IRIS.alerts import IRISAlertsService
 from app.services.DFIR_IRIS.assets import AssetsService
 from app.services.DFIR_IRIS.cases import CasesService
 from app.services.DFIR_IRIS.notes import NotesService
@@ -100,6 +100,6 @@ def get_alerts():
     Returns:
         Response: A Flask Response object carrying a JSON representation of the list of alerts.
     """
-    service = AlertsService()
+    service = IRISAlertsService()
     alerts = service.list_alerts()
     return alerts

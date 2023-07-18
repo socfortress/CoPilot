@@ -1261,6 +1261,75 @@
                 "tags": ["Wazuh-Indexer"]
             }
         },
+        "/alerts/escalate": {
+            "post": {
+                "tags": ["Wazuh-Indexer"],
+                "summary": "Escalate an alert.",
+                "description": "Collects the alert from the Wazuh-Indexer then creates the alert in DFIR-IRIS",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "alert_id": {
+                                        "type": "string",
+                                        "description": "Alert ID"
+                                    },
+                                    "index": {
+                                        "type": "string",
+                                        "description": "Index Name"
+                                    }
+                                },
+                                "required": ["alert_id", "index"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successfully searched for IoCs.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successfully searched for IoCs."
+                                        },
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid payload.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Invalid payload."
+                                        },
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/wazuh_indexer/allocation": {
             "get": {
                 "summary": "Get node allocation of the Wazuh-Indexer nodes",
