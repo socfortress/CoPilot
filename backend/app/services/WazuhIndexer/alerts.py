@@ -5,6 +5,7 @@ from elasticsearch7 import Elasticsearch
 from loguru import logger
 
 from app.services.ask_socfortress.universal import AskSocfortressService
+from app.services.DFIR_IRIS.alerts import IRISAlertsService
 from app.services.WazuhIndexer.universal import UniversalService
 
 
@@ -229,6 +230,25 @@ class AlertsService:
             logger.error(f"Failed to collect alerts: {e}")
             return {"message": "Failed to collect alerts", "success": False}
 
+    def _collect_alert(self, alert_id: str, index: str) -> Dict[str, Any]:
+        """
+        Collects an alert from Elasticsearch.
+
+        Args:
+            alert_uid (str): The alert UID.
+            index (str): The name of the index to query.
+
+        Returns:
+            Dict[str, Any]: A dictionary containing success status and the alert or an error message.
+        """
+        logger.info(f"Collecting alert {alert_id} from {index}")
+        try:
+            alert = self.es.get(index=index, id=alert_id)
+            return {"message": "Successfully collected alert", "success": True, "alert": alert["_source"]}
+        except Exception as e:
+            logger.error(f"Failed to collect alert: {e}")
+            return {"message": "Failed to collect alert", "success": False}
+
     @staticmethod
     def _build_query() -> Dict[str, object]:
         """
@@ -249,3 +269,26 @@ class AlertsService:
             },
             "sort": [{"timestamp_utc": {"order": "desc"}}],
         }
+
+    def escalate_alert(self, alert_id: str, index: str) -> Dict[str, Any]:
+        """
+        Escalates an alert by creating it in DFIR-IRIS
+
+        Args:
+            alert_id (str): The alert UID.
+            index (str): The index name.
+
+        Returns:
+            Dict[str, Any]: A dictionary containing success status and escalation message or an error message.
+        """
+        try:
+            alert_details = self._collect_alert(alert_id=alert_id, index=index)
+            service = IRISAlertsService()
+            logger.info(f"Escalating alert {alert_details} to DFIR-IRIS")
+            ask_socfortress = self.asksocfortress_service.invoke_asksocfortress(alert_details["alert"]["rule_description"])
+            alert_details["alert"]["ask_socfortress"] = ask_socfortress["message"]
+            escalation = service.create_alert_general(alert_data=alert_details["alert"], alert_id=alert_id, index=index)
+            return {"message": escalation["message"], "success": True}
+        except Exception as e:
+            logger.error(f"Failed to escalate alert: {e}")
+            return {"message": "Failed to escalate alert", "success": False}

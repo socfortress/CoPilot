@@ -1,5 +1,6 @@
 from flask import Blueprint
 from flask import jsonify
+from flask import request
 
 from app.services.WazuhIndexer.alerts import AlertsService
 
@@ -112,3 +113,20 @@ def get_rules_by_host() -> jsonify:
     service = AlertsService()
     rules = service.collect_alerts_by_rule_per_host()
     return jsonify(rules)
+
+
+@bp.route("/alerts/escalate", methods=["POST"])
+def escalate_alert() -> jsonify:
+    """
+    Accepts a POST request with an alert_uid and esacalates the alert by creating an alert in DFIR-IRIS
+
+    This endpoint accepts a POST request with an alert_uid and esacalates the alert by creating an alert in DFIR-IRIS.
+
+    Returns:
+        jsonify: A JSON response containing the status of the escalation.
+    """
+    service = AlertsService()
+    alert_id = request.json["alert_id"]
+    index = request.json["index"]
+    status = service.escalate_alert(alert_id=alert_id, index=index)
+    return jsonify(status)
