@@ -110,6 +110,7 @@ class Connectors(db.Model):
         "velociraptor": True,
         "sublime": True,
         "influxdb": True,
+        "ask-socfortress": True,
     }
 
     def __init__(
