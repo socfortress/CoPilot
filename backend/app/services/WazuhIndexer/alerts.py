@@ -212,7 +212,7 @@ class AlertsService:
         logger.info(f"Collecting alerts from {index_name}")
         query = self._build_query()
         try:
-            alerts = self.es.search(index=index_name, body=query, size=size)
+            alerts = self.es.search(index=index_name, body=query, size=1)
             alerts_list = [alert for alert in alerts["hits"]["hits"]]
 
             # Iterate over each alert and invoke invoke_socfortress function

@@ -53,47 +53,45 @@ class AskSocfortressService:
         else:
             return None, None
 
-    def invoke_asksocfortress(self, data: str) -> Dict[str, Any]:
+    def create_payload(self, data: str) -> Dict[str, Any]:
         """
-        Invoke ASKSOCFortress API to enrich data via a POST request.
-
-        Attributes:
-            data (str): The data to be enriched.
-
-        Returns:
-            dict: A dictionary containing a success key indicating the success or failure of the connection
-                  and a message key containing further information about the connection result.
+        Creates the payload for the request.
         """
-        headers = {
+        return {"rule_description": data}
+
+    def create_headers(self) -> Dict[str, str]:
+        """
+        Creates the headers for the request.
+        """
+        return {
             "Content-Type": "application/json",
             "x-api-key": self.connector_api_key,
             "module-version": "1.0",
         }
-        logger.info(f"Invoking AskSOCFortress API with data: {data}")
 
-        payload = {"rule_description": data}
+    def make_request(self, payload: Dict[str, Any], headers: Dict[str, str]) -> requests.Response:
+        """
+        Makes the HTTP request.
+        """
+        return requests.post(
+            self.connector_url,
+            data=json.dumps(payload),
+            headers=headers,
+            timeout=120,
+        )
 
-        timeout = 120
-
+    def handle_response(self, response: requests.Response) -> Dict[str, Any]:
+        """
+        Handles the response from the HTTP request.
+        """
         try:
-            response = requests.post(
-                self.connector_url,
-                data=json.dumps(payload),
-                headers=headers,
-                timeout=timeout,
-            )
             response.raise_for_status()
-            try:
-                response_data = response.json()
-            except ValueError:
-                logger.error(f"Unable to decode response from AskSOCFortress API: {response.text}")
-                raise
-            else:
-                return {
-                    "success": True,
-                    "response": response_data["message"],
-                    "message": "Successfully invoked AskSOCFortress API",
-                }
+            response_data = response.json()
+            return {
+                "success": True,
+                "response": response_data["message"],
+                "message": "Successfully invoked AskSOCFortress API",
+            }
         except requests.exceptions.HTTPError as e:
             logger.error(f"Unable to invoke AskSOCFortress API: {e}")
             return {
@@ -108,3 +106,18 @@ class AskSocfortressService:
                 "response": None,
                 "message": f"Unable to invoke AskSOCFortress API: {e}",
             }
+
+    def invoke_asksocfortress(self, data: str) -> Dict[str, Any]:
+        """
+        Invoke ASKSOCFortress API to enrich data via a POST request.
+        Attributes:
+            data (str): The data to be enriched.
+        Returns:
+            dict: A dictionary containing a success key indicating the success or failure of the connection
+                  and a message key containing further information about the connection result.
+        """
+        logger.info(f"Invoking AskSOCFortress API with data: {data}")
+        payload = self.create_payload(data)
+        headers = self.create_headers()
+        response = self.make_request(payload, headers)
+        return self.handle_response(response)
