@@ -45,6 +45,7 @@ nav:
     - InfluxDB: influxdb.md
     - Healthcehcks: healthchecks.md
     - SMTP: smtp.md
+    - ASK-SOCFortress: asksocfortress.md
 
 markdown_extensions:
     - pymdownx.highlight:

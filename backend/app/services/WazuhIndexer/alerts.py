@@ -4,7 +4,7 @@ from typing import Dict
 from elasticsearch7 import Elasticsearch
 from loguru import logger
 
-from app.services.ask_socfortress.univerval import AskSocfortressService
+from app.services.ask_socfortress.universal import AskSocfortressService
 from app.services.WazuhIndexer.universal import UniversalService
 
 
