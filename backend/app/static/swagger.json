@@ -3175,6 +3175,75 @@
                 "operationId": "getSOCFortressThreatIntelByIOCValue",
                 "tags": ["Threat Intel"]
             }
+        },
+        "/threatintel/socfortress/search/wazuh": {
+            "post": {
+                "tags": ["Threat Intel"],
+                "summary": "Search field name for IoCs in Wazuh Indicies",
+                "description": "Search field name for IoCs in Wazuh Indicies.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "field_name": {
+                                        "type": "string",
+                                        "description": "Field name to search for IoCs"
+                                    },
+                                    "time_range": {
+                                        "type": "string",
+                                        "description": "Time range to search for IoCs"
+                                    }
+                                },
+                                "required": ["field_name", "time_range"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successfully searched for IoCs.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Successfully searched for IoCs."
+                                        },
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid payload.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Invalid payload."
+                                        },
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "components": {
