@@ -111,6 +111,7 @@ class Connectors(db.Model):
         "sublime": True,
         "influxdb": True,
         "asksocfortress": True,
+        "socfortressthreatintel": True,
     }
 
     def __init__(

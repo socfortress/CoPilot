@@ -56,6 +56,7 @@ from app.routes.rules import bp as rules_bp
 from app.routes.shuffle import bp as shuffle_bp
 from app.routes.smtp import bp as smtp_bp
 from app.routes.sublime import bp as sublime_bp
+from app.routes.threatintel import bp as threatintel_bp
 from app.routes.velociraptor import bp as velociraptor_bp
 from app.routes.wazuhindexer import bp as wazuhindexer_bp
 
@@ -72,3 +73,4 @@ app.register_blueprint(sublime_bp)  # Register the sublime blueprint
 app.register_blueprint(influxdb_bp)  # Register the influxdb blueprint
 app.register_blueprint(smtp_bp)  # Register the smtp blueprint
 app.register_blueprint(healthchecks_bp)  # Register the healthchecks blueprint
+app.register_blueprint(threatintel_bp)  # Register the threatintel blueprint
