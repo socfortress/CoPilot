@@ -2,11 +2,6 @@ from abc import ABC
 from typing import Dict
 from typing import Union
 
-import requests
-from loguru import logger
-from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.util.retry import Retry
-
 
 class AssetValidator(ABC):
     """
