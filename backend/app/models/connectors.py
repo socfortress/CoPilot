@@ -479,6 +479,60 @@ class AskSOCFortressConnector(Connector):
             return {"connectionSuccessful": False, "response": None}
 
 
+class SocfortressThreatIntelConnector(Connector):
+    """
+    A connector for the SocfortressThreatIntel service, a subclass of Connector.
+
+    Args:
+        connector_name (str): The name of the connector.
+    """
+
+    def __init__(self, connector_name: str):
+        super().__init__(attributes=self.get_connector_info_from_db(connector_name))
+
+    def verify_connection(self) -> Dict[str, Any]:
+        """
+        Verifies the connection to ASK SOCFortress service.
+
+        Returns:
+            dict: A dictionary containing 'connectionSuccessful' status and 'response' if the connection is successful.
+        """
+        logger.info(
+            f"Verifying the ASK SOCFortress connection to {self.attributes['connector_url']}",
+        )
+        try:
+            headers = {
+                "Content-Type": "application/json",
+                "x-api-key": f"{self.attributes['connector_api_key']}",
+                "module-version": "1.0",
+            }
+            params = {
+                "value": "evil.socfortress.co",
+            }
+            socfortress_threat_intel = requests.get(
+                f"{self.attributes['connector_url']}",
+                headers=headers,
+                params=params,
+                verify=False,
+                timeout=60,
+            )
+            if socfortress_threat_intel.status_code == 200:
+                logger.info(
+                    f"Connection to {self.attributes['connector_url']} successful",
+                )
+                return {"connectionSuccessful": True}
+            else:
+                logger.error(
+                    f"Connection to {self.attributes['connector_url']} failed with error: {socfortress_threat_intel.text}",
+                )
+                return {"connectionSuccessful": False, "response": None}
+        except Exception as e:
+            logger.error(
+                f"Connection to {self.attributes['connector_url']} failed with error: {e}",
+            )
+            return {"connectionSuccessful": False, "response": None}
+
+
 class InfluxDBConnector(Connector):
     """
     A connector for the InfluxDB service, a subclass of Connector.
@@ -633,3 +687,4 @@ connector_factory.register_creator("Shuffle", "ShuffleConnector")
 connector_factory.register_creator("Sublime", "SublimeConnector")
 connector_factory.register_creator("InfluxDB", "InfluxDBConnector")
 connector_factory.register_creator("AskSocfortress", "AskSOCFortressConnector")
+connector_factory.register_creator("SocfortressThreatIntel", "SocfortressThreatIntelConnector")

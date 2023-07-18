@@ -105,6 +105,14 @@
                 "description": "Find out more",
                 "url": "http://swagger.io"
             }
+        },
+        {
+            "name": "Threat Intel",
+            "description": "Everything about Threat Intel",
+            "externalDocs": {
+                "description": "Find out more",
+                "url": "http://swagger.io"
+            }
         }
     ],
     "paths": {
@@ -3116,6 +3124,56 @@
                 },
                 "operationId": "getVelociraptorAgentHealthcheckByAgentID",
                 "tags": ["Healthcheck"]
+            }
+        },
+        "/threatintel/socfortress/{ioc_value}": {
+            "get": {
+                "summary": "Get SOC Fortress threat intelligence by IOC value",
+                "description": "Endpoint to get SOC Fortress threat intelligence by IOC value.",
+                "parameters": [
+                    {
+                        "name": "ioc_value",
+                        "in": "path",
+                        "description": "The IOC value.",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "threat_intel": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "description": "Threat intelligence details"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                },
+                "operationId": "getSOCFortressThreatIntelByIOCValue",
+                "tags": ["Threat Intel"]
             }
         }
     },
