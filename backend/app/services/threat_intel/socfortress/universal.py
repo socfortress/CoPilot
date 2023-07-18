@@ -1,4 +1,3 @@
-import json
 from typing import Any
 from typing import Dict
 from typing import Optional
@@ -19,7 +18,8 @@ class SocfortressThreatIntelService:
 
     def __init__(self, connector_name: str) -> None:
         """
-        Initializes the SocfortressThreatIntelService by collecting SOCFortress Threat Intel details associated with the specified connector name.
+        Initializes the SocfortressThreatIntelService by collecting SOCFortress Threat Intel details associated with the specified
+        connector name.
 
         Args:
             connector_name (str): The name of the SOCFortress Threat Intel connector.
