@@ -1,31 +1,20 @@
-from typing import Callable
+import json
+from typing import Any
 from typing import Dict
 from typing import Optional
 from typing import Tuple
-from typing import Any
+
 import requests
-import json
-
-# from dfir_iris_client.case import Case
-from dfir_iris_client.helper.utils import assert_api_resp
-from dfir_iris_client.helper.utils import get_data_from_resp
-from dfir_iris_client.session import ClientSession
-
-# from elasticsearch7 import Elasticsearch
 from loguru import logger
 
-# from app import db
-# from app.models.agents import AgentMetadata
-# from app.models.agents import agent_metadata_schema
-# from app.models.agents import agent_metadatas_schema
 from app.models.connectors import Connector
 from app.models.connectors import connector_factory
 
 
 class AskSocfortressService:
     """
-    A service class that encapsulates the logic for interfacing with ASK SOCFortress. This class handles tasks like retrieving connector details,
-    and invoking the ask_socfortress connector.
+    A service class that encapsulates the logic for interfacing with ASK SOCFortress. This class handles tasks like retrieving connector
+    details, and invoking the ask_socfortress connector.
     """
 
     def __init__(self, connector_name: str) -> None:
@@ -119,7 +108,3 @@ class AskSocfortressService:
                 "response": None,
                 "message": f"Unable to invoke AskSOCFortress API: {e}",
             }
-
-
-
-
