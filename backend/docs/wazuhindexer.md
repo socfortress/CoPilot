@@ -218,6 +218,58 @@ Overall, this module is used to facilitate the interaction between the applicati
 
 ::: app.services.WazuhIndexer.index
 
+### <span style="color:red">IoC Search Services</span>
+
+This Python script contains a class `IocSearchService` which is used to search for Indicators of Compromise (IoCs) within data indexed by Wazuh. Wazuh is an open-source security detection, visibility, and compliance project.
+
+Below is a detailed description of the `IocSearchService` class and its methods:
+
+Class Initialization (`__init__`):
+During initialization, the class fetches Wazuh-Indexer details and establishes a connection to Elasticsearch.
+
+`is_index_skipped (is_index_skipped)`:
+This method checks whether a given index name should be skipped based on a predefined list of indices.
+
+`is_valid_index (is_valid_index)`:
+This method verifies if an index name starts with "wazuh\_" and is not in the list of skipped indices.
+
+`_collect_indices_and_validate (_collect_indices_and_validate)`:
+This method collects all indices and validates the connector details.
+
+`search_ioc (search_ioc)`:
+This method is used to search for IoCs from a given field name within a specified time range. It collects and validates the indices, then collects the IoCs.
+
+`_error_response (_error_response)`:
+This method standardizes the format of the error response.
+
+`is_invalid_domain_name (is_invalid_domain_name)`:
+This method checks if the given field value is an internal domain name.
+
+`is_valid_ipv4 (is_valid_ipv4)`:
+This method checks if the given field value is a valid IPv4 address.
+
+`is_valid_md5 (is_valid_md5)`:
+This method checks if the given field value is a valid MD5 hash.
+
+`is_valid_sha256 (is_valid_sha256)`:
+This method checks if the given field value is a valid SHA256 hash.
+
+`is_valid_domain_name (is_valid_domain_name)`:
+This method checks if the given field value is a valid domain name.
+
+`_collect_iocs (_collect_iocs)`:
+This method builds an Elasticsearch query to retrieve all values of a given field and index to invoke the IoC service for checking if the value is malicious.
+
+`_filter_and_enrich_alerts (_filter_and_enrich_alerts)`:
+This method filters out invalid domain names and enriches the alerts with `socfortress_threat_intel`.
+
+`_build_query (_build_query)`:
+This method builds the Elasticsearch query to retrieve all values of a given field.
+
+This class is primarily designed to work with a service like `SocfortressThreatIntel`, and it interfaces with Elasticsearch to search for threat indicators across various indices. The class provides a high level of abstraction for interacting with Wazuh-Indexer and `SocfortressThreatIntel` services, allowing users to easily retrieve and filter IoCs.
+
+::: app.services.WazuhIndexer.ioc_search
+
 ### <span style="color:red">Universal Services</span>
 
 ::: app.services.WazuhIndexer.universal
