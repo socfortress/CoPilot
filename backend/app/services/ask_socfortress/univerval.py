@@ -55,13 +55,22 @@ class AskSocfortressService:
 
     def create_payload(self, data: str) -> Dict[str, Any]:
         """
-        Creates the payload for the request.
+        Creates the payload for the AskSOCFortress API request.
+
+        Args:
+            data (str): The data to be enriched.
+
+        Returns:
+            dict: The payload to be sent to the AskSOCFortress API.
         """
         return {"rule_description": data}
 
     def create_headers(self) -> Dict[str, str]:
         """
-        Creates the headers for the request.
+        Creates the headers for the AskSOCFortress API request.
+
+        Returns:
+            dict: The headers to be used for the AskSOCFortress API request.
         """
         return {
             "Content-Type": "application/json",
@@ -71,7 +80,14 @@ class AskSocfortressService:
 
     def make_request(self, payload: Dict[str, Any], headers: Dict[str, str]) -> requests.Response:
         """
-        Makes the HTTP request.
+        Makes the HTTP request to the AskSOCFortress API.
+
+        Args:
+            payload (dict): The payload to be sent to the AskSOCFortress API.
+            headers (dict): The headers to be used for the AskSOCFortress API request.
+
+        Returns:
+            requests.Response: The HTTP response from the AskSOCFortress API.
         """
         return requests.post(
             self.connector_url,
@@ -82,7 +98,15 @@ class AskSocfortressService:
 
     def handle_response(self, response: requests.Response) -> Dict[str, Any]:
         """
-        Handles the response from the HTTP request.
+        Handles the response from the AskSOCFortress API.
+
+        Args:
+            response (requests.Response): The HTTP response from the AskSOCFortress API.
+
+        Returns:
+            dict: A dictionary containing a success key indicating the success or failure of the connection,
+            a response key containing the response from the AskSOCFortress API (if successful), and
+            a message key containing further information about the connection result.
         """
         try:
             response.raise_for_status()
@@ -109,12 +133,17 @@ class AskSocfortressService:
 
     def invoke_asksocfortress(self, data: str) -> Dict[str, Any]:
         """
-        Invoke ASKSOCFortress API to enrich data via a POST request.
-        Attributes:
+        Invokes the AskSOCFortress API to enrich data via a POST request.
+
+        The function creates the payload and headers, makes the HTTP request, and handles the response.
+
+        Args:
             data (str): The data to be enriched.
+
         Returns:
-            dict: A dictionary containing a success key indicating the success or failure of the connection
-                  and a message key containing further information about the connection result.
+            dict: A dictionary containing a success key indicating the success or failure of the connection,
+            a response key containing the response from the AskSOCFortress API (if successful), and
+            a message key containing further information about the connection result.
         """
         logger.info(f"Invoking AskSOCFortress API with data: {data}")
         payload = self.create_payload(data)
