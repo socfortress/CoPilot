@@ -286,7 +286,10 @@ class AlertsService:
             service = IRISAlertsService()
             logger.info(f"Escalating alert {alert_details} to DFIR-IRIS")
             ask_socfortress = self.asksocfortress_service.invoke_asksocfortress(alert_details["alert"]["rule_description"])
-            alert_details["alert"]["ask_socfortress"] = ask_socfortress["message"]
+            try:
+                alert_details["alert"]["ask_socfortress"] = ask_socfortress["response"]
+            except Exception:
+                alert_details["alert"]["ask_socfortress"] = ask_socfortress["message"]
             escalation = service.create_alert_general(alert_data=alert_details["alert"], alert_id=alert_id, index=index)
             return {"message": escalation["message"], "success": True}
         except Exception as e:
