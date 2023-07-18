@@ -4,6 +4,7 @@ from typing import Dict
 from elasticsearch7 import Elasticsearch
 from loguru import logger
 
+from app.services.ask_socfortress.univerval import AskSocfortressService
 from app.services.WazuhIndexer.universal import UniversalService
 
 
@@ -35,6 +36,11 @@ class AlertsService:
             max_retries=10,
             retry_on_timeout=False,
         )
+        self.asksocfortress_service = AskSocfortressService("AskSocfortress")
+        (
+            self.connector_url,
+            self.connector_api_key,
+        ) = self.asksocfortress_service.collect_asksocfortress_details("AskSocfortress")
 
     def is_index_skipped(self, index_name: str) -> bool:
         """
@@ -82,7 +88,6 @@ class AlertsService:
                         "alerts": alerts["alerts"],
                     },
                 )
-
         return {
             "message": f"Successfully collected top {size} alerts",
             "success": True,
@@ -209,10 +214,16 @@ class AlertsService:
         try:
             alerts = self.es.search(index=index_name, body=query, size=size)
             alerts_list = [alert for alert in alerts["hits"]["hits"]]
+
+            # Iterate over each alert and invoke invoke_socfortress function
+            for alert in alerts_list:
+                ask_socfortress = self.asksocfortress_service.invoke_asksocfortress(alert["_source"]["rule_description"])
+                alert["ask_socfortress"] = ask_socfortress  # Add the result to the alert
+
             return {
                 "message": "Successfully collected alerts",
                 "success": True,
-                "alerts": alerts_list,
+                "alerts": alerts_list,  # Return the alerts list with the added results
             }
         except Exception as e:
             logger.error(f"Failed to collect alerts: {e}")
