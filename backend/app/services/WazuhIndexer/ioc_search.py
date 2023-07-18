@@ -1,3 +1,5 @@
+import ipaddress
+import re
 from typing import Any
 from typing import Dict
 
@@ -131,6 +133,88 @@ class IocSearchService:
         """
         return any(field_value.endswith(domain) for domain in IocSearchService.INVALID_DOMAINS)
 
+    @staticmethod
+    def is_valid_domain_name(domain: str) -> bool:
+        """
+        Checks if the given domain name is valid.
+
+        Args:
+            domain (str): The domain name to check.
+
+        Returns:
+            bool: True if the domain name is valid, False otherwise.
+        """
+        pattern = r"(?:[a-z0-9](?:[a-z0-9\-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9\-]{0,61}[a-z0-9]"
+        return re.fullmatch(pattern, domain) is not None
+
+    @staticmethod
+    def is_valid_ipv4(field_value: str) -> bool:
+        """
+        Checks if the given field value is a valid IPv4 address.
+
+        Args:
+            field_value (str): The field value to check.
+
+        Returns:
+            bool: True if the field value is a valid IPv4 address, False otherwise.
+        """
+        try:
+            ipaddress.IPv4Address(field_value)
+            return True
+        except ValueError:
+            return False
+
+    @staticmethod
+    def is_valid_md5(field_value: str) -> bool:
+        """
+        Checks if the given field value is a valid MD5 hash.
+
+        Args:
+            field_value (str): The field value to check.
+
+        Returns:
+            bool: True if the field value is a valid MD5 hash, False otherwise.
+        """
+        return bool(re.fullmatch(r"[a-fA-F0-9]{32}", field_value))
+
+    @staticmethod
+    def is_valid_sha256(field_value: str) -> bool:
+        """
+        Checks if the given field value is a valid SHA256 hash.
+
+        Args:
+            field_value (str): The field value to check.
+
+        Returns:
+            bool: True if the field value is a valid SHA256 hash, False otherwise.
+        """
+        return bool(re.fullmatch(r"[a-fA-F0-9]{64}", field_value))
+
+    def is_valid_field_value(self, field_value: str) -> bool:
+        """
+        Validates the field value as per different conditions.
+
+        Args:
+            field_value (str): The field value to check.
+
+        Returns:
+            bool: True if the field value is valid, False otherwise.
+        """
+        if self.is_invalid_domain_name(field_value):
+            logger.info(f"Skipping invalid domain name: {field_value}")
+            return False
+
+        if not (
+            self.is_valid_ipv4(field_value)
+            or self.is_valid_md5(field_value)
+            or self.is_valid_sha256(field_value)
+            or self.is_valid_domain_name(field_value)
+        ):
+            logger.info(f"Skipping invalid field value: {field_value}")
+            return False
+
+        return True
+
     def _collect_iocs(self, index_name: str, field_name: str, time_range: str) -> Dict[str, object]:
         """
         Elasticsearch query to retrieve all values of a given field and index to
@@ -166,8 +250,10 @@ class IocSearchService:
         alerts_list_with_response = []  # Create a new list to store alerts with responses
         for alert in alerts_list:
             field_value = alert["_source"][field_name]
-            if self.is_invalid_domain_name(field_value):
+            # Skip if field value is invalid
+            if not self.is_valid_field_value(field_value):
                 continue
+
             socfortress_threat_intel = self.socfortress_threat_intel_service.invoke_socfortress_threat_intel(data=field_value)
             logger.info(f"Socfortress threat intel response: {socfortress_threat_intel}")
             # if `response` is not empty, add it to the alert

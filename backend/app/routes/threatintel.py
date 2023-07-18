@@ -26,7 +26,7 @@ def get_socfortress_threatintel(ioc_value: str) -> jsonify:
 
 
 @bp.route("/threatintel/socfortress/search/wazuh", methods=["POST"])
-def search_wazuh_threatintel() -> jsonify:
+def search_socfortress_wazuh_threatintel() -> jsonify:
     """
     Endpoint to search IoC in Wazuh Threat Intel.
 
