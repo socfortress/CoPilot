@@ -25,6 +25,24 @@ def get_alerts() -> jsonify:
     return jsonify(alerts)
 
 
+@bp.route("/alerts/<agent_name>", methods=["GET"])
+def get_alerts_by_agent(agent_name: str) -> jsonify:
+    """
+    Retrieves all alerts from the AlertsService by agent name.
+
+    This endpoint retrieves all available alerts from the AlertsService. It does this by creating an instance of
+    the AlertsService class and calling its `collect_alerts_by_agent` method. The result is a list of all alerts currently
+    available.
+
+    Returns:
+        jsonify: A JSON response containing a list of alerts. Each item in the list is a dictionary representing an alert,
+        containing all its associated data.
+    """
+    service = AlertsService()
+    alerts = service.collect_alerts_by_agent_name(agent_name=agent_name)
+    return jsonify(alerts)
+
+
 @bp.route("/alerts/top_10", methods=["GET"])
 def get_top_10_alerts() -> jsonify:
     """
