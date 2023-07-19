@@ -42,6 +42,7 @@ def get_alerts_by_agent(agent_name: str) -> jsonify:
     alerts = service.collect_alerts_by_agent_name(agent_name=agent_name)
     return jsonify(alerts)
 
+
 @bp.route("/alerts/top_10", methods=["GET"])
 def get_top_10_alerts() -> jsonify:
     """
