@@ -113,6 +113,36 @@ class AlertsService:
             "total_alerts": len(alerts["alerts"]),
         }
 
+    def collect_alerts_by_agent_name(self, agent_name: str) -> Dict[str, Any]:
+        """
+        Collects alerts associated with a given agent name.
+
+        Args:
+            agent_name (str): The agent name associated with the alerts.
+
+        Returns:
+            Dict[str, Any]: A dictionary containing success status, a message, and potentially the alerts associated with the agent.
+        """
+        indices_validation = self._collect_indices_and_validate()
+        if not indices_validation["success"]:
+            return indices_validation
+
+        alerts_by_agent_dict = {}
+        for index_name in indices_validation["indices"]:
+            alerts = self._collect_alerts(index_name=index_name, size=1000)
+            if alerts["success"]:
+                for alert in alerts["alerts"]:
+                    if alert["_source"]["agent_name"] == agent_name:
+                        alerts_by_agent_dict[alert["_id"]] = alert["_source"]
+
+        alerts_by_agent_list = [{"alert_id": alert_id, "alert": alert} for alert_id, alert in alerts_by_agent_dict.items()]
+
+        return {
+            "message": f"Successfully collected alerts associated with agent {agent_name}",
+            "success": True,
+            "alerts_by_agent": alerts_by_agent_list,
+        }
+
     def collect_alerts_by_host(self) -> Dict[str, int]:
         """
         Collects the number of alerts per host.
