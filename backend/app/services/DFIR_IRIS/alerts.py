@@ -387,7 +387,7 @@ class IRISAlertsService:
                 "asset_name": agent_data["hostname"],
                 "asset_ip": agent_data["ip_address"],
                 "asset_type": alert_data["asset_type_id"],
-                "process_id": alert_data["process_id"],
+                "process_id": alert_data.get("process_id", "No process ID found"),
                 "rule_mitre_id": alert_data.get("rule_mitre_id", "n/a"),
                 "rule_mitre_tactic": alert_data.get("rule_mitre_tactic", "n/a"),
                 "rule_mitre_technique": alert_data.get("rule_mitre_technique", "n/a"),
