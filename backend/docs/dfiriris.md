@@ -178,6 +178,40 @@ This file serves as a core component in managing case notes in DFIR-IRIS, provid
 ::: app.services.DFIR_IRIS.notes
 <br>
 
+### <span style="color:red">Users Services</span>
+
+## Python Script: users.py
+
+This script is responsible for managing user interactions in DFIR-IRIS.
+
+### Import Statements
+
+The script begins by importing necessary modules and classes:
+
+-   `typing`: For specifying type hints in function signatures.
+-   `User` and `Alert` classes from the `dfir_iris_client` package: These classes likely encapsulate the data and behavior associated with users and alerts in DFIR-IRIS.
+-   `loguru`: A third-party logging module to log messages, here used for error and info level logging.
+-   `UniversalService` class from `app.services.DFIR_IRIS.universal`: This class is used to create a session with DFIR-IRIS and fetch/parse data from it.
+
+### IRISUsersService Class
+
+The `IRISUsersService` class encapsulates the logic for managing users in DFIR-IRIS.
+
+#### **init** method
+
+This method initializes an instance of the `IRISUsersService` class. It creates an instance of the `UniversalService` class for "DFIR-IRIS" and attempts to establish a session with DFIR-IRIS. If the session creation is successful, the session is stored in the `iris_session` attribute of the `IRISUsersService` instance. If the session creation is not successful, an error message is logged, and `iris_session` is set to `None`.
+
+#### list_users method
+
+This method retrieves the list of users from DFIR-IRIS. If `iris_session` is `None` (indicating unsuccessful session creation), it returns a dictionary with "success" set to `False`. If a session exists, it uses the `User` class from the `dfir_iris_client` package to fetch and parse the user data from DFIR-IRIS. The result is a dictionary containing information about the success of the operation, a message describing the operation, and (if the operation was successful) the fetched users.
+
+#### assign_user_alert method
+
+This method assigns a user to an alert in DFIR-IRIS. Similar to `list_users`, it checks if `iris_session` is `None` and returns a failure message if it is. If a session exists, it uses the `Alert` class from the `dfir_iris_client` package to assign a user to an alert. The user and alert are identified by their IDs, which are passed as arguments to the method. The result is a dictionary containing information about the success of the operation, a message describing the operation, and (if the operation was successful) the assigned user.
+
+::: app.services.DFIR_IRIS.users
+<br>
+
 ### <span style="color:red">Universal Services</span>
 
 ::: app.services.DFIR_IRIS.universal

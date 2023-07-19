@@ -2364,6 +2364,108 @@
                 "tags": ["DFIR Iris"]
             }
         },
+        "/dfir_iris/users": {
+            "get": {
+                "summary": "Get all users",
+                "description": "Endpoint to get all users.",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "users": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "description": "User details"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                },
+                "operationId": "getAllUsers",
+                "tags": ["DFIR Iris"]
+            }
+        },
+        "/dfir_iris/users/assign/{alert_id}": {
+            "post": {
+                "summary": "Assign a user to a DFIR-IRIS Alert",
+                "description": "Assign a user to a DFIR-IRIS Alert.",
+                "parameters": [
+                    {
+                        "name": "alert_id",
+                        "in": "path",
+                        "description": "ID of the alert to assign.",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "description": "Assignee details",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "alert_owner_id": {
+                                        "type": "integer",
+                                        "description": "The owner id of who to assign the alert to. Invoke the `/dfir_iris/users` to obtain the owner id."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "output": {
+                                            "type": "string",
+                                            "description": "The output of the command."
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                },
+                "operationId": "assignUserToAlert",
+                "tags": ["DFIR Iris"]
+            }
+        },
         "/sublime/alerts": {
             "get": {
                 "summary": "Get all alerts",
