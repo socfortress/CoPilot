@@ -106,6 +106,51 @@ def get_alerts():
     return alerts
 
 
+@bp.route("/dfir_iris/alerts/bookmark/<alert_id>", methods=["POST"])
+def bookmark_alert(alert_id: str):
+    """
+    Handle POST requests at the "/alerts/<alert_id>/bookmark" endpoint. Bookmark an alert in DFIR IRIS.
+
+    Args:
+        alert_id (str): The ID of the alert to bookmark.
+
+    Returns:
+        Response: A Flask Response object carrying a JSON representation of the result of the bookmark operation.
+    """
+    service = IRISAlertsService()
+    bookmarked_alert = service.bookmark_alert(alert_id=alert_id)
+    return bookmarked_alert
+
+
+@bp.route("/dfir_iris/alerts/unbookmark/<alert_id>", methods=["POST"])
+def unbookmark_alert(alert_id: str):
+    """
+    Handle POST requests at the "/alerts/<alert_id>/unbookmark" endpoint. Unbookmark an alert in DFIR IRIS.
+
+    Args:
+        alert_id (str): The ID of the alert to unbookmark.
+
+    Returns:
+        Response: A Flask Response object carrying a JSON representation of the result of the unbookmark operation.
+    """
+    service = IRISAlertsService()
+    unbookmarked_alert = service.unbookmark_alert(alert_id=alert_id)
+    return unbookmarked_alert
+
+
+@bp.route("/dfir_iris/alerts/bookmarked", methods=["GET"])
+def get_bookmarked_alerts():
+    """
+    Handle GET requests at the "/alerts/bookmarked" endpoint. Retrieve all bookmarked alerts from DFIR IRIS.
+
+    Returns:
+        Response: A Flask Response object carrying a JSON representation of the list of bookmarked alerts.
+    """
+    service = IRISAlertsService()
+    alerts = service.list_bookmarked_alerts()
+    return alerts
+
+
 @bp.route("/dfir_iris/users", methods=["GET"])
 def get_users():
     """

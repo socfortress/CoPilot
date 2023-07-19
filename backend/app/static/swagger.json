@@ -2448,6 +2448,139 @@
                 "tags": ["DFIR Iris"]
             }
         },
+        "/dfir_iris/alerts/bookmark/{alert_id}": {
+            "post": {
+                "summary": "Assign a bookmark to an alert which adds it as an alert tag",
+                "description": "Assign a bookmark to an alert which adds it as an alert tag.",
+                "parameters": [
+                    {
+                        "name": "alert_id",
+                        "in": "path",
+                        "description": "ID of the alert to bookmark.",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "output": {
+                                            "type": "string",
+                                            "description": "The output of the command."
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                },
+                "operationId": "assignUserToAlert",
+                "tags": ["DFIR Iris"]
+            }
+        },
+        "/dfir_iris/alerts/unbookmark/{alert_id}": {
+            "post": {
+                "summary": "Unbookmark an alert",
+                "description": "Unbookmark an alert.",
+                "parameters": [
+                    {
+                        "name": "alert_id",
+                        "in": "path",
+                        "description": "ID of the alert to unbookmark.",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "output": {
+                                            "type": "string",
+                                            "description": "The output of the command."
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                },
+                "operationId": "unbookmarkAlert",
+                "tags": ["DFIR Iris"]
+            }
+        },
+        "/dfir_iris/alerts/bookmarked": {
+            "get": {
+                "summary": "Get all bookmarked alerts",
+                "description": "Endpoint to get all bookmarked alerts.",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "alerts": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "description": "Alert details"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                },
+                "operationId": "getAllBookmarkedAlerts",
+                "tags": ["DFIR Iris"]
+            }
+        },
         "/dfir_iris/users": {
             "get": {
                 "summary": "Get all users",

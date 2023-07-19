@@ -102,6 +102,98 @@ class IRISAlertsService:
             "results": result["data"],
         }
 
+    def bookmark_alert(self, alert_id: str) -> Dict[str, Any]:
+        """
+        Bookmark an alert in DFIR-IRIS.
+
+        Parameters
+        ----------
+        alert_id : str
+            The ID of the alert to bookmark.
+
+        Returns
+        -------
+        Dict[str, Any]
+            The result of the bookmark operation. Contains information on whether the bookmark operation was successful,
+            an associated message, and the resulting data.
+        """
+        alert = Alert(session=self.iris_session)
+        result = self.universal_service.fetch_and_parse_data(
+            self.iris_session,
+            alert.update_alert,
+            alert_id,
+            {"alert_tags": "bookmarked"},
+        )
+
+        if not result["success"]:
+            return {
+                "success": False,
+                "message": "Failed to bookmark alert in DFIR-IRIS",
+            }
+
+        return {
+            "success": True,
+            "message": "Successfully bookmarked alert in DFIR-IRIS",
+            "results": result["data"],
+        }
+
+    def unbookmark_alert(self, alert_id: str) -> Dict[str, Any]:
+        """
+        Unbookmark an alert in DFIR-IRIS.
+
+        Parameters
+        ----------
+        alert_id : str
+            The ID of the alert to unbookmark.
+
+        Returns
+        -------
+        Dict[str, Any]
+            The result of the unbookmark operation. Contains information on whether the unbookmark operation was successful,
+            an associated message, and the resulting data.
+        """
+        alert = Alert(session=self.iris_session)
+        result = self.universal_service.fetch_and_parse_data(
+            self.iris_session,
+            alert.update_alert,
+            alert_id,
+            {"alert_tags": ""},
+        )
+
+        if not result["success"]:
+            return {
+                "success": False,
+                "message": "Failed to unbookmark alert in DFIR-IRIS",
+            }
+
+        return {
+            "success": True,
+            "message": "Successfully unbookmarked alert in DFIR-IRIS",
+            "results": result["data"],
+        }
+
+    def list_bookmarked_alerts(self) -> Dict[str, Any]:
+        """
+        List all bookmarked alerts from DFIR-IRIS.
+
+        Returns
+        -------
+        Dict[str, Any]
+            The result of the bookmarked alerts listing. Contains information on whether the listing was successful,
+            an associated message, and the resulting data.
+        """
+        alerts = self.list_alerts()["results"]["alerts"]
+        # Loop thorugh the alerts and collect ones where `alert_tags` contains `bookmarked`
+        bookmarked_alerts = []
+        for alert in alerts:
+            if alert["alert_tags"] is not None and "bookmarked" in alert["alert_tags"]:
+                bookmarked_alerts.append(alert)
+        return {
+            "success": True,
+            "message": "Successfully collected bookmarked alerts from DFIR-IRIS",
+            "bookmarked_alerts": bookmarked_alerts,
+        }
+
     def create_alert_general(self, alert_data: Dict[str, Any], alert_id: str, index: str) -> Dict[str, Any]:
         """
         Create an alert within DFIR-IRIS with the provided data.
