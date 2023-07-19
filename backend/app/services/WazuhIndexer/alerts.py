@@ -1,3 +1,5 @@
+from datetime import datetime
+from datetime import timedelta
 from typing import Any
 from typing import Dict
 
@@ -70,9 +72,16 @@ class AlertsService:
 
         return {"success": True, "indices": valid_indices}
 
-    def collect_alerts(self, size: int) -> Dict[str, object]:
+    def collect_alerts(self, size: int, timerange: str) -> Dict[str, object]:
         """
         Collects alerts from the Wazuh-Indexer.
+
+        Args:
+            size (int): The maximum number of alerts to return.
+            timerange (str): The time range to collect alerts from. This is a string like "24h", "1w", etc.
+
+        Returns:
+            Dict[str, object]: A dictionary containing success status and alerts or an error message.
         """
         indices_validation = self._collect_indices_and_validate()
         if not indices_validation["success"]:
@@ -80,7 +89,7 @@ class AlertsService:
 
         alerts_summary = []
         for index_name in indices_validation["indices"]:
-            alerts = self._collect_alerts(index_name, size=size)
+            alerts = self._collect_alerts(index_name, size=size, timerange=timerange)
             if alerts["success"] and len(alerts["alerts"]) > 0:
                 alerts_summary.append(
                     {
@@ -90,7 +99,7 @@ class AlertsService:
                     },
                 )
         return {
-            "message": f"Successfully collected top {size} alerts",
+            "message": f"Successfully collected top {size} alerts from the last {timerange}",
             "success": True,
             "alerts_summary": alerts_summary,
         }
@@ -252,7 +261,7 @@ class AlertsService:
         """
         return {"message": message, "success": False}
 
-    def _collect_alerts(self, index_name: str, size: int = None) -> Dict[str, object]:
+    def _collect_alerts(self, index_name: str, size: int = None, timerange: str = "24h") -> Dict[str, object]:
         """
         Elasticsearch query to get the most recent alerts where the `rule_level` is 12 or higher or the
         `syslog_level` field is `ALERT` and return the results in descending order by the `timestamp_utc` field.
@@ -261,12 +270,13 @@ class AlertsService:
         Args:
             index_name (str): The name of the index to query.
             size (int, optional): The maximum number of alerts to return. If None, all alerts are returned.
+            timerange (str, optional): The time range to collect alerts from. This is a string like "24h", "1w", etc.
 
         Returns:
             Dict[str, object]: A dictionary containing success status and alerts or an error message.
         """
         logger.info(f"Collecting alerts from {index_name}")
-        query = self._build_query()  # Use the provided query
+        query = self._build_query(timerange=timerange)  # Use the provided query
         try:
             alerts = self.es.search(index=index_name, body=query, size=size)
             alerts_list = [alert for alert in alerts["hits"]["hits"]]
@@ -305,20 +315,55 @@ class AlertsService:
             return {"message": "Failed to collect alert", "success": False}
 
     @staticmethod
-    def _build_query() -> Dict[str, object]:
+    def _get_time_range_start(timerange: str) -> str:
+        """
+        Determines the start time of the time range based on the current time and the provided timerange.
+
+        Args:
+            timerange (str): The time range to collect alerts from. This is a string like "24h", "1w", etc.
+
+        Returns:
+            str: A string representing the start time of the time range in ISO format.
+        """
+        if timerange.endswith("h"):
+            delta = timedelta(hours=int(timerange[:-1]))
+        elif timerange.endswith("d"):
+            delta = timedelta(days=int(timerange[:-1]))
+        elif timerange.endswith("w"):
+            delta = timedelta(weeks=int(timerange[:-1]))
+        else:
+            raise ValueError("Invalid timerange format. Expected a string like '24h', '1d', '1w', etc.")
+
+        start = datetime.utcnow() - delta
+        return start.isoformat() + "Z"  # Elasticsearch expects the time in ISO format with a Z at the end
+
+    @staticmethod
+    def _build_query(timerange: str) -> Dict[str, object]:
         """
         Builds the Elasticsearch query to get the most recent alerts where the `rule_level` is 12 or higher or
         the `syslog_level` field is `ALERT`.
 
+        Args:
+            timerange (str): The time range to collect alerts from. This is a string like "24h", "1w", etc.
+
         Returns:
             Dict[str, object]: A dictionary representing the Elasticsearch query.
         """
+        start = AlertsService._get_time_range_start(timerange)
+
         return {
             "query": {
                 "bool": {
-                    "should": [
-                        {"range": {"rule_level": {"gte": 12}}},
-                        {"match": {"syslog_level": "ALERT"}},
+                    "must": [
+                        {"range": {"timestamp_utc": {"gte": start, "lte": "now"}}},
+                        {
+                            "bool": {
+                                "should": [
+                                    {"range": {"rule_level": {"gte": 12}}},
+                                    {"match": {"syslog_level": "ALERT"}},
+                                ],
+                            },
+                        },
                     ],
                 },
             },

@@ -20,8 +20,10 @@ def get_alerts() -> jsonify:
         jsonify: A JSON response containing a list of alerts. Each item in the list is a dictionary representing an alert,
         containing all its associated data.
     """
+    size = request.args.get("size", default=10, type=int)
+    timerange = request.args.get("timerange", default="24h", type=str)
     service = AlertsService()
-    alerts = service.collect_alerts(size=10)  # replace `collect_all_alerts` with `collect_alerts(size=1000)`
+    alerts = service.collect_alerts(size=size, timerange=timerange)  # replace `collect_all_alerts` with `collect_alerts(size=1000)`
     return jsonify(alerts)
 
 
