@@ -21,7 +21,7 @@ def get_alerts() -> jsonify:
         containing all its associated data.
     """
     service = AlertsService()
-    alerts = service.collect_alerts(size=1000)  # replace `collect_all_alerts` with `collect_alerts(size=1000)`
+    alerts = service.collect_alerts(size=10)  # replace `collect_all_alerts` with `collect_alerts(size=1000)`
     return jsonify(alerts)
 
 
@@ -41,25 +41,6 @@ def get_alerts_by_agent(agent_name: str) -> jsonify:
     service = AlertsService()
     alerts = service.collect_alerts_by_agent_name(agent_name=agent_name)
     return jsonify(alerts)
-
-
-@bp.route("/alerts/last_24_hours", methods=["GET"])
-def get_alerts_last_24_hours() -> jsonify:
-    """
-    Retrieves all alerts from all wazuh indices with the last 24 hours.
-
-    This endpoint retrieves all available alerts from the AlertsService. It does this by creating an instance of
-    the AlertsService class and calling its `collect_alerts_by_agent` method. The result is a list of all alerts currently
-    available.
-
-    Returns:
-        jsonify: A JSON response containing a list of alerts. Each item in the list is a dictionary representing an alert,
-        containing all its associated data.
-    """
-    service = AlertsService()
-    alerts = service.collect_alerts_last_24_hours(size=1000)
-    return jsonify(alerts)
-
 
 @bp.route("/alerts/top_10", methods=["GET"])
 def get_top_10_alerts() -> jsonify:

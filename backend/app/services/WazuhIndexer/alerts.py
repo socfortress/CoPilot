@@ -254,7 +254,7 @@ class AlertsService:
         """
         return {"message": message, "success": False}
 
-    def _collect_alerts(self, index_name: str, size: int = None, query: Dict[str, object] = None) -> Dict[str, object]:
+    def _collect_alerts(self, index_name: str, size: int = None) -> Dict[str, object]:
         """
         Elasticsearch query to get the most recent alerts where the `rule_level` is 12 or higher or the
         `syslog_level` field is `ALERT` and return the results in descending order by the `timestamp_utc` field.
@@ -263,13 +263,12 @@ class AlertsService:
         Args:
             index_name (str): The name of the index to query.
             size (int, optional): The maximum number of alerts to return. If None, all alerts are returned.
-            query (Dict[str, object], optional): The Elasticsearch query to use. If None, the default query is used.
 
         Returns:
             Dict[str, object]: A dictionary containing success status and alerts or an error message.
         """
         logger.info(f"Collecting alerts from {index_name}")
-        query = query or self._build_query()  # Use the provided query or the default query
+        query = self._build_query()  # Use the provided query
         try:
             alerts = self.es.search(index=index_name, body=query, size=size)
             alerts_list = [alert for alert in alerts["hits"]["hits"]]
@@ -319,33 +318,6 @@ class AlertsService:
         return {
             "query": {
                 "bool": {
-                    "should": [
-                        {"range": {"rule_level": {"gte": 12}}},
-                        {"match": {"syslog_level": "ALERT"}},
-                    ],
-                },
-            },
-            "sort": [{"timestamp_utc": {"order": "desc"}}],
-        }
-
-    def _build_query_last_24_hours(self) -> Dict[str, object]:
-        """
-        Builds the Elasticsearch query to get the most recent alerts where the `rule_level` is 12 or higher or
-        the `syslog_level` field is `ALERT`, and the `timestamp_utc` is within the last 24 hours.
-
-        Returns:
-            Dict[str, object]: A dictionary representing the Elasticsearch query.
-        """
-        # Calculate the time 24 hours ago
-        time_24_hours_ago = datetime.utcnow() - timedelta(hours=24)
-
-        # Convert the time to the format used in the Elasticsearch index
-        time_24_hours_ago = time_24_hours_ago.strftime("%Y-%m-%dT%H:%M:%S")
-
-        return {
-            "query": {
-                "bool": {
-                    "must": [{"range": {"timestamp_utc": {"gte": time_24_hours_ago}}}],
                     "should": [
                         {"range": {"rule_level": {"gte": 12}}},
                         {"match": {"syslog_level": "ALERT"}},
