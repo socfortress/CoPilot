@@ -1,8 +1,9 @@
 from typing import Dict
 
+from dfir_iris_client.alert import Alert
+
 # import requests
 from dfir_iris_client.users import User
-from dfir_iris_client.alert import Alert
 
 # from dfir_iris_client.helper.utils import assert_api_resp
 # from dfir_iris_client.helper.utils import get_data_from_resp
@@ -51,7 +52,7 @@ class IRISUsersService:
                 "message": "DFIR-IRIS session was not successfully created.",
             }
 
-        logger.info(f"Collecting users from DFIR-IRIS")
+        logger.info("Collecting users from DFIR-IRIS")
         user = User(session=self.iris_session)
         result = self.universal_service.fetch_and_parse_data(
             self.iris_session,
