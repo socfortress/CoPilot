@@ -7,7 +7,7 @@ from app.services.WazuhIndexer.alerts import AlertsService
 bp = Blueprint("alerts", __name__)
 
 
-@bp.route("/alerts", methods=["GET"])
+@bp.route("/alerts", methods=["POST"])
 def get_alerts() -> jsonify:
     """
     Retrieves all alerts from the AlertsService.
@@ -20,15 +20,20 @@ def get_alerts() -> jsonify:
         jsonify: A JSON response containing a list of alerts. Each item in the list is a dictionary representing an alert,
         containing all its associated data.
     """
-    size = request.args.get("size", default=10, type=int)
-    timerange = request.args.get("timerange", default="24h", type=str)
+    data = request.json
+
+    size = int(data.get("size", 10))
+    timerange = str(data.get("timerange", "24h"))
+    alert_field = str(data.get("alert_field", "syslog_level"))
+    alert_value = str(data.get("alert_value", "ALERT"))
+
     service = AlertsService()
-    alerts = service.collect_alerts(size=size, timerange=timerange)  # replace `collect_all_alerts` with `collect_alerts(size=1000)`
+    alerts = service.collect_alerts(size=size, timerange=timerange, alert_field=alert_field, alert_value=alert_value)
     return jsonify(alerts)
 
 
-@bp.route("/alerts/<agent_name>", methods=["GET"])
-def get_alerts_by_agent(agent_name: str) -> jsonify:
+@bp.route("/alerts/agent", methods=["POST"])
+def get_alerts_by_agent() -> jsonify:
     """
     Retrieves all alerts from the AlertsService by agent name.
 
@@ -40,15 +45,27 @@ def get_alerts_by_agent(agent_name: str) -> jsonify:
         jsonify: A JSON response containing a list of alerts. Each item in the list is a dictionary representing an alert,
         containing all its associated data.
     """
+    data = request.json
+    size = int(data.get("size", 10))
+    timerange = str(data.get("timerange", "24h"))
+    agent_name = str(data.get("agent_name", "WIN-HFOU106TD7K"))
+    alert_field = str(data.get("alert_field", "syslog_level"))
+    alert_value = str(data.get("alert_value", "ALERT"))
     service = AlertsService()
-    size = request.args.get("size", default=10, type=int)
-    timerange = request.args.get("timerange", default="24h", type=str)
-    alerts = service.collect_alerts_by_agent_name(agent_name=agent_name, size=size, timerange=timerange)
+    # size = request.args.get("size", default=10, type=int)
+    # timerange = request.args.get("timerange", default="24h", type=str)
+    alerts = service.collect_alerts_by_agent_name(
+        agent_name=agent_name,
+        size=size,
+        timerange=timerange,
+        alert_field=alert_field,
+        alert_value=alert_value,
+    )
     return jsonify(alerts)
 
 
-@bp.route("/alerts/index/<index_name>", methods=["GET"])
-def get_alerts_by_index(index_name: str) -> jsonify:
+@bp.route("/alerts/index", methods=["POST"])
+def get_alerts_by_index() -> jsonify:
     """
     Retrieves all alerts from the AlertsService by index name.
 
@@ -60,10 +77,20 @@ def get_alerts_by_index(index_name: str) -> jsonify:
         jsonify: A JSON response containing a list of alerts. Each item in the list is a dictionary representing an alert,
         containing all its associated data.
     """
-    size = request.args.get("size", default=10, type=int)
-    timerange = request.args.get("timerange", default="24h", type=str)
+    data = request.json
+    size = int(data.get("size", 10))
+    timerange = str(data.get("timerange", "24h"))
+    index_name = str(data.get("index_name", "wazuh*"))
+    alert_field = str(data.get("alert_field", "syslog_level"))
+    alert_value = str(data.get("alert_value", "ALERT"))
     service = AlertsService()
-    alerts = service.collect_alerts_by_index(index_name=index_name, size=size, timerange=timerange)
+    alerts = service.collect_alerts_by_index(
+        index_name=index_name,
+        size=size,
+        timerange=timerange,
+        alert_field=alert_field,
+        alert_value=alert_value,
+    )
     return jsonify(alerts)
 
 
