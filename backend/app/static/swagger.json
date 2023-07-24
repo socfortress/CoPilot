@@ -949,7 +949,29 @@
         "/alerts": {
             "get": {
                 "summary": "Get alerts",
-                "description": "Endpoint to get alerts.",
+                "description": "Endpoint to get alerts. Retrieves all alerts from the AlertsService.",
+                "parameters": [
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "The number of alerts to return. Defaults to 10.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        }
+                    },
+                    {
+                        "name": "timerange",
+                        "in": "query",
+                        "description": "The time range to consider for alerts. Defaults to '24h'.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "24h"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -996,6 +1018,26 @@
                         "description": "The name of the host to get alerts from.",
                         "required": true,
                         "type": "string"
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "The number of alerts to return. Defaults to 10.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        }
+                    },
+                    {
+                        "name": "timerange",
+                        "in": "query",
+                        "description": "The time range to consider for alerts. Defaults to '24h'.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "24h"
+                        }
                     }
                 ],
                 "responses": {
@@ -1065,46 +1107,7 @@
                         }
                     }
                 },
-                "operationId": "getAlertsFromIndex",
-                "tags": ["Wazuh-Indexer"]
-            }
-        },
-        "/alerts/top_10": {
-            "get": {
-                "summary": "Get top 10 alerts",
-                "description": "Endpoint to get top 10 alerts.",
-                "responses": {
-                    "200": {
-                        "description": "Successful operation",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "alerts": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "object",
-                                                "description": "Alert details"
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "default": {
-                        "description": "Unexpected error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Error"
-                                }
-                            }
-                        }
-                    }
-                },
-                "operationId": "getTop10Alerts",
+                "operationId": "getAlertsFromAgent",
                 "tags": ["Wazuh-Indexer"]
             }
         },
@@ -1119,6 +1122,26 @@
                         "description": "The name of the index to get alerts from.",
                         "required": true,
                         "type": "string"
+                    },
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "The number of alerts to return. Defaults to 10.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        }
+                    },
+                    {
+                        "name": "timerange",
+                        "in": "query",
+                        "description": "The time range to consider for alerts. Defaults to '24h'.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "24h"
+                        }
                     }
                 ],
                 "responses": {
@@ -1196,6 +1219,28 @@
             "get": {
                 "summary": "Get hosts with alerts",
                 "description": "Endpoint to get hosts with alerts.",
+                "parameters": [
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "The number of alerts to return. Defaults to 10.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        }
+                    },
+                    {
+                        "name": "timerange",
+                        "in": "query",
+                        "description": "The time range to consider for alerts. Defaults to '24h'.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "24h"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -1235,6 +1280,28 @@
             "get": {
                 "summary": "Get rules with alerts",
                 "description": "Endpoint to get rules with alerts.",
+                "parameters": [
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "The number of alerts to return. Defaults to 10.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        }
+                    },
+                    {
+                        "name": "timerange",
+                        "in": "query",
+                        "description": "The time range to consider for alerts. Defaults to '24h'.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "24h"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -1274,6 +1341,28 @@
             "get": {
                 "summary": "Get rules with alerts per host",
                 "description": "Endpoint to get rules with alerts per host",
+                "parameters": [
+                    {
+                        "name": "size",
+                        "in": "query",
+                        "description": "The number of alerts to return. Defaults to 10.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        }
+                    },
+                    {
+                        "name": "timerange",
+                        "in": "query",
+                        "description": "The time range to consider for alerts. Defaults to '24h'.",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "24h"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Successful operation",

@@ -41,25 +41,9 @@ def get_alerts_by_agent(agent_name: str) -> jsonify:
         containing all its associated data.
     """
     service = AlertsService()
-    alerts = service.collect_alerts_by_agent_name(agent_name=agent_name)
-    return jsonify(alerts)
-
-
-@bp.route("/alerts/top_10", methods=["GET"])
-def get_top_10_alerts() -> jsonify:
-    """
-    Retrieves top 10 alerts from the AlertsService per index.
-
-    This endpoint retrieves top 10 alerts from the AlertsService. It does this by creating an instance of
-    the AlertsService class and calling its `collect_alerts` method. The result is a list of top 10 alerts currently
-    available.
-
-    Returns:
-        jsonify: A JSON response containing a list of alerts. Each item in the list is a dictionary representing an alert,
-        containing all its associated data.
-    """
-    service = AlertsService()
-    alerts = service.collect_alerts(size=10)  # replace `collect_top_10_alerts` with `collect_alerts(size=10)`
+    size = request.args.get("size", default=10, type=int)
+    timerange = request.args.get("timerange", default="24h", type=str)
+    alerts = service.collect_alerts_by_agent_name(agent_name=agent_name, size=size, timerange=timerange)
     return jsonify(alerts)
 
 
@@ -76,8 +60,10 @@ def get_alerts_by_index(index_name: str) -> jsonify:
         jsonify: A JSON response containing a list of alerts. Each item in the list is a dictionary representing an alert,
         containing all its associated data.
     """
+    size = request.args.get("size", default=10, type=int)
+    timerange = request.args.get("timerange", default="24h", type=str)
     service = AlertsService()
-    alerts = service.collect_alerts_by_index(index_name=index_name, size=1000)
+    alerts = service.collect_alerts_by_index(index_name=index_name, size=size, timerange=timerange)
     return jsonify(alerts)
 
 
@@ -94,8 +80,10 @@ def get_hosts() -> jsonify:
         jsonify: A JSON response containing a list of hosts. Each item in the list is a dictionary representing a host,
         containing all its associated data.
     """
+    size = request.args.get("size", default=10, type=int)
+    timerange = request.args.get("timerange", default="24h", type=str)
     service = AlertsService()
-    hosts = service.collect_alerts_by_host()
+    hosts = service.collect_alerts_by_host(size=size, timerange=timerange)
     return jsonify(hosts)
 
 
@@ -112,8 +100,10 @@ def get_rules() -> jsonify:
         jsonify: A JSON response containing a list of rules. Each item in the list is a dictionary representing a rule,
         containing all its associated data.
     """
+    size = request.args.get("size", default=10, type=int)
+    timerange = request.args.get("timerange", default="24h", type=str)
     service = AlertsService()
-    rules = service.collect_alerts_by_rule()
+    rules = service.collect_alerts_by_rule(size=size, timerange=timerange)
     return jsonify(rules)
 
 
@@ -130,8 +120,10 @@ def get_rules_by_host() -> jsonify:
         jsonify: A JSON response containing a list of rules. Each item in the list is a dictionary representing a rule,
         containing all its associated data.
     """
+    size = request.args.get("size", default=10, type=int)
+    timerange = request.args.get("timerange", default="24h", type=str)
     service = AlertsService()
-    rules = service.collect_alerts_by_rule_per_host()
+    rules = service.collect_alerts_by_rule_per_host(size=size, timerange=timerange)
     return jsonify(rules)
 
 

@@ -1,5 +1,9 @@
 # from datetime import datetime
+from datetime import datetime
+from datetime import timedelta
 from typing import Dict
+from typing import Iterable
+from typing import Tuple
 
 # import requests
 from elasticsearch7 import Elasticsearch
@@ -10,6 +14,8 @@ from loguru import logger
 # from app.models.agents import agent_metadatas_schema
 from app.models.connectors import Connector
 from app.models.connectors import connector_factory
+
+# from app.services.WazuhIndexer.alerts import AlertsService
 
 # from typing import List
 
@@ -150,3 +156,59 @@ class UniversalService:
         except Exception as e:
             logger.error(f"Failed to run query: {e}")
             return {"message": "Failed to run query", "success": False}
+
+
+class QueryBuilder:
+    @staticmethod
+    def _get_time_range_start(timerange: str) -> str:
+        """
+        Determines the start time of the time range based on the current time and the provided timerange.
+
+        Args:
+            timerange (str): The time range to collect alerts from. This is a string like "24h", "1w", etc.
+
+        Returns:
+            str: A string representing the start time of the time range in ISO format.
+        """
+        if timerange.endswith("h"):
+            delta = timedelta(hours=int(timerange[:-1]))
+        elif timerange.endswith("d"):
+            delta = timedelta(days=int(timerange[:-1]))
+        elif timerange.endswith("w"):
+            delta = timedelta(weeks=int(timerange[:-1]))
+        else:
+            raise ValueError("Invalid timerange format. Expected a string like '24h', '1d', '1w', etc.")
+
+        start = datetime.utcnow() - delta
+        return start.isoformat() + "Z"  # Elasticsearch expects the time in ISO format with a Z at the end
+
+    def __init__(self):
+        self.query = {
+            "query": {
+                "bool": {
+                    "must": [],
+                },
+            },
+            "sort": [],
+        }
+
+    def add_time_range(self, timerange: str):
+        start = self._get_time_range_start(timerange)
+        self.query["query"]["bool"]["must"].append({"range": {"timestamp_utc": {"gte": start, "lte": "now"}}})
+        return self
+
+    def add_matches(self, matches: Iterable[Tuple[str, str]]):
+        for field, value in matches:
+            self.query["query"]["bool"]["must"].append({"match": {field: value}})
+        return self
+
+    def add_range(self, field: str, value: str):
+        self.query["query"]["bool"]["must"].append({"range": {field: {"gte": value}}})
+        return self
+
+    def add_sort(self, field: str, order: str = "desc"):
+        self.query["sort"].append({field: {"order": order}})
+        return self
+
+    def build(self):
+        return self.query
