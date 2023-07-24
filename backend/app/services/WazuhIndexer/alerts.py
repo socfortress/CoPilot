@@ -73,14 +73,15 @@ class AlertsService:
 
         return {"success": True, "indices": valid_indices}
 
-    def collect_alerts(self, size: int, timerange: str) -> Dict[str, object]:
+    def collect_alerts(self, size: int, timerange: str, alert_field: str, alert_value: str) -> Dict[str, object]:
         """
         Collects alerts from the Wazuh-Indexer.
 
         Args:
             size (int): The maximum number of alerts to return.
             timerange (str): The time range to collect alerts from. This is a string like "24h", "1w", etc.
-
+            alert_field (str): The field to match.
+            alert_value (str): The value to match.
         Returns:
             Dict[str, object]: A dictionary containing success status and alerts or an error message.
         """
@@ -90,7 +91,8 @@ class AlertsService:
 
         alerts_summary = []
         # matches = [("syslog_level", "ALERT"), ("agent_name", "WIN-39O01J5F7G5")]
-        matches = [("syslog_level", "ALERT")]
+        # matches = [("syslog_level", "ALERT")]
+        matches = [(alert_field, alert_value)]
         for index_name in indices_validation["indices"]:
             alerts = self._collect_alerts(index_name, size=size, timerange=timerange, matches=matches)
             if alerts["success"] and len(alerts["alerts"]) > 0:
@@ -132,7 +134,7 @@ class AlertsService:
             "alerts_summary": alerts_summary,
         }
 
-    def collect_alerts_by_index(self, index_name: str, size: int, timerange: str) -> Dict[str, Any]:
+    def collect_alerts_by_index(self, index_name: str, size: int, timerange: str, alert_field: str, alert_value: str) -> Dict[str, Any]:
         """
         Collects alerts from the given index.
 
@@ -140,6 +142,8 @@ class AlertsService:
             index_name (str): The name of the index to query.
             size (int): The maximum number of alerts to return.
             timerange (str): The time range to collect alerts from. This is a string like "24h", "1w", etc.
+            alert_field (str): The field to match.
+            alert_value (str): The value to match.
 
         Returns:
             Dict[str, Any]: A dictionary containing success status, a message, and potentially the alerts from the given index.
@@ -147,7 +151,8 @@ class AlertsService:
         if not self.is_valid_index(index_name):
             return self._error_response("Invalid index name")
 
-        alerts = self._collect_alerts(index_name=index_name, size=size, timerange=timerange)
+        matches = [(alert_field, alert_value)]
+        alerts = self._collect_alerts(index_name=index_name, size=size, timerange=timerange, matches=matches)
         if not alerts["success"]:
             return alerts
 
@@ -158,7 +163,14 @@ class AlertsService:
             "total_alerts": len(alerts["alerts"]),
         }
 
-    def collect_alerts_by_agent_name(self, agent_name: str, size: int, timerange: str) -> Dict[str, Any]:
+    def collect_alerts_by_agent_name(
+        self,
+        agent_name: str,
+        size: int,
+        timerange: str,
+        alert_field: str,
+        alert_value: str,
+    ) -> Dict[str, Any]:
         """
         Collects alerts associated with a given agent name.
 
@@ -166,6 +178,8 @@ class AlertsService:
             agent_name (str): The agent name associated with the alerts.
             size (int): The maximum number of alerts to return.
             timerange (str): The time range to collect alerts from. This is a string like "24h", "1w", etc.
+            alert_field (str): The field to match.
+            alert_value (str): The value to match.
 
         Returns:
             Dict[str, Any]: A dictionary containing success status, a message, and potentially the alerts associated with the agent.
@@ -175,7 +189,7 @@ class AlertsService:
             return indices_validation
 
         alerts_by_agent_dict = {}
-        matches = [("syslog_level", "ALERT"), ("agent_name", f"{agent_name}")]
+        matches = [(alert_field, alert_value), ("agent_name", f"{agent_name}")]
         for index_name in indices_validation["indices"]:
             alerts = self._collect_alerts(index_name=index_name, size=size, timerange=timerange, matches=matches)
             if alerts["success"]:
@@ -296,40 +310,6 @@ class AlertsService:
         """
         return {"message": message, "success": False}
 
-    # def _collect_alerts(self, index_name: str, size: int = None, timerange: str = "24h") -> Dict[str, object]:
-    #     """
-    #     Elasticsearch query to get the most recent alerts where the `rule_level` is 12 or higher or the
-    #     `syslog_level` field is `ALERT` and return the results in descending order by the `timestamp_utc` field.
-    #     The number of alerts to return can be limited by the `size` parameter.
-
-    #     Args:
-    #         index_name (str): The name of the index to query.
-    #         size (int, optional): The maximum number of alerts to return. If None, all alerts are returned.
-    #         timerange (str, optional): The time range to collect alerts from. This is a string like "24h", "1w", etc.
-
-    #     Returns:
-    #         Dict[str, object]: A dictionary containing success status and alerts or an error message.
-    #     """
-    #     logger.info(f"Collecting alerts from {index_name}")
-    #     query = self._build_query(timerange=timerange)  # Use the provided query
-    #     try:
-    #         alerts = self.es.search(index=index_name, body=query, size=size)
-    #         alerts_list = [alert for alert in alerts["hits"]["hits"]]
-
-    #         # Iterate over each alert and invoke invoke_socfortress function
-    #         for alert in alerts_list:
-    #             ask_socfortress = self.asksocfortress_service.invoke_asksocfortress(alert["_source"]["rule_description"])
-    #             alert["ask_socfortress"] = ask_socfortress  # Add the result to the alert
-
-    #         return {
-    #             "message": "Successfully collected alerts",
-    #             "success": True,
-    #             "alerts": alerts_list,  # Return the alerts list with the added results
-    #         }
-    #     except Exception as e:
-    #         logger.error(f"Failed to collect alerts: {e}")
-    #         return {"message": "Failed to collect alerts", "success": False}
-
     def _collect_alerts(
         self,
         index_name: str,
@@ -361,7 +341,7 @@ class AlertsService:
             query_builder.add_matches(matches)
         else:
             query_builder.add_matches([("syslog_level", "ALERT")])
-        query_builder.add_range("rule_level", "12")
+        # query_builder.add_range("rule_level", "12") # removed to get all alerts regardless of rule level
         query_builder.add_sort("timestamp_utc")
 
         # Get the final query
