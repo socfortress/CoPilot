@@ -1,4 +1,7 @@
+from datetime import datetime
+
 from sqlalchemy import Column
+from sqlalchemy import DateTime
 from sqlalchemy import Integer
 from sqlalchemy import String
 from sqlalchemy.dialects.postgresql import TEXT  # Add this line
@@ -18,6 +21,7 @@ class Artifact(db.Model):
     artifact_name: Column[String] = db.Column(db.String(100))
     artifact_results: Column[TEXT] = db.Column(TEXT)
     hostname: Column[String] = db.Column(db.String(100))
+    timestamp: Column[DateTime] = db.Column(db.DateTime, default=datetime.utcnow)
 
     def __init__(self, artifact_name: str, artifact_results: str, hostname: str):
         """
@@ -55,6 +59,7 @@ class ArtifactSchema(ma.Schema):
             "artifact_name",
             "artifact_results",
             "hostname",
+            "timestamp",
         )
 
 
