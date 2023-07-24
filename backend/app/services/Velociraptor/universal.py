@@ -6,6 +6,8 @@ import pyvelociraptor
 from pyvelociraptor import api_pb2
 from pyvelociraptor import api_pb2_grpc
 
+from app import db
+from app.models.artifacts import Artifact
 from app.models.connectors import Connector
 from app.models.connectors import connector_factory
 
@@ -151,6 +153,34 @@ class UniversalService:
         """
         vql = f"SELECT * FROM source(client_id='{client_id}', flow_id='{flow_id}', artifact='{artifact}')"
         return self.execute_query(vql)
+
+    def update_artifact_table(self, artifact_name: str, artifact_results: str, hostname: str):
+        """
+        Update the artifact table with the results of the artifact collection.
+
+        Args:
+            artifact_name (str): The name of the artifact.
+            artifact_results (str): The results of the artifact collection.
+            hostname (str): The hostname where the artifact was collected.
+
+        Returns:
+            dict: A dictionary with the success status and a message.
+        """
+        # Covernt the artifact_results from a dict to json
+        artifact_results = json.dumps(artifact_results)
+        try:
+            artifact = Artifact(artifact_name, artifact_results, hostname)
+            db.session.add(artifact)
+            db.session.commit()
+            return {
+                "success": True,
+                "message": "Successfully updated artifact table",
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "message": f"Failed to update artifact table: {e}",
+            }
 
     def get_client_id(self, client_name: str):
         """

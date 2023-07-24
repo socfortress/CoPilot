@@ -1984,7 +1984,7 @@
                 "description": "Endpoint to get all artifacts for a hostname.",
                 "parameters": [
                     {
-                        "name": "client_name",
+                        "name": "hostname",
                         "in": "path",
                         "description": "The client name",
                         "required": true,

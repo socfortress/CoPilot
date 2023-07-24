@@ -160,6 +160,20 @@ class ArtifactsService:
                 flow_id,
                 artifact,
             )
+
+            update_artifact_table_response = self.universal_service.update_artifact_table(
+                artifact_name=artifact,
+                artifact_results=results,
+                hostname=client_id,
+            )
+
+            if not update_artifact_table_response["success"]:
+                logger.error(f"Failed to update artifact table: {update_artifact_table_response['message']}")
+                return {
+                    "message": "Failed to update artifact table",
+                    "success": False,
+                }
+
             return results
         except Exception as err:
             logger.error(f"Failed to run artifact collection: {err}")
