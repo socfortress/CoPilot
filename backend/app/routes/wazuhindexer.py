@@ -1,5 +1,7 @@
 from flask import Blueprint
+from loguru import logger
 
+from app import db
 from app.services.WazuhIndexer.cluster import ClusterService
 from app.services.WazuhIndexer.index import IndexService
 
@@ -43,6 +45,18 @@ def get_node_allocation():
     """
     service = ClusterService()
     indices = service.collect_node_allocation()
+    if indices["success"]:
+        for allocation in indices["node_allocation"]:
+            processed_data = service._preprocess_allocation_data(allocation)
+            if processed_data is None:
+                continue
+            wazuh_indexer_allocation = service._create_wazuh_indexer_allocation(*processed_data)
+            try:
+                db.session.add(wazuh_indexer_allocation)
+                db.session.commit()
+            except Exception as e:
+                db.session.rollback()
+                logger.error(f"Failed to add Wazuh-Indexer allocation to database: {e}")
     return indices
 
 
