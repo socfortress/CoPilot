@@ -380,9 +380,9 @@ class AlertsService:
         timestamp_field: str = None,
     ) -> Dict[str, object]:
         """
-        Elasticsearch query to get the most recent alerts where the `rule_level` is 12 or higher or the
-        `syslog_level` field is `ALERT` and return the results in descending order by the `timestamp_utc` field.
-        The number of alerts to return can be limited by the `size` parameter.
+        Constructs an Elasticsearch query to get the most recent alerts based on the provided parameters. By default, it
+        fetches alerts where the `syslog_level` field is `ALERT` and returns the results in descending order by the
+        `timestamp_utc` field. The number of alerts to return can be limited by the `size` parameter.
 
         Args:
             index_name (str): The name of the index to query.
@@ -393,7 +393,9 @@ class AlertsService:
             timestamp_field (str, optional): The timestamp field to sort by.
 
         Returns:
-            Dict[str, object]: A dictionary containing success status and alerts or an error message.
+            Dict[str, object]: A dictionary containing success status and alerts or an error message. If successful,
+            each alert in the list will be augmented with a `ask_socfortress` field containing results from the
+            `invoke_socfortress` function.
         """
         logger.info(f"Collecting alerts from {index_name}")
 
