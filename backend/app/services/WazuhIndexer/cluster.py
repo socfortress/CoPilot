@@ -1,9 +1,12 @@
 from typing import Dict
+from typing import Optional
+from typing import Tuple
 
 # import requests
 from elasticsearch7 import Elasticsearch
 from loguru import logger
 
+from app.models.wazuh_indexer import WazuhIndexerAllocation
 from app.services.WazuhIndexer.universal import UniversalService
 
 
@@ -221,3 +224,59 @@ class ClusterService:
             }
             for shard in shards
         ]
+
+    def _preprocess_allocation_data(self, allocation: Dict[str, str]) -> Optional[Tuple[str, float, float, float, float]]:
+        """
+        Preprocess the allocation data by stripping units and converting values to float.
+
+        Args:
+            allocation (Dict[str, str]): A dictionary containing the allocation data for a node.
+
+        Returns:
+            Optional[Tuple[str, float, float, float, float]]: A tuple containing the node name and the preprocessed disk usage
+            data. Returns None if the node is 'UNASSIGNED'.
+        """
+        # Skip if the node is 'UNASSIGNED'
+        if allocation["node"] == "UNASSIGNED":
+            return None
+
+        node = allocation["node"]
+
+        # Strip 'gb' from the disk fields and convert to float
+        disk_used = float(allocation["disk_used"].strip("gb"))
+        disk_available = float(allocation["disk_available"].strip("gb"))
+        disk_total = float(allocation["disk_total"].strip("gb"))
+
+        # Strip '%' from the disk_percent field and convert to float
+        disk_percent = float(allocation["disk_percent"].strip("%"))
+
+        return node, disk_used, disk_available, disk_total, disk_percent
+
+    def _create_wazuh_indexer_allocation(
+        self,
+        node: str,
+        disk_used: float,
+        disk_available: float,
+        disk_total: float,
+        disk_percent: float,
+    ) -> WazuhIndexerAllocation:
+        """
+        Create a WazuhIndexerAllocation instance.
+
+        Args:
+            node (str): The name of the node.
+            disk_used (float): The amount of disk used by the node.
+            disk_available (float): The amount of available disk space on the node.
+            disk_total (float): The total amount of disk space on the node.
+            disk_percent (float): The percentage of disk used on the node.
+
+        Returns:
+            WazuhIndexerAllocation: A WazuhIndexerAllocation instance containing the provided data.
+        """
+        return WazuhIndexerAllocation(
+            node=node,
+            disk_used=disk_used,
+            disk_available=disk_available,
+            disk_total=disk_total,
+            disk_percent=disk_percent,
+        )
