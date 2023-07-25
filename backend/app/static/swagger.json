@@ -3793,11 +3793,11 @@
                                 "type": "object",
                                 "properties": {
                                     "field_name": {
-                                        "type": "string",
+                                        "type": "dns_query",
                                         "description": "Field name to search for IoCs"
                                     },
                                     "time_range": {
-                                        "type": "string",
+                                        "type": "24h",
                                         "description": "Time range to search for IoCs"
                                     }
                                 },
