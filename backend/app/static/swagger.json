@@ -1242,31 +1242,41 @@
             }
         },
         "/alerts/hosts": {
-            "get": {
-                "summary": "Get hosts with alerts",
-                "description": "Endpoint to get hosts with alerts.",
-                "parameters": [
-                    {
-                        "name": "size",
-                        "in": "query",
-                        "description": "The number of alerts to return. Defaults to 10.",
-                        "required": false,
-                        "schema": {
-                            "type": "integer",
-                            "default": 10
-                        }
-                    },
-                    {
-                        "name": "timerange",
-                        "in": "query",
-                        "description": "The time range to consider for alerts. Defaults to '24h'.",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "default": "24h"
+            "post": {
+                "summary": "Create and get hosts with alerts",
+                "description": "Endpoint to create and get hosts with alerts. Retrieves all available hosts from the AlertsService based on the provided parameters.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "size": {
+                                        "type": "integer",
+                                        "default": 10,
+                                        "description": "The number of alerts to return. Defaults to 10."
+                                    },
+                                    "timerange": {
+                                        "type": "string",
+                                        "default": "24h",
+                                        "description": "The time range to consider for alerts. Defaults to '24h'."
+                                    },
+                                    "alert_field": {
+                                        "type": "string",
+                                        "default": "syslog_level",
+                                        "description": "Field to filter alerts on. Defaults to 'syslog_level'."
+                                    },
+                                    "alert_value": {
+                                        "type": "string",
+                                        "default": "ALERT",
+                                        "description": "Value to filter alerts on. Defaults to 'ALERT'."
+                                    }
+                                },
+                                "required": []
+                            }
                         }
                     }
-                ],
+                },
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -1287,6 +1297,42 @@
                             }
                         }
                     },
+                    "400": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "success": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Index not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "success": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
                     "default": {
                         "description": "Unexpected error",
                         "content": {
@@ -1298,36 +1344,46 @@
                         }
                     }
                 },
-                "operationId": "getHostsWithAlerts",
+                "operationId": "createAndGetHostsWithAlerts",
                 "tags": ["Wazuh-Indexer"]
             }
         },
         "/alerts/rules": {
-            "get": {
-                "summary": "Get rules with alerts",
-                "description": "Endpoint to get rules with alerts.",
-                "parameters": [
-                    {
-                        "name": "size",
-                        "in": "query",
-                        "description": "The number of alerts to return. Defaults to 10.",
-                        "required": false,
-                        "schema": {
-                            "type": "integer",
-                            "default": 10
-                        }
-                    },
-                    {
-                        "name": "timerange",
-                        "in": "query",
-                        "description": "The time range to consider for alerts. Defaults to '24h'.",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "default": "24h"
+            "post": {
+                "summary": "Create and get rules with alerts",
+                "description": "Endpoint to create and get rules with alerts. Retrieves all available rules from the AlertsService based on the provided parameters.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "size": {
+                                        "type": "integer",
+                                        "default": 10,
+                                        "description": "The number of alerts to return. Defaults to 10."
+                                    },
+                                    "timerange": {
+                                        "type": "string",
+                                        "default": "24h",
+                                        "description": "The time range to consider for alerts. Defaults to '24h'."
+                                    },
+                                    "alert_field": {
+                                        "type": "string",
+                                        "default": "syslog_level",
+                                        "description": "Field to filter alerts on. Defaults to 'syslog_level'."
+                                    },
+                                    "alert_value": {
+                                        "type": "string",
+                                        "default": "ALERT",
+                                        "description": "Value to filter alerts on. Defaults to 'ALERT'."
+                                    }
+                                },
+                                "required": []
+                            }
                         }
                     }
-                ],
+                },
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -1348,6 +1404,42 @@
                             }
                         }
                     },
+                    "400": {
+                        "description": "Bad request",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "success": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Index not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "success": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
                     "default": {
                         "description": "Unexpected error",
                         "content": {
@@ -1359,36 +1451,46 @@
                         }
                     }
                 },
-                "operationId": "getRulesWithAlerts",
+                "operationId": "createAndGetRulesWithAlerts",
                 "tags": ["Wazuh-Indexer"]
             }
         },
         "/alerts/rules/host": {
-            "get": {
-                "summary": "Get rules with alerts per host",
-                "description": "Endpoint to get rules with alerts per host",
-                "parameters": [
-                    {
-                        "name": "size",
-                        "in": "query",
-                        "description": "The number of alerts to return. Defaults to 10.",
-                        "required": false,
-                        "schema": {
-                            "type": "integer",
-                            "default": 10
-                        }
-                    },
-                    {
-                        "name": "timerange",
-                        "in": "query",
-                        "description": "The time range to consider for alerts. Defaults to '24h'.",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "default": "24h"
+            "post": {
+                "summary": "Create and get rules with alerts per host",
+                "description": "Endpoint to create and get rules with alerts per host. Retrieves all available rules from the AlertsService based on the provided parameters and organizes them by host.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "size": {
+                                        "type": "integer",
+                                        "default": 10,
+                                        "description": "The number of alerts to return. Defaults to 10."
+                                    },
+                                    "timerange": {
+                                        "type": "string",
+                                        "default": "24h",
+                                        "description": "The time range to consider for alerts. Defaults to '24h'."
+                                    },
+                                    "alert_field": {
+                                        "type": "string",
+                                        "default": "syslog_level",
+                                        "description": "Field to filter alerts on. Defaults to 'syslog_level'."
+                                    },
+                                    "alert_value": {
+                                        "type": "string",
+                                        "default": "ALERT",
+                                        "description": "Value to filter alerts on. Defaults to 'ALERT'."
+                                    }
+                                },
+                                "required": []
+                            }
                         }
                     }
-                ],
+                },
                 "responses": {
                     "200": {
                         "description": "Successful operation",
@@ -1456,7 +1558,7 @@
                         }
                     }
                 },
-                "operationId": "getRulesWithAlertsFromHost",
+                "operationId": "createAndGetRulesWithAlertsFromHost",
                 "tags": ["Wazuh-Indexer"]
             }
         },

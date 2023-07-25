@@ -205,13 +205,15 @@ class AlertsService:
             "alerts_by_agent": alerts_by_agent_list,
         }
 
-    def collect_alerts_by_host(self, size: int, timerange: str) -> Dict[str, int]:
+    def collect_alerts_by_host(self, size: int, timerange: str, alert_field: str, alert_value: str) -> Dict[str, int]:
         """
         Collects the number of alerts per host.
 
         Args:
             size (int): The maximum number of alerts to return.
             timerange (str): The time range to collect alerts from. This is a string like "24h", "1w", etc.
+            alert_field (str): The field to match.
+            alert_value (str): The value to match.
 
         Returns:
             Dict[str, int]: A dictionary containing success status and the number of alerts per host or an error message.
@@ -221,8 +223,9 @@ class AlertsService:
             return indices_validation
 
         alerts_by_host_dict = {}
+        matches = [(alert_field, alert_value)]
         for index_name in indices_validation["indices"]:
-            alerts = self._collect_alerts(index_name=index_name, size=size, timerange=timerange)
+            alerts = self._collect_alerts(index_name=index_name, size=size, timerange=timerange, matches=matches)
             if alerts["success"]:
                 for alert in alerts["alerts"]:
                     host = alert["_source"]["agent_name"]
@@ -236,13 +239,15 @@ class AlertsService:
             "alerts_by_host": alerts_by_host_list,
         }
 
-    def collect_alerts_by_rule(self, size: int, timerange: str) -> Dict[str, int]:
+    def collect_alerts_by_rule(self, size: int, timerange: str, alert_field: str, alert_value: str) -> Dict[str, int]:
         """
         Collects the number of alerts per rule.
 
         Args:
             size (int): The maximum number of alerts to return.
             timerange (str): The time range to collect alerts from. This is a string like "24h", "1w", etc.
+            alert_field (str): The field to match.
+            alert_value (str): The value to match.
 
         Returns:
             Dict[str, int]: A dictionary containing success status and the number of alerts per rule or an error message.
@@ -252,8 +257,9 @@ class AlertsService:
             return indices_validation
 
         alerts_by_rule_dict = {}
+        matches = [(alert_field, alert_value)]
         for index_name in indices_validation["indices"]:
-            alerts = self._collect_alerts(index_name=index_name, size=size, timerange=timerange)
+            alerts = self._collect_alerts(index_name=index_name, size=size, timerange=timerange, matches=matches)
             if alerts["success"]:
                 for alert in alerts["alerts"]:
                     rule = alert["_source"]["rule_description"]
@@ -267,13 +273,15 @@ class AlertsService:
             "alerts_by_rule": alerts_by_rule_list,
         }
 
-    def collect_alerts_by_rule_per_host(self, size: int, timerange: str) -> Dict[str, int]:
+    def collect_alerts_by_rule_per_host(self, size: int, timerange: str, alert_field: str, alert_value: str) -> Dict[str, int]:
         """
         Collects the number of alerts per rule per host.
 
         Args:
             size (int): The maximum number of alerts to return.
             timerange (str): The time range to collect alerts from. This is a string like "24h", "1w", etc.
+            alert_field (str): The field to match.
+            alert_value (str): The value to match.
 
         Returns:
             Dict[str, int]: A dictionary containing success status and the number of alerts per rule per host or an error message.
@@ -283,8 +291,9 @@ class AlertsService:
             return indices_validation
 
         alerts_by_rule_per_host_dict = {}
+        matches = [(alert_field, alert_value)]
         for index_name in indices_validation["indices"]:
-            alerts = self._collect_alerts(index_name=index_name, size=size, timerange=timerange)
+            alerts = self._collect_alerts(index_name=index_name, size=size, timerange=timerange, matches=matches)
             if alerts["success"]:
                 for alert in alerts["alerts"]:
                     rule = alert["_source"]["rule_description"]
