@@ -73,7 +73,7 @@ class AlertsService:
 
         return {"success": True, "indices": valid_indices}
 
-    def collect_alerts(self, size: int, timerange: str, alert_field: str, alert_value: str) -> Dict[str, object]:
+    def collect_alerts(self, size: int, timerange: str, alert_field: str, alert_value: str, timestamp_field: str) -> Dict[str, object]:
         """
         Collects alerts from the Wazuh-Indexer.
 
@@ -82,6 +82,7 @@ class AlertsService:
             timerange (str): The time range to collect alerts from. This is a string like "24h", "1w", etc.
             alert_field (str): The field to match.
             alert_value (str): The value to match.
+            timestamp_field (str): The timestamp field to sort by.
         Returns:
             Dict[str, object]: A dictionary containing success status and alerts or an error message.
         """
@@ -94,7 +95,7 @@ class AlertsService:
         # matches = [("syslog_level", "ALERT")]
         matches = [(alert_field, alert_value)]
         for index_name in indices_validation["indices"]:
-            alerts = self._collect_alerts(index_name, size=size, timerange=timerange, matches=matches)
+            alerts = self._collect_alerts(index_name, size=size, timerange=timerange, matches=matches, timestamp_field=timestamp_field)
             if alerts["success"] and len(alerts["alerts"]) > 0:
                 alerts_summary.append(
                     {
@@ -134,7 +135,15 @@ class AlertsService:
             "alerts_summary": alerts_summary,
         }
 
-    def collect_alerts_by_index(self, index_name: str, size: int, timerange: str, alert_field: str, alert_value: str) -> Dict[str, Any]:
+    def collect_alerts_by_index(
+        self,
+        index_name: str,
+        size: int,
+        timerange: str,
+        alert_field: str,
+        alert_value: str,
+        timestamp_field: str,
+    ) -> Dict[str, Any]:
         """
         Collects alerts from the given index.
 
@@ -144,6 +153,7 @@ class AlertsService:
             timerange (str): The time range to collect alerts from. This is a string like "24h", "1w", etc.
             alert_field (str): The field to match.
             alert_value (str): The value to match.
+            timestamp_field (str): The timestamp field to sort by.
 
         Returns:
             Dict[str, Any]: A dictionary containing success status, a message, and potentially the alerts from the given index.
@@ -152,7 +162,13 @@ class AlertsService:
             return self._error_response("Invalid index name")
 
         matches = [(alert_field, alert_value)]
-        alerts = self._collect_alerts(index_name=index_name, size=size, timerange=timerange, matches=matches)
+        alerts = self._collect_alerts(
+            index_name=index_name,
+            size=size,
+            timerange=timerange,
+            matches=matches,
+            timestamp_field=timestamp_field,
+        )
         if not alerts["success"]:
             return alerts
 
@@ -170,6 +186,7 @@ class AlertsService:
         timerange: str,
         alert_field: str,
         alert_value: str,
+        timestamp_field: str,
     ) -> Dict[str, Any]:
         """
         Collects alerts associated with a given agent name.
@@ -180,6 +197,7 @@ class AlertsService:
             timerange (str): The time range to collect alerts from. This is a string like "24h", "1w", etc.
             alert_field (str): The field to match.
             alert_value (str): The value to match.
+            timestamp_field (str): The timestamp field to sort by.
 
         Returns:
             Dict[str, Any]: A dictionary containing success status, a message, and potentially the alerts associated with the agent.
@@ -191,7 +209,13 @@ class AlertsService:
         alerts_by_agent_dict = {}
         matches = [(alert_field, alert_value), ("agent_name", f"{agent_name}")]
         for index_name in indices_validation["indices"]:
-            alerts = self._collect_alerts(index_name=index_name, size=size, timerange=timerange, matches=matches)
+            alerts = self._collect_alerts(
+                index_name=index_name,
+                size=size,
+                timerange=timerange,
+                matches=matches,
+                timestamp_field=timestamp_field,
+            )
             if alerts["success"]:
                 for alert in alerts["alerts"]:
                     if alert["_source"]["agent_name"] == agent_name:
@@ -205,7 +229,7 @@ class AlertsService:
             "alerts_by_agent": alerts_by_agent_list,
         }
 
-    def collect_alerts_by_host(self, size: int, timerange: str, alert_field: str, alert_value: str) -> Dict[str, int]:
+    def collect_alerts_by_host(self, size: int, timerange: str, alert_field: str, alert_value: str, timestamp_field: str) -> Dict[str, int]:
         """
         Collects the number of alerts per host.
 
@@ -214,6 +238,7 @@ class AlertsService:
             timerange (str): The time range to collect alerts from. This is a string like "24h", "1w", etc.
             alert_field (str): The field to match.
             alert_value (str): The value to match.
+            timestamp_field (str): The timestamp field to sort by.
 
         Returns:
             Dict[str, int]: A dictionary containing success status and the number of alerts per host or an error message.
@@ -225,7 +250,13 @@ class AlertsService:
         alerts_by_host_dict = {}
         matches = [(alert_field, alert_value)]
         for index_name in indices_validation["indices"]:
-            alerts = self._collect_alerts(index_name=index_name, size=size, timerange=timerange, matches=matches)
+            alerts = self._collect_alerts(
+                index_name=index_name,
+                size=size,
+                timerange=timerange,
+                matches=matches,
+                timestamp_field=timestamp_field,
+            )
             if alerts["success"]:
                 for alert in alerts["alerts"]:
                     host = alert["_source"]["agent_name"]
@@ -239,7 +270,7 @@ class AlertsService:
             "alerts_by_host": alerts_by_host_list,
         }
 
-    def collect_alerts_by_rule(self, size: int, timerange: str, alert_field: str, alert_value: str) -> Dict[str, int]:
+    def collect_alerts_by_rule(self, size: int, timerange: str, alert_field: str, alert_value: str, timestamp_field: str) -> Dict[str, int]:
         """
         Collects the number of alerts per rule.
 
@@ -248,6 +279,7 @@ class AlertsService:
             timerange (str): The time range to collect alerts from. This is a string like "24h", "1w", etc.
             alert_field (str): The field to match.
             alert_value (str): The value to match.
+            timestamp_field (str): The timestamp field to sort by.
 
         Returns:
             Dict[str, int]: A dictionary containing success status and the number of alerts per rule or an error message.
@@ -259,7 +291,13 @@ class AlertsService:
         alerts_by_rule_dict = {}
         matches = [(alert_field, alert_value)]
         for index_name in indices_validation["indices"]:
-            alerts = self._collect_alerts(index_name=index_name, size=size, timerange=timerange, matches=matches)
+            alerts = self._collect_alerts(
+                index_name=index_name,
+                size=size,
+                timerange=timerange,
+                matches=matches,
+                timestamp_field=timestamp_field,
+            )
             if alerts["success"]:
                 for alert in alerts["alerts"]:
                     rule = alert["_source"]["rule_description"]
@@ -273,7 +311,14 @@ class AlertsService:
             "alerts_by_rule": alerts_by_rule_list,
         }
 
-    def collect_alerts_by_rule_per_host(self, size: int, timerange: str, alert_field: str, alert_value: str) -> Dict[str, int]:
+    def collect_alerts_by_rule_per_host(
+        self,
+        size: int,
+        timerange: str,
+        alert_field: str,
+        alert_value: str,
+        timestamp_field: str,
+    ) -> Dict[str, int]:
         """
         Collects the number of alerts per rule per host.
 
@@ -282,6 +327,7 @@ class AlertsService:
             timerange (str): The time range to collect alerts from. This is a string like "24h", "1w", etc.
             alert_field (str): The field to match.
             alert_value (str): The value to match.
+            timestamp_field (str): The timestamp field to sort by.
 
         Returns:
             Dict[str, int]: A dictionary containing success status and the number of alerts per rule per host or an error message.
@@ -293,7 +339,13 @@ class AlertsService:
         alerts_by_rule_per_host_dict = {}
         matches = [(alert_field, alert_value)]
         for index_name in indices_validation["indices"]:
-            alerts = self._collect_alerts(index_name=index_name, size=size, timerange=timerange, matches=matches)
+            alerts = self._collect_alerts(
+                index_name=index_name,
+                size=size,
+                timerange=timerange,
+                matches=matches,
+                timestamp_field=timestamp_field,
+            )
             if alerts["success"]:
                 for alert in alerts["alerts"]:
                     rule = alert["_source"]["rule_description"]
@@ -325,6 +377,7 @@ class AlertsService:
         size: int = None,
         timerange: str = "24h",
         matches: Iterable[Tuple[str, str]] = None,
+        timestamp_field: str = None,
     ) -> Dict[str, object]:
         """
         Elasticsearch query to get the most recent alerts where the `rule_level` is 12 or higher or the
@@ -337,6 +390,7 @@ class AlertsService:
             timerange (str, optional): The time range to collect alerts from. This is a string like "24h", "1w", etc.
             matches (Iterable[Tuple[str, str]], optional): A list of tuples representing the field and value to match.
                 I.E: [("syslog_level", "ALERT"), ("agent_name", "WIN-39O01J5F7G5")]
+            timestamp_field (str, optional): The timestamp field to sort by.
 
         Returns:
             Dict[str, object]: A dictionary containing success status and alerts or an error message.
@@ -345,7 +399,7 @@ class AlertsService:
 
         # Use QueryBuilder to construct the query
         query_builder = QueryBuilder()
-        query_builder.add_time_range(timerange)
+        query_builder.add_time_range(timerange, timestamp_field=timestamp_field)
         if matches is not None:
             query_builder.add_matches(matches)
         else:

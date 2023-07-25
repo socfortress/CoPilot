@@ -975,6 +975,11 @@
                                         "type": "string",
                                         "default": "ALERT",
                                         "description": "Value to filter alerts on. Defaults to 'ALERT'."
+                                    },
+                                    "timestamp_field": {
+                                        "type": "string",
+                                        "default": "timestamp_utc",
+                                        "description": "Field to filter alerts on. Defaults to '@timestamp'."
                                     }
                                 },
                                 "required": []
@@ -1051,6 +1056,11 @@
                                         "type": "string",
                                         "default": "ALERT",
                                         "description": "Value to filter alerts on. Defaults to 'ALERT'."
+                                    },
+                                    "timestamp_field": {
+                                        "type": "string",
+                                        "default": "timestamp_utc",
+                                        "description": "Field to filter alerts on. Defaults to '@timestamp'."
                                     }
                                 },
                                 "required": []
@@ -1163,6 +1173,11 @@
                                         "type": "string",
                                         "default": "ALERT",
                                         "description": "Value to filter alerts on. Defaults to 'ALERT'."
+                                    },
+                                    "timestamp_field": {
+                                        "type": "string",
+                                        "default": "timestamp_utc",
+                                        "description": "Field to filter alerts on. Defaults to '@timestamp'."
                                     }
                                 },
                                 "required": []
@@ -1270,6 +1285,11 @@
                                         "type": "string",
                                         "default": "ALERT",
                                         "description": "Value to filter alerts on. Defaults to 'ALERT'."
+                                    },
+                                    "timestamp_field": {
+                                        "type": "string",
+                                        "default": "timestamp_utc",
+                                        "description": "Field to filter alerts on. Defaults to '@timestamp'."
                                     }
                                 },
                                 "required": []
@@ -1377,6 +1397,11 @@
                                         "type": "string",
                                         "default": "ALERT",
                                         "description": "Value to filter alerts on. Defaults to 'ALERT'."
+                                    },
+                                    "timestamp_field": {
+                                        "type": "string",
+                                        "default": "timestamp_utc",
+                                        "description": "Field to filter alerts on. Defaults to '@timestamp'."
                                     }
                                 },
                                 "required": []
@@ -1484,6 +1509,11 @@
                                         "type": "string",
                                         "default": "ALERT",
                                         "description": "Value to filter alerts on. Defaults to 'ALERT'."
+                                    },
+                                    "timestamp_field": {
+                                        "type": "string",
+                                        "default": "timestamp_utc",
+                                        "description": "Field to filter alerts on. Defaults to '@timestamp'."
                                     }
                                 },
                                 "required": []

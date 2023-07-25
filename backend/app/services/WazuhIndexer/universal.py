@@ -192,9 +192,9 @@ class QueryBuilder:
             "sort": [],
         }
 
-    def add_time_range(self, timerange: str):
+    def add_time_range(self, timerange: str, timestamp_field: str):
         start = self._get_time_range_start(timerange)
-        self.query["query"]["bool"]["must"].append({"range": {"timestamp_utc": {"gte": start, "lte": "now"}}})
+        self.query["query"]["bool"]["must"].append({"range": {timestamp_field: {"gte": start, "lte": "now"}}})
         return self
 
     def add_matches(self, matches: Iterable[Tuple[str, str]]):

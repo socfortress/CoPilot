@@ -26,9 +26,16 @@ def get_alerts() -> jsonify:
     timerange = str(data.get("timerange", "24h"))
     alert_field = str(data.get("alert_field", "syslog_level"))
     alert_value = str(data.get("alert_value", "ALERT"))
+    timestamp_field = str(data.get("timestamp_field", "timestamp_utc"))
 
     service = AlertsService()
-    alerts = service.collect_alerts(size=size, timerange=timerange, alert_field=alert_field, alert_value=alert_value)
+    alerts = service.collect_alerts(
+        size=size,
+        timerange=timerange,
+        alert_field=alert_field,
+        alert_value=alert_value,
+        timestamp_field=timestamp_field,
+    )
     return jsonify(alerts)
 
 
@@ -51,6 +58,7 @@ def get_alerts_by_agent() -> jsonify:
     agent_name = str(data.get("agent_name", "WIN-HFOU106TD7K"))
     alert_field = str(data.get("alert_field", "syslog_level"))
     alert_value = str(data.get("alert_value", "ALERT"))
+    timestamp_field = str(data.get("timestamp_field", "timestamp_utc"))
     service = AlertsService()
     # size = request.args.get("size", default=10, type=int)
     # timerange = request.args.get("timerange", default="24h", type=str)
@@ -60,6 +68,7 @@ def get_alerts_by_agent() -> jsonify:
         timerange=timerange,
         alert_field=alert_field,
         alert_value=alert_value,
+        timestamp_field=timestamp_field,
     )
     return jsonify(alerts)
 
@@ -83,6 +92,7 @@ def get_alerts_by_index() -> jsonify:
     index_name = str(data.get("index_name", "wazuh*"))
     alert_field = str(data.get("alert_field", "syslog_level"))
     alert_value = str(data.get("alert_value", "ALERT"))
+    timestamp_field = str(data.get("timestamp_field", "timestamp_utc"))
     service = AlertsService()
     alerts = service.collect_alerts_by_index(
         index_name=index_name,
@@ -90,6 +100,7 @@ def get_alerts_by_index() -> jsonify:
         timerange=timerange,
         alert_field=alert_field,
         alert_value=alert_value,
+        timestamp_field=timestamp_field,
     )
     return jsonify(alerts)
 
@@ -112,8 +123,15 @@ def get_hosts() -> jsonify:
     timerange = str(data.get("timerange", "24h"))
     alert_field = str(data.get("alert_field", "syslog_level"))
     alert_value = str(data.get("alert_value", "ALERT"))
+    timestamp_field = str(data.get("timestamp_field", "timestamp_utc"))
     service = AlertsService()
-    hosts = service.collect_alerts_by_host(size=size, timerange=timerange, alert_field=alert_field, alert_value=alert_value)
+    hosts = service.collect_alerts_by_host(
+        size=size,
+        timerange=timerange,
+        alert_field=alert_field,
+        alert_value=alert_value,
+        timestamp_field=timestamp_field,
+    )
     return jsonify(hosts)
 
 
@@ -135,8 +153,15 @@ def get_rules() -> jsonify:
     timerange = str(data.get("timerange", "24h"))
     alert_field = str(data.get("alert_field", "syslog_level"))
     alert_value = str(data.get("alert_value", "ALERT"))
+    timestamp_field = str(data.get("timestamp_field", "timestamp_utc"))
     service = AlertsService()
-    rules = service.collect_alerts_by_rule(size=size, timerange=timerange, alert_field=alert_field, alert_value=alert_value)
+    rules = service.collect_alerts_by_rule(
+        size=size,
+        timerange=timerange,
+        alert_field=alert_field,
+        alert_value=alert_value,
+        timestamp_field=timestamp_field,
+    )
     return jsonify(rules)
 
 
@@ -158,8 +183,15 @@ def get_rules_by_host() -> jsonify:
     timerange = str(data.get("timerange", "24h"))
     alert_field = str(data.get("alert_field", "syslog_level"))
     alert_value = str(data.get("alert_value", "ALERT"))
+    timestamp_field = str(data.get("timestamp_field", "timestamp_utc"))
     service = AlertsService()
-    rules = service.collect_alerts_by_rule_per_host(size=size, timerange=timerange, alert_field=alert_field, alert_value=alert_value)
+    rules = service.collect_alerts_by_rule_per_host(
+        size=size,
+        timerange=timerange,
+        alert_field=alert_field,
+        alert_value=alert_value,
+        timestamp_field=timestamp_field,
+    )
     return jsonify(rules)
 
 
