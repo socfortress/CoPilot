@@ -94,7 +94,7 @@ def get_alerts_by_index() -> jsonify:
     return jsonify(alerts)
 
 
-@bp.route("/alerts/hosts", methods=["GET"])
+@bp.route("/alerts/hosts", methods=["POST"])
 def get_hosts() -> jsonify:
     """
     Retrieves all hosts from the AlertsService that have an alert.
@@ -107,14 +107,17 @@ def get_hosts() -> jsonify:
         jsonify: A JSON response containing a list of hosts. Each item in the list is a dictionary representing a host,
         containing all its associated data.
     """
-    size = request.args.get("size", default=10, type=int)
-    timerange = request.args.get("timerange", default="24h", type=str)
+    data = request.json
+    size = int(data.get("size", 10))
+    timerange = str(data.get("timerange", "24h"))
+    alert_field = str(data.get("alert_field", "syslog_level"))
+    alert_value = str(data.get("alert_value", "ALERT"))
     service = AlertsService()
-    hosts = service.collect_alerts_by_host(size=size, timerange=timerange)
+    hosts = service.collect_alerts_by_host(size=size, timerange=timerange, alert_field=alert_field, alert_value=alert_value)
     return jsonify(hosts)
 
 
-@bp.route("/alerts/rules", methods=["GET"])
+@bp.route("/alerts/rules", methods=["POST"])
 def get_rules() -> jsonify:
     """
     Retrieves all rules from the AlertsService that have an alert.
@@ -127,14 +130,17 @@ def get_rules() -> jsonify:
         jsonify: A JSON response containing a list of rules. Each item in the list is a dictionary representing a rule,
         containing all its associated data.
     """
-    size = request.args.get("size", default=10, type=int)
-    timerange = request.args.get("timerange", default="24h", type=str)
+    data = request.json
+    size = int(data.get("size", 10))
+    timerange = str(data.get("timerange", "24h"))
+    alert_field = str(data.get("alert_field", "syslog_level"))
+    alert_value = str(data.get("alert_value", "ALERT"))
     service = AlertsService()
-    rules = service.collect_alerts_by_rule(size=size, timerange=timerange)
+    rules = service.collect_alerts_by_rule(size=size, timerange=timerange, alert_field=alert_field, alert_value=alert_value)
     return jsonify(rules)
 
 
-@bp.route("/alerts/rules/host", methods=["GET"])
+@bp.route("/alerts/rules/host", methods=["POST"])
 def get_rules_by_host() -> jsonify:
     """
     Retrieves all rules from the AlertsService that have an alert and organizes by host.
@@ -147,10 +153,13 @@ def get_rules_by_host() -> jsonify:
         jsonify: A JSON response containing a list of rules. Each item in the list is a dictionary representing a rule,
         containing all its associated data.
     """
-    size = request.args.get("size", default=10, type=int)
-    timerange = request.args.get("timerange", default="24h", type=str)
+    data = request.json
+    size = int(data.get("size", 10))
+    timerange = str(data.get("timerange", "24h"))
+    alert_field = str(data.get("alert_field", "syslog_level"))
+    alert_value = str(data.get("alert_value", "ALERT"))
     service = AlertsService()
-    rules = service.collect_alerts_by_rule_per_host(size=size, timerange=timerange)
+    rules = service.collect_alerts_by_rule_per_host(size=size, timerange=timerange, alert_field=alert_field, alert_value=alert_value)
     return jsonify(rules)
 
 
