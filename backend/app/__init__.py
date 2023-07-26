@@ -50,6 +50,7 @@ migrate = Migrate(app, db)
 from app.routes.agents import bp as agents_bp
 from app.routes.alerts import bp as alerts_bp
 from app.routes.connectors import bp as connectors_bp
+from app.routes.customers import bp as customers_bp
 from app.routes.dfir_iris import bp as dfir_iris_bp
 from app.routes.graylog import bp as graylog_bp
 from app.routes.healthchecks import bp as healthchecks_bp
@@ -76,3 +77,4 @@ app.register_blueprint(influxdb_bp)  # Register the influxdb blueprint
 app.register_blueprint(smtp_bp)  # Register the smtp blueprint
 app.register_blueprint(healthchecks_bp)  # Register the healthchecks blueprint
 app.register_blueprint(threatintel_bp)  # Register the threatintel blueprint
+app.register_blueprint(customers_bp)  # Register the customers blueprint
