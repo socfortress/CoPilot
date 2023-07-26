@@ -1,8 +1,9 @@
+from datetime import datetime
+
 from flask import Blueprint
 from flask import jsonify
 from flask import request
 from loguru import logger
-from datetime import datetime
 
 from app.services.Customers.universal import UniversalCustomers
 
@@ -41,9 +42,23 @@ def create_customer():
     if createdAt:
         createdAt = datetime.fromisoformat(createdAt.replace("Z", "+00:00"))
 
-    new_customer = UniversalCustomers.create(customerCode, customerName, parentCustomerCode, contactLastName,
-                                             contactFirstName, phone, addressLine1, addressLine2, city,
-                                             state, postalCode, country, customerType, logoFile, createdAt)
+    new_customer = UniversalCustomers.create(
+        customerCode,
+        customerName,
+        parentCustomerCode,
+        contactLastName,
+        contactFirstName,
+        phone,
+        addressLine1,
+        addressLine2,
+        city,
+        state,
+        postalCode,
+        country,
+        customerType,
+        logoFile,
+        createdAt,
+    )
 
     return jsonify(new_customer), 201
 
@@ -59,6 +74,7 @@ def read_all_customers():
     logger.info("Received request to get all customers")
     customers = UniversalCustomers.read_all()
     return jsonify(customers)
+
 
 @bp.route("/customers/read/<int:id>", methods=["GET"])
 def read_customer_by_id(id: int):
@@ -108,9 +124,23 @@ def update_customer(id: int):
     if createdAt:
         createdAt = datetime.fromisoformat(createdAt.replace("Z", "+00:00"))
 
-    updated_customer = UniversalCustomers.update(id, customerCode, customerName, parentCustomerCode, contactLastName,
-                                                 contactFirstName, phone, addressLine1, addressLine2, city,
-                                                 state, postalCode, country, customerType, logoFile, createdAt)
+    updated_customer = UniversalCustomers.update(
+        id,
+        customerCode,
+        customerName,
+        parentCustomerCode,
+        contactLastName,
+        contactFirstName,
+        phone,
+        addressLine1,
+        addressLine2,
+        city,
+        state,
+        postalCode,
+        country,
+        customerType,
+        logoFile,
+        createdAt,
+    )
 
     return jsonify(updated_customer), 201
-

@@ -1,13 +1,8 @@
-import os
+from datetime import datetime
 from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Union
-
-from jinja2 import Environment
-from jinja2 import FileSystemLoader
-from loguru import logger
-from datetime import datetime
 
 from app import db
 from app.models.customers import Customers
@@ -17,11 +12,23 @@ from app.models.customers import customers_schema
 
 class UniversalCustomers:
     @staticmethod
-    def create(customerCode: str, customerName: str, parentCustomerCode: str = None,
-               contactLastName: str = None, contactFirstName: str = None, phone: str = None,
-               addressLine1: str = None, addressLine2: str = None, city: str = None,
-               state: str = None, postalCode: str = None, country: str = None,
-               customerType: str = None, logoFile: str = None, createdAt: datetime = None) -> Dict[str, Union[int, str]]:
+    def create(
+        customerCode: str,
+        customerName: str,
+        parentCustomerCode: str = None,
+        contactLastName: str = None,
+        contactFirstName: str = None,
+        phone: str = None,
+        addressLine1: str = None,
+        addressLine2: str = None,
+        city: str = None,
+        state: str = None,
+        postalCode: str = None,
+        country: str = None,
+        customerType: str = None,
+        logoFile: str = None,
+        createdAt: datetime = None,
+    ) -> Dict[str, Union[int, str]]:
         """
         Create a new customer and add it to the database.
 
@@ -42,9 +49,23 @@ class UniversalCustomers:
         :param createdAt: The date the customer was created.
         :return: Dictionary of the created customer.
         """
-        new_customer = Customers(customerCode, customerName, parentCustomerCode, contactLastName,
-                                 contactFirstName, phone, addressLine1, addressLine2, city,
-                                 state, postalCode, country, customerType, logoFile, createdAt)
+        new_customer = Customers(
+            customerCode,
+            customerName,
+            parentCustomerCode,
+            contactLastName,
+            contactFirstName,
+            phone,
+            addressLine1,
+            addressLine2,
+            city,
+            state,
+            postalCode,
+            country,
+            customerType,
+            logoFile,
+            createdAt,
+        )
         db.session.add(new_customer)
         db.session.commit()
         return {
@@ -183,4 +204,3 @@ class UniversalCustomers:
         """
         Customers.query.filter(Customers.id == id).delete()
         db.session.commit()
-
