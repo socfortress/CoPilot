@@ -22,7 +22,8 @@ def get_agents_full() -> Any:
     agent_service = AgentService()
     agents = agent_service.get_all_agents()
     healthcheck_service = HealthcheckAgentsService()
-    agent_health = healthcheck_service.perform_healthcheck_full(agents, check_logs=True)
+    logger.info(f"All agents: {agents}")
+    agent_health = healthcheck_service.perform_healthcheck_full(agents["agents"], check_logs=True)
     return jsonify(agent_health)
 
 
@@ -56,7 +57,7 @@ def get_agents_wazuh() -> Any:
     agent_service = AgentService()
     agents = agent_service.get_all_agents()
     healthcheck_service = HealthcheckAgentsService()
-    agent_health = healthcheck_service.perform_healthcheck_wazuh(agents)
+    agent_health = healthcheck_service.perform_healthcheck_wazuh(agents["agents"])
     return jsonify(agent_health)
 
 
@@ -92,7 +93,7 @@ def get_agents_velociraptor() -> Any:
     agent_service = AgentService()
     agents = agent_service.get_all_agents()
     healthcheck_service = HealthcheckAgentsService()
-    agent_health = healthcheck_service.perform_healthcheck_velociraptor(agents)
+    agent_health = healthcheck_service.perform_healthcheck_velociraptor(agents["agents"])
     return jsonify(agent_health)
 
 

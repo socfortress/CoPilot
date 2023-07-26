@@ -20,15 +20,37 @@ class HealthcheckAgentsService:
     }
 
     def __init__(self):
+        """
+        Initialize HealthcheckAgentsService with a UniversalService instance.
+        """
         self.universal_service = UniversalService()
 
     def convert_string_to_datetime(self, date_string: str) -> datetime:
+        """
+        Convert a string to a datetime object.
+
+        Args:
+            date_string (str): The date string to be converted.
+
+        Returns:
+            datetime: The converted datetime object.
+        """
         try:
             return datetime.strptime(date_string, "%Y-%m-%dT%H:%M:%S")
         except ValueError:
             return datetime.strptime(date_string, "%Y-%m-%dT%H:%M:%S.%f")
 
     def is_agent_unhealthy(self, agent: Dict, current_time: datetime) -> bool:
+        """
+        Check if an agent is unhealthy based on the last_seen and client_last_seen timestamps.
+
+        Args:
+            agent (Dict): The agent dictionary to be checked.
+            current_time (datetime): The current time to compare with the last_seen and client_last_seen timestamps.
+
+        Returns:
+            bool: True if the agent is unhealthy, False otherwise.
+        """
         last_seen = self.convert_string_to_datetime(agent["last_seen"])
         client_last_seen = self.convert_string_to_datetime(agent["client_last_seen"])
 
@@ -40,6 +62,9 @@ class HealthcheckAgentsService:
     def get_indices(self):
         """
         Returns a list of all indices in the Wazuh-Indexer.
+
+        Returns:
+            List[str]: A list of all indices.
         """
         indices_response = self.universal_service.collect_indices()
         if indices_response["success"]:
@@ -49,6 +74,16 @@ class HealthcheckAgentsService:
             return []
 
     def has_agent_recent_logs(self, agent: Dict, indices: List[str]) -> bool:
+        """
+        Check if an agent has recent logs within the Wazuh Indexer.
+
+        Args:
+            agent (Dict): The agent dictionary to be checked.
+            indices (List[str]): The list of indices to be checked.
+
+        Returns:
+            bool: True if the agent has recent logs, False otherwise.
+        """
         for interval in [1, 5, 15]:
             logger.info(f"Checking agent {agent['hostname']} for logs within the last {interval} minutes.")
             query = self._generate_recent_logs_query(agent["hostname"], interval)
@@ -67,6 +102,16 @@ class HealthcheckAgentsService:
 
     @staticmethod
     def _generate_recent_logs_query(agent_hostname: str, minutes: int) -> Dict:
+        """
+        Generate a query to get recent logs of an agent.
+
+        Args:
+            agent_hostname (str): The hostname of the agent.
+            minutes (int): The number of past minutes to look for logs.
+
+        Returns:
+            Dict: The generated query.
+        """
         return {
             "query": {"bool": {"must": [{"match": {"agent_name": agent_hostname}}, {"range": {"timestamp": {"gte": f"now-{minutes}m"}}}]}},
         }
