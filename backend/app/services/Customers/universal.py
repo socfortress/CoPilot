@@ -6,7 +6,10 @@ from typing import Union
 
 from app import db
 from app.models.customers import Customers
+from app.models.customers import CustomersMeta
+from app.models.customers import customer_meta_schema
 from app.models.customers import customer_schema
+from app.models.customers import customers_meta_schema
 from app.models.customers import customers_schema
 
 
@@ -203,4 +206,165 @@ class UniversalCustomers:
         :param id: ID of the customer to delete.
         """
         Customers.query.filter(Customers.id == id).delete()
+        db.session.commit()
+
+
+class UniversalCustomersMeta:
+    @staticmethod
+    def create(
+        customerCode: str,
+        clientName: str = None,
+        customerMetaGraylogIndex: str = None,
+        customerMetaGraylogStream: str = None,
+        customerMetaInfluxOrg: str = None,
+        customerMetaGrafanaOrg: str = None,
+        customerMetaWazuhGroup: str = None,
+        indexRetention: int = None,
+        wazuhRegistrationPort: int = None,
+        wazuhLogIngestionPort: int = None,
+    ) -> Dict[str, Union[int, str]]:
+        """
+        Create a new customer meta and add it to the database.
+
+        :param customerCode: The code of the customer.
+        :param clientName: The name of the client.
+        :param customerMetaGraylogIndex: The Graylog index of the customer metadata.
+        :param customerMetaGraylogStream: The Graylog stream of the customer metadata.
+        :param customerMetaInfluxOrg: The InfluxOrg of the customer metadata.
+        :param customerMetaGrafanaOrg: The GrafanaOrg of the customer metadata.
+        :param customerMetaWazuhGroup: The WazuhGroup of the customer metadata.
+        :param indexRetention: The index retention of the customer metadata.
+        :param wazuhRegistrationPort: The Wazuh registration port of the customer's Wazuh Agents.
+        :param wazuhLogIngestionPort: The Wazuh log ingestion port of the customer's Wazuh Agents.
+        :return: Dictionary of the created customer meta.
+        """
+        new_customer_meta = CustomersMeta(
+            customerCode,
+            clientName,
+            customerMetaGraylogIndex,
+            customerMetaGraylogStream,
+            customerMetaInfluxOrg,
+            customerMetaGrafanaOrg,
+            customerMetaWazuhGroup,
+            indexRetention,
+            wazuhRegistrationPort,
+            wazuhLogIngestionPort,
+        )
+        db.session.add(new_customer_meta)
+        db.session.commit()
+        return {
+            "message": "Customer Meta created successfully.",
+            "success": True,
+            "customersMeta": customer_meta_schema.dump(new_customer_meta),
+        }
+
+    @staticmethod
+    def read_by_id(id: int) -> Optional[Dict[str, Union[int, str]]]:
+        """
+        Fetch customer meta by their id.
+
+        :param id: ID of the customer meta.
+        :return: Dictionary of the customer meta or None if not found.
+        """
+        customer_meta = CustomersMeta.query.get(id)
+        return customer_meta_schema.dump(customer_meta) if customer_meta else None
+
+    @staticmethod
+    def read_by_customerCode(customerCode: str) -> Optional[Dict[str, Union[int, str]]]:
+        """
+        Fetch customer meta by customerCode.
+
+        :param customerCode: The code of the customer meta.
+        :return: Dictionary of the customer meta or None if not found.
+        """
+        customer_meta = CustomersMeta.query.filter_by(customerCode=customerCode).first()
+        return customer_meta_schema.dump(customer_meta) if customer_meta else None
+
+    @staticmethod
+    def read_all() -> List[Dict[str, Union[int, str]]]:
+        """
+        Fetch all customer metas.
+
+        :return: List of dictionaries of all customer metas.
+        """
+        customer_metas = CustomersMeta.query.all()
+        return {
+            "message": "Customer Metas retrieved successfully.",
+            "success": True,
+            "customersMetas": customers_meta_schema.dump(customer_metas, many=True),
+        }
+
+    @staticmethod
+    def update(
+        id: int,
+        customerCode: Optional[str] = None,
+        clientName: Optional[str] = None,
+        customerMetaGraylogIndex: Optional[str] = None,
+        customerMetaGraylogStream: Optional[str] = None,
+        customerMetaInfluxOrg: Optional[str] = None,
+        customerMetaGrafanaOrg: Optional[str] = None,
+        customerMetaWazuhGroup: Optional[str] = None,
+        indexRetention: Optional[int] = None,
+        wazuhRegistrationPort: Optional[int] = None,
+        wazuhLogIngestionPort: Optional[int] = None,
+    ) -> Optional[Dict[str, Union[int, str]]]:
+        """
+        Update existing customer meta.
+
+        :param id: ID of the customer meta.
+        :param customerCode: The code of the customer.
+        :param clientName: The name of the client.
+        :param customerMetaGraylogIndex: The Graylog index of the customer metadata.
+        :param customerMetaGraylogStream: The Graylog stream of the customer metadata.
+        :param customerMetaInfluxOrg: The InfluxOrg of the customer metadata.
+        :param customerMetaGrafanaOrg: The GrafanaOrg of the customer metadata.
+        :param customerMetaWazuhGroup: The WazuhGroup of the customer metadata.
+        :param indexRetention: The index retention of the customer metadata.
+        :param wazuhRegistrationPort: The Wazuh registration port of the customer's Wazuh Agents.
+        :param wazuhLogIngestionPort: The Wazuh log ingestion port of the customer's Wazuh Agents.
+        :return: Dictionary of the updated customer meta or None if not found.
+        """
+        customer_meta = CustomersMeta.query.get(id)
+        if not customer_meta:
+            return None
+        if customerCode is not None:
+            customer_meta.customerCode = customerCode
+        if clientName is not None:
+            customer_meta.clientName = clientName
+        if customerMetaGraylogIndex is not None:
+            customer_meta.customerMetaGraylogIndex = customerMetaGraylogIndex
+        if customerMetaGraylogStream is not None:
+            customer_meta.customerMetaGraylogStream = customerMetaGraylogStream
+        if customerMetaInfluxOrg is not None:
+            customer_meta.customerMetaInfluxOrg = customerMetaInfluxOrg
+        if customerMetaGrafanaOrg is not None:
+            customer_meta.customerMetaGrafanaOrg = customerMetaGrafanaOrg
+        if customerMetaWazuhGroup is not None:
+            customer_meta.customerMetaWazuhGroup = customerMetaWazuhGroup
+        if indexRetention is not None:
+            customer_meta.indexRetention = indexRetention
+        if wazuhRegistrationPort is not None:
+            customer_meta.wazuhRegistrationPort = wazuhRegistrationPort
+        if wazuhLogIngestionPort is not None:
+            customer_meta.wazuhLogIngestionPort = wazuhLogIngestionPort
+
+        db.session.commit()
+        return customer_meta_schema.dump(customer_meta)
+
+    @staticmethod
+    def delete_all():
+        """
+        Delete all customer metas from the table.
+        """
+        CustomersMeta.query.delete()
+        db.session.commit()
+
+    @staticmethod
+    def delete_by_id(id: int):
+        """
+        Delete a customer meta with the given id.
+
+        :param id: ID of the customer meta to delete.
+        """
+        CustomersMeta.query.filter(CustomersMeta.id == id).delete()
         db.session.commit()

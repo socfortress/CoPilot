@@ -6,6 +6,7 @@ from flask import request
 from loguru import logger
 
 from app.services.Customers.universal import UniversalCustomers
+from app.services.Customers.universal import UniversalCustomersMeta
 
 bp = Blueprint("customers", __name__)
 
@@ -144,3 +145,114 @@ def update_customer(id: int):
     )
 
     return jsonify(updated_customer), 201
+
+
+@bp.route("/customers_meta/create", methods=["POST"])
+def create_customer_meta():
+    """
+    Endpoint to create a new entry in the `CustomersMeta` table.
+
+    Returns:
+        Tuple[jsonify, int]: A Tuple where the first element is a JSON response
+        indicating if the customer meta was created successfully and the second element
+        is the HTTP status code.
+    """
+    if not request.is_json:
+        return jsonify({"message": "Missing JSON in request", "success": False}), 400
+
+    customerCode = request.json.get("customerCode", None)
+    clientName = request.json.get("clientName", None)
+    customerMetaGraylogIndex = request.json.get("customerMetaGraylogIndex", None)
+    customerMetaGraylogStream = request.json.get("customerMetaGraylogStream", None)
+    customerMetaInfluxOrg = request.json.get("customerMetaInfluxOrg", None)
+    customerMetaGrafanaOrg = request.json.get("customerMetaGrafanaOrg", None)
+    customerMetaWazuhGroup = request.json.get("customerMetaWazuhGroup", None)
+    indexRetention = request.json.get("indexRetention", None)
+    wazuhRegistrationPort = request.json.get("wazuhRegistrationPort", None)
+    wazuhLogIngestionPort = request.json.get("wazuhLogIngestionPort", None)
+
+    new_customer_meta = UniversalCustomersMeta.create(
+        customerCode,
+        clientName,
+        customerMetaGraylogIndex,
+        customerMetaGraylogStream,
+        customerMetaInfluxOrg,
+        customerMetaGrafanaOrg,
+        customerMetaWazuhGroup,
+        indexRetention,
+        wazuhRegistrationPort,
+        wazuhLogIngestionPort,
+    )
+
+    return jsonify(new_customer_meta), 201
+
+
+@bp.route("/customers_meta/read/all", methods=["GET"])
+def read_all_customers_meta():
+    """
+    Endpoint to list all customers from the `customers` table.
+
+    Returns:
+        jsonify: A JSON response containing the list of all customers.
+    """
+    logger.info("Received request to get all customers")
+    customers = UniversalCustomersMeta.read_all()
+    return jsonify(customers)
+
+
+@bp.route("/customers_meta/read/<int:id>", methods=["GET"])
+def read_customer_meta_by_id(id: int):
+    """
+    Endpoint to fetch a customer by their id.
+
+    Returns:
+        Tuple[jsonify, int]: A Tuple where the first element is a JSON response
+        containing the customer and the second element is the HTTP status code.
+    """
+    logger.info(f"Received request to get customer with id {id}")
+    customer = UniversalCustomersMeta.read_by_id(id)
+    if customer:
+        return jsonify(customer), 200
+    return jsonify({"message": "Customer not found", "success": False}), 404
+
+
+@bp.route("/customers_meta/update/<int:id>", methods=["PUT"])
+def update_customer_meta(id: int):
+    """
+    Endpoint to update a customersmeta details into the `customers_meta` table.
+
+    Returns:
+        Tuple[jsonify, int]: A Tuple where the first element is a JSON response
+        indicating if the customer was updated successfully and the second element
+        is the HTTP status code.
+    """
+    logger.info(f"Received data to update a customer: {request.json}")
+    if not request.is_json:
+        return jsonify({"message": "Missing JSON in request", "success": False}), 400
+
+    customerCode = request.json.get("customerCode", None)
+    clientName = request.json.get("clientName", None)
+    customerMetaGraylogIndex = request.json.get("customerMetaGraylogIndex", None)
+    customerMetaGraylogStream = request.json.get("customerMetaGraylogStream", None)
+    customerMetaInfluxOrg = request.json.get("customerMetaInfluxOrg", None)
+    customerMetaGrafanaOrg = request.json.get("customerMetaGrafanaOrg", None)
+    customerMetaWazuhGroup = request.json.get("customerMetaWazuhGroup", None)
+    indexRetention = request.json.get("indexRetention", None)
+    wazuhRegistrationPort = request.json.get("wazuhRegistrationPort", None)
+    wazuhLogIngestionPort = request.json.get("wazuhLogIngestionPort", None)
+
+    updated_customer_meta = UniversalCustomersMeta.update(
+        id,
+        customerCode,
+        clientName,
+        customerMetaGraylogIndex,
+        customerMetaGraylogStream,
+        customerMetaInfluxOrg,
+        customerMetaGrafanaOrg,
+        customerMetaWazuhGroup,
+        indexRetention,
+        wazuhRegistrationPort,
+        wazuhLogIngestionPort,
+    )
+
+    return jsonify(updated_customer_meta), 201
