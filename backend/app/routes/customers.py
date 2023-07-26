@@ -256,3 +256,22 @@ def update_customer_meta(id: int):
     )
 
     return jsonify(updated_customer_meta), 201
+
+
+@bp.route("/customers/details/<int:id>", methods=["GET"])
+def read_customer_and_meta_details(id: int):
+    """
+    Endpoint to fetch a customer by their id and retrieve their details from the
+    `customers` and `CustomersMeta` tables.
+
+    Returns:
+        Tuple[jsonify, int]: A Tuple where the first element is a JSON response
+        containing the customer and customer meta details, and the second element is
+        the HTTP status code.
+    """
+    logger.info(f"Received request to get customer and customer meta details with id {id}")
+    customer = UniversalCustomers.read_by_id(id)
+    customer_meta = UniversalCustomersMeta.read_by_id(id)
+    if customer and customer_meta:
+        return jsonify({"customer": customer, "customer_meta": customer_meta, "message": "Customer details fetched.", "success": True}), 200
+    return jsonify({"message": "Customer or Customer Meta not found", "success": False}), 404
