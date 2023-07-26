@@ -5,6 +5,8 @@ from flask import jsonify
 from flask import request
 from loguru import logger
 
+from app.models.agents import AgentMetadata
+from app.models.agents import agent_metadatas_schema
 from app.services.Customers.universal import UniversalCustomers
 from app.services.Customers.universal import UniversalCustomersMeta
 
@@ -277,8 +279,8 @@ def read_customer_and_meta_details(id: int):
     return jsonify({"message": "Customer or Customer Meta not found", "success": False}), 404
 
 
-@bp.route("/customers/healthcheck/agents/<int:id>", methods=["GET"])
-def read_customer_healthcheck(id: int):
+@bp.route("/customers/agents/<int:id>", methods=["GET"])
+def read_customer_agents(id: int):
     """
     Endpoint to fetch the `customerCode` from the `customers_meta` table for the given customer id.
     Then, it uses the customer code to fetch all agents from the `agent_metadata` table where the `customerCode`
@@ -289,12 +291,21 @@ def read_customer_healthcheck(id: int):
         containing the customer code and the list of agents, and the second element is
         the HTTP status code.
     """
-    logger.info(f"Received request to get customer healthcheck with id {id}")
+    logger.info(f"Received request to get customer agents with id {id}")
     customer_meta = UniversalCustomersMeta.read_by_id(id)
     if customer_meta:
         customer_code = customer_meta["customerCode"]
-        logger.info(f"Customer code for customer id {id} is {customer_code}")
-        exit(0)
-        agents = UniversalCustomersMeta.read_agents_by_customer_code(customer_code)
-        return jsonify({"customerCode": customer_code, "agents": agents, "message": "Customer healthcheck fetched.", "success": True}), 200
-    return jsonify({"message": "Customer Meta not found", "success": False}), 404
+        agents = AgentMetadata.query.filter(AgentMetadata.label.like(f"%{customer_code}%")).all()
+        if agents:
+            return (
+                jsonify(
+                    {
+                        "customerCode": customer_code,
+                        "agents": agent_metadatas_schema.dump(agents),
+                        "message": "Customer agents fetched.",
+                        "success": True,
+                    },
+                ),
+                200,
+            )
+        return jsonify({"message": "No agents found for this customer.", "success": False}), 404
