@@ -92,13 +92,8 @@ class HealthcheckAgentsService:
                     continue
                 response = self.universal_service.run_query(query, index, size=1)
                 if response["query_results"]["hits"]["total"]["value"] > 0:
-                    return True
-            # Check the next interval only if the previous interval didn't return results
-            if interval == 1:
-                break
-            # Proceed to next agent if logs are found
-            break
-        return False
+                    return True  # Logs found, stop checking.
+        return False  # No logs found after checking all intervals and indices.
 
     @staticmethod
     def _generate_recent_logs_query(agent_hostname: str, minutes: int) -> Dict:

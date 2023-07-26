@@ -9,6 +9,7 @@ from app.models.agents import AgentMetadata
 from app.models.agents import agent_metadatas_schema
 from app.services.Customers.universal import UniversalCustomers
 from app.services.Customers.universal import UniversalCustomersMeta
+from app.services.Healthchecks.agents import HealthcheckAgentsService
 
 bp = Blueprint("customers", __name__)
 
@@ -303,6 +304,108 @@ def read_customer_agents(id: int):
                         "customerCode": customer_code,
                         "agents": agent_metadatas_schema.dump(agents),
                         "message": "Customer agents fetched.",
+                        "success": True,
+                    },
+                ),
+                200,
+            )
+        return jsonify({"message": "No agents found for this customer.", "success": False}), 404
+
+
+@bp.route("/customers/healthchecks/agents/<int:id>/wazuh", methods=["GET"])
+def read_customer_agents_healthchecks_wazuh(id: int):
+    """
+    Endpoint to fetch the `customerCode` from the `customers_meta` table for the given customer id.
+    Then, it uses the customer code to fetch all agents from the `agent_metadata` table where the `customerCode`
+    is a wildcard match on the `label` column within the `agent_metadata` table.
+
+    Returns:
+        Tuple[jsonify, int]: A Tuple where the first element is a JSON response
+        containing the customer code and the list of agents, and the second element is
+        the HTTP status code.
+    """
+    logger.info(f"Received request to get customer agents with id {id}")
+    customer_meta = UniversalCustomersMeta.read_by_id(id)
+    if customer_meta:
+        customer_code = customer_meta["customerCode"]
+        agents = AgentMetadata.query.filter(AgentMetadata.label.like(f"%{customer_code}%")).all()
+        if agents:
+            agents_list = agent_metadatas_schema.dump(agents)
+            agent_health = HealthcheckAgentsService().perform_healthcheck_wazuh(agents=agents_list)
+            return (
+                jsonify(
+                    {
+                        "customerCode": customer_code,
+                        "agents": agent_health,
+                        "message": "Customer Wazuh agents health fetched.",
+                        "success": True,
+                    },
+                ),
+                200,
+            )
+        return jsonify({"message": "No wazuh agents found for this customer.", "success": False}), 404
+
+
+@bp.route("/customers/healthchecks/agents/<int:id>/velociraptor", methods=["GET"])
+def read_customer_agents_healthchecks_velociraptor(id: int):
+    """
+    Endpoint to fetch the `customerCode` from the `customers_meta` table for the given customer id.
+    Then, it uses the customer code to fetch all agents from the `agent_metadata` table where the `customerCode`
+    is a wildcard match on the `label` column within the `agent_metadata` table.
+
+    Returns:
+        Tuple[jsonify, int]: A Tuple where the first element is a JSON response
+        containing the customer code and the list of agents, and the second element is
+        the HTTP status code.
+    """
+    logger.info(f"Received request to get customer agents with id {id}")
+    customer_meta = UniversalCustomersMeta.read_by_id(id)
+    if customer_meta:
+        customer_code = customer_meta["customerCode"]
+        agents = AgentMetadata.query.filter(AgentMetadata.label.like(f"%{customer_code}%")).all()
+        if agents:
+            agents_list = agent_metadatas_schema.dump(agents)
+            agent_health = HealthcheckAgentsService().perform_healthcheck_velociraptor(agents=agents_list)
+            return (
+                jsonify(
+                    {
+                        "customerCode": customer_code,
+                        "agents": agent_health,
+                        "message": "Customer Velociraptor agents health fetched.",
+                        "success": True,
+                    },
+                ),
+                200,
+            )
+        return jsonify({"message": "No velociraptor agents found for this customer.", "success": False}), 404
+
+
+@bp.route("/customers/healthchecks/agents/<int:id>/full", methods=["GET"])
+def read_customer_agents_healthchecks_full(id: int):
+    """
+    Endpoint to fetch the `customerCode` from the `customers_meta` table for the given customer id.
+    Then, it uses the customer code to fetch all agents from the `agent_metadata` table where the `customerCode`
+    is a wildcard match on the `label` column within the `agent_metadata` table.
+
+    Returns:
+        Tuple[jsonify, int]: A Tuple where the first element is a JSON response
+        containing the customer code and the list of agents, and the second element is
+        the HTTP status code.
+    """
+    logger.info(f"Received request to get customer agents with id {id}")
+    customer_meta = UniversalCustomersMeta.read_by_id(id)
+    if customer_meta:
+        customer_code = customer_meta["customerCode"]
+        agents = AgentMetadata.query.filter(AgentMetadata.label.like(f"%{customer_code}%")).all()
+        if agents:
+            agents_list = agent_metadatas_schema.dump(agents)
+            agent_health = HealthcheckAgentsService().perform_healthcheck_full(agents=agents_list, check_logs=True)
+            return (
+                jsonify(
+                    {
+                        "customerCode": customer_code,
+                        "agents": agent_health,
+                        "message": "Customer full agents health fetched.",
                         "success": True,
                     },
                 ),
