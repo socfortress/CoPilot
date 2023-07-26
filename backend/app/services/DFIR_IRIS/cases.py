@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Dict
 
 # import requests
@@ -57,6 +58,49 @@ class CasesService:
             "message": "Successfully collected cases from DFIR-IRIS",
             "cases": result["data"],
         }
+
+    def calculate_kpis(self, cases):
+        """
+        Calculate KPIs for a list of cases and return only those that have breached.
+
+        Args:
+            cases (List[Dict]): The list of cases to calculate KPIs for.
+
+        Returns:
+            Dict: A dictionary containing the success status, a message, and the cases that have breached KPIs.
+        """
+        try:
+            cases_breached = [case for case in cases if self._is_kpi_breached(case)]
+            return {"success": True, "message": "Successfully calculated KPIs.", "cases_breached": cases_breached}
+        except Exception as e:
+            return {"success": False, "message": f"Failed to calculate KPIs: {e}"}
+
+    def _is_kpi_breached(self, case):
+        """
+        Check if a case's KPI is breached. A case is breached if it is older than 24 hours and still open.
+
+        Args:
+            case (Dict): The case to check.
+
+        Returns:
+            bool: True if the KPI is breached, False otherwise.
+        """
+        # Check if the `case_close_date` is empty and `case_open_date` is not
+        if case["case_close_date"] == "" and case["case_open_date"] != "":
+            # Get the current date
+            current_date = datetime.now()
+            # Get the case open date
+            case_open_date = datetime.strptime(case["case_open_date"], "%m/%d/%Y")
+            # Calculate the difference between the current date and the case open date
+            difference = current_date - case_open_date
+            # Convert the difference to days
+            difference = difference.days
+            # Check if the difference is greater than 1 day
+            if difference > 1:
+                # Set the KPI to True
+                case["kpi_breached"] = True
+                return True
+        return False
 
     def get_case(self, case_id: int) -> bool:
         """

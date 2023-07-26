@@ -3022,6 +3022,45 @@
                 "tags": ["DFIR Iris"]
             }
         },
+        "/dfir_iris/cases/kpi": {
+            "get": {
+                "summary": "Get KPIs for all cases",
+                "description": "Endpoint to get KPIs for all cases.",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "cases": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "description": "Case details"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                },
+                "operationId": "getKPIsForAllCases",
+                "tags": ["DFIR Iris"]
+            }
+        },
         "/dfir_iris/cases/{case_id}": {
             "get": {
                 "summary": "Get a case",

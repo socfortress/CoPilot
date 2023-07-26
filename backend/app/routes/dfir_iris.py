@@ -1,4 +1,5 @@
 from flask import Blueprint
+from flask import jsonify
 from flask import request
 
 from app.services.DFIR_IRIS.alerts import IRISAlertsService
@@ -21,6 +22,26 @@ def get_cases():
     service = CasesService()
     cases = service.list_cases()
     return cases
+
+
+@bp.route("/dfir_iris/cases/kpi", methods=["GET"])
+def get_cases_kpi():
+    """
+    Handle GET requests at the "/cases" endpoint. Retrieve all cases from DFIR IRIS and calculate their KPI.
+
+    Currently supports collecting cases older than 24 hours that are still open.
+
+    Returns:
+        Response: A Flask Response object carrying a JSON representation of the list of cases.
+    """
+    service = CasesService()
+    result = service.list_cases()
+
+    if not result["success"]:
+        return jsonify(result), 500
+
+    cases = service.calculate_kpis(result["cases"])
+    return jsonify({"cases": cases}), 200
 
 
 @bp.route("/dfir_iris/cases/<case_id>", methods=["GET"])
