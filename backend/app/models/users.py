@@ -8,6 +8,7 @@ from sqlalchemy import String
 from app import db
 from app import ma
 
+
 class Users(db.Model):
     """
     Class for users which stores various user details.
@@ -24,9 +25,17 @@ class Users(db.Model):
     notifications: Column[Integer] = db.Column(db.SmallInteger, nullable=False)
     createdAt: Column[DateTime] = db.Column(db.DateTime, default=datetime.utcnow)
 
-    def __init__(self, customerCode: str, notifications: int, usersFirstName: str = None,
-                 usersLastName: str = None, usersEmail: str = None, usersRole: str = None,
-                 imageFile: str = None, createdAt: datetime = None):
+    def __init__(
+        self,
+        customerCode: str,
+        notifications: int,
+        usersFirstName: str = None,
+        usersLastName: str = None,
+        usersEmail: str = None,
+        usersRole: str = None,
+        imageFile: str = None,
+        createdAt: datetime = None,
+    ):
         """
         Initialize a new instance of the Users class.
 
@@ -56,6 +65,7 @@ class Users(db.Model):
         """
         return f"<User {self.usersEmail}>"
 
+
 class UsersSchema(ma.Schema):
     """
     Schema for serializing and deserializing instances of the Users class.
@@ -77,6 +87,7 @@ class UsersSchema(ma.Schema):
             "notifications",
             "createdAt",
         )
+
 
 users_schema: UsersSchema = UsersSchema()
 users_schema: UsersSchema = UsersSchema(many=True)
