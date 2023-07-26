@@ -41,6 +41,7 @@ from app.models import models  # noqa: F401
 from app.models import rules  # noqa: F401
 from app.models import smtp  # noqa: F401
 from app.models import sublime_alerts  # noqa: F401
+from app.models import users  # noqa: F401
 from app.models import wazuh_indexer  # noqa: F401
 
 migrate = Migrate(app, db)
