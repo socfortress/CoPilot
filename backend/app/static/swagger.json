@@ -881,148 +881,148 @@
             }
         },
         "/customers/healthchecks/agents/{id}/wazuh": {
-          "get": {
-            "tags": ["Customers"],
-            "summary": "Get a customer",
-            "description": "Endpoint to retrieve a customer details from the `customers` and `customers_meta` tables.",
-            "parameters": [
-              {
-                "name": "id",
-                "in": "path",
-                "description": "ID of the customer to retrieve",
-                "required": true,
-                "type": "integer"
-              }
-            ],
-            "responses": {
-              "200": {
-                "description": "Successful operation",
-                "content": {
-                  "application/json": {
-                    "schema": {
-                      "type": "object",
-                      "properties": {
-                        "message": { "type": "string", "example": "Customer retrieved successfully." },
-                        "success": { "type": "boolean", "example": true },
-                        "customer": { "$ref": "#/definitions/Customer" },
-                        "customerMeta": { "$ref": "#/definitions/CustomerMeta" }
-                      }
+            "get": {
+                "tags": ["Customers"],
+                "summary": "Get a customer",
+                "description": "Endpoint to retrieve a customer details from the `customers` and `customers_meta` tables.",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the customer to retrieve",
+                        "required": true,
+                        "type": "integer"
                     }
-                  }
-                }
-              },
-              "404": {
-                "description": "Customer not found",
-                "content": {
-                  "application/json": {
-                    "schema": {
-                      "type": "object",
-                      "properties": {
-                        "message": { "type": "string", "example": "Customer not found." },
-                        "success": { "type": "boolean", "example": false }
-                      }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": { "type": "string", "example": "Customer retrieved successfully." },
+                                        "success": { "type": "boolean", "example": true },
+                                        "customer": { "$ref": "#/definitions/Customer" },
+                                        "customerMeta": { "$ref": "#/definitions/CustomerMeta" }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Customer not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": { "type": "string", "example": "Customer not found." },
+                                        "success": { "type": "boolean", "example": false }
+                                    }
+                                }
+                            }
+                        }
                     }
-                  }
                 }
-              }
             }
-          }
         },
         "/customers/healthchecks/agents/{id}/velociraptor": {
-          "get": {
-            "tags": ["Customers"],
-            "summary": "Get a customer",
-            "description": "Endpoint to retrieve a customer details from the `customers` and `customers_meta` tables.",
-            "parameters": [
-              {
-                "name": "id",
-                "in": "path",
-                "description": "ID of the customer to retrieve",
-                "required": true,
-                "type": "integer"
-              }
-            ],
-            "responses": {
-              "200": {
-                "description": "Successful operation",
-                "content": {
-                  "application/json": {
-                    "schema": {
-                      "type": "object",
-                      "properties": {
-                        "message": { "type": "string", "example": "Customer retrieved successfully." },
-                        "success": { "type": "boolean", "example": true },
-                        "customer": { "$ref": "#/definitions/Customer" },
-                        "customerMeta": { "$ref": "#/definitions/CustomerMeta" }
-                      }
+            "get": {
+                "tags": ["Customers"],
+                "summary": "Get a customer",
+                "description": "Endpoint to retrieve a customer details from the `customers` and `customers_meta` tables.",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the customer to retrieve",
+                        "required": true,
+                        "type": "integer"
                     }
-                  }
-                }
-              },
-              "404": {
-                "description": "Customer not found",
-                "content": {
-                  "application/json": {
-                    "schema": {
-                      "type": "object",
-                      "properties": {
-                        "message": { "type": "string", "example": "Customer not found." },
-                        "success": { "type": "boolean", "example": false }
-                      }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": { "type": "string", "example": "Customer retrieved successfully." },
+                                        "success": { "type": "boolean", "example": true },
+                                        "customer": { "$ref": "#/definitions/Customer" },
+                                        "customerMeta": { "$ref": "#/definitions/CustomerMeta" }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Customer not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": { "type": "string", "example": "Customer not found." },
+                                        "success": { "type": "boolean", "example": false }
+                                    }
+                                }
+                            }
+                        }
                     }
-                  }
                 }
-              }
             }
-          }
         },
         "/customers/healthchecks/agents/{id}/full": {
-          "get": {
-            "tags": ["Customers"],
-            "summary": "Get a customer",
-            "description": "Endpoint to retrieve a customer details from the `customers` and `customers_meta` tables.",
-            "parameters": [
-              {
-                "name": "id",
-                "in": "path",
-                "description": "ID of the customer to retrieve",
-                "required": true,
-                "type": "integer"
-              }
-            ],
-            "responses": {
-              "200": {
-                "description": "Successful operation",
-                "content": {
-                  "application/json": {
-                    "schema": {
-                      "type": "object",
-                      "properties": {
-                        "message": { "type": "string", "example": "Customer retrieved successfully." },
-                        "success": { "type": "boolean", "example": true },
-                        "customer": { "$ref": "#/definitions/Customer" },
-                        "customerMeta": { "$ref": "#/definitions/CustomerMeta" }
-                      }
+            "get": {
+                "tags": ["Customers"],
+                "summary": "Get a customer",
+                "description": "Endpoint to retrieve a customer details from the `customers` and `customers_meta` tables.",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID of the customer to retrieve",
+                        "required": true,
+                        "type": "integer"
                     }
-                  }
-                }
-              },
-              "404": {
-                "description": "Customer not found",
-                "content": {
-                  "application/json": {
-                    "schema": {
-                      "type": "object",
-                      "properties": {
-                        "message": { "type": "string", "example": "Customer not found." },
-                        "success": { "type": "boolean", "example": false }
-                      }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": { "type": "string", "example": "Customer retrieved successfully." },
+                                        "success": { "type": "boolean", "example": true },
+                                        "customer": { "$ref": "#/definitions/Customer" },
+                                        "customerMeta": { "$ref": "#/definitions/CustomerMeta" }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Customer not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": { "type": "string", "example": "Customer not found." },
+                                        "success": { "type": "boolean", "example": false }
+                                    }
+                                }
+                            }
+                        }
                     }
-                  }
                 }
-              }
             }
-          }
         },
         "/agents": {
             "get": {

@@ -345,6 +345,7 @@ def read_customer_agents_healthchecks_wazuh(id: int):
             )
         return jsonify({"message": "No wazuh agents found for this customer.", "success": False}), 404
 
+
 @bp.route("/customers/healthchecks/agents/<int:id>/velociraptor", methods=["GET"])
 def read_customer_agents_healthchecks_velociraptor(id: int):
     """
@@ -377,6 +378,7 @@ def read_customer_agents_healthchecks_velociraptor(id: int):
                 200,
             )
         return jsonify({"message": "No velociraptor agents found for this customer.", "success": False}), 404
+
 
 @bp.route("/customers/healthchecks/agents/<int:id>/full", methods=["GET"])
 def read_customer_agents_healthchecks_full(id: int):

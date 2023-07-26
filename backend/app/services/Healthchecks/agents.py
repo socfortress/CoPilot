@@ -95,7 +95,6 @@ class HealthcheckAgentsService:
                     return True  # Logs found, stop checking.
         return False  # No logs found after checking all intervals and indices.
 
-
     @staticmethod
     def _generate_recent_logs_query(agent_hostname: str, minutes: int) -> Dict:
         """
