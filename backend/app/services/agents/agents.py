@@ -153,6 +153,7 @@ class AgentService:
             existing_agent.ip_address = agent["agent_ip"]
             existing_agent.os = agent["agent_os"]
             existing_agent.last_seen = agent_last_seen
+            existing_agent.label = agent["agent_label"]
             existing_agent.client_id = agent["client_id"]
             existing_agent.client_last_seen = agent["client_last_seen"]
             existing_agent.wazuh_agent_version = agent["wazuh_agent_version"]
@@ -169,6 +170,7 @@ class AgentService:
             hostname=agent["agent_name"],
             ip_address=agent["agent_ip"],
             os=agent["agent_os"],
+            label=agent["agent_label"],
             last_seen=agent_last_seen,
             critical_asset=False,
             client_id=agent["client_id"],
@@ -287,14 +289,18 @@ class AgentSyncService:
             if agents_collected.status_code == 200:
                 wazuh_agents_list = []
                 for agent in agents_collected.json()["data"]["affected_items"]:
+                    logger.info(f"Agent: {agent}")
                     os_name = agent.get("os", {}).get("name", "Unknown")
                     last_keep_alive = agent.get("lastKeepAlive", "Unknown")
+                    agent_group_list = agent.get("group", [])  # Use get method to access the 'group' list
+                    agent_group = agent_group_list[0] if agent_group_list else "Unknown"  # Get the first item of the 'group' list
                     wazuh_agents_list.append(
                         {
                             "agent_id": agent["id"],
                             "agent_name": agent["name"],
                             "agent_ip": agent["ip"],
                             "agent_os": os_name,
+                            "agent_label": agent_group,
                             "agent_last_seen": last_keep_alive,
                             "wazuh_agent_version": agent["version"],
                         },
