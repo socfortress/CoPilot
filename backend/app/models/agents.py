@@ -22,6 +22,7 @@ class AgentMetadata(db.Model):
     ip_address: Column[String] = db.Column(db.String(100))
     os: Column[String] = db.Column(db.String(100))
     hostname: Column[String] = db.Column(db.String(100))
+    label: Column[String] = db.Column(db.String(100))
     critical_asset: Column[Boolean] = db.Column(db.Boolean, default=False)
     last_seen: Column[DateTime] = db.Column(db.DateTime)
     client_id: Column[String] = db.Column(db.String(100))
@@ -35,6 +36,7 @@ class AgentMetadata(db.Model):
         ip_address: str,
         os: str,
         hostname: str,
+        label: str,
         critical_asset: bool,
         last_seen: datetime,
         client_id: str,
@@ -49,6 +51,7 @@ class AgentMetadata(db.Model):
         :param ip_address: IP address of the agent.
         :param os: Operating system of the agent.
         :param hostname: Hostname of the agent.
+        :param label: Label of the agent.
         :param critical_asset: Boolean value indicating if the agent is a critical asset.
         :param last_seen: Timestamp of when the agent was last seen.
         :param client_id: Unique ID for the client stored in Velociraptor.
@@ -58,6 +61,7 @@ class AgentMetadata(db.Model):
         self.ip_address = ip_address
         self.os = os
         self.hostname = hostname
+        self.label = label
         self.critical_asset = critical_asset
         self.last_seen = last_seen
         self.client_id = client_id
@@ -111,6 +115,7 @@ class AgentMetadataSchema(ma.Schema):
             "ip_address",
             "os",
             "hostname",
+            "label",
             "critical_asset",
             "last_seen",
             "client_id",
