@@ -1,11 +1,13 @@
+from datetime import datetime
+
 from sqlalchemy import Column
+from sqlalchemy import DateTime
 from sqlalchemy import Integer
 from sqlalchemy import String
-from sqlalchemy import DateTime
-from datetime import datetime
 
 from app import db
 from app import ma
+
 
 class Customers(db.Model):
     """
@@ -30,9 +32,24 @@ class Customers(db.Model):
     logoFile: Column[String] = db.Column(db.String(64))
     createdAt: Column[DateTime] = db.Column(db.DateTime, default=datetime.utcnow)
 
-    def __init__(self, customerCode, customerName, parentCustomerCode=None, contactLastName=None,
-                 contactFirstName=None, phone=None, addressLine1=None, addressLine2=None, city=None,
-                 state=None, postalCode=None, country=None, customerType=None, logoFile=None, createdAt=None):
+    def __init__(
+        self,
+        customerCode,
+        customerName,
+        parentCustomerCode=None,
+        contactLastName=None,
+        contactFirstName=None,
+        phone=None,
+        addressLine1=None,
+        addressLine2=None,
+        city=None,
+        state=None,
+        postalCode=None,
+        country=None,
+        customerType=None,
+        logoFile=None,
+        createdAt=None,
+    ):
         """
         Initialize a new instance of the Customer class.
 
@@ -76,6 +93,7 @@ class Customers(db.Model):
         """
         return f"<Customer {self.customerCode}>"
 
+
 class CustomerSchema(ma.Schema):
     """
     Schema for serializing and deserializing instances of the Customer class.
@@ -105,8 +123,10 @@ class CustomerSchema(ma.Schema):
             "createdAt",
         )
 
+
 customer_schema: CustomerSchema = CustomerSchema()
 customers_schema: CustomerSchema = CustomerSchema(many=True)
+
 
 class CustomersMeta(db.Model):
     """
@@ -126,9 +146,19 @@ class CustomersMeta(db.Model):
     wazuhRegistrationPort: Column[Integer] = db.Column(db.Integer)
     wazuhLogIngestionPort: Column[Integer] = db.Column(db.Integer)
 
-    def __init__(self, customerCode, clientName=None, customerMetaGraylogIndex=None,
-                 customerMetaGraylogStream=None, customerMetaInfluxOrg=None,
-                 customerMetaGrafanaOrg=None, customerMetaWazuhGroup=None, indexRetention=None, wazuhRegistrationPort=None, wazuhLogIngestionPort=None):
+    def __init__(
+        self,
+        customerCode,
+        clientName=None,
+        customerMetaGraylogIndex=None,
+        customerMetaGraylogStream=None,
+        customerMetaInfluxOrg=None,
+        customerMetaGrafanaOrg=None,
+        customerMetaWazuhGroup=None,
+        indexRetention=None,
+        wazuhRegistrationPort=None,
+        wazuhLogIngestionPort=None,
+    ):
         """
         Initialize a new instance of the CustomerMeta class.
 
@@ -187,8 +217,6 @@ class CustomerMetaSchema(ma.Schema):
             "wazuhLogIngestionPort",
         )
 
+
 customer_meta_schema: CustomerMetaSchema = CustomerMetaSchema()
 customers_meta_schema: CustomerMetaSchema = CustomerMetaSchema(many=True)
-
-
-
