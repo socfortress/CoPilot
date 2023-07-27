@@ -96,11 +96,13 @@ See https://flask-migrate.readthedocs.io/en/latest/ for further information
 ## Running Pytest
 
 To run pytest, ensure pytest is installed:
+
 ```
 pip install pytest
 ```
 
 Then run pytest:
+
 ```
 pytest .\backend\tests\routes\test_connectors.py
 ```
