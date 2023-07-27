@@ -1,0 +1,100 @@
+{
+	"us": {
+		"message": {
+			"hello": "hello world"
+		},
+		"languages": {
+			"English": "English",
+			"Italian": "Italian",
+			"French": "French",
+			"German": "German",
+			"Spanish": "Spanish",
+			"Chinese": "Chinese",
+			"Japanese": "Japanese"
+		}
+	},
+	"it": {
+		"message": {
+			"hello": "ciao mondo"
+		},
+		"languages": {
+			"English": "Inglese",
+			"Italian": "Italiano",
+			"French": "Francese",
+			"German": "Tedesco",
+			"Spanish": "Spagnolo",
+			"Chinese": "Cinese",
+			"Japanese": "Giapponese"
+		}
+	},
+	"fr": {
+		"message": {
+			"hello": "bonjour le monde"
+		},
+		"languages": {
+			"English": "Anglais",
+			"Italian": "Italien",
+			"French": "Français",
+			"German": "Allemand",
+			"Spanish": "Espagnol",
+			"Chinese": "Chinois",
+			"Japanese": "Japonais"
+		}
+	},
+	"de": {
+		"message": {
+			"hello": "hallo welt"
+		},
+		"languages": {
+			"English": "Englisch",
+			"Italian": "Italienisch",
+			"French": "Französisch",
+			"German": "Deutsch",
+			"Spanish": "Spanisch",
+			"Chinese": "Chinesisch",
+			"Japanese": "Japanisch"
+		}
+	},
+	"es": {
+		"message": {
+			"hello": "hola mundo"
+		},
+		"languages": {
+			"English": "Inglés",
+			"Italian": "Italiano",
+			"French": "Francés",
+			"German": "Alemán",
+			"Spanish": "Español",
+			"Chinese": "Chino",
+			"Japanese": "Japonés"
+		}
+	},
+	"cn": {
+		"message": {
+			"hello": "你好，世界"
+		},
+		"languages": {
+			"English": "英语",
+			"Italian": "意大利语",
+			"French": "法语",
+			"German": "德国的语言",
+			"Spanish": "西班牙语",
+			"Chinese": "中文",
+			"Japanese": "日语"
+		}
+	},
+	"jp": {
+		"message": {
+			"hello": "こんにちは、世界"
+		},
+		"languages": {
+			"English": "英語",
+			"Italian": "イタリア語",
+			"French": "フランス語",
+			"German": "ドイツ語",
+			"Spanish": "スペイン語",
+			"Chinese": "中国語",
+			"Japanese": "日本語"
+		}
+	}
+}

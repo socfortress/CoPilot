@@ -1,0 +1,112 @@
+.vgt-wrap.styled {
+    .vgt-global-search {
+        padding: 10px;
+        border: none;
+        background: transparent;
+
+        .vgt-global-search__input {
+            outline: none;
+            padding: 0;
+            border: none;
+            box-shadow: none;
+            color: $text-color-primary;
+            background: transparent;
+
+            .input__icon {
+                display: none;
+            }
+
+            .vgt-input {
+                border: none;
+                color: $text-color-primary;
+            }
+        }
+
+        .vgt-global-search__actions {
+            display: none;
+        }
+    }
+
+    .vgt-table {
+        border: none;
+
+        td {
+            border: none;
+            border-top: 1px solid transparentize($background-color, 0.7);
+        }
+        tr:first-child {
+            td {
+                border: none;
+            }
+        }
+        th.line-numbers {
+            opacity: 0.5;
+            background: transparent;
+        }
+        thead th {
+            border: none;
+            background: transparentize($background-color, 0.7) !important;
+            border-bottom: 2px solid transparentize($background-color, 0.5);
+            border-top: 0;
+            opacity: 1 !important;
+            color: transparentize($text-color-primary, 0.6);
+
+            &.sorting-asc,
+            &.sorting-desc {
+                color: $text-color-primary;
+            }
+        }
+
+        .sorting {
+            cursor: pointer;
+
+            input {
+                outline: none;
+                padding: 0;
+                border: none;
+                box-shadow: none;
+                background: transparent;
+                border-bottom: 1px solid $background-color;
+                border-radius: 0;
+            }
+        }
+
+        .text-disabled {
+            color: transparentize($text-color-primary, 0.6);
+        }
+    }
+
+    .vgt-wrap__footer {
+        border: 0;
+        background: transparentize($background-color, 0.5);
+        color: transparentize($text-color-primary, 0.6);
+
+        .footer__navigation__info {
+            color: transparentize($text-color-primary, 0.3);
+        }
+    }
+
+    .footer__navigation__page-btn {
+        outline: none;
+        color: transparentize($text-color-primary, 0.3);
+
+        .chevron.left::after {
+            border-right-color: transparentize($text-color-primary, 0.3);
+        }
+        .chevron.right::after {
+            border-left-color: transparentize($text-color-primary, 0.3);
+        }
+
+        &.disabled {
+            .chevron.left::after {
+                border-right-color: transparentize($text-color-primary, 0.6);
+            }
+            .chevron.right::after {
+                border-left-color: transparentize($text-color-primary, 0.6);
+            }
+        }
+    }
+    .datatable-length select {
+        outline: none;
+    }
+}

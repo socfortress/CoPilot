@@ -1,0 +1,55 @@
+//@import '_variables';
+@import "perfect-scrollbar/css/perfect-scrollbar.css";
+
+.ps:hover > .ps__scrollbar-y-rail:hover,
+.ps.ps--in-scrolling.ps--y > .ps__scrollbar-y-rail,
+.ps:hover.ps--in-scrolling.ps--y > .ps__scrollbar-y-rail,
+.ps:hover > .ps__scrollbar-x-rail:hover,
+.ps.ps--in-scrolling.ps--x > .ps__scrollbar-x-rail,
+.ps:hover.ps--in-scrolling.ps--x > .ps__scrollbar-x-rail {
+    background-color: transparentize($text-color-primary, 0.9) !important;
+    opacity: 1 !important;
+}
+.ps > .ps__scrollbar-y-rail > .ps__scrollbar-y,
+.ps > .ps__rail-y > .ps__thumb-y {
+    right: 0 !important;
+    background-color: transparentize($text-color-primary, 0.7) !important;
+    transition: width 0.5s, transform 0.5s !important;
+    transform: translateX(-4px) !important;
+    width: 4px !important;
+}
+.ps.ps--in-scrolling.ps--y > .ps__scrollbar-y-rail > .ps__scrollbar-y,
+.ps:hover.ps--in-scrolling.ps--y > .ps__scrollbar-y-rail > .ps__scrollbar-y,
+.ps:hover > .ps__scrollbar-y-rail:hover > .ps__scrollbar-y,
+.ps:hover > .ps__rail-y:hover > .ps__thumb-y {
+    right: 0 !important;
+    background-color: transparentize($text-color-primary, 0.5) !important;
+    transform: translateX(-2px) !important;
+    width: 8px !important;
+}
+.ps > .ps__scrollbar-y-rail,
+.ps > .ps__rail-y {
+    width: 12px !important;
+}
+
+.ps > .ps__scrollbar-x-rail > .ps__scrollbar-x,
+.ps > .ps__rail-x > .ps__thumb-x {
+    bottom: 0 !important;
+    background-color: transparentize($text-color-primary, 0.7) !important;
+    transition: height 0.5s, transform 0.5s !important;
+    transform: translateY(-4px) !important;
+    height: 4px !important;
+}
+.ps.ps--in-scrolling.ps--x > .ps__scrollbar-x-rail > .ps__scrollbar-x,
+.ps:hover.ps--in-scrolling.ps--x > .ps__scrollbar-x-rail > .ps__scrollbar-x,
+.ps:hover > .ps__scrollbar-x-rail:hover > .ps__scrollbar-x,
+.ps:hover > .ps__rail-x:hover > .ps__thumb-x {
+    bottom: 0 !important;
+    background-color: transparentize($text-color-primary, 0.5) !important;
+    transform: translateY(-2px) !important;
+    height: 8px !important;
+}
+.ps > .ps__scrollbar-x-rail,
+.ps > .ps__rail-x {
+    height: 12px !important;
+}

@@ -1,0 +1,102 @@
+.good-table.styled {
+    .global-search {
+        padding: 0;
+        //padding-left: .75rem;
+
+        .global-search-icon {
+            display: none;
+        }
+
+        .global-search-input {
+            outline: none;
+            padding: 0;
+            border: none;
+            box-shadow: none;
+            color: $text-color-primary;
+            background: transparent;
+        }
+    }
+
+    .table {
+        td {
+            border-top: 1px solid transparentize($background-color, 0.7);
+        }
+        tr:first-child {
+            td {
+                border: none;
+            }
+        }
+        th.line-numbers {
+            opacity: 0.5;
+            background: transparent;
+        }
+        thead th {
+            background: transparentize($background-color, 0.7) !important;
+            border-bottom-color: transparentize($background-color, 0.5);
+            border-top: 0;
+            opacity: 1 !important;
+            color: transparentize($text-color-primary, 0.6);
+
+            &.sorting-asc,
+            &.sorting-desc {
+                color: $text-color-primary;
+            }
+        }
+
+        .sorting {
+            cursor: pointer;
+
+            input {
+                outline: none;
+                padding: 0;
+                border: none;
+                box-shadow: none;
+                background: transparent;
+                border-bottom: 1px solid $background-color;
+                border-radius: 0;
+            }
+        }
+
+        .text-disabled {
+            color: transparentize($text-color-primary, 0.6);
+        }
+    }
+
+    .table-footer {
+        border: 0;
+        background-color: transparentize($background-color, 0.5);
+        color: transparentize($text-color-primary, 0.6);
+
+        .browser-default {
+            color: transparentize($text-color-primary, 0.3);
+        }
+
+        .info {
+            color: transparentize($text-color-primary, 0.3);
+        }
+    }
+
+    .page-btn {
+        outline: none;
+        color: transparentize($text-color-primary, 0.3);
+
+        .chevron.left::after {
+            border-right-color: transparentize($text-color-primary, 0.3);
+        }
+        .chevron.right::after {
+            border-left-color: transparentize($text-color-primary, 0.3);
+        }
+
+        &.disabled {
+            .chevron.left::after {
+                border-right-color: transparentize($text-color-primary, 0.6);
+            }
+            .chevron.right::after {
+                border-left-color: transparentize($text-color-primary, 0.6);
+            }
+        }
+    }
+    .datatable-length select {
+        outline: none;
+    }
+}

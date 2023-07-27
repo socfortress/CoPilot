@@ -1,0 +1,17 @@
+.card-base {
+	background-color: #fff;
+	border-radius: 5px;
+	overflow: hidden;
+}
+.card-shadow--small {
+	box-shadow: 0 3px 6px 0 rgba(40,40,90,.09),0 1px 1px 0 rgba(0,0,0,.065)
+}
+.card-shadow--medium {
+	box-shadow: 0 8px 16px 0 rgba(40,40,90,.09),0 3px 6px 0 rgba(0,0,0,.065)
+}
+.card-shadow--large {
+	box-shadow: 0 13px 30px 0 rgba(40,40,90,.09),0 4px 13px 0 rgba(0,0,0,.065)
+}
+.card-shadow--extraLarge {
+	box-shadow: 0 40px 90px 0 rgba(40,40,90,.09),0 13px 30px 0 rgba(40,40,90,.09),0 4px 13px 0 rgba(0,0,0,.065)
+}

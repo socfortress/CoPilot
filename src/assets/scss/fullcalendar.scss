@@ -1,0 +1,227 @@
+//@import '_variables';
+
+.fc {
+    .fc-toolbar.fc-header-toolbar {
+        padding: 15px;
+        margin: 0;
+        box-sizing: border-box;
+        //border-bottom: 2px solid $background-color;
+        margin-bottom: 0 !important;
+
+        h2 {
+            font-size: 1.5em;
+        }
+
+        .fc-button {
+            background: transparent;
+            border-color: $text-color-accent !important;
+            color: $text-color-accent;
+            box-shadow: none;
+            text-shadow: none;
+            outline: none;
+            height: 2.1em;
+            padding: 0 0.6em;
+            font-size: 1em;
+
+            &:hover {
+                background: transparentize($text-color-accent, 0.8);
+            }
+
+            &.fc-state-disabled {
+                cursor: not-allowed;
+                opacity: 0.4;
+
+                &:hover {
+                    background: transparent;
+                }
+            }
+
+            &.fc-button-active {
+                background: $text-color-accent;
+                color: white;
+            }
+        }
+
+        .fc-toolbar-chunk {
+            margin: 10px;
+        }
+    }
+
+    .fc-event {
+        padding: 3px 7px;
+        box-sizing: border-box;
+        background-color: $text-color-primary;
+        color: $background-color;
+        border: none;
+
+        &:not(.fc-event-start) {
+            border-left: 1px dashed $background-color !important;
+        }
+        &:not(.fc-event-end) {
+            border-right: 1px dashed $background-color !important;
+        }
+    }
+
+    .fc-daygrid-event-harness[style*="margin-top"] {
+        padding-top: 4px;
+    }
+
+    .fc-daygrid-dot-event:hover,
+    .fc-daygrid-dot-event.fc-event-mirror {
+        background: transparentize($text-color-primary, 0.25);
+    }
+
+    .fc-daygrid {
+        table,
+        tr,
+        td,
+        th {
+            border: 0;
+        }
+
+        .fc-col-header-cell {
+            padding: 15px 0;
+            background-color: $background-color;
+            border-bottom: 1px solid lighten($text-color-primary, 60%);
+
+            a {
+                cursor: default;
+                color: $text-color-primary;
+                text-decoration: none;
+            }
+        }
+
+        .fc-daygrid-day-number {
+            font-weight: bold;
+            padding: 2px 0px;
+            margin-top: 1px;
+            background: $background-color;
+            border-bottom-left-radius: 4px;
+            border-bottom-right-radius: 4px;
+            margin: 0 auto;
+            display: block;
+            float: inherit !important;
+            width: 30px;
+            text-align: center;
+        }
+
+        .fc-day {
+            border-top: 1px solid lighten($text-color-primary, 60%);
+        }
+
+        .fc-more {
+            font-size: 12px;
+            line-height: 12px;
+            display: inline-block;
+        }
+
+        .fc-more-popover {
+            .fc-widget-header {
+                background-color: $background-color;
+            }
+        }
+    }
+
+    .fc-timegrid {
+        .fc-scrollgrid {
+            border: none;
+        }
+
+        .fc-scrollgrid-shrink {
+            font-weight: bold;
+            border-color: lighten($text-color-primary, 60%);
+        }
+
+        .fc-timegrid-slot,
+        .fc-daygrid-day,
+        .fc-timegrid-col {
+            border-color: lighten($text-color-primary, 60%);
+        }
+
+        .fc-col-header {
+            background-color: $background-color;
+
+            .fc-col-header-cell {
+                padding: 15px 0;
+                border-color: lighten($text-color-primary, 60%);
+            }
+
+            .fc-timegrid-axis {
+                border: none;
+            }
+        }
+
+        .fc-timegrid-divider {
+            background: $background-color;
+            border-color: lighten($text-color-primary, 60%);
+            padding-bottom: 3px;
+        }
+
+        .fc-body {
+            & > tr > .fc-widget-content {
+                border: none;
+            }
+            .fc-widget-content {
+                border-color: lighten($text-color-primary, 60%);
+
+                .fc-axis {
+                    font-weight: bold;
+                    border-color: lighten($text-color-primary, 60%);
+                }
+
+                .fc-divider {
+                    background: $background-color;
+                    border-color: lighten($text-color-primary, 60%);
+                    padding-bottom: 3px;
+                }
+
+                .fc-event-container {
+                    .fc-event {
+                        border: 1px solid $text-color-primary;
+
+                        .fc-content {
+                            .fc-time {
+                                font-weight: bold;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    .fc-list-view {
+        border: none;
+
+        .fc-list-heading {
+            .fc-widget-header {
+                background-color: $background-color;
+                border: none;
+            }
+        }
+
+        .fc-list-item {
+            & > * {
+                border-color: lighten($text-color-primary, 60%);
+            }
+
+            &:hover {
+                & > * {
+                    background: transparentize($text-color-primary, 0.9);
+                }
+            }
+        }
+
+        .fc-event-dot {
+            background-color: $text-color-primary;
+        }
+    }
+}
+
+@media (max-width: 768px) {
+    .fc {
+        .fc-toolbar.fc-header-toolbar {
+            font-size: 85%;
+        }
+    }
+}

@@ -1,0 +1,124 @@
+.el-table {
+    background-color: lighten($background-color, 5%);
+    color: $text-color-primary;
+
+    &::before,
+    .el-table--group::after,
+    .el-table--border::after,
+    .el-table__fixed::before,
+    .el-table__fixed-right::before {
+        background-color: transparentize($background-color, 0.5);
+    }
+
+    .el-table__body {
+        tr {
+            &.hover-row {
+                & > td,
+                &.current-row > td,
+                &.el-table__row--striped > td,
+                &.el-table__row--striped.current-row > td {
+                    background-color: darken($background-color, 1%);
+                }
+            }
+        }
+    }
+
+    tr {
+        background-color: lighten($background-color, 5%);
+    }
+
+    th {
+        background-color: lighten(darken($background-color, 0.3%), 2%);
+
+        &.is-leaf {
+            border-bottom: 1px solid transparentize($background-color, 0.5);
+        }
+    }
+
+    td {
+        border-bottom: 1px solid transparentize($background-color, 0.5);
+    }
+
+    .el-table-column--selection .cell {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    .el-checkbox {
+        .el-checkbox__input {
+            .el-checkbox__inner {
+                background: transparent;
+            }
+
+            &.is-checked,
+            &.is-indeterminate {
+                .el-checkbox__inner {
+                    &::after {
+                        border-color: $text-color-accent;
+                    }
+                    &::before {
+                        background-color: $text-color-accent;
+                    }
+                }
+            }
+        }
+    }
+}
+.el-pagination {
+    padding: 8px;
+    color: $text-color-primary;
+
+    button {
+        background-color: transparent;
+        &.btn-next,
+        &.btn-prev {
+            background-color: transparent;
+            color: $text-color-primary;
+        }
+        &:disabled {
+            background-color: transparent;
+            color: transparentize($text-color-primary, 0.5);
+        }
+    }
+
+    .el-pager {
+        li {
+            background-color: transparent;
+
+            &.btn-quicknext,
+            &.btn-quickprev {
+                color: $text-color-primary;
+            }
+        }
+    }
+
+    .el-pagination__jump {
+        color: transparentize($text-color-primary, 0.5);
+
+        .el-input__inner {
+            //background-color: transparentize($background-color, 0.35);
+            border-color: transparent;
+            margin-left: 3px;
+            color: $text-color-primary;
+        }
+    }
+
+    .el-pagination__sizes {
+        margin: 0;
+
+        .el-input {
+            margin-right: 0;
+
+            .el-input__inner {
+                //background-color: transparentize($background-color, 0.35);
+                border-color: transparent;
+                color: $text-color-primary;
+            }
+        }
+    }
+
+    .el-pagination__total {
+        padding-left: 6px;
+        color: transparentize($text-color-primary, 0.5);
+    }
+}
