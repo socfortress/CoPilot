@@ -10,6 +10,7 @@ import Gallery from "../views/apps/Gallery.vue"
 import Cards from "../views/apps/Cards.vue"
 import Mail from "../views/apps/Mail.vue"
 import Ecommerce from "./ecommerce"
+import Connectors from "../views/apps/Connectors.vue"
 /*
 
 //pages
@@ -81,9 +82,9 @@ const router = createRouter({
             }
         },
         {
-            path: "/calendar",
-            name: "calendar",
-            component: Calendar,
+            path: "/connectors",
+            name: "connectors",
+            component: Connectors,
             meta: {
                 auth: true,
                 layout: layouts.navLeft,
