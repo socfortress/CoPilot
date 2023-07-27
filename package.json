@@ -6,6 +6,7 @@
         "dev": "vite",
         "build": "run-p type-check build-only",
         "preview": "vite preview --port 4173",
+        "serve": "vite preview",
         "test:unit": "vitest --environment jsdom",
         "test:e2e": "start-server-and-test preview http://localhost:4173/ 'cypress open --e2e'",
         "test:e2e:ci": "start-server-and-test preview http://localhost:4173/ 'cypress run --e2e'",
