@@ -22,7 +22,7 @@
                 <span slot="title">Crypto</span>
             </el-menu-item>
         </el-sub-menu>
-        <el-menu-item index="/calendar"> <i class="mdi mdi-calendar"></i><span slot="title">Calendar</span> </el-menu-item>
+        <el-menu-item index="/connectors"> <i class="mdi mdi-antenna"></i><span slot="title">Connectors</span> </el-menu-item>
         <el-menu-item index="/contacts"> <i class="mdi mdi-account-multiple-outline"></i><span slot="title">Contacts</span> </el-menu-item>
         <el-menu-item index="/gallery"> <i class="mdi mdi-image-multiple-outline"></i><span slot="title">Gallery</span> </el-menu-item>
         <el-menu-item index="/cards"> <i class="mdi mdi-view-dashboard-outline"></i><span slot="title">Cards</span> </el-menu-item>
