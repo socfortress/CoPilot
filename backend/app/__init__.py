@@ -29,6 +29,7 @@ CORS(app)
 app.config.from_object("settings")
 
 db = SQLAlchemy(app)
+
 ma = Marshmallow(app)
 from app.models import agents  # noqa: F401
 from app.models import artifacts  # noqa: F401
