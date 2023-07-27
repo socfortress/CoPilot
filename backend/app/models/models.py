@@ -31,9 +31,7 @@ class ConnectorsAvailable(db.Model):
     connector_configured: Column[Boolean] = db.Column(db.Boolean, default=False)
     connector_verified: Column[Boolean] = db.Column(db.Boolean, default=False)
     connector_accepts_api_key: Column[Boolean] = db.Column(db.Boolean, default=False)
-    connector_accepts_username_password: Column[Boolean] = db.Column(
-        db.Boolean, default=False
-    )
+    connector_accepts_username_password: Column[Boolean] = db.Column(db.Boolean, default=False)
     connector_accepts_file: Column[Boolean] = db.Column(db.Boolean, default=False)
 
     def __init__(self, connector_name: str, connector_supports: str):
