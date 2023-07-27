@@ -16,6 +16,7 @@ mitreattack-python
 openai
 pika
 psycopg2-binary
+pytest
 pyvelociraptor~=0.1
 reportlab
 requests
