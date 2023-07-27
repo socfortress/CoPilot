@@ -1,0 +1,49 @@
+//@import '_variables';
+
+.vfl-has-label.styled {
+    width: 100%;
+    max-width: 300px;
+    margin-top: 16px;
+    padding-bottom: 16px;
+
+    .vfl-label {
+        left: 0;
+        width: 100%;
+        height: 12px;
+        line-height: 12px;
+        font-size: 10px;
+        text-transform: uppercase;
+        color: transparentize($text-color-primary, 0.6);
+
+        &.vfl-label-on-input {
+            left: 0;
+            top: initial;
+            bottom: 100%;
+
+            & + input {
+                border-color: transparentize($text-color-primary, 0.3);
+            }
+        }
+
+        &.vfl-label-on-focus {
+            color: $text-color-accent;
+
+            & + input {
+                border-color: $text-color-accent;
+            }
+        }
+    }
+
+    .vfl-label + input {
+        border: none;
+        border-bottom: 2px solid transparentize($text-color-primary, 0.85);
+        width: 100%;
+        padding: 0;
+        padding-bottom: 4px;
+        font-size: 16px;
+        transition: all 0.2s ease-out;
+        border-radius: 0px;
+        color: $text-color-primary;
+        background: transparent;
+    }
+}

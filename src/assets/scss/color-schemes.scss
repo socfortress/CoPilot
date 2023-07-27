@@ -1,0 +1,206 @@
+//@import '_variables';
+
+body.theme-a {
+    .card-base {
+        background: darken($background-color, 3%);
+    }
+}
+
+body.theme-b {
+    .bg-primary {
+        background-color: $background-color !important;
+    }
+    .bg-primary-light {
+        background-color: lighten($background-color, 15%) !important;
+    }
+    .bg-primary-lighter {
+        background-color: lighten($background-color, 35%) !important;
+    }
+
+    .card-base {
+        background: darken($background-color, 15%);
+    }
+    .layout-container .footer {
+        background: darken($background-color, 15%);
+    }
+
+    .main-navigation-submenu .el-menu,
+    .main-navigation-submenu .el-menu .el-menu-item:not(.is-active) {
+        color: #000;
+    }
+    .main-navigation-menu.el-menu--horizontal .el-submenu__title,
+    .main-navigation-menu.el-menu--horizontal .el-menu-item:not(.is-active),
+    .main-navigation-menu.el-menu--horizontal .el-submenu__title i,
+    .main-navigation-menu.el-menu--horizontal .el-menu-item:not(.is-active) i {
+        color: #000;
+    }
+    .main-navigation-menu.el-menu--horizontal:not(.el-menu--collapse) .el-menu-item-group__title {
+        color: rgba(0, 0, 0, 0.35);
+    }
+
+    .page-header {
+        &.header-primary {
+            h1,
+            h4 {
+                color: #000;
+                text-shadow: none;
+            }
+
+            .el-breadcrumb {
+                .el-breadcrumb__inner,
+                .el-breadcrumb__inner a {
+                    color: #000;
+                }
+                .el-breadcrumb__separator {
+                    color: transparentize(#000, 0.7);
+                }
+                .el-breadcrumb__item:last-child .el-breadcrumb__inner,
+                .el-breadcrumb__item:last-child .el-breadcrumb__inner:hover,
+                .el-breadcrumb__item:last-child .el-breadcrumb__inner a,
+                .el-breadcrumb__item:last-child .el-breadcrumb__inner a:hover {
+                    color: transparentize(#000, 0.4);
+                }
+            }
+        }
+    }
+    .toolbar .toggle-sidebar {
+        color: $background-color;
+    }
+}
+
+body.theme-c {
+    .bg-primary {
+        background-color: $background-color !important;
+    }
+    .bg-primary-light {
+        background-color: lighten($background-color, 15%) !important;
+    }
+    .bg-primary-lighter {
+        background-color: lighten($background-color, 35%) !important;
+    }
+
+    .card-base {
+        background: lighten($background-color, 5%);
+    }
+    .layout-container .footer {
+        background: lighten($background-color, 5%);
+    }
+
+    .main-navigation-submenu .el-menu,
+    .main-navigation-submenu .el-menu .el-menu-item:not(.is-active) {
+        color: #000;
+    }
+    .main-navigation-menu.el-menu--horizontal .el-submenu__title,
+    .main-navigation-menu.el-menu--horizontal .el-menu-item:not(.is-active),
+    .main-navigation-menu.el-menu--horizontal .el-submenu__title i,
+    .main-navigation-menu.el-menu--horizontal .el-menu-item:not(.is-active) i {
+        color: #000;
+    }
+    .main-navigation-menu.el-menu--horizontal:not(.el-menu--collapse) .el-menu-item-group__title {
+        color: rgba(0, 0, 0, 0.35);
+    }
+
+    .page-header {
+        &.header-primary {
+            h1,
+            h4 {
+                color: #000;
+                text-shadow: none;
+            }
+
+            .el-breadcrumb {
+                .el-breadcrumb__inner,
+                .el-breadcrumb__inner a {
+                    color: #000;
+                }
+                .el-breadcrumb__separator {
+                    color: transparentize(#000, 0.7);
+                }
+                .el-breadcrumb__item:last-child .el-breadcrumb__inner,
+                .el-breadcrumb__item:last-child .el-breadcrumb__inner:hover,
+                .el-breadcrumb__item:last-child .el-breadcrumb__inner a,
+                .el-breadcrumb__item:last-child .el-breadcrumb__inner a:hover {
+                    color: transparentize(#000, 0.4);
+                }
+            }
+        }
+    }
+    .toolbar .toggle-sidebar {
+        color: $background-color;
+    }
+}
+
+body.theme-d {
+    .bg-primary {
+        background-color: $background-color !important;
+    }
+    .bg-primary-light {
+        background-color: lighten($background-color, 15%) !important;
+    }
+    .bg-primary-lighter {
+        background-color: lighten($background-color, 35%) !important;
+    }
+
+    .card-base {
+        background: darken($background-color, 25%);
+    }
+    .layout-container .footer {
+        color: darken($background-color, 25%);
+    }
+
+    .main-navigation-submenu .el-menu,
+    .main-navigation-submenu .el-menu .el-menu-item:not(.is-active) {
+        color: #000;
+    }
+    .main-navigation-menu.el-menu--horizontal .el-submenu__title,
+    .main-navigation-menu.el-menu--horizontal .el-menu-item:not(.is-active),
+    .main-navigation-menu.el-menu--horizontal .el-submenu__title i,
+    .main-navigation-menu.el-menu--horizontal .el-menu-item:not(.is-active) i {
+        color: #000;
+    }
+    .main-navigation-menu.el-menu--horizontal:not(.el-menu--collapse) .el-menu-item-group__title {
+        color: rgba(0, 0, 0, 0.35);
+    }
+
+    .page-header {
+        &.header-primary {
+            h1,
+            h4 {
+                color: #000;
+                text-shadow: none;
+            }
+
+            .el-breadcrumb {
+                .el-breadcrumb__inner,
+                .el-breadcrumb__inner a {
+                    color: #000;
+                }
+                .el-breadcrumb__separator {
+                    color: transparentize(#000, 0.7);
+                }
+                .el-breadcrumb__item:last-child .el-breadcrumb__inner,
+                .el-breadcrumb__item:last-child .el-breadcrumb__inner:hover,
+                .el-breadcrumb__item:last-child .el-breadcrumb__inner a,
+                .el-breadcrumb__item:last-child .el-breadcrumb__inner a:hover {
+                    color: transparentize(#000, 0.4);
+                }
+            }
+        }
+    }
+    .toolbar .toggle-sidebar {
+        color: $background-color;
+    }
+    .page-calendar .calendar-wrap {
+        background: darken($background-color, 10%);
+    }
+    .fc .fc-month-view .fc-widget-header .fc-day-header,
+    .fc .fc-agenda-view .fc-head .fc-head-container,
+    .fc .fc-list-view .fc-list-heading .fc-widget-header {
+        background: lighten($background-color, 20%);
+    }
+
+    a {
+        color: darken($text-color-primary, 10%);
+        text-decoration-color: transparentize($text-color-primary, 0.7);
+    }
+}

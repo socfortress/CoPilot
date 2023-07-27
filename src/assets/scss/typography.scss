@@ -1,0 +1,367 @@
+//@import '_variables';
+//@import "~element-ui/packages/theme-chalk/src/common/var";
+//@import "element-variables";
+
+//hr
+hr.styled {
+    border: none;
+    border-top: 1px solid transparentize($text-color-primary, 0.8);
+    border-bottom: 1px solid transparentize($text-color-primary, 0.9);
+}
+
+//header 1
+h1 {
+    font-size: 2em;
+}
+h1.h-big {
+    font-size: 3.5em;
+}
+h2.h-big {
+    font-size: 3em;
+}
+h3.h-big {
+    font-size: 2.5em;
+}
+
+//blockquote
+blockquote {
+    font-style: italic;
+    padding: 5px 20px;
+    margin: 0 0 20px;
+
+    > p {
+        margin-top: 0;
+    }
+
+    &:not(.reverse) {
+        border-left: 5px solid transparentize($text-color-primary, 0.9);
+
+        .small::before,
+        footer::before,
+        small::before {
+            content: "\2014 \00A0";
+        }
+    }
+    &.reverse {
+        border-right: 5px solid transparentize($text-color-primary, 0.9);
+        text-align: right;
+
+        .small::after,
+        footer::after,
+        small::after {
+            content: "\2014 \00A0";
+        }
+    }
+}
+
+//definition lists
+dl {
+    dt {
+        font-weight: 700;
+    }
+    dd {
+        margin: 4px 0 16px;
+    }
+
+    &.horizontal {
+        dt {
+            float: left;
+            width: 25%;
+            clear: left;
+            text-align: right;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        dd {
+            margin-left: 30%;
+        }
+    }
+}
+
+//code
+pre {
+    background: transparentize($text-color-primary, 0.95);
+    padding: 10px;
+    border-radius: 3px;
+}
+
+//list
+ul,
+ol,
+li {
+    &.list-unstyled {
+        list-style: none;
+    }
+}
+ul,
+ol {
+    &.list-unstyled {
+        padding: 0;
+    }
+}
+ul.styled,
+ul.styled ul {
+    padding: 0;
+    list-style-type: none;
+
+    li {
+        padding-left: 1.3rem;
+        padding-bottom: 0.2rem;
+
+        &::before {
+            content: "";
+            display: inline-block;
+            width: 0.5rem;
+            height: 0.5rem;
+            position: relative;
+            right: 1.1rem;
+            top: -0.05rem;
+            margin-right: -0.5em;
+            border-radius: 50%;
+            background-color: $text-color-accent;
+            box-sizing: border-box;
+        }
+
+        li:before {
+            background-color: #fff;
+            border: 2px solid $text-color-accent;
+        }
+    }
+}
+ol.styled,
+ol.styled ol {
+    padding: 0;
+    counter-reset: a;
+
+    li {
+        list-style: none;
+        padding-left: 1.3rem;
+        padding-bottom: 0.2rem;
+
+        &::before {
+            counter-increment: a;
+            content: counter(a);
+            display: inline-block;
+            width: 0.9rem;
+            height: 0.9rem;
+            position: relative;
+            right: 1.1rem;
+            top: -0.15rem;
+            margin-right: -0.5em;
+            text-align: center;
+            line-height: 0.95rem;
+            background: $text-color-accent;
+            color: white;
+            font-size: 0.5rem;
+            border-radius: 50%;
+        }
+
+        li:before {
+            background-color: #fff;
+            border: 1px solid $text-color-accent;
+            color: $text-color-accent;
+        }
+    }
+}
+
+//abbreviation
+abbr[title] {
+    border-bottom: none;
+    text-decoration: underline;
+    -webkit-text-decoration: underline dashed;
+    text-decoration: underline dashed;
+    text-decoration-color: transparentize($text-color-primary, 0.5);
+}
+abbr {
+    cursor: help;
+    border-bottom: 1px dashed transparentize($text-color-primary, 0.5);
+}
+
+//marked text
+mark {
+    background-color: transparentize($text-color-accent, 0.8);
+    padding: 0 3px;
+    border-radius: 3px;
+}
+
+//link
+a {
+    color: $text-color-accent;
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-color: transparentize($text-color-accent, 0.7);
+}
+
+//selected text
+.text-selected {
+    background-color: $text-color-accent;
+    color: white;
+    padding: 0 3px;
+}
+
+.text-capitalized {
+    text-transform: capitalize;
+}
+.text-uppercase {
+    text-transform: uppercase;
+}
+.text-lowercase {
+    text-transform: lowercase;
+}
+
+.primary-text {
+    color: $text-color-primary;
+}
+.secondary-text {
+    color: transparentize($text-color-primary, 0.4);
+}
+.hint-text {
+    color: transparentize($text-color-primary, 0.7);
+}
+.accent-text {
+    color: $text-color-accent;
+}
+.white-text {
+    color: $color-white;
+}
+.black-text {
+    color: $color-black;
+}
+.success-text {
+    color: $color-success;
+}
+.warning-text {
+    color: $color-warning;
+}
+.danger-text {
+    color: $color-danger;
+}
+.info-text {
+    color: $color-info;
+}
+.success-light-text {
+    color: lighten($color-success, 25%);
+}
+.warning-light-text {
+    color: lighten($color-warning, 25%);
+}
+.danger-light-text {
+    color: lighten($color-danger, 20%);
+}
+.info-light-text {
+    color: lighten($color-info, 15%);
+}
+.success-lighter-text {
+    color: lighten($color-success, 35%);
+}
+.warning-lighter-text {
+    color: lighten($color-warning, 35%);
+}
+.danger-lighter-text {
+    color: lighten($color-danger, 30%);
+}
+.info-lighter-text {
+    color: lighten($color-info, 25%);
+}
+
+/* text align */
+.text-left {
+    text-align: left;
+}
+.text-right {
+    text-align: right;
+}
+.text-center {
+    text-align: center;
+}
+.text-justify {
+    text-align: justify;
+}
+
+/* text divider */
+.text-divider {
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-direction: row;
+    flex-direction: row;
+    -ms-flex-pack: center;
+    justify-content: center;
+    -ms-flex-align: center;
+    align-items: center;
+
+    &::before {
+        content: "";
+        height: 1px;
+        background: transparentize($text-color-primary, 0.7);
+        -ms-flex: 1 1 100%;
+        flex: 1;
+        margin: 0 10px 0 0;
+    }
+    &::after {
+        content: "";
+        height: 1px;
+        background: transparentize($text-color-primary, 0.7);
+        -ms-flex: 1 1 100%;
+        flex: 1;
+        margin: 0 0 0 10px;
+    }
+}
+
+//font weight
+.font-weight-100,
+.fw-100 {
+    font-weight: 100;
+}
+.font-weight-200,
+.fw-200 {
+    font-weight: 200;
+}
+.font-weight-300,
+.fw-300 {
+    font-weight: 300;
+}
+.font-weight-400,
+.fw-400 {
+    font-weight: 400;
+}
+.font-weight-500,
+.fw-500 {
+    font-weight: 500;
+}
+.font-weight-600,
+.fw-600 {
+    font-weight: 600;
+}
+.font-weight-700,
+.fw-700 {
+    font-weight: 700;
+}
+.font-weight-800,
+.fw-800 {
+    font-weight: 800;
+}
+.font-weight-900,
+.fw-900 {
+    font-weight: 900;
+}
+
+// FontSize / LineHeight
+@for $i from 0 through 200 {
+    .font-size-#{$i},
+    .fs-#{$i} {
+        font-size: #{($i) + "px"};
+    }
+    .line-height-#{$i},
+    .lh-#{$i} {
+        line-height: #{($i) + "px"};
+    }
+}
+
+//text-truncate
+.text-truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

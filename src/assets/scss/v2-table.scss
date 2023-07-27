@@ -1,0 +1,195 @@
+.v2-table.styled {
+    background: transparent;
+    color: $text-color-primary;
+
+    $v2-table-header-tmp: darken($background-color, 1%);
+    $v2-table-header: lighten($v2-table-header-tmp, 2%);
+
+    .v2-table__row {
+        background-color: lighten($background-color, 5%);
+
+        &.row-hover {
+            background-color: darken($background-color, 1%);
+        }
+    }
+
+    .v2-table__cell {
+        border-bottom-color: transparentize($background-color, 0.6);
+    }
+    .v2-table__cell.v2-table__row-cell {
+        color: $text-color-primary;
+    }
+    .v2-table__cell.v2-table__column-cell {
+        background-color: $v2-table-header;
+        font-weight: bold;
+        color: transparentize($text-color-primary, 0.6);
+    }
+    .v2-table__body.v2-table__header-border,
+    .v2-table__footer.v2-table__header-border,
+    .v2-table__header.v2-table__header-border {
+        border-top: none;
+    }
+    .v2-table-fixed.v2-table__fixed-left .v2-table__cell:first-child {
+        border-left-color: transparent;
+    }
+    .v2-table-fixed.v2-table__fixed-right .v2-table__cell:last-child {
+        border-right-color: transparent;
+    }
+    .v2-table__header-row .v2-table__cell:first-child {
+        border-left-color: transparent !important;
+    }
+    .v2-table__header-row .v2-table__cell:last-child {
+        border-right-color: transparent !important;
+    }
+    .v2-table__table-tbody .v2-table__row .v2-table__cell:first-child {
+        border-left-color: transparent !important;
+    }
+    .v2-table__table-tbody .v2-table__row .v2-table__cell:last-child {
+        border-right-color: transparent !important;
+    }
+    .v2-table__sort-caret.descending-caret {
+        border-top: 5px solid transparentize($text-color-primary, 0.9);
+    }
+    .v2-table__cell.v2-table__column-cell.descending .descending-caret {
+        border-top: 5px solid $text-color-accent;
+    }
+    .v2-table__sort-caret.ascending-caret {
+        border-bottom: 5px solid transparentize($text-color-primary, 0.9);
+    }
+    .v2-table__cell.v2-table__column-cell.ascending .ascending-caret {
+        border-bottom: 5px solid $text-color-accent;
+    }
+    .v2-checkbox__input.is-checked .v2-checkbox__inner {
+        border-color: $text-color-accent !important;
+    }
+    .v2-checkbox__inner::after {
+        border-color: $text-color-accent !important;
+    }
+    .v2-checkbox__input.is-indeterminate .v2-checkbox__inner {
+        background-color: $text-color-accent !important;
+        border-color: $text-color-accent !important;
+    }
+    .v2-checkbox-list-wrap {
+        border-left: none !important;
+        border-top: none !important;
+        background-color: lighten($background-color, 5%);
+    }
+    .v2-checkbox-item.checked-all {
+        background: $v2-table-header;
+        border-bottom-color: transparentize($background-color, 0.7);
+    }
+    .v2-checkbox-item {
+        border-bottom-color: transparentize($background-color, 0.7) !important;
+
+        &.checkbox-hover {
+            background-color: darken($background-color, 1%);
+        }
+    }
+    .v2-checkbox__input {
+        background: transparent;
+    }
+
+    .v2-table__pagination-box {
+        margin: 0;
+        padding: 8px;
+        box-sizing: border-box;
+        user-select: none;
+        height: 40px;
+        border-top: 1px solid transparentize($background-color, 0.5);
+    }
+    .v2-table__pagination-box .pagination-text-info {
+        left: 10px;
+        top: 4px;
+        color: transparentize($text-color-primary, 0.6);
+
+        strong {
+            color: transparentize($text-color-primary, 0.3);
+        }
+    }
+    .v2-table__pagination .page {
+        border-radius: 5px;
+        height: 24px;
+        line-height: 24px;
+        border: none;
+        font-weight: bold;
+        color: $text-color-primary;
+        background: transparent;
+
+        &.next-page,
+        &.prev-page {
+            font-size: 20px;
+        }
+    }
+    .v2-table__pagination ul .cur-page {
+        //border-color: $text-color-accent;
+        //background-color: $text-color-accent;
+        background: transparent;
+        color: $text-color-accent;
+    }
+    .v2-table__pagination ul .cur-page:hover {
+        border-color: $text-color-accent;
+        color: $text-color-accent;
+        opacity: 0.7;
+    }
+    .v2-table__pagination .page:hover {
+        color: $text-color-accent;
+        border-color: $text-color-accent;
+        opacity: 0.7;
+    }
+    .v2-table__pagination .page.disabled {
+        color: transparentize($text-color-primary, 0.7);
+    }
+    .v2-table__data-loading .path {
+        stroke: $text-color-accent;
+    }
+
+    .v2-scroll__x-thumb,
+    .v2-scroll__y-thumb {
+        border-radius: 5px;
+        background-color: transparentize($text-color-primary, 0.7);
+        opacity: 0;
+        -webkit-transition: none;
+        transition: none;
+    }
+    .beautify-scroll__x-thumb,
+    .beautify-scroll__y-thumb {
+        border-radius: 5px;
+        background-color: transparentize($text-color-primary, 0.7);
+        opacity: 0;
+        -webkit-transition: none;
+        transition: none;
+    }
+
+    &.mobile {
+        .v2-table__table-container {
+            overflow: scroll !important;
+        }
+        .v2-checkbox-list-wrap {
+            display: none !important;
+        }
+        .v2-table__pagination-box {
+            .pagination-text-info {
+                top: 0;
+                left: 6px;
+                font-size: 10px;
+                line-height: 23px;
+            }
+
+            .v2-table__pagination {
+                bottom: -10px;
+
+                .page {
+                    height: 14px;
+                    line-height: 14px;
+                    font-size: 12px;
+                    padding: 0 6px;
+                }
+
+                .page.next-page,
+                .page.prev-page {
+                    font-size: 18px;
+                }
+            }
+        }
+    }
+}

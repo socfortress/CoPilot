@@ -1,0 +1,329 @@
+//@import '_variables';
+//@import "~element-ui/packages/theme-chalk/src/common/var";
+
+// Div scrollable
+.scrollable {
+    overflow-x: auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch !important;
+
+    &.only-x {
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+    }
+
+    &.only-y {
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+    }
+}
+@media (min-width: 769px) {
+    .scrollable {
+        &::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        &::-webkit-scrollbar-thumb,
+        &::-webkit-scrollbar-track {
+            background: transparent;
+            border-radius: 5px;
+        }
+        &::-webkit-scrollbar-thumb {
+            background: transparentize($text-color-primary, 0.95);
+        }
+        &:hover::-webkit-scrollbar-thumb {
+            background: transparentize($text-color-primary, 0.85);
+
+            &:hover {
+                background: transparentize($text-color-primary, 0.75);
+            }
+        }
+        &:hover::-webkit-scrollbar-track {
+            background: transparentize($text-color-primary, 0.95);
+        }
+    }
+}
+
+// Classic vertical align
+.align-vertical {
+    &:before {
+        display: inline-block;
+        height: 100%;
+        content: "";
+        vertical-align: middle;
+    }
+
+    .align-vertical-top,
+    .align-vertical-middle,
+    .align-vertical-bottom {
+        display: inline-block;
+    }
+    .align-vertical-top {
+        vertical-align: top;
+    }
+    .align-vertical-middle {
+        vertical-align: middle;
+    }
+    .align-vertical-bottom {
+        vertical-align: bottom;
+    }
+}
+
+// Padding / Margin helpers
+.no-p {
+    padding: 0 !important;
+}
+.no-m {
+    margin: 0 !important;
+}
+@for $i from 0 through 200 {
+    //padding
+    .padding-#{$i},
+    .p-#{$i} {
+        padding: #{($i) + "px"};
+    }
+    .padding-top-#{$i},
+    .pt-#{$i} {
+        padding-top: #{($i) + "px"};
+    }
+    .padding-right-#{$i},
+    .pr-#{$i} {
+        padding-right: #{($i) + "px"};
+    }
+    .padding-bottom-#{$i},
+    .pb-#{$i} {
+        padding-bottom: #{($i) + "px"};
+    }
+    .padding-left-#{$i},
+    .pl-#{$i} {
+        padding-left: #{($i) + "px"};
+    }
+    .padding-horizontal-#{$i},
+    .ph-#{$i} {
+        padding-left: #{($i) + "px"};
+        padding-right: #{($i) + "px"};
+    }
+    .padding-vertical-#{$i},
+    .pv-#{$i} {
+        padding-top: #{($i) + "px"};
+        padding-bottom: #{($i) + "px"};
+    }
+
+    //margin
+    .margin-#{$i},
+    .m-#{$i} {
+        margin: #{($i) + "px"};
+    }
+    .margin-top-#{$i},
+    .mt-#{$i} {
+        margin-top: #{($i) + "px"};
+    }
+    .margin-right-#{$i},
+    .mr-#{$i} {
+        margin-right: #{($i) + "px"};
+    }
+    .margin-bottom-#{$i},
+    .mb-#{$i} {
+        margin-bottom: #{($i) + "px"};
+    }
+    .margin-left-#{$i},
+    .ml-#{$i} {
+        margin-left: #{($i) + "px"};
+    }
+    .margin-horizontal-#{$i},
+    .mh-#{$i} {
+        margin-left: #{($i) + "px"};
+        margin-right: #{($i) + "px"};
+    }
+    .margin-vertical-#{$i},
+    .mv-#{$i} {
+        margin-top: #{($i) + "px"};
+        margin-bottom: #{($i) + "px"};
+    }
+}
+
+// Border helpers
+$border-style: 1px solid transparentize($text-color-primary, 0.85);
+.border,
+.b {
+    border: $border-style;
+}
+.border-top,
+.bt {
+    border-top: $border-style;
+}
+.border-right,
+.br {
+    border-right: $border-style;
+}
+.border-bottom,
+.bb {
+    border-bottom: $border-style;
+}
+.border-left,
+.bl {
+    border-left: $border-style;
+}
+.border-horizontal,
+.bh {
+    border-left: $border-style;
+    border-right: $border-style;
+}
+.border-vertical,
+.bv {
+    border-top: $border-style;
+    border-bottom: $border-style;
+}
+
+// Border-radius helpers
+.no-b-rad {
+    border-radius: 0;
+}
+@for $i from 1 through 50 {
+    .b-rad-#{$i} {
+        border-radius: #{$i + "px"};
+    }
+}
+
+// Opacity helpers
+.o-0 {
+    opacity: 0;
+}
+.o-005 {
+    opacity: 0.05;
+}
+.o-010 {
+    opacity: 0.1;
+}
+.o-015 {
+    opacity: 0.15;
+}
+.o-020 {
+    opacity: 0.2;
+}
+.o-025 {
+    opacity: 0.25;
+}
+.o-030 {
+    opacity: 0.3;
+}
+.o-035 {
+    opacity: 0.35;
+}
+.o-040 {
+    opacity: 0.4;
+}
+.o-045 {
+    opacity: 0.45;
+}
+.o-050 {
+    opacity: 0.5;
+}
+.o-055 {
+    opacity: 0.55;
+}
+.o-060 {
+    opacity: 0.6;
+}
+.o-065 {
+    opacity: 0.65;
+}
+.o-070 {
+    opacity: 0.7;
+}
+.o-075 {
+    opacity: 0.75;
+}
+.o-080 {
+    opacity: 0.8;
+}
+.o-085 {
+    opacity: 0.85;
+}
+.o-090 {
+    opacity: 0.9;
+}
+.o-095 {
+    opacity: 0.95;
+}
+.o-1 {
+    opacity: 1;
+}
+
+.bg-primary {
+    background-color: $text-color-primary !important;
+}
+.bg-primary-light {
+    background-color: lighten($text-color-primary, 20%) !important;
+}
+.bg-primary-lighter {
+    background-color: lighten($text-color-primary, 45%) !important;
+}
+.bg-accent {
+    background-color: $text-color-accent !important;
+}
+.bg-accent-light {
+    background-color: lighten($text-color-accent, 20%) !important;
+}
+.bg-accent-lighter {
+    background-color: lighten($text-color-accent, 30%) !important;
+}
+.bg-white {
+    background-color: $color-white !important;
+}
+.bg-black {
+    background-color: $color-black !important;
+}
+.bg-success,
+.bg-green {
+    background-color: $color-success !important;
+}
+.bg-warning,
+.bg-orange {
+    background-color: $color-warning !important;
+}
+.bg-danger,
+.bg-red {
+    background-color: $color-danger !important;
+}
+.bg-info,
+.bg-grey {
+    background-color: $color-info !important;
+}
+.bg-success-light,
+.bg-green-light {
+    background-color: lighten($color-success, 25%) !important;
+}
+.bg-warning-light,
+.bg-orange-light {
+    background-color: lighten($color-warning, 25%) !important;
+}
+.bg-danger-light,
+.bg-red-light {
+    background-color: lighten($color-danger, 20%) !important;
+}
+.bg-info-light,
+.bg-grey-light {
+    background-color: lighten($color-info, 15%) !important;
+}
+.bg-success-lighter,
+.bg-green-lighter {
+    background-color: lighten($color-success, 35%) !important;
+}
+.bg-warning-lighter,
+.bg-orange-lighter {
+    background-color: lighten($color-warning, 35%) !important;
+}
+.bg-danger-lighter,
+.bg-red-lighter {
+    background-color: lighten($color-danger, 30%) !important;
+}
+.bg-info-lighter,
+.bg-grey-lighter {
+    background-color: lighten($color-info, 25%) !important;
+}
+
+.bg-accent-gradient {
+    background: $text-color-accent;
+    background: linear-gradient(45deg, $text-color-accent 0%, lighten($text-color-accent, 20%) 100%) !important;
+}
