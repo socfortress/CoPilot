@@ -45,7 +45,7 @@ def list_connectors_available():
             "message": "All available connectors",
             "connectors": instantiated_connectors,
             "connectors_available": connectors_available,
-            "success": True
+            "success": True,
         }
     except Exception as e:
         logger.error(f"Error while getting all available connectors: {e}")
