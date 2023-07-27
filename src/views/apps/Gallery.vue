@@ -7,9 +7,7 @@
                 <el-breadcrumb-item>Apps</el-breadcrumb-item>
                 <el-breadcrumb-item>Gallery</el-breadcrumb-item>
             </el-breadcrumb>
-            <h4>
-                All pictures taken from <a href="https://pexels.com/" target="_blank" class="white-text">pexels.com</a>
-            </h4>
+            <h4>All pictures taken from <a href="https://pexels.com/" target="_blank" class="white-text">pexels.com</a></h4>
         </div>
 
         <div class="photo-list">

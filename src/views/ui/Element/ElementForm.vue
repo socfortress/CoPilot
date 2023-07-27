@@ -126,14 +126,7 @@
         <div class="card-base card-shadow--medium demo-box bg-white">
             <el-collapse value="1">
                 <el-collapse-item title="Custom validation rules" name="1">
-                    <el-form
-                        :model="ruleForm2"
-                        status-icon
-                        :rules="rules2"
-                        ref="ruleForm2"
-                        label-width="120px"
-                        class="demo-ruleForm"
-                    >
+                    <el-form :model="ruleForm2" status-icon :rules="rules2" ref="ruleForm2" label-width="120px" class="demo-ruleForm">
                         <el-form-item label="Password" prop="pass">
                             <el-input type="password" v-model="ruleForm2.pass" auto-complete="off"></el-input>
                         </el-form-item>

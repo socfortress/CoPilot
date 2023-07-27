@@ -22,18 +22,10 @@
                 <span slot="title">Crypto</span>
             </el-menu-item>
         </el-sub-menu>
-        <el-menu-item index="/calendar">
-            <i class="mdi mdi-calendar"></i><span slot="title">Calendar</span>
-        </el-menu-item>
-        <el-menu-item index="/contacts">
-            <i class="mdi mdi-account-multiple-outline"></i><span slot="title">Contacts</span>
-        </el-menu-item>
-        <el-menu-item index="/gallery">
-            <i class="mdi mdi-image-multiple-outline"></i><span slot="title">Gallery</span>
-        </el-menu-item>
-        <el-menu-item index="/cards">
-            <i class="mdi mdi-view-dashboard-outline"></i><span slot="title">Cards</span>
-        </el-menu-item>
+        <el-menu-item index="/calendar"> <i class="mdi mdi-calendar"></i><span slot="title">Calendar</span> </el-menu-item>
+        <el-menu-item index="/contacts"> <i class="mdi mdi-account-multiple-outline"></i><span slot="title">Contacts</span> </el-menu-item>
+        <el-menu-item index="/gallery"> <i class="mdi mdi-image-multiple-outline"></i><span slot="title">Gallery</span> </el-menu-item>
+        <el-menu-item index="/cards"> <i class="mdi mdi-view-dashboard-outline"></i><span slot="title">Cards</span> </el-menu-item>
         <el-menu-item index="/mail"> <i class="mdi mdi-email-outline"></i><span slot="title">Mail</span> </el-menu-item>
         <el-sub-menu index="/ecommerce" popper-class="main-navigation-submenu">
             <template #title> <i class="mdi mdi-cart-outline"></i><span>eCommerce</span> </template>
@@ -85,9 +77,7 @@
                 <span slot="title">Tabbed page</span>
             </el-menu-item>
         </el-sub-menu>
-        <el-menu-item index="/themes">
-            <i class="mdi mdi-format-color-fill"></i><span slot="title">Themes</span>
-        </el-menu-item>
+        <el-menu-item index="/themes"> <i class="mdi mdi-format-color-fill"></i><span slot="title">Themes</span> </el-menu-item>
         <el-sub-menu index="1" popper-class="main-navigation-submenu" teleported>
             <template #title> <i class="mdi mdi-menu"></i><span>Multi level menu</span> </template>
             <el-menu-item index="1-1">item one (1)</el-menu-item>
@@ -123,12 +113,8 @@
                 <span slot="title">Flag Icons</span>
             </el-menu-item>
         </el-sub-menu>
-        <el-menu-item index="/multi-language">
-            <i class="mdi mdi-translate"></i><span slot="title">Multi language</span>
-        </el-menu-item>
-        <el-menu-item index="/typography">
-            <i class="mdi mdi-format-font"></i><span slot="title">Typography</span>
-        </el-menu-item>
+        <el-menu-item index="/multi-language"> <i class="mdi mdi-translate"></i><span slot="title">Multi language</span> </el-menu-item>
+        <el-menu-item index="/typography"> <i class="mdi mdi-format-font"></i><span slot="title">Typography</span> </el-menu-item>
         <el-menu-item index="/helper-classes">
             <i class="mdi mdi-help-circle-outline"></i><span slot="title">Helper Classes</span>
         </el-menu-item>
@@ -319,12 +305,8 @@
                 <span slot="title">Forgot Password</span>
             </el-menu-item>
         </el-sub-menu>
-        <el-menu-item index="/invoice">
-            <i class="mdi mdi-file-document-edit-outline"></i><span slot="title">Invoice</span>
-        </el-menu-item>
-        <el-menu-item index="/404">
-            <i class="mdi mdi-alert-octagon-outline"></i><span slot="title">404</span>
-        </el-menu-item>
+        <el-menu-item index="/invoice"> <i class="mdi mdi-file-document-edit-outline"></i><span slot="title">Invoice</span> </el-menu-item>
+        <el-menu-item index="/404"> <i class="mdi mdi-alert-octagon-outline"></i><span slot="title">404</span> </el-menu-item>
 
         <div class="collapse-menu-btn" :class="{ collapsed: isCollapse }">
             <button @click="$emit('collapse-nav-toggle')" class="flex align-center">

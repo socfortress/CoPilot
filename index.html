@@ -1,106 +1,105 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
+        <link rel="canonical" href="http://pragmatic.ddmweb.it" />
+        <link rel="shortcut icon" href="/favicon.ico" />
+        <title>Pragmatic - Vue.js Admin Template</title>
 
-	<head>
-		<meta charset="utf-8">
-		<meta http-equiv="X-UA-Compatible" content="IE=edge">
-		<meta name="viewport"
-			content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
-		<link rel="canonical" href="http://pragmatic.ddmweb.it">
-		<link rel="shortcut icon" href="/favicon.ico">
-		<title>Pragmatic - Vue.js Admin Template</title>
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="Pragmatic" />
+        <meta name="apple-touch-fullscreen" content="yes" />
 
-		<meta name="apple-mobile-web-app-capable" content="yes">
-		<meta name="apple-mobile-web-app-status-bar-style" content="default">
-		<meta name="apple-mobile-web-app-title" content="Pragmatic">
-		<meta name="apple-touch-fullscreen" content="yes">
+        <link rel="apple-touch-icon" sizes="57x57" href="/static/icons/apple-icon-57x57.png" />
+        <link rel="apple-touch-icon" sizes="60x60" href="/static/icons/apple-icon-60x60.png" />
+        <link rel="apple-touch-icon" sizes="72x72" href="/static/icons/apple-icon-72x72.png" />
+        <link rel="apple-touch-icon" sizes="76x76" href="/static/icons/apple-icon-76x76.png" />
+        <link rel="apple-touch-icon" sizes="114x114" href="/static/icons/apple-icon-114x114.png" />
+        <link rel="apple-touch-icon" sizes="120x120" href="/static/icons/apple-icon-120x120.png" />
+        <link rel="apple-touch-icon" sizes="144x144" href="/static/icons/apple-icon-144x144.png" />
+        <link rel="apple-touch-icon" sizes="152x152" href="/static/icons/apple-icon-152x152.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/static/icons/apple-icon-180x180.png" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/static/icons/android-icon-192x192.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32x32.png" />
+        <link rel="icon" type="image/png" sizes="96x96" href="/static/icons/favicon-96x96.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/static/icons/favicon-16x16.png" />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="msapplication-TileColor" content="#ffffff" />
+        <meta name="msapplication-TileImage" content="/static/icons/ms-icon-144x144.png" />
+        <meta name="theme-color" content="#ffffff" />
 
-		<link rel="apple-touch-icon" sizes="57x57" href="/static/icons/apple-icon-57x57.png">
-		<link rel="apple-touch-icon" sizes="60x60" href="/static/icons/apple-icon-60x60.png">
-		<link rel="apple-touch-icon" sizes="72x72" href="/static/icons/apple-icon-72x72.png">
-		<link rel="apple-touch-icon" sizes="76x76" href="/static/icons/apple-icon-76x76.png">
-		<link rel="apple-touch-icon" sizes="114x114" href="/static/icons/apple-icon-114x114.png">
-		<link rel="apple-touch-icon" sizes="120x120" href="/static/icons/apple-icon-120x120.png">
-		<link rel="apple-touch-icon" sizes="144x144" href="/static/icons/apple-icon-144x144.png">
-		<link rel="apple-touch-icon" sizes="152x152" href="/static/icons/apple-icon-152x152.png">
-		<link rel="apple-touch-icon" sizes="180x180" href="/static/icons/apple-icon-180x180.png">
-		<link rel="icon" type="image/png" sizes="192x192" href="/static/icons/android-icon-192x192.png">
-		<link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32x32.png">
-		<link rel="icon" type="image/png" sizes="96x96" href="/static/icons/favicon-96x96.png">
-		<link rel="icon" type="image/png" sizes="16x16" href="/static/icons/favicon-16x16.png">
-		<link rel="manifest" href="/manifest.json">
-		<meta name="msapplication-TileColor" content="#ffffff">
-		<meta name="msapplication-TileImage" content="/static/icons/ms-icon-144x144.png">
-		<meta name="theme-color" content="#ffffff">
+        <!-- Search Engine -->
+        <meta name="description" content="Element UI Vuejs design admin template with pre-built apps and pages" />
+        <meta
+            name="keywords"
+            content="HTML,CSS,VueJs,JAVASCRIPT,JS,element,admin,dashboard,theme,html dashboard, html css dashboard, web dashboard,vue dashboard, premium vue.js dashboard, vue.js admin template"
+        />
+        <meta name="author" content="Linko" />
+        <meta name="image" content="https://pragmatic.ddmweb.it/logo.png" />
+        <!-- Twitter -->
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Pragmatic - Vue.js Admin Template" />
+        <meta name="twitter:description" content="Element UI Vuejs design admin template with pre-built apps and pages" />
+        <meta name="twitter:site" content="@Linko_ddm" />
+        <meta name="twitter:creator" content="@Linko_ddm" />
+        <meta name="twitter:image" content="https://pragmatic.ddmweb.it/preview.jpg" />
+        <!-- Open Graph general (Facebook, Pinterest & Google+) -->
+        <meta name="og:title" content="Pragmatic - Vue.js Admin Template" />
+        <meta name="og:description" content="Element UI Vuejs design admin template with pre-built apps and pages" />
+        <meta name="og:image" content="https://pragmatic.ddmweb.it/preview.jpg" />
+        <meta name="og:url" content="https://pragmatic.ddmweb.it" />
+        <meta name="og:site_name" content="Pragmatic" />
+        <meta name="og:type" content="website" />
+        <meta property="og:title" content="Pragmatic - Vue.js Admin Template" />
+        <meta property="og:description" content="Element UI Vuejs design admin template with pre-built apps and pages" />
+        <meta property="og:image" content="https://pragmatic.ddmweb.it/preview.jpg" />
+        <meta property="og:url" content="https://pragmatic.ddmweb.it" />
+        <meta property="og:site_name" content="Pragmatic" />
+        <meta property="og:type" content="website" />
 
-		<!-- Search Engine -->
-		<meta name="description" content="Element UI Vuejs design admin template with pre-built apps and pages">
-		<meta name="keywords"
-			content="HTML,CSS,VueJs,JAVASCRIPT,JS,element,admin,dashboard,theme,html dashboard, html css dashboard, web dashboard,vue dashboard, premium vue.js dashboard, vue.js admin template">
-		<meta name="author" content="Linko">
-		<meta name="image" content="https://pragmatic.ddmweb.it/logo.png">
-		<!-- Twitter -->
-		<meta name="twitter:card" content="summary_large_image">
-		<meta name="twitter:title" content="Pragmatic - Vue.js Admin Template">
-		<meta name="twitter:description" content="Element UI Vuejs design admin template with pre-built apps and pages">
-		<meta name="twitter:site" content="@Linko_ddm">
-		<meta name="twitter:creator" content="@Linko_ddm">
-		<meta name="twitter:image" content="https://pragmatic.ddmweb.it/preview.jpg">
-		<!-- Open Graph general (Facebook, Pinterest & Google+) -->
-		<meta name="og:title" content="Pragmatic - Vue.js Admin Template">
-		<meta name="og:description" content="Element UI Vuejs design admin template with pre-built apps and pages">
-		<meta name="og:image" content="https://pragmatic.ddmweb.it/preview.jpg">
-		<meta name="og:url" content="https://pragmatic.ddmweb.it">
-		<meta name="og:site_name" content="Pragmatic">
-		<meta name="og:type" content="website">
-		<meta property="og:title" content="Pragmatic - Vue.js Admin Template">
-		<meta property="og:description" content="Element UI Vuejs design admin template with pre-built apps and pages">
-		<meta property="og:image" content="https://pragmatic.ddmweb.it/preview.jpg">
-		<meta property="og:url" content="https://pragmatic.ddmweb.it">
-		<meta property="og:site_name" content="Pragmatic">
-		<meta property="og:type" content="website">
+        <style>
+            .splash-screen {
+                background: #4a596a;
+                position: fixed;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                right: 0;
+                z-index: 99999;
+            }
 
-		<style>
-			.splash-screen {
-				background: #4a596a;
-				position: fixed;
-				top: 0;
-				left: 0;
-				bottom: 0;
-				right: 0;
-				z-index: 99999;
-			}
+            .splash-screen > .wrap {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translateX(-50%) translateY(-50%);
+            }
 
-			.splash-screen>.wrap {
-				position: absolute;
-				top: 50%;
-				left: 50%;
-				transform: translateX(-50%) translateY(-50%);
-			}
+            .splash-screen > .wrap > img {
+                margin: 30px auto;
+                display: block;
+                width: 100px;
+            }
 
-			.splash-screen>.wrap>img {
-				margin: 30px auto;
-				display: block;
-				width: 100px;
-			}
+            .splash-screen > .wrap > img.logo {
+                -webkit-filter: drop-shadow(0px 2px 2px rgba(0, 0, 0, 0.3));
+                filter: drop-shadow(0px 2px 2px rgba(0, 0, 0, 0.3));
+            }
+        </style>
+    </head>
 
-			.splash-screen>.wrap>img.logo {
-				-webkit-filter: drop-shadow(0px 2px 2px rgba(0, 0, 0, 0.3));
-				filter: drop-shadow(0px 2px 2px rgba(0, 0, 0, 0.3));
-			}
-		</style>
-	</head>
-
-	<body class="theme-default">
-		<div id="app">
-			<div class="splash-screen">
-				<div class="wrap">
-					<img src="/logo.svg" class="logo" alt="logo">
-					<img src="/Ripple-2s-200px.gif" alt="loading-image">
-				</div>
-			</div>
-		</div>
-		<script type="module" src="/src/main.ts"></script>
-	</body>
-
+    <body class="theme-default">
+        <div id="app">
+            <div class="splash-screen">
+                <div class="wrap">
+                    <img src="/logo.svg" class="logo" alt="logo" />
+                    <img src="/Ripple-2s-200px.gif" alt="loading-image" />
+                </div>
+            </div>
+        </div>
+        <script type="module" src="/src/main.ts"></script>
+    </body>
 </html>

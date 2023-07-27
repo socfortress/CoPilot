@@ -15,9 +15,7 @@
         </div>
 
         <h4>
-            <a href="https://github.com/apache/incubator-echarts" target="_blank">
-                <i class="mdi mdi-link-variant"></i>reference
-            </a>
+            <a href="https://github.com/apache/incubator-echarts" target="_blank"> <i class="mdi mdi-link-variant"></i>reference </a>
         </h4>
     </div>
 </template>
@@ -97,20 +95,7 @@ export default defineComponent({
                                 /*color: '#57617B'*/
                             }
                         },
-                        data: [
-                            "13:00",
-                            "13:05",
-                            "13:10",
-                            "13:15",
-                            "13:20",
-                            "13:25",
-                            "13:30",
-                            "13:35",
-                            "13:40",
-                            "13:45",
-                            "13:50",
-                            "13:55"
-                        ]
+                        data: ["13:00", "13:05", "13:10", "13:15", "13:20", "13:25", "13:30", "13:35", "13:40", "13:45", "13:50", "13:55"]
                     }
                 ],
                 yAxis: [

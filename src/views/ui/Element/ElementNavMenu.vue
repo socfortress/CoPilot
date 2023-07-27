@@ -14,12 +14,7 @@
         <div class="card-base card-shadow--medium demo-box bg-white">
             <el-collapse value="1">
                 <el-collapse-item title="Top bar" name="1">
-                    <el-menu
-                        :default-active="activeIndex"
-                        class="el-menu-demo"
-                        mode="horizontal"
-                        @select="handleSelect"
-                    >
+                    <el-menu :default-active="activeIndex" class="el-menu-demo" mode="horizontal" @select="handleSelect">
                         <el-menu-item index="1">Processing Center</el-menu-item>
                         <el-sub-menu index="2">
                             <template slot="title">Workspace</template>
@@ -74,12 +69,7 @@
                     <el-row class="tac">
                         <el-col :span="9" :xs="24">
                             <h5>Default colors</h5>
-                            <el-menu
-                                default-active="2"
-                                class="el-menu-vertical-demo"
-                                @open="handleOpen"
-                                @close="handleClose"
-                            >
+                            <el-menu default-active="2" class="el-menu-vertical-demo" @open="handleOpen" @close="handleClose">
                                 <el-sub-menu index="1">
                                     <template slot="title">
                                         <i class="el-icon-location"></i>

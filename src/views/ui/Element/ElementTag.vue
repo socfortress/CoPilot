@@ -14,13 +14,7 @@
         <div class="card-base card-shadow--medium demo-box bg-white">
             <el-collapse value="1">
                 <el-collapse-item title="Edit Dynamically" name="1">
-                    <el-tag
-                        :key="tag"
-                        v-for="tag in dynamicTags"
-                        closable
-                        :disable-transitions="false"
-                        @close="handleClose(tag)"
-                    >
+                    <el-tag :key="tag" v-for="tag in dynamicTags" closable :disable-transitions="false" @close="handleClose(tag)">
                         {{ tag }}
                     </el-tag>
                     <el-input

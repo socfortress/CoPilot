@@ -14,7 +14,9 @@
 .ps > .ps__rail-y > .ps__thumb-y {
     right: 0 !important;
     background-color: transparentize($text-color-primary, 0.7) !important;
-    transition: width 0.5s, transform 0.5s !important;
+    transition:
+        width 0.5s,
+        transform 0.5s !important;
     transform: translateX(-4px) !important;
     width: 4px !important;
 }
@@ -36,7 +38,9 @@
 .ps > .ps__rail-x > .ps__thumb-x {
     bottom: 0 !important;
     background-color: transparentize($text-color-primary, 0.7) !important;
-    transition: height 0.5s, transform 0.5s !important;
+    transition:
+        height 0.5s,
+        transform 0.5s !important;
     transform: translateY(-4px) !important;
     height: 4px !important;
 }

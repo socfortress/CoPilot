@@ -83,8 +83,7 @@ export default defineComponent({
             this.$prompt("Please input your e-mail", "Tip", {
                 confirmButtonText: "OK",
                 cancelButtonText: "Cancel",
-                inputPattern:
-                    /[\w!#$%&'*+/=?^_`{|}~-]+(?:\.[\w!#$%&'*+/=?^_`{|}~-]+)*@(?:[\w](?:[\w-]*[\w])?\.)+[\w](?:[\w-]*[\w])?/,
+                inputPattern: /[\w!#$%&'*+/=?^_`{|}~-]+(?:\.[\w!#$%&'*+/=?^_`{|}~-]+)*@(?:[\w](?:[\w-]*[\w])?\.)+[\w](?:[\w-]*[\w])?/,
                 inputErrorMessage: "Invalid Email"
             })
                 .then(value => {

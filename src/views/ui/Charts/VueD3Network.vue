@@ -3,9 +3,7 @@
         <div class="page-header">
             <h1>Vue D3 Network</h1>
             <h4>
-                <a href="https://github.com/emiliorizzo/vue-d3-network" target="_blank"
-                    ><i class="mdi mdi-link-variant"></i>reference</a
-                >
+                <a href="https://github.com/emiliorizzo/vue-d3-network" target="_blank"><i class="mdi mdi-link-variant"></i>reference</a>
             </h4>
             <el-breadcrumb separator="/">
                 <el-breadcrumb-item :to="{ path: '/' }"><i class="mdi mdi-home-outline"></i></el-breadcrumb-item>

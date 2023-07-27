@@ -2,10 +2,7 @@
     <div class="page-table column scrollable only-y" :class="{ flex: !isMobile, overflow: isMobile }">
         <div class="page-header">
             <h1>V2 Table</h1>
-            <h4>
-                for a better experience on Mac OS during horizontal scroll is prefered disable the "Swipe between pages"
-                option
-            </h4>
+            <h4>for a better experience on Mac OS during horizontal scroll is prefered disable the "Swipe between pages" option</h4>
             <el-breadcrumb separator="/">
                 <el-breadcrumb-item :to="{ path: '/' }"><i class="mdi mdi-home-outline"></i></el-breadcrumb-item>
                 <el-breadcrumb-item>Components</el-breadcrumb-item>
@@ -36,9 +33,7 @@
                 <button @click="downloadCSV">download csv ({{ total }})</button>
             </div>
             <div class="">
-                <a href="https://github.com/dwqs/v2-table" target="_blank"
-                    ><i class="mdi mdi-link-variant"></i> reference</a
-                >
+                <a href="https://github.com/dwqs/v2-table" target="_blank"><i class="mdi mdi-link-variant"></i> reference</a>
             </div>
         </div>
 
@@ -67,14 +62,7 @@
                     :shown-pagination="shownPagination"
                 >
                     <v2-table-column type="selection" width="45"></v2-table-column>
-                    <v2-table-column
-                        label="Name"
-                        prop="full_name"
-                        sortable
-                        width="200"
-                        align="left"
-                        :fixed="isMobile ? '' : 'left'"
-                    >
+                    <v2-table-column label="Name" prop="full_name" sortable width="200" align="left" :fixed="isMobile ? '' : 'left'">
                         <template slot-scope="row">
                             <span class="sel-string" v-html="$options.filters.selected(row.full_name, search)"></span>
                         </template>

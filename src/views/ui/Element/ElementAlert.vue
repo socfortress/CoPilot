@@ -14,16 +14,13 @@
         <div class="card-base card-shadow--medium demo-box bg-white">
             <el-collapse value="1">
                 <el-collapse-item title="With icon and description" name="1">
-                    <el-alert title="success alert" type="success" description="more text description" show-icon>
-                    </el-alert>
+                    <el-alert title="success alert" type="success" description="more text description" show-icon> </el-alert>
                     &nbsp;
                     <el-alert title="info alert" type="info" description="more text description" show-icon> </el-alert>
                     &nbsp;
-                    <el-alert title="warning alert" type="warning" description="more text description" show-icon>
-                    </el-alert>
+                    <el-alert title="warning alert" type="warning" description="more text description" show-icon> </el-alert>
                     &nbsp;
-                    <el-alert title="error alert" type="error" description="more text description" show-icon>
-                    </el-alert>
+                    <el-alert title="error alert" type="error" description="more text description" show-icon> </el-alert>
                 </el-collapse-item>
                 <el-collapse-item title="Code" name="2">
                     <pre v-highlightjs="code1"><code class="html"></code></pre>

@@ -10,16 +10,11 @@
             </el-breadcrumb>
         </div>
         <div class="card-base card-shadow--medium">
-            <div
-                id="container"
-                style="position: relative; width: 100%; max-width: 800px; height: 500px; margin: 0 auto"
-            ></div>
+            <div id="container" style="position: relative; width: 100%; max-width: 800px; height: 500px; margin: 0 auto"></div>
         </div>
 
         <h4>
-            <a href="https://github.com/markmarkoh/datamaps" target="_blank"
-                ><i class="mdi mdi-link-variant"></i> reference</a
-            >
+            <a href="https://github.com/markmarkoh/datamaps" target="_blank"><i class="mdi mdi-link-variant"></i> reference</a>
         </h4>
     </div>
 </template>

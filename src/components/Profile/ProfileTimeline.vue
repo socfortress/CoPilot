@@ -13,14 +13,13 @@
                         <span class="time">1{{ i }}/05/2018 22:4{{ i + 2 }}</span>
                     </div>
                     <div class="time-content__content" v-if="i % 2">
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce dictum finibus maximus. Morbi
-                        nibh lorem, bibendum porttitor turpis sed, molestie aliquam nibh. Curabitur condimentum ipsum
-                        accumsan elementum lobortis. Sed at turpis est. Nam maximus tempor orci ac dictum.
+                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce dictum finibus maximus. Morbi nibh lorem, bibendum
+                        porttitor turpis sed, molestie aliquam nibh. Curabitur condimentum ipsum accumsan elementum lobortis. Sed at turpis
+                        est. Nam maximus tempor orci ac dictum.
                     </div>
                     <div class="time-content__content" v-else>
-                        Donec dapibus molestie lacus ac pellentesque. Quisque imperdiet ultricies elementum. Quisque
-                        quis ullamcorper nisl, a facilisis augue. Fusce in lacus dapibus, eleifend orci non, maximus
-                        nunc.
+                        Donec dapibus molestie lacus ac pellentesque. Quisque imperdiet ultricies elementum. Quisque quis ullamcorper nisl,
+                        a facilisis augue. Fusce in lacus dapibus, eleifend orci non, maximus nunc.
                     </div>
                 </div>
             </div>

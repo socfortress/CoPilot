@@ -6,8 +6,7 @@
             <div class="card-base card-shadow--small search-card scrollable only-y">
                 <h1 class="mt-0">Contacts</h1>
 
-                <el-input prefix-icon="el-icon-search" placeholder="Search a contact" clearable v-model="search">
-                </el-input>
+                <el-input prefix-icon="el-icon-search" placeholder="Search a contact" clearable v-model="search"> </el-input>
 
                 <div class="o-050 text-right mt-10 mb-30">
                     <strong>{{ contactsFiltered.length }}</strong> contacts
@@ -35,11 +34,7 @@
                         <i class="mdi mdi-star-outline align-vertical-middle" v-if="!c.starred"></i>
                     </div>
                     <div class="avatar align-vertical">
-                        <img
-                            :src="'/static/images/users/user-' + c.id + '.jpg'"
-                            class="align-vertical-middle"
-                            alt="user avatar"
-                        />
+                        <img :src="'/static/images/users/user-' + c.id + '.jpg'" class="align-vertical-middle" alt="user avatar" />
                     </div>
                     <div class="info box grow flex">
                         <div class="name box grow flex column justify-center p-10">
@@ -83,10 +78,7 @@ export default defineComponent({
         contactsFiltered() {
             return this.contacts.filter(
                 ({ full_name, email, phone }) =>
-                    (full_name + email + phone)
-                        .toString()
-                        .toLowerCase()
-                        .indexOf(this.search.toString().toLowerCase()) !== -1
+                    (full_name + email + phone).toString().toLowerCase().indexOf(this.search.toString().toLowerCase()) !== -1
             )
         },
         contactsClass() {
@@ -284,7 +276,9 @@ export default defineComponent({
                 padding: 10px;
                 background-color: lighten($background-color, 20%);
                 border-radius: 5px;
-                box-shadow: 0 8px 16px 0 rgba(40, 40, 90, 0.09), 0 3px 6px 0 rgba(0, 0, 0, 0.065);
+                box-shadow:
+                    0 8px 16px 0 rgba(40, 40, 90, 0.09),
+                    0 3px 6px 0 rgba(0, 0, 0, 0.065);
 
                 .avatar {
                     width: 90px;

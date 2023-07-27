@@ -17,14 +17,14 @@
         <div class="card-base card-shadow--small ph-40 pt-20 pb-30">
             <p>
                 Multi language support is provided by the
-                <a href="https://github.com/kazupon/vue-i18n" target="_blank">vue-i18n</a> plugin. For more information
-                and to find out about all possible implementations, I invite you to read the
+                <a href="https://github.com/kazupon/vue-i18n" target="_blank">vue-i18n</a> plugin. For more information and to find out
+                about all possible implementations, I invite you to read the
                 <a href="http://kazupon.github.io/vue-i18n/en/" target="_blank">documentation</a>.
             </p>
             <p>
                 In the theme
-                <a href="https://pragmatic-docs.vercel.app/#/multilanguage" target="_blank">documentation</a> you can
-                find out how it was implemented.
+                <a href="https://pragmatic-docs.vercel.app/#/multilanguage" target="_blank">documentation</a> you can find out how it was
+                implemented.
             </p>
             <hr class="styled mb-20" />
             <div class="flex align-center">
@@ -36,32 +36,25 @@
                     <template #dropdown>
                         <el-dropdown-menu>
                             <el-dropdown-item command="us-English"
-                                ><i class="flag-icon flag-icon-us mr-15"></i
-                                >{{ $t("languages.English") }}</el-dropdown-item
+                                ><i class="flag-icon flag-icon-us mr-15"></i>{{ $t("languages.English") }}</el-dropdown-item
                             >
                             <el-dropdown-item command="it-Italian"
-                                ><i class="flag-icon flag-icon-it mr-15"></i
-                                >{{ $t("languages.Italian") }}</el-dropdown-item
+                                ><i class="flag-icon flag-icon-it mr-15"></i>{{ $t("languages.Italian") }}</el-dropdown-item
                             >
                             <el-dropdown-item command="fr-French"
-                                ><i class="flag-icon flag-icon-fr mr-15"></i
-                                >{{ $t("languages.French") }}</el-dropdown-item
+                                ><i class="flag-icon flag-icon-fr mr-15"></i>{{ $t("languages.French") }}</el-dropdown-item
                             >
                             <el-dropdown-item command="de-German"
-                                ><i class="flag-icon flag-icon-de mr-15"></i
-                                >{{ $t("languages.German") }}</el-dropdown-item
+                                ><i class="flag-icon flag-icon-de mr-15"></i>{{ $t("languages.German") }}</el-dropdown-item
                             >
                             <el-dropdown-item command="es-Spanish"
-                                ><i class="flag-icon flag-icon-es mr-15"></i
-                                >{{ $t("languages.Spanish") }}</el-dropdown-item
+                                ><i class="flag-icon flag-icon-es mr-15"></i>{{ $t("languages.Spanish") }}</el-dropdown-item
                             >
                             <el-dropdown-item command="cn-Chinese"
-                                ><i class="flag-icon flag-icon-cn mr-15"></i
-                                >{{ $t("languages.Chinese") }}</el-dropdown-item
+                                ><i class="flag-icon flag-icon-cn mr-15"></i>{{ $t("languages.Chinese") }}</el-dropdown-item
                             >
                             <el-dropdown-item command="jp-Japanese"
-                                ><i class="flag-icon flag-icon-jp mr-15"></i
-                                >{{ $t("languages.Japanese") }}</el-dropdown-item
+                                ><i class="flag-icon flag-icon-jp mr-15"></i>{{ $t("languages.Japanese") }}</el-dropdown-item
                             >
                         </el-dropdown-menu>
                     </template>

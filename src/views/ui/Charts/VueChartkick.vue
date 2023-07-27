@@ -63,9 +63,7 @@
         </div>
 
         <h4>
-            <a href="https://github.com/ankane/vue-chartkick" target="_blank"
-                ><i class="mdi mdi-link-variant"></i>reference</a
-            >
+            <a href="https://github.com/ankane/vue-chartkick" target="_blank"><i class="mdi mdi-link-variant"></i>reference</a>
         </h4>
     </div>
 </template>

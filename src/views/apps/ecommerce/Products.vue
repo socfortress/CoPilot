@@ -8,12 +8,7 @@
                 <div class="widget">
                     <div class="title">Category</div>
                     <div class="content">
-                        <el-tree
-                            :data="treeData"
-                            :props="treeProps"
-                            node-key="id"
-                            :default-expanded-keys="[1]"
-                        ></el-tree>
+                        <el-tree :data="treeData" :props="treeProps" node-key="id" :default-expanded-keys="[1]"></el-tree>
                     </div>
                 </div>
                 <div class="widget">
@@ -264,7 +259,9 @@ export default defineComponent({
             background: white;
             border-radius: 4px;
             margin-bottom: 20px;
-            box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.07), 0 3px 6px 0 rgba(0, 0, 0, 0.065);
+            box-shadow:
+                0 8px 16px 0 rgba(0, 0, 0, 0.07),
+                0 3px 6px 0 rgba(0, 0, 0, 0.065);
             overflow: hidden;
             margin-left: 20px;
             margin-right: 10px;
@@ -443,7 +440,9 @@ export default defineComponent({
                 }
 
                 &:hover {
-                    box-shadow: 0 8px 16px 0 rgba(40, 40, 90, 0.09), 0 3px 6px 0 rgba(0, 0, 0, 0.065),
+                    box-shadow:
+                        0 8px 16px 0 rgba(40, 40, 90, 0.09),
+                        0 3px 6px 0 rgba(0, 0, 0, 0.065),
                         0px 10px 0px 0px $text-color-accent;
                 }
             }

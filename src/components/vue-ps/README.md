@@ -14,44 +14,43 @@ npm install vue-ps
 
 ```html
 <template>
-  <VuePs class="scroll-area" v-once :settings="settings" @ps-scroll-y="scrollHanle">
-    <img src="./assets/azusa.jpg" height="720" width="1280" alt="azusa">
-  </VuePs>
+    <VuePs class="scroll-area" v-once :settings="settings" @ps-scroll-y="scrollHanle">
+        <img src="./assets/azusa.jpg" height="720" width="1280" alt="azusa" />
+    </VuePs>
 </template>
 
 <script>
-import VuePs from 'vue-ps'
+    import VuePs from "vue-ps"
 
-export default {
-  components: {
-    VuePs
-  },
-  name: 'app',
-  data() {
-    return {
-      settings: {
-        maxScrollbarLength: 60
-      }
+    export default {
+        components: {
+            VuePs
+        },
+        name: "app",
+        data() {
+            return {
+                settings: {
+                    maxScrollbarLength: 60
+                }
+            }
+        },
+        methods: {
+            scrollHanle(evt) {
+                console.log(evt)
+            }
+        }
     }
-  },
-  methods: {
-    scrollHanle(evt) {
-      console.log(evt)
-    }
-  }
-}
-
 </script>
 <style lang="scss">
-.scroll-area {
-  position: relative;
-  margin: auto;
-  width: 400px;
-  height: 300px;
-}
+    .scroll-area {
+        position: relative;
+        margin: auto;
+        width: 400px;
+        height: 300px;
+    }
 </style>
-
 ```
+
 Also,you can clone this repository to run the example:
 
 ```shell
@@ -60,7 +59,9 @@ cd vue-ps
 npm install
 npm run example
 ```
+
 ### 2.2 example with vuerouter
+
 ```shell
 git clone git@github.com:Linko91/vue-ps.git
 cd vue-ps
@@ -71,29 +72,32 @@ npm run example:vuerouter
 ## 3. props
 
 ### settings:please refer to [optional-parameters of perfect-scrollbar](https://github.com/noraesae/perfect-scrollbar#optional-parameters)
-### swicher:which you could use to turn off the scrollbar for mobile or other case
 
+### swicher:which you could use to turn off the scrollbar for mobile or other case
 
 ## 4. events
 
 please refer to [events of perfect-scrollbar](https://github.com/noraesae/perfect-scrollbar#events)
 
 ## 5. use vue and webpack
+
 you can do it like this:
 
 ### install
+
 ```shell
 npm install vue-ps perfect-scrollbar --save
 ```
 
 ### use
+
 ```js
-import VuePs from 'vue-ps/index.vue'
+import VuePs from "vue-ps/index.vue"
 export default {
-  components: {
-    VuePs
-  },
-  //...
+    components: {
+        VuePs
+    }
+    //...
 }
 ```
 

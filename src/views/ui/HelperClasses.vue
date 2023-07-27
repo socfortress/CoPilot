@@ -61,12 +61,8 @@
                 <div class="right-box box grow align-box">
                     <div class="align-vertical scrollable p-10" style="height: 250px; min-width: 306px">
                         <div class="align-vertical-top card-base card-shadow--small p-20 m-20">align-vertical-top</div>
-                        <div class="align-vertical-middle card-base card-shadow--small p-20 m-20">
-                            align-vertical-middle
-                        </div>
-                        <div class="align-vertical-bottom card-base card-shadow--small p-20 m-20">
-                            align-vertical-bottom
-                        </div>
+                        <div class="align-vertical-middle card-base card-shadow--small p-20 m-20">align-vertical-middle</div>
+                        <div class="align-vertical-bottom card-base card-shadow--small p-20 m-20">align-vertical-bottom</div>
                     </div>
                 </div>
             </div>
@@ -75,8 +71,8 @@
                 <div class="left-box">box scrollable</div>
                 <div class="right-box box grow">
                     <div class="scrollable" style="width: 120px; height: 80px">
-                        Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod
-                        tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam.
+                        Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore
+                        magna aliquam erat volutpat. Ut wisi enim ad minim veniam.
                     </div>
                 </div>
             </div>
@@ -88,9 +84,7 @@
                 </div>
             </div>
 
-            <div class="text-divider">
-                PADDINGS ( from <strong class="mh-7">1px</strong> to <strong class="mh-7">200px</strong> )
-            </div>
+            <div class="text-divider">PADDINGS ( from <strong class="mh-7">1px</strong> to <strong class="mh-7">200px</strong> )</div>
             <br />
             <div class="flex center demo-box">
                 <div class="left-box">padding ex: p-20, pt-10, padding-bottom-8, padding-horizontal-5</div>
@@ -122,9 +116,7 @@
                 </div>
             </div>
 
-            <div class="text-divider">
-                MARGINS ( from <strong class="mh-7">1px</strong> to <strong class="mh-7">200px</strong> )
-            </div>
+            <div class="text-divider">MARGINS ( from <strong class="mh-7">1px</strong> to <strong class="mh-7">200px</strong> )</div>
             <br />
             <div class="flex center demo-box">
                 <div class="left-box">margins ex: m-20, mt-10, margin-bottom-8, margin-horizontal-5</div>
@@ -172,9 +164,7 @@
                 </div>
             </div>
 
-            <div class="text-divider">
-                BORDER RADIUS ( from <strong class="mh-7">1px</strong> to <strong class="mh-7">50px</strong> )
-            </div>
+            <div class="text-divider">BORDER RADIUS ( from <strong class="mh-7">1px</strong> to <strong class="mh-7">50px</strong> )</div>
             <br />
             <div class="flex center demo-box">
                 <div class="left-box">border-radius</div>
@@ -186,9 +176,7 @@
                 </div>
             </div>
 
-            <div class="text-divider">
-                OPACITY ( from <strong class="mh-7">0</strong> to <strong class="mh-7">1</strong> )
-            </div>
+            <div class="text-divider">OPACITY ( from <strong class="mh-7">0</strong> to <strong class="mh-7">1</strong> )</div>
             <br />
             <div class="flex center demo-box">
                 <div class="left-box">opacity ex: o-0, o-1, o-055, o-70</div>
@@ -207,15 +195,7 @@ export default defineComponent({
     name: "HelperClasses",
     data() {
         return {
-            border: [
-                "border",
-                "border-top",
-                "border-right",
-                "border-bottom",
-                "border-left",
-                "border-horizontal",
-                "border-vertical"
-            ],
+            border: ["border", "border-top", "border-right", "border-bottom", "border-left", "border-horizontal", "border-vertical"],
             padding: Array(10),
             margin: Array(10),
             borderRadius: Array(20)
@@ -333,7 +313,9 @@ export default defineComponent({
         margin-right: 15px;
         margin-bottom: 15px;
         display: inline-block;
-        box-shadow: 0 3px 6px 0 rgba(40, 40, 90, 0.09), 0 1px 1px 0 rgba(0, 0, 0, 0.065);
+        box-shadow:
+            0 3px 6px 0 rgba(40, 40, 90, 0.09),
+            0 1px 1px 0 rgba(0, 0, 0, 0.065);
 
         li {
             list-style: none;

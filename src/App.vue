@@ -48,12 +48,7 @@
                 </router-view>
             </div>
 
-            <horizontal-nav
-                :position="navPos"
-                @push-page="closeSidebar"
-                v-if="navPos === 'bottom'"
-                style="margin-bottom: 0"
-            />
+            <horizontal-nav :position="navPos" @push-page="closeSidebar" v-if="navPos === 'bottom'" style="margin-bottom: 0" />
 
             <Footer v-if="footer === 'below'" :position="footer" />
         </div>
@@ -96,10 +91,7 @@ export default defineComponent({
     },
     computed: {
         navPos() {
-            if (
-                this.innerWidth <= 768 &&
-                (useMainStore().navPos === ENavPos.top || useMainStore().navPos === ENavPos.bottom)
-            ) {
+            if (this.innerWidth <= 768 && (useMainStore().navPos === ENavPos.top || useMainStore().navPos === ENavPos.bottom)) {
                 return "left"
             }
             return useMainStore().navPos
@@ -322,7 +314,9 @@ export default defineComponent({
     &.boxed {
         max-width: 1300px;
         margin: 0 auto;
-        box-shadow: 0px 0px 20px 10px rgba(0, 0, 0, 0.15), 0px 0px 5px 0px rgba(0, 0, 0, 0.1);
+        box-shadow:
+            0px 0px 20px 10px rgba(0, 0, 0, 0.15),
+            0px 0px 5px 0px rgba(0, 0, 0, 0.1);
     }
 
     &.footer-above {

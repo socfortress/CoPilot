@@ -3,7 +3,7 @@
 complete variables list in: node_modules/element-ui/packages/theme-chalk/src/common/var.scss
 */
 
-/* icon font path, required 
+/* icon font path, required
 $--font-path: "~element-ui/lib/theme-chalk/fonts";
 */
 @use "element-plus/theme-chalk/src/index.scss" as *;
@@ -83,13 +83,13 @@ $--font-path: "~element-ui/lib/theme-chalk/fonts";
 		right: 75px !important;
 		left: initial !important;
 		transform: none !important;
-		
+
 		.el-menu--vertical {
 			position: fixed !important;
 			right: 280px !important;
 			left: initial !important;
 			transform: none !important;
-		
+
 			.el-menu--vertical > .el-menu--popup {
 				position: fixed !important;
 				right: 485px !important;

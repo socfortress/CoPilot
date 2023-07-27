@@ -42,8 +42,7 @@ export default defineComponent({
 
     methods: {
         getScroll(w, top) {
-            let prop =
-                this.scrollerIsWindow || w === window ? `page${top ? "Y" : "X"}Offset` : `scroll${top ? "Top" : "Left"}`
+            let prop = this.scrollerIsWindow || w === window ? `page${top ? "Y" : "X"}Offset` : `scroll${top ? "Top" : "Left"}`
 
             return this.scroller[prop]
         },

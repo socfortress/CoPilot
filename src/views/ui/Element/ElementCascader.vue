@@ -14,12 +14,7 @@
         <div class="card-base card-shadow--medium demo-box bg-white">
             <el-collapse value="1">
                 <el-collapse-item title="Filterable" name="1">
-                    <el-cascader
-                        placeholder="Try searching: Guide"
-                        :options="options"
-                        filterable
-                        change-on-select
-                    ></el-cascader>
+                    <el-cascader placeholder="Try searching: Guide" :options="options" filterable change-on-select></el-cascader>
                 </el-collapse-item>
                 <el-collapse-item title="Code" name="2">
                     <pre v-highlightjs="code1"><code class="html"></code></pre>

@@ -2,9 +2,7 @@
     <div class="page-icons flex column" id="page-icons">
         <div class="page-header">
             <h1>Material Design Icons</h1>
-            <h4 class="hidden-xs-only">
-                in this page you can search <strong>Material Design Icons</strong> for your project
-            </h4>
+            <h4 class="hidden-xs-only">in this page you can search <strong>Material Design Icons</strong> for your project</h4>
             <el-breadcrumb separator="/">
                 <el-breadcrumb-item :to="{ path: '/' }"><i class="mdi mdi-home-outline"></i></el-breadcrumb-item>
                 <el-breadcrumb-item>UI</el-breadcrumb-item>
@@ -18,9 +16,7 @@
             <input v-model="search" placeholder="Search an icon" class="box grow" />
             <div class="icons-tot">{{ iconsFiltered.length }} icons</div>
             <div>
-                <a href="https://materialdesignicons.com/" target="_blank">
-                    all icons <i class="mdi mdi-arrow-right"></i>reference
-                </a>
+                <a href="https://materialdesignicons.com/" target="_blank"> all icons <i class="mdi mdi-arrow-right"></i>reference </a>
             </div>
         </div>
         <resize-observer @notify="handleResize" />
@@ -5415,9 +5411,7 @@ export default defineComponent({
     },
     computed: {
         iconsFiltered() {
-            return this.icons.filter(
-                ({ data }) => data.toString().toLowerCase().indexOf(this.search.toString().toLowerCase()) !== -1
-            )
+            return this.icons.filter(({ data }) => data.toString().toLowerCase().indexOf(this.search.toString().toLowerCase()) !== -1)
         }
     },
     methods: {

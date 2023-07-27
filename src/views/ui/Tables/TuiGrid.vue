@@ -3,11 +3,7 @@
         <div class="page-header card-base header-accent">
             <h1>TUI Grid</h1>
             <h4>
-                <a
-                    href="http://ui.toast.com/tui-grid/"
-                    target="_blank"
-                    class="white-text"
-                    style="text-decoration-color: white"
+                <a href="http://ui.toast.com/tui-grid/" target="_blank" class="white-text" style="text-decoration-color: white"
                     >TOAST UI Grid</a
                 >
                 is a powerful widget which allows you to visualize and edit data via its table representation
@@ -154,13 +150,7 @@ export default {
                         name: "email",
                         minWidth: 200,
                         formatter: function (data) {
-                            return (
-                                '<a href="mailto:' +
-                                data.value.toString() +
-                                '" target="_blank">' +
-                                data.value.toString() +
-                                "</a>"
-                            )
+                            return '<a href="mailto:' + data.value.toString() + '" target="_blank">' + data.value.toString() + "</a>"
                         }
                     },
                     {

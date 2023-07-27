@@ -3,12 +3,7 @@
         <div class="mail-boxes flex column">
             <button class="compose-btn" @click="mailComposerVisible = true"><i class="mdi mdi-email-plus"></i></button>
             <div class="list-boxes scrollable only-y box grow">
-                <div
-                    class="item flex align-center"
-                    :class="{ selected: mb.active }"
-                    v-for="mb in mailboxes"
-                    :key="mb.icon"
-                >
+                <div class="item flex align-center" :class="{ selected: mb.active }" v-for="mb in mailboxes" :key="mb.icon">
                     <span class="icon"><i :class="'mdi mdi-' + mb.icon"></i></span>
                     <span class="label box grow">{{ mb.label }}</span>
                     <span class="badge" v-if="mb.label === 'Inbox'">7</span>

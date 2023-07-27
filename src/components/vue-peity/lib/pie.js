@@ -6,7 +6,7 @@ export default {
 
     draw(opts) {
         if (!opts.delimiter) {
-            var delimiter = this.raw.match(/[^0-9\.]/)
+            var delimiter = this.raw.match(/[^0-9.]/)
             opts.delimiter = delimiter ? delimiter[0] : ","
         }
         var values = this.values().map(n => (n > 0 ? n : 0))

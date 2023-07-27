@@ -1,11 +1,7 @@
 <template>
     <div class="toolbar flex align-center justify-space-between">
         <div class="box-left box grow flex">
-            <button
-                @click="toggleSidebar"
-                v-if="menuBurger !== 'right'"
-                class="toggle-sidebar card-base card-shadow--small"
-            >
+            <button @click="toggleSidebar" v-if="menuBurger !== 'right'" class="toggle-sidebar card-base card-shadow--small">
                 <i class="mdi mdi-menu"></i>
             </button>
 
@@ -39,8 +35,7 @@
                             ><i class="flag-icon flag-icon-cn mr-15"></i>{{ $t("languages.Chinese") }}</el-dropdown-item
                         >
                         <el-dropdown-item command="jp"
-                            ><i class="flag-icon flag-icon-jp mr-15"></i
-                            >{{ $t("languages.Japanese") }}</el-dropdown-item
+                            ><i class="flag-icon flag-icon-jp mr-15"></i>{{ $t("languages.Japanese") }}</el-dropdown-item
                         >
                     </el-dropdown-menu>
                 </template>
@@ -68,18 +63,12 @@
                 </span>
                 <template #dropdown>
                     <el-dropdown-menu>
-                        <el-dropdown-item command="/profile">
-                            <i class="mdi mdi-account-outline mr-10"></i> Profile
-                        </el-dropdown-item>
-                        <el-dropdown-item command="/calendar">
-                            <i class="mdi mdi-calendar mr-10"></i> Calendar
-                        </el-dropdown-item>
+                        <el-dropdown-item command="/profile"> <i class="mdi mdi-account-outline mr-10"></i> Profile </el-dropdown-item>
+                        <el-dropdown-item command="/calendar"> <i class="mdi mdi-calendar mr-10"></i> Calendar </el-dropdown-item>
                         <el-dropdown-item command="/contacts">
                             <i class="mdi mdi-account-multiple-outline mr-10"></i> Contacts
                         </el-dropdown-item>
-                        <el-dropdown-item command="/logout" divided>
-                            <i class="mdi mdi-logout mr-10"></i> Logout
-                        </el-dropdown-item>
+                        <el-dropdown-item command="/logout" divided> <i class="mdi mdi-logout mr-10"></i> Logout </el-dropdown-item>
                     </el-dropdown-menu>
                 </template>
             </el-dropdown>
@@ -187,11 +176,15 @@ export default defineComponent({
         box-sizing: border-box;
         display: block;
         cursor: pointer;
-        box-shadow: 0 2px 5px 0 rgba(49, 49, 93, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.08);
+        box-shadow:
+            0 2px 5px 0 rgba(49, 49, 93, 0.1),
+            0 1px 2px 0 rgba(0, 0, 0, 0.08);
         transition: box-shadow 0.5s;
 
         &:hover {
-            box-shadow: 0px 3px 10px 0 rgba(49, 49, 93, 0.08), 0px 2px 7px 0 rgba(0, 0, 0, 0.08);
+            box-shadow:
+                0px 3px 10px 0 rgba(49, 49, 93, 0.08),
+                0px 2px 7px 0 rgba(0, 0, 0, 0.08);
         }
     }
 
@@ -280,7 +273,9 @@ export default defineComponent({
 
     .el-dropdown {
         .flag-icon {
-            box-shadow: 0 2px 5px 0 rgba(49, 49, 93, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.08);
+            box-shadow:
+                0 2px 5px 0 rgba(49, 49, 93, 0.1),
+                0 1px 2px 0 rgba(0, 0, 0, 0.08);
             cursor: pointer;
             border: 1px solid lighten($background-color, 20%);
             background-color: lighten($background-color, 20%);

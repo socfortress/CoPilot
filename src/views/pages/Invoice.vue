@@ -41,8 +41,8 @@
                 <div class="project">
                     <h2>Project Description</h2>
                     <p>
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam in diam sit amet felis ultricies
-                        ultricies vitae et tortor. Proin dapibus justo felis, ut imperdiet lacus accumsan quis.
+                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam in diam sit amet felis ultricies ultricies vitae et
+                        tortor. Proin dapibus justo felis, ut imperdiet lacus accumsan quis.
                     </p>
                 </div>
             </div>
@@ -113,13 +113,10 @@
 
                 <div class="legalcopy flex mt-20">
                     <p class="legal box grow mr-20 mt-0">
-                        <strong>Thank you for your business!</strong>  Payment is expected within 31 days; please
-                        process this invoice within that time. There will be a 5% interest charge per month on late
-                        invoices.
+                        <strong>Thank you for your business!</strong>  Payment is expected within 31 days; please process this invoice
+                        within that time. There will be a 5% interest charge per month on late invoices.
                     </p>
-                    <el-button type="primary" plain size="small" style="height: 32px"
-                        ><i class="mdi mdi-cart"></i> Check out</el-button
-                    >
+                    <el-button type="primary" plain size="small" style="height: 32px"><i class="mdi mdi-cart"></i> Check out</el-button>
                 </div>
             </div>
             <!--End Invoice-->

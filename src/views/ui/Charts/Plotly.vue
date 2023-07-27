@@ -111,20 +111,14 @@ export default defineComponent({
         /*  Colored and Styled Bar Chart  */
         ;(() => {
             var trace1 = {
-                x: [
-                    1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
-                    2011, 2012
-                ],
+                x: [1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012],
                 y: [219, 146, 112, 127, 124, 180, 236, 207, 236, 263, 350, 430, 474, 526, 488, 537, 500, 439],
                 name: "Rest of world",
                 marker: { color: "rgb(55, 83, 109)" },
                 type: "bar"
             }
             var trace2 = {
-                x: [
-                    1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010,
-                    2011, 2012
-                ],
+                x: [1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012],
                 y: [16, 13, 10, 11, 28, 37, 43, 55, 56, 88, 105, 156, 270, 299, 340, 403, 549, 499],
                 name: "China",
                 marker: { color: "rgb(26, 118, 255)" },
@@ -164,47 +158,44 @@ export default defineComponent({
         })()
 
         /*  Sankey Diagram  */
-        Plotly.d3.json(
-            "https://raw.githubusercontent.com/plotly/plotly.js/master/test/image/mocks/sankey_energy.json",
-            fig => {
-                var data = {
-                    type: "sankey",
-                    domain: {
-                        x: [0, 1],
-                        y: [0, 1]
+        Plotly.d3.json("https://raw.githubusercontent.com/plotly/plotly.js/master/test/image/mocks/sankey_energy.json", fig => {
+            var data = {
+                type: "sankey",
+                domain: {
+                    x: [0, 1],
+                    y: [0, 1]
+                },
+                orientation: "h",
+                valueformat: ".0f",
+                valuesuffix: "TWh",
+                node: {
+                    pad: 15,
+                    thickness: 15,
+                    line: {
+                        color: "black",
+                        width: 0.5
                     },
-                    orientation: "h",
-                    valueformat: ".0f",
-                    valuesuffix: "TWh",
-                    node: {
-                        pad: 15,
-                        thickness: 15,
-                        line: {
-                            color: "black",
-                            width: 0.5
-                        },
-                        label: fig.data[0].node.label,
-                        color: fig.data[0].node.color
-                    },
-                    link: {
-                        source: fig.data[0].link.source,
-                        target: fig.data[0].link.target,
-                        value: fig.data[0].link.value,
-                        label: fig.data[0].link.label
-                    }
+                    label: fig.data[0].node.label,
+                    color: fig.data[0].node.color
+                },
+                link: {
+                    source: fig.data[0].link.source,
+                    target: fig.data[0].link.target,
+                    value: fig.data[0].link.value,
+                    label: fig.data[0].link.label
                 }
-                var data = [data]
-                var layout = {
-                    title: "Energy forecast for 2050<br>Source: Department of Energy & Climate Change, Tom Counsell via <a href='https://bost.ocks.org/mike/sankey/'>Mike Bostock</a>",
-                    //width: 1118,
-                    height: 772,
-                    font: {
-                        size: 10
-                    }
-                }
-                Plotly.plot(this.$refs.sankey, data, layout)
             }
-        )
+            var data = [data]
+            var layout = {
+                title: "Energy forecast for 2050<br>Source: Department of Energy & Climate Change, Tom Counsell via <a href='https://bost.ocks.org/mike/sankey/'>Mike Bostock</a>",
+                //width: 1118,
+                height: 772,
+                font: {
+                    size: 10
+                }
+            }
+            Plotly.plot(this.$refs.sankey, data, layout)
+        })
 
         /*  Lines on an Orthographic Map
 		Plotly.d3.csv('https://raw.githubusercontent.com/plotly/datasets/master/globe_contours.csv',(err, rows) => {
@@ -361,69 +352,66 @@ export default defineComponent({
         })()
 
         /*  Time Series with Rangeslider  */
-        Plotly.d3.csv(
-            "https://raw.githubusercontent.com/plotly/datasets/master/finance-charts-apple.csv",
-            (err, rows) => {
-                function unpack(rows, key) {
-                    return rows.map(function (row) {
-                        return row[key]
-                    })
-                }
-
-                var trace1 = {
-                    type: "scatter",
-                    mode: "lines",
-                    name: "AAPL High",
-                    x: unpack(rows, "Date"),
-                    y: unpack(rows, "AAPL.High"),
-                    line: { color: "#17BECF" }
-                }
-                var trace2 = {
-                    type: "scatter",
-                    mode: "lines",
-                    name: "AAPL Low",
-                    x: unpack(rows, "Date"),
-                    y: unpack(rows, "AAPL.Low"),
-                    line: { color: "#7F7F7F" }
-                }
-
-                var data = [trace1, trace2]
-
-                var layout = {
-                    title: "Time Series with Rangeslider",
-                    xaxis: {
-                        autorange: true,
-                        range: ["2015-02-17", "2017-02-16"],
-                        rangeselector: {
-                            buttons: [
-                                {
-                                    count: 1,
-                                    label: "1m",
-                                    step: "month",
-                                    stepmode: "backward"
-                                },
-                                {
-                                    count: 6,
-                                    label: "6m",
-                                    step: "month",
-                                    stepmode: "backward"
-                                },
-                                { step: "all" }
-                            ]
-                        },
-                        rangeslider: { range: ["2015-02-17", "2017-02-16"] },
-                        type: "date"
-                    },
-                    yaxis: {
-                        autorange: true,
-                        range: [86.8700008333, 138.870004167],
-                        type: "linear"
-                    }
-                }
-
-                Plotly.newPlot(this.$refs.time, data, layout)
+        Plotly.d3.csv("https://raw.githubusercontent.com/plotly/datasets/master/finance-charts-apple.csv", (err, rows) => {
+            function unpack(rows, key) {
+                return rows.map(function (row) {
+                    return row[key]
+                })
             }
-        )
+
+            var trace1 = {
+                type: "scatter",
+                mode: "lines",
+                name: "AAPL High",
+                x: unpack(rows, "Date"),
+                y: unpack(rows, "AAPL.High"),
+                line: { color: "#17BECF" }
+            }
+            var trace2 = {
+                type: "scatter",
+                mode: "lines",
+                name: "AAPL Low",
+                x: unpack(rows, "Date"),
+                y: unpack(rows, "AAPL.Low"),
+                line: { color: "#7F7F7F" }
+            }
+
+            var data = [trace1, trace2]
+
+            var layout = {
+                title: "Time Series with Rangeslider",
+                xaxis: {
+                    autorange: true,
+                    range: ["2015-02-17", "2017-02-16"],
+                    rangeselector: {
+                        buttons: [
+                            {
+                                count: 1,
+                                label: "1m",
+                                step: "month",
+                                stepmode: "backward"
+                            },
+                            {
+                                count: 6,
+                                label: "6m",
+                                step: "month",
+                                stepmode: "backward"
+                            },
+                            { step: "all" }
+                        ]
+                    },
+                    rangeslider: { range: ["2015-02-17", "2017-02-16"] },
+                    type: "date"
+                },
+                yaxis: {
+                    autorange: true,
+                    range: [86.8700008333, 138.870004167],
+                    type: "linear"
+                }
+            }
+
+            Plotly.newPlot(this.$refs.time, data, layout)
+        })
 
         /*  Wind Rose Chart  */
         var trace1 = {

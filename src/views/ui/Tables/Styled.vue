@@ -9,13 +9,7 @@
         <resize-observer @notify="handleResize" />
 
         <div class="table-box card-base card-shadow--medium box grow" id="table-wrapper" v-loading="!ready">
-            <el-table
-                :data="listInPage"
-                style="width: 100%"
-                :height="height"
-                v-if="ready"
-                @selection-change="handleSelectionChange"
-            >
+            <el-table :data="listInPage" style="width: 100%" :height="height" v-if="ready" @selection-change="handleSelectionChange">
                 <el-table-column type="selection" width="34" fixed></el-table-column>
                 <el-table-column label="Name" min-width="250" prop="full_name" :fixed="!isMobile">
                     <template #default="scope">

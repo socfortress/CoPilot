@@ -4,8 +4,7 @@
             <h1>Themes</h1>
             <h4>
                 <a href="https://pragmatic-docs.vercel.app/#/#/colors" target="_blank"
-                    ><i class="mdi mdi-book-open-page-variant"></i> read the documentation to create endless
-                    combinations</a
+                    ><i class="mdi mdi-book-open-page-variant"></i> read the documentation to create endless combinations</a
                 >
             </h4>
             <el-breadcrumb separator="/">

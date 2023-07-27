@@ -15,8 +15,7 @@
             <el-collapse value="1">
                 <el-collapse-item title="Date and time" name="1">
                     <div class="block">
-                        <el-date-picker v-model="value1" type="datetime" placeholder="Select date and time">
-                        </el-date-picker>
+                        <el-date-picker v-model="value1" type="datetime" placeholder="Select date and time"> </el-date-picker>
                     </div>
                 </el-collapse-item>
                 <el-collapse-item title="Code" name="2">

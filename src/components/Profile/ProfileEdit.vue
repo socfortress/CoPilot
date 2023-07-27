@@ -37,12 +37,7 @@
             <el-col>
                 <el-col :span="12" :md="12" :sm="24" :xs="24" class="col-p">
                     <el-form-item label="Birthday">
-                        <el-date-picker
-                            type="date"
-                            placeholder="Pick a date"
-                            v-model="form.birthday"
-                            style="width: 100%"
-                        ></el-date-picker>
+                        <el-date-picker type="date" placeholder="Pick a date" v-model="form.birthday" style="width: 100%"></el-date-picker>
                     </el-form-item>
                 </el-col>
                 <el-col :span="12" :md="12" :sm="24" :xs="24" class="col-p">
@@ -102,13 +97,7 @@
                             default-first-option
                             placeholder="Choose tags for your hobbies"
                         >
-                            <el-option
-                                v-for="item in hobbies"
-                                :key="item.value"
-                                :label="item.label"
-                                :value="item.value"
-                            >
-                            </el-option>
+                            <el-option v-for="item in hobbies" :key="item.value" :label="item.label" :value="item.value"> </el-option>
                         </el-select>
                     </el-form-item>
                 </el-col>
@@ -123,8 +112,7 @@
                             default-first-option
                             placeholder="Choose tags for your skills"
                         >
-                            <el-option v-for="item in skills" :key="item.value" :label="item.label" :value="item.value">
-                            </el-option>
+                            <el-option v-for="item in skills" :key="item.value" :label="item.label" :value="item.value"> </el-option>
                         </el-select>
                     </el-form-item>
                 </el-col>

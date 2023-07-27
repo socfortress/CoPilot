@@ -64,48 +64,18 @@
         <div class="card-base card-shadow--medium p-30 mt-40">
             <h2 class="mt-0 mb-30">Options</h2>
             <div class="chart-box">
-                <peity
-                    :type="'donut'"
-                    :options="{ fill: ['red', '#eeeeee'], innerRadius: 10, radius: 40 }"
-                    :data="'1/7'"
-                ></peity>
-                <peity
-                    :type="'donut'"
-                    :options="{ fill: ['orange', '#eeeeee'], innerRadius: 14, radius: 36 }"
-                    :data="'2/7'"
-                ></peity>
-                <peity
-                    :type="'donut'"
-                    :options="{ fill: ['yellow', '#eeeeee'], innerRadius: 16, radius: 32 }"
-                    :data="'3/7'"
-                ></peity>
-                <peity
-                    :type="'donut'"
-                    :options="{ fill: ['green', '#eeeeee'], innerRadius: 18, radius: 28 }"
-                    :data="'4/7'"
-                ></peity>
-                <peity
-                    :type="'donut'"
-                    :options="{ fill: ['blue', '#eeeeee'], innerRadius: 20, radius: 24 }"
-                    :data="'5/7'"
-                ></peity>
-                <peity
-                    :type="'donut'"
-                    :options="{ fill: ['indigo', '#eeeeee'], innerRadius: 18, radius: 20 }"
-                    :data="'6/7'"
-                ></peity>
-                <peity
-                    :type="'donut'"
-                    :options="{ fill: ['violet', '#eeeeee'], innerRadius: 15, radius: 16 }"
-                    :data="'7/7'"
-                ></peity>
+                <peity :type="'donut'" :options="{ fill: ['red', '#eeeeee'], innerRadius: 10, radius: 40 }" :data="'1/7'"></peity>
+                <peity :type="'donut'" :options="{ fill: ['orange', '#eeeeee'], innerRadius: 14, radius: 36 }" :data="'2/7'"></peity>
+                <peity :type="'donut'" :options="{ fill: ['yellow', '#eeeeee'], innerRadius: 16, radius: 32 }" :data="'3/7'"></peity>
+                <peity :type="'donut'" :options="{ fill: ['green', '#eeeeee'], innerRadius: 18, radius: 28 }" :data="'4/7'"></peity>
+                <peity :type="'donut'" :options="{ fill: ['blue', '#eeeeee'], innerRadius: 20, radius: 24 }" :data="'5/7'"></peity>
+                <peity :type="'donut'" :options="{ fill: ['indigo', '#eeeeee'], innerRadius: 18, radius: 20 }" :data="'6/7'"></peity>
+                <peity :type="'donut'" :options="{ fill: ['violet', '#eeeeee'], innerRadius: 15, radius: 16 }" :data="'7/7'"></peity>
             </div>
         </div>
 
         <h4>
-            <a href="https://github.com/vue-bulma/peity" target="_blank"
-                ><i class="mdi mdi-link-variant"></i>reference</a
-            >
+            <a href="https://github.com/vue-bulma/peity" target="_blank"><i class="mdi mdi-link-variant"></i>reference</a>
         </h4>
     </div>
 </template>

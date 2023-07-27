@@ -36,12 +36,7 @@
                 <el-collapse-item title="Autosize Textarea" name="1">
                     <el-input type="textarea" autosize placeholder="Please input" v-model="textarea2"> </el-input>
                     <div style="margin: 20px 0"></div>
-                    <el-input
-                        type="textarea"
-                        :autosize="{ minRows: 2, maxRows: 4 }"
-                        placeholder="Please input"
-                        v-model="textarea3"
-                    >
+                    <el-input type="textarea" :autosize="{ minRows: 2, maxRows: 4 }" placeholder="Please input" v-model="textarea3">
                     </el-input>
                 </el-collapse-item>
                 <el-collapse-item title="Code" name="2">

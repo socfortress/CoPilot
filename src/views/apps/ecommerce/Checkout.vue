@@ -17,9 +17,7 @@
                 <div class="flex justify-space-between">
                     <div class="box grow flex column mt-40 fs-20 info">
                         <div class="mb-15"><i class="mdi mdi-account mr-10"></i>Aurora Shenton</div>
-                        <div class="mb-15">
-                            <i class="mdi mdi-map-marker mr-10"></i>Los Angeles, Church Street, 23, Block C2
-                        </div>
+                        <div class="mb-15"><i class="mdi mdi-map-marker mr-10"></i>Los Angeles, Church Street, 23, Block C2</div>
                         <div><i class="mdi mdi-phone mr-10"></i>579-459-8481</div>
                     </div>
 
@@ -69,11 +67,10 @@
                     <div class="box grow mt-40 pr-30 info">
                         <h3 class="m-0 mb-10">General Info</h3>
                         <p>
-                            Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt
-                            ut labore et dolore magna aliqua.
+                            Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore
+                            magna aliqua.
                             <br /><br />
-                            Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
-                            commodo consequat.
+                            Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
                         </p>
                     </div>
 
@@ -124,11 +121,10 @@
             <div class="mt-40 small-info">
                 <h3 class="m-0 mb-10">General Info</h3>
                 <p>
-                    Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore
-                    et dolore magna aliqua.
+                    Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna
+                    aliqua.
                     <br /><br />
-                    Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
-                    consequat.
+                    Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
                 </p>
             </div>
         </div>

@@ -58,12 +58,7 @@
                         <el-button size="small" @click="addTab(editableTabsValue2)"> add tab </el-button>
                     </div>
                     <el-tabs v-model="editableTabsValue2" type="card" closable @tab-remove="removeTab">
-                        <el-tab-pane
-                            v-for="item in editableTabs2"
-                            :key="item.name"
-                            :label="item.title"
-                            :name="item.name"
-                        >
+                        <el-tab-pane v-for="item in editableTabs2" :key="item.name" :label="item.title" :name="item.name">
                             {{ item.content }}
                         </el-tab-pane>
                     </el-tabs>

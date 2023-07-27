@@ -39,18 +39,14 @@
                     filter-placement="bottom-end"
                 >
                     <template slot-scope="scope">
-                        <el-tag :type="scope.row.tag === 'Home' ? 'primary' : 'success'" close-transition>{{
-                            scope.row.tag
-                        }}</el-tag>
+                        <el-tag :type="scope.row.tag === 'Home' ? 'primary' : 'success'" close-transition>{{ scope.row.tag }}</el-tag>
                     </template>
                 </el-table-column>
             </el-table>
         </div>
 
         <h4>
-            <a href="http://element.eleme.io/#/en-US/component/table" target="_blank"
-                ><i class="mdi mdi-link-variant"></i> reference</a
-            >
+            <a href="http://element.eleme.io/#/en-US/component/table" target="_blank"><i class="mdi mdi-link-variant"></i> reference</a>
         </h4>
     </div>
 </template>

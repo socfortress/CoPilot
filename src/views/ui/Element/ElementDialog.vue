@@ -62,9 +62,7 @@
                         <el-dialog width="30%" title="Inner Dialog" v-model="innerVisible" append-to-body> </el-dialog>
                         <div slot="footer" class="dialog-footer">
                             <el-button class="m-5" @click="outerVisible = false">Cancel</el-button>
-                            <el-button class="m-5" type="primary" @click="innerVisible = true"
-                                >open the inner Dialog</el-button
-                            >
+                            <el-button class="m-5" type="primary" @click="innerVisible = true">open the inner Dialog</el-button>
                         </div>
                     </el-dialog>
                 </el-collapse-item>

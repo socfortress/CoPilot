@@ -85,9 +85,7 @@
                             </div>
                             <div class="chart-box">
                                 <div v-loading="!asyncComponent">
-                                    <div class="data-range-picker">
-                                        Last 6 months <i class="mdi mdi-chevron-down ml-10"></i>
-                                    </div>
+                                    <div class="data-range-picker">Last 6 months <i class="mdi mdi-chevron-down ml-10"></i></div>
                                     <component
                                         :is="asyncComponent"
                                         :type="'line'"
@@ -98,11 +96,7 @@
                                             stroke: 'rgba(8, 124, 210, 0.75)',
                                             strokeWidth: 2
                                         }"
-                                        :data="
-                                            [
-                                                1, 3, 2, 4, 4, 9, 3, 4, 6, 5, 4, 6, 9, 8, 11, 12, 13, 12, 12, 14
-                                            ].toString()
-                                        "
+                                        :data="[1, 3, 2, 4, 4, 9, 3, 4, 6, 5, 4, 6, 9, 8, 11, 12, 13, 12, 12, 14].toString()"
                                     />
                                     <div class="flex justify-space-around labels" v-if="asyncComponent">
                                         <span>FEB</span>
@@ -176,9 +170,7 @@
                                                 <el-form-item label="Total">
                                                     <el-input class="themed" placeholder="$ 747,36"></el-input>
                                                 </el-form-item>
-                                                <el-button class="themed" type="primary" plain style="float: right">
-                                                    Buy BTC
-                                                </el-button>
+                                                <el-button class="themed" type="primary" plain style="float: right"> Buy BTC </el-button>
                                             </el-form>
                                         </div>
                                     </el-col>
@@ -198,9 +190,7 @@
                                                 <el-form-item label="Total">
                                                     <el-input class="themed" placeholder="$ 83638,76"></el-input>
                                                 </el-form-item>
-                                                <el-button class="themed" type="primary" plain style="float: right">
-                                                    Sell BTC
-                                                </el-button>
+                                                <el-button class="themed" type="primary" plain style="float: right"> Sell BTC </el-button>
                                             </el-form>
                                         </div>
                                     </el-col>
@@ -223,9 +213,7 @@
                                                 <el-form-item label="Amount">
                                                     <el-input class="themed" placeholder="0.0373 BTC"></el-input>
                                                 </el-form-item>
-                                                <el-button class="themed" type="primary" plain style="float: right">
-                                                    Buy BTC
-                                                </el-button>
+                                                <el-button class="themed" type="primary" plain style="float: right"> Buy BTC </el-button>
                                             </el-form>
                                         </div>
                                     </el-col>
@@ -242,9 +230,7 @@
                                                 <el-form-item label="Amount">
                                                     <el-input class="themed" placeholder="0.083837 BTC"></el-input>
                                                 </el-form-item>
-                                                <el-button class="themed" type="primary" plain style="float: right">
-                                                    Sell BTC
-                                                </el-button>
+                                                <el-button class="themed" type="primary" plain style="float: right"> Sell BTC </el-button>
                                             </el-form>
                                         </div>
                                     </el-col>
@@ -270,9 +256,7 @@
                                                 <el-form-item label="Amount">
                                                     <el-input class="themed" placeholder="$ 747,36"></el-input>
                                                 </el-form-item>
-                                                <el-button class="themed" type="primary" plain style="float: right">
-                                                    Buy BTC
-                                                </el-button>
+                                                <el-button class="themed" type="primary" plain style="float: right"> Buy BTC </el-button>
                                             </el-form>
                                         </div>
                                     </el-col>
@@ -292,9 +276,7 @@
                                                 <el-form-item label="Amount">
                                                     <el-input class="themed" placeholder="$ 83638,76"></el-input>
                                                 </el-form-item>
-                                                <el-button class="themed" type="primary" plain style="float: right">
-                                                    Sell BTC
-                                                </el-button>
+                                                <el-button class="themed" type="primary" plain style="float: right"> Sell BTC </el-button>
                                             </el-form>
                                         </div>
                                     </el-col>
@@ -658,15 +640,7 @@ export default defineComponent({
                                     total += value.value
                                 })
                                 percent = ((params.value / total) * 100).toFixed(1)
-                                return (
-                                    "{value|" +
-                                    params.value +
-                                    "}\n{title|" +
-                                    params.name +
-                                    "}\n{percent|" +
-                                    percent +
-                                    "%}"
-                                )
+                                return "{value|" + params.value + "}\n{title|" + params.name + "}\n{percent|" + percent + "%}"
                                 //return '{white|' + params.name + '}\n{hr|}\n{yellow|' + params.value + '}\n{blue|' + percent + '%}';
                             },
                             rich: rich

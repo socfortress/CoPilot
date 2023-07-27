@@ -161,11 +161,7 @@
 
         <el-row class="mt-0" :gutter="30">
             <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
-                <div
-                    class="card-base card-shadow--medium bg-accent p-20"
-                    style="height: 400px"
-                    v-loading="!asyncChart1"
-                >
+                <div class="card-base card-shadow--medium bg-accent p-20" style="height: 400px" v-loading="!asyncChart1">
                     <h1 class="white-text mv-0 animate__animated animate__fadeInDown">Statistics</h1>
                     <h3 class="mt-0 mb-40 white-text o-050 animate__animated animate__slideInUp">revenue</h3>
                     <div id="chart1" style="height: 300px; width: 100%"></div>
@@ -216,42 +212,18 @@
                                     <td style="min-width: 80px">{{ item.first_name }}</td>
                                     <td style="min-width: 80px">{{ item.last_name }}</td>
                                     <td style="min-width: 130px">
-                                        <peity
-                                            :options="{ fill: ['#a4bbe0', '#5f8fdf'] }"
-                                            :type="'donut'"
-                                            :data="'1/5'"
-                                        ></peity>
-                                        <peity
-                                            :options="{ fill: ['#a4bbe0', '#5f8fdf'] }"
-                                            :type="'donut'"
-                                            :data="'226/360'"
-                                        ></peity>
-                                        <peity
-                                            :options="{ fill: ['#a4bbe0', '#5f8fdf'] }"
-                                            :type="'donut'"
-                                            :data="'0.52/1.561'"
-                                        ></peity>
-                                        <peity
-                                            :options="{ fill: ['#a4bbe0', '#5f8fdf'] }"
-                                            :type="'donut'"
-                                            :data="'0.52/1.561'"
-                                        ></peity>
-                                        <peity
-                                            :options="{ fill: ['#a4bbe0', '#5f8fdf'] }"
-                                            :type="'donut'"
-                                            :data="'0.52/1.561'"
-                                        ></peity>
+                                        <peity :options="{ fill: ['#a4bbe0', '#5f8fdf'] }" :type="'donut'" :data="'1/5'"></peity>
+                                        <peity :options="{ fill: ['#a4bbe0', '#5f8fdf'] }" :type="'donut'" :data="'226/360'"></peity>
+                                        <peity :options="{ fill: ['#a4bbe0', '#5f8fdf'] }" :type="'donut'" :data="'0.52/1.561'"></peity>
+                                        <peity :options="{ fill: ['#a4bbe0', '#5f8fdf'] }" :type="'donut'" :data="'0.52/1.561'"></peity>
+                                        <peity :options="{ fill: ['#a4bbe0', '#5f8fdf'] }" :type="'donut'" :data="'0.52/1.561'"></peity>
                                     </td>
                                     <td style="min-width: 195px">
                                         <el-progress
                                             :percentage="item.progress"
                                             :status="item.status === 'positive' ? 'success' : null"
                                             :color="
-                                                item.status === 'negative'
-                                                    ? '#ff4d4d'
-                                                    : item.status === 'intermediary'
-                                                    ? '#ffaa00'
-                                                    : ''
+                                                item.status === 'negative' ? '#ff4d4d' : item.status === 'intermediary' ? '#ffaa00' : ''
                                             "
                                         ></el-progress>
                                     </td>

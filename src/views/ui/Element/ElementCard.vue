@@ -18,9 +18,7 @@
                         <el-card class="box-card">
                             <div slot="header" class="clearfix">
                                 <span>Card name</span>
-                                <el-button style="float: right; padding: 3px 0" :link="true"
-                                    >Operation button</el-button
-                                >
+                                <el-button style="float: right; padding: 3px 0" :link="true">Operation button</el-button>
                             </div>
                             <div v-for="o in 4" :key="o" class="text item">
                                 {{ "List item " + o }}
@@ -40,11 +38,7 @@
                         <el-row>
                             <el-col :span="8" :xs="11" v-for="(o, index) in 2" :key="o" style="margin: 5px">
                                 <el-card :body-style="{ padding: '0px' }">
-                                    <img
-                                        :src="'/static/images/gallery/photo-' + index + '.jpg'"
-                                        class="image"
-                                        alt="card image"
-                                    />
+                                    <img :src="'/static/images/gallery/photo-' + index + '.jpg'" class="image" alt="card image" />
                                     <div style="padding: 14px">
                                         <span>Yummy hamburger</span>
                                         <div class="bottom clearfix">

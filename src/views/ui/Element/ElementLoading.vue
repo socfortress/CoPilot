@@ -49,12 +49,7 @@
         <div class="card-base card-shadow--medium demo-box bg-white">
             <el-collapse value="1">
                 <el-collapse-item title="Full screen loading" name="1">
-                    <el-button
-                        class="m-5"
-                        type="primary"
-                        @click="openFullScreen"
-                        v-loading.fullscreen.lock="fullscreenLoading"
-                    >
+                    <el-button class="m-5" type="primary" @click="openFullScreen" v-loading.fullscreen.lock="fullscreenLoading">
                         As a directive
                     </el-button>
                     <el-button class="m-5" type="primary" @click="openFullScreen2"> As a service </el-button>

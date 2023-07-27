@@ -35,11 +35,7 @@
                     <div class="block">
                         <el-rate
                             v-model="value4"
-                            :icon-classes="[
-                                'mdi mdi-emoticon-sad',
-                                'mdi mdi-emoticon-neutral',
-                                'mdi mdi-emoticon-happy'
-                            ]"
+                            :icon-classes="['mdi mdi-emoticon-sad', 'mdi mdi-emoticon-neutral', 'mdi mdi-emoticon-happy']"
                             void-icon-class="mdi mdi-emoticon-sad"
                             :colors="['#99A9BF', '#F7BA2A', '#FF9900']"
                         >

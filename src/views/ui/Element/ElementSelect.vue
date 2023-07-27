@@ -15,8 +15,7 @@
             <el-collapse value="1">
                 <el-collapse-item title="Basic usage" name="1">
                     <el-select v-model="value" placeholder="Select">
-                        <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value">
-                        </el-option>
+                        <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value"> </el-option>
                     </el-select>
                 </el-collapse-item>
                 <el-collapse-item title="Code" name="2">
@@ -35,8 +34,7 @@
                         default-first-option
                         placeholder="Choose tags for your article"
                     >
-                        <el-option v-for="item in options5" :key="item.value" :label="item.label" :value="item.value">
-                        </el-option>
+                        <el-option v-for="item in options5" :key="item.value" :label="item.label" :value="item.value"> </el-option>
                     </el-select>
                 </el-collapse-item>
                 <el-collapse-item title="Code" name="2">

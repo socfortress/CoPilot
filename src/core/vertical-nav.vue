@@ -8,11 +8,7 @@
             <div class="box-nav box grow">
                 <el-scrollbar class="scroll-nav">
                     <div>
-                        <Nav
-                            :is-collapse="collapseNav"
-                            @push-page="pushPage"
-                            @collapse-nav-toggle="collapseNavToggle"
-                        />
+                        <Nav :is-collapse="collapseNav" @push-page="pushPage" @collapse-nav-toggle="collapseNavToggle" />
                         <br />
                     </div>
                 </el-scrollbar>
@@ -132,7 +128,9 @@ export default defineComponent({
             left: 0;
             z-index: 9999;
             background: $background-color;
-            box-shadow: -10px 0px 10px 10px rgba(0, 0, 0, 0.2), -10px 0px 20px 20px rgba(0, 0, 0, 0.2);
+            box-shadow:
+                -10px 0px 10px 10px rgba(0, 0, 0, 0.2),
+                -10px 0px 20px 20px rgba(0, 0, 0, 0.2);
             transform: translateX(-100%);
             opacity: 0;
             transition: all 0.5s;
@@ -140,7 +138,9 @@ export default defineComponent({
             &.pos-right {
                 left: initial;
                 right: 0;
-                box-shadow: 10px 0px 10px 10px rgba(0, 0, 0, 0.2), 10px 0px 20px 20px rgba(0, 0, 0, 0.2);
+                box-shadow:
+                    10px 0px 10px 10px rgba(0, 0, 0, 0.2),
+                    10px 0px 20px 20px rgba(0, 0, 0, 0.2);
                 transform: translateX(100%);
             }
 

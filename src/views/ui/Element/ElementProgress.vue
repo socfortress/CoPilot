@@ -34,19 +34,9 @@
                     &nbsp;
                     <el-progress :text-inside="true" :stroke-width="18" :percentage="70"></el-progress>
                     &nbsp;
-                    <el-progress
-                        :text-inside="true"
-                        :stroke-width="18"
-                        :percentage="100"
-                        status="success"
-                    ></el-progress>
+                    <el-progress :text-inside="true" :stroke-width="18" :percentage="100" status="success"></el-progress>
                     &nbsp;
-                    <el-progress
-                        :text-inside="true"
-                        :stroke-width="18"
-                        :percentage="50"
-                        status="exception"
-                    ></el-progress>
+                    <el-progress :text-inside="true" :stroke-width="18" :percentage="50" status="exception"></el-progress>
                 </el-collapse-item>
                 <el-collapse-item title="Code" name="2">
                     <pre v-highlightjs="code2"><code class="html"></code></pre>

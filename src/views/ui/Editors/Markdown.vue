@@ -10,19 +10,11 @@
             </el-breadcrumb>
         </div>
         <div class="card-base card-shadow--medium">
-            <mavon-editor
-                v-model="value"
-                language="en"
-                :toolbars="toolbars"
-                :subfield="subfield"
-                :defaultOpen="subfield ? null : 'edit'"
-            />
+            <mavon-editor v-model="value" language="en" :toolbars="toolbars" :subfield="subfield" :defaultOpen="subfield ? null : 'edit'" />
         </div>
 
         <h4>
-            <a href="https://github.com/hinesboy/mavonEditor" target="_blank"
-                ><i class="mdi mdi-link-variant"></i> reference</a
-            >
+            <a href="https://github.com/hinesboy/mavonEditor" target="_blank"><i class="mdi mdi-link-variant"></i> reference</a>
         </h4>
     </div>
 </template>

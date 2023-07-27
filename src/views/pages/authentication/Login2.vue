@@ -5,8 +5,8 @@
                 <img class="image-logo" src="@/assets/images/logo.svg" alt="logo-left" />
                 <h1 class="h-big">Pragmatic</h1>
                 <p class="p-50">
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus ullamcorper nisl erat, vel
-                    convallis elit fermentum pellentesque. Sed mollis velit facilisis facilisis viverra.
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus ullamcorper nisl erat, vel convallis elit fermentum
+                    pellentesque. Sed mollis velit facilisis facilisis viverra.
                 </p>
             </div>
         </div>

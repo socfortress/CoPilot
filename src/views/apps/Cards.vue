@@ -1,19 +1,12 @@
 <template>
     <div class="page-cards flex column">
         <el-row>
-            <div
-                class="card-form card-base card-outline"
-                @click="openForm"
-                v-click-outside="onClickOutside"
-                :class="{ open: formOpen }"
-            >
+            <div class="card-form card-base card-outline" @click="openForm" v-click-outside="onClickOutside" :class="{ open: formOpen }">
                 <div v-if="!formOpen">Write a note</div>
                 <div v-if="formOpen">
                     <input v-model="title" placeholder="Title" />
                     <textarea v-model="description" placeholder="Description"></textarea>
-                    <button @click="addCard" :disabled="!title.trim() && !description.trim()" class="accent-text">
-                        Save
-                    </button>
+                    <button @click="addCard" :disabled="!title.trim() && !description.trim()" class="accent-text">Save</button>
                     <button @click="closeForm">close</button>
                 </div>
             </div>

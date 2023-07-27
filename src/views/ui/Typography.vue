@@ -51,8 +51,8 @@
                         <div class="left-box">paragraph</div>
                         <div class="right-box box grow">
                             <p>
-                                Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod
-                                tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam.
+                                Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet
+                                dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam.
                             </p>
                         </div>
                     </div>
@@ -63,9 +63,8 @@
                         <div class="right-box box grow">
                             <blockquote>
                                 <p>
-                                    Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh
-                                    euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad
-                                    minim veniam.
+                                    Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut
+                                    laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam.
                                 </p>
                                 <small class="secondary-text"> Lorem ipsum, Lorem ipsum </small>
                             </blockquote>
@@ -76,9 +75,8 @@
                         <div class="right-box box grow">
                             <blockquote class="reverse">
                                 <p>
-                                    Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh
-                                    euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad
-                                    minim veniam.
+                                    Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut
+                                    laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam.
                                 </p>
                                 <small class="secondary-text"> Lorem ipsum, Lorem ipsum </small>
                             </blockquote>
@@ -256,9 +254,7 @@
                     <div class="flex center demo-box" v-for="i in textColors" :key="i">
                         <div class="left-box">{{ i }}</div>
                         <div class="right-box box grow">
-                            <span :class="i"
-                                >Lorem Ipsum is simply dummy text of the printing and typesetting industry</span
-                            >
+                            <span :class="i">Lorem Ipsum is simply dummy text of the printing and typesetting industry</span>
                         </div>
                     </div>
                     <br />
@@ -267,9 +263,7 @@
                     <div class="flex center demo-box" v-for="i in fontWeight" :key="i">
                         <div class="left-box">{{ i }}</div>
                         <div class="right-box box grow">
-                            <span :class="i"
-                                >Lorem Ipsum is simply dummy text of the printing and typesetting industry</span
-                            >
+                            <span :class="i">Lorem Ipsum is simply dummy text of the printing and typesetting industry</span>
                         </div>
                     </div>
                     <br />
@@ -315,11 +309,10 @@
                     <div class="flex center demo-box">
                         <div class="left-box">text-truncate</div>
                         <div class="right-box box grow text-truncate">
-                            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus laoreet mi vel semper
-                            venenatis. Integer eget convallis libero, sit amet tristique est. Sed lacinia massa eget
-                            erat facilisis, et pulvinar arcu pharetra. Morbi gravida metus et turpis efficitur bibendum.
-                            Praesent tortor leo, finibus et finibus in, malesuada vel massa. Aliquam erat volutpat.
-                            Etiam efficitur lectus sit amet odio tempus, quis tempor enim molestie.
+                            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus laoreet mi vel semper venenatis. Integer eget
+                            convallis libero, sit amet tristique est. Sed lacinia massa eget erat facilisis, et pulvinar arcu pharetra.
+                            Morbi gravida metus et turpis efficitur bibendum. Praesent tortor leo, finibus et finibus in, malesuada vel
+                            massa. Aliquam erat volutpat. Etiam efficitur lectus sit amet odio tempus, quis tempor enim molestie.
                         </div>
                     </div>
                 </el-tab-pane>

@@ -31,9 +31,7 @@
         </div>
 
         <h4>
-            <a href="https://github.com/lakb248/vue-chartist" target="_blank"
-                ><i class="mdi mdi-link-variant"></i>reference</a
-            >
+            <a href="https://github.com/lakb248/vue-chartist" target="_blank"><i class="mdi mdi-link-variant"></i>reference</a>
         </h4>
     </el-scrollbar>
 </template>

@@ -1,10 +1,6 @@
 <template>
     <el-scrollbar class="page-calendar">
-        <FullCalendar
-            ref="fullCalendar"
-            :options="calendarOptions"
-            class="calendar-wrap card-base card-shadow--medium"
-        />
+        <FullCalendar ref="fullCalendar" :options="calendarOptions" class="calendar-wrap card-base card-shadow--medium" />
 
         <el-dialog title="Add event" v-model="dialogFormVisible">
             <el-form :model="form" ref="form" label-position="top">
@@ -37,12 +33,7 @@
                     :rules="[{ required: true, message: 'Please input a valid date', trigger: 'blur' }]"
                 >
                     <el-col :span="11">
-                        <el-date-picker
-                            type="date"
-                            placeholder="Pick a date"
-                            v-model="form.startDate"
-                            style="width: 100%"
-                        ></el-date-picker>
+                        <el-date-picker type="date" placeholder="Pick a date" v-model="form.startDate" style="width: 100%"></el-date-picker>
                     </el-col>
                     <el-col v-if="!form.allDay" class="text-center" :span="2">-</el-col>
                     <el-col v-if="!form.allDay" :span="11">
@@ -57,12 +48,7 @@
                 </el-form-item>
                 <el-form-item label="End">
                     <el-col :span="11">
-                        <el-date-picker
-                            type="date"
-                            placeholder="Pick a date"
-                            v-model="form.endDate"
-                            style="width: 100%"
-                        ></el-date-picker>
+                        <el-date-picker type="date" placeholder="Pick a date" v-model="form.endDate" style="width: 100%"></el-date-picker>
                     </el-col>
                     <el-col v-if="!form.allDay" class="text-center" :span="2">-</el-col>
                     <el-col v-if="!form.allDay" :span="11">

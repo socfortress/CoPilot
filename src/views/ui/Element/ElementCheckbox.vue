@@ -24,9 +24,7 @@
         <div class="card-base card-shadow--medium demo-box bg-white">
             <el-collapse value="1">
                 <el-collapse-item title="Indeterminate" name="1">
-                    <el-checkbox :indeterminate="isIndeterminate" v-model="checkAll" @change="handleCheckAllChange"
-                        >Check all</el-checkbox
-                    >
+                    <el-checkbox :indeterminate="isIndeterminate" v-model="checkAll" @change="handleCheckAllChange">Check all</el-checkbox>
                     <div style="margin: 15px 0"></div>
                     <el-checkbox-group v-model="checkedCities" @change="handleCheckedCitiesChange">
                         <el-checkbox v-for="city in cities" :label="city" :key="city">{{ city }}</el-checkbox>

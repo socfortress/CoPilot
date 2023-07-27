@@ -1,15 +1,7 @@
 <template>
-    <el-dialog
-        :show-close="true"
-        :class="'user-dialog'"
-        v-model="visible"
-        @close="$emit('update:dialogvisible', false)"
-    >
+    <el-dialog :show-close="true" :class="'user-dialog'" v-model="visible" @close="$emit('update:dialogvisible', false)">
         <div class="avatar-box">
-            <img
-                :src="userdata.id ? '/static/images/users/user-' + userdata.id + '.jpg' : imagePlaceholder"
-                alt="user avatar"
-            />
+            <img :src="userdata.id ? '/static/images/users/user-' + userdata.id + '.jpg' : imagePlaceholder" alt="user avatar" />
             <div class="star" @click="userdata.starred = !userdata.starred">
                 <i class="mdi mdi-star align-vertical-middle" v-if="userdata.starred"></i>
                 <i class="mdi mdi-star-outline align-vertical-middle" v-if="!userdata.starred"></i>

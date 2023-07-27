@@ -21,9 +21,7 @@
         </div>
 
         <h4>
-            <a href="https://github.com/CinKon/vue-pell-editor" target="_blank"
-                ><i class="mdi mdi-link-variant"></i> reference</a
-            >
+            <a href="https://github.com/CinKon/vue-pell-editor" target="_blank"><i class="mdi mdi-link-variant"></i> reference</a>
         </h4>
     </div>
 </template>

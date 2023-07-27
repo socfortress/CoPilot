@@ -65,10 +65,7 @@ export default defineComponent({
 
     methods: {
         compareAndNotify() {
-            if (
-                (!this.ignoreWidth && this._w !== this.$el.offsetWidth) ||
-                (!this.ignoreHeight && this._h !== this.$el.offsetHeight)
-            ) {
+            if ((!this.ignoreWidth && this._w !== this.$el.offsetWidth) || (!this.ignoreHeight && this._h !== this.$el.offsetHeight)) {
                 this._w = this.$el.offsetWidth
                 this._h = this.$el.offsetHeight
                 this.emitSize()

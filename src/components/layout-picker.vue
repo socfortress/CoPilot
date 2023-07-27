@@ -174,7 +174,9 @@ export default defineComponent({
     top: 50%;
     transform: translateX(-5px) translateY(-50%);
     border-radius: 50%;
-    box-shadow: 0px 4px 20px 0px rgba(0, 0, 0, 0.08), 0px 2px 7px 0px rgba(0, 0, 0, 0.02);
+    box-shadow:
+        0px 4px 20px 0px rgba(0, 0, 0, 0.08),
+        0px 2px 7px 0px rgba(0, 0, 0, 0.02);
     transition: all 0.5s;
     overflow: hidden;
     z-index: 2000;

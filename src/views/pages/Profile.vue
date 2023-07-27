@@ -8,12 +8,7 @@
                 <div class="avatar-small"><img src="@/assets/images/avatar.jpg" alt="avatar" /></div>
                 <span>{{ username }}</span>
                 <div class="colors-box">
-                    <div
-                        v-for="i in 5"
-                        :key="i"
-                        :class="{ color: true, active: colorActive }"
-                        :style="{ background: color }"
-                    ></div>
+                    <div v-for="i in 5" :key="i" :class="{ color: true, active: colorActive }" :style="{ background: color }"></div>
                 </div>
             </div>
             <div class="avatar"><img src="@/assets/images/avatar.jpg" alt="avatar" /></div>
@@ -127,7 +122,9 @@ export default defineComponent({
             overflow: hidden;
             white-space: nowrap;
             text-overflow: ellipsis;
-            box-shadow: 0 7px 14px 0 rgba(50, 50, 93, 0.1), 0 3px 6px 0 rgba(0, 0, 0, 0.07);
+            box-shadow:
+                0 7px 14px 0 rgba(50, 50, 93, 0.1),
+                0 3px 6px 0 rgba(0, 0, 0, 0.07);
 
             .cover-small {
                 width: 220px;

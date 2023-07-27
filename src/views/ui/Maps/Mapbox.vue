@@ -14,9 +14,7 @@
         </div>
 
         <h4>
-            <a href="https://www.mapbox.com/mapbox-gl-js/api" target="_blank">
-                <i class="mdi mdi-link-variant"></i> reference
-            </a>
+            <a href="https://www.mapbox.com/mapbox-gl-js/api" target="_blank"> <i class="mdi mdi-link-variant"></i> reference </a>
         </h4>
     </div>
 </template>
@@ -50,8 +48,7 @@ export default defineComponent({
     methods: {
         initMap() {
             if (!this.loading) {
-                mapboxgl.accessToken =
-                    "pk.eyJ1IjoibGlua28iLCJhIjoiY2pmZWFoMG1iMHdzeDMzcGtrY3h4cXdjOSJ9.Ad6zNqdn5Ju_sx6a2RUXRA"
+                mapboxgl.accessToken = "pk.eyJ1IjoibGlua28iLCJhIjoiY2pmZWFoMG1iMHdzeDMzcGtrY3h4cXdjOSJ9.Ad6zNqdn5Ju_sx6a2RUXRA"
                 this.map = new mapboxgl.Map({
                     container: "map",
                     style: "mapbox://styles/mapbox/streets-v9",
