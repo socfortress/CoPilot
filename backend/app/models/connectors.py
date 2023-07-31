@@ -242,7 +242,7 @@ class ShuffleConnector(Connector):
                 "Authorization": f"Bearer {self.attributes['connector_api_key']}",
             }
             shuffle_apps = requests.get(
-                f"{self.attributes['connector_url']}/api/v1/apps",
+                f"{self.attributes['connector_url']}/api/v1/apps/authentication",
                 headers=headers,
                 verify=False,
             )
