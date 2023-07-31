@@ -29,6 +29,7 @@ import i18n_messages from "./i18n.json"
 |     CORE ASSETS     |
 \* ═ ═ ═ ═ ═ ═ ═ ═ ═ */
 import "./assets/scss/global.scss"
+import "./assets/open-props/open-props.css"
 import "flex.box/src/flexbox.css"
 import "animate.css"
 import App from "@/App.vue"
