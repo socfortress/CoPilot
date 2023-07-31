@@ -33,20 +33,15 @@ def list_connectors_available():
         logger.info("Received request to get all available connectors")
         connectors_service = ConnectorService(db)
         connectors = ConnectorsAvailable.query.all()
-        connectors_available = connectors_available_schema.dump(connectors)
+        result = connectors_available_schema.dump(connectors)
 
-        instantiated_connectors = []
-        for connector in connectors_available:
-            processed_connector = connectors_service.process_connector(connector["connector_name"])
-            if processed_connector:
-                instantiated_connectors.append(processed_connector)
+        instantiated_connectors = [
+            connectors_service.process_connector(connector["connector_name"])
+            for connector in result
+            if connectors_service.process_connector(connector["connector_name"])
+        ]
 
-        return {
-            "message": "All available connectors",
-            "connectors": instantiated_connectors,
-            "connectors_available": connectors_available,
-            "success": True,
-        }
+        return {"message": "All available connectors", "connectors": instantiated_connectors, "success": True}
     except Exception as e:
         logger.error(f"Error while getting all available connectors: {e}")
         return {"message": "Error while getting all available connectors", "success": False}, 500

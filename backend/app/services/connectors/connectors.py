@@ -76,8 +76,9 @@ class ConnectorService:
         connector_instance = connector_factory.create(connector_name, connector_name)
         connection_successful = connector_instance.verify_connection()
         connection_details = Connector.get_connector_info_from_db(connector_name)
+        connection_available_details = Connector.get_connector_available_info_from_db(connector_name)
         logger.info(f"Connection details: {connection_details}")
-        return {"name": connector_name, **connection_successful, **connection_details}
+        return {"name": connector_name, **connection_successful, **connection_details, **connection_available_details}
 
     def validate_connector_exists(self, connector_id: int):
         """

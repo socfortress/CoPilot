@@ -18,6 +18,7 @@ from pyvelociraptor import api_pb2_grpc
 from sqlalchemy.orm.exc import NoResultFound
 
 from app.models.models import Connectors
+from app.models.models import ConnectorsAvailable
 
 
 def dynamic_import(module_name: str, class_name: str) -> Any:
@@ -69,6 +70,26 @@ class Connector(ABC):
         connector = current_app.extensions["sqlalchemy"].db.session.query(Connectors).filter_by(connector_name=connector_name).first()
         if connector:
             attributes = {col.name: getattr(connector, col.name) for col in Connectors.__table__.columns}
+            return attributes
+        else:
+            raise NoResultFound
+
+    # @staticmethod
+    def get_connector_available_info_from_db(connector_name: str) -> Dict[str, Any]:
+        """
+        This method retrieves connector information from the database.
+
+        :param connector_name: A string that specifies the name of the connector whose information is to be retrieved.
+        :return: A dictionary of the connector's attributes if the connector exists. Otherwise, it raises a
+        NoResultFound exception.
+        Raises:
+            NoResultFound: If the connector_name is not found in the database.
+        """
+        connector = (
+            current_app.extensions["sqlalchemy"].db.session.query(ConnectorsAvailable).filter_by(connector_name=connector_name).first()
+        )
+        if connector:
+            attributes = {col.name: getattr(connector, col.name) for col in ConnectorsAvailable.__table__.columns}
             return attributes
         else:
             raise NoResultFound
