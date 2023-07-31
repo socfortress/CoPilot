@@ -76,3 +76,21 @@ def update_connector_route(id: str):
             return validate_and_update_connector(id, request_data, service)
     else:
         return jsonify(connector), 404
+
+
+@bp.route("/connectors/upload", methods=["POST"])
+def upload_file():
+    logger.info("Received request to upload a file")
+    # check if the post request has the file part
+    if "file" not in request.files:
+        logger.error("No file part in the request")
+        return {"message": "No file part in the request", "success": False}, 400
+    file = request.files["file"]
+    # if user does not select file, browser also
+    # submit an empty part without filename
+    if file.filename == "":
+        logger.error("No selected file")
+        return {"message": "No selected file", "success": False}, 400
+
+    service = ConnectorService(db)
+    return service.save_file(file)

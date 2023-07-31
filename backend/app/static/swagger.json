@@ -354,6 +354,48 @@
                 }
             }
         },
+        "/connectors/upload": {
+            "post": {
+                "tags": ["Connectors"],
+                "summary": "Upload a file",
+                "description": "Endpoint to upload a file to the server.",
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "A JSON response containing the details of the uploaded file.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "success": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/customers/create": {
             "post": {
                 "tags": ["Customers"],
