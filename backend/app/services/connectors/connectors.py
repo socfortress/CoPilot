@@ -1,7 +1,10 @@
 # from app.models.connectors import ConnectorFactory
+import os
+
 from flask import current_app
 from loguru import logger
 from sqlalchemy.exc import SQLAlchemyError
+from werkzeug.utils import secure_filename
 
 from app.models.connectors import Connector
 from app.models.connectors import connector_factory
@@ -9,6 +12,10 @@ from app.models.models import Connectors
 
 # from app.models.models import ConnectorsAvailable
 # from app.models.models import connectors_schema
+
+UPLOAD_FOLDER = "file-store"
+UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), UPLOAD_FOLDER)
+ALLOWED_EXTENSIONS = set(["yaml"])  # replace with your allowed file extensions
 
 
 class ConnectorService:
@@ -234,3 +241,19 @@ class ConnectorService:
                 "message": "Request data is invalid. Ensure connector_url and connector_api_key are present",
                 "success": False,
             }
+
+    @staticmethod
+    def allowed_file(filename):
+        return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
+    def save_file(self, file):
+        if file and self.allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(UPLOAD_FOLDER, filename))
+            connector = self.db.session.query(Connectors).filter_by(connector_name="Velociraptor").first()
+            # Write location to `connectors` table
+            connector.connector_api_key = os.path.join(UPLOAD_FOLDER, filename)
+            self.db.session.commit()
+            return {"message": "File successfully uploaded", "success": True}
+        else:
+            return {"message": "File type not allowed", "success": False}, 400
