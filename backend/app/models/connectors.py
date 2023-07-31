@@ -94,6 +94,35 @@ class Connector(ABC):
         else:
             raise NoResultFound
 
+    def update_connectors_available_table(
+        self,
+        connector_name: str,
+        connector_configured: bool,
+        connector_verified: bool,
+    ) -> Dict[str, Any]:
+        """
+        This method updates the `connector_configured` and `connector_verified` columns of the
+        `connectors_available` table in the database.
+
+        :param connector_name: A string that specifies the name of the connector whose information is to be updated.
+        :param connector_configured: A boolean that specifies whether the connector is configured.
+        :param connector_verified: A boolean that specifies whether the connector is verified.
+
+        :return: A dictionary of the connector's attributes if the connector exists. Otherwise, it raises a
+        NoResultFound exception.
+        """
+        connector = (
+            current_app.extensions["sqlalchemy"].db.session.query(ConnectorsAvailable).filter_by(connector_name=connector_name).first()
+        )
+        if connector:
+            connector.connector_configured = connector_configured
+            connector.connector_verified = connector_verified
+            current_app.extensions["sqlalchemy"].db.session.commit()
+            attributes = {col.name: getattr(connector, col.name) for col in ConnectorsAvailable.__table__.columns}
+            return attributes
+        else:
+            raise NoResultFound
+
 
 class WazuhIndexerConnector(Connector):
     """
@@ -129,11 +158,15 @@ class WazuhIndexerConnector(Connector):
             )
             es.cluster.health()
             logger.info(f"Connection to {self.attributes['connector_url']} successful")
+            # Update the connector_available table
+            self.update_connectors_available_table(self.attributes["connector_name"], True, True)
             return {"connectionSuccessful": True}
         except Exception as e:
             logger.error(
                 f"Connection to {self.attributes['connector_url']} failed with error: {e}",
             )
+            # Update the connector_available table
+            self.update_connectors_available_table(self.attributes["connector_name"], True, False)
             return {"connectionSuccessful": False, "clusterHealth": None}
 
 
@@ -170,16 +203,22 @@ class GraylogConnector(Connector):
                 logger.info(
                     f"Connection to {self.attributes['connector_url']} successful",
                 )
+                # Update the connector_available table
+                self.update_connectors_available_table(self.attributes["connector_name"], True, True)
                 return {"connectionSuccessful": True}
             else:
                 logger.error(
                     f"Connection to {self.attributes['connector_url']} failed with error: {graylog_roles.text}",
                 )
+                # Update the connector_available table
+                self.update_connectors_available_table(self.attributes["connector_name"], True, False)
                 return {"connectionSuccessful": False, "roles": None}
         except Exception as e:
             logger.error(
                 f"Connection to {self.attributes['connector_url']} failed with error: {e}",
             )
+            # Update the connector_available table
+            self.update_connectors_available_table(self.attributes["connector_name"], True, False)
             return {"connectionSuccessful": False, "roles": None}
 
 
@@ -216,16 +255,22 @@ class WazuhManagerConnector(Connector):
                 logger.debug("Wazuh Authentication Token successful")
                 wazuh_auth_token = wazuh_auth_token.json()
                 wazuh_auth_token = wazuh_auth_token["data"]["token"]
+                # Update the connector_available table
+                self.update_connectors_available_table(self.attributes["connector_name"], True, True)
                 return {"connectionSuccessful": True, "authToken": wazuh_auth_token}
             else:
                 logger.error(
                     f"Connection to {self.attributes['connector_url']} failed with error: {wazuh_auth_token.text}",
                 )
+                # Update the connector_available table
+                self.update_connectors_available_table(self.attributes["connector_name"], True, False)
                 return {"connectionSuccessful": False, "authToken": None}
         except Exception as e:
             logger.error(
                 f"Connection to {self.attributes['connector_url']} failed with error: {e}",
             )
+            # Update the connector_available table
+            self.update_connectors_available_table(self.attributes["connector_name"], True, False)
             return {"connectionSuccessful": False, "authToken": None}
 
     def get_auth_token(self) -> str:
@@ -271,16 +316,22 @@ class ShuffleConnector(Connector):
                 logger.info(
                     f"Connection to {self.attributes['connector_url']} successful",
                 )
+                # Update the connector_available table
+                self.update_connectors_available_table(self.attributes["connector_name"], True, True)
                 return {"connectionSuccessful": True}
             else:
                 logger.error(
                     f"Connection to {self.attributes['connector_url']} failed with error: {shuffle_apps.text}",
                 )
+                # Update the connector_available table
+                self.update_connectors_available_table(self.attributes["connector_name"], True, False)
                 return {"connectionSuccessful": False}
         except Exception as e:
             logger.error(
                 f"Connection to {self.attributes['connector_url']} failed with error: {e}",
             )
+            # Update the connector_available table
+            self.update_connectors_available_table(self.attributes["connector_name"], True, False)
             return {"connectionSuccessful": False}
 
 
@@ -318,16 +369,22 @@ class DfirIrisConnector(Connector):
                 logger.info(
                     f"Connection to {self.attributes['connector_url']} successful",
                 )
+                # Update the connector_available table
+                self.update_connectors_available_table(self.attributes["connector_name"], True, True)
                 return {"connectionSuccessful": True}
             else:
                 logger.error(
                     f"Connection to {self.attributes['connector_url']} failed with error: {dfir_iris.text}",
                 )
+                # Update the connector_available table
+                self.update_connectors_available_table(self.attributes["connector_name"], True, False)
                 return {"connectionSuccessful": False, "response": None}
         except Exception as e:
             logger.error(
                 f"Connection to {self.attributes['connector_url']} failed with error: {e}",
             )
+            # Update the connector_available table
+            self.update_connectors_available_table(self.attributes["connector_name"], True, False)
             return {"connectionSuccessful": False, "response": None}
 
 
@@ -387,12 +444,18 @@ class VelociraptorConnector(Connector):
                     for response in stub.Query(client_request):
                         if response.Response:
                             r = r + json.loads(response.Response)
+                    # Update the connector_available table
+                    self.update_connectors_available_table(self.attributes["connector_name"], True, True)
                     return {"connectionSuccessful": True}
             except Exception as e:
                 logger.error(f"Failed to verify connection to Velociraptor: {e}")
+                # Update the connector_available table
+                self.update_connectors_available_table(self.attributes["connector_name"], True, False)
                 return {"connectionSuccessful": False, "response": None}
         except Exception as e:
             logger.error(f"Failed to get connector_api_key from the database: {e}")
+            # Update the connector_available table
+            self.update_connectors_available_table(self.attributes["connector_name"], True, False)
             return {"connectionSuccessful": False, "response": None}
 
 
@@ -433,16 +496,22 @@ class SublimeConnector(Connector):
                 logger.info(
                     f"Connection to {self.attributes['connector_url']} successful",
                 )
+                # Update the connector_available table
+                self.update_connectors_available_table(self.attributes["connector_name"], True, True)
                 return {"connectionSuccessful": True}
             else:
                 logger.error(
                     f"Connection to {self.attributes['connector_url']} failed with error: {sublime.text}",
                 )
+                # Update the connector_available table
+                self.update_connectors_available_table(self.attributes["connector_name"], True, False)
                 return {"connectionSuccessful": False, "response": None}
         except Exception as e:
             logger.error(
                 f"Connection to {self.attributes['connector_url']} failed with error: {e}",
             )
+            # Update the connector_available table
+            self.update_connectors_available_table(self.attributes["connector_name"], True, False)
             return {"connectionSuccessful": False, "response": None}
 
 
@@ -487,16 +556,22 @@ class AskSOCFortressConnector(Connector):
                 logger.info(
                     f"Connection to {self.attributes['connector_url']} successful",
                 )
+                # Update the connector_available table
+                self.update_connectors_available_table(self.attributes["connector_name"], True, True)
                 return {"connectionSuccessful": True}
             else:
                 logger.error(
                     f"Connection to {self.attributes['connector_url']} failed with error: {ask_socfortress.text}",
                 )
+                # Update the connector_available table
+                self.update_connectors_available_table(self.attributes["connector_name"], True, False)
                 return {"connectionSuccessful": False, "response": None}
         except Exception as e:
             logger.error(
                 f"Connection to {self.attributes['connector_url']} failed with error: {e}",
             )
+            # Update the connector_available table
+            self.update_connectors_available_table(self.attributes["connector_name"], True, False)
             return {"connectionSuccessful": False, "response": None}
 
 
@@ -541,16 +616,22 @@ class SocfortressThreatIntelConnector(Connector):
                 logger.info(
                     f"Connection to {self.attributes['connector_url']} successful",
                 )
+                # Update the connector_available table
+                self.update_connectors_available_table(self.attributes["connector_name"], True, True)
                 return {"connectionSuccessful": True}
             else:
                 logger.error(
                     f"Connection to {self.attributes['connector_url']} failed with error: {socfortress_threat_intel.text}",
                 )
+                # Update the connector_available table
+                self.update_connectors_available_table(self.attributes["connector_name"], True, False)
                 return {"connectionSuccessful": False, "response": None}
         except Exception as e:
             logger.error(
                 f"Connection to {self.attributes['connector_url']} failed with error: {e}",
             )
+            # Update the connector_available table
+            self.update_connectors_available_table(self.attributes["connector_name"], True, False)
             return {"connectionSuccessful": False, "response": None}
 
 
@@ -590,16 +671,22 @@ class InfluxDBConnector(Connector):
                 logger.info(
                     f"Connection to {self.attributes['connector_url']} successful",
                 )
+                # Update the connector_available table
+                self.update_connectors_available_table(self.attributes["connector_name"], True, True)
                 return {"connectionSuccessful": True}
             else:
                 logger.error(
                     f"Connection to {self.attributes['connector_url']} failed with error: {influxdb.text}",
                 )
+                # Update the connector_available table
+                self.update_connectors_available_table(self.attributes["connector_name"], True, False)
                 return {"connectionSuccessful": False, "response": None}
         except Exception as e:
             logger.error(
                 f"Connection to {self.attributes['connector_url']} failed with error: {e}",
             )
+            # Update the connector_available table
+            self.update_connectors_available_table(self.attributes["connector_name"], True, False)
             return {"connectionSuccessful": False, "response": None}
 
 
@@ -641,14 +728,20 @@ class RabbitMQConnector(Connector):
                 logger.info(
                     f"Connection to {self.attributes['connector_url']} successful",
                 )
+                # Update the connector_available table
+                self.update_connectors_available_table(self.attributes["connector_name"], True, True)
                 return {"connectionSuccessful": True}
             else:
                 logger.error(f"Connection to {self.attributes['connector_url']} failed")
+                # Update the connector_available table
+                self.update_connectors_available_table(self.attributes["connector_name"], True, False)
                 return {"connectionSuccessful": False, "response": None}
         except Exception as e:
             logger.error(
                 f"Connection to {self.attributes['connector_url']} failed with error: {e}",
             )
+            # Update the connector_available table
+            self.update_connectors_available_table(self.attributes["connector_name"], True, False)
             return {"connectionSuccessful": False, "response": None}
 
 
