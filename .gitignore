@@ -41,4 +41,4 @@ wheels/
 .env
 *.sqbpro
 site/
-backend/app/file-store/
+backend/app/file-store/api.config.yaml
