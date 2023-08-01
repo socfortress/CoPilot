@@ -11,7 +11,7 @@ from app.services.connectors.connectors import ConnectorService
 
 bp = Blueprint("connectors", __name__)
 
-api_key_connector = ["Shuffle", "DFIR-IRIS", "Velociraptor", "Sublime"]
+api_key_connector = ["Shuffle", "DFIR-IRIS", "Velociraptor", "Sublime", "InfluxDB", "AskSocfortress", "SocfortressThreatIntel"]
 
 
 def validate_and_update_connector(id, request_data, service, api_key=False):
