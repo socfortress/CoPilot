@@ -1,8 +1,8 @@
 <template>
     <div class="box-logo flex align-center" :class="{ 'nav-collapsed': collapseNav, [mode]: true }">
         <!--<div class="letter-logo">P</div>-->
-        <img class="image-logo" src="@/assets/images/logo.svg" alt="logo" @click="goto('/')" />
-        <div class="app-name" @click="goto('/')">Pragmatic</div>
+        <img class="image-logo" src="@/assets/images/socfortress_logo.svg" alt="logo" @click="goto('/')" />
+        <div class="app-name" @click="goto('/')">SOCFortress</div>
         <!--
 		<button class="collapse-nav" @click="collapseNavToggle">
 			<i class="mdi mdi-menu"></i>
