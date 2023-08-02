@@ -11,7 +11,7 @@
         <transition name="fade">
             <div class="splash-screen" v-if="splashScreen">
                 <div class="wrap">
-                    <img src="/logo.svg" class="logo" alt="logo" />
+                    <img src="/socfortress_logo.svg" class="logo" alt="logo" />
                     <img src="/Ripple-2s-200px.gif" alt="loading-image" />
                 </div>
             </div>
