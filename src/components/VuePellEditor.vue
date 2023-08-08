@@ -12,7 +12,7 @@
 
 <script>
 import pell from "pell"
-import { defineComponent } from "@vue/runtime-core"
+import { defineComponent } from "vue"
 
 export default defineComponent({
     name: "VuePellEditor",
@@ -95,7 +95,7 @@ export default defineComponent({
      * Before Destroy
      * Reset pell instance
      */
-    beforeDestroy() {
+    beforeUnmount() {
         this.pell = undefined
     },
 

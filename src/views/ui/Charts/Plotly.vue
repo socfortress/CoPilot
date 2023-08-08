@@ -82,7 +82,7 @@ Plotly.register(PlotlySankey)
 Plotly.register(PlotlySurface)
 Plotly.register(PlotlyMesh3d)*/
 
-import { defineComponent } from "@vue/runtime-core"
+import { defineComponent } from "vue"
 
 export default defineComponent({
     name: "PlotlyPage",

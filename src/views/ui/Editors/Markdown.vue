@@ -20,7 +20,7 @@
 </template>
 
 <script>
-import { defineComponent } from "@vue/runtime-core"
+import { defineComponent } from "vue"
 import "mavon-editor/dist/css/index.css"
 
 export default defineComponent({

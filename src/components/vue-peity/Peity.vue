@@ -7,7 +7,7 @@ import Peity from "./lib/peity"
 
 const types = ["line", "bar", "pie", "donut"]
 
-import { defineComponent } from "@vue/runtime-core"
+import { defineComponent } from "vue"
 
 export default defineComponent({
     props: {

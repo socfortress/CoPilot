@@ -94,7 +94,7 @@ export default {
     mounted() {
         this.initialize()
     },
-    beforeDestroy() {
+    beforeUnmount() {
         this.quill = null
         delete this.quill
     },

@@ -59,7 +59,7 @@
 <script>
 import UserDialog from "@/components/UserDialog.vue"
 import Contacts from "@/assets/data/CONTACTS_MOCK_DATA.json"
-import { defineComponent } from "@vue/runtime-core"
+import { defineComponent } from "vue"
 import _ from "lodash"
 import ResizeObserver from "@/components/vue-resize/ResizeObserver.vue"
 

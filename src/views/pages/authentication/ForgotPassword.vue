@@ -20,7 +20,7 @@
 
 <script>
 import { useMainStore } from "../../../stores/main"
-import { defineComponent } from "@vue/runtime-core"
+import { defineComponent } from "vue"
 
 export default defineComponent({
     name: "ForgotPassword",

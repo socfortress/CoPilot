@@ -135,7 +135,7 @@
 import Chance from "chance"
 const chance = new Chance()
 import _ from "lodash"
-import { defineComponent } from "@vue/runtime-core"
+import { defineComponent } from "vue"
 
 export default defineComponent({
     name: "EcommerceCheckout",
