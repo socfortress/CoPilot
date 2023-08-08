@@ -20,20 +20,43 @@
             </el-image>
             <div class="connector-name">{{ connector.connector_name || "" }}</div>
         </div>
+
+        <div class="connector-form-type">
+            <CredentialsType :form="connectorForm" v-if="connectorFormType === ConnectorFormType.CREDENTIALS" />
+            <FileType :form="connectorForm" v-if="connectorFormType === ConnectorFormType.FILE" />
+            <TokenType :form="connectorForm" v-if="connectorFormType === ConnectorFormType.TOKEN" />
+        </div>
+
+        <div class="connector-footer">
+            <el-form-item>
+                <el-button type="primary" @click="configureConnector">Save</el-button>
+                <el-button @click="closeDialogUserandPass">Cancel</el-button>
+            </el-form-item>
+        </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { computed, toRefs } from "vue"
-import { Connector, ConnectorFormType } from "@/types/connectors.d"
+import { computed, ref, toRefs } from "vue"
+import { Connector, ConnectorForm, ConnectorFormType } from "@/types/connectors.d"
 import { Picture as IconPicture } from "@element-plus/icons-vue"
+import CredentialsType from "./FormTypes/CredentialsType.vue"
+import FileType from "./FormTypes/FileType.vue"
+import TokenType from "./FormTypes/TokenType.vue"
 
 const props = defineProps<{
     connector: Connector
 }>()
 const { connector } = toRefs(props)
 
-const connectorFommType = computed<ConnectorFormType>(() => getConnectorFormType(connector.value))
+const connectorForm = ref<ConnectorForm>({
+    connector_url: "",
+    connector_username: "",
+    connector_password: "",
+    connector_api_key: "",
+    connector_file: ""
+})
+const connectorFormType = computed<ConnectorFormType>(() => getConnectorFormType(connector.value))
 const isConnectorConfigured = computed<boolean>(() => connector.value.connector_configured)
 
 function getConnectorFormType(connector: Connector): ConnectorFormType {
@@ -49,7 +72,6 @@ function getConnectorFormType(connector: Connector): ConnectorFormType {
     return ConnectorFormType.UNKNOWN
 }
 
-/*
 function configureConnector(event) {
     event.preventDefault()
     const { connector_url, username, password, connector_api_key } = this.connectorForm
@@ -207,7 +229,6 @@ function updateConnector(event) {
             })
     }
 }
-*/
 </script>
 
 <style lang="scss" scoped>

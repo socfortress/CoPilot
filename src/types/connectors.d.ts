@@ -28,3 +28,11 @@ export enum ConnectorFormType {
     CREDENTIALS = "credentials",
     UNKNOWN = "unknown"
 }
+
+export interface ConnectorForm {
+    connector_url: string
+    connector_username: string
+    connector_password: string
+    connector_api_key: string
+    connector_file: string
+}
