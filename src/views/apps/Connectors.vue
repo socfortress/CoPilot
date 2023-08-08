@@ -303,6 +303,7 @@
 <script>
 import Affix from "@/components/Affix.vue"
 import axios from "axios"
+import Api from "@/api"
 
 import { defineComponent } from "@vue/runtime-core"
 import { component } from "v-viewer"
@@ -390,7 +391,7 @@ export default defineComponent({
         configureConnector(event) {
             event.preventDefault()
             const { connector_url, username, password, connector_api_key } = this.connectorForm
-            const path = `http://localhost:5000/connectors/${this.currentConnector.id}`
+            const path = `http://127.0.0.1:5000/connectors/${this.currentConnector.id}`
             this.loading = true
             this.closeDialogUserandPass()
 
@@ -470,7 +471,7 @@ export default defineComponent({
         updateConnector(event) {
             event.preventDefault()
             const { connector_url, username, password, connector_api_key } = this.connectorForm
-            const path = `http://localhost:5000/connectors/${this.currentConnector.id}`
+            const path = `http://127.0.0.1:5000/connectors/${this.currentConnector.id}`
             this.loading = true
             this.closeUpdateModal()
 
@@ -549,10 +550,9 @@ export default defineComponent({
         },
 
         getConnectors() {
-            const path = "http://localhost:5000/connectors"
             this.loading = true
-            axios
-                .get(path)
+            Api.connectors
+                .getAll()
                 .then(res => {
                     this.connectors = res.data.connectors
                 })
