@@ -21,3 +21,10 @@ export interface Connector {
     roles?: null
     response?: null
 }
+
+export enum ConnectorFormType {
+    TOKEN = "token",
+    FILE = "file",
+    CREDENTIALS = "credentials",
+    UNKNOWN = "unknown"
+}

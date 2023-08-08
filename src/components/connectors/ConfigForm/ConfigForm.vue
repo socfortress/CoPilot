@@ -1,13 +1,53 @@
-<template>generic form</template>
+<template>
+    <div class="connector-form">
+        <div class="connector-header">
+            <el-image
+                class="connector-image"
+                fit="contain"
+                :src="`/src/assets/images/${connector ? connector.connector_name.toLowerCase() + '.svg' : 'default-logo.svg'}`"
+                :alt="`${connector.connector_name} Logo`"
+            >
+                <template #placeholder>
+                    <div class="image-slot">
+                        <el-icon><icon-picture /></el-icon>
+                    </div>
+                </template>
+                <template #error>
+                    <div class="image-slot">
+                        <el-icon><icon-picture /></el-icon>
+                    </div>
+                </template>
+            </el-image>
+            <div class="connector-name">{{ connector.connector_name || "" }}</div>
+        </div>
+    </div>
+</template>
 
 <script setup lang="ts">
-import { toRefs } from "vue"
-import { Connector } from "@/types/connectors.d"
+import { computed, toRefs } from "vue"
+import { Connector, ConnectorFormType } from "@/types/connectors.d"
+import { Picture as IconPicture } from "@element-plus/icons-vue"
 
 const props = defineProps<{
     connector: Connector
 }>()
 const { connector } = toRefs(props)
+
+const connectorFommType = computed<ConnectorFormType>(() => getConnectorFormType(connector.value))
+const isConnectorConfigured = computed<boolean>(() => connector.value.connector_configured)
+
+function getConnectorFormType(connector: Connector): ConnectorFormType {
+    if (connector.connector_accepts_api_key) {
+        return ConnectorFormType.TOKEN
+    }
+    if (connector.connector_accepts_file) {
+        return ConnectorFormType.FILE
+    }
+    if (connector.connector_accepts_username_password) {
+        return ConnectorFormType.CREDENTIALS
+    }
+    return ConnectorFormType.UNKNOWN
+}
 
 /*
 function configureConnector(event) {
@@ -169,3 +209,31 @@ function updateConnector(event) {
 }
 */
 </script>
+
+<style lang="scss" scoped>
+.connector-form {
+    .connector-header {
+        display: flex;
+        align-items: center;
+        gap: var(--size-4);
+        .connector-image {
+            width: var(--size-8);
+            height: var(--size-8);
+            border: var(--border-size-1) solid var(--gray-1);
+            border-radius: var(--radius-round);
+
+            .image-slot {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 100%;
+                height: 100%;
+            }
+        }
+        .connector-name {
+            font-size: var(--font-size-4);
+            font-weight: bold;
+        }
+    }
+}
+</style>
