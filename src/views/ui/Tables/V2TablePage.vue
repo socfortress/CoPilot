@@ -63,7 +63,7 @@
                 >
                     <v2-table-column type="selection" width="45"></v2-table-column>
                     <v2-table-column label="Name" prop="full_name" sortable width="200" align="left" :fixed="isMobile ? '' : 'left'">
-                        <template slot-scope="row">
+                        <template v-slot="row">
                             <span class="sel-string" v-html="$options.filters.selected(row.full_name, search)"></span>
                         </template>
                     </v2-table-column>
@@ -75,7 +75,7 @@
                         :fixed="isMobile ? '' : 'right'"
                     ></v2-table-column>
                     <v2-table-column label="Email" prop="email" sortable width="250">
-                        <template slot-scope="row">
+                        <template v-slot="row">
                             <span class="sel-string" v-html="$options.filters.selected(row.email, search)"></span>
                         </template>
                     </v2-table-column>
@@ -85,7 +85,7 @@
                     <v2-table-column label="City" prop="city" sortable width="200"></v2-table-column>
                     <v2-table-column label="Country" prop="country" sortable></v2-table-column>
                     <v2-table-column label="Address" prop="street_address" sortable>
-                        <template slot-scope="row">
+                        <template v-slot="row">
                             <div class="custom-action-row">
                                 <el-tooltip class="item" effect="dark" :content="row.street_address" placement="left">
                                     <span>{{ row.street_address }}</span>
@@ -96,7 +96,7 @@
                     <v2-table-column label="Phone" prop="phone" sortable width="150"></v2-table-column>
                     <v2-table-column label="Username" prop="username" sortable width="200"></v2-table-column>
                     <v2-table-column label="Action" width="70" :fixed="isMobile ? '' : 'right'">
-                        <template slot-scope="row">
+                        <template v-slot="row">
                             <div class="custom-action-row">
                                 <el-button @click="print(row)"><i class="mdi mdi-eye"></i></el-button>
                             </div>
@@ -114,7 +114,7 @@ import Papa from "papaparse"
 import * as FS from "file-saver"
 import _ from "lodash"
 
-import { defineComponent } from "@vue/runtime-core"
+import { defineComponent } from "vue"
 
 export default defineComponent({
     name: "V2TablePage",

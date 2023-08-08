@@ -85,7 +85,7 @@ import { detect } from "detect-browser"
 const browser = detect()
 import Peity from "@/components/vue-peity/Peity.vue"
 
-import { defineComponent } from "@vue/runtime-core"
+import { defineComponent } from "vue"
 
 export default defineComponent({
     name: "PeityPage",

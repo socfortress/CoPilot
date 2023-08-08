@@ -223,7 +223,7 @@
 import _ from "lodash"
 import { useMainStore } from "@/stores/main"
 import TextareaAutosize from "@/components/TextareaAutosize.vue"
-import { defineComponent } from "@vue/runtime-core"
+import { defineComponent } from "vue"
 
 export default defineComponent({
     name: "EcommerceNewProduct",

@@ -49,12 +49,12 @@
                 <el-collapse-item title="Mixed input" name="1">
                     <div>
                         <el-input placeholder="Please input" v-model="input3">
-                            <template slot="prepend">Http://</template>
+                            <template v-slot:prepend>Http://</template>
                         </el-input>
                     </div>
                     <div style="margin-top: 15px">
                         <el-input placeholder="Please input" v-model="input4">
-                            <template slot="append">.com</template>
+                            <template v-slot:append>.com</template>
                         </el-input>
                     </div>
                     <div style="margin-top: 15px">
@@ -79,7 +79,7 @@
 <script>
 import ThemePicker from "@/components/theme-picker.vue"
 
-import { defineComponent } from "@vue/runtime-core"
+import { defineComponent } from "vue"
 
 export default defineComponent({
     name: "ElementInput",

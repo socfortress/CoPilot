@@ -20,7 +20,7 @@
 const version = "2.2.2"
 
 const ORIGINAL_THEME = "#409EFF"
-import { defineComponent } from "@vue/runtime-core"
+import { defineComponent } from "vue"
 
 export default defineComponent({
     data() {

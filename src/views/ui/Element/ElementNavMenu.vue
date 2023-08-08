@@ -17,12 +17,12 @@
                     <el-menu :default-active="activeIndex" class="el-menu-demo" mode="horizontal" @select="handleSelect">
                         <el-menu-item index="1">Processing Center</el-menu-item>
                         <el-sub-menu index="2">
-                            <template slot="title">Workspace</template>
+                            <template v-slot:title>Workspace</template>
                             <el-menu-item index="2-1">item one</el-menu-item>
                             <el-menu-item index="2-2">item two</el-menu-item>
                             <el-menu-item index="2-3">item three</el-menu-item>
                             <el-sub-menu index="2-4">
-                                <template slot="title">item four</template>
+                                <template v-slot:title>item four</template>
                                 <el-menu-item index="2-4-1">item one</el-menu-item>
                                 <el-menu-item index="2-4-2">item two</el-menu-item>
                                 <el-menu-item index="2-4-3">item three</el-menu-item>
@@ -43,12 +43,12 @@
                     >
                         <el-menu-item index="1">Processing Center</el-menu-item>
                         <el-sub-menu index="2">
-                            <template slot="title">Workspace</template>
+                            <template v-slot:title>Workspace</template>
                             <el-menu-item index="2-1">item one</el-menu-item>
                             <el-menu-item index="2-2">item two</el-menu-item>
                             <el-menu-item index="2-3">item three</el-menu-item>
                             <el-sub-menu index="2-4">
-                                <template slot="title">item four</template>
+                                <template v-slot:title>item four</template>
                                 <el-menu-item index="2-4-1">item one</el-menu-item>
                                 <el-menu-item index="2-4-2">item two</el-menu-item>
                                 <el-menu-item index="2-4-3">item three</el-menu-item>
@@ -71,7 +71,7 @@
                             <h5>Default colors</h5>
                             <el-menu default-active="2" class="el-menu-vertical-demo" @open="handleOpen" @close="handleClose">
                                 <el-sub-menu index="1">
-                                    <template slot="title">
+                                    <template v-slot:title>
                                         <i class="el-icon-location"></i>
                                         <span>Navigator One</span>
                                     </template>
@@ -83,7 +83,7 @@
                                         <el-menu-item index="1-3">item three</el-menu-item>
                                     </el-menu-item-group>
                                     <el-sub-menu index="1-4">
-                                        <template slot="title">item four</template>
+                                        <template v-slot:title>item four</template>
                                         <el-menu-item index="1-4-1">item one</el-menu-item>
                                     </el-sub-menu>
                                 </el-sub-menu>
@@ -113,7 +113,7 @@
                                 active-text-color="#ffd04b"
                             >
                                 <el-sub-menu index="1">
-                                    <template slot="title">
+                                    <template v-slot:title>
                                         <i class="el-icon-location"></i>
                                         <span>Navigator One</span>
                                     </template>
@@ -125,7 +125,7 @@
                                         <el-menu-item index="1-3">item three</el-menu-item>
                                     </el-menu-item-group>
                                     <el-sub-menu index="1-4">
-                                        <template slot="title">item four</template>
+                                        <template v-slot:title>item four</template>
                                         <el-menu-item index="1-4-1">item one</el-menu-item>
                                     </el-sub-menu>
                                 </el-sub-menu>
@@ -166,7 +166,7 @@
                             :collapse="isCollapse"
                         >
                             <el-sub-menu index="1">
-                                <template slot="title">
+                                <template v-slot:title>
                                     <i class="el-icon-location"></i>
                                     <span slot="title">Navigator One</span>
                                 </template>
@@ -209,7 +209,7 @@
 <script>
 import ThemePicker from "@/components/theme-picker.vue"
 
-import { defineComponent } from "@vue/runtime-core"
+import { defineComponent } from "vue"
 
 export default defineComponent({
     name: "ElementNavMenu",

@@ -26,7 +26,7 @@
 
 <script>
 import "flag-icon-css/css/flag-icons.min.css"
-import { defineComponent } from "@vue/runtime-core"
+import { defineComponent } from "vue"
 
 export default defineComponent({
     name: "FlagIcons",

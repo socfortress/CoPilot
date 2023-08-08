@@ -24,7 +24,7 @@
 </template>
 
 <script>
-import { defineComponent } from "@vue/runtime-core"
+import { defineComponent } from "vue"
 import "leaflet/dist/leaflet.css"
 import { LMap, LTileLayer, LMarker } from "@vue-leaflet/vue-leaflet"
 

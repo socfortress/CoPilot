@@ -297,7 +297,7 @@ import "cryptocoins-icons/webfont/cryptocoins.css"
 import "cryptocoins-icons/webfont/cryptocoins-colors.css"
 import ResizeObserver from "../../components/vue-resize/ResizeObserver.vue"
 import _throttle from "lodash/throttle"
-import { defineComponent } from "@vue/runtime-core"
+import { defineComponent } from "vue"
 import Peity from "../../components/vue-peity/Peity.vue"
 
 export default defineComponent({

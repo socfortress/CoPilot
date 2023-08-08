@@ -27,7 +27,7 @@
 </template>
 
 <script>
-import { defineComponent } from "@vue/runtime-core"
+import { defineComponent } from "vue"
 import VuePellEditor from "@/components/VuePellEditor.vue"
 
 export default defineComponent({
