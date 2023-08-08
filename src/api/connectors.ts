@@ -1,8 +1,9 @@
+import { FlaskBaseResponse } from "@/types/flask"
+import { Connector } from "@/types/connectors"
 import { HttpClient } from "./httpClient"
 
 export default {
     getAll() {
-        // TODO: implement res type
-        return HttpClient.get("/connectors")
+        return HttpClient.get<FlaskBaseResponse & { connectors: Connector[] }>("/connectors")
     }
 }

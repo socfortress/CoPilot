@@ -1,17 +1,15 @@
 <template>
-    <div class="page-table scrollable only-y" id="affix-container">
+    <div class="page-table scrollable only-y">
         <div class="page-header">
             <h1>Connectors</h1>
             <h4>Configure connections to your toolset.</h4>
             <el-breadcrumb separator="/">
                 <el-breadcrumb-item :to="{ path: '/' }"><i class="mdi mdi-home-outline"></i></el-breadcrumb-item>
-                <el-breadcrumb-item>Components</el-breadcrumb-item>
-                <el-breadcrumb-item>Tables</el-breadcrumb-item>
-                <el-breadcrumb-item>Table</el-breadcrumb-item>
+                <el-breadcrumb-item>Connectors</el-breadcrumb-item>
             </el-breadcrumb>
         </div>
 
-        <div class="table-box card-base card-shadow--medium scrollable only-x">
+        <div class="table-box card-base card-shadow--medium scrollable only-x" v-loading="loading">
             <table class="styled striped">
                 <thead>
                     <tr>
@@ -300,18 +298,16 @@
     </div>
 </template>
 
-<script>
-import Affix from "@/components/Affix.vue"
+<script lang="ts">
 import axios from "axios"
 import Api from "@/api"
-
-import { defineComponent } from "@vue/runtime-core"
-import { component } from "v-viewer"
+import { defineComponent } from "vue"
+import { Connector } from "@/types/connectors"
 
 export default defineComponent({
     data() {
         return {
-            connectors: [],
+            connectors: [] as Connector[],
             currentConnector: null,
 
             // Configure Modal
