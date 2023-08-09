@@ -20,6 +20,7 @@ import { FormInstance, FormRules } from "element-plus"
 import type { UploadInstance, UploadProps, UploadRawFile } from "element-plus"
 import { UploadFilled } from "@element-plus/icons-vue"
 import { reactive, ref, toRefs } from "vue"
+import isURL from "validator/lib/isURL"
 
 export interface IFileForm {
     connector_url: string
@@ -44,49 +45,21 @@ const handleExceed: UploadProps["onExceed"] = files => {
 const submitUpload = () => {
     upload.value!.submit()
 }
-/*
-const checkAge = (rule: any, value: any, callback: any) => {
-    if (!value) {
-        return callback(new Error("Please input the age"))
-    }
-    setTimeout(() => {
-        if (!Number.isInteger(value)) {
-            callback(new Error("Please input digits"))
-        } else {
-            if (value < 18) {
-                callback(new Error("Age must be greater than 18"))
-            } else {
-                callback()
-            }
-        }
-    }, 1000)
-}
 
-const validatePass = (rule: any, value: any, callback: any) => {
-    if (value === "") {
-        callback(new Error("Please input the password"))
-    } else {
-        if (ruleForm.checkPass !== "") {
-            if (!formRef.value) return
-            formRef.value.validateField("checkPass", () => null)
-        }
-        callback()
+const validateUrl = (rule: any, value: any, callback: any) => {
+    if (!value) {
+        return callback(new Error("Please input a valid URL"))
     }
-}
-const validatePass2 = (rule: any, value: any, callback: any) => {
-    if (value === "") {
-        callback(new Error("Please input the password again"))
-    } else if (value !== ruleForm.pass) {
-        callback(new Error("Two inputs don't match!"))
-    } else {
-        callback()
+    if (!isURL(value)) {
+        return callback(new Error("Please input a valid URL"))
     }
+
+    return callback()
 }
-*/
 
 const rules = reactive<FormRules<typeof form>>({
-    connector_url: [{ trigger: "blur" }],
-    connector_file: [{ trigger: "blur" }]
+    connector_url: [{ required: true, validator: validateUrl, trigger: "blur" }],
+    connector_file: [{ required: true, message: "Please input a valid File", trigger: "blur" }]
 })
 </script>
 

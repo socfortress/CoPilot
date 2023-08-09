@@ -55,11 +55,11 @@
         <el-dialog
             title="Connector configuration"
             v-model="showConfigDialog"
-            :close-on-click-modal="true"
-            :close-on-press-escape="true"
+            :close-on-click-modal="false"
+            :close-on-press-escape="false"
             width="600px"
         >
-            <ConfigForm :connector="currentConnector" />
+            <ConfigForm v-if="currentConnector" :connector="currentConnector" @close="closeConfigDialog()" />
         </el-dialog>
     </div>
 </template>
@@ -100,6 +100,11 @@ export default defineComponent({
         openConfigDialog(connector) {
             this.currentConnector = connector
             this.showConfigDialog = true
+        },
+
+        closeConfigDialog() {
+            this.currentConnector = null
+            this.showConfigDialog = false
         },
 
         getConnectors() {

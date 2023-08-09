@@ -12,6 +12,7 @@
 <script setup lang="ts">
 import { FormInstance, FormRules } from "element-plus"
 import { reactive, ref, toRefs } from "vue"
+import isURL from "validator/lib/isURL"
 
 export interface ITokenForm {
     connector_url: string
@@ -25,49 +26,20 @@ const { form } = toRefs(props)
 
 const formRef = ref<FormInstance>()
 
-/*
-const checkAge = (rule: any, value: any, callback: any) => {
+const validateUrl = (rule: any, value: any, callback: any) => {
     if (!value) {
-        return callback(new Error("Please input the age"))
+        return callback(new Error("Please input a valid URL"))
     }
-    setTimeout(() => {
-        if (!Number.isInteger(value)) {
-            callback(new Error("Please input digits"))
-        } else {
-            if (value < 18) {
-                callback(new Error("Age must be greater than 18"))
-            } else {
-                callback()
-            }
-        }
-    }, 1000)
-}
+    if (!isURL(value)) {
+        return callback(new Error("Please input a valid URL"))
+    }
 
-const validatePass = (rule: any, value: any, callback: any) => {
-    if (value === "") {
-        callback(new Error("Please input the password"))
-    } else {
-        if (ruleForm.checkPass !== "") {
-            if (!formRef.value) return
-            formRef.value.validateField("checkPass", () => null)
-        }
-        callback()
-    }
+    return callback()
 }
-const validatePass2 = (rule: any, value: any, callback: any) => {
-    if (value === "") {
-        callback(new Error("Please input the password again"))
-    } else if (value !== ruleForm.pass) {
-        callback(new Error("Two inputs don't match!"))
-    } else {
-        callback()
-    }
-}
-*/
 
 const rules = reactive<FormRules<typeof form>>({
-    connector_url: [{ trigger: "blur" }],
-    connector_api_key: [{ trigger: "blur" }]
+    connector_url: [{ required: true, validator: validateUrl, trigger: "blur" }],
+    connector_api_key: [{ required: true, message: "Please input a valid API Key", trigger: "blur" }]
 })
 </script>
 

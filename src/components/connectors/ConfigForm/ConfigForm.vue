@@ -29,25 +29,30 @@
 
         <div class="connector-footer">
             <el-form-item>
-                <el-button type="primary" @click="configureConnector">Save</el-button>
-                <el-button @click="closeDialogUserandPass">Cancel</el-button>
+                <el-button type="primary" @click="saveConnector()">Save</el-button>
+                <el-button @click="abortForm()">Cancel</el-button>
             </el-form-item>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, toRefs } from "vue"
+import { computed, onMounted, ref, toRefs } from "vue"
 import { Connector, ConnectorForm, ConnectorFormType } from "@/types/connectors.d"
 import { Picture as IconPicture } from "@element-plus/icons-vue"
 import CredentialsType from "./FormTypes/CredentialsType.vue"
 import FileType from "./FormTypes/FileType.vue"
 import TokenType from "./FormTypes/TokenType.vue"
+import _pick from "lodash/pick"
 
 const props = defineProps<{
     connector: Connector
 }>()
 const { connector } = toRefs(props)
+
+const emit = defineEmits<{
+    (e: "close"): void
+}>()
 
 const connectorForm = ref<ConnectorForm>({
     connector_url: "",
@@ -58,6 +63,16 @@ const connectorForm = ref<ConnectorForm>({
 })
 const connectorFormType = computed<ConnectorFormType>(() => getConnectorFormType(connector.value))
 const isConnectorConfigured = computed<boolean>(() => connector.value.connector_configured)
+
+function setUpForm() {
+    connectorForm.value = _pick(connector.value, [
+        "connector_url",
+        "connector_username",
+        "connector_password",
+        "connector_api_key",
+        "connector_file"
+    ]) as ConnectorForm
+}
 
 function getConnectorFormType(connector: Connector): ConnectorFormType {
     if (connector.connector_accepts_api_key) {
@@ -72,6 +87,16 @@ function getConnectorFormType(connector: Connector): ConnectorFormType {
     return ConnectorFormType.UNKNOWN
 }
 
+function saveConnector() {
+    console.log("saveConnector")
+}
+
+function abortForm() {
+    emit("close")
+    console.log("abortForm")
+}
+
+/*
 function configureConnector(event) {
     event.preventDefault()
     const { connector_url, username, password, connector_api_key } = this.connectorForm
@@ -229,6 +254,11 @@ function updateConnector(event) {
             })
     }
 }
+*/
+
+onMounted(() => {
+    setUpForm()
+})
 </script>
 
 <style lang="scss" scoped>
@@ -237,6 +267,8 @@ function updateConnector(event) {
         display: flex;
         align-items: center;
         gap: var(--size-4);
+        margin-bottom: var(--size-6);
+
         .connector-image {
             width: var(--size-8);
             height: var(--size-8);

@@ -15,6 +15,8 @@ export interface Connector {
     connector_url: string
     connector_username: string
     connector_verified: boolean
+    // TODO: to verify connector_file prop
+    connector_file: string
     id: number
     name: string
     authToken?: null
