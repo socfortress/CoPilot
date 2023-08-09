@@ -1,8 +1,8 @@
 {
-	"arrowParens": "avoid",
-	"printWidth": 140,
-	"semi": false,
-	"tabWidth": 4,
-	"trailingComma": "none",
-	"useTabs": false
+    "arrowParens": "avoid",
+    "printWidth": 140,
+    "semi": false,
+    "tabWidth": 4,
+    "trailingComma": "none",
+    "useTabs": false
 }
