@@ -36,5 +36,12 @@ export interface ConnectorForm {
     connector_username: string
     connector_password: string
     connector_api_key: string
-    connector_file: string
+    connector_file: File | null
+}
+
+export interface ConnectorRequestPayload {
+    connector_url: string
+    connector_username?: string
+    connector_password?: string
+    connector_api_key?: string
 }

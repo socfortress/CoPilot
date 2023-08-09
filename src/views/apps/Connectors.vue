@@ -59,7 +59,7 @@
             :close-on-press-escape="false"
             width="600px"
         >
-            <ConfigForm v-if="currentConnector" :connector="currentConnector" @close="closeConfigDialog()" />
+            <ConfigForm v-if="currentConnector" :connector="currentConnector" @close="closeConfigDialog" />
         </el-dialog>
     </div>
 </template>
@@ -102,9 +102,13 @@ export default defineComponent({
             this.showConfigDialog = true
         },
 
-        closeConfigDialog() {
+        closeConfigDialog(update: boolean) {
             this.currentConnector = null
             this.showConfigDialog = false
+
+            if (update) {
+                this.getConnectors()
+            }
         },
 
         getConnectors() {

@@ -34,7 +34,7 @@ const { form } = toRefs(props)
 
 const formRef = ref<FormInstance>()
 
-const validateUrl = (rule: any, value: any, callback: any) => {
+const validateUrl = (rule: any, value: string, callback: any) => {
     if (!value) {
         return callback(new Error("Please input a valid URL"))
     }

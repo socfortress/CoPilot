@@ -30,7 +30,7 @@
         <div class="connector-footer mt-40">
             <el-form-item>
                 <el-button type="primary" @click="saveConnector()">Save</el-button>
-                <el-button @click="abortForm()">Cancel</el-button>
+                <el-button @click="closeForm(false)">Cancel</el-button>
             </el-form-item>
         </div>
     </div>
@@ -53,7 +53,7 @@ const props = defineProps<{
 const { connector } = toRefs(props)
 
 const emit = defineEmits<{
-    (e: "close"): void
+    (e: "close", value: boolean): void
 }>()
 
 const connectorForm = ref<ConnectorForm>({
@@ -61,7 +61,7 @@ const connectorForm = ref<ConnectorForm>({
     connector_username: "",
     connector_password: "",
     connector_api_key: "",
-    connector_file: ""
+    connector_file: null
 })
 const connectorFormType = computed<ConnectorFormType>(() => getConnectorFormType(connector.value))
 const isConnectorConfigured = computed<boolean>(() => connector.value.connector_configured)
@@ -75,7 +75,7 @@ function setUpForm() {
         "connector_password",
         "connector_api_key",
         "connector_file"
-    ]) as ConnectorForm
+    ]) as unknown as ConnectorForm
 }
 
 function getConnectorFormType(connector: Connector): ConnectorFormType {
@@ -107,18 +107,26 @@ function saveConnector() {
     })
 }
 
-function abortForm() {
-    emit("close")
+function closeForm(update: boolean) {
+    emit("close", update)
+}
+
+function getRequestMethod() {
+    if (connectorFormType.value === ConnectorFormType.FILE) {
+        return Api.connectors.upload
+    }
+
+    return isConnectorConfigured.value ? Api.connectors.update : Api.connectors.configure
 }
 
 function configureConnector() {
     loading.value = true
 
-    const { connector_url, connector_username, connector_password, connector_file, connector_api_key } = connectorForm.value
+    const { connector_url, connector_username, connector_password, connector_api_key, connector_file } = connectorForm.value
 
-    const requestMethod = isConnectorConfigured.value ? Api.connectors.update : Api.connectors.configure
+    const requestMethod = getRequestMethod()
 
-    let requestPayload = { connector_url }
+    let requestPayload: any = { connector_url }
 
     if (connectorFormType.value === ConnectorFormType.TOKEN) {
         requestPayload = Object.assign(requestPayload, {
@@ -131,6 +139,12 @@ function configureConnector() {
             connector_password
         })
     }
+    if (connectorFormType.value === ConnectorFormType.FILE) {
+        const form = new FormData()
+        form.append("file", connector_file, connector_file.name)
+
+        requestPayload = form
+    }
 
     requestMethod(connector.value.id, requestPayload)
         .then(() => {
@@ -138,7 +152,7 @@ function configureConnector() {
                 message: "Connector has been successfully configured.",
                 type: "success"
             })
-            //    this.getConnectors() // Refresh the connectors
+            closeForm(true)
         })
         .catch(err => {
             if (err.response.status === 400) {
@@ -154,27 +168,20 @@ function configureConnector() {
                     })
                 }
             } else if (err.response.status === 401) {
-                if (connectorFormType.value === ConnectorFormType.CREDENTIALS) {
-                    ElMessage({
-                        message: "Unauthorized. Please check your endpoint URL, username and password.",
-                        type: "error"
-                    })
-                } else {
-                    ElMessage({
-                        message: "Unauthorized. Please check your endpoint URL and Key",
-                        type: "error"
-                    })
-                }
+                ElMessage({
+                    message: "Unauthorized. Please check all fields",
+                    type: "error"
+                })
             } else {
                 ElMessage({
                     message: "Error updating the connector. Your settings were not inserted into the keystore. Please try again.",
                     type: "error"
                 })
             }
-            // this.getConnectors() // Refresh the connectors
+            closeForm(false)
         })
         .finally(() => {
-            loading.value = false // Set loading to false
+            loading.value = false
         })
 }
 
