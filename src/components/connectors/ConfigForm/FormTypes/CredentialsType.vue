@@ -14,7 +14,7 @@
 
 <script setup lang="ts">
 import { FormInstance, FormRules } from "element-plus"
-import { reactive, ref, toRefs } from "vue"
+import { onMounted, reactive, ref, toRefs } from "vue"
 import isURL from "validator/lib/isURL"
 
 export interface ICredentialsForm {
@@ -22,6 +22,10 @@ export interface ICredentialsForm {
     connector_username: string
     connector_password: string
 }
+
+const emit = defineEmits<{
+    (e: "mounted", value: FormInstance): void
+}>()
 
 const props = defineProps<{
     form: ICredentialsForm
@@ -46,6 +50,10 @@ const rules = reactive<FormRules<typeof form>>({
     connector_username: [{ required: true, message: "Please input a valid Username", trigger: "blur" }],
     connector_password: [{ required: true, message: "Please input a valid Password", trigger: "blur" }]
 })
-</script>
 
-<style lang="scss" scoped></style>
+onMounted(() => {
+    if (formRef.value) {
+        emit("mounted", formRef.value)
+    }
+})
+</script>

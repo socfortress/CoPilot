@@ -11,13 +11,17 @@
 
 <script setup lang="ts">
 import { FormInstance, FormRules } from "element-plus"
-import { reactive, ref, toRefs } from "vue"
+import { onMounted, reactive, ref, toRefs } from "vue"
 import isURL from "validator/lib/isURL"
 
 export interface ITokenForm {
     connector_url: string
     connector_api_key: string
 }
+
+const emit = defineEmits<{
+    (e: "mounted", value: FormInstance): void
+}>()
 
 const props = defineProps<{
     form: ITokenForm
@@ -41,6 +45,10 @@ const rules = reactive<FormRules<typeof form>>({
     connector_url: [{ required: true, validator: validateUrl, trigger: "blur" }],
     connector_api_key: [{ required: true, message: "Please input a valid API Key", trigger: "blur" }]
 })
-</script>
 
-<style lang="scss" scoped></style>
+onMounted(() => {
+    if (formRef.value) {
+        emit("mounted", formRef.value)
+    }
+})
+</script>

@@ -1,5 +1,5 @@
 <template>
-    <div class="connector-form">
+    <div class="connector-form" v-loading="loading">
         <div class="connector-header">
             <el-image
                 class="connector-image"
@@ -22,12 +22,12 @@
         </div>
 
         <div class="connector-form-type">
-            <CredentialsType :form="connectorForm" v-if="connectorFormType === ConnectorFormType.CREDENTIALS" />
-            <FileType :form="connectorForm" v-if="connectorFormType === ConnectorFormType.FILE" />
-            <TokenType :form="connectorForm" v-if="connectorFormType === ConnectorFormType.TOKEN" />
+            <CredentialsType :form="connectorForm" v-if="connectorFormType === ConnectorFormType.CREDENTIALS" @mounted="formRef = $event" />
+            <FileType :form="connectorForm" v-if="connectorFormType === ConnectorFormType.FILE" @mounted="formRef = $event" />
+            <TokenType :form="connectorForm" v-if="connectorFormType === ConnectorFormType.TOKEN" @mounted="formRef = $event" />
         </div>
 
-        <div class="connector-footer">
+        <div class="connector-footer mt-40">
             <el-form-item>
                 <el-button type="primary" @click="saveConnector()">Save</el-button>
                 <el-button @click="abortForm()">Cancel</el-button>
@@ -44,6 +44,8 @@ import CredentialsType from "./FormTypes/CredentialsType.vue"
 import FileType from "./FormTypes/FileType.vue"
 import TokenType from "./FormTypes/TokenType.vue"
 import _pick from "lodash/pick"
+import { ElMessage, FormInstance } from "element-plus"
+import Api from "@/api"
 
 const props = defineProps<{
     connector: Connector
@@ -63,6 +65,8 @@ const connectorForm = ref<ConnectorForm>({
 })
 const connectorFormType = computed<ConnectorFormType>(() => getConnectorFormType(connector.value))
 const isConnectorConfigured = computed<boolean>(() => connector.value.connector_configured)
+const formRef = ref<FormInstance | null>(null)
+const loading = ref<boolean>(false)
 
 function setUpForm() {
     connectorForm.value = _pick(connector.value, [
@@ -88,173 +92,91 @@ function getConnectorFormType(connector: Connector): ConnectorFormType {
 }
 
 function saveConnector() {
-    console.log("saveConnector")
+    if (!formRef.value) return
+
+    formRef.value.validate(valid => {
+        if (valid) {
+            configureConnector()
+        } else {
+            ElMessage({
+                message: "You must fill in the required fields correctly.",
+                type: "warning"
+            })
+            return false
+        }
+    })
 }
 
 function abortForm() {
     emit("close")
-    console.log("abortForm")
 }
 
-/*
-function configureConnector(event) {
-    event.preventDefault()
-    const { connector_url, username, password, connector_api_key } = this.connectorForm
-    const path = `http://127.0.0.1:5000/connectors/${this.currentConnector.id}`
-    this.loading = true
-    this.closeDialogUserandPass()
+function configureConnector() {
+    loading.value = true
 
-    if (connector_api_key) {
-        console.log("POST request to: ", path)
-        console.log("Data: ", {
-            connector_url: connector_url,
-            connector_api_key: connector_api_key
+    const { connector_url, connector_username, connector_password, connector_file, connector_api_key } = connectorForm.value
+
+    const requestMethod = isConnectorConfigured.value ? Api.connectors.update : Api.connectors.configure
+
+    let requestPayload = { connector_url }
+
+    if (connectorFormType.value === ConnectorFormType.TOKEN) {
+        requestPayload = Object.assign(requestPayload, {
+            connector_api_key
         })
-        axios
-            .post(path, {
-                connector_url: connector_url,
-                connector_api_key: connector_api_key
-            })
-            .then(() => {
-                this.successMessage = "Connector has been successfully configured." // Set success message
-                setTimeout(() => {
-                    this.successMessage = "" // Clear success message after 5 seconds
-                }, 5000)
-                this.getConnectors() // Refresh the connectors
-            })
-            .catch(err => {
-                if (err.response.status === 400) {
-                    this.errorMessage =
-                        "This connector is already configured. If you would like to reconfigure this connector select `Edit`." // Set the error message
-                } else if (err.response.status === 401) {
-                    this.errorMessage = "Unauthorized. Please check your endpoint URL, username and password." // Set the error message
-                } else {
-                    this.errorMessage = "Error updating the connector. Your settings were not inserted into the keystore. Please try again." // Set the error message
-                }
-                setTimeout(() => {
-                    this.errorMessage = "" // Clear error message after 5 seconds
-                }, 5000)
-                this.getConnectors() // Refresh the connectors
-                console.error(err) // Also log the error for debugging
-            })
-            .finally(() => {
-                this.loading = false // Set loading to false
-            })
-    } else {
-        axios
-            .post(path, {
-                connector_url: connector_url,
-                connector_username: username,
-                connector_password: password
-            })
-            .then(() => {
-                this.successMessage = "Connector has been successfully configured." // Set success message
-                setTimeout(() => {
-                    this.successMessage = "" // Clear success message after 5 seconds
-                }, 5000)
-                this.getConnectors() // Refresh the connectors
-            })
-            .catch(err => {
-                if (err.response.status === 400) {
-                    this.errorMessage =
-                        "This connector is already configured. If you would like to reconfigure this connector select `Edit`." // Set the error message
-                } else if (err.response.status === 401) {
-                    this.errorMessage = "Unauthorized. Please check your endpoint URL, username and password." // Set the error message
-                } else {
-                    this.errorMessage = "Error updating the connector. Your settings were not inserted into the keystore. Please try again." // Set the error message
-                }
-                setTimeout(() => {
-                    this.errorMessage = "" // Clear error message after 5 seconds
-                }, 5000)
-                this.getConnectors() // Refresh the connectors
-                console.error(err) // Also log the error for debugging
-            })
-            .finally(() => {
-                this.loading = false // Set loading to false
-            })
     }
-}
-function updateConnector(event) {
-    event.preventDefault()
-    const { connector_url, username, password, connector_api_key } = this.connectorForm
-    const path = `http://127.0.0.1:5000/connectors/${this.currentConnector.id}`
-    this.loading = true
-    this.closeUpdateModal()
-
-    if (connector_api_key) {
-        console.log("POST request to: ", path)
-        console.log("Data: ", {
-            connector_url: connector_url,
-            connector_api_key: connector_api_key
+    if (connectorFormType.value === ConnectorFormType.CREDENTIALS) {
+        requestPayload = Object.assign(requestPayload, {
+            connector_username,
+            connector_password
         })
-
-        axios
-            .put(path, {
-                connector_url: connector_url,
-                connector_username: username,
-                connector_password: password,
-                connector_api_key: connector_api_key
-            })
-            .then(() => {
-                this.successMessage = "Connector has been successfully updated." // Set success message
-                setTimeout(() => {
-                    this.successMessage = "" // Clear success message after 5 seconds
-                }, 5000)
-                this.getConnectors() // Refresh the connectors
-            })
-            .catch(err => {
-                if (err.response.status === 400) {
-                    this.errorMessage =
-                        "This connector is not configured. If you would like to configure this connector select `Configure`." // Set the error message
-                } else if (err.response.status === 401) {
-                    this.errorMessage = "Unauthorized. Please check your endpoint URL, username and password." // Set the error message
-                } else {
-                    this.errorMessage = "Error updating the connector. Please try again." // Set the error message
-                }
-                setTimeout(() => {
-                    this.errorMessage = "" // Clear error message after 5 seconds
-                }, 5000)
-                this.getConnectors() // Refresh the connectors
-                console.error(err) // Also log the error for debugging
-            })
-            .finally(() => {
-                this.loading = false // Set loading to false
-            })
-    } else {
-        axios
-            .put(path, {
-                connector_url: connector_url,
-                connector_username: username,
-                connector_password: password
-            })
-            .then(() => {
-                this.successMessage = "Connector has been successfully updated." // Set success message
-                setTimeout(() => {
-                    this.successMessage = "" // Clear success message after 5 seconds
-                }, 5000)
-                this.getConnectors() // Refresh the connectors
-            })
-            .catch(err => {
-                if (err.response.status === 400) {
-                    this.errorMessage =
-                        "This connector is not configured. If you would like to configure this connector select `Configure`." // Set the error message
-                } else if (err.response.status === 401) {
-                    this.errorMessage = "Unauthorized. Please check your endpoint URL, username and password." // Set the error message
-                } else {
-                    this.errorMessage = "Error updating the connector. Please try again." // Set the error message
-                }
-                setTimeout(() => {
-                    this.errorMessage = "" // Clear error message after 5 seconds
-                }, 5000)
-                this.getConnectors() // Refresh the connectors
-                console.error(err) // Also log the error for debugging
-            })
-            .finally(() => {
-                this.loading = false // Set loading to false
-            })
     }
+
+    requestMethod(connector.value.id, requestPayload)
+        .then(() => {
+            ElMessage({
+                message: "Connector has been successfully configured.",
+                type: "success"
+            })
+            //    this.getConnectors() // Refresh the connectors
+        })
+        .catch(err => {
+            if (err.response.status === 400) {
+                if (isConnectorConfigured.value) {
+                    ElMessage({
+                        message: "This connector is not configured. If you would like to configure this connector select `Configure`.",
+                        type: "error"
+                    })
+                } else {
+                    ElMessage({
+                        message: "This connector is already configured. If you would like to reconfigure this connector select `Edit`.",
+                        type: "error"
+                    })
+                }
+            } else if (err.response.status === 401) {
+                if (connectorFormType.value === ConnectorFormType.CREDENTIALS) {
+                    ElMessage({
+                        message: "Unauthorized. Please check your endpoint URL, username and password.",
+                        type: "error"
+                    })
+                } else {
+                    ElMessage({
+                        message: "Unauthorized. Please check your endpoint URL and Key",
+                        type: "error"
+                    })
+                }
+            } else {
+                ElMessage({
+                    message: "Error updating the connector. Your settings were not inserted into the keystore. Please try again.",
+                    type: "error"
+                })
+            }
+            // this.getConnectors() // Refresh the connectors
+        })
+        .finally(() => {
+            loading.value = false // Set loading to false
+        })
 }
-*/
 
 onMounted(() => {
     setUpForm()
