@@ -8,7 +8,7 @@ export const HttpClient = axios.create({
 })
 
 // TODO: To be set when the authentication mechanism is implemented
-/* 
+/*
 HttpClient.interceptors.response.use(
     response => {
         return response
