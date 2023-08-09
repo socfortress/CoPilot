@@ -39,7 +39,7 @@
 </template>
 
 <script>
-import { defineComponent } from "@vue/runtime-core"
+import { defineComponent } from "vue"
 import VueQuillEditor from "@/components/vue-quill-editor.vue"
 
 export default defineComponent({

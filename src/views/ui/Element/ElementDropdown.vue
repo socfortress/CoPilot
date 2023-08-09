@@ -43,7 +43,7 @@
 <script>
 import ThemePicker from "@/components/theme-picker.vue"
 import { ArrowDown } from "@element-plus/icons-vue"
-import { defineComponent } from "@vue/runtime-core"
+import { defineComponent } from "vue"
 
 export default defineComponent({
     name: "ElementDropdown",

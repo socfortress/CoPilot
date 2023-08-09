@@ -152,7 +152,7 @@ import Chance from "chance"
 const chance = new Chance()
 import VuePellEditor from "@/components/VuePellEditor.vue"
 
-import { defineComponent } from "@vue/runtime-core"
+import { defineComponent } from "vue"
 
 export default defineComponent({
     name: "Mail",

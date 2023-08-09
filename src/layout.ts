@@ -1,4 +1,4 @@
-import { EFooter, ENavPos, EToolbar } from "@/types"
+import { EFooter, ENavPos, EToolbar } from "@/types/layout.d"
 
 export default {
     contenOnly: {

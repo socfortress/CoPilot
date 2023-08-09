@@ -34,7 +34,7 @@
 import ProfileEdit from "../../components/Profile/ProfileEdit.vue"
 import ProfileGallery from "../../components/Profile/ProfileGallery.vue"
 import ProfileTimeline from "../../components/Profile/ProfileTimeline.vue"
-import { defineComponent } from "@vue/runtime-core"
+import { defineComponent } from "vue"
 
 export default defineComponent({
     name: "Profile",

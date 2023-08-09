@@ -278,7 +278,7 @@ import _ from "lodash"
 import * as echarts from "echarts"
 import Peity from "../../components/vue-peity/Peity.vue"
 import ResizeObserver from "../../components/vue-resize/ResizeObserver.vue"
-import { defineComponent } from "@vue/runtime-core"
+import { defineComponent } from "vue"
 
 export default defineComponent({
     name: "Dashboard",

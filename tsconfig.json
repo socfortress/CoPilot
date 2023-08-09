@@ -8,17 +8,16 @@
         "jsx": "preserve",
         "sourceMap": true,
         "resolveJsonModule": true,
-        "isolatedModules": true,
+        "isolatedModules": false,
         "esModuleInterop": true,
         "lib": ["esnext", "dom"],
         "skipLibCheck": true,
         "allowJs": true,
         "paths": {
-            "@/*": ["./src/*", "./dist/*"],
-            "preact/*": ["./src/empty.d.ts"]
+            "@/*": ["./src/*", "./dist/*"]
         },
         "types": ["vite/client", "node"]
     },
-    "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue"],
+    "include": ["src/**/*.ts", "src/**/*.js", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue"],
     "references": [{ "path": "./tsconfig.node.json" }]
 }

@@ -85,7 +85,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "@vue/runtime-core"
+import { defineComponent } from "vue"
 import NotificationBox from "../components/NotificationBox.vue"
 import Search from "../components/Search.vue"
 import { api as fullscreen } from "vue-fullscreen"

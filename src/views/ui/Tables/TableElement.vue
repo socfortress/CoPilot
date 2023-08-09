@@ -38,7 +38,7 @@
                     :filter-method="filterTag"
                     filter-placement="bottom-end"
                 >
-                    <template slot-scope="scope">
+                    <template v-slot="scope">
                         <el-tag :type="scope.row.tag === 'Home' ? 'primary' : 'success'" close-transition>{{ scope.row.tag }}</el-tag>
                     </template>
                 </el-table-column>
@@ -52,7 +52,7 @@
 </template>
 
 <script>
-import { defineComponent } from "@vue/runtime-core"
+import { defineComponent } from "vue"
 
 export default defineComponent({
     name: "TableElement",

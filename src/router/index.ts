@@ -40,7 +40,7 @@ import charts from "./charts"
 
 import layouts from "../layout"
 import { useMainStore } from "@/stores/main"
-import type { StateLayout } from "@/types"
+import type { StateLayout } from "@/types/layout"
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),

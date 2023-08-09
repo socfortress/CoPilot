@@ -41,7 +41,7 @@
 <script>
 import Affix from "@/components/Affix.vue"
 
-import { defineComponent } from "@vue/runtime-core"
+import { defineComponent } from "vue"
 
 export default defineComponent({
     name: "Table",

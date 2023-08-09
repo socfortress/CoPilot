@@ -1,4 +1,4 @@
-import { ENavPos, EToolbar, EViewAnimation, type State, type StateLayout } from "@/types"
+import { ENavPos, EToolbar, EViewAnimation, State, StateLayout } from "@/types/layout.d"
 import { defineStore, acceptHMRUpdate } from "pinia"
 
 export const useMainStore = defineStore("main", {

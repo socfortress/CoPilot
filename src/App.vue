@@ -50,7 +50,7 @@
 
             <horizontal-nav :position="navPos" @push-page="closeSidebar" v-if="navPos === 'bottom'" style="margin-bottom: 0" />
 
-            <Footer v-if="footer === 'below'" :position="footer" />
+            <FooterComp v-if="footer === 'below'" :position="footer" />
         </div>
 
         <vertical-nav
@@ -62,14 +62,14 @@
             v-if="navPos === 'right'"
         />
 
-        <Footer v-if="footer === 'above'" :position="footer" />
+        <FooterComp v-if="footer === 'above'" :position="footer" />
 
         <layout-picker :position="navPos" v-if="isLogged" />
     </div>
 </template>
 
 <script lang="ts">
-import { defineComponent } from "@vue/runtime-core"
+import { defineComponent } from "vue"
 import { detect } from "detect-browser"
 const browser = detect()
 import HorizontalNav from "./core/horizontal-nav.vue"
@@ -78,7 +78,7 @@ import Toolbar from "./core/toolbar.vue"
 import Footer from "./core/footer.vue"
 import LayoutPicker from "./components/layout-picker.vue"
 import { useMainStore } from "./stores/main"
-import { EFooter, ENavPos } from "./types"
+import { EFooter, ENavPos } from "@/types/layout.d"
 
 export default defineComponent({
     name: "App",
@@ -139,7 +139,7 @@ export default defineComponent({
         HorizontalNav,
         VerticalNav,
         Toolbar,
-        Footer,
+        FooterComp: Footer,
         LayoutPicker
     },
     created() {

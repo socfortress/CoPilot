@@ -318,7 +318,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from "@vue/runtime-core"
+import { defineComponent } from "vue"
 import { detect } from "detect-browser"
 import { useRoute } from "vue-router"
 const browser = detect()

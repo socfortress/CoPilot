@@ -43,7 +43,7 @@
 
 <script>
 import _ from "lodash"
-import { defineComponent } from "@vue/runtime-core"
+import { defineComponent } from "vue"
 import ResizeObserver from "@/components/vue-resize/ResizeObserver.vue"
 import VirtualCollection from "/node_modules/vue-virtual-collection/src/VirtualCollection.vue"
 

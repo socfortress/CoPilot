@@ -19,7 +19,7 @@
 <script>
 import ProfileGallery from "@/components/Profile/ProfileGallery.vue"
 
-import { defineComponent } from "@vue/runtime-core"
+import { defineComponent } from "vue"
 
 export default defineComponent({
     name: "Gallery",
