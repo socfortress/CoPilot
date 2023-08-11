@@ -58,7 +58,9 @@ const validateFile = (rule: any, value: File, callback: any) => {
         return callback(new Error("Please input a valid File"))
     }
 
-    if (value.type.indexOf("yaml") === -1) {
+    const stringCheck = value.name + value.type
+
+    if (stringCheck.indexOf("yaml") === -1) {
         return callback(new Error("Please input a valid File"))
     }
 
