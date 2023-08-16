@@ -11,6 +11,7 @@ import Cards from "../views/apps/Cards.vue"
 import Mail from "../views/apps/Mail.vue"
 import Ecommerce from "./ecommerce"
 import Connectors from "../views/apps/Connectors.vue"
+import Indices from "../views/apps/Dashboards/Indices.vue"
 /*
 
 //pages
@@ -85,6 +86,17 @@ const router = createRouter({
             path: "/connectors",
             name: "connectors",
             component: Connectors,
+            meta: {
+                auth: true,
+                layout: layouts.navLeft,
+                searchable: true,
+                tags: ["app"]
+            }
+        },
+        {
+            path: "/indices",
+            name: "indices",
+            component: Indices,
             meta: {
                 auth: true,
                 layout: layouts.navLeft,
