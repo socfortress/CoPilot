@@ -1,5 +1,5 @@
-import Indices from "../views/apps/Dashboards/Indices.vue";
-import layouts from "../layout";
+import Indices from "../views/apps/Dashboards/Indices.vue"
+import layouts from "../layout"
 
 export default {
     path: "/indices",
