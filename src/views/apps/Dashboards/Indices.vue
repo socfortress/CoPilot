@@ -1,16 +1,7 @@
 <template>
-    <el-scrollbar class="page-crypto-dashboard">
-        <div id="crypto-banner" class="card-base">
-            <div class="marqueeInfiniteSlider">
-                <ul>
-                    <li v-for="index in indices" data-balloon-pos="down">
-                        <i v-if="index.health === 'green'" class="mdi mdi-check-bold bg-green"></i>
-                        <i v-else-if="index.health === 'yellow'" class="mdi mdi-alert-box bg-orange"></i>
-                        <i v-else-if="index.health === 'red'" class="mdi mdi-alert-box bg-red"></i>
-                        {{ index.index }}
-                    </li>
-                </ul>
-            </div>
+    <el-scrollbar class="page page-indices">
+        <div class="card-base mb-30">
+            <IndicesMarquee :indices="indices" @click="setIndex" />
         </div>
 
         <!--BEGIN TEST-->
@@ -228,15 +219,12 @@
 </template>
 
 <script>
-import axios from "axios"
 import MarqueeInfinite from "marquee-infinite"
 import * as echarts from "echarts"
-import "cryptocoins-icons/webfont/cryptocoins.css"
-import "cryptocoins-icons/webfont/cryptocoins-colors.css"
-import ResizeObserver from "../../../components/vue-resize/ResizeObserver.vue"
 import _throttle from "lodash/throttle"
-import { defineComponent } from "@vue/runtime-core"
-import Peity from "../../../components/vue-peity/Peity.vue"
+import Api from "@/api"
+import { defineComponent } from "vue"
+import IndicesMarquee from "@/components/indices/Marquee.vue"
 
 export default defineComponent({
     data() {
@@ -277,46 +265,8 @@ export default defineComponent({
         }
     },
     methods: {
-        __resizeHanlder: _throttle(function (e) {
-            if (this.resized) {
-                this.asyncComponent = null
-                this.removePeity()
-                setTimeout(() => {
-                    this.asyncComponent = "peity"
-                }, 1000)
-
-                if (this.chartWallet) {
-                    this.chartWallet.resize()
-                }
-                if (this.chartPrice) {
-                    this.chartPrice.resize()
-                }
-                if (this.chartCandle) {
-                    this.chartCandle.resize()
-                }
-                if (this.pie) {
-                    this.pie.resize()
-                }
-                if (this.chart) {
-                    this.chart.resize()
-                }
-            }
-            this.resized = true
-        }, 700),
-        removePeity() {
-            const peityEl = document.querySelectorAll(".peity")
-            //ie fix
-            for (let i = 0; i < peityEl.length; i++) {
-                peityEl[i].parentNode.removeChild(peityEl[i])
-            }
-        },
-        initMarquee() {
-            this.marquee = new MarqueeInfinite(".marqueeInfinite", {
-                maxItems: 100000,
-                duration: 500000000,
-                direction: "horizontal",
-                loop: true
-            })
+        setIndex(index) {
+            console.log("setIndex", index)
         },
         updateSelectedHealth() {
             const selectedIdx = this.indices.find(index => index.index === this.selectedValue)
@@ -639,10 +589,9 @@ export default defineComponent({
             })
         },
         deleteIndex(index) {
-            const path = "http://localhost:5000/graylog/indices/" + index + "/delete"
             this.loading = true
-            axios
-                .delete(path)
+            Api.indices
+                .deleteIndex(index)
                 .then(res => {
                     this.successMessage = "Index was successfully deleted."
                     this.$message({
@@ -670,10 +619,9 @@ export default defineComponent({
                 })
         },
         getIndicesAllocation() {
-            const path = "http://localhost:5000/wazuh_indexer/allocation"
             this.loading = true
-            axios
-                .get(path)
+            Api.indices
+                .getAllocation()
                 .then(res => {
                     this.indicesAllocation = res.data.node_allocation
                     this.successMessage = "Indices allocation was successfully retrieved."
@@ -694,10 +642,9 @@ export default defineComponent({
                 })
         },
         getIndices() {
-            const path = "http://localhost:5000/wazuh_indexer/indices"
             this.loading = true
-            axios
-                .get(path)
+            Api.indices
+                .getIndices()
                 .then(res => {
                     this.indices = res.data.indices
                     this.successMessage = "Indices were successfully retrieved."
@@ -717,10 +664,9 @@ export default defineComponent({
                 })
         },
         getShards() {
-            const path = "http://localhost:5000/wazuh_indexer/shards"
             this.loading = true
-            axios
-                .get(path)
+            Api.indices
+                .getShards()
                 .then(res => {
                     this.shards = res.data.shards
                     this.successMessage = "Shards were successfully retrieved."
@@ -749,10 +695,9 @@ export default defineComponent({
             return ""
         },
         getClusterHealth() {
-            const path = "http://localhost:5000/wazuh_indexer/health"
             this.loading = true
-            axios
-                .get(path)
+            Api.indices
+                .getClusterHealth()
                 .then(res => {
                     this.clusterHealth = res.data
                     this.successMessage = "Cluster health was successfully retrieved."
@@ -824,428 +769,10 @@ export default defineComponent({
         this.pie.dispose()
         this.chart.dispose()
     },
-    components: { ResizeObserver, Peity }
+    components: { IndicesMarquee }
 })
 </script>
 
 <style lang="scss" scoped>
 @import "../../../assets/scss/_variables";
-
-.chart-row {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-}
-
-.chart-col {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
-}
-
-.chart-container {
-    width: 100%;
-}
-
-.chart {
-    width: 100%;
-}
-
-.pie-chart {
-    flex-grow: 1;
-}
-.marqueeInfiniteSlider {
-    display: flex;
-    animation: marquee 20s infinite linear;
-    white-space: nowrap;
-}
-
-@keyframes marquee {
-    0% {
-        transform: translateX(0);
-    }
-    100% {
-        transform: translateX(-100%);
-    }
-}
-
-.chart-wallet-box > div {
-    margin-left: 1%;
-}
-
-.wallet-box {
-    border-right: 2px solid $text-color-primary;
-    height: 500px;
-
-    .select-wallet {
-        background: $text-color-primary;
-        color: $background-color;
-        height: 70px;
-        overflow: hidden;
-        position: relative;
-        z-index: 1;
-
-        .wallet-item {
-            background: $text-color-primary;
-            color: $background-color;
-            height: 70px;
-
-            .icon {
-                width: 70px;
-                line-height: 70px;
-                font-size: 35px;
-            }
-
-            .coin {
-                .title {
-                    font-weight: bold;
-                }
-            }
-
-            .arrow {
-                background: transparentize($background-color, 0.9);
-                color: transparentize($background-color, 0.8);
-                width: 70px;
-                line-height: 70px;
-                font-size: 40px;
-                cursor: pointer;
-
-                &:hover {
-                    background: transparentize($background-color, 0.8);
-                    color: transparentize($text-color-primary, 0.1);
-                }
-            }
-        }
-
-        .wallet-list {
-            display: none;
-            background: $text-color-primary;
-            position: absolute;
-            top: 70px;
-            left: 0;
-            right: 0;
-
-            .wallet-item {
-                background: transparentize($background-color, 0.9);
-            }
-        }
-
-        &.open {
-            overflow: inherit;
-
-            .wallet-list {
-                display: block;
-            }
-        }
-    }
-
-    .content {
-        .portfolio {
-            padding: 20px;
-
-            .price-chart-box {
-                width: 60%;
-                display: none;
-            }
-
-            .price-chart {
-                background: transparentize($text-color-primary, 0.9);
-                position: relative;
-                border-radius: 4px;
-            }
-        }
-        .chart-box {
-            position: relative;
-            min-height: 50px;
-
-            .data-range-picker {
-                position: absolute;
-                top: 0;
-                left: 20px;
-                background: transparentize($text-color-primary, 0.9);
-                padding: 5px 10px;
-                cursor: pointer;
-                border-radius: 4px;
-
-                &:hover {
-                    background: transparentize($text-color-primary, 0.8);
-                }
-            }
-            .peity {
-                display: inherit;
-            }
-            .labels {
-                position: absolute;
-                bottom: 0;
-                z-index: 1;
-                left: 0;
-                right: 0;
-                font-size: 12px;
-                padding-bottom: 5px;
-                opacity: 0.6;
-            }
-        }
-    }
-}
-
-.widget {
-    height: 200px;
-    position: relative;
-
-    .widget-header {
-        .widget-icon-box {
-            background: rgba(0, 0, 0, 0.02);
-            border: 1px solid rgba(0, 0, 0, 0.02);
-            text-align: center;
-            width: 60px;
-            padding: 5px;
-        }
-
-        .widget-title {
-            font-weight: bold;
-        }
-    }
-
-    .badge-box {
-        .badge {
-            //background: rgba(0, 0, 0, .02);
-            display: inline-block;
-            //padding: 2px 5px;
-            //border: 1px solid rgba(0, 0, 0, .02);
-            border-radius: 4px;
-            font-size: 80%;
-        }
-    }
-}
-
-.conversion-widget {
-    .conversion-title {
-        background: $text-color-primary;
-        color: $background-color;
-        padding: 10px 15px;
-        margin: 0;
-        border-top-left-radius: 5px;
-        border-top-right-radius: 5px;
-    }
-
-    .conversion-table {
-        width: 100%;
-
-        thead {
-            th {
-                opacity: 0.6;
-            }
-        }
-
-        tbody {
-            tr {
-                td {
-                    &.tokens {
-                        i {
-                            font-size: 20px;
-                            opacity: 0.4;
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-.candle-chart-box {
-    .zoom-box {
-        margin-top: 5px;
-        margin-bottom: 5px;
-
-        .label {
-            background: transparentize($background-color, 0.8);
-            padding: 1px 5px;
-            font-size: 14px;
-            margin: 0 5px;
-
-            &.selected {
-                background: transparentize($text-color-accent, 0.5);
-            }
-        }
-    }
-}
-
-/*@media (max-width: 768px) {
-.el-row {
-  //margin-left: 0 !important;
-  //margin-right: 0 !important;
-
-  .el-col-24 {
-    //padding-left: 0 !important;
-    //padding-right: 0 !important;
-  }
-}
-}*/
-
-@media (min-width: 1300px) {
-    .wallet-box {
-        .content {
-            .portfolio {
-                .price-chart-box {
-                    display: block;
-                }
-            }
-        }
-    }
-}
-
-@media (max-width: 991px) {
-    .wallet-box {
-        border: none;
-    }
-    .candle-chart-box {
-        .price-box {
-            display: none;
-        }
-    }
-}
-
-@media (max-width: 400px) {
-    .wallet-box {
-        .select-wallet {
-            height: 50px;
-
-            .wallet-item {
-                height: 50px;
-
-                .icon {
-                    width: 50px;
-                    line-height: 50px;
-                    font-size: 30px;
-                }
-
-                .coin {
-                    .title {
-                        font-size: 16px;
-
-                        .cod {
-                            display: none;
-                        }
-                    }
-                    .balance {
-                        display: none;
-                    }
-                }
-
-                .arrow {
-                    width: 50px;
-                    line-height: 50px;
-                    font-size: 40px;
-                }
-            }
-
-            .wallet-list {
-                top: 50px;
-            }
-        }
-    }
-
-    .conversion-widget {
-        .conversion-table {
-            font-size: 13px;
-
-            tbody {
-                tr {
-                    td {
-                        &.tokens {
-                            i {
-                                font-size: 14px;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-</style>
-
-<style lang="scss">
-@import "../../../assets/scss/_variables";
-
-.page-crypto-dashboard {
-    #crypto-banner {
-        margin-bottom: 0px;
-        padding-top: 10px;
-        padding-bottom: 40px;
-        box-shadow: 0px -30px 0px 0px $background-color inset;
-        //background: transparentize($text-color-primary, 0.9);
-        box-sizing: border-box;
-
-        &.marqueeInfinite {
-            display: -webkit-box;
-            display: -ms-flexbox;
-            display: flex;
-            overflow: hidden;
-            white-space: nowrap;
-        }
-
-        &.marqueeInfinite > * {
-            -ms-flex-negative: 0;
-            flex-shrink: 0;
-            width: -moz-max-content;
-            -webkit-backface-visibility: hidden;
-            backface-visibility: hidden;
-            will-change: transform;
-        }
-
-        &.marqueeInfinite > * > * {
-            -ms-flex-negative: 0;
-            flex-shrink: 0;
-            display: inline-block;
-        }
-
-        ul,
-        li {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        li {
-            display: inline-block;
-            margin-right: 30px;
-            //border-bottom: 2px solid $text-color-primary;
-
-            i {
-                margin-right: 7px;
-            }
-        }
-    }
-
-    .wallet-box {
-        .content {
-            .chart-box {
-                .peity {
-                    display: inherit;
-                }
-            }
-        }
-    }
-
-    .vb-content {
-        padding: 0 20px;
-        box-sizing: border-box !important;
-        margin-top: -5px;
-        margin-left: -20px;
-        margin-right: -20px;
-        height: calc(100% + 15px) !important;
-        width: calc(100% + 40px) !important;
-    }
-}
-
-@media (max-width: 768px) {
-    .page-crypto-dashboard {
-        .vb-content {
-            padding: 0 5px !important;
-            margin: -5px;
-            width: calc(100% + 10px) !important;
-        }
-    }
-}
 </style>
