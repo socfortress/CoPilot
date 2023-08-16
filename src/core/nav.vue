@@ -12,8 +12,8 @@
         <div class="el-menu-item-group__title" style="padding-top: 4px"><span>Apps</span></div>
         <el-sub-menu index="/dashboards" popper-class="main-navigation-submenu">
             <template #title> <i class="mdi mdi-gauge"></i><span>Dashboard</span> </template>
-            <el-menu-item index="/dashboard">
-                <span slot="title">Analytical</span>
+            <el-menu-item index="/indices">
+                <span slot="title">Indicies</span>
             </el-menu-item>
             <el-menu-item index="/ecommerce-dashboard">
                 <span slot="title">eCommerce</span>
