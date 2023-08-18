@@ -9,13 +9,21 @@
             :gradient-color="[255, 255, 255]"
             gradient-length="10%"
         >
-            <span v-for="item in indices" :key="item.index" class="item" :class="item.health" @click="emit('click', item)">
+            <span
+                v-for="item in indices"
+                :key="item.index"
+                class="item"
+                :class="item.health"
+                @click="emit('click', item)"
+                title="Click to select"
+            >
                 <i v-if="item.health === IndexHealth.GREEN" class="mdi mdi-shield-check"></i>
                 <i v-else-if="item.health === IndexHealth.YELLOW" class="mdi mdi-alert"></i>
                 <i v-else-if="item.health === IndexHealth.RED" class="mdi mdi-alert-decagram"></i>
                 {{ item.index }}
             </span>
         </Vue3Marquee>
+        <div class="info"><i class="mdi mdi-information-outline"></i> Click on an index to select</div>
     </div>
 </template>
 
@@ -38,11 +46,18 @@ const loading = computed(() => !indices?.value || indices.value.length === 0)
 
 <style lang="scss" scoped>
 @import "@/assets/scss/_variables";
+@import "@/assets/scss/card-shadow";
 
 .indices-marquee {
-    height: 45px;
+    .info {
+        opacity: 0.5;
+        font-size: 12px;
+        margin-top: 5px;
+    }
     .marquee-wrap {
+        height: 45px;
         transform: translate3d(0, 0, 0);
+        @extend .card-base;
 
         :deep() {
             .marquee {
@@ -57,6 +72,7 @@ const loading = computed(() => !indices?.value || indices.value.length === 0)
 
         .item {
             padding: 10px 20px;
+            cursor: pointer;
 
             &.green {
                 i {
@@ -64,14 +80,10 @@ const loading = computed(() => !indices?.value || indices.value.length === 0)
                 }
             }
             &.yellow {
-                i {
-                    color: $text-color-warning;
-                }
+                color: $text-color-warning;
             }
             &.red {
-                i {
-                    color: $text-color-danger;
-                }
+                color: $text-color-danger;
             }
         }
     }
