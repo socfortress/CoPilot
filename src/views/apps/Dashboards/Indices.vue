@@ -4,45 +4,49 @@
             <IndicesMarquee :indices="indices" @click="setIndex" />
         </div>
 
-        <div class="index-details-box" :class="{ active: currentIndex }">
-            <div class="title">Select an index to see the details</div>
-            <div class="select-box">
-                <el-select v-model="currentIndex" placeholder="Index list" clearable value-key="index" filterable>
-                    <el-option v-for="index in indices" :key="index.index" :label="index.index" :value="index"></el-option>
-                </el-select>
+        <div class="mb-30">
+            <Details :indices="indices" v-model="currentIndex" />
+        </div>
+
+        <div class="mb-30">
+            <div class="flex">
+                <div class="box grow">
+                    <ClusterHealth />
+                </div>
+                <div class="box grow">
+                    <UnhealthyIndices :indices="indices" @click="setIndex" />
+                </div>
             </div>
         </div>
 
-        <div>
-            <ClusterHealth />
+        <div class="mb-30">
+            <div class="flex">
+                <div class="box grow">chart 1</div>
+                <div class="box grow">chart 2</div>
+            </div>
         </div>
     </el-scrollbar>
 </template>
 
 <script lang="ts" setup>
-import { Index, IndexAllocation, IndexHealth, IndexShard } from "@/types/indices.d"
+import { Index, IndexAllocation, IndexHealth } from "@/types/indices.d"
 import Api from "@/api"
 import { ElMessage } from "element-plus"
 import { computed, onBeforeMount, ref } from "vue"
 import IndicesMarquee from "@/components/indices/Marquee.vue"
 import ClusterHealth from "@/components/indices/ClusterHealth.vue"
+import Details from "@/components/indices/Details.vue"
+import UnhealthyIndices from "@/components/indices/UnhealthyIndices.vue"
 
 const indices = ref<Index[]>([])
-const shards = ref<IndexShard[]>([])
 const indicesAllocation = ref<IndexAllocation[]>([])
 const loadingIndex = ref(false)
-const loadingShards = ref(false)
 const loadingAllocation = ref(false)
 const loadingDeleteIndex = ref(false)
 const currentIndex = ref<Index | null>(null)
-/*
-const filteredIndices = computed(() => indices.value.filter((index: Index) => index.index === currentIndex.value?.index))
-const filteredShards = computed(() => shards.value.filter((shard: IndexShard) => shard.index === currentIndex.value?.index))
-const unhealthyIndices = computed(() =>
-    indices.value.filter((index: Index) => index.health === IndexHealth.YELLOW || index.health === IndexHealth.RED)
-)
-const loading = computed(() => loadingIndex.value || loadingShards.value || loadingAllocation.value)
-*/
+
+const loading = computed(() => loadingIndex.value || loadingAllocation.value)
+
 function setIndex(index: Index) {
     currentIndex.value = index
 }
@@ -144,39 +148,8 @@ function getIndices() {
         })
 }
 
-function getShards() {
-    loadingShards.value = true
-    Api.indices
-        .getShards()
-        .then(res => {
-            shards.value = res.data.shards
-        })
-        .catch(err => {
-            if (err.response.status === 401) {
-                ElMessage({
-                    message: "Wazuh-Indexer returned Unauthorized. Please check your connector credentials.",
-                    type: "error"
-                })
-            } else if (err.response.status === 404) {
-                ElMessage({
-                    message: "No alerts were found.",
-                    type: "error"
-                })
-            } else {
-                ElMessage({
-                    message: "An error occurred. Please try again later.",
-                    type: "error"
-                })
-            }
-        })
-        .finally(() => {
-            loadingShards.value = false
-        })
-}
-
 onBeforeMount(() => {
     getIndices()
-    getShards()
     getIndicesAllocation()
 })
 </script>
@@ -186,13 +159,5 @@ onBeforeMount(() => {
 @import "@/assets/scss/card-shadow";
 
 .page-indices {
-    .index-details-box {
-        padding: var(--size-6);
-        @extend .card-base;
-        &.active {
-            border: 2px solid $text-color-accent;
-            @extend .card-shadow--small;
-        }
-    }
 }
 </style>
