@@ -48,7 +48,7 @@ export interface ClusterHealth {
     number_of_nodes: number
     number_of_pending_tasks: number
     relocating_shards: number
-    status: string
+    status: IndexHealth
     task_max_waiting_in_queue_millis: number
     timed_out: boolean
     unassigned_shards: number
