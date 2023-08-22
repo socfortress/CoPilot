@@ -17,9 +17,7 @@
                 @click="emit('click', item)"
                 title="Click to select"
             >
-                <i v-if="item.health === IndexHealth.GREEN" class="mdi mdi-shield-check"></i>
-                <i v-else-if="item.health === IndexHealth.YELLOW" class="mdi mdi-alert"></i>
-                <i v-else-if="item.health === IndexHealth.RED" class="mdi mdi-alert-decagram"></i>
+                <IndexIcon :health="item.health" color />
                 {{ item.index }}
             </span>
         </Vue3Marquee>
@@ -29,8 +27,9 @@
 
 <script setup lang="ts">
 import { computed, toRefs } from "vue"
-import { Index, IndexHealth } from "@/types/indices.d"
+import { Index } from "@/types/indices.d"
 import { Vue3Marquee } from "vue3-marquee"
+import IndexIcon from "@/components/indices/IndexIcon.vue"
 
 const emit = defineEmits<{
     (e: "click", value: Index): void
@@ -81,9 +80,11 @@ const loading = computed(() => !indices?.value || indices.value.length === 0)
             }
             &.yellow {
                 color: $text-color-warning;
+                font-weight: bold;
             }
             &.red {
                 color: $text-color-danger;
+                font-weight: bold;
             }
         }
     }
