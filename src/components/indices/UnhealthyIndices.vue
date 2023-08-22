@@ -1,11 +1,20 @@
 <template>
-    <div class="cluster-health">
+    <div class="unhealthy-indices">
         <div class="title">Unhealthy Indices</div>
         <div v-loading="loading">
-            <div class="info" v-if="unhealthyIndices.length">
-                <div v-for="item of unhealthyIndices" :key="item.index" class="item" :class="item.health" @click="emit('click', item)">
-                    <pre>{{ item }}</pre>
-                </div>
+            <div class="info">
+                <template v-if="unhealthyIndices.length">
+                    <div
+                        v-for="item of unhealthyIndices"
+                        :key="item.index"
+                        class="item"
+                        :class="item.health"
+                        @click="emit('click', item)"
+                        title="Click for details"
+                    >
+                        <IndexCard :index="item" />
+                    </div>
+                </template>
             </div>
         </div>
     </div>
@@ -14,6 +23,7 @@
 <script setup lang="ts">
 import { computed, toRefs } from "vue"
 import { Index, IndexHealth } from "@/types/indices.d"
+import IndexCard from "@/components/indices/IndexCard.vue"
 
 const emit = defineEmits<{
     (e: "click", value: Index): void
@@ -34,4 +44,25 @@ const unhealthyIndices = computed(() =>
 <style lang="scss" scoped>
 @import "@/assets/scss/_variables";
 @import "@/assets/scss/card-shadow";
+
+.unhealthy-indices {
+    padding: var(--size-5) var(--size-6);
+    @extend .card-base;
+
+    .title {
+        font-size: var(--font-size-4);
+        font-weight: var(--font-weight-6);
+        margin-bottom: var(--size-5);
+    }
+    .info {
+        min-height: 50px;
+        .item {
+            cursor: pointer;
+
+            &:not(:last-child) {
+                margin-bottom: var(--size-3);
+            }
+        }
+    }
+}
 </style>
