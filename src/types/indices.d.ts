@@ -22,6 +22,7 @@ export interface IndexAllocation {
 }
 
 export interface IndexShard {
+    id?: string
     index: string
     node: null | string
     shard: string
