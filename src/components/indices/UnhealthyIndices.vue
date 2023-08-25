@@ -1,9 +1,11 @@
 <template>
     <div class="unhealthy-indices">
-        <div class="title">Unhealthy Indices</div>
+        <div class="title">
+            Unhealthy Indices <small class="o-050">({{ unhealthyIndices.length }})</small>
+        </div>
         <div v-loading="loading">
             <div class="info">
-                <template v-if="unhealthyIndices.length">
+                <template v-if="unhealthyIndices && unhealthyIndices.length">
                     <div
                         v-for="item of unhealthyIndices"
                         :key="item.index"
@@ -30,14 +32,14 @@ const emit = defineEmits<{
 }>()
 
 const props = defineProps<{
-    indices: Index[]
+    indices: Index[] | null
 }>()
 const { indices } = toRefs(props)
 
-const loading = computed(() => !indices?.value || indices.value.length === 0)
+const loading = computed(() => !indices?.value || indices.value === null)
 
 const unhealthyIndices = computed(() =>
-    indices.value.filter((index: Index) => index.health === IndexHealth.YELLOW || index.health === IndexHealth.RED)
+    (indices.value || []).filter((index: Index) => index.health === IndexHealth.YELLOW || index.health === IndexHealth.RED)
 )
 </script>
 

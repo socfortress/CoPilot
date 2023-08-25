@@ -36,11 +36,11 @@ const emit = defineEmits<{
 }>()
 
 const props = defineProps<{
-    indices: Index[]
+    indices: Index[] | null
 }>()
 const { indices } = toRefs(props)
 
-const loading = computed(() => !indices?.value || indices.value.length === 0)
+const loading = computed(() => !indices?.value || indices.value === null)
 </script>
 
 <style lang="scss" scoped>

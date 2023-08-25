@@ -26,6 +26,7 @@
 		"@vue-leaflet/vue-leaflet": "^0.10.1",
 		"animate.css": "^4.1.1",
 		"balloon-css": "^1.2.0",
+		"bytes": "^3.1.2",
 		"chance": "^1.1.11",
 		"cryptocoins-icons": "^2.9.0",
 		"dayjs": "^1.11.9",

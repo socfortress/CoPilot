@@ -4,6 +4,8 @@ export interface Index {
     index: string
     replica_count: string
     store_size: string
+    store_size_value?: number
+    store_size_value?: number
 }
 
 // TODO: Better to use a status instead of a color
@@ -14,11 +16,13 @@ export enum IndexHealth {
 }
 
 export interface IndexAllocation {
+    id?: string
     disk_available: null | string
     disk_percent: null | string
     disk_total: null | string
     disk_used: null | string
     node: string | "UNASSIGNED"
+    disk_percent_value?: number
 }
 
 export interface IndexShard {

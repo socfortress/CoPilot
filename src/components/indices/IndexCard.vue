@@ -126,7 +126,7 @@ function deleteIndex() {
 @import "@/assets/scss/card-shadow";
 
 .index-card {
-    padding: var(--size-3) var(--size-6);
+    padding: var(--size-3) var(--size-4);
     @extend .card-base;
     @extend .card-shadow--small;
     border: 2px solid transparent;
