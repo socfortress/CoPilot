@@ -1,11 +1,8 @@
 <template>
     <el-scrollbar class="page page-indices">
-        <!--
-
-			<div class="section">
-				<IndicesMarquee :indices="indices" @click="setIndex" />
-			</div>
-		-->
+        <div class="section">
+            <IndicesMarquee :indices="indices" @click="setIndex" />
+        </div>
 
         <div class="section">
             <Details :indices="indices" v-model="currentIndex" />
@@ -14,7 +11,7 @@
         <div class="section">
             <div class="columns">
                 <div class="col basis-50">
-                    <ClusterHealth />
+                    <ClusterHealth class="stretchy" />
                 </div>
                 <div class="col basis-50">
                     <UnhealthyIndices :indices="indices" @click="setIndex" class="stretchy" />
@@ -23,9 +20,11 @@
         </div>
 
         <div class="section">
-            <div class="columns">
-                <div class="col basis-20">chart 1</div>
-                <div class="col basis-80">
+            <div class="columns column-1200">
+                <div class="col basis-40">
+                    <NodeAllocation class="stretchy" />
+                </div>
+                <div class="col basis-60">
                     <TopIndices :indices="indices" />
                 </div>
             </div>
@@ -34,54 +33,23 @@
 </template>
 
 <script lang="ts" setup>
-import { Index, IndexAllocation } from "@/types/indices.d"
+import { Index } from "@/types/indices.d"
 import Api from "@/api"
 import { ElMessage } from "element-plus"
 import { onBeforeMount, ref } from "vue"
 import IndicesMarquee from "@/components/indices/Marquee.vue"
+import NodeAllocation from "@/components/indices/NodeAllocation.vue"
 import ClusterHealth from "@/components/indices/ClusterHealth.vue"
 import Details from "@/components/indices/Details.vue"
 import UnhealthyIndices from "@/components/indices/UnhealthyIndices.vue"
 import TopIndices from "@/components/indices/TopIndices.vue"
 
-const indices = ref<Index[]>([])
-const indicesAllocation = ref<IndexAllocation[]>([])
+const indices = ref<Index[] | null>(null)
 const loadingIndex = ref(false)
-const loadingAllocation = ref(false)
 const currentIndex = ref<Index | null>(null)
 
 function setIndex(index: Index) {
     currentIndex.value = index
-}
-
-function getIndicesAllocation() {
-    loadingAllocation.value = true
-    Api.indices
-        .getAllocation()
-        .then(res => {
-            indicesAllocation.value = res.data.node_allocation
-        })
-        .catch(err => {
-            if (err.response.status === 401) {
-                ElMessage({
-                    message: "Wazuh-Indexer returned Unauthorized. Please check your connector credentials.",
-                    type: "error"
-                })
-            } else if (err.response.status === 404) {
-                ElMessage({
-                    message: "No alerts were found.",
-                    type: "error"
-                })
-            } else {
-                ElMessage({
-                    message: "An error occurred. Please try again later.",
-                    type: "error"
-                })
-            }
-        })
-        .finally(() => {
-            loadingAllocation.value = false
-        })
 }
 
 function getIndices() {
@@ -117,7 +85,6 @@ function getIndices() {
 
 onBeforeMount(() => {
     getIndices()
-    getIndicesAllocation()
 })
 </script>
 
@@ -139,8 +106,14 @@ onBeforeMount(() => {
                 &.basis-20 {
                     flex-basis: 20%;
                 }
+                &.basis-40 {
+                    flex-basis: 40%;
+                }
                 &.basis-50 {
                     flex-basis: 50%;
+                }
+                &.basis-60 {
+                    flex-basis: 60%;
                 }
                 &.basis-80 {
                     flex-basis: 80%;
@@ -157,6 +130,13 @@ onBeforeMount(() => {
     @media (max-width: 1000px) {
         .section {
             .columns {
+                flex-direction: column;
+            }
+        }
+    }
+    @media (max-width: 1200px) {
+        .section {
+            .columns.column-1200 {
                 flex-direction: column;
             }
         }

@@ -5,7 +5,7 @@
                 <span v-if="currentIndex"> Below the details for index </span>
                 <span v-else> Select an index to see the details </span>
             </div>
-            <div class="select-box">
+            <div class="select-box" v-if="indices && indices.length">
                 <el-select v-model="currentIndex" placeholder="Indices list" clearable value-key="index" filterable>
                     <el-option v-for="index in indices" :key="index.index" :label="index.index" :value="index"></el-option>
                 </el-select>
@@ -60,14 +60,14 @@ const emit = defineEmits<{
 }>()
 
 const props = defineProps<{
-    indices: Index[]
+    indices: Index[] | null
     modelValue: IndexModel
 }>()
 const { indices, modelValue } = toRefs(props)
 
 const shards = ref<IndexShard[]>([])
 const loadingShards = ref(false)
-const loading = computed(() => !indices?.value || indices.value.length === 0 || loadingShards.value)
+const loading = computed(() => !indices?.value || indices.value === null || loadingShards.value)
 
 const filteredShards = computed(() =>
     shards.value.filter((shard: IndexShard) => {

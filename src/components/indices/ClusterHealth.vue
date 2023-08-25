@@ -117,7 +117,7 @@ onBeforeMount(() => {
             border: 2px solid transparent;
 
             .card-wrap {
-                padding: var(--size-3) var(--size-6);
+                padding: var(--size-3) var(--size-4);
                 column-width: 12rem;
                 column-count: auto;
                 column-gap: var(--size-6);
