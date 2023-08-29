@@ -29,10 +29,11 @@
         </div>
         <div class="group actions" v-if="showActions">
             <div class="box">
+                <!--
                 <el-tooltip content="Rotate" placement="top" :show-arrow="false">
                     <el-button type="primary" :icon="RefreshIcon" circle />
                 </el-tooltip>
-
+              -->
                 <el-tooltip content="Delete" placement="top" :show-arrow="false">
                     <el-button type="danger" :icon="DeleteIcon" circle @click="handleDelete" />
                 </el-tooltip>
