@@ -89,18 +89,25 @@ function deleteIndex() {
 
     Api.indices
         .deleteIndex(index.value.index)
-        .then(() => {
-            ElMessage({
-                message: "Index was successfully deleted.",
-                type: "success"
-            })
+        .then(res => {
+            if (res.data.success) {
+                ElMessage({
+                    message: "Index was successfully deleted.",
+                    type: "success"
+                })
 
-            emit("delete")
+                emit("delete")
+            } else {
+                ElMessage({
+                    message: res.data?.message || "An error occurred. Please try again later.",
+                    type: "error"
+                })
+            }
         })
         .catch(err => {
             if (err.response.status === 401) {
                 ElMessage({
-                    message: "Wazuh-Indexer returned Unauthorized. Please check your connector credentials.",
+                    message: err.response?.data?.message || "Wazuh-Indexer returned Unauthorized. Please check your connector credentials.",
                     type: "error"
                 })
             } else if (err.response.status === 404) {
@@ -110,7 +117,7 @@ function deleteIndex() {
                 })
             } else {
                 ElMessage({
-                    message: "An error occurred. Please try again later.",
+                    message: err.response?.data?.message || "An error occurred. Please try again later.",
                     type: "error"
                 })
             }

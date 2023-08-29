@@ -94,25 +94,32 @@ function getShards() {
     Api.indices
         .getShards()
         .then(res => {
-            shards.value = (res.data?.shards || []).map(obj => {
-                obj.id = nanoid()
-                return obj
-            })
+            if (res.data.success) {
+                shards.value = (res.data?.shards || []).map(obj => {
+                    obj.id = nanoid()
+                    return obj
+                })
+            } else {
+                ElMessage({
+                    message: res.data?.message || "An error occurred. Please try again later.",
+                    type: "error"
+                })
+            }
         })
         .catch(err => {
             if (err.response.status === 401) {
                 ElMessage({
-                    message: "Wazuh-Indexer returned Unauthorized. Please check your connector credentials.",
+                    message: err.response?.data?.message || "Wazuh-Indexer returned Unauthorized. Please check your connector credentials.",
                     type: "error"
                 })
             } else if (err.response.status === 404) {
                 ElMessage({
-                    message: "No alerts were found.",
+                    message: err.response?.data?.message || "No alerts were found.",
                     type: "error"
                 })
             } else {
                 ElMessage({
-                    message: "An error occurred. Please try again later.",
+                    message: err.response?.data?.message || "An error occurred. Please try again later.",
                     type: "error"
                 })
             }

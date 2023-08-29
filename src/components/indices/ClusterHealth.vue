@@ -65,22 +65,29 @@ function getClusterHealth() {
     Api.indices
         .getClusterHealth()
         .then(res => {
-            cluster.value = res.data.cluster_health
+            if (res.data.success) {
+                cluster.value = res.data.cluster_health
+            } else {
+                ElMessage({
+                    message: res.data?.message || "An error occurred. Please try again later.",
+                    type: "error"
+                })
+            }
         })
         .catch(err => {
             if (err.response.status === 401) {
                 ElMessage({
-                    message: "Wazuh-Indexer returned Unauthorized. Please check your connector credentials.",
+                    message: err.response?.data?.message || "Wazuh-Indexer returned Unauthorized. Please check your connector credentials.",
                     type: "error"
                 })
             } else if (err.response.status === 404) {
                 ElMessage({
-                    message: "No alerts were found.",
+                    message: err.response?.data?.message || "No alerts were found.",
                     type: "error"
                 })
             } else {
                 ElMessage({
-                    message: "An error occurred. Please try again later.",
+                    message: err.response?.data?.message || "An error occurred. Please try again later.",
                     type: "error"
                 })
             }
