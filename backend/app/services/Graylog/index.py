@@ -80,6 +80,34 @@ class IndexService:
         index_names = list(response.get("indices", {}).keys())
         return index_names
 
+    def _check_index_active(self, index_name: str) -> bool:
+        """
+        Checks if the provided index is active.
+
+        Args:
+            index_name (str): The name of the index to check.
+
+        Returns:
+            bool: True if the index is active, False otherwise.
+        """
+        try:
+            index_info = requests.get(
+                f"{self.connector_url}/api/system/indexer/indices/{index_name}",
+                headers=self.HEADERS,
+                auth=(self.connector_username, self.connector_password),
+                verify=False,
+            )
+            index_info = index_info.json()
+            # Navigate through the 'routing' key to find 'active' field
+            for routing in index_info["routing"]:
+                if not routing["active"]:
+                    return False
+
+            return True
+        except Exception as e:
+            logger.error(f"Failed to collect index info for {index_name}: {e}")
+            return False
+
     def delete_index(self, index_name: str) -> Dict[str, Union[bool, str]]:
         """
         Deletes the specified index from Graylog.
@@ -104,6 +132,12 @@ class IndexService:
                     "success": False,
                 }
             # Invoke _delete_index
+            index_active = self._check_index_active(index_name=index_name)
+            if index_active:
+                return {
+                    "message": f"Failed to delete index {index_name} from Graylog. This is the current index, it cannot be deleted. Please rotate the index first.",
+                    "success": False,
+                }
             return self._delete_index(index_name)
 
         return {
