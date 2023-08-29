@@ -4,6 +4,8 @@ export interface Index {
     index: string
     replica_count: string
     store_size: string
+    store_size_value?: number
+    store_size_value?: number
 }
 
 // TODO: Better to use a status instead of a color
@@ -14,14 +16,17 @@ export enum IndexHealth {
 }
 
 export interface IndexAllocation {
+    id?: string
     disk_available: null | string
     disk_percent: null | string
     disk_total: null | string
     disk_used: null | string
     node: string | "UNASSIGNED"
+    disk_percent_value?: number
 }
 
 export interface IndexShard {
+    id?: string
     index: string
     node: null | string
     shard: string
@@ -48,7 +53,7 @@ export interface ClusterHealth {
     number_of_nodes: number
     number_of_pending_tasks: number
     relocating_shards: number
-    status: string
+    status: IndexHealth
     task_max_waiting_in_queue_millis: number
     timed_out: boolean
     unassigned_shards: number
