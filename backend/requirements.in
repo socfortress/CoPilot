@@ -18,6 +18,7 @@ pika
 psycopg2-binary
 pytest
 pyvelociraptor~=0.1
+regex
 reportlab
 requests
 xmltodict
