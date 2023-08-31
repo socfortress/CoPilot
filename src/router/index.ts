@@ -13,6 +13,7 @@ import Ecommerce from "./ecommerce"
 import Connectors from "../views/apps/Connectors.vue"
 import Indices from "../views/apps/Dashboards/Indices.vue"
 import IndicesBKP from "../views/apps/Dashboards/_bkp_Indices.vue"
+import Agents from "../views/apps/Dashboards/Agents.vue"
 /*
 
 //pages
@@ -98,6 +99,17 @@ const router = createRouter({
             path: "/indices",
             name: "indices",
             component: Indices,
+            meta: {
+                auth: true,
+                layout: layouts.navLeft,
+                searchable: true,
+                tags: ["app"]
+            }
+        },
+        {
+            path: "/agents",
+            name: "agents",
+            component: Agents,
             meta: {
                 auth: true,
                 layout: layouts.navLeft,

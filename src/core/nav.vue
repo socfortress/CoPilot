@@ -15,6 +15,9 @@
             <el-menu-item index="/indices">
                 <span slot="title">Indicies</span>
             </el-menu-item>
+            <el-menu-item index="/agents">
+                <span slot="title">Agents</span>
+            </el-menu-item>
             <el-menu-item index="/indices-bkp">
                 <span slot="title">Indicies-bkp</span>
             </el-menu-item>
