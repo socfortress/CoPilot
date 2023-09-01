@@ -118,6 +118,7 @@ class Connectors(db.Model):
         "influxdb": True,
         "asksocfortress": True,
         "socfortressthreatintel": True,
+        "cortex": True,
     }
 
     def __init__(

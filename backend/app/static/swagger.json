@@ -132,9 +132,137 @@
                 "description": "Find out more",
                 "url": "http://swagger.io"
             }
+        },
+        {
+            "name": "Cortex",
+            "description": "Everything about Cortex",
+            "externalDocs": {
+                "description": "Find out more",
+                "url": "http://swagger.io"
+            }
         }
     ],
     "paths": {
+        "/cortex/analyzers": {
+            "get": {
+                "tags": ["Cortex"],
+                "summary": "List all available analyzers",
+                "description": "Endpoint to list all available analyzers. It processes each analyzer to verify the connection and returns the results.",
+                "responses": {
+                    "200": {
+                        "description": "A JSON response containing the list of all available analyzers along with their connection verification status.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "connectionSuccessful": {
+                                                "type": "boolean"
+                                            },
+                                            "analyzer_api_key": {
+                                                "type": "string",
+                                                "nullable": true
+                                            },
+                                            "analyzer_last_updated": {
+                                                "type": "string",
+                                                "format": "date-time"
+                                            },
+                                            "analyzer_name": {
+                                                "type": "string"
+                                            },
+                                            "analyzer_password": {
+                                                "type": "string",
+                                                "nullable": true
+                                            },
+                                            "analyzer_type": {
+                                                "type": "string"
+                                            },
+                                            "analyzer_url": {
+                                                "type": "string"
+                                            },
+                                            "analyzer_username": {
+                                                "type": "string",
+                                                "nullable": true
+                                            },
+                                            "id": {
+                                                "type": "integer"
+                                            },
+                                            "name": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/cortex/analyzers/run": {
+            "post": {
+                "tags": ["Cortex"],
+                "summary": "Run Cortex analyzer",
+                "description": "Endpoint to run Cortex analyzer.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "analyzer_name": {
+                                        "type": "string",
+                                        "description": "Analyzer name"
+                                    },
+                                    "artifact": {
+                                        "type": "string",
+                                        "description": "Artifact"
+                                    }
+                                },
+                                "required": ["analyzer_name", "artifact"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Cortex analyzer run successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid input",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/dnstwist/registered": {
             "post": {
                 "tags": ["DNSTwist"],
