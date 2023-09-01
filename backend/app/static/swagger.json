@@ -124,9 +124,75 @@
                 "description": "Find out more",
                 "url": "http://swagger.io"
             }
+        },
+        {
+            "name": "DNSTwist",
+            "description": "DNSTwist Integration - https://github.com/elceef/dnstwist",
+            "externalDocs": {
+                "description": "Find out more",
+                "url": "http://swagger.io"
+            }
         }
     ],
     "paths": {
+        "/dnstwist/registered": {
+            "post": {
+                "tags": ["DNSTwist"],
+                "summary": "Get registered domains",
+                "description": "Endpoint to get registered domains from DNSTwist.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "domain": {
+                                        "type": "string",
+                                        "description": "Domain to check"
+                                    }
+                                },
+                                "required": ["domain"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Registered domains retrieved successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid input",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/connectors": {
             "get": {
                 "tags": ["Connectors"],
