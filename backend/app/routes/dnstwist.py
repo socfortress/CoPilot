@@ -1,11 +1,10 @@
-import json
-
-from app.services.dnstwist.analyze import DNSTwistService
-from app.services.dnstwist.universal import UniversalService
 from flask import Blueprint
 from flask import jsonify
 from flask import request
 from loguru import logger
+
+from app.services.dnstwist.analyze import DNSTwistService
+from app.services.dnstwist.universal import UniversalService
 
 bp = Blueprint("dnstwist", __name__)
 
