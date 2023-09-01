@@ -1,5 +1,6 @@
 blueprint
 dfir_iris_client
+dnstwist[full]
 elasticsearch7==7.10.1
 environs
 flask
