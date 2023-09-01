@@ -43,6 +43,7 @@
                             </div>
                             <div class="ip fs-14 secondary-text">{{ agent.ip_address }}</div>
                             <div class="os fs-14 secondary-text">{{ agent.os }}</div>
+                            <div class="os fs-14 secondary-text">{{ agent.label }}</div>
                         </div>
                         <div class="phone align-vertical p-10">
                             <span class="align-vertical-middle">{{ agent.last_seen }}</span>

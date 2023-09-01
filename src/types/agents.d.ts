@@ -11,4 +11,27 @@ export interface Agents {
     os: string
     velociraptor_client_version: string
     wazuh_agent_version: string
+    vulnerabilities?: AgentVulnerabilities[]
 }
+
+export interface AgentVulnerabilities {
+    architecture: string
+    condition: string
+    cve: string
+    cvss2_score: number
+    cvss3_score: number
+    detection_time: string
+    external_references: string[]
+    name: string
+    published: string
+    severity: string
+    status: string
+    title: string
+    type: string
+    updated: string
+    version: string
+}
+
+export type OutdatedWazuhAgents = Agents[]
+
+export type OutdatedVelociraptorAgents = Agents[]
