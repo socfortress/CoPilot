@@ -10,6 +10,7 @@ import grpc
 import pika
 import pyvelociraptor
 import requests
+from cortex4py.api import Api
 from elasticsearch7 import Elasticsearch
 from flask import current_app
 from loguru import logger
@@ -745,6 +746,50 @@ class RabbitMQConnector(Connector):
             return {"connectionSuccessful": False, "response": None}
 
 
+class CortexConnector(Connector):
+    """
+    A connector for the Cortex service, a subclass of Connector.
+
+    Args:
+        connector_name (str): The name of the connector.
+    """
+
+    def __init__(self, connector_name: str):
+        super().__init__(attributes=self.get_connector_info_from_db(connector_name))
+
+    def verify_connection(self) -> Dict[str, Any]:
+        """
+        Verifies the connection to Cortex service.
+        """
+        logger.info(
+            f"Verifying the cortex connection to {self.attributes['connector_url']}",
+        )
+        try:
+            api = Api(self.attributes["connector_url"], self.attributes["connector_api_key"], verify_cert=False)
+
+            # Get Cortex Status
+            status = api.status
+            if status:
+                logger.info(
+                    f"Connection to {self.attributes['connector_url']} successful",
+                )
+                # Update the connector_available table
+                self.update_connectors_available_table(self.attributes["connector_name"], True, True)
+                return {"connectionSuccessful": True}
+            else:
+                logger.error(f"Connection to {self.attributes['connector_url']} failed")
+                # Update the connector_available table
+                self.update_connectors_available_table(self.attributes["connector_name"], True, False)
+                return {"connectionSuccessful": False, "response": None}
+        except Exception as e:
+            logger.error(
+                f"Connection to {self.attributes['connector_url']} failed with error: {e}",
+            )
+            # Update the connector_available table
+            self.update_connectors_available_table(self.attributes["connector_name"], True, False)
+            return {"connectionSuccessful": False, "response": None}
+
+
 class ConnectorFactory:
     """
     This class represents a factory for creating connector instances.
@@ -802,3 +847,4 @@ connector_factory.register_creator("Sublime", "SublimeConnector")
 connector_factory.register_creator("InfluxDB", "InfluxDBConnector")
 connector_factory.register_creator("AskSocfortress", "AskSOCFortressConnector")
 connector_factory.register_creator("SocfortressThreatIntel", "SocfortressThreatIntelConnector")
+connector_factory.register_creator("Cortex", "CortexConnector")
