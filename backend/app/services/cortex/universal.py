@@ -1,15 +1,17 @@
-from typing import Callable
-from typing import Dict
+import ipaddress
 from typing import Optional
 from typing import Tuple
-from typing import Union
 
-from cortex4py.api import Api
-
+import regex
 from loguru import logger
 
 from app.models.connectors import Connector
 from app.models.connectors import connector_factory
+
+HASH_PATTERN = r"^[a-fA-F\d]{64}$"
+DOMAIN_PATTERN = r"^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$"
+HASH_REGEX = regex.compile(HASH_PATTERN, regex.IGNORECASE)
+DOMAIN_REGEX = regex.compile(DOMAIN_PATTERN, regex.IGNORECASE)
 
 
 class UniversalService:
@@ -53,3 +55,70 @@ class UniversalService:
             )
         else:
             return None, None
+
+    def is_valid_datatype(self, value: str) -> Tuple[bool, str]:
+        """
+        Check if input value is a valid data type - IPv4, hash, or domain.
+
+        Args:
+            value (str): The input value to check.
+
+        Returns:
+            tuple: A tuple containing a boolean indicating whether the input value is a valid data type and a string indicating the data type.
+        """
+        if self._is_valid_ipv4(value):
+            return True, "ip"
+        elif self._is_valid_hash(value):
+            return True, "hash"
+        elif self._is_valid_domain(value):
+            return True, "domain"
+        else:
+            return False, "Unknown"
+
+    def _is_valid_ipv4(self, value: str) -> bool:
+        """
+        Check if input value is a valid IPv4 address.
+
+        Args:
+            value (str): The input value to check.
+
+        Returns:
+            bool: True if the input value is a valid IPv4 address, False otherwise.
+        """
+        try:
+            ipaddress.IPv4Address(value)
+            return True
+        except ValueError:
+            return False
+
+    def _is_valid_hash(self, value: str) -> bool:
+        """
+        Check if input value is a valid hash.
+
+        Args:
+            value (str): The input value to check.
+
+        Returns:
+            bool: True if the input value is a valid hash, False otherwise.
+        """
+        try:
+            return bool(HASH_REGEX.match(value))
+        except Exception as e:
+            logger.error(f"Error validating hash: {e}")
+            return False
+
+    def _is_valid_domain(self, value: str) -> bool:
+        """
+        Check if input value is a valid domain.
+
+        Args:
+            value (str): The input value to check.
+
+        Returns:
+            bool: True if the input value is a valid domain, False otherwise.
+        """
+        try:
+            return bool(DOMAIN_REGEX.match(value))
+        except Exception as e:
+            logger.error(f"Error validating domain: {e}")
+            return False
