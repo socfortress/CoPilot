@@ -28,9 +28,11 @@
             </div>
 
             <div class="agent-actions" v-if="showActions">
-                <el-tooltip content="Delete" placement="top" :show-arrow="false">
-                    <el-button type="danger" :icon="DeleteIcon" circle @click="handleDelete" />
-                </el-tooltip>
+                <div class="box">
+                    <el-tooltip content="Delete" placement="top" :show-arrow="false">
+                        <el-button type="danger" :icon="DeleteIcon" circle @click="handleDelete" />
+                    </el-tooltip>
+                </div>
             </div>
         </div>
     </div>
@@ -41,6 +43,7 @@ import { computed, ref, toRefs } from "vue"
 import { Agent } from "@/types/agents.d"
 import dayjs from "dayjs"
 import Api from "@/api"
+import { isAgentOnline } from "./utils"
 import { ElMessage, ElMessageBox } from "element-plus"
 import { Star as StarIcon, Delete as DeleteIcon } from "@element-plus/icons-vue"
 
@@ -57,10 +60,7 @@ const { agent, showActions } = toRefs(props)
 const loading = ref(false)
 
 const isOnline = computed(() => {
-    const lastSeenDate = dayjs(agent.value.last_seen)
-    if (!lastSeenDate.isValid()) return false
-
-    return lastSeenDate.isAfter(dayjs().subtract(1, "h"))
+    return isAgentOnline(agent.value.last_seen)
 })
 const formatLastSeen = computed(() => {
     const lastSeenDate = dayjs(agent.value.last_seen)
@@ -182,6 +182,7 @@ function toggleAgentCritical(agentId, criticalStatus) {
     max-width: 100%;
     padding: var(--size-3) var(--size-4);
     box-sizing: border-box;
+    transition: all 0.3s;
 
     .wrapper {
         display: flex;
@@ -203,17 +204,18 @@ function toggleAgentCritical(agentId, criticalStatus) {
                 .hostname {
                     font-weight: bold;
                     white-space: nowrap;
-                    padding: 0px 15px;
                     line-height: 32px;
                     height: 32px;
                     background-color: transparent;
                     border-radius: 4px;
                     border: 1px solid $text-color-info;
+                    border-color: transparent;
                     box-sizing: border-box;
                     overflow: hidden;
                     text-overflow: ellipsis;
 
                     &.online {
+                        padding: 0px 15px;
                         background-color: rgba(19, 206, 102, 0.1);
                         color: $text-color-success;
                         border-color: $text-color-success;
@@ -225,6 +227,8 @@ function toggleAgentCritical(agentId, criticalStatus) {
                 font-size: var(--font-size-0);
                 opacity: 0.7;
                 white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
                 margin-left: 2px;
             }
         }
@@ -255,11 +259,25 @@ function toggleAgentCritical(agentId, criticalStatus) {
 
         .agent-actions {
             display: flex;
+
+            .box {
+                padding: var(--size-2) var(--size-2);
+                background-color: rgba(0, 0, 0, 0.07);
+                display: flex;
+                align-items: center;
+                border-radius: var(--radius-6);
+            }
         }
     }
 
     &.critical {
         border-color: $text-color-warning;
+    }
+
+    &:hover {
+        cursor: pointer;
+        @extend .card-shadow--medium;
+        border-color: #e3e8ec;
     }
 
     @container (max-width: 550px) {

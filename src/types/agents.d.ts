@@ -12,6 +12,7 @@ export interface Agent {
     velociraptor_client_version: string
     wazuh_agent_version: string
     vulnerabilities?: AgentVulnerabilities[]
+    online?: boolean
 }
 
 export interface AgentVulnerabilities {
