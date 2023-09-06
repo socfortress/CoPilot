@@ -1,18 +1,16 @@
 <template>
-    <div class="page-contacts flex column" id="page-contacts">
-        <resize-observer @notify="__resizeHanlder" />
-
-        <div class="contacts-root box grow flex gaps justify-center" :class="contactsClass">
+    <div class="page-agents flex column">
+        <div class="contacts-root box grow flex gaps justify-center">
             <div class="card-base card-shadow--small search-card scrollable only-y">
                 <h1 class="mt-0">Agents</h1>
 
-                <el-input prefix-icon="el-icon-search" placeholder="Search a contact" clearable v-model="search"> </el-input>
+                <el-input prefix-icon="el-icon-search" placeholder="Search a contact" clearable v-model="textFilter"> </el-input>
 
                 <div class="o-050 text-right mt-10 mb-30">
                     <strong>{{ agentsFiltered.length }}</strong> Agents
                 </div>
 
-                <el-button @click="sync_agents({})">
+                <el-button @click="syncAgents()">
                     <i class="mdi mdi-account-plus mr-10"></i>
                     Sync Agents</el-button
                 >
@@ -20,247 +18,122 @@
                 <div class="p-20">
                     <p>Critical Assets</p>
                     <ul class="contacts-favourites">
-                        <li v-for="agent in agentsFavorite" :key="agent.agent_id" @click="openDialog(c)">
+                        <li v-for="agent in agentsCritical" :key="agent.agent_id">
+                            <img :src="'/static/images/gallery/computer.png'" alt="user favourite avatar" />
+                            <span>{{ agent.hostname }}</span>
+                        </li>
+                    </ul>
+                    <p>Online Assets</p>
+                    <ul class="contacts-favourites">
+                        <li v-for="agent in agentsCritical" :key="agent.agent_id">
                             <img :src="'/static/images/gallery/computer.png'" alt="user favourite avatar" />
                             <span>{{ agent.hostname }}</span>
                         </li>
                     </ul>
                 </div>
             </div>
-            <div class="contacts-list box grow scrollable only-y">
-                <div v-for="agent in agentsFiltered" :key="agent.agent_id" class="flex contact" @click="openEditAgentsModal(agent)">
-                    <div class="star align-vertical p-10 fs-22">
-                        <i class="mdi mdi-star align-vertical-middle" v-if="agent.critical_asset"></i>
-                        <i class="mdi mdi-star-outline align-vertical-middle" v-if="!agent.critical_asset"></i>
-                    </div>
-                    <div class="avatar align-vertical">
-                        <img :src="'/static/images/gallery/computer.png'" class="align-vertical-middle" alt="user avatar" />
-                    </div>
-                    <div class="info box grow flex">
-                        <div class="name box grow flex column justify-center p-10">
-                            <div class="fullname fs-18">
-                                <strong>{{ agent.hostname }}</strong>
-                            </div>
-                            <div class="ip fs-14 secondary-text">{{ agent.ip_address }}</div>
-                            <div class="os fs-14 secondary-text">{{ agent.os }}</div>
-                            <div class="os fs-14 secondary-text">{{ agent.label }}</div>
-                        </div>
-                        <div class="phone align-vertical p-10">
-                            <span class="align-vertical-middle">{{ agent.last_seen }}</span>
-                        </div>
-                        <!--Add a el-button to make the agent critical-->
-                        <div class="phone align-vertical p-10">
-                            <el-button type="primary" @click="makeAgentCritical(agent.agent_id)" v-if="!agent.critical_asset">
-                                <i class="mdi mdi-star-outline align-vertical-middle"></i>
-                            </el-button>
-                            <el-button type="primary" @click="makeAgentUncritical(agent.agent_id)" v-if="agent.critical_asset">
-                                <i class="mdi mdi-star align-vertical-middle"></i>
-                            </el-button>
-                        </div>
-                    </div>
-                </div>
+            <div class="agents-list box grow scrollable only-y">
+                <AgentCard v-for="agent in agentsFiltered" :key="agent.agent_id" :agent="agent" show-actions />
             </div>
         </div>
-
-        <user-dialog v-model="dialogvisible" :userdata="userdata"></user-dialog>
     </div>
 </template>
 
-<script>
-import UserDialog from "@/components/UserDialog.vue"
-import Contacts from "@/assets/data/CONTACTS_MOCK_DATA.json"
-import { defineComponent } from "@vue/runtime-core"
-import _ from "lodash"
-import ResizeObserver from "@/components/vue-resize/ResizeObserver.vue"
-import axios from "axios"
+<script setup lang="ts">
+import { computed, onBeforeMount, ref } from "vue"
+import { Agent } from "@/types/agents.d"
+import { ElMessage } from "element-plus"
+import AgentCard from "@/components/agents/AgentCard.vue"
+import Api from "@/api"
 
-export default defineComponent({
-    name: "Contacts",
-    data() {
-        return {
-            loading: false,
-            agents: [],
-            currentAgent: null,
+const loadingAgents = ref(false)
+const loadingSync = ref(false)
+const agents = ref<Agent[]>([])
+const textFilter = ref("")
 
-            // Configure Modal
-            isEditAgentsModalActive: false,
+const agentsFiltered = computed(() => {
+    return agents.value.filter(
+        ({ hostname, ip_address, agent_id, label }) =>
+            (hostname + ip_address + agent_id + label).toString().toLowerCase().indexOf(textFilter.value.toString().toLowerCase()) !== -1
+    )
+})
 
-            search: "",
-            dialogvisible: false,
-            pageWidth: 0,
-            userdata: {},
-            contacts: Contacts.slice(0, 30)
-        }
-    },
-    computed: {
-        contactsFiltered() {
-            return this.contacts.filter(
-                ({ full_name, email, phone }) =>
-                    (full_name + email + phone).toString().toLowerCase().indexOf(this.search.toString().toLowerCase()) !== -1
-            )
-        },
-        contactsClass() {
-            return this.pageWidth >= 870 ? "large" : this.pageWidth >= 760 ? "medium" : "small"
-        },
-        contactsFavourite() {
-            return this.contacts.filter(({ starred }) => starred)
-        },
-        agentsFiltered() {
-            return this.agents.filter(
-                ({ agent_name, agent_ip, agent_id }) =>
-                    (agent_name + agent_ip + agent_id).toString().toLowerCase().indexOf(this.search.toString().toLowerCase()) !== -1
-            )
-        },
-        agentsFavorite() {
-            return this.agents.filter(({ critical_asset }) => critical_asset)
-        }
-    },
-    methods: {
-        openEditAgentsModal(agent) {
-            this.currentAgent = agent
-            this.isEditAgentsModalActive = true
-        },
-        closeEditAgentsModal() {
-            this.isEditAgentsModalActive = false
-        },
+const agentsCritical = computed(() => {
+    return agents.value.filter(({ critical_asset }) => critical_asset)
+})
 
-        openDialog(data) {
-            this.userdata = data
-            this.dialogvisible = true
-        },
-        setPageWidth() {
-            this.pageWidth = document.getElementById("page-contacts").offsetWidth
-        },
-        __resizeHanlder: _.throttle(function (e) {
-            this.setPageWidth()
-        }, 700),
-        get_agents() {
-            const path = "http://localhost:5000/agents"
-            this.loading = true
-            resizing: true,
-                axios
-                    .get(path)
-                    .then(response => {
-                        if (response.data.success && Array.isArray(response.data.agents)) {
-                            this.agents = response.data.agents
-                        } else {
-                            console.error("Received non-array agents: ", response.data)
-                            this.agents = [] // Reset to empty array
-                        }
-                    })
-                    .catch(error => {
-                        console.log(error)
-                        this.loading = false
-                    })
-        },
-        sync_agents() {
-            const path = "http://localhost:5000/sync"
-            this.loading = true
-            resizing: true,
-                axios
-                    .get(path)
-                    .then(response => {
-                        this.sync = response.data
-                        this.loading = false
-                        this.succssMesaage = "Agents Synced Successfully"
-                        this.$message({
-                            message: this.succssMesaage,
-                            type: "success"
-                        })
-                        this.get_agents()
-                    })
-                    .catch(error => {
-                        if (error.response.status === 401) {
-                            this.errorMessage = "Unauthorized"
-                            this.$message({
-                                message: this.errorMessage,
-                                type: "error"
-                            })
-                        } else {
-                            this.$message({
-                                message: "Failed to Sync Agents",
-                                type: "error"
-                            })
-                        }
-                    })
-        },
-        makeAgentCritical(agent_id) {
-            const path = "http://localhost:5000/agents/" + agent_id + "/critical"
-            axios
-                .put(path)
-                .then(response => {
-                    this.loading = false
-                    this.succssMesaage = "Agent Criticality Updated Successfully"
-                    this.$message({
-                        message: this.succssMesaage,
-                        type: "success"
-                    })
-                    this.get_agents()
+function getAgents() {
+    loadingAgents.value = true
+
+    Api.agents
+        .getAgents()
+        .then(res => {
+            if (res.data.success) {
+                agents.value = res.data.agents
+            } else {
+                ElMessage({
+                    message: res.data?.message || "An error occurred. Please try again later.",
+                    type: "error"
                 })
-                .catch(error => {
-                    if (error.response.status === 401) {
-                        this.errorMessage = "Unauthorized"
-                        this.$message({
-                            message: this.errorMessage,
-                            type: "error"
-                        })
-                    } else {
-                        this.$message({
-                            message: "Failed to Update Agent Criticality",
-                            type: "error"
-                        })
-                    }
+            }
+        })
+        .catch(err => {
+            ElMessage({
+                message: err.response?.data?.message || "An error occurred. Please try again later.",
+                type: "error"
+            })
+        })
+        .finally(() => {
+            loadingAgents.value = false
+        })
+}
+function syncAgents() {
+    loadingSync.value = true
+
+    Api.agents
+        .getAgents()
+        .then(res => {
+            if (res.data.success) {
+                ElMessage({
+                    message: "Agents Synced Successfully",
+                    type: "success"
                 })
-        },
-        makeAgentUncritical(agent_id) {
-            const path = "http://localhost:5000/agents/" + agent_id + "/uncritical"
-            axios
-                .put(path)
-                .then(response => {
-                    this.loading = false
-                    this.succssMesaage = "Agent Criticality Updated Successfully"
-                    this.$message({
-                        message: this.succssMesaage,
-                        type: "success"
-                    })
-                    this.get_agents()
+                getAgents()
+            } else {
+                ElMessage({
+                    message: res.data?.message || "An error occurred. Please try again later.",
+                    type: "error"
                 })
-                .catch(error => {
-                    if (error.response.status === 401) {
-                        this.errorMessage = "Unauthorized"
-                        this.$message({
-                            message: this.errorMessage,
-                            type: "error"
-                        })
-                    } else {
-                        this.$message({
-                            message: "Failed to Update Agent Criticality",
-                            type: "error"
-                        })
-                    }
+            }
+        })
+        .catch(err => {
+            if (err.response.status === 401) {
+                ElMessage({
+                    message: err.response?.data?.message || "Sync returned Unauthorized.",
+                    type: "error"
                 })
-        }
-    },
-    mounted() {
-        this.setPageWidth()
-        this.get_agents()
-    },
-    watch: {
-        agentsFiltered(newValue) {
-            console.log("agentsFiltered:", newValue)
-        }
-    },
-    components: {
-        ResizeObserver,
-        UserDialog
-    }
+            } else {
+                ElMessage({
+                    message: err.response?.data?.message || "Failed to Sync Agents",
+                    type: "error"
+                })
+            }
+        })
+        .finally(() => {
+            loadingSync.value = false
+        })
+}
+
+onBeforeMount(() => {
+    getAgents()
+    syncAgents()
 })
 </script>
 
 <style lang="scss" scoped>
 @import "../../../assets/scss/_variables";
 
-.page-contacts {
+.page-agents {
     height: 100%;
     margin: 0 !important;
     padding: 20px;
@@ -361,90 +234,12 @@ export default defineComponent({
         max-height: 100%;
     }
 
-    .contacts-list {
-        //margin: 0 auto;
-        width: 100%;
-        max-width: 965px;
+    .agents-list {
         padding: 0px 30px;
         box-sizing: border-box;
 
-        .contact {
-            margin: 10px 0;
-            padding: 5px;
-            box-sizing: border-box;
-            cursor: pointer;
-            transition: all 0.5s 0.25s;
-
-            .star {
-                .mdi-star {
-                    color: #ffd730;
-                }
-                .mdi-star-outline {
-                    opacity: 0.5;
-                }
-            }
-
-            .avatar {
-                width: 60px;
-                transition: all 0.5s 0.25s;
-
-                img {
-                    border: 1px solid transparentize($text-color-primary, 0.9);
-                    box-sizing: border-box;
-                    width: 50px;
-                    height: 50px;
-                    border-radius: 50%;
-                    transition: all 0.5s 0.25s;
-                }
-            }
-
-            .info {
-                word-break: break-word;
-
-                .name {
-                    //.fullname {}
-
-                    .email {
-                        opacity: 0;
-                        line-height: 0;
-                        transition: all 0.5s 0.25s;
-                    }
-
-                    .phone {
-                        display: none;
-                    }
-                }
-
-                //.phone {}
-            }
-
-            &:hover {
-                margin: 15px -20px;
-                padding: 10px;
-                background-color: lighten($background-color, 20%);
-                border-radius: 5px;
-                box-shadow:
-                    0 8px 16px 0 rgba(40, 40, 90, 0.09),
-                    0 3px 6px 0 rgba(0, 0, 0, 0.065);
-
-                .avatar {
-                    width: 90px;
-
-                    img {
-                        width: 90px;
-                        height: 90px;
-                    }
-                }
-
-                .info {
-                    .name {
-                        .email {
-                            opacity: 1;
-                            line-height: 1.4;
-                        }
-                    }
-                }
-            }
+        .agent-card {
+            margin-bottom: 10px;
         }
     }
 
@@ -477,7 +272,7 @@ export default defineComponent({
                 overflow: hidden !important;
             }
 
-            .contacts-list {
+            .agents-list {
                 flex: none;
                 -webkit-box-flex: none;
                 -ms-flex: none;
@@ -489,11 +284,11 @@ export default defineComponent({
 }
 
 @media (max-width: 768px) {
-    .page-contacts {
+    .page-agents {
         .search-wrap {
             padding: 0;
         }
-        .contacts-list {
+        .agents-list {
             padding: 0px;
 
             .contact {
@@ -535,12 +330,12 @@ export default defineComponent({
 
         .contacts-root {
             &.medium {
-                .contacts-list {
+                .agents-list {
                     padding: 0 30px;
                 }
             }
             &.small {
-                .contacts-list {
+                .agents-list {
                     padding: 8px;
                 }
             }

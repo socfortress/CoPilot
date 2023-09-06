@@ -12,7 +12,7 @@ import Mail from "../views/apps/Mail.vue"
 import Ecommerce from "./ecommerce"
 import Connectors from "../views/apps/Connectors.vue"
 import Indices from "../views/apps/Dashboards/Indices.vue"
-import IndicesBKP from "../views/apps/Dashboards/_bkp_Indices.vue"
+import Agents_bkp from "../views/apps/Dashboards/Agents_bkp.vue"
 import Agents from "../views/apps/Dashboards/Agents.vue"
 /*
 
@@ -118,9 +118,9 @@ const router = createRouter({
             }
         },
         {
-            path: "/indices-bkp",
-            name: "indices-bkp",
-            component: IndicesBKP,
+            path: "/agents-bkp",
+            name: "agents-bkp",
+            component: Agents_bkp,
             meta: {
                 auth: true,
                 layout: layouts.navLeft,

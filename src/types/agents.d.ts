@@ -1,4 +1,4 @@
-export interface Agents {
+export interface Agent {
     agent_id: string
     client_id: string
     client_last_seen: string
@@ -32,6 +32,6 @@ export interface AgentVulnerabilities {
     version: string
 }
 
-export type OutdatedWazuhAgents = Agents[]
+export type OutdatedWazuhAgents = Agent[]
 
-export type OutdatedVelociraptorAgents = Agents[]
+export type OutdatedVelociraptorAgents = Agent[]
