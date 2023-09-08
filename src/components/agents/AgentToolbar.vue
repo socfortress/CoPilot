@@ -9,7 +9,7 @@
         </div>
 
         <div class="agent-search">
-            <el-input :prefix-icon="SearchIcon" placeholder="Search a contact" clearable v-model="textFilter"> </el-input>
+            <el-input :prefix-icon="SearchIcon" placeholder="Search for an agent" clearable v-model="textFilter"> </el-input>
 
             <div class="o-050 text-right mt-10 mb-30">
                 <strong v-if="agentsFilteredLength !== agentsLength">{{ agentsFilteredLength }}</strong>
