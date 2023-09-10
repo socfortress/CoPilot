@@ -79,10 +79,6 @@ const loading = computed(() => !inputs?.value || inputs.value === null)
                     color: $text-color-success;
                 }
             }
-            &.STOPPED {
-                color: $text-color-danger;
-                font-weight: bold;
-            }
         }
     }
 }
