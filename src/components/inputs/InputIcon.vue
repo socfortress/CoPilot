@@ -1,6 +1,6 @@
 <template>
     <span class="input-icon" :class="[`state-${state}`, { color }]">
-        <i v-if="state === 'RUNNING'" class="mdi mdi-play-circle"></i>
+        <i v-if="state === 'RUNNING'" class="mdi mdi-shield-check"></i>
         <i v-else class="mdi mdi-stop-circle"></i>
     </span>
 </template>
