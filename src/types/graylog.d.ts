@@ -65,6 +65,10 @@ export interface IndexData {
 
 // Graylog Inputs
 
+export enum InputState {
+    RUNNING = "RUNNING"
+}
+
 export interface ConfiguredInput {
     port: number
     title: string

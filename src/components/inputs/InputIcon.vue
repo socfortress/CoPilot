@@ -1,13 +1,12 @@
 <template>
     <span class="input-icon" :class="[`state-${state}`, { color }]">
-        <i v-if="state === 'RUNNING'" class="mdi mdi-shield-check"></i>
-        <i v-else class="mdi mdi-stop-circle"></i>
+        <i v-if="state === InputState.RUNNING" class="mdi mdi-shield-check"></i>
     </span>
 </template>
 
 <script setup lang="ts">
 import { toRefs } from "vue"
-import { RunningInput } from "@/types/graylog.d"
+import { RunningInput, InputState } from "@/types/graylog.d"
 
 const props = defineProps<{
     state: RunningInput["state"]
