@@ -21,14 +21,8 @@ const { state, color } = toRefs(props)
 
 .input-icon {
     &.color {
-        &.state-running {
+        &.state-RUNNING {
             color: $text-color-success;
-        }
-        &.state-stopped {
-            color: $text-color-danger;
-        }
-        &.state-paused {
-            color: $text-color-warning;
         }
     }
 }
