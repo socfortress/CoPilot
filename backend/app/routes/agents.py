@@ -88,7 +88,7 @@ def sync_agents() -> Any:
     return jsonify(result)
 
 
-@bp.route("/agents/<agent_id>/delete", methods=["POST"])
+@bp.route("/agents/<agent_id>/delete", methods=["DELETE"])
 def delete_agent(agent_id: str) -> Any:
     """
     Endpoint to delete an agent.

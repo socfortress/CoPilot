@@ -1742,7 +1742,7 @@
             }
         },
         "/agents/{id}/delete": {
-            "post": {
+            "delete": {
                 "tags": ["Agents"],
                 "summary": "Deletes an agent",
                 "description": "Deletes an agent from the database.",

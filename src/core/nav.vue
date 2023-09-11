@@ -18,6 +18,9 @@
             <el-menu-item index="/agents">
                 <span slot="title">Agents</span>
             </el-menu-item>
+            <el-menu-item index="/inputs">
+                <span slot="title">Inputs</span>
+            </el-menu-item>
             <el-menu-item index="/agents-bkp">
                 <span slot="title">agents-bkp</span>
             </el-menu-item>

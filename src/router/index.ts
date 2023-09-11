@@ -14,6 +14,7 @@ import Connectors from "../views/apps/Connectors.vue"
 import Indices from "../views/apps/Dashboards/Indices.vue"
 import Agents_bkp from "../views/apps/Dashboards/Agents_bkp.vue"
 import Agents from "../views/apps/Dashboards/Agents.vue"
+import Inputs from "../views/apps/Dashboards/Inputs.vue"
 /*
 
 //pages
@@ -110,6 +111,17 @@ const router = createRouter({
             path: "/agents",
             name: "agents",
             component: Agents,
+            meta: {
+                auth: true,
+                layout: layouts.navLeft,
+                searchable: true,
+                tags: ["app"]
+            }
+        },
+        {
+            path: "/inputs",
+            name: "inputs",
+            component: Inputs,
             meta: {
                 auth: true,
                 layout: layouts.navLeft,
