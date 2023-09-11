@@ -189,6 +189,7 @@ function toggleAgentCritical(agentId, criticalStatus) {
         gap: var(--size-6);
         flex-direction: row;
         align-items: center;
+        overflow: hidden;
 
         .agent-header {
             display: flex;
@@ -206,7 +207,6 @@ function toggleAgentCritical(agentId, criticalStatus) {
                     white-space: nowrap;
                     line-height: 32px;
                     height: 32px;
-                    background-color: transparent;
                     border-radius: 4px;
                     border: 1px solid $text-color-info;
                     border-color: transparent;
@@ -216,7 +216,6 @@ function toggleAgentCritical(agentId, criticalStatus) {
 
                     &.online {
                         padding: 0px 15px;
-                        background-color: rgba(19, 206, 102, 0.1);
                         color: $text-color-success;
                         border-color: $text-color-success;
                     }
@@ -291,39 +290,14 @@ function toggleAgentCritical(agentId, criticalStatus) {
     }
     @container (max-width: 480px) {
         .wrapper {
-            flex-wrap: wrap;
             gap: var(--size-4);
 
             .agent-header {
-                order: 0;
                 flex-grow: 1;
+                overflow: hidden;
             }
             .agent-info {
-                order: 2;
-                width: 100%;
-            }
-            .agent-actions {
-                order: 1;
-            }
-        }
-    }
-    @container (max-width: 380px) {
-        .wrapper {
-            flex-wrap: wrap;
-            gap: var(--size-3);
-
-            .agent-header {
-                order: 0;
-                width: 100%;
-            }
-            .agent-info {
-                order: 1;
-                width: 100%;
-            }
-            .agent-actions {
-                order: 2;
-                width: 100%;
-                justify-content: flex-end;
+                display: none;
             }
         }
     }
