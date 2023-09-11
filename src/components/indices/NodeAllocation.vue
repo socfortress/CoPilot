@@ -121,6 +121,7 @@ onBeforeMount(() => {
 .cluster-health {
     padding: var(--size-5) var(--size-6);
     @extend .card-base;
+    @extend .card-shadow--small;
 
     .title {
         font-size: var(--font-size-4);
@@ -129,12 +130,15 @@ onBeforeMount(() => {
     }
     .info {
         min-height: 50px;
+        margin-left: -5px;
+        margin-right: -5px;
 
         .item {
             padding: var(--size-3) var(--size-4);
             @extend .card-base;
             @extend .card-shadow--small;
             border: 2px solid transparent;
+            margin: 5px;
 
             display: flex;
             flex-direction: column;

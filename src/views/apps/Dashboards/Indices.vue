@@ -24,7 +24,7 @@
                 <div class="col basis-40">
                     <NodeAllocation class="stretchy" />
                 </div>
-                <div class="col basis-60">
+                <div class="col basis-60 chart-card">
                     <TopIndices :indices="indices" />
                 </div>
             </div>
@@ -109,7 +109,7 @@ onBeforeMount(() => {
 
             .col {
                 flex-grow: 1;
-                overflow: hidden;
+                //overflow: hidden;
                 &.basis-20 {
                     flex-basis: 20%;
                 }
@@ -124,6 +124,11 @@ onBeforeMount(() => {
                 }
                 &.basis-80 {
                     flex-basis: 80%;
+                }
+
+                &.chart-card {
+                    @extend .card-base;
+                    @extend .card-shadow--small;
                 }
             }
 

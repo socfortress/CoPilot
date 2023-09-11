@@ -50,13 +50,14 @@ const loading = computed(() => !indices?.value || indices.value === null)
 .indices-marquee {
     .info {
         opacity: 0.5;
-        font-size: 12px;
+        font-size: var(--font-size-0);
         margin-top: 5px;
     }
     .marquee-wrap {
         height: 45px;
         transform: translate3d(0, 0, 0);
         @extend .card-base;
+        @extend .card-shadow--small;
 
         :deep() {
             .marquee {
