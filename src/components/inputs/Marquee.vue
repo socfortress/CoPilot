@@ -10,15 +10,15 @@
             gradient-length="10%"
         >
             <span
-                v-for="input in inputs"
-                :key="input.title"
+                v-for="item in parsedItems"
+                :key="item.title"
                 class="item"
-                :class="input.state"
-                @click="emit('click', input)"
+                :class="item.state"
+                @click="emit('click', item)"
                 title="Click to select"
             >
-                <InputIcon :state="input.state" color />
-                {{ input.title }}
+                <InputIcon :state="item.state" color />
+                {{ item.title }}
             </span>
         </Vue3Marquee>
         <div class="info"><i class="mdi mdi-information-outline"></i> Click on an input to select</div>
@@ -31,6 +31,8 @@ import { RunningInput } from "@/types/graylog.d"
 import { Vue3Marquee } from "vue3-marquee"
 import InputIcon from "@/components/inputs/InputIcon.vue"
 
+const MIN_ITEMS = 8
+
 const emit = defineEmits<{
     (e: "click", value: RunningInput): void
 }>()
@@ -40,6 +42,23 @@ const props = defineProps<{
 }>()
 
 const { inputs } = toRefs(props)
+
+const parsedItems = computed(() => {
+    if (!inputs.value) {
+        return []
+    }
+
+    if (inputs.value.length >= MIN_ITEMS) {
+        return inputs.value
+    }
+
+    const list = []
+    while (list.length < MIN_ITEMS) {
+        list.push(...inputs.value)
+    }
+
+    return list
+})
 
 const loading = computed(() => !inputs?.value || inputs.value === null)
 </script>
