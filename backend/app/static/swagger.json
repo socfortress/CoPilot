@@ -2457,7 +2457,7 @@
                 }
             }
         },
-        "/graylog/inputstate/{input_id}": {
+        "/graylog/inputs/{input_id}/state": {
             "get": {
                 "tags": ["Graylog"],
                 "summary": "Get the state of a Graylog input",

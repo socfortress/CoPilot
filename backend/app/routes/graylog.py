@@ -89,7 +89,7 @@ def get_inputs() -> dict:
         {"running_inputs": running_inputs, "configured_inputs": configured_inputs},
     )
 
-@bp.route("/graylog/inputstate/<input_id>", methods=["GET"])
+@bp.route("/graylog/inputs/<input_id>/state", methods=["GET"])
 def get_inputstate(input_id: str) -> dict:
     """
     Endpoint to collect Graylog inputstate.
