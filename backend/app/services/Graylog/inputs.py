@@ -65,6 +65,7 @@ class InputsService:
             for input in running_inputs.json()["states"]:
                 inputs_list.append(
                     {
+                        "id": input["id"],
                         "state": input["state"],
                         "title": input["message_input"]["title"],
                         "port": input["message_input"]["attributes"]["port"],
@@ -116,6 +117,7 @@ class InputsService:
             for input in configured_inputs.json()["inputs"]:
                 configured_inputs_list.append(
                     {
+                        "id": input["id"],
                         "title": input["title"],
                         "port": input["attributes"]["port"],
                     },

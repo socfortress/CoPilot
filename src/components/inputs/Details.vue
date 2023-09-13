@@ -7,7 +7,7 @@
           </div>
           <div class="select-box" v-if="inputs && inputs.length">
               <el-select v-model="currentInput" placeholder="Inputs list" clearable value-key="input" filterable>
-                  <el-option v-for="input in inputs" :key="input.title" :label="input.title" :value="input"></el-option>
+                  <el-option v-for="input in inputs" :key="input.id" :label="input.title" :value="input"></el-option>
               </el-select>
           </div>
       </div>

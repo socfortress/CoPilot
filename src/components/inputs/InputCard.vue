@@ -5,6 +5,10 @@
               <div class="value">{{ input.title }}</div>
               <div class="label">name</div>
           </div>
+          <div class="box">
+              <div class="value">{{ input.id }}</div>
+              <div class="label">id</div>
+          </div>
           <!-- <div class="box">
               <div class="value text-uppercase">
                   <InputIcon :health="input.health" color />

@@ -11,7 +11,7 @@
         >
             <span
                 v-for="item in parsedItems"
-                :key="item.title"
+                :key="item.id"
                 class="item"
                 :class="item.state"
                 @click="emit('click', item)"
