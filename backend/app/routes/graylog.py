@@ -135,6 +135,12 @@ def get_inputs_configured() -> dict:
     logger.info("Received request to get configured graylog inputs")
     service = InputsService()
     configured_inputs = service.collect_configured_inputs()
+    for input in configured_inputs["configured_inputs"]:
+        # Get the ID and invoke the get_inputstate function
+        input_id = input["id"]
+        inputstate = get_inputstate(input_id)
+        # Add the inputstate to the configured_inputs
+        input["inputstate"] = inputstate["inputstate"]["state"]
     return jsonify(
         {"configured_inputs": configured_inputs},
     )

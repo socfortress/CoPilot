@@ -22,6 +22,10 @@
               <div class="value">{{ input.port }}</div>
               <div class="label">port</div>
           </div>
+          <div class="box">
+              <div class="value">{{ input.inputstate }}</div>
+              <div class="label">state</div>
+          </div>
       </div>
       <div class="group actions" v-if="showActions">
           <div class="box">
