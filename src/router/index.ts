@@ -119,6 +119,17 @@ const router = createRouter({
             }
         },
         {
+            path: "/agent/:id?",
+            name: "agent",
+            component: import("@/views/AgentOverview.vue"),
+            meta: {
+                auth: true,
+                layout: layouts.navLeft,
+                searchable: true,
+                tags: ["app"]
+            }
+        },
+        {
             path: "/inputs",
             name: "inputs",
             component: Inputs,

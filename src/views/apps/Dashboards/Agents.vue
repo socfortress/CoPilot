@@ -11,15 +11,18 @@
                 @sync="syncAgents()"
                 @click="gotoAgentPage"
             />
-            <transition-group class="agents-list box grow scrollable only-y" tag="div" name="list" v-loading="loadingAgents">
-                <AgentCard
-                    v-for="agent in agentsFiltered"
-                    :key="agent.agent_id"
-                    :agent="agent"
-                    show-actions
-                    @click="gotoAgentPage(agent)"
-                />
-            </transition-group>
+            <div class="agents-list box grow scrollable only-y" v-loading="loadingAgents">
+                <transition-group class="animated-list" tag="div" name="list">
+                    <AgentCard
+                        v-for="agent in agentsFiltered"
+                        :key="agent.agent_id"
+                        :agent="agent"
+                        show-actions
+                        @delete="syncAgents()"
+                        @click="gotoAgentPage(agent)"
+                    />
+                </transition-group>
+            </div>
         </div>
     </div>
 </template>
@@ -32,7 +35,9 @@ import AgentCard from "@/components/agents/AgentCard.vue"
 import AgentToolbar from "@/components/agents/AgentToolbar.vue"
 import { isAgentOnline } from "@/components/agents/utils"
 import Api from "@/api"
+import { useRouter } from "vue-router"
 
+const router = useRouter()
 const loadingAgents = ref(false)
 const loadingSync = ref(false)
 const agents = ref<Agent[]>([])
@@ -54,7 +59,7 @@ const agentsOnline = computed(() => {
 })
 
 function gotoAgentPage(agent: Agent) {
-    console.log("goto", agent)
+    router.push(`/agent/${agent.agent_id}`).catch(err => {})
 }
 
 function getAgents() {
@@ -85,6 +90,7 @@ function getAgents() {
             loadingAgents.value = false
         })
 }
+
 function syncAgents() {
     loadingSync.value = true
 
@@ -150,33 +156,40 @@ onBeforeMount(() => {
             margin-bottom: var(--size-2);
         }
 
-        .list-enter-active,
-        .list-leave-active,
-        .list-move {
-            transition: 500ms cubic-bezier(0.59, 0.12, 0.34, 0.95);
-            transition-property: opacity, transform;
+        .animated-list {
+            .list-enter-active,
+            .list-leave-active,
+            .list-move {
+                transition: 500ms cubic-bezier(0.59, 0.12, 0.34, 0.95);
+                transition-property: opacity, transform;
+            }
+
+            .list-enter {
+                opacity: 0;
+                transform: scaleY(0);
+            }
+
+            .list-enter-to {
+                opacity: 1;
+                transform: scaleY(1);
+            }
+
+            .list-leave-active {
+                position: absolute;
+                left: 0;
+                right: 0;
+            }
+
+            .list-leave-to {
+                opacity: 0;
+                transform: scaleY(0);
+                transform-origin: center top;
+            }
         }
 
-        .list-enter {
-            opacity: 0;
-            transform: scaleY(0);
-        }
-
-        .list-enter-to {
-            opacity: 1;
-            transform: scaleY(1);
-        }
-
-        .list-leave-active {
-            position: absolute;
-            left: 0;
-            right: 0;
-        }
-
-        .list-leave-to {
-            opacity: 0;
-            transform: scaleY(0);
-            transform-origin: center top;
+        &.el-loading-parent--relative {
+            overflow-x: hidden !important;
+            overflow-y: hidden !important;
         }
     }
 
