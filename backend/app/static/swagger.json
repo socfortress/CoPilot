@@ -2601,6 +2601,63 @@
                 "tags": ["Graylog"]
             }
         },
+        "/graylog/pipeline/pipelines": {
+            "get": {
+                "summary": "Get pipelines from Graylog",
+                "description": "Endpoint to get pipelines from Graylog.",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "pipelines": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "description": "Pipeline details"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        }
+                    }
+                },
+                "operationId": "getGraylogPipelines",
+                "tags": ["Graylog"]
+            }
+        },
+        "/graylog/streams": {
+            "get": {
+                "summary": "Get streams from Graylog",
+                "description": "Endpoint to get streams from Graylog.",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "description": "Stream details"
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        }
+                    }
+                },
+                "operationId": "getGraylogStreams",
+                "tags": ["Graylog"]
+            }
+        },
         "/alerts": {
             "post": {
                 "summary": "Create and get alerts",

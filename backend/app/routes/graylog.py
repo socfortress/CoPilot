@@ -8,6 +8,7 @@ from app.services.Graylog.messages import MessagesService
 from app.services.Graylog.metrics import MetricsService
 from app.services.Graylog.events import EventsService
 from app.services.Graylog.pipelines import PipelinesService
+from app.services.Graylog.streams import StreamsService
 
 bp = Blueprint("graylog", __name__)
 
@@ -218,3 +219,29 @@ def get_pipeline_rules() -> dict:
     service = PipelinesService()
     pipeline_rules = service.collect_pipeline_rules()
     return pipeline_rules
+
+@bp.route("/graylog/pipeline/pipelines", methods=["GET"])
+def get_pipelines() -> dict:
+    """
+    Endpoint to collect Graylog pipelines.
+
+    Returns:
+        dict: A JSON object containing the list of all pipelines.
+    """
+    logger.info("Received request to get graylog pipelines")
+    service = PipelinesService()
+    pipelines = service.collect_pipelines()
+    return pipelines
+
+@bp.route("/graylog/streams", methods=["GET"])
+def get_streams() -> dict:
+    """
+    Endpoint to collect Graylog streams.
+
+    Returns:
+        dict: A JSON object containing the list of all streams.
+    """
+    logger.info("Received request to get graylog streams")
+    service = StreamsService()
+    streams = service.collect_streams()
+    return streams

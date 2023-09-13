@@ -69,3 +69,45 @@ class PipelinesService:
         except Exception as e:
             logger.error(f"Failed to collect pipeline rules: {e}")
             return {"message": "Failed to collect pipeline rules", "success": False}
+
+    def collect_pipelines(
+        self,
+    ) -> Dict[str, Union[bool, str, List[Dict[str, Union[str, int]]]]]:
+        """
+        Collects the pipelines that are managed by Graylog.
+
+        Returns:
+            dict: A dictionary containing the success status, a message, and potentially a list of pipelines.
+        """
+        if self.connector_url is None or self.connector_username is None or self.connector_password is None:
+            return {"message": "Failed to collect Graylog details", "success": False}
+
+        pipelines = self._collect_pipelines()
+
+        if pipelines["success"]:
+            return pipelines
+
+    def _collect_pipelines(
+        self,
+    ) -> Dict[str, Union[bool, str, List[Dict[str, Union[str, int]]]]]:
+        """
+        Collects the pipelines that are managed by Graylog.
+
+        Returns:
+            dict: A dictionary containing the success status, a message, and potentially a list of pipelines.
+        """
+        try:
+            pipelines = requests.get(
+                f"{self.connector_url}/api/system/pipelines/pipeline",
+                headers=self.HEADERS,
+                auth=(self.connector_username, self.connector_password),
+                verify=False,
+            )
+            return {
+                "message": "Successfully collected pipelines",
+                "success": True,
+                "pipelines": pipelines.json(),
+            }
+        except Exception as e:
+            logger.error(f"Failed to collect pipelines: {e}")
+            return {"message": "Failed to collect pipelines", "success": False}
