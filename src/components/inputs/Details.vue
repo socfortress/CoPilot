@@ -1,36 +1,33 @@
 <template>
-  <div class="index-details-box" v-loading="loading" :class="{ active: currentIndex }">
+  <div class="input-details-box" v-loading="loading" :class="{ active: currentInput }">
       <div class="box-header">
           <div class="title">
-              <span v-if="currentIndex"> Below the details for index </span>
-              <span v-else> Select an index to see the details </span>
+              <span v-if="currentInput"> Below the details for input </span>
+              <span v-else> Select an input to see the details </span>
           </div>
-          <div class="select-box" v-if="indices && indices.length">
-              <el-select v-model="currentIndex" placeholder="Indices list" clearable value-key="index" filterable>
-                  <el-option v-for="index in indices" :key="index.index" :label="index.index" :value="index"></el-option>
+          <div class="select-box" v-if="inputs && inputs.length">
+              <el-select v-model="currentInput" placeholder="Inputs list" clearable value-key="input" filterable>
+                  <el-option v-for="input in inputs" :key="input.title" :label="input.title" :value="input"></el-option>
               </el-select>
           </div>
       </div>
-      <div class="details-box" v-if="currentIndex">
+      <div class="details-box" v-if="currentInput">
           <div class="info">
-              <IndexCard :index="currentIndex" showActions @delete="clearCurrentIndex()" />
+              <InputCard :input="currentInput" showActions @delete="clearCurrentInput()" />
           </div>
-          <div class="shards">
+          <!-- <div class="shards">
               <el-scrollbar>
                   <table class="styled">
                       <thead>
                           <tr>
-                              <th>Node</th>
-                              <th>Shard</th>
-                              <th>Size</th>
-                              <th>State</th>
+                              <th>Title</th>
+                              <th>Port</th>
                           </tr>
                       </thead>
                       <tbody>
                           <tr v-for="shard of filteredShards" :key="shard.id">
-                              <td>{{ shard.node || "-" }}</td>
-                              <td>{{ shard.shard || "-" }}</td>
-                              <td>{{ shard.size || "-" }}</td>
+                              <td>{{ shard.title || "-" }}</td>
+                              <td>{{ shard.port || "-" }}</td>
                               <td>
                                   <span class="shard-state" :class="shard.state">
                                       {{ shard.state || "-" }}
@@ -40,43 +37,43 @@
                       </tbody>
                   </table>
               </el-scrollbar>
-          </div>
+          </div> -->
       </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, onBeforeMount, ref, toRefs } from "vue"
-import { Index, IndexShard } from "@/types/indices.d"
+import { Inputs } from "@/types/graylog.d"
 import { ElMessage } from "element-plus"
-import IndexCard from "@/components/indices/IndexCard.vue"
+import InputCard from "@/components/inputs/InputCard.vue"
 import Api from "@/api"
 import { nanoid } from "nanoid"
 
-type IndexModel = Index | null | ""
+type InputModel = Inputs | null | ""
 
 const emit = defineEmits<{
-  (e: "update:modelValue", value: IndexModel): void
+  (e: "update:modelValue", value: InputModel): void
 }>()
 
 const props = defineProps<{
-  indices: Index[] | null
-  modelValue: IndexModel
+  inputs: Inputs[] | null
+  modelValue: InputModel
 }>()
-const { indices, modelValue } = toRefs(props)
+const { inputs, modelValue } = toRefs(props)
 
-const shards = ref<IndexShard[]>([])
-const loadingShards = ref(false)
-const loading = computed(() => !indices?.value || indices.value === null || loadingShards.value)
+// const shards = ref<InputShard[]>([])
+// const loadingShards = ref(false)
+const loading = computed(() => !inputs?.value || inputs.value === null)
 
-const filteredShards = computed(() =>
-  shards.value.filter((shard: IndexShard) => {
-      if (!currentIndex.value || typeof currentIndex.value === "string") return false
-      return shard.index === currentIndex.value?.index
-  })
-)
+// const filteredShards = computed(() =>
+//   shards.value.filter((shard: InputShard) => {
+//       if (!currentInput.value || typeof currentInput.value === "string") return false
+//       return shard.input === currentInput.value?.input
+//   })
+// )
 
-const currentIndex = computed<IndexModel>({
+const currentInput = computed<InputModel>({
   get() {
       return modelValue.value
   },
@@ -85,52 +82,52 @@ const currentIndex = computed<IndexModel>({
   }
 })
 
-function clearCurrentIndex() {
-  currentIndex.value = null
+function clearCurrentInput() {
+  currentInput.value = null
 }
 
-function getShards() {
-  loadingShards.value = true
-  Api.indices
-      .getShards()
-      .then(res => {
-          if (res.data.success) {
-              shards.value = (res.data?.shards || []).map(obj => {
-                  obj.id = nanoid()
-                  return obj
-              })
-          } else {
-              ElMessage({
-                  message: res.data?.message || "An error occurred. Please try again later.",
-                  type: "error"
-              })
-          }
-      })
-      .catch(err => {
-          if (err.response.status === 401) {
-              ElMessage({
-                  message: err.response?.data?.message || "Wazuh-Indexer returned Unauthorized. Please check your connector credentials.",
-                  type: "error"
-              })
-          } else if (err.response.status === 404) {
-              ElMessage({
-                  message: err.response?.data?.message || "No alerts were found.",
-                  type: "error"
-              })
-          } else {
-              ElMessage({
-                  message: err.response?.data?.message || "An error occurred. Please try again later.",
-                  type: "error"
-              })
-          }
-      })
-      .finally(() => {
-          loadingShards.value = false
-      })
-}
+// function getShards() {
+//   loadingShards.value = true
+//   Api.indices
+//       .getShards()
+//       .then(res => {
+//           if (res.data.success) {
+//               shards.value = (res.data?.shards || []).map(obj => {
+//                   obj.id = nanoid()
+//                   return obj
+//               })
+//           } else {
+//               ElMessage({
+//                   message: res.data?.message || "An error occurred. Please try again later.",
+//                   type: "error"
+//               })
+//           }
+//       })
+//       .catch(err => {
+//           if (err.response.status === 401) {
+//               ElMessage({
+//                   message: err.response?.data?.message || "Wazuh-Indexer returned Unauthorized. Please check your connector credentials.",
+//                   type: "error"
+//               })
+//           } else if (err.response.status === 404) {
+//               ElMessage({
+//                   message: err.response?.data?.message || "No alerts were found.",
+//                   type: "error"
+//               })
+//           } else {
+//               ElMessage({
+//                   message: err.response?.data?.message || "An error occurred. Please try again later.",
+//                   type: "error"
+//               })
+//           }
+//       })
+//       .finally(() => {
+//           loadingShards.value = false
+//       })
+// }
 
 onBeforeMount(() => {
-  getShards()
+  // getShards()
 })
 </script>
 
@@ -138,7 +135,7 @@ onBeforeMount(() => {
 @import "@/assets/scss/_variables";
 @import "@/assets/scss/card-shadow";
 
-.index-details-box {
+.input-details-box {
   padding: var(--size-5) var(--size-6);
   border: 2px solid transparent;
   @extend .card-base;

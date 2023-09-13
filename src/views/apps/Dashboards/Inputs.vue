@@ -3,17 +3,24 @@
         <div class="section">
             <InputsMarquee :inputs="runningInputs" @click="setInput" />
         </div>
+
+        <div class="section">
+            <Details :inputs="configuredInputs" v-model="currentInput" />
+        </div>
+
     </el-scrollbar>
 </template>
 
 <script lang="ts" setup>
-import { RunningInput } from "@/types/graylog.d"
+import { RunningInput, ConfiguredInput } from "@/types/graylog.d"
 import Api from "@/api"
 import { ElMessage } from "element-plus"
 import { onBeforeMount, ref } from "vue"
 import InputsMarquee from "@/components/inputs/Marquee.vue"
+import Details from "@/components/inputs/Details.vue"
 
 const runningInputs = ref<RunningInput[] | null>(null)
+const configuredInputs = ref<ConfiguredInput[] | null>(null)
 const loadingInput = ref(false)
 const currentInput = ref<RunningInput | null>(null)
 
@@ -51,7 +58,7 @@ function getInputsConfigured() {
         .getInputsConfigured()
         .then(res => {
             if (res.data.configured_inputs.success) {
-                inputs.value = res.data.configured_inputs.inputs
+              configuredInputs.value = res.data.configured_inputs.configured_inputs
             } else {
                 ElMessage({
                     message: res.data.configured_inputs?.message || "An error occurred. Please try again later.",
