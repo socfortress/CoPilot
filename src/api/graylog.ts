@@ -15,7 +15,10 @@ export default {
     deleteIndex(indexName: string) {
         return HttpClient.delete<FlaskBaseResponse>(`/graylog/indices/${indexName}/delete`)
     },
-    getInputs() {
-        return HttpClient.get<FlaskBaseResponse & { inputs: Inputs }>(`/graylog/inputs`)
+    getInputsRunning() {
+        return HttpClient.get<FlaskBaseResponse & { inputs: Inputs }>(`/graylog/inputs/running`)
+    },
+    getInputsConfigured() {
+        return HttpClient.get<FlaskBaseResponse & { inputs: Inputs }>(`/graylog/inputs/configured`)
     }
 }

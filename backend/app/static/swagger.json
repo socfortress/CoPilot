@@ -2259,6 +2259,84 @@
                 "tags": ["Graylog"]
             }
         },
+        "/graylog/inputs/running": {
+          "get": {
+              "summary": "Get running inputs from Graylog",
+              "description": "Endpoint to get running inputs from Graylog.",
+              "responses": {
+                  "200": {
+                      "description": "Successful operation",
+                      "content": {
+                          "application/json": {
+                              "schema": {
+                                  "type": "object",
+                                  "properties": {
+                                      "inputs": {
+                                          "type": "array",
+                                          "items": {
+                                              "type": "object",
+                                              "description": "Input details"
+                                          }
+                                      }
+                                  }
+                              }
+                          }
+                      }
+                  },
+                  "default": {
+                      "description": "Unexpected error",
+                      "content": {
+                          "application/json": {
+                              "schema": {
+                                  "$ref": "#/components/schemas/Error"
+                              }
+                          }
+                      }
+                  }
+              },
+              "operationId": "getGraylogInputsRunning",
+              "tags": ["Graylog"]
+          }
+        },
+        "/graylog/inputs/configured": {
+          "get": {
+              "summary": "Get configured inputs from Graylog",
+              "description": "Endpoint to get configured inputs from Graylog.",
+              "responses": {
+                  "200": {
+                      "description": "Successful operation",
+                      "content": {
+                          "application/json": {
+                              "schema": {
+                                  "type": "object",
+                                  "properties": {
+                                      "inputs": {
+                                          "type": "array",
+                                          "items": {
+                                              "type": "object",
+                                              "description": "Input details"
+                                          }
+                                      }
+                                  }
+                              }
+                          }
+                      }
+                  },
+                  "default": {
+                      "description": "Unexpected error",
+                      "content": {
+                          "application/json": {
+                              "schema": {
+                                  "$ref": "#/components/schemas/Error"
+                              }
+                          }
+                      }
+                  }
+              },
+              "operationId": "getGraylogInputsConfigured",
+              "tags": ["Graylog"]
+          }
+        },
         "/alerts": {
             "post": {
                 "summary": "Create and get alerts",

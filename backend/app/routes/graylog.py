@@ -88,3 +88,34 @@ def get_inputs() -> dict:
     return jsonify(
         {"running_inputs": running_inputs, "configured_inputs": configured_inputs},
     )
+
+
+@bp.route("/graylog/inputs/running", methods=["GET"])
+def get_inputs_running() -> dict:
+    """
+    Endpoint to collect running Graylog inputs.
+
+    Returns:
+        dict: A JSON object containing the list of all running and configured inputs.
+    """
+    logger.info("Received request to get runnning graylog inputs")
+    service = InputsService()
+    running_inputs = service.collect_running_inputs()
+    return jsonify(
+        {"running_inputs": running_inputs},
+    )
+
+@bp.route("/graylog/inputs/configured", methods=["GET"])
+def get_inputs_configured() -> dict:
+    """
+    Endpoint to collect configured Graylog inputs.
+
+    Returns:
+        dict: A JSON object containing the list of all running and configured inputs.
+    """
+    logger.info("Received request to get configured graylog inputs")
+    service = InputsService()
+    configured_inputs = service.collect_configured_inputs()
+    return jsonify(
+        {"configured_inputs": configured_inputs},
+    )
