@@ -69,3 +69,55 @@ class EventsService:
         except Exception as e:
             logger.error(f"Failed to collect event definitions: {e}")
             return {"message": "Failed to collect event definitions", "success": False}
+
+    def collect_alerts(
+        self,
+    ) -> Dict[str, Union[bool, str, List[Dict[str, Union[str, int]]]]]:
+        """
+        Collects the alerts that are managed by Graylog.
+
+        Returns:
+            dict: A dictionary containing the success status, a message, and potentially a list of alerts.
+        """
+        if self.connector_url is None or self.connector_username is None or self.connector_password is None:
+            return {"message": "Failed to collect Graylog details", "success": False}
+
+        alerts = self._collect_alerts()
+
+        if alerts["success"]:
+            return alerts
+
+    def _collect_alerts(
+        self,
+    ) -> Dict[str, Union[bool, str, List[Dict[str, Union[str, int]]]]]:
+        """
+        Collects the alerts that are managed by Graylog.
+
+        Returns:
+            dict: A dictionary containing the success status, a message, and potentially a list of alerts.
+        """
+        try:
+            # Set body as `{"query":"","page":1,"per_page":10,"filter":{"alerts":"only","event_definitions":[]},"timerange":{"range":86400,"type":"relative"}}`
+            body = {
+                "query": "",
+                "page": 1,
+                "per_page": 100,
+                "filter": {"alerts": "only", "event_definitions": []},
+                #"timerange": {"range": 86400, "type": "relative"},
+            }
+
+            alerts = requests.post(
+                f"{self.connector_url}/api/events/search",
+                headers=self.HEADERS,
+                json=body,
+                auth=(self.connector_username, self.connector_password),
+                verify=False,
+            )
+            return {
+                "message": "Successfully collected alerts",
+                "success": True,
+                "alerts": alerts.json(),
+            }
+        except Exception as e:
+            logger.error(f"Failed to collect alerts: {e}")
+            return {"message": "Failed to collect alerts", "success": False}

@@ -2539,6 +2539,68 @@
                 "tags": ["Graylog"]
             }
         },
+        "/graylog/event/alerts": {
+            "get": {
+                "summary": "Get event alerts from Graylog",
+                "description": "Endpoint to get event alerts from Graylog.",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "event_alerts": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "description": "Event alert details"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        }
+                    }
+                },
+                "operationId": "getGraylogEventAlerts",
+                "tags": ["Graylog"]
+            }
+        },
+        "/graylog/pipeline/rules": {
+            "get": {
+                "summary": "Get pipeline rules from Graylog",
+                "description": "Endpoint to get pipeline rules from Graylog.",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "pipeline_rules": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "description": "Pipeline rule details"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        }
+                    }
+                },
+                "operationId": "getGraylogPipelineRules",
+                "tags": ["Graylog"]
+            }
+        },
         "/alerts": {
             "post": {
                 "summary": "Create and get alerts",

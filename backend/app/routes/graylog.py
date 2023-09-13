@@ -7,6 +7,7 @@ from app.services.Graylog.inputs import InputsService
 from app.services.Graylog.messages import MessagesService
 from app.services.Graylog.metrics import MetricsService
 from app.services.Graylog.events import EventsService
+from app.services.Graylog.pipelines import PipelinesService
 
 bp = Blueprint("graylog", __name__)
 
@@ -191,3 +192,29 @@ def get_event_definitions() -> dict:
     service = EventsService()
     event_definitions = service.collect_event_definitions()
     return event_definitions
+
+@bp.route("/graylog/event/alerts", methods=["GET"])
+def get_alerts() -> dict:
+    """
+    Endpoint to collect Graylog alerts. Currently collects last 100 alerts.
+
+    Returns:
+        dict: A JSON object containing the list of all alerts.
+    """
+    logger.info("Received request to get graylog alerts")
+    service = EventsService()
+    alerts = service.collect_alerts()
+    return alerts
+
+@bp.route("/graylog/pipeline/rules", methods=["GET"])
+def get_pipeline_rules() -> dict:
+    """
+    Endpoint to collect Graylog pipeline rules.
+
+    Returns:
+        dict: A JSON object containing the list of all pipeline rules.
+    """
+    logger.info("Received request to get graylog pipeline rules")
+    service = PipelinesService()
+    pipeline_rules = service.collect_pipeline_rules()
+    return pipeline_rules
