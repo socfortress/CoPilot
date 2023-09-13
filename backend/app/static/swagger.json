@@ -2508,6 +2508,37 @@
                 }
             }
         },
+        "/graylog/event/definitions": {
+            "get": {
+                "summary": "Get event definitions from Graylog",
+                "description": "Endpoint to get event definitions from Graylog.",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "event_definitions": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "description": "Event definition details"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        }
+                    }
+                },
+                "operationId": "getGraylogEventDefinitions",
+                "tags": ["Graylog"]
+            }
+        },
         "/alerts": {
             "post": {
                 "summary": "Create and get alerts",

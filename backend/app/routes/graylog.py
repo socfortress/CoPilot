@@ -6,6 +6,7 @@ from app.services.Graylog.index import IndexService
 from app.services.Graylog.inputs import InputsService
 from app.services.Graylog.messages import MessagesService
 from app.services.Graylog.metrics import MetricsService
+from app.services.Graylog.events import EventsService
 
 bp = Blueprint("graylog", __name__)
 
@@ -177,3 +178,16 @@ def start_input(input_id: str) -> dict:
     service = InputsService()
     result = service.start_input(input_id)
     return result
+
+@bp.route("/graylog/event/definitions", methods=["GET"])
+def get_event_definitions() -> dict:
+    """
+    Endpoint to collect Graylog event definitions.
+
+    Returns:
+        dict: A JSON object containing the list of all event definitions.
+    """
+    logger.info("Received request to get graylog event definitions")
+    service = EventsService()
+    event_definitions = service.collect_event_definitions()
+    return event_definitions
