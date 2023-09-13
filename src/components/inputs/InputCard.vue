@@ -30,13 +30,19 @@
                   <el-button type="primary" :icon="RefreshIcon" circle />
               </el-tooltip>
             -->
-              <el-tooltip content="Delete" placement="top" :show-arrow="false">
+            <el-tooltip content="Start Input" placement="top" :show-arrow="false">
+                  <el-button type="primary" :icon="DeleteIcon" circle @click="handleStart" />
+              </el-tooltip>
+              <el-tooltip content="Stop Input" placement="top" :show-arrow="false">
                   <el-button type="danger" :icon="DeleteIcon" circle @click="handleStop" />
               </el-tooltip>
           </div>
       </div>
   </div>
 </template>
+
+<!-- arrow-down-drop-circle
+"mdi mdi-arrow-down-drop-circle" -->
 
 <script setup lang="ts">
 import { ref, toRefs } from "vue"
@@ -90,6 +96,72 @@ function stopInput() {
           if (res.data.success) {
               ElMessage({
                   message: "Input was successfully stopped.",
+                  type: "success"
+              })
+
+              emit("delete")
+          } else {
+              ElMessage({
+                  message: res.data?.message || "An error occurred. Please try again later.",
+                  type: "error"
+              })
+          }
+      })
+      .catch(err => {
+          if (err.response.status === 401) {
+              ElMessage({
+                  message: err.response?.data?.message || "Graylog returned Unauthorized. Please check your connector credentials.",
+                  type: "error"
+              })
+          } else if (err.response.status === 404) {
+              ElMessage({
+                  message: err.response?.data?.message || "An error occurred. Please try again later.",
+                  type: "error"
+              })
+          } else {
+              ElMessage({
+                  message: err.response?.data?.message || "An error occurred. Please try again later.",
+                  type: "error"
+              })
+          }
+      })
+      .finally(() => {
+          loading.value = false
+      })
+}
+
+const handleStart = () => {
+  ElMessageBox.confirm(`Are you sure you want to start the Input:<br/><strong>${input.value.title}</strong> ?`, "Warning", {
+      confirmButtonText: "Yes I'm sure",
+      confirmButtonClass: "el-button--warning",
+      cancelButtonText: "Cancel",
+      type: "warning",
+      dangerouslyUseHTMLString: true,
+      customStyle: {
+          width: "90%",
+          maxWidth: "400px"
+      }
+  })
+      .then(() => {
+          startInput()
+      })
+      .catch(() => {
+          ElMessage({
+              type: "info",
+              message: "Stop canceled"
+          })
+      })
+}
+
+function startInput() {
+  loading.value = true
+
+  Api.graylog
+      .startInput(input.value.id)
+      .then(res => {
+          if (res.data.success) {
+              ElMessage({
+                  message: "Input was successfully started.",
                   type: "success"
               })
 
