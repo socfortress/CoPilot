@@ -20,5 +20,12 @@ export default {
     },
     getInputsConfigured() {
         return HttpClient.get<FlaskBaseResponse & { inputs: Inputs }>(`/graylog/inputs/configured`)
+    },
+    startInput(inputId: string) {
+        return HttpClient.put<FlaskBaseResponse>(`/graylog/inputs/${inputId}/start`)
+    },
+    stopInput(inputId: string) {
+        return HttpClient.delete<FlaskBaseResponse>(`/graylog/inputs/${inputId}/stop`)
     }
+
 }

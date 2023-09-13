@@ -31,7 +31,7 @@
               </el-tooltip>
             -->
               <el-tooltip content="Delete" placement="top" :show-arrow="false">
-                  <el-button type="danger" :icon="DeleteIcon" circle @click="handleDelete" />
+                  <el-button type="danger" :icon="DeleteIcon" circle @click="handleStop" />
               </el-tooltip>
           </div>
       </div>
@@ -54,12 +54,12 @@ const props = defineProps<{
   input: Inputs
   showActions?: boolean
 }>()
-const { Input, showActions } = toRefs(props)
+const { input, showActions } = toRefs(props)
 
 const loading = ref(false)
 
-const handleDelete = () => {
-  ElMessageBox.confirm(`Are you sure you want to delete the Input:<br/><strong>${input.value.input}</strong> ?`, "Warning", {
+const handleStop = () => {
+  ElMessageBox.confirm(`Are you sure you want to stop the Input:<br/><strong>${input.value.title}</strong> ?`, "Warning", {
       confirmButtonText: "Yes I'm sure",
       confirmButtonClass: "el-button--warning",
       cancelButtonText: "Cancel",
@@ -71,25 +71,25 @@ const handleDelete = () => {
       }
   })
       .then(() => {
-          deleteInput()
+          stopInput()
       })
       .catch(() => {
           ElMessage({
               type: "info",
-              message: "Delete canceled"
+              message: "Stop canceled"
           })
       })
 }
 
-function deleteInput() {
+function stopInput() {
   loading.value = true
 
-  Api.indices
-      .deleteInput(input.value.input)
+  Api.graylog
+      .stopInput(input.value.id)
       .then(res => {
           if (res.data.success) {
               ElMessage({
-                  message: "Input was successfully deleted.",
+                  message: "Input was successfully stopped.",
                   type: "success"
               })
 
@@ -104,7 +104,7 @@ function deleteInput() {
       .catch(err => {
           if (err.response.status === 401) {
               ElMessage({
-                  message: err.response?.data?.message || "Wazuh-Indexer returned Unauthorized. Please check your connector credentials.",
+                  message: err.response?.data?.message || "Graylog returned Unauthorized. Please check your connector credentials.",
                   type: "error"
               })
           } else if (err.response.status === 404) {
