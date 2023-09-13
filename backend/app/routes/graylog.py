@@ -245,3 +245,35 @@ def get_streams() -> dict:
     service = StreamsService()
     streams = service.collect_streams()
     return streams
+
+@bp.route("/graylog/streams/<stream_id>/pause", methods=["POST"])
+def pause_stream(stream_id: str) -> dict:
+    """
+    Endpoint to pause a Graylog stream.
+
+    Args:
+        stream_id (str): The ID of the stream to be paused.
+
+    Returns:
+        dict: A JSON object containing the result of the pause operation.
+    """
+    logger.info("Received request to pause stream")
+    service = StreamsService()
+    result = service.pause_stream(stream_id)
+    return result
+
+@bp.route("/graylog/streams/<stream_id>/resume", methods=["POST"])
+def resume_stream(stream_id: str) -> dict:
+    """
+    Endpoint to resume a Graylog stream.
+
+    Args:
+        stream_id (str): The ID of the stream to be resumed.
+
+    Returns:
+        dict: A JSON object containing the result of the resume operation.
+    """
+    logger.info("Received request to resume stream")
+    service = StreamsService()
+    result = service.resume_stream(stream_id)
+    return result

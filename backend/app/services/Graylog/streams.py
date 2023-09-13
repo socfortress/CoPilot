@@ -69,3 +69,89 @@ class StreamsService:
         except Exception as e:
             logger.error(f"Failed to collect streams: {e}")
             return {"message": "Failed to collect streams", "success": False}
+
+    def pause_stream(self, stream_id: str) -> Dict[str, Union[bool, str]]:
+        """
+        Pauses a stream in Graylog.
+
+        Args:
+            stream_id (str): The ID of the stream to pause.
+
+        Returns:
+            dict: A dictionary containing the success status and a message.
+        """
+        if self.connector_url is None or self.connector_username is None or self.connector_password is None:
+            return {"message": "Failed to collect Graylog details", "success": False}
+
+        pause_stream = self._pause_stream(stream_id)
+
+        if pause_stream["success"]:
+            return pause_stream
+
+    def _pause_stream(self, stream_id: str) -> Dict[str, Union[bool, str]]:
+        """
+        Pauses a stream in Graylog.
+
+        Args:
+            stream_id (str): The ID of the stream to pause.
+
+        Returns:
+            dict: A dictionary containing the success status and a message.
+        """
+        try:
+            pause_stream = requests.post(
+                f"{self.connector_url}/api/streams/{stream_id}/pause",
+                headers=self.HEADERS,
+                auth=(self.connector_username, self.connector_password),
+                verify=False,
+            )
+            return {
+                "message": "Successfully paused stream",
+                "success": True,
+            }
+        except Exception as e:
+            logger.error(f"Failed to pause stream: {e}")
+            return {"message": "Failed to pause stream", "success": False}
+
+    def resume_stream(self, stream_id: str) -> Dict[str, Union[bool, str]]:
+        """
+        Resumes a stream in Graylog.
+
+        Args:
+            stream_id (str): The ID of the stream to resume.
+
+        Returns:
+            dict: A dictionary containing the success status and a message.
+        """
+        if self.connector_url is None or self.connector_username is None or self.connector_password is None:
+            return {"message": "Failed to collect Graylog details", "success": False}
+
+        resume_stream = self._resume_stream(stream_id)
+
+        if resume_stream["success"]:
+            return resume_stream
+
+    def _resume_stream(self, stream_id: str) -> Dict[str, Union[bool, str]]:
+        """
+        Resumes a stream in Graylog.
+
+        Args:
+            stream_id (str): The ID of the stream to resume.
+
+        Returns:
+            dict: A dictionary containing the success status and a message.
+        """
+        try:
+            resume_stream = requests.post(
+                f"{self.connector_url}/api/streams/{stream_id}/resume",
+                headers=self.HEADERS,
+                auth=(self.connector_username, self.connector_password),
+                verify=False,
+            )
+            return {
+                "message": "Successfully resumed stream",
+                "success": True,
+            }
+        except Exception as e:
+            logger.error(f"Failed to resume stream: {e}")
+            return {"message": "Failed to resume stream", "success": False}

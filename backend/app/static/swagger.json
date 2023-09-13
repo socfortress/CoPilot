@@ -2658,6 +2658,126 @@
                 "tags": ["Graylog"]
             }
         },
+        "/graylog/streams/{stream_id}/pause": {
+            "post": {
+                "tags": ["Graylog"],
+                "summary": "Pauses a Graylog stream",
+                "description": "Endpoint to pause a Graylog stream.",
+                "parameters": [
+                    {
+                        "name": "stream_id",
+                        "in": "path",
+                        "description": "The ID of the stream to be paused.",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "success": {
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "success": {
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Stream not found",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "success": {
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/graylog/streams/{stream_id}/resume": {
+            "post": {
+                "tags": ["Graylog"],
+                "summary": "Resumes a Graylog stream",
+                "description": "Endpoint to resume a Graylog stream.",
+                "parameters": [
+                    {
+                        "name": "stream_id",
+                        "in": "path",
+                        "description": "The ID of the stream to be resumed.",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "success": {
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "success": {
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Stream not found",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "success": {
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/alerts": {
             "post": {
                 "summary": "Create and get alerts",
