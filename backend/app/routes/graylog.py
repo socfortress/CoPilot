@@ -119,3 +119,36 @@ def get_inputs_configured() -> dict:
     return jsonify(
         {"configured_inputs": configured_inputs},
     )
+
+@bp.route("/graylog/inputs/<input_id>/stop", methods=["DELETE"])
+def stop_input(input_id: str) -> dict:
+    """
+    Endpoint to stop a Graylog input.
+
+    Args:
+        input_id (str): The ID of the input to be stopped.
+
+    Returns:
+        dict: A JSON object containing the result of the stop operation.
+    """
+    logger.info("Received request to stop input")
+    service = InputsService()
+    result = service.stop_input(input_id)
+    return result
+
+
+@bp.route("/graylog/inputs/<input_id>/start", methods=["PUT"])
+def start_input(input_id: str) -> dict:
+    """
+    Endpoint to start a Graylog input.
+
+    Args:
+        input_id (str): The ID of the input to be started.
+
+    Returns:
+        dict: A JSON object containing the result of the start operation.
+    """
+    logger.info("Received request to start input")
+    service = InputsService()
+    result = service.start_input(input_id)
+    return result
