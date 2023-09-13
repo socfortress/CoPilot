@@ -2457,6 +2457,57 @@
                 }
             }
         },
+        "/graylog/inputstate/{input_id}": {
+            "get": {
+                "tags": ["Graylog"],
+                "summary": "Get the state of a Graylog input",
+                "description": "Endpoint to get the state of a Graylog input.",
+                "parameters": [
+                    {
+                        "name": "input_id",
+                        "in": "path",
+                        "description": "The ID of the input to get the state of.",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "state": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Input not found",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/alerts": {
             "post": {
                 "summary": "Create and get alerts",

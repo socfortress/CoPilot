@@ -89,6 +89,25 @@ def get_inputs() -> dict:
         {"running_inputs": running_inputs, "configured_inputs": configured_inputs},
     )
 
+@bp.route("/graylog/inputstate/<input_id>", methods=["GET"])
+def get_inputstate(input_id: str) -> dict:
+    """
+    Endpoint to collect Graylog inputstate.
+
+    Returns:
+        dict: A JSON object containing the list of all running and configured inputs.
+    """
+    logger.info("Received request to get graylog inputstate")
+    service = InputsService()
+    inputstate = service.collect_inputstate(input_id)
+    try:
+        # If inputstate.inputstate.message starts with `No input state`, then set the state to STOPPED
+        if inputstate["inputstate"]["message"].startswith("No input state"):
+            inputstate["inputstate"]["state"] = "STOPPED"
+            return inputstate
+    except:
+        return inputstate
+
 
 @bp.route("/graylog/inputs/running", methods=["GET"])
 def get_inputs_running() -> dict:

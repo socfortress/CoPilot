@@ -131,6 +131,50 @@ class InputsService:
             logger.error(f"Failed to collect configured inputs: {e}")
             return {"message": "Failed to collect configured inputs", "success": False}
 
+    def collect_inputstate(
+        self,
+        input_id: str,
+    ) -> Dict[str, Union[bool, str, List[Dict[str, Union[str, int]]]]]:
+        """
+        Collects the inputstate that is managed by Graylog.
+
+        Returns:
+            dict: A dictionary containing the success status, a message, and potentially a list of configured inputs.
+        """
+        if self.connector_url is None or self.connector_username is None or self.connector_password is None:
+            return {"message": "Failed to collect Graylog details", "success": False}
+
+        inputstate = self._collect_inputstate(input_id)
+
+        if inputstate["success"]:
+            return inputstate
+
+    def _collect_inputstate(
+        self,
+        input_id: str,
+    ) -> Dict[str, Union[bool, str, List[Dict[str, Union[str, int]]]]]:
+        """
+        Collects the inputstate that is managed by Graylog.
+
+        Returns:
+            dict: A dictionary containing the success status, a message, and potentially a list of configured inputs.
+        """
+        try:
+            inputstate = requests.get(
+                f"{self.connector_url}/api/system/inputstates/{input_id}",
+                headers=self.HEADERS,
+                auth=(self.connector_username, self.connector_password),
+                verify=False,
+            )
+            return {
+                "message": "Successfully collected inputstate",
+                "success": True,
+                "inputstate": inputstate.json(),
+            }
+        except Exception as e:
+            logger.error(f"Failed to collect inputstate: {e}")
+            return {"message": "Failed to collect inputstate", "success": False}
+
     def stop_input(self, input_id: str) -> Dict[str, Union[bool, str]]:
         """
         Stops a Graylog input.
