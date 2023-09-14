@@ -167,6 +167,18 @@ def quarantine_endpoint():
     """
     req_data = request.get_json()
     client_name = req_data["client_name"]
+    action = req_data["action"]
+    if action is None:
+        return (
+            jsonify(
+                {
+                    "message": f"Action is required.",
+                    "success": False,
+                },
+            ),
+            500,
+        )
+
     service = UniversalService()
     client_id = service.get_client_id(client_name=client_name)["results"][0]["client_id"]
     client_os = service.get_client_os(client_name=client_name)["results"][0]["os_info"]["system"]
@@ -186,5 +198,6 @@ def quarantine_endpoint():
     artifact_results = artifact_service.quarantine_endpoint(
         client_id=client_id,
         client_os=client_os,
+        action=action,
     )
     return artifact_results

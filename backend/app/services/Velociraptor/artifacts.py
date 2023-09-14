@@ -38,14 +38,18 @@ class ArtifactsService:
             client_id (str): The ID of the client.
             artifact (str): The name of the artifact.
             command (str): The command that was run, if applicable.
+            quarantined (bool): Whether the client is quarantined or not.
 
         Returns:
             str: The constructed artifact key.
         """
+        logger.info(f"Quarantined: {quarantined}")
         if command:
             return f"collect_client(client_id='{client_id}', urgent=true, artifacts=['{artifact}'], env=dict(Command='{command}'))"
-        elif quarantined:
+        elif quarantined is True:
             return f'collect_client(client_id="{client_id}", artifacts=["{artifact}"], spec=dict(`{artifact}`=dict()))'
+        elif quarantined is False:
+            return f'collect_client(client_id="{client_id}", artifacts=["{artifact}"], spec=dict(`{artifact}`=dict(`RemovePolicy`="Y")))'
         else:
             return f"collect_client(client_id='{client_id}', artifacts=['{artifact}'])"
 
@@ -259,7 +263,23 @@ class ArtifactsService:
         query = f'SELECT collect_client(client_id=\"{client_id}\", artifacts=[\"{artifact}\"], spec=dict(`{artifact}`=dict())) FROM scope()'
         return universal_service.execute_query(query)
 
-    def handle_flow(self, flow: Dict, client_id: str, artifact: str, universal_service: Any) -> str:
+    def execute_quarantine_remove(self, client_id: str, artifact: str, universal_service: Any) -> Dict:
+        """
+        Execute the query to remove quarantine from a client.
+
+        Args:
+            client_id (str): The ID of the client.
+            artifact (str): The artifact to use for quarantine.
+            universal_service (Any): The service used to execute the query.
+
+        Returns:
+            dict: The result of the executed query.
+        """
+        query = f'SELECT collect_client(client_id=\"{client_id}\", artifacts=[\"{artifact}\"], spec=dict(`{artifact}`=dict(`RemovePolicy`="Y"))) FROM scope()'
+        return universal_service.execute_query(query)
+
+
+    def handle_flow(self, flow: Dict, client_id: str, artifact: str, quarantined: bool) -> str:
         """
         Handle the flow after executing the quarantine query.
 
@@ -268,21 +288,62 @@ class ArtifactsService:
             client_id (str): The ID of the client.
             artifact (str): The artifact to use for quarantine.
             universal_service (Any): The service used to watch the flow completion.
+            quarantined (bool): Whether the client is quarantined or not.
 
         Returns:
             str: The flow ID that was completed.
         """
-        artifact_key = self._get_artifact_key(client_id, artifact, quarantined=True)
+        logger.info(f"Quarantined: {quarantined}")
+        artifact_key = self._get_artifact_key(client_id=client_id, artifact=artifact, quarantined=quarantined)
         flow_id = flow["results"][0][artifact_key]["flow_id"]
-        return universal_service.watch_flow_completion(flow_id)
+        return self.universal_service.watch_flow_completion(flow_id)
 
-    def quarantine_endpoint(self, client_id: str, client_os: str) -> Dict[str, Any]:
+    def execute_action(self, client_id: str, artifact: str, action: str) -> Dict[str, Any]:
         """
-        Quarantine an endpoint based on its client ID and operating system.
+        Execute the given action on the client.
+
+        Args:
+            client_id (str): The ID of the client.
+            artifact (str): The artifact to use for the action.
+            action (str): The action to be performed ("quarantine" or "removequarantine").
+
+        Returns:
+            dict: A dictionary with the success status and a message.
+        """
+        try:
+            if action == "quarantine":
+                flow = self.execute_quarantine_query(client_id, artifact, self.universal_service)
+                completed = self.handle_flow(flow, client_id, artifact, quarantined=True)
+            elif action == "removequarantine":
+                flow = self.execute_quarantine_remove(client_id, artifact, self.universal_service)
+                completed = self.handle_flow(flow, client_id, artifact, quarantined=False)
+            else:
+                return {"message": "Action not supported", "success": False}
+
+            logger.info(f"Successfully ran artifact collection on {flow}")
+
+            logger.info(f"Successfully watched flow completion on {completed}")
+
+            return {
+                "message": f"Successfully {action}d endpoint",
+                "success": True,
+            }
+
+        except Exception as err:
+            logger.error(f"Failed to {action} endpoint: {err}")
+            return {
+                "message": f"Failed to {action} endpoint",
+                "success": False,
+            }
+
+    def quarantine_endpoint(self, client_id: str, client_os: str, action: str) -> Dict[str, Any]:
+        """
+        Quarantine or remove quarantine from an endpoint based on its client ID and operating system.
 
         Args:
             client_id (str): The ID of the client.
             client_os (str): The operating system of the client.
+            action (str): The action to be performed ("quarantine" or "removequarantine").
 
         Returns:
             dict: A dictionary with the success status and a message.
@@ -295,21 +356,4 @@ class ArtifactsService:
                 "success": False,
             }
 
-        try:
-            flow = self.execute_quarantine_query(client_id, artifact, self.universal_service)
-            logger.info(f"Successfully ran artifact collection on {flow}")
-
-            completed = self.handle_flow(flow, client_id, artifact, self.universal_service)
-            logger.info(f"Successfully watched flow completion on {completed}")
-
-            return {
-                "message": "Successfully quarantined endpoint",
-                "success": True,
-            }
-
-        except Exception as err:
-            logger.error(f"Failed to quarantine endpoint: {err}")
-            return {
-                "message": "Failed to quarantine endpoint",
-                "success": False,
-            }
+        return self.execute_action(client_id, artifact, action)

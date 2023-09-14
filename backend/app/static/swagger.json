@@ -4151,6 +4151,10 @@
                       "client_name" : {
                         "type" : "string",
                         "description" : "The hostname of the client to quarantine."
+                      },
+                      "action": {
+                        "type": "string",
+                        "description": "The action to perform on the host. Valid values are 'quarantine' and 'removequarantine'."
                       }
                     }
                   }
