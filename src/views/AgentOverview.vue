@@ -1,8 +1,8 @@
 <template>
     <div class="page-agent scrollable only-y">
         <div class="agent-toolbar">
-            <div class="back-btn">
-                <i class="mdi mdi-arrow-left" @click="gotoAgents()"></i>
+            <div class="back-btn" @click="gotoAgents()">
+                <i class="mdi mdi-arrow-left"></i>
                 <span> Agents list </span>
             </div>
             <div class="delete-btn" @click.stop="handleDelete">Delete Agent</div>
@@ -39,9 +39,12 @@
         <div class="flex">
             <div class="sidebar scrollable" :class="{ open: sidebarOpen }">
                 <el-button size="small" class="close-btn" @click="sidebarOpen = false">close</el-button>
-                <ul>
-                    <li v-for="i in 20" :key="i">Sidebar Item {{ i }}</li>
-                </ul>
+                <div class="sidebar-header">Vulnerabilities</div>
+                <div class="vulnerabilities-list scrollable only-y" v-loading="loadingVulnerabilities">
+                    <VulnerabilityCard :vulnerability="item" v-for="item of vulnerabilities" :key="item.id" />
+
+                    <div v-if="!loadingVulnerabilities && !vulnerabilities.length">No vulnerabilities detected</div>
+                </div>
             </div>
             <div class="main-content box grow card-base card-shadow--small p-24">
                 <div class="property-group" v-if="agent">
@@ -93,6 +96,8 @@ import { Agent, AgentVulnerabilities } from "@/types/agents"
 import { handleDeleteAgent, isAgentOnline, toggleAgentCritical } from "@/components/agents/utils"
 import { Star as StarIcon } from "@element-plus/icons-vue"
 import { useRouter } from "vue-router"
+import VulnerabilityCard from "@/components/agents/VulnerabilityCard.vue"
+import { nanoid } from "nanoid"
 
 const router = useRouter()
 const sidebarOpen = ref(false)
@@ -121,8 +126,6 @@ const formatClientLastSeen = computed(() => {
 })
 
 function getAgent(id: string) {
-    console.log("agent", id)
-
     loadingAgent.value = true
 
     Api.agents
@@ -151,15 +154,16 @@ function getAgent(id: string) {
 }
 
 function getVulnerabilities(id: string) {
-    console.log("Vulnerabilities", id)
-
     loadingVulnerabilities.value = true
 
     Api.agents
         .agentVulnerabilities(id)
         .then(res => {
             if (res.data.success) {
-                vulnerabilities.value = res.data.vulnerabilities || []
+                vulnerabilities.value = (res.data.vulnerabilities || []).map(o => {
+                    o.id = nanoid()
+                    return o
+                })
             } else {
                 ElMessage({
                     message: res.data?.message || "An error occurred. Please try again later.",
@@ -174,7 +178,6 @@ function getVulnerabilities(id: string) {
             })
         })
         .finally(() => {
-            console.log(vulnerabilities.value)
             loadingVulnerabilities.value = false
         })
 }
@@ -325,9 +328,9 @@ onBeforeMount(() => {
 
     .sidebar {
         box-sizing: border-box;
-        padding: 24px;
+        padding-right: var(--size-3);
         min-width: 250px;
-        margin-left: -24px;
+        max-height: 100vh;
 
         .close-btn {
             display: none;
@@ -335,38 +338,18 @@ onBeforeMount(() => {
             margin-bottom: 10px;
         }
 
-        ul {
-            width: 100%;
-            list-style: none;
-            padding: 0;
-            margin: 0;
+        .sidebar-header {
+            font-weight: bold;
+            margin-bottom: var(--size-3);
         }
-        li {
-            box-sizing: border-box;
-            width: 100%;
-            list-style: none;
-            padding: 15px 20px;
-            border-bottom: 1px solid transparentize($text-color-primary, 0.9);
-            cursor: pointer;
-            position: relative;
 
-            &::after {
-                content: "";
-                display: block;
-                width: 0%;
-                height: 100%;
-                background: $text-color-primary;
-                position: absolute;
-                top: 0;
-                left: 0;
-                opacity: 0;
-                transition: all 0.5s;
-            }
+        .vulnerabilities-list {
+            min-height: 100px;
+            padding-top: 8px;
 
-            &:hover {
-                &::after {
-                    width: 100%;
-                    opacity: 0.3;
+            :deep() {
+                .vulnerability-card {
+                    margin-bottom: var(--size-3);
                 }
             }
         }
@@ -430,12 +413,13 @@ onBeforeMount(() => {
             }
         }
         .sidebar {
+            padding: var(--size-3);
+
             .close-btn {
                 display: block;
             }
 
             margin: 0;
-            text-align: center;
             position: absolute;
             background: white;
             color: #000;

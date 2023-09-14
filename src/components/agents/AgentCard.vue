@@ -13,7 +13,7 @@
                                 :icon="StarIcon"
                                 :type="agent.critical_asset ? 'warning' : ''"
                                 circle
-                                @click="toggleAgentCritical(agent.agent_id, agent.critical_asset)"
+                                @click.stop="toggleCritical(agent.agent_id, agent.critical_asset)"
                             />
                         </el-tooltip>
                     </div>
@@ -30,7 +30,7 @@
             <div class="agent-actions" v-if="showActions">
                 <div class="box">
                     <el-tooltip content="Delete" placement="top" :show-arrow="false">
-                        <el-button type="danger" :icon="DeleteIcon" circle @click="handleDelete" />
+                        <el-button type="danger" :icon="DeleteIcon" circle @click.stop="handleDelete" />
                     </el-tooltip>
                 </div>
             </div>
@@ -43,7 +43,7 @@ import { computed, ref, toRefs } from "vue"
 import { Agent } from "@/types/agents.d"
 import dayjs from "dayjs"
 import Api from "@/api"
-import { isAgentOnline } from "./utils"
+import { handleDeleteAgent, isAgentOnline, toggleAgentCritical } from "./utils"
 import { ElMessage, ElMessageBox } from "element-plus"
 import { Star as StarIcon, Delete as DeleteIcon } from "@element-plus/icons-vue"
 
@@ -69,103 +69,35 @@ const formatLastSeen = computed(() => {
     return lastSeenDate.format("DD/MM/YYYY @ HH:mm")
 })
 
-const handleDelete = () => {
-    ElMessageBox.confirm(`Are you sure you want to delete the agent:<br/><strong>${agent.value.label}</strong> ?`, "Warning", {
-        confirmButtonText: "Yes I'm sure",
-        confirmButtonClass: "el-button--warning",
-        cancelButtonText: "Cancel",
-        type: "warning",
-        dangerouslyUseHTMLString: true,
-        customStyle: {
-            width: "90%",
-            maxWidth: "400px"
+function handleDelete() {
+    handleDeleteAgent({
+        agent: agent.value,
+        cbBefore: () => {
+            loading.value = true
+        },
+        cbSuccess: () => {
+            emit("delete")
+        },
+        cbAfter: () => {
+            loading.value = false
         }
     })
-        .then(() => {
-            deleteAgent()
-        })
-        .catch(() => {
-            ElMessage({
-                type: "info",
-                message: "Delete canceled"
-            })
-        })
 }
 
-function deleteAgent() {
-    loading.value = true
-
-    Api.agents
-        .deleteAgent(agent.value.agent_id)
-        .then(res => {
-            if (res.data.success) {
-                ElMessage({
-                    message: "Agent was successfully deleted.",
-                    type: "success"
-                })
-
-                emit("delete")
-            } else {
-                ElMessage({
-                    message: res.data?.message || "An error occurred. Please try again later.",
-                    type: "error"
-                })
-            }
-        })
-        .catch(err => {
-            if (err.response.status === 401) {
-                ElMessage({
-                    message: err.response?.data?.message || "Agent Delete returned Unauthorized.",
-                    type: "error"
-                })
-            } else {
-                ElMessage({
-                    message: err.response?.data?.message || "An error occurred. Please try again later.",
-                    type: "error"
-                })
-            }
-        })
-        .finally(() => {
+function toggleCritical(agentId: string, criticalStatus: boolean) {
+    toggleAgentCritical({
+        agentId,
+        criticalStatus,
+        cbBefore: () => {
+            loading.value = true
+        },
+        cbSuccess: () => {
+            agent.value.critical_asset = !criticalStatus
+        },
+        cbAfter: () => {
             loading.value = false
-        })
-}
-
-function toggleAgentCritical(agentId, criticalStatus) {
-    loading.value = agentId
-    const method = criticalStatus ? "markNonCritical" : "markCritical"
-
-    Api.agents[method](agentId)
-        .then(res => {
-            if (res.data.success) {
-                ElMessage({
-                    message: "Agent Criticality Updated Successfully",
-                    type: "success"
-                })
-
-                agent.value.critical_asset = !criticalStatus
-            } else {
-                ElMessage({
-                    message: res.data?.message || "Failed to Update Agent Criticality.",
-                    type: "error"
-                })
-            }
-        })
-        .catch(err => {
-            if (err.response.status === 401) {
-                ElMessage({
-                    message: err.response?.data?.message || "Agent Criticality Update returned Unauthorized.",
-                    type: "error"
-                })
-            } else {
-                ElMessage({
-                    message: err.response?.data?.message || "Failed to Update Agent Criticality",
-                    type: "error"
-                })
-            }
-        })
-        .finally(() => {
-            loading.value = false
-        })
+        }
+    })
 }
 </script>
 
@@ -182,6 +114,7 @@ function toggleAgentCritical(agentId, criticalStatus) {
     max-width: 100%;
     padding: var(--size-3) var(--size-4);
     box-sizing: border-box;
+    cursor: pointer;
     transition: all 0.3s;
 
     .wrapper {
@@ -269,14 +202,13 @@ function toggleAgentCritical(agentId, criticalStatus) {
         }
     }
 
-    &.critical {
-        border-color: $text-color-warning;
-    }
-
     &:hover {
-        cursor: pointer;
         @extend .card-shadow--medium;
         border-color: #e3e8ec;
+    }
+
+    &.critical {
+        border-color: $text-color-warning;
     }
 
     @container (max-width: 550px) {

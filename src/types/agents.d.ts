@@ -16,6 +16,7 @@ export interface Agent {
 }
 
 export interface AgentVulnerabilities {
+    id?: string
     architecture: string
     condition: string
     cve: string
@@ -25,12 +26,28 @@ export interface AgentVulnerabilities {
     external_references: string[]
     name: string
     published: string
-    severity: string
-    status: string
+    severity: VulnerabilitySeverity
+    status: VulnerabilityStatus
     title: string
-    type: string
+    type: VulnerabilityType
     updated: string
     version: string
+}
+
+export enum VulnerabilitySeverity {
+    Critical = "Critical",
+    High = "High",
+    Low = "Low",
+    Medium = "Medium",
+    Untriaged = "Untriaged"
+}
+
+export enum VulnerabilityStatus {
+    Valid = "VALID"
+}
+
+export enum VulnerabilityType {
+    Package = "PACKAGE"
 }
 
 export type OutdatedWazuhAgents = Agent[]

@@ -8,7 +8,6 @@ export interface Index {
     store_size_value?: number
 }
 
-// TODO: Better to use a status instead of a color
 export enum IndexHealth {
     GREEN = "green",
     YELLOW = "yellow",
