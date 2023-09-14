@@ -20,7 +20,7 @@ matplotlib.use(
 # in main loop issue as it bypasses the need for tkinter.
 import matplotlib.pyplot as plt
 
-from app.services.WazuhIndexer.alerts import AlertsService
+from app.services.wazuh_indexer.alerts import AlertsService
 
 
 def fetch_alert_data(service, fetch_func):

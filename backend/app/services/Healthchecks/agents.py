@@ -6,7 +6,7 @@ from typing import Union
 
 from loguru import logger
 
-from app.services.WazuhIndexer.universal import UniversalService
+from app.services.wazuh_indexer.universal import UniversalService
 
 
 class HealthcheckAgentsService:

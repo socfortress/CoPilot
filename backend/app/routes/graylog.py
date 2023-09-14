@@ -2,13 +2,13 @@ from flask import Blueprint
 from flask import jsonify
 from loguru import logger
 
-from app.services.Graylog.events import EventsService
-from app.services.Graylog.index import IndexService
-from app.services.Graylog.inputs import InputsService
-from app.services.Graylog.messages import MessagesService
-from app.services.Graylog.metrics import MetricsService
-from app.services.Graylog.pipelines import PipelinesService
-from app.services.Graylog.streams import StreamsService
+from app.services.graylog.events import EventsService
+from app.services.graylog.index import IndexService
+from app.services.graylog.inputs import InputsService
+from app.services.graylog.messages import MessagesService
+from app.services.graylog.metrics import MetricsService
+from app.services.graylog.pipelines import PipelinesService
+from app.services.graylog.streams import StreamsService
 
 bp = Blueprint("graylog", __name__)
 

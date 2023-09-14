@@ -6,9 +6,7 @@ from typing import Union
 import requests
 from loguru import logger
 
-from app.services.Graylog.universal import UniversalService
-
-# from typing import List
+from app.services.graylog.universal import UniversalService
 
 
 class EventsService:

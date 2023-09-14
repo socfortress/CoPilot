@@ -3,7 +3,7 @@ from typing import Dict
 import requests
 from loguru import logger
 
-from app.services.Shuffle.universal import UniversalService
+from app.services.shuffle.universal import UniversalService
 
 
 class WorkflowsService:

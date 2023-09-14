@@ -7,7 +7,7 @@ from loguru import logger
 
 from app import db
 from app.models.influxdb_alerts import InfluxDBAlerts
-from app.services.InfluxDB.universal import UniversalService
+from app.services.influxdb.universal import UniversalService
 
 # OrgID for the InfluxDB server
 ORG_ID = "a1b203a448a55d31"

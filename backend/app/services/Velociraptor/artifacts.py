@@ -5,7 +5,7 @@ from typing import Optional
 from loguru import logger
 
 from app.models.agents import AgentMetadata
-from app.services.Velociraptor.universal import UniversalService
+from app.services.velociraptor.universal import UniversalService
 
 
 class ArtifactsService:

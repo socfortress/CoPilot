@@ -7,9 +7,9 @@ from elasticsearch7 import Elasticsearch
 from loguru import logger
 
 from app.services.ask_socfortress.universal import AskSocfortressService
-from app.services.DFIR_IRIS.alerts import IRISAlertsService
-from app.services.WazuhIndexer.universal import QueryBuilder
-from app.services.WazuhIndexer.universal import UniversalService
+from app.services.dfir_iris.alerts import IRISAlertsService
+from app.services.wazuh_indexer.universal import QueryBuilder
+from app.services.wazuh_indexer.universal import UniversalService
 
 
 class AlertsService:

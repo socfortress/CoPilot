@@ -7,7 +7,7 @@ from app.models.connectors import SocfortressThreatIntelConnector
 from app.services.threat_intel.socfortress.universal import (
     SocfortressThreatIntelService,
 )
-from app.services.WazuhIndexer.ioc_search import IocSearchService
+from app.services.wazuh_indexer.ioc_search import IocSearchService
 
 bp = Blueprint("threatintel", __name__)
 

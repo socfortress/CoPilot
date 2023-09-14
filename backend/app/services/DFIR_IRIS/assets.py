@@ -8,7 +8,7 @@ from dfir_iris_client.case import Case
 # from dfir_iris_client.session import ClientSession
 from loguru import logger
 
-from app.services.DFIR_IRIS.universal import UniversalService
+from app.services.dfir_iris.universal import UniversalService
 
 
 class AssetsService:

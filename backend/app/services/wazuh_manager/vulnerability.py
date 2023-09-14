@@ -6,7 +6,7 @@ from typing import Optional
 import requests
 from loguru import logger
 
-from app.services.WazuhManager.universal import UniversalService
+from app.services.wazuh_manager.universal import UniversalService
 
 
 class WazuhHttpRequests:

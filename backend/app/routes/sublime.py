@@ -6,8 +6,8 @@ from flask import jsonify
 from flask import request
 from loguru import logger
 
-from app.services.Sublime.alerts import InvalidPayloadError
-from app.services.Sublime.alerts import SublimeAlertsService
+from app.services.sublime.alerts import InvalidPayloadError
+from app.services.sublime.alerts import SublimeAlertsService
 
 bp = Blueprint("sublime", __name__)
 

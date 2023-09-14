@@ -6,7 +6,7 @@ from loguru import logger
 
 from app.models.agents import agent_metadata_schema
 from app.services.agents.agents import AgentService
-from app.services.Healthchecks.agents import HealthcheckAgentsService
+from app.services.healthchecks.agents import HealthcheckAgentsService
 
 bp = Blueprint("healthchecks", __name__)
 

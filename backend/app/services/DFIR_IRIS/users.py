@@ -1,16 +1,10 @@
 from typing import Dict
 
 from dfir_iris_client.alert import Alert
-
-# import requests
 from dfir_iris_client.users import User
-
-# from dfir_iris_client.helper.utils import assert_api_resp
-# from dfir_iris_client.helper.utils import get_data_from_resp
-# from dfir_iris_client.session import ClientSession
 from loguru import logger
 
-from app.services.DFIR_IRIS.universal import UniversalService
+from app.services.dfir_iris.universal import UniversalService
 
 
 class IRISUsersService:

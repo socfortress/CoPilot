@@ -13,11 +13,8 @@ import xmltodict
 from loguru import logger
 
 from app import db
-
-# from app.models.connectors import Connector
-# from app.models.connectors import connector_factory
 from app.models.rules import DisabledRules
-from app.services.WazuhManager.universal import UniversalService
+from app.services.wazuh_manager.universal import UniversalService
 
 
 class WazuhHttpRequests:

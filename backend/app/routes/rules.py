@@ -6,11 +6,9 @@ from flask import Blueprint
 from flask import request
 from loguru import logger
 
-from app.services.WazuhManager.disabled_rule import DisableRuleService
-from app.services.WazuhManager.enabled_rule import EnableRuleService
-from app.services.WazuhManager.universal import UniversalService
-
-# from app.services.WazuhManager.wazuhmanager import WazuhManagerService
+from app.services.wazuh_manager.disabled_rule import DisableRuleService
+from app.services.wazuh_manager.enabled_rule import EnableRuleService
+from app.services.wazuh_manager.universal import UniversalService
 
 bp = Blueprint("rules", __name__)
 
