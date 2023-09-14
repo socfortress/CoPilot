@@ -330,6 +330,7 @@ onBeforeMount(() => {
         box-sizing: border-box;
         padding-right: var(--size-3);
         min-width: 250px;
+        max-width: 250px;
         max-height: 100vh;
 
         .close-btn {
