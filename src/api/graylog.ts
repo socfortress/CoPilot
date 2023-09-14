@@ -39,5 +39,4 @@ export default {
     startStream(streamId: string) {
         return HttpClient.post<FlaskBaseResponse>(`/graylog/streams/${streamId}/resume`)
     }
-
 }

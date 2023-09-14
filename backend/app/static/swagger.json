@@ -2260,82 +2260,82 @@
             }
         },
         "/graylog/inputs/running": {
-          "get": {
-              "summary": "Get running inputs from Graylog",
-              "description": "Endpoint to get running inputs from Graylog.",
-              "responses": {
-                  "200": {
-                      "description": "Successful operation",
-                      "content": {
-                          "application/json": {
-                              "schema": {
-                                  "type": "object",
-                                  "properties": {
-                                      "inputs": {
-                                          "type": "array",
-                                          "items": {
-                                              "type": "object",
-                                              "description": "Input details"
-                                          }
-                                      }
-                                  }
-                              }
-                          }
-                      }
-                  },
-                  "default": {
-                      "description": "Unexpected error",
-                      "content": {
-                          "application/json": {
-                              "schema": {
-                                  "$ref": "#/components/schemas/Error"
-                              }
-                          }
-                      }
-                  }
-              },
-              "operationId": "getGraylogInputsRunning",
-              "tags": ["Graylog"]
-          }
+            "get": {
+                "summary": "Get running inputs from Graylog",
+                "description": "Endpoint to get running inputs from Graylog.",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "inputs": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "description": "Input details"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                },
+                "operationId": "getGraylogInputsRunning",
+                "tags": ["Graylog"]
+            }
         },
         "/graylog/inputs/configured": {
-          "get": {
-              "summary": "Get configured inputs from Graylog",
-              "description": "Endpoint to get configured inputs from Graylog.",
-              "responses": {
-                  "200": {
-                      "description": "Successful operation",
-                      "content": {
-                          "application/json": {
-                              "schema": {
-                                  "type": "object",
-                                  "properties": {
-                                      "inputs": {
-                                          "type": "array",
-                                          "items": {
-                                              "type": "object",
-                                              "description": "Input details"
-                                          }
-                                      }
-                                  }
-                              }
-                          }
-                      }
-                  },
-                  "default": {
-                      "description": "Unexpected error",
-                      "content": {
-                          "application/json": {
-                              "schema": {
-                                  "$ref": "#/components/schemas/Error"
-                              }
-                          }
-                      }
-                  }
-              },
-              "operationId": "getGraylogInputsConfigured",
-              "tags": ["Graylog"]
-          }
+            "get": {
+                "summary": "Get configured inputs from Graylog",
+                "description": "Endpoint to get configured inputs from Graylog.",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "inputs": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "description": "Input details"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                },
+                "operationId": "getGraylogInputsConfigured",
+                "tags": ["Graylog"]
+            }
         },
         "/graylog/inputs/{input_id}/stop": {
             "delete": {
@@ -3813,175 +3813,175 @@
             }
         },
         "/velociraptor/artifacts/os/{filter_os}": {
-          "get": {
-              "summary": "Get artifacts filtered by OS",
-              "description": "Endpoint to get artifacts based on the OS filter.",
-              "parameters": [
-                  {
-                      "name": "filter_os",
-                      "in": "path",
-                      "description": "Operating system filter for the artifacts.",
-                      "required": true,
-                      "schema": {
-                          "type": "string"
-                      }
-                  }
-              ],
-              "responses": {
-                  "200": {
-                      "description": "Successful operation",
-                      "content": {
-                          "application/json": {
-                              "schema": {
-                                  "type": "object",
-                                  "properties": {
-                                      "artifacts": {
-                                          "type": "array",
-                                          "items": {
-                                              "type": "object",
-                                              "description": "Artifact details"
-                                          }
-                                      }
-                                  }
-                              }
-                          }
-                      }
-                  },
-                  "default": {
-                      "description": "Unexpected error",
-                      "content": {
-                          "application/json": {
-                              "schema": {
-                                  "$ref": "#/components/schemas/Error"
-                              }
-                          }
-                      }
-                  }
-              },
-              "operationId": "getFilteredArtifacts",
-              "tags": ["Velociraptor"]
-          }
-      },
-      "/velociraptor/operation": {
-          "post": {
-              "summary": "Execute an operation",
-              "description": "Endpoint to execute an operation like artifact collection, remote command execution, or quarantine.",
-              "requestBody": {
-                  "description": "Operation details",
-                  "content": {
-                      "application/json": {
-                          "schema": {
-                              "type": "object",
-                              "properties": {
-                                  "client_name": {
-                                      "type": "string",
-                                      "description": "The hostname of the client."
-                                  },
-                                  "operation": {
-                                      "type": "string",
-                                      "description": "The operation to perform. Valid values are 'collect_artifact', 'run_command', and 'quarantine'."
-                                  },
-                                  "action": {
-                                      "type": "string",
-                                      "description": "The action to perform for quarantine. Valid values are 'quarantine' and 'removequarantine'.",
-                                      "nullable": true
-                                  },
-                                  "command": {
-                                      "type": "string",
-                                      "description": "The command to run for remote command execution.",
-                                      "nullable": true
-                                  },
-                                  "artifact_name": {
-                                      "type": "string",
-                                      "description": "The name of the artifact for artifact collection or remote command execution.",
-                                      "nullable": true
-                                  }
-                              }
-                          }
-                      }
-                  }
-              },
-              "responses": {
-                  "200": {
-                      "description": "Successful operation",
-                      "content": {
-                          "application/json": {
-                              "schema": {
-                                  "type": "object",
-                                  "properties": {
-                                      "result": {
-                                          "type": "object",
-                                          "description": "Operation result details"
-                                      }
-                                  }
-                              }
-                          }
-                      }
-                  },
-                  "default": {
-                      "description": "Unexpected error",
-                      "content": {
-                          "application/json": {
-                              "schema": {
-                                  "$ref": "#/components/schemas/Error"
-                              }
-                          }
-                      }
-                  }
-              },
-              "operationId": "executeOperation",
-              "tags": ["Velociraptor"]
-          }
+            "get": {
+                "summary": "Get artifacts filtered by OS",
+                "description": "Endpoint to get artifacts based on the OS filter.",
+                "parameters": [
+                    {
+                        "name": "filter_os",
+                        "in": "path",
+                        "description": "Operating system filter for the artifacts.",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "artifacts": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "description": "Artifact details"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                },
+                "operationId": "getFilteredArtifacts",
+                "tags": ["Velociraptor"]
+            }
+        },
+        "/velociraptor/operation": {
+            "post": {
+                "summary": "Execute an operation",
+                "description": "Endpoint to execute an operation like artifact collection, remote command execution, or quarantine.",
+                "requestBody": {
+                    "description": "Operation details",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "client_name": {
+                                        "type": "string",
+                                        "description": "The hostname of the client."
+                                    },
+                                    "operation": {
+                                        "type": "string",
+                                        "description": "The operation to perform. Valid values are 'collect_artifact', 'run_command', and 'quarantine'."
+                                    },
+                                    "action": {
+                                        "type": "string",
+                                        "description": "The action to perform for quarantine. Valid values are 'quarantine' and 'removequarantine'.",
+                                        "nullable": true
+                                    },
+                                    "command": {
+                                        "type": "string",
+                                        "description": "The command to run for remote command execution.",
+                                        "nullable": true
+                                    },
+                                    "artifact_name": {
+                                        "type": "string",
+                                        "description": "The name of the artifact for artifact collection or remote command execution.",
+                                        "nullable": true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "result": {
+                                            "type": "object",
+                                            "description": "Operation result details"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                },
+                "operationId": "executeOperation",
+                "tags": ["Velociraptor"]
+            }
         },
         "/velociraptor/artifacts/hostname/{hostname}": {
-          "get": {
-              "summary": "Get all artifacts for a specific hostname",
-              "description": "Endpoint to get all artifacts available for a specific hostname.",
-              "parameters": [
-                  {
-                      "name": "hostname",
-                      "in": "path",
-                      "description": "The hostname for which to collect artifacts.",
-                      "required": true,
-                      "schema": {
-                          "type": "string"
-                      }
-                  }
-              ],
-              "responses": {
-                  "200": {
-                      "description": "Successful operation",
-                      "content": {
-                          "application/json": {
-                              "schema": {
-                                  "type": "object",
-                                  "properties": {
-                                      "artifacts": {
-                                          "type": "array",
-                                          "items": {
-                                              "type": "object",
-                                              "description": "Artifact details"
-                                          }
-                                      }
-                                  }
-                              }
-                          }
-                      }
-                  },
-                  "default": {
-                      "description": "Unexpected error",
-                      "content": {
-                          "application/json": {
-                              "schema": {
-                                  "$ref": "#/components/schemas/Error"
-                              }
-                          }
-                      }
-                  }
-              },
-              "operationId": "getAllArtifactsForHostname",
-              "tags": ["Velociraptor"]
-          }
+            "get": {
+                "summary": "Get all artifacts for a specific hostname",
+                "description": "Endpoint to get all artifacts available for a specific hostname.",
+                "parameters": [
+                    {
+                        "name": "hostname",
+                        "in": "path",
+                        "description": "The hostname for which to collect artifacts.",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "artifacts": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "object",
+                                                "description": "Artifact details"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    }
+                },
+                "operationId": "getAllArtifactsForHostname",
+                "tags": ["Velociraptor"]
+            }
         },
         "/dfir_iris/cases": {
             "get": {

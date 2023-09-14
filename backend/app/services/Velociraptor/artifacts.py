@@ -1,5 +1,8 @@
+from typing import Any
+from typing import Dict
+from typing import Optional
+
 from loguru import logger
-from typing import Dict, Optional, Any
 
 from app.models.agents import AgentMetadata
 from app.services.Velociraptor.universal import UniversalService
@@ -11,8 +14,8 @@ class ArtifactsService:
     """
 
     QUARANTINE_ARTIFACTS = {
-    "linux": "Linux.Remediation.Quarantine",
-    "windows": "Windows.Remediation.Quarantine",
+        "linux": "Linux.Remediation.Quarantine",
+        "windows": "Windows.Remediation.Quarantine",
     }
 
     def __init__(self):
@@ -95,11 +98,7 @@ class ArtifactsService:
         Returns:
             dict: A dictionary with the success status, a message, and potentially the artifacts.
         """
-        os_prefix_map = {
-            'linux': 'Linux.',
-            'windows': 'Windows.',
-            'macos': 'MacOS.'
-        }
+        os_prefix_map = {"linux": "Linux.", "windows": "Windows.", "macos": "MacOS."}
 
         prefix = os_prefix_map.get(filter_os.lower())
 
@@ -129,11 +128,7 @@ class ArtifactsService:
             }
 
         os = agent_metadata.os.lower()
-        os_filter_map = {
-            'linux': 'Linux',
-            'windows': 'Windows',
-            'macos': 'MacOS'
-        }
+        os_filter_map = {"linux": "Linux", "windows": "Windows", "macos": "MacOS"}
 
         filter_os = None
         for keyword, prefix in os_filter_map.items():
@@ -267,7 +262,7 @@ class ArtifactsService:
         Returns:
             dict: The result of the executed query.
         """
-        query = f'SELECT collect_client(client_id=\"{client_id}\", artifacts=[\"{artifact}\"], spec=dict(`{artifact}`=dict())) FROM scope()'
+        query = f'SELECT collect_client(client_id="{client_id}", artifacts=["{artifact}"], spec=dict(`{artifact}`=dict())) FROM scope()'
         return universal_service.execute_query(query)
 
     def execute_quarantine_remove(self, client_id: str, artifact: str, universal_service: Any) -> Dict:
@@ -282,9 +277,8 @@ class ArtifactsService:
         Returns:
             dict: The result of the executed query.
         """
-        query = f'SELECT collect_client(client_id=\"{client_id}\", artifacts=[\"{artifact}\"], spec=dict(`{artifact}`=dict(`RemovePolicy`="Y"))) FROM scope()'
+        query = f'SELECT collect_client(client_id="{client_id}", artifacts=["{artifact}"], spec=dict(`{artifact}`=dict(`RemovePolicy`="Y"))) FROM scope()'
         return universal_service.execute_query(query)
-
 
     def handle_flow(self, flow: Dict, client_id: str, artifact: str, quarantined: bool) -> str:
         """

@@ -2,11 +2,11 @@ from flask import Blueprint
 from flask import jsonify
 from loguru import logger
 
+from app.services.Graylog.events import EventsService
 from app.services.Graylog.index import IndexService
 from app.services.Graylog.inputs import InputsService
 from app.services.Graylog.messages import MessagesService
 from app.services.Graylog.metrics import MetricsService
-from app.services.Graylog.events import EventsService
 from app.services.Graylog.pipelines import PipelinesService
 from app.services.Graylog.streams import StreamsService
 
@@ -92,6 +92,7 @@ def get_inputs() -> dict:
         {"running_inputs": running_inputs, "configured_inputs": configured_inputs},
     )
 
+
 @bp.route("/graylog/inputs/<input_id>/state", methods=["GET"])
 def get_inputstate(input_id: str) -> dict:
     """
@@ -108,7 +109,7 @@ def get_inputstate(input_id: str) -> dict:
         if inputstate["inputstate"]["message"].startswith("No input state"):
             inputstate["inputstate"]["state"] = "STOPPED"
             return inputstate
-    except:
+    except Exception:
         return inputstate
 
 
@@ -126,6 +127,7 @@ def get_inputs_running() -> dict:
     return jsonify(
         {"running_inputs": running_inputs},
     )
+
 
 @bp.route("/graylog/inputs/configured", methods=["GET"])
 def get_inputs_configured() -> dict:
@@ -147,6 +149,7 @@ def get_inputs_configured() -> dict:
     return jsonify(
         {"configured_inputs": configured_inputs},
     )
+
 
 @bp.route("/graylog/inputs/<input_id>/stop", methods=["DELETE"])
 def stop_input(input_id: str) -> dict:
@@ -181,6 +184,7 @@ def start_input(input_id: str) -> dict:
     result = service.start_input(input_id)
     return result
 
+
 @bp.route("/graylog/event/definitions", methods=["GET"])
 def get_event_definitions() -> dict:
     """
@@ -193,6 +197,7 @@ def get_event_definitions() -> dict:
     service = EventsService()
     event_definitions = service.collect_event_definitions()
     return event_definitions
+
 
 @bp.route("/graylog/event/alerts", methods=["GET"])
 def get_alerts() -> dict:
@@ -207,6 +212,7 @@ def get_alerts() -> dict:
     alerts = service.collect_alerts()
     return alerts
 
+
 @bp.route("/graylog/pipeline/rules", methods=["GET"])
 def get_pipeline_rules() -> dict:
     """
@@ -219,6 +225,7 @@ def get_pipeline_rules() -> dict:
     service = PipelinesService()
     pipeline_rules = service.collect_pipeline_rules()
     return pipeline_rules
+
 
 @bp.route("/graylog/pipeline/pipelines", methods=["GET"])
 def get_pipelines() -> dict:
@@ -233,6 +240,7 @@ def get_pipelines() -> dict:
     pipelines = service.collect_pipelines()
     return pipelines
 
+
 @bp.route("/graylog/streams", methods=["GET"])
 def get_streams() -> dict:
     """
@@ -245,6 +253,7 @@ def get_streams() -> dict:
     service = StreamsService()
     streams = service.collect_streams()
     return streams
+
 
 @bp.route("/graylog/streams/<stream_id>/pause", methods=["POST"])
 def pause_stream(stream_id: str) -> dict:
@@ -261,6 +270,7 @@ def pause_stream(stream_id: str) -> dict:
     service = StreamsService()
     result = service.pause_stream(stream_id)
     return result
+
 
 @bp.route("/graylog/streams/<stream_id>/resume", methods=["POST"])
 def resume_stream(stream_id: str) -> dict:

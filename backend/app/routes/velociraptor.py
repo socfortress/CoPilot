@@ -1,11 +1,16 @@
-from flask import Blueprint, jsonify, request, Response
-from loguru import logger
-from typing import Tuple, Union
+from typing import Tuple
+from typing import Union
+
+from flask import Blueprint
+from flask import Response
+from flask import jsonify
+from flask import request
 
 from app.services.Velociraptor.artifacts import ArtifactsService
 from app.services.Velociraptor.universal import UniversalService
 
 bp = Blueprint("velociraptor", __name__)
+
 
 def get_client_info(client_name: str) -> Tuple[Union[str, None], Union[str, None], Union[Response, None]]:
     """
@@ -20,13 +25,19 @@ def get_client_info(client_name: str) -> Tuple[Union[str, None], Union[str, None
     service = UniversalService()
     client_info = service.get_client_id(client_name=client_name)["results"][0]
     if client_info is None:
-        return None, None, jsonify(
-            {
-                "message": f"{client_name} has not been seen in the last 30 seconds and may not be online with the Velociraptor server.",
-                "success": False,
-            }
-        ), 500
+        return (
+            None,
+            None,
+            jsonify(
+                {
+                    "message": f"{client_name} has not been seen in the last 30 seconds and may not be online with the Velociraptor server.",
+                    "success": False,
+                },
+            ),
+            500,
+        )
     return client_info["client_id"], client_info["os_info"]["system"], None
+
 
 @bp.route("/velociraptor/artifacts/os/<filter_os>", methods=["GET"])
 def get_artifacts(filter_os: str = None) -> Response:
@@ -46,6 +57,7 @@ def get_artifacts(filter_os: str = None) -> Response:
         artifacts = service.collect_artifacts()
     return artifacts
 
+
 @bp.route("/velociraptor/artifacts/hostname/<hostname>", methods=["GET"])
 def get_artifacts_by_hostname(hostname: str) -> Response:
     """
@@ -60,6 +72,7 @@ def get_artifacts_by_hostname(hostname: str) -> Response:
     service = ArtifactsService()
     artifacts = service.collect_artifacts_by_hostname(hostname=hostname)
     return artifacts
+
 
 @bp.route("/velociraptor/operation", methods=["POST"])
 def execute_operation() -> Response:

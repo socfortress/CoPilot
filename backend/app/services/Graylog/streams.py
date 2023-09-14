@@ -99,7 +99,7 @@ class StreamsService:
             dict: A dictionary containing the success status and a message.
         """
         try:
-            pause_stream = requests.post(
+            requests.post(
                 f"{self.connector_url}/api/streams/{stream_id}/pause",
                 headers=self.HEADERS,
                 auth=(self.connector_username, self.connector_password),
@@ -142,7 +142,7 @@ class StreamsService:
             dict: A dictionary containing the success status and a message.
         """
         try:
-            resume_stream = requests.post(
+            requests.post(
                 f"{self.connector_url}/api/streams/{stream_id}/resume",
                 headers=self.HEADERS,
                 auth=(self.connector_username, self.connector_password),

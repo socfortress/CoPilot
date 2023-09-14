@@ -103,7 +103,7 @@ class EventsService:
                 "page": 1,
                 "per_page": 100,
                 "filter": {"alerts": "only", "event_definitions": []},
-                #"timerange": {"range": 86400, "type": "relative"},
+                # "timerange": {"range": 86400, "type": "relative"},
             }
 
             alerts = requests.post(

@@ -18,7 +18,6 @@
                 </div> -->
             </div>
         </div>
-
     </el-scrollbar>
 </template>
 
@@ -53,7 +52,7 @@ function getInputsRunning() {
         .getInputsRunning()
         .then(res => {
             if (res.data.running_inputs.success) {
-              runningInputs.value = res.data.running_inputs.inputs
+                runningInputs.value = res.data.running_inputs.inputs
             } else {
                 ElMessage({
                     message: res.data.running_inputs?.message || "An error occurred. Please try again later.",
@@ -76,7 +75,7 @@ function getInputsConfigured() {
         .getInputsConfigured()
         .then(res => {
             if (res.data.configured_inputs.success) {
-              configuredInputs.value = res.data.configured_inputs.configured_inputs
+                configuredInputs.value = res.data.configured_inputs.configured_inputs
             } else {
                 ElMessage({
                     message: res.data.configured_inputs?.message || "An error occurred. Please try again later.",
@@ -116,9 +115,7 @@ function getStreams() {
 }
 
 onBeforeMount(() => {
-  getInputsRunning(),
-  getInputsConfigured(),
-  getStreams()
+    getInputsRunning(), getInputsConfigured(), getStreams()
 })
 </script>
 

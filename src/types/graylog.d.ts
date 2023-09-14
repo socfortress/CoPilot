@@ -100,33 +100,32 @@ export interface Inputs {
 
 // Stream Rule
 export interface StreamRule {
-    description: null | string;
-    field: string;
-    id: string;
-    inverted: boolean;
-    stream_id: string;
-    type: number;
-    value: string;
+    description: null | string
+    field: string
+    id: string
+    inverted: boolean
+    stream_id: string
+    type: number
+    value: string
 }
 
 // Stream
 export interface Stream {
-    content_pack: null | string;
-    created_at: string;
-    creator_user_id: string;
-    description: string;
-    disabled: boolean;
-    id: string;
-    index_set_id: string;
-    is_default: boolean;
-    is_editable: boolean;
-    matching_type: string;
-    outputs: any[]; // Replace with the appropriate type if known
-    remove_matches_from_default_stream: boolean;
-    rules: StreamRule[];
-    title: string;
+    content_pack: null | string
+    created_at: string
+    creator_user_id: string
+    description: string
+    disabled: boolean
+    id: string
+    index_set_id: string
+    is_default: boolean
+    is_editable: boolean
+    matching_type: string
+    outputs: any[] // Replace with the appropriate type if known
+    remove_matches_from_default_stream: boolean
+    rules: StreamRule[]
+    title: string
 }
 
 // Streams Array
 export interface Streams extends Array<Stream> {}
-

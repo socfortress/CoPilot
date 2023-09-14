@@ -1,9 +1,9 @@
 import json
 from datetime import datetime
-from loguru import logger
 
 import grpc
 import pyvelociraptor
+from loguru import logger
 from pyvelociraptor import api_pb2
 from pyvelociraptor import api_pb2_grpc
 
