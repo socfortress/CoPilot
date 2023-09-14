@@ -1,6 +1,7 @@
 import dayjs from "dayjs"
 import Api from "@/api"
 import { ElMessage, ElMessageBox } from "element-plus"
+import { Agent } from "@/types/agents"
 
 export function isAgentOnline(last_seen: string) {
     const lastSeenDate = dayjs(last_seen)
@@ -79,7 +80,7 @@ export interface DeleteAgentParams {
 }
 
 export function handleDeleteAgent({ agent, cbBefore, cbSuccess, cbAfter, cbError }: DeleteAgentParams) {
-    ElMessageBox.confirm(`Are you sure you want to delete the agent:<br/><strong>${agent.label}</strong> ?`, "Warning", {
+    ElMessageBox.confirm(`Are you sure you want to delete the agent:<br/><strong>${agent.hostname}</strong> ?`, "Warning", {
         confirmButtonText: "Yes I'm sure",
         confirmButtonClass: "el-button--warning",
         cancelButtonText: "Cancel",
