@@ -7,11 +7,11 @@ from loguru import logger
 
 from app.models.agents import agent_metadata_schema
 from app.services.agents.agents import AgentService
-from app.services.DFIR_IRIS.host_enrichment import AssetTypeResolver
-from app.services.DFIR_IRIS.ioc_enrichment import DomainValidator
-from app.services.DFIR_IRIS.ioc_enrichment import HashValidator
-from app.services.DFIR_IRIS.ioc_enrichment import IPv4AddressValidator
-from app.services.DFIR_IRIS.universal import UniversalService
+from app.services.dfir_iris.host_enrichment import AssetTypeResolver
+from app.services.dfir_iris.ioc_enrichment import DomainValidator
+from app.services.dfir_iris.ioc_enrichment import HashValidator
+from app.services.dfir_iris.ioc_enrichment import IPv4AddressValidator
+from app.services.dfir_iris.universal import UniversalService
 
 
 class IRISAlertsService:

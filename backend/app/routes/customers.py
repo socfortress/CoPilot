@@ -7,9 +7,9 @@ from loguru import logger
 
 from app.models.agents import AgentMetadata
 from app.models.agents import agent_metadatas_schema
-from app.services.Customers.universal import UniversalCustomers
-from app.services.Customers.universal import UniversalCustomersMeta
-from app.services.Healthchecks.agents import HealthcheckAgentsService
+from app.services.customers.universal import UniversalCustomers
+from app.services.customers.universal import UniversalCustomersMeta
+from app.services.healthchecks.agents import HealthcheckAgentsService
 
 bp = Blueprint("customers", __name__)
 

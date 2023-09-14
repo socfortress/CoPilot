@@ -6,8 +6,8 @@ from flask import jsonify
 from flask import request
 from loguru import logger
 
-from app.services.InfluxDB.alerts import InfluxDBAlertsService
-from app.services.InfluxDB.checks import InfluxDBChecksService
+from app.services.influxdb.alerts import InfluxDBAlertsService
+from app.services.influxdb.checks import InfluxDBChecksService
 
 bp = Blueprint("influxdb", __name__)
 

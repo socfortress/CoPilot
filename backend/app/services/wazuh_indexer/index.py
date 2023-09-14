@@ -4,7 +4,7 @@ from typing import Dict
 from elasticsearch7 import Elasticsearch
 from loguru import logger
 
-from app.services.WazuhIndexer.universal import UniversalService
+from app.services.wazuh_indexer.universal import UniversalService
 
 
 class IndexService:

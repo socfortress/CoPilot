@@ -2,11 +2,11 @@ from flask import Blueprint
 from flask import jsonify
 from flask import request
 
-from app.services.DFIR_IRIS.alerts import IRISAlertsService
-from app.services.DFIR_IRIS.assets import AssetsService
-from app.services.DFIR_IRIS.cases import CasesService
-from app.services.DFIR_IRIS.notes import NotesService
-from app.services.DFIR_IRIS.users import IRISUsersService
+from app.services.dfir_iris.alerts import IRISAlertsService
+from app.services.dfir_iris.assets import AssetsService
+from app.services.dfir_iris.cases import CasesService
+from app.services.dfir_iris.notes import NotesService
+from app.services.dfir_iris.users import IRISUsersService
 
 bp = Blueprint("dfir_iris", __name__)
 

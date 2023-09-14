@@ -2,7 +2,7 @@ from flask import Blueprint
 from flask import jsonify
 from loguru import logger
 
-from app.services.Shuffle.workflows import WorkflowsService
+from app.services.shuffle.workflows import WorkflowsService
 
 bp = Blueprint("shuffle", __name__)
 

@@ -2,8 +2,8 @@ from flask import Blueprint
 from loguru import logger
 
 from app import db
-from app.services.WazuhIndexer.cluster import ClusterService
-from app.services.WazuhIndexer.index import IndexService
+from app.services.wazuh_indexer.cluster import ClusterService
+from app.services.wazuh_indexer.index import IndexService
 
 bp = Blueprint("wazuh_indexer", __name__)
 

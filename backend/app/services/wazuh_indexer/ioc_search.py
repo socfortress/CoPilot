@@ -9,7 +9,7 @@ from loguru import logger
 from app.services.threat_intel.socfortress.universal import (
     SocfortressThreatIntelService,
 )
-from app.services.WazuhIndexer.universal import UniversalService
+from app.services.wazuh_indexer.universal import UniversalService
 
 
 class IocSearchService:

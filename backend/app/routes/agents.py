@@ -7,9 +7,9 @@ from loguru import logger
 from app.models.agents import agent_metadata_schema
 from app.services.agents.agents import AgentService
 from app.services.agents.agents import AgentSyncService
-from app.services.WazuhManager.agent import WazuhManagerAgentService
-from app.services.WazuhManager.universal import UniversalService
-from app.services.WazuhManager.vulnerability import VulnerabilityService
+from app.services.wazuh_manager.agent import WazuhManagerAgentService
+from app.services.wazuh_manager.universal import UniversalService
+from app.services.wazuh_manager.vulnerability import VulnerabilityService
 
 bp = Blueprint("agents", __name__)
 

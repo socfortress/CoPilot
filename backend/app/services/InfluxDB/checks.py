@@ -5,7 +5,7 @@ from typing import Union
 import requests
 from loguru import logger
 
-from app.services.InfluxDB.universal import UniversalService
+from app.services.influxdb.universal import UniversalService
 
 # OrgID for the InfluxDB server
 ORG_ID = "a1b203a448a55d31"

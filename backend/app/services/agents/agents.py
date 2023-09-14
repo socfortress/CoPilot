@@ -15,7 +15,7 @@ from app.models.agents import agent_metadatas_schema
 from app.models.connectors import Connector
 from app.models.connectors import WazuhManagerConnector
 from app.models.connectors import connector_factory
-from app.services.Velociraptor.universal import UniversalService
+from app.services.velociraptor.universal import UniversalService
 
 
 class AgentService:

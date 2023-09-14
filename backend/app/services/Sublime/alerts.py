@@ -7,7 +7,7 @@ from loguru import logger
 
 from app import db
 from app.models.sublime_alerts import SublimeAlerts
-from app.services.Sublime.universal import UniversalService
+from app.services.sublime.universal import UniversalService
 
 
 class InvalidPayloadError(Exception):

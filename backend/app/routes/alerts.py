@@ -2,7 +2,7 @@ from flask import Blueprint
 from flask import jsonify
 from flask import request
 
-from app.services.WazuhIndexer.alerts import AlertsService
+from app.services.wazuh_indexer.alerts import AlertsService
 
 bp = Blueprint("alerts", __name__)
 

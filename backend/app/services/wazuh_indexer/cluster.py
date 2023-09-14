@@ -7,7 +7,7 @@ from elasticsearch7 import Elasticsearch
 from loguru import logger
 
 from app.models.wazuh_indexer import WazuhIndexerAllocation
-from app.services.WazuhIndexer.universal import UniversalService
+from app.services.wazuh_indexer.universal import UniversalService
 
 
 class ClusterService:

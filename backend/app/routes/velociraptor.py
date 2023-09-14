@@ -6,8 +6,8 @@ from flask import Response
 from flask import jsonify
 from flask import request
 
-from app.services.Velociraptor.artifacts import ArtifactsService
-from app.services.Velociraptor.universal import UniversalService
+from app.services.velociraptor.artifacts import ArtifactsService
+from app.services.velociraptor.universal import UniversalService
 
 bp = Blueprint("velociraptor", __name__)
 
