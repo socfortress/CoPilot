@@ -13,7 +13,6 @@ import xmltodict
 from loguru import logger
 
 from app import db
-
 from app.models.rules import DisabledRules
 from app.services.wazuh_manager.universal import UniversalService
 
