@@ -3812,330 +3812,176 @@
                 "tags": ["Shuffle"]
             }
         },
-        "/velociraptor/artifacts": {
-            "get": {
-                "summary": "Get all artifacts",
-                "description": "Endpoint to get all artifacts.",
-                "responses": {
-                    "200": {
-                        "description": "Successful operation",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "artifacts": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "object",
-                                                "description": "Artifact details"
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "default": {
-                        "description": "Unexpected error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Error"
-                                }
-                            }
-                        }
-                    }
-                },
-                "operationId": "getAllArtifacts",
-                "tags": ["Velociraptor"]
-            }
+        "/velociraptor/artifacts/os/{filter_os}": {
+          "get": {
+              "summary": "Get artifacts filtered by OS",
+              "description": "Endpoint to get artifacts based on the OS filter.",
+              "parameters": [
+                  {
+                      "name": "filter_os",
+                      "in": "path",
+                      "description": "Operating system filter for the artifacts.",
+                      "required": true,
+                      "schema": {
+                          "type": "string"
+                      }
+                  }
+              ],
+              "responses": {
+                  "200": {
+                      "description": "Successful operation",
+                      "content": {
+                          "application/json": {
+                              "schema": {
+                                  "type": "object",
+                                  "properties": {
+                                      "artifacts": {
+                                          "type": "array",
+                                          "items": {
+                                              "type": "object",
+                                              "description": "Artifact details"
+                                          }
+                                      }
+                                  }
+                              }
+                          }
+                      }
+                  },
+                  "default": {
+                      "description": "Unexpected error",
+                      "content": {
+                          "application/json": {
+                              "schema": {
+                                  "$ref": "#/components/schemas/Error"
+                              }
+                          }
+                      }
+                  }
+              },
+              "operationId": "getFilteredArtifacts",
+              "tags": ["Velociraptor"]
+          }
+      },
+      "/velociraptor/operation": {
+          "post": {
+              "summary": "Execute an operation",
+              "description": "Endpoint to execute an operation like artifact collection, remote command execution, or quarantine.",
+              "requestBody": {
+                  "description": "Operation details",
+                  "content": {
+                      "application/json": {
+                          "schema": {
+                              "type": "object",
+                              "properties": {
+                                  "client_name": {
+                                      "type": "string",
+                                      "description": "The hostname of the client."
+                                  },
+                                  "operation": {
+                                      "type": "string",
+                                      "description": "The operation to perform. Valid values are 'collect_artifact', 'run_command', and 'quarantine'."
+                                  },
+                                  "action": {
+                                      "type": "string",
+                                      "description": "The action to perform for quarantine. Valid values are 'quarantine' and 'removequarantine'.",
+                                      "nullable": true
+                                  },
+                                  "command": {
+                                      "type": "string",
+                                      "description": "The command to run for remote command execution.",
+                                      "nullable": true
+                                  },
+                                  "artifact_name": {
+                                      "type": "string",
+                                      "description": "The name of the artifact for artifact collection or remote command execution.",
+                                      "nullable": true
+                                  }
+                              }
+                          }
+                      }
+                  }
+              },
+              "responses": {
+                  "200": {
+                      "description": "Successful operation",
+                      "content": {
+                          "application/json": {
+                              "schema": {
+                                  "type": "object",
+                                  "properties": {
+                                      "result": {
+                                          "type": "object",
+                                          "description": "Operation result details"
+                                      }
+                                  }
+                              }
+                          }
+                      }
+                  },
+                  "default": {
+                      "description": "Unexpected error",
+                      "content": {
+                          "application/json": {
+                              "schema": {
+                                  "$ref": "#/components/schemas/Error"
+                              }
+                          }
+                      }
+                  }
+              },
+              "operationId": "executeOperation",
+              "tags": ["Velociraptor"]
+          }
         },
-        "/velociraptor/artifacts/linux": {
-            "get": {
-                "summary": "Get all linux artifacts",
-                "description": "Endpoint to get all linux artifacts.",
-                "responses": {
-                    "200": {
-                        "description": "Successful operation",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "artifacts": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "object",
-                                                "description": "Artifact details"
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "default": {
-                        "description": "Unexpected error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Error"
-                                }
-                            }
-                        }
-                    }
-                },
-                "operationId": "getAllLinuxArtifacts",
-                "tags": ["Velociraptor"]
-            }
-        },
-        "/velociraptor/artifacts/windows": {
-            "get": {
-                "summary": "Get all windows artifacts",
-                "description": "Endpoint to get all windows artifacts.",
-                "responses": {
-                    "200": {
-                        "description": "Successful operation",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "artifacts": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "object",
-                                                "description": "Artifact details"
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "default": {
-                        "description": "Unexpected error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Error"
-                                }
-                            }
-                        }
-                    }
-                },
-                "operationId": "getAllWindowsArtifacts",
-                "tags": ["Velociraptor"]
-            }
-        },
-        "/velociraptor/artifacts/mac": {
-            "get": {
-                "summary": "Get all mac artifacts",
-                "description": "Endpoint to get all mac artifacts.",
-                "responses": {
-                    "200": {
-                        "description": "Successful operation",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "artifacts": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "object",
-                                                "description": "Artifact details"
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "default": {
-                        "description": "Unexpected error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Error"
-                                }
-                            }
-                        }
-                    }
-                },
-                "operationId": "getAllMacArtifacts",
-                "tags": ["Velociraptor"]
-            }
-        },
-        "/velociraptor/artifacts/{hostname}": {
-            "get": {
-                "summary": "Get all artifacts for a hostname",
-                "description": "Endpoint to get all artifacts for a hostname.",
-                "parameters": [
-                    {
-                        "name": "hostname",
-                        "in": "path",
-                        "description": "The client name",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Successful operation",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "artifacts": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "object",
-                                                "description": "Artifact details"
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "default": {
-                        "description": "Unexpected error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Error"
-                                }
-                            }
-                        }
-                    }
-                },
-                "operationId": "getAllArtifactsForHostname",
-                "tags": ["Velociraptor"]
-            }
-        },
-        "/velociraptor/artifacts/collection": {
-            "post": {
-                "summary": "Create a new artifact collection",
-                "description": "Endpoint to create a new artifact collection.",
-                "requestBody": {
-                    "description": "Artifact collection details",
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "artifact_name": {
-                                        "type": "string",
-                                        "description": "The name of the artifact collection."
-                                    },
-                                    "client_name": {
-                                        "type": "string",
-                                        "description": "The name of the client to collect the artifact for."
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Successful operation",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "collection": {
-                                            "type": "object",
-                                            "description": "Artifact collection details"
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "default": {
-                        "description": "Unexpected error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Error"
-                                }
-                            }
-                        }
-                    }
-                },
-                "operationId": "createArtifactCollection",
-                "tags": ["Velociraptor"]
-            }
-        },
-        "/velociraptor/remotecommand": {
-            "post": {
-                "summary": "Run a remote command",
-                "description": "Endpoint to run a remote command.",
-                "requestBody": {
-                    "description": "Remote command details",
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "type": "object",
-                                "properties": {
-                                    "client_name": {
-                                        "type": "string",
-                                        "value": "WIN-39O01J5F7G5",
-                                        "description": "The hostname of the client to run the command on."
-                                    },
-                                    "artifact_name": {
-                                        "type": "string",
-                                        "value": "Windows.System.PowerShell",
-                                        "description": "The name of the artifact to run."
-                                    },
-                                    "command": {
-                                        "type": "string",
-                                        "value": "ping 8.8.8.8",
-                                        "description": "The powershell command to run."
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Successful operation",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "output": {
-                                            "type": "string",
-                                            "description": "The output of the command."
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "default": {
-                        "description": "Unexpected error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Error"
-                                }
-                            }
-                        }
-                    }
-                },
-                "operationId": "runPowershellCommand",
-                "tags": ["Velociraptor"]
-            }
+        "/velociraptor/artifacts/hostname/{hostname}": {
+          "get": {
+              "summary": "Get all artifacts for a specific hostname",
+              "description": "Endpoint to get all artifacts available for a specific hostname.",
+              "parameters": [
+                  {
+                      "name": "hostname",
+                      "in": "path",
+                      "description": "The hostname for which to collect artifacts.",
+                      "required": true,
+                      "schema": {
+                          "type": "string"
+                      }
+                  }
+              ],
+              "responses": {
+                  "200": {
+                      "description": "Successful operation",
+                      "content": {
+                          "application/json": {
+                              "schema": {
+                                  "type": "object",
+                                  "properties": {
+                                      "artifacts": {
+                                          "type": "array",
+                                          "items": {
+                                              "type": "object",
+                                              "description": "Artifact details"
+                                          }
+                                      }
+                                  }
+                              }
+                          }
+                      }
+                  },
+                  "default": {
+                      "description": "Unexpected error",
+                      "content": {
+                          "application/json": {
+                              "schema": {
+                                  "$ref": "#/components/schemas/Error"
+                              }
+                          }
+                      }
+                  }
+              },
+              "operationId": "getAllArtifactsForHostname",
+              "tags": ["Velociraptor"]
+          }
         },
         "/dfir_iris/cases": {
             "get": {

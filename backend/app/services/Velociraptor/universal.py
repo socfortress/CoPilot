@@ -1,5 +1,6 @@
 import json
 from datetime import datetime
+from loguru import logger
 
 import grpc
 import pyvelociraptor
@@ -116,6 +117,7 @@ class UniversalService:
                 "results": results,
             }
         except Exception as e:
+            logger.error(f"Failed to execute query: {e}")
             return {
                 "success": False,
                 "message": f"Failed to execute query: {e}",
@@ -194,7 +196,7 @@ class UniversalService:
         """
         # Formulate queries
         try:
-            vql_client_id = f"select client_id from clients(search='host:{client_name}')"
+            vql_client_id = f"select client_id,os_info from clients(search='host:{client_name}')"
             vql_last_seen_at = f"select last_seen_at from clients(search='host:{client_name}')"
 
             # Get the last seen timestamp

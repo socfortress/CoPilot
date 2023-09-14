@@ -1,4 +1,5 @@
 from loguru import logger
+from typing import Dict, Optional, Any
 
 from app.models.agents import AgentMetadata
 from app.services.Velociraptor.universal import UniversalService
@@ -8,6 +9,11 @@ class ArtifactsService:
     """
     A service class that encapsulates the logic for pulling artifacts from Velociraptor.
     """
+
+    QUARANTINE_ARTIFACTS = {
+    "linux": "Linux.Remediation.Quarantine",
+    "windows": "Windows.Remediation.Quarantine",
+    }
 
     def __init__(self):
         self.universal_service = UniversalService()
@@ -24,7 +30,7 @@ class ArtifactsService:
         """
         return query
 
-    def _get_artifact_key(self, client_id: str, artifact: str, command: str = None) -> str:
+    def _get_artifact_key(self, client_id: str, artifact: str, command: str = None, quarantined: bool = None) -> str:
         """
         Construct the artifact key.
 
@@ -32,12 +38,18 @@ class ArtifactsService:
             client_id (str): The ID of the client.
             artifact (str): The name of the artifact.
             command (str): The command that was run, if applicable.
+            quarantined (bool): Whether the client is quarantined or not.
 
         Returns:
             str: The constructed artifact key.
         """
+        logger.info(f"Quarantined: {quarantined}")
         if command:
             return f"collect_client(client_id='{client_id}', urgent=true, artifacts=['{artifact}'], env=dict(Command='{command}'))"
+        elif quarantined is True:
+            return f'collect_client(client_id="{client_id}", artifacts=["{artifact}"], spec=dict(`{artifact}`=dict()))'
+        elif quarantined is False:
+            return f'collect_client(client_id="{client_id}", artifacts=["{artifact}"], spec=dict(`{artifact}`=dict(`RemovePolicy`="Y")))'
         else:
             return f"collect_client(client_id='{client_id}', artifacts=['{artifact}'])"
 
@@ -73,32 +85,31 @@ class ArtifactsService:
             "artifacts": filtered_artifacts,
         }
 
-    def collect_artifacts_linux(self) -> dict:
+    def collect_artifacts_filtered(self, filter_os: str) -> dict:
         """
-        Collect the artifacts from Velociraptor that have a name beginning with `Linux`.
+        Collect the artifacts from Velociraptor based on the provided OS filter.
+
+        Args:
+            filter_os (str): The OS filter to collect the artifacts.
 
         Returns:
             dict: A dictionary with the success status, a message, and potentially the artifacts.
         """
-        return self.collect_artifacts_prefixed("Linux.")
+        os_prefix_map = {
+            'linux': 'Linux.',
+            'windows': 'Windows.',
+            'macos': 'MacOS.'
+        }
 
-    def collect_artifacts_windows(self) -> dict:
-        """
-        Collect the artifacts from Velociraptor that have a name beginning with `Windows`.
+        prefix = os_prefix_map.get(filter_os.lower())
 
-        Returns:
-            dict: A dictionary with the success status, a message, and potentially the artifacts.
-        """
-        return self.collect_artifacts_prefixed("Windows.")
+        if not prefix:
+            return {
+                "success": False,
+                "message": f"OS filter {filter_os} not supported",
+            }
 
-    def collect_artifacts_macos(self) -> dict:
-        """
-        Collect the artifacts from Velociraptor that have a name beginning with `MacOS`.
-
-        Returns:
-            dict: A dictionary with the success status, a message, and potentially the artifacts.
-        """
-        return self.collect_artifacts_prefixed("MacOS.")
+        return self.collect_artifacts_prefixed(prefix)
 
     def collect_artifacts_by_hostname(self, hostname: str) -> dict:
         """
@@ -117,13 +128,21 @@ class ArtifactsService:
                 "message": f"Agent with hostname {hostname} not found",
             }
 
-        os = agent_metadata.os
-        if "Linux" in os:
-            return self.collect_artifacts_linux()
-        elif "Windows" in os:
-            return self.collect_artifacts_windows()
-        elif "MacOS" in os:
-            return self.collect_artifacts_macos()
+        os = agent_metadata.os.lower()
+        os_filter_map = {
+            'linux': 'Linux',
+            'windows': 'Windows',
+            'macos': 'MacOS'
+        }
+
+        filter_os = None
+        for keyword, prefix in os_filter_map.items():
+            if keyword in os:
+                filter_os = prefix
+                break
+
+        if filter_os:
+            return self.collect_artifacts_filtered(filter_os)
         else:
             return {
                 "success": False,
@@ -222,3 +241,126 @@ class ArtifactsService:
                 "message": "Failed to run artifact collection",
                 "success": False,
             }
+
+    def determine_artifact(self, client_os: str) -> Optional[str]:
+        """
+        Determine the artifact to use based on the client's operating system.
+
+        Args:
+            client_os (str): The operating system of the client.
+
+        Returns:
+            Optional[str]: The artifact to use, or None if the OS is not supported.
+        """
+        client_os = client_os.lower()
+        return self.QUARANTINE_ARTIFACTS.get(client_os, None)
+
+    def execute_quarantine_query(self, client_id: str, artifact: str, universal_service: Any) -> Dict:
+        """
+        Execute the query to quarantine a client.
+
+        Args:
+            client_id (str): The ID of the client.
+            artifact (str): The artifact to use for quarantine.
+            universal_service (Any): The service used to execute the query.
+
+        Returns:
+            dict: The result of the executed query.
+        """
+        query = f'SELECT collect_client(client_id=\"{client_id}\", artifacts=[\"{artifact}\"], spec=dict(`{artifact}`=dict())) FROM scope()'
+        return universal_service.execute_query(query)
+
+    def execute_quarantine_remove(self, client_id: str, artifact: str, universal_service: Any) -> Dict:
+        """
+        Execute the query to remove quarantine from a client.
+
+        Args:
+            client_id (str): The ID of the client.
+            artifact (str): The artifact to use for quarantine.
+            universal_service (Any): The service used to execute the query.
+
+        Returns:
+            dict: The result of the executed query.
+        """
+        query = f'SELECT collect_client(client_id=\"{client_id}\", artifacts=[\"{artifact}\"], spec=dict(`{artifact}`=dict(`RemovePolicy`="Y"))) FROM scope()'
+        return universal_service.execute_query(query)
+
+
+    def handle_flow(self, flow: Dict, client_id: str, artifact: str, quarantined: bool) -> str:
+        """
+        Handle the flow after executing the quarantine query.
+
+        Args:
+            flow (dict): The result of the executed query.
+            client_id (str): The ID of the client.
+            artifact (str): The artifact to use for quarantine.
+            universal_service (Any): The service used to watch the flow completion.
+            quarantined (bool): Whether the client is quarantined or not.
+
+        Returns:
+            str: The flow ID that was completed.
+        """
+        logger.info(f"Quarantined: {quarantined}")
+        artifact_key = self._get_artifact_key(client_id=client_id, artifact=artifact, quarantined=quarantined)
+        flow_id = flow["results"][0][artifact_key]["flow_id"]
+        return self.universal_service.watch_flow_completion(flow_id)
+
+    def execute_action(self, client_id: str, artifact: str, action: str) -> Dict[str, Any]:
+        """
+        Execute the given action on the client.
+
+        Args:
+            client_id (str): The ID of the client.
+            artifact (str): The artifact to use for the action.
+            action (str): The action to be performed ("quarantine" or "removequarantine").
+
+        Returns:
+            dict: A dictionary with the success status and a message.
+        """
+        try:
+            if action == "quarantine":
+                flow = self.execute_quarantine_query(client_id, artifact, self.universal_service)
+                completed = self.handle_flow(flow, client_id, artifact, quarantined=True)
+            elif action == "removequarantine":
+                flow = self.execute_quarantine_remove(client_id, artifact, self.universal_service)
+                completed = self.handle_flow(flow, client_id, artifact, quarantined=False)
+            else:
+                return {"message": "Action not supported", "success": False}
+
+            logger.info(f"Successfully ran artifact collection on {flow}")
+
+            logger.info(f"Successfully watched flow completion on {completed}")
+
+            return {
+                "message": f"Successfully {action}d endpoint",
+                "success": True,
+            }
+
+        except Exception as err:
+            logger.error(f"Failed to {action} endpoint: {err}")
+            return {
+                "message": f"Failed to {action} endpoint",
+                "success": False,
+            }
+
+    def quarantine_endpoint(self, client_id: str, client_os: str, action: str) -> Dict[str, Any]:
+        """
+        Quarantine or remove quarantine from an endpoint based on its client ID and operating system.
+
+        Args:
+            client_id (str): The ID of the client.
+            client_os (str): The operating system of the client.
+            action (str): The action to be performed ("quarantine" or "removequarantine").
+
+        Returns:
+            dict: A dictionary with the success status and a message.
+        """
+        artifact = self.determine_artifact(client_os)
+
+        if artifact is None:
+            return {
+                "message": f"OS {client_os} not supported",
+                "success": False,
+            }
+
+        return self.execute_action(client_id, artifact, action)
