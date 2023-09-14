@@ -4137,6 +4137,58 @@
                 "tags": ["Velociraptor"]
             }
         },
+        "/velociraptor/quarantine": {
+          "post" : {
+            "summary" : "Quarantine a host",
+            "description" : "Endpoint to quarantine a host.",
+            "requestBody" : {
+              "description" : "Quarantine details",
+              "content" : {
+                "application/json" : {
+                  "schema" : {
+                    "type" : "object",
+                    "properties" : {
+                      "client_name" : {
+                        "type" : "string",
+                        "description" : "The hostname of the client to quarantine."
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "responses" : {
+              "200" : {
+                "description" : "Successful operation",
+                "content" : {
+                  "application/json" : {
+                    "schema" : {
+                      "type" : "object",
+                      "properties" : {
+                        "output" : {
+                          "type" : "string",
+                          "description" : "The output of the command."
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "default" : {
+                "description" : "Unexpected error",
+                "content" : {
+                  "application/json" : {
+                    "schema" : {
+                      "$ref" : "#/components/schemas/Error"
+                    }
+                  }
+                }
+              }
+            },
+            "operationId" : "runQuarantineCommand",
+            "tags" : [ "Velociraptor" ]
+          }
+        },
         "/dfir_iris/cases": {
             "get": {
                 "summary": "Get all cases",

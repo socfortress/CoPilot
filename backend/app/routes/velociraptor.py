@@ -1,6 +1,7 @@
 from flask import Blueprint
 from flask import jsonify
 from flask import request
+from loguru import logger
 
 from app.services.Velociraptor.artifacts import ArtifactsService
 from app.services.Velociraptor.universal import UniversalService
@@ -152,5 +153,38 @@ def run_remote_command():
         client_id=client_id,
         artifact=artifact_name,
         command=command,
+    )
+    return artifact_results
+
+@bp.route("/velociraptor/quarantine", methods=["POST"])
+def quarantine_endpoint():
+    """
+    Endpoint to quarantine a host.
+    It collects the client name and OS and invokes the quarantine function.
+
+    Returns:
+        json: A JSON response containing the result of the artifact collection operation.
+    """
+    req_data = request.get_json()
+    client_name = req_data["client_name"]
+    service = UniversalService()
+    client_id = service.get_client_id(client_name=client_name)["results"][0]["client_id"]
+    client_os = service.get_client_os(client_name=client_name)["results"][0]["os_info"]["system"]
+    if client_id is None:
+        return (
+            jsonify(
+                {
+                    "message": f"{client_name} has not been seen in the last 30 seconds and may not be online with the "
+                    "Velociraptor server.",
+                    "success": False,
+                },
+            ),
+            500,
+        )
+
+    artifact_service = ArtifactsService()
+    artifact_results = artifact_service.quarantine_endpoint(
+        client_id=client_id,
+        client_os=client_os,
     )
     return artifact_results

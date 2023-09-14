@@ -1,4 +1,5 @@
 from loguru import logger
+from typing import Dict, Optional, Any
 
 from app.models.agents import AgentMetadata
 from app.services.Velociraptor.universal import UniversalService
@@ -8,6 +9,11 @@ class ArtifactsService:
     """
     A service class that encapsulates the logic for pulling artifacts from Velociraptor.
     """
+
+    QUARANTINE_ARTIFACTS = {
+    "linux": "Linux.Remediation.Quarantine",
+    "windows": "Windows.Remediation.Quarantine",
+    }
 
     def __init__(self):
         self.universal_service = UniversalService()
@@ -24,7 +30,7 @@ class ArtifactsService:
         """
         return query
 
-    def _get_artifact_key(self, client_id: str, artifact: str, command: str = None) -> str:
+    def _get_artifact_key(self, client_id: str, artifact: str, command: str = None, quarantined: bool = None) -> str:
         """
         Construct the artifact key.
 
@@ -38,6 +44,8 @@ class ArtifactsService:
         """
         if command:
             return f"collect_client(client_id='{client_id}', urgent=true, artifacts=['{artifact}'], env=dict(Command='{command}'))"
+        elif quarantined:
+            return f'collect_client(client_id="{client_id}", artifacts=["{artifact}"], spec=dict(`{artifact}`=dict()))'
         else:
             return f"collect_client(client_id='{client_id}', artifacts=['{artifact}'])"
 
@@ -220,5 +228,88 @@ class ArtifactsService:
             logger.error(f"Failed to run artifact collection: {err}")
             return {
                 "message": "Failed to run artifact collection",
+                "success": False,
+            }
+
+    def determine_artifact(self, client_os: str) -> Optional[str]:
+        """
+        Determine the artifact to use based on the client's operating system.
+
+        Args:
+            client_os (str): The operating system of the client.
+
+        Returns:
+            Optional[str]: The artifact to use, or None if the OS is not supported.
+        """
+        client_os = client_os.lower()
+        return self.QUARANTINE_ARTIFACTS.get(client_os, None)
+
+    def execute_quarantine_query(self, client_id: str, artifact: str, universal_service: Any) -> Dict:
+        """
+        Execute the query to quarantine a client.
+
+        Args:
+            client_id (str): The ID of the client.
+            artifact (str): The artifact to use for quarantine.
+            universal_service (Any): The service used to execute the query.
+
+        Returns:
+            dict: The result of the executed query.
+        """
+        query = f'SELECT collect_client(client_id=\"{client_id}\", artifacts=[\"{artifact}\"], spec=dict(`{artifact}`=dict())) FROM scope()'
+        return universal_service.execute_query(query)
+
+    def handle_flow(self, flow: Dict, client_id: str, artifact: str, universal_service: Any) -> str:
+        """
+        Handle the flow after executing the quarantine query.
+
+        Args:
+            flow (dict): The result of the executed query.
+            client_id (str): The ID of the client.
+            artifact (str): The artifact to use for quarantine.
+            universal_service (Any): The service used to watch the flow completion.
+
+        Returns:
+            str: The flow ID that was completed.
+        """
+        artifact_key = self._get_artifact_key(client_id, artifact, quarantined=True)
+        flow_id = flow["results"][0][artifact_key]["flow_id"]
+        return universal_service.watch_flow_completion(flow_id)
+
+    def quarantine_endpoint(self, client_id: str, client_os: str) -> Dict[str, Any]:
+        """
+        Quarantine an endpoint based on its client ID and operating system.
+
+        Args:
+            client_id (str): The ID of the client.
+            client_os (str): The operating system of the client.
+
+        Returns:
+            dict: A dictionary with the success status and a message.
+        """
+        artifact = self.determine_artifact(client_os)
+
+        if artifact is None:
+            return {
+                "message": f"OS {client_os} not supported",
+                "success": False,
+            }
+
+        try:
+            flow = self.execute_quarantine_query(client_id, artifact, self.universal_service)
+            logger.info(f"Successfully ran artifact collection on {flow}")
+
+            completed = self.handle_flow(flow, client_id, artifact, self.universal_service)
+            logger.info(f"Successfully watched flow completion on {completed}")
+
+            return {
+                "message": "Successfully quarantined endpoint",
+                "success": True,
+            }
+
+        except Exception as err:
+            logger.error(f"Failed to quarantine endpoint: {err}")
+            return {
+                "message": "Failed to quarantine endpoint",
                 "success": False,
             }
