@@ -1,7 +1,7 @@
 <template>
     <div class="top-indices-chart-container">
         <div class="title">Top 8 indices size & health</div>
-        <div style="height: 400px" v-loading="loading">
+        <div style="height: 400px; overflow: hidden" v-loading="loading">
             <div id="top-indices-chart" style="max-width: 100%; height: 400px"></div>
         </div>
     </div>

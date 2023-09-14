@@ -1,4 +1,4 @@
-export interface Agents {
+export interface Agent {
     agent_id: string
     client_id: string
     client_last_seen: string
@@ -12,9 +12,11 @@ export interface Agents {
     velociraptor_client_version: string
     wazuh_agent_version: string
     vulnerabilities?: AgentVulnerabilities[]
+    online?: boolean
 }
 
 export interface AgentVulnerabilities {
+    id?: string
     architecture: string
     condition: string
     cve: string
@@ -24,14 +26,30 @@ export interface AgentVulnerabilities {
     external_references: string[]
     name: string
     published: string
-    severity: string
-    status: string
+    severity: VulnerabilitySeverity
+    status: VulnerabilityStatus
     title: string
-    type: string
+    type: VulnerabilityType
     updated: string
     version: string
 }
 
-export type OutdatedWazuhAgents = Agents[]
+export enum VulnerabilitySeverity {
+    Critical = "Critical",
+    High = "High",
+    Low = "Low",
+    Medium = "Medium",
+    Untriaged = "Untriaged"
+}
 
-export type OutdatedVelociraptorAgents = Agents[]
+export enum VulnerabilityStatus {
+    Valid = "VALID"
+}
+
+export enum VulnerabilityType {
+    Package = "PACKAGE"
+}
+
+export type OutdatedWazuhAgents = Agent[]
+
+export type OutdatedVelociraptorAgents = Agent[]

@@ -2,10 +2,13 @@ from flask import Blueprint
 from flask import jsonify
 from loguru import logger
 
+from app.services.Graylog.events import EventsService
 from app.services.Graylog.index import IndexService
 from app.services.Graylog.inputs import InputsService
 from app.services.Graylog.messages import MessagesService
 from app.services.Graylog.metrics import MetricsService
+from app.services.Graylog.pipelines import PipelinesService
+from app.services.Graylog.streams import StreamsService
 
 bp = Blueprint("graylog", __name__)
 
@@ -88,3 +91,199 @@ def get_inputs() -> dict:
     return jsonify(
         {"running_inputs": running_inputs, "configured_inputs": configured_inputs},
     )
+
+
+@bp.route("/graylog/inputs/<input_id>/state", methods=["GET"])
+def get_inputstate(input_id: str) -> dict:
+    """
+    Endpoint to collect Graylog inputstate.
+
+    Returns:
+        dict: A JSON object containing the list of all running and configured inputs.
+    """
+    logger.info("Received request to get graylog inputstate")
+    service = InputsService()
+    inputstate = service.collect_inputstate(input_id)
+    try:
+        # If inputstate.inputstate.message starts with `No input state`, then set the state to STOPPED
+        if inputstate["inputstate"]["message"].startswith("No input state"):
+            inputstate["inputstate"]["state"] = "STOPPED"
+            return inputstate
+    except Exception:
+        return inputstate
+
+
+@bp.route("/graylog/inputs/running", methods=["GET"])
+def get_inputs_running() -> dict:
+    """
+    Endpoint to collect running Graylog inputs.
+
+    Returns:
+        dict: A JSON object containing the list of all running and configured inputs.
+    """
+    logger.info("Received request to get runnning graylog inputs")
+    service = InputsService()
+    running_inputs = service.collect_running_inputs()
+    return jsonify(
+        {"running_inputs": running_inputs},
+    )
+
+
+@bp.route("/graylog/inputs/configured", methods=["GET"])
+def get_inputs_configured() -> dict:
+    """
+    Endpoint to collect configured Graylog inputs.
+
+    Returns:
+        dict: A JSON object containing the list of all running and configured inputs.
+    """
+    logger.info("Received request to get configured graylog inputs")
+    service = InputsService()
+    configured_inputs = service.collect_configured_inputs()
+    for input in configured_inputs["configured_inputs"]:
+        # Get the ID and invoke the get_inputstate function
+        input_id = input["id"]
+        inputstate = get_inputstate(input_id)
+        # Add the inputstate to the configured_inputs
+        input["inputstate"] = inputstate["inputstate"]["state"]
+    return jsonify(
+        {"configured_inputs": configured_inputs},
+    )
+
+
+@bp.route("/graylog/inputs/<input_id>/stop", methods=["DELETE"])
+def stop_input(input_id: str) -> dict:
+    """
+    Endpoint to stop a Graylog input.
+
+    Args:
+        input_id (str): The ID of the input to be stopped.
+
+    Returns:
+        dict: A JSON object containing the result of the stop operation.
+    """
+    logger.info("Received request to stop input")
+    service = InputsService()
+    result = service.stop_input(input_id)
+    return result
+
+
+@bp.route("/graylog/inputs/<input_id>/start", methods=["PUT"])
+def start_input(input_id: str) -> dict:
+    """
+    Endpoint to start a Graylog input.
+
+    Args:
+        input_id (str): The ID of the input to be started.
+
+    Returns:
+        dict: A JSON object containing the result of the start operation.
+    """
+    logger.info("Received request to start input")
+    service = InputsService()
+    result = service.start_input(input_id)
+    return result
+
+
+@bp.route("/graylog/event/definitions", methods=["GET"])
+def get_event_definitions() -> dict:
+    """
+    Endpoint to collect Graylog event definitions.
+
+    Returns:
+        dict: A JSON object containing the list of all event definitions.
+    """
+    logger.info("Received request to get graylog event definitions")
+    service = EventsService()
+    event_definitions = service.collect_event_definitions()
+    return event_definitions
+
+
+@bp.route("/graylog/event/alerts", methods=["GET"])
+def get_alerts() -> dict:
+    """
+    Endpoint to collect Graylog alerts. Currently collects last 100 alerts.
+
+    Returns:
+        dict: A JSON object containing the list of all alerts.
+    """
+    logger.info("Received request to get graylog alerts")
+    service = EventsService()
+    alerts = service.collect_alerts()
+    return alerts
+
+
+@bp.route("/graylog/pipeline/rules", methods=["GET"])
+def get_pipeline_rules() -> dict:
+    """
+    Endpoint to collect Graylog pipeline rules.
+
+    Returns:
+        dict: A JSON object containing the list of all pipeline rules.
+    """
+    logger.info("Received request to get graylog pipeline rules")
+    service = PipelinesService()
+    pipeline_rules = service.collect_pipeline_rules()
+    return pipeline_rules
+
+
+@bp.route("/graylog/pipeline/pipelines", methods=["GET"])
+def get_pipelines() -> dict:
+    """
+    Endpoint to collect Graylog pipelines.
+
+    Returns:
+        dict: A JSON object containing the list of all pipelines.
+    """
+    logger.info("Received request to get graylog pipelines")
+    service = PipelinesService()
+    pipelines = service.collect_pipelines()
+    return pipelines
+
+
+@bp.route("/graylog/streams", methods=["GET"])
+def get_streams() -> dict:
+    """
+    Endpoint to collect Graylog streams.
+
+    Returns:
+        dict: A JSON object containing the list of all streams.
+    """
+    logger.info("Received request to get graylog streams")
+    service = StreamsService()
+    streams = service.collect_streams()
+    return streams
+
+
+@bp.route("/graylog/streams/<stream_id>/pause", methods=["POST"])
+def pause_stream(stream_id: str) -> dict:
+    """
+    Endpoint to pause a Graylog stream.
+
+    Args:
+        stream_id (str): The ID of the stream to be paused.
+
+    Returns:
+        dict: A JSON object containing the result of the pause operation.
+    """
+    logger.info("Received request to pause stream")
+    service = StreamsService()
+    result = service.pause_stream(stream_id)
+    return result
+
+
+@bp.route("/graylog/streams/<stream_id>/resume", methods=["POST"])
+def resume_stream(stream_id: str) -> dict:
+    """
+    Endpoint to resume a Graylog stream.
+
+    Args:
+        stream_id (str): The ID of the stream to be resumed.
+
+    Returns:
+        dict: A JSON object containing the result of the resume operation.
+    """
+    logger.info("Received request to resume stream")
+    service = StreamsService()
+    result = service.resume_stream(stream_id)
+    return result

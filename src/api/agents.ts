@@ -1,13 +1,10 @@
 import { FlaskBaseResponse } from "@/types/flask"
 import { HttpClient } from "./httpClient"
-import { Agents, AgentVulnerabilities, OutdatedWazuhAgents, OutdatedVelociraptorAgents } from "@/types/agents" // Import the new types
+import { Agent, AgentVulnerabilities, OutdatedWazuhAgents, OutdatedVelociraptorAgents } from "@/types/agents"
 
 export default {
-    getAgents() {
-        return HttpClient.get<FlaskBaseResponse & { agents: Agents[] }>("/agents")
-    },
-    getAgent(id: string) {
-        return HttpClient.get<FlaskBaseResponse & { agent: Agents }>(`/agents/${id}`) // Should be Agents, not Agents[]
+    getAgents(id?: string) {
+        return HttpClient.get<FlaskBaseResponse & { agent?: Agent; agents?: Agent[] }>(`/agents${id ? "/" + id : ""}`)
     },
     markCritical(id: string) {
         return HttpClient.post<FlaskBaseResponse>(`/agents/${id}/critical`)
@@ -22,11 +19,13 @@ export default {
         return HttpClient.post<FlaskBaseResponse>(`/agents/sync`)
     },
     agentVulnerabilities(id: string) {
-        return HttpClient.get<FlaskBaseResponse & { vulnerabilities: AgentVulnerabilities[] }>(`/agents/${id}/vulnerabilities`) // Include the vulnerabilities
+        return HttpClient.get<FlaskBaseResponse & { vulnerabilities: AgentVulnerabilities[] }>(`/agents/${id}/vulnerabilities`)
     },
+    // IGNORE AT THE MOMENT !
     agentsWazuhOutdated() {
         return HttpClient.get<FlaskBaseResponse & { outdated_wazuh_agents: OutdatedWazuhAgents }>(`/agents/wazuh/outdated`) // Include the outdated Wazuh agents
     },
+    // IGNORE AT THE MOMENT !
     agentsVelociraptorOutdated() {
         return HttpClient.get<FlaskBaseResponse & { outdated_velociraptor_agents: OutdatedVelociraptorAgents }>(
             `/agents/velociraptor/outdated`

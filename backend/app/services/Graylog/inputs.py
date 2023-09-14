@@ -65,6 +65,7 @@ class InputsService:
             for input in running_inputs.json()["states"]:
                 inputs_list.append(
                     {
+                        "id": input["id"],
                         "state": input["state"],
                         "title": input["message_input"]["title"],
                         "port": input["message_input"]["attributes"]["port"],
@@ -116,6 +117,7 @@ class InputsService:
             for input in configured_inputs.json()["inputs"]:
                 configured_inputs_list.append(
                     {
+                        "id": input["id"],
                         "title": input["title"],
                         "port": input["attributes"]["port"],
                     },
@@ -128,3 +130,149 @@ class InputsService:
         except Exception as e:
             logger.error(f"Failed to collect configured inputs: {e}")
             return {"message": "Failed to collect configured inputs", "success": False}
+
+    def collect_inputstate(
+        self,
+        input_id: str,
+    ) -> Dict[str, Union[bool, str, List[Dict[str, Union[str, int]]]]]:
+        """
+        Collects the inputstate that is managed by Graylog.
+
+        Returns:
+            dict: A dictionary containing the success status, a message, and potentially a list of configured inputs.
+        """
+        if self.connector_url is None or self.connector_username is None or self.connector_password is None:
+            return {"message": "Failed to collect Graylog details", "success": False}
+
+        inputstate = self._collect_inputstate(input_id)
+
+        if inputstate["success"]:
+            return inputstate
+
+    def _collect_inputstate(
+        self,
+        input_id: str,
+    ) -> Dict[str, Union[bool, str, List[Dict[str, Union[str, int]]]]]:
+        """
+        Collects the inputstate that is managed by Graylog.
+
+        Returns:
+            dict: A dictionary containing the success status, a message, and potentially a list of configured inputs.
+        """
+        try:
+            inputstate = requests.get(
+                f"{self.connector_url}/api/system/inputstates/{input_id}",
+                headers=self.HEADERS,
+                auth=(self.connector_username, self.connector_password),
+                verify=False,
+            )
+            return {
+                "message": "Successfully collected inputstate",
+                "success": True,
+                "inputstate": inputstate.json(),
+            }
+        except Exception as e:
+            logger.error(f"Failed to collect inputstate: {e}")
+            return {"message": "Failed to collect inputstate", "success": False}
+
+    def stop_input(self, input_id: str) -> Dict[str, Union[bool, str]]:
+        """
+        Stops a Graylog input.
+
+        Args:
+            input_id (str): The ID of the input to stop.
+
+        Returns:
+            dict: A dictionary containing the success status and a message.
+        """
+        if self.connector_url is None or self.connector_username is None or self.connector_password is None:
+            return {"message": "Failed to collect Graylog details", "success": False}
+
+        stop_input = self._stop_input(input_id)
+
+        if stop_input["success"]:
+            return stop_input
+
+    def _stop_input(self, input_id: str) -> Dict[str, Union[bool, str]]:
+        """
+        Stops a Graylog input.
+
+        Args:
+            input_id (str): The ID of the input to stop.
+
+        Returns:
+            dict: A dictionary containing the success status and a message.
+        """
+        try:
+            stop_input = requests.delete(
+                f"{self.connector_url}/api/system/inputstates/{input_id}",
+                headers=self.HEADERS,
+                auth=(self.connector_username, self.connector_password),
+                verify=False,
+            )
+            if stop_input.status_code == 200:
+                return {
+                    "message": "Successfully stopped input",
+                    "success": True,
+                    "input_id": input_id,
+                }
+            else:
+                return {
+                    "message": "Failed to stop input",
+                    "success": False,
+                    "input_id": input_id,
+                }
+        except Exception as e:
+            logger.error(f"Failed to stop input: {e}")
+            return {"message": "Failed to stop input", "success": False, "input_id": input_id}
+
+    def start_input(self, input_id: str) -> Dict[str, Union[bool, str]]:
+        """
+        Starts a Graylog input.
+
+        Args:
+            input_id (str): The ID of the input to start.
+
+        Returns:
+            dict: A dictionary containing the success status and a message.
+        """
+        if self.connector_url is None or self.connector_username is None or self.connector_password is None:
+            return {"message": "Failed to collect Graylog details", "success": False}
+
+        start_input = self._start_input(input_id)
+
+        if start_input["success"]:
+            return start_input
+
+    def _start_input(self, input_id: str) -> Dict[str, Union[bool, str]]:
+        """
+        Starts a Graylog input.
+
+        Args:
+            input_id (str): The ID of the input to start.
+
+        Returns:
+            dict: A dictionary containing the success status and a message.
+        """
+        try:
+            start_input = requests.put(
+                f"{self.connector_url}/api/system/inputstates/{input_id}",
+                headers=self.HEADERS,
+                auth=(self.connector_username, self.connector_password),
+                verify=False,
+            )
+            if start_input.status_code == 200:
+                return {
+                    "message": "Successfully started input",
+                    "success": True,
+                    "input_id": input_id,
+                }
+            else:
+                return {
+                    "message": "Failed to start input",
+                    "success": False,
+                    "input_id": input_id,
+                }
+        except Exception as e:
+            logger.error(f"Failed to start input: {e}")
+            return {"message": "Failed to start input", "success": False, "input_id": input_id}

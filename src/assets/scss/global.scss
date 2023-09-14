@@ -151,3 +151,7 @@ body {
 		padding: 0 10px;
 	}
 }*/
+
+[aria-label][data-balloon-pos]:after {
+    border-radius: 4px;
+}

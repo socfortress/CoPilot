@@ -1,5 +1,5 @@
 <template>
-    <div class="indices-marquee" v-loading="loading">
+    <div class="inputs-marquee" v-loading="loading">
         <Vue3Marquee
             class="marquee-wrap"
             :duration="200"
@@ -10,54 +10,73 @@
             gradient-length="10%"
         >
             <span
-                v-for="item in indices"
-                :key="item.index"
+                v-for="item in parsedItems"
+                :key="item.id"
                 class="item"
-                :class="item.health"
+                :class="item.state"
                 @click="emit('click', item)"
                 title="Click to select"
             >
-                <IndexIcon :health="item.health" color />
-                {{ item.index }}
+                <InputIcon :state="item.state" color />
+                {{ item.title }}
             </span>
         </Vue3Marquee>
-        <div class="info"><i class="mdi mdi-information-outline"></i> Click on an index to select</div>
+        <div class="info"><i class="mdi mdi-information-outline"></i> Click on an input to select</div>
     </div>
 </template>
 
 <script setup lang="ts">
 import { computed, toRefs } from "vue"
-import { Index } from "@/types/indices.d"
+import { RunningInput } from "@/types/graylog.d"
 import { Vue3Marquee } from "vue3-marquee"
-import IndexIcon from "@/components/indices/IndexIcon.vue"
+import InputIcon from "@/components/inputs/InputIcon.vue"
+
+const MIN_ITEMS = 8
 
 const emit = defineEmits<{
-    (e: "click", value: Index): void
+    (e: "click", value: RunningInput): void
 }>()
 
 const props = defineProps<{
-    indices: Index[] | null
+    inputs: RunningInput[] | null
 }>()
-const { indices } = toRefs(props)
 
-const loading = computed(() => !indices?.value || indices.value === null)
+const { inputs } = toRefs(props)
+
+const parsedItems = computed(() => {
+    if (!inputs.value) {
+        return []
+    }
+
+    if (inputs.value.length >= MIN_ITEMS) {
+        return inputs.value
+    }
+
+    const list = []
+    while (list.length < MIN_ITEMS) {
+        list.push(...inputs.value)
+    }
+
+    return list
+})
+
+const loading = computed(() => !inputs?.value || inputs.value === null)
 </script>
 
 <style lang="scss" scoped>
 @import "@/assets/scss/_variables";
 @import "@/assets/scss/card-shadow";
 
-.indices-marquee {
+.inputs-marquee {
     .info {
         opacity: 0.5;
-        font-size: var(--font-size-0);
+        font-size: 12px;
         margin-top: 5px;
     }
     .marquee-wrap {
         height: 45px;
         transform: translate3d(0, 0, 0);
         @extend .card-base;
-        @extend .card-shadow--small;
 
         :deep() {
             .marquee {
@@ -74,18 +93,10 @@ const loading = computed(() => !indices?.value || indices.value === null)
             padding: 10px 20px;
             cursor: pointer;
 
-            &.green {
+            &.RUNNING {
                 i {
                     color: $text-color-success;
                 }
-            }
-            &.yellow {
-                color: $text-color-warning;
-                font-weight: bold;
-            }
-            &.red {
-                color: $text-color-danger;
-                font-weight: bold;
             }
         }
     }

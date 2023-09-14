@@ -109,6 +109,7 @@ onBeforeMount(() => {
 .cluster-health {
     padding: var(--size-5) var(--size-6);
     @extend .card-base;
+    @extend .card-shadow--small;
 
     .title {
         font-size: var(--font-size-4);
