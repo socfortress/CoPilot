@@ -66,7 +66,8 @@ export interface IndexData {
 // Graylog Inputs
 
 export enum InputState {
-    RUNNING = "RUNNING"
+    RUNNING = "RUNNING",
+    STOPPED = "STOPPED"
 }
 
 export interface ConfiguredInput {

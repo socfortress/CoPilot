@@ -1,19 +1,26 @@
 <template>
     <el-scrollbar class="page page-inputs">
         <div class="section">
-            <InputsMarquee :inputs="inputs" @click="setInput" />
+            <InputsMarquee :inputs="runningInputs" @click="setInput" />
         </div>
+
+        <div class="section">
+            <Details :inputs="configuredInputs" v-model="currentInput" />
+        </div>
+
     </el-scrollbar>
 </template>
 
 <script lang="ts" setup>
-import { RunningInput } from "@/types/graylog.d"
+import { RunningInput, ConfiguredInput } from "@/types/graylog.d"
 import Api from "@/api"
 import { ElMessage } from "element-plus"
 import { onBeforeMount, ref } from "vue"
 import InputsMarquee from "@/components/inputs/Marquee.vue"
+import Details from "@/components/inputs/Details.vue"
 
-const inputs = ref<RunningInput[] | null>(null)
+const runningInputs = ref<RunningInput[] | null>(null)
+const configuredInputs = ref<ConfiguredInput[] | null>(null)
 const loadingInput = ref(false)
 const currentInput = ref<RunningInput | null>(null)
 
@@ -21,14 +28,14 @@ function setInput(input: RunningInput) {
     currentInput.value = input
 }
 
-function getInputs() {
+function getInputsRunning() {
     loadingInput.value = true
 
     Api.graylog
-        .getInputs()
+        .getInputsRunning()
         .then(res => {
             if (res.data.running_inputs.success) {
-                inputs.value = res.data.running_inputs.inputs
+              runningInputs.value = res.data.running_inputs.inputs
             } else {
                 ElMessage({
                     message: res.data.running_inputs?.message || "An error occurred. Please try again later.",
@@ -44,8 +51,32 @@ function getInputs() {
         })
 }
 
+function getInputsConfigured() {
+    loadingInput.value = true
+
+    Api.graylog
+        .getInputsConfigured()
+        .then(res => {
+            if (res.data.configured_inputs.success) {
+              configuredInputs.value = res.data.configured_inputs.configured_inputs
+            } else {
+                ElMessage({
+                    message: res.data.configured_inputs?.message || "An error occurred. Please try again later.",
+                    type: "error"
+                })
+            }
+        })
+        .catch(err => {
+            // Handle errors
+        })
+        .finally(() => {
+            loadingInput.value = false
+        })
+}
+
 onBeforeMount(() => {
-    getInputs()
+  getInputsRunning(),
+  getInputsConfigured()
 })
 </script>
 

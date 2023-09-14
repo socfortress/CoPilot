@@ -2259,6 +2259,525 @@
                 "tags": ["Graylog"]
             }
         },
+        "/graylog/inputs/running": {
+          "get": {
+              "summary": "Get running inputs from Graylog",
+              "description": "Endpoint to get running inputs from Graylog.",
+              "responses": {
+                  "200": {
+                      "description": "Successful operation",
+                      "content": {
+                          "application/json": {
+                              "schema": {
+                                  "type": "object",
+                                  "properties": {
+                                      "inputs": {
+                                          "type": "array",
+                                          "items": {
+                                              "type": "object",
+                                              "description": "Input details"
+                                          }
+                                      }
+                                  }
+                              }
+                          }
+                      }
+                  },
+                  "default": {
+                      "description": "Unexpected error",
+                      "content": {
+                          "application/json": {
+                              "schema": {
+                                  "$ref": "#/components/schemas/Error"
+                              }
+                          }
+                      }
+                  }
+              },
+              "operationId": "getGraylogInputsRunning",
+              "tags": ["Graylog"]
+          }
+        },
+        "/graylog/inputs/configured": {
+          "get": {
+              "summary": "Get configured inputs from Graylog",
+              "description": "Endpoint to get configured inputs from Graylog.",
+              "responses": {
+                  "200": {
+                      "description": "Successful operation",
+                      "content": {
+                          "application/json": {
+                              "schema": {
+                                  "type": "object",
+                                  "properties": {
+                                      "inputs": {
+                                          "type": "array",
+                                          "items": {
+                                              "type": "object",
+                                              "description": "Input details"
+                                          }
+                                      }
+                                  }
+                              }
+                          }
+                      }
+                  },
+                  "default": {
+                      "description": "Unexpected error",
+                      "content": {
+                          "application/json": {
+                              "schema": {
+                                  "$ref": "#/components/schemas/Error"
+                              }
+                          }
+                      }
+                  }
+              },
+              "operationId": "getGraylogInputsConfigured",
+              "tags": ["Graylog"]
+          }
+        },
+        "/graylog/inputs/{input_id}/stop": {
+            "delete": {
+                "tags": ["Graylog"],
+                "summary": "Stops a Graylog input",
+                "description": "Endpoint to stop a Graylog input.",
+                "parameters": [
+                    {
+                        "name": "input_id",
+                        "in": "path",
+                        "description": "The ID of the input to be stopped.",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "success": {
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "success": {
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Input not found",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "success": {
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/graylog/inputs/{input_id}/start": {
+            "put": {
+                "tags": ["Graylog"],
+                "summary": "Starts a Graylog input",
+                "description": "Endpoint to start a Graylog input.",
+                "parameters": [
+                    {
+                        "name": "input_id",
+                        "in": "path",
+                        "description": "The ID of the input to be started.",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "success": {
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "success": {
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Input not found",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "success": {
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/graylog/inputs/{input_id}/state": {
+            "get": {
+                "tags": ["Graylog"],
+                "summary": "Get the state of a Graylog input",
+                "description": "Endpoint to get the state of a Graylog input.",
+                "parameters": [
+                    {
+                        "name": "input_id",
+                        "in": "path",
+                        "description": "The ID of the input to get the state of.",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "state": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Input not found",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/graylog/event/definitions": {
+            "get": {
+                "summary": "Get event definitions from Graylog",
+                "description": "Endpoint to get event definitions from Graylog.",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "event_definitions": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "description": "Event definition details"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        }
+                    }
+                },
+                "operationId": "getGraylogEventDefinitions",
+                "tags": ["Graylog"]
+            }
+        },
+        "/graylog/event/alerts": {
+            "get": {
+                "summary": "Get event alerts from Graylog",
+                "description": "Endpoint to get event alerts from Graylog.",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "event_alerts": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "description": "Event alert details"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        }
+                    }
+                },
+                "operationId": "getGraylogEventAlerts",
+                "tags": ["Graylog"]
+            }
+        },
+        "/graylog/pipeline/rules": {
+            "get": {
+                "summary": "Get pipeline rules from Graylog",
+                "description": "Endpoint to get pipeline rules from Graylog.",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "pipeline_rules": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "description": "Pipeline rule details"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        }
+                    }
+                },
+                "operationId": "getGraylogPipelineRules",
+                "tags": ["Graylog"]
+            }
+        },
+        "/graylog/pipeline/pipelines": {
+            "get": {
+                "summary": "Get pipelines from Graylog",
+                "description": "Endpoint to get pipelines from Graylog.",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "pipelines": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "description": "Pipeline details"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        }
+                    }
+                },
+                "operationId": "getGraylogPipelines",
+                "tags": ["Graylog"]
+            }
+        },
+        "/graylog/streams": {
+            "get": {
+                "summary": "Get streams from Graylog",
+                "description": "Endpoint to get streams from Graylog.",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "description": "Stream details"
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        }
+                    }
+                },
+                "operationId": "getGraylogStreams",
+                "tags": ["Graylog"]
+            }
+        },
+        "/graylog/streams/{stream_id}/pause": {
+            "post": {
+                "tags": ["Graylog"],
+                "summary": "Pauses a Graylog stream",
+                "description": "Endpoint to pause a Graylog stream.",
+                "parameters": [
+                    {
+                        "name": "stream_id",
+                        "in": "path",
+                        "description": "The ID of the stream to be paused.",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "success": {
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "success": {
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Stream not found",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "success": {
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/graylog/streams/{stream_id}/resume": {
+            "post": {
+                "tags": ["Graylog"],
+                "summary": "Resumes a Graylog stream",
+                "description": "Endpoint to resume a Graylog stream.",
+                "parameters": [
+                    {
+                        "name": "stream_id",
+                        "in": "path",
+                        "description": "The ID of the stream to be resumed.",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "success": {
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "success": {
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Stream not found",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "message": {
+                                    "type": "string"
+                                },
+                                "success": {
+                                    "type": "boolean"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/alerts": {
             "post": {
                 "summary": "Create and get alerts",

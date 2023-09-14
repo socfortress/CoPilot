@@ -1,6 +1,6 @@
 import { HttpClient } from "./httpClient"
 import { FlaskBaseResponse } from "@/types/flask"
-import { Message, ThroughputMetric, IndexData, Inputs } from "@/types/graylog" // Import Graylog interfaces
+import { Message, ThroughputMetric, IndexData, Inputs, InputState } from "@/types/graylog" // Import Graylog interfaces
 
 export default {
     getMessages() {
@@ -15,7 +15,20 @@ export default {
     deleteIndex(indexName: string) {
         return HttpClient.delete<FlaskBaseResponse>(`/graylog/indices/${indexName}/delete`)
     },
-    getInputs() {
-        return HttpClient.get<FlaskBaseResponse & { inputs: Inputs }>(`/graylog/inputs`)
+    getInputsRunning() {
+        return HttpClient.get<FlaskBaseResponse & { inputs: Inputs }>(`/graylog/inputs/running`)
+    },
+    getInputsConfigured() {
+        return HttpClient.get<FlaskBaseResponse & { inputs: Inputs }>(`/graylog/inputs/configured`)
+    },
+    startInput(inputId: string) {
+        return HttpClient.put<FlaskBaseResponse>(`/graylog/inputs/${inputId}/start`)
+    },
+    stopInput(inputId: string) {
+        return HttpClient.delete<FlaskBaseResponse>(`/graylog/inputs/${inputId}/stop`)
+    },
+    getInputState(inputId: string) {
+        return HttpClient.get<FlaskBaseResponse & { state: InputState }>(`/graylog/inputs/${inputId}/state`)
     }
+
 }
