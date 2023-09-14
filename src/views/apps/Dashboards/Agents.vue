@@ -95,7 +95,7 @@ function syncAgents() {
     loadingSync.value = true
 
     Api.agents
-        .getAgents()
+        .syncAgents()
         .then(res => {
             if (res.data.success) {
                 ElMessage({

@@ -1,13 +1,17 @@
 <template>
-    <div class="page-agent scrollable only-y">
+    <div class="page-agent">
         <div class="agent-toolbar">
             <div class="back-btn" @click="gotoAgents()">
                 <i class="mdi mdi-arrow-left"></i>
                 <span> Agents list </span>
             </div>
-            <div class="delete-btn" @click.stop="handleDelete">Delete Agent</div>
+            <div class="delete-btn" @click.stop="handleDelete" v-if="agent">Delete Agent</div>
         </div>
-        <div class="page-header card-base card-shadow--small flex" :class="{ critical: agent?.critical_asset, online: isOnline }">
+        <div
+            class="page-header card-base card-shadow--small flex"
+            :class="{ critical: agent?.critical_asset, online: isOnline }"
+            v-loading="loadingAgent"
+        >
             <div class="box grow">
                 <div class="title">
                     <div class="critical" :class="{ active: agent?.critical_asset }">
@@ -36,50 +40,22 @@
                 <i class="mdi mdi-menu align-vertical-middle"></i>
             </div>
         </div>
-        <div class="flex">
+        <div class="wrapper">
             <div class="sidebar scrollable" :class="{ open: sidebarOpen }">
                 <el-button size="small" class="close-btn" @click="sidebarOpen = false">close</el-button>
-                <div class="sidebar-header">Vulnerabilities</div>
-                <div class="vulnerabilities-list scrollable only-y" v-loading="loadingVulnerabilities">
-                    <VulnerabilityCard :vulnerability="item" v-for="item of vulnerabilities" :key="item.id" />
-
-                    <div v-if="!loadingVulnerabilities && !vulnerabilities.length">No vulnerabilities detected</div>
-                </div>
+                <ul>
+                    <li :class="{ active: activePage === 'overview' }" @click="activePage = 'overview'">Overview</li>
+                    <li :class="{ active: activePage === 'vulnerabilities' }" @click="activePage = 'vulnerabilities'">Vulnerabilities</li>
+                    <li :class="{ active: activePage === 'alerts' }" @click="activePage = 'alerts'">Alerts</li>
+                </ul>
             </div>
-            <div class="main-content box grow card-base card-shadow--small p-24">
-                <div class="property-group" v-if="agent">
-                    <div class="property">
-                        <div class="label">client_id</div>
-                        <div class="value">{{ agent.client_id || "-" }}</div>
-                    </div>
-                    <div class="property">
-                        <div class="label">client_last_seen</div>
-                        <div class="value">{{ formatClientLastSeen || "-" }}</div>
-                    </div>
-                    <div class="property">
-                        <div class="label">ip_address</div>
-                        <div class="value">{{ agent.ip_address || "-" }}</div>
-                    </div>
-                    <div class="property">
-                        <div class="label">label</div>
-                        <div class="value">{{ agent.label || "-" }}</div>
-                    </div>
-                    <div class="property">
-                        <div class="label">last_seen</div>
-                        <div class="value">{{ formatLastSeen || "-" }}</div>
-                    </div>
-                    <div class="property">
-                        <div class="label">os</div>
-                        <div class="value">{{ agent.os || "-" }}</div>
-                    </div>
-                    <div class="property">
-                        <div class="label">velociraptor_client_version</div>
-                        <div class="value">{{ agent.velociraptor_client_version || "-" }}</div>
-                    </div>
-                    <div class="property">
-                        <div class="label">wazuh_agent_version</div>
-                        <div class="value">{{ agent.wazuh_agent_version || "-" }}</div>
-                    </div>
+            <div class="main-content box grow card-base card-shadow--small scrollable only-y">
+                <div v-if="agent" v-loading="loadingAgent">
+                    <OverviewSection :agent="agent" v-if="activePage === 'overview'" />
+
+                    <VulnerabilitiesSection :agent="agent" v-show="activePage === 'vulnerabilities'" />
+
+                    <template v-if="activePage === 'alerts'">...yet to be implemented...</template>
                 </div>
             </div>
         </div>
@@ -89,40 +65,26 @@
 <script setup lang="ts">
 import { ref, onBeforeMount, computed } from "vue"
 import { useRoute } from "vue-router"
-import dayjs from "dayjs"
 import { ElMessage } from "element-plus"
 import Api from "@/api"
-import { Agent, AgentVulnerabilities } from "@/types/agents"
+import { Agent } from "@/types/agents"
 import { handleDeleteAgent, isAgentOnline, toggleAgentCritical } from "@/components/agents/utils"
 import { Star as StarIcon } from "@element-plus/icons-vue"
 import { useRouter } from "vue-router"
-import VulnerabilityCard from "@/components/agents/VulnerabilityCard.vue"
-import { nanoid } from "nanoid"
+import VulnerabilitiesSection from "@/components/agents/VulnerabilitiesSection.vue"
+import OverviewSection from "@/components/agents/OverviewSection.vue"
+
+type AgentPages = "overview" | "vulnerabilities" | "alerts"
 
 const router = useRouter()
 const sidebarOpen = ref(false)
 const route = useRoute()
 const loadingAgent = ref(false)
-const loadingVulnerabilities = ref(false)
+const activePage = ref<AgentPages>("overview")
 const agent = ref<Agent | null>(null)
-const vulnerabilities = ref<AgentVulnerabilities[]>([])
 
 const isOnline = computed(() => {
     return isAgentOnline(agent.value?.last_seen)
-})
-
-const formatLastSeen = computed(() => {
-    const lastSeenDate = dayjs(agent.value.last_seen)
-    if (!lastSeenDate.isValid()) return agent.value.last_seen
-
-    return lastSeenDate.format("DD/MM/YYYY @ HH:mm")
-})
-
-const formatClientLastSeen = computed(() => {
-    const lastSeenDate = dayjs(agent.value.client_last_seen)
-    if (!lastSeenDate.isValid()) return agent.value.last_seen
-
-    return lastSeenDate.format("DD/MM/YYYY @ HH:mm")
 })
 
 function getAgent(id: string) {
@@ -150,35 +112,6 @@ function getAgent(id: string) {
         })
         .finally(() => {
             loadingAgent.value = false
-        })
-}
-
-function getVulnerabilities(id: string) {
-    loadingVulnerabilities.value = true
-
-    Api.agents
-        .agentVulnerabilities(id)
-        .then(res => {
-            if (res.data.success) {
-                vulnerabilities.value = (res.data.vulnerabilities || []).map(o => {
-                    o.id = nanoid()
-                    return o
-                })
-            } else {
-                ElMessage({
-                    message: res.data?.message || "An error occurred. Please try again later.",
-                    type: "warning"
-                })
-            }
-        })
-        .catch(err => {
-            ElMessage({
-                message: err.response?.data?.message || "An error occurred. Please try again later.",
-                type: "error"
-            })
-        })
-        .finally(() => {
-            loadingVulnerabilities.value = false
         })
 }
 
@@ -216,15 +149,14 @@ function handleDelete() {
 }
 
 function gotoAgents() {
-    router.push(`/agents`).catch(err => {})
+    router.push(`/agents`).catch(() => {})
 }
 
 onBeforeMount(() => {
     if (route.params.id) {
         getAgent(route.params.id.toString())
-        getVulnerabilities(route.params.id.toString())
     } else {
-        router.replace(`/agents`).catch(err => {})
+        router.replace(`/agents`).catch(() => {})
     }
 })
 </script>
@@ -233,9 +165,14 @@ onBeforeMount(() => {
 @import "@/assets/scss/_variables";
 
 .page-agent {
-    padding-left: 20px;
-    padding-right: 15px;
-    padding-bottom: 20px;
+    height: 100%;
+    margin: 0 !important;
+    padding: 20px;
+    padding-bottom: 10px;
+    box-sizing: border-box;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
 
     .agent-toolbar {
         margin-top: 16px;
@@ -269,8 +206,9 @@ onBeforeMount(() => {
     .page-header {
         margin-top: 12px;
         margin-bottom: 20px;
-        min-height: 60px;
+        min-height: 120px;
         border: 2px solid transparent;
+        box-sizing: border-box;
 
         .title {
             display: flex;
@@ -326,79 +264,89 @@ onBeforeMount(() => {
         }
     }
 
-    .sidebar {
-        box-sizing: border-box;
-        padding-right: var(--size-3);
-        min-width: 250px;
-        max-width: 250px;
-        max-height: 100vh;
+    .wrapper {
+        display: flex;
+        flex-grow: 1;
+        overflow: hidden;
+        padding: 5px;
+        margin-left: -5px;
+        margin-right: -5px;
 
-        .close-btn {
-            display: none;
-            width: 100%;
-            margin-bottom: 10px;
-        }
+        .sidebar {
+            box-sizing: border-box;
+            padding-right: var(--size-3);
+            min-width: 250px;
+            max-width: 250px;
+            max-height: 100vh;
 
-        .sidebar-header {
-            font-weight: bold;
-            margin-bottom: var(--size-3);
-        }
-
-        .vulnerabilities-list {
-            min-height: 100px;
-            padding-top: 8px;
-
-            :deep() {
-                .vulnerability-card {
-                    margin-bottom: var(--size-3);
-                }
+            .close-btn {
+                display: none;
+                width: 100%;
+                margin-bottom: 10px;
             }
-        }
-    }
 
-    .main-content {
-        container-type: inline-size;
-        padding: var(--size-5);
-
-        .property-group {
-            width: 100%;
-            display: grid;
-            grid-gap: var(--size-5);
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            grid-auto-flow: row dense;
-
-            .property {
-                background-color: rgb(244, 244, 244);
-                padding: var(--size-3);
+            ul {
+                width: 100%;
+                list-style: none;
+                padding: 0;
+                margin: 0;
+            }
+            li {
+                box-sizing: border-box;
+                width: 100%;
+                list-style: none;
+                padding: 15px 20px;
+                border-bottom: 1px solid transparentize($text-color-primary, 0.9);
+                cursor: pointer;
                 position: relative;
-                border-radius: 8px;
 
-                .label {
+                &::after {
+                    content: "";
+                    display: block;
+                    width: 0%;
+                    height: 100%;
+                    background: $text-color-primary;
                     position: absolute;
-                    top: -8px;
-                    font-size: var(--font-size-0);
-                    background-color: #8d91a1;
-                    padding: 1px 6px;
-                    font-family: var(--font-mono);
-                    border-radius: 5px;
-                    color: white;
-                    max-width: calc(100% - var(--size-8));
-                    overflow: hidden;
-                    white-space: nowrap;
-                    text-overflow: ellipsis;
+                    top: 0;
+                    left: 0;
+                    opacity: 0;
+                    transition: all 0.5s;
                 }
 
-                .value {
-                    position: relative;
-                    top: 5px;
+                &::before {
+                    content: "";
+                    display: block;
+                    width: 6px;
+                    height: 60%;
+                    background: #6996e0;
+                    position: absolute;
+                    top: 20%;
+                    left: 0;
+                    opacity: 0;
+                    transform: translateX(-100%);
+                    transition: all 0.5s;
+                }
+
+                &:hover {
+                    &::after {
+                        width: 100%;
+                        opacity: 0.3;
+                    }
+                }
+
+                &.active {
+                    &::before {
+                        opacity: 1;
+                        transform: translateX(0);
+                    }
                 }
             }
         }
 
-        @container (max-width: 500px) {
-            .property-group {
-                grid-template-columns: repeat(auto-fit, 100%);
-            }
+        .main-content {
+            padding: var(--size-5);
+            flex-grow: 1;
+            overflow: hidden;
         }
     }
 }
@@ -413,34 +361,37 @@ onBeforeMount(() => {
                 display: block;
             }
         }
-        .sidebar {
-            padding: var(--size-3);
 
-            .close-btn {
-                display: block;
-            }
+        .wrapper {
+            .sidebar {
+                padding: var(--size-3);
 
-            margin: 0;
-            position: absolute;
-            background: white;
-            color: #000;
-            top: 5px;
-            left: -100%;
-            opacity: 0;
-            bottom: 5px;
-            box-shadow: 40px 0px 160px 80px rgba(0, 0, 0, 0.3);
-            border-top-right-radius: 4px;
-            border-bottom-right-radius: 4px;
-            transition: all 0.5s;
+                .close-btn {
+                    display: block;
+                }
 
-            li {
-                border-bottom: 1px solid #eee;
-            }
+                margin: 0;
+                position: absolute;
+                background: white;
+                color: #000;
+                top: 5px;
+                left: -100%;
+                opacity: 0;
+                bottom: 5px;
+                box-shadow: 40px 0px 160px 80px rgba(0, 0, 0, 0.3);
+                border-top-right-radius: 4px;
+                border-bottom-right-radius: 4px;
+                transition: all 0.5s;
 
-            &.open {
-                opacity: 1;
-                left: 0;
-                z-index: 999;
+                li {
+                    border-bottom: 1px solid #eee;
+                }
+
+                &.open {
+                    opacity: 1;
+                    left: 0;
+                    z-index: 999;
+                }
             }
         }
     }

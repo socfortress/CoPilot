@@ -121,7 +121,7 @@ const router = createRouter({
         {
             path: "/agent/:id?",
             name: "agent",
-            component: import("@/views/AgentOverview.vue"),
+            component: () => import("@/views/AgentOverview.vue"),
             meta: {
                 auth: true,
                 layout: layouts.navLeft,
