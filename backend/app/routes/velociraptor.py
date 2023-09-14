@@ -1,203 +1,98 @@
-from flask import Blueprint
-from flask import jsonify
-from flask import request
+from flask import Blueprint, jsonify, request, Response
 from loguru import logger
+from typing import Tuple, Union
 
 from app.services.Velociraptor.artifacts import ArtifactsService
 from app.services.Velociraptor.universal import UniversalService
 
 bp = Blueprint("velociraptor", __name__)
 
-
-@bp.route("/velociraptor/artifacts", methods=["GET"])
-def get_artifacts():
+def get_client_info(client_name: str) -> Tuple[Union[str, None], Union[str, None], Union[Response, None]]:
     """
-    Endpoint to list all available artifacts.
-    It processes each artifact to verify the connection and returns the results.
+    Fetch client information based on client name.
+
+    Args:
+        client_name (str): The name of the client.
 
     Returns:
-        json: A JSON response containing the list of all available artifacts along with their connection verification
-        status.
+        tuple: Client ID, Client OS, and an error response if any.
+    """
+    service = UniversalService()
+    client_info = service.get_client_id(client_name=client_name)["results"][0]
+    if client_info is None:
+        return None, None, jsonify(
+            {
+                "message": f"{client_name} has not been seen in the last 30 seconds and may not be online with the Velociraptor server.",
+                "success": False,
+            }
+        ), 500
+    return client_info["client_id"], client_info["os_info"]["system"], None
+
+@bp.route("/velociraptor/artifacts/os/<filter_os>", methods=["GET"])
+def get_artifacts(filter_os: str = None) -> Response:
+    """
+    Fetch artifacts based on the OS filter if provided.
+
+    Args:
+        filter_os (str, optional): The OS filter for artifacts.
+
+    Returns:
+        Response: A Flask JSON response containing the artifacts.
     """
     service = ArtifactsService()
-    artifacts = service.collect_artifacts()
+    if filter_os:
+        artifacts = service.collect_artifacts_filtered(filter_os)
+    else:
+        artifacts = service.collect_artifacts()
     return artifacts
 
-
-@bp.route("/velociraptor/artifacts/linux", methods=["GET"])
-def get_artifacts_linux():
+@bp.route("/velociraptor/artifacts/hostname/<hostname>", methods=["GET"])
+def get_artifacts_by_hostname(hostname: str) -> Response:
     """
-    Endpoint to list all available Linux artifacts.
-    It processes each artifact to verify the connection and returns the results where the name
-    begins with `Linux`.
+    Fetch artifacts based on hostname.
+
+    Args:
+        hostname (str): The hostname for which to fetch artifacts.
 
     Returns:
-        json: A JSON response containing the list of all available Linux artifacts along with their connection verification
-        status.
-    """
-    service = ArtifactsService()
-    linux_artifacts = service.collect_artifacts_linux()
-    return linux_artifacts
-
-
-@bp.route("/velociraptor/artifacts/windows", methods=["GET"])
-def get_artifacts_windows():
-    """
-    Endpoint to list all available Windows artifacts.
-    It processes each artifact to verify the connection and returns the results where the name
-    begins with `Windows`.
-
-    Returns:
-        json: A JSON response containing the list of all available Windows artifacts along with their connection verification
-        status.
-    """
-    service = ArtifactsService()
-    windows_artifacts = service.collect_artifacts_windows()
-    return windows_artifacts
-
-
-@bp.route("/velociraptor/artifacts/mac", methods=["GET"])
-def get_artifacts_mac():
-    """
-    Endpoint to list all available MacOS artifacts.
-    It processes each artifact to verify the connection and returns the results where the name
-    begins with `MacOS`.
-
-    Returns:
-        json: A JSON response containing the list of all available MacOS artifacts along with their connection verification
-        status.
-    """
-    service = ArtifactsService()
-    mac_artifacts = service.collect_artifacts_macos()
-    return mac_artifacts
-
-
-@bp.route("/velociraptor/artifacts/<hostname>", methods=["GET"])
-def get_artifacts_by_hostname(hostname):
-    """
-    Endpoint to list all available artifacts for a given hostname.
-    It looks up the `os` for the provided `hostname` in the `agent_metadata` table and returns the artifacts for that OS.
-
-    Returns:
-        json: A JSON response containing the list of all available artifacts along with their connection verification
-        status.
+        Response: A Flask JSON response containing the artifacts.
     """
     service = ArtifactsService()
     artifacts = service.collect_artifacts_by_hostname(hostname=hostname)
     return artifacts
 
-
-@bp.route("/velociraptor/artifacts/collection", methods=["POST"])
-def collect_artifact():
+@bp.route("/velociraptor/operation", methods=["POST"])
+def execute_operation() -> Response:
     """
-    Endpoint to collect an artifact.
-    It collects the artifact name and client name from the request body and returns the results.
+    Execute an operation like artifact collection, remote command execution, or quarantine.
 
     Returns:
-        json: A JSON response containing the result of the artifact collection operation.
-    """
-    req_data = request.get_json()
-    artifact_name = req_data["artifact_name"]
-    client_name = req_data["client_name"]
-    service = UniversalService()
-    client_id = service.get_client_id(client_name=client_name)["results"][0]["client_id"]
-    if client_id is None:
-        return (
-            jsonify(
-                {
-                    "message": f"{client_name} has not been seen in the last 30 seconds and may not be online with the "
-                    "Velociraptor server.",
-                    "success": False,
-                },
-            ),
-            500,
-        )
-
-    artifact_service = ArtifactsService()
-    artifact_results = artifact_service.run_artifact_collection(
-        client_id=client_id,
-        artifact=artifact_name,
-    )
-    return artifact_results
-
-
-@bp.route("/velociraptor/remotecommand", methods=["POST"])
-def run_remote_command():
-    """
-    Endpoint to run a remote command.
-    It collects the command and client name from the request body and returns the results.
-
-    Returns:
-        json: A JSON response containing the result of the PowerShell command execution.
-    """
-    req_data = request.get_json()
-    command = req_data["command"]
-    client_name = req_data["client_name"]
-    artifact_name = req_data["artifact_name"]
-    service = UniversalService()
-    client_id = service.get_client_id(client_name=client_name)["results"][0]["client_id"]
-    if client_id is None:
-        return (
-            jsonify(
-                {
-                    "message": f"{client_name} has not been seen in the last 30 seconds and may not be online with the "
-                    "Velociraptor server.",
-                    "success": False,
-                },
-            ),
-            500,
-        )
-
-    artifact_service = ArtifactsService()
-    artifact_results = artifact_service.run_remote_command(
-        client_id=client_id,
-        artifact=artifact_name,
-        command=command,
-    )
-    return artifact_results
-
-@bp.route("/velociraptor/quarantine", methods=["POST"])
-def quarantine_endpoint():
-    """
-    Endpoint to quarantine a host.
-    It collects the client name and OS and invokes the quarantine function.
-
-    Returns:
-        json: A JSON response containing the result of the artifact collection operation.
+        Response: A Flask JSON response containing the result of the operation.
     """
     req_data = request.get_json()
     client_name = req_data["client_name"]
-    action = req_data["action"]
-    if action is None:
-        return (
-            jsonify(
-                {
-                    "message": f"Action is required.",
-                    "success": False,
-                },
-            ),
-            500,
-        )
+    operation = req_data["operation"]
+    action = req_data.get("action", None)
+    command = req_data.get("command", None)
 
-    service = UniversalService()
-    client_id = service.get_client_id(client_name=client_name)["results"][0]["client_id"]
-    client_os = service.get_client_os(client_name=client_name)["results"][0]["os_info"]["system"]
-    if client_id is None:
-        return (
-            jsonify(
-                {
-                    "message": f"{client_name} has not been seen in the last 30 seconds and may not be online with the "
-                    "Velociraptor server.",
-                    "success": False,
-                },
-            ),
-            500,
-        )
+    client_id, client_os, error_response = get_client_info(client_name)
+    if error_response:
+        return error_response
 
-    artifact_service = ArtifactsService()
-    artifact_results = artifact_service.quarantine_endpoint(
-        client_id=client_id,
-        client_os=client_os,
-        action=action,
-    )
-    return artifact_results
+    service = ArtifactsService()
+
+    if operation == "collect_artifact":
+        artifact_name = req_data["artifact_name"]
+        return service.run_artifact_collection(client_id=client_id, artifact=artifact_name)
+
+    elif operation == "run_command":
+        artifact_name = req_data["artifact_name"]
+        return service.run_remote_command(client_id=client_id, artifact=artifact_name, command=command)
+
+    elif operation == "quarantine":
+        if action is None:
+            return jsonify({"message": "Action is required.", "success": False}), 500
+        return service.quarantine_endpoint(client_id=client_id, client_os=client_os, action=action)
+
+    else:
+        return jsonify({"message": "Invalid operation", "success": False}), 400

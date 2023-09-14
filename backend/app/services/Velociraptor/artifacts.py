@@ -85,32 +85,31 @@ class ArtifactsService:
             "artifacts": filtered_artifacts,
         }
 
-    def collect_artifacts_linux(self) -> dict:
+    def collect_artifacts_filtered(self, filter_os: str) -> dict:
         """
-        Collect the artifacts from Velociraptor that have a name beginning with `Linux`.
+        Collect the artifacts from Velociraptor based on the provided OS filter.
+
+        Args:
+            filter_os (str): The OS filter to collect the artifacts.
 
         Returns:
             dict: A dictionary with the success status, a message, and potentially the artifacts.
         """
-        return self.collect_artifacts_prefixed("Linux.")
+        os_prefix_map = {
+            'linux': 'Linux.',
+            'windows': 'Windows.',
+            'macos': 'MacOS.'
+        }
 
-    def collect_artifacts_windows(self) -> dict:
-        """
-        Collect the artifacts from Velociraptor that have a name beginning with `Windows`.
+        prefix = os_prefix_map.get(filter_os.lower())
 
-        Returns:
-            dict: A dictionary with the success status, a message, and potentially the artifacts.
-        """
-        return self.collect_artifacts_prefixed("Windows.")
+        if not prefix:
+            return {
+                "success": False,
+                "message": f"OS filter {filter_os} not supported",
+            }
 
-    def collect_artifacts_macos(self) -> dict:
-        """
-        Collect the artifacts from Velociraptor that have a name beginning with `MacOS`.
-
-        Returns:
-            dict: A dictionary with the success status, a message, and potentially the artifacts.
-        """
-        return self.collect_artifacts_prefixed("MacOS.")
+        return self.collect_artifacts_prefixed(prefix)
 
     def collect_artifacts_by_hostname(self, hostname: str) -> dict:
         """
@@ -129,13 +128,21 @@ class ArtifactsService:
                 "message": f"Agent with hostname {hostname} not found",
             }
 
-        os = agent_metadata.os
-        if "Linux" in os:
-            return self.collect_artifacts_linux()
-        elif "Windows" in os:
-            return self.collect_artifacts_windows()
-        elif "MacOS" in os:
-            return self.collect_artifacts_macos()
+        os = agent_metadata.os.lower()
+        os_filter_map = {
+            'linux': 'Linux',
+            'windows': 'Windows',
+            'macos': 'MacOS'
+        }
+
+        filter_os = None
+        for keyword, prefix in os_filter_map.items():
+            if keyword in os:
+                filter_os = prefix
+                break
+
+        if filter_os:
+            return self.collect_artifacts_filtered(filter_os)
         else:
             return {
                 "success": False,

@@ -196,7 +196,7 @@ class UniversalService:
         """
         # Formulate queries
         try:
-            vql_client_id = f"select client_id from clients(search='host:{client_name}')"
+            vql_client_id = f"select client_id,os_info from clients(search='host:{client_name}')"
             vql_last_seen_at = f"select last_seen_at from clients(search='host:{client_name}')"
 
             # Get the last seen timestamp
@@ -217,41 +217,6 @@ class UniversalService:
                 "success": False,
                 "message": f"Failed to get Client ID for {client_name}: {e}",
                 "results": [{"client_id": None}],
-            }
-
-    def get_client_os(self, client_name: str):
-        """
-        Get the client_os associated with a given client_name.
-
-        Args:
-            client_name (str): The asset name to search for.
-
-        Returns:
-            dict: A dictionary with the success status, a message, and potentially the client_os.
-        """
-        # Formulate queries
-        try:
-            vql_client_os = f"select os_info from clients(search='host:{client_name}')"
-            vql_last_seen_at = f"select last_seen_at from clients(search='host:{client_name}')"
-
-            # Get the last seen timestamp
-            last_seen_at = self._get_last_seen_timestamp(vql_last_seen_at)
-            logger.info(f"Last seen at: {last_seen_at}")
-
-            # if last_seen_at is longer than 30 seconds from now, return False
-            if self._is_offline(last_seen_at):
-                return {
-                    "success": False,
-                    "message": f"{client_name} has not been seen in the last 30 seconds and "
-                    "may not be online with the Velociraptor server.",
-                    "results": [{"os": None}],
-                }
-            return self.execute_query(vql_client_os)
-        except Exception as e:
-            return {
-                "success": False,
-                "message": f"Failed to get Client OS for {client_name}: {e}",
-                "results": [{"os": None}],
             }
 
     def _get_last_seen_timestamp(self, vql: str):
