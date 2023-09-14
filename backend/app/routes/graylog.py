@@ -140,15 +140,21 @@ def get_inputs_configured() -> dict:
     logger.info("Received request to get configured graylog inputs")
     service = InputsService()
     configured_inputs = service.collect_configured_inputs()
-    for input in configured_inputs["configured_inputs"]:
-        # Get the ID and invoke the get_inputstate function
-        input_id = input["id"]
-        inputstate = get_inputstate(input_id)
-        # Add the inputstate to the configured_inputs
-        input["inputstate"] = inputstate["inputstate"]["state"]
-    return jsonify(
-        {"configured_inputs": configured_inputs},
-    )
+    try:
+        for input in configured_inputs["configured_inputs"]:
+            # Get the ID and invoke the get_inputstate function
+            input_id = input["id"]
+            inputstate = get_inputstate(input_id)
+            # Add the inputstate to the configured_inputs
+            input["inputstate"] = inputstate["inputstate"]["state"]
+        return jsonify(
+            {"configured_inputs": configured_inputs},
+        )
+    except Exception as e:
+        logger.error(e)
+        return jsonify(
+            {"message": "Error getting inputstate. Make sure Graylog is running and has valid credentials.", "success": False},
+        )
 
 
 @bp.route("/graylog/inputs/<input_id>/stop", methods=["DELETE"])
@@ -251,8 +257,17 @@ def get_streams() -> dict:
     """
     logger.info("Received request to get graylog streams")
     service = StreamsService()
-    streams = service.collect_streams()
-    return streams
+    try:
+        streams = service.collect_streams()
+        return streams
+    except Exception as e:
+        logger.error(e)
+        return jsonify(
+            {
+                "message": "Error getting streams",
+                "success": False,
+            },
+        )
 
 
 @bp.route("/graylog/streams/<stream_id>/pause", methods=["POST"])

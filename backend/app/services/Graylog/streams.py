@@ -44,6 +44,8 @@ class StreamsService:
 
         if streams["success"]:
             return streams
+        else:
+            return {"message": "Failed to collect streams", "success": False}
 
     def _collect_streams(
         self,
@@ -61,6 +63,13 @@ class StreamsService:
                 auth=(self.connector_username, self.connector_password),
                 verify=False,
             )
+            # If streams is None, return an empty list
+            if streams is None:
+                return {
+                    "message": "Collected empty list of streams",
+                    "success": True,
+                    "streams": [],
+                }
             return {
                 "message": "Successfully collected streams",
                 "success": True,
