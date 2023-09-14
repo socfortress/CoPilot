@@ -1,19 +1,19 @@
 <template>
-  <div class="input-details-box" v-loading="loading" :class="{ active: currentInput }">
+  <div class="stream-details-box" v-loading="loading" :class="{ active: currentStream }">
       <div class="box-header">
           <div class="title">
-              <span v-if="currentInput"> Below the details for input </span>
-              <span v-else> Select an input to see the details </span>
+              <span v-if="currentStream"> Below the details for stream </span>
+              <span v-else> Select a stream to see the details </span>
           </div>
-          <div class="select-box" v-if="inputs && inputs.length">
-              <el-select v-model="currentInput" placeholder="Inputs list" clearable value-key="input" filterable>
-                  <el-option v-for="input in inputs" :key="input.id" :label="input.title" :value="input"></el-option>
+          <div class="select-box" v-if="streams && streams.length">
+              <el-select v-model="currentStream" placeholder="Streams list" clearable value-key="stream" filterable>
+                  <el-option v-for="stream in streams" :key="stream.id" :label="stream.title" :value="stream"></el-option>
               </el-select>
           </div>
       </div>
-      <div class="details-box" v-if="currentInput">
+      <div class="details-box" v-if="currentStream">
           <div class="info">
-              <InputCard :input="currentInput" showActions @delete="clearCurrentInput()" />
+              <StreamCard :stream="currentStream" showActions @delete="clearcurrentStream()" />
           </div>
       </div>
   </div>
@@ -21,38 +21,40 @@
 
 <script setup lang="ts">
 import { computed, onBeforeMount, ref, toRefs } from "vue"
-import { Inputs } from "@/types/graylog.d"
+import { Streams } from "@/types/graylog.d"
 import { ElMessage } from "element-plus"
-import InputCard from "@/components/inputs/InputCard.vue"
+import StreamCard from "@/components/inputs/StreamCard.vue"
 import Api from "@/api"
 import { nanoid } from "nanoid"
 
-type InputModel = Inputs | null | ""
+type StreamModel = Streams | null | ""
 
 const emit = defineEmits<{
-  (e: "update:modelValue", value: InputModel): void
+  (e: "update:modelValue", value: StreamModel): void
 }>()
 
 const props = defineProps<{
-  inputs: Inputs[] | null
-  modelValue: InputModel
+  streams: Streams[] | null
+  modelValue: StreamModel
 }>()
-const { inputs, modelValue } = toRefs(props)
+const { streams, modelValue } = toRefs(props)
 
-const loading = computed(() => !inputs?.value || inputs.value === null)
+const loading = computed(() => !streams?.value || streams.value === null)
 
 
-const currentInput = computed<InputModel>({
+const currentStream = computed<StreamModel>({
   get() {
-      return modelValue.value
+      return modelValue.value;
   },
   set(value) {
-      emit("update:modelValue", value)
+      console.log("Setting currentStream:", value);  // Debug log
+      emit("update:modelValue", value);
   }
-})
+});
 
-function clearCurrentInput() {
-  currentInput.value = null
+
+function clearcurrentStream() {
+  currentStream.value = null
 }
 
 onBeforeMount(() => {
@@ -64,7 +66,7 @@ onBeforeMount(() => {
 @import "@/assets/scss/_variables";
 @import "@/assets/scss/card-shadow";
 
-.input-details-box {
+.stream-details-box {
   padding: var(--size-5) var(--size-6);
   border: 2px solid transparent;
   @extend .card-base;

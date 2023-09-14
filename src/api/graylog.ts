@@ -1,6 +1,6 @@
 import { HttpClient } from "./httpClient"
 import { FlaskBaseResponse } from "@/types/flask"
-import { Message, ThroughputMetric, IndexData, Inputs, InputState } from "@/types/graylog" // Import Graylog interfaces
+import { Message, ThroughputMetric, IndexData, Inputs, InputState, Streams } from "@/types/graylog" // Import Graylog interfaces
 
 export default {
     getMessages() {
@@ -29,6 +29,15 @@ export default {
     },
     getInputState(inputId: string) {
         return HttpClient.get<FlaskBaseResponse & { state: InputState }>(`/graylog/inputs/${inputId}/state`)
+    },
+    getStreams() {
+        return HttpClient.get<FlaskBaseResponse & { streams: Streams }>(`/graylog/streams`)
+    },
+    stopStream(streamId: string) {
+        return HttpClient.post<FlaskBaseResponse>(`/graylog/streams/${streamId}/pause`)
+    },
+    startStream(streamId: string) {
+        return HttpClient.post<FlaskBaseResponse>(`/graylog/streams/${streamId}/resume`)
     }
 
 }

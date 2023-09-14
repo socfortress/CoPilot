@@ -8,24 +8,42 @@
             <Details :inputs="configuredInputs" v-model="currentInput" />
         </div>
 
+        <div class="section">
+            <div class="columns">
+                <div class="col basis-50">
+                    <StreamDetails class="stretchy" :streams="streams" v-model="currentStream" />
+                </div>
+                <!-- <div class="col basis-50">
+                    <UnhealthyIndices :indices="indices" @click="setIndex" class="stretchy" />
+                </div> -->
+            </div>
+        </div>
+
     </el-scrollbar>
 </template>
 
 <script lang="ts" setup>
-import { RunningInput, ConfiguredInput } from "@/types/graylog.d"
+import { RunningInput, ConfiguredInput, Streams } from "@/types/graylog.d"
 import Api from "@/api"
 import { ElMessage } from "element-plus"
 import { onBeforeMount, ref } from "vue"
 import InputsMarquee from "@/components/inputs/Marquee.vue"
+import StreamDetails from "@/components/inputs/StreamDetails.vue"
 import Details from "@/components/inputs/Details.vue"
 
 const runningInputs = ref<RunningInput[] | null>(null)
 const configuredInputs = ref<ConfiguredInput[] | null>(null)
 const loadingInput = ref(false)
 const currentInput = ref<RunningInput | null>(null)
+const streams = ref<Streams | null>(null)
+const currentStream = ref<Streams | null>(null)
 
 function setInput(input: RunningInput) {
     currentInput.value = input
+}
+
+function setStream(stream: Streams) {
+    currentStream.value = stream
 }
 
 function getInputsRunning() {
@@ -74,9 +92,33 @@ function getInputsConfigured() {
         })
 }
 
+function getStreams() {
+    loadingInput.value = true
+
+    Api.graylog
+        .getStreams()
+        .then(res => {
+            if (res.data.success) {
+                streams.value = res.data.streams.streams
+            } else {
+                ElMessage({
+                    message: res.data?.message || "An error occurred. Please try again later.",
+                    type: "error"
+                })
+            }
+        })
+        .catch(err => {
+            // Handle errors
+        })
+        .finally(() => {
+            loadingInput.value = false
+        })
+}
+
 onBeforeMount(() => {
   getInputsRunning(),
-  getInputsConfigured()
+  getInputsConfigured(),
+  getStreams()
 })
 </script>
 
