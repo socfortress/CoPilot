@@ -1,3 +1,4 @@
+bcrypt
 blueprint
 cortex4py
 dfir_iris_client
@@ -6,6 +7,7 @@ elasticsearch7==7.10.1
 environs
 flask
 flask-cors
+Flask-JWT-Extended
 flask-marshmallow
 flask-migrate
 flask-sqlalchemy
