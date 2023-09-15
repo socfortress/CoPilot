@@ -1,11 +1,14 @@
+from datetime import datetime
+from datetime import timedelta
+
 import bcrypt
-from datetime import datetime, timedelta
-from app.models.users import Users
-from app import db
 from flask_jwt_extended import create_access_token
 
-class UniversalService:
+from app import db
+from app.models.users import Users
 
+
+class UniversalService:
     @staticmethod
     def validate_user_input(data):
         required_fields = ["customerCode", "usersEmail", "password"]
@@ -20,7 +23,7 @@ class UniversalService:
 
     @staticmethod
     def hash_password(password):
-        return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
     @staticmethod
     def create_user(data, hashed_password):
@@ -32,7 +35,7 @@ class UniversalService:
             usersRole=data.get("usersRole"),
             imageFile=data.get("imageFile"),
             notifications=data.get("notifications", 0),
-            passwordHash=hashed_password
+            passwordHash=hashed_password,
         )
         db.session.add(new_user)
         db.session.commit()
@@ -56,7 +59,7 @@ class UniversalService:
         if not user:
             return {"message": "User not found", "success": False}, 404
 
-        if not bcrypt.checkpw(password.encode('utf-8'), user.passwordHash.encode('utf-8')):
+        if not bcrypt.checkpw(password.encode("utf-8"), user.passwordHash.encode("utf-8")):
             return {"message": "Incorrect password", "success": False}, 401
 
         return user
