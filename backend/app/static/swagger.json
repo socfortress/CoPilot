@@ -140,9 +140,177 @@
                 "description": "Find out more",
                 "url": "http://swagger.io"
             }
+        },
+        {
+            "name": "Authenticator",
+            "description": "Everything about Authenticator",
+            "externalDocs": {
+                "description": "Find out more",
+                "url": "http://swagger.io"
+            }
         }
     ],
     "paths": {
+        "/register": {
+            "post": {
+                "tags": ["Authenticator"],
+                "summary": "Register a new user",
+                "description": "Endpoint to register a new user.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "customerCode": {
+                                        "type": "string",
+                                        "description": "The code of the customer"
+                                    },
+                                    "usersFirstName": {
+                                        "type": "string",
+                                        "description": "The first name of the user"
+                                    },
+                                    "usersLastName": {
+                                        "type": "string",
+                                        "description": "The last name of the user"
+                                    },
+                                    "usersEmail": {
+                                        "type": "string",
+                                        "description": "The email of the user"
+                                    },
+                                    "usersRole": {
+                                        "type": "string",
+                                        "description": "The role of the user"
+                                    },
+                                    "imageFile": {
+                                        "type": "string",
+                                        "description": "The file name of the user's image"
+                                    },
+                                    "notifications": {
+                                        "type": "integer",
+                                        "description": "Whether the user has notifications enabled (1) or not (0)"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "description": "The password of the user"
+                                    }
+                                },
+                                "required": ["customerCode", "usersEmail", "password"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "User registered successfully.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request, missing or invalid parameters",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict, user already exists",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/login": {
+            "post": {
+                "tags": ["Authenticator"],
+                "summary": "Run login attempt",
+                "description": "Endpoint to login.",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "description": "User's email"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "description": "User's password"
+                                    }
+                                },
+                                "required": ["email", "password"]
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Login successful.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid input",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/cortex/analyzers": {
             "get": {
                 "tags": ["Cortex"],

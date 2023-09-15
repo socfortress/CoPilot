@@ -1,11 +1,13 @@
 from flask import Flask
 from flask_cors import CORS
+from flask_jwt_extended import JWTManager
 from flask_marshmallow import Marshmallow
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from flask_swagger_ui import get_swaggerui_blueprint
 
 app = Flask(__name__)
+jwt = JWTManager(app)
 
 SWAGGER_URL = "/api/docs"  # URL for exposing Swagger UI (without trailing '/')
 API_URL = "/static/swagger.json"  # Our API url (can of course be a local resource)
@@ -63,6 +65,7 @@ from app.routes.shuffle import bp as shuffle_bp
 from app.routes.smtp import bp as smtp_bp
 from app.routes.sublime import bp as sublime_bp
 from app.routes.threatintel import bp as threatintel_bp
+from app.routes.users import bp as users_bp
 from app.routes.velociraptor import bp as velociraptor_bp
 from app.routes.wazuhindexer import bp as wazuhindexer_bp
 
@@ -83,3 +86,4 @@ app.register_blueprint(threatintel_bp)  # Register the threatintel blueprint
 app.register_blueprint(customers_bp)  # Register the customers blueprint
 app.register_blueprint(dnstwist_bp)  # Register the dnstwist blueprint
 app.register_blueprint(cortex_bp)  # Register the cortex blueprint
+app.register_blueprint(users_bp)  # Register the login blueprint
