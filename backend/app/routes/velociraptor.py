@@ -39,6 +39,19 @@ def get_client_info(client_name: str) -> Tuple[Union[str, None], Union[str, None
     return client_info["client_id"], client_info["os_info"]["system"], None
 
 
+@bp.route("/velociraptor/artifacts", methods=["GET"])
+def get_all_artifacts() -> Response:
+    """
+    Fetch all artifacts.
+
+    Returns:
+        Response: A Flask JSON response containing the artifacts.
+    """
+    service = ArtifactsService()
+    artifacts = service.collect_artifacts()
+    return artifacts
+
+
 @bp.route("/velociraptor/artifacts/os/<filter_os>", methods=["GET"])
 def get_artifacts(filter_os: str = None) -> Response:
     """
@@ -54,7 +67,7 @@ def get_artifacts(filter_os: str = None) -> Response:
     if filter_os:
         artifacts = service.collect_artifacts_filtered(filter_os)
     else:
-        artifacts = service.collect_artifacts()
+        return jsonify({"message": "OS filter is required.", "success": False}), 500
     return artifacts
 
 

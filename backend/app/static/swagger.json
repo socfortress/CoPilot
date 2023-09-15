@@ -3812,6 +3812,29 @@
                 "tags": ["Shuffle"]
             }
         },
+        "/velociraptor/artifacts": {
+            "get": {
+                "summary": "Get all artifacts",
+                "description": "Endpoint to get all artifacts.",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Artifacts"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error"
+                    }
+                },
+                "operationId": "getAllArtifacts",
+                "tags": ["Velociraptor"]
+            }
+        },
         "/velociraptor/artifacts/os/{filter_os}": {
             "get": {
                 "summary": "Get artifacts filtered by OS",
