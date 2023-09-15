@@ -24,10 +24,14 @@ class Users(db.Model):
     imageFile: Column[String] = db.Column(db.String(64))
     notifications: Column[Integer] = db.Column(db.SmallInteger, nullable=False)
     createdAt: Column[DateTime] = db.Column(db.DateTime, default=datetime.utcnow)
+    passwordHash = db.Column(db.String(128), nullable=False)
+    jwtToken = db.Column(db.String(512))
+    tokenExpiry = db.Column(db.DateTime)
 
     def __init__(
         self,
         customerCode: str,
+        passwordHash: str,
         notifications: int,
         usersFirstName: str = None,
         usersLastName: str = None,
@@ -56,6 +60,7 @@ class Users(db.Model):
         self.imageFile = imageFile
         self.notifications = notifications
         self.createdAt = createdAt
+        self.passwordHash = passwordHash
 
     def __repr__(self) -> str:
         """
@@ -86,6 +91,9 @@ class UsersSchema(ma.Schema):
             "imageFile",
             "notifications",
             "createdAt",
+            "passwordHash",
+            "jwtToken",
+            "tokenExpiry",
         )
 
 
