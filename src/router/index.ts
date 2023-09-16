@@ -1,426 +1,378 @@
 import { createRouter, createWebHistory } from "vue-router"
+import Analytics from "@/views/Dashboard/Analytics.vue"
 
-//apps
-import Dashboard from "../views/apps/Dashboard.vue"
-import CryptoDashboard from "../views/apps/CryptoDashboard.vue"
-import EcommerceDashboard from "../views/apps/ecommerce/Dashboard.vue"
-import Calendar from "../views/apps/Calendar.vue"
-import Contacts from "../views/apps/Contacts.vue"
-import Gallery from "../views/apps/Gallery.vue"
-import Cards from "../views/apps/Cards.vue"
-import Mail from "../views/apps/Mail.vue"
-import Ecommerce from "./ecommerce"
-import Connectors from "../views/apps/Connectors.vue"
-import Indices from "../views/apps/Dashboards/Indices.vue"
-import Agents_bkp from "../views/apps/Dashboards/Agents_bkp.vue"
-import Agents from "../views/apps/Dashboards/Agents.vue"
-import Inputs from "../views/apps/Dashboards/Inputs.vue"
-/*
+import AnalyticsIcon from "@vicons/ionicons5/Analytics"
+import EcommerceIcon from "@vicons/fluent/ShoppingBagPercent20Regular"
+import MapIcon from "@vicons/carbon/Map"
+import EditorIcon from "@vicons/carbon/Pen"
+import CalendarIcon from "@vicons/carbon/Calendar"
+import EmailIcon from "@vicons/carbon/Email"
+import ChatIcon from "@vicons/carbon/Chat"
+import CardsIcon from "@vicons/fluent/PreviewLink20Regular"
+import KanbanIcon from "@vicons/fluent/GridKanban20Regular"
+import NotesIcon from "@vicons/carbon/Notebook"
+import PersonIcon from "@vicons/ionicons5/PersonOutline"
+import ToolboxIcon from "@vicons/carbon/ToolBox"
+import MultiLanguageIcon from "@vicons/ionicons5/Language"
+import IconsIcon from "@vicons/fluent/Icons24Regular"
+import FlagIconsIcon from "@vicons/carbon/Flag"
+import TablesIcon from "@vicons/carbon/ShowDataCards"
+import LoginIcon from "@vicons/carbon/Login"
+import LayoutIcon from "@vicons/fluent/DualScreenVerticalScroll24Regular"
+import TypographyIcon from "@vicons/fluent/TextFont16Regular"
 
-//pages
-*/
-import Login from "../views/pages/authentication/Login.vue"
-import Login2 from "../views/pages/authentication/Login2.vue"
-import Register from "../views/pages/authentication/Register.vue"
-import ForgotPassword from "../views/pages/authentication/ForgotPassword.vue"
-import Profile from "../views/pages/Profile.vue"
-import NotFound from "../views/pages/NotFound.vue"
-import Invoice from "../views/pages/Invoice.vue"
-
-//ui
-import layout from "./layout"
-import Themes from "../views/ui/Themes.vue"
-import Icons from "../views/ui/Icons/Icons.vue"
-import MdIcons from "../views/ui/Icons/MdIcons.vue"
-import FlagIcons from "../views/ui/Icons/FlagIcons.vue"
-import MultiLanguage from "../views/ui/MultiLanguage.vue"
-import HelperClasses from "../views/ui/HelperClasses.vue"
-import Typography from "../views/ui/Typography.vue"
-import element from "./element"
-import tables from "./tables"
-import maps from "./maps"
-import editors from "./editors"
-import charts from "./charts"
-
-import layouts from "../layout"
-import { useMainStore } from "@/stores/main"
-import type { StateLayout } from "@/types/layout"
+import components from "./components"
+import { Layout } from "@/types/theme.d"
 
 const router = createRouter({
-    history: createWebHistory(import.meta.env.BASE_URL),
-    routes: [
-        {
-            path: "/",
-            alias: "/dashboard",
-            name: "dashboard",
-            component: Dashboard,
-            meta: {
-                auth: true,
-                layout: layouts.navLeft,
-                searchable: true,
-                tags: ["app"]
-            }
-        },
-        {
-            path: "/ecommerce-dashboard",
-            name: "ecommerce-admin-dashboard",
-            component: EcommerceDashboard,
-            meta: {
-                auth: true,
-                layout: layouts.navLeft,
-                searchable: true,
-                title: "eCommerce admin dashboard",
-                tags: ["app", "Ecommerce"]
-            }
-        },
-        {
-            path: "/crypto-dashboard",
-            alias: "/dashboards",
-            name: "crypto-dashboard",
-            component: CryptoDashboard,
-            meta: {
-                auth: true,
-                layout: layouts.navLeft,
-                searchable: true,
-                tags: ["app", "Crypto"]
-            }
-        },
-        {
-            path: "/connectors",
-            name: "connectors",
-            component: Connectors,
-            meta: {
-                auth: true,
-                layout: layouts.navLeft,
-                searchable: true,
-                tags: ["app"]
-            }
-        },
-        {
-            path: "/indices",
-            name: "indices",
-            component: Indices,
-            meta: {
-                auth: true,
-                layout: layouts.navLeft,
-                searchable: true,
-                tags: ["app"]
-            }
-        },
-        {
-            path: "/agents",
-            name: "agents",
-            component: Agents,
-            meta: {
-                auth: true,
-                layout: layouts.navLeft,
-                searchable: true,
-                tags: ["app"]
-            }
-        },
-        {
-            path: "/agent/:id?",
-            name: "agent",
-            component: () => import("@/views/AgentOverview.vue"),
-            meta: {
-                auth: true,
-                layout: layouts.navLeft,
-                searchable: true,
-                tags: ["app"]
-            }
-        },
-        {
-            path: "/inputs",
-            name: "inputs",
-            component: Inputs,
-            meta: {
-                auth: true,
-                layout: layouts.navLeft,
-                searchable: true,
-                tags: ["app"]
-            }
-        },
-        {
-            path: "/agents-bkp",
-            name: "agents-bkp",
-            component: Agents_bkp,
-            meta: {
-                auth: true,
-                layout: layouts.navLeft,
-                searchable: true,
-                tags: ["app"]
-            }
-        },
-        {
-            path: "/contacts",
-            name: "contacts",
-            component: Contacts,
-            meta: {
-                auth: true,
-                layout: layouts.navLeft,
-                searchable: true,
-                tags: ["users", "address", "book", "app"]
-            }
-        },
-        {
-            path: "/gallery",
-            name: "gallery",
-            component: Gallery,
-            meta: {
-                auth: true,
-                layout: layouts.navLeft,
-                searchable: true,
-                tags: ["photo", "app"]
-            }
-        },
-        {
-            path: "/cards",
-            name: "cards",
-            component: Cards,
-            meta: {
-                auth: true,
-                layout: layouts.navLeft,
-                searchable: true,
-                tags: ["app", "todo"]
-            }
-        },
-        {
-            path: "/mail",
-            name: "mail",
-            component: Mail,
-            meta: {
-                auth: true,
-                layout: layouts.navLeft,
-                searchable: true,
-                title: "Mail",
-                tags: ["app", "email", "inbox"]
-            }
-        },
-        Ecommerce,
-        layout,
-        {
-            path: "/themes",
-            name: "themes",
-            component: Themes,
-            meta: {
-                auth: true,
-                layout: layouts.navLeft,
-                searchable: true,
-                tags: ["ui"]
-            }
-        },
-        {
-            path: "/icons",
-            name: "icons",
-            component: Icons,
-            meta: {
-                auth: true,
-                layout: layouts.navLeft
-            },
-            children: [
-                {
-                    path: "md-icons",
-                    name: "md-icons",
-                    component: MdIcons,
-                    meta: {
-                        auth: true,
-                        layout: layouts.navLeft,
-                        searchable: true,
-                        title: "Material Design Icons",
-                        tags: ["material design"]
-                    }
-                },
-                {
-                    path: "flag-icons",
-                    name: "flag-icons",
-                    component: FlagIcons,
-                    meta: {
-                        auth: true,
-                        layout: layouts.navLeft,
-                        searchable: true,
-                        title: "Flag Icons",
-                        tags: ["list", "ui"]
-                    }
-                }
-            ]
-        },
-        {
-            path: "/multi-language",
-            name: "multi-language",
-            component: MultiLanguage,
-            meta: {
-                auth: true,
-                layout: layouts.navLeft,
-                searchable: true,
-                tags: ["ui", "translate"]
-            }
-        },
-        {
-            path: "/helper-classes",
-            name: "helper-classes",
-            component: HelperClasses,
-            meta: {
-                auth: true,
-                layout: layouts.navLeft,
-                searchable: true,
-                title: "Helper Classes",
-                tags: ["ui"]
-            }
-        },
-        {
-            path: "/typography",
-            name: "typography",
-            component: Typography,
-            meta: {
-                auth: true,
-                layout: layouts.navLeft,
-                searchable: true,
-                title: "Typography",
-                tags: ["ui"]
-            }
-        },
-        element,
-        tables,
-        maps,
-        editors,
-        charts,
-        {
-            path: "/profile",
-            name: "profile",
-            component: Profile,
-            meta: {
-                auth: true,
-                layout: layouts.navLeft,
-                searchable: true,
-                tags: ["pages"]
-            }
-        },
-        {
-            path: "/invoice",
-            name: "invoice",
-            component: Invoice,
-            meta: {
-                auth: true,
-                layout: layouts.navLeft,
-                searchable: true,
-                tags: ["pages"]
-            }
-        },
-        {
-            path: "/login",
-            name: "login",
-            component: Login,
-            meta: {
-                layout: layouts.contenOnly
-            }
-        },
-        {
-            path: "/login2",
-            name: "login2",
-            component: Login2,
-            meta: {
-                layout: layouts.contenOnly
-            }
-        },
-        {
-            path: "/register",
-            name: "register",
-            component: Register,
-            meta: {
-                layout: layouts.contenOnly
-            }
-        },
-        {
-            path: "/forgot-password",
-            name: "forgot-password",
-            component: ForgotPassword,
-            meta: {
-                layout: layouts.contenOnly
-            }
-        },
-        {
-            path: "/logout",
-            redirect: to => {
-                auth.logout()
-                return "/login"
-            }
-        },
-        {
-            path: "/:pathMatch(.*)*",
-            name: "not-found",
-            component: NotFound,
-            meta: {
-                layout: layouts.contenOnly
-            }
-        }
-    ]
-})
+	history: createWebHistory(import.meta.env.BASE_URL),
+	routes: [
+		{
+			path: "/",
+			redirect: "/dashboard/analytics"
+		},
+		{
+			path: "/dashboard",
+			redirect: "/dashboard/analytics",
+			meta: {
+				auth: true,
+				roles: "all"
+			},
+			children: [
+				{
+					path: "analytics",
+					name: "analytics",
+					component: Analytics,
+					meta: { icon: AnalyticsIcon, title: "Analytics" }
+				},
+				{
+					path: "ecommerce",
+					name: "ecommerce",
+					component: () => import("@/views/Dashboard/eCommerce.vue"),
+					meta: { icon: EcommerceIcon, title: "eCommerce" }
+				}
+			]
+		},
+		{
+			path: "/calendar",
+			name: "calendar",
+			component: () => import("@/views/Apps/Calendars/FullCalendar.vue"),
+			meta: { icon: CalendarIcon, title: "Calendar", auth: true, roles: "all" }
+		},
+		/*
+		{
+			path: "/calendars",
+			redirect: "/calendars/vue-cal",
+			meta: {
+				auth: true,
+				roles: "all"
+			},
+			children: [
+				{
+					path: "vue-cal",
+					name: "vue-cal",
+					component: () => import("@/views/Apps/Calendars/VueCal.vue"),
+					meta: { icon: CalendarIcon, title: "Vue Cal" }
+				},
+				{
+					path: "full-calendar",
+					name: "full-calendar",
+					component: () => import("@/views/Apps/Calendars/FullCalendar.vue"),
+					meta: { icon: CalendarIcon, title: "Full Calendar" }
+				}
+			]
+		},
+		*/
+		{
+			path: "/email",
+			name: "email",
+			component: () => import("@/views/Apps/Mailbox.vue"),
+			meta: { icon: EmailIcon, title: "Email", auth: true, roles: "all" }
+		},
+		{
+			path: "/chat",
+			name: "chat",
+			component: () => import("@/views/Apps/Chat.vue"),
+			meta: { icon: ChatIcon, title: "Chat", auth: true, roles: "all" }
+		},
+		{
+			path: "/kanban",
+			name: "kanban",
+			component: () => import("@/views/Apps/Kanban.vue"),
+			meta: { icon: KanbanIcon, title: "Kanban", auth: true, roles: "all" }
+		},
+		{
+			path: "/notes",
+			name: "notes",
+			component: () => import("@/views/Apps/Notes.vue"),
+			meta: { icon: NotesIcon, title: "Notes", auth: true, roles: "all" }
+		},
+		{
+			path: "/typography",
+			name: "typography",
+			component: () => import("@/views/Typography.vue"),
+			meta: { icon: TypographyIcon, title: "Typography", auth: true, roles: "all" }
+		},
+		{
+			path: "/cards",
+			redirect: "/cards/basic",
+			meta: {
+				auth: true,
+				roles: "all"
+			},
+			children: [
+				{
+					path: "basic",
+					name: "cards-basic",
+					component: () => import("@/views/Cards/Basic.vue"),
+					meta: { icon: CardsIcon, title: "Cards Basic" }
+				},
+				{
+					path: "ecommerce",
+					name: "cards-ecommerce",
+					component: () => import("@/views/Cards/Ecommerce.vue"),
+					meta: { icon: CardsIcon, title: "Cards Ecommerce" }
+				},
+				{
+					path: "list",
+					name: "cards-list",
+					component: () => import("@/views/Cards/List.vue"),
+					meta: { icon: CardsIcon, title: "Cards List" }
+				},
+				{
+					path: "extra",
+					name: "cards-extra",
+					component: () => import("@/views/Cards/Extra.vue"),
+					meta: { icon: CardsIcon, title: "Cards Extra" }
+				},
+				{
+					path: "combo",
+					name: "cards-combo",
+					component: () => import("@/views/Cards/Combo.vue"),
+					meta: { icon: CardsIcon, title: "Cards Combo" }
+				}
+			]
+		},
+		components,
+		{
+			path: "/toolbox",
+			redirect: "/toolbox/refresh-tool",
+			meta: {
+				auth: true,
+				roles: "all"
+			},
+			children: [
+				{
+					path: "refresh-tool",
+					name: "toolbox-refresh-tool",
+					// route level code-splitting
+					// this generates a separate chunk (About.[hash].js) for this route
+					// which is lazy-loaded when the route is visited.
+					component: () => import("@/views/Toolbox/RefreshTool.vue"),
+					meta: { icon: ToolboxIcon, title: "Refresh Tool" }
+				},
+				{
+					path: "tour",
+					name: "toolbox-tour",
+					component: () => import("@/views/Toolbox/Tour.vue"),
+					meta: { icon: ToolboxIcon, title: "Tour" }
+				}
+			]
+		},
+		{
+			path: "/layout",
+			redirect: "/layout/left-sidebar",
+			meta: {
+				auth: true,
+				roles: "all"
+			},
+			children: [
+				{
+					path: "left-sidebar",
+					name: "layout-left-sidebar",
+					component: () => import("@/views/Layout/LeftSidebar.vue"),
+					meta: { icon: LayoutIcon, title: "Left Sidebar" }
+				},
+				{
+					path: "right-sidebar",
+					name: "layout-right-sidebar",
+					component: () => import("@/views/Layout/RightSidebar.vue"),
+					meta: { icon: LayoutIcon, title: "Right Sidebar" }
+				},
+				{
+					path: "full-width",
+					name: "layout-full-width",
+					component: () => import("@/views/Layout/FullWidth.vue"),
+					meta: { icon: LayoutIcon, title: "Full Width" }
+				}
+			]
+		},
+		{
+			path: "/maps",
+			redirect: "/maps/google-maps",
+			meta: {
+				auth: true,
+				roles: "all"
+			},
+			children: [
+				{
+					path: "google-maps",
+					name: "maps-google-maps",
+					component: () => import("@/views/Maps/GoogleMaps.vue"),
+					meta: { icon: MapIcon, title: "Google maps" }
+				},
+				{
+					path: "maplibre",
+					name: "maps-maplibre",
+					component: () => import("@/views/Maps/MapLibre.vue"),
+					meta: { icon: MapIcon, title: "MapLibre" }
+				},
+				{
+					path: "leaflet",
+					name: "maps-leaflet",
+					component: () => import("@/views/Maps/Leaflet.vue"),
+					meta: { icon: MapIcon, title: "Leaflet" }
+				},
+				{
+					path: "vectormap",
+					name: "maps-vectormap",
+					component: () => import("@/views/Maps/VectorMap.vue"),
+					meta: { icon: MapIcon, title: "Vector Map" }
+				}
+			]
+		},
+		{
+			path: "/editors",
+			redirect: "/editors/quill",
+			meta: {
+				auth: true,
+				roles: "all"
+			},
+			children: [
+				{
+					path: "quill",
+					name: "editors-quill",
+					component: () => import("@/views/Editors/Quill.vue"),
+					meta: { icon: EditorIcon, title: "Quill" }
+				},
+				{
+					path: "tiptap",
+					name: "editors-tiptap",
+					component: () => import("@/views/Editors/Tiptap.vue"),
+					meta: { icon: EditorIcon, title: "Tiptap" }
+				},
+				{
+					path: "milkdown",
+					name: "editors-milkdown",
+					component: () => import("@/views/Editors/Milkdown.vue"),
+					meta: { icon: EditorIcon, title: "Milkdown" }
+				}
+			]
+		},
+		{
+			path: "/charts",
+			redirect: "/charts/apexcharts",
+			meta: {
+				auth: true,
+				roles: "all"
+			},
+			children: [
+				{
+					path: "apexcharts",
+					name: "charts-apexcharts",
+					component: () => import("@/views/Charts/ApexCharts.vue"),
+					meta: { icon: EditorIcon, title: "ApexCharts" }
+				},
+				{
+					path: "chartjs",
+					name: "charts-chartjs",
+					component: () => import("@/views/Charts/ChartJS.vue"),
+					meta: { icon: EditorIcon, title: "ChartJS" }
+				}
+			]
+		},
+		{
+			path: "/multi-language",
+			name: "multi-language",
+			component: () => import("@/views/MultiLanguage.vue"),
+			meta: { icon: MultiLanguageIcon, title: "Multi Language", auth: true, roles: "all" }
+		},
+		{
+			path: "/icons",
+			redirect: "/icons/xicons",
+			meta: {
+				auth: true,
+				roles: "all"
+			},
+			children: [
+				{
+					path: "xicons",
+					name: "icons-xicons",
+					component: () => import("@/views/Icons/Xicons.vue"),
+					meta: { icon: IconsIcon, title: "xIcons" }
+				},
+				{
+					path: "flag",
+					name: "icons-flag",
+					component: () => import("@/views/Icons/Flag.vue"),
+					meta: { icon: FlagIconsIcon, title: "Flag Icons" }
+				}
+			]
+		},
+		{
+			path: "/tables",
+			redirect: "/tables/base",
+			meta: {
+				auth: true,
+				roles: "all"
+			},
+			children: [
+				{
+					path: "base",
+					name: "tables-base",
+					component: () => import("@/views/Tables/Base.vue"),
+					meta: { icon: TablesIcon, title: "Tables Base" }
+				},
+				{
+					path: "data-table",
+					name: "tables-data-table",
+					component: () => import("@/views/Tables/DataTable.vue"),
+					meta: { icon: TablesIcon, title: "Data Table" }
+				},
+				{
+					path: "grid",
+					name: "tables-grid",
+					component: () => import("@/views/Tables/Grid.vue"),
+					meta: { icon: TablesIcon, title: "Data Grid" }
+				}
+			]
+		},
 
-const l = {
-    contenOnly() {
-        useMainStore().setLayout(layouts.contenOnly)
-    },
-    navLeft() {
-        useMainStore().setLayout(layouts.navLeft)
-    },
-    navRight() {
-        useMainStore().setLayout(layouts.navRight)
-    },
-    navTop() {
-        useMainStore().setLayout(layouts.navTop)
-    },
-    navBottom() {
-        useMainStore().setLayout(layouts.navBottom)
-    },
-    set(layout: Partial<StateLayout>) {
-        useMainStore().setLayout(layout)
-    }
-}
+		{
+			path: "/profile",
+			name: "profile",
+			component: () => import("@/views/Profile.vue"),
+			meta: { icon: PersonIcon, title: "Profile", auth: true, roles: "all" }
+		},
 
-//insert here login logic
-const auth = {
-    loggedIn() {
-        return useMainStore().isLogged
-    },
-    logout() {
-        useMainStore().setLogout()
-    }
-}
-
-router.beforeEach((to, from) => {
-    let authrequired = false
-    if (to && to.meta && to.meta.auth) authrequired = true
-
-    //console.log('authrequired', authrequired, to.name)
-
-    if (authrequired) {
-        if (auth.loggedIn()) {
-            if (to.name === "login") {
-                window.location.href = "/"
-                return false
-            }
-        } else {
-            if (to.name !== "login") {
-                window.location.href = "/login"
-                return false
-            }
-        }
-    } else {
-        if (auth.loggedIn() && to.name === "login") {
-            window.location.href = "/"
-            return false
-        }
-    }
-
-    if (to && to.meta && to.meta.layout) {
-        l.set(to.meta.layout)
-    }
-})
-
-router.afterEach((to, from) => {
-    setTimeout(() => {
-        useMainStore().setSplashScreen(false)
-    }, 500)
+		{
+			path: "/login",
+			name: "login",
+			component: () => import("@/views/Auth/Login.vue"),
+			meta: { icon: LoginIcon, title: "Login", forceLayout: Layout.Blank, checkAuth: true }
+		},
+		{
+			path: "/logout",
+			name: "logout",
+			redirect: "/login"
+		},
+		{
+			path: "/:pathMatch(.*)*",
+			name: "not-found",
+			component: () => import("@/views/NotFound.vue"),
+			meta: { forceLayout: Layout.Blank }
+		}
+	]
 })
 
 export default router

@@ -5,7 +5,6 @@ export interface Index {
     replica_count: string
     store_size: string
     store_size_value?: number
-    store_size_value?: number
 }
 
 export enum IndexHealth {

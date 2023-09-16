@@ -1,0 +1,17 @@
+{
+	"extends": "@vue/tsconfig/tsconfig.dom.json",
+	"include": ["src/**/*.d.ts", "src/**/*.ts", "src/**/*.tsx", "src/**/*.vue", "src/**/*.json", "src/**/*.js"],
+	"exclude": ["src/**/__tests__/*"],
+	"compilerOptions": {
+		"composite": true,
+		"baseUrl": ".",
+		"types": ["node", "naive-ui/volar"],
+		"moduleResolution": "node",
+		"isolatedModules": true,
+		"allowJs": true,
+		"noEmit": true,
+		"paths": {
+			"@/*": ["./src/*"]
+		}
+	}
+}
