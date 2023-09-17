@@ -225,8 +225,12 @@ export const useThemeStore = defineStore("theme", {
 			const primaryColor = naive.primaryColor
 			const primaryColorRGB = hex2rgb(primaryColor).join(", ")
 			const primaryColorHS = [hex2hsl(primaryColor)[0], hex2hsl(primaryColor)[1] + "%"].join(" ")
+
 			const successColor = naive.successColor
 			const errorColor = naive.errorColor
+			const warningColor = naive.warningColor
+			const infoColor = naive.infoColor
+
 			const modalColor = naive.modalColor
 			const modalColorRGB = hex2rgb(modalColor).join(", ")
 			const codeColor = naive.codeColor
@@ -306,6 +310,8 @@ export const useThemeStore = defineStore("theme", {
 
 				"--success-color": `${successColor}`,
 				"--error-color": `${errorColor}`,
+				"--warning-color": `${warningColor}`,
+				"--info-color": `${infoColor}`,
 				"--secondary1-color": `${secondary1}`,
 				"--secondary1-color-rgb": `${secondary1RGB}`,
 				"--secondary2-color": `${secondary2}`,

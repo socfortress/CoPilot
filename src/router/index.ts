@@ -31,6 +31,39 @@ const router = createRouter({
 			path: "/",
 			redirect: "/dashboard/analytics"
 		},
+		/*
+		{
+			path: "/indices",
+			name: "indices",
+			component: () => import("@/views/socfortress/Indices.vue"),
+			meta: { icon: CalendarIcon, title: "Indices", auth: true, roles: "all" }
+		},
+		{
+			path: "/inputs",
+			name: "inputs",
+			component: () => import("@/views/socfortress/Inputs.vue"),
+			meta: { icon: CalendarIcon, title: "Inputs", auth: true, roles: "all" }
+		},
+		{
+			path: "/connectors",
+			name: "connectors",
+			component: () => import("@/views/socfortress/Connectors.vue"),
+			meta: { icon: CalendarIcon, title: "Connectors", auth: true, roles: "all" }
+		},
+		*/
+		{
+			path: "/agents",
+			name: "agents",
+			component: () => import("@/views/socfortress/Agents.vue"),
+			meta: { icon: CalendarIcon, title: "Agents", auth: true, roles: "all" }
+		},
+		{
+			path: "/agent/:id?",
+			name: "agent",
+			component: () => import("@/views/socfortress/AgentOverview.vue"),
+			meta: { icon: CalendarIcon, title: "agent", auth: true, roles: "all" }
+		},
+
 		{
 			path: "/dashboard",
 			redirect: "/dashboard/analytics",

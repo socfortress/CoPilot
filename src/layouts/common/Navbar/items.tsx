@@ -14,7 +14,6 @@ import GroupIcon from "@vicons/carbon/TreeView"
 import CalendarIcon from "@vicons/carbon/Calendar"
 
 import dashboard from "./dashboard"
-//import calendars from "./calendars"
 import cards from "./cards"
 import getComponents from "./components"
 import icons from "./icons"
@@ -28,8 +27,30 @@ import authentication from "./authentication"
 
 export default function getItems(mode: "vertical" | "horizontal", collapsed: boolean): MenuMixedOption[] {
 	return [
+		{
+			label: () =>
+				h(
+					RouterLink,
+					{
+						to: {
+							name: "agents"
+						}
+					},
+					{ default: () => "Agents" }
+				),
+			key: "agents",
+			icon: renderIcon(NotesIcon)
+		},
+		{
+			key: "divider",
+			type: "divider",
+			props: {
+				style: {
+					//marginLeft: "32px"
+				}
+			}
+		},
 		dashboard,
-		//calendars,
 		{
 			label: () =>
 				h(
@@ -101,7 +122,7 @@ export default function getItems(mode: "vertical" | "horizontal", collapsed: boo
 			icon: renderIcon(NotesIcon)
 		},
 		{
-			key: "divider-1",
+			key: "divider",
 			type: "divider",
 			props: {
 				style: {

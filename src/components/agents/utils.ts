@@ -1,0 +1,133 @@
+import dayjs from "dayjs"
+import Api from "@/api"
+import { type Agent } from "@/types/agents.d"
+import { useDialog, useMessage } from "naive-ui"
+
+const message = useMessage()
+const dialog = useDialog()
+
+export function isAgentOnline(last_seen: string) {
+	const lastSeenDate = dayjs(last_seen)
+	if (!lastSeenDate.isValid()) return false
+
+	return lastSeenDate.isAfter(dayjs().subtract(1, "h"))
+}
+
+export interface ToggleAgentCriticalParams {
+	agentId: string
+	criticalStatus: boolean
+	cbBefore?: () => void
+	cbSuccess?: () => void
+	cbAfter?: () => void
+	cbError?: () => void
+}
+
+export function toggleAgentCritical({
+	agentId,
+	criticalStatus,
+	cbBefore,
+	cbSuccess,
+	cbAfter,
+	cbError
+}: ToggleAgentCriticalParams) {
+	if (cbBefore && typeof cbBefore === "function") {
+		cbBefore()
+	}
+	const method = criticalStatus ? "markNonCritical" : "markCritical"
+
+	Api.agents[method](agentId)
+		.then(res => {
+			if (res.data.success) {
+				message.success("Agent Criticality Updated Successfully")
+
+				if (cbSuccess && typeof cbSuccess === "function") {
+					cbSuccess()
+				}
+			} else {
+				message.error(res.data?.message || "Failed to Update Agent Criticality.")
+
+				if (cbError && typeof cbError === "function") {
+					cbError()
+				}
+			}
+		})
+		.catch(err => {
+			if (err.response.status === 401) {
+				message.error(err.response?.data?.message || "Agent Criticality Update returned Unauthorized.")
+			} else {
+				message.error(err.response?.data?.message || "Failed to Update Agent Criticality")
+			}
+
+			if (cbError && typeof cbError === "function") {
+				cbError()
+			}
+		})
+		.finally(() => {
+			if (cbAfter && typeof cbAfter === "function") {
+				cbAfter()
+			}
+		})
+}
+
+export interface DeleteAgentParams {
+	agent: Agent
+	cbBefore?: () => void
+	cbSuccess?: () => void
+	cbAfter?: () => void
+	cbError?: () => void
+}
+
+export function handleDeleteAgent({ agent, cbBefore, cbSuccess, cbAfter, cbError }: DeleteAgentParams) {
+	dialog.warning({
+		title: "Confirm",
+		content: `Are you sure you want to delete the agent:<br/><strong>${agent.hostname}</strong> ?`,
+		positiveText: "Yes I'm sure",
+		negativeText: "Cancel",
+		onPositiveClick: () => {
+			deleteAgent({ agent, cbBefore, cbSuccess, cbAfter, cbError })
+		},
+		onNegativeClick: () => {
+			message.info("Delete canceled")
+		}
+	})
+}
+
+export function deleteAgent({ agent, cbBefore, cbSuccess, cbAfter, cbError }: DeleteAgentParams) {
+	if (cbBefore && typeof cbBefore === "function") {
+		cbBefore()
+	}
+
+	Api.agents
+		.deleteAgent(agent.agent_id)
+		.then(res => {
+			if (res.data.success) {
+				message.success("Agent was successfully deleted.")
+
+				if (cbSuccess && typeof cbSuccess === "function") {
+					cbSuccess()
+				}
+			} else {
+				message.error(res.data?.message || "An error occurred. Please try again later.")
+
+				if (cbError && typeof cbError === "function") {
+					cbError()
+				}
+			}
+		})
+		.catch(err => {
+			if (err.response.status === 401) {
+				message.error(err.response?.data?.message || "Agent Delete returned Unauthorized.")
+			} else {
+				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			}
+
+			if (cbError && typeof cbError === "function") {
+				cbError()
+			}
+		})
+		.finally(() => {
+			if (cbAfter && typeof cbAfter === "function") {
+				cbAfter()
+			}
+		})
+}

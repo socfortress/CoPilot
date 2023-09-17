@@ -1,28 +1,31 @@
 <template>
-    <div class="indices-marquee" v-loading="loading">
-        <Vue3Marquee
-            class="marquee-wrap"
-            :duration="200"
-            :pauseOnHover="true"
-            :clone="true"
-            :gradient="true"
-            :gradient-color="[255, 255, 255]"
-            gradient-length="10%"
-        >
-            <span
-                v-for="item in indices"
-                :key="item.index"
-                class="item"
-                :class="item.health"
-                @click="emit('click', item)"
-                title="Click to select"
-            >
-                <IndexIcon :health="item.health" color />
-                {{ item.index }}
-            </span>
-        </Vue3Marquee>
-        <div class="info"><i class="mdi mdi-information-outline"></i> Click on an index to select</div>
-    </div>
+	<div class="indices-marquee" v-loading="loading">
+		<Vue3Marquee
+			class="marquee-wrap"
+			:duration="200"
+			:pauseOnHover="true"
+			:clone="true"
+			:gradient="true"
+			:gradient-color="[255, 255, 255]"
+			gradient-length="10%"
+		>
+			<span
+				v-for="item in indices"
+				:key="item.index"
+				class="item"
+				:class="item.health"
+				@click="emit('click', item)"
+				title="Click to select"
+			>
+				<IndexIcon :health="item.health" color />
+				{{ item.index }}
+			</span>
+		</Vue3Marquee>
+		<div class="info">
+			<i class="mdi mdi-information-outline"></i>
+			Click on an index to select
+		</div>
+	</div>
 </template>
 
 <script setup lang="ts">
@@ -32,11 +35,11 @@ import { Vue3Marquee } from "vue3-marquee"
 import IndexIcon from "@/components/indices/IndexIcon.vue"
 
 const emit = defineEmits<{
-    (e: "click", value: Index): void
+	(e: "click", value: Index): void
 }>()
 
 const props = defineProps<{
-    indices: Index[] | null
+	indices: Index[] | null
 }>()
 const { indices } = toRefs(props)
 
@@ -48,46 +51,46 @@ const loading = computed(() => !indices?.value || indices.value === null)
 @import "@/assets/scss/card-shadow";
 
 .indices-marquee {
-    .info {
-        opacity: 0.5;
-        font-size: var(--font-size-0);
-        margin-top: 5px;
-    }
-    .marquee-wrap {
-        height: 45px;
-        transform: translate3d(0, 0, 0);
-        @extend .card-base;
-        @extend .card-shadow--small;
+	.info {
+		opacity: 0.5;
+		font-size: var(--font-size-0);
+		margin-top: 5px;
+	}
+	.marquee-wrap {
+		height: 45px;
+		transform: translate3d(0, 0, 0);
+		@extend .card-base;
+		@extend .card-shadow--small;
 
-        :deep() {
-            .marquee {
-                transform: translate3d(0, 0, 0);
-            }
-            .overlay {
-                &:after {
-                    right: -1px;
-                }
-            }
-        }
+		:deep() {
+			.marquee {
+				transform: translate3d(0, 0, 0);
+			}
+			.overlay {
+				&:after {
+					right: -1px;
+				}
+			}
+		}
 
-        .item {
-            padding: 10px 20px;
-            cursor: pointer;
+		.item {
+			padding: 10px 20px;
+			cursor: pointer;
 
-            &.green {
-                i {
-                    color: $text-color-success;
-                }
-            }
-            &.yellow {
-                color: $text-color-warning;
-                font-weight: bold;
-            }
-            &.red {
-                color: $text-color-danger;
-                font-weight: bold;
-            }
-        }
-    }
+			&.green {
+				i {
+					color: var(--success-color);
+				}
+			}
+			&.yellow {
+				color: var(--warning-color);
+				font-weight: bold;
+			}
+			&.red {
+				color: var(--error-color);
+				font-weight: bold;
+			}
+		}
+	}
 }
 </style>

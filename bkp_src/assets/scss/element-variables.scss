@@ -12,73 +12,73 @@ $--font-path: "~element-ui/lib/theme-chalk/fonts";
 
 /* theme color */
 @forward "element-plus/theme-chalk/src/common/var.scss" with (
-    $colors: (
-        "primary": (
-            "base": $text-color-accent
-        ),
-        "success": (
-            "base": $text-color-success
-        ),
-        "warning": (
-            "base": $text-color-warning
-        ),
-        "danger": (
-            "base": $text-color-danger
-        ),
-        "info": (
-            "base": $text-color-info
-        )
-    )
+	$colors: (
+		"primary": (
+			"base": var(--primary-color)
+		),
+		"success": (
+			"base": var(--success-color)
+		),
+		"warning": (
+			"base": var(--warning-color)
+		),
+		"danger": (
+			"base": var(--error-color)
+		),
+		"info": (
+			"base": var(--info-color)
+		)
+	)
 );
 
 .el-form--label-top .el-form-item__label {
-    padding: 0;
-    line-height: 30px;
+	padding: 0;
+	line-height: 30px;
 }
 .el-upload.el-upload--text {
-    max-width: 100%;
+	max-width: 100%;
 
-    .el-upload-dragger {
-        max-width: 100%;
-    }
+	.el-upload-dragger {
+		max-width: 100%;
+	}
 }
 .el-message {
-    min-width: 310px;
+	min-width: 310px;
 }
 .el-notification {
-    width: 290px;
+	width: 290px;
 }
 .el-message-box {
-    max-width: 95%;
-    box-sizing: border-box;
+	max-width: 95%;
+	box-sizing: border-box;
 }
 
 .el-menu--horizontal {
-    min-height: 35px;
+	min-height: 35px;
 
-    &.limit-height {
-        max-height: 60%;
-        overflow-x: hidden;
-        overflow-y: auto;
-    }
+	&.limit-height {
+		max-height: 60%;
+		overflow-x: hidden;
+		overflow-y: auto;
+	}
 
-    &[x-placement="top-start"],
-    &[x-placement="top-start"] .el-menu--horizontal,
-    &[x-placement="top-start"] .el-menu--horizontal > .el-menu--popup {
-        position: fixed !important;
-        bottom: 45px !important;
-        top: initial !important;
-        transform: none !important;
-    }
+	&[x-placement="top-start"],
+	&[x-placement="top-start"] .el-menu--horizontal,
+	&[x-placement="top-start"] .el-menu--horizontal > .el-menu--popup {
+		position: fixed !important;
+		bottom: 45px !important;
+		top: initial !important;
+		transform: none !important;
+	}
 }
 .el-menu--vertical {
-    &.limit-height {
-        max-height: 90%;
-        overflow-x: hidden;
-        overflow-y: auto;
-    }
+	&.limit-height {
+		max-height: 90%;
+		overflow-x: hidden;
+		overflow-y: auto;
+	}
 
-    /*&[x-placement="left-start"] {
+	/*&[x-placement="left-start"] {
 		position: fixed !important;
 		right: 75px !important;
 		left: initial !important;
@@ -101,40 +101,40 @@ $--font-path: "~element-ui/lib/theme-chalk/fonts";
 }
 
 .el-popper {
-    max-height: 90%;
-    overflow-x: hidden;
-    overflow-y: auto;
+	max-height: 90%;
+	overflow-x: hidden;
+	overflow-y: auto;
 }
 .el-select-dropdown.el-popper,
 .el-picker-panel.el-popper,
 .el-time-panel.el-popper {
-    max-height: inherit;
-    overflow: initial;
+	max-height: inherit;
+	overflow: initial;
 }
 
 .el-tooltip__popper.is-light {
-    color: #000;
+	color: #000;
 }
 
 .el-progress .el-progress__text {
-    color: $text-color-primary;
+	color: var(--fg-color);
 }
 
 .el-checkbox .el-checkbox__label {
-    color: $text-color-primary;
+	color: var(--fg-color);
 }
 
 .el-tabs:not(.el-tabs--border-card) {
-    .el-tabs__item:not(.is-active) {
-        color: $text-color-primary;
-    }
+	.el-tabs__item:not(.is-active) {
+		color: var(--fg-color);
+	}
 }
 
 .el-dialog {
-    min-width: 310px;
-    max-width: 1500px;
+	min-width: 310px;
+	max-width: 1500px;
 
-    .el-dialog__body {
-        box-sizing: border-box;
-    }
+	.el-dialog__body {
+		box-sizing: border-box;
+	}
 }
