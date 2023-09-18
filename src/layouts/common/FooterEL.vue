@@ -3,11 +3,11 @@
 		<div class="wrap flex items-center justify-end gap-3">
 			<div class="copy">
 				Made with
-				<n-icon :size="22" :color="style['--primary-color']">
+				<n-icon :size="22" :color="style['--primary-color']" class="mx-1">
 					<BrainIcon />
 				</n-icon>
 				By
-				<a href="https://dverse.studio/" target="_blank" alt="D*VERSE" rel="noopener noreferrer">
+				<a href="https://dverse.studio/" target="_blank" alt="D*VERSE" rel="noopener noreferrer" class="mx-1">
 					D*VERSE Studio
 				</a>
 				All rights Reserved © Copyright {{ year }}
@@ -30,7 +30,7 @@ const props = defineProps<{
 	boxed: boolean
 }>()
 const { boxed } = toRefs(props)
-const style: { [key: string]: any } = computed(() => useThemeStore().style)
+const style = computed<{ [key: string]: any }>(() => useThemeStore().style)
 
 const year = ref(new Date().getFullYear())
 </script>
@@ -72,6 +72,14 @@ const year = ref(new Date().getFullYear())
 			padding-top: 0;
 			max-width: var(--boxed-width);
 			margin: 0 auto;
+		}
+	}
+
+	@media (max-width: 700px) {
+		font-size: 10px;
+
+		i.n-icon {
+			font-size: 18px !important;
 		}
 	}
 }

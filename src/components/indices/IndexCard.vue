@@ -54,7 +54,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, toRefs } from "vue"
+import { h, ref, toRefs } from "vue"
 import IndexIcon from "@/components/indices/IndexIcon.vue"
 import { type Index } from "@/types/indices.d"
 import Api from "@/api"
@@ -78,7 +78,10 @@ const loading = ref(false)
 const handleDelete = () => {
 	dialog.warning({
 		title: "Confirm",
-		content: `Are you sure you want to delete the index:<br/><strong>${index.value.index}</strong> ?`,
+		content: () =>
+			h("div", {
+				innerHTML: `Are you sure you want to delete the index:<br/><strong>${index.value.index}</strong> ?`
+			}),
 		positiveText: "Yes I'm sure",
 		negativeText: "Cancel",
 		onPositiveClick: () => {
