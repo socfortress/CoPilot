@@ -1,5 +1,5 @@
 <template>
-	<el-scrollbar class="page page-indices">
+	<el-scrollbar class="page">
 		<div class="section">
 			<IndicesMarquee :indices="indices" @click="setIndex" />
 		</div>
@@ -35,7 +35,6 @@
 <script lang="ts" setup>
 import { type Index } from "@/types/indices.d"
 import Api from "@/api"
-import { ElMessage } from "element-plus"
 import { onBeforeMount, ref } from "vue"
 import IndicesMarquee from "@/components/indices/Marquee.vue"
 import NodeAllocation from "@/components/indices/NodeAllocation.vue"
@@ -43,7 +42,9 @@ import ClusterHealth from "@/components/indices/ClusterHealth.vue"
 import Details from "@/components/indices/Details.vue"
 import UnhealthyIndices from "@/components/indices/UnhealthyIndices.vue"
 import TopIndices from "@/components/indices/TopIndices.vue"
+import { useMessage } from "naive-ui"
 
+const message = useMessage()
 const indices = ref<Index[] | null>(null)
 const loadingIndex = ref(false)
 const currentIndex = ref<Index | null>(null)
@@ -61,30 +62,19 @@ function getIndices() {
 			if (res.data.success) {
 				indices.value = res.data.indices
 			} else {
-				ElMessage({
-					message: res.data?.message || "An error occurred. Please try again later.",
-					type: "error"
-				})
+				message.error(res.data?.message || "An error occurred. Please try again later.")
 			}
 		})
 		.catch(err => {
 			if (err.response.status === 401) {
-				ElMessage({
-					message:
-						err.response?.data?.message ||
-						"Wazuh-Indexer returned Unauthorized. Please check your connector credentials.",
-					type: "error"
-				})
+				message.error(
+					err.response?.data?.message ||
+						"Wazuh-Indexer returned Unauthorized. Please check your connector credentials."
+				)
 			} else if (err.response.status === 404) {
-				ElMessage({
-					message: err.response?.data?.message || "No alerts were found.",
-					type: "error"
-				})
+				message.error(err.response?.data?.message || "No alerts were found.")
 			} else {
-				ElMessage({
-					message: err.response?.data?.message || "An error occurred. Please try again later.",
-					type: "error"
-				})
+				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
 			}
 		})
 		.finally(() => {
@@ -98,16 +88,13 @@ onBeforeMount(() => {
 </script>
 
 <style lang="scss" scoped>
-@import "@/assets/scss/_variables";
-@import "@/assets/scss/card-shadow";
-
-.page-indices {
+.page {
 	.section {
-		margin-bottom: var(--size-6);
+		@apply mb-6;
 
 		.columns {
 			display: flex;
-			gap: var(--size-6);
+			@apply gap-6;
 
 			.col {
 				flex-grow: 1;

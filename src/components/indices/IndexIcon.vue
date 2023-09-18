@@ -1,14 +1,24 @@
 <template>
 	<span class="index-icon" :class="[`health-${health}`, { color }]">
-		<i v-if="health === IndexHealth.GREEN" class="mdi mdi-shield-check"></i>
-		<i v-else-if="health === IndexHealth.YELLOW" class="mdi mdi-alert"></i>
-		<i v-else-if="health === IndexHealth.RED" class="mdi mdi-alert-decagram"></i>
+		<n-icon v-if="health === IndexHealth.GREEN">
+			<ShieldIcon />
+		</n-icon>
+		<n-icon v-if="health === IndexHealth.YELLOW">
+			<WarningIcon />
+		</n-icon>
+		<n-icon v-if="health === IndexHealth.RED">
+			<DangerIcon />
+		</n-icon>
 	</span>
 </template>
 
 <script setup lang="ts">
 import { toRefs } from "vue"
 import { type Index, IndexHealth } from "@/types/indices.d"
+import ShieldIcon from "@vicons/fluent/ShieldTask20Regular"
+import WarningIcon from "@vicons/fluent/ShieldError20Regular"
+import DangerIcon from "@vicons/fluent/Warning20Regular"
+import { NIcon } from "naive-ui"
 
 const props = defineProps<{
 	health: Index["health"]
@@ -18,9 +28,6 @@ const { health, color } = toRefs(props)
 </script>
 
 <style lang="scss" scoped>
-@import "@/assets/scss/_variables";
-@import "@/assets/scss/card-shadow";
-
 .index-icon {
 	&.color {
 		&.health-green {

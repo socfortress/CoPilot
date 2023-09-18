@@ -1,13 +1,13 @@
 <template>
 	<div class="cluster-health">
-		<div class="title">
+		<h4 class="title mb-5">
 			Nodes Allocation
-			<small class="o-050">({{ indicesAllocation.length }})</small>
-		</div>
-		<div v-loading="loading">
+			<small class="opacity-50">({{ indicesAllocation.length }})</small>
+		</h4>
+		<n-spin :show="loading">
 			<div class="info">
 				<template v-if="indicesAllocation.length">
-					<el-scrollbar max-height="500px">
+					<n-scrollbar style=" max-height;500px">
 						<div
 							v-for="node of indicesAllocation"
 							:key="node.id"
@@ -36,8 +36,9 @@
 							</div>
 							<div class="group" v-if="node.disk_percent">
 								<div class="box w-full">
-									<el-progress
-										:text-inside="true"
+									<n-progress
+										type="line"
+										indicator-placement="inside"
 										:stroke-width="26"
 										:percentage="node.disk_percent_value"
 										:status="getStatusPercent(node.disk_percent_value)"
@@ -45,10 +46,10 @@
 								</div>
 							</div>
 						</div>
-					</el-scrollbar>
+					</n-scrollbar>
 				</template>
 			</div>
-		</div>
+		</n-spin>
 	</div>
 </template>
 
@@ -56,16 +57,17 @@
 import { onBeforeMount, ref } from "vue"
 import { type IndexAllocation } from "@/types/indices.d"
 import Api from "@/api"
-import { ElMessage } from "element-plus"
 import { nanoid } from "nanoid"
+import { useMessage, NSpin, NScrollbar, NProgress } from "naive-ui"
 
+const message = useMessage()
 const indicesAllocation = ref<IndexAllocation[]>([])
 const loading = ref(true)
 
 // TODO: decide with Taylor
-function getStatusPercent(percent) {
-	if (parseFloat(percent) < 20) return "exception"
-	if (parseFloat(percent) < 40) return "warning"
+function getStatusPercent(percent: string | number | undefined | null) {
+	if (parseFloat(percent?.toString() || "") < 20) return "error"
+	if (parseFloat(percent?.toString() || "") < 40) return "warning"
 	return "success"
 }
 
@@ -77,34 +79,23 @@ function getIndicesAllocation() {
 			if (res.data.success) {
 				indicesAllocation.value = (res.data?.node_allocation || []).map(obj => {
 					obj.id = nanoid()
-					obj.disk_percent_value = parseFloat(obj.disk_percent)
+					obj.disk_percent_value = parseFloat(obj.disk_percent || "")
 					return obj
 				})
 			} else {
-				ElMessage({
-					message: res.data?.message || "An error occurred. Please try again later.",
-					type: "error"
-				})
+				message.error(res.data?.message || "An error occurred. Please try again later.")
 			}
 		})
 		.catch(err => {
 			if (err.response.status === 401) {
-				ElMessage({
-					message:
-						err.response?.data?.message ||
-						"Wazuh-Indexer returned Unauthorized. Please check your connector credentials.",
-					type: "error"
-				})
+				message.error(
+					err.response?.data?.message ||
+						"Wazuh-Indexer returned Unauthorized. Please check your connector credentials."
+				)
 			} else if (err.response.status === 404) {
-				ElMessage({
-					message: err.response?.data?.message || "No alerts were found.",
-					type: "error"
-				})
+				message.error(err.response?.data?.message || "No alerts were found.")
 			} else {
-				ElMessage({
-					message: err.response?.data?.message || "An error occurred. Please try again later.",
-					type: "error"
-				})
+				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
 			}
 		})
 		.finally(() => {
@@ -119,32 +110,26 @@ onBeforeMount(() => {
 
 <style lang="scss" scoped>
 .cluster-health {
-	padding: var(--size-5) var(--size-6);
+	@apply py-5 px-6;
 
-	.title {
-		font-size: var(--font-size-4);
-		font-weight: var(--font-weight-6);
-		margin-bottom: var(--size-5);
-	}
 	.info {
 		min-height: 50px;
 		margin-left: -5px;
 		margin-right: -5px;
 
 		.item {
-			padding: var(--size-3) var(--size-4);
+			@apply py-3 px-4 gap-6;
 
 			border: 2px solid transparent;
 			margin: 5px;
 
 			display: flex;
 			flex-direction: column;
-			gap: var(--size-6);
 
 			.group {
+				@apply gap-6;
 				display: flex;
 				justify-content: space-between;
-				gap: var(--size-6);
 				flex-grow: 1;
 				flex-wrap: wrap;
 
@@ -155,12 +140,14 @@ onBeforeMount(() => {
 						white-space: nowrap;
 					}
 					.label {
-						font-size: var(--font-size-0);
-						font-family: var(--font-mono);
+						@apply text-xs;
+						font-family: var(--font-family-mono);
 						opacity: 0.8;
 					}
 
 					:deep() {
+						// TODO: check
+						/*
 						.el-progress-bar__outer {
 							border-radius: 4px;
 
@@ -168,6 +155,7 @@ onBeforeMount(() => {
 								border-radius: 0;
 							}
 						}
+						*/
 					}
 
 					&.w-full {
@@ -184,7 +172,7 @@ onBeforeMount(() => {
 				border-color: var(--warning-color);
 			}
 
-			&.percent-exception {
+			&.percent-error {
 				border-color: var(--error-color);
 			}
 

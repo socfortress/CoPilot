@@ -1,9 +1,9 @@
 <template>
 	<div class="top-indices-chart-container">
-		<div class="title">Top 8 indices size & health</div>
-		<div style="height: 400px; overflow: hidden" v-loading="loading">
+		<h4 class="title mb-5">Top 8 indices size & health</h4>
+		<n-spin style="height: 400px; overflow: hidden" :show="loading">
 			<div id="top-indices-chart" style="max-width: 100%; height: 400px"></div>
-		</div>
+		</n-spin>
 	</div>
 </template>
 
@@ -13,6 +13,7 @@ import * as echarts from "echarts"
 import { type Index, IndexHealth } from "@/types/indices.d"
 import bytes from "bytes"
 import _ from "lodash"
+import { NSpin } from "naive-ui"
 
 const props = defineProps<{
 	indices: Index[] | null
@@ -20,7 +21,7 @@ const props = defineProps<{
 const { indices } = toRefs(props)
 
 const loading = computed(() => !indices?.value || indices.value === null)
-const chartCtx = ref<echarts.ECharts>(null)
+const chartCtx = ref<echarts.ECharts | null>(null)
 
 function getOptions() {
 	const data = _.chain(indices.value || [])
@@ -43,7 +44,7 @@ function getOptions() {
 	const red = data.filter(i => i.health === IndexHealth.RED).length
 
 	const sizeData: { value: number; name: string }[] = data.map(i => ({
-		value: i.store_size_value,
+		value: i.store_size_value || 0,
 		name: i.index
 	}))
 
@@ -100,7 +101,7 @@ function getOptions() {
 					"#bae6fd"
 				],
 				tooltip: {
-					formatter: params => {
+					formatter: (params: any) => {
 						return `${params.seriesName}<hr/>${params.name}:<br/><strong>${bytes(
 							params.value
 						)}</strong>  (${params.percent}%)`
@@ -136,8 +137,8 @@ function getOptions() {
 						}
 					}
 				},
-				labelLayout: function (params) {
-					const isLeft = params.labelRect.x < chartCtx.value.getWidth() / 2
+				labelLayout: function (params: any) {
+					const isLeft = chartCtx.value ? params.labelRect.x < chartCtx.value.getWidth() / 2 : false
 					const points = params.labelLinePoints
 					// Update the end point.
 					points[2][0] = isLeft ? params.labelRect.x : params.labelRect.x + params.labelRect.width
@@ -170,9 +171,13 @@ onMounted(() => {
 
 	chartCtx.value.setOption(getOptions())
 
-	new ResizeObserver(() => {
-		chartCtx.value.resize()
-	}).observe(chartDom)
+	if (chartDom) {
+		new ResizeObserver(() => {
+			if (chartCtx.value) {
+				chartCtx.value.resize()
+			}
+		}).observe(chartDom)
+	}
 })
 </script>
 
@@ -180,14 +185,7 @@ onMounted(() => {
 .top-indices-chart-container {
 	width: 100%;
 	overflow: hidden;
-
-	padding: var(--size-6);
+	@apply p-6;
 	box-sizing: border-box;
-
-	.title {
-		font-size: var(--font-size-4);
-		font-weight: var(--font-weight-6);
-		margin-bottom: var(--size-5);
-	}
 }
 </style>

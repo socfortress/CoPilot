@@ -1,10 +1,10 @@
 <template>
 	<div class="cluster-health">
-		<div class="title">Overall Health</div>
-		<div v-loading="loading">
+		<h4 class="title">Overall Health</h4>
+		<n-spin :show="loading">
 			<div class="info">
 				<div class="cluster-card" :class="[`health-${cluster.status}`]" v-if="cluster">
-					<el-scrollbar max-height="500px">
+					<n-scrollbar style="max-height: 500px">
 						<div class="card-wrap">
 							<div class="box" v-for="prop of propsOrder" :key="prop">
 								<template v-if="prop === 'status'">
@@ -19,10 +19,10 @@
 								<div class="label">{{ sanitizeLabel(prop) }}</div>
 							</div>
 						</div>
-					</el-scrollbar>
+					</n-scrollbar>
 				</div>
 			</div>
-		</div>
+		</n-spin>
 	</div>
 </template>
 
@@ -31,12 +31,13 @@ import { onBeforeMount, ref } from "vue"
 import IndexIcon from "@/components/indices/IndexIcon.vue"
 import { type ClusterHealth } from "@/types/indices.d"
 import Api from "@/api"
-import { ElMessage } from "element-plus"
+import { useMessage, NSpin, NScrollbar } from "naive-ui"
 
+const message = useMessage()
 const cluster = ref<ClusterHealth | null>(null)
 const loading = ref(true)
 
-const propsOrder = ref([
+const propsOrder = ref<Array<keyof ClusterHealth>>([
 	"cluster_name",
 	"status",
 	"active_primary_shards",
@@ -57,7 +58,7 @@ const propsOrder = ref([
 ])
 
 function sanitizeLabel(label: string) {
-	return label.replaceAll("_", " ")
+	return label.replace(/_/gim, " ")
 }
 
 function getClusterHealth() {
@@ -68,30 +69,19 @@ function getClusterHealth() {
 			if (res.data.success) {
 				cluster.value = res.data.cluster_health
 			} else {
-				ElMessage({
-					message: res.data?.message || "An error occurred. Please try again later.",
-					type: "error"
-				})
+				message.error(res.data?.message || "An error occurred. Please try again later.")
 			}
 		})
 		.catch(err => {
 			if (err.response.status === 401) {
-				ElMessage({
-					message:
-						err.response?.data?.message ||
-						"Wazuh-Indexer returned Unauthorized. Please check your connector credentials.",
-					type: "error"
-				})
+				message.error(
+					err.response?.data?.message ||
+						"Wazuh-Indexer returned Unauthorized. Please check your connector credentials."
+				)
 			} else if (err.response.status === 404) {
-				ElMessage({
-					message: err.response?.data?.message || "No alerts were found.",
-					type: "error"
-				})
+				message.error(err.response?.data?.message || "No alerts were found.")
 			} else {
-				ElMessage({
-					message: err.response?.data?.message || "An error occurred. Please try again later.",
-					type: "error"
-				})
+				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
 			}
 		})
 		.finally(() => {
@@ -106,12 +96,10 @@ onBeforeMount(() => {
 
 <style lang="scss" scoped>
 .cluster-health {
-	padding: var(--size-5) var(--size-6);
+	@apply py-5 px-6;
 
 	.title {
-		font-size: var(--font-size-4);
-		font-weight: var(--font-weight-6);
-		margin-bottom: var(--size-5);
+		@apply mb-5;
 	}
 	.info {
 		min-height: 50px;
@@ -120,23 +108,21 @@ onBeforeMount(() => {
 			border: 2px solid transparent;
 
 			.card-wrap {
-				padding: var(--size-3) var(--size-4);
+				@apply py-3 px-4 gap-6 gap-x-6;
 				column-width: 12rem;
 				column-count: auto;
-				column-gap: var(--size-6);
-				gap: var(--size-6);
 
 				.box {
 					overflow: hidden;
-					margin-bottom: var(--size-6);
+					@apply mb-6;
 					.value {
 						font-weight: bold;
 						margin-bottom: 2px;
 						white-space: nowrap;
 					}
 					.label {
-						font-size: var(--font-size-0);
-						font-family: var(--font-mono);
+						@apply text-xs;
+						font-family: var(--font-family-mono);
 						opacity: 0.8;
 					}
 				}

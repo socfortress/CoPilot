@@ -1,62 +1,63 @@
 <template>
-	<div class="index-details-box" v-loading="loading" :class="{ active: currentIndex }">
-		<div class="box-header">
-			<div class="title">
-				<span v-if="currentIndex">Below the details for index</span>
-				<span v-else>Select an index to see the details</span>
+	<div class="index-details-box" :class="{ active: currentIndex }">
+		<n-spin :show="loading">
+			<div class="box-header">
+				<h4 class="title">
+					<span v-if="currentIndex">Below the details for index</span>
+					<span v-else>Select an index to see the details</span>
+				</h4>
+				<div class="select-box" v-if="indices && indices.length">
+					<n-select
+						v-model:value="selectValue"
+						placeholder="Indices list"
+						clearable
+						filterable
+						:options="selectOptions"
+					></n-select>
+				</div>
 			</div>
-			<div class="select-box" v-if="indices && indices.length">
-				<el-select v-model="currentIndex" placeholder="Indices list" clearable value-key="index" filterable>
-					<el-option
-						v-for="index in indices"
-						:key="index.index"
-						:label="index.index"
-						:value="index"
-					></el-option>
-				</el-select>
+			<div class="details-box" v-if="currentIndex">
+				<div class="info">
+					<IndexCard :index="currentIndex" showActions @delete="clearCurrentIndex()" />
+				</div>
+				<div class="shards">
+					<n-scrollbar>
+						<n-table>
+							<thead>
+								<tr>
+									<th>Node</th>
+									<th>Shard</th>
+									<th>Size</th>
+									<th>State</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr v-for="shard of filteredShards" :key="shard.id">
+									<td>{{ shard.node || "-" }}</td>
+									<td>{{ shard.shard || "-" }}</td>
+									<td>{{ shard.size || "-" }}</td>
+									<td>
+										<span class="shard-state" :class="shard.state">
+											{{ shard.state || "-" }}
+										</span>
+									</td>
+								</tr>
+							</tbody>
+						</n-table>
+					</n-scrollbar>
+				</div>
 			</div>
-		</div>
-		<div class="details-box" v-if="currentIndex">
-			<div class="info">
-				<IndexCard :index="currentIndex" showActions @delete="clearCurrentIndex()" />
-			</div>
-			<div class="shards">
-				<el-scrollbar>
-					<table class="styled">
-						<thead>
-							<tr>
-								<th>Node</th>
-								<th>Shard</th>
-								<th>Size</th>
-								<th>State</th>
-							</tr>
-						</thead>
-						<tbody>
-							<tr v-for="shard of filteredShards" :key="shard.id">
-								<td>{{ shard.node || "-" }}</td>
-								<td>{{ shard.shard || "-" }}</td>
-								<td>{{ shard.size || "-" }}</td>
-								<td>
-									<span class="shard-state" :class="shard.state">
-										{{ shard.state || "-" }}
-									</span>
-								</td>
-							</tr>
-						</tbody>
-					</table>
-				</el-scrollbar>
-			</div>
-		</div>
+		</n-spin>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeMount, ref, toRefs } from "vue"
+import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
 import { type Index, type IndexShard } from "@/types/indices.d"
-import { ElMessage } from "element-plus"
 import IndexCard from "@/components/indices/IndexCard.vue"
 import Api from "@/api"
 import { nanoid } from "nanoid"
+import { useMessage, NScrollbar, NSpin, NTable, NSelect } from "naive-ui"
 
 type IndexModel = Index | null | ""
 
@@ -70,6 +71,7 @@ const props = defineProps<{
 }>()
 const { indices, modelValue } = toRefs(props)
 
+const message = useMessage()
 const shards = ref<IndexShard[]>([])
 const loadingShards = ref(false)
 const loading = computed(() => !indices?.value || indices.value === null || loadingShards.value)
@@ -80,6 +82,19 @@ const filteredShards = computed(() =>
 		return shard.index === currentIndex.value?.index
 	})
 )
+
+const selectValue = ref<string | undefined>(undefined)
+const selectOptions = computed(() => {
+	return (indices.value || []).map(o => ({ value: o.index, label: o.index }))
+})
+
+watch(modelValue, val => {
+	selectValue.value = typeof modelValue.value !== "string" ? modelValue.value?.index : undefined
+})
+
+watch(selectValue, val => {
+	currentIndex.value = (indices.value || []).find(o => o.index === val) || null
+})
 
 const currentIndex = computed<IndexModel>({
 	get() {
@@ -105,30 +120,19 @@ function getShards() {
 					return obj
 				})
 			} else {
-				ElMessage({
-					message: res.data?.message || "An error occurred. Please try again later.",
-					type: "error"
-				})
+				message.error(res.data?.message || "An error occurred. Please try again later.")
 			}
 		})
 		.catch(err => {
 			if (err.response.status === 401) {
-				ElMessage({
-					message:
-						err.response?.data?.message ||
-						"Wazuh-Indexer returned Unauthorized. Please check your connector credentials.",
-					type: "error"
-				})
+				message.error(
+					err.response?.data?.message ||
+						"Wazuh-Indexer returned Unauthorized. Please check your connector credentials."
+				)
 			} else if (err.response.status === 404) {
-				ElMessage({
-					message: err.response?.data?.message || "No alerts were found.",
-					type: "error"
-				})
+				message.error(err.response?.data?.message || "No alerts were found.")
 			} else {
-				ElMessage({
-					message: err.response?.data?.message || "An error occurred. Please try again later.",
-					type: "error"
-				})
+				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
 			}
 		})
 		.finally(() => {
@@ -142,11 +146,8 @@ onBeforeMount(() => {
 </script>
 
 <style lang="scss" scoped>
-@import "@/assets/scss/_variables";
-@import "@/assets/scss/card-shadow";
-
 .index-details-box {
-	padding: var(--size-5) var(--size-6);
+	@apply py-5 px-6;
 	border: 2px solid transparent;
 
 	&.active {
@@ -158,22 +159,25 @@ onBeforeMount(() => {
 		align-items: center;
 
 		.title {
-			margin-right: var(--size-4);
+			@apply mr-4;
 		}
 
 		.select-box {
+			// TODO: check!!!
+			/*
 			.el-select {
-				min-width: var(--size-fluid-9);
+				min-width: clamp(2rem, 4vw, 3rem);
 				max-width: 100%;
 			}
+			*/
 		}
 	}
 
 	.details-box {
-		margin-top: var(--size-6);
+		@apply mt-6;
 
 		.shards {
-			margin-top: var(--size-4);
+			@apply mt-4;
 
 			.shard-state {
 				font-weight: bold;
@@ -191,12 +195,16 @@ onBeforeMount(() => {
 		.box-header {
 			flex-direction: column;
 			align-items: flex-start;
-			gap: var(--size-2);
+			@apply gap-2;
+
 			.select-box {
 				width: 100%;
+				// TODO: check!!!
+				/*
 				.el-select {
 					min-width: 100%;
 				}
+				*/
 			}
 		}
 	}

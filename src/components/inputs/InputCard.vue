@@ -240,8 +240,8 @@ function startInput() {
 			}
 			.label {
 				white-space: nowrap;
-				font-size: var(--font-size-0);
-				font-family: var(--font-mono);
+				@apply text-xs;
+				font-family: var(--font-family-mono);
 				opacity: 0.8;
 			}
 		}

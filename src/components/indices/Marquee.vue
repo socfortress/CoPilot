@@ -1,30 +1,32 @@
 <template>
-	<div class="indices-marquee" v-loading="loading">
-		<Vue3Marquee
-			class="marquee-wrap"
-			:duration="200"
-			:pauseOnHover="true"
-			:clone="true"
-			:gradient="true"
-			:gradient-color="[255, 255, 255]"
-			gradient-length="10%"
-		>
-			<span
-				v-for="item in indices"
-				:key="item.index"
-				class="item"
-				:class="item.health"
-				@click="emit('click', item)"
-				title="Click to select"
+	<div class="indices-marquee">
+		<n-spin :show="loading">
+			<Vue3Marquee
+				class="marquee-wrap"
+				:duration="200"
+				:pauseOnHover="true"
+				:clone="true"
+				:gradient="true"
+				:gradient-color="[255, 255, 255]"
+				gradient-length="10%"
 			>
-				<IndexIcon :health="item.health" color />
-				{{ item.index }}
-			</span>
-		</Vue3Marquee>
-		<div class="info">
-			<i class="mdi mdi-information-outline"></i>
-			Click on an index to select
-		</div>
+				<span
+					v-for="item in indices"
+					:key="item.index"
+					class="item"
+					:class="item.health"
+					@click="emit('click', item)"
+					title="Click to select"
+				>
+					<IndexIcon :health="item.health" color />
+					{{ item.index }}
+				</span>
+			</Vue3Marquee>
+			<div class="info">
+				<i class="mdi mdi-information-outline"></i>
+				Click on an index to select
+			</div>
+		</n-spin>
 	</div>
 </template>
 
@@ -33,6 +35,7 @@ import { computed, toRefs } from "vue"
 import { type Index } from "@/types/indices.d"
 import { Vue3Marquee } from "vue3-marquee"
 import IndexIcon from "@/components/indices/IndexIcon.vue"
+import { NSpin } from "naive-ui"
 
 const emit = defineEmits<{
 	(e: "click", value: Index): void
@@ -50,7 +53,7 @@ const loading = computed(() => !indices?.value || indices.value === null)
 .indices-marquee {
 	.info {
 		opacity: 0.5;
-		font-size: var(--font-size-0);
+		@apply text-xs;
 		margin-top: 5px;
 	}
 	.marquee-wrap {

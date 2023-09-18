@@ -33,12 +33,40 @@ export default function getItems(mode: "vertical" | "horizontal", collapsed: boo
 					RouterLink,
 					{
 						to: {
+							name: "indices"
+						}
+					},
+					{ default: () => "Indices" }
+				),
+			key: "indices",
+			icon: renderIcon(NotesIcon)
+		},
+		{
+			label: () =>
+				h(
+					RouterLink,
+					{
+						to: {
 							name: "agents"
 						}
 					},
 					{ default: () => "Agents" }
 				),
 			key: "agents",
+			icon: renderIcon(NotesIcon)
+		},
+		{
+			label: () =>
+				h(
+					RouterLink,
+					{
+						to: {
+							name: "connectors"
+						}
+					},
+					{ default: () => "Connectors" }
+				),
+			key: "connectors",
 			icon: renderIcon(NotesIcon)
 		},
 		{

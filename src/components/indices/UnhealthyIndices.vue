@@ -1,10 +1,10 @@
 <template>
 	<div class="unhealthy-indices">
-		<div class="title">
+		<h4 class="title mb-5">
 			Unhealthy Indices
-			<small class="o-050">({{ unhealthyIndices.length }})</small>
-		</div>
-		<div v-loading="loading">
+			<small class="opacity-50">({{ unhealthyIndices.length }})</small>
+		</h4>
+		<n-spin :show="loading">
 			<div class="info">
 				<template v-if="unhealthyIndices && unhealthyIndices.length">
 					<div
@@ -19,7 +19,7 @@
 					</div>
 				</template>
 			</div>
-		</div>
+		</n-spin>
 	</div>
 </template>
 
@@ -27,6 +27,7 @@
 import { computed, toRefs } from "vue"
 import { type Index, IndexHealth } from "@/types/indices.d"
 import IndexCard from "@/components/indices/IndexCard.vue"
+import { NSpin } from "naive-ui"
 
 const emit = defineEmits<{
 	(e: "click", value: Index): void
@@ -48,20 +49,15 @@ const unhealthyIndices = computed(() =>
 
 <style lang="scss" scoped>
 .unhealthy-indices {
-	padding: var(--size-5) var(--size-6);
+	@apply py-5 px-6;
 
-	.title {
-		font-size: var(--font-size-4);
-		font-weight: var(--font-weight-6);
-		margin-bottom: var(--size-5);
-	}
 	.info {
 		min-height: 50px;
 		.item {
 			cursor: pointer;
 
 			&:not(:last-child) {
-				margin-bottom: var(--size-3);
+				@apply mb-3;
 			}
 		}
 	}

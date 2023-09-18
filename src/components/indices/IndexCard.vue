@@ -1,44 +1,49 @@
 <template>
-	<div class="index-card" :class="[`health-${index.health}`]" v-loading="loading">
-		<div class="group">
-			<div class="box">
-				<div class="value">{{ index.index }}</div>
-				<div class="label">name</div>
-			</div>
-			<div class="box">
-				<div class="value text-uppercase">
-					<IndexIcon :health="index.health" color />
-					{{ index.health }}
+	<div class="index-card" :class="[`health-${index.health}`]">
+		<n-spin :show="loading">
+			<div class="group">
+				<div class="box">
+					<div class="value">{{ index.index }}</div>
+					<div class="label">name</div>
 				</div>
-				<div class="label">health</div>
+				<div class="box">
+					<div class="value text-uppercase">
+						<IndexIcon :health="index.health" color />
+						{{ index.health }}
+					</div>
+					<div class="label">health</div>
+				</div>
 			</div>
-		</div>
-		<div class="group">
-			<div class="box">
-				<div class="value">{{ index.store_size }}</div>
-				<div class="label">store_size</div>
+			<div class="group">
+				<div class="box">
+					<div class="value">{{ index.store_size }}</div>
+					<div class="label">store_size</div>
+				</div>
+				<div class="box">
+					<div class="value">{{ index.docs_count }}</div>
+					<div class="label">docs_count</div>
+				</div>
+				<div class="box">
+					<div class="value">{{ index.replica_count }}</div>
+					<div class="label">replica_count</div>
+				</div>
 			</div>
-			<div class="box">
-				<div class="value">{{ index.docs_count }}</div>
-				<div class="label">docs_count</div>
-			</div>
-			<div class="box">
-				<div class="value">{{ index.replica_count }}</div>
-				<div class="label">replica_count</div>
-			</div>
-		</div>
-		<div class="group actions" v-if="showActions">
-			<div class="box">
-				<!--
+			<div class="group actions" v-if="showActions">
+				<div class="box">
+					<!--
                 <el-tooltip content="Rotate" placement="top" :show-arrow="false">
                     <el-button type="primary" :icon="RefreshIcon" circle />
                 </el-tooltip>
               -->
-				<el-tooltip content="Delete" placement="top" :show-arrow="false">
-					<el-button type="danger" :icon="DeleteIcon" circle @click="handleDelete" />
-				</el-tooltip>
+					<n-tooltip content="Delete">
+						Delete
+						<template #trigger>
+							<n-button type="error" :icon="DeleteIcon" circle @click="handleDelete" />
+						</template>
+					</n-tooltip>
+				</div>
 			</div>
-		</div>
+		</n-spin>
 	</div>
 </template>
 
@@ -47,8 +52,8 @@ import { ref, toRefs } from "vue"
 import IndexIcon from "@/components/indices/IndexIcon.vue"
 import { type Index } from "@/types/indices.d"
 import Api from "@/api"
-import { ElMessage, ElMessageBox } from "element-plus"
-import { Refresh as RefreshIcon, Delete as DeleteIcon } from "@element-plus/icons-vue"
+import DeleteIcon from "@vicons/carbon/Delete"
+import { useMessage, useDialog, NTooltip, NButton } from "naive-ui"
 
 const emit = defineEmits<{
 	(e: "delete"): void
@@ -60,33 +65,23 @@ const props = defineProps<{
 }>()
 const { index, showActions } = toRefs(props)
 
+const dialog = useDialog()
+const message = useMessage()
 const loading = ref(false)
 
 const handleDelete = () => {
-	ElMessageBox.confirm(
-		`Are you sure you want to delete the index:<br/><strong>${index.value.index}</strong> ?`,
-		"Warning",
-		{
-			confirmButtonText: "Yes I'm sure",
-			confirmButtonClass: "el-button--warning",
-			cancelButtonText: "Cancel",
-			type: "warning",
-			dangerouslyUseHTMLString: true,
-			customStyle: {
-				width: "90%",
-				maxWidth: "400px"
-			}
-		}
-	)
-		.then(() => {
+	dialog.warning({
+		title: "Confirm",
+		content: `Are you sure you want to delete the index:<br/><strong>${index.value.index}</strong> ?`,
+		positiveText: "Yes I'm sure",
+		negativeText: "Cancel",
+		onPositiveClick: () => {
 			deleteIndex()
-		})
-		.catch(() => {
-			ElMessage({
-				type: "info",
-				message: "Delete canceled"
-			})
-		})
+		},
+		onNegativeClick: () => {
+			message.info("Delete canceled")
+		}
+	})
 }
 
 function deleteIndex() {
@@ -96,37 +91,23 @@ function deleteIndex() {
 		.deleteIndex(index.value.index)
 		.then(res => {
 			if (res.data.success) {
-				ElMessage({
-					message: "Index was successfully deleted.",
-					type: "success"
-				})
+				message.success("Index was successfully deleted.")
 
 				emit("delete")
 			} else {
-				ElMessage({
-					message: res.data?.message || "An error occurred. Please try again later.",
-					type: "error"
-				})
+				message.error(res.data?.message || "An error occurred. Please try again later.")
 			}
 		})
 		.catch(err => {
 			if (err.response.status === 401) {
-				ElMessage({
-					message:
-						err.response?.data?.message ||
-						"Wazuh-Indexer returned Unauthorized. Please check your connector credentials.",
-					type: "error"
-				})
+				message.error(
+					err.response?.data?.message ||
+						"Wazuh-Indexer returned Unauthorized. Please check your connector credentials."
+				)
 			} else if (err.response.status === 404) {
-				ElMessage({
-					message: err.response?.data?.message || "An error occurred. Please try again later.",
-					type: "error"
-				})
+				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
 			} else {
-				ElMessage({
-					message: err.response?.data?.message || "An error occurred. Please try again later.",
-					type: "error"
-				})
+				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
 			}
 		})
 		.finally(() => {
@@ -137,19 +118,16 @@ function deleteIndex() {
 
 <style lang="scss" scoped>
 .index-card {
-	padding: var(--size-3) var(--size-4);
-
+	@apply py-3 px-4 gap-6;
 	border: 2px solid transparent;
-
 	display: flex;
 	justify-content: space-between;
-	gap: var(--size-6);
 	flex-wrap: wrap;
 
 	.group {
 		display: flex;
 		justify-content: space-between;
-		gap: var(--size-6);
+		@apply gap-6;
 		flex-grow: 1;
 		flex-wrap: wrap;
 
@@ -163,19 +141,18 @@ function deleteIndex() {
 			}
 			.label {
 				white-space: nowrap;
-				font-size: var(--font-size-0);
-				font-family: var(--font-mono);
+				@apply text-xs;
+				font-family: var(--font-family-mono);
 				opacity: 0.8;
 			}
 		}
 		&.actions {
 			flex-grow: 0;
 			.box {
-				padding: var(--size-2) var(--size-2);
+				@apply rounded-full py-2 px-2;
 				background-color: rgba(0, 0, 0, 0.07);
 				display: flex;
 				align-items: center;
-				border-radius: var(--radius-6);
 			}
 		}
 	}
