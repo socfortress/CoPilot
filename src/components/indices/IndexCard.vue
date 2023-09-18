@@ -1,46 +1,48 @@
 <template>
 	<div class="index-card" :class="[`health-${index.health}`]">
 		<n-spin :show="loading">
-			<div class="group">
-				<div class="box">
-					<div class="value">{{ index.index }}</div>
-					<div class="label">name</div>
-				</div>
-				<div class="box">
-					<div class="value text-uppercase">
-						<IndexIcon :health="index.health" color />
-						{{ index.health }}
+			<div class="wrapper">
+				<div class="group">
+					<div class="box">
+						<div class="value">{{ index.index }}</div>
+						<div class="label">name</div>
 					</div>
-					<div class="label">health</div>
+					<div class="box">
+						<div class="value text-uppercase">
+							<IndexIcon :health="index.health" color />
+							{{ index.health }}
+						</div>
+						<div class="label">health</div>
+					</div>
 				</div>
-			</div>
-			<div class="group">
-				<div class="box">
-					<div class="value">{{ index.store_size }}</div>
-					<div class="label">store_size</div>
+				<div class="group">
+					<div class="box">
+						<div class="value">{{ index.store_size }}</div>
+						<div class="label">store_size</div>
+					</div>
+					<div class="box">
+						<div class="value">{{ index.docs_count }}</div>
+						<div class="label">docs_count</div>
+					</div>
+					<div class="box">
+						<div class="value">{{ index.replica_count }}</div>
+						<div class="label">replica_count</div>
+					</div>
 				</div>
-				<div class="box">
-					<div class="value">{{ index.docs_count }}</div>
-					<div class="label">docs_count</div>
-				</div>
-				<div class="box">
-					<div class="value">{{ index.replica_count }}</div>
-					<div class="label">replica_count</div>
-				</div>
-			</div>
-			<div class="group actions" v-if="showActions">
-				<div class="box">
-					<!--
-                <el-tooltip content="Rotate" placement="top" :show-arrow="false">
-                    <el-button type="primary" :icon="RefreshIcon" circle />
-                </el-tooltip>
-              -->
-					<n-tooltip content="Delete">
-						Delete
-						<template #trigger>
-							<n-button type="error" :icon="DeleteIcon" circle @click="handleDelete" />
-						</template>
-					</n-tooltip>
+				<div class="group actions" v-if="showActions">
+					<div class="box">
+						<!--
+						<el-tooltip content="Rotate" placement="top" :show-arrow="false">
+							<el-button type="primary" :icon="RefreshIcon" circle />
+						</el-tooltip>
+					-->
+						<n-tooltip content="Delete">
+							Delete
+							<template #trigger>
+								<n-button type="error" :icon="DeleteIcon" circle @click="handleDelete" />
+							</template>
+						</n-tooltip>
+					</div>
 				</div>
 			</div>
 		</n-spin>
@@ -53,7 +55,7 @@ import IndexIcon from "@/components/indices/IndexIcon.vue"
 import { type Index } from "@/types/indices.d"
 import Api from "@/api"
 import DeleteIcon from "@vicons/carbon/Delete"
-import { useMessage, useDialog, NTooltip, NButton } from "naive-ui"
+import { useMessage, useDialog, NTooltip, NButton, NSpin } from "naive-ui"
 
 const emit = defineEmits<{
 	(e: "delete"): void
@@ -120,43 +122,46 @@ function deleteIndex() {
 .index-card {
 	@apply py-3 px-4 gap-6;
 	border: 2px solid transparent;
-	display: flex;
-	justify-content: space-between;
-	flex-wrap: wrap;
+	border-radius: var(--border-radius);
 
-	.group {
+	.wrapper {
 		display: flex;
 		justify-content: space-between;
-		@apply gap-6;
-		flex-grow: 1;
 		flex-wrap: wrap;
 
-		.box {
+		.group {
+			display: flex;
+			justify-content: space-between;
+			@apply gap-6;
 			flex-grow: 1;
+			flex-wrap: wrap;
 
-			.value {
-				font-weight: bold;
-				margin-bottom: 2px;
-				white-space: nowrap;
-			}
-			.label {
-				white-space: nowrap;
-				@apply text-xs;
-				font-family: var(--font-family-mono);
-				opacity: 0.8;
-			}
-		}
-		&.actions {
-			flex-grow: 0;
 			.box {
-				@apply rounded-full py-2 px-2;
-				background-color: rgba(0, 0, 0, 0.07);
-				display: flex;
-				align-items: center;
+				flex-grow: 1;
+
+				.value {
+					font-weight: bold;
+					margin-bottom: 2px;
+					white-space: nowrap;
+				}
+				.label {
+					white-space: nowrap;
+					@apply text-xs;
+					font-family: var(--font-family-mono);
+					opacity: 0.8;
+				}
+			}
+			&.actions {
+				flex-grow: 0;
+				.box {
+					@apply rounded-full py-2 px-2;
+					background-color: rgba(0, 0, 0, 0.07);
+					display: flex;
+					align-items: center;
+				}
 			}
 		}
 	}
-
 	&.health-green {
 		border-color: var(--success-color);
 	}

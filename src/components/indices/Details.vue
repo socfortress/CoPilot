@@ -1,5 +1,5 @@
 <template>
-	<div class="index-details-box" :class="{ active: currentIndex }">
+	<n-card class="index-details-box">
 		<n-spin :show="loading">
 			<div class="box-header">
 				<h4 class="title">
@@ -20,9 +20,9 @@
 				<div class="info">
 					<IndexCard :index="currentIndex" showActions @delete="clearCurrentIndex()" />
 				</div>
-				<div class="shards">
-					<n-scrollbar>
-						<n-table>
+				<n-card class="shards" content-style="padding:0">
+					<n-scrollbar x-scrollable style="width: 100%">
+						<n-table :bordered="false" class="min-w-max">
 							<thead>
 								<tr>
 									<th>Node</th>
@@ -45,10 +45,10 @@
 							</tbody>
 						</n-table>
 					</n-scrollbar>
-				</div>
+				</n-card>
 			</div>
 		</n-spin>
-	</div>
+	</n-card>
 </template>
 
 <script setup lang="ts">
@@ -57,7 +57,7 @@ import { type Index, type IndexShard } from "@/types/indices.d"
 import IndexCard from "@/components/indices/IndexCard.vue"
 import Api from "@/api"
 import { nanoid } from "nanoid"
-import { useMessage, NScrollbar, NSpin, NTable, NSelect } from "naive-ui"
+import { useMessage, NScrollbar, NSpin, NTable, NSelect, NCard } from "naive-ui"
 
 type IndexModel = Index | null | ""
 
@@ -147,13 +147,6 @@ onBeforeMount(() => {
 
 <style lang="scss" scoped>
 .index-details-box {
-	@apply py-5 px-6;
-	border: 2px solid transparent;
-
-	&.active {
-		border-color: var(--primary-color);
-	}
-
 	.box-header {
 		display: flex;
 		align-items: center;

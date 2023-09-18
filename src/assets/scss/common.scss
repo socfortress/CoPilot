@@ -72,6 +72,8 @@
 		}
 
 		@media (max-width: 700px) {
+			flex-direction: column;
+
 			.title {
 				font-size: 20px;
 			}

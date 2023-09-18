@@ -1,32 +1,34 @@
 <template>
 	<div class="indices-marquee">
-		<n-spin :show="loading">
-			<Vue3Marquee
-				class="marquee-wrap"
-				:duration="200"
-				:pauseOnHover="true"
-				:clone="true"
-				:gradient="true"
-				:gradient-color="[255, 255, 255]"
-				gradient-length="10%"
-			>
-				<span
-					v-for="item in indices"
-					:key="item.index"
-					class="item"
-					:class="item.health"
-					@click="emit('click', item)"
-					title="Click to select"
+		<n-card content-style="padding:0; " class="overflow-hidden">
+			<n-spin :show="loading">
+				<Vue3Marquee
+					class="marquee-wrap"
+					:duration="200"
+					:pauseOnHover="true"
+					:clone="true"
+					:gradient="true"
+					:gradient-color="gradientColor"
+					gradient-length="10%"
 				>
-					<IndexIcon :health="item.health" color />
-					{{ item.index }}
-				</span>
-			</Vue3Marquee>
-			<div class="info">
-				<i class="mdi mdi-information-outline"></i>
-				Click on an index to select
-			</div>
-		</n-spin>
+					<span
+						v-for="item in indices"
+						:key="item.index"
+						class="item"
+						:class="item.health"
+						@click="emit('click', item)"
+						title="Click to select"
+					>
+						<IndexIcon :health="item.health" color />
+						{{ item.index }}
+					</span>
+				</Vue3Marquee>
+			</n-spin>
+		</n-card>
+		<div class="info" v-if="indices?.length">
+			<i class="mdi mdi-information-outline"></i>
+			Click on an index to select
+		</div>
 	</div>
 </template>
 
@@ -35,7 +37,8 @@ import { computed, toRefs } from "vue"
 import { type Index } from "@/types/indices.d"
 import { Vue3Marquee } from "vue3-marquee"
 import IndexIcon from "@/components/indices/IndexIcon.vue"
-import { NSpin } from "naive-ui"
+import { NSpin, NCard } from "naive-ui"
+import { useThemeStore } from "@/stores/theme"
 
 const emit = defineEmits<{
 	(e: "click", value: Index): void
@@ -46,6 +49,8 @@ const props = defineProps<{
 }>()
 const { indices } = toRefs(props)
 
+const style = computed<{ [key: string]: any }>(() => useThemeStore().style)
+const gradientColor = computed(() => style.value["--bg-color-rgb"].split(", "))
 const loading = computed(() => !indices?.value || indices.value === null)
 </script>
 

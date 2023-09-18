@@ -1,5 +1,5 @@
 <template>
-	<el-scrollbar class="page">
+	<div class="page">
 		<div class="section">
 			<IndicesMarquee :indices="indices" @click="setIndex" />
 		</div>
@@ -29,7 +29,7 @@
 				</div>
 			</div>
 		</div>
-	</el-scrollbar>
+	</div>
 </template>
 
 <script lang="ts" setup>
