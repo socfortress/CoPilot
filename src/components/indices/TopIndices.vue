@@ -1,10 +1,11 @@
 <template>
-	<div class="top-indices-chart-container">
-		<h4 class="title mb-5">Top 8 indices size & health</h4>
+	<n-card class="top-indices-chart-container" title="Top 8 indices size & health" segmented>
 		<n-spin style="height: 400px; overflow: hidden" :show="loading">
-			<div id="top-indices-chart" style="max-width: 100%; height: 400px"></div>
+			<div class="overflow-hidden">
+				<div id="top-indices-chart" style="max-width: 100%; height: 400px"></div>
+			</div>
 		</n-spin>
-	</div>
+	</n-card>
 </template>
 
 <script setup lang="ts">
@@ -13,7 +14,7 @@ import * as echarts from "echarts"
 import { type Index, IndexHealth } from "@/types/indices.d"
 import bytes from "bytes"
 import _ from "lodash"
-import { NSpin } from "naive-ui"
+import { NSpin, NCard } from "naive-ui"
 
 const props = defineProps<{
 	indices: Index[] | null
@@ -185,7 +186,6 @@ onMounted(() => {
 .top-indices-chart-container {
 	width: 100%;
 	overflow: hidden;
-	@apply p-6;
 	box-sizing: border-box;
 }
 </style>

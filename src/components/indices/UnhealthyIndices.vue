@@ -1,9 +1,11 @@
 <template>
-	<div class="unhealthy-indices">
-		<h4 class="title mb-5">
-			Unhealthy Indices
-			<small class="opacity-50">({{ unhealthyIndices.length }})</small>
-		</h4>
+	<n-card class="unhealthy-indices" segmented>
+		<template #header>
+			<div class="flex align-center justify-between">
+				<span>Unhealthy Indices</span>
+				<small class="opacity-50">{{ unhealthyIndices.length }}</small>
+			</div>
+		</template>
 		<n-spin :show="loading">
 			<div class="info">
 				<template v-if="unhealthyIndices && unhealthyIndices.length">
@@ -18,16 +20,25 @@
 						<IndexCard :index="item" />
 					</div>
 				</template>
+				<n-empty description="No Unhealthy Indices found" v-else>
+					<template #icon>
+						<n-icon>
+							<ShieldIcon />
+						</n-icon>
+					</template>
+					<template #extra>Great, all indices are healthy!</template>
+				</n-empty>
 			</div>
 		</n-spin>
-	</div>
+	</n-card>
 </template>
 
 <script setup lang="ts">
 import { computed, toRefs } from "vue"
 import { type Index, IndexHealth } from "@/types/indices.d"
 import IndexCard from "@/components/indices/IndexCard.vue"
-import { NSpin } from "naive-ui"
+import { NSpin, NCard, NEmpty, NIcon } from "naive-ui"
+import ShieldIcon from "@vicons/fluent/ShieldTask20Regular"
 
 const emit = defineEmits<{
 	(e: "click", value: Index): void
@@ -49,8 +60,6 @@ const unhealthyIndices = computed(() =>
 
 <style lang="scss" scoped>
 .unhealthy-indices {
-	@apply py-5 px-6;
-
 	.info {
 		min-height: 50px;
 		.item {

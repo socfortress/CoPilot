@@ -9,22 +9,22 @@
 		</div>
 
 		<div class="section">
-			<div class="columns">
-				<div class="col basis-50">
+			<div class="columns flex">
+				<div class="col basis-1/2">
 					<ClusterHealth class="stretchy" />
 				</div>
-				<div class="col basis-50">
+				<div class="col basis-1/2">
 					<UnhealthyIndices :indices="indices" @click="setIndex" class="stretchy" />
 				</div>
 			</div>
 		</div>
 
 		<div class="section">
-			<div class="columns column-1200">
-				<div class="col basis-40">
+			<div class="columns flex column-1200">
+				<div class="col basis-2/5">
 					<NodeAllocation class="stretchy" />
 				</div>
-				<div class="col basis-60 chart-card">
+				<div class="col basis-3/5 overflow-hidden">
 					<TopIndices :indices="indices" />
 				</div>
 			</div>
@@ -96,32 +96,8 @@ onBeforeMount(() => {
 			display: flex;
 			@apply gap-6;
 
-			.col {
-				flex-grow: 1;
-				//overflow: hidden;
-				&.basis-20 {
-					flex-basis: 20%;
-				}
-				&.basis-40 {
-					flex-basis: 40%;
-				}
-				&.basis-50 {
-					flex-basis: 50%;
-				}
-				&.basis-60 {
-					flex-basis: 60%;
-				}
-				&.basis-80 {
-					flex-basis: 80%;
-				}
-
-				&.chart-card {
-				}
-			}
-
 			.stretchy {
 				height: 100%;
-				box-sizing: border-box;
 			}
 		}
 	}

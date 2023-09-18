@@ -1,5 +1,5 @@
 <template>
-	<div class="page-agent">
+	<div class="page">
 		<div class="agent-toolbar">
 			<div class="back-btn" @click="gotoAgents()">
 				<n-icon :size="16"><ArrowIcon /></n-icon>
@@ -8,67 +8,54 @@
 			<div class="delete-btn" @click.stop="handleDelete" v-if="agent">Delete Agent</div>
 		</div>
 		<n-spin
-			class="page-header card-base card-shadow--small flex"
+			class="agent-header py-5 px-7 my-4"
 			:class="{ critical: agent?.critical_asset, online: isOnline }"
 			:show="loadingAgent"
 		>
-			<div class="box grow">
-				<div class="title">
-					<div class="critical" :class="{ active: agent?.critical_asset }" v-if="agent">
-						<n-tooltip>
-							Toggle Critical Assets
-							<template #trigger>
-								<n-button
-									text
-									:type="agent?.critical_asset ? 'warning' : 'default'"
-									circle
-									@click.stop="toggleCritical(agent.agent_id, agent.critical_asset)"
-								>
-									<template #icon>
-										<n-icon><StarIcon /></n-icon>
-									</template>
-								</n-button>
-							</template>
-						</n-tooltip>
-					</div>
-					<h1 v-if="agent?.hostname">
-						{{ agent?.hostname }}
-					</h1>
-					<span class="online-badge" v-if="isOnline">ONLINE</span>
+			<div class="title">
+				<div class="critical" :class="{ active: agent?.critical_asset }" v-if="agent">
+					<n-tooltip>
+						Toggle Critical Assets
+						<template #trigger>
+							<n-button
+								text
+								:type="agent?.critical_asset ? 'warning' : 'default'"
+								circle
+								@click.stop="toggleCritical(agent.agent_id, agent.critical_asset)"
+							>
+								<template #icon>
+									<n-icon><StarIcon /></n-icon>
+								</template>
+							</n-button>
+						</template>
+					</n-tooltip>
 				</div>
-				<n-breadcrumb separator="/">
-					<n-breadcrumb-item :to="{ path: '/' }">
-						<n-icon :size="16"><Home24Regular /></n-icon>
-					</n-breadcrumb-item>
-					<n-breadcrumb-item>Agent</n-breadcrumb-item>
-					<n-breadcrumb-item v-if="agent?.agent_id">#{{ agent?.agent_id }}</n-breadcrumb-item>
-				</n-breadcrumb>
+				<h1 v-if="agent?.hostname">
+					{{ agent?.hostname }}
+				</h1>
+				<span class="online-badge" v-if="isOnline">ONLINE</span>
 			</div>
-			<div class="menu-btn align-vertical" @click="sidebarOpen = !sidebarOpen">
-				<n-icon :size="16"><MenuIcon /></n-icon>
-			</div>
+			<div class="label opacity-60 mt-2">Agent #{{ agent?.agent_id }}</div>
 		</n-spin>
-		<div class="wrapper">
-			<div class="sidebar scrollable" :class="{ open: sidebarOpen }">
-				<n-button size="small" class="close-btn" @click="sidebarOpen = false">close</n-button>
-				<ul>
-					<li :class="{ active: activePage === 'overview' }" @click="activePage = 'overview'">Overview</li>
-					<li :class="{ active: activePage === 'vulnerabilities' }" @click="activePage = 'vulnerabilities'">
-						Vulnerabilities
-					</li>
-					<li :class="{ active: activePage === 'alerts' }" @click="activePage = 'alerts'">Alerts</li>
-				</ul>
-			</div>
-			<div class="main-content box grow card-base card-shadow--small scrollable only-y">
-				<n-spin v-if="agent" :show="loadingAgent">
-					<OverviewSection :agent="agent" v-if="activePage === 'overview'" />
-
-					<VulnerabilitiesSection :agent="agent" v-show="activePage === 'vulnerabilities'" />
-
-					<template v-if="activePage === 'alerts'">...yet to be implemented...</template>
-				</n-spin>
-			</div>
-		</div>
+		<n-card class="p-2" content-style="padding:0">
+			<n-spin :show="loadingAgent">
+				<n-tabs type="segment" animated default-value="Overview">
+					<n-tab-pane name="Overview" tab="Overview" display-directive="show">
+						<div class="section">
+							<OverviewSection v-if="agent" :agent="agent" />
+						</div>
+					</n-tab-pane>
+					<n-tab-pane name="Vulnerabilities" tab="Vulnerabilities" display-directive="show">
+						<div class="section">
+							<VulnerabilitiesSection v-if="agent" :agent="agent" />
+						</div>
+					</n-tab-pane>
+					<n-tab-pane name="Alerts" tab="Alerts" display-directive="show">
+						<div class="section">...yet to be implemented...</div>
+					</n-tab-pane>
+				</n-tabs>
+			</n-spin>
+		</n-card>
 	</div>
 </template>
 
@@ -82,7 +69,7 @@ import StarIcon from "@vicons/carbon/Star"
 import { useRouter } from "vue-router"
 import VulnerabilitiesSection from "@/components/agents/VulnerabilitiesSection.vue"
 import OverviewSection from "@/components/agents/OverviewSection.vue"
-import { useMessage, NSpin, NTooltip, NButton, NIcon, NBreadcrumbItem, NBreadcrumb } from "naive-ui"
+import { useMessage, NSpin, NTooltip, NButton, NIcon, NTabs, NTabPane, NCard } from "naive-ui"
 import Home24Regular from "@vicons/fluent/Home24Regular"
 import ArrowIcon from "@vicons/carbon/ArrowLeft"
 import MenuIcon from "@vicons/carbon/Menu"
@@ -172,18 +159,8 @@ onBeforeMount(() => {
 </script>
 
 <style lang="scss" scoped>
-.page-agent {
-	height: 100%;
-	margin: 0 !important;
-	padding: 20px;
-	padding-bottom: 10px;
-	box-sizing: border-box;
-	overflow: hidden;
-	display: flex;
-	flex-direction: column;
-
+.page {
 	.agent-toolbar {
-		margin-top: 16px;
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
@@ -211,43 +188,34 @@ onBeforeMount(() => {
 		}
 	}
 
-	.page-header {
-		margin-top: 12px;
-		margin-bottom: 20px;
-		min-height: 120px;
+	.agent-header {
 		border: 2px solid transparent;
-		box-sizing: border-box;
+		border-radius: var(--border-radius);
+		background-color: var(--bg-color);
 
 		.title {
 			display: flex;
 			align-items: center;
 			line-height: 1;
+			@apply gap-4;
 
 			h1 {
 				margin: 0;
 				@apply text-2xl;
+				word-break: break-all;
 			}
 
 			.critical {
-				margin-right: 6px;
-				margin-left: -8px;
+				display: flex;
+				align-items: center;
 			}
-
 			.online-badge {
 				border: 2px solid var(--primary-color);
 				color: var(--primary-color);
 				font-weight: bold;
-				margin-left: 10px;
-				border-radius: 6px;
+				border-radius: var(--border-radius);
 				@apply text-xs py-1 px-2;
 			}
-		}
-
-		.menu-btn {
-			color: var(--fg-color);
-			font-size: 20px;
-			display: none;
-			cursor: pointer;
 		}
 
 		&.critical {
@@ -255,136 +223,9 @@ onBeforeMount(() => {
 		}
 	}
 
-	.wrapper {
-		display: flex;
-		flex-grow: 1;
-		overflow: hidden;
-		padding: 5px;
-		margin-left: -5px;
-		margin-right: -5px;
-
-		.sidebar {
-			box-sizing: border-box;
-			@apply pr-4;
-			min-width: 250px;
-			max-width: 250px;
-			max-height: 100vh;
-
-			.close-btn {
-				display: none;
-				width: 100%;
-				margin-bottom: 10px;
-			}
-
-			ul {
-				width: 100%;
-				list-style: none;
-				padding: 0;
-				margin: 0;
-			}
-			li {
-				box-sizing: border-box;
-				width: 100%;
-				list-style: none;
-				padding: 15px 20px;
-				border-bottom: 1px solid var(--fg-color);
-				cursor: pointer;
-				position: relative;
-
-				&::after {
-					content: "";
-					display: block;
-					width: 0%;
-					height: 100%;
-					background: var(--fg-color);
-					position: absolute;
-					top: 0;
-					left: 0;
-					opacity: 0;
-					transition: all 0.5s;
-				}
-
-				&::before {
-					content: "";
-					display: block;
-					width: 6px;
-					height: 60%;
-					background: var(--fg-color);
-					position: absolute;
-					top: 20%;
-					left: 0;
-					opacity: 0;
-					transform: translateX(-100%);
-					transition: all 0.5s;
-				}
-
-				&:hover {
-					&::after {
-						width: 100%;
-						opacity: 0.3;
-					}
-				}
-
-				&.active {
-					&::before {
-						opacity: 1;
-						transform: translateX(0);
-					}
-				}
-			}
-		}
-
-		.main-content {
-			@apply p-6;
-			flex-grow: 1;
-			overflow: hidden;
-		}
-	}
-}
-
-@media (max-width: 768px) {
-	.page-agent {
-		padding-left: 5px;
-		padding-right: 5px;
-
-		.page-header {
-			.menu-btn {
-				display: block;
-			}
-		}
-
-		.wrapper {
-			.sidebar {
-				@apply p-4;
-
-				.close-btn {
-					display: block;
-				}
-
-				margin: 0;
-				position: absolute;
-				background: white;
-				color: #000;
-				top: 5px;
-				left: -100%;
-				opacity: 0;
-				bottom: 5px;
-				box-shadow: 40px 0px 160px 80px rgba(0, 0, 0, 0.3);
-				border-top-right-radius: 4px;
-				border-bottom-right-radius: 4px;
-				transition: all 0.5s;
-
-				li {
-					border-bottom: 1px solid #eee;
-				}
-
-				&.open {
-					opacity: 1;
-					left: 0;
-					z-index: 999;
-				}
-			}
-		}
+	.section {
+		min-height: 200px;
+		@apply mt-2;
 	}
 }
 </style>

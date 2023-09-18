@@ -1,13 +1,15 @@
 <template>
-	<div class="cluster-health">
-		<h4 class="title mb-5">
-			Nodes Allocation
-			<small class="opacity-50">({{ indicesAllocation.length }})</small>
-		</h4>
+	<n-card class="cluster-health" segmented>
+		<template #header>
+			<div class="flex align-center justify-between">
+				<span>Nodes Allocation</span>
+				<small class="opacity-50">{{ indicesAllocation.length }}</small>
+			</div>
+		</template>
 		<n-spin :show="loading">
 			<div class="info">
 				<template v-if="indicesAllocation.length">
-					<n-scrollbar style=" max-height;500px">
+					<n-scrollbar style="max-height: 500px" trigger="none">
 						<div
 							v-for="node of indicesAllocation"
 							:key="node.id"
@@ -34,12 +36,13 @@
 									<div class="label">disk_available</div>
 								</div>
 							</div>
-							<div class="group" v-if="node.disk_percent">
+							<div class="group disk-percent" v-if="node.disk_percent">
 								<div class="box w-full">
 									<n-progress
 										type="line"
 										indicator-placement="inside"
-										:stroke-width="26"
+										border-radius="0"
+										:height="24"
 										:percentage="node.disk_percent_value"
 										:status="getStatusPercent(node.disk_percent_value)"
 									/>
@@ -50,7 +53,7 @@
 				</template>
 			</div>
 		</n-spin>
-	</div>
+	</n-card>
 </template>
 
 <script setup lang="ts">
@@ -58,7 +61,7 @@ import { onBeforeMount, ref } from "vue"
 import { type IndexAllocation } from "@/types/indices.d"
 import Api from "@/api"
 import { nanoid } from "nanoid"
-import { useMessage, NSpin, NScrollbar, NProgress } from "naive-ui"
+import { useMessage, NSpin, NScrollbar, NProgress, NCard } from "naive-ui"
 
 const message = useMessage()
 const indicesAllocation = ref<IndexAllocation[]>([])
@@ -110,57 +113,43 @@ onBeforeMount(() => {
 
 <style lang="scss" scoped>
 .cluster-health {
-	@apply py-5 px-6;
-
 	.info {
 		min-height: 50px;
 		margin-left: -5px;
 		margin-right: -5px;
 
 		.item {
-			@apply py-3 px-4 gap-6;
-
 			border: 2px solid transparent;
-			margin: 5px;
-
 			display: flex;
+			border-radius: var(--border-radius);
 			flex-direction: column;
+			overflow: hidden;
 
 			.group {
+				@apply py-3 px-4;
 				@apply gap-6;
 				display: flex;
 				justify-content: space-between;
 				flex-grow: 1;
 				flex-wrap: wrap;
+				overflow: hidden;
 
 				.box {
+					overflow: hidden;
+
 					.value {
 						font-weight: bold;
 						margin-bottom: 2px;
-						white-space: nowrap;
 					}
 					.label {
 						@apply text-xs;
 						font-family: var(--font-family-mono);
 						opacity: 0.8;
 					}
+				}
 
-					:deep() {
-						// TODO: check
-						/*
-						.el-progress-bar__outer {
-							border-radius: 4px;
-
-							.el-progress-bar__inner {
-								border-radius: 0;
-							}
-						}
-						*/
-					}
-
-					&.w-full {
-						width: 100%;
-					}
+				&.disk-percent {
+					padding: 0;
 				}
 			}
 
@@ -181,7 +170,7 @@ onBeforeMount(() => {
 			}
 
 			&:not(:last-child) {
-				margin-bottom: var(--size-3);
+				@apply mb-4;
 			}
 		}
 	}

@@ -55,11 +55,12 @@ onBeforeMount(() => {
 <style lang="scss" scoped>
 .vulnerabilities-section {
 	container-type: inline-size;
+	min-height: 100px;
 
 	.group {
+		@apply gap-4;
 		width: 100%;
 		display: grid;
-		grid-gap: var(--size-5);
 		grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
 		grid-auto-flow: row dense;
 	}

@@ -61,7 +61,7 @@ const router = createRouter({
 			path: "/agent/:id?",
 			name: "agent",
 			component: () => import("@/views/socfortress/AgentOverview.vue"),
-			meta: { icon: CalendarIcon, title: "agent", auth: true, roles: "all" }
+			meta: { icon: CalendarIcon, title: "Agent", auth: true, roles: "all" }
 		},
 
 		{

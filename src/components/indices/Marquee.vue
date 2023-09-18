@@ -14,7 +14,7 @@
 					<span
 						v-for="item in indices"
 						:key="item.index"
-						class="item"
+						class="item flex items-center gap-2"
 						:class="item.health"
 						@click="emit('click', item)"
 						title="Click to select"
@@ -79,6 +79,7 @@ const loading = computed(() => !indices?.value || indices.value === null)
 		.item {
 			padding: 10px 20px;
 			cursor: pointer;
+			line-height: 1;
 
 			&.green {
 				i {

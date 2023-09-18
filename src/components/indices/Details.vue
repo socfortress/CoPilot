@@ -20,7 +20,7 @@
 				<div class="info">
 					<IndexCard :index="currentIndex" showActions @delete="clearCurrentIndex()" />
 				</div>
-				<n-card class="shards" content-style="padding:0">
+				<n-card class="shards overflow-hidden" content-style="padding:0">
 					<n-scrollbar x-scrollable style="width: 100%">
 						<n-table :bordered="false" class="min-w-max">
 							<thead>
@@ -150,20 +150,8 @@ onBeforeMount(() => {
 	.box-header {
 		display: flex;
 		align-items: center;
-
-		.title {
-			@apply mr-4;
-		}
-
-		.select-box {
-			// TODO: check!!!
-			/*
-			.el-select {
-				min-width: clamp(2rem, 4vw, 3rem);
-				max-width: 100%;
-			}
-			*/
-		}
+		justify-content: space-between;
+		@apply gap-4;
 	}
 
 	.details-box {
@@ -184,7 +172,7 @@ onBeforeMount(() => {
 		}
 	}
 
-	@media (max-width: 1000px) {
+	@media (max-width: 700px) {
 		.box-header {
 			flex-direction: column;
 			align-items: flex-start;
@@ -192,12 +180,6 @@ onBeforeMount(() => {
 
 			.select-box {
 				width: 100%;
-				// TODO: check!!!
-				/*
-				.el-select {
-					min-width: 100%;
-				}
-				*/
 			}
 		}
 	}

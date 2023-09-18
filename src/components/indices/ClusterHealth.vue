@@ -1,29 +1,32 @@
 <template>
-	<div class="cluster-health">
-		<h4 class="title">Overall Health</h4>
+	<n-card class="cluster-health" segmented>
+		<template #header>
+			<div class="flex align-center justify-between">
+				<span>Overall Health</span>
+				<IndexIcon v-if="cluster" :health="cluster.status" color />
+			</div>
+		</template>
 		<n-spin :show="loading">
-			<div class="info">
-				<div class="cluster-card" :class="[`health-${cluster.status}`]" v-if="cluster">
-					<n-scrollbar style="max-height: 500px">
-						<div class="card-wrap">
-							<div class="box" v-for="prop of propsOrder" :key="prop">
-								<template v-if="prop === 'status'">
-									<div class="value text-uppercase">
-										<IndexIcon :health="cluster.status" color />
-										{{ cluster.status }}
-									</div>
-								</template>
-								<template v-else>
-									<div class="value">{{ cluster[prop] }}</div>
-								</template>
-								<div class="label">{{ sanitizeLabel(prop) }}</div>
-							</div>
+			<div class="info" v-if="cluster">
+				<n-scrollbar style="max-height: 500px" trigger="none">
+					<div class="card-wrap">
+						<div class="box" v-for="prop of propsOrder" :key="prop">
+							<template v-if="prop === 'status'">
+								<div class="value uppercase flex align-center gap-2">
+									<IndexIcon :health="cluster.status" color />
+									{{ cluster.status }}
+								</div>
+							</template>
+							<template v-else>
+								<div class="value">{{ cluster[prop] }}</div>
+							</template>
+							<div class="label">{{ sanitizeLabel(prop) }}</div>
 						</div>
-					</n-scrollbar>
-				</div>
+					</div>
+				</n-scrollbar>
 			</div>
 		</n-spin>
-	</div>
+	</n-card>
 </template>
 
 <script setup lang="ts">
@@ -31,7 +34,7 @@ import { onBeforeMount, ref } from "vue"
 import IndexIcon from "@/components/indices/IndexIcon.vue"
 import { type ClusterHealth } from "@/types/indices.d"
 import Api from "@/api"
-import { useMessage, NSpin, NScrollbar } from "naive-ui"
+import { useMessage, NSpin, NScrollbar, NCard } from "naive-ui"
 
 const message = useMessage()
 const cluster = ref<ClusterHealth | null>(null)
@@ -96,48 +99,27 @@ onBeforeMount(() => {
 
 <style lang="scss" scoped>
 .cluster-health {
-	@apply py-5 px-6;
-
-	.title {
-		@apply mb-5;
-	}
 	.info {
 		min-height: 50px;
 
-		.cluster-card {
-			border: 2px solid transparent;
+		.card-wrap {
+			@apply py-3 px-4 gap-6 gap-x-6;
+			column-width: 12rem;
+			column-count: auto;
 
-			.card-wrap {
-				@apply py-3 px-4 gap-6 gap-x-6;
-				column-width: 12rem;
-				column-count: auto;
-
-				.box {
-					overflow: hidden;
-					@apply mb-6;
-					.value {
-						font-weight: bold;
-						margin-bottom: 2px;
-						white-space: nowrap;
-					}
-					.label {
-						@apply text-xs;
-						font-family: var(--font-family-mono);
-						opacity: 0.8;
-					}
+			.box {
+				overflow: hidden;
+				@apply mb-6;
+				.value {
+					font-weight: bold;
+					margin-bottom: 2px;
+					white-space: nowrap;
 				}
-			}
-
-			&.health-green {
-				border-color: var(--success-color);
-			}
-
-			&.health-yellow {
-				border-color: var(--warning-color);
-			}
-
-			&.health-red {
-				border-color: var(--error-color);
+				.label {
+					@apply text-xs;
+					font-family: var(--font-family-mono);
+					opacity: 0.8;
+				}
 			}
 		}
 	}

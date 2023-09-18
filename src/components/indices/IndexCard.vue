@@ -8,7 +8,7 @@
 						<div class="label">name</div>
 					</div>
 					<div class="box">
-						<div class="value text-uppercase">
+						<div class="value uppercase flex align-center gap-2">
 							<IndexIcon :health="index.health" color />
 							{{ index.health }}
 						</div>
@@ -39,7 +39,11 @@
 						<n-tooltip content="Delete">
 							Delete
 							<template #trigger>
-								<n-button type="error" :icon="DeleteIcon" circle @click="handleDelete" />
+								<n-button quaternary circle type="error" @click.stop="handleDelete">
+									<template #icon>
+										<n-icon><DeleteIcon /></n-icon>
+									</template>
+								</n-button>
 							</template>
 						</n-tooltip>
 					</div>
@@ -55,7 +59,7 @@ import IndexIcon from "@/components/indices/IndexIcon.vue"
 import { type Index } from "@/types/indices.d"
 import Api from "@/api"
 import DeleteIcon from "@vicons/carbon/Delete"
-import { useMessage, useDialog, NTooltip, NButton, NSpin } from "naive-ui"
+import { useMessage, useDialog, NTooltip, NButton, NSpin, NIcon } from "naive-ui"
 
 const emit = defineEmits<{
 	(e: "delete"): void
@@ -128,6 +132,7 @@ function deleteIndex() {
 		display: flex;
 		justify-content: space-between;
 		flex-wrap: wrap;
+		@apply gap-6;
 
 		.group {
 			display: flex;
@@ -142,7 +147,6 @@ function deleteIndex() {
 				.value {
 					font-weight: bold;
 					margin-bottom: 2px;
-					white-space: nowrap;
 				}
 				.label {
 					white-space: nowrap;
@@ -153,12 +157,6 @@ function deleteIndex() {
 			}
 			&.actions {
 				flex-grow: 0;
-				.box {
-					@apply rounded-full py-2 px-2;
-					background-color: rgba(0, 0, 0, 0.07);
-					display: flex;
-					align-items: center;
-				}
 			}
 		}
 	}

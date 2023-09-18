@@ -1,6 +1,6 @@
 <template>
 	<span class="index-icon" :class="[`health-${health}`, { color }]">
-		<n-icon v-if="health === IndexHealth.GREEN">
+		<n-icon v-if="health === IndexHealth.GREEN" :size="18">
 			<ShieldIcon />
 		</n-icon>
 		<n-icon v-if="health === IndexHealth.YELLOW">
@@ -29,6 +29,8 @@ const { health, color } = toRefs(props)
 
 <style lang="scss" scoped>
 .index-icon {
+	display: flex;
+	align-items: center;
 	&.color {
 		&.health-green {
 			color: var(--success-color);
