@@ -16,14 +16,14 @@ from app.services.wazuh_manager.vulnerability import VulnerabilityService
 
 bp = Blueprint("agents", __name__)
 
-
-@bp.before_request
-def before_request_func():
-    if request.endpoint != "agents.get_agents":  # Example of endpoint that doesn't require JWT
-        verify_jwt_in_request()
-        response = check_jwt_in_db()
-        if response:
-            return response
+## Comment out during development
+# @bp.before_request
+# def before_request_func():
+#     if request.endpoint != "agents.get_agents":  # Example of endpoint that doesn't require JWT
+#         verify_jwt_in_request()
+#         response = check_jwt_in_db()
+#         if response:
+#             return response
 
 
 @bp.route("/agents", methods=["GET"])
