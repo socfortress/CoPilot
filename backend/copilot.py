@@ -13,4 +13,6 @@ logger.add(
 logger.debug("Starting CoPilot...")
 
 if __name__ == "__main__":
+    #app.run(debug=True,ssl_context='adhoc') - for running SSL
     app.run(debug=True)
+
