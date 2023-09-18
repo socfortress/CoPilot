@@ -311,6 +311,68 @@
                 }
             }
         },
+        "/refresh": {
+          "post": {
+              "tags": ["Authenticator"],
+              "summary": "Run login attempt",
+              "description": "Endpoint to login.",
+              "requestBody": {
+                  "content": {
+                      "application/json": {
+                          "schema": {
+                              "type": "object",
+                              "properties": {
+                                  "email": {
+                                      "type": "string",
+                                      "description": "User's email"
+                                  },
+                                  "password": {
+                                      "type": "string",
+                                      "description": "User's password"
+                                  }
+                              },
+                              "required": ["email", "password"]
+                          }
+                      }
+                  }
+              },
+              "responses": {
+                  "200": {
+                      "description": "Login successful.",
+                      "content": {
+                          "application/json": {
+                              "schema": {
+                                  "type": "object",
+                                  "properties": {
+                                      "data": {
+                                          "type": "array",
+                                          "items": {
+                                              "type": "string"
+                                          }
+                                      }
+                                  }
+                              }
+                          }
+                      }
+                  },
+                  "400": {
+                      "description": "Invalid input",
+                      "content": {
+                          "application/json": {
+                              "schema": {
+                                  "type": "object",
+                                  "properties": {
+                                      "error": {
+                                          "type": "string"
+                                      }
+                                  }
+                              }
+                          }
+                      }
+                  }
+              }
+          }
+        },
         "/cortex/analyzers": {
             "get": {
                 "tags": ["Cortex"],
