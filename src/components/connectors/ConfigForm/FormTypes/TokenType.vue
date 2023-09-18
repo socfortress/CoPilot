@@ -1,54 +1,54 @@
 <template>
-    <el-form :model="form" status-icon :rules="rules" label-width="120px" ref="formRef" label-position="top">
-        <el-form-item label="Connector URL" prop="connector_url">
-            <el-input v-model="form.connector_url" required type="url" />
-        </el-form-item>
-        <el-form-item label="API Key" prop="connector_api_key">
-            <el-input v-model="form.connector_api_key" required type="text" />
-        </el-form-item>
-    </el-form>
+	<n-form :model="form" :rules="rules" label-width="120px" ref="formRef" label-placement="top">
+		<n-form-item label="Connector URL" path="connector_url">
+			<n-input v-model:value="form.connector_url" required type="text" />
+		</n-form-item>
+		<n-form-item label="API Key" path="connector_api_key">
+			<n-input v-model:value="form.connector_api_key" required type="text" />
+		</n-form-item>
+	</n-form>
 </template>
 
 <script setup lang="ts">
-import { FormInstance, FormRules } from "element-plus"
-import { onMounted, reactive, ref, toRefs } from "vue"
-import isURL from "validator/lib/isURL"
+import { onMounted, ref, toRefs } from "vue"
+import isURL from "validator/es/lib/isURL"
+import { NForm, NFormItem, NInput, type FormRules, type FormInst, type FormItemRule } from "naive-ui"
 
 export interface ITokenForm {
-    connector_url: string
-    connector_api_key: string
+	connector_url: string
+	connector_api_key: string
 }
 
 const emit = defineEmits<{
-    (e: "mounted", value: FormInstance): void
+	(e: "mounted", value: FormInst): void
 }>()
 
 const props = defineProps<{
-    form: ITokenForm
+	form: ITokenForm
 }>()
 const { form } = toRefs(props)
 
-const formRef = ref<FormInstance>()
+const formRef = ref<FormInst>()
 
-const validateUrl = (rule: any, value: string, callback: any) => {
-    if (!value) {
-        return callback(new Error("Please input a valid URL"))
-    }
-    if (!isURL(value)) {
-        return callback(new Error("Please input a valid URL"))
-    }
+const validateUrl = (rule: FormItemRule, value: string) => {
+	if (!value) {
+		return new Error("Please input a valid URL")
+	}
+	if (!isURL(value)) {
+		return new Error("Please input a valid URL")
+	}
 
-    return callback()
+	return true
 }
 
-const rules = reactive<FormRules<typeof form>>({
-    connector_url: [{ required: true, validator: validateUrl, trigger: "blur" }],
-    connector_api_key: [{ required: true, message: "Please input a valid API Key", trigger: "blur" }]
-})
+const rules: FormRules = {
+	connector_url: [{ required: true, validator: validateUrl, trigger: "blur" }],
+	connector_api_key: [{ required: true, message: "Please input a valid API Key", trigger: "blur" }]
+}
 
 onMounted(() => {
-    if (formRef.value) {
-        emit("mounted", formRef.value)
-    }
+	if (formRef.value) {
+		emit("mounted", formRef.value)
+	}
 })
 </script>

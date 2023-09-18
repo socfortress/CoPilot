@@ -1,157 +1,137 @@
 <template>
-	<div class="page-table scrollable only-y">
+	<div class="page">
 		<div class="page-header">
-			<h1>Connectors</h1>
-			<h4>Configure connections to your toolset.</h4>
-			<el-breadcrumb separator="/">
-				<el-breadcrumb-item :to="{ path: '/' }"><i class="mdi mdi-home-outline"></i></el-breadcrumb-item>
-				<el-breadcrumb-item>Connectors</el-breadcrumb-item>
-			</el-breadcrumb>
+			<div class="title">Connectors</div>
+			<p>Configure connections to your toolset.</p>
 		</div>
 
-		<div class="table-box card-base card-shadow--medium scrollable only-x" v-loading="loading">
-			<table class="styled striped">
-				<thead>
-					<tr>
-						<th scope="col">Connector Name</th>
-						<th scope="col">Connector Description</th>
-						<th scope="col">Connector Supports</th>
-						<th scope="col">Connector Configured</th>
-						<th scope="col">Connector Verified</th>
-						<th scope="col">Connector Options</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr v-for="connector in connectors" :key="connector.id">
-						<!-- Display the connector details in the table -->
-						<td>{{ connector.connector_name }}</td>
-						<td>{{ connector.connector_description }}</td>
-						<td>{{ connector.connector_supports }}</td>
-						<td>
-							<el-button type="primary" v-if="connector.connector_configured">True</el-button>
-							<el-button type="info" v-else>False</el-button>
-						</td>
-						<!-- Show the connector verified which is in the `connector` table -->
-						<td>
-							<el-button type="success" v-if="connector.connector_verified">True</el-button>
-							<el-button type="danger" v-else>False</el-button>
-						</td>
-						<td>
-							<div class="btn-group" role="group">
-								<!--If the connector is not already configured then display the configure button -->
-								<el-button
-									type="primary"
-									round
-									v-if="!connector.connector_configured"
-									@click="openConfigDialog(connector)"
-								>
-									Configure
-								</el-button>
+		<n-card class="table-box" content-style="padding:0">
+			<n-spin :show="loading">
+				<n-scrollbar x-scrollable style="width: 100%">
+					<n-table :bordered="false">
+						<thead>
+							<tr>
+								<th scope="col">Connector Name</th>
+								<th scope="col">Connector Description</th>
+								<th scope="col">Connector Supports</th>
+								<th scope="col">Connector Configured</th>
+								<th scope="col">Connector Verified</th>
+								<th scope="col">Connector Options</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr v-for="connector in connectors" :key="connector.id">
+								<!-- Display the connector details in the table -->
+								<td>{{ connector.connector_name }}</td>
+								<td>{{ connector.connector_description }}</td>
+								<td>{{ connector.connector_supports }}</td>
+								<td>
+									<n-button type="primary" v-if="connector.connector_configured">True</n-button>
+									<n-button type="info" v-else>False</n-button>
+								</td>
+								<!-- Show the connector verified which is in the `connector` table -->
+								<td>
+									<n-button type="success" v-if="connector.connector_verified">True</n-button>
+									<n-button type="error" v-else>False</n-button>
+								</td>
+								<td>
+									<div class="btn-group" role="group">
+										<!--If the connector is not already configured then display the configure button -->
+										<n-button
+											type="primary"
+											round
+											v-if="!connector.connector_configured"
+											@click="openConfigDialog(connector)"
+										>
+											Configure
+										</n-button>
 
-								<el-button type="warning" round v-else @click="openConfigDialog(connector)">
-									Update
-								</el-button>
-								<!--<button type="button" class="btn btn-info btn-sm" @click="deleteConnector(connector)">Delete</button>-->
-							</div>
-						</td>
-					</tr>
-				</tbody>
-			</table>
-		</div>
+										<n-button type="warning" round v-else @click="openConfigDialog(connector)">
+											Update
+										</n-button>
+										<!--<button type="button" class="btn btn-info btn-sm" @click="deleteConnector(connector)">Delete</button>-->
+									</div>
+								</td>
+							</tr>
+						</tbody>
+					</n-table>
+				</n-scrollbar>
+			</n-spin>
+		</n-card>
 
-		<el-dialog
+		<n-modal
 			title="Connector configuration"
-			v-model="showConfigDialog"
-			:close-on-click-modal="false"
-			:close-on-press-escape="false"
+			v-model:show="showConfigDialog"
+			:mask-closable="false"
+			:close-on-esc="false"
 			width="600px"
 		>
-			<ConfigForm v-if="currentConnector" :connector="currentConnector" @close="closeConfigDialog" />
-		</el-dialog>
+			<n-card style="width: 90vw; max-width: 500px">
+				<ConfigForm v-if="currentConnector" :connector="currentConnector" @close="closeConfigDialog" />
+			</n-card>
+		</n-modal>
 	</div>
 </template>
 
-<script lang="ts">
+<script setup lang="ts">
 import Api from "@/api"
-import { defineComponent } from "vue"
+import { onBeforeMount, ref } from "vue"
 import ConfigForm from "@/components/connectors/ConfigForm"
 import { type Connector } from "@/types/connectors.d"
+import { NScrollbar, NSpin, NModal, NTable, NButton, NCard } from "naive-ui"
 
-export default defineComponent({
-	data() {
-		return {
-			connectors: [] as Connector[],
-			currentConnector: null,
+const connectors = ref<Connector[]>([])
+const currentConnector = ref<Connector | null>(null)
 
-			// Configure Modal
-			isConfigureModalActive: false,
-			isConfigureModalFileActive: false,
+// Configure Modal
+const isConfigureModalActive = ref(false)
+const isConfigureModalFileActive = ref(false)
 
-			// Update Modal
-			isUpdateModalActive: false,
+// Update Modal
+const isUpdateModalActive = ref(false)
 
-			loading: false,
-			showConfigDialog: false,
+const loading = ref(false)
+const showConfigDialog = ref(false)
 
-			successMessage: "",
-			errorMessage: "",
-			connectorForm: {
-				connector_url: "",
-				username: "",
-				password: "",
-				connector_api_key: ""
-			}
-		}
-	},
-	methods: {
-		openConfigDialog(connector) {
-			this.currentConnector = connector
-			this.showConfigDialog = true
-		},
+const successMessage = ref("")
+const errorMessage = ref("")
+const connectorForm = ref({
+	connector_url: "",
+	username: "",
+	password: "",
+	connector_api_key: ""
+})
 
-		closeConfigDialog(update: boolean) {
-			this.currentConnector = null
-			this.showConfigDialog = false
+function openConfigDialog(connector: Connector) {
+	currentConnector.value = connector
+	showConfigDialog.value = true
+}
+function closeConfigDialog(update: boolean) {
+	currentConnector.value = null
+	showConfigDialog.value = false
 
-			if (update) {
-				this.getConnectors()
-			}
-		},
-
-		getConnectors() {
-			this.loading = true
-
-			Api.connectors
-				.getAll()
-				.then(res => {
-					this.connectors = res.data.connectors
-				})
-				.catch(err => {
-					console.error(err)
-				})
-				.finally(() => {
-					this.loading = false
-				})
-		}
-	},
-	created() {
-		this.getConnectors()
-	},
-	components: {
-		ConfigForm
+	if (update) {
+		getConnectors()
 	}
+}
+
+function getConnectors() {
+	loading.value = true
+
+	Api.connectors
+		.getAll()
+		.then(res => {
+			connectors.value = res.data.connectors
+		})
+		.catch(err => {
+			console.error(err)
+		})
+		.finally(() => {
+			loading.value = false
+		})
+}
+
+onBeforeMount(() => {
+	getConnectors()
 })
 </script>
-
-<style lang="scss" scoped>
-@import "../../assets/scss/_variables";
-
-.page-table {
-	padding-left: 20px;
-	padding-right: 15px;
-	padding-bottom: 20px;
-}
-.table-box {
-	overflow: auto;
-}
-</style>

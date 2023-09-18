@@ -1,64 +1,61 @@
 <template>
-	<div class="connector-form" v-loading="loading">
-		<div class="connector-header">
-			<el-image
-				class="connector-image"
-				fit="contain"
-				:src="`/src/assets/images/${
-					connector ? connector.connector_name.toLowerCase() + '.svg' : 'default-logo.svg'
-				}`"
-				:alt="`${connector.connector_name} Logo`"
-			>
-				<template #placeholder>
-					<div class="image-slot">
-						<el-icon><icon-picture /></el-icon>
-					</div>
-				</template>
-				<template #error>
-					<div class="image-slot">
-						<el-icon><icon-picture /></el-icon>
-					</div>
-				</template>
-			</el-image>
-			<div class="connector-name">{{ connector.connector_name || "" }}</div>
-		</div>
+	<div class="connector-form">
+		<n-spin :show="loading">
+			<div class="connector-header">
+				<n-avatar
+					class="connector-image"
+					object-fit="contain"
+					round
+					:size="60"
+					:src="`/src/assets/images/${
+						connector ? connector.connector_name.toLowerCase() + '.svg' : 'default-logo.svg'
+					}`"
+					:alt="`${connector.connector_name} Logo`"
+					fallback-src="/images/img-not-found.svg"
+				/>
 
-		<div class="connector-form-type">
-			<CredentialsType
-				:form="connectorForm"
-				v-if="connectorFormType === ConnectorFormType.CREDENTIALS"
-				@mounted="formRef = $event"
-			/>
-			<FileType
-				:form="connectorForm"
-				v-if="connectorFormType === ConnectorFormType.FILE"
-				@mounted="formRef = $event"
-			/>
-			<TokenType
-				:form="connectorForm"
-				v-if="connectorFormType === ConnectorFormType.TOKEN"
-				@mounted="formRef = $event"
-			/>
-		</div>
+				<h3>{{ connector.connector_name || "" }}</h3>
+			</div>
 
-		<div class="connector-footer mt-40">
-			<el-form-item>
-				<el-button type="primary" @click="saveConnector()">Save</el-button>
-				<el-button @click="closeForm(false)">Cancel</el-button>
-			</el-form-item>
-		</div>
+			<div class="connector-form-type">
+				<CredentialsType
+					:form="connectorForm"
+					v-if="connectorFormType === ConnectorFormType.CREDENTIALS"
+					@mounted="formRef = $event"
+				/>
+				<FileType
+					:form="connectorForm"
+					v-if="connectorFormType === ConnectorFormType.FILE"
+					@mounted="formRef = $event"
+				/>
+				<TokenType
+					:form="connectorForm"
+					v-if="connectorFormType === ConnectorFormType.TOKEN"
+					@mounted="formRef = $event"
+				/>
+			</div>
+
+			<div class="connector-footer mt-4">
+				<n-form-item>
+					<div class="flex gap-2 justify-end w-full">
+						<n-button type="primary" @click="saveConnector()">Save</n-button>
+						<n-button @click="closeForm(false)">Cancel</n-button>
+					</div>
+				</n-form-item>
+			</div>
+		</n-spin>
 	</div>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, ref, toRefs } from "vue"
 import { type Connector, type ConnectorForm, ConnectorFormType } from "@/types/connectors.d"
-import { Picture as IconPicture } from "@element-plus/icons-vue"
 import CredentialsType from "./FormTypes/CredentialsType.vue"
 import FileType from "./FormTypes/FileType.vue"
 import TokenType from "./FormTypes/TokenType.vue"
 import _pick from "lodash/pick"
-import { ElMessage, FormInstance } from "element-plus"
+import { useMessage, NFormItem, NAvatar, NSpin, NButton, type FormInst, type FormValidationError } from "naive-ui"
+
 import Api from "@/api"
 
 const props = defineProps<{
@@ -70,6 +67,7 @@ const emit = defineEmits<{
 	(e: "close", value: boolean): void
 }>()
 
+const message = useMessage()
 const connectorForm = ref<ConnectorForm>({
 	connector_url: "",
 	connector_username: "",
@@ -79,7 +77,7 @@ const connectorForm = ref<ConnectorForm>({
 })
 const connectorFormType = computed<ConnectorFormType>(() => getConnectorFormType(connector.value))
 const isConnectorConfigured = computed<boolean>(() => connector.value.connector_configured)
-const formRef = ref<FormInstance | null>(null)
+const formRef = ref<FormInst | null>(null)
 const loading = ref<boolean>(false)
 
 function setUpForm() {
@@ -108,14 +106,11 @@ function getConnectorFormType(connector: Connector): ConnectorFormType {
 function saveConnector() {
 	if (!formRef.value) return
 
-	formRef.value.validate(valid => {
-		if (valid) {
+	formRef.value.validate((errors?: Array<FormValidationError>) => {
+		if (!errors) {
 			configureConnector()
 		} else {
-			ElMessage({
-				message: "You must fill in the required fields correctly.",
-				type: "warning"
-			})
+			message.warning("You must fill in the required fields correctly.")
 			return false
 		}
 	})
@@ -154,47 +149,35 @@ function configureConnector() {
 			connector_password
 		})
 	}
-	if (connectorFormType.value === ConnectorFormType.FILE) {
+	if (connectorFormType.value === ConnectorFormType.FILE && connector_file) {
 		const form = new FormData()
-		form.append("file", connector_file, connector_file.name)
+		form.append("file", new Blob([connector_file], { type: connector_file.type }), connector_file.name)
 
 		requestPayload = form
 	}
 
 	requestMethod(connector.value.id, requestPayload)
 		.then(() => {
-			ElMessage({
-				message: "Connector has been successfully configured.",
-				type: "success"
-			})
+			message.success("Connector has been successfully configured.")
 			closeForm(true)
 		})
 		.catch(err => {
 			if (err.response.status === 400) {
 				if (isConnectorConfigured.value) {
-					ElMessage({
-						message:
-							"This connector is not configured. If you would like to configure this connector select `Configure`.",
-						type: "error"
-					})
+					message.error(
+						"This connector is not configured. If you would like to configure this connector select `Configure`."
+					)
 				} else {
-					ElMessage({
-						message:
-							"This connector is already configured. If you would like to reconfigure this connector select `Edit`.",
-						type: "error"
-					})
+					message.error(
+						"This connector is already configured. If you would like to reconfigure this connector select `Edit`."
+					)
 				}
 			} else if (err.response.status === 401) {
-				ElMessage({
-					message: "Unauthorized. Please check all fields",
-					type: "error"
-				})
+				message.error("Unauthorized. Please check all fields")
 			} else {
-				ElMessage({
-					message:
-						"Error updating the connector. Your settings were not inserted into the keystore. Please try again.",
-					type: "error"
-				})
+				message.error(
+					"Error updating the connector. Your settings were not inserted into the keystore. Please try again."
+				)
 			}
 			closeForm(false)
 		})
@@ -213,26 +196,10 @@ onMounted(() => {
 	.connector-header {
 		display: flex;
 		align-items: center;
-		gap: var(--size-4);
-		margin-bottom: var(--size-6);
+		@apply gap-5 mb-7;
 
 		.connector-image {
-			width: var(--size-8);
-			height: var(--size-8);
-			border: var(--border-size-1) solid var(--gray-1);
-			border-radius: var(--radius-round);
-
-			.image-slot {
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				width: 100%;
-				height: 100%;
-			}
-		}
-		.connector-name {
-			font-size: var(--font-size-4);
-			font-weight: bold;
+			border: 2px solid var(--bg-body);
 		}
 	}
 }
