@@ -1,10 +1,9 @@
 import dayjs from "dayjs"
 import Api from "@/api"
 import { type Agent } from "@/types/agents.d"
-import { useDialog, useMessage } from "naive-ui"
-
-const message = useMessage()
-const dialog = useDialog()
+import type { MessageApiInjection } from "naive-ui/es/message/src/MessageProvider"
+import type { DialogApiInjection } from "naive-ui/es/dialog/src/DialogProvider"
+import { h } from "vue"
 
 export function isAgentOnline(last_seen: string) {
 	const lastSeenDate = dayjs(last_seen)
@@ -20,6 +19,7 @@ export interface ToggleAgentCriticalParams {
 	cbSuccess?: () => void
 	cbAfter?: () => void
 	cbError?: () => void
+	message: MessageApiInjection
 }
 
 export function toggleAgentCritical({
@@ -28,7 +28,8 @@ export function toggleAgentCritical({
 	cbBefore,
 	cbSuccess,
 	cbAfter,
-	cbError
+	cbError,
+	message
 }: ToggleAgentCriticalParams) {
 	if (cbBefore && typeof cbBefore === "function") {
 		cbBefore()
@@ -75,16 +76,29 @@ export interface DeleteAgentParams {
 	cbSuccess?: () => void
 	cbAfter?: () => void
 	cbError?: () => void
+	message: MessageApiInjection
+	dialog: DialogApiInjection
 }
 
-export function handleDeleteAgent({ agent, cbBefore, cbSuccess, cbAfter, cbError }: DeleteAgentParams) {
+export function handleDeleteAgent({
+	agent,
+	cbBefore,
+	cbSuccess,
+	cbAfter,
+	cbError,
+	dialog,
+	message
+}: DeleteAgentParams) {
 	dialog.warning({
 		title: "Confirm",
-		content: `Are you sure you want to delete the agent:<br/><strong>${agent.hostname}</strong> ?`,
+		content: () =>
+			h("div", {
+				innerHTML: `Are you sure you want to delete the agent:<br/><strong>${agent.hostname}</strong> ?`
+			}),
 		positiveText: "Yes I'm sure",
 		negativeText: "Cancel",
 		onPositiveClick: () => {
-			deleteAgent({ agent, cbBefore, cbSuccess, cbAfter, cbError })
+			deleteAgent({ agent, cbBefore, cbSuccess, cbAfter, cbError, dialog, message })
 		},
 		onNegativeClick: () => {
 			message.info("Delete canceled")
@@ -92,7 +106,7 @@ export function handleDeleteAgent({ agent, cbBefore, cbSuccess, cbAfter, cbError
 	})
 }
 
-export function deleteAgent({ agent, cbBefore, cbSuccess, cbAfter, cbError }: DeleteAgentParams) {
+export function deleteAgent({ agent, cbBefore, cbSuccess, cbAfter, cbError, message }: DeleteAgentParams) {
 	if (cbBefore && typeof cbBefore === "function") {
 		cbBefore()
 	}

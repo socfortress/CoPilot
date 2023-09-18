@@ -89,7 +89,7 @@ const selectOptions = computed(() => {
 })
 
 watch(modelValue, val => {
-	selectValue.value = typeof modelValue.value !== "string" ? modelValue.value?.index : undefined
+	selectValue.value = typeof val !== "string" ? val?.index : undefined
 })
 
 watch(selectValue, val => {

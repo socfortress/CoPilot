@@ -69,19 +69,14 @@ import StarIcon from "@vicons/carbon/Star"
 import { useRouter } from "vue-router"
 import VulnerabilitiesSection from "@/components/agents/VulnerabilitiesSection.vue"
 import OverviewSection from "@/components/agents/OverviewSection.vue"
-import { useMessage, NSpin, NTooltip, NButton, NIcon, NTabs, NTabPane, NCard } from "naive-ui"
-import Home24Regular from "@vicons/fluent/Home24Regular"
+import { useMessage, NSpin, NTooltip, NButton, NIcon, NTabs, NTabPane, NCard, useDialog } from "naive-ui"
 import ArrowIcon from "@vicons/carbon/ArrowLeft"
-import MenuIcon from "@vicons/carbon/Menu"
-
-type AgentPages = "overview" | "vulnerabilities" | "alerts"
 
 const message = useMessage()
 const router = useRouter()
-const sidebarOpen = ref(false)
+const dialog = useDialog()
 const route = useRoute()
 const loadingAgent = ref(false)
-const activePage = ref<AgentPages>("overview")
 const agent = ref<Agent | null>(null)
 
 const isOnline = computed(() => {
@@ -114,6 +109,7 @@ function toggleCritical(agentId: string, criticalStatus: boolean) {
 	toggleAgentCritical({
 		agentId,
 		criticalStatus,
+		message,
 		cbBefore: () => {
 			loadingAgent.value = true
 		},
@@ -132,6 +128,8 @@ function handleDelete() {
 	if (agent.value) {
 		handleDeleteAgent({
 			agent: agent.value,
+			message,
+			dialog,
 			cbBefore: () => {
 				loadingAgent.value = true
 			},

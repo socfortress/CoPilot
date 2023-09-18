@@ -63,7 +63,7 @@ import dayjs from "dayjs"
 import { handleDeleteAgent, isAgentOnline, toggleAgentCritical } from "./utils"
 import StarIcon from "@vicons/carbon/Star"
 import DeleteIcon from "@vicons/carbon/Delete"
-import { NTooltip, NButton, NIcon, NSpin, NCard } from "naive-ui"
+import { NTooltip, NButton, NIcon, NSpin, NCard, useMessage, useDialog } from "naive-ui"
 
 const emit = defineEmits<{
 	(e: "delete"): void
@@ -76,7 +76,8 @@ const props = defineProps<{
 const { agent, showActions } = toRefs(props)
 
 const loading = ref(false)
-
+const message = useMessage()
+const dialog = useDialog()
 const isOnline = computed(() => {
 	return isAgentOnline(agent.value.last_seen)
 })
@@ -98,7 +99,9 @@ function handleDelete() {
 		},
 		cbAfter: () => {
 			loading.value = false
-		}
+		},
+		message,
+		dialog
 	})
 }
 
@@ -106,6 +109,7 @@ function toggleCritical(agentId: string, criticalStatus: boolean) {
 	toggleAgentCritical({
 		agentId,
 		criticalStatus,
+		message,
 		cbBefore: () => {
 			loading.value = true
 		},

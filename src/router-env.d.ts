@@ -7,7 +7,6 @@ export {}
 
 declare module "vue-router" {
 	interface RouteMeta extends RouteMetaAuth {
-		icon?: Component
 		title?: string
 		forceLayout?: Layout
 	}

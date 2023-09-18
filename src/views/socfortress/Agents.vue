@@ -80,7 +80,7 @@ const agentsOnline = computed(() => {
 })
 
 function gotoAgentPage(agent: Agent) {
-	router.push(`/agent/${agent.agent_id}`).catch(err => {})
+	router.push(`/agent/${agent.agent_id}`).catch(() => {})
 }
 
 function getAgents() {
