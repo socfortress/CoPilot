@@ -15,12 +15,14 @@ import { type Index, IndexHealth } from "@/types/indices.d"
 import bytes from "bytes"
 import _ from "lodash"
 import { NSpin, NCard } from "naive-ui"
+import { useThemeStore } from "@/stores/theme"
 
 const props = defineProps<{
 	indices: Index[] | null
 }>()
 const { indices } = toRefs(props)
 
+const style = computed<{ [key: string]: any }>(() => useThemeStore().style)
 const loading = computed(() => !indices?.value || indices.value === null)
 const chartCtx = ref<echarts.ECharts | null>(null)
 
@@ -57,7 +59,13 @@ function getOptions() {
 		legend: {
 			data: sizeData.map(i => i.name),
 			left: "left",
-			type: "scroll"
+			type: "scroll",
+			textStyle: {
+				color: style.value["--fg-color"]
+			},
+			pageTextStyle: {
+				color: style.value["--fg-color"]
+			}
 		},
 		grid: {
 			top: "0%",
@@ -76,13 +84,13 @@ function getOptions() {
 					show: false
 				},
 				itemStyle: {
-					borderColor: "#fff",
+					borderColor: style.value["--bg-color"],
 					borderWidth: 2
 				},
 				data: [
-					{ value: green, name: "Green", itemStyle: { color: "#13ce66" } },
-					{ value: yellow, name: "Yellow", itemStyle: { color: "#f7ba2a" } },
-					{ value: red, name: "Red", itemStyle: { color: "#ec205f" } }
+					{ value: green, name: "Green", itemStyle: { color: style.value["--success-color"] } },
+					{ value: yellow, name: "Yellow", itemStyle: { color: style.value["--warning-color"] } },
+					{ value: red, name: "Red", itemStyle: { color: style.value["--error-color"] } }
 				]
 			},
 			{
@@ -103,9 +111,9 @@ function getOptions() {
 				],
 				tooltip: {
 					formatter: (params: any) => {
-						return `${params.seriesName}<hr/>${params.name}:<br/><strong>${bytes(
-							params.value
-						)}</strong>  (${params.percent}%)`
+						return `${params.seriesName}<hr/>${params.name}<br/><strong>${bytes(params.value)}</strong>  (${
+							params.percent
+						}%)`
 					}
 				},
 				avoidLabelOverlap: true,
@@ -129,12 +137,13 @@ function getOptions() {
 					//alignTo: "edge",
 					rich: {
 						name: {
-							color: "#4C5058",
+							color: style.value["--fg-color"],
 							fontSize: window.innerWidth > 1000 ? 13 : 11
 						},
 						per: {
 							fontSize: window.innerWidth > 1000 ? 13 : 11,
-							fontWeight: "bold"
+							fontWeight: "bold",
+							color: style.value["--fg-color"]
 						}
 					}
 				},
@@ -151,7 +160,7 @@ function getOptions() {
 					}
 				},
 				itemStyle: {
-					borderColor: "#fff",
+					borderColor: style.value["--bg-color"],
 					borderWidth: 1
 				},
 				data: sizeData
@@ -161,6 +170,12 @@ function getOptions() {
 }
 
 watch(indices, () => {
+	if (chartCtx.value) {
+		chartCtx.value.setOption(getOptions())
+	}
+})
+
+watch(style, () => {
 	if (chartCtx.value) {
 		chartCtx.value.setOption(getOptions())
 	}
