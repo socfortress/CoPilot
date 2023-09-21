@@ -58,7 +58,7 @@
 
 <script lang="ts" setup>
 import { NButton, NIcon } from "naive-ui"
-import SignInUp from "@/components/SignInUp"
+import SignInUp from "@/components/SignInUp/index.vue"
 import AlignLeft from "@vicons/fluent/TextboxAlignBottomRotate9024Regular"
 import AlignCenter from "@vicons/fluent/TextboxAlignMiddleRotate9024Regular"
 import AlignRight from "@vicons/fluent/TextboxAlignTopRotate9024Regular"
@@ -70,7 +70,7 @@ import SquareActive from "@vicons/fluent/CheckboxIndeterminate24Regular"
 import { ref, computed, onBeforeMount } from "vue"
 import { useRoute } from "vue-router"
 import { useThemeStore } from "@/stores/theme"
-import { type FormType } from "@/components/SignInUp/SignInUp.vue"
+import { type FormType } from "@/components/SignInUp/index.vue"
 
 defineOptions({
 	name: "Login"
@@ -96,8 +96,6 @@ onBeforeMount(() => {
 </script>
 
 <style lang="scss" scoped>
-@import "@/assets/scss/common.scss";
-
 .page {
 	min-height: 100vh;
 

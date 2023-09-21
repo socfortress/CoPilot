@@ -58,8 +58,8 @@ const router = useRouter()
 const formRef = ref<FormInst | null>(null)
 const message = useMessage()
 const model = ref<ModelType>({
-	email: "admin@admin.com",
-	password: "password"
+	email: "",
+	password: ""
 })
 
 const emit = defineEmits<{
