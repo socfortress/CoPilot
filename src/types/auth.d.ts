@@ -7,3 +7,19 @@ export interface RouteMetaAuth {
 	auth?: boolean
 	roles?: Roles
 }
+
+export interface LoginPayload {
+	email: string
+	password: string
+}
+
+export interface RegisterPayload {
+	customerCode: string
+	usersFirstName: string
+	usersLastName: string
+	usersEmail: string
+	usersRole: string
+	imageFile: string
+	notifications: number
+	password: string
+}
