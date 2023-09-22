@@ -18,8 +18,12 @@ export interface RegisterPayload {
 	usersFirstName: string
 	usersLastName: string
 	usersEmail: string
-	usersRole: string
+	usersRole: "admin"
 	imageFile: string
 	notifications: number
 	password: string
+}
+
+export interface User {
+	token: string
 }

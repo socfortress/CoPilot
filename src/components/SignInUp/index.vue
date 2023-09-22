@@ -11,30 +11,13 @@
 
 		<div class="form">
 			<transition name="form-fade" mode="out-in" appear>
-				<SignIn v-if="typeRef === 'signin'" key="signin" @forgot-password="gotoForgotPassword()" />
+				<SignIn v-if="typeRef === 'signin'" key="signin" @goto-forgot-password="gotoForgotPassword()" />
 				<ForgotPassword v-else-if="typeRef === 'forgotpassword'" key="forgotpassword" />
-				<SignUp v-else-if="typeRef === 'signup'" key="signup" />
+				<SignUp v-else-if="typeRef === 'signup'" key="signup" @goto-signin="gotoSignIn()" />
 			</transition>
 		</div>
 
-		<n-divider title-placement="center">Or</n-divider>
-
-		<div class="social-btns flex flex-col gap-4 mb-12">
-			<n-button strong secondary size="large">
-				<span class="b-icon">
-					<img src="@/assets/images/google-icon.svg?url" />
-				</span>
-				Sign in with Google
-			</n-button>
-			<n-button strong secondary>
-				<span class="b-icon" size="large">
-					<img src="@/assets/images/facebook-icon.svg?url" />
-				</span>
-				Sign in with Facebook
-			</n-button>
-		</div>
-
-		<div class="sign-text text-center">
+		<div class="sign-text text-center mt-10">
 			<div class="sign-text" v-if="typeRef === 'signin'">
 				Don't you have an account?
 				<n-button text @click="gotoSignUp()" type="primary" size="large">Sign up</n-button>

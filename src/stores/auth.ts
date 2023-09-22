@@ -1,25 +1,31 @@
 import { defineStore, acceptHMRUpdate } from "pinia"
-import type { Role, Roles } from "@/types/auth.d"
+import type { Role, Roles, User } from "@/types/auth.d"
 import _castArray from "lodash/castArray"
-
-// HERE YOU CAN IMPLEMENT YOUR LOGIN
 
 export const useAuthStore = defineStore("auth", {
 	state: () => ({
 		logged: true,
 		role: "admin" as Role | null,
-		user: {}
+		user: {
+			token: ""
+		} as User
 	}),
 	actions: {
-		setLogged(payload?: any) {
+		setLogged(payload: User) {
 			this.logged = true
 			this.role = "admin"
 			this.user = payload
 		},
+		// TODO: save crypted
+		setToken(token: string) {
+			this.user.token = token
+		},
 		setLogout() {
 			this.logged = false
 			this.role = null
-			this.user = {}
+			this.user = {
+				token: ""
+			}
 		}
 	},
 	getters: {
@@ -49,7 +55,7 @@ export const useAuthStore = defineStore("auth", {
 		}
 	},
 	persist: {
-		paths: ["logged", "role"]
+		paths: ["logged", "role", "user"]
 	}
 })
 
