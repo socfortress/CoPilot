@@ -120,7 +120,7 @@ function syncAgents() {
 			}
 		})
 		.catch(err => {
-			if (err.response.status === 401) {
+			if (err.response?.status === 401) {
 				message.error(err.response?.data?.message || "Sync returned Unauthorized.")
 			} else {
 				message.error(err.response?.data?.message || "Failed to Sync Agents")

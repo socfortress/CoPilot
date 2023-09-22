@@ -69,6 +69,7 @@
 		"flag-icons": "^6.11.0",
 		"geojson": "^0.5.0",
 		"highlight.js": "^11.8.0",
+		"jose": "^4.14.6",
 		"lodash": "^4.17.21",
 		"maplibre-gl": "3.3.1",
 		"mitt": "^3.0.1",

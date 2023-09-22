@@ -53,7 +53,7 @@ export function toggleAgentCritical({
 			}
 		})
 		.catch(err => {
-			if (err.response.status === 401) {
+			if (err.response?.status === 401) {
 				message.error(err.response?.data?.message || "Agent Criticality Update returned Unauthorized.")
 			} else {
 				message.error(err.response?.data?.message || "Failed to Update Agent Criticality")
@@ -129,7 +129,7 @@ export function deleteAgent({ agent, cbBefore, cbSuccess, cbAfter, cbError, mess
 			}
 		})
 		.catch(err => {
-			if (err.response.status === 401) {
+			if (err.response?.status === 401) {
 				message.error(err.response?.data?.message || "Agent Delete returned Unauthorized.")
 			} else {
 				message.error(err.response?.data?.message || "An error occurred. Please try again later.")

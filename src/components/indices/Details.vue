@@ -124,12 +124,12 @@ function getShards() {
 			}
 		})
 		.catch(err => {
-			if (err.response.status === 401) {
+			if (err.response?.status === 401) {
 				message.error(
 					err.response?.data?.message ||
 						"Wazuh-Indexer returned Unauthorized. Please check your connector credentials."
 				)
-			} else if (err.response.status === 404) {
+			} else if (err.response?.status === 404) {
 				message.error(err.response?.data?.message || "No alerts were found.")
 			} else {
 				message.error(err.response?.data?.message || "An error occurred. Please try again later.")

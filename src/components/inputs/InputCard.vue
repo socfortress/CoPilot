@@ -115,14 +115,14 @@ function stopInput() {
 			}
 		})
 		.catch(err => {
-			if (err.response.status === 401) {
+			if (err.response?.status === 401) {
 				ElMessage({
 					message:
 						err.response?.data?.message ||
 						"Graylog returned Unauthorized. Please check your connector credentials.",
 					type: "error"
 				})
-			} else if (err.response.status === 404) {
+			} else if (err.response?.status === 404) {
 				ElMessage({
 					message: err.response?.data?.message || "An error occurred. Please try again later.",
 					type: "error"
@@ -187,14 +187,14 @@ function startInput() {
 			}
 		})
 		.catch(err => {
-			if (err.response.status === 401) {
+			if (err.response?.status === 401) {
 				ElMessage({
 					message:
 						err.response?.data?.message ||
 						"Graylog returned Unauthorized. Please check your connector credentials.",
 					type: "error"
 				})
-			} else if (err.response.status === 404) {
+			} else if (err.response?.status === 404) {
 				ElMessage({
 					message: err.response?.data?.message || "An error occurred. Please try again later.",
 					type: "error"

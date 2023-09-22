@@ -172,7 +172,7 @@ function configureConnector() {
 						"This connector is already configured. If you would like to reconfigure this connector select `Edit`."
 					)
 				}
-			} else if (err.response.status === 401) {
+			} else if (err.response?.status === 401) {
 				message.error("Unauthorized. Please check all fields")
 			} else {
 				message.error(
