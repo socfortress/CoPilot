@@ -1,10 +1,11 @@
 import { defineStore, acceptHMRUpdate } from "pinia"
 import type { Role, Roles, User } from "@/types/auth.d"
 import _castArray from "lodash/castArray"
+import SecureLS from "secure-ls"
+const ls = new SecureLS({ encodingType: "aes", isCompression: false })
 
 export const useAuthStore = defineStore("auth", {
 	state: () => ({
-		logged: true,
 		role: "admin" as Role | null,
 		user: {
 			token: ""
@@ -12,16 +13,13 @@ export const useAuthStore = defineStore("auth", {
 	}),
 	actions: {
 		setLogged(payload: User) {
-			this.logged = true
 			this.role = "admin"
 			this.user = payload
 		},
-		// TODO: save crypted
 		setToken(token: string) {
 			this.user.token = token
 		},
 		setLogout() {
-			this.logged = false
 			this.role = null
 			this.user = {
 				token: ""
@@ -30,7 +28,7 @@ export const useAuthStore = defineStore("auth", {
 	},
 	getters: {
 		isLogged(state) {
-			return state.logged
+			return state.user?.token
 		},
 		userRole(state) {
 			return state.role
@@ -55,7 +53,11 @@ export const useAuthStore = defineStore("auth", {
 		}
 	},
 	persist: {
-		paths: ["logged", "role", "user"]
+		storage: {
+			getItem: key => ls.get(key),
+			setItem: (key, value) => ls.set(key, value)
+		},
+		paths: ["role", "user"]
 	}
 })
 

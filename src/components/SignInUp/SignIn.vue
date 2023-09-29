@@ -4,7 +4,7 @@
 			<n-input
 				v-model:value="model.email"
 				@keydown.enter="signIn"
-				placeholder="Eamil..."
+				placeholder="Email..."
 				size="large"
 				autocomplete="on"
 			/>
