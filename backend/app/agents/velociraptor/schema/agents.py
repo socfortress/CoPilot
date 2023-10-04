@@ -1,6 +1,12 @@
-from pydantic import BaseModel, Field
-from typing import Optional, List, Dict, Any
 from datetime import datetime
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+
+from pydantic import BaseModel
+from pydantic import Field
+
 
 class VelociraptorAgent(BaseModel):
     client_id: Optional[str] = Field("n/a", alias="velociraptor_id")
@@ -9,7 +15,7 @@ class VelociraptorAgent(BaseModel):
 
     @property
     def client_last_seen_as_datetime(self):
-        dt = datetime.strptime(self.client_last_seen, '%Y-%m-%dT%H:%M:%S%z')
+        dt = datetime.strptime(self.client_last_seen, "%Y-%m-%dT%H:%M:%S%z")
         return dt.replace(tzinfo=None)
 
     class Config:

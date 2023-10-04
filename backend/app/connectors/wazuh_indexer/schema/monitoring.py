@@ -1,6 +1,11 @@
-from pydantic import BaseModel
-from typing import Optional, List, Dict, Any
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
 from typing import Union
+
+from pydantic import BaseModel
+
 
 class ClusterHealth(BaseModel):
     active_primary_shards: int
@@ -21,6 +26,7 @@ class ClusterHealth(BaseModel):
     timed_out: bool
     unassigned_shards: int
 
+
 class ClusterHealthResponse(BaseModel):
     cluster_health: Optional[ClusterHealth]
     message: str
@@ -34,10 +40,12 @@ class NodeAllocation(BaseModel):
     disk_used: str
     node: str
 
+
 class NodeAllocationResponse(BaseModel):
     node_allocation: Optional[List[NodeAllocation]]
     message: str
     success: bool
+
 
 class IndicesStats(BaseModel):
     docs_count: str
@@ -46,10 +54,12 @@ class IndicesStats(BaseModel):
     replica_count: str
     store_size: str
 
+
 class IndicesStatsResponse(BaseModel):
     indices_stats: Optional[List[IndicesStats]]
     message: str
     success: bool
+
 
 class Shards(BaseModel):
     index: str
@@ -57,6 +67,7 @@ class Shards(BaseModel):
     shard: int
     state: str
     size: str
+
 
 class ShardsResponse(BaseModel):
     shards: Optional[List[Shards]]

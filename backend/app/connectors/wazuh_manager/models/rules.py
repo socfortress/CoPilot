@@ -1,8 +1,11 @@
 import datetime
 from typing import Optional
 
-from pydantic import validator, EmailStr
-from sqlmodel import SQLModel, Field, Relationship
+from pydantic import EmailStr
+from pydantic import validator
+from sqlmodel import Field
+from sqlmodel import Relationship
+from sqlmodel import SQLModel
 
 
 class DisabledRule(SQLModel, table=True):

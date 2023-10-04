@@ -1,6 +1,10 @@
-from sqlmodel import SQLModel, Field, Column, Relationship
-from typing import Optional
 from datetime import datetime
+from typing import Optional
+
+from sqlmodel import Column
+from sqlmodel import Field
+from sqlmodel import Relationship
+from sqlmodel import SQLModel
 
 
 class Customers(SQLModel, table=True):
@@ -20,7 +24,7 @@ class Customers(SQLModel, table=True):
     customer_type: Optional[str] = Field(max_length=50)
     logo_file: Optional[str] = Field(max_length=64)
     created_at: datetime = Field(default=datetime.utcnow())
-    
+
     agents: list["Agents"] = Relationship(back_populates="customer")
     meta: Optional["CustomersMeta"] = Relationship(back_populates="customer")
 
@@ -40,6 +44,7 @@ class Customers(SQLModel, table=True):
         self.customer_type = customer.customer_type
         self.logo_file = customer.logo_file
 
+
 class CustomersMeta(SQLModel, table=True):
     id: Optional[int] = Field(primary_key=True)
     customer_code: str = Field(foreign_key="customers.customer_code", nullable=False)
@@ -57,9 +62,9 @@ class CustomersMeta(SQLModel, table=True):
     customer: Optional["Customers"] = Relationship(back_populates="meta")
 
     def update_from_model(self, customer_meta):
-        if hasattr(customer_meta, 'customer_code'):
+        if hasattr(customer_meta, "customer_code"):
             self.customer_code = customer_meta.customer_code
-        if hasattr(customer_meta, 'customer_name'):
+        if hasattr(customer_meta, "customer_name"):
             self.customer_name = customer_meta.customer_name
         self.customer_meta_graylog_index = customer_meta.customer_meta_graylog_index
         self.customer_meta_graylog_stream = customer_meta.customer_meta_graylog_stream
@@ -69,6 +74,7 @@ class CustomersMeta(SQLModel, table=True):
         self.index_retention = customer_meta.index_retention
         self.wazuh_registration_port = customer_meta.wazuh_registration_port
         self.wazuh_log_ingestion_port = customer_meta.wazuh_log_ingestion_port
+
 
 class Agents(SQLModel, table=True):
     id: Optional[int] = Field(primary_key=True)
@@ -84,7 +90,7 @@ class Agents(SQLModel, table=True):
     wazuh_agent_version: str = Field(max_length=256)
     velociraptor_agent_version: str = Field(max_length=256)
     customer_code: Optional[str] = Field(foreign_key="customers.customer_code")
-    
+
     customer: Optional[Customers] = Relationship(back_populates="agents")
 
     @classmethod
@@ -100,7 +106,7 @@ class Agents(SQLModel, table=True):
             velociraptor_id=velociraptor_agent.client_id if velociraptor_agent.client_id else "n/a",
             velociraptor_last_seen=velociraptor_agent.client_last_seen_as_datetime,
             velociraptor_agent_version=velociraptor_agent.client_version,
-            customer_code=customer_code
+            customer_code=customer_code,
         )
 
     def update_from_model(self, wazuh_agent, velociraptor_agent, customer_code):

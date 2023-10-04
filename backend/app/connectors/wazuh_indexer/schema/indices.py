@@ -1,11 +1,18 @@
-from pydantic import BaseModel, Field
-from typing import Optional, List, Dict, Any
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
 from typing import Union
+
+from pydantic import BaseModel
+from pydantic import Field
+
 
 class Indices(BaseModel):
     indices_list: list
     success: bool
     message: str
+
 
 class IndexConfigModel(BaseModel):
     SKIP_INDEX_NAMES: Dict[str, bool] = Field(
@@ -13,7 +20,7 @@ class IndexConfigModel(BaseModel):
             "wazuh-statistics": True,
             "wazuh-monitoring": True,
         },
-        description="A dictionary containing index names to be skipped and their skip status."
+        description="A dictionary containing index names to be skipped and their skip status.",
     )
 
     def is_index_skipped(self, index_name: str) -> bool:
@@ -39,6 +46,3 @@ class IndexConfigModel(BaseModel):
             bool: True if the index is valid, False otherwise.
         """
         return index_name.startswith("wazuh") and not self.is_index_skipped(index_name)
-
-
-

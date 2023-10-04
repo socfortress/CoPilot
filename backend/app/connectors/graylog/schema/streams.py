@@ -1,5 +1,8 @@
-from typing import List, Optional
+from typing import List
+from typing import Optional
+
 from pydantic import BaseModel
+
 
 class Rule(BaseModel):
     description: Optional[str]
@@ -10,8 +13,9 @@ class Rule(BaseModel):
     type: int
     value: str
 
+
 class Stream(BaseModel):
-    content_pack: Optional[str]  
+    content_pack: Optional[str]
     created_at: str
     creator_user_id: str
     description: str
@@ -21,10 +25,11 @@ class Stream(BaseModel):
     is_default: bool
     is_editable: bool
     matching_type: str
-    outputs: list 
+    outputs: list
     remove_matches_from_default_stream: bool
     rules: List[Rule]
     title: str
+
 
 class GraylogStreamsResponse(BaseModel):
     message: str

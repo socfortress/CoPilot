@@ -1,17 +1,25 @@
-from typing import List, Optional, Dict, Union
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Union
+
 from pydantic import BaseModel
+
 
 class Provider(BaseModel):
     require_values: bool
     template: str
     type: str
 
+
 class FieldSpecItem(BaseModel):
     data_type: str
     providers: List[Provider]
 
+
 class Conditions(BaseModel):
     expression: Optional[str]
+
 
 class Config(BaseModel):
     conditions: Conditions
@@ -24,13 +32,16 @@ class Config(BaseModel):
     streams: List[str]
     type: str
 
+
 class NotificationSettings(BaseModel):
     backlog_size: int
     grace_period_ms: int
 
+
 class Storage(BaseModel):
     streams: List[str]
     type: str
+
 
 class EventDefinition(BaseModel):
     _scope: str
@@ -46,10 +57,12 @@ class EventDefinition(BaseModel):
     storage: List[Storage]
     title: str
 
+
 class GraylogEventDefinitionsResponse(BaseModel):
     event_definitions: List[EventDefinition]
     message: str
     success: bool
+
 
 class AlertQuery(BaseModel):
     query: Optional[str] = ""
@@ -58,22 +71,27 @@ class AlertQuery(BaseModel):
     filter: Optional[Dict[str, Union[str, List[str]]]] = {"alerts": "only", "event_definitions": []}
     timerange: Optional[Dict[str, Union[int, str]]] = {"range": 86400, "type": "relative"}
 
+
 class SimplifiedEventDefinition(BaseModel):
     description: str
     id: str
     title: str
+
 
 class Stream(BaseModel):
     description: str
     id: str
     title: str
 
+
 class Context(BaseModel):
     event_definitions: Dict[str, SimplifiedEventDefinition]
     streams: Dict[str, Stream]
 
+
 class Fields(BaseModel):
     test: str
+
 
 class Event(BaseModel):
     alert: bool
@@ -95,6 +113,7 @@ class Event(BaseModel):
     timestamp: str
     timestamp_processing: str
 
+
 class AlertEvent(BaseModel):
     event: Event
     index_name: str
@@ -103,11 +122,13 @@ class AlertEvent(BaseModel):
 
 class Filter(BaseModel):
     alerts: str
-    event_definitions: List[str] 
+    event_definitions: List[str]
+
 
 class Timerange(BaseModel):
     range: int
     type: str
+
 
 class Parameters(BaseModel):
     page: int
@@ -118,6 +139,7 @@ class Parameters(BaseModel):
     timerange: Timerange
     filter: Filter
 
+
 class Alerts(BaseModel):
     context: Context
     duration: int
@@ -125,6 +147,7 @@ class Alerts(BaseModel):
     parameters: Parameters
     total_events: int
     used_indices: List[str]
+
 
 class GraylogAlertsResponse(BaseModel):
     alerts: Alerts

@@ -1,6 +1,11 @@
 from datetime import datetime
-from sqlmodel import SQLModel, Field, Relationship
-from typing import Optional, List
+from typing import List
+from typing import Optional
+
+from sqlmodel import Field
+from sqlmodel import Relationship
+from sqlmodel import SQLModel
+
 
 class ConnectorHistory(SQLModel, table=True):
     """
@@ -12,13 +17,14 @@ class ConnectorHistory(SQLModel, table=True):
     :ivar change_description: Description of the change.
     :ivar connector: Relationship to the Connectors model.
     """
+
     id: Optional[int] = Field(default=None, primary_key=True)
     connector_id: int = Field(foreign_key="connectors.id")
     change_timestamp: datetime = Field(default=datetime.utcnow())
     change_description: str
 
     # Relationship
-    connector: Optional['Connectors'] = Relationship(back_populates='history_logs')
+    connector: Optional["Connectors"] = Relationship(back_populates="history_logs")
 
 
 class Connectors(SQLModel, table=True):
@@ -42,6 +48,7 @@ class Connectors(SQLModel, table=True):
     :ivar connector_accepts_file: Boolean indicating if the connector accepts files.
     :ivar history_logs: Relationship to the ConnectorHistory model.
     """
+
     id: Optional[int] = Field(default=None, primary_key=True)
     connector_name: str = Field()
     connector_type: str = Field()
@@ -50,7 +57,7 @@ class Connectors(SQLModel, table=True):
     connector_username: Optional[str] = Field(default=None)
     connector_password: Optional[str] = Field(default=None)
     connector_api_key: Optional[str] = Field(default=None)
-    
+
     # Fields moved from ConnectorsAvailable
     connector_description: Optional[str] = Field(default=None)
     connector_supports: Optional[str] = Field(default=None)
@@ -59,9 +66,9 @@ class Connectors(SQLModel, table=True):
     connector_accepts_api_key: bool = Field(default=False)
     connector_accepts_username_password: bool = Field(default=False)
     connector_accepts_file: bool = Field(default=False)
-    
+
     # Relationship
-    history_logs: List[ConnectorHistory] = Relationship(back_populates='connector')
+    history_logs: List[ConnectorHistory] = Relationship(back_populates="connector")
 
 
 # Example usage

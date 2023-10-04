@@ -1,13 +1,17 @@
-from pydantic import BaseModel, Field
 from datetime import datetime
-from typing import Optional, List
+from typing import List
+from typing import Optional
+
+from pydantic import BaseModel
+from pydantic import Field
+
 
 class CustomerRequestBody(BaseModel):
     customer_code: str = Field(..., description="Unique code for the customer")
     customer_name: str = Field(..., description="Name of the customer")
     contact_last_name: str = Field(..., description="Last name of the contact person")
     contact_first_name: str = Field(..., description="First name of the contact person")
-    
+
     parent_customer_code: Optional[str] = Field(None, description="Code for the parent customer")
     phone: Optional[str] = Field(None, description="Phone number")
     address_line1: Optional[str] = Field(None, description="First line of the address")
@@ -34,19 +38,22 @@ class CustomerRequestBody(BaseModel):
                 "postal_code": "12345",
                 "country": "USA",
                 "customer_type": "Enterprise",
-                "logo_file": "logo.png"
-            }
+                "logo_file": "logo.png",
+            },
         }
+
 
 class CustomerResponse(BaseModel):
     customer: Optional[CustomerRequestBody]
     success: bool
     message: str
 
+
 class CustomersResponse(BaseModel):
     customers: list[CustomerRequestBody]
     success: bool
     message: str
+
 
 ############# Customer Meta
 class CustomerMetaRequestBody(BaseModel):
@@ -69,14 +76,16 @@ class CustomerMetaRequestBody(BaseModel):
                 "customer_meta_wazuh_group": "wazuh_group",
                 "index_retention": 30,
                 "wazuh_registration_port": 1514,
-                "wazuh_log_ingestion_port": 1515
-            }
+                "wazuh_log_ingestion_port": 1515,
+            },
         }
+
 
 class CustomerMetaResponse(BaseModel):
     customer_meta: Optional[CustomerMetaRequestBody]
     success: bool
     message: str
+
 
 ############# Customer Full Response
 class CustomerFullResponse(BaseModel):
@@ -104,6 +113,7 @@ class AgentModel(BaseModel):
 
     class Config:
         orm_mode = True
+
 
 class AgentsResponse(BaseModel):
     agents: Optional[List[AgentModel]] = Field([], description="List of agents")

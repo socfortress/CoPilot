@@ -1,23 +1,36 @@
-from typing import Dict, Any, List, Generator, Type, Optional, Union, Tuple
-from sqlmodel import Session, select
 import ipaddress
-import regex
 import re
-from app.connectors.models import Connectors
+from abc import ABC
+from datetime import datetime
+from datetime import timedelta
+from typing import Any
+from typing import Dict
+from typing import Generator
+from typing import Iterable
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Type
+from typing import Union
+
+import regex
+import requests
 from elasticsearch7 import Elasticsearch
+from fastapi import HTTPException
 from loguru import logger
+from sqlmodel import Session
+from sqlmodel import select
+
+from app.connectors.models import Connectors
+from app.connectors.schema import ConnectorResponse
+from app.connectors.utils import get_connector_info_from_db
+from app.connectors.wazuh_indexer.schema.indices import IndexConfigModel
+from app.connectors.wazuh_indexer.schema.indices import Indices
+from app.db.all_models import Agents
 from app.db.db_session import engine
 from app.db.db_session import session
-import requests
-from app.connectors.schema import ConnectorResponse
-from app.db.all_models import Agents
-from app.connectors.utils import get_connector_info_from_db
-from app.connectors.wazuh_indexer.schema.indices import Indices, IndexConfigModel
-from app.healthchecks.agents.schema.agents import AgentHealthCheckResponse, AgentModel
-from datetime import datetime, timedelta
-from typing import Iterable, Tuple
-from fastapi import HTTPException
-from abc import ABC
+from app.healthchecks.agents.schema.agents import AgentHealthCheckResponse
+from app.healthchecks.agents.schema.agents import AgentModel
 
 
 #################### ! DFIR IRIS ASSET VALIDATOR ! ####################
@@ -176,12 +189,13 @@ class AssetTypeResolver:
 
         # Return default asset type id (1) if no validators succeed
         return 1
-    
+
+
 #################### ! DFIR IRIS ASSET VALIDATOR END ! ####################
 
 
-
 #################### ! DFIR IRIS IOC VALIDATOR ! ##########################
+
 
 class IoCValidator(ABC):
     """
@@ -281,6 +295,7 @@ class DomainValidator(IoCValidator):
 
 #################### ! DFIR IRIS IOC VALIDATOR END ! ##########################
 
+
 def verify_wazuh_indexer_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
     """
     Verifies the connection to Wazuh Indexer service.
@@ -289,7 +304,7 @@ def verify_wazuh_indexer_credentials(attributes: Dict[str, Any]) -> Dict[str, An
         dict: A dictionary containing 'connectionSuccessful' status and 'authToken' if the connection is successful.
     """
     logger.info(f"Verifying the wazuh-indexer connection to {attributes['connector_url']}")
-    
+
     try:
         es = Elasticsearch(
             [attributes["connector_url"]],
@@ -305,7 +320,8 @@ def verify_wazuh_indexer_credentials(attributes: Dict[str, Any]) -> Dict[str, An
     except Exception as e:
         logger.error(f"Connection to {attributes['connector_url']} failed with error: {e}")
         return {"connectionSuccessful": False, "message": f"Connection to {attributes['connector_url']} failed with error: {e}"}
-    
+
+
 def verify_wazuh_indexer_connection(connector_name: str) -> str:
     """
     Returns the authentication token for the Wazuh Indexer service.
@@ -318,6 +334,7 @@ def verify_wazuh_indexer_connection(connector_name: str) -> str:
         logger.error("No Wazuh Indexer connector found in the database")
         return None
     return verify_wazuh_indexer_credentials(attributes)
+
 
 def create_wazuh_indexer_client(connector_name: str) -> Elasticsearch:
     """
@@ -339,6 +356,7 @@ def create_wazuh_indexer_client(connector_name: str) -> Elasticsearch:
         retry_on_timeout=False,
     )
 
+
 def get_agent_data(agent_id: str) -> AgentModel:
     """
     Get agent data based on the agent id from the agents table.
@@ -354,7 +372,8 @@ def get_agent_data(agent_id: str) -> AgentModel:
         return agent_details
     else:
         raise HTTPException(status_code=404, detail=f"Agent with id {agent_id} not found in agents table")
-    
+
+
 def get_asset_type_id(os: str) -> int:
     """
     Use AssetTypeResolver to determine the asset type ID to set within DFIR-IRIS.
@@ -371,6 +390,7 @@ def get_asset_type_id(os: str) -> int:
     """
     asset_resolver = AssetTypeResolver(os)
     return asset_resolver.get_asset_type_id()
+
 
 def validate_ioc_type(ioc_value: str) -> str:
     """
@@ -400,4 +420,3 @@ def validate_ioc_type(ioc_value: str) -> str:
     if ioc_type is None:
         logger.error("Failed to validate IoC value.")
     return ioc_type
-

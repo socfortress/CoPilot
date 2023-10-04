@@ -1,21 +1,29 @@
-from typing import Dict, Any, List, Generator, Type
-from sqlmodel import Session, select
-from app.connectors.models import Connectors
-from elasticsearch7 import Elasticsearch
-from loguru import logger
-from app.db.db_session import engine
-import requests
-from app.connectors.schema import ConnectorResponse
-from app.connectors.utils import get_connector_info_from_db
-from app.connectors.wazuh_indexer.schema.indices import Indices, IndexConfigModel
-from app.connectors.cortex.schema.analyzers import AnalyzerJobData
-from datetime import datetime, timedelta
-from typing import Iterable, Tuple
-from cortex4py.api import Api
 import time
 import traceback
+from datetime import datetime
+from datetime import timedelta
+from typing import Any
+from typing import Dict
+from typing import Generator
+from typing import Iterable
+from typing import List
+from typing import Tuple
+from typing import Type
 
+import requests
+from cortex4py.api import Api
+from elasticsearch7 import Elasticsearch
+from loguru import logger
+from sqlmodel import Session
+from sqlmodel import select
 
+from app.connectors.cortex.schema.analyzers import AnalyzerJobData
+from app.connectors.models import Connectors
+from app.connectors.schema import ConnectorResponse
+from app.connectors.utils import get_connector_info_from_db
+from app.connectors.wazuh_indexer.schema.indices import IndexConfigModel
+from app.connectors.wazuh_indexer.schema.indices import Indices
+from app.db.db_session import engine
 
 
 def verify_cortex_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
@@ -26,7 +34,7 @@ def verify_cortex_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
         dict: A dictionary containing 'connectionSuccessful' status and 'authToken' if the connection is successful.
     """
     logger.info(f"Verifying the Cortex connection to {attributes['connector_url']}")
-    
+
     try:
         api = Api(attributes["connector_url"], attributes["connector_api_key"], verify_cert=False)
         # Get Cortex Status
@@ -40,7 +48,8 @@ def verify_cortex_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
     except Exception as e:
         logger.error(f"Connection to {attributes['connector_url']} failed with error: {e}")
         return {"connectionSuccessful": False, "message": f"Connection to {attributes['connector_url']} failed with error: {e}"}
-    
+
+
 def verify_cortex_connection(connector_name: str) -> str:
     """
     Returns the authentication token for the Cortex service.
@@ -53,6 +62,7 @@ def verify_cortex_connection(connector_name: str) -> str:
         logger.error("No Cortex connector found in the database")
         return None
     return verify_cortex_credentials(attributes)
+
 
 def create_cortex_client(connector_name: str) -> Api:
     """
@@ -67,10 +77,11 @@ def create_cortex_client(connector_name: str) -> Api:
         return None
     return Api(attributes["connector_url"], attributes["connector_api_key"], verify_cert=False)
 
+
 def run_and_wait_for_analyzer(analyzer_name: str, job_data: AnalyzerJobData) -> Dict[str, Any]:
-    api = create_cortex_client('Cortex')  # Create Api object
+    api = create_cortex_client("Cortex")  # Create Api object
     if api is None:
-        return {"success": False, "message": "API initialization failed"}    
+        return {"success": False, "message": "API initialization failed"}
     try:
         # job = api.analyzers.run_by_name(
         #     analyzer_name,
@@ -92,6 +103,7 @@ def run_and_wait_for_analyzer(analyzer_name: str, job_data: AnalyzerJobData) -> 
         logger.debug(f"Error running analyzer {analyzer_name}: {e}", exc_info=True)
         return {"success": False, "message": f"Error running analyzer {analyzer_name}: {e}"}
 
+
 def monitor_analyzer_job(api: Api, job: Any) -> Dict[str, Any]:
     r_json = job.json()
     job_id = r_json["id"]
@@ -104,7 +116,7 @@ def monitor_analyzer_job(api: Api, job: Any) -> Dict[str, Any]:
         if timer == 60:
             logger.error("Job failed to complete after 5 minutes.")
             return {"success": False, "message": "Job timed out"}
-        
+
         timer += 1
         logger.info(f"Timer is: {timer}")
 
@@ -119,6 +131,7 @@ def monitor_analyzer_job(api: Api, job: Any) -> Dict[str, Any]:
         job_state = r_json["status"]
 
     return retrieve_final_report(api, job_id)
+
 
 def retrieve_final_report(api: Api, job_id: str) -> Dict[str, Any]:
     report = api.jobs.get_report(job_id).report

@@ -1,10 +1,15 @@
-from pydantic import BaseModel, Field
-from typing import List, Optional
+from typing import List
+from typing import Optional
+
+from pydantic import BaseModel
+from pydantic import Field
+
 
 class Stage(BaseModel):
     match: str
     rules: List[str]
     stage: int
+
 
 class Pipeline(BaseModel):
     created_at: str
@@ -16,10 +21,12 @@ class Pipeline(BaseModel):
     stages: List[Stage]
     title: str
 
+
 class GraylogPipelinesResponse(BaseModel):
     message: str
     pipelines: List[Pipeline]
     success: bool
+
 
 class PipelineRule(BaseModel):
     created_at: str
@@ -29,6 +36,7 @@ class PipelineRule(BaseModel):
     modified_at: str
     source: str
     title: str
+
 
 # Define the main response model
 class PipelineRulesResponse(BaseModel):

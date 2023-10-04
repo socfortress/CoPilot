@@ -1,11 +1,31 @@
 from datetime import datetime
-from typing import List, Dict, Any, Callable, Tuple
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import List
+from typing import Tuple
+
+from dfir_iris_client.case import Case
 from fastapi import HTTPException
 from loguru import logger
-from dfir_iris_client.case import Case
-from app.connectors.dfir_iris.schema.cases import CaseModel, CaseResponse, CaseOlderThanBody, CasesBreachedResponse, SingleCaseBody, SingleCaseResponse
-from app.connectors.dfir_iris.schema.notes import NotesResponse, NotesQueryParams, NoteDetails, NoteDetailsResponse, NoteCreationBody, NoteCreationResponse
-from app.connectors.dfir_iris.utils.universal import create_dfir_iris_client, fetch_and_parse_data, initialize_client_and_case, fetch_and_validate_data, handle_error
+
+from app.connectors.dfir_iris.schema.cases import CaseModel
+from app.connectors.dfir_iris.schema.cases import CaseOlderThanBody
+from app.connectors.dfir_iris.schema.cases import CaseResponse
+from app.connectors.dfir_iris.schema.cases import CasesBreachedResponse
+from app.connectors.dfir_iris.schema.cases import SingleCaseBody
+from app.connectors.dfir_iris.schema.cases import SingleCaseResponse
+from app.connectors.dfir_iris.schema.notes import NoteCreationBody
+from app.connectors.dfir_iris.schema.notes import NoteCreationResponse
+from app.connectors.dfir_iris.schema.notes import NoteDetails
+from app.connectors.dfir_iris.schema.notes import NoteDetailsResponse
+from app.connectors.dfir_iris.schema.notes import NotesQueryParams
+from app.connectors.dfir_iris.schema.notes import NotesResponse
+from app.connectors.dfir_iris.utils.universal import create_dfir_iris_client
+from app.connectors.dfir_iris.utils.universal import fetch_and_parse_data
+from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
+from app.connectors.dfir_iris.utils.universal import handle_error
+from app.connectors.dfir_iris.utils.universal import initialize_client_and_case
 
 
 def process_notes(notes: List[Dict], case_id: int) -> List[Dict]:
@@ -17,11 +37,13 @@ def process_notes(notes: List[Dict], case_id: int) -> List[Dict]:
         processed_notes.append(note)
     return processed_notes
 
+
 def get_case_notes(case_id: int, search_term: str) -> NotesResponse:
     client, case = initialize_client_and_case("DFIR-IRIS")
     result = fetch_and_validate_data(client, case.search_notes, search_term, case_id)
     processed_notes = process_notes(result["data"], case_id)
     return NotesResponse(success=True, message="Successfully fetched notes for case", notes=processed_notes)
+
 
 def get_case_note_details(note_id: int, case_id: int) -> NoteDetailsResponse:
     client, case = initialize_client_and_case("DFIR-IRIS")
@@ -29,11 +51,21 @@ def get_case_note_details(note_id: int, case_id: int) -> NoteDetailsResponse:
     note_details = NoteDetails(**result["data"])
     return NoteDetailsResponse(success=True, message="Successfully fetched note details", note_details=note_details)
 
+
 def perform_note_creation(client: Any, case: Case, note_creation_body: NoteCreationBody, case_id: int) -> Dict:
     result = fetch_and_validate_data(client, case.add_notes_group, note_creation_body.note_title, case_id)
     note_id = result["data"]["group_id"]
     custom_attributes = {}
-    return fetch_and_validate_data(client, case.add_note, note_creation_body.note_title, note_creation_body.note_content, note_id, custom_attributes, case_id)
+    return fetch_and_validate_data(
+        client,
+        case.add_note,
+        note_creation_body.note_title,
+        note_creation_body.note_content,
+        note_id,
+        custom_attributes,
+        case_id,
+    )
+
 
 def create_case_note(case_id: int, note_creation_body: NoteCreationBody) -> NoteCreationResponse:
     client, case = initialize_client_and_case("DFIR-IRIS")

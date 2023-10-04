@@ -1,19 +1,24 @@
-from typing import Dict, Any, Optional
-from sqlmodel import Session, select
-from app.connectors.models import Connectors
-from loguru import logger
-from app.db.db_session import engine
-import requests
+import json
+from datetime import datetime
+from typing import Any
+from typing import Dict
+from typing import Optional
+
 import grpc
 import pika
-import json 
-from datetime import datetime
 import pyvelociraptor
-import json
+import requests
+from loguru import logger
 from pyvelociraptor import api_pb2
 from pyvelociraptor import api_pb2_grpc
+from sqlmodel import Session
+from sqlmodel import select
+
+from app.connectors.models import Connectors
 from app.connectors.schema import ConnectorResponse
 from app.connectors.utils import get_connector_info_from_db
+from app.db.db_session import engine
+
 
 def verify_velociraptor_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
     """
@@ -68,6 +73,7 @@ def verify_velociraptor_credentials(attributes: Dict[str, Any]) -> Dict[str, Any
         logger.error(f"Failed to get connector_api_key from the database: {e}")
         return {"connectionSuccessful": False, "message": f"Failed to get connector_api_key from the database: {e}"}
 
+
 def verify_velociraptor_connection(connector_name: str) -> str:
     """
     Verifies the connection to Velociraptor service.
@@ -78,6 +84,7 @@ def verify_velociraptor_connection(connector_name: str) -> str:
         logger.error("No Velociraptor connector found in the database")
         return None
     return verify_velociraptor_credentials(attributes)
+
 
 class UniversalService:
     """

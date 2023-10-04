@@ -1,10 +1,19 @@
-from pydantic import BaseModel, validator, Field
 import ipaddress
 import re
-from typing import List, Optional, Dict, Any, Tuple
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
 
-HASH_REGEX = re.compile(r'[a-fA-F\d]{32}|[a-fA-F\d]{64}')  # Update this regex to match your specific hash format
-DOMAIN_REGEX = re.compile(r'^(?:[a-z0-9](?:[a-z0-9\-]{0,61}[a-z0-9])?\.)+[a-z]{2,6}$')  # Update this regex to match your specific domain format
+from pydantic import BaseModel
+from pydantic import Field
+from pydantic import validator
+
+HASH_REGEX = re.compile(r"[a-fA-F\d]{32}|[a-fA-F\d]{64}")  # Update this regex to match your specific hash format
+DOMAIN_REGEX = re.compile(
+    r"^(?:[a-z0-9](?:[a-z0-9\-]{0,61}[a-z0-9])?\.)+[a-z]{2,6}$",
+)  # Update this regex to match your specific domain format
 
 
 class AnalyzersResponse(BaseModel):
@@ -12,17 +21,18 @@ class AnalyzersResponse(BaseModel):
     message: str
     success: bool
 
+
 class RunAnalyzerBody(BaseModel):
     analyzer_name: str = Field(..., description="Name of the analyzer to be run.")
     analyzer_data: str = Field(..., description="The Indicator of Compromise (IoC) to be analyzed.")
     data_type: Optional[str] = Field(default=None, description="Data type determined after validation")
 
-    @validator('analyzer_data', pre=True, always=True)
+    @validator("analyzer_data", pre=True, always=True)
     def validate_and_set_data_type(cls, value: str, values: dict) -> str:
         is_valid, data_type = cls.is_valid_datatype(value)
         if not is_valid:
             raise ValueError(f"Invalid data type: {data_type}")
-        values['data_type'] = data_type
+        values["data_type"] = data_type
         return value
 
     @classmethod
@@ -52,11 +62,11 @@ class RunAnalyzerBody(BaseModel):
     def _is_valid_domain(value: str) -> bool:
         return bool(DOMAIN_REGEX.match(value))
 
+
 class RunAnalyzerResponse(BaseModel):
     report: Dict[str, Any]
     message: str
     success: bool
-
 
 
 class AnalyzerJobData(BaseModel):

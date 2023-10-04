@@ -1,6 +1,8 @@
-from sqlmodel import Session, select
-from app.db.db_session import engine 
+from sqlmodel import Session
+from sqlmodel import select
+
 from app.auth.models.users import User
+from app.db.db_session import engine
 
 
 def select_all_users():

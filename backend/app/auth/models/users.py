@@ -1,8 +1,11 @@
 import datetime
 from typing import Optional
 
-from pydantic import validator, EmailStr
-from sqlmodel import SQLModel, Field, Relationship
+from pydantic import EmailStr
+from pydantic import validator
+from sqlmodel import Field
+from sqlmodel import Relationship
+from sqlmodel import SQLModel
 
 
 class User(SQLModel, table=True):
@@ -23,10 +26,10 @@ class UserInput(SQLModel):
     email: EmailStr
     is_admin: bool = False
 
-    @validator('password2')
+    @validator("password2")
     def password_match(cls, v, values, **kwargs):
-        if 'password' in values and v != values['password']:
-            raise ValueError('passwords don\'t match')
+        if "password" in values and v != values["password"]:
+            raise ValueError("passwords don't match")
         return v
 
 
@@ -45,6 +48,7 @@ class SMTP(SQLModel, table=True):
 
     user: "User" = Relationship(back_populates="smtp")
 
+
 class SMTPInput(SQLModel):
     email: EmailStr
     smtp_password: str = Field(max_length=256)
@@ -52,8 +56,8 @@ class SMTPInput(SQLModel):
     smtp_server: str = Field(max_length=256)
     smtp_port: int
 
-    @validator('smtp_password2')
+    @validator("smtp_password2")
     def password_match(cls, v, values, **kwargs):
-        if 'smtp_password' in values and v != values['smtp_password']:
-            raise ValueError('passwords don\'t match')
+        if "smtp_password" in values and v != values["smtp_password"]:
+            raise ValueError("passwords don't match")
         return v

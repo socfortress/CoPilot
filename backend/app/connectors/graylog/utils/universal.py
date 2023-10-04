@@ -1,14 +1,23 @@
-from typing import Dict, Any, List, Generator, Type, Optional
-from sqlmodel import Session, select
-from app.connectors.models import Connectors
+from typing import Any
+from typing import Dict
+from typing import Generator
+from typing import List
+from typing import Optional
+from typing import Type
+
+import requests
 from elasticsearch7 import Elasticsearch
 from loguru import logger
-from app.db.db_session import engine
-import requests
+from sqlmodel import Session
+from sqlmodel import select
+
+from app.connectors.models import Connectors
 from app.connectors.schema import ConnectorResponse
 from app.connectors.utils import get_connector_info_from_db
+from app.db.db_session import engine
 
 HEADERS = {"X-Requested-By": "CoPilot"}
+
 
 def verify_graylog_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
     """
@@ -18,8 +27,8 @@ def verify_graylog_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
         dict: A dictionary containing 'connectionSuccessful' status and 'authToken' if the connection is successful.
     """
     logger.info(
-            f"Verifying the graylog connection to {attributes['connector_url']}",
-        )
+        f"Verifying the graylog connection to {attributes['connector_url']}",
+    )
     try:
         graylog_roles = requests.get(
             f"{attributes['connector_url']}/api/authz/roles/user/{attributes['connector_username']}",
@@ -38,12 +47,16 @@ def verify_graylog_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
             logger.error(
                 f"Connection to {attributes['connector_url']} failed with error: {graylog_roles.text}",
             )
-            return {"connectionSuccessful": False, "message": f"Connection to {attributes['connector_url']} failed with error: {graylog_roles.text}"}
+            return {
+                "connectionSuccessful": False,
+                "message": f"Connection to {attributes['connector_url']} failed with error: {graylog_roles.text}",
+            }
     except Exception as e:
         logger.error(
             f"Connection to {attributes['connector_url']} failed with error: {e}",
         )
         return {"connectionSuccessful": False, "message": f"Connection to {attributes['connector_url']} failed with error: {e}"}
+
 
 def verify_graylog_connection(connector_name: str) -> str:
     """
@@ -55,6 +68,7 @@ def verify_graylog_connection(connector_name: str) -> str:
         logger.error("No Graylog connector found in the database")
         return None
     return verify_graylog_credentials(attributes)
+
 
 def send_get_request(endpoint: str, params: Optional[Dict[str, Any]] = None, connector_name: str = "Graylog") -> Dict[str, Any]:
     """
@@ -88,7 +102,8 @@ def send_get_request(endpoint: str, params: Optional[Dict[str, Any]] = None, con
     except Exception as e:
         logger.error(f"Failed to send GET request to {endpoint} with error: {e}")
         return {"success": False, "message": f"Failed to send GET request to {endpoint} with error: {e}"}
-    
+
+
 def send_post_request(endpoint: str, data: Dict[str, Any] = None, connector_name: str = "Graylog") -> Dict[str, Any]:
     """
     Sends a POST request to the Graylog service.
@@ -118,16 +133,21 @@ def send_post_request(endpoint: str, data: Dict[str, Any] = None, connector_name
             json=data,
             verify=False,
         )
-        
+
         if response.status_code == 204:
             return {"data": None, "success": True, "message": "Successfully completed request with no content"}
         else:
-            return {"data": response.json(), "success": False if response.status_code >= 400 else True, "message": "Successfully retrieved data" if response.status_code < 400 else "Failed to retrieve data"}
+            return {
+                "data": response.json(),
+                "success": False if response.status_code >= 400 else True,
+                "message": "Successfully retrieved data" if response.status_code < 400 else "Failed to retrieve data",
+            }
     except Exception as e:
         logger.debug(f"Response: {response}")
         logger.error(f"Failed to send POST request to {endpoint} with error: {e}")
         return {"success": False, "message": f"Failed to send POST request to {endpoint} with error: {e}"}
-    
+
+
 def send_delete_request(endpoint: str, params: Optional[Dict[str, Any]] = None, connector_name: str = "Graylog") -> Dict[str, Any]:
     """
     Sends a DELETE request to the Graylog service.
@@ -160,7 +180,8 @@ def send_delete_request(endpoint: str, params: Optional[Dict[str, Any]] = None, 
     except Exception as e:
         logger.error(f"Failed to send DELETE request to {endpoint} with error: {e}")
         return {"success": False, "message": f"Failed to send DELETE request to {endpoint} with error: {e}"}
-    
+
+
 def send_put_request(endpoint: str, data: Optional[Dict[str, Any]] = None, connector_name: str = "Graylog") -> Dict[str, Any]:
     """
     Sends a PUT request to the Graylog service.

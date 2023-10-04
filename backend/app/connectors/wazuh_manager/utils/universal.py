@@ -1,11 +1,17 @@
-from typing import Dict, Any, Optional
-from sqlmodel import Session, select
-from app.connectors.models import Connectors
-from loguru import logger
-from app.db.db_session import engine
+from typing import Any
+from typing import Dict
+from typing import Optional
+
 import requests
+from loguru import logger
+from sqlmodel import Session
+from sqlmodel import select
+
+from app.connectors.models import Connectors
 from app.connectors.schema import ConnectorResponse
 from app.connectors.utils import get_connector_info_from_db
+from app.db.db_session import engine
+
 
 def verify_wazuh_manager_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
     """
@@ -15,7 +21,7 @@ def verify_wazuh_manager_credentials(attributes: Dict[str, Any]) -> Dict[str, An
         dict: A dictionary containing 'connectionSuccessful' status and 'authToken' if the connection is successful.
     """
     logger.info(f"Verifying the wazuh-manager connection to {attributes['connector_url']}")
-    
+
     try:
         wazuh_auth_token = requests.get(
             f"{attributes['connector_url']}/security/user/authenticate",
@@ -25,18 +31,19 @@ def verify_wazuh_manager_credentials(attributes: Dict[str, Any]) -> Dict[str, An
             ),
             verify=False,
         )
-        
+
         if wazuh_auth_token.status_code == 200:
-            logger.debug("Wazuh Authentication Token successful")            
+            logger.debug("Wazuh Authentication Token successful")
             return {"connectionSuccessful": True, "message": "Wazuh Manager authentication successful"}
         else:
             logger.error(f"Connection to {attributes['connector_url']} failed with error: {wazuh_auth_token.text}")
-            
+
             return {"connectionSuccessful": False, "message": f"Connection to {attributes['connector_url']} failed"}
     except Exception as e:
         logger.error(f"Connection to {attributes['connector_url']} failed with error: {e}")
-        
+
         return {"connectionSuccessful": False, "message": f"Connection to {attributes['connector_url']} failed with error."}
+
 
 def verify_wazuh_manager_connection(connector_name: str) -> str:
     """
@@ -51,6 +58,7 @@ def verify_wazuh_manager_connection(connector_name: str) -> str:
         logger.error("No Wazuh Manager connector found in the database")
         return None
     return verify_wazuh_manager_credentials(attributes)
+
 
 def create_wazuh_manager_client(connector_name: str) -> str:
     """
@@ -88,7 +96,8 @@ def create_wazuh_manager_client(connector_name: str) -> str:
         logger.error(f"Connection to {attributes['connector_url']} failed with error: {e}")
 
         return None
-    
+
+
 def send_get_request(endpoint: str, params: Optional[Dict[str, Any]] = None, connector_name: str = "Wazuh-Manager") -> Dict[str, Any]:
     """
     Sends a GET request to the Wazuh Manager service.
@@ -119,7 +128,8 @@ def send_get_request(endpoint: str, params: Optional[Dict[str, Any]] = None, con
     except Exception as e:
         logger.error(f"Failed to send GET request to {endpoint} with error: {e}")
         return {"success": False, "message": f"Failed to send GET request to {endpoint} with error: {e}"}
-    
+
+
 def send_post_request(endpoint: str, data: Dict[str, Any], connector_name: str = "Wazuh-Manager") -> Dict[str, Any]:
     """
     Sends a POST request to the Wazuh Manager service.
@@ -150,8 +160,14 @@ def send_post_request(endpoint: str, data: Dict[str, Any], connector_name: str =
     except Exception as e:
         logger.error(f"Failed to send POST request to {endpoint} with error: {e}")
         return {"success": False, "message": f"Failed to send POST request to {endpoint} with error: {e}"}
-    
-def send_put_request(endpoint: str, data: Optional[Dict[str, Any]], params: Optional[Dict[str, str]] = None, connector_name: str = "Wazuh-Manager") -> Dict[str, Any]:
+
+
+def send_put_request(
+    endpoint: str,
+    data: Optional[Dict[str, Any]],
+    params: Optional[Dict[str, str]] = None,
+    connector_name: str = "Wazuh-Manager",
+) -> Dict[str, Any]:
     """
     Sends a PUT request to the Wazuh Manager service.
 
@@ -182,7 +198,8 @@ def send_put_request(endpoint: str, data: Optional[Dict[str, Any]], params: Opti
     except Exception as e:
         logger.error(f"Failed to send PUT request to {endpoint} with error: {e}")
         return {"success": False, "message": f"Failed to send PUT request to {endpoint} with error: {e}"}
-    
+
+
 def send_delete_request(endpoint: str, params: Optional[Dict[str, Any]] = None, connector_name: str = "Wazuh-Manager") -> Dict[str, Any]:
     """
     Sends a DELETE request to the Wazuh Manager service.
@@ -213,7 +230,7 @@ def send_delete_request(endpoint: str, params: Optional[Dict[str, Any]] = None, 
     except Exception as e:
         logger.error(f"Failed to send DELETE request to {endpoint} with error: {e}")
         return {"success": False, "message": f"Failed to send DELETE request to {endpoint} with error: {e}"}
-    
+
 
 def restart_service(connector_name: str = "Wazuh-Manager") -> Dict[str, Any]:
     """
@@ -239,4 +256,3 @@ def restart_service(connector_name: str = "Wazuh-Manager") -> Dict[str, Any]:
     except Exception as e:
         logger.error(f"Failed to restart Wazuh Manager service with error: {e}")
         return {"success": False, "message": f"Failed to restart Wazuh Manager service with error: {e}"}
-    

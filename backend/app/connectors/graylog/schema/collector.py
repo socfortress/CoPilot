@@ -1,13 +1,20 @@
-from typing import List, Dict, Optional
-from pydantic import BaseModel, Field
+from typing import Dict
+from typing import List
+from typing import Optional
+
+from pydantic import BaseModel
+from pydantic import Field
+
 
 class Document(BaseModel):
     count: int
     deleted: int
 
+
 class Operation(BaseModel):
     time_seconds: int
     total: int
+
 
 class ShardInfo(BaseModel):
     documents: Document
@@ -22,6 +29,7 @@ class ShardInfo(BaseModel):
     segments: int
     store_size_bytes: int
 
+
 class Routing(BaseModel):
     active: bool
     id: int
@@ -32,20 +40,24 @@ class Routing(BaseModel):
     relocating_to: Optional[None]  # Assuming this is always None based on your example
     state: str
 
+
 class IndexInfo(BaseModel):
     all_shards: ShardInfo
     primary_shards: ShardInfo
     reopened: bool
     routing: List[Routing]
 
+
 class GraylogIndexItem(BaseModel):
     index_name: str
     index_info: IndexInfo
+
 
 class GraylogIndicesResponse(BaseModel):
     indices: List[GraylogIndexItem]
     message: str
     success: bool
+
 
 class ConfiguredInputAttributes(BaseModel):
     recv_buffer_size: int
@@ -68,9 +80,10 @@ class ConfiguredInputAttributes(BaseModel):
     charset_name: Optional[str]
     allow_override_date: Optional[bool]
 
+
 class ConfiguredInput(BaseModel):
     title: str
-    global_field: bool = Field(alias='global')
+    global_field: bool = Field(alias="global")
     name: str
     content_pack: Optional[str]
     created_at: str
@@ -80,6 +93,7 @@ class ConfiguredInput(BaseModel):
     static_fields: Dict[str, str]
     node: str
     id: str
+
 
 class MessageInputAttributes(BaseModel):
     recv_buffer_size: int
@@ -96,9 +110,10 @@ class MessageInputAttributes(BaseModel):
     max_message_size: int
     tls_client_auth: str
 
+
 class MessageInput(BaseModel):
     title: str
-    global_field: bool = Field(alias='global')
+    global_field: bool = Field(alias="global")
     name: str
     content_pack: Optional[str]
     created_at: str
@@ -109,6 +124,7 @@ class MessageInput(BaseModel):
     node: str
     id: str
 
+
 class RunningInput(BaseModel):
     id: str
     state: str
@@ -116,15 +132,18 @@ class RunningInput(BaseModel):
     detailed_message: Optional[str]
     message_input: MessageInput
 
+
 class ConfiguredInputsResponse(BaseModel):
     configured_inputs: List[ConfiguredInput]
     message: str
     success: bool
 
+
 class RunningInputsResponse(BaseModel):
     running_inputs: List[RunningInput]
     message: str
     success: bool
+
 
 class GraylogInputsResponse(BaseModel):
     configured_inputs: List[ConfiguredInput]

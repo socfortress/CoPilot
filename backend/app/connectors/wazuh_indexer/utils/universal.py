@@ -1,17 +1,25 @@
-from typing import Dict, Any, List, Generator, Type
-from sqlmodel import Session, select
-from app.connectors.models import Connectors
+from datetime import datetime
+from datetime import timedelta
+from typing import Any
+from typing import Dict
+from typing import Generator
+from typing import Iterable
+from typing import List
+from typing import Tuple
+from typing import Type
+
+import requests
 from elasticsearch7 import Elasticsearch
 from loguru import logger
-from app.db.db_session import engine
-import requests
+from sqlmodel import Session
+from sqlmodel import select
+
+from app.connectors.models import Connectors
 from app.connectors.schema import ConnectorResponse
 from app.connectors.utils import get_connector_info_from_db
-from app.connectors.wazuh_indexer.schema.indices import Indices, IndexConfigModel
-from datetime import datetime, timedelta
-from typing import Iterable, Tuple
-
-
+from app.connectors.wazuh_indexer.schema.indices import IndexConfigModel
+from app.connectors.wazuh_indexer.schema.indices import Indices
+from app.db.db_session import engine
 
 
 def verify_wazuh_indexer_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
@@ -22,7 +30,7 @@ def verify_wazuh_indexer_credentials(attributes: Dict[str, Any]) -> Dict[str, An
         dict: A dictionary containing 'connectionSuccessful' status and 'authToken' if the connection is successful.
     """
     logger.info(f"Verifying the wazuh-indexer connection to {attributes['connector_url']}")
-    
+
     try:
         es = Elasticsearch(
             [attributes["connector_url"]],
@@ -38,7 +46,8 @@ def verify_wazuh_indexer_credentials(attributes: Dict[str, Any]) -> Dict[str, An
     except Exception as e:
         logger.error(f"Connection to {attributes['connector_url']} failed with error: {e}")
         return {"connectionSuccessful": False, "message": f"Connection to {attributes['connector_url']} failed with error: {e}"}
-    
+
+
 def verify_wazuh_indexer_connection(connector_name: str) -> str:
     """
     Returns the authentication token for the Wazuh Indexer service.
@@ -51,6 +60,7 @@ def verify_wazuh_indexer_connection(connector_name: str) -> str:
         logger.error("No Wazuh Indexer connector found in the database")
         return None
     return verify_wazuh_indexer_credentials(attributes)
+
 
 def create_wazuh_indexer_client(connector_name: str) -> Elasticsearch:
     """
@@ -72,71 +82,75 @@ def create_wazuh_indexer_client(connector_name: str) -> Elasticsearch:
         retry_on_timeout=False,
     )
 
+
 def format_node_allocation(node_allocation):
-        """
-        Format the node allocation details into a list of dictionaries. Each dictionary contains disk used, disk available, total disk, disk
-        usage percentage, and node name.
+    """
+    Format the node allocation details into a list of dictionaries. Each dictionary contains disk used, disk available, total disk, disk
+    usage percentage, and node name.
 
-        Args:
-            node_allocation: Node allocation details from Elasticsearch.
+    Args:
+        node_allocation: Node allocation details from Elasticsearch.
 
-        Returns:
-            list: A list of dictionaries containing formatted node allocation details.
-        """
-        return [
-            {
-                "disk_used": node["disk.used"],
-                "disk_available": node["disk.avail"],
-                "disk_total": node["disk.total"],
-                "disk_percent": node["disk.percent"],
-                "node": node["node"],
-            }
-            for node in node_allocation
-        ]
+    Returns:
+        list: A list of dictionaries containing formatted node allocation details.
+    """
+    return [
+        {
+            "disk_used": node["disk.used"],
+            "disk_available": node["disk.avail"],
+            "disk_total": node["disk.total"],
+            "disk_percent": node["disk.percent"],
+            "node": node["node"],
+        }
+        for node in node_allocation
+    ]
+
 
 def format_indices_stats(indices_stats):
-        """
-        Format the indices stats details into a list of dictionaries. Each dictionary contains the index name, the number of documents in the index,
-        the size of the index, and the number of shards in the index.
+    """
+    Format the indices stats details into a list of dictionaries. Each dictionary contains the index name, the number of documents in the index,
+    the size of the index, and the number of shards in the index.
 
-        Args:
-            indices_stats: Indices stats details from Elasticsearch.
+    Args:
+        indices_stats: Indices stats details from Elasticsearch.
 
-        Returns:
-            list: A list of dictionaries containing formatted indices stats details.
-        """
-        return [
-            {
-                "index": index["index"],
-                "docs_count": index["docs.count"],
-                "store_size": index["store.size"],
-                "replica_count": index["rep"],
-                "health": index["health"],
-            }
-            for index in indices_stats
-        ]
+    Returns:
+        list: A list of dictionaries containing formatted indices stats details.
+    """
+    return [
+        {
+            "index": index["index"],
+            "docs_count": index["docs.count"],
+            "store_size": index["store.size"],
+            "replica_count": index["rep"],
+            "health": index["health"],
+        }
+        for index in indices_stats
+    ]
+
 
 def format_shards(shards):
-        """
-        Format the shards details into a list of dictionaries. Each dictionary contains the index name, the shard number, the shard state, the shard
-        size, and the node name.
+    """
+    Format the shards details into a list of dictionaries. Each dictionary contains the index name, the shard number, the shard state, the shard
+    size, and the node name.
 
-        Args:
-            shards: Shards details from Elasticsearch.
+    Args:
+        shards: Shards details from Elasticsearch.
 
-        Returns:
-            list: A list of dictionaries containing formatted shards details.
-        """
-        return [
-            {
-                "index": shard["index"],
-                "shard": shard["shard"],
-                "state": shard["state"],
-                "size": shard["store"],
-                "node": shard["node"],
-            }
-            for shard in shards
-        ]
+    Returns:
+        list: A list of dictionaries containing formatted shards details.
+    """
+    return [
+        {
+            "index": shard["index"],
+            "shard": shard["shard"],
+            "state": shard["state"],
+            "size": shard["store"],
+            "node": shard["node"],
+        }
+        for shard in shards
+    ]
+
 
 def collect_indices() -> Indices:
     """
@@ -157,6 +171,7 @@ def collect_indices() -> Indices:
     except Exception as e:
         logger.error(f"Failed to collect indices: {e}")
         return Indices(message="Failed to collect indices", success=False)
+
 
 class AlertsQueryBuilder:
     @staticmethod
@@ -201,7 +216,7 @@ class AlertsQueryBuilder:
         for field, value in matches:
             self.query["query"]["bool"]["must"].append({"match": {field: value}})
         return self
-    
+
     def add_match_phrase(self, matches: Iterable[Tuple[str, str]]):
         for field, value in matches:
             self.query["query"]["bool"]["must"].append({"match_phrase": {field: value}})
@@ -217,7 +232,8 @@ class AlertsQueryBuilder:
 
     def build(self):
         return self.query
-    
+
+
 class LogsQueryBuilder:
     @staticmethod
     def _get_time_range_start(timerange: str) -> str:
@@ -263,7 +279,7 @@ class LogsQueryBuilder:
         for field, value in matches:
             self.query["query"]["bool"]["must"].append({"match": {field: value}})
         return self
-    
+
     def add_match_phrase(self, matches: Iterable[Tuple[str, str]]):
         for field, value in matches:
             self.query["query"]["bool"]["must"].append({"match_phrase": {field: value}})

@@ -1,37 +1,44 @@
 from typing import List
-from fastapi import APIRouter, HTTPException, Security, Depends
-from starlette.status import HTTP_401_UNAUTHORIZED
+
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import Security
 from loguru import logger
+from starlette.status import HTTP_401_UNAUTHORIZED
 
 # App specific imports
 from app.auth.routes.auth import auth_handler
-from app.db.db_session import session
-from app.connectors.wazuh_manager.schema.rules import (
-    RuleDisable, RuleDisableResponse, RuleEnableResponse, RuleEnable, AllDisabledRuleResponse
-)
 from app.connectors.wazuh_manager.models.rules import DisabledRule
-from app.connectors.wazuh_manager.services.rules import disable_rule, enable_rule
+from app.connectors.wazuh_manager.schema.rules import AllDisabledRuleResponse
+from app.connectors.wazuh_manager.schema.rules import RuleDisable
+from app.connectors.wazuh_manager.schema.rules import RuleDisableResponse
+from app.connectors.wazuh_manager.schema.rules import RuleEnable
+from app.connectors.wazuh_manager.schema.rules import RuleEnableResponse
+from app.connectors.wazuh_manager.services.rules import disable_rule
+from app.connectors.wazuh_manager.services.rules import enable_rule
+from app.db.db_session import session
 
 NEW_LEVEL = "1"
 wazuh_manager_router = APIRouter()
+
 
 def verify_admin(user):
     if not user.is_admin:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail="Unauthorized")
 
+
 def query_disabled_rule(rule_id: str):
     return session.query(DisabledRule).filter(DisabledRule.rule_id == rule_id).first()
+
 
 @wazuh_manager_router.get("/rule/disabled", response_model=AllDisabledRuleResponse, description="Get all disabled rules")
 async def get_disabled_rules(user=Depends(auth_handler.get_current_user)) -> AllDisabledRuleResponse:
     logger.info(f"Fetching all disabled rules for user: {user.username}")
     verify_admin(user)
     disabled_rules = session.query(DisabledRule).all()
-    return AllDisabledRuleResponse(
-        disabled_rules=disabled_rules,
-        success=True,
-        message="Successfully fetched all disabled rules"
-    )
+    return AllDisabledRuleResponse(disabled_rules=disabled_rules, success=True, message="Successfully fetched all disabled rules")
+
 
 @wazuh_manager_router.post("/rule/disable", response_model=RuleDisableResponse, description="Disable a Wazuh Rule")
 async def disable_wazuh_rule(rule: RuleDisable, user=Depends(auth_handler.get_current_user)) -> RuleDisableResponse:
@@ -49,13 +56,14 @@ async def disable_wazuh_rule(rule: RuleDisable, user=Depends(auth_handler.get_cu
             new_level=NEW_LEVEL,
             reason_for_disabling=rule.reason_for_disabling,
             length_of_time=rule.length_of_time,
-            disabled_by=user.username
+            disabled_by=user.username,
         )
         session.add(new_disabled_rule)
         session.commit()
         return rule_disabled
     else:
         raise HTTPException(status_code=404, detail="Was not able to disable rule")
+
 
 @wazuh_manager_router.post("/rule/enable", response_model=RuleEnableResponse, description="Enable a Wazuh Rule")
 async def enable_wazuh_rule(rule: RuleEnable, user=Depends(auth_handler.get_current_user)) -> RuleEnableResponse:

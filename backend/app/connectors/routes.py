@@ -1,23 +1,41 @@
-from fastapi import APIRouter, HTTPException, Request, File, UploadFile
-from fastapi.responses import JSONResponse, FileResponse
-from typing import List, Union
-from app.connectors.schema import ConnectorResponse, ConnectorListResponse, VerifyConnectorResponse, ConnectorsListResponse, UpdateConnector
-from app.connectors.services import ConnectorServices
-from loguru import logger
-from app.db.db_session import session
+from typing import List
+from typing import Union
 
 ## Auth Things
-from fastapi import APIRouter, HTTPException, Security, security, Depends
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import File
+from fastapi import HTTPException
+from fastapi import Request
+from fastapi import Security
+from fastapi import UploadFile
+from fastapi import security
+from fastapi.responses import FileResponse
+from fastapi.responses import JSONResponse
 from fastapi.security import HTTPAuthorizationCredentials
-from app.auth.schema.auth import UserResponse, UserLoginResponse
+from loguru import logger
+from starlette.status import HTTP_204_NO_CONTENT
+from starlette.status import HTTP_401_UNAUTHORIZED
+from starlette.status import HTTP_404_NOT_FOUND
 
+from app.auth.models.users import User
+from app.auth.models.users import UserInput
+from app.auth.models.users import UserLogin
 from app.auth.routes.auth import auth_handler
+from app.auth.schema.auth import UserLoginResponse
+from app.auth.schema.auth import UserResponse
+from app.auth.services.universal import find_user
+from app.auth.services.universal import select_all_users
+from app.connectors.schema import ConnectorListResponse
+from app.connectors.schema import ConnectorResponse
+from app.connectors.schema import ConnectorsListResponse
+from app.connectors.schema import UpdateConnector
+from app.connectors.schema import VerifyConnectorResponse
+from app.connectors.services import ConnectorServices
 from app.db.db_session import session
-from app.auth.models.users import UserInput, User, UserLogin
-from app.auth.services.universal import select_all_users, find_user
-from starlette.status import HTTP_204_NO_CONTENT, HTTP_404_NOT_FOUND, HTTP_401_UNAUTHORIZED
 
 connector_router = APIRouter()
+
 
 @connector_router.get("", response_model=ConnectorsListResponse, description="Fetch all available connectors")
 async def get_connectors(user=Depends(auth_handler.get_current_user)) -> ConnectorListResponse:
@@ -37,16 +55,12 @@ async def get_connectors(user=Depends(auth_handler.get_current_user)) -> Connect
     if not user.is_admin:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail="Unauthorized")
 
-    
-    connectors = ConnectorServices.fetch_all_connectors() 
+    connectors = ConnectorServices.fetch_all_connectors()
     if connectors:
-        return {
-            "connectors": connectors,
-            "success": True,
-            "message": "Connectors fetched successfully"
-        }
+        return {"connectors": connectors, "success": True, "message": "Connectors fetched successfully"}
     else:
         raise HTTPException(status_code=404, detail="No connectors found")
+
 
 @connector_router.get("/{connector_id}", response_model=ConnectorListResponse, description="Fetch a specific connector")
 async def get_connector(connector_id: int) -> Union[ConnectorResponse, HTTPException]:
@@ -66,15 +80,16 @@ async def get_connector(connector_id: int) -> Union[ConnectorResponse, HTTPExcep
     """
     connector = ConnectorServices.fetch_connector_by_id(connector_id)
     if connector is not None:
-        return {
-            "connector": connector,
-            "success": True,
-            "message": "Connector fetched successfully"
-        }
+        return {"connector": connector, "success": True, "message": "Connector fetched successfully"}
     else:
         raise HTTPException(status_code=404, detail=f"No connector found for ID: {connector_id}".format(connector_id=connector_id))
-    
-@connector_router.post("/verify/{connector_id}", response_model=VerifyConnectorResponse, description="Verify a connector. Makes an API call to the connector to verify it is working.")
+
+
+@connector_router.post(
+    "/verify/{connector_id}",
+    response_model=VerifyConnectorResponse,
+    description="Verify a connector. Makes an API call to the connector to verify it is working.",
+)
 async def verify_connector(connector_id: int) -> Union[VerifyConnectorResponse, HTTPException]:
     """
     Verify a connector by its ID.
@@ -96,7 +111,7 @@ async def verify_connector(connector_id: int) -> Union[VerifyConnectorResponse, 
         return connector
     else:
         raise HTTPException(status_code=404, detail=f"No connector found for ID: {connector_id}".format(connector_id=connector_id))
-    
+
 
 @connector_router.put("/{connector_id}", response_model=ConnectorListResponse, description="Update a connector")
 async def update_connector(connector_id: int, connector: UpdateConnector) -> ConnectorListResponse:
@@ -117,14 +132,10 @@ async def update_connector(connector_id: int, connector: UpdateConnector) -> Con
     """
     updated_connector = ConnectorServices.update_connector_by_id(connector_id, connector)
     if updated_connector is not None:
-        return {
-            "connector": updated_connector,
-            "success": True,
-            "message": "Connector updated successfully"
-        }
+        return {"connector": updated_connector, "success": True, "message": "Connector updated successfully"}
     else:
         raise HTTPException(status_code=404, detail=f"No connector found for ID: {connector_id}".format(connector_id=connector_id))
-    
+
 
 @connector_router.post("/upload/{connector_id}", description="Upload a YAML file for a specific connector")
 async def upload_yaml_file(connector_id: int, file: UploadFile = File(...)) -> dict:
@@ -157,5 +168,3 @@ async def upload_yaml_file(connector_id: int, file: UploadFile = File(...)) -> d
     except Exception as e:
         logger.error(f"Failed to upload file: {e}")
         raise HTTPException(status_code=500, detail="Failed to upload file")
-
-

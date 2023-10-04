@@ -1,22 +1,26 @@
-from typing import List, Any
-from fastapi import APIRouter, HTTPException, Security, Depends
-from starlette.status import HTTP_401_UNAUTHORIZED
-from loguru import logger
-import pydantic
 import json
+from typing import Any
+from typing import List
 
+import pydantic
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import Security
+from loguru import logger
+from starlette.status import HTTP_401_UNAUTHORIZED
 
 # App specific imports
 from app.auth.routes.auth import auth_handler
+from app.connectors.sublime.schema.alerts import AlertRequestBody
+from app.connectors.sublime.schema.alerts import AlertResponseBody
+from app.connectors.sublime.schema.alerts import SublimeAlertsResponse
+from app.connectors.sublime.services.alerts import collect_alerts
+from app.connectors.sublime.services.alerts import store_sublime_alert
 from app.db.db_session import session
-from app.connectors.sublime.schema.alerts import (
-    AlertRequestBody, AlertResponseBody, SublimeAlertsResponse
-)
-
-from app.connectors.sublime.services.alerts import store_sublime_alert, collect_alerts
-
 
 sublime_alerts_router = APIRouter()
+
 
 @sublime_alerts_router.post("/alert", description="Receive alert from Sublime and store it in the database")
 async def receive_sublime_alert(alert_request_body: AlertRequestBody) -> AlertResponseBody:
@@ -29,6 +33,7 @@ async def receive_sublime_alert(alert_request_body: AlertRequestBody) -> AlertRe
     """
     logger.info(f"Received alert from Sublime: {alert_request_body}")
     return store_sublime_alert(alert_request_body)
+
 
 @sublime_alerts_router.get("/alerts", response_model=SublimeAlertsResponse, description="Get all alerts")
 async def get_sublime_alerts() -> SublimeAlertsResponse:

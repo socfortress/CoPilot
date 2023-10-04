@@ -1,14 +1,21 @@
-from typing import Dict, List, Optional, Any, Tuple, Union
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Union
+
 import requests
 import xmltodict
 from loguru import logger
 
-from app.connectors.wazuh_manager.schema.rules import (
-    RuleDisable, RuleDisableResponse, RuleEnable, RuleEnableResponse
-)
-from app.connectors.wazuh_manager.utils.universal import (
-    send_get_request, send_put_request, restart_service
-)
+from app.connectors.wazuh_manager.schema.rules import RuleDisable
+from app.connectors.wazuh_manager.schema.rules import RuleDisableResponse
+from app.connectors.wazuh_manager.schema.rules import RuleEnable
+from app.connectors.wazuh_manager.schema.rules import RuleEnableResponse
+from app.connectors.wazuh_manager.utils.universal import restart_service
+from app.connectors.wazuh_manager.utils.universal import send_get_request
+from app.connectors.wazuh_manager.utils.universal import send_put_request
 
 
 def fetch_filename(rule_id: str) -> str:
@@ -76,7 +83,7 @@ def process_rule(rule, rule_action_func, ResponseModel):
     return ResponseModel(
         previous_level=previous_level,
         success=True,
-        message=f"Rule {rule.rule_id} successfully processed in file {filename}."
+        message=f"Rule {rule.rule_id} successfully processed in file {filename}.",
     )
 
 

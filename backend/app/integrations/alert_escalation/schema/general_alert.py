@@ -1,26 +1,37 @@
-from pydantic import BaseModel, Field, validator, Extra
-from typing import Optional, List, Dict, Any
-from typing import Union
 from enum import Enum
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Union
+
+from pydantic import BaseModel
+from pydantic import Extra
+from pydantic import Field
+from pydantic import validator
+
 
 class ValidIocFields(Enum):
     MISP_VALUE = "misp_value"
     OPENCTI_VALUE = "opencti_value"
     THREAT_INTEL_VALUE = "threat_intel_value"
 
+
 class CreateAlertRequest(BaseModel):
     index_name: str = Field(..., description="The name of the index to search alerts for.")
     alert_id: str = Field(..., description="The alert id to create.")
+
 
 class CreateAlertResponse(BaseModel):
     success: bool
     message: str
     alert_id: int = Field(..., description="The alert id as created in IRIS.")
 
+
 class GenericSourceModel(BaseModel):
     agent_name: str = Field(..., description="The name of the agent.")
     agent_id: str = Field(..., description="The id of the agent.")
-    agent_labels_customer: str = Field(..., description="The customer of the agent.") 
+    agent_labels_customer: str = Field(..., description="The customer of the agent.")
     rule_id: str = Field(..., description="The id of the rule.")
     rule_level: int = Field(..., description="The level of the rule.")
     rule_description: str = Field(..., description="The description of the rule.")
@@ -30,17 +41,22 @@ class GenericSourceModel(BaseModel):
     class Config:
         extra = Extra.allow
 
+
 class GenericAlertModel(BaseModel):
     _index: str
     _id: str
     _version: int
     _source: GenericSourceModel  # Nested model
-    asset_type_id: Optional[int] = Field(None, description="The asset type id of the alert which is needed for when we add the asset to IRIS.")
+    asset_type_id: Optional[int] = Field(
+        None,
+        description="The asset type id of the alert which is needed for when we add the asset to IRIS.",
+    )
     ioc_value: Optional[str] = Field(None, description="The IoC value of the alert which is needed for when we add the IoC to IRIS.")
     ioc_type: Optional[str] = Field(None, description="The IoC type of the alert which is needed for when we add the IoC to IRIS.")
 
     class Config:
         extra = Extra.allow
+
 
 # Sample data from `get_single_alert_details`
 sample_data = {
@@ -56,7 +72,6 @@ sample_data = {
 }
 
 
-
 ########### Create Alerts Schemas ###########
 class IrisAsset(BaseModel):
     asset_name: str = Field(..., description="Name of the asset", example="Server01")
@@ -64,11 +79,13 @@ class IrisAsset(BaseModel):
     asset_description: str = Field(..., description="Description of the asset", example="Windows Server")
     asset_type_id: int = Field(..., description="Type ID of the asset", example=1)
 
+
 class IrisIoc(BaseModel):
     ioc_value: str = Field(..., description="Value of the IoC", example="www.google.com")
     ioc_description: str = Field(..., description="Description of the IoC", example="Google")
     ioc_tlp_id: int = Field(1, description="TLP ID of the IoC", example=1)
     ioc_type_id: int = Field(20, description="Type ID of the IoC", example=20)
+
 
 class IrisAlertContext(BaseModel):
     alert_id: str = Field(..., description="ID of the alert", example="123")
@@ -82,6 +99,7 @@ class IrisAlertContext(BaseModel):
     rule_mitre_id: Optional[str] = Field("n/a", description="MITRE ATT&CK ID of the rule", example="T1234")
     rule_mitre_tactic: Optional[str] = Field("n/a", description="MITRE ATT&CK Tactic", example="Execution")
     rule_mitre_technique: Optional[str] = Field("n/a", description="MITRE ATT&CK Technique", example="Scripting")
+
 
 class IrisAlertPayload(BaseModel):
     alert_title: str = Field(..., description="Title of the alert", example="Intrusion Detected")
@@ -97,4 +115,3 @@ class IrisAlertPayload(BaseModel):
 
     def to_dict(self):
         return self.dict(exclude_none=True)
-

@@ -1,5 +1,9 @@
-from typing import List, Optional
-from pydantic import BaseModel, Field
+from typing import List
+from typing import Optional
+
+from pydantic import BaseModel
+from pydantic import Field
+
 
 class DomainData(BaseModel):
     dns_a: Optional[List[str]]
@@ -8,10 +12,12 @@ class DomainData(BaseModel):
     domain: str
     fuzzer: str
 
+
 class DomainAnalysisResponse(BaseModel):
     data: List[DomainData]
     message: str
     success: bool
+
 
 class DomainRequestBody(BaseModel):
     domain: str = Field("socfortress.co", description="The domain to analyze.")

@@ -1,9 +1,13 @@
-from pydantic import BaseModel, Field
-from typing import List, Optional
-from enum import Enum
-from datetime import timedelta
-from typing import Union, Dict
 from datetime import datetime
+from datetime import timedelta
+from enum import Enum
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Union
+
+from pydantic import BaseModel
+from pydantic import Field
 
 
 class CaseModel(BaseModel):
@@ -25,15 +29,18 @@ class CaseModel(BaseModel):
     state_id: int
     state_name: str
 
+
 class CaseResponse(BaseModel):
     cases: List[CaseModel]
     message: str
     success: bool
 
+
 class ModificationHistoryItem(BaseModel):
     action: str
     user: str
     user_id: int
+
 
 class SingleCaseModel(BaseModel):
     case_description: str
@@ -63,18 +70,22 @@ class SingleCaseModel(BaseModel):
     status_id: int
     status_name: str
 
+
 class SingleCaseBody(BaseModel):
     case_id: int
+
 
 class SingleCaseResponse(BaseModel):
     case: SingleCaseModel
     message: str
     success: bool
 
+
 class TimeUnit(str, Enum):
-    HOURS = 'hours'
-    DAYS = 'days'
-    WEEKS = 'weeks'
+    HOURS = "hours"
+    DAYS = "days"
+    WEEKS = "weeks"
+
 
 class CaseOlderThanBody(BaseModel):
     older_than: timedelta = Field(..., description="Amount of time to filter cases by")

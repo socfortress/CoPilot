@@ -1,8 +1,15 @@
-from pydantic import BaseModel, Field
-from typing import Optional, List, Dict, Any
-from typing import Union
-from app.db.universal_models import Agents
 from datetime import datetime
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Union
+
+from pydantic import BaseModel
+from pydantic import Field
+
+from app.db.universal_models import Agents
+
 
 class WazuhAgent(BaseModel):
     agent_id: str = Field(..., alias="agent_id")
@@ -15,11 +22,12 @@ class WazuhAgent(BaseModel):
 
     @property
     def agent_last_seen_as_datetime(self):
-        dt = datetime.strptime(self.agent_last_seen, '%Y-%m-%dT%H:%M:%S%z')
+        dt = datetime.strptime(self.agent_last_seen, "%Y-%m-%dT%H:%M:%S%z")
         return dt.replace(tzinfo=None)
 
     class Config:
         allow_population_by_field_name = True
+
 
 class WazuhAgentsList(BaseModel):
     agents: List[WazuhAgent]
@@ -28,6 +36,7 @@ class WazuhAgentsList(BaseModel):
 
     class Config:
         allow_population_by_field_name = True
+
 
 class WazuhAgentVulnerabilities(BaseModel):
     severity: Optional[str]
@@ -45,6 +54,7 @@ class WazuhAgentVulnerabilities(BaseModel):
     status: Optional[str]
     title: Optional[str]
     cvss2_score: Optional[float]
+
 
 class WazuhAgentVulnerabilitiesResponse(BaseModel):
     vulnerabilities: Optional[List[WazuhAgentVulnerabilities]]

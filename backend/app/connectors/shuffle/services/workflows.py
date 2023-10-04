@@ -1,17 +1,22 @@
-from typing import Dict, List, Optional, Any, Tuple, Union
+import json
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Union
+
 import requests
 import xmltodict
 from loguru import logger
 from pydantic import Field
-import json
 
-from app.connectors.shuffle.schema.workflows import (
-    WorkflowsResponse, WorkflowExecutionResponseModel, WorkflowExecutionBodyModel, WorkflowExecutionStatusResponseModel
-)
+from app.connectors.shuffle.schema.workflows import WorkflowExecutionBodyModel
+from app.connectors.shuffle.schema.workflows import WorkflowExecutionResponseModel
+from app.connectors.shuffle.schema.workflows import WorkflowExecutionStatusResponseModel
+from app.connectors.shuffle.schema.workflows import WorkflowsResponse
+from app.connectors.shuffle.utils.universal import send_get_request
 
-from app.connectors.shuffle.utils.universal import (
-    send_get_request
-)
 
 def get_workflows() -> WorkflowsResponse:
     """
@@ -22,6 +27,7 @@ def get_workflows() -> WorkflowsResponse:
     if response is None:
         return WorkflowsResponse(success=False, message="Failed to get workflows", workflows=[])
     return WorkflowsResponse(success=True, message="Successfully fetched workflows", workflows=response["data"])
+
 
 def get_workflow_executions(exection_body: WorkflowExecutionBodyModel) -> WorkflowExecutionStatusResponseModel:
     """

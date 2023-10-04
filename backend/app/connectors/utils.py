@@ -1,13 +1,21 @@
-from sqlmodel import Session, select
 from contextlib import contextmanager
-from app.db.db_session import engine  # Import the shared engine
-from app.connectors.models import Connectors
-from app.connectors.schema import ConnectorResponse
 from datetime import datetime
-from typing import List, Optional, Generator, Type
+from typing import Any
+from typing import Dict
+from typing import Generator
+from typing import List
+from typing import Optional
+from typing import Type
+
 from loguru import logger
 from pydantic import BaseModel
-from typing import Dict, Any
+from sqlmodel import Session
+from sqlmodel import select
+
+from app.connectors.models import Connectors
+from app.connectors.schema import ConnectorResponse
+from app.db.db_session import engine  # Import the shared engine
+
 
 def get_connector_info_from_db(connector_name: str) -> Dict[str, Any]:
     with Session(engine) as session:

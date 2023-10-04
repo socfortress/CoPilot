@@ -1,6 +1,11 @@
-from typing import List, Optional
-from sqlmodel import SQLModel, Field, Relationship
 import datetime
+from typing import List
+from typing import Optional
+
+from sqlmodel import Field
+from sqlmodel import Relationship
+from sqlmodel import SQLModel
+
 
 class FlaggedRule(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -9,9 +14,10 @@ class FlaggedRule(SQLModel, table=True):
     severity: Optional[str] = Field(None, description="Severity level of the flagged rule")
     tags: str
     sublime_alert_id: int = Field(foreign_key="sublimealerts.id")
-    
+
     # Relationship attribute
     sublime_alert: "SublimeAlerts" = Relationship(back_populates="flagged_rules")
+
 
 class Mailbox(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -21,6 +27,7 @@ class Mailbox(SQLModel, table=True):
 
     # Relationship attribute
     sublime_alert: "SublimeAlerts" = Relationship(back_populates="mailbox")
+
 
 class TriggeredAction(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -32,6 +39,7 @@ class TriggeredAction(SQLModel, table=True):
     # Relationship attribute
     sublime_alert: "SublimeAlerts" = Relationship(back_populates="triggered_actions")
 
+
 class Sender(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     email: str
@@ -40,6 +48,7 @@ class Sender(SQLModel, table=True):
 
     # Relationship attribute
     sublime_alert: "SublimeAlerts" = Relationship(back_populates="sender")
+
 
 class Recipient(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)

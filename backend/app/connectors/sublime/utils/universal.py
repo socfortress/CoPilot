@@ -1,12 +1,21 @@
-from typing import Dict, Any, List, Generator, Type, Optional
-from sqlmodel import Session, select
-from app.connectors.models import Connectors
+from typing import Any
+from typing import Dict
+from typing import Generator
+from typing import List
+from typing import Optional
+from typing import Type
+
+import requests
 from elasticsearch7 import Elasticsearch
 from loguru import logger
-from app.db.db_session import engine
-import requests
+from sqlmodel import Session
+from sqlmodel import select
+
+from app.connectors.models import Connectors
 from app.connectors.schema import ConnectorResponse
 from app.connectors.utils import get_connector_info_from_db
+from app.db.db_session import engine
+
 
 def verify_sublime_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
     """
@@ -16,22 +25,22 @@ def verify_sublime_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
         dict: A dictionary containing 'connectionSuccessful' status and 'authToken' if the connection is successful.
     """
     logger.info(
-            f"Verifying the Sublime connection to {attributes['connector_url']}",
-        )
+        f"Verifying the Sublime connection to {attributes['connector_url']}",
+    )
     try:
         headers = {
-                "Authorization": f"Bearer {attributes['connector_api_key']}",
-                "Content-Type": "application/json",
-            }
+            "Authorization": f"Bearer {attributes['connector_api_key']}",
+            "Content-Type": "application/json",
+        }
         params = {
             "limit": 1,
         }
         sublime = requests.get(
-                f"{attributes['connector_url']}/v0/rules",
-                headers=headers,
-                params=params,
-                verify=False,
-            )
+            f"{attributes['connector_url']}/v0/rules",
+            headers=headers,
+            params=params,
+            verify=False,
+        )
         if sublime.status_code == 200:
             logger.info(
                 f"Connection to {attributes['connector_url']} successful",
@@ -41,12 +50,16 @@ def verify_sublime_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
             logger.error(
                 f"Connection to {attributes['connector_url']} failed with error: {sublime.text}",
             )
-            return {"connectionSuccessful": False, "message": f"Connection to {attributes['connector_url']} failed with error: {sublime.text}"}
+            return {
+                "connectionSuccessful": False,
+                "message": f"Connection to {attributes['connector_url']} failed with error: {sublime.text}",
+            }
     except Exception as e:
         logger.error(
             f"Connection to {attributes['connector_url']} failed with error: {e}",
         )
         return {"connectionSuccessful": False, "message": f"Connection to {attributes['connector_url']} failed with error: {e}"}
+
 
 def verify_sublime_connection(connector_name: str) -> str:
     """
@@ -79,9 +92,9 @@ def send_get_request(endpoint: str, params: Optional[Dict[str, Any]] = None, con
         return None
     try:
         HEADERS = {
-                "Authorization": f"Bearer {attributes['connector_api_key']}",
-                "Content-Type": "application/json",
-            }
+            "Authorization": f"Bearer {attributes['connector_api_key']}",
+            "Content-Type": "application/json",
+        }
         response = requests.get(
             f"{attributes['connector_url']}{endpoint}",
             headers=HEADERS,

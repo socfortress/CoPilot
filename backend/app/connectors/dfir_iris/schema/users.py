@@ -1,5 +1,7 @@
 from typing import List
+
 from pydantic import BaseModel
+
 
 class User(BaseModel):
     user_active: bool
@@ -7,6 +9,7 @@ class User(BaseModel):
     user_login: str
     user_name: str
     user_uuid: str
+
 
 class UsersResponse(BaseModel):
     message: str

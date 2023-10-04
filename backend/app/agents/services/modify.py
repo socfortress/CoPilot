@@ -1,13 +1,17 @@
 from typing import List
+
+from fastapi import HTTPException
 from loguru import logger
+
+import app.agents.velociraptor.services.agents as velociraptor_services
+import app.agents.wazuh.services.agents as wazuh_services
+from app.agents.schema.agents import SyncedAgent
+from app.agents.schema.agents import SyncedAgentsResponse
+from app.agents.velociraptor.schema.agents import VelociraptorAgent
+from app.agents.wazuh.schema.agents import WazuhAgent
+from app.agents.wazuh.schema.agents import WazuhAgentsList
 from app.db.db_session import session
 from app.db.universal_models import Agents
-import app.agents.wazuh.services.agents as wazuh_services
-import app.agents.velociraptor.services.agents as velociraptor_services
-from app.agents.schema.agents import SyncedAgentsResponse, SyncedAgent
-from app.agents.wazuh.schema.agents import WazuhAgent, WazuhAgentsList
-from app.agents.velociraptor.schema.agents import VelociraptorAgent
-from fastapi import HTTPException
 
 
 def mark_agent_criticality(agent_id: str, critical: bool):
@@ -19,6 +23,7 @@ def mark_agent_criticality(agent_id: str, critical: bool):
     session.commit()
     return {"success": True, "message": f"Agent {agent_id} marked as critical: {critical}"}
 
+
 def delete_agent_db(agent_id: str):
     """Delete agent from database."""
     agent = session.query(Agents).filter(Agents.agent_id == agent_id).first()
@@ -27,6 +32,7 @@ def delete_agent_db(agent_id: str):
     session.delete(agent)
     session.commit()
     return {"success": True, "message": f"Agent {agent_id} deleted from database"}
+
 
 def delete_agent_wazuh(agent_id: str):
     """Delete agent from Wazuh service."""

@@ -1,11 +1,27 @@
 from datetime import datetime
-from typing import List, Dict, Any, Callable, Tuple
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import List
+from typing import Tuple
+
+from dfir_iris_client.case import Case
 from fastapi import HTTPException
 from loguru import logger
-from dfir_iris_client.case import Case
-from app.connectors.dfir_iris.schema.cases import CaseModel, CaseResponse, CaseOlderThanBody, CasesBreachedResponse, SingleCaseBody, SingleCaseResponse
-from app.connectors.dfir_iris.schema.notes import NotesResponse, NotesQueryParams, NoteDetails, NoteDetailsResponse
-from app.connectors.dfir_iris.utils.universal import create_dfir_iris_client, fetch_and_parse_data
+
+from app.connectors.dfir_iris.schema.cases import CaseModel
+from app.connectors.dfir_iris.schema.cases import CaseOlderThanBody
+from app.connectors.dfir_iris.schema.cases import CaseResponse
+from app.connectors.dfir_iris.schema.cases import CasesBreachedResponse
+from app.connectors.dfir_iris.schema.cases import SingleCaseBody
+from app.connectors.dfir_iris.schema.cases import SingleCaseResponse
+from app.connectors.dfir_iris.schema.notes import NoteDetails
+from app.connectors.dfir_iris.schema.notes import NoteDetailsResponse
+from app.connectors.dfir_iris.schema.notes import NotesQueryParams
+from app.connectors.dfir_iris.schema.notes import NotesResponse
+from app.connectors.dfir_iris.utils.universal import create_dfir_iris_client
+from app.connectors.dfir_iris.utils.universal import fetch_and_parse_data
+
 
 def get_client_and_cases() -> Dict:
     """
@@ -20,6 +36,7 @@ def get_client_and_cases() -> Dict:
     result = fetch_and_parse_data(dfir_iris_client, case.list_cases)
     return result
 
+
 def filter_open_cases(cases: List[Dict]) -> List[Dict]:
     """
     Filters out cases that are still open.
@@ -31,6 +48,7 @@ def filter_open_cases(cases: List[Dict]) -> List[Dict]:
         List of cases that are still open.
     """
     return [case for case in cases if case["case_close_date"] == ""]
+
 
 def filter_cases_older_than(cases: List[Dict], older_than: datetime) -> List[Dict]:
     """
@@ -46,11 +64,16 @@ def filter_cases_older_than(cases: List[Dict], older_than: datetime) -> List[Dic
     current_time = datetime.now()
     filtered_cases = []
     for case in cases:
-        case_open_date = datetime.strptime(case["case_open_date"], "%m/%d/%Y") if not isinstance(case["case_open_date"], datetime) else case["case_open_date"]
+        case_open_date = (
+            datetime.strptime(case["case_open_date"], "%m/%d/%Y")
+            if not isinstance(case["case_open_date"], datetime)
+            else case["case_open_date"]
+        )
         if case_open_date < current_time - older_than:
             case["case_open_date"] = case_open_date.strftime("%m/%d/%Y")  # Convert back to string to match the model
             filtered_cases.append(case)
     return filtered_cases
+
 
 def get_all_cases() -> CaseResponse:
     result = get_client_and_cases()
@@ -59,12 +82,13 @@ def get_all_cases() -> CaseResponse:
         return HTTPException(status_code=500, detail=f"Failed to get all cases: {result['message']}")
     return CaseResponse(success=True, message="Successfully fetched all cases", cases=result["data"])
 
+
 def get_cases_older_than(case_older_than_body: CaseOlderThanBody) -> CasesBreachedResponse:
     result = get_client_and_cases()
     if not result["success"]:
         logger.error(f"Failed to get all cases: {result['message']}")
         return HTTPException(status_code=500, detail=f"Failed to get all cases: {result['message']}")
-    
+
     open_cases = filter_open_cases(result["data"])
     breached_cases = filter_cases_older_than(open_cases, case_older_than_body.older_than)
     return CasesBreachedResponse(
@@ -72,6 +96,7 @@ def get_cases_older_than(case_older_than_body: CaseOlderThanBody) -> CasesBreach
         message=f"Successfully fetched all cases older than {case_older_than_body.older_than}",
         cases_breached=breached_cases,
     )
+
 
 def get_single_case(case_id: SingleCaseBody) -> SingleCaseResponse:
     dfir_iris_client = create_dfir_iris_client("DFIR-IRIS")

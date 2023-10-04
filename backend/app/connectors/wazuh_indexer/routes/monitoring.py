@@ -1,13 +1,30 @@
-from fastapi import APIRouter, HTTPException, Request
+from typing import List
+from typing import Union
+
+from fastapi import APIRouter
+from fastapi import HTTPException
+from fastapi import Request
 from fastapi.responses import JSONResponse
-from typing import List, Union
-from app.connectors.schema import ConnectorResponse, ConnectorListResponse, VerifyConnectorResponse, ConnectorsListResponse
-from app.connectors.services import ConnectorServices
-#from app.connectors.wazuh_indexer.schema import WazuhIndexerResponse, WazuhIndexerListResponse
-from app.connectors.wazuh_indexer.services.monitoring import cluster_healthcheck, node_allocation, indices_stats, shards
-from app.connectors.wazuh_indexer.schema.monitoring import ClusterHealthResponse, NodeAllocationResponse, IndicesStatsResponse, ShardsResponse
 from loguru import logger
+
+from app.connectors.schema import ConnectorListResponse
+from app.connectors.schema import ConnectorResponse
+from app.connectors.schema import ConnectorsListResponse
+from app.connectors.schema import VerifyConnectorResponse
+from app.connectors.services import ConnectorServices
+from app.connectors.wazuh_indexer.schema.monitoring import ClusterHealthResponse
+from app.connectors.wazuh_indexer.schema.monitoring import IndicesStatsResponse
+from app.connectors.wazuh_indexer.schema.monitoring import NodeAllocationResponse
+from app.connectors.wazuh_indexer.schema.monitoring import ShardsResponse
+
+# from app.connectors.wazuh_indexer.schema import WazuhIndexerResponse, WazuhIndexerListResponse
+from app.connectors.wazuh_indexer.services.monitoring import cluster_healthcheck
+from app.connectors.wazuh_indexer.services.monitoring import indices_stats
+from app.connectors.wazuh_indexer.services.monitoring import node_allocation
+from app.connectors.wazuh_indexer.services.monitoring import shards
+
 wazuh_indexer_router = APIRouter()
+
 
 @wazuh_indexer_router.get("/health", response_model=ClusterHealthResponse, description="Fetch Wazuh Indexer cluster health")
 async def get_cluster_health() -> Union[ClusterHealthResponse, HTTPException]:
@@ -27,7 +44,8 @@ async def get_cluster_health() -> Union[ClusterHealthResponse, HTTPException]:
         return cluster_health
     else:
         raise HTTPException(status_code=500, detail="Failed to retrieve cluster health.")
-    
+
+
 @wazuh_indexer_router.get("/allocation", response_model=NodeAllocationResponse, description="Fetch Wazuh Indexer node allocation")
 async def get_node_allocation() -> Union[NodeAllocationResponse, HTTPException]:
     """
@@ -46,7 +64,8 @@ async def get_node_allocation() -> Union[NodeAllocationResponse, HTTPException]:
         return node_allocation_response
     else:
         raise HTTPException(status_code=500, detail="Failed to retrieve node allocation.")
-    
+
+
 @wazuh_indexer_router.get("/indices", response_model=IndicesStatsResponse, description="Fetch Wazuh Indexer indices stats")
 async def get_indices_stats() -> Union[IndicesStatsResponse, HTTPException]:
     """
@@ -65,7 +84,8 @@ async def get_indices_stats() -> Union[IndicesStatsResponse, HTTPException]:
         return indices_stats_response
     else:
         raise HTTPException(status_code=500, detail="Failed to retrieve indices stats.")
-    
+
+
 @wazuh_indexer_router.get("/shards", response_model=ShardsResponse, description="Fetch Wazuh Indexer shards")
 async def get_shards() -> Union[ShardsResponse, HTTPException]:
     """

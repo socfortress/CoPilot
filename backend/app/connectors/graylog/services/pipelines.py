@@ -1,16 +1,23 @@
-from typing import Dict, List, Optional, Any, Tuple, Union
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Tuple
+from typing import Union
+
 import requests
 import xmltodict
 from loguru import logger
 from pydantic import Field
 
-from app.connectors.graylog.schema.pipelines import (
-    Stage, Pipeline, GraylogPipelinesResponse, PipelineRule, PipelineRulesResponse
-)
+from app.connectors.graylog.schema.pipelines import GraylogPipelinesResponse
+from app.connectors.graylog.schema.pipelines import Pipeline
+from app.connectors.graylog.schema.pipelines import PipelineRule
+from app.connectors.graylog.schema.pipelines import PipelineRulesResponse
+from app.connectors.graylog.schema.pipelines import Stage
+from app.connectors.graylog.utils.universal import send_get_request
+from app.connectors.graylog.utils.universal import send_post_request
 
-from app.connectors.graylog.utils.universal import (
-    send_get_request, send_post_request
-)
 
 def get_pipelines() -> GraylogPipelinesResponse:
     """Get pipelines from Graylog."""
@@ -21,7 +28,8 @@ def get_pipelines() -> GraylogPipelinesResponse:
         return GraylogPipelinesResponse(pipelines=pipelines_list, success=True, message="Pipelines collected successfully")
     else:
         return GraylogPipelinesResponse(pipelines=[], success=False, message="Failed to collect pipelines")
-    
+
+
 def get_pipeline_rules() -> PipelineRulesResponse:
     """Get pipeline rules from Graylog."""
     logger.info(f"Getting pipeline rules from Graylog")

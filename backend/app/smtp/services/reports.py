@@ -9,8 +9,8 @@ from app.services.smtp.create_report import create_alerts_report_pdf
 from app.services.smtp.universal import EmailTemplate
 from app.services.smtp.universal import UniversalEmailCredentials
 
-
 # ! SEND REPORT
+
 
 class EmailReportSender:
     """

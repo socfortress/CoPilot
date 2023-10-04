@@ -1,9 +1,13 @@
-from typing import List, Optional
+from typing import List
+from typing import Optional
+
 from pydantic import BaseModel
+
 
 class AssetState(BaseModel):
     object_last_update: str
     object_state: int
+
 
 class Asset(BaseModel):
     analysis_status: str
@@ -23,13 +27,14 @@ class Asset(BaseModel):
     ioc_links: Optional[None]
     link: List
 
+
 class AssetData(BaseModel):
     assets: List[Asset]
     state: AssetState
 
+
 class AssetResponse(BaseModel):
-    assets: List[Asset] 
+    assets: List[Asset]
     state: AssetState
     message: str
     success: bool
-

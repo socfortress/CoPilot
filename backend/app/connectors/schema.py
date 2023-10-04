@@ -1,6 +1,11 @@
 from datetime import datetime
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+
 from pydantic import BaseModel
-from typing import Optional, List, Dict, Any
+
 
 class ConnectorHistoryResponse(BaseModel):
     id: Optional[int]
@@ -10,6 +15,7 @@ class ConnectorHistoryResponse(BaseModel):
 
     class Config:
         orm_mode = True
+
 
 class ConnectorResponse(BaseModel):
     id: Optional[int]
@@ -32,19 +38,23 @@ class ConnectorResponse(BaseModel):
     class Config:
         orm_mode = True
 
+
 class ConnectorsListResponse(BaseModel):
     connectors: List[ConnectorResponse]
     success: bool
     message: str
+
 
 class ConnectorListResponse(BaseModel):
     connector: ConnectorResponse
     success: bool
     message: str
 
+
 class VerifyConnectorResponse(BaseModel):
     connectionSuccessful: bool
     message: str
+
 
 class UpdateConnector(BaseModel):
     connector_url: str

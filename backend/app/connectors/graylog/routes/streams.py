@@ -1,15 +1,19 @@
 from typing import List
-from fastapi import APIRouter, HTTPException, Security, Depends
-from starlette.status import HTTP_401_UNAUTHORIZED
+
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import Security
 from loguru import logger
+from starlette.status import HTTP_401_UNAUTHORIZED
 
 # App specific imports
 from app.auth.routes.auth import auth_handler
-from app.db.db_session import session
-from app.connectors.graylog.schema.streams import (
-    Rule, Stream, GraylogStreamsResponse
-)
+from app.connectors.graylog.schema.streams import GraylogStreamsResponse
+from app.connectors.graylog.schema.streams import Rule
+from app.connectors.graylog.schema.streams import Stream
 from app.connectors.graylog.services.streams import get_streams
+from app.db.db_session import session
 
 graylog_streams_router = APIRouter()
 

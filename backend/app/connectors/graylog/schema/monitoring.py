@@ -1,6 +1,12 @@
-from pydantic import BaseModel, Field
-from typing import Optional, List, Dict, Any
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
 from typing import Union
+
+from pydantic import BaseModel
+from pydantic import Field
+
 
 class GraylogMessages(BaseModel):
     caller: str
@@ -8,8 +14,10 @@ class GraylogMessages(BaseModel):
     node_id: str
     timestamp: str
 
+
 class GraylogTotalMessages(BaseModel):
     total: int
+
 
 class GraylogMessagesResponse(BaseModel):
     graylog_messages: List[GraylogMessages]
@@ -17,9 +25,11 @@ class GraylogMessagesResponse(BaseModel):
     message: str
     total_messages: int
 
+
 class GraylogThroughputMetrics(BaseModel):
     metric: str
     value: float
+
 
 class GraylogThroughputMetricsCollection(BaseModel):
     graylog2_buffers_input_usage: Optional[str] = Field(alias="org.graylog2.buffers.input.usage")
@@ -31,12 +41,13 @@ class GraylogThroughputMetricsCollection(BaseModel):
     graylog2_throughput_input: Optional[str] = Field(alias="org.graylog2.throughput.input")
 
 
-
 class GraylogThroughputMetricsList(BaseModel):
     throughput_metrics: List[GraylogThroughputMetrics]
 
+
 class GraylogUncommittedJournalEntries(BaseModel):
     uncommitted_journal_entries: int
+
 
 class GraylogMetricsResponse(BaseModel):
     throughput_metrics: List[GraylogThroughputMetrics]
