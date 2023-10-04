@@ -1,8 +1,10 @@
 {
-    "compilerOptions": {
-        "composite": true,
-        "module": "esnext",
-        "moduleResolution": "node"
-    },
-    "include": ["vite.config.ts"]
+	"extends": "@tsconfig/node18/tsconfig.json",
+	"include": ["vite.config.*", "vitest.config.*", "cypress.config.*", "nightwatch.conf.*", "playwright.config.*"],
+	"compilerOptions": {
+		"composite": true,
+		"module": "ESNext",
+		"moduleResolution": "Bundler",
+		"types": ["node"]
+	}
 }

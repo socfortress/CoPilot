@@ -1,0 +1,125 @@
+@import "@vueup/vue-quill/dist/vue-quill.snow.css";
+
+.ql-snow.ql-toolbar {
+	border: none;
+	border: 1px solid rgba(var(--fg-color-rgb), 0.13);
+	border-radius: var(--border-radius);
+
+	.ql-picker {
+		border-radius: var(--border-radius-small);
+
+		.ql-picker-label {
+			&.ql-active {
+				background-color: rgba(var(--primary-color-rgb), 0.05);
+				color: rgba(var(--primary-color-rgb), 0.9);
+
+				.ql-fill {
+					fill: rgba(var(--primary-color-rgb), 0.9);
+				}
+				.ql-stroke {
+					stroke: rgba(var(--primary-color-rgb), 0.9);
+				}
+			}
+
+			&:hover {
+				background-color: transparent;
+			}
+		}
+		&.ql-expanded {
+			.ql-picker-label {
+				border-color: transparent;
+
+				&.ql-active {
+					background-color: rgba(var(--primary-color-rgb), 0.05);
+					color: rgba(var(--primary-color-rgb), 0.9);
+				}
+			}
+			.ql-picker-options {
+				border-radius: var(--border-radius);
+
+				.ql-picker-item {
+					border-radius: var(--border-radius-small);
+					color: var(--fg-color);
+					display: flex;
+					.ql-fill {
+						fill: var(--fg-color);
+					}
+					.ql-stroke {
+						stroke: var(--fg-color);
+					}
+
+					&.ql-selected {
+						background-color: rgba(var(--primary-color-rgb), 0.05);
+						color: rgba(var(--primary-color-rgb), 0.9);
+						.ql-fill {
+							fill: rgba(var(--primary-color-rgb), 0.9);
+						}
+						.ql-stroke {
+							stroke: rgba(var(--primary-color-rgb), 0.9);
+						}
+					}
+
+					&:hover {
+						background-color: rgba(var(--fg-color-rgb), 0.1);
+					}
+				}
+			}
+		}
+
+		&:hover {
+			background-color: rgba(var(--fg-color-rgb), 0.04);
+		}
+	}
+
+	button {
+		border-radius: var(--border-radius-small);
+
+		&.ql-active {
+			background-color: rgba(var(--primary-color-rgb), 0.05);
+			color: rgba(var(--primary-color-rgb), 0.9);
+
+			.ql-fill {
+				fill: rgba(var(--primary-color-rgb), 0.9);
+			}
+			.ql-stroke {
+				stroke: rgba(var(--primary-color-rgb), 0.9);
+			}
+		}
+
+		&:hover {
+			background-color: rgba(var(--fg-color-rgb), 0.04);
+		}
+	}
+
+	.ql-stroke {
+		stroke: rgba(var(--fg-color-rgb), 0.7);
+	}
+
+	.ql-fill {
+		fill: rgba(var(--fg-color-rgb), 0.7);
+	}
+
+	.ql-picker-options {
+		background-color: var(--bg-color);
+		border: 1px solid rgba(var(--fg-color-rgb), 0.15) !important;
+
+		.ql-stroke {
+			stroke: #000;
+		}
+
+		.ql-fill {
+			fill: #000;
+		}
+	}
+}
+
+.ql-snow.ql-container {
+	flex-grow: 1;
+	border: none !important;
+	height: inherit;
+	border-radius: var(--border-radius);
+	font-family: var(--font-family);
+	background-color: rgba(var(--fg-color-rgb), 0.04);
+	margin-top: 10px;
+	font-size: 16px;
+}

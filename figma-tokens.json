@@ -1,0 +1,280 @@
+{
+	"global": {
+		"border-radius-base": {
+			"value": "6px",
+			"type": "borderRadius"
+		},
+		"border-radius-small": {
+			"value": "3px",
+			"type": "borderRadius"
+		},
+		"line-heights-base": {
+			"value": "1.35",
+			"type": "lineHeights"
+		},
+		"font-sizes-base": {
+			"value": "15px",
+			"type": "fontSizes"
+		},
+		"font-sizes-card-title": {
+			"value": "18px",
+			"type": "fontSizes"
+		},
+		"font-families-base": {
+			"value": "'Public Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'",
+			"type": "fontFamilies"
+		},
+		"font-families-display": {
+			"value": "'Lexend', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'",
+			"type": "fontFamilies"
+		},
+		"font-families-mono": {
+			"value": "'JetBrains Mono', SFMono-Regular, Menlo, Consolas, Courier, monospace",
+			"type": "fontFamilies"
+		},
+		"color-light-text": {
+			"value": "#000000",
+			"type": "color"
+		},
+		"color-light-text-secondary": {
+			"value": "#495465",
+			"type": "color"
+		},
+		"color-light-background": {
+			"value": "#ffffff",
+			"type": "color"
+		},
+		"color-light-sidebar-background": {
+			"value": "#F6F7F9",
+			"type": "color"
+		},
+		"color-light-body-background": {
+			"value": "#E8EDF2",
+			"type": "color"
+		},
+		"color-light-primary": {
+			"value": "#00B27B",
+			"type": "color"
+		},
+		"color-light-info": {
+			"value": "#6267FF",
+			"type": "color"
+		},
+		"color-light-success": {
+			"value": "#00B27B",
+			"type": "color"
+		},
+		"color-light-warning": {
+			"value": "#FFB600",
+			"type": "color"
+		},
+		"color-light-error": {
+			"value": "#FF0156",
+			"type": "color"
+		},
+		"color-light-secondary-1": {
+			"value": "#6267FF",
+			"type": "color"
+		},
+		"color-light-secondary-2": {
+			"value": "#FF61C9",
+			"type": "color"
+		},
+		"color-light-secondary-3": {
+			"value": "#FFB600",
+			"type": "color"
+		},
+		"color-light-secondary-4": {
+			"value": "#FF0156",
+			"type": "color"
+		},
+		"color-light-shade-1": {
+			"value": "#ffffff",
+			"type": "color"
+		},
+		"color-dark-text": {
+			"value": "#ffffff",
+			"type": "color"
+		},
+		"color-dark-text-secondary": {
+			"value": "#ACB5BE",
+			"type": "color"
+		},
+		"color-dark-background": {
+			"value": "#26282d",
+			"type": "color"
+		},
+		"color-dark-sidebar-background": {
+			"value": "#1D1F25",
+			"type": "color"
+		},
+		"color-dark-body-background": {
+			"value": "#14161A",
+			"type": "color"
+		},
+		"color-dark-primary": {
+			"value": "#00E19B",
+			"type": "color"
+		},
+		"color-dark-info": {
+			"value": "#6267FF",
+			"type": "color"
+		},
+		"color-dark-success": {
+			"value": "#00E19B",
+			"type": "color"
+		},
+		"color-dark-warning": {
+			"value": "#FFB600",
+			"type": "color"
+		},
+		"color-dark-error": {
+			"value": "#FF0156",
+			"type": "color"
+		},
+		"color-dark-secondary-1": {
+			"value": "#6267FF",
+			"type": "color"
+		},
+		"color-dark-secondary-2": {
+			"value": "#FF61C9",
+			"type": "color"
+		},
+		"color-dark-secondary-3": {
+			"value": "#FFB600",
+			"type": "color"
+		},
+		"color-dark-secondary-4": {
+			"value": "#FF0156",
+			"type": "color"
+		},
+		"color-dark-shade-1": {
+			"value": "#26282d",
+			"type": "color"
+		}
+	},
+	"light": {
+		"color-text": {
+			"value": "{color-light-text}",
+			"type": "color"
+		},
+		"color-text-secondary": {
+			"value": "{color-light-text-secondary}",
+			"type": "color"
+		},
+		"color-background": {
+			"value": "{color-light-background}",
+			"type": "color"
+		},
+		"color-sidebar-background": {
+			"value": "{color-light-sidebar-background}",
+			"type": "color"
+		},
+		"color-body-background": {
+			"value": "{color-light-body-background}",
+			"type": "color"
+		},
+		"color-primary": {
+			"value": "{color-light-primary}",
+			"type": "color"
+		},
+		"color-info": {
+			"value": "{color-light-info}",
+			"type": "color"
+		},
+		"color-success": {
+			"value": "{color-light-success}",
+			"type": "color"
+		},
+		"color-warning": {
+			"value": "{color-light-warning}",
+			"type": "color"
+		},
+		"color-error": {
+			"value": "{color-light-error}",
+			"type": "color"
+		},
+		"color-secondary-1": {
+			"value": "{color-light-secondary-1}",
+			"type": "color"
+		},
+		"color-secondary-2": {
+			"value": "{color-light-secondary-2}",
+			"type": "color"
+		},
+		"color-secondary-3": {
+			"value": "{color-light-secondary-3}",
+			"type": "color"
+		},
+		"color-secondary-4": {
+			"value": "{color-light-secondary-4}",
+			"type": "color"
+		},
+		"color-shade-1": {
+			"value": "{color-light-shade-1}",
+			"type": "color"
+		}
+	},
+	"dark": {
+		"color-text": {
+			"value": "{color-dark-text}",
+			"type": "color"
+		},
+		"color-text-secondary": {
+			"value": "{color-dark-text-secondary}",
+			"type": "color"
+		},
+		"color-background": {
+			"value": "{color-dark-background}",
+			"type": "color"
+		},
+		"color-sidebar-background": {
+			"value": "{color-dark-sidebar-background}",
+			"type": "color"
+		},
+		"color-body-background": {
+			"value": "{color-dark-body-background}",
+			"type": "color"
+		},
+		"color-primary": {
+			"value": "{color-dark-primary}",
+			"type": "color"
+		},
+		"color-info": {
+			"value": "{color-dark-info}",
+			"type": "color"
+		},
+		"color-success": {
+			"value": "{color-dark-success}",
+			"type": "color"
+		},
+		"color-warning": {
+			"value": "{color-dark-warning}",
+			"type": "color"
+		},
+		"color-error": {
+			"value": "{color-dark-error}",
+			"type": "color"
+		},
+		"color-secondary-1": {
+			"value": "{color-dark-secondary-1}",
+			"type": "color"
+		},
+		"color-secondary-2": {
+			"value": "{color-dark-secondary-2}",
+			"type": "color"
+		},
+		"color-secondary-3": {
+			"value": "{color-dark-secondary-3}",
+			"type": "color"
+		},
+		"color-secondary-4": {
+			"value": "{color-dark-secondary-4}",
+			"type": "color"
+		},
+		"color-shade-1": {
+			"value": "{color-dark-shade-1}",
+			"type": "color"
+		}
+	}
+}

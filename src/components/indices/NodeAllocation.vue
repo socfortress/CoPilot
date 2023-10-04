@@ -1,204 +1,178 @@
 <template>
-    <div class="cluster-health">
-        <div class="title">
-            Nodes Allocation <small class="o-050">({{ indicesAllocation.length }})</small>
-        </div>
-        <div v-loading="loading">
-            <div class="info">
-                <template v-if="indicesAllocation.length">
-                    <el-scrollbar max-height="500px">
-                        <div
-                            v-for="node of indicesAllocation"
-                            :key="node.id"
-                            class="item"
-                            :class="[`percent-${getStatusPercent(node.disk_percent)}`, `node-${node.node}`]"
-                        >
-                            <div class="group">
-                                <div class="box">
-                                    <div class="value">{{ node.node }}</div>
-                                    <div class="label">node</div>
-                                </div>
-                            </div>
-                            <div class="group">
-                                <div class="box">
-                                    <div class="value">{{ node.disk_total || "-" }}</div>
-                                    <div class="label">disk_total</div>
-                                </div>
-                                <div class="box">
-                                    <div class="value">{{ node.disk_used || "-" }}</div>
-                                    <div class="label">disk_used</div>
-                                </div>
-                                <div class="box">
-                                    <div class="value">{{ node.disk_available || "-" }}</div>
-                                    <div class="label">disk_available</div>
-                                </div>
-                            </div>
-                            <div class="group" v-if="node.disk_percent">
-                                <div class="box w-full">
-                                    <el-progress
-                                        :text-inside="true"
-                                        :stroke-width="26"
-                                        :percentage="node.disk_percent_value"
-                                        :status="getStatusPercent(node.disk_percent_value)"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    </el-scrollbar>
-                </template>
-            </div>
-        </div>
-    </div>
+	<n-card class="cluster-health" segmented>
+		<template #header>
+			<div class="flex align-center justify-between">
+				<span>Nodes Allocation</span>
+				<small class="opacity-50">{{ indicesAllocation.length }}</small>
+			</div>
+		</template>
+		<n-spin :show="loading">
+			<div class="info">
+				<template v-if="indicesAllocation.length">
+					<n-scrollbar style="max-height: 500px" trigger="none">
+						<div
+							v-for="node of indicesAllocation"
+							:key="node.id"
+							class="item"
+							:class="[`percent-${getStatusPercent(node.disk_percent)}`, `node-${node.node}`]"
+						>
+							<div class="group">
+								<div class="box">
+									<div class="value">{{ node.node }}</div>
+									<div class="label">node</div>
+								</div>
+							</div>
+							<div class="group">
+								<div class="box">
+									<div class="value">{{ node.disk_total || "-" }}</div>
+									<div class="label">disk_total</div>
+								</div>
+								<div class="box">
+									<div class="value">{{ node.disk_used || "-" }}</div>
+									<div class="label">disk_used</div>
+								</div>
+								<div class="box">
+									<div class="value">{{ node.disk_available || "-" }}</div>
+									<div class="label">disk_available</div>
+								</div>
+							</div>
+							<div class="group disk-percent" v-if="node.disk_percent">
+								<div class="box w-full">
+									<n-progress
+										type="line"
+										indicator-placement="inside"
+										border-radius="0"
+										:height="24"
+										:percentage="node.disk_percent_value"
+										:status="getStatusPercent(node.disk_percent_value)"
+									/>
+								</div>
+							</div>
+						</div>
+					</n-scrollbar>
+				</template>
+			</div>
+		</n-spin>
+	</n-card>
 </template>
 
 <script setup lang="ts">
 import { onBeforeMount, ref } from "vue"
-import { IndexAllocation } from "@/types/indices.d"
+import { type IndexAllocation } from "@/types/indices.d"
 import Api from "@/api"
-import { ElMessage } from "element-plus"
 import { nanoid } from "nanoid"
+import { useMessage, NSpin, NScrollbar, NProgress, NCard } from "naive-ui"
 
+const message = useMessage()
 const indicesAllocation = ref<IndexAllocation[]>([])
 const loading = ref(true)
 
 // TODO: decide with Taylor
-function getStatusPercent(percent) {
-    if (parseFloat(percent) < 20) return "exception"
-    if (parseFloat(percent) < 40) return "warning"
-    return "success"
+function getStatusPercent(percent: string | number | undefined | null) {
+	if (parseFloat(percent?.toString() || "") < 20) return "error"
+	if (parseFloat(percent?.toString() || "") < 40) return "warning"
+	return "success"
 }
 
 function getIndicesAllocation() {
-    loading.value = true
-    Api.indices
-        .getAllocation()
-        .then(res => {
-            if (res.data.success) {
-                indicesAllocation.value = (res.data?.node_allocation || []).map(obj => {
-                    obj.id = nanoid()
-                    obj.disk_percent_value = parseFloat(obj.disk_percent)
-                    return obj
-                })
-            } else {
-                ElMessage({
-                    message: res.data?.message || "An error occurred. Please try again later.",
-                    type: "error"
-                })
-            }
-        })
-        .catch(err => {
-            if (err.response.status === 401) {
-                ElMessage({
-                    message: err.response?.data?.message || "Wazuh-Indexer returned Unauthorized. Please check your connector credentials.",
-                    type: "error"
-                })
-            } else if (err.response.status === 404) {
-                ElMessage({
-                    message: err.response?.data?.message || "No alerts were found.",
-                    type: "error"
-                })
-            } else {
-                ElMessage({
-                    message: err.response?.data?.message || "An error occurred. Please try again later.",
-                    type: "error"
-                })
-            }
-        })
-        .finally(() => {
-            loading.value = false
-        })
+	loading.value = true
+	Api.indices
+		.getAllocation()
+		.then(res => {
+			if (res.data.success) {
+				indicesAllocation.value = (res.data?.node_allocation || []).map(obj => {
+					obj.id = nanoid()
+					obj.disk_percent_value = parseFloat(obj.disk_percent || "")
+					return obj
+				})
+			} else {
+				message.error(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			if (err.response?.status === 401) {
+				message.error(
+					err.response?.data?.message ||
+						"Wazuh-Indexer returned Unauthorized. Please check your connector credentials."
+				)
+			} else if (err.response?.status === 404) {
+				message.error(err.response?.data?.message || "No alerts were found.")
+			} else {
+				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.finally(() => {
+			loading.value = false
+		})
 }
 
 onBeforeMount(() => {
-    getIndicesAllocation()
+	getIndicesAllocation()
 })
 </script>
 
 <style lang="scss" scoped>
-@import "@/assets/scss/_variables";
-@import "@/assets/scss/card-shadow";
-
 .cluster-health {
-    padding: var(--size-5) var(--size-6);
-    @extend .card-base;
-    @extend .card-shadow--small;
+	.info {
+		min-height: 50px;
+		margin-left: -5px;
+		margin-right: -5px;
 
-    .title {
-        font-size: var(--font-size-4);
-        font-weight: var(--font-weight-6);
-        margin-bottom: var(--size-5);
-    }
-    .info {
-        min-height: 50px;
-        margin-left: -5px;
-        margin-right: -5px;
+		.item {
+			border: 2px solid transparent;
+			display: flex;
+			border-radius: var(--border-radius);
+			flex-direction: column;
+			overflow: hidden;
 
-        .item {
-            padding: var(--size-3) var(--size-4);
-            @extend .card-base;
-            @extend .card-shadow--small;
-            border: 2px solid transparent;
-            margin: 5px;
+			.group {
+				@apply py-3 px-4;
+				@apply gap-6;
+				display: flex;
+				justify-content: space-between;
+				flex-grow: 1;
+				flex-wrap: wrap;
+				overflow: hidden;
 
-            display: flex;
-            flex-direction: column;
-            gap: var(--size-6);
+				.box {
+					overflow: hidden;
 
-            .group {
-                display: flex;
-                justify-content: space-between;
-                gap: var(--size-6);
-                flex-grow: 1;
-                flex-wrap: wrap;
+					.value {
+						font-weight: bold;
+						margin-bottom: 2px;
+					}
+					.label {
+						@apply text-xs;
+						font-family: var(--font-family-mono);
+						opacity: 0.8;
+					}
+				}
 
-                .box {
-                    .value {
-                        font-weight: bold;
-                        margin-bottom: 2px;
-                        white-space: nowrap;
-                    }
-                    .label {
-                        font-size: var(--font-size-0);
-                        font-family: var(--font-mono);
-                        opacity: 0.8;
-                    }
+				&.disk-percent {
+					padding: 0;
+				}
+			}
 
-                    :deep() {
-                        .el-progress-bar__outer {
-                            border-radius: 4px;
+			&.percent-success {
+				border-color: var(--success-color);
+			}
 
-                            .el-progress-bar__inner {
-                                border-radius: 0;
-                            }
-                        }
-                    }
+			&.percent-warning {
+				border-color: var(--warning-color);
+			}
 
-                    &.w-full {
-                        width: 100%;
-                    }
-                }
-            }
+			&.percent-error {
+				border-color: var(--error-color);
+			}
 
-            &.percent-success {
-                border-color: $text-color-success;
-            }
+			&.node-UNASSIGNED {
+				border-color: var(--info-color);
+			}
 
-            &.percent-warning {
-                border-color: $text-color-warning;
-            }
-
-            &.percent-exception {
-                border-color: $text-color-danger;
-            }
-
-            &.node-UNASSIGNED {
-                border-color: $text-color-info;
-            }
-
-            &:not(:last-child) {
-                margin-bottom: var(--size-3);
-            }
-        }
-    }
+			&:not(:last-child) {
+				@apply mb-4;
+			}
+		}
+	}
 }
 </style>

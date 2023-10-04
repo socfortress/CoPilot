@@ -1,0 +1,165 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import "_variables";
+@import "common";
+@import "fonts";
+@import "router-animations";
+@import "naive-override";
+
+html,
+body {
+	text-size-adjust: 100%;
+	-webkit-tap-highlight-color: transparent;
+	-webkit-touch-callout: none;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	text-rendering: optimizeLegibility;
+	line-height: 1.35;
+	font-size: 15px;
+
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+
+	width: 100vw;
+	width: 100svw;
+	height: 100vh;
+	height: 100svh;
+	overflow: hidden;
+
+	&:focus {
+		outline: none;
+	}
+}
+
+[v-cloak] {
+	display: none !important;
+}
+
+::selection {
+	background-color: rgba(var(--primary-color-rgb), 0.2);
+}
+
+#app {
+	width: 100vw;
+	height: 100vh;
+	overflow: auto;
+}
+
+* {
+	//user-select: none;
+}
+
+input {
+	accent-color: var(--primary-color);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5 {
+	font-family: var(--font-family-display);
+}
+h1 {
+	font-size: 30px;
+}
+h2 {
+	font-size: 26px;
+}
+h3 {
+	font-size: 22px;
+}
+h4 {
+	font-size: 18px;
+}
+h5 {
+	font-size: 14px;
+}
+h6 {
+	font-size: 12px;
+}
+
+p {
+	color: var(--fg-secondary-color);
+}
+
+code,
+kbd,
+samp,
+pre {
+	font-family: var(--font-family-mono);
+}
+
+code {
+	padding: 1px 6px;
+	border-radius: var(--border-radius-small);
+	background-color: rgba(var(--fg-color-rgb), 0.05);
+	font-size: 13px;
+}
+pre {
+	border-radius: var(--border-radius-small);
+
+	code {
+		padding: 12px;
+		display: block;
+		overflow-x: auto;
+	}
+}
+
+a {
+	text-decoration: underline;
+	text-decoration-color: var(--primary-color);
+}
+
+blockquote {
+	display: block;
+	padding-left: 1em;
+	border-left: 4px solid rgba(var(--fg-color-rgb), 0.1);
+}
+
+dl {
+	dt {
+		font-weight: bold;
+		margin-bottom: 2px;
+	}
+
+	& > dd:not(:last-child) {
+		margin-bottom: 10px;
+	}
+}
+
+ul {
+	display: block;
+	list-style-type: disc;
+	padding-left: 20px;
+	line-height: 1.6;
+
+	ul {
+		list-style-type: circle;
+		margin-top: 3px;
+		margin-bottom: 6px;
+	}
+}
+
+ol {
+	display: block;
+	list-style-type: decimal;
+	padding-left: 20px;
+	line-height: 1.6;
+
+	ol {
+		list-style-type: decimal;
+		margin-top: 3px;
+		margin-bottom: 6px;
+	}
+}
+
+mark {
+	padding: 2px 0px;
+	border-radius: var(--border-radius-small);
+	background-color: rgba(var(--primary-color-rgb), 0.3);
+	color: var(--fg-color);
+}

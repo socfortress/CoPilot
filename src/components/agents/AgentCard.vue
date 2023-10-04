@@ -1,237 +1,262 @@
 <template>
-    <div class="agent-card" :class="{ critical: agent.critical_asset }" v-loading="loading">
-        <div class="wrapper">
-            <div class="agent-header">
-                <div class="title">
-                    <el-tooltip :content="`${isOnline ? 'online' : 'last seen'} - ${formatLastSeen}`" placement="top" :show-arrow="false">
-                        <div class="hostname" :class="{ online: isOnline }">{{ agent.hostname }}</div>
-                    </el-tooltip>
-                    <div class="critical" :class="{ active: agent.critical_asset }">
-                        <el-tooltip content="Toggle Critical Assets" placement="top" :show-arrow="false">
-                            <el-button
-                                text
-                                :icon="StarIcon"
-                                :type="agent.critical_asset ? 'warning' : ''"
-                                circle
-                                @click.stop="toggleCritical(agent.agent_id, agent.critical_asset)"
-                            />
-                        </el-tooltip>
-                    </div>
-                </div>
-                <div class="info">#{{ agent.agent_id }} / {{ agent.label }}</div>
-            </div>
-            <div class="agent-info">
-                <div class="os" :title="agent.os">
-                    {{ agent.os }}
-                </div>
-                <div class="ip-address" :title="agent.ip_address">{{ agent.ip_address }}</div>
-            </div>
+	<n-card class="agent-card py-3 px-4" :class="{ critical: agent.critical_asset }" content-style="padding:0">
+		<n-spin :show="loading">
+			<div class="wrapper">
+				<div class="agent-header">
+					<div class="title">
+						<n-tooltip>
+							{{ `${isOnline ? "online" : "last seen"} - ${formatLastSeen}` }}
+							<template #trigger>
+								<div class="hostname" :class="{ online: isOnline }">{{ agent.hostname }}</div>
+							</template>
+						</n-tooltip>
+						<div class="critical" :class="{ active: agent.critical_asset }">
+							<n-tooltip>
+								Toggle Critical Assets
+								<template #trigger>
+									<n-button
+										quaternary
+										circle
+										:type="agent.critical_asset ? 'warning' : 'default'"
+										@click.stop="toggleCritical(agent.agent_id, agent.critical_asset)"
+									>
+										<template #icon>
+											<n-icon><StarIcon /></n-icon>
+										</template>
+									</n-button>
+								</template>
+							</n-tooltip>
+						</div>
+					</div>
+					<div class="info">#{{ agent.agent_id }} / {{ agent.label }}</div>
+				</div>
+				<div class="agent-info">
+					<div class="os" :title="agent.os">
+						{{ agent.os }}
+					</div>
+					<div class="ip-address" :title="agent.ip_address">{{ agent.ip_address }}</div>
+				</div>
 
-            <div class="agent-actions" v-if="showActions">
-                <div class="box">
-                    <el-tooltip content="Delete" placement="top" :show-arrow="false">
-                        <el-button type="danger" :icon="DeleteIcon" circle @click.stop="handleDelete" />
-                    </el-tooltip>
-                </div>
-            </div>
-        </div>
-    </div>
+				<div class="agent-actions" v-if="showActions">
+					<div class="box">
+						<n-tooltip>
+							Delete
+							<template #trigger>
+								<n-button quaternary circle type="error" @click.stop="handleDelete">
+									<template #icon>
+										<n-icon><DeleteIcon /></n-icon>
+									</template>
+								</n-button>
+							</template>
+						</n-tooltip>
+					</div>
+				</div>
+			</div>
+		</n-spin>
+	</n-card>
 </template>
 
 <script setup lang="ts">
 import { computed, ref, toRefs } from "vue"
-import { Agent } from "@/types/agents.d"
+import { type Agent } from "@/types/agents.d"
 import dayjs from "dayjs"
-import Api from "@/api"
 import { handleDeleteAgent, isAgentOnline, toggleAgentCritical } from "./utils"
-import { ElMessage, ElMessageBox } from "element-plus"
-import { Star as StarIcon, Delete as DeleteIcon } from "@element-plus/icons-vue"
+import StarIcon from "@vicons/carbon/Star"
+import DeleteIcon from "@vicons/carbon/Delete"
+import { NTooltip, NButton, NIcon, NSpin, NCard, useMessage, useDialog } from "naive-ui"
 
 const emit = defineEmits<{
-    (e: "delete"): void
+	(e: "delete"): void
 }>()
 
 const props = defineProps<{
-    agent: Agent
-    showActions?: boolean
+	agent: Agent
+	showActions?: boolean
 }>()
 const { agent, showActions } = toRefs(props)
 
 const loading = ref(false)
-
+const message = useMessage()
+const dialog = useDialog()
 const isOnline = computed(() => {
-    return isAgentOnline(agent.value.last_seen)
+	return isAgentOnline(agent.value.last_seen)
 })
 const formatLastSeen = computed(() => {
-    const lastSeenDate = dayjs(agent.value.last_seen)
-    if (!lastSeenDate.isValid()) return agent.value.last_seen
+	const lastSeenDate = dayjs(agent.value.last_seen)
+	if (!lastSeenDate.isValid()) return agent.value.last_seen
 
-    return lastSeenDate.format("DD/MM/YYYY @ HH:mm")
+	return lastSeenDate.format("DD/MM/YYYY @ HH:mm")
 })
 
 function handleDelete() {
-    handleDeleteAgent({
-        agent: agent.value,
-        cbBefore: () => {
-            loading.value = true
-        },
-        cbSuccess: () => {
-            emit("delete")
-        },
-        cbAfter: () => {
-            loading.value = false
-        }
-    })
+	handleDeleteAgent({
+		agent: agent.value,
+		cbBefore: () => {
+			loading.value = true
+		},
+		cbSuccess: () => {
+			emit("delete")
+		},
+		cbAfter: () => {
+			loading.value = false
+		},
+		message,
+		dialog
+	})
 }
 
 function toggleCritical(agentId: string, criticalStatus: boolean) {
-    toggleAgentCritical({
-        agentId,
-        criticalStatus,
-        cbBefore: () => {
-            loading.value = true
-        },
-        cbSuccess: () => {
-            agent.value.critical_asset = !criticalStatus
-        },
-        cbAfter: () => {
-            loading.value = false
-        }
-    })
+	toggleAgentCritical({
+		agentId,
+		criticalStatus,
+		message,
+		cbBefore: () => {
+			loading.value = true
+		},
+		cbSuccess: () => {
+			agent.value.critical_asset = !criticalStatus
+		},
+		cbAfter: () => {
+			loading.value = false
+		}
+	})
 }
 </script>
 
 <style lang="scss" scoped>
-@import "@/assets/scss/_variables";
-@import "@/assets/scss/card-shadow";
-
 .agent-card {
-    container-type: inline-size;
-    @extend .card-base;
-    @extend .card-shadow--small;
-    overflow: hidden;
-    border: 2px solid transparent;
-    max-width: 100%;
-    padding: var(--size-3) var(--size-4);
-    box-sizing: border-box;
-    cursor: pointer;
-    transition: all 0.3s;
+	container-type: inline-size;
+	overflow: hidden;
+	border: 2px solid transparent;
+	max-width: 100%;
+	box-sizing: border-box;
+	cursor: pointer;
+	opacity: 0;
+	transition: all 0.3s;
+	animation: agent-card-fade 0.3s forwards;
 
-    .wrapper {
-        display: flex;
-        gap: var(--size-6);
-        flex-direction: row;
-        align-items: center;
-        overflow: hidden;
+	@for $i from 0 through 20 {
+		&:nth-child(#{$i}) {
+			animation-delay: $i * 0.05s;
+		}
+	}
 
-        .agent-header {
-            display: flex;
-            flex-direction: column;
-            min-width: 300px;
+	@keyframes agent-card-fade {
+		from {
+			opacity: 0;
+			transform: translateY(10px);
+		}
+		to {
+			opacity: 1;
+		}
+	}
 
-            .title {
-                display: flex;
-                align-items: center;
-                gap: var(--size-2);
-                margin-bottom: 4px;
+	.wrapper {
+		display: flex;
+		@apply gap-6;
+		flex-direction: row;
+		align-items: center;
+		overflow: hidden;
 
-                .hostname {
-                    font-weight: bold;
-                    white-space: nowrap;
-                    line-height: 32px;
-                    height: 32px;
-                    border-radius: 4px;
-                    border: 1px solid $text-color-info;
-                    border-color: transparent;
-                    box-sizing: border-box;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
+		.agent-header {
+			display: flex;
+			flex-direction: column;
+			min-width: 300px;
 
-                    &.online {
-                        padding: 0px 15px;
-                        color: $text-color-success;
-                        border-color: $text-color-success;
-                    }
-                }
-            }
-            .info {
-                font-family: var(--font-mono);
-                font-size: var(--font-size-0);
-                opacity: 0.7;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                margin-left: 2px;
-            }
-        }
+			.title {
+				display: flex;
+				align-items: center;
+				@apply gap-2;
+				margin-bottom: 4px;
 
-        .agent-info {
-            display: flex;
-            flex-direction: column;
-            flex-grow: 1;
-            overflow: hidden;
+				.hostname {
+					font-weight: bold;
+					white-space: nowrap;
+					line-height: 32px;
+					height: 32px;
+					border-radius: 4px;
+					border: 1px solid var(--info-color);
+					border-color: transparent;
+					box-sizing: border-box;
+					overflow: hidden;
+					text-overflow: ellipsis;
 
-            .os {
-                line-height: 32px;
-                height: 32px;
-                margin-bottom: 4px;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
-            .ip-address {
-                white-space: nowrap;
-                font-size: var(--font-size-0);
-                font-family: var(--font-mono);
-                opacity: 0.7;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
-        }
+					&.online {
+						padding: 0px 15px;
+						color: var(--primary-color);
+						border-color: var(--primary-color);
+					}
+				}
+			}
+			.info {
+				font-family: var(--font-family-mono);
+				@apply text-xs;
+				opacity: 0.7;
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				margin-left: 2px;
+			}
+		}
 
-        .agent-actions {
-            display: flex;
+		.agent-info {
+			display: flex;
+			flex-direction: column;
+			flex-grow: 1;
+			overflow: hidden;
 
-            .box {
-                padding: var(--size-2) var(--size-2);
-                background-color: rgba(0, 0, 0, 0.07);
-                display: flex;
-                align-items: center;
-                border-radius: var(--radius-6);
-            }
-        }
-    }
+			.os {
+				line-height: 32px;
+				height: 32px;
+				margin-bottom: 4px;
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+			}
+			.ip-address {
+				white-space: nowrap;
+				@apply text-xs;
+				font-family: var(--font-family-mono);
+				opacity: 0.7;
+				overflow: hidden;
+				text-overflow: ellipsis;
+			}
+		}
 
-    &:hover {
-        @extend .card-shadow--medium;
-        border-color: #e3e8ec;
-    }
+		.agent-actions {
+			display: flex;
+		}
+	}
 
-    &.critical {
-        border-color: $text-color-warning;
-    }
+	&:hover {
+		border-color: var(--primary-color);
+	}
 
-    @container (max-width: 550px) {
-        .wrapper {
-            gap: var(--size-5);
+	&.critical {
+		border-color: var(--warning-color);
+	}
 
-            .agent-header {
-                min-width: initial;
-            }
-        }
-    }
-    @container (max-width: 480px) {
-        .wrapper {
-            gap: var(--size-4);
+	@container (max-width: 550px) {
+		.wrapper {
+			@apply gap-5;
 
-            .agent-header {
-                flex-grow: 1;
-                overflow: hidden;
-            }
-            .agent-info {
-                display: none;
-            }
-        }
-    }
+			.agent-header {
+				min-width: initial;
+			}
+		}
+	}
+	@container (max-width: 400px) {
+		.wrapper {
+			@apply gap-4;
+
+			.agent-header {
+				flex-grow: 1;
+				overflow: hidden;
+			}
+			.agent-info {
+				display: none;
+			}
+		}
+	}
 }
 </style>

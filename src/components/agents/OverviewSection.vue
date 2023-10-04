@@ -1,112 +1,84 @@
 <template>
-    <div class="overview-section">
-        <div class="property-group">
-            <div class="property">
-                <div class="label">client_id</div>
-                <div class="value">{{ agent.client_id || "-" }}</div>
-            </div>
-            <div class="property">
-                <div class="label">client_last_seen</div>
-                <div class="value">{{ formatClientLastSeen || "-" }}</div>
-            </div>
-            <div class="property">
-                <div class="label">ip_address</div>
-                <div class="value">{{ agent.ip_address || "-" }}</div>
-            </div>
-            <div class="property">
-                <div class="label">label</div>
-                <div class="value">{{ agent.label || "-" }}</div>
-            </div>
-            <div class="property">
-                <div class="label">last_seen</div>
-                <div class="value">{{ formatLastSeen || "-" }}</div>
-            </div>
-            <div class="property">
-                <div class="label">os</div>
-                <div class="value">{{ agent.os || "-" }}</div>
-            </div>
-            <div class="property">
-                <div class="label">velociraptor_client_version</div>
-                <div class="value">{{ agent.velociraptor_client_version || "-" }}</div>
-            </div>
-            <div class="property">
-                <div class="label">wazuh_agent_version</div>
-                <div class="value">{{ agent.wazuh_agent_version || "-" }}</div>
-            </div>
-        </div>
-    </div>
+	<div class="overview-section">
+		<div class="property-group">
+			<n-card>
+				<template #action>client_id</template>
+				<div class="font-bold">{{ agent.client_id || "-" }}</div>
+			</n-card>
+			<n-card>
+				<template #action>client_last_seen</template>
+				<div class="font-bold">{{ formatClientLastSeen || "-" }}</div>
+			</n-card>
+			<n-card>
+				<template #action>ip_address</template>
+				<div class="font-bold">{{ agent.ip_address || "-" }}</div>
+			</n-card>
+			<n-card>
+				<template #action>label</template>
+				<div class="font-bold">{{ agent.label || "-" }}</div>
+			</n-card>
+			<n-card>
+				<template #action>last_seen</template>
+				<div class="font-bold">{{ formatLastSeen || "-" }}</div>
+			</n-card>
+			<n-card>
+				<template #action>os</template>
+				<div class="font-bold">{{ agent.os || "-" }}</div>
+			</n-card>
+			<n-card>
+				<template #action>velociraptor_client_version</template>
+				<div class="font-bold">{{ agent.velociraptor_client_version || "-" }}</div>
+			</n-card>
+			<n-card>
+				<template #action>wazuh_agent_version</template>
+				<div class="font-bold">{{ agent.wazuh_agent_version || "-" }}</div>
+			</n-card>
+		</div>
+	</div>
 </template>
 
 <script setup lang="ts">
 import { computed, toRefs } from "vue"
 import dayjs from "dayjs"
-import { Agent } from "@/types/agents"
+import { type Agent } from "@/types/agents.d"
+import { NCard } from "naive-ui"
 
 const props = defineProps<{
-    agent: Agent
+	agent: Agent
 }>()
 const { agent } = toRefs(props)
 
 const formatLastSeen = computed(() => {
-    const lastSeenDate = dayjs(agent.value.last_seen)
-    if (!lastSeenDate.isValid()) return agent.value.last_seen
+	const lastSeenDate = dayjs(agent.value.last_seen)
+	if (!lastSeenDate.isValid()) return agent.value.last_seen
 
-    return lastSeenDate.format("DD/MM/YYYY @ HH:mm")
+	return lastSeenDate.format("DD/MM/YYYY @ HH:mm")
 })
 
 const formatClientLastSeen = computed(() => {
-    const lastSeenDate = dayjs(agent.value.client_last_seen)
-    if (!lastSeenDate.isValid()) return agent.value.last_seen
+	const lastSeenDate = dayjs(agent.value.client_last_seen)
+	if (!lastSeenDate.isValid()) return agent.value.last_seen
 
-    return lastSeenDate.format("DD/MM/YYYY @ HH:mm")
+	return lastSeenDate.format("DD/MM/YYYY @ HH:mm")
 })
 </script>
 
 <style lang="scss" scoped>
-@import "@/assets/scss/_variables";
-
 .overview-section {
-    container-type: inline-size;
+	container-type: inline-size;
 
-    .property-group {
-        width: 100%;
-        display: grid;
-        grid-gap: var(--size-5);
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        grid-auto-flow: row dense;
+	.property-group {
+		width: 100%;
+		display: grid;
+		@apply gap-2;
+		grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+		grid-auto-flow: row dense;
+	}
 
-        .property {
-            background-color: rgb(244, 244, 244);
-            padding: var(--size-3);
-            position: relative;
-            border-radius: 8px;
-
-            .label {
-                position: absolute;
-                top: -8px;
-                font-size: var(--font-size-0);
-                background-color: #8d91a1;
-                padding: 1px 6px;
-                font-family: var(--font-mono);
-                border-radius: 5px;
-                color: white;
-                max-width: calc(100% - var(--size-8));
-                overflow: hidden;
-                white-space: nowrap;
-                text-overflow: ellipsis;
-            }
-
-            .value {
-                position: relative;
-                top: 5px;
-            }
-        }
-    }
-
-    @container (max-width: 500px) {
-        .property-group {
-            grid-template-columns: repeat(auto-fit, 100%);
-        }
-    }
+	@container (max-width: 500px) {
+		.property-group {
+			grid-template-columns: repeat(auto-fit, 100%);
+		}
+	}
 }
 </style>

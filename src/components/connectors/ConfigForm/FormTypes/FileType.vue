@@ -1,95 +1,91 @@
 <template>
-    <el-form :model="form" status-icon :rules="rules" label-width="120px" ref="formRef" label-position="top">
-        <el-form-item label="File" prop="connector_file">
-            <el-upload
-                class="file-upload-wrap"
-                drag
-                :limit="1"
-                :auto-upload="false"
-                :on-exceed="handleExceed"
-                :on-change="handleChange"
-                ref="uploadRef"
-                accept=".yaml, .YAML"
-            >
-                <el-icon class="el-icon--upload"><upload-filled /></el-icon>
-                <div class="el-upload__text">Drop file here or <em>click to upload</em></div>
-                <template #tip>
-                    <div class="el-upload__tip text-red">Limit 1 file .YAML, new file will cover the old file</div>
-                </template>
-            </el-upload>
-        </el-form-item>
-    </el-form>
+	<n-form :model="form" :rules="rules" label-width="120px" ref="formRef" label-placement="top">
+		<n-form-item label="File" path="connector_file">
+			<n-upload
+				class="file-upload-wrap"
+				:max="1"
+				:show-file-list="true"
+				@change="handleChange"
+				@remove="handleChange"
+				ref="uploadRef"
+				accept=".yaml, .YAML"
+			>
+				<n-upload-dragger>
+					<div>
+						<n-icon size="48" :depth="3">
+							<UploadIcon />
+						</n-icon>
+					</div>
+					<h4>Click or drag a file to this area to upload</h4>
+					<p class="mt-2">Limit 1 file .YAML, new file will cover the old file</p>
+				</n-upload-dragger>
+			</n-upload>
+		</n-form-item>
+	</n-form>
 </template>
 
 <script setup lang="ts">
-import { FormInstance } from "element-plus"
-import type { UploadFile, UploadInstance, UploadProps, UploadRawFile } from "element-plus"
-import { UploadFilled } from "@element-plus/icons-vue"
-import { onMounted, reactive, ref, toRefs } from "vue"
+import UploadIcon from "@vicons/carbon/CloudUpload"
+import { onMounted, ref, toRefs } from "vue"
+import {
+	NForm,
+	NFormItem,
+	NIcon,
+	NUpload,
+	NUploadDragger,
+	type FormRules,
+	type FormInst,
+	type FormItemRule,
+	type UploadInst,
+	type UploadFileInfo
+} from "naive-ui"
 
 export interface IFileForm {
-    connector_file: File | null
+	connector_file: File | null
 }
 
 const emit = defineEmits<{
-    (e: "mounted", value: FormInstance): void
+	(e: "mounted", value: FormInst): void
 }>()
 
 const props = defineProps<{
-    form: IFileForm
+	form: IFileForm
 }>()
 const { form } = toRefs(props)
 
-const formRef = ref<FormInstance>()
-const uploadRef = ref<UploadInstance>()
+const formRef = ref<FormInst>()
+const uploadRef = ref<UploadInst>()
 
-const handleExceed: UploadProps["onExceed"] = (files: File[]) => {
-    uploadRef.value!.clearFiles()
-    const file = files[0] as UploadRawFile
-    uploadRef.value!.handleStart(file)
+const handleChange = ({ file }: { file: UploadFileInfo }) => {
+	if (file.status === "removed") {
+		form.value.connector_file = null
+	} else {
+		form.value.connector_file = file.file || null
+	}
+	formRef.value?.validate()
 }
 
-const handleChange: UploadProps["onChange"] = (file: UploadFile) => {
-    form.value.connector_file = file.raw
+const validateFile = (rule: FormItemRule, value: File) => {
+	if (!value) {
+		return new Error("Please input a valid File")
+	}
+
+	const stringCheck = value.name + value.type
+
+	if (stringCheck.indexOf("yaml") === -1) {
+		return new Error("Please input a valid File")
+	}
+
+	return true
 }
 
-const validateFile = (rule: any, value: File, callback: any) => {
-    if (!value) {
-        return callback(new Error("Please input a valid File"))
-    }
-
-    const stringCheck = value.name + value.type
-
-    if (stringCheck.indexOf("yaml") === -1) {
-        return callback(new Error("Please input a valid File"))
-    }
-
-    return callback()
+const rules: FormRules = {
+	connector_file: [{ required: true, validator: validateFile, trigger: "blur" }]
 }
-
-const rules = reactive({
-    connector_file: [{ required: true, validator: validateFile, trigger: "blur" }]
-})
 
 onMounted(() => {
-    if (formRef.value) {
-        emit("mounted", formRef.value)
-    }
+	if (formRef.value) {
+		emit("mounted", formRef.value)
+	}
 })
 </script>
-
-<style scoped lang="scss">
-.file-upload-wrap {
-    width: 100%;
-
-    .el-icon--upload {
-        margin-bottom: 0px;
-    }
-
-    :deep() {
-        .el-upload-dragger {
-            padding: 20px 10px;
-        }
-    }
-}
-</style>

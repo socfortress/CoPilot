@@ -1,0 +1,121 @@
+<template>
+	<aside
+		id="sidebar"
+		class="sidebar flex flex-col"
+		:class="{ collapsed: sidebarCollapsed, opened: !sidebarCollapsed }"
+	>
+		<div class="sidebar-wrap grow flex flex-col" ref="sidebar">
+			<SidebarHeader :logo-mini="sidebarClosed" />
+			<n-scrollbar>
+				<Navbar :collapsed="sidebarClosed"></Navbar>
+			</n-scrollbar>
+			<SidebarFooter :collapsed="sidebarClosed" />
+		</div>
+	</aside>
+</template>
+
+<script lang="ts" setup>
+import { computed, onMounted, ref, watch } from "vue"
+import { NScrollbar } from "naive-ui"
+import { isMobile } from "@/utils"
+import { onClickOutside, useElementHover } from "@vueuse/core"
+import Navbar from "@/layouts/common/Navbar"
+import SidebarHeader from "./SidebarHeader.vue"
+import SidebarFooter from "./SidebarFooter.vue"
+import { useThemeStore } from "@/stores/theme"
+
+defineOptions({
+	name: "Sidebar"
+})
+
+const sidebar = ref(null)
+const sidebarHovered = useElementHover(sidebar)
+
+const sidebarCollapsed = computed(() => useThemeStore().sidebar.collapsed)
+const sidebarClosed = computed(() => !sidebarHovered.value && sidebarCollapsed.value)
+
+function clickListener() {
+	if (sidebar.value) {
+		onClickOutside(sidebar, e => {
+			if (!sidebarCollapsed.value) {
+				e.stopPropagation()
+				useThemeStore().closeSidebar()
+			}
+		})
+	}
+}
+
+onMounted(() => {
+	watch(
+		sidebarCollapsed,
+		val => {
+			if (val) {
+				if (isMobile()) {
+					sidebarHovered.value = false
+				}
+			}
+		},
+		{
+			immediate: true
+		}
+	)
+
+	if (window.innerWidth <= 700) {
+		clickListener()
+	}
+})
+</script>
+
+<style lang="scss" scoped>
+@import "./variables";
+
+.sidebar {
+	position: fixed;
+	z-index: 4;
+	top: 0;
+	left: 0;
+	//bottom: 0;
+	//border-right:var(--border-small-100);
+	padding-right: 1px;
+	width: var(--sidebar-open-width);
+	height: 100vh;
+	height: 100svh;
+	overflow-x: hidden;
+	overflow-y: auto;
+	background-color: var(--bg-sidebar);
+	transition:
+		width var(--sidebar-anim-ease) var(--sidebar-anim-duration),
+		box-shadow var(--sidebar-anim-ease) var(--sidebar-anim-duration),
+		color 0.3s var(--bezier-ease) 0s,
+		background-color 0.3s var(--bezier-ease) 0s;
+
+	.sidebar-wrap {
+		overflow: hidden;
+	}
+
+	:deep(.n-scrollbar-rail) {
+		opacity: 0.15;
+	}
+
+	&.collapsed {
+		width: var(--sidebar-close-width);
+
+		&:hover {
+			width: var(--sidebar-open-width);
+			box-shadow: 0px 0px 80px 0px rgba(0, 0, 0, 0.2);
+		}
+	}
+
+	@media (max-width: $sidebar-bp) {
+		z-index: -1;
+		transition: all 0.3s var(--bezier-ease) 0s;
+		transform: translateX(-100%);
+
+		&.opened {
+			z-index: 4;
+			transform: translateX(0);
+			box-shadow: 0px 0px 80px 0px rgba(0, 0, 0, 0.2);
+		}
+	}
+}
+</style>

@@ -1,0 +1,54 @@
+{
+	"colors": {
+		"light": {
+			"text": "#000000",
+			"textSecondary": "#495465",
+			"background": "#ffffff",
+			"sidebarBackground": "#F6F7F9",
+			"bodyBackground": "#E8EDF2",
+			"primary": "#00B27B",
+			"info": "#6267FF",
+			"success": "#00B27B",
+			"warning": "#FFB600",
+			"error": "#FF0156",
+			"secondary1": "#6267FF",
+			"secondary2": "#FF61C9",
+			"secondary3": "#FFB600",
+			"secondary4": "#FF0156",
+			"shade1": "#ffffff"
+		},
+		"dark": {
+			"text": "#ffffff",
+			"textSecondary": "#ACB5BE",
+			"background": "#26282d",
+			"sidebarBackground": "#1D1F25",
+			"bodyBackground": "#14161A",
+			"primary": "#00E19B",
+			"info": "#6267FF",
+			"success": "#00E19B",
+			"warning": "#FFB600",
+			"error": "#FF0156",
+			"secondary1": "#6267FF",
+			"secondary2": "#FF61C9",
+			"secondary3": "#FFB600",
+			"secondary4": "#FF0156",
+			"shade1": "#26282d"
+		}
+	},
+	"borderRadius": {
+		"base": "6px",
+		"small": "3px"
+	},
+	"lineHeight": {
+		"base": "1.35"
+	},
+	"fontSize": {
+		"base": "15px",
+		"cardTitle": "18px"
+	},
+	"fontFamily": {
+		"base": "'Public Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'",
+		"display": "'Lexend', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'",
+		"mono": "'JetBrains Mono', SFMono-Regular, Menlo, Consolas, Courier, monospace"
+	}
+}

@@ -1,0 +1,54 @@
+.shepherd-element.styled {
+	background-color: var(--bg-color);
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+
+	.shepherd-content {
+		.shepherd-header {
+			padding: 4px 10px;
+			background-color: var(--bg-color);
+			border-bottom: var(--border-small-100);
+
+			.shepherd-title {
+				color: var(--fg-color);
+			}
+		}
+
+		.shepherd-text {
+			background-color: var(--bg-color);
+			color: var(--fg-color);
+			margin-bottom: 10px;
+		}
+
+		.shepherd-footer {
+			background-color: var(--bg-color);
+
+			.shepherd-button {
+				background-color: rgba(var(--primary-color-rgb), 0.1);
+				color: var(--primary-color);
+				padding: 4px 16px;
+
+				&.shepherd-button-secondary {
+					background-color: rgba(var(--fg-color-rgb), 0.05);
+					color: var(--fg-color);
+				}
+			}
+		}
+	}
+
+	.shepherd-arrow {
+		&::before {
+			background-color: var(--bg-color) !important;
+			box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+		}
+	}
+}
+.shepherd-modal-overlay-container {
+	&.shepherd-modal-is-visible {
+		opacity: 0.7;
+		mix-blend-mode: hard-light;
+
+		path {
+			fill: var(--bg-color);
+		}
+	}
+}
