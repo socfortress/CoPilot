@@ -1,0 +1,403 @@
+from typing import Dict, Any, List, Generator, Type, Optional, Union, Tuple
+from sqlmodel import Session, select
+import ipaddress
+import regex
+import re
+from app.connectors.models import Connectors
+from elasticsearch7 import Elasticsearch
+from loguru import logger
+from app.db.db_session import engine
+from app.db.db_session import session
+import requests
+from app.connectors.schema import ConnectorResponse
+from app.db.all_models import Agents
+from app.connectors.utils import get_connector_info_from_db
+from app.connectors.wazuh_indexer.schema.indices import Indices, IndexConfigModel
+from app.healthchecks.agents.schema.agents import AgentHealthCheckResponse, AgentModel
+from datetime import datetime, timedelta
+from typing import Iterable, Tuple
+from fastapi import HTTPException
+from abc import ABC
+
+
+#################### ! DFIR IRIS ASSET VALIDATOR ! ####################
+class AssetValidator(ABC):
+    """
+    Base class for asset validators.
+
+    Attributes:
+        os (str): The OS to be validated.
+    """
+
+    ASSET_TYPE_ID: int = 1
+
+    def __init__(self, os: str) -> None:
+        """
+        Initialize a Validator.
+
+        Args:
+            os (str): The OS to be validated.
+        """
+        self.os = os.lower()
+
+    def validate(self) -> Dict[str, Union[bool, str, int]]:
+        """
+        Validate the OS.
+
+        If the OS matches the type of this validator,
+        the method returns a dictionary indicating success, the matching message, and the asset type id.
+
+        Returns:
+            Dict[str, Union[bool, str, int]]: The validation result.
+        """
+        raise NotImplementedError
+
+
+class WindowsAssetValidator(AssetValidator):
+    """
+    Class to check if an OS is Windows.
+    """
+
+    ASSET_TYPE_ID = 9
+
+    def validate(self) -> Dict[str, Union[bool, str, int]]:
+        if "windows" in self.os:
+            return {
+                "success": True,
+                "message": f"{self.os} is a valid Windows OS.",
+                "asset_type_id": self.ASSET_TYPE_ID,
+            }
+        else:
+            return {
+                "success": False,
+                "message": f"{self.os} is not a Windows OS.",
+                "asset_type_id": self.ASSET_TYPE_ID,
+            }
+
+
+class LinuxAssetValidator(AssetValidator):
+    """
+    Class to check if an OS is Linux.
+    """
+
+    ASSET_TYPE_ID = 4
+
+    def validate(self) -> Dict[str, Union[bool, str, int]]:
+        if "linux" in self.os:
+            return {
+                "success": True,
+                "message": f"{self.os} is a valid Linux OS.",
+                "asset_type_id": self.ASSET_TYPE_ID,
+            }
+        else:
+            return {
+                "success": False,
+                "message": f"{self.os} is not a Linux OS.",
+                "asset_type_id": self.ASSET_TYPE_ID,
+            }
+
+
+class FirewallAssetValidator(AssetValidator):
+    """
+    Class to check if an OS is Firewall.
+    """
+
+    ASSET_TYPE_ID = 2
+
+    def validate(self) -> Dict[str, Union[bool, str, int]]:
+        if "firewall" in self.os:
+            return {
+                "success": True,
+                "message": f"{self.os} is a valid Firewall OS.",
+                "asset_type_id": self.ASSET_TYPE_ID,
+            }
+        else:
+            return {
+                "success": False,
+                "message": f"{self.os} is not a Firewall OS.",
+                "asset_type_id": self.ASSET_TYPE_ID,
+            }
+
+
+class UbuntuAssetValidator(AssetValidator):
+    """
+    Class to check if an OS is Ubuntu.
+    """
+
+    ASSET_TYPE_ID = 4
+
+    def validate(self) -> Dict[str, Union[bool, str, int]]:
+        if "ubuntu" in self.os:
+            return {
+                "success": True,
+                "message": f"{self.os} is a valid Ubuntu OS.",
+                "asset_type_id": self.ASSET_TYPE_ID,
+            }
+        else:
+            return {
+                "success": False,
+                "message": f"{self.os} is not an Ubuntu OS.",
+                "asset_type_id": self.ASSET_TYPE_ID,
+            }
+
+
+class AssetTypeResolver:
+    """
+    Class to iterate over asset validators and return the successful validator's asset type id.
+    """
+
+    def __init__(self, os: str):
+        """
+        Initialize AssetTypeResolver.
+
+        Args:
+            os (str): The OS to be validated.
+        """
+        self.os = os
+        self.validators = [
+            WindowsAssetValidator,
+            LinuxAssetValidator,
+            FirewallAssetValidator,
+            UbuntuAssetValidator,
+        ]
+
+    def get_asset_type_id(self) -> int:
+        """
+        Iterate over validators and return the successful validator's asset type id.
+
+        Returns:
+            int: The asset type id.
+        """
+        for Validator in self.validators:
+            validator = Validator(self.os)
+            result = validator.validate()
+            if result["success"] is True:
+                return result["asset_type_id"]
+
+        # Return default asset type id (1) if no validators succeed
+        return 1
+    
+#################### ! DFIR IRIS ASSET VALIDATOR END ! ####################
+
+
+
+#################### ! DFIR IRIS IOC VALIDATOR ! ##########################
+
+class IoCValidator(ABC):
+    """
+    Base class for validators.
+
+    Attributes:
+        value (str): The value to be validated.
+    """
+
+    PATTERN: Optional[str] = None  # type: ignore
+    IOC_TYPE: Optional[int] = None  # type: ignore
+
+    def __init__(self, value: str) -> None:
+        """
+        Initialize a Validator.
+
+        Args:
+            value (str): The value to be validated.
+        """
+        self.value = value
+
+    def validate(self) -> Dict[str, Union[bool, str, int]]:
+        """
+        Validate the value.
+
+        If the value matches the pattern,
+        the method returns a dictionary indicating success, the matching message, and the IOC type.
+
+        Returns:
+            Dict[str, Union[bool, str, int]]: The validation result.
+        """
+        logger.info(f"Validating {self.value} against {self.PATTERN}.")
+        if self.PATTERN and regex.match(self.PATTERN, self.value, re.IGNORECASE):
+            return {
+                "success": True,
+                "message": f"{self.value} matches the pattern.",
+                "ioc_type": self.IOC_TYPE,
+            }
+        else:
+            return {
+                "success": False,
+                "message": f"{self.value} does not match the pattern.",
+                "ioc_type": self.IOC_TYPE,
+            }
+
+
+class IPv4AddressValidator(IoCValidator):
+    """
+    Class to check if a string is a valid IPv4 address.
+    """
+
+    IOC_TYPE = 76
+
+    def validate(self) -> Dict[str, Union[bool, str, int]]:
+        """
+        Validate if the given value is a valid IPv4 address.
+
+        Returns:
+            dict: A dictionary containing success status, message, and the associated IoC type.
+        """
+        try:
+            # if the value is like this `162.159.133.233|443` strip the port
+            if "|" in self.value:
+                self.value = self.value.split("|")[0]
+            logger.info(f"Validating {self.value} as an IPv4 address.")
+            ipaddress.IPv4Address(self.value)
+            return {
+                "success": True,
+                "message": f"{self.value} is a valid IPv4 address.",
+                "ioc_type": self.IOC_TYPE,
+            }
+        except ValueError:
+            return {
+                "success": False,
+                "message": f"{self.value} is not a valid IPv4 address.",
+                "ioc_type": self.IOC_TYPE,
+            }
+
+
+class HashValidator(IoCValidator):
+    """
+    Class to check if a string is a valid SHA256 hash.
+    """
+
+    PATTERN = r"^[a-fA-F\d]{64}$"
+    IOC_TYPE = 113
+
+
+class DomainValidator(IoCValidator):
+    """
+    Class to check if a string is a valid domain name.
+    """
+
+    PATTERN = r"^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$"
+    IOC_TYPE = 20
+
+
+#################### ! DFIR IRIS IOC VALIDATOR END ! ##########################
+
+def verify_wazuh_indexer_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Verifies the connection to Wazuh Indexer service.
+
+    Returns:
+        dict: A dictionary containing 'connectionSuccessful' status and 'authToken' if the connection is successful.
+    """
+    logger.info(f"Verifying the wazuh-indexer connection to {attributes['connector_url']}")
+    
+    try:
+        es = Elasticsearch(
+            [attributes["connector_url"]],
+            http_auth=(attributes["connector_username"], attributes["connector_password"]),
+            verify_certs=False,
+            timeout=15,
+            max_retries=10,
+            retry_on_timeout=False,
+        )
+        es.cluster.health()
+        logger.debug("Wazuh Indexer connection successful")
+        return {"connectionSuccessful": True, "message": "Wazuh Indexer connection successful"}
+    except Exception as e:
+        logger.error(f"Connection to {attributes['connector_url']} failed with error: {e}")
+        return {"connectionSuccessful": False, "message": f"Connection to {attributes['connector_url']} failed with error: {e}"}
+    
+def verify_wazuh_indexer_connection(connector_name: str) -> str:
+    """
+    Returns the authentication token for the Wazuh Indexer service.
+
+    Returns:
+        str: Authentication token for the Wazuh Indexer service.
+    """
+    attributes = get_connector_info_from_db(connector_name)
+    if attributes is None:
+        logger.error("No Wazuh Indexer connector found in the database")
+        return None
+    return verify_wazuh_indexer_credentials(attributes)
+
+def create_wazuh_indexer_client(connector_name: str) -> Elasticsearch:
+    """
+    Returns an Elasticsearch client for the Wazuh Indexer service.
+
+    Returns:
+        Elasticsearch: Elasticsearch client for the Wazuh Indexer service.
+    """
+    attributes = get_connector_info_from_db(connector_name)
+    if attributes is None:
+        logger.error("No Wazuh Indexer connector found in the database")
+        return None
+    return Elasticsearch(
+        [attributes["connector_url"]],
+        http_auth=(attributes["connector_username"], attributes["connector_password"]),
+        verify_certs=False,
+        timeout=15,
+        max_retries=10,
+        retry_on_timeout=False,
+    )
+
+def get_agent_data(agent_id: str) -> AgentModel:
+    """
+    Get agent data based on the agent id from the agents table.
+
+    Args:
+        agent_id (str): Agent id.
+
+    Returns:
+        Dict[str, Any]: Agent data.
+    """
+    agent_details = session.query(Agents).filter(Agents.agent_id == agent_id).first()
+    if agent_details is not None:
+        return agent_details
+    else:
+        raise HTTPException(status_code=404, detail=f"Agent with id {agent_id} not found in agents table")
+    
+def get_asset_type_id(os: str) -> int:
+    """
+    Use AssetTypeResolver to determine the asset type ID to set within DFIR-IRIS.
+
+    Parameters
+    ----------
+    os : str
+        The operating system (OS) string used to resolve the asset type ID.
+
+    Returns
+    -------
+    int
+        The ID corresponding to the asset type.
+    """
+    asset_resolver = AssetTypeResolver(os)
+    return asset_resolver.get_asset_type_id()
+
+def validate_ioc_type(ioc_value: str) -> str:
+    """
+    Validate IoC type using validators.
+
+    Parameters
+    ----------
+    ioc_value : str
+        The value to validate the IoC type.
+
+    Returns
+    -------
+    str
+        The type of the IoC. Returns None if validation fails.
+    """
+    validators = [IPv4AddressValidator, HashValidator, DomainValidator]
+    ioc_type = None
+
+    for Validator in validators:
+        validator = Validator(ioc_value)
+        result = validator.validate()
+
+        if result["success"]:
+            ioc_type = result["ioc_type"]
+            break
+
+    if ioc_type is None:
+        logger.error("Failed to validate IoC value.")
+    return ioc_type
+
