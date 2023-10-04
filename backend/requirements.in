@@ -18,7 +18,7 @@ python-multipart
 pytest
 python-magic
 passlib
-jwt
+PyJWT
 pydantic[email]
 pyvelociraptor~=0.1
 regex

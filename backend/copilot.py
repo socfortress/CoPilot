@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse
 from sqlmodel import create_engine, SQLModel
 from app.db.db_session import engine
 import uvicorn
+from fastapi.middleware.cors import CORSMiddleware
 from settings import SQLALCHEMY_DATABASE_URI
 from app.auth.routes.auth import user_router
 from app.connectors.routes import connector_router
@@ -34,6 +35,15 @@ from app.integrations.alert_escalation.routes.general_alert import integration_g
 from app.db.db_setup import create_tables
 
 app = FastAPI(description="CoPilot API", version="0.1.0", title="CoPilot API")
+
+# Allow all origins, methods and headers
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.exception_handler(HTTPException)
 async def custom_http_exception_handler(request: Request, exc: HTTPException):

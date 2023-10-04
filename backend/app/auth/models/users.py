@@ -31,7 +31,7 @@ class UserInput(SQLModel):
 
 
 class UserLogin(SQLModel):
-    email: str
+    username: str
     password: str
 
 
