@@ -107,7 +107,7 @@
 					`) }}
 
 					{{
-						js(`					
+						js(`
 						const customValue = ref([
 							{
 								isCheck: true,
@@ -121,7 +121,7 @@
 								num: 1,
 								string: "A String"
 							}
-						}						
+						}
 						`)
 					}}
 				</template>

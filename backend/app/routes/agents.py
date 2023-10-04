@@ -2,21 +2,18 @@ from typing import Any
 
 from flask import Blueprint
 from flask import jsonify
-from flask import request
-from flask_jwt_extended import verify_jwt_in_request
 from loguru import logger
 
 from app.models.agents import agent_metadata_schema
 from app.services.agents.agents import AgentService
 from app.services.agents.agents import AgentSyncService
-from app.services.validator import check_jwt_in_db
 from app.services.wazuh_manager.agent import WazuhManagerAgentService
 from app.services.wazuh_manager.universal import UniversalService
 from app.services.wazuh_manager.vulnerability import VulnerabilityService
 
 bp = Blueprint("agents", __name__)
 
-## Comment out during development
+# Comment out during development
 # @bp.before_request
 # def before_request_func():
 #     if request.endpoint != "agents.get_agents":  # Example of endpoint that doesn't require JWT

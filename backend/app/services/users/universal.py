@@ -1,9 +1,13 @@
 from datetime import datetime
 from datetime import timedelta
-from typing import Union, Dict, Tuple, Optional
-from loguru import logger
+from typing import Dict
+from typing import Optional
+from typing import Tuple
+
 import bcrypt
-from flask_jwt_extended import create_access_token, decode_token
+from flask_jwt_extended import create_access_token
+from flask_jwt_extended import decode_token
+from loguru import logger
 
 from app import db
 from app.models.users import Users
@@ -158,4 +162,3 @@ class UniversalService:
         UniversalService.update_user_token(user, new_access_token)
 
         return {"message": "Token refreshed successfully", "success": True, "token": new_access_token}, 200
-

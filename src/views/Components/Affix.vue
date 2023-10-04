@@ -75,20 +75,20 @@
 							height: 200px;
 							position: relative;
 						}
-						
+
 						.anchor-container {
 							height: 200px;
 							background-color: rgba(128, 128, 128, 0.3);
 							border-radius: 3px;
 							overflow: auto;
 						}
-						
+
 						.padding {
 							height: 150px;
 							width: 100%;
 							background-color: rgba(128, 128, 128, 0.15);
 						}
-						
+
 						.content {
 							height: 600px;
 						}

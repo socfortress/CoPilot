@@ -124,7 +124,7 @@
 							if (currentRef.value === 0) currentRef.value = null
 							else if (currentRef.value === null) currentRef.value = 4
 							else currentRef.value--
-						}						
+						}
 						`)
 					}}
 				</template>
@@ -235,7 +235,7 @@
 							if (currentRef.value === 0) currentRef.value = null
 							else if (currentRef.value === null) currentRef.value = 4
 							else currentRef.value--
-						}						
+						}
 						`)
 					}}
 				</template>

@@ -299,7 +299,7 @@
 					/>
 					`) }}
 					{{
-						js(`						
+						js(`
 						import {
 							PersonCircleOutline as UserIcon,
 							Pencil as EditIcon,

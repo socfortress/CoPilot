@@ -1,16 +1,16 @@
 {
-    "recommendations": [
-        "ms-python.python",
-        "ms-python.black-formatter",
-        "editorconfig.editorconfig",
-        "github.vscode-github-actions",
-        "ecmel.vscode-html-css",
-        "george-alison.html-preview-vscodes",
-        "esbenp.prettier-vscode",
-        "octref.vetur",
-        "ms-vscode.remtoe-remote-wsl",
-        "dbaeumer.vscode-eslint",
-        "Vue.volar",
-        "Vue.vscode-typescript-vue-plugin"
-    ]
+	"recommendations": [
+		"ms-python.python",
+		"ms-python.black-formatter",
+		"editorconfig.editorconfig",
+		"github.vscode-github-actions",
+		"ecmel.vscode-html-css",
+		"george-alison.html-preview-vscodes",
+		"esbenp.prettier-vscode",
+		"octref.vetur",
+		"ms-vscode.remtoe-remote-wsl",
+		"dbaeumer.vscode-eslint",
+		"Vue.volar",
+		"Vue.vscode-typescript-vue-plugin"
+	]
 }

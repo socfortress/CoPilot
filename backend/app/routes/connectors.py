@@ -46,6 +46,7 @@ def validate_and_update_connector(id, request_data, service, api_key=False):
 #         logger.error(f"Error while getting all available connectors: {e}")
 #         return {"message": "Error while getting all available connectors", "success": False}, 500
 
+
 @bp.route("/connectors", methods=["GET"])
 def list_connectors_available():
     try:

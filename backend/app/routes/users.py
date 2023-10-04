@@ -24,12 +24,13 @@ def login():
     response, status_code = UniversalService.login_user(request.json)
     return jsonify(response), status_code
 
+
 @bp.route("/refresh", methods=["POST"])
 def refresh():
     # Fetch the token from the Authorization header
-    auth_header = request.headers.get('Authorization')
+    auth_header = request.headers.get("Authorization")
 
-    if not auth_header or not auth_header.startswith('Bearer '):
+    if not auth_header or not auth_header.startswith("Bearer "):
         return jsonify({"message": "Missing or malformed Authorization header", "success": False}), 400
 
     token = auth_header.split(" ")[1]
