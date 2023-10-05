@@ -60,7 +60,7 @@ function getIndices() {
 		.getIndices()
 		.then(res => {
 			if (res.data.success) {
-				indices.value = res.data.indices
+				indices.value = res.data.indices_stats
 			} else {
 				message.error(res.data?.message || "An error occurred. Please try again later.")
 			}
