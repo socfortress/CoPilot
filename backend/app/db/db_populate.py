@@ -14,6 +14,7 @@ def add_connectors_if_not_exist(session: Session):
             "connector_username": "admin",
             "connector_password": "hmx7KPy15XPhJkgjlFrVgrWZ+Aid6QNm",
             "connector_api_key": None,
+            "connector_configured": True,
         },
         {
             "connector_name": "Wazuh-Manager",
@@ -22,6 +23,7 @@ def add_connectors_if_not_exist(session: Session):
             "connector_username": "wazuh-wui",
             "connector_password": "wazuh-wui",
             "connector_api_key": None,
+            "connector_configured": True,
         },
         {
             "connector_name": "Graylog",
@@ -30,6 +32,7 @@ def add_connectors_if_not_exist(session: Session):
             "connector_username": "socfortress_graylog_manager",
             "connector_password": "R{2PvE5TQkU7[xS$pX>fw>`y",
             "connector_api_key": None,
+            "connector_configured": True,
         },
         {
             "connector_name": "Shuffle",
@@ -38,6 +41,7 @@ def add_connectors_if_not_exist(session: Session):
             "connector_username": "sting",
             "connector_password": "string",
             "connector_api_key": "bc5d1e18-6230-40f0-b032-6ed898c307c5",
+            "connector_configured": True,
         },
         {
             "connector_name": "DFIR-IRIS",
@@ -46,6 +50,7 @@ def add_connectors_if_not_exist(session: Session):
             "connector_username": None,
             "connector_password": None,
             "connector_api_key": "I3Hwvkpvdk8Z0XRFlyGm4WXGw8jksnEzvKNoD9BobtSQ2AgWmdo_p-pfmJCg_ev2cm8I-zgWzAfya3jLBWZ6qw",
+            "connector_configured": True,
         },
         {
             "connector_name": "Velociraptor",
@@ -54,6 +59,7 @@ def add_connectors_if_not_exist(session: Session):
             "connector_username": None,
             "connector_password": None,
             "connector_api_key": "C:\\Users\\walto\\Desktop\\GitHub\\CoPilot\\backend\\app\\file-store\\api.config.yaml",
+            "connector_configured": True,
         },
         {
             "connector_name": "RabbitMQ",
@@ -62,6 +68,7 @@ def add_connectors_if_not_exist(session: Session):
             "connector_username": "guest",
             "connector_password": "guest",
             "connector_api_key": None,
+            "connector_configured": True,
         },
         {
             "connector_name": "Sublime",
@@ -70,6 +77,7 @@ def add_connectors_if_not_exist(session: Session):
             "connector_username": None,
             "connector_password": None,
             "connector_api_key": "7653trxhakxn4wxdh8bbatbvu97hm8fopos7wztzjrwfd12gf5i2kyebhvke9rt4",
+            "connector_configured": True,
         },
         {
             "connector_name": "InfluxDB",
@@ -78,6 +86,7 @@ def add_connectors_if_not_exist(session: Session):
             "connector_username": "SOCFortress",
             "connector_password": None,
             "connector_api_key": "gOLoFKucQXXd5d1rDx59YYktIz6OfrHIe4jRowJKZ8iB4IcZES8rOhRPaDEejEkahch8Ze2FiMzZxbQ9ZV8K6g==",
+            "connector_configured": True,
         },
         {
             "connector_name": "AskSocfortress",
@@ -86,6 +95,7 @@ def add_connectors_if_not_exist(session: Session):
             "connector_username": None,
             "connector_password": None,
             "connector_api_key": "CkKmw1B9NM1hG669tC4sTazLm1HlRfSXVvMZkxa9",
+            "connector_configured": True,
         },
         {
             "connector_name": "SocfortressThreatIntel",
@@ -94,6 +104,7 @@ def add_connectors_if_not_exist(session: Session):
             "connector_username": None,
             "connector_password": None,
             "connector_api_key": "ozH1jHp1zmacCePYrAZmxarJCGptcMth93a86Jq8",
+            "connector_configured": True,
         },
         {
             "connector_name": "Cortex",
@@ -102,6 +113,7 @@ def add_connectors_if_not_exist(session: Session):
             "connector_username": None,
             "connector_password": None,
             "connector_api_key": "+k/DvVYMEYURbc8sUdXA5/hW9VhJZV3v",
+            "connector_configured": True,
         },
     ]
 
