@@ -1,28 +1,14 @@
 from datetime import datetime
 from datetime import timedelta
-from typing import Any
-from typing import Dict
-from typing import List
 from typing import Optional
 from typing import Type
 
-from fastapi import APIRouter
-from fastapi import Depends
 from fastapi import HTTPException
-from fastapi import Security
 from loguru import logger
-from starlette.status import HTTP_401_UNAUTHORIZED
 
-# App specific imports
-from app.auth.routes.auth import auth_handler
 from app.connectors.wazuh_indexer.utils.universal import LogsQueryBuilder
 from app.connectors.wazuh_indexer.utils.universal import collect_indices
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
-from app.connectors.wazuh_indexer.utils.universal import format_indices_stats
-from app.connectors.wazuh_indexer.utils.universal import format_node_allocation
-from app.connectors.wazuh_indexer.utils.universal import format_shards
-from app.db.db_session import session
-from app.db.universal_models import Agents
 from app.healthchecks.agents.schema.agents import AgentHealthCheckResponse
 from app.healthchecks.agents.schema.agents import AgentModel
 from app.healthchecks.agents.schema.agents import CollectLogsResponse
@@ -30,7 +16,6 @@ from app.healthchecks.agents.schema.agents import ExtendedAgentModel
 from app.healthchecks.agents.schema.agents import HostLogsSearchBody
 from app.healthchecks.agents.schema.agents import HostLogsSearchResponse
 from app.healthchecks.agents.schema.agents import LogsSearchBody
-from app.healthchecks.agents.schema.agents import LogsSearchResponse
 from app.healthchecks.agents.schema.agents import TimeCriteriaModel
 
 

@@ -3,12 +3,8 @@ from typing import List
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
-from fastapi import Security
 from loguru import logger
-from starlette.status import HTTP_401_UNAUTHORIZED
 
-# App specific imports
-from app.auth.routes.auth import auth_handler
 from app.connectors.wazuh_indexer.schema.alerts import AlertsByHostResponse
 from app.connectors.wazuh_indexer.schema.alerts import AlertsByRulePerHostResponse
 from app.connectors.wazuh_indexer.schema.alerts import AlertsByRuleResponse
@@ -25,7 +21,9 @@ from app.connectors.wazuh_indexer.services.alerts import get_alerts_by_rule_per_
 from app.connectors.wazuh_indexer.services.alerts import get_host_alerts
 from app.connectors.wazuh_indexer.services.alerts import get_index_alerts
 from app.connectors.wazuh_indexer.utils.universal import collect_indices
-from app.db.db_session import session
+
+# App specific imports
+
 
 wazuh_indexer_alerts_router = APIRouter()
 

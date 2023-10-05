@@ -1,21 +1,11 @@
-from typing import Any
 from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Type
-from typing import Union
 
-import requests
-from elasticsearch7 import Elasticsearch
 from fastapi import HTTPException
 from loguru import logger
-from pydantic import BaseModel
-from sqlmodel import Session
-from sqlmodel import select
 
-from app.connectors.models import Connectors
-from app.connectors.schema import ConnectorResponse
-from app.connectors.utils import get_connector_info_from_db
 from app.connectors.wazuh_indexer.schema.alerts import AlertsByHost
 from app.connectors.wazuh_indexer.schema.alerts import AlertsByHostResponse
 from app.connectors.wazuh_indexer.schema.alerts import AlertsByRule
@@ -29,14 +19,9 @@ from app.connectors.wazuh_indexer.schema.alerts import HostAlertsSearchBody
 from app.connectors.wazuh_indexer.schema.alerts import HostAlertsSearchResponse
 from app.connectors.wazuh_indexer.schema.alerts import IndexAlertsSearchBody
 from app.connectors.wazuh_indexer.schema.alerts import IndexAlertsSearchResponse
-from app.connectors.wazuh_indexer.schema.indices import IndexConfigModel
 from app.connectors.wazuh_indexer.utils.universal import AlertsQueryBuilder
 from app.connectors.wazuh_indexer.utils.universal import collect_indices
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
-from app.connectors.wazuh_indexer.utils.universal import format_indices_stats
-from app.connectors.wazuh_indexer.utils.universal import format_node_allocation
-from app.connectors.wazuh_indexer.utils.universal import format_shards
-from app.db.db_session import engine
 
 # def collect_and_aggregate_alerts(field_name: str, search_body: AlertsSearchBody) -> Dict[str, int]:
 #     indices = collect_indices()

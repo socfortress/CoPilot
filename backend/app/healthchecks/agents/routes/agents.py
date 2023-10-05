@@ -1,21 +1,12 @@
-from datetime import datetime
-from typing import Dict
-from typing import List
-
 from fastapi import APIRouter
-from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Query
-from fastapi import Security
 from loguru import logger
 from starlette.status import HTTP_401_UNAUTHORIZED
 
-# App specific imports
-from app.auth.routes.auth import auth_handler
 from app.db.db_session import session
 from app.db.universal_models import Agents
 from app.healthchecks.agents.schema.agents import AgentHealthCheckResponse
-from app.healthchecks.agents.schema.agents import AgentModel
 from app.healthchecks.agents.schema.agents import HostLogsSearchBody
 from app.healthchecks.agents.schema.agents import HostLogsSearchResponse
 from app.healthchecks.agents.schema.agents import TimeCriteriaModel

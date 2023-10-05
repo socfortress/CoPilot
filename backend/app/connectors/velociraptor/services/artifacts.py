@@ -1,7 +1,3 @@
-from typing import Any
-from typing import Dict
-from typing import Optional
-
 from fastapi import HTTPException
 from loguru import logger
 
@@ -14,8 +10,6 @@ from app.connectors.velociraptor.schema.artifacts import QuarantineResponse
 from app.connectors.velociraptor.schema.artifacts import RunCommandBody
 from app.connectors.velociraptor.schema.artifacts import RunCommandResponse
 from app.connectors.velociraptor.utils.universal import UniversalService
-from app.db.db_session import session
-from app.db.universal_models import Agents
 
 universal_service = UniversalService()
 
@@ -66,7 +60,7 @@ def get_artifacts() -> ArtifactsResponse:
     Returns:
         ArtifactsResponse: A dictionary containing the artifacts.
     """
-    logger.info(f"Fetching artifacts from Velociraptor")
+    logger.info("Fetching artifacts from Velociraptor")
     query = create_query("SELECT name,description FROM artifact_definitions()")
     all_artifacts = universal_service.execute_query(query)
     if all_artifacts["success"]:

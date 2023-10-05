@@ -1,10 +1,7 @@
 import datetime
 from typing import Optional
 
-from pydantic import EmailStr
-from pydantic import validator
 from sqlmodel import Field
-from sqlmodel import Relationship
 from sqlmodel import SQLModel
 
 

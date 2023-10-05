@@ -1,6 +1,3 @@
-from typing import Any
-from typing import Optional
-
 import dnstwist
 from loguru import logger
 

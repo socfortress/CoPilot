@@ -1,22 +1,13 @@
 from typing import Any
 from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Tuple
-from typing import Union
 
-import requests
-import xmltodict
 from loguru import logger
-from pydantic import Field
 
 from app.connectors.graylog.schema.pipelines import GraylogPipelinesResponse
 from app.connectors.graylog.schema.pipelines import Pipeline
 from app.connectors.graylog.schema.pipelines import PipelineRule
 from app.connectors.graylog.schema.pipelines import PipelineRulesResponse
-from app.connectors.graylog.schema.pipelines import Stage
 from app.connectors.graylog.utils.universal import send_get_request
-from app.connectors.graylog.utils.universal import send_post_request
 
 
 def get_pipelines() -> GraylogPipelinesResponse:

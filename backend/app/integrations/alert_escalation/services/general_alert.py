@@ -1,34 +1,12 @@
-from typing import Any
-from typing import Dict
-from typing import List
 from typing import Optional
 from typing import Set
-from typing import Type
-from typing import Union
 
-from dfir_iris_client.alert import Alert
-from elasticsearch7 import Elasticsearch
 from fastapi import HTTPException
 from loguru import logger
-from pydantic import BaseModel
-from sqlmodel import Session
-from sqlmodel import select
 
-from app.connectors.dfir_iris.utils.universal import create_dfir_iris_client
-from app.connectors.dfir_iris.utils.universal import fetch_and_parse_data
 from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
 from app.connectors.dfir_iris.utils.universal import initialize_client_and_alert
-from app.connectors.models import Connectors
-from app.connectors.schema import ConnectorResponse
-from app.connectors.utils import get_connector_info_from_db
-from app.connectors.wazuh_indexer.schema.indices import IndexConfigModel
-from app.connectors.wazuh_indexer.utils.universal import AlertsQueryBuilder
-from app.connectors.wazuh_indexer.utils.universal import collect_indices
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
-from app.connectors.wazuh_indexer.utils.universal import format_indices_stats
-from app.connectors.wazuh_indexer.utils.universal import format_node_allocation
-from app.connectors.wazuh_indexer.utils.universal import format_shards
-from app.db.db_session import engine
 from app.integrations.alert_escalation.schema.general_alert import CreateAlertRequest
 from app.integrations.alert_escalation.schema.general_alert import CreateAlertResponse
 from app.integrations.alert_escalation.schema.general_alert import GenericAlertModel
@@ -118,7 +96,7 @@ def build_alert_payload(alert_details: GenericAlertModel, agent_data, ioc_payloa
             alert_iocs=[ioc_payload],
         )
     else:
-        logger.info(f"Alert does not have IoC")
+        logger.info("Alert does not have IoC")
         return IrisAlertPayload(
             alert_title=alert_details._source.rule_description,
             alert_description=alert_details._source.rule_description,

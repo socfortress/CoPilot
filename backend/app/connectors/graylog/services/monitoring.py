@@ -1,22 +1,10 @@
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Tuple
-from typing import Union
-
-import requests
-import xmltodict
 from loguru import logger
-from pydantic import Field
 
 from app.connectors.graylog.schema.monitoring import GraylogMessages
 from app.connectors.graylog.schema.monitoring import GraylogMessagesResponse
 from app.connectors.graylog.schema.monitoring import GraylogMetricsResponse
 from app.connectors.graylog.schema.monitoring import GraylogThroughputMetrics
 from app.connectors.graylog.schema.monitoring import GraylogThroughputMetricsCollection
-from app.connectors.graylog.schema.monitoring import GraylogThroughputMetricsList
-from app.connectors.graylog.schema.monitoring import GraylogTotalMessages
 from app.connectors.graylog.schema.monitoring import GraylogUncommittedJournalEntries
 from app.connectors.graylog.utils.universal import send_get_request
 

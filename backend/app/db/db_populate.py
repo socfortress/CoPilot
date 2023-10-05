@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from loguru import logger
 from sqlmodel import Session
 

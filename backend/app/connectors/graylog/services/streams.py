@@ -1,19 +1,10 @@
-from typing import Any
-from typing import Dict
 from typing import List
-from typing import Optional
-from typing import Tuple
-from typing import Union
 
-import requests
-import xmltodict
 from loguru import logger
-from pydantic import Field
 
 from app.connectors.graylog.schema.streams import GraylogStreamsResponse
 from app.connectors.graylog.schema.streams import Stream
 from app.connectors.graylog.utils.universal import send_get_request
-from app.connectors.graylog.utils.universal import send_post_request
 
 
 def get_streams() -> GraylogStreamsResponse:

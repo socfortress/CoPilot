@@ -1,14 +1,7 @@
-from typing import Any
-from typing import Dict
 from typing import List
-from typing import Optional
 from typing import Tuple
-from typing import Union
 
-import requests
-import xmltodict
 from loguru import logger
-from pydantic import Field
 
 from app.connectors.graylog.schema.collector import ConfiguredInput
 from app.connectors.graylog.schema.collector import ConfiguredInputsResponse

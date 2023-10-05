@@ -1,18 +1,10 @@
-from datetime import timedelta
-from typing import Dict
 from typing import List
-from typing import Optional
-from typing import Union
 
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
-from fastapi import Security
 from loguru import logger
-from starlette.status import HTTP_401_UNAUTHORIZED
 
-# App specific imports
-from app.auth.routes.auth import auth_handler
 from app.connectors.velociraptor.schema.artifacts import ArtifactsResponse
 from app.connectors.velociraptor.schema.artifacts import CollectArtifactBody
 from app.connectors.velociraptor.schema.artifacts import CollectArtifactResponse
@@ -28,6 +20,9 @@ from app.connectors.velociraptor.services.artifacts import run_artifact_collecti
 from app.connectors.velociraptor.services.artifacts import run_remote_command
 from app.db.db_session import session
 from app.db.universal_models import Agents
+
+# App specific imports
+
 
 velociraptor_artifacts_router = APIRouter()
 
@@ -74,7 +69,7 @@ def get_velociraptor_id(hostname: str) -> str:
 
 @velociraptor_artifacts_router.get("", response_model=ArtifactsResponse, description="Get all artifacts")
 async def get_all_artifacts() -> ArtifactsResponse:
-    logger.info(f"Fetching all artifacts")
+    logger.info("Fetching all artifacts")
     return get_artifacts()
 
 

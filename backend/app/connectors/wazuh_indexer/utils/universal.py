@@ -2,24 +2,15 @@ from datetime import datetime
 from datetime import timedelta
 from typing import Any
 from typing import Dict
-from typing import Generator
 from typing import Iterable
-from typing import List
 from typing import Tuple
-from typing import Type
 
-import requests
 from elasticsearch7 import Elasticsearch
 from loguru import logger
-from sqlmodel import Session
-from sqlmodel import select
 
-from app.connectors.models import Connectors
-from app.connectors.schema import ConnectorResponse
 from app.connectors.utils import get_connector_info_from_db
 from app.connectors.wazuh_indexer.schema.indices import IndexConfigModel
 from app.connectors.wazuh_indexer.schema.indices import Indices
-from app.db.db_session import engine
 
 
 def verify_wazuh_indexer_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:

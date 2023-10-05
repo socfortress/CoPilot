@@ -4,8 +4,6 @@ from fastapi import HTTPException
 from fastapi import Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from sqlmodel import SQLModel
-from sqlmodel import create_engine
 
 from app.agents.routes.agents import agents_router
 from app.auth.routes.auth import user_router
@@ -39,7 +37,6 @@ from app.integrations.alert_escalation.routes.general_alert import (
 )
 from app.integrations.dnstwist.routes.analyze import dnstwist_router
 from app.smtp.routes.configure import smtp_router
-from settings import SQLALCHEMY_DATABASE_URI
 
 app = FastAPI(description="CoPilot API", version="0.1.0", title="CoPilot API")
 

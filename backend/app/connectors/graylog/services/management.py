@@ -1,14 +1,4 @@
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Tuple
-from typing import Union
-
-import requests
-import xmltodict
 from loguru import logger
-from pydantic import Field
 
 from app.connectors.graylog.schema.management import DeletedIndexBody
 from app.connectors.graylog.schema.management import DeletedIndexResponse
@@ -22,7 +12,6 @@ from app.connectors.graylog.schema.management import StopStreamBody
 from app.connectors.graylog.schema.management import StopStreamResponse
 from app.connectors.graylog.services.collector import get_index_names
 from app.connectors.graylog.utils.universal import send_delete_request
-from app.connectors.graylog.utils.universal import send_get_request
 from app.connectors.graylog.utils.universal import send_post_request
 from app.connectors.graylog.utils.universal import send_put_request
 

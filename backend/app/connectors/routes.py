@@ -1,4 +1,3 @@
-from typing import List
 from typing import Union
 
 ## Auth Things
@@ -6,33 +5,17 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import File
 from fastapi import HTTPException
-from fastapi import Request
-from fastapi import Security
 from fastapi import UploadFile
-from fastapi import security
-from fastapi.responses import FileResponse
-from fastapi.responses import JSONResponse
-from fastapi.security import HTTPAuthorizationCredentials
 from loguru import logger
-from starlette.status import HTTP_204_NO_CONTENT
 from starlette.status import HTTP_401_UNAUTHORIZED
-from starlette.status import HTTP_404_NOT_FOUND
 
-from app.auth.models.users import User
-from app.auth.models.users import UserInput
-from app.auth.models.users import UserLogin
 from app.auth.routes.auth import auth_handler
-from app.auth.schema.auth import UserLoginResponse
-from app.auth.schema.auth import UserResponse
-from app.auth.services.universal import find_user
-from app.auth.services.universal import select_all_users
 from app.connectors.schema import ConnectorListResponse
 from app.connectors.schema import ConnectorResponse
 from app.connectors.schema import ConnectorsListResponse
 from app.connectors.schema import UpdateConnector
 from app.connectors.schema import VerifyConnectorResponse
 from app.connectors.services import ConnectorServices
-from app.db.db_session import session
 
 connector_router = APIRouter()
 

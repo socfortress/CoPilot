@@ -1,15 +1,9 @@
 from fastapi import APIRouter
-from fastapi import Depends
 from fastapi import HTTPException
-from fastapi import Security
-from fastapi import security
-from fastapi.security import HTTPAuthorizationCredentials
 from loguru import logger
 
 from app.auth.models.users import SMTP
 from app.auth.models.users import SMTPInput
-from app.auth.models.users import User
-from app.auth.services.universal import find_user
 from app.auth.services.universal import select_all_users
 from app.auth.utils import AuthHandler
 from app.db.db_session import session

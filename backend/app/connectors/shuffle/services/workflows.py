@@ -1,18 +1,6 @@
-import json
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Tuple
-from typing import Union
-
-import requests
-import xmltodict
 from loguru import logger
-from pydantic import Field
 
 from app.connectors.shuffle.schema.workflows import WorkflowExecutionBodyModel
-from app.connectors.shuffle.schema.workflows import WorkflowExecutionResponseModel
 from app.connectors.shuffle.schema.workflows import WorkflowExecutionStatusResponseModel
 from app.connectors.shuffle.schema.workflows import WorkflowsResponse
 from app.connectors.shuffle.utils.universal import send_get_request

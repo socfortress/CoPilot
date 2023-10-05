@@ -1,7 +1,6 @@
 from datetime import datetime
 from typing import Optional
 
-from sqlmodel import Column
 from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel

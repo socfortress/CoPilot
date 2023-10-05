@@ -1,20 +1,9 @@
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Tuple
-from typing import Union
-
-import requests
-import xmltodict
 from loguru import logger
-from pydantic import Field
 
 from app.connectors.graylog.schema.events import AlertEvent
 from app.connectors.graylog.schema.events import AlertQuery
 from app.connectors.graylog.schema.events import Alerts
 from app.connectors.graylog.schema.events import Context
-from app.connectors.graylog.schema.events import Event
 from app.connectors.graylog.schema.events import EventDefinition
 from app.connectors.graylog.schema.events import GraylogAlertsResponse
 from app.connectors.graylog.schema.events import GraylogEventDefinitionsResponse

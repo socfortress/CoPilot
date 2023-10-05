@@ -1,16 +1,8 @@
-from typing import Any
 from typing import Dict
 from typing import Union
 
-import requests
-from elasticsearch7 import Elasticsearch
 from loguru import logger
-from sqlmodel import Session
-from sqlmodel import select
 
-from app.connectors.models import Connectors
-from app.connectors.schema import ConnectorResponse
-from app.connectors.utils import get_connector_info_from_db
 from app.connectors.wazuh_indexer.schema.monitoring import ClusterHealth
 from app.connectors.wazuh_indexer.schema.monitoring import ClusterHealthResponse
 from app.connectors.wazuh_indexer.schema.monitoring import IndicesStats
@@ -23,7 +15,6 @@ from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_cl
 from app.connectors.wazuh_indexer.utils.universal import format_indices_stats
 from app.connectors.wazuh_indexer.utils.universal import format_node_allocation
 from app.connectors.wazuh_indexer.utils.universal import format_shards
-from app.db.db_session import engine
 
 
 def cluster_healthcheck() -> Union[ClusterHealthResponse, Dict[str, str]]:

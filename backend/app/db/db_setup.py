@@ -3,14 +3,15 @@ from sqlalchemy import inspect
 from sqlmodel import Session
 from sqlmodel import SQLModel
 
-# from app.connectors.models import Connectors
-# from app.auth.models.users import User
-# from app.connectors.wazuh_manager.models.rules import DisabledRule
-# from app.agents.models.agents import Agents
-# from app.customers.models.customers import Customers
-# from app.connectors.sublime.models.alerts import SublimeAlerts
-from app.db.all_models import *
+# from app.db.all_models import *
+from app.auth.models.users import User
+from app.connectors.models import Connectors
+from app.connectors.sublime.models.alerts import SublimeAlerts
+from app.connectors.wazuh_manager.models.rules import DisabledRule
 from app.db.db_populate import add_connectors_if_not_exist
+from app.db.universal_models import Agents
+from app.db.universal_models import Customers
+from app.db.universal_models import CustomersMeta
 
 
 def create_tables(engine):

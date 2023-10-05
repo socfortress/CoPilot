@@ -2,22 +2,14 @@ import json
 from datetime import datetime
 from typing import Any
 from typing import Dict
-from typing import Optional
 
 import grpc
-import pika
 import pyvelociraptor
-import requests
 from loguru import logger
 from pyvelociraptor import api_pb2
 from pyvelociraptor import api_pb2_grpc
-from sqlmodel import Session
-from sqlmodel import select
 
-from app.connectors.models import Connectors
-from app.connectors.schema import ConnectorResponse
 from app.connectors.utils import get_connector_info_from_db
-from app.db.db_session import engine
 
 
 def verify_velociraptor_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:

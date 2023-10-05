@@ -1,19 +1,10 @@
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Type
-
 from fastapi import APIRouter
-from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Query
-from fastapi import Security
 from loguru import logger
 from starlette.status import HTTP_401_UNAUTHORIZED
 
 # App specific imports
-from app.auth.routes.auth import auth_handler
 from app.customers.schema.customers import AgentModel
 from app.customers.schema.customers import AgentsResponse
 from app.customers.schema.customers import CustomerFullResponse
@@ -28,13 +19,8 @@ from app.db.universal_models import Customers
 from app.db.universal_models import CustomersMeta
 from app.healthchecks.agents.schema.agents import AgentHealthCheckResponse
 from app.healthchecks.agents.schema.agents import AgentModel
-from app.healthchecks.agents.schema.agents import HostLogsSearchBody
-from app.healthchecks.agents.schema.agents import HostLogsSearchResponse
 from app.healthchecks.agents.schema.agents import TimeCriteriaModel
-from app.healthchecks.agents.services.agents import host_logs
-from app.healthchecks.agents.services.agents import velociraptor_agent_healthcheck
 from app.healthchecks.agents.services.agents import velociraptor_agents_healthcheck
-from app.healthchecks.agents.services.agents import wazuh_agent_healthcheck
 from app.healthchecks.agents.services.agents import wazuh_agents_healthcheck
 
 customers_router = APIRouter()

@@ -2,18 +2,12 @@ import regex
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
-from fastapi import Security
-from fastapi import security
-from fastapi.security import HTTPAuthorizationCredentials
 from loguru import logger
 
-from app.auth.utils import AuthHandler
 from app.db.db_session import session
 from app.integrations.dnstwist.schema.analyze import DomainAnalysisResponse
 from app.integrations.dnstwist.schema.analyze import DomainRequestBody
 from app.integrations.dnstwist.services.analyze import analyze_domain
-from app.integrations.dnstwist.services.analyze import analyze_domain_phishing
-from app.smtp.schema.configure import SMTPResponse
 
 dnstwist_router = APIRouter()
 
