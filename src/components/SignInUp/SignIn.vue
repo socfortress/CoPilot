@@ -72,7 +72,7 @@ const rules: FormRules = {
 		{
 			required: true,
 			trigger: ["blur"],
-			message: "username is required"
+			message: "Username is required"
 		}
 	],
 	password: [
