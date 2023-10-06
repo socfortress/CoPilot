@@ -9,7 +9,7 @@ export interface Agent {
 	label: string
 	last_seen: string
 	os: string
-	velociraptor_client_version: string
+	velociraptor_agent_version: string
 	wazuh_agent_version: string
 	vulnerabilities?: AgentVulnerabilities[]
 	online?: boolean
