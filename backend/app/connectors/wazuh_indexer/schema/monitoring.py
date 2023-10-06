@@ -3,6 +3,7 @@ from typing import Optional
 from typing import Union
 
 from pydantic import BaseModel
+from pydantic import Field
 
 
 class ClusterHealth(BaseModel):
@@ -32,10 +33,10 @@ class ClusterHealthResponse(BaseModel):
 
 
 class NodeAllocation(BaseModel):
-    disk_available: str
-    disk_percent: str
-    disk_total: str
-    disk_used: str
+    disk_available: Optional[str] = Field(None, description="Disk available in bytes")
+    disk_percent: Optional[str] = Field(None, description="Disk percent")
+    disk_total: Optional[str] = Field(None, description="Disk total in bytes")
+    disk_used: Optional[str] = Field(None, description="Disk used in bytes")
     node: str
 
 
@@ -61,10 +62,10 @@ class IndicesStatsResponse(BaseModel):
 
 class Shards(BaseModel):
     index: str
-    node: str
+    node: Optional[str] = Field(None, description="Node name")
     shard: int
     state: str
-    size: str
+    size: Optional[str] = Field(None, description="Shard size in bytes")
 
 
 class ShardsResponse(BaseModel):
