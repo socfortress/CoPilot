@@ -90,7 +90,7 @@ function getAgent(id: string) {
 		.getAgents(id)
 		.then(res => {
 			if (res.data.success) {
-				agent.value = res.data.agent || null
+				agent.value = res.data.agents[0] || null
 			} else {
 				message.error(res.data?.message || "An error occurred. Please try again later.")
 				router.push(`/agents`).catch(() => {})

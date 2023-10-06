@@ -10,6 +10,6 @@ export default {
 		return HttpClient.post<FlaskBaseResponse>("/auth/register", payload)
 	},
 	refresh() {
-		return HttpClient.get<FlaskBaseResponse & { token: string }>("/refresh")
+		return HttpClient.get<FlaskBaseResponse & { token: string }>("/auth/refresh")
 	}
 }
