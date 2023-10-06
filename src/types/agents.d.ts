@@ -1,16 +1,17 @@
 export interface Agent {
-	agent_id: string
-	client_id: string
-	client_last_seen: string
-	critical_asset: boolean
-	hostname: string
 	id?: number
+	agent_id: string
 	ip_address: string
-	label: string
-	last_seen: string
 	os: string
-	velociraptor_client_version: string
+	hostname: string
+	label: string
+	critical_asset: boolean
+	wazuh_last_seen: string
+	velociraptor_id: string
+	velociraptor_last_seen: string
 	wazuh_agent_version: string
+	velociraptor_agent_version: string
+	customer_code: null | string
 	vulnerabilities?: AgentVulnerabilities[]
 	online?: boolean
 }

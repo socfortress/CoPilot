@@ -96,7 +96,7 @@ const handleDelete = () => {
 function deleteIndex() {
 	loading.value = true
 
-	Api.indices
+	Api.graylog
 		.deleteIndex(index.value.index)
 		.then(res => {
 			if (res.data.success) {

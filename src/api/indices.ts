@@ -14,8 +14,5 @@ export default {
 	},
 	getClusterHealth() {
 		return HttpClient.get<FlaskBaseResponse & { cluster_health: ClusterHealth }>("/wazuh_indexer/health")
-	},
-	deleteIndex(index: string) {
-		return HttpClient.delete<FlaskBaseResponse>(`/graylog/indices/${index}/delete`)
 	}
 }
