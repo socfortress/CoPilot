@@ -34,18 +34,18 @@
 
 <script setup lang="ts">
 import { computed, toRefs } from "vue"
-import { type Index } from "@/types/indices.d"
+import type { IndexStats } from "@/types/indices.d"
 import { Vue3Marquee } from "vue3-marquee"
 import IndexIcon from "@/components/indices/IndexIcon.vue"
 import { NSpin, NCard } from "naive-ui"
 import { useThemeStore } from "@/stores/theme"
 
 const emit = defineEmits<{
-	(e: "click", value: Index): void
+	(e: "click", value: IndexStats): void
 }>()
 
 const props = defineProps<{
-	indices: Index[] | null
+	indices: IndexStats[] | null
 }>()
 const { indices } = toRefs(props)
 

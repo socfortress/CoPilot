@@ -1,4 +1,4 @@
-export interface Index {
+export interface IndexStats {
 	docs_count: string
 	health: IndexHealth
 	index: string

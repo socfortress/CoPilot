@@ -56,20 +56,20 @@
 
 <script setup lang="ts">
 import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
-import { type Index, type IndexShard } from "@/types/indices.d"
+import type { IndexStats, IndexShard } from "@/types/indices.d"
 import IndexCard from "@/components/indices/IndexCard.vue"
 import Api from "@/api"
 import { nanoid } from "nanoid"
 import { useMessage, NScrollbar, NSpin, NTable, NSelect, NCard } from "naive-ui"
 
-type IndexModel = Index | null | ""
+type IndexModel = IndexStats | null | ""
 
 const emit = defineEmits<{
 	(e: "update:modelValue", value: IndexModel): void
 }>()
 
 const props = defineProps<{
-	indices: Index[] | null
+	indices: IndexStats[] | null
 	modelValue: IndexModel
 }>()
 const { indices, modelValue } = toRefs(props)

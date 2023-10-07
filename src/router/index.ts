@@ -350,12 +350,6 @@ const router = createRouter({
 					name: "tables-data-table",
 					component: () => import("@/views/Tables/DataTable.vue"),
 					meta: { title: "Data Table" }
-				},
-				{
-					path: "grid",
-					name: "tables-grid",
-					component: () => import("@/views/Tables/Grid.vue"),
-					meta: { title: "Data Grid" }
 				}
 			]
 		},
