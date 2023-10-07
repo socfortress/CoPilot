@@ -80,7 +80,7 @@ const loadingAgent = ref(false)
 const agent = ref<Agent | null>(null)
 
 const isOnline = computed(() => {
-	return isAgentOnline(agent.value?.last_seen ?? "")
+	return isAgentOnline(agent.value?.wazuh_last_seen ?? "")
 })
 
 function getAgent(id: string) {

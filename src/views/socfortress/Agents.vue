@@ -91,7 +91,7 @@ function getAgents() {
 		.then(res => {
 			if (res.data.success) {
 				agents.value = (res.data.agents || []).map(o => {
-					o.online = isAgentOnline(o.last_seen)
+					o.online = isAgentOnline(o.wazuh_last_seen)
 					return o
 				})
 			} else {
@@ -133,7 +133,6 @@ function syncAgents() {
 
 onBeforeMount(() => {
 	getAgents()
-	syncAgents()
 })
 </script>
 
