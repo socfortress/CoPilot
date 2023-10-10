@@ -4,7 +4,6 @@ from loguru import logger
 
 from app.agents.schema.agents import AgentsResponse
 from app.agents.velociraptor.schema.agents import VelociraptorAgent
-from app.agents.velociraptor.utils.universal import parse_date
 from app.connectors.velociraptor.services.artifacts import ArtifactsService
 from app.connectors.velociraptor.utils.universal import UniversalService
 

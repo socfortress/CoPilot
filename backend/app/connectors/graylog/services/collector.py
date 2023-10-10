@@ -15,7 +15,7 @@ from app.connectors.graylog.utils.universal import send_get_request
 
 def get_indices_full() -> GraylogIndicesResponse:
     """Get indices from Graylog."""
-    logger.info(f"Getting indices from Graylog")
+    logger.info("Getting indices from Graylog")
     indices_collected = send_get_request(endpoint="/api/system/indexer/indices")
     if indices_collected["success"]:
         indices_data = indices_collected["data"]["all"]["indices"]

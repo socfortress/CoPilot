@@ -10,7 +10,6 @@ from app.connectors.cortex.schema.analyzers import RunAnalyzerBody
 from app.connectors.cortex.schema.analyzers import RunAnalyzerResponse
 from app.connectors.cortex.services.analyzers import get_analyzers
 from app.connectors.cortex.services.analyzers import run_analyzer
-from app.db.db_session import session
 
 # App specific imports
 
@@ -31,7 +30,7 @@ def verify_analyzer_exists(run_analyzer_body: RunAnalyzerBody) -> RunAnalyzerBod
 
 @cortex_analyzer_router.get("", response_model=AnalyzersResponse, description="Get all analyzers")
 async def get_all_analyzers() -> AnalyzersResponse:
-    logger.info(f"Fetching all analyzers")
+    logger.info("Fetching all analyzers")
     return get_analyzers()
 
 

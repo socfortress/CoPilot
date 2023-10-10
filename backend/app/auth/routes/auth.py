@@ -33,7 +33,7 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
             headers={"WWW-Authenticate": "Bearer"},
         )
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = auth_handler.encode_token(user.username)  # replace with actual scopes
+    access_token = auth_handler.encode_token(user.username, access_token_expires)
     return {"access_token": access_token, "token_type": "bearer"}
 
 
@@ -49,7 +49,7 @@ def register(user: UserInput):
     return {"message": "User created successfully", "success": True}
 
 
-@user_router.post("/login", response_model=UserLoginResponse, description="Login user")
+@user_router.post("/login", response_model=UserLoginResponse, description="Login user", deprecated=True)
 def login(user: UserLogin):
     user_found = find_user(user.username)
     if not user_found:

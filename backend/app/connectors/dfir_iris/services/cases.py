@@ -1,24 +1,16 @@
 from datetime import datetime
-from typing import Any
-from typing import Callable
 from typing import Dict
 from typing import List
-from typing import Tuple
 
 from dfir_iris_client.case import Case
 from fastapi import HTTPException
 from loguru import logger
 
-from app.connectors.dfir_iris.schema.cases import CaseModel
 from app.connectors.dfir_iris.schema.cases import CaseOlderThanBody
 from app.connectors.dfir_iris.schema.cases import CaseResponse
 from app.connectors.dfir_iris.schema.cases import CasesBreachedResponse
 from app.connectors.dfir_iris.schema.cases import SingleCaseBody
 from app.connectors.dfir_iris.schema.cases import SingleCaseResponse
-from app.connectors.dfir_iris.schema.notes import NoteDetails
-from app.connectors.dfir_iris.schema.notes import NoteDetailsResponse
-from app.connectors.dfir_iris.schema.notes import NotesQueryParams
-from app.connectors.dfir_iris.schema.notes import NotesResponse
 from app.connectors.dfir_iris.utils.universal import create_dfir_iris_client
 from app.connectors.dfir_iris.utils.universal import fetch_and_parse_data
 

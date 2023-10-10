@@ -1,18 +1,8 @@
-from datetime import timedelta
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Union
-
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
-from fastapi import Security
 from loguru import logger
-from starlette.status import HTTP_401_UNAUTHORIZED
 
-# App specific imports
-from app.auth.routes.auth import auth_handler
 from app.connectors.dfir_iris.schema.alerts import AlertResponse
 from app.connectors.dfir_iris.schema.users import User
 from app.connectors.dfir_iris.schema.users import UsersResponse
@@ -20,7 +10,6 @@ from app.connectors.dfir_iris.services.users import assign_user_to_alert
 from app.connectors.dfir_iris.services.users import get_users
 from app.connectors.dfir_iris.utils.universal import check_alert_exists
 from app.connectors.dfir_iris.utils.universal import check_user_exists
-from app.db.db_session import session
 
 
 def verify_user_exists(user_id: int) -> int:
@@ -40,7 +29,7 @@ dfir_iris_users_router = APIRouter()
 
 @dfir_iris_users_router.get("", response_model=UsersResponse, description="Get all users")
 async def get_all_users() -> UsersResponse:
-    logger.info(f"Fetching all users")
+    logger.info("Fetching all users")
     return get_users()
 
 

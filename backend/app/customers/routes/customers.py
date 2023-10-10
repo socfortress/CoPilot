@@ -17,8 +17,9 @@ from app.db.db_session import session
 from app.db.universal_models import Agents
 from app.db.universal_models import Customers
 from app.db.universal_models import CustomersMeta
+
+# from app.healthchecks.agents.schema.agents import AgentModel
 from app.healthchecks.agents.schema.agents import AgentHealthCheckResponse
-from app.healthchecks.agents.schema.agents import AgentModel
 from app.healthchecks.agents.schema.agents import TimeCriteriaModel
 from app.healthchecks.agents.services.agents import velociraptor_agents_healthcheck
 from app.healthchecks.agents.services.agents import wazuh_agents_healthcheck
@@ -49,7 +50,7 @@ async def create_customer(customer: CustomerRequestBody) -> CustomerResponse:
 
 @customers_router.get("", response_model=CustomersResponse, description="Get all customers")
 async def get_customers() -> CustomersResponse:
-    logger.info(f"Fetching all customers")
+    logger.info("Fetching all customers")
     customers = session.query(Customers).all()
     # Explode the customers list into a list of Customer objects
     customers = [CustomerRequestBody.parse_obj(customer.__dict__) for customer in customers]
@@ -198,7 +199,7 @@ async def get_agents(customer_code: str) -> AgentsResponse:
     response_model=AgentHealthCheckResponse,
     description="Get agents healthcheck for the given customer_code",
 )
-async def get_agents_healthcheck(
+async def get_wazuh_agents_healthcheck(
     customer_code: str,
     minutes: int = Query(60, description="Number of minutes within which the agent should have been last seen to be considered healthy."),
     hours: int = Query(0, description="Number of hours within which the agent should have been last seen to be considered healthy."),
@@ -221,7 +222,7 @@ async def get_agents_healthcheck(
     response_model=AgentHealthCheckResponse,
     description="Get agents healthcheck for the given customer_code",
 )
-async def get_agents_healthcheck(
+async def get_velociraptor_agents_healthcheck(
     customer_code: str,
     minutes: int = Query(60, description="Number of minutes within which the agent should have been last seen to be considered healthy."),
     hours: int = Query(0, description="Number of hours within which the agent should have been last seen to be considered healthy."),

@@ -1,23 +1,13 @@
-from datetime import timedelta
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Union
-
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
-from fastapi import Security
 from loguru import logger
-from starlette.status import HTTP_401_UNAUTHORIZED
 
-# App specific imports
-from app.auth.routes.auth import auth_handler
 from app.connectors.dfir_iris.schema.assets import AssetResponse
 from app.connectors.dfir_iris.services.assets import get_case_assets
 from app.connectors.dfir_iris.utils.universal import check_case_exists
-from app.connectors.wazuh_indexer.utils.universal import collect_indices
-from app.db.db_session import session
+
+# App specific imports
 
 
 def verify_case_exists(case_id: int) -> int:

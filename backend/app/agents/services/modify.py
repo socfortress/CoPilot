@@ -1,5 +1,3 @@
-from typing import List
-
 from fastapi import HTTPException
 
 import app.agents.wazuh.services.agents as wazuh_services

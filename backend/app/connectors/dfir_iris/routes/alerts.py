@@ -1,18 +1,8 @@
-from datetime import timedelta
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Union
-
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
-from fastapi import Security
 from loguru import logger
-from starlette.status import HTTP_401_UNAUTHORIZED
 
-# App specific imports
-from app.auth.routes.auth import auth_handler
 from app.connectors.dfir_iris.schema.alerts import AlertResponse
 from app.connectors.dfir_iris.schema.alerts import AlertsResponse
 from app.connectors.dfir_iris.schema.alerts import BookmarkedAlertsResponse
@@ -20,7 +10,8 @@ from app.connectors.dfir_iris.services.alerts import bookmark_alert
 from app.connectors.dfir_iris.services.alerts import get_alerts
 from app.connectors.dfir_iris.services.alerts import get_bookmarked_alerts
 from app.connectors.dfir_iris.utils.universal import check_alert_exists
-from app.db.db_session import session
+
+# App specific imports
 
 
 def verify_alert_exists(alert_id: str) -> str:
@@ -34,13 +25,13 @@ dfir_iris_alerts_router = APIRouter()
 
 @dfir_iris_alerts_router.get("", response_model=AlertsResponse, description="Get all alerts")
 async def get_all_alerts() -> AlertsResponse:
-    logger.info(f"Fetching all alerts")
+    logger.info("Fetching all alerts")
     return get_alerts()
 
 
 @dfir_iris_alerts_router.get("/bookmark", response_model=BookmarkedAlertsResponse, description="Get all bookmarked alerts")
 async def get_all_bookmarked_alerts() -> BookmarkedAlertsResponse:
-    logger.info(f"Fetching all bookmarked alerts")
+    logger.info("Fetching all bookmarked alerts")
     return get_bookmarked_alerts()
 
 

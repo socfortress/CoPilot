@@ -1,23 +1,13 @@
-from functools import wraps
-from http import HTTPStatus
-from typing import Callable
-from typing import List
 from typing import Union
 
 ## Auth Things
 from fastapi import APIRouter
-from fastapi import Depends
 from fastapi import File
 from fastapi import HTTPException
-from fastapi import Request
 from fastapi import Security
 from fastapi import UploadFile
-from fastapi.security import HTTPAuthorizationCredentials
-from fastapi.security import HTTPBearer
 from loguru import logger
-from starlette.status import HTTP_401_UNAUTHORIZED
 
-from app.auth.routes.auth import auth_handler
 from app.auth.utils import AuthHandler
 from app.connectors.schema import ConnectorListResponse
 from app.connectors.schema import ConnectorResponse

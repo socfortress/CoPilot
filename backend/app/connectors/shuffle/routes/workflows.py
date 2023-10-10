@@ -7,23 +7,19 @@ from app.connectors.shuffle.schema.workflows import WorkflowExecutionResponseMod
 from app.connectors.shuffle.schema.workflows import WorkflowsResponse
 from app.connectors.shuffle.services.workflows import get_workflow_executions
 from app.connectors.shuffle.services.workflows import get_workflows
-from app.db.db_session import session
-
-# App specific imports
-
 
 shuffle_workflows_router = APIRouter()
 
 
 @shuffle_workflows_router.get("", response_model=WorkflowsResponse, description="Get all workflows")
 async def get_all_workflows() -> WorkflowsResponse:
-    logger.info(f"Fetching all workflows")
+    logger.info("Fetching all workflows")
     return get_workflows()
 
 
 @shuffle_workflows_router.get("/executions", response_model=WorkflowExecutionResponseModel, description="Get all workflow executions")
 async def get_all_workflow_executions() -> WorkflowExecutionResponseModel:
-    logger.info(f"Fetching all workflow executions")
+    logger.info("Fetching all workflow executions")
 
     # Initialize an empty list for storing workflow details
     workflow_details = []

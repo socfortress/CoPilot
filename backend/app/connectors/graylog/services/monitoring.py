@@ -11,7 +11,7 @@ from app.connectors.graylog.utils.universal import send_get_request
 
 def get_messages(page_number: int) -> GraylogMessagesResponse:
     """Get messages from Graylog."""
-    logger.info(f"Getting messages from Graylog")
+    logger.info("Getting messages from Graylog")
     params = {"page": page_number}
     messages_collected = send_get_request(endpoint="/api/system/messages", params=params)
     if messages_collected["success"]:

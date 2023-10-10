@@ -1,17 +1,8 @@
-from typing import List
 from typing import Union
 
 from fastapi import APIRouter
 from fastapi import HTTPException
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from loguru import logger
 
-from app.connectors.schema import ConnectorListResponse
-from app.connectors.schema import ConnectorResponse
-from app.connectors.schema import ConnectorsListResponse
-from app.connectors.schema import VerifyConnectorResponse
-from app.connectors.services import ConnectorServices
 from app.connectors.wazuh_indexer.schema.monitoring import ClusterHealthResponse
 from app.connectors.wazuh_indexer.schema.monitoring import IndicesStatsResponse
 from app.connectors.wazuh_indexer.schema.monitoring import NodeAllocationResponse

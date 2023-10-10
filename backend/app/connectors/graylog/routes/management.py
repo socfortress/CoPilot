@@ -3,12 +3,8 @@ from typing import List
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
-from fastapi import Security
 from loguru import logger
-from starlette.status import HTTP_401_UNAUTHORIZED
 
-# App specific imports
-from app.auth.routes.auth import auth_handler
 from app.connectors.graylog.schema.management import DeletedIndexBody
 from app.connectors.graylog.schema.management import DeletedIndexResponse
 from app.connectors.graylog.schema.management import StartInputBody
@@ -27,7 +23,6 @@ from app.connectors.graylog.services.management import start_stream
 from app.connectors.graylog.services.management import stop_input
 from app.connectors.graylog.services.management import stop_stream
 from app.connectors.graylog.services.streams import get_stream_ids
-from app.db.db_session import session
 
 graylog_management_router = APIRouter()
 

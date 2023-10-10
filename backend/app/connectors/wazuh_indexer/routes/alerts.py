@@ -48,7 +48,7 @@ def verify_index_name(index_alerts_search_body: IndexAlertsSearchBody) -> IndexA
 
 @wazuh_indexer_alerts_router.post("", response_model=AlertsSearchResponse, description="Get all alerts")
 async def get_all_alerts(alerts_search_body: AlertsSearchBody) -> AlertsSearchResponse:
-    logger.info(f"Fetching all alerts")
+    logger.info("Fetching all alerts")
     return get_alerts(alerts_search_body)
 
 
@@ -68,13 +68,13 @@ async def get_all_alerts_for_index(
 
 @wazuh_indexer_alerts_router.post("/hosts/all", response_model=AlertsByHostResponse, description="Get number of all alerts for all hosts")
 async def get_all_alerts_by_host(alerts_search_body: AlertsSearchBody) -> AlertsByHostResponse:
-    logger.info(f"Fetching number of all alerts for all hosts")
+    logger.info("Fetching number of all alerts for all hosts")
     return get_alerts_by_host(alerts_search_body)
 
 
 @wazuh_indexer_alerts_router.post("/rules/all", response_model=AlertsByRuleResponse, description="Get number of all alerts for all rules")
 async def get_all_alerts_by_rule(alerts_search_body: AlertsSearchBody) -> AlertsByRuleResponse:
-    logger.info(f"Fetching number of all alerts for all rules")
+    logger.info("Fetching number of all alerts for all rules")
     return get_alerts_by_rule(alerts_search_body)
 
 
@@ -93,5 +93,5 @@ async def get_all_alerts_by_rule_per_host(alerts_search_body: AlertsSearchBody) 
     Returns:
         AlertsByRulePerHostResponse: _description_
     """
-    logger.info(f"Fetching number of all alerts for all rules per host")
+    logger.info("Fetching number of all alerts for all rules per host")
     return get_alerts_by_rule_per_host(alerts_search_body)

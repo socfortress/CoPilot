@@ -5,15 +5,10 @@ from typing import List
 from typing import Union
 
 from cortex4py.api import Api
-from dfir_iris_client.alert import (
-    Alert,  # Assuming this import is needed in your context
-)
 from fastapi import HTTPException
 from loguru import logger
 
-from app.connectors.cortex.schema.analyzers import (
-    AnalyzerJobData,  # Assuming this import is needed
-)
+from app.connectors.cortex.schema.analyzers import AnalyzerJobData
 from app.connectors.cortex.schema.analyzers import AnalyzersResponse
 from app.connectors.cortex.schema.analyzers import RunAnalyzerBody
 from app.connectors.cortex.schema.analyzers import RunAnalyzerResponse
@@ -23,47 +18,6 @@ from app.connectors.cortex.utils.universal import (
 from app.connectors.cortex.utils.universal import (
     run_and_wait_for_analyzer,  # Importing from universal.py
 )
-
-############################# Helpful to find the attributes of the analyzer object
-# def fetch_analyzers(api: Api) -> List[Dict]:
-#     analyzers = api.analyzers.find_all({}, range="all")
-#     if analyzers:  # Check if the list is not empty
-#         # Log the attributes of the first analyzer object to understand its structure
-#         logger.info(f"Attributes of the Analyzer object: {dir(analyzers[0])}")
-#     return analyzers
-
-
-# def fetch_analyzers(api: Api) -> List[Dict]:
-#     return api.analyzers.find_all({}, range="all")
-
-# def build_analyzer_response(analyzers: List[Dict]) -> Dict[str, Union[bool, str, List[str]]]:
-#     try:
-#         analyzer_names = [analyzer.name for analyzer in analyzers]
-#         return analyzer_names
-#     except Exception as e:
-#         logger.error(f"Error processing analyzers: {e}")
-#         raise HTTPException(status_code=500, detail=f"Error processing analyzers: {e}")
-
-# def get_analyzers() -> Dict[str, Union[bool, str, List[str]]]:
-#     api = create_cortex_client('Cortex')
-#     if api is None:
-#         return {"success": False, "message": "API initialization failed"}
-
-#     analyzers = fetch_analyzers(api)
-#     return AnalyzersResponse(success=True, message="Successfully fetched analyzers", analyzers=build_analyzer_response(analyzers))
-
-# def run_analyzer(run_analyzer_body: RunAnalyzerBody) -> Dict[str, Union[bool, str, List[str]]]:
-#     api = create_cortex_client('Cortex')
-#     if api is None:
-#         return {"success": False, "message": "API initialization failed"}
-
-#     analyzer_name = run_analyzer_body.analyzer_name
-#     analyzer_data = run_analyzer_body.analyzer_data
-#     job_data = AnalyzerJobData(data=analyzer_data, dataType='ip')
-#     result = run_and_wait_for_analyzer(analyzer_name=analyzer_name, job_data=job_data)
-#     if result is None:
-#         raise HTTPException(status_code=500, detail=f"Failed to run analyzer {analyzer_name}")
-#     return RunAnalyzerResponse(success=True, message="Successfully ran analyzer", report=result["report"])
 
 
 def fetch_analyzers(api: Api) -> List[Dict]:

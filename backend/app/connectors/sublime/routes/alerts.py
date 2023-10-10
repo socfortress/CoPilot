@@ -31,5 +31,5 @@ async def get_sublime_alerts() -> SublimeAlertsResponse:
     Returns:
         jsonify: A JSON response containing all the alerts stored in the `sublimealerts` table.
     """
-    logger.info(f"Fetching all alerts from Sublime")
+    logger.info("Fetching all alerts from Sublime")
     return collect_alerts()

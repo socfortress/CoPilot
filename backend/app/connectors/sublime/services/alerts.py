@@ -16,7 +16,6 @@ from app.connectors.sublime.schema.alerts import SublimeAlertsResponse
 from app.connectors.sublime.schema.alerts import SublimeAlertsSchema
 from app.connectors.sublime.utils.universal import send_get_request
 from app.db.db_session import session
-from app.db.universal_models import Agents
 
 
 def create_sublime_alert(alert_request_body: AlertRequestBody) -> SublimeAlerts:

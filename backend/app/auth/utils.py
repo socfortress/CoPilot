@@ -18,7 +18,7 @@ class AuthHandler:
         scopes={"admin": "Admin users", "analyst": "SOC Analysts"},
     )
     pwd_context = CryptContext(schemes=["bcrypt"])
-    secret = "supersecret"
+    secret = "bL4unrkoxtFs1MT6A7Ns2yMLkduyuqrkTxDV9CjlbNc="
 
     def get_password_hash(self, password):
         return self.pwd_context.hash(password)
@@ -32,8 +32,13 @@ class AuthHandler:
             return False
         return user
 
-    def encode_token(self, username: str):
-        payload = {"exp": datetime.utcnow() + timedelta(hours=8), "iat": datetime.utcnow(), "sub": username, "scopes": [get_role(username)]}
+    def encode_token(self, username: str, access_token_expires: timedelta = timedelta(minutes=60)):
+        payload = {
+            "exp": datetime.utcnow() + access_token_expires,
+            "iat": datetime.utcnow(),
+            "sub": username,
+            "scopes": [get_role(username)],
+        }
         return jwt.encode(payload, self.secret, algorithm="HS256")
 
     def decode_token(self, token):

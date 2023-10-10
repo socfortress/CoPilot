@@ -1,29 +1,13 @@
 import time
 import traceback
-from datetime import datetime
-from datetime import timedelta
 from typing import Any
 from typing import Dict
-from typing import Generator
-from typing import Iterable
-from typing import List
-from typing import Tuple
-from typing import Type
 
-import requests
 from cortex4py.api import Api
-from elasticsearch7 import Elasticsearch
 from loguru import logger
-from sqlmodel import Session
-from sqlmodel import select
 
 from app.connectors.cortex.schema.analyzers import AnalyzerJobData
-from app.connectors.models import Connectors
-from app.connectors.schema import ConnectorResponse
 from app.connectors.utils import get_connector_info_from_db
-from app.connectors.wazuh_indexer.schema.indices import IndexConfigModel
-from app.connectors.wazuh_indexer.schema.indices import Indices
-from app.db.db_session import engine
 
 
 def verify_cortex_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
@@ -43,8 +27,8 @@ def verify_cortex_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
             logger.debug("Cortex connection successful")
             return {"connectionSuccessful": True, "message": "Cortex connection successful"}
         else:
-            logger.error(f"Connection to {attributes['connector_url']} failed with error: {e}")
-            return {"connectionSuccessful": False, "message": f"Connection to {attributes['connector_url']} failed with error: {e}"}
+            logger.error(f"Connection to {attributes['connector_url']} failed with error.")
+            return {"connectionSuccessful": False, "message": f"Connection to {attributes['connector_url']} failed with error."}
     except Exception as e:
         logger.error(f"Connection to {attributes['connector_url']} failed with error: {e}")
         return {"connectionSuccessful": False, "message": f"Connection to {attributes['connector_url']} failed with error: {e}"}
@@ -83,17 +67,6 @@ def run_and_wait_for_analyzer(analyzer_name: str, job_data: AnalyzerJobData) -> 
     if api is None:
         return {"success": False, "message": "API initialization failed"}
     try:
-        # job = api.analyzers.run_by_name(
-        #     analyzer_name,
-        #     {
-        #         "data": ioc_value,
-        #         "dataType": data_type,
-        #         "tlp": 1,
-        #         "message": "custom message sent to analyzer",
-        #     },
-        #     force=1,
-        # )
-        job_query = job_data.dict()
         job = api.analyzers.run_by_name(analyzer_name, job_data.dict(), force=1)
         return monitor_analyzer_job(api, job)
     except Exception as e:

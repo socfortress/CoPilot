@@ -32,7 +32,7 @@ def verify_admin(user):
 
 @agents_router.get("", response_model=AgentsResponse, description="Get all disabled rules")
 async def get_agents() -> AgentsResponse:
-    logger.info(f"Fetching all agents")
+    logger.info("Fetching all agents")
     agents = session.query(Agents).all()
     return AgentsResponse(agents=agents, success=True, message="Agents fetched successfully")
 
@@ -81,7 +81,7 @@ async def get_agent_vulnerabilities(agent_id: str) -> WazuhAgentVulnerabilitiesR
 
 @agents_router.get("/wazuh/outdated", response_model=OutdatedWazuhAgentsResponse, description="Get all outdated Wazuh agents")
 async def get_outdated_wazuh_agents() -> OutdatedWazuhAgentsResponse:
-    logger.info(f"Fetching all outdated Wazuh agents")
+    logger.info("Fetching all outdated Wazuh agents")
     return get_outdated_agents_wazuh()
 
 
@@ -91,7 +91,7 @@ async def get_outdated_wazuh_agents() -> OutdatedWazuhAgentsResponse:
     description="Get all outdated Velociraptor agents",
 )
 async def get_outdated_velociraptor_agents() -> OutdatedVelociraptorAgentsResponse:
-    logger.info(f"Fetching all outdated Velociraptor agents")
+    logger.info("Fetching all outdated Velociraptor agents")
     return get_outdated_agents_velociraptor()
 
 
