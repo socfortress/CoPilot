@@ -1,14 +1,9 @@
 from datetime import datetime
-from typing import Any
-from typing import Dict
 from typing import List
 from typing import Optional
-from typing import Union
 
 from pydantic import BaseModel
 from pydantic import Field
-
-from app.db.universal_models import Agents
 
 
 class WazuhAgent(BaseModel):

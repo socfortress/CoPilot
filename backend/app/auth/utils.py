@@ -1,49 +1,117 @@
-import datetime
+from datetime import datetime
+from datetime import timedelta
 
 import jwt
+from fastapi import Depends
 from fastapi import HTTPException
-from fastapi import Security
-from fastapi.security import HTTPAuthorizationCredentials
-from fastapi.security import HTTPBearer
+from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import SecurityScopes
 from passlib.context import CryptContext
-from starlette import status
 
 from app.auth.services.universal import find_user
+from app.auth.services.universal import get_role
 
 
 class AuthHandler:
-    security = HTTPBearer()
+    security = OAuth2PasswordBearer(
+        tokenUrl="auth/token",
+        scopes={"admin": "Admin users", "analyst": "SOC Analysts", "customer": "Customers"},
+    )
     pwd_context = CryptContext(schemes=["bcrypt"])
     secret = "supersecret"
 
     def get_password_hash(self, password):
         return self.pwd_context.hash(password)
 
-    def verify_password(self, pwd, hashed_pwd):
-        return self.pwd_context.verify(pwd, hashed_pwd)
+    def verify_password(self, plain_password, hashed_password):
+        return self.pwd_context.verify(plain_password, hashed_password)
 
-    def encode_token(self, user_id):
-        payload = {"exp": datetime.datetime.utcnow() + datetime.timedelta(hours=8), "iat": datetime.datetime.utcnow(), "sub": user_id}
+    def authenticate_user(self, username: str, password: str):
+        user = find_user(username)
+        if not user or not self.verify_password(password, user.password):
+            return False
+        return user
+
+    def encode_token(self, username: str):
+        payload = {"exp": datetime.utcnow() + timedelta(hours=8), "iat": datetime.utcnow(), "sub": username, "scopes": [get_role(username)]}
         return jwt.encode(payload, self.secret, algorithm="HS256")
 
     def decode_token(self, token):
         try:
             payload = jwt.decode(token, self.secret, algorithms=["HS256"])
-            return payload["sub"]
+            return payload["sub"], payload.get("scopes", [])
         except jwt.ExpiredSignatureError:
             raise HTTPException(status_code=401, detail="Expired signature")
         except jwt.InvalidTokenError:
             raise HTTPException(status_code=401, detail="Invalid token")
 
-    def auth_wrapper(self, auth: HTTPAuthorizationCredentials = Security(security)):
-        return self.decode_token(auth.credentials)
+    def get_current_user(self, security_scopes: SecurityScopes, token: str = Depends(security)):
+        if security_scopes.scopes:
+            authenticate_value = f'Bearer scope="{security_scopes.scope_str}"'
+        else:
+            authenticate_value = "Bearer"
 
-    def get_current_user(self, auth: HTTPAuthorizationCredentials = Security(security)):
-        credentials_exception = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate credentials")
-        username = self.decode_token(auth.credentials)
+        credentials_exception = HTTPException(
+            status_code=401,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": authenticate_value},
+        )
+
+        try:
+            username, token_scopes = self.decode_token(token)
+        except Exception as e:
+            raise HTTPException(
+                status_code=401,
+                detail=f"Could not decode token: {e}",
+                headers={"WWW-Authenticate": authenticate_value},
+            )
+
         if username is None:
-            raise credentials_exception
+            raise HTTPException(
+                status_code=401,
+                detail="Username not found in token",
+                headers={"WWW-Authenticate": authenticate_value},
+            )
         user = find_user(username)
         if user is None:
-            raise credentials_exception
+            raise HTTPException(
+                status_code=401,
+                detail="User not found",
+                headers={"WWW-Authenticate": authenticate_value},
+            )
+
+        for scope in security_scopes.scopes:
+            if scope not in token_scopes:
+                raise HTTPException(
+                    status_code=401,
+                    detail="Not enough permissions",
+                    headers={"WWW-Authenticate": authenticate_value},
+                )
+
         return user
+
+    def return_username_for_logging(self, token: str = Depends(security)):
+        username, token_scopes = self.decode_token(token)
+        return username
+
+    def require_any_scope(self, *required_scopes: str):
+        async def _require_any_scope(token: str = Depends(self.security)):
+            if not token:
+                raise HTTPException(
+                    status_code=401,
+                    detail="Not authenticated",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+
+            username, token_scopes = self.decode_token(token)
+
+            if not any(scope in token_scopes for scope in required_scopes):
+                raise HTTPException(
+                    status_code=401,
+                    detail="Not enough permissions, you don't have any of the required scopes.",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+
+            return username
+
+        return _require_any_scope

@@ -4,14 +4,8 @@ from sqlmodel import Session
 from sqlmodel import SQLModel
 
 # from app.db.all_models import *
-from app.auth.models.users import User
-from app.connectors.models import Connectors
-from app.connectors.sublime.models.alerts import SublimeAlerts
-from app.connectors.wazuh_manager.models.rules import DisabledRule
 from app.db.db_populate import add_connectors_if_not_exist
-from app.db.universal_models import Agents
-from app.db.universal_models import Customers
-from app.db.universal_models import CustomersMeta
+from app.db.db_populate import add_roles_if_not_exist
 
 
 def create_tables(engine):
@@ -33,4 +27,5 @@ def create_tables(engine):
     # After creating all tables, add connectors if they don't exist
     with Session(engine) as session:
         add_connectors_if_not_exist(session)
+        add_roles_if_not_exist(session)
         session.commit()

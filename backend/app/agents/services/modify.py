@@ -1,15 +1,8 @@
 from typing import List
 
 from fastapi import HTTPException
-from loguru import logger
 
-import app.agents.velociraptor.services.agents as velociraptor_services
 import app.agents.wazuh.services.agents as wazuh_services
-from app.agents.schema.agents import SyncedAgent
-from app.agents.schema.agents import SyncedAgentsResponse
-from app.agents.velociraptor.schema.agents import VelociraptorAgent
-from app.agents.wazuh.schema.agents import WazuhAgent
-from app.agents.wazuh.schema.agents import WazuhAgentsList
 from app.db.db_session import session
 from app.db.universal_models import Agents
 

@@ -1,14 +1,7 @@
 # analyzers.py
 
-import json
-import time
-from datetime import datetime
-from typing import Any
-from typing import Callable
 from typing import Dict
 from typing import List
-from typing import Optional
-from typing import Tuple
 from typing import Union
 
 from cortex4py.api import Api

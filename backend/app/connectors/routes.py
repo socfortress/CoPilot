@@ -1,3 +1,7 @@
+from functools import wraps
+from http import HTTPStatus
+from typing import Callable
+from typing import List
 from typing import Union
 
 ## Auth Things
@@ -5,11 +9,16 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import File
 from fastapi import HTTPException
+from fastapi import Request
+from fastapi import Security
 from fastapi import UploadFile
+from fastapi.security import HTTPAuthorizationCredentials
+from fastapi.security import HTTPBearer
 from loguru import logger
 from starlette.status import HTTP_401_UNAUTHORIZED
 
 from app.auth.routes.auth import auth_handler
+from app.auth.utils import AuthHandler
 from app.connectors.schema import ConnectorListResponse
 from app.connectors.schema import ConnectorResponse
 from app.connectors.schema import ConnectorsListResponse
@@ -19,33 +28,13 @@ from app.connectors.services import ConnectorServices
 
 connector_router = APIRouter()
 
-# ! ROUTE WITH AUTH
-# @connector_router.get("", response_model=ConnectorsListResponse, description="Fetch all available connectors")
-# async def get_connectors(user=Depends(auth_handler.get_current_user)) -> ConnectorListResponse:
-#     """
-#     Fetch all available connectors from the database.
 
-#     This endpoint retrieves all the connectors stored in the database and returns them
-#     along with a success status and message.
-
-#     Returns:
-#         ConnectorListResponse: A Pydantic model containing a list of connectors and additional metadata.
-
-#     Raises:
-#         HTTPException: An exception with a 404 status code is raised if no connectors are found.
-#     """
-#     logger.info(f"Fetching all connectors for user: {user.username}")
-#     if not user.is_admin:
-#         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail="Unauthorized")
-
-#     connectors = ConnectorServices.fetch_all_connectors()
-#     if connectors:
-#         return {"connectors": connectors, "success": True, "message": "Connectors fetched successfully"}
-#     else:
-#         raise HTTPException(status_code=404, detail="No connectors found")
-
-
-@connector_router.get("", response_model=ConnectorsListResponse, description="Fetch all available connectors")
+@connector_router.get(
+    "",
+    response_model=ConnectorsListResponse,
+    description="Fetch all available connectors",
+    dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
+)
 async def get_connectors() -> ConnectorListResponse:
     """
     Fetch all available connectors from the database.
@@ -67,7 +56,12 @@ async def get_connectors() -> ConnectorListResponse:
         raise HTTPException(status_code=404, detail="No connectors found")
 
 
-@connector_router.get("/{connector_id}", response_model=ConnectorListResponse, description="Fetch a specific connector")
+@connector_router.get(
+    "/{connector_id}",
+    response_model=ConnectorListResponse,
+    description="Fetch a specific connector",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "test"))],
+)
 async def get_connector(connector_id: int) -> Union[ConnectorResponse, HTTPException]:
     """
     Fetch a specific connector by its ID.

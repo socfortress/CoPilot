@@ -1,15 +1,20 @@
+import re
 from typing import Any
 from typing import Dict
 from typing import List
 from typing import Tuple
 from typing import Union
 
+import pcre2
 import xmltodict
+from loguru import logger
 
 from app.connectors.wazuh_manager.schema.rules import RuleDisable
 from app.connectors.wazuh_manager.schema.rules import RuleDisableResponse
 from app.connectors.wazuh_manager.schema.rules import RuleEnable
 from app.connectors.wazuh_manager.schema.rules import RuleEnableResponse
+from app.connectors.wazuh_manager.schema.rules import RuleExclude
+from app.connectors.wazuh_manager.schema.rules import RuleExcludeResponse
 from app.connectors.wazuh_manager.utils.universal import restart_service
 from app.connectors.wazuh_manager.utils.universal import send_get_request
 from app.connectors.wazuh_manager.utils.universal import send_put_request
@@ -96,3 +101,43 @@ def disable_rule(rule: RuleDisable) -> RuleDisableResponse:
 
 def enable_rule(rule: RuleEnable, previous_level: str) -> RuleEnableResponse:
     return process_rule(rule, lambda fc, rid: set_rule_level(fc, rid, previous_level), RuleEnableResponse)
+
+
+################# ! EXCLUDE RULE ! #################
+
+
+def make_pcre2_compatible(input_string: str) -> str:
+    """
+    Convert the input string to a PCRE2 compatible regex pattern.
+
+    Parameters:
+    - input_string (str): The input string to convert.
+
+    Returns:
+    - str: The PCRE2 compatible regex pattern.
+    """
+    # PCRE2 uses \\ to escape a backslash
+    return input_string.replace("\\", "\\\\")
+
+
+def exclude_rule(rule: RuleExclude) -> RuleExcludeResponse:
+    try:
+        # Convert rule_value to a PCRE2 compatible regex pattern
+        pcre2_pattern = make_pcre2_compatible(rule.rule_value)
+
+        compiled_pattern = pcre2.compile(pcre2_pattern)
+        print(f"Compiled Pattern: {compiled_pattern}")  # Debugging line
+
+        print(f"Input Value: {rule.input_value}")  # Debugging line
+
+        match_data = compiled_pattern.match(rule.input_value)
+
+        if match_data:
+            return RuleExcludeResponse(success=True, message="Successfully excluded rule", recommended_exclusion=rule.input_value)
+        else:
+            return RuleExcludeResponse(success=False, message="Failed to exclude rule", recommended_exclusion="")
+
+    except Exception as e:
+        print(f"Exception: {e}")  # Debugging line
+        logger.error(f"Failed to exclude rule: {e}")
+        return RuleExcludeResponse(success=False, message=f"Failed to exclude rule: {e}", recommended_exclusion="")

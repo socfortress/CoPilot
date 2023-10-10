@@ -1,14 +1,5 @@
-import json
 from datetime import datetime
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Tuple
-from typing import Union
 
-import requests
-import xmltodict
 from loguru import logger
 
 from app.agents.schema.agents import AgentsResponse
@@ -16,10 +7,6 @@ from app.agents.velociraptor.schema.agents import VelociraptorAgent
 from app.agents.velociraptor.utils.universal import parse_date
 from app.connectors.velociraptor.services.artifacts import ArtifactsService
 from app.connectors.velociraptor.utils.universal import UniversalService
-from app.connectors.wazuh_manager.schema.rules import RuleDisable
-from app.connectors.wazuh_manager.schema.rules import RuleDisableResponse
-from app.connectors.wazuh_manager.schema.rules import RuleEnable
-from app.connectors.wazuh_manager.schema.rules import RuleEnableResponse
 
 
 def collect_velociraptor_agent(agent_name: str) -> VelociraptorAgent:

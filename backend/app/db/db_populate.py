@@ -1,6 +1,7 @@
 from loguru import logger
 from sqlmodel import Session
 
+from app.auth.models.users import Role
 from app.connectors.models import Connectors
 
 
@@ -140,4 +141,35 @@ def add_connectors_if_not_exist(session: Session):
             logger.info(f"Added new connector: {connector_data['connector_name']}")
 
     # Commit the changes if any new connectors were added
+    session.commit()
+
+
+def add_roles_if_not_exist(session: Session):
+    # List of roles to add
+    role_list = [
+        {
+            "name": "admin",
+            "description": "Administrator",
+        },
+        {
+            "name": "analyst",
+            "description": "SOC Analyst",
+        },
+        {
+            "name": "customer",
+            "description": "Customer",
+        },
+    ]
+
+    for role_data in role_list:
+        # Check if role already exists in the database
+        existing_role = session.query(Role).filter_by(name=role_data["name"]).first()
+
+        if existing_role is None:
+            # If role does not exist, create new role entry
+            new_role = Role(**role_data)
+            session.add(new_role)
+            logger.info(f"Added new role: {role_data['name']}")
+
+    # Commit the changes if any new roles were added
     session.commit()

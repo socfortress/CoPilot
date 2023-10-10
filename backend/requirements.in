@@ -12,6 +12,8 @@ marshmallow-sqlalchemy
 matplotlib
 mitreattack-python
 openai
+passlib[bcrypt]
+pcre2
 pika
 psycopg2-binary
 python-multipart
@@ -20,6 +22,7 @@ python-magic
 passlib
 PyJWT
 pydantic[email]
+python-jose[cryptography]
 pyvelociraptor~=0.1
 regex
 uvicorn

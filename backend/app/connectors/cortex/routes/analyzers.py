@@ -1,25 +1,19 @@
-from datetime import timedelta
-from typing import Dict
 from typing import List
-from typing import Optional
-from typing import Union
 
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
-from fastapi import Security
 from loguru import logger
-from starlette.status import HTTP_401_UNAUTHORIZED
 
-# App specific imports
-from app.auth.routes.auth import auth_handler
-from app.connectors.cortex.schema.analyzers import AnalyzerJobData
 from app.connectors.cortex.schema.analyzers import AnalyzersResponse
 from app.connectors.cortex.schema.analyzers import RunAnalyzerBody
 from app.connectors.cortex.schema.analyzers import RunAnalyzerResponse
 from app.connectors.cortex.services.analyzers import get_analyzers
 from app.connectors.cortex.services.analyzers import run_analyzer
 from app.db.db_session import session
+
+# App specific imports
+
 
 cortex_analyzer_router = APIRouter()
 

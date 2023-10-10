@@ -13,6 +13,9 @@ export default {
 		return HttpClient.put<FlaskBaseResponse & { connectors: Connector[] }>(`/connectors/${connectorId}`, payload)
 	},
 	upload(connectorId: string | number, formData: FormData) {
-		return HttpClient.post<FlaskBaseResponse & { connectors: Connector[] }>(`/connectors/upload/${connectorId}`, formData)
+		return HttpClient.post<FlaskBaseResponse & { connectors: Connector[] }>(
+			`/connectors/upload/${connectorId}`,
+			formData
+		)
 	}
 }

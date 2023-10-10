@@ -4,7 +4,6 @@ from fastapi import Depends
 from fastapi import HTTPException
 from loguru import logger
 
-from app.db.db_session import session
 from app.integrations.dnstwist.schema.analyze import DomainAnalysisResponse
 from app.integrations.dnstwist.schema.analyze import DomainRequestBody
 from app.integrations.dnstwist.services.analyze import analyze_domain

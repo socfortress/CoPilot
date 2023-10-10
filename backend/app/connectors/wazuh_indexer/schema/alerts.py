@@ -2,7 +2,6 @@ from typing import Any
 from typing import Dict
 from typing import List
 from typing import Optional
-from typing import Union
 
 from pydantic import BaseModel
 from pydantic import Field

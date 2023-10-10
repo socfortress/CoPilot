@@ -1,9 +1,5 @@
-from typing import List
-
 from fastapi import APIRouter
-from fastapi import Depends
 from fastapi import HTTPException
-from fastapi import Security
 from loguru import logger
 from starlette.status import HTTP_401_UNAUTHORIZED
 
@@ -13,22 +9,16 @@ from app.agents.schema.agents import AgentUpdateCustomerCodeBody
 from app.agents.schema.agents import AgentUpdateCustomerCodeResponse
 from app.agents.schema.agents import OutdatedVelociraptorAgentsResponse
 from app.agents.schema.agents import OutdatedWazuhAgentsResponse
-from app.agents.schema.agents import SyncedAgent
 from app.agents.schema.agents import SyncedAgentsResponse
-from app.agents.services.modify import delete_agent_db
-from app.agents.services.modify import delete_agent_wazuh
 from app.agents.services.modify import mark_agent_criticality
 from app.agents.services.status import get_outdated_agents_velociraptor
 from app.agents.services.status import get_outdated_agents_wazuh
 from app.agents.services.sync import sync_agents
 from app.agents.velociraptor.services.agents import delete_agent_velociraptor
-from app.agents.wazuh.schema.agents import WazuhAgent
-from app.agents.wazuh.schema.agents import WazuhAgentsList
 from app.agents.wazuh.schema.agents import WazuhAgentVulnerabilitiesResponse
 from app.agents.wazuh.services.vulnerabilities import collect_agent_vulnerabilities
 
 # App specific imports
-from app.auth.routes.auth import auth_handler
 from app.db.db_session import session
 from app.db.universal_models import Agents
 
