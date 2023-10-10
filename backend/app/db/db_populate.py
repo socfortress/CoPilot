@@ -155,10 +155,6 @@ def add_roles_if_not_exist(session: Session):
             "name": "analyst",
             "description": "SOC Analyst",
         },
-        {
-            "name": "customer",
-            "description": "Customer",
-        },
     ]
 
     for role_data in role_list:

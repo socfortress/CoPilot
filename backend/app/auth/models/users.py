@@ -33,7 +33,6 @@ class User(SQLModel, table=True):
 class RoleEnum(int, Enum):
     admin = 1
     analyst = 2
-    customer = 3
 
 
 class UserInput(SQLModel):
@@ -45,7 +44,7 @@ class UserInput(SQLModel):
         description="Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number",
     )
     email: EmailStr
-    role_id: RoleEnum = Field(RoleEnum.analyst, description="Role ID 1: admin, 2: analyst, 3: customer", foreign_key="role.id")
+    role_id: RoleEnum = Field(RoleEnum.analyst, description="Role ID 1: admin, 2: analyst", foreign_key="role.id")
 
 
 class UserLogin(SQLModel):
