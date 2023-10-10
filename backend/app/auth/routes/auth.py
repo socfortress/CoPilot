@@ -37,7 +37,7 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@user_router.post("/refresh", response_model=Token)
+@user_router.get("/refresh", response_model=Token)
 async def refresh_token(current_user: User = Depends(auth_handler.get_current_user)):
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = auth_handler.encode_token(current_user.username, access_token_expires)

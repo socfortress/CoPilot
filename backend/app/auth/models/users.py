@@ -29,7 +29,7 @@ class User(SQLModel, table=True):
     role: Optional["Role"] = Relationship(back_populates="user")
 
 
-# Enum class for role_id 1,2,3
+# Enum class for role_id 1,2
 class RoleEnum(int, Enum):
     admin = 1
     analyst = 2
