@@ -9,7 +9,7 @@
 		}
 	},
 	"scripts": {
-		"dev": "vite",
+		"dev": "vite --host 127.0.0.1",
 		"dev:debug": "DEBUG=vite:* vite",
 		"build": "run-p type-check build-only",
 		"build-only": "vite build",
@@ -28,6 +28,7 @@
 		"open:redoc": "open http://127.0.0.1:5000/redoc"
 	},
 	"dependencies": {
+		"@ajoelp/json-to-formdata": "^1.5.0",
 		"@animxyz/core": "^0.6.6",
 		"@animxyz/vue3": "^0.6.7",
 		"@fawmi/vue-google-maps": "^0.9.79",
