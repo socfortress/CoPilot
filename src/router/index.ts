@@ -1,5 +1,7 @@
+import { UserRole } from "@/types/auth.d"
 import { createRouter, createWebHistory } from "vue-router"
 import Analytics from "@/views/Dashboard/Analytics.vue"
+import { authCheck } from "@/utils/auth"
 import components from "./components"
 import { Layout } from "@/types/theme.d"
 
@@ -14,33 +16,25 @@ const router = createRouter({
 			path: "/indices",
 			name: "indices",
 			component: () => import("@/views/socfortress/Indices.vue"),
-			meta: { title: "Indices", auth: true, roles: "all" }
+			meta: { title: "Indices", auth: true, roles: UserRole.All }
 		},
-		/*
-		{
-			path: "/inputs",
-			name: "inputs",
-			component: () => import("@/views/socfortress/Inputs.vue"),
-			meta: {  title: "Inputs", auth: true, roles: "all" }
-		},
-		*/
 		{
 			path: "/connectors",
 			name: "connectors",
 			component: () => import("@/views/socfortress/Connectors.vue"),
-			meta: { title: "Connectors", auth: true, roles: "all" }
+			meta: { title: "Connectors", auth: true, roles: UserRole.All }
 		},
 		{
 			path: "/agents",
 			name: "agents",
 			component: () => import("@/views/socfortress/Agents.vue"),
-			meta: { title: "Agents", auth: true, roles: "all" }
+			meta: { title: "Agents", auth: true, roles: UserRole.All }
 		},
 		{
 			path: "/agent/:id?",
 			name: "agent",
 			component: () => import("@/views/socfortress/AgentOverview.vue"),
-			meta: { title: "Agent", auth: true, roles: "all" }
+			meta: { title: "Agent", auth: true, roles: UserRole.All }
 		},
 
 		{
@@ -48,7 +42,7 @@ const router = createRouter({
 			redirect: "/dashboard/analytics",
 			meta: {
 				auth: true,
-				roles: "all"
+				roles: UserRole.All
 			},
 			children: [
 				{
@@ -69,68 +63,44 @@ const router = createRouter({
 			path: "/calendar",
 			name: "calendar",
 			component: () => import("@/views/Apps/Calendars/FullCalendar.vue"),
-			meta: { title: "Calendar", auth: true, roles: "all" }
+			meta: { title: "Calendar", auth: true, roles: UserRole.All }
 		},
-		/*
-		{
-			path: "/calendars",
-			redirect: "/calendars/vue-cal",
-			meta: {
-				auth: true,
-				roles: "all"
-			},
-			children: [
-				{
-					path: "vue-cal",
-					name: "vue-cal",
-					component: () => import("@/views/Apps/Calendars/VueCal.vue"),
-					meta: {  title: "Vue Cal" }
-				},
-				{
-					path: "full-calendar",
-					name: "full-calendar",
-					component: () => import("@/views/Apps/Calendars/FullCalendar.vue"),
-					meta: {  title: "Full Calendar" }
-				}
-			]
-		},
-		*/
 		{
 			path: "/email",
 			name: "email",
 			component: () => import("@/views/Apps/Mailbox.vue"),
-			meta: { title: "Email", auth: true, roles: "all" }
+			meta: { title: "Email", auth: true, roles: UserRole.All }
 		},
 		{
 			path: "/chat",
 			name: "chat",
 			component: () => import("@/views/Apps/Chat.vue"),
-			meta: { title: "Chat", auth: true, roles: "all" }
+			meta: { title: "Chat", auth: true, roles: UserRole.All }
 		},
 		{
 			path: "/kanban",
 			name: "kanban",
 			component: () => import("@/views/Apps/Kanban.vue"),
-			meta: { title: "Kanban", auth: true, roles: "all" }
+			meta: { title: "Kanban", auth: true, roles: UserRole.All }
 		},
 		{
 			path: "/notes",
 			name: "notes",
 			component: () => import("@/views/Apps/Notes.vue"),
-			meta: { title: "Notes", auth: true, roles: "all" }
+			meta: { title: "Notes", auth: true, roles: UserRole.All }
 		},
 		{
 			path: "/typography",
 			name: "typography",
 			component: () => import("@/views/Typography.vue"),
-			meta: { title: "Typography", auth: true, roles: "all" }
+			meta: { title: "Typography", auth: true, roles: UserRole.All }
 		},
 		{
 			path: "/cards",
 			redirect: "/cards/basic",
 			meta: {
 				auth: true,
-				roles: "all"
+				roles: UserRole.All
 			},
 			children: [
 				{
@@ -171,7 +141,7 @@ const router = createRouter({
 			redirect: "/toolbox/refresh-tool",
 			meta: {
 				auth: true,
-				roles: "all"
+				roles: UserRole.All
 			},
 			children: [
 				{
@@ -196,7 +166,7 @@ const router = createRouter({
 			redirect: "/layout/left-sidebar",
 			meta: {
 				auth: true,
-				roles: "all"
+				roles: UserRole.All
 			},
 			children: [
 				{
@@ -224,7 +194,7 @@ const router = createRouter({
 			redirect: "/maps/google-maps",
 			meta: {
 				auth: true,
-				roles: "all"
+				roles: UserRole.All
 			},
 			children: [
 				{
@@ -258,7 +228,7 @@ const router = createRouter({
 			redirect: "/editors/quill",
 			meta: {
 				auth: true,
-				roles: "all"
+				roles: UserRole.All
 			},
 			children: [
 				{
@@ -286,7 +256,7 @@ const router = createRouter({
 			redirect: "/charts/apexcharts",
 			meta: {
 				auth: true,
-				roles: "all"
+				roles: UserRole.All
 			},
 			children: [
 				{
@@ -307,14 +277,14 @@ const router = createRouter({
 			path: "/multi-language",
 			name: "multi-language",
 			component: () => import("@/views/MultiLanguage.vue"),
-			meta: { title: "Multi Language", auth: true, roles: "all" }
+			meta: { title: "Multi Language", auth: true, roles: UserRole.All }
 		},
 		{
 			path: "/icons",
 			redirect: "/icons/xicons",
 			meta: {
 				auth: true,
-				roles: "all"
+				roles: UserRole.All
 			},
 			children: [
 				{
@@ -336,7 +306,7 @@ const router = createRouter({
 			redirect: "/tables/base",
 			meta: {
 				auth: true,
-				roles: "all"
+				roles: UserRole.All
 			},
 			children: [
 				{
@@ -358,7 +328,7 @@ const router = createRouter({
 			path: "/profile",
 			name: "profile",
 			component: () => import("@/views/Profile.vue"),
-			meta: { title: "Profile", auth: true, roles: "all" }
+			meta: { title: "Profile", auth: true, roles: UserRole.All }
 		},
 
 		{
@@ -379,6 +349,10 @@ const router = createRouter({
 			meta: { forceLayout: Layout.Blank }
 		}
 	]
+})
+
+router.beforeEach(route => {
+	return authCheck(route)
 })
 
 export default router
