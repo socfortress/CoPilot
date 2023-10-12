@@ -95,20 +95,13 @@ function signIn(e: Event) {
 				password: model.value.password
 			}
 
-			Api.auth
+			useAuthStore()
 				.login(payload)
-				.then(res => {
-					if (res.data.success && res.data.token) {
-						useAuthStore().setLogged({
-							token: res.data.token
-						})
-						router.push({ path: "/", replace: true })
-					} else {
-						message.warning(res.data?.message || "An error occurred. Please try again later.")
-					}
+				.then(() => {
+					router.push({ path: "/", replace: true })
 				})
 				.catch(err => {
-					message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+					message.error(err?.message || "An error occurred. Please try again later.")
 				})
 				.finally(() => {
 					loading.value = false

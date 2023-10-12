@@ -53,6 +53,16 @@
 				</n-step>
 				<n-step title="Details">
 					<div class="pt-3" v-show="wizardCurrent === 2">
+						<n-form-item path="username" label="Username">
+							<n-input
+								v-model:value="model.username"
+								@keydown.enter="signUp"
+								size="large"
+								placeholder="Username..."
+							/>
+						</n-form-item>
+
+						<!--
 						<div class="propic flex gap-5 mb-5">
 							<div class="avatar">
 								<n-avatar :size="80" :src="model.propic" round />
@@ -106,8 +116,9 @@
 								placeholder="Customer Code..."
 							/>
 						</n-form-item>
+						-->
 
-						<div class="flex items-center justify-between mt-3">
+						<div class="flex items-center justify-between mt-3 gap-3">
 							<n-button @click="wizardCurrent = 1" size="large">
 								<template #icon>
 									<n-icon>
@@ -171,11 +182,14 @@ import type { RegisterPayload } from "@/types/auth.d"
 interface ModelType {
 	email: string
 	password: string
+	username: string
 	confirmPassword: string
+	/*
 	customerCode: string
 	firstName: string
 	lastName: string
 	propic: string
+	*/
 }
 
 const emit = defineEmits<{
@@ -190,14 +204,18 @@ const model = ref<ModelType>({
 	email: "",
 	password: "",
 	confirmPassword: "",
+	username: ""
+	/*
 	customerCode: "",
 	firstName: "",
 	lastName: "",
 	propic: ""
+	*/
 })
 
 const accountStepValid = computed(() => !!model.value.email && !!model.value.password && !!model.value.confirmPassword)
-const detailsStepValid = computed(() => !!model.value.customerCode && !!model.value.firstName && !!model.value.lastName)
+const detailsStepValid = computed(() => !!model.value.username)
+//const detailsStepValid = computed(() => !!model.value.customerCode && !!model.value.firstName && !!model.value.lastName)
 
 const passwordSchema = new passwordValidator()
 passwordSchema
@@ -211,8 +229,8 @@ passwordSchema
 	.lowercase() // Must have lowercase letters
 	.has()
 	.digits(1) // Must have at least 1 digit
-	.has()
-	.symbols(1) // Must have at least 1 symbol
+//.has()
+//.symbols(1) // Must have at least 1 symbol
 
 const rules: FormRules = {
 	email: [
@@ -240,7 +258,8 @@ const rules: FormRules = {
 				return !!passwordSchema.validate(value, { details: false })
 			},
 			message:
-				"The string should have a minimum length of 8 characters, minimum of 1 uppercase and lowercase letter, minimum of 1 digit and 1 symbol",
+				"The string should have a minimum length of 8 characters, minimum of 1 uppercase and lowercase letter and minimum of 1 digit",
+			//"The string should have a minimum length of 8 characters, minimum of 1 uppercase and lowercase letter, minimum of 1 digit and 1 symbol",
 			trigger: ["blur"]
 		}
 	],
@@ -258,6 +277,14 @@ const rules: FormRules = {
 			trigger: ["blur", "password-input"]
 		}
 	],
+	username: [
+		{
+			required: true,
+			trigger: ["blur"],
+			message: "Username Code is required"
+		}
+	]
+	/*
 	customerCode: [
 		{
 			required: true,
@@ -279,6 +306,7 @@ const rules: FormRules = {
 			message: "Last Name is required"
 		}
 	]
+	*/
 }
 
 function signUp(e: Event) {
@@ -288,6 +316,11 @@ function signUp(e: Event) {
 			loading.value = true
 
 			const payload: RegisterPayload = {
+				password: model.value.password,
+				email: model.value.email,
+				username: model.value.username,
+				role_id: 1
+				/*
 				customerCode: model.value.customerCode,
 				usersFirstName: model.value.firstName,
 				usersLastName: model.value.lastName,
@@ -295,7 +328,7 @@ function signUp(e: Event) {
 				usersRole: "admin",
 				imageFile: model.value.propic,
 				notifications: 0,
-				password: model.value.password
+				*/
 			}
 
 			Api.auth
@@ -324,6 +357,6 @@ function signUp(e: Event) {
 
 function setCroppedImage(result: ImageCropperResult) {
 	const canvas = result.canvas as HTMLCanvasElement
-	model.value.propic = canvas.toDataURL()
+	// model.value.propic = canvas.toDataURL()
 }
 </script>
