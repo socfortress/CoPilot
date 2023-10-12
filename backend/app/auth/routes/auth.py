@@ -17,7 +17,7 @@ from app.auth.services.universal import select_all_users
 from app.auth.utils import AuthHandler
 from app.db.db_session import session
 
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
+ACCESS_TOKEN_EXPIRE_MINUTES = 1440
 
 user_router = APIRouter()
 auth_handler = AuthHandler()
