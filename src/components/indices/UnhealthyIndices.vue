@@ -35,17 +35,17 @@
 
 <script setup lang="ts">
 import { computed, toRefs } from "vue"
-import { type Index, IndexHealth } from "@/types/indices.d"
+import { type IndexStats, IndexHealth } from "@/types/indices.d"
 import IndexCard from "@/components/indices/IndexCard.vue"
 import { NSpin, NCard, NEmpty, NIcon } from "naive-ui"
 import ShieldIcon from "@vicons/fluent/ShieldTask20Regular"
 
 const emit = defineEmits<{
-	(e: "click", value: Index): void
+	(e: "click", value: IndexStats): void
 }>()
 
 const props = defineProps<{
-	indices: Index[] | null
+	indices: IndexStats[] | null
 }>()
 const { indices } = toRefs(props)
 
@@ -53,7 +53,7 @@ const loading = computed(() => !indices?.value || indices.value === null)
 
 const unhealthyIndices = computed(() =>
 	(indices.value || []).filter(
-		(index: Index) => index.health === IndexHealth.YELLOW || index.health === IndexHealth.RED
+		(index: IndexStats) => index.health === IndexHealth.YELLOW || index.health === IndexHealth.RED
 	)
 )
 </script>

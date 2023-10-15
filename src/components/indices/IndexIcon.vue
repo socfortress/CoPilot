@@ -14,14 +14,14 @@
 
 <script setup lang="ts">
 import { toRefs } from "vue"
-import { type Index, IndexHealth } from "@/types/indices.d"
+import { type IndexStats, IndexHealth } from "@/types/indices.d"
 import ShieldIcon from "@vicons/fluent/ShieldTask20Regular"
 import WarningIcon from "@vicons/fluent/ShieldError20Regular"
 import DangerIcon from "@vicons/fluent/Warning20Regular"
 import { NIcon } from "naive-ui"
 
 const props = defineProps<{
-	health: Index["health"]
+	health: IndexStats["health"]
 	color?: boolean
 }>()
 const { health, color } = toRefs(props)

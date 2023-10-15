@@ -34,19 +34,6 @@ export default {
 					{ default: () => "Data Table" }
 				),
 			key: "tables-data-table"
-		},
-		{
-			label: () =>
-				h(
-					RouterLink,
-					{
-						to: {
-							name: "tables-grid"
-						}
-					},
-					{ default: () => "Data Grid" }
-				),
-			key: "tables-grid"
 		}
 	]
 }

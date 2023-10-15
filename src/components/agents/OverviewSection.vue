@@ -1,37 +1,9 @@
 <template>
 	<div class="overview-section">
 		<div class="property-group">
-			<n-card>
-				<template #action>client_id</template>
-				<div class="font-bold">{{ agent.client_id || "-" }}</div>
-			</n-card>
-			<n-card>
-				<template #action>client_last_seen</template>
-				<div class="font-bold">{{ formatClientLastSeen || "-" }}</div>
-			</n-card>
-			<n-card>
-				<template #action>ip_address</template>
-				<div class="font-bold">{{ agent.ip_address || "-" }}</div>
-			</n-card>
-			<n-card>
-				<template #action>label</template>
-				<div class="font-bold">{{ agent.label || "-" }}</div>
-			</n-card>
-			<n-card>
-				<template #action>last_seen</template>
-				<div class="font-bold">{{ formatLastSeen || "-" }}</div>
-			</n-card>
-			<n-card>
-				<template #action>os</template>
-				<div class="font-bold">{{ agent.os || "-" }}</div>
-			</n-card>
-			<n-card>
-				<template #action>velociraptor_client_version</template>
-				<div class="font-bold">{{ agent.velociraptor_client_version || "-" }}</div>
-			</n-card>
-			<n-card>
-				<template #action>wazuh_agent_version</template>
-				<div class="font-bold">{{ agent.wazuh_agent_version || "-" }}</div>
+			<n-card v-for="item of propsSanitized" :key="item.key">
+				<template #action>{{ item.key }}</template>
+				<div class="font-bold">{{ item.val }}</div>
 			</n-card>
 		</div>
 	</div>
@@ -48,19 +20,27 @@ const props = defineProps<{
 }>()
 const { agent } = toRefs(props)
 
-const formatLastSeen = computed(() => {
-	const lastSeenDate = dayjs(agent.value.last_seen)
-	if (!lastSeenDate.isValid()) return agent.value.last_seen
+const propsSanitized = computed(() => {
+	const obj = []
+	for (const key in agent.value) {
+		if (["wazuh_last_seen", "velociraptor_last_seen"].includes(key)) {
+			// @ts-ignore
+			obj.push({ key, val: formatDate(agent.value[key]) || "-" })
+		} else {
+			// @ts-ignore
+			obj.push({ key, val: agent.value[key] || "-" })
+		}
+	}
 
-	return lastSeenDate.format("DD/MM/YYYY @ HH:mm")
+	return obj
 })
 
-const formatClientLastSeen = computed(() => {
-	const lastSeenDate = dayjs(agent.value.client_last_seen)
-	if (!lastSeenDate.isValid()) return agent.value.last_seen
+const formatDate = (date: string) => {
+	const datejs = dayjs(date)
+	if (!datejs.isValid()) return date
 
-	return lastSeenDate.format("DD/MM/YYYY @ HH:mm")
-})
+	return datejs.format("DD/MM/YYYY @ HH:mm")
+}
 </script>
 
 <style lang="scss" scoped>

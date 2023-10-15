@@ -1,29 +1,38 @@
-export type Role = "all" | "admin" | "moderator"
-export type Roles = role | role[]
-
 export interface RouteMetaAuth {
 	checkAuth?: boolean
 	authRedirect?: string
 	auth?: boolean
-	roles?: Roles
+	roles?: UserRole | UserRole[]
 }
 
 export interface LoginPayload {
-	email: string
+	username: string
 	password: string
 }
 
 export interface RegisterPayload {
+	username: string
+	password: string
+	email: string
+	role_id: number
+	/*
 	customerCode: string
 	usersFirstName: string
 	usersLastName: string
-	usersEmail: string
 	usersRole: "admin"
 	imageFile: string
 	notifications: number
-	password: string
+	*/
+}
+
+export enum UserRole {
+	All = "all",
+	Unknown = 0,
+	Admin = 1,
+	Analyst = 2
 }
 
 export interface User {
-	token: string
+	access_token: string
+	role: UserRole
 }

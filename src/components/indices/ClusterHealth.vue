@@ -32,7 +32,7 @@
 <script setup lang="ts">
 import { onBeforeMount, ref } from "vue"
 import IndexIcon from "@/components/indices/IndexIcon.vue"
-import { type ClusterHealth } from "@/types/indices.d"
+import type { ClusterHealth } from "@/types/indices.d"
 import Api from "@/api"
 import { useMessage, NSpin, NScrollbar, NCard } from "naive-ui"
 
