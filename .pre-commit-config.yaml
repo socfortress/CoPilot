@@ -43,10 +43,10 @@ repos:
           - id: flake8
             name: Check project styling
 
-    # - repo: https://github.com/pre-commit/mirrors-prettier
-    #   rev: "v3.0.0"
-    #   hooks:
-    #       - id: prettier
+    - repo: https://github.com/pre-commit/mirrors-prettier
+      rev: "v3.0.0"
+      hooks:
+          - id: prettier
 
     # - repo: https://github.com/pre-commit/mirrors-eslint
     #   rev: v8.41.0

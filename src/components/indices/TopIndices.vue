@@ -11,14 +11,14 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, toRefs, watch } from "vue"
 import * as echarts from "echarts"
-import { type Index, IndexHealth } from "@/types/indices.d"
+import { type IndexStats, IndexHealth } from "@/types/indices.d"
 import bytes from "bytes"
 import _ from "lodash"
 import { NSpin, NCard } from "naive-ui"
 import { useThemeStore } from "@/stores/theme"
 
 const props = defineProps<{
-	indices: Index[] | null
+	indices: IndexStats[] | null
 }>()
 const { indices } = toRefs(props)
 

@@ -80,7 +80,7 @@ const loadingAgent = ref(false)
 const agent = ref<Agent | null>(null)
 
 const isOnline = computed(() => {
-	return isAgentOnline(agent.value?.last_seen ?? "")
+	return isAgentOnline(agent.value?.wazuh_last_seen ?? "")
 })
 
 function getAgent(id: string) {
@@ -90,7 +90,7 @@ function getAgent(id: string) {
 		.getAgents(id)
 		.then(res => {
 			if (res.data.success) {
-				agent.value = res.data.agent || null
+				agent.value = res.data.agents[0] || null
 			} else {
 				message.error(res.data?.message || "An error occurred. Please try again later.")
 				router.push(`/agents`).catch(() => {})

@@ -79,11 +79,11 @@ const loading = ref(false)
 const message = useMessage()
 const dialog = useDialog()
 const isOnline = computed(() => {
-	return isAgentOnline(agent.value.last_seen)
+	return isAgentOnline(agent.value.wazuh_last_seen)
 })
 const formatLastSeen = computed(() => {
-	const lastSeenDate = dayjs(agent.value.last_seen)
-	if (!lastSeenDate.isValid()) return agent.value.last_seen
+	const lastSeenDate = dayjs(agent.value.wazuh_last_seen)
+	if (!lastSeenDate.isValid()) return agent.value.wazuh_last_seen
 
 	return lastSeenDate.format("DD/MM/YYYY @ HH:mm")
 })

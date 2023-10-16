@@ -1,10 +1,10 @@
 <template>
 	<n-form ref="formRef" :model="model" :rules="rules">
-		<n-form-item path="email" label="Email">
+		<n-form-item path="username" label="Username">
 			<n-input
-				v-model:value="model.email"
+				v-model:value="model.username"
 				@keydown.enter="signIn"
-				placeholder="Email..."
+				placeholder="Username..."
 				size="large"
 				autocomplete="on"
 			/>
@@ -50,7 +50,7 @@ import { useRouter } from "vue-router"
 import type { LoginPayload } from "@/types/auth.d"
 
 interface ModelType {
-	email: string
+	username: string
 	password: string
 }
 
@@ -63,16 +63,16 @@ const router = useRouter()
 const formRef = ref<FormInst | null>(null)
 const message = useMessage()
 const model = ref<ModelType>({
-	email: "",
+	username: "",
 	password: ""
 })
 
 const rules: FormRules = {
-	email: [
+	username: [
 		{
 			required: true,
 			trigger: ["blur"],
-			message: "Email is required"
+			message: "Username is required"
 		}
 	],
 	password: [
@@ -91,24 +91,17 @@ function signIn(e: Event) {
 			loading.value = true
 
 			const payload: LoginPayload = {
-				email: model.value.email,
+				username: model.value.username,
 				password: model.value.password
 			}
 
-			Api.auth
+			useAuthStore()
 				.login(payload)
-				.then(res => {
-					if (res.data.success && res.data.token) {
-						useAuthStore().setLogged({
-							token: res.data.token
-						})
-						router.push({ path: "/", replace: true })
-					} else {
-						message.warning(res.data?.message || "An error occurred. Please try again later.")
-					}
+				.then(() => {
+					router.push({ path: "/", replace: true })
 				})
 				.catch(err => {
-					message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+					message.error(err?.message || "An error occurred. Please try again later.")
 				})
 				.finally(() => {
 					loading.value = false

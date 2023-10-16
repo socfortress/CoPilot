@@ -33,7 +33,7 @@
 </template>
 
 <script lang="ts" setup>
-import { type Index } from "@/types/indices.d"
+import type { IndexStats } from "@/types/indices.d"
 import Api from "@/api"
 import { onBeforeMount, ref } from "vue"
 import IndicesMarquee from "@/components/indices/Marquee.vue"
@@ -45,11 +45,11 @@ import TopIndices from "@/components/indices/TopIndices.vue"
 import { useMessage } from "naive-ui"
 
 const message = useMessage()
-const indices = ref<Index[] | null>(null)
+const indices = ref<IndexStats[] | null>(null)
 const loadingIndex = ref(false)
-const currentIndex = ref<Index | null>(null)
+const currentIndex = ref<IndexStats | null>(null)
 
-function setIndex(index: Index) {
+function setIndex(index: IndexStats) {
 	currentIndex.value = index
 }
 
@@ -60,7 +60,7 @@ function getIndices() {
 		.getIndices()
 		.then(res => {
 			if (res.data.success) {
-				indices.value = res.data.indices
+				indices.value = res.data.indices_stats
 			} else {
 				message.error(res.data?.message || "An error occurred. Please try again later.")
 			}

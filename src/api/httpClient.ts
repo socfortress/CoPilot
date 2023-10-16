@@ -4,43 +4,66 @@ import Api from "@/api"
 import axios from "axios"
 const BASE_URL = import.meta.env.VITE_API_URL
 
-const store = useAuthStore()
-
 const HttpClient = axios.create({
 	baseURL: BASE_URL
 })
 
-HttpClient.interceptors.request.use(config => {
-	if (!config.headers) config.headers = {}
-	config.headers.token = store.user.token
+let __TOKEN_REFRESHING = false
+let __TOKEN_ATTEMPTS: number[] = []
+const TOKEN_MAX_ATTEMPTS = 3 // TODO: ?? replace with debounce time
 
-	if (isJwtExpiring(store.user.token, 60 * 60)) {
-		Api.auth.refresh().then(res => {
-			if (res.data.success && res.data.token) {
-				store.setToken(res.data.token)
+HttpClient.interceptors.request.use(
+	config => {
+		const store = useAuthStore()
+
+		if (!config.headers) config.headers = {}
+		config.headers.Authorization = `Bearer ${store.userToken}`
+
+		if (isJwtExpiring(store.userToken, 60 * 60) && !__TOKEN_REFRESHING) {
+			__TOKEN_REFRESHING = true
+			__TOKEN_ATTEMPTS.push(new Date().getTime())
+
+			if (__TOKEN_ATTEMPTS.length >= TOKEN_MAX_ATTEMPTS) {
+				window.location.href = "/logout"
 			}
-		})
-	}
 
-	return config
-})
+			Api.auth.refresh().then(res => {
+				if (res.data.access_token) {
+					store.setToken(res.data.access_token)
+
+					__TOKEN_REFRESHING = false
+					__TOKEN_ATTEMPTS = []
+				}
+			})
+
+			console.log("is expired")
+		}
+
+		console.log(__TOKEN_ATTEMPTS, __TOKEN_REFRESHING)
+		return config
+	},
+	error => Promise.reject(error)
+)
 
 // TODO: to complete
 HttpClient.interceptors.response.use(
-	response => {
-		//if (response.config?.data?._retry) response.config.data._retry = false
-
-		return response
-	},
+	response => response,
 	error => {
+		/*
 		if (error.response) {
 			if (error.response.status === 401 && !error.config.data?._retry) {
 				if (!error.config.data) error.config.data = {}
-				//error.config.data._retry = true
+				error.config.data._retry = true
 
 				if (window.location.pathname.indexOf("login") === -1) {
 					window.location.href = "/logout"
 				}
+			}
+		}
+		*/
+		if (error.response && error.response.status === 401) {
+			if (window.location.pathname.indexOf("login") === -1) {
+				window.location.href = "/logout"
 			}
 		}
 

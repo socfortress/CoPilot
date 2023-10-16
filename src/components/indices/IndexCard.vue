@@ -56,7 +56,7 @@
 <script setup lang="ts">
 import { h, ref, toRefs } from "vue"
 import IndexIcon from "@/components/indices/IndexIcon.vue"
-import { type Index } from "@/types/indices.d"
+import type { IndexStats } from "@/types/indices.d"
 import Api from "@/api"
 import DeleteIcon from "@vicons/carbon/Delete"
 import { useMessage, useDialog, NTooltip, NButton, NSpin, NIcon } from "naive-ui"
@@ -66,7 +66,7 @@ const emit = defineEmits<{
 }>()
 
 const props = defineProps<{
-	index: Index
+	index: IndexStats
 	showActions?: boolean
 }>()
 const { index, showActions } = toRefs(props)
@@ -96,7 +96,7 @@ const handleDelete = () => {
 function deleteIndex() {
 	loading.value = true
 
-	Api.indices
+	Api.graylog
 		.deleteIndex(index.value.index)
 		.then(res => {
 			if (res.data.success) {

@@ -1,9 +1,11 @@
+import { UserRole } from "@/types/auth.d"
+
 export default {
 	path: "/components",
 	redirect: "/components/avatar",
 	meta: {
 		auth: true,
-		roles: "all"
+		roles: UserRole.All
 	},
 	children: [
 		{

@@ -4,7 +4,7 @@ import type { Agent, AgentVulnerabilities, OutdatedWazuhAgents, OutdatedVelocira
 
 export default {
 	getAgents(id?: string) {
-		return HttpClient.get<FlaskBaseResponse & { agent?: Agent; agents?: Agent[] }>(`/agents${id ? "/" + id : ""}`)
+		return HttpClient.get<FlaskBaseResponse & { agents: Agent[] }>(`/agents${id ? "/" + id : ""}`)
 	},
 	markCritical(id: string) {
 		return HttpClient.post<FlaskBaseResponse>(`/agents/${id}/critical`)

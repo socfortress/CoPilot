@@ -1,54 +1,82 @@
 import { defineStore, acceptHMRUpdate } from "pinia"
-import type { Role, Roles, User } from "@/types/auth.d"
+import { UserRole, type User, type LoginPayload } from "@/types/auth.d"
 import _castArray from "lodash/castArray"
+import Api from "@/api"
+import * as jose from "jose"
 import SecureLS from "secure-ls"
+import { scopeToRole } from "@/utils/auth"
 const ls = new SecureLS({ encodingType: "aes", isCompression: false })
 
 export const useAuthStore = defineStore("auth", {
 	state: () => ({
-		role: "admin" as Role | null,
 		user: {
-			token: ""
+			access_token: "",
+			role: UserRole.Unknown
 		} as User
 	}),
 	actions: {
-		setLogged(payload: User) {
-			this.role = "admin"
-			this.user = payload
+		setLogged(token: string) {
+			const jwtPayload = jose.decodeJwt(token)
+			const scopes = jwtPayload.scopes as string[]
+
+			this.user = {
+				access_token: token,
+				role: scopeToRole(scopes)
+			}
 		},
 		setToken(token: string) {
-			this.user.token = token
+			this.user.access_token = token
 		},
 		setLogout() {
-			this.role = null
 			this.user = {
-				token: ""
+				access_token: "",
+				role: UserRole.Unknown
 			}
+		},
+		login(payload: LoginPayload) {
+			return new Promise((resolve, reject) => {
+				Api.auth
+					.login(payload)
+					.then(res => {
+						if (res.data.access_token) {
+							useAuthStore().setLogged(res.data.access_token)
+							resolve(res.data)
+						} else {
+							reject(res.data)
+						}
+					})
+					.catch(err => {
+						reject(err.response?.data)
+					})
+			})
 		}
 	},
 	getters: {
-		isLogged(state) {
-			return state.user?.token
+		isLogged(state): boolean {
+			return !!state.user?.access_token
 		},
-		userRole(state) {
-			return state.role
+		userToken(state): string {
+			return state.user?.access_token
 		},
-		isRoleGranted(state) {
-			return (roles?: Roles) => {
+		userRole(state): UserRole {
+			return state.user?.role
+		},
+		isRoleGranted() {
+			return (roles?: UserRole | UserRole[]) => {
 				if (!roles) {
 					return true
 				}
-				if (!state.role) {
+				if (!this.userRole) {
 					return false
 				}
 
-				const arrRoles: Role[] = _castArray(roles)
+				const arrRoles: UserRole[] = _castArray(roles)
 
-				if (arrRoles.includes("all")) {
+				if (arrRoles.includes(UserRole.All)) {
 					return true
 				}
 
-				return arrRoles.includes(state.role)
+				return arrRoles.includes(this.userRole)
 			}
 		}
 	},
@@ -57,7 +85,7 @@ export const useAuthStore = defineStore("auth", {
 			getItem: key => ls.get(key),
 			setItem: (key, value) => ls.set(key, value)
 		},
-		paths: ["role", "user"]
+		paths: ["user"]
 	}
 })
 

@@ -1,21 +1,24 @@
 <template>
-	<n-card class="index-details-box">
-		<n-spin :show="loading">
-			<div class="box-header">
-				<h4 class="title">
-					<span v-if="currentIndex">Below the details for index</span>
-					<span v-else>Select an index to see the details</span>
-				</h4>
-				<div class="select-box" v-if="indices && indices.length">
-					<n-select
-						v-model:value="selectValue"
-						placeholder="Indices list"
-						clearable
-						filterable
-						:options="selectOptions"
-					></n-select>
+	<n-spin :show="loading">
+		<n-card class="index-details-box" segmented>
+			<template #header>
+				<div class="box-header">
+					<div class="title">
+						<span v-if="currentIndex">Below the details for index</span>
+						<span v-else>Select an index to see the details</span>
+					</div>
+					<div class="select-box" v-if="indices && indices.length">
+						<n-select
+							v-model:value="selectValue"
+							placeholder="Indices list"
+							clearable
+							filterable
+							:options="selectOptions"
+						></n-select>
+					</div>
 				</div>
-			</div>
+			</template>
+
 			<div class="details-box" v-if="currentIndex">
 				<div class="info">
 					<IndexCard :index="currentIndex" showActions @delete="clearCurrentIndex()" />
@@ -47,26 +50,26 @@
 					</n-scrollbar>
 				</n-card>
 			</div>
-		</n-spin>
-	</n-card>
+		</n-card>
+	</n-spin>
 </template>
 
 <script setup lang="ts">
 import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
-import { type Index, type IndexShard } from "@/types/indices.d"
+import type { IndexStats, IndexShard } from "@/types/indices.d"
 import IndexCard from "@/components/indices/IndexCard.vue"
 import Api from "@/api"
 import { nanoid } from "nanoid"
 import { useMessage, NScrollbar, NSpin, NTable, NSelect, NCard } from "naive-ui"
 
-type IndexModel = Index | null | ""
+type IndexModel = IndexStats | null | ""
 
 const emit = defineEmits<{
 	(e: "update:modelValue", value: IndexModel): void
 }>()
 
 const props = defineProps<{
-	indices: Index[] | null
+	indices: IndexStats[] | null
 	modelValue: IndexModel
 }>()
 const { indices, modelValue } = toRefs(props)
@@ -155,8 +158,6 @@ onBeforeMount(() => {
 	}
 
 	.details-box {
-		@apply mt-6;
-
 		.shards {
 			@apply mt-4;
 
