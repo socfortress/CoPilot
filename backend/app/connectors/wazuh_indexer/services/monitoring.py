@@ -1,6 +1,7 @@
 from typing import Dict
 from typing import Union
 
+from fastapi import HTTPException
 from loguru import logger
 
 from app.connectors.wazuh_indexer.schema.monitoring import ClusterHealth
@@ -39,7 +40,7 @@ def cluster_healthcheck() -> Union[ClusterHealthResponse, Dict[str, str]]:
         )
     except Exception as e:
         logger.error(f"Cluster health check failed with error: {e}")
-        return {"success": False, "message": f"Cluster health check failed with error: {e}"}
+        raise Exception(str(e))  # Change this line
 
 
 def node_allocation() -> Union[NodeAllocationResponse, Dict[str, bool]]:

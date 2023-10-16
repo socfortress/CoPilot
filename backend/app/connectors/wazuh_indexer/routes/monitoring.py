@@ -34,7 +34,7 @@ async def get_cluster_health() -> Union[ClusterHealthResponse, HTTPException]:
     if cluster_health is not None:
         return cluster_health
     else:
-        raise HTTPException(status_code=500, detail="Failed to retrieve cluster health.")
+        raise Exception("Failed to retrieve cluster health.")
 
 
 @wazuh_indexer_router.get("/allocation", response_model=NodeAllocationResponse, description="Fetch Wazuh Indexer node allocation")
