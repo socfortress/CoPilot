@@ -16,6 +16,7 @@ from app.auth.services.universal import find_user
 from app.auth.services.universal import select_all_users
 from app.auth.utils import AuthHandler
 from app.db.db_session import session
+from loguru import logger
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 1440
 

@@ -6,7 +6,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from loguru import logger
 from sqlmodel import Session
-
 from app.agents.routes.agents import agents_router
 from app.auth.routes.auth import user_router
 from app.auth.utils import AuthHandler
@@ -33,6 +32,8 @@ from app.connectors.wazuh_indexer.routes.monitoring import wazuh_indexer_router
 from app.connectors.wazuh_manager.routes.rules import wazuh_manager_router
 from app.customers.routes.customers import customers_router
 from app.db.db_session import engine
+from pydantic import BaseSettings
+from dotenv import load_dotenv
 from app.db.db_setup import create_tables
 from app.healthchecks.agents.routes.agents import healtcheck_agents_router
 from app.integrations.alert_escalation.routes.general_alert import (
@@ -43,6 +44,7 @@ from app.smtp.routes.configure import smtp_router
 from app.utils import Logger
 
 auth_handler = AuthHandler()
+
 
 app = FastAPI(description="CoPilot API", version="0.1.0", title="CoPilot API")
 
@@ -57,28 +59,87 @@ app.add_middleware(
 
 
 ################## ! Middleware LOGGING TO `log_entry` table ! ##################
+# Constants
+EXCLUDED_PATHS = ["/auth/token", "/auth/register"]
+INTERNAL_SERVER_ERROR = 500
+
+async def process_request(request: Request, call_next, session, logger_instance):
+    response = await call_next(request)
+    user_id = await logger_instance.get_user_id_from_request(request)
+    return response, user_id
+
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     user_id = None
-    exception_occurred = False
+    response = None
     with Session(engine) as session:
         logger_instance = Logger(session, auth_handler)
 
         try:
-            if request.url.path != "/auth/token":
+            if request.url.path not in EXCLUDED_PATHS:
+                response, user_id = await process_request(request, call_next, session, logger_instance)
+            else:
                 response = await call_next(request)
-                user_id = await logger_instance.get_user_id_from_request(request)
 
-        except Exception as e:
-            logger.info(f"Exception occurred: {e}")
-            exception_occurred = True
+        except Exception as e:  # Replace SpecificException with the actual exception you're expecting
+            logger.error(f"Exception occurred: {e}")  # Changed from logger.info to logger.error
             await logger_instance.log_error(user_id, request, e)
-            return JSONResponse(status_code=500, content={"message": "Internal Server Error", "success": False})
+            return JSONResponse(status_code=INTERNAL_SERVER_ERROR, content={"message": "Internal Server Error", "success": False})
 
-        if not exception_occurred:
-            await logger_instance.log_route_access(user_id, request, response)
+        await logger_instance.log_route_access(user_id, request, response)
 
-    return response if not exception_occurred else await call_next(request)
+    return response if response else await call_next(request)
+
+
+# @app.middleware("http")
+# async def log_requests(request: Request, call_next):
+#     user_id = None
+#     exception_occurred = False
+#     response = None  # Initialize to None or some default value
+#     with Session(engine) as session:
+#         logger_instance = Logger(session, auth_handler)
+
+#         try:
+#             if request.url.path not in ["/auth/token", "/auth/register"]:
+#                 response = await call_next(request)
+#                 user_id = await logger_instance.get_user_id_from_request(request)
+#             else:
+#                 response = await call_next(request)  # Add this line if you want to proceed with the request
+
+#         except Exception as e:
+#             logger.info(f"Exception occurred: {e}")
+#             exception_occurred = True
+#             await logger_instance.log_error(user_id, request, e)
+#             return JSONResponse(status_code=500, content={"message": "Internal Server Error", "success": False})
+
+#         if not exception_occurred:
+#             await logger_instance.log_route_access(user_id, request, response)
+
+#     return response if response else await call_next(request)  # Modified this line
+
+
+# @app.middleware("http")
+# async def log_requests(request: Request, call_next):
+#     user_id = None
+#     exception_occurred = False
+#     with Session(engine) as session:
+#         logger_instance = Logger(session, auth_handler)
+
+#         try:
+#             if request.url.path != "/auth/token":
+#                 response = await call_next(request)
+#                 user_id = await logger_instance.get_user_id_from_request(request)
+
+#         except Exception as e:
+#             logger.info(f"Exception occurred: {e}")
+#             exception_occurred = True
+#             await logger_instance.log_error(user_id, request, e)
+#             return JSONResponse(status_code=500, content={"message": "Internal Server Error", "success": False})
+
+#         if not exception_occurred:
+#             await logger_instance.log_route_access(user_id, request, response)
+
+#     return response if not exception_occurred else await call_next(request)
 
 
 @app.exception_handler(HTTPException)
@@ -118,6 +179,8 @@ app.include_router(healtcheck_agents_router, prefix="/healthcheck", tags=["healt
 app.include_router(smtp_router, prefix="/smtp", tags=["smtp"])
 app.include_router(dnstwist_router, prefix="/dnstwist", tags=["dnstwist"])
 app.include_router(integration_general_alerts_router, prefix="/alerts", tags=["alerts"])
+
+
 
 
 @app.on_event("startup")
