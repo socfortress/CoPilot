@@ -4,9 +4,12 @@ from fastapi import HTTPException
 from fastapi import Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from loguru import logger
+from sqlmodel import Session
 
 from app.agents.routes.agents import agents_router
 from app.auth.routes.auth import user_router
+from app.auth.utils import AuthHandler
 from app.connectors.cortex.routes.analyzers import cortex_analyzer_router
 from app.connectors.dfir_iris.routes.alerts import dfir_iris_alerts_router
 from app.connectors.dfir_iris.routes.assets import assets_router
@@ -37,6 +40,9 @@ from app.integrations.alert_escalation.routes.general_alert import (
 )
 from app.integrations.dnstwist.routes.analyze import dnstwist_router
 from app.smtp.routes.configure import smtp_router
+from app.utils import Logger
+
+auth_handler = AuthHandler()
 
 app = FastAPI(description="CoPilot API", version="0.1.0", title="CoPilot API")
 
@@ -48,6 +54,31 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+################## ! Middleware LOGGING TO `log_entry` table ! ##################
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    user_id = None
+    exception_occurred = False
+    with Session(engine) as session:
+        logger_instance = Logger(session, auth_handler)
+
+        try:
+            if request.url.path != "/auth/token":
+                response = await call_next(request)
+                user_id = await logger_instance.get_user_id_from_request(request)
+
+        except Exception as e:
+            logger.info(f"Exception occurred: {e}")
+            exception_occurred = True
+            await logger_instance.log_error(user_id, request, e)
+            return JSONResponse(status_code=500, content={"message": "Internal Server Error", "success": False})
+
+        if not exception_occurred:
+            await logger_instance.log_route_access(user_id, request, response)
+
+    return response if not exception_occurred else await call_next(request)
 
 
 @app.exception_handler(HTTPException)
