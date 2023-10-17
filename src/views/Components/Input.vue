@@ -8,11 +8,8 @@
 					target="_blank"
 					alt="docs"
 					rel="nofollow noopener noreferrer"
-					class="ml-4"
 				>
-					<n-icon :size="16">
-						<ExternalIcon />
-					</n-icon>
+					<Icon :name="ExternalIcon" :size="16" />
 					docs
 				</a>
 			</div>
@@ -68,7 +65,7 @@
 				<n-space vertical>
 					<n-input placeholder="Flash">
 						<template #prefix>
-							<n-icon :component="FlashOutline" />
+							<Icon :name="FlashOutline" />
 						</template>
 					</n-input>
 					<n-input round placeholder="1,400,000">
@@ -76,7 +73,7 @@
 					</n-input>
 					<n-input round placeholder="Flash">
 						<template #suffix>
-							<n-icon :component="FlashOutline" />
+							<Icon :name="FlashOutline" />
 						</template>
 					</n-input>
 					<n-input type="text" placeholder="Basic Input" loading />
@@ -118,10 +115,10 @@
 						:maxlength="8"
 					>
 						<template #password-visible-icon>
-							<n-icon :size="16" :component="GlassesOutline" />
+							<Icon :size="16" :name="GlassesOutline" />
 						</template>
 						<template #password-invisible-icon>
-							<n-icon :size="16" :component="Glasses" />
+							<Icon :size="16" :name="Glasses" />
 						</template>
 					</n-input>
 					<n-input type="text" placeholder="Content is clearable" clearable />
@@ -330,7 +327,6 @@
 
 <script lang="ts" setup>
 import {
-	NIcon,
 	NInput,
 	NSpace,
 	NText,
@@ -343,10 +339,13 @@ import {
 	NDatePicker,
 	NTimePicker
 } from "naive-ui"
-import ExternalIcon from "@vicons/tabler/ExternalLink"
+import Icon from "@/components/common/Icon.vue"
 import { ref } from "vue"
-import { FlashOutline } from "@vicons/ionicons5"
-import { GlassesOutline, Glasses } from "@vicons/ionicons5"
+
+const ExternalIcon = "tabler:external-link"
+const FlashOutline = "ion:flash-outline"
+const GlassesOutline = "ion:glasses-outline"
+const Glasses = "ion:glasses"
 
 const value = ref(null)
 

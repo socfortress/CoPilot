@@ -8,7 +8,7 @@
 "
 	>
 		<n-spin :show="loading">
-			<div style="height: 250px; width: 100%; overflow: hidden">
+			<div style="height: 250px; width: calc(100% - 4px); margin: 0 auto; overflow: hidden">
 				<vuevectormap
 					v-if="!loading"
 					ref="map"
@@ -26,18 +26,17 @@
 
 <script setup lang="ts">
 import { NCard, NSpin } from "naive-ui"
-// Import your preferred map
-import "jsvectormap/dist/maps/world-merc"
 
 import { computed, ref, watchEffect, watch } from "vue"
 import { useResizeObserver, useWindowSize } from "@vueuse/core"
 import { useThemeStore } from "@/stores/theme"
 
-const style: { [key: string]: any } = computed(() => useThemeStore().style)
+const style = computed<{ [key: string]: any }>(() => useThemeStore().style)
 
 function getOption() {
 	return {
 		map: "world_merc",
+		showTooltip: false,
 		bindTouchEvents: false,
 		zoomButtons: false,
 		zoomOnScroll: false,
@@ -74,8 +73,7 @@ function getOption() {
 					return marker.name
 				}
 			}
-		},
-		showTooltip: true
+		}
 	}
 }
 

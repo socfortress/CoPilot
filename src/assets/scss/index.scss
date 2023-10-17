@@ -38,8 +38,20 @@ body {
 	display: none !important;
 }
 
+::view-transition-old(root),
+::view-transition-new(root) {
+	animation: none;
+	mix-blend-mode: normal;
+}
+::view-transition-old(root) {
+	z-index: 1;
+}
+::view-transition-new(root) {
+	z-index: 99999;
+}
+
 ::selection {
-	background-color: rgba(var(--primary-color-rgb), 0.2);
+	background-color: var(--primary-020-color);
 }
 
 #app {
@@ -56,32 +68,6 @@ input {
 	accent-color: var(--primary-color);
 }
 
-h1,
-h2,
-h3,
-h4,
-h5 {
-	font-family: var(--font-family-display);
-}
-h1 {
-	font-size: 30px;
-}
-h2 {
-	font-size: 26px;
-}
-h3 {
-	font-size: 22px;
-}
-h4 {
-	font-size: 18px;
-}
-h5 {
-	font-size: 14px;
-}
-h6 {
-	font-size: 12px;
-}
-
 p {
 	color: var(--fg-secondary-color);
 }
@@ -96,7 +82,7 @@ pre {
 code {
 	padding: 1px 6px;
 	border-radius: var(--border-radius-small);
-	background-color: rgba(var(--fg-color-rgb), 0.05);
+	background-color: var(--hover-005-color);
 	font-size: 13px;
 }
 pre {
@@ -117,7 +103,7 @@ a {
 blockquote {
 	display: block;
 	padding-left: 1em;
-	border-left: 4px solid rgba(var(--fg-color-rgb), 0.1);
+	border-left: 4px solid var(--border-color);
 }
 
 dl {
@@ -160,6 +146,6 @@ ol {
 mark {
 	padding: 2px 0px;
 	border-radius: var(--border-radius-small);
-	background-color: rgba(var(--primary-color-rgb), 0.3);
+	background-color: var(--primary-030-color);
 	color: var(--fg-color);
 }

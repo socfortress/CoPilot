@@ -8,11 +8,8 @@
 					target="_blank"
 					alt="docs"
 					rel="nofollow noopener noreferrer"
-					class="ml-4"
 				>
-					<n-icon :size="16">
-						<ExternalIcon />
-					</n-icon>
+					<Icon :name="ExternalIcon" :size="16" />
 					docs
 				</a>
 			</div>
@@ -20,13 +17,9 @@
 
 		<div class="components-list">
 			<CardCodeExample title="Basic">
-				<n-icon size="40">
-					<game-controller-outline />
-				</n-icon>
-				<n-icon size="40" color="#0e7a0d">
-					<game-controller />
-				</n-icon>
-				<n-icon size="40" :component="GameController" />
+				<Icon :name="GameControllerOutline" :size="40" />
+				<Icon :name="GameController" :size="40" color="#0e7a0d" />
+				<Icon :name="GameController" :size="40" />
 				<template #code="{ html, js }">
 					{{ html(`
 					<n-icon size="40">
@@ -47,9 +40,15 @@
 
 			<CardCodeExample title="Icon with background">
 				<template #description>Sometime it looks better with a background.</template>
-				<n-icon-wrapper :size="24" :border-radius="10">
-					<n-icon :size="18" :component="Checkmark16Filled" />
-				</n-icon-wrapper>
+				<Icon
+					:name="Checkmark16Filled"
+					:bgSize="24"
+					:size="18"
+					:border-radius="10"
+					bgColor="#0e7a0d"
+					color="#fff"
+				/>
+
 				<template #code="{ html, js }">
 					{{ html(`
 					<n-icon-wrapper :size="24" :border-radius="10">
@@ -65,8 +64,9 @@
 </template>
 
 <script lang="ts" setup>
-import { NIcon, NIconWrapper } from "naive-ui"
-import ExternalIcon from "@vicons/tabler/ExternalLink"
-import { GameControllerOutline, GameController } from "@vicons/ionicons5"
-import Checkmark16Filled from "@vicons/fluent/Checkmark16Filled"
+import Icon from "@/components/common/Icon.vue"
+const ExternalIcon = "tabler:external-link"
+const GameControllerOutline = "ion:game-controller-outline"
+const GameController = "ion:game-controller"
+const Checkmark16Filled = "fluent:checkmark-16-filled"
 </script>

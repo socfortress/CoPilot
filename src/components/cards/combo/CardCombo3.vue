@@ -39,9 +39,7 @@
 							secondary
 							:type="series.active ? 'default' : 'tertiary'"
 						>
-							<n-icon :size="12" :color="series.color">
-								<DotIcon />
-							</n-icon>
+							<Icon :size="12" :color="series.color" :name="DotIcon"></Icon>
 							<span class="ml-2">
 								{{ series.name }}
 							</span>
@@ -56,9 +54,7 @@
 						]"
 					>
 						<n-button secondary>
-							<n-icon :size="14">
-								<TimeIcon />
-							</n-icon>
+							<Icon :size="14" :name="TimeIcon"></Icon>
 							<span class="ml-2">
 								{{ capitalized(chartTypeValue) }}
 							</span>
@@ -85,14 +81,15 @@
 </template>
 
 <script setup lang="ts">
-import { NCard, NSpin, NButton, NIcon, NPopselect } from "naive-ui"
+import { NCard, NSpin, NButton, NPopselect } from "naive-ui"
 import { useThemeStore } from "@/stores/theme"
 import dayjs from "@/utils/dayjs"
-import { computed, ref, toRefs } from "vue"
-import DemoChart, { type DataType } from "@/components/charts/Apex.vue"
-import DotIcon from "@vicons/carbon/CircleSolid"
-import TimeIcon from "@vicons/carbon/Time"
-import { type VueApexChartsComponent } from "vue3-apexcharts"
+import { computed, ref, toRefs, onMounted } from "vue"
+import DemoChart, { type DataType, type VueApexChartsComponent } from "@/components/charts/DemoApex.vue"
+import Icon from "@/components/common/Icon.vue"
+
+const DotIcon = "carbon:circle-solid"
+const TimeIcon = "carbon:time"
 
 interface ChartSeries {
 	active: boolean
@@ -110,7 +107,7 @@ const props = withDefaults(
 const { oneSeries } = toRefs(props)
 
 const twoSeries = computed(() => !oneSeries.value)
-const style: { [key: string]: any } = computed(() => useThemeStore().style)
+const style = computed<{ [key: string]: any }>(() => useThemeStore().style)
 const textSecondaryColor = computed<string>(() => style.value["--fg-secondary-color"])
 const loaded = ref(false)
 
@@ -134,7 +131,7 @@ function toggleSeries(series: ChartSeries) {
 
 function getSeries() {
 	const chartColors: string[] = chartCTX.value?.options?.colors || []
-	chartSeries.value = chartCTX.value?.series.map((s: any, index: number) => {
+	chartSeries.value = (chartCTX.value?.series || []).map((s: any, index: number) => {
 		return {
 			active: true,
 			name: s.name,
@@ -150,9 +147,11 @@ function capitalized(text: string) {
 	return capitalizedFirst + rest
 }
 
-setTimeout(() => {
-	loaded.value = true
-}, 400)
+onMounted(() => {
+	setTimeout(() => {
+		loaded.value = true
+	}, 1000)
+})
 </script>
 
 <style scoped lang="scss">

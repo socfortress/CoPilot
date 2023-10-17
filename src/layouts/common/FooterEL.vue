@@ -3,9 +3,9 @@
 		<div class="wrap flex items-center justify-end gap-3">
 			<div class="copy">
 				Made with
-				<n-icon :size="22" :color="style['--primary-color']" class="mx-1">
+				<Icon :size="22" :color="style['--primary-color']" class="mx-1">
 					<BrainIcon />
-				</n-icon>
+				</Icon>
 				By
 				<a href="https://dverse.studio/" target="_blank" alt="D*VERSE" rel="noopener noreferrer" class="mx-1">
 					D*VERSE Studio
@@ -18,7 +18,7 @@
 
 <script lang="ts" setup>
 import { computed, ref, toRefs } from "vue"
-import { NIcon } from "naive-ui"
+import Icon from "@/components/common/Icon.vue"
 import BrainIcon from "@/assets/icons/brain-icon.svg"
 import { useThemeStore } from "@/stores/theme"
 

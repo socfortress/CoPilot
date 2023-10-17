@@ -4,9 +4,7 @@
 			<div class="box-card-1">
 				<CardCombo1 title="Sales" class="h-full">
 					<template #icon>
-						<CardComboIcon boxed>
-							<SalesIcon />
-						</CardComboIcon>
+						<CardComboIcon :iconName="SalesIcon" boxed></CardComboIcon>
 					</template>
 				</CardCombo1>
 			</div>
@@ -22,9 +20,7 @@
 			<div class="box-card-3">
 				<CardCombo1 title="Orders" class="h-full">
 					<template #icon>
-						<CardComboIcon boxed>
-							<OrdersIcon />
-						</CardComboIcon>
+						<CardComboIcon :iconName="OrdersIcon" boxed></CardComboIcon>
 					</template>
 				</CardCombo1>
 			</div>
@@ -75,23 +71,32 @@
 					<div class="flex gap-5 w-full" :class="{ 'flex-col': isCardHorizontal }" ref="cardsContainer">
 						<CardCombo2 title="Completed" centered :horizontal="isCardHorizontal" class="basis-1/3">
 							<template #icon>
-								<CardComboIcon boxed :boxSize="50" :color="style['--primary-color']">
-									<CompletedIcon />
-								</CardComboIcon>
+								<CardComboIcon
+									:iconName="CompletedIcon"
+									boxed
+									:boxSize="50"
+									:color="style['--primary-color']"
+								></CardComboIcon>
 							</template>
 						</CardCombo2>
 						<CardCombo2 title="Pending" centered :horizontal="isCardHorizontal" class="basis-1/3">
 							<template #icon>
-								<CardComboIcon boxed :boxSize="50" :color="style['--secondary3-color']">
-									<PendingIcon />
-								</CardComboIcon>
+								<CardComboIcon
+									:iconName="PendingIcon"
+									boxed
+									:boxSize="50"
+									:color="style['--secondary3-color']"
+								></CardComboIcon>
 							</template>
 						</CardCombo2>
 						<CardCombo2 title="Shipped" centered :horizontal="isCardHorizontal" class="basis-1/3">
 							<template #icon>
-								<CardComboIcon boxed :boxSize="50" :color="style['--secondary1-color']">
-									<ShippedIcon />
-								</CardComboIcon>
+								<CardComboIcon
+									:iconName="ShippedIcon"
+									boxed
+									:boxSize="50"
+									:color="style['--secondary1-color']"
+								></CardComboIcon>
 							</template>
 						</CardCombo2>
 					</div>
@@ -114,9 +119,7 @@
 									chartColor="#ffffff"
 								>
 									<template #icon>
-										<CardComboIcon boxed color="white">
-											<RevenueIcon />
-										</CardComboIcon>
+										<CardComboIcon :iconName="RevenueIcon" boxed color="white"></CardComboIcon>
 									</template>
 								</CardCombo1>
 							</div>
@@ -150,25 +153,21 @@
 </template>
 
 <script lang="ts" setup>
-import DemoChart from "@/components/charts/Apex.vue"
-import CompletedIcon from "@vicons/carbon/CheckmarkOutline"
-import PendingIcon from "@vicons/carbon/Hourglass"
-import ShippedIcon from "@vicons/carbon/Send"
+import DemoChart from "@/components/charts/DemoApex.vue"
 import DemoList from "@/components/list/List.vue"
-import SalesIcon from "@vicons/carbon/WirelessCheckout"
-import OrdersIcon from "@vicons/carbon/ShoppingCart"
-import RevenueIcon from "@vicons/carbon/Money"
-import { useWindowSize } from "@vueuse/core"
+import { useWindowSize, useElementSize } from "@vueuse/core"
 import { computed, ref } from "vue"
 import { useThemeStore } from "@/stores/theme"
-import { useElementSize } from "@vueuse/core"
 
-defineOptions({
-	name: "eCommerce"
-})
+const CompletedIcon = "carbon:checkmark-outline"
+const PendingIcon = "carbon:hourglass"
+const ShippedIcon = "carbon:send"
+const SalesIcon = "carbon:wireless-checkout"
+const OrdersIcon = "carbon:shopping-cart"
+const RevenueIcon = "carbon:money"
 
 const { width } = useWindowSize()
-const style: { [key: string]: any } = computed(() => useThemeStore().style)
+const style = computed<{ [key: string]: any }>(() => useThemeStore().style)
 const textSecondaryColor = computed<string>(() => style.value["--fg-secondary-color"])
 const cardsContainer = ref(null)
 const { width: widthCardsContainer } = useElementSize(cardsContainer)

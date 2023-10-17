@@ -3,9 +3,7 @@
 		<template #header>
 			<div class="flex items-center justify-between !text-white">
 				<span>Alt Background</span>
-				<n-icon class="ml-3 icon-ring">
-					<ColorIcon />
-				</n-icon>
+				<Icon class="ml-3 icon-ring" :name="ColorIcon"></Icon>
 			</div>
 		</template>
 		<div class="!text-white">
@@ -19,13 +17,15 @@
 	</n-card>
 </template>
 <script setup lang="ts">
-import { NCard, NIcon } from "naive-ui"
-import ColorIcon from "@vicons/ionicons5/ColorFillOutline"
+import { NCard } from "naive-ui"
+import Icon from "@/components/common/Icon.vue"
+
+const ColorIcon = "ion:color-fill-outline"
 </script>
 
 <style scoped lang="scss">
 .icon-ring {
-	background-color: rgba(var(--fg-color-rgb), 0.05);
+	background-color: var(--hover-005-color);
 	width: 30px;
 	height: 30px;
 	border-radius: 50%;

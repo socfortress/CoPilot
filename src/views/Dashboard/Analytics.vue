@@ -23,9 +23,7 @@
 							}"
 						>
 							<template #icon>
-								<CardComboIcon boxed>
-									<UsersIcon />
-								</CardComboIcon>
+								<CardComboIcon :iconName="UsersIcon" boxed></CardComboIcon>
 							</template>
 						</CardCombo4>
 						<CardCombo4
@@ -39,9 +37,7 @@
 							}"
 						>
 							<template #icon>
-								<CardComboIcon boxed>
-									<ViewsIcon />
-								</CardComboIcon>
+								<CardComboIcon :iconName="ViewsIcon" boxed></CardComboIcon>
 							</template>
 						</CardCombo4>
 						<CardCombo4
@@ -55,9 +51,7 @@
 							}"
 						>
 							<template #icon>
-								<CardComboIcon boxed>
-									<ActivityIcon />
-								</CardComboIcon>
+								<CardComboIcon :iconName="ActivityIcon" boxed></CardComboIcon>
 							</template>
 						</CardCombo4>
 						<CardCombo4
@@ -71,9 +65,7 @@
 							}"
 						>
 							<template #icon>
-								<CardComboIcon boxed>
-									<UploadsIcon />
-								</CardComboIcon>
+								<CardComboIcon :iconName="UploadsIcon" boxed></CardComboIcon>
 							</template>
 						</CardCombo4>
 					</div>
@@ -122,9 +114,7 @@
 							chartColor="#ffffff"
 						>
 							<template #icon>
-								<CardComboIcon boxed color="white">
-									<SessionsIcon />
-								</CardComboIcon>
+								<CardComboIcon :iconName="SessionsIcon" boxed color="white"></CardComboIcon>
 							</template>
 						</CardCombo1>
 					</div>
@@ -133,16 +123,22 @@
 					<div class="flex gap-5">
 						<CardCombo2 title="Reports" centered class="basis-1/2">
 							<template #icon>
-								<CardComboIcon boxed :boxSize="50" :color="style['--secondary3-color']">
-									<ReportsIcon />
-								</CardComboIcon>
+								<CardComboIcon
+									:iconName="ReportsIcon"
+									boxed
+									:boxSize="50"
+									:color="style['--secondary3-color']"
+								></CardComboIcon>
 							</template>
 						</CardCombo2>
 						<CardCombo2 title="Issues" centered class="basis-1/2">
 							<template #icon>
-								<CardComboIcon boxed :boxSize="50" :color="style['--secondary4-color']">
-									<ErrorIcon />
-								</CardComboIcon>
+								<CardComboIcon
+									:iconName="ErrorIcon"
+									boxed
+									:boxSize="50"
+									:color="style['--secondary4-color']"
+								></CardComboIcon>
 							</template>
 						</CardCombo2>
 					</div>
@@ -177,24 +173,20 @@
 </template>
 
 <script lang="ts" setup>
-import DemoChart from "@/components/charts/Apex.vue"
+import DemoChart from "@/components/charts/DemoApex.vue"
 import DemoList from "@/components/list/List.vue"
-import SessionsIcon from "@vicons/carbon/UserMultiple"
-import UsersIcon from "@vicons/carbon/User"
-import ReportsIcon from "@vicons/carbon/Report"
-import ErrorIcon from "@vicons/carbon/Debug"
-import ViewsIcon from "@vicons/carbon/View"
-import ActivityIcon from "@vicons/carbon/Activity"
-import UploadsIcon from "@vicons/carbon/CloudUpload"
 import { useThemeStore } from "@/stores/theme"
-
 import { computed } from "vue"
 
-defineOptions({
-	name: "Analytics"
-})
+const SessionsIcon = "carbon:user-multiple"
+const UsersIcon = "carbon:user"
+const ReportsIcon = "carbon:report"
+const ErrorIcon = "carbon:debug"
+const ViewsIcon = "carbon:view"
+const ActivityIcon = "carbon:activity"
+const UploadsIcon = "carbon:cloud-upload"
 
-const style: { [key: string]: any } = computed(() => useThemeStore().style)
+const style = computed<{ [key: string]: any }>(() => useThemeStore().style)
 const textSecondaryColor = computed<string>(() => style.value["--fg-secondary-color"])
 
 const chartBg = computed<string>(() =>

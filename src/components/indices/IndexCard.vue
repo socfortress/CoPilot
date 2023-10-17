@@ -41,7 +41,7 @@
 							<template #trigger>
 								<n-button quaternary circle type="error" @click.stop="handleDelete">
 									<template #icon>
-										<n-icon><DeleteIcon /></n-icon>
+										<Icon :name="DeleteIcon"></Icon>
 									</template>
 								</n-button>
 							</template>
@@ -58,8 +58,10 @@ import { h, ref, toRefs } from "vue"
 import IndexIcon from "@/components/indices/IndexIcon.vue"
 import type { IndexStats } from "@/types/indices.d"
 import Api from "@/api"
-import DeleteIcon from "@vicons/carbon/Delete"
-import { useMessage, useDialog, NTooltip, NButton, NSpin, NIcon } from "naive-ui"
+import { useMessage, useDialog, NTooltip, NButton, NSpin } from "naive-ui"
+import Icon from "@/components/common/Icon.vue"
+
+const DeleteIcon = "carbon:delete"
 
 const emit = defineEmits<{
 	(e: "delete"): void

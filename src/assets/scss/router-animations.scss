@@ -1,7 +1,7 @@
 /* router-fade */
 .router-fade-enter-active,
 .router-fade-leave-active {
-	transition: opacity 0.2s ease-in-out;
+	transition: opacity var(--router-transition-duration) ease-in-out;
 }
 .router-fade-enter-from,
 .router-fade-leave-to {
@@ -12,8 +12,8 @@
 .router-fade-up-enter-active,
 .router-fade-up-leave-active {
 	transition:
-		opacity 0.2s ease-in-out,
-		transform 0.3s ease-in-out;
+		opacity var(--router-transition-duration) ease-in-out,
+		transform var(--router-transition-duration) ease-in-out;
 }
 .router-fade-up-enter-from {
 	opacity: 0;
@@ -28,8 +28,8 @@
 .router-fade-bottom-enter-active,
 .router-fade-bottom-leave-active {
 	transition:
-		opacity 0.2s ease-in-out,
-		transform 0.3s ease-in-out;
+		opacity var(--router-transition-duration) ease-in-out,
+		transform var(--router-transition-duration) ease-in-out;
 }
 .router-fade-bottom-enter-from {
 	opacity: 0;
@@ -44,8 +44,8 @@
 .router-fade-left-enter-active,
 .router-fade-left-leave-active {
 	transition:
-		opacity 0.2s ease-in-out,
-		transform 0.3s ease-in-out;
+		opacity var(--router-transition-duration) ease-in-out,
+		transform var(--router-transition-duration) ease-in-out;
 }
 .router-fade-left-enter-from {
 	opacity: 0;
@@ -60,8 +60,8 @@
 .router-fade-right-enter-active,
 .router-fade-right-leave-active {
 	transition:
-		opacity 0.2s ease-in-out,
-		transform 0.3s ease-in-out;
+		opacity var(--router-transition-duration) ease-in-out,
+		transform var(--router-transition-duration) ease-in-out;
 }
 .router-fade-right-enter-from {
 	opacity: 0;

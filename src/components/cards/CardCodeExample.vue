@@ -9,7 +9,7 @@
 		<template #action v-if="$slots.html || $slots.js || $slots.css || $slots.code">
 			<n-collapse>
 				<template #header-extra>
-					<n-icon><CodeIcon /></n-icon>
+					<Icon :name="CodeIcon"></Icon>
 				</template>
 				<n-collapse-item title="Code" name="code">
 					<div class="code-container">
@@ -40,11 +40,12 @@
 
 <script setup lang="ts">
 import { hljs, resetIndent } from "@/directives/v-hl"
-import { NCollapse, NCollapseItem, NCard, NScrollbar, NIcon } from "naive-ui"
-import CodeIcon from "@vicons/carbon/Code"
+import { NCollapse, NCollapseItem, NCard, NScrollbar } from "naive-ui"
 import { ref } from "vue"
+import Icon from "@/components/common/Icon.vue"
 
 type LangType = "html" | "js" | "css"
+const CodeIcon = "carbon:code"
 
 const refHTML = ref<HTMLElement | null>(null)
 const refJS = ref<HTMLElement | null>(null)
@@ -109,7 +110,7 @@ function css(code: string) {
 			margin: 15px 0;
 
 			.label {
-				background-color: rgba(var(--fg-color-rgb), 0.1);
+				background-color: var(--hover-010-color);
 				opacity: 0.5;
 				display: inline-block;
 				padding: 4px 6px;

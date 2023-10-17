@@ -10,7 +10,7 @@
 <script lang="ts" setup>
 import { computed } from "vue"
 import { NScrollbar } from "naive-ui"
-import Navbar from "@/layouts/common/Navbar"
+import Navbar from "@/layouts/common/Navbar/index.vue"
 import Logo from "@/layouts/common/Logo.vue"
 import { useThemeStore } from "@/stores/theme"
 

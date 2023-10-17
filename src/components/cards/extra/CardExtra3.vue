@@ -18,7 +18,7 @@ import { Calendar } from "v-calendar"
 import "v-calendar/style.css"
 import "@/assets/scss/vcalendar-override.scss"
 import { useThemeStore } from "@/stores/theme"
-import type { AttributeConfig } from "v-calendar/dist/types/src/utils/attribute"
+import { type AttributeConfig } from "v-calendar/dist/types/src/utils/attribute.d"
 import dayjs from "@/utils/dayjs"
 import { faker } from "@faker-js/faker"
 

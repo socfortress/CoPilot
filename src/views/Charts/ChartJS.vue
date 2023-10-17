@@ -3,16 +3,8 @@
 		<div class="page-header">
 			<div class="title">ChartJS</div>
 			<div class="links">
-				<a
-					href="https://vue-chartjs.org/"
-					target="_blank"
-					alt="docs"
-					rel="nofollow noopener noreferrer"
-					class="ml-4"
-				>
-					<n-icon :size="16">
-						<ExternalIcon />
-					</n-icon>
+				<a href="https://vue-chartjs.org/" target="_blank" alt="docs" rel="nofollow noopener noreferrer">
+					<Icon :name="ExternalIcon" :size="16" />
 					docs
 				</a>
 			</div>
@@ -26,10 +18,11 @@
 </template>
 
 <script lang="ts" setup>
-import { NIcon } from "naive-ui"
-import ExternalIcon from "@vicons/tabler/ExternalLink"
-import Bar from "./chartjs-components/Bar.vue"
-import Line from "./chartjs-components/Line.vue"
+import Icon from "@/components/common/Icon.vue"
+const ExternalIcon = "tabler:external-link"
+
+import Bar from "@/components/charts/demo-pages/chartjs-components/Bar.vue"
+import Line from "@/components/charts/demo-pages/chartjs-components/Line.vue"
 </script>
 
 <style scoped lang="scss">

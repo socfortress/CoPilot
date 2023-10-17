@@ -8,11 +8,8 @@
 					target="_blank"
 					alt="docs"
 					rel="nofollow noopener noreferrer"
-					class="ml-4"
 				>
-					<n-icon :size="16">
-						<ExternalIcon />
-					</n-icon>
+					<Icon :name="ExternalIcon" :size="16" />
 					docs
 				</a>
 			</div>
@@ -53,16 +50,14 @@
 				<n-thing :content-indented="indented">
 					<template v-if="avatar" #avatar>
 						<n-avatar>
-							<n-icon>
-								<cash-icon />
-							</n-icon>
+							<Icon :name="CashIcon" />
 						</n-avatar>
 					</template>
 					<template v-if="header" #header>Money</template>
 					<template v-if="headerExtra" #header-extra>
 						<n-button circle size="small">
 							<template #icon>
-								<cash-icon />
+								<Icon :name="CashIcon" />
 							</template>
 						</n-button>
 					</template>
@@ -74,25 +69,19 @@
 						<n-space>
 							<n-button size="small">
 								<template #icon>
-									<n-icon>
-										<cash-icon />
-									</n-icon>
+									<Icon :name="CashIcon" />
 								</template>
 								1$
 							</n-button>
 							<n-button size="small">
 								<template #icon>
-									<n-icon>
-										<cash-icon />
-									</n-icon>
+									<Icon :name="CashIcon" />
 								</template>
 								10$
 							</n-button>
 							<n-button size="small">
 								<template #icon>
-									<n-icon>
-										<cash-icon />
-									</n-icon>
+									<Icon :name="CashIcon" />
 								</template>
 								100$
 							</n-button>
@@ -202,11 +191,13 @@
 </template>
 
 <script lang="ts" setup>
-import { NIcon, NRow, NCol, NCheckbox, NDivider, NThing, NAvatar, NSpace, NButton } from "naive-ui"
-import ExternalIcon from "@vicons/tabler/ExternalLink"
+import { NRow, NCol, NCheckbox, NDivider, NThing, NAvatar, NSpace, NButton } from "naive-ui"
+import Icon from "@/components/common/Icon.vue"
 import { ref } from "vue"
 
-import { CashOutline as CashIcon } from "@vicons/ionicons5"
+const ExternalIcon = "tabler:external-link"
+const CashIcon = "ion:cash-outline"
+
 const avatar = ref(true)
 const header = ref(true)
 const headerExtra = ref(true)

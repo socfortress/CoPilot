@@ -21,7 +21,7 @@
 										@click.stop="toggleCritical(agent.agent_id, agent.critical_asset)"
 									>
 										<template #icon>
-											<n-icon><StarIcon /></n-icon>
+											<Icon :name="StarIcon"></Icon>
 										</template>
 									</n-button>
 								</template>
@@ -44,7 +44,7 @@
 							<template #trigger>
 								<n-button quaternary circle type="error" @click.stop="handleDelete">
 									<template #icon>
-										<n-icon><DeleteIcon /></n-icon>
+										<Icon :name="DeleteIcon"></Icon>
 									</template>
 								</n-button>
 							</template>
@@ -61,9 +61,11 @@ import { computed, ref, toRefs } from "vue"
 import { type Agent } from "@/types/agents.d"
 import dayjs from "dayjs"
 import { handleDeleteAgent, isAgentOnline, toggleAgentCritical } from "./utils"
-import StarIcon from "@vicons/carbon/Star"
-import DeleteIcon from "@vicons/carbon/Delete"
-import { NTooltip, NButton, NIcon, NSpin, NCard, useMessage, useDialog } from "naive-ui"
+import { NTooltip, NButton, NSpin, NCard, useMessage, useDialog } from "naive-ui"
+import Icon from "@/components/common/Icon.vue"
+
+const StarIcon = "carbon:star"
+const DeleteIcon = "carbon:delete"
 
 const emit = defineEmits<{
 	(e: "delete"): void

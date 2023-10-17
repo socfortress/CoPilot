@@ -2,9 +2,7 @@
 	<div class="page">
 		<div class="toolbar flex items-center mb-6 gap-4">
 			<n-button type="primary" size="large" @click="newNote()">
-				<n-icon class="mr-2">
-					<AddIcon />
-				</n-icon>
+				<Icon :name="AddIcon" class="mr-2"></Icon>
 				Add notes
 			</n-button>
 
@@ -54,9 +52,7 @@
 					<n-upload class="mb-2" :max="1" v-else>
 						<n-upload-dragger>
 							<div style="margin-bottom: 12px">
-								<n-icon size="48" :depth="3">
-									<ImageIcon />
-								</n-icon>
+								<Icon :name="ImageIcon" :size="48" :depth="3"></Icon>
 							</div>
 							<n-text style="font-size: 16px">Click or drag a file to this area to upload</n-text>
 							<n-p depth="3" style="margin: 8px 0 0 0">
@@ -112,26 +108,17 @@
 </template>
 
 <script lang="ts" setup>
-import {
-	NButton,
-	NIcon,
-	NImage,
-	NImageGroup,
-	NSelect,
-	NModal,
-	NInput,
-	NUpload,
-	NUploadDragger,
-	NText,
-	NP
-} from "naive-ui"
-import AddIcon from "@vicons/fluent/NotebookAdd24Regular"
-import ImageIcon from "@vicons/carbon/Image"
+import { NButton, NImage, NImageGroup, NSelect, NModal, NInput, NUpload, NUploadDragger, NText, NP } from "naive-ui"
+import Icon from "@/components/common/Icon.vue"
+
 import { type Note, getNotes, labels } from "@/mock/notes"
 import { type Ref, ref, computed } from "vue"
 import _clone from "lodash/cloneDeep"
 import dayjs from "@/utils/dayjs"
 import { useThemeStore } from "@/stores/theme"
+
+const AddIcon = "fluent:notebook-add-24-regular"
+const ImageIcon = "carbon:image"
 
 const notes: Ref<Note[]> = ref(getNotes())
 const options = labels.map(l => ({
@@ -203,10 +190,10 @@ function save(note: Note) {
 
 		.n-select {
 			:deep(.n-base-selection__border) {
-				border-color: rgba(var(--fg-color-rgb), 0.2);
+				border-color: var(--divider-020-color);
 			}
 			:deep(.n-base-selection-tags) {
-				background-color: rgba(var(--bg-color-rgb), 0.7);
+				background-color: var(--bg-secondary-color);
 			}
 		}
 	}

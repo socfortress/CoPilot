@@ -40,9 +40,7 @@
 								class="flex items-center"
 								rel="nofollow noopener noreferrer"
 							>
-								<n-icon :size="16">
-									<ExternalIcon />
-								</n-icon>
+								<Icon :name="ExternalIcon" :size="16" />
 								<span class="ml-2">docs</span>
 							</a>
 							<a
@@ -52,17 +50,16 @@
 								class="flex items-center"
 								rel="nofollow noopener noreferrer"
 							>
-								<n-icon :size="16">
-									<ExternalIcon />
-								</n-icon>
+								<Icon :name="ExternalIcon" :size="16" />
 								<span class="ml-2">VCalendar</span>
 							</a>
 						</div>
 					</div>
 				</div>
 			</n-scrollbar>
-			<div class="main flex-grow">
-				<FullCalendar ref="refCalendar" :options="calendarOptions" />
+			<div class="main flex-grow scrollbar-styled">
+				<FullCalendar ref="refCalendar" :options="calendarOptions" v-if="ready" />
+				<n-spin v-else class="w-full h-full"></n-spin>
 			</div>
 		</div>
 
@@ -100,9 +97,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue"
-import { NCheckbox, NCheckboxGroup, NIcon, NScrollbar, NModal, NButton } from "naive-ui"
-import ExternalIcon from "@vicons/tabler/ExternalLink"
+import { computed, onMounted, ref, watch, nextTick } from "vue"
+import { NCheckbox, NCheckboxGroup, NScrollbar, NModal, NButton, NSpin } from "naive-ui"
+
+import Icon from "@/components/common/Icon.vue"
+const ExternalIcon = "tabler:external-link"
+
 import FullCalendar from "@fullcalendar/vue3"
 import type { CalendarApi, EventInput, CalendarOptions } from "@fullcalendar/core"
 import type { DateMarker, EventImpl } from "@fullcalendar/core/internal"
@@ -110,7 +110,7 @@ import dayGridPlugin from "@fullcalendar/daygrid"
 import interactionPlugin from "@fullcalendar/interaction"
 import listPlugin from "@fullcalendar/list"
 import timeGridPlugin from "@fullcalendar/timegrid"
-import type { CalendarEvent } from "@/mock/fullcalendar"
+import type { CalendarEvent, CalendarEditEvent } from "@/mock/fullcalendar"
 import { useFullCalendarStore } from "@/stores/apps/useFullCalendarStore"
 import { DatePicker } from "v-calendar"
 import "v-calendar/style.css"
@@ -119,20 +119,27 @@ import { useThemeStore } from "@/stores/theme"
 import EventEditor from "@/components/apps/FullCalendar/EventEditor.vue"
 import { useHideLayoutFooter } from "@/composables/useHideLayoutFooter"
 
-// Store
 const store = useFullCalendarStore()
+const themeStore = useThemeStore()
 
+const ready = ref(false)
 const refCalendar = ref()
 const calendarApi = ref<null | CalendarApi>(null)
 
 onMounted(() => {
-	calendarApi.value = refCalendar.value.getApi()
-})
+	nextTick(() => {
+		const duration = 1000 * themeStore.routerTransitionDuration
+		const gap = 500
 
-export interface CalendarEditEvent extends Omit<CalendarEvent, "start" | "end"> {
-	start: number
-	end: number
-}
+		// TIMEOUT REQUIRED BY PAGE ANIMATION
+		setTimeout(() => {
+			ready.value = true
+			nextTick(() => {
+				calendarApi.value = refCalendar.value?.getApi()
+			})
+		}, duration + gap)
+	})
+})
 
 const newEvent: CalendarEditEvent = {
 	title: "",
@@ -339,7 +346,8 @@ useHideLayoutFooter()
 		:deep() {
 			.sidebar-scroll {
 				width: 310px;
-				background-color: var(--bg-sidebar);
+				min-width: 290px;
+				background-color: var(--bg-secondary-color);
 
 				@media (max-width: 1200px) {
 					display: none;
@@ -348,6 +356,7 @@ useHideLayoutFooter()
 		}
 		.sidebar {
 			padding: 36px 20px;
+			min-width: 290px;
 		}
 
 		.main {
@@ -359,16 +368,16 @@ useHideLayoutFooter()
 				height: 100%;
 
 				:deep() {
-					--fc-today-bg-color: rgba(var(--primary-color-rgb), 0.05);
-					--fc-border-color: rgba(var(--fg-color-rgb), 0.1);
-					--fc-button-bg-color: rgba(var(--bg-color-rgb), 0.7);
+					--fc-today-bg-color: var(--primary-005-color);
+					--fc-border-color: var(--border-color);
+					--fc-button-bg-color: var(--bg-secondary-color);
 
-					--fc-button-border-color: rgba(var(--primary-color-rgb), 0.05);
-					--fc-button-text-color: rgba(var(--primary-color-rgb), 1);
-					--fc-button-active-bg-color: rgba(var(--primary-color-rgb), 0.15);
-					--fc-button-active-border-color: rgba(var(--primary-color-rgb), 0.05);
-					--fc-button-hover-bg-color: rgba(var(--primary-color-rgb), 0.05);
-					--fc-button-hover-border-color: rgba(var(--primary-color-rgb), 0.05);
+					--fc-button-border-color: var(--primary-005-color);
+					--fc-button-text-color: var(--primary-color);
+					--fc-button-active-bg-color: var(--primary-010-color);
+					--fc-button-active-border-color: var(--primary-005-color);
+					--fc-button-hover-bg-color: var(--primary-005-color);
+					--fc-button-hover-border-color: var(--primary-005-color);
 					.fc-header-toolbar {
 						flex-wrap: wrap;
 						gap: 10px;
@@ -417,7 +426,7 @@ useHideLayoutFooter()
 						}
 
 						.fc-drawerToggler-button {
-							background-color: rgba(var(--primary-color-rgb), 0.1);
+							background-color: var(--primary-010-color);
 							border-radius: var(--border-radius);
 							border: none;
 							padding: 7px 18px;
@@ -475,7 +484,7 @@ useHideLayoutFooter()
 
 					.fc-list-event:hover {
 						td {
-							background-color: rgba(var(--primary-color-rgb), 0.05);
+							background-color: var(--primary-005-color);
 						}
 					}
 					.fc-timegrid-event-harness-inset .fc-timegrid-event,
@@ -490,41 +499,41 @@ useHideLayoutFooter()
 						}
 
 						.fc-event-time {
-							color: rgba(var(--fg-color-rgb), 0.5);
+							color: var(--fg-secondary-color);
 							margin-left: 5px;
 						}
 
 						&.c-Personal {
-							background-color: rgba(var(--secondary1-color-rgb), 0.06);
-							border-color: rgba(var(--secondary1-color-rgb), 0.1);
+							background-color: var(--secondary1-opacity-005-color);
+							border-color: var(--secondary1-opacity-010-color);
 							.fc-event-title {
 								color: var(--secondary1-color);
 							}
 						}
 						&.c-Business {
-							background-color: rgba(var(--secondary2-color-rgb), 0.06);
-							border-color: rgba(var(--secondary2-color-rgb), 0.1);
+							background-color: var(--secondary2-opacity-005-color);
+							border-color: var(--secondary2-opacity-010-color);
 							.fc-event-title {
 								color: var(--secondary2-color);
 							}
 						}
 						&.c-Family {
-							background-color: rgba(var(--secondary3-color-rgb), 0.06);
-							border-color: rgba(var(--secondary3-color-rgb), 0.1);
+							background-color: var(--secondary3-opacity-005-color);
+							border-color: var(--secondary3-opacity-010-color);
 							.fc-event-title {
 								color: var(--secondary3-color);
 							}
 						}
 						&.c-Holiday {
-							background-color: rgba(var(--secondary4-color-rgb), 0.06);
-							border-color: rgba(var(--secondary4-color-rgb), 0.1);
+							background-color: var(--secondary4-opacity-005-color);
+							border-color: var(--secondary4-opacity-010-color);
 							.fc-event-title {
 								color: var(--secondary4-color);
 							}
 						}
 						&.c-Other {
-							background-color: rgba(var(--primary-color-rgb), 0.06);
-							border-color: rgba(var(--primary-color-rgb), 0.05);
+							background-color: var(--primary-005-color);
+							border-color: var(--primary-005-color);
 							.fc-event-title {
 								color: var(--primary-color);
 							}
@@ -532,11 +541,11 @@ useHideLayoutFooter()
 					}
 
 					.fc-popover {
-						border-color: rgba(var(--primary-color-rgb), 0.2);
+						border-color: var(--primary-020-color);
 						border: none;
 						.fc-popover-header {
 							color: var(--fg-color);
-							background-color: rgba(var(--bg-color-rgb), 0.7);
+							background-color: var(--bg-secondary-color);
 						}
 
 						.fc-event-time {

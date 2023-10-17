@@ -1,7 +1,7 @@
 import { renderIcon } from "@/utils"
 import { h } from "vue"
 
-import AuthenticationIcon from "@vicons/fluent/LockClosed24Regular"
+const AuthenticationIcon = "fluent:lock-closed-24-regular"
 
 export default {
 	label: "Authentication",

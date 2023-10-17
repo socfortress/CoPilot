@@ -8,11 +8,8 @@
 					target="_blank"
 					alt="docs"
 					rel="nofollow noopener noreferrer"
-					class="ml-4"
 				>
-					<n-icon :size="16">
-						<ExternalIcon />
-					</n-icon>
+					<Icon :name="ExternalIcon" :size="16" />
 					docs
 				</a>
 			</div>
@@ -165,8 +162,9 @@
 </template>
 
 <script lang="ts" setup>
-import { NIcon, NDatePicker, NSelect } from "naive-ui"
-import ExternalIcon from "@vicons/tabler/ExternalLink"
+import { NDatePicker, NSelect } from "naive-ui"
+import Icon from "@/components/common/Icon.vue"
+const ExternalIcon = "tabler:external-link"
 import { ref, watch } from "vue"
 import { type DatePickerType } from "naive-ui/es/date-picker/src/config"
 

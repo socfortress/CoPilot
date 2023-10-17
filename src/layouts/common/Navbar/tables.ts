@@ -2,11 +2,11 @@ import { renderIcon } from "@/utils"
 import { h } from "vue"
 import { RouterLink } from "vue-router"
 
-import TablesIcon from "@vicons/carbon/DataTable"
+const TablesIcon = "carbon:data-table"
 
 export default {
 	label: "Tables",
-	key: "tables",
+	key: "Tables",
 	icon: renderIcon(TablesIcon),
 	children: [
 		{
@@ -15,12 +15,12 @@ export default {
 					RouterLink,
 					{
 						to: {
-							name: "tables-base"
+							name: "Tables-Base"
 						}
 					},
 					{ default: () => "Base" }
 				),
-			key: "tables-base"
+			key: "Tables-Base"
 		},
 		{
 			label: () =>
@@ -28,12 +28,27 @@ export default {
 					RouterLink,
 					{
 						to: {
-							name: "tables-data-table"
+							name: "Tables-DataTable"
 						}
 					},
 					{ default: () => "Data Table" }
 				),
-			key: "tables-data-table"
+			key: "Tables-Data-table"
 		}
+		/*
+		{
+			label: () =>
+				h(
+					RouterLink,
+					{
+						to: {
+							name: "Tables-Grid"
+						}
+					},
+					{ default: () => "Data Grid" }
+				),
+			key: "Tables-Grid"
+		}
+		*/
 	]
 }

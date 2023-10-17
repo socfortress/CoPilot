@@ -1,6 +1,6 @@
 <template>
 	<div class="page page-wrapped flex flex-col page-without-footer">
-		<CardWIthSiderbar sidebar-position="right">
+		<PageSplitted sidebar-position="right">
 			<template #main-toolbar>Main toolbar</template>
 			<template #main-content>
 				<div>Main content scrollable</div>
@@ -13,12 +13,12 @@
 				<div class="spacer mt-5"></div>
 			</template>
 			<template #sidebar-footer>Sidebar footer</template>
-		</CardWIthSiderbar>
+		</PageSplitted>
 	</div>
 </template>
 
 <script setup lang="ts">
-import CardWIthSiderbar from "@/components/CardWIthSiderbar.vue"
+import PageSplitted from "@/components/common/PageSplitted.vue"
 import { useHideLayoutFooter } from "@/composables/useHideLayoutFooter"
 
 // :has() CSS relational pseudo-class not yet supported by Firefox
@@ -35,18 +35,18 @@ useHideLayoutFooter()
 	}
 
 	.spacer {
-		background: rgba(var(--fg-color-rgb), 0.05);
+		background: var(--divider-005-color);
 		background: repeating-linear-gradient(
 			-45deg,
-			rgba(var(--fg-color-rgb), 0.05),
-			rgba(var(--fg-color-rgb), 0.05) 1px,
+			var(--divider-005-color),
+			var(--divider-005-color) 1px,
 			transparent 1px,
 			transparent 20px
 		);
 		width: 100%;
 		height: 200vh;
 		border-radius: 14px;
-		border: 4px dashed rgba(var(--fg-color-rgb), 0.05);
+		border: 4px dashed var(--divider-005-color);
 		opacity: 0.5;
 	}
 }

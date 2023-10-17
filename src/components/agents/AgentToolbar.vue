@@ -5,7 +5,7 @@
 				<div class="agent-search flex gap-3">
 					<n-input placeholder="Search for an agent" clearable v-model:value="textFilter">
 						<template #prefix>
-							<n-icon :component="SearchIcon" />
+							<Icon :name="SearchIcon" />
 						</template>
 					</n-input>
 					<n-button @click="emit('sync')" :loading="syncing">Sync</n-button>
@@ -61,8 +61,10 @@
 <script setup lang="ts">
 import { computed, toRefs } from "vue"
 import { type Agent } from "@/types/agents.d"
-import SearchIcon from "@vicons/carbon/Search"
-import { NInput, NButton, NIcon, NCard, NScrollbar } from "naive-ui"
+import { NInput, NButton, NCard, NScrollbar } from "naive-ui"
+import Icon from "@/components/common/Icon.vue"
+
+const SearchIcon = "carbon:search"
 
 const emit = defineEmits<{
 	(e: "sync"): void

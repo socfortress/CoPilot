@@ -15,9 +15,7 @@
 						}"
 					>
 						<template #icon>
-							<CardComboIcon boxed>
-								<ActiveUsersIcon />
-							</CardComboIcon>
+							<CardComboIcon boxed :iconName="ActiveUsersIcon" />
 						</template>
 					</CardCombo4>
 
@@ -32,9 +30,11 @@
 						}"
 					>
 						<template #icon>
-							<CardComboIcon boxed :color="style['--secondary4-color']">
-								<CanceledUsersIcon />
-							</CardComboIcon>
+							<CardComboIcon
+								boxed
+								:color="style['--secondary4-color']"
+								:iconName="CanceledUsersIcon"
+							></CardComboIcon>
 						</template>
 					</CardCombo4>
 
@@ -49,9 +49,11 @@
 						}"
 					>
 						<template #icon>
-							<CardComboIcon boxed :color="style['--secondary3-color']">
-								<AFKUsersIcon />
-							</CardComboIcon>
+							<CardComboIcon
+								boxed
+								:color="style['--secondary3-color']"
+								:iconName="AFKUsersIcon"
+							></CardComboIcon>
 						</template>
 					</CardCombo4>
 				</div>
@@ -60,14 +62,7 @@
 				<div class="title">Users target</div>
 
 				<div class="chart overflow-hidden">
-					<apexchart
-						type="radialBar"
-						height="270"
-						width="270"
-						:options="chartOptions"
-						:series="series"
-						ref="chart"
-					></apexchart>
+					<Apex type="radialBar" height="270" width="270" :options="chartOptions" :series="series"></Apex>
 				</div>
 			</div>
 		</div>
@@ -77,13 +72,15 @@
 <script setup lang="ts">
 import { NCard } from "naive-ui"
 import { ref, computed, watchEffect } from "vue"
-import ActiveUsersIcon from "@vicons/carbon/Activity"
-import CanceledUsersIcon from "@vicons/carbon/TrashCan"
-import AFKUsersIcon from "@vicons/carbon/Pause"
 import { useResizeObserver } from "@vueuse/core"
+import Apex from "@/components/charts/Apex.vue"
 import { useThemeStore } from "@/stores/theme"
 
-const style: { [key: string]: any } = computed(() => useThemeStore().style)
+const ActiveUsersIcon = "carbon:activity"
+const CanceledUsersIcon = "carbon:trash-can"
+const AFKUsersIcon = "carbon:pause"
+
+const style = computed<{ [key: string]: any }>(() => useThemeStore().style)
 const secondaryColors = computed(() => Object.values(useThemeStore().secondaryColors))
 const palette = computed<string[]>(() => new Array(4).fill(secondaryColors.value).flat())
 const trigger = ref(null)

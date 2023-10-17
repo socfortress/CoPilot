@@ -11,9 +11,7 @@
 							<n-timeline>
 								<n-timeline-item :content="text1" line-type="dashed">
 									<template #icon>
-										<n-icon :size="8">
-											<DotIcon />
-										</n-icon>
+										<Icon :size="8" :name="DotIcon"></Icon>
 									</template>
 								</n-timeline-item>
 								<n-timeline-item type="success" :content="text2" :time="date1">
@@ -21,16 +19,12 @@
 										<n-tag type="success" size="small">Success</n-tag>
 									</template>
 									<template #icon>
-										<n-icon :size="8">
-											<DotIcon />
-										</n-icon>
+										<Icon :size="8" :name="DotIcon"></Icon>
 									</template>
 								</n-timeline-item>
 								<n-timeline-item type="error" :content="text3" :time="date2">
 									<template #icon>
-										<n-icon :size="8">
-											<DotIcon />
-										</n-icon>
+										<Icon :size="8" :name="DotIcon"></Icon>
 									</template>
 								</n-timeline-item>
 								<n-timeline-item type="warning" :content="text4" :time="date3">
@@ -38,9 +32,7 @@
 										<n-tag type="warning" size="small">Warning</n-tag>
 									</template>
 									<template #icon>
-										<n-icon :size="8">
-											<DotIcon />
-										</n-icon>
+										<Icon :size="8" :name="DotIcon"></Icon>
 									</template>
 								</n-timeline-item>
 								<n-timeline-item
@@ -54,9 +46,7 @@
 										<n-tag :type="item.type" size="small" v-if="item.title">{{ item.title }}</n-tag>
 									</template>
 									<template #icon>
-										<n-icon :size="8">
-											<DotIcon />
-										</n-icon>
+										<Icon :size="8" :name="DotIcon"></Icon>
 									</template>
 								</n-timeline-item>
 								<n-timeline-item
@@ -70,16 +60,12 @@
 										<n-tag type="info" size="small">Info</n-tag>
 									</template>
 									<template #icon>
-										<n-icon :size="8">
-											<DotIcon />
-										</n-icon>
+										<Icon :size="8" :name="DotIcon"></Icon>
 									</template>
 								</n-timeline-item>
 								<n-timeline-item :content="text6">
 									<template #icon>
-										<n-icon :size="8">
-											<DotIcon />
-										</n-icon>
+										<Icon :size="8" :name="DotIcon"></Icon>
 									</template>
 								</n-timeline-item>
 							</n-timeline>
@@ -95,10 +81,12 @@
 import dayjs from "@/utils/dayjs"
 import { faker } from "@faker-js/faker"
 import _capitalize from "lodash/capitalize"
-import { NCard, NTimeline, NTimelineItem, NScrollbar, NSpin, NIcon, NTag } from "naive-ui"
+import { NCard, NTimeline, NTimelineItem, NScrollbar, NSpin, NTag } from "naive-ui"
 import { toRefs, ref } from "vue"
 import { useResizeObserver } from "@vueuse/core"
-import DotIcon from "@vicons/carbon/CircleSolid"
+import Icon from "@/components/common/Icon.vue"
+
+const DotIcon = "carbon:circle-solid"
 
 type TimelineType = "default" | "success" | "error" | "info" | "warning" | undefined
 

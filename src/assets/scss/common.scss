@@ -47,6 +47,7 @@
 		display: flex;
 		align-items: baseline;
 		justify-content: space-between;
+		gap: 20px;
 
 		.title {
 			font-family: var(--font-family-display);
@@ -64,7 +65,8 @@
 				position: relative;
 				top: -2px;
 
-				.n-icon {
+				.n-icon,
+				.n-icon-wrapper {
 					position: relative;
 					top: 3px;
 				}
@@ -73,6 +75,7 @@
 
 		@media (max-width: 700px) {
 			flex-direction: column;
+			gap: 6px;
 
 			.title {
 				font-size: 20px;
@@ -96,7 +99,7 @@
 }
 
 /*
-	DOES NOT WORK ON FIREFOX!
+	DOES NOT WORK ON FIREFOX! 
 	:has() CSS relational pseudo-class not yet supported by Firefox
 	(https://caniuse.com/css-has)
 	you can find a worker around in pages that use this class
@@ -110,5 +113,30 @@
 				}
 			}
 		}
+	}
+}
+
+.scrollbar-styled {
+	/* Works on Firefox */
+
+	scrollbar-width: thin;
+	scrollbar-color: var(--hover-010-color) var(--bg-sidebar);
+
+	/* Works on Chrome, Edge, and Safari */
+	&::-webkit-scrollbar,
+	::-webkit-scrollbar {
+		width: 12px;
+	}
+
+	&::-webkit-scrollbar-track,
+	::-webkit-scrollbar-track {
+		background: var(--bg-sidebar);
+	}
+
+	&::-webkit-scrollbar-thumb,
+	::-webkit-scrollbar-thumb {
+		background-color: var(--hover-010-color);
+		border-radius: 20px;
+		border: 2px solid var(--bg-sidebar);
 	}
 }

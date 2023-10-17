@@ -2,11 +2,11 @@ import { renderIcon } from "@/utils"
 import { h } from "vue"
 import { RouterLink } from "vue-router"
 
-import MapIcon from "@vicons/carbon/Map"
+const MapIcon = "carbon:map"
 
 export default {
 	label: "Maps",
-	key: "maps",
+	key: "Maps",
 	icon: renderIcon(MapIcon),
 	children: [
 		{
@@ -15,12 +15,12 @@ export default {
 					RouterLink,
 					{
 						to: {
-							name: "maps-google-maps"
+							name: "Maps-GoogleMaps"
 						}
 					},
 					{ default: () => "Google Maps" }
 				),
-			key: "maps-google-maps"
+			key: "Maps-GoogleMaps"
 		},
 		{
 			label: () =>
@@ -28,12 +28,12 @@ export default {
 					RouterLink,
 					{
 						to: {
-							name: "maps-maplibre"
+							name: "Maps-MapLibre"
 						}
 					},
 					{ default: () => "MapLibre" }
 				),
-			key: "maps-maplibre"
+			key: "Maps-MapLibre"
 		},
 		{
 			label: () =>
@@ -41,12 +41,12 @@ export default {
 					RouterLink,
 					{
 						to: {
-							name: "maps-leaflet"
+							name: "Maps-Leaflet"
 						}
 					},
 					{ default: () => "Leaflet" }
 				),
-			key: "maps-leaflet"
+			key: "Maps-Leaflet"
 		},
 		{
 			label: () =>
@@ -54,12 +54,12 @@ export default {
 					RouterLink,
 					{
 						to: {
-							name: "maps-vectormap"
+							name: "Maps-VectorMap"
 						}
 					},
 					{ default: () => "Vector Map" }
 				),
-			key: "maps-vectormap"
+			key: "Maps-VectorMap"
 		}
 	]
 }

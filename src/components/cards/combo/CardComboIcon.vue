@@ -1,21 +1,23 @@
 <template>
 	<div class="icon" :class="{ boxed }" :style="`--size:${boxSize}px`">
 		<div class="bg" v-if="boxed"></div>
-		<n-icon :size="iconFinalSize">
+		<Icon :size="iconFinalSize" v-if="$slots.default">
 			<slot></slot>
-		</n-icon>
+		</Icon>
+		<Icon :size="iconFinalSize" :name="iconName" v-else></Icon>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { NIcon } from "naive-ui"
 import { toRefs, computed } from "vue"
 import { useThemeStore } from "@/stores/theme"
+import Icon from "@/components/common/Icon.vue"
 
 const props = withDefaults(
 	defineProps<{
 		boxSize?: number
 		iconSize?: number
+		iconName?: string
 		boxed?: boolean
 		color?: string
 	}>(),
@@ -23,7 +25,7 @@ const props = withDefaults(
 )
 const { boxed, boxSize, iconSize, color } = toRefs(props)
 
-const style: { [key: string]: any } = computed(() => useThemeStore().style)
+const style = computed<{ [key: string]: any }>(() => useThemeStore().style)
 
 const iconColor = computed(() => color?.value || style.value["--primary-color"])
 const iconBoxedSize = computed(() => (boxSize.value / 100) * 45)

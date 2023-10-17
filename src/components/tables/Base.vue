@@ -64,16 +64,12 @@
 					<div class="actions flex items-center justify-end gap-2">
 						<n-button secondary>
 							<template #icon>
-								<n-icon>
-									<DeleteIcon />
-								</n-icon>
+								<Icon :name="DeleteIcon"></Icon>
 							</template>
 						</n-button>
 						<n-button secondary>
 							<template #icon>
-								<n-icon>
-									<DownloadIcon />
-								</n-icon>
+								<Icon :name="DownloadIcon"></Icon>
 							</template>
 						</n-button>
 						<n-popselect
@@ -84,9 +80,7 @@
 						>
 							<n-button secondary>
 								<template #icon>
-									<n-icon>
-										<MenuIcon />
-									</n-icon>
+									<Icon :name="MenuIcon"></Icon>
 								</template>
 							</n-button>
 						</n-popselect>
@@ -98,10 +92,13 @@
 </template>
 
 <script lang="ts" setup>
-import { NTable, NImage, NProgress, NTag, NButton, NIcon, NPopselect } from "naive-ui"
-import DeleteIcon from "@vicons/carbon/Delete"
-import MenuIcon from "@vicons/carbon/OverflowMenuVertical"
-import DownloadIcon from "@vicons/carbon/CloudDownload"
+import { NTable, NImage, NProgress, NTag, NButton, NPopselect } from "naive-ui"
+import Icon from "@/components/common/Icon.vue"
+
+const DeleteIcon = "carbon:delete"
+const MenuIcon = "carbon:overflow-menu-vertical"
+const DownloadIcon = "carbon:cloud-download"
+
 import dayjs from "@/utils/dayjs"
 import { faker } from "@faker-js/faker"
 import { ref, toRefs } from "vue"

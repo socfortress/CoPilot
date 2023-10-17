@@ -8,11 +8,8 @@
 					target="_blank"
 					alt="docs"
 					rel="nofollow noopener noreferrer"
-					class="ml-4"
 				>
-					<n-icon :size="16">
-						<ExternalIcon />
-					</n-icon>
+					<Icon :name="ExternalIcon" :size="16" />
 					docs
 				</a>
 			</div>
@@ -29,13 +26,13 @@
 </template>
 
 <script lang="ts" setup>
-import { NIcon } from "naive-ui"
 import Basic from "./data-table-components/Basic.vue"
 import Merge from "./data-table-components/Merge.vue"
 import Sorting from "./data-table-components/Sorting.vue"
 import Draggable from "./data-table-components/Draggable.vue"
 import Selection from "./data-table-components/Selection.vue"
-import ExternalIcon from "@vicons/tabler/ExternalLink"
+import Icon from "@/components/common/Icon.vue"
+const ExternalIcon = "tabler:external-link"
 </script>
 
 <style lang="scss" scoped>

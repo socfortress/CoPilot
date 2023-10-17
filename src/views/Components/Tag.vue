@@ -8,11 +8,8 @@
 					target="_blank"
 					alt="docs"
 					rel="nofollow noopener noreferrer"
-					class="ml-4"
 				>
-					<n-icon :size="16">
-						<ExternalIcon />
-					</n-icon>
+					<Icon :name="ExternalIcon" :size="16" />
 					docs
 				</a>
 			</div>
@@ -94,13 +91,13 @@
 					<n-tag type="success">
 						Checked
 						<template #icon>
-							<n-icon :component="CheckmarkCircle" />
+							<Icon :name="CheckmarkCircle" />
 						</template>
 					</n-tag>
 					<n-tag round :bordered="false" type="success">
 						Checked
 						<template #icon>
-							<n-icon :component="CheckmarkCircle" />
+							<Icon :name="CheckmarkCircle" />
 						</template>
 					</n-tag>
 				</n-space>
@@ -134,9 +131,10 @@
 </template>
 
 <script lang="ts" setup>
-import { NIcon, NSpace, NTag, useMessage } from "naive-ui"
-import ExternalIcon from "@vicons/tabler/ExternalLink"
-import { CheckmarkCircle } from "@vicons/ionicons5"
+import { NSpace, NTag, useMessage } from "naive-ui"
+import Icon from "@/components/common/Icon.vue"
+const ExternalIcon = "tabler:external-link"
+const CheckmarkCircle = "ion:checkmark-circle"
 
 const message = useMessage()
 function handleClose() {

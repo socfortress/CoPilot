@@ -1,15 +1,22 @@
 <template>
 	<div class="page page-wrapped flex items-center justify-center">
-		<n-result status="404" title="404 Not Found" size="huge"></n-result>
+		<n-result status="404" title="404 Not Found" size="huge">
+			<div class="flex justify-center">
+				<n-button @click="redirect()">Go to home</n-button>
+			</div>
+		</n-result>
 	</div>
 </template>
 
 <script lang="ts" setup>
-import { NResult } from "naive-ui"
+import { NResult, NButton } from "naive-ui"
+import { useRouter } from "vue-router"
 
-defineOptions({
-	name: "NotFound"
-})
+const router = useRouter()
+
+function redirect() {
+	router.push({ path: "/" })
+}
 </script>
 
 <style lang="scss" scoped>

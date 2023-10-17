@@ -1,24 +1,19 @@
 <template>
 	<span class="index-icon" :class="[`health-${health}`, { color }]">
-		<n-icon v-if="health === IndexHealth.GREEN" :size="18">
-			<ShieldIcon />
-		</n-icon>
-		<n-icon v-if="health === IndexHealth.YELLOW">
-			<WarningIcon />
-		</n-icon>
-		<n-icon v-if="health === IndexHealth.RED">
-			<DangerIcon />
-		</n-icon>
+		<Icon :name="ShieldIcon" v-if="health === IndexHealth.GREEN" :size="18"></Icon>
+		<Icon :name="WarningIcon" v-if="health === IndexHealth.YELLOW" :size="18"></Icon>
+		<Icon :name="DangerIcon" v-if="health === IndexHealth.RED" :size="18"></Icon>
 	</span>
 </template>
 
 <script setup lang="ts">
 import { toRefs } from "vue"
 import { type IndexStats, IndexHealth } from "@/types/indices.d"
-import ShieldIcon from "@vicons/fluent/ShieldTask20Regular"
-import WarningIcon from "@vicons/fluent/ShieldError20Regular"
-import DangerIcon from "@vicons/fluent/Warning20Regular"
-import { NIcon } from "naive-ui"
+import Icon from "@/components/common/Icon.vue"
+
+const ShieldIcon = "fluent:shield-task-20-regular"
+const WarningIcon = "fluent:shield-error-20-regular"
+const DangerIcon = "fluent:warning-20-regular"
 
 const props = defineProps<{
 	health: IndexStats["health"]

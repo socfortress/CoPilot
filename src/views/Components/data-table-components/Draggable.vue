@@ -13,13 +13,13 @@
 				import { h, defineComponent } from "vue"
 				import { NButton, useMessage, NDataTable } from "naive-ui"
 				import type { DataTableColumns } from "naive-ui"
-
+				
 				type Song = {
 					no: number
 					title: string
 					length: string
 				}
-
+				
 				const createColumns = ({ play }: { play: (row: Song) => void }): DataTableColumns\<\Song\>\ => {
 					return [
 						{
@@ -57,13 +57,13 @@
 						}
 					]
 				}
-
+				
 				const data: Song[] = [
 					{ no: 3, title: "Wonderwall", length: "4:18" },
 					{ no: 4, title: "Don't Look Back in Anger", length: "4:48" },
 					{ no: 12, title: "Champagne Supernova", length: "7:27" }
 				]
-
+				
 				export default defineComponent({
 					setup() {
 						const message = useMessage()
@@ -87,8 +87,7 @@
 
 <script lang="ts">
 import { h, defineComponent } from "vue"
-import { NButton, useMessage, NDataTable } from "naive-ui"
-import type { DataTableColumns } from "naive-ui"
+import { NButton, useMessage, NDataTable, type DataTableColumns } from "naive-ui"
 
 type Song = {
 	no: number

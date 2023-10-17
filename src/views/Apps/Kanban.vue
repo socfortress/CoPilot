@@ -29,15 +29,11 @@
 													<span>
 														{{ column.title }}
 
-														<n-icon :size="14">
-															<EditIcon />
-														</n-icon>
+														<Icon :name="EditIcon" :size="12"></Icon>
 													</span>
 													<span class="opacity-40">{{ column.tasks.length || 0 }}</span>
 												</span>
-												<n-icon :size="20" class="pan-area">
-													<PanIcon />
-												</n-icon>
+												<Icon :name="PanIcon" :size="20" class="pan-area"></Icon>
 											</div>
 										</template>
 										<template #item="{ element: task }">
@@ -48,9 +44,7 @@
 												class="add-task-btn flex items-center justify-center"
 												@click="addTask(column)"
 											>
-												<n-icon :size="20">
-													<AddIcon />
-												</n-icon>
+												<Icon :name="AddIcon" :size="20"></Icon>
 												<span>Add card</span>
 											</button>
 										</template>
@@ -63,9 +57,7 @@
 										class="add-task-btn flex items-center justify-center !mt-0"
 										@click="addColumn()"
 									>
-										<n-icon :size="20">
-											<AddIcon />
-										</n-icon>
+										<Icon :name="AddIcon" :size="20"></Icon>
 										<span>Add column</span>
 									</button>
 								</div>
@@ -92,10 +84,7 @@
 </template>
 
 <script lang="ts" setup>
-import { NScrollbar, NIcon, NModal } from "naive-ui"
-import AddIcon from "@vicons/carbon/AddAlt"
-import PanIcon from "@vicons/carbon/PanHorizontal"
-import EditIcon from "@vicons/fluent/Edit16Filled"
+import { NScrollbar, NModal } from "naive-ui"
 import draggable from "vuedraggable"
 import TaskCard from "@/components/apps/Kanban/TaskCard.vue"
 import TaskEditor from "@/components/apps/Kanban/TaskEditor.vue"
@@ -105,6 +94,11 @@ import { getTask, type Column, type Task } from "@/mock/kanban"
 import dayjs from "@/utils/dayjs"
 import { isMobile } from "@/utils"
 import { useHideLayoutFooter } from "@/composables/useHideLayoutFooter"
+import Icon from "@/components/common/Icon.vue"
+
+const AddIcon = "carbon:add-alt"
+const PanIcon = "carbon:pan-horizontal"
+const EditIcon = "uil:edit-alt"
 
 const selectedTask = ref<Task | null>(null)
 const selectedColumn = ref<Column | null>(null)
@@ -157,7 +151,7 @@ useHideLayoutFooter()
 	}
 
 	.column {
-		background-color: var(--bg-sidebar);
+		background-color: var(--bg-secondary-color);
 		margin-left: 14px;
 		width: 70vw;
 		max-width: 320px;
@@ -177,7 +171,7 @@ useHideLayoutFooter()
 			margin-right: var(--view-padding);
 		}
 		&:hover {
-			transform: translateY(-1px);
+			border-color: var(--primary-color);
 		}
 
 		.column-header {
@@ -205,7 +199,7 @@ useHideLayoutFooter()
 		}
 
 		.add-task-btn {
-			background-color: rgba(var(--primary-color-rgb), 0.1);
+			background-color: var(--primary-010-color);
 			width: 100%;
 			height: 50px;
 			border-radius: var(--border-radius-small);
@@ -235,27 +229,30 @@ useHideLayoutFooter()
 	.layout {
 		.main {
 			// .view:has(.kanban-app) when will firefox have full compatibility
-			.view.route-kanban {
-				padding-left: 0;
-				padding-right: 0;
-
-				.page {
-					.columns-scroll {
-						padding: 0 var(--view-padding);
-					}
-				}
-
-				&.boxed {
-					max-width: initial;
+			.view {
+				&.route-kanban,
+				&.route-Apps-Kanban {
+					padding-left: 0;
+					padding-right: 0;
 
 					.page {
 						.columns-scroll {
-							max-width: var(--boxed-width);
-							margin: 0 auto;
-							padding: 0;
+							padding: 0 var(--view-padding);
+						}
+					}
 
-							.columns-wrap {
-								padding: 0 var(--view-padding);
+					&.boxed {
+						max-width: initial;
+
+						.page {
+							.columns-scroll {
+								max-width: var(--boxed-width);
+								margin: 0 auto;
+								padding: 0;
+
+								.columns-wrap {
+									padding: 0 var(--view-padding);
+								}
 							}
 						}
 					}

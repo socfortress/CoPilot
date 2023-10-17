@@ -16,21 +16,11 @@
 					<p v-html="text"></p>
 					<div class="divider"></div>
 					<div class="features flex justify-around">
-						<n-icon :size="20">
-							<CheckIcon />
-						</n-icon>
-						<n-icon :size="20">
-							<StarIcon />
-						</n-icon>
-						<n-icon :size="20">
-							<ShieldIcon />
-						</n-icon>
-						<n-icon :size="20">
-							<PremiumIcon />
-						</n-icon>
-						<n-icon :size="20">
-							<EcoIcon />
-						</n-icon>
+						<Icon :size="20" :name="CheckIcon"></Icon>
+						<Icon :size="20" :name="StarIcon"></Icon>
+						<Icon :size="20" :name="ShieldIcon"></Icon>
+						<Icon :size="20" :name="PremiumIcon"></Icon>
+						<Icon :size="20" :name="EcoIcon"></Icon>
 					</div>
 				</div>
 			</div>
@@ -54,9 +44,7 @@
 					</div>
 				</div>
 				<n-button type="primary">
-					<n-icon class="mr-3">
-						<PremiumIcon />
-					</n-icon>
+					<Icon class="mr-3" :name="PremiumIcon"></Icon>
 					Subscribe now
 				</n-button>
 			</div>
@@ -66,13 +54,15 @@
 
 <script setup lang="ts">
 import { faker } from "@faker-js/faker"
-import { NCard, NButton, NIcon, NRate, NRadioGroup, NRadioButton } from "naive-ui"
-import CheckIcon from "@vicons/fluent/CheckmarkStarburst16Regular"
-import StarIcon from "@vicons/fluent/Star16Regular"
-import ShieldIcon from "@vicons/fluent/ShieldKeyhole16Regular"
-import PremiumIcon from "@vicons/fluent/Premium24Regular"
-import EcoIcon from "@vicons/material/EcoOutlined"
+import { NCard, NButton, NRate, NRadioGroup, NRadioButton } from "naive-ui"
+import Icon from "@/components/common/Icon.vue"
 import { ref } from "vue"
+
+const CheckIcon = "fluent:checkmark-starburst-16-regular"
+const StarIcon = "fluent:star-16-regular"
+const ShieldIcon = "fluent:shield-keyhole-16-regular"
+const PremiumIcon = "fluent:premium-24-regular"
+const EcoIcon = "material-symbols:eco-outline"
 
 const subscription = ref("monthly")
 
@@ -108,14 +98,13 @@ const text = faker.lorem.sentences(2, "<br/><br/>") + faker.lorem.paragraph()
 		background-clip: padding-box;
 		background-color: var(--n-action-color);
 		padding: var(--n-padding-bottom) var(--n-padding-left);
-		border-bottom-left-radius: var(--n-border-radius);
-		border-bottom-right-radius: var(--n-border-radius);
 	}
 
 	.divider {
-		background-color: rgba(var(--fg-color-rgb), 0.2);
-		width: 80%;
-		margin: 20px auto;
+		background-color: var(--border-color);
+		margin: 20px 0;
+		margin-left: calc(var(--n-padding-left) * -1);
+		margin-right: calc(var(--n-padding-left) * -1);
 		height: 1px;
 	}
 }

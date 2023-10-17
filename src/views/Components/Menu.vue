@@ -8,11 +8,8 @@
 					target="_blank"
 					alt="docs"
 					rel="nofollow noopener noreferrer"
-					class="ml-4"
 				>
-					<n-icon :size="16">
-						<ExternalIcon />
-					</n-icon>
+					<Icon :name="ExternalIcon" :size="16" />
 					docs
 				</a>
 			</div>
@@ -80,10 +77,10 @@
 
 					{{
 						js(`
-						import { BookOutline as BookIcon, PersonOutline as PersonIcon, WineOutline as WineIcon } from "@vicons/ionicons5"
+						import { BookOutline as BookIcon, PersonOutline as Perso  WineOutline as WineIcon } from "@vicons/ionicons5"
 
 						function renderIcon(icon: Component) {
-							return () => h(NIcon, null, { default: () => h(icon) })
+							return () => h(  null, { default: () => h(icon) })
 						}
 
 						const menuOptions: MenuOption[] = [
@@ -177,10 +174,10 @@
 
 					{{
 						js(`
-						import { BookOutline as BookIcon, PersonOutline as PersonIcon, WineOutline as WineIcon } from "@vicons/ionicons5"
+						import { BookOutline as BookIcon, PersonOutline as Perso  WineOutline as WineIcon } from "@vicons/ionicons5"
 
 						function renderIcon(icon: Component) {
-							return () => h(NIcon, null, { default: () => h(icon) })
+							return () => h(  null, { default: () => h(icon) })
 						}
 
 						const menuOptions: MenuOption[] = [
@@ -266,15 +263,15 @@
 </template>
 
 <script lang="ts" setup>
-import { NIcon, NSpace, NSwitch, NLayout, NLayoutSider, NMenu, type MenuOption } from "naive-ui"
-import ExternalIcon from "@vicons/tabler/ExternalLink"
+import { NSpace, NSwitch, NLayout, NLayoutSider, NMenu, type MenuOption } from "naive-ui"
+import { ref } from "vue"
+import { renderIcon } from "@/utils"
+import Icon from "@/components/common/Icon.vue"
 
-import { BookOutline as BookIcon, PersonOutline as PersonIcon, WineOutline as WineIcon } from "@vicons/ionicons5"
-import { ref, h, type Component } from "vue"
-
-function renderIcon(icon: Component) {
-	return () => h(NIcon, null, { default: () => h(icon) })
-}
+const ExternalIcon = "tabler:external-link"
+const BookIcon = "ion:book-outline"
+const PersonIcon = "ion:person-outline"
+const WineIcon = "ion:wine-outline"
 
 const menuOptions: MenuOption[] = [
 	{

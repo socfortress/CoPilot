@@ -2,9 +2,7 @@
 	<div class="task-card flex flex-col justify-between">
 		<div class="task-header flex justify-between gap-3">
 			<div class="task-title">{{ task.title }}</div>
-			<n-icon :size="20" class="pan-area" v-if="mobile">
-				<PanIcon />
-			</n-icon>
+			<Icon :size="20" class="pan-area" v-if="mobile" :name="PanIcon"></Icon>
 		</div>
 		<div class="task-footer flex justify-between items-end">
 			<span class="task-date">{{ task.dateText }}</span>
@@ -19,15 +17,11 @@
 	</div>
 </template>
 <script lang="ts" setup>
-import { NIcon } from "naive-ui"
-import PanIcon from "@vicons/carbon/Move"
+import Icon from "@/components/common/Icon.vue"
+const PanIcon = "carbon:move"
 import { type Task } from "@/mock/kanban"
 import { toRefs, computed } from "vue"
 import { useThemeStore } from "@/stores/theme"
-
-defineOptions({
-	name: "TaskCard"
-})
 
 const props = defineProps<{
 	task: Task
@@ -93,7 +87,7 @@ const labelsColors = {
 	}
 
 	&:hover {
-		transform: translateY(-1px);
+		border-color: var(--primary-color);
 	}
 }
 </style>

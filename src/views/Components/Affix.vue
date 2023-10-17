@@ -8,11 +8,8 @@
 					target="_blank"
 					alt="docs"
 					rel="nofollow noopener noreferrer"
-					class="ml-4"
 				>
-					<n-icon :size="16">
-						<ExternalIcon />
-					</n-icon>
+					<Icon :name="ExternalIcon" :size="16" />
 					docs
 				</a>
 			</div>
@@ -75,20 +72,20 @@
 							height: 200px;
 							position: relative;
 						}
-
+						
 						.anchor-container {
 							height: 200px;
 							background-color: rgba(128, 128, 128, 0.3);
 							border-radius: 3px;
 							overflow: auto;
 						}
-
+						
 						.padding {
 							height: 150px;
 							width: 100%;
 							background-color: rgba(128, 128, 128, 0.15);
 						}
-
+						
 						.content {
 							height: 600px;
 						}
@@ -101,8 +98,9 @@
 </template>
 
 <script lang="ts" setup>
-import { NIcon, NAffix, NText, NTag } from "naive-ui"
-import ExternalIcon from "@vicons/tabler/ExternalLink"
+import { NAffix, NText, NTag } from "naive-ui"
+import Icon from "@/components/common/Icon.vue"
+const ExternalIcon = "tabler:external-link"
 import { ref } from "vue"
 
 const containerRef = ref<HTMLElement | undefined>(undefined)

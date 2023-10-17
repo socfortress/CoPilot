@@ -1,5 +1,16 @@
 /** @type {import('tailwindcss').Config} */
 const plugin = require("tailwindcss/plugin")
+const tokens = require("./src/design-tokens.json")
+const _ = require("lodash")
+
+function getValue(origin, val) {
+	if (val && val.indexOf("{") === 0) {
+		const path = val.replace("{", "").replace("}", "")
+		return _.get(origin, path)
+	}
+
+	return val
+}
 
 module.exports = {
 	content: ["./index.html", "./src/**/*.{vue,js,ts,jsx,tsx}"],
@@ -15,27 +26,45 @@ module.exports = {
 		plugin(function ({ addBase, theme }) {
 			addBase({
 				h1: {
-					fontWeight: theme("fontWeight.bold"),
-					letterSpacing: theme("letterSpacing.tight")
+					fontFamily: getValue(tokens, tokens?.typography?.h1?.fontFamily),
+					fontWeight: getValue(tokens, tokens?.typography?.h1?.fontWeight) || theme("fontWeight.bold"),
+					fontSize: getValue(tokens, tokens?.typography?.h1?.fontSize),
+					letterSpacing:
+						getValue(tokens, tokens?.typography?.h1?.letterSpacing) || theme("letterSpacing.tight")
 				},
 				h2: {
-					fontWeight: theme("fontWeight.bold"),
-					letterSpacing: theme("letterSpacing.tight")
+					fontFamily: getValue(tokens, tokens?.typography?.h2?.fontFamily),
+					fontWeight: getValue(tokens, tokens?.typography?.h2?.fontWeight) || theme("fontWeight.bold"),
+					fontSize: getValue(tokens, tokens?.typography?.h2?.fontSize),
+					letterSpacing:
+						getValue(tokens, tokens?.typography?.h2?.letterSpacing) || theme("letterSpacing.tight")
 				},
 				h3: {
-					fontWeight: theme("fontWeight.bold"),
-					letterSpacing: theme("letterSpacing.tight")
+					fontFamily: getValue(tokens, tokens?.typography?.h3?.fontFamily),
+					fontWeight: getValue(tokens, tokens?.typography?.h3?.fontWeight) || theme("fontWeight.bold"),
+					fontSize: getValue(tokens, tokens?.typography?.h3?.fontSize),
+					letterSpacing:
+						getValue(tokens, tokens?.typography?.h3?.letterSpacing) || theme("letterSpacing.tight")
 				},
 				h4: {
-					fontWeight: theme("fontWeight.medium"),
-					letterSpacing: theme("letterSpacing.tight")
+					fontFamily: getValue(tokens, tokens?.typography?.h4?.fontFamily),
+					fontWeight: getValue(tokens, tokens?.typography?.h4?.fontWeight) || theme("fontWeight.medium"),
+					fontSize: getValue(tokens, tokens?.typography?.h4?.fontSize),
+					letterSpacing:
+						getValue(tokens, tokens?.typography?.h4?.letterSpacing) || theme("letterSpacing.tight")
 				},
 				h5: {
-					fontWeight: theme("fontWeight.bold"),
-					letterSpacing: theme("letterSpacing.tight")
+					fontFamily: getValue(tokens, tokens?.typography?.h5?.fontFamily),
+					fontWeight: getValue(tokens, tokens?.typography?.h5?.fontWeight) || theme("fontWeight.bold"),
+					fontSize: getValue(tokens, tokens?.typography?.h5?.fontSize),
+					letterSpacing:
+						getValue(tokens, tokens?.typography?.h5?.letterSpacing) || theme("letterSpacing.tight")
 				},
 				h6: {
-					fontWeight: theme("fontWeight.medium")
+					fontFamily: getValue(tokens, tokens?.typography?.h6?.fontFamily),
+					fontWeight: getValue(tokens, tokens?.typography?.h6?.fontWeight) || theme("fontWeight.bold"),
+					fontSize: getValue(tokens, tokens?.typography?.h6?.fontSize),
+					letterSpacing: getValue(tokens, tokens?.typography?.h6?.letterSpacing)
 				}
 			})
 		})

@@ -8,11 +8,8 @@
 					target="_blank"
 					alt="docs"
 					rel="nofollow noopener noreferrer"
-					class="ml-4"
 				>
-					<n-icon :size="16">
-						<ExternalIcon />
-					</n-icon>
+					<Icon :name="ExternalIcon" :size="16" />
 					docs
 				</a>
 			</div>
@@ -137,7 +134,6 @@
 
 <script lang="ts" setup>
 import {
-	NIcon,
 	NPageHeader,
 	NGrid,
 	NGi,
@@ -150,7 +146,8 @@ import {
 	NButton,
 	NDropdown
 } from "naive-ui"
-import ExternalIcon from "@vicons/tabler/ExternalLink"
+import Icon from "@/components/common/Icon.vue"
+const ExternalIcon = "tabler:external-link"
 
 const message = useMessage()
 function handleBack() {

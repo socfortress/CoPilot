@@ -3,16 +3,8 @@
 		<div class="page-header">
 			<div class="title">Vector Map</div>
 			<div class="links">
-				<a
-					href="https://jvm-docs.vercel.app/"
-					target="_blank"
-					alt="docs"
-					rel="nofollow noopener noreferrer"
-					class="ml-4"
-				>
-					<n-icon :size="16">
-						<ExternalIcon />
-					</n-icon>
+				<a href="https://jvm-docs.vercel.app/" target="_blank" alt="docs" rel="nofollow noopener noreferrer">
+					<Icon :name="ExternalIcon" :size="16" />
 					docs
 				</a>
 			</div>
@@ -37,16 +29,15 @@
 	</div>
 </template>
 <script setup lang="ts">
-import { NIcon, NCard, NSpin } from "naive-ui"
-import ExternalIcon from "@vicons/tabler/ExternalLink"
-// Import your preferred map
-import "jsvectormap/dist/maps/world-merc"
+import { NCard, NSpin } from "naive-ui"
 
+import Icon from "@/components/common/Icon.vue"
+const ExternalIcon = "tabler:external-link"
 import { computed, ref, watchEffect, watch } from "vue"
 import { useResizeObserver, useWindowSize } from "@vueuse/core"
 import { useThemeStore } from "@/stores/theme"
 
-const style: { [key: string]: any } = computed(() => useThemeStore().style)
+const style = computed<{ [key: string]: any }>(() => useThemeStore().style)
 
 function getOption() {
 	return {
@@ -146,7 +137,7 @@ watchEffect(() => {
 	padding: 0;
 	color: var(--fg-color);
 	background: var(--bg-body);
-	border: 1px solid rgba(var(--fg-color-rgb), 0.1);
+	border: 1px solid var(--border-color);
 
 	&.jvm-zoomout {
 		top: 60px;

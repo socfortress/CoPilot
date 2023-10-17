@@ -1,55 +1,55 @@
 <template>
 	<div class="page">
-		<div class="settings flex items-center justify-between">
+		<div class="settings flex items-center justify-between" v-if="!isLogged">
 			<div class="layout">
 				<n-button quaternary circle @click="align = 'left'">
 					<template #icon>
-						<n-icon>
-							<AlignLeftActive v-if="align === 'left'" />
-							<AlignLeft v-else />
-						</n-icon>
+						<Icon>
+							<Iconify :icon="AlignLeftActive" v-if="align === 'left'" />
+							<Iconify :icon="AlignLeft" v-else />
+						</Icon>
 					</template>
 				</n-button>
 				<n-button quaternary circle @click="align = 'center'">
 					<template #icon>
-						<n-icon>
-							<AlignCenterActive v-if="align === 'center'" />
-							<AlignCenter v-else />
-						</n-icon>
+						<Icon>
+							<Iconify :icon="AlignCenterActive" v-if="align === 'center'" />
+							<Iconify :icon="AlignCenter" v-else />
+						</Icon>
 					</template>
 				</n-button>
 				<n-button quaternary circle @click="align = 'right'">
 					<template #icon>
-						<n-icon>
-							<AlignRightActive v-if="align === 'right'" />
-							<AlignRight v-else />
-						</n-icon>
+						<Icon>
+							<Iconify :icon="AlignRightActive" v-if="align === 'right'" />
+							<Iconify :icon="AlignRight" v-else />
+						</Icon>
 					</template>
 				</n-button>
 			</div>
 			<div class="colors">
 				<n-button quaternary circle v-for="color of colors" :key="color" @click="activeColor = color">
 					<template #icon>
-						<n-icon :color="color">
-							<SquareActive v-if="activeColor === color" />
-							<Square v-else />
-						</n-icon>
+						<Icon :color="color">
+							<Iconify :icon="SquareActive" v-if="activeColor === color" />
+							<Iconify :icon="Square" v-else />
+						</Icon>
 					</template>
 				</n-button>
 				<n-button quaternary circle @click="activeColor = primaryColor">
 					<template #icon>
-						<n-icon :color="primaryColor">
-							<SquareActive v-if="activeColor === primaryColor" />
-							<Square v-else />
-						</n-icon>
+						<Icon :color="primaryColor">
+							<Iconify :icon="SquareActive" v-if="activeColor === primaryColor" />
+							<Iconify :icon="Square" v-else />
+						</Icon>
 					</template>
 				</n-button>
 			</div>
 		</div>
-		<div class="flex wrapper justify-center">
+		<div class="flex wrapper justify-center" v-if="!isLogged">
 			<div class="image-box basis-2/3" v-if="align === 'right'"></div>
 			<div class="form-box basis-1/3 flex items-center justify-center" :class="{ centered: align === 'center' }">
-				<SignInUp :type="type" />
+				<AuthForm :type="type" />
 			</div>
 			<div class="image-box basis-2/3" v-if="align === 'left'"></div>
 		</div>
@@ -57,24 +57,25 @@
 </template>
 
 <script lang="ts" setup>
-import { NButton, NIcon } from "naive-ui"
-import SignInUp from "@/components/SignInUp/index.vue"
-import AlignLeft from "@vicons/fluent/TextboxAlignBottomRotate9024Regular"
-import AlignCenter from "@vicons/fluent/TextboxAlignMiddleRotate9024Regular"
-import AlignRight from "@vicons/fluent/TextboxAlignTopRotate9024Regular"
-import AlignLeftActive from "@vicons/fluent/TextboxAlignBottomRotate9024Filled"
-import AlignCenterActive from "@vicons/fluent/TextboxAlignMiddleRotate9024Filled"
-import AlignRightActive from "@vicons/fluent/TextboxAlignTopRotate9024Filled"
-import Square from "@vicons/fluent/Square24Filled"
-import SquareActive from "@vicons/fluent/CheckboxIndeterminate24Regular"
+import { NButton } from "naive-ui"
+import Icon from "@/components/common/Icon.vue"
+import { Icon as Iconify } from "@iconify/vue"
+
+import AuthForm from "@/components/AuthForm/index.vue"
 import { ref, computed, onBeforeMount } from "vue"
 import { useRoute } from "vue-router"
 import { useThemeStore } from "@/stores/theme"
-import { type FormType } from "@/components/SignInUp/index.vue"
+import { useAuthStore } from "@/stores/auth"
+import type { FormType } from "@/components/AuthForm/index.vue"
 
-defineOptions({
-	name: "Login"
-})
+const AlignLeft = "fluent:textbox-align-bottom-rotate-90-24-regular"
+const AlignCenter = "fluent:textbox-align-middle-rotate-90-24-regular"
+const AlignRight = "fluent:textbox-align-top-rotate-90-24-regular"
+const AlignLeftActive = "fluent:textbox-align-bottom-rotate-90-24-filled"
+const AlignCenterActive = "fluent:textbox-align-middle-rotate-90-24-filled"
+const AlignRightActive = "fluent:textbox-align-top-rotate-90-24-filled"
+const Square = "fluent:square-24-filled"
+const SquareActive = "fluent:checkbox-indeterminate-24-regular"
 
 type Align = "left" | "center" | "right"
 
@@ -85,6 +86,7 @@ const type = ref<FormType | undefined>(undefined)
 
 const colors = computed(() => useThemeStore().secondaryColors)
 const primaryColor = computed(() => useThemeStore().primaryColor)
+const isLogged = computed(() => useAuthStore().isLogged)
 
 onBeforeMount(() => {
 	if (route.query.step) {
@@ -96,6 +98,8 @@ onBeforeMount(() => {
 </script>
 
 <style lang="scss" scoped>
+@import "@/assets/scss/common.scss";
+
 .page {
 	min-height: 100vh;
 
@@ -104,8 +108,7 @@ onBeforeMount(() => {
 		top: 10px;
 		left: 50%;
 		transform: translateX(-50%);
-		backdrop-filter: blur(10px);
-		background-color: rgba(var(--bg-color-rgb), 0.4);
+		background-color: var(--bg-secondary-color);
 		height: 44px;
 		width: 300px;
 		border-radius: 50px;

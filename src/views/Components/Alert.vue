@@ -8,11 +8,8 @@
 					target="_blank"
 					alt="docs"
 					rel="nofollow noopener noreferrer"
-					class="ml-4"
 				>
-					<n-icon :size="16">
-						<ExternalIcon />
-					</n-icon>
+					<Icon :name="ExternalIcon" :size="16" />
 					docs
 				</a>
 			</div>
@@ -23,9 +20,7 @@
 				<n-space vertical :size="12">
 					<n-alert title="Default Text" type="default">
 						<template #icon>
-							<n-icon>
-								<Airplane />
-							</n-icon>
+							<Icon :name="Airplane" />
 						</template>
 						Gee it's good to be back home
 					</n-alert>
@@ -62,8 +57,9 @@
 </template>
 
 <script lang="ts" setup>
-import { NIcon, NSpace, NAlert } from "naive-ui"
-import ExternalIcon from "@vicons/tabler/ExternalLink"
+import { NSpace, NAlert } from "naive-ui"
+import Icon from "@/components/common/Icon.vue"
+const ExternalIcon = "tabler:external-link"
 
-import { Airplane } from "@vicons/ionicons5"
+const Airplane = "ion:airplane"
 </script>

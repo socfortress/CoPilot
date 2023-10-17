@@ -6,6 +6,7 @@ const os = require("node:os")
 const { intro, outro, select, spinner, isCancel, cancel, text } = require("@clack/prompts")
 
 const GLOBAL_KEYS = ["border-radius", "line-heights", "font-sizes", "font-families"]
+const TYPO_KEYS = ["typo"]
 const SET_KEYS = ["color"]
 const TOKENS_MAP = [
 	{
@@ -23,8 +24,27 @@ const TOKENS_MAP = [
 	{
 		token: "lineHeight",
 		type: "lineHeights"
+	},
+	{
+		token: "typography",
+		type: "typo"
 	}
 ]
+
+const DESIGN_TOKEN_PATH = fs.pathExistsSync(path.join(process.cwd(), "src"))
+	? path.join(process.cwd(), "src", "design-tokens.json")
+	: path.join(process.cwd(), "design-tokens.json")
+const FIGMA_TOKEN_PATH = path.join(process.cwd(), "figma-tokens.json")
+
+function getValue(origin, val) {
+	if (val && val.indexOf("{") === 0) {
+		const path = val.replace("{", "").replace("}", "")
+		return _.get(origin, path)
+	}
+
+	return val
+}
+
 /**
  *
  * @param {string} name
@@ -48,7 +68,6 @@ function tokenNameSanitize(name, from) {
  */
 async function importTokens(tokensPath) {
 	const filePath = path.normalize(tokensPath.trim().replace("~/", os.homedir() + "/"))
-	const projectFilePath = path.join(process.cwd(), "src", "design-tokens.json")
 	const tokens = await fs.readJSON(filePath)
 
 	const projectFile = {}
@@ -67,6 +86,31 @@ async function importTokens(tokensPath) {
 				const name = _.camelCase(k.replace(gk + "-", ""))
 
 				_.set(projectFile, `${gkParsed}.${name}`, globalTokens[k].value)
+			}
+		}
+	}
+
+	for (const k in globalTokens) {
+		for (const tk of TYPO_KEYS) {
+			const kIndex = k.indexOf(tk)
+			if (kIndex !== -1) {
+				const value = globalTokens[k].value
+				const element = _.split(k, "-")[1]
+				const tkParsed = tokenNameSanitize(_.camelCase(tk), "type")
+
+				for (const k in value) {
+					const prop = value[k]
+					if (prop.indexOf("{") === 0) {
+						const prefix = tokenNameSanitize(k, "token")
+						const ref = prop
+							.replace(_.kebabCase(prefix) + "-", "")
+							.replace("{", "")
+							.replace("}", "")
+						value[k] = `{${k}.${_.camelCase(ref)}}`
+					}
+				}
+
+				_.set(projectFile, `${tkParsed}.${element}`, value)
 			}
 		}
 	}
@@ -97,9 +141,9 @@ async function importTokens(tokensPath) {
 		}
 	}
 
-	await fs.writeJSON(projectFilePath, projectFile, { spaces: "\t" })
+	await fs.writeJSON(DESIGN_TOKEN_PATH, projectFile, { spaces: "\t" })
 
-	return projectFilePath
+	return DESIGN_TOKEN_PATH
 }
 
 /**
@@ -107,9 +151,7 @@ async function importTokens(tokensPath) {
  * @returns {string}
  */
 async function exportTokens() {
-	const projectFilePath = path.join(process.cwd(), "src", "design-tokens.json")
-	const figmaFilePath = path.join(process.cwd(), "figma-tokens.json")
-	const tokens = await fs.readJSON(projectFilePath)
+	const tokens = await fs.readJSON(DESIGN_TOKEN_PATH)
 
 	const groups = _.chain(tokens)
 		.toPairs()
@@ -122,8 +164,9 @@ async function exportTokens() {
 		dark: {}
 	}
 
-	const globalTokens = groups.filter(o => o.key !== "colors")
-	const setsTokens = groups.filter(o => o.key === "colors")
+	const globalTokens = groups.filter(o => !["colors", "typography"].includes(o.key))
+	const setsTokens = groups.filter(o => ["colors"].includes(o.key))
+	const typoTokens = groups.filter(o => ["typography"].includes(o.key))
 
 	for (const group of globalTokens) {
 		const type = tokenNameSanitize(group.key, "token")
@@ -160,9 +203,44 @@ async function exportTokens() {
 		}
 	}
 
-	await fs.writeJSON(figmaFilePath, exportFile, { spaces: "\t" })
+	for (const group of typoTokens) {
+		const type = group.key
+		const set = group.value
 
-	return figmaFilePath
+		for (const setName in set) {
+			const globalName = `typo-${setName}`
+			const value = set[setName]
+			const newValue = {}
+
+			for (const k in value) {
+				const prop = value[k]
+				if (prop.indexOf("{") === 0) {
+					const ref = prop.replace("{", "").replace("}", "")
+					const path = _.split(ref, ".")[1]
+					const prefix = tokenNameSanitize(k, "token")
+					newValue[k] = "{" + _.kebabCase(`${prefix}-${_.kebabCase(path)}`) + "}"
+				} else {
+					newValue[k] = prop
+				}
+			}
+
+			// sanitize lineHeight for figma
+			if (value.fontSize && tokens?.lineHeight?.base) {
+				newValue.lineHeight = Math.round(
+					parseInt(getValue(tokens, value.fontSize)) * parseFloat(tokens.lineHeight.base)
+				).toString()
+			}
+
+			exportFile.global[globalName] = {
+				value: newValue,
+				type
+			}
+		}
+	}
+
+	await fs.writeJSON(FIGMA_TOKEN_PATH, exportFile, { spaces: "\t" })
+
+	return FIGMA_TOKEN_PATH
 }
 
 async function main() {
@@ -172,8 +250,8 @@ async function main() {
 	const flowType = await select({
 		message: "Choose an action.",
 		options: [
-			{ value: "import", label: "Import tokens file" },
-			{ value: "export", label: "Create tokens json" }
+			{ value: "import", label: "Import figma tokens" },
+			{ value: "export", label: "Export figma json" }
 		]
 	})
 

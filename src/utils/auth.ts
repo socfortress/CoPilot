@@ -38,7 +38,7 @@ export function authCheck(route: RouteLocationNormalized) {
 	const meta: RouteMetaAuth = route.meta
 	const { checkAuth, authRedirect, auth, roles } = meta
 
-	if (route?.redirectedFrom?.name === "logout") {
+	if (route?.redirectedFrom?.name === "Logout") {
 		useAuthStore().setLogout()
 	}
 

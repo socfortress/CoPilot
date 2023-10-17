@@ -5,10 +5,8 @@
 		</div>
 		<div class="starred flex" :class="{ 'opacity-50': !email.starred }">
 			<n-button text @click.stop="toggleStar(email)">
-				<n-icon :size="16">
-					<StarActiveIcon v-if="email.starred" :color="primaryColor" />
-					<StarIcon v-else />
-				</n-icon>
+				<Icon :size="16" :name="StarActiveIcon" v-if="email.starred" :color="primaryColor"></Icon>
+				<Icon :size="16" :name="StarIcon" v-else></Icon>
 			</n-button>
 		</div>
 		<div class="avatar flex">
@@ -23,47 +21,45 @@
 			</span>
 		</div>
 		<div class="labels flex">
-			<n-icon :size="16" v-for="label of email.labels" :key="label.id">
-				<LabelIcon :color="labelsColors[label.id]" />
-			</n-icon>
+			<Icon
+				:size="16"
+				v-for="label of email.labels"
+				:key="label.id"
+				:color="labelsColors[label.id]"
+				:name="LabelIcon"
+			></Icon>
 		</div>
 		<div class="attachments flex" v-if="email.attachments.length">
-			<n-icon :size="16">
-				<AttachmentIcon />
-			</n-icon>
+			<Icon :size="16" :name="AttachmentIcon"></Icon>
 		</div>
 		<div class="date opacity-70">
 			{{ email.dateText }}
 		</div>
 		<div class="actions opacity-70 flex items-start gap-3">
 			<n-button text>
-				<n-icon :size="20">
-					<TrashIcon />
-				</n-icon>
+				<Icon :size="20" :name="TrashIcon"></Icon>
 			</n-button>
 			<n-button text>
-				<n-icon :size="20">
-					<LabelOutIcon />
-				</n-icon>
+				<Icon :size="20" :name="LabelOutIcon"></Icon>
 			</n-button>
 			<n-button text>
-				<n-icon :size="20">
-					<FolderIcon />
-				</n-icon>
+				<Icon :size="20" :name="FolderIcon"></Icon>
 			</n-button>
 		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { NIcon, NCheckbox, NAvatar, NButton } from "naive-ui"
-import StarActiveIcon from "@vicons/carbon/StarFilled"
-import StarIcon from "@vicons/carbon/Star"
-import TrashIcon from "@vicons/carbon/TrashCan"
-import LabelIcon from "@vicons/carbon/BookmarkFilled"
-import LabelOutIcon from "@vicons/carbon/Bookmark"
-import AttachmentIcon from "@vicons/carbon/Attachment"
-import FolderIcon from "@vicons/carbon/FolderMoveTo"
+import { NCheckbox, NAvatar, NButton } from "naive-ui"
+import Icon from "@/components/common/Icon.vue"
+
+const StarActiveIcon = "carbon:star-filled"
+const StarIcon = "carbon:star"
+const TrashIcon = "carbon:trash-can"
+const LabelIcon = "carbon:bookmark-filled"
+const LabelOutIcon = "carbon:bookmark"
+const AttachmentIcon = "carbon:attachment"
+const FolderIcon = "carbon:folder-move-to"
 import { useMailboxStore } from "@/stores/apps/useMailboxStore"
 import { type Email } from "@/mock/mailbox"
 import { toRefs, computed } from "vue"
@@ -111,13 +107,13 @@ function toggleStar(email: Email) {
 .email {
 	height: 52px;
 	padding: 0 30px;
-	border-block-end: var(--border-small-050);
+	border-bottom: var(--border-small-050);
 	gap: 18px;
 	line-height: 1.2;
 	white-space: nowrap;
 	cursor: pointer;
 	opacity: 0;
-	transition: all 0.25s ease-in;
+	transition: all 0.1s ease-in;
 	animation: email-fade 0.3s forwards;
 	container-type: inline-size;
 
@@ -134,7 +130,6 @@ function toggleStar(email: Email) {
 		font-size: 15px;
 
 		.name {
-			//font-weight: bold;
 			margin-right: 14px;
 		}
 		.subject {
@@ -147,7 +142,7 @@ function toggleStar(email: Email) {
 	}
 
 	&.seen {
-		background-color: var(--bg-sidebar);
+		background-color: var(--bg-secondary-color);
 		.title {
 			opacity: 0.85;
 			.subject {
@@ -157,14 +152,11 @@ function toggleStar(email: Email) {
 	}
 
 	&.selected {
-		background-color: rgba(var(--primary-color-rgb), 0.05);
+		background-color: var(--primary-005-color);
 	}
 
 	&:hover {
-		background-color: rgba(var(--bg-color-rgb), 0.03);
-		border-bottom-color: transparent;
-		box-shadow: 0px 1px 8px -4px rgba(var(--fg-color-rgb), 0.6);
-		transform: translateY(-1px);
+		box-shadow: 0px 0px 0px 1px var(--primary-050-color) inset;
 
 		.actions {
 			display: flex;

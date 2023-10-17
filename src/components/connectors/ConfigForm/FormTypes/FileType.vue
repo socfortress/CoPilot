@@ -12,9 +12,7 @@
 			>
 				<n-upload-dragger>
 					<div>
-						<n-icon size="48" :depth="3">
-							<UploadIcon />
-						</n-icon>
+						<Icon :name="UploadIcon" :size="48" :depth="3"></Icon>
 					</div>
 					<h4>Click or drag a file to this area to upload</h4>
 					<p class="mt-2">Limit 1 file .YAML, new file will cover the old file</p>
@@ -25,12 +23,10 @@
 </template>
 
 <script setup lang="ts">
-import UploadIcon from "@vicons/carbon/CloudUpload"
 import { onMounted, ref, toRefs } from "vue"
 import {
 	NForm,
 	NFormItem,
-	NIcon,
 	NUpload,
 	NUploadDragger,
 	type FormRules,
@@ -39,10 +35,13 @@ import {
 	type UploadInst,
 	type UploadFileInfo
 } from "naive-ui"
+import Icon from "@/components/common/Icon.vue"
 
 export interface IFileForm {
 	connector_file: File | null
 }
+
+const UploadIcon = "carbon:cloud-upload"
 
 const emit = defineEmits<{
 	(e: "mounted", value: FormInst): void

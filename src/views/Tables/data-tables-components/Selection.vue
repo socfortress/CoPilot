@@ -22,8 +22,7 @@
 
 <script lang="tsx" setup>
 import { computed, reactive, ref } from "vue"
-import type { DataTableColumns, DataTableRowKey } from "naive-ui"
-import { NP, NDataTable, NText, NButton } from "naive-ui"
+import { NP, NDataTable, NText, NButton, type DataTableColumns, type DataTableRowKey } from "naive-ui"
 import { useResizeObserver } from "@vueuse/core"
 import { faker } from "@faker-js/faker"
 

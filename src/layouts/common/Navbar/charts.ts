@@ -2,11 +2,11 @@ import { renderIcon } from "@/utils"
 import { h } from "vue"
 import { RouterLink } from "vue-router"
 
-import ChartIcon from "@vicons/carbon/ChartHistogram"
+const ChartIcon = "carbon:chart-histogram"
 
 export default {
 	label: "Charts",
-	key: "charts",
+	key: "Charts",
 	icon: renderIcon(ChartIcon),
 	children: [
 		{
@@ -15,12 +15,12 @@ export default {
 					RouterLink,
 					{
 						to: {
-							name: "charts-apexcharts"
+							name: "Charts-ApexCharts"
 						}
 					},
 					{ default: () => "ApexCharts" }
 				),
-			key: "charts-apexcharts"
+			key: "Charts-ApexCharts"
 		},
 		{
 			label: () =>
@@ -28,12 +28,12 @@ export default {
 					RouterLink,
 					{
 						to: {
-							name: "charts-chartjs"
+							name: "Charts-ChartJS"
 						}
 					},
 					{ default: () => "ChartJS" }
 				),
-			key: "charts-chartjs"
+			key: "Charts-ChartJS"
 		}
 	]
 }

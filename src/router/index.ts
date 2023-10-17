@@ -1,38 +1,38 @@
-import { UserRole } from "@/types/auth.d"
 import { createRouter, createWebHistory } from "vue-router"
 import Analytics from "@/views/Dashboard/Analytics.vue"
-import { authCheck } from "@/utils/auth"
+import { UserRole } from "@/types/auth.d"
 import components from "./components"
 import { Layout } from "@/types/theme.d"
+import { authCheck } from "@/utils/auth"
 
 const router = createRouter({
 	history: createWebHistory(import.meta.env.BASE_URL),
 	routes: [
 		{
 			path: "/",
-			redirect: "/dashboard/analytics"
+			redirect: "/indices"
 		},
 		{
 			path: "/indices",
-			name: "indices",
+			name: "Indices",
 			component: () => import("@/views/socfortress/Indices.vue"),
 			meta: { title: "Indices", auth: true, roles: UserRole.All }
 		},
 		{
 			path: "/connectors",
-			name: "connectors",
+			name: "Connectors",
 			component: () => import("@/views/socfortress/Connectors.vue"),
 			meta: { title: "Connectors", auth: true, roles: UserRole.All }
 		},
 		{
 			path: "/agents",
-			name: "agents",
+			name: "Agents",
 			component: () => import("@/views/socfortress/Agents.vue"),
 			meta: { title: "Agents", auth: true, roles: UserRole.All }
 		},
 		{
 			path: "/agent/:id?",
-			name: "agent",
+			name: "Agent",
 			component: () => import("@/views/socfortress/AgentOverview.vue"),
 			meta: { title: "Agent", auth: true, roles: UserRole.All }
 		},
@@ -47,13 +47,13 @@ const router = createRouter({
 			children: [
 				{
 					path: "analytics",
-					name: "analytics",
+					name: "Dashboard-Analytics",
 					component: Analytics,
 					meta: { title: "Analytics" }
 				},
 				{
 					path: "ecommerce",
-					name: "ecommerce",
+					name: "Dashboard-eCommerce",
 					component: () => import("@/views/Dashboard/eCommerce.vue"),
 					meta: { title: "eCommerce" }
 				}
@@ -61,37 +61,37 @@ const router = createRouter({
 		},
 		{
 			path: "/calendar",
-			name: "calendar",
+			name: "Apps-Calendars-FullCalendar",
 			component: () => import("@/views/Apps/Calendars/FullCalendar.vue"),
 			meta: { title: "Calendar", auth: true, roles: UserRole.All }
 		},
 		{
 			path: "/email",
-			name: "email",
+			name: "Apps-Mailbox",
 			component: () => import("@/views/Apps/Mailbox.vue"),
 			meta: { title: "Email", auth: true, roles: UserRole.All }
 		},
 		{
 			path: "/chat",
-			name: "chat",
+			name: "Apps-Chat",
 			component: () => import("@/views/Apps/Chat.vue"),
 			meta: { title: "Chat", auth: true, roles: UserRole.All }
 		},
 		{
 			path: "/kanban",
-			name: "kanban",
+			name: "Apps-Kanban",
 			component: () => import("@/views/Apps/Kanban.vue"),
 			meta: { title: "Kanban", auth: true, roles: UserRole.All }
 		},
 		{
 			path: "/notes",
-			name: "notes",
+			name: "Apps-Notes",
 			component: () => import("@/views/Apps/Notes.vue"),
 			meta: { title: "Notes", auth: true, roles: UserRole.All }
 		},
 		{
 			path: "/typography",
-			name: "typography",
+			name: "Typography",
 			component: () => import("@/views/Typography.vue"),
 			meta: { title: "Typography", auth: true, roles: UserRole.All }
 		},
@@ -105,31 +105,31 @@ const router = createRouter({
 			children: [
 				{
 					path: "basic",
-					name: "cards-basic",
+					name: "Cards-Basic",
 					component: () => import("@/views/Cards/Basic.vue"),
 					meta: { title: "Cards Basic" }
 				},
 				{
 					path: "ecommerce",
-					name: "cards-ecommerce",
+					name: "Cards-Ecommerce",
 					component: () => import("@/views/Cards/Ecommerce.vue"),
 					meta: { title: "Cards Ecommerce" }
 				},
 				{
 					path: "list",
-					name: "cards-list",
+					name: "Cards-List",
 					component: () => import("@/views/Cards/List.vue"),
 					meta: { title: "Cards List" }
 				},
 				{
 					path: "extra",
-					name: "cards-extra",
+					name: "Cards-Extra",
 					component: () => import("@/views/Cards/Extra.vue"),
 					meta: { title: "Cards Extra" }
 				},
 				{
 					path: "combo",
-					name: "cards-combo",
+					name: "Cards-Combo",
 					component: () => import("@/views/Cards/Combo.vue"),
 					meta: { title: "Cards Combo" }
 				}
@@ -146,7 +146,7 @@ const router = createRouter({
 			children: [
 				{
 					path: "refresh-tool",
-					name: "toolbox-refresh-tool",
+					name: "Toolbox-RefreshTool",
 					// route level code-splitting
 					// this generates a separate chunk (About.[hash].js) for this route
 					// which is lazy-loaded when the route is visited.
@@ -155,7 +155,7 @@ const router = createRouter({
 				},
 				{
 					path: "tour",
-					name: "toolbox-tour",
+					name: "Toolbox-Tour",
 					component: () => import("@/views/Toolbox/Tour.vue"),
 					meta: { title: "Tour" }
 				}
@@ -171,19 +171,19 @@ const router = createRouter({
 			children: [
 				{
 					path: "left-sidebar",
-					name: "layout-left-sidebar",
+					name: "Layout-LeftSidebar",
 					component: () => import("@/views/Layout/LeftSidebar.vue"),
 					meta: { title: "Left Sidebar" }
 				},
 				{
 					path: "right-sidebar",
-					name: "layout-right-sidebar",
+					name: "Layout-RightSidebar",
 					component: () => import("@/views/Layout/RightSidebar.vue"),
 					meta: { title: "Right Sidebar" }
 				},
 				{
 					path: "full-width",
-					name: "layout-full-width",
+					name: "Layout-FullWidth",
 					component: () => import("@/views/Layout/FullWidth.vue"),
 					meta: { title: "Full Width" }
 				}
@@ -199,25 +199,25 @@ const router = createRouter({
 			children: [
 				{
 					path: "google-maps",
-					name: "maps-google-maps",
+					name: "Maps-GoogleMaps",
 					component: () => import("@/views/Maps/GoogleMaps.vue"),
 					meta: { title: "Google maps" }
 				},
 				{
 					path: "maplibre",
-					name: "maps-maplibre",
+					name: "Maps-MapLibre",
 					component: () => import("@/views/Maps/MapLibre.vue"),
 					meta: { title: "MapLibre" }
 				},
 				{
 					path: "leaflet",
-					name: "maps-leaflet",
+					name: "Maps-Leaflet",
 					component: () => import("@/views/Maps/Leaflet.vue"),
 					meta: { title: "Leaflet" }
 				},
 				{
 					path: "vectormap",
-					name: "maps-vectormap",
+					name: "Maps-VectorMap",
 					component: () => import("@/views/Maps/VectorMap.vue"),
 					meta: { title: "Vector Map" }
 				}
@@ -233,19 +233,19 @@ const router = createRouter({
 			children: [
 				{
 					path: "quill",
-					name: "editors-quill",
+					name: "Editors-Quill",
 					component: () => import("@/views/Editors/Quill.vue"),
 					meta: { title: "Quill" }
 				},
 				{
 					path: "tiptap",
-					name: "editors-tiptap",
+					name: "Editors-Tiptap",
 					component: () => import("@/views/Editors/Tiptap.vue"),
 					meta: { title: "Tiptap" }
 				},
 				{
 					path: "milkdown",
-					name: "editors-milkdown",
+					name: "Editors-Milkdown",
 					component: () => import("@/views/Editors/Milkdown.vue"),
 					meta: { title: "Milkdown" }
 				}
@@ -261,13 +261,13 @@ const router = createRouter({
 			children: [
 				{
 					path: "apexcharts",
-					name: "charts-apexcharts",
+					name: "Charts-ApexCharts",
 					component: () => import("@/views/Charts/ApexCharts.vue"),
 					meta: { title: "ApexCharts" }
 				},
 				{
 					path: "chartjs",
-					name: "charts-chartjs",
+					name: "Charts-ChartJS",
 					component: () => import("@/views/Charts/ChartJS.vue"),
 					meta: { title: "ChartJS" }
 				}
@@ -275,31 +275,15 @@ const router = createRouter({
 		},
 		{
 			path: "/multi-language",
-			name: "multi-language",
+			name: "MultiLanguage",
 			component: () => import("@/views/MultiLanguage.vue"),
 			meta: { title: "Multi Language", auth: true, roles: UserRole.All }
 		},
 		{
 			path: "/icons",
-			redirect: "/icons/xicons",
-			meta: {
-				auth: true,
-				roles: UserRole.All
-			},
-			children: [
-				{
-					path: "xicons",
-					name: "icons-xicons",
-					component: () => import("@/views/Icons/Xicons.vue"),
-					meta: { title: "xIcons" }
-				},
-				{
-					path: "flag",
-					name: "icons-flag",
-					component: () => import("@/views/Icons/Flag.vue"),
-					meta: { title: "Flag Icons" }
-				}
-			]
+			name: "Icons",
+			component: () => import("@/views/Icons.vue"),
+			meta: { title: "Icons", auth: true, roles: UserRole.All }
 		},
 		{
 			path: "/tables",
@@ -311,13 +295,13 @@ const router = createRouter({
 			children: [
 				{
 					path: "base",
-					name: "tables-base",
+					name: "Tables-Base",
 					component: () => import("@/views/Tables/Base.vue"),
 					meta: { title: "Tables Base" }
 				},
 				{
 					path: "data-table",
-					name: "tables-data-table",
+					name: "Tables-DataTable",
 					component: () => import("@/views/Tables/DataTable.vue"),
 					meta: { title: "Data Table" }
 				}
@@ -326,25 +310,25 @@ const router = createRouter({
 
 		{
 			path: "/profile",
-			name: "profile",
+			name: "Profile",
 			component: () => import("@/views/Profile.vue"),
 			meta: { title: "Profile", auth: true, roles: UserRole.All }
 		},
 
 		{
 			path: "/login",
-			name: "login",
+			name: "Login",
 			component: () => import("@/views/Auth/Login.vue"),
 			meta: { title: "Login", forceLayout: Layout.Blank, checkAuth: true }
 		},
 		{
 			path: "/logout",
-			name: "logout",
+			name: "Logout",
 			redirect: "/login"
 		},
 		{
 			path: "/:pathMatch(.*)*",
-			name: "not-found",
+			name: "NotFound",
 			component: () => import("@/views/NotFound.vue"),
 			meta: { forceLayout: Layout.Blank }
 		}

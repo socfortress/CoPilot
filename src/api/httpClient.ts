@@ -35,11 +35,8 @@ HttpClient.interceptors.request.use(
 					__TOKEN_ATTEMPTS = []
 				}
 			})
-
-			console.log("is expired")
 		}
 
-		console.log(__TOKEN_ATTEMPTS, __TOKEN_REFRESHING)
 		return config
 	},
 	error => Promise.reject(error)

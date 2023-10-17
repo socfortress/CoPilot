@@ -2,7 +2,7 @@ import { renderIcon } from "@/utils"
 import { h } from "vue"
 import { RouterLink } from "vue-router"
 
-import ToolboxIcon from "@vicons/carbon/ToolBox"
+const ToolboxIcon = "carbon:tool-box"
 
 export default {
 	label: "Toolbox",
@@ -15,14 +15,14 @@ export default {
 					RouterLink,
 					{
 						to: {
-							name: "toolbox-refresh-tool"
+							name: "Toolbox-RefreshTool"
 						}
 					},
 					{
 						default: () => "Refresh Tool"
 					}
 				),
-			key: "toolbox-refresh-tool"
+			key: "Toolbox-RefreshTool"
 		},
 		{
 			label: () =>
@@ -30,14 +30,14 @@ export default {
 					RouterLink,
 					{
 						to: {
-							name: "toolbox-tour"
+							name: "Toolbox-Tour"
 						}
 					},
 					{
 						default: () => "Tour"
 					}
 				),
-			key: "toolbox-tour"
+			key: "Toolbox-Tour"
 		}
 	]
 }

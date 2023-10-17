@@ -8,11 +8,8 @@
 					target="_blank"
 					alt="docs"
 					rel="nofollow noopener noreferrer"
-					class="ml-4"
 				>
-					<n-icon :size="16">
-						<ExternalIcon />
-					</n-icon>
+					<Icon :name="ExternalIcon" :size="16" />
 					docs
 				</a>
 			</div>
@@ -85,12 +82,10 @@
 			<CardCodeExample title="Customize icon">
 				<n-collapse>
 					<template #header-extra>
-						<n-icon><cash-icon /></n-icon>
+						<Icon :name="CashIcon" />
 					</template>
 					<template #arrow>
-						<n-icon>
-							<cash-icon />
-						</n-icon>
+						<Icon :name="CashIcon" />
 					</template>
 					<n-collapse-item title="Bronze" name="1">
 						<div>good</div>
@@ -167,7 +162,8 @@
 </template>
 
 <script lang="ts" setup>
-import { NIcon, NCollapse, NCollapseItem, NText } from "naive-ui"
-import { CashOutline as CashIcon } from "@vicons/ionicons5"
-import ExternalIcon from "@vicons/tabler/ExternalLink"
+import { NCollapse, NCollapseItem, NText } from "naive-ui"
+const CashIcon = "ion:cash-outline"
+import Icon from "@/components/common/Icon.vue"
+const ExternalIcon = "tabler:external-link"
 </script>

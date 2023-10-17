@@ -8,17 +8,12 @@
 					target="_blank"
 					alt="docs"
 					rel="nofollow noopener noreferrer"
-					class="ml-4"
 				>
-					<n-icon :size="16">
-						<ExternalIcon />
-					</n-icon>
+					<Icon :name="ExternalIcon" :size="16" />
 					docs
 				</a>
-				<router-link :to="{ name: 'cards-basic' }">
-					<n-icon :size="16">
-						<LinkIcon />
-					</n-icon>
+				<router-link :to="{ name: 'Cards-Basic' }">
+					<Icon :name="LinkIcon" :size="16" />
 					more cards
 				</router-link>
 			</div>
@@ -98,8 +93,9 @@
 </template>
 
 <script lang="ts" setup>
-import { NIcon, NCard, NSpace, NText } from "naive-ui"
-import ExternalIcon from "@vicons/tabler/ExternalLink"
-import LinkIcon from "@vicons/carbon/Link"
+import { NCard, NSpace, NText } from "naive-ui"
+import Icon from "@/components/common/Icon.vue"
+const ExternalIcon = "tabler:external-link"
+const LinkIcon = "carbon:link"
 import { RouterLink } from "vue-router"
 </script>

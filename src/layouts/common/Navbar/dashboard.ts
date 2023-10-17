@@ -2,11 +2,11 @@ import { renderIcon } from "@/utils"
 import { h } from "vue"
 import { RouterLink } from "vue-router"
 
-import DashboardIcon from "@vicons/carbon/Dashboard"
+const DashboardIcon = "carbon:dashboard"
 
 export default {
 	label: "Dashboard",
-	key: "dashboard",
+	key: "Dashboard",
 	icon: renderIcon(DashboardIcon),
 	children: [
 		{
@@ -15,12 +15,12 @@ export default {
 					RouterLink,
 					{
 						to: {
-							name: "analytics"
+							name: "Dashboard-Analytics"
 						}
 					},
 					{ default: () => "Analytics" }
 				),
-			key: "analytics"
+			key: "Dashboard-Analytics"
 		},
 		{
 			label: () =>
@@ -28,12 +28,12 @@ export default {
 					RouterLink,
 					{
 						to: {
-							name: "ecommerce"
+							name: "Dashboard-eCommerce"
 						}
 					},
 					{ default: () => "eCommerce" }
 				),
-			key: "ecommerce"
+			key: "Dashboard-eCommerce"
 		}
 	]
 }

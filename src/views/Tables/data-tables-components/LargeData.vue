@@ -6,8 +6,7 @@
 
 <script lang="ts">
 import { h, defineComponent } from "vue"
-import type { DataTableColumns } from "naive-ui"
-import { NDataTable } from "naive-ui"
+import { NDataTable, type DataTableColumns } from "naive-ui"
 
 type RowData = {
 	key: number
