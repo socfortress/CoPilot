@@ -79,6 +79,11 @@ async def process_request(request: Request, call_next, session, logger_instance)
 async def log_requests(request: Request, call_next):
     user_id = None
     response = None
+
+    # Skip logging for OPTIONS requests
+    if request.method == "OPTIONS":
+        return await call_next(request)
+
     with Session(engine) as session:
         logger_instance = Logger(session, auth_handler)
 
