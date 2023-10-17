@@ -39,8 +39,8 @@ def cluster_healthcheck() -> Union[ClusterHealthResponse, Dict[str, str]]:
             message="Successfully collected Wazuh Indexer cluster health",
         )
     except Exception as e:
-        logger.error(f"Cluster health check failed with error: {e}")
-        raise Exception(str(e))  # Change this line
+        e = f"Cluster health check failed with error: {e}"
+        raise Exception(str(e))
 
 
 def node_allocation() -> Union[NodeAllocationResponse, Dict[str, bool]]:
@@ -69,8 +69,8 @@ def node_allocation() -> Union[NodeAllocationResponse, Dict[str, bool]]:
             message="Successfully collected Wazuh Indexer node allocation",
         )
     except Exception as e:
-        logger.error(f"Node allocation check failed with error: {e}")
-        return {"success": False, "message": f"Node allocation check failed with error: {e}"}
+        e = f"Node allocation check failed with error: {e}"
+        raise Exception(str(e))
 
 
 def indices_stats() -> Union[IndicesStatsResponse, Dict[str, str]]:
@@ -98,8 +98,8 @@ def indices_stats() -> Union[IndicesStatsResponse, Dict[str, str]]:
             message="Successfully collected Wazuh Indexer indices stats",
         )
     except Exception as e:
-        logger.error(f"Indices stats check failed with error: {e}")
-        return {"success": False, "message": f"Indices stats check failed with error: {e}"}
+        e = f"Indices stats check failed with error: {e}"
+        raise Exception(str(e))
 
 
 def shards() -> Union[ShardsResponse, Dict[str, str]]:
@@ -124,4 +124,5 @@ def shards() -> Union[ShardsResponse, Dict[str, str]]:
         return ShardsResponse(shards=shard_models, success=True, message="Successfully collected Wazuh Indexer shards")
     except Exception as e:
         logger.error(f"Shards check failed with error: {e}")
-        return {"success": False, "message": f"Shards check failed with error: {e}"}
+        e = f"Shards check failed with error: {e}"
+        raise Exception(str(e))

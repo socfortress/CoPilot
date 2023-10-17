@@ -50,7 +50,7 @@ async def get_connectors() -> ConnectorListResponse:
     "/{connector_id}",
     response_model=ConnectorListResponse,
     description="Fetch a specific connector",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "test"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_connector(connector_id: int) -> Union[ConnectorResponse, HTTPException]:
     """
