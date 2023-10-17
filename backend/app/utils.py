@@ -1,13 +1,42 @@
+from enum import Enum
+from typing import List
 from typing import Optional
 
 from fastapi import HTTPException
 from fastapi import Request
 from pydantic import BaseModel
 from pydantic import Field
+from pydantic import validator
 
 from app.auth.services.universal import find_user
 from app.auth.utils import AuthHandler
 from app.db.universal_models import LogEntry
+
+
+################## ! 422 VALIDATION ERROR TYPES FOR PYDANTIC RESPONSE ! ##################
+class ErrorType(str, Enum):
+    PASSWORD_REGEX = "value_error.str.regex"
+    EMAIL = "value_error.email"
+    # Add other error types as needed
+
+
+class ValidationErrorItem(BaseModel):
+    field: str
+    error_type: ErrorType
+    message: str = None  # Initialize as None or some default
+
+    @validator("message", pre=True, always=True)
+    def set_message(cls, value, values):
+        error_type = values.get("error_type")
+        if error_type == ErrorType.PASSWORD_REGEX:
+            return "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character"
+        else:
+            return value  # if the message is already set, or you can put a generic message here
+
+
+class ValidationErrorResponse(BaseModel):
+    message: str
+    details: List[ValidationErrorItem]
 
 
 ################## ! LOGGING TO `log_entry` table ! ##################

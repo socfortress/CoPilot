@@ -155,7 +155,7 @@
 						js(`
 						const formRef = ref<FormInst | null>(null)
 						const message = useMessage()
-						
+
 						const formValue = ref({
 							user: {
 								name: "",
@@ -269,5 +269,3 @@ function handleValidateClick(e: MouseEvent) {
 	})
 }
 </script>
-
- 

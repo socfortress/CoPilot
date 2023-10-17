@@ -144,7 +144,7 @@
 								percentage: 99
 							}
 						])
-						
+
 						`)
 					}}
 				</template>

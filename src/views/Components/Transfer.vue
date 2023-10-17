@@ -53,7 +53,7 @@
 
 						const options1 = createOptions()
 						const value1 = ref(createValues())
-						
+
 						`)
 					}}
 				</template>
