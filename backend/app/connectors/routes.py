@@ -78,6 +78,7 @@ async def get_connector(connector_id: int) -> Union[ConnectorResponse, HTTPExcep
     "/verify/{connector_id}",
     response_model=VerifyConnectorResponse,
     description="Verify a connector. Makes an API call to the connector to verify it is working.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def verify_connector(connector_id: int) -> Union[VerifyConnectorResponse, HTTPException]:
     """
@@ -95,14 +96,19 @@ async def verify_connector(connector_id: int) -> Union[VerifyConnectorResponse, 
         HTTPException: An exception with a 404 status code is raised if the connector is not found.
     """
     connector = ConnectorServices.verify_connector_by_id(connector_id)
-    if connector is not None:
-        logger.info(f"Connector verified successfully: {connector}")
-        return connector
-    else:
+    if connector is None:
         raise HTTPException(status_code=404, detail=f"No connector found for ID: {connector_id}".format(connector_id=connector_id))
+    if connector["connectionSuccessful"] is False:
+        raise HTTPException(status_code=500, detail=f"Failed to verify connector: {connector['message']}")
+    return connector
 
 
-@connector_router.put("/{connector_id}", response_model=ConnectorListResponse, description="Update a connector")
+@connector_router.put(
+    "/{connector_id}",
+    response_model=ConnectorListResponse,
+    description="Update a connector",
+    dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
+)
 async def update_connector(connector_id: int, connector: UpdateConnector) -> ConnectorListResponse:
     """
     Update a connector by its ID.
@@ -126,7 +132,11 @@ async def update_connector(connector_id: int, connector: UpdateConnector) -> Con
         raise HTTPException(status_code=404, detail=f"No connector found for ID: {connector_id}".format(connector_id=connector_id))
 
 
-@connector_router.post("/upload/{connector_id}", description="Upload a YAML file for a specific connector")
+@connector_router.post(
+    "/upload/{connector_id}",
+    description="Upload a YAML file for a specific connector",
+    dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
+)
 async def upload_yaml_file(connector_id: int, file: UploadFile = File(...)) -> dict:
     """
     Upload a YAML file for a specific connector ID.

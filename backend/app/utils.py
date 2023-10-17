@@ -81,7 +81,7 @@ class Logger:
         )
         self.insert_log_entry(log_entry_model)
 
-    async def log_error(self, user_id, request: Request, exception: Exception):
+    async def log_error(self, user_id, request: Request, exception: Exception, additional_info: Optional[str] = None):
         log_entry_model = LogEntryModel(
             event_type="Error",
             user_id=user_id,
@@ -89,6 +89,7 @@ class Logger:
             method=request.method,
             status_code=500,  # Internal Server Error
             message=str(exception),
+            additional_info=additional_info,
         )
         self.insert_log_entry(log_entry_model)
 

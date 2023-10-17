@@ -75,28 +75,44 @@ async def process_request(request: Request, call_next, session, logger_instance)
     return response, user_id
 
 
+def is_excluded_path(path: str) -> bool:
+    """Check if the request path is in the list of excluded paths."""
+    return path in EXCLUDED_PATHS
+
+
+async def handle_exception(e, user_id, request, logger_instance):
+    """
+    Handle exceptions that occur during request processing.
+    """
+    user_id = await logger_instance.get_user_id_from_request(request) if user_id is None else user_id
+    await logger_instance.log_error(user_id, request, e)
+    if isinstance(e, HTTPException):
+        status_code = e.status_code
+    else:
+        status_code = INTERNAL_SERVER_ERROR
+    return JSONResponse(status_code=status_code, content={"message": str(e), "success": False})
+
+
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
-    user_id = None
-    response = None
-
+    """
+    Middleware for logging requests.
+    """
     # Skip logging for OPTIONS requests
     if request.method == "OPTIONS":
         return await call_next(request)
 
     with Session(engine) as session:
         logger_instance = Logger(session, auth_handler)
+        user_id = None
 
         try:
-            if request.url.path not in EXCLUDED_PATHS:
+            if not is_excluded_path(request.url.path):
                 response, user_id = await process_request(request, call_next, session, logger_instance)
             else:
                 response = await call_next(request)
-
         except Exception as e:
-            logger.error(f"Exception occurred: {e}")
-            await logger_instance.log_error(user_id, request, e)
-            return JSONResponse(status_code=INTERNAL_SERVER_ERROR, content={"message": "Internal Server Error", "success": False})
+            return await handle_exception(e, user_id, request, logger_instance)
 
         await logger_instance.log_route_access(user_id, request, response)
 
