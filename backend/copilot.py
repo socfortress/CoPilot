@@ -104,11 +104,17 @@ async def log_requests(request: Request, call_next):
 
 
 ################## ! Exception Handlers ! ##################
+# Utility function to get user_id from request
+async def get_user_id_from_request(request: Request, session, logger_instance):
+    return await logger_instance.get_user_id_from_request(request)
+
+
 @app.exception_handler(HTTPException)
 async def custom_http_exception_handler(request: Request, exc: HTTPException):
     with Session(engine) as session:
         logger_instance = Logger(session, auth_handler)
-        await logger_instance.log_error(None, request, exc.detail)
+        user_id = await get_user_id_from_request(request, session, logger_instance)
+        await logger_instance.log_error(user_id, request, exc.detail)
 
     return JSONResponse(
         status_code=exc.status_code,
@@ -134,7 +140,8 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
     with Session(engine) as session:
         logger_instance = Logger(session, auth_handler)
-        await logger_instance.log_error(None, request, main_message)
+        user_id = await get_user_id_from_request(request, session, logger_instance)
+        await logger_instance.log_error(user_id, request, main_message)
 
     return JSONResponse(
         status_code=422,
@@ -142,6 +149,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     )
 
 
+################## ! INCLUDE ROUTES ! ##################
 app.include_router(connector_router, prefix="/connectors", tags=["connectors"])
 app.include_router(wazuh_indexer_router, prefix="/wazuh_indexer", tags=["wazuh-indexer"])
 app.include_router(user_router, prefix="/auth", tags=["auth"])
