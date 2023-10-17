@@ -36,6 +36,24 @@ const router = createRouter({
 			component: () => import("@/views/socfortress/AgentOverview.vue"),
 			meta: { title: "Agent", auth: true, roles: UserRole.All }
 		},
+		{
+			path: "/logs",
+			name: "Logs",
+			component: () => import("@/views/socfortress/Logs.vue"),
+			meta: { title: "Logs", auth: true, roles: UserRole.All }
+		},
+		{
+			path: "/metrics",
+			name: "Metrics",
+			component: () => import("@/views/socfortress/Metrics.vue"),
+			meta: { title: "Metrics", auth: true, roles: UserRole.All }
+		},
+		{
+			path: "/pipelines",
+			name: "Pipelines",
+			component: () => import("@/views/socfortress/Pipelines.vue"),
+			meta: { title: "Pipelines", auth: true, roles: UserRole.All }
+		},
 
 		{
 			path: "/dashboard",

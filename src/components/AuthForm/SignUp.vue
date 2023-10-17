@@ -220,8 +220,8 @@ passwordSchema
 	.lowercase() // Must have lowercase letters
 	.has()
 	.digits(1) // Must have at least 1 digit
-//.has()
-//.symbols(1) // Must have at least 1 symbol
+	.has()
+	.symbols(1) // Must have at least 1 symbol
 
 const rules: FormRules = {
 	email: [
@@ -249,8 +249,7 @@ const rules: FormRules = {
 				return !!passwordSchema.validate(value, { details: false })
 			},
 			message:
-				"The string should have a minimum length of 8 characters, minimum of 1 uppercase and lowercase letter and minimum of 1 digit",
-			//"The string should have a minimum length of 8 characters, minimum of 1 uppercase and lowercase letter, minimum of 1 digit and 1 symbol",
+				"The string should have a minimum length of 8 characters, minimum of 1 uppercase and lowercase letter, minimum of 1 digit and 1 symbol",
 			trigger: ["blur"]
 		}
 	],

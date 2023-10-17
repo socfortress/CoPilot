@@ -4,7 +4,9 @@
 			<n-message-provider>
 				<n-notification-provider>
 					<n-dialog-provider>
-						<slot />
+						<GlobalListener>
+							<slot />
+						</GlobalListener>
 					</n-dialog-provider>
 				</n-notification-provider>
 			</n-message-provider>
@@ -14,6 +16,7 @@
 </template>
 
 <script lang="ts" setup>
+import { computed, onBeforeMount, watch } from "vue"
 import {
 	NGlobalStyle,
 	NConfigProvider,
@@ -25,7 +28,7 @@ import {
 } from "naive-ui"
 import { useThemeStore } from "@/stores/theme"
 import { useWindowSize } from "@vueuse/core"
-import { computed, onBeforeMount, watch } from "vue"
+import GlobalListener from "@/layouts/common/GlobalListener.vue"
 
 const { width } = useWindowSize()
 
