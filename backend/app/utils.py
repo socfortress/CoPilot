@@ -74,6 +74,12 @@ class LogsResponse(BaseModel):
     message: str
 
 
+class EventType(str, Enum):
+    INFO = "Info"
+    ERROR = "Error"
+    # Add other event types as needed
+
+
 class TimeRangeModel(BaseModel):
     time_range: Union[str, int] = Field("1d", description="Time range to fetch logs for, e.g., 1, 1h, 1d, 1w")
 
@@ -223,7 +229,6 @@ async def get_logs() -> LogsResponse:  # Update this line to use the new model
             raise HTTPException(status_code=404, detail="No logs found")
 
 
-# Get logs by user_id
 @logs_router.get(
     "/{user_id}",
     response_model=LogsResponse,
@@ -295,6 +300,42 @@ async def get_logs_by_time_range(time_range: TimeRangeModel) -> LogsResponse:
                     status_code=404,
                     detail=f"No logs found for time range: {time_range.time_range}".format(time_range=time_range.time_range),
                 )
+        else:
+            raise HTTPException(status_code=404, detail="No logs found")
+
+
+@logs_router.post(
+    "/{event_type}",
+    response_model=LogsResponse,
+    description="Fetch logs by event type",
+    dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
+)
+async def get_logs_by_event_type(event_type: EventType) -> LogsResponse:  # Update this line to use the new model
+    """
+    Fetch all logs from the database where the event_type matches the provided event_type.
+
+    This endpoint retrieves all the logs stored in the database where the event_type matches the provided event_type
+    and returns them along with a success status and message.
+
+    Args:
+        event_type (EventType): The event_type to filter logs by.
+
+    Returns:
+        LogsResponse: A Pydantic model containing a list of logs and additional metadata.
+
+    Raises:
+        HTTPException: An exception with a 404 status code is raised if no logs are found.
+    """
+    with Session(engine) as session:
+        auth_handler_instance = AuthHandler()
+        logger_instance = Logger(session, auth_handler_instance)
+        logs = logger_instance.fetch_all_logs()
+        if logs:
+            logs = [log for log in logs if log.event_type == event_type]
+            if logs != []:
+                return LogsResponse(logs=logs, success=True, message="Logs fetched successfully")
+            else:
+                raise HTTPException(status_code=404, detail=f"No logs found for event type: {event_type}".format(event_type=event_type))
         else:
             raise HTTPException(status_code=404, detail="No logs found")
 
