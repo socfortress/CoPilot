@@ -99,10 +99,12 @@ async def log_requests(request: Request, call_next):
 
 
 ################## ! Exception Handlers ! ##################
-
-
 @app.exception_handler(HTTPException)
 async def custom_http_exception_handler(request: Request, exc: HTTPException):
+    with Session(engine) as session:
+        logger_instance = Logger(session, auth_handler)
+        await logger_instance.log_error(None, request, exc.detail)
+
     return JSONResponse(
         status_code=exc.status_code,
         content={
@@ -124,6 +126,10 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
     # Extract the first message from details for use in ValidationErrorResponse
     main_message = details[0].message if details else "Validation Error"
+
+    with Session(engine) as session:
+        logger_instance = Logger(session, auth_handler)
+        await logger_instance.log_error(None, request, main_message)
 
     return JSONResponse(
         status_code=422,
