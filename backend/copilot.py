@@ -47,6 +47,7 @@ from app.utils import ErrorType
 from app.utils import Logger
 from app.utils import ValidationErrorItem
 from app.utils import ValidationErrorResponse
+from app.utils import logs_router
 
 auth_handler = AuthHandler()
 
@@ -192,6 +193,7 @@ app.include_router(healtcheck_agents_router, prefix="/healthcheck", tags=["healt
 app.include_router(smtp_router, prefix="/smtp", tags=["smtp"])
 app.include_router(dnstwist_router, prefix="/dnstwist", tags=["dnstwist"])
 app.include_router(integration_general_alerts_router, prefix="/alerts", tags=["alerts"])
+app.include_router(logs_router, prefix="/logs", tags=["logs"])
 
 
 @app.on_event("startup")
