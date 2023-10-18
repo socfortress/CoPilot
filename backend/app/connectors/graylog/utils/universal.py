@@ -92,7 +92,8 @@ def send_get_request(endpoint: str, params: Optional[Dict[str, Any]] = None, con
         )
         if response.status_code == 404:
             raise HTTPException(
-                status_code=404, detail=f"Failed to send GET request to {endpoint} with error: {response.json()['message']}",
+                status_code=404,
+                detail=f"Failed to send GET request to {endpoint} with error: {response.json()['message']}",
             )
         return {"data": response.json(), "success": True, "message": "Successfully retrieved data"}
     except HTTPException as e:
