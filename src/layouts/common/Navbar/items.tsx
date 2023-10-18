@@ -67,46 +67,50 @@ export default function getItems(mode: "vertical" | "horizontal", collapsed: boo
 			icon: renderIcon(BlankIcon)
 		},
 		{
-			label: () =>
-				h(
-					RouterLink,
-					{
-						to: {
-							name: "Logs"
-						}
-					},
-					{ default: () => "Logs" }
-				),
-			key: "Logs",
-			icon: renderIcon(BlankIcon)
-		},
-		{
-			label: () =>
-				h(
-					RouterLink,
-					{
-						to: {
-							name: "Metrics"
-						}
-					},
-					{ default: () => "Metrics" }
-				),
-			key: "Metrics",
-			icon: renderIcon(BlankIcon)
-		},
-		{
-			label: () =>
-				h(
-					RouterLink,
-					{
-						to: {
-							name: "Pipelines"
-						}
-					},
-					{ default: () => "Pipelines" }
-				),
-			key: "Pipelines",
-			icon: renderIcon(BlankIcon)
+			label: "Graylog",
+			key: "Graylog",
+			icon: renderIcon(BlankIcon),
+			children: [
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "Management"
+								}
+							},
+							{ default: () => "Management" }
+						),
+					key: "Management"
+				},
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "Metrics"
+								}
+							},
+							{ default: () => "Metrics" }
+						),
+					key: "Metrics"
+				},
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "Pipelines"
+								}
+							},
+							{ default: () => "Pipelines" }
+						),
+					key: "Pipelines"
+				}
+			]
 		},
 		{
 			type: "divider"

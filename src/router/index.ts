@@ -37,10 +37,10 @@ const router = createRouter({
 			meta: { title: "Agent", auth: true, roles: UserRole.All }
 		},
 		{
-			path: "/logs",
-			name: "Logs",
-			component: () => import("@/views/socfortress/Logs.vue"),
-			meta: { title: "Logs", auth: true, roles: UserRole.All }
+			path: "/management",
+			name: "Management",
+			component: () => import("@/views/socfortress/Management.vue"),
+			meta: { title: "Management", auth: true, roles: UserRole.All }
 		},
 		{
 			path: "/metrics",

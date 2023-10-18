@@ -45,7 +45,6 @@ import {
 	NButton
 } from "naive-ui"
 import { useAuthStore } from "@/stores/auth"
-import Api from "@/api"
 import { useRouter } from "vue-router"
 import type { LoginPayload } from "@/types/auth.d"
 
