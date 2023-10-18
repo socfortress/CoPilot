@@ -34,7 +34,8 @@ def fetch_file_content(filename: str) -> str:
     file_content_data = send_get_request(endpoint=endpoint)
     if file_content_data["data"]["data"]["total_affected_items"] == 0:
         raise HTTPException(
-            status_code=404, detail=f"File {filename} not found. Make sure the file name is correct within the Wazuh Manager.",
+            status_code=404,
+            detail=f"File {filename} not found. Make sure the file name is correct within the Wazuh Manager.",
         )
     return file_content_data["data"]["data"]["affected_items"][0]["group"]
 
