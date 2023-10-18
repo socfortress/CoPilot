@@ -56,7 +56,7 @@ def collect_wazuh_agents() -> WazuhAgentsList:
         )
 
 
-def delete_agent(agent_id: str) -> AgentModifyResponse:
+def delete_agent_wazuh(agent_id: str) -> AgentModifyResponse:
     """Delete agent from Wazuh Manager."""
     logger.info(f"Deleting agent {agent_id} from Wazuh Manager")
     params = {

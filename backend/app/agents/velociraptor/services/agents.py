@@ -2,10 +2,22 @@ from datetime import datetime
 
 from loguru import logger
 
-from app.agents.schema.agents import AgentsResponse
+from app.agents.schema.agents import AgentModifyResponse
 from app.agents.velociraptor.schema.agents import VelociraptorAgent
-from app.connectors.velociraptor.services.artifacts import ArtifactsService
 from app.connectors.velociraptor.utils.universal import UniversalService
+
+
+def create_query(query: str) -> str:
+    """
+    Create a query string.
+
+    Args:
+        query (str): The query to be executed.
+
+    Returns:
+        str: The created query string.
+    """
+    return query
 
 
 def collect_velociraptor_agent(agent_name: str) -> VelociraptorAgent:
@@ -48,20 +60,70 @@ def collect_velociraptor_agent(agent_name: str) -> VelociraptorAgent:
     return VelociraptorAgent(client_id=client_id, client_last_seen=client_last_seen, client_version=client_version)
 
 
-def delete_agent_velociraptor(client_id: str) -> AgentsResponse:
-    """
-    Deletes an agent from Velociraptor.
+def execute_query(universal_service, query: str) -> dict:
+    flow = universal_service.execute_query(query)
+    logger.info(f"Successfully ran artifact collection on {flow}")
+    return flow
 
-    Args:
-        client_id (str): The client ID of the agent to delete.
 
-    Returns:
-        AgentsResponse: The response object.
-    """
-    logger.info(f"Deleting agent {client_id} from Velociraptor")
+def check_flow_success(flow: dict, client_id: str) -> dict:
+    if flow["success"]:
+        logger.info(f"Successfully deleted velociraptor client {client_id}")
+        return {"message": f"Successfully deleted velociraptor client {client_id}", "success": True}
+    else:
+        logger.error(f"Failed to delete velociraptor client {client_id}")
+        return {"message": f"Failed to delete velociraptor client {client_id}", "success": False}
+
+
+def check_client_in_results(results: dict, client_id: str) -> dict:
+    if results["results"] == []:
+        logger.info(f"Successfully deleted velociraptor client {client_id}")
+        return {"message": f"Successfully deleted velociraptor client {client_id}", "success": True}
+
+    for result in results["results"]:
+        if result["client_id"] == client_id:
+            logger.error(f"Failed to delete velociraptor client {client_id}")
+            return {"message": f"Failed to delete velociraptor client {client_id}", "success": False}
+
+
+def handle_exception(e: Exception, client_id: str) -> dict:
+    logger.error(f"Failed to delete client {client_id}: {e}")
+    return {"message": f"Failed to delete client {client_id}", "success": False}
+
+
+def delete_agent_velociraptor(client_id: str) -> AgentModifyResponse:
     try:
-        ArtifactsService().delete_client(client_id=client_id)
-        return AgentsResponse(success=True, message="Agent deleted successfully")
+        delete_client(client_id=client_id)
+        ensure_client_deleted(client_id=client_id)
+        return AgentModifyResponse(success=True, message="Agent deleted successfully")
     except Exception as e:
-        logger.error(f"Failed to delete agent {client_id}. Error: {e}")
-        return AgentsResponse(success=False, message="Failed to delete agent")
+        return handle_exception(e, client_id)
+
+
+def delete_client(client_id: str) -> dict:
+    universal_service = UniversalService()
+    try:
+        query = create_query(
+            f"SELECT collect_client(client_id='server', artifacts=['Server.Utils.DeleteClient'], env=dict(ClientIdList='{client_id}',ReallyDoIt='Y')) FROM scope()",
+        )
+        flow = execute_query(universal_service, query)
+        return check_flow_success(flow, client_id)
+    except Exception as e:
+        return handle_exception(e, client_id)
+
+
+def ensure_client_deleted(client_id: str) -> dict:
+    universal_service = UniversalService()
+    try:
+        query = create_query("SELECT collect_client(client_id='server', artifacts=['Server.Information.Clients'], env=dict()) FROM scope()")
+        flow = execute_query(universal_service, query)
+        flow_id = (
+            flow.get("results")[0]
+            .get("collect_client(client_id='server', artifacts=['Server.Information.Clients'], env=dict())")
+            .get("flow_id")
+        )
+
+        results = universal_service.read_collection_results(client_id=client_id, flow_id=flow_id, artifact="Server.Information.Clients")
+        return check_client_in_results(results, client_id)
+    except Exception as e:
+        return handle_exception(e, client_id)

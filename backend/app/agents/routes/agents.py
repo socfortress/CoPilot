@@ -17,6 +17,7 @@ from app.agents.services.status import get_outdated_agents_wazuh
 from app.agents.services.sync import sync_agents
 from app.agents.velociraptor.services.agents import delete_agent_velociraptor
 from app.agents.wazuh.schema.agents import WazuhAgentVulnerabilitiesResponse
+from app.agents.wazuh.services.agents import delete_agent_wazuh
 from app.agents.wazuh.services.vulnerabilities import collect_agent_vulnerabilities
 
 # App specific imports
@@ -153,17 +154,19 @@ async def get_outdated_velociraptor_agents() -> OutdatedVelociraptorAgentsRespon
 )
 async def delete_agent(agent_id: str) -> AgentModifyResponse:
     logger.info(f"Deleting agent {agent_id}")
-    # delete_agent_db(agent_id)
-    # delete_agent_wazuh(agent_id)
+    delete_agent_wazuh(agent_id)
     client_id = session.query(Agents).filter(Agents.agent_id == agent_id).first().velociraptor_id
     delete_agent_velociraptor(client_id)
+    # Delete the agent from the database
+    session.query(Agents).filter(Agents.agent_id == agent_id).delete()
+    session.commit()
     return {"success": True, "message": f"Agent {agent_id} deleted from database and Wazuh"}
 
 
 @agents_router.put(
     "/{agent_id}/update-customer-code",
     response_model=AgentUpdateCustomerCodeResponse,
-    description="Update agent customer code",
+    description="Update `agent` customer code",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def update_agent_customer_code(agent_id: str, body: AgentUpdateCustomerCodeBody) -> AgentUpdateCustomerCodeResponse:
