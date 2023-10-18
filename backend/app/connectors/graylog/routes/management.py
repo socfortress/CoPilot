@@ -3,8 +3,10 @@ from typing import List
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi import Security
 from loguru import logger
 
+from app.auth.utils import AuthHandler
 from app.connectors.graylog.schema.management import DeletedIndexBody
 from app.connectors.graylog.schema.management import DeletedIndexResponse
 from app.connectors.graylog.schema.management import StartInputBody
@@ -75,35 +77,60 @@ def verify_stream_id(stop_stream_body: StopStreamBody) -> StopStreamBody:
     return stop_stream_body
 
 
-@graylog_management_router.delete("/index", response_model=DeletedIndexResponse, description="Delete index")
+@graylog_management_router.delete(
+    "/index",
+    response_model=DeletedIndexResponse,
+    description="Delete index",
+    dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
+)
 async def delete_index_route(deleted_index_body: DeletedIndexBody = Depends(verify_index_name)) -> DeletedIndexResponse:
     logger.info(f"Deleting index {deleted_index_body.index_name}")
 
     return delete_index(deleted_index_body.index_name)
 
 
-@graylog_management_router.post("/input/stop", response_model=StopInputResponse, description="Stop input")
+@graylog_management_router.post(
+    "/input/stop",
+    response_model=StopInputResponse,
+    description="Stop input",
+    dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
+)
 async def stop_input_route(stop_input_body: StopInputBody = Depends(verify_input_id)) -> StopInputResponse:
     logger.info(f"Stopping input {stop_input_body.input_id}")
 
     return stop_input(stop_input_body.input_id)
 
 
-@graylog_management_router.post("/input/start", response_model=StartInputResponse, description="Start input")
+@graylog_management_router.post(
+    "/input/start",
+    response_model=StartInputResponse,
+    description="Start input",
+    dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
+)
 async def start_input_route(start_input_body: StartInputBody = Depends(verify_input_id)) -> StartInputResponse:
     logger.info(f"Starting input {start_input_body.input_id}")
 
     return start_input(start_input_body.input_id)
 
 
-@graylog_management_router.post("/stream/stop", response_model=StopStreamResponse, description="Stop stream")
+@graylog_management_router.post(
+    "/stream/stop",
+    response_model=StopStreamResponse,
+    description="Stop stream",
+    dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
+)
 async def stop_stream_route(stop_stream_body: StopStreamBody = Depends(verify_stream_id)) -> StopStreamResponse:
     logger.info(f"Stopping stream {stop_stream_body.stream_id}")
 
     return stop_stream(stop_stream_body.stream_id)
 
 
-@graylog_management_router.post("/stream/start", response_model=StartStreamResponse, description="Start stream")
+@graylog_management_router.post(
+    "/stream/start",
+    response_model=StartStreamResponse,
+    description="Start stream",
+    dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
+)
 async def start_stream_route(start_stream_body: StartStreamBody = Depends(verify_stream_id)) -> StartStreamResponse:
     logger.info(f"Starting stream {start_stream_body.stream_id}")
 
