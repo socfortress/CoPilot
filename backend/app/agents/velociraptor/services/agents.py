@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from fastapi import HTTPException
 from loguru import logger
 
 from app.agents.schema.agents import AgentModifyResponse
@@ -72,7 +73,7 @@ def check_flow_success(flow: dict, client_id: str) -> dict:
         return {"message": f"Successfully deleted velociraptor client {client_id}", "success": True}
     else:
         logger.error(f"Failed to delete velociraptor client {client_id}")
-        return {"message": f"Failed to delete velociraptor client {client_id}", "success": False}
+        return handle_exception(e="Failed to delete velociraptor client", client_id=client_id)
 
 
 def check_client_in_results(results: dict, client_id: str) -> dict:
@@ -83,12 +84,15 @@ def check_client_in_results(results: dict, client_id: str) -> dict:
     for result in results["results"]:
         if result["client_id"] == client_id:
             logger.error(f"Failed to delete velociraptor client {client_id}")
-            return {"message": f"Failed to delete velociraptor client {client_id}", "success": False}
+            return handle_exception(e="Failed to delete velociraptor client", client_id=client_id)
 
 
 def handle_exception(e: Exception, client_id: str) -> dict:
     logger.error(f"Failed to delete client {client_id}: {e}")
-    return {"message": f"Failed to delete client {client_id}", "success": False}
+    raise HTTPException(
+        status_code=500,
+        detail=f"Failed to delete Velociraptor client {client_id}: {e}",
+    )
 
 
 def delete_agent_velociraptor(client_id: str) -> AgentModifyResponse:
