@@ -3,6 +3,7 @@ from typing import Dict
 from typing import Optional
 
 import requests
+from fastapi import HTTPException
 from loguru import logger
 
 from app.connectors.utils import get_connector_info_from_db
@@ -89,10 +90,16 @@ def send_get_request(endpoint: str, params: Optional[Dict[str, Any]] = None, con
             params=params,
             verify=False,
         )
+        if response.status_code == 404:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Failed to send GET request to {endpoint} with error: {response.json()['message']}",
+            )
         return {"data": response.json(), "success": True, "message": "Successfully retrieved data"}
+    except HTTPException as e:
+        raise e
     except Exception as e:
-        logger.error(f"Failed to send GET request to {endpoint} with error: {e}")
-        return {"success": False, "message": f"Failed to send GET request to {endpoint} with error: {e}"}
+        raise HTTPException(status_code=500, detail=f"Failed to send GET request to {endpoint} with error: {e}")
 
 
 def send_post_request(endpoint: str, data: Dict[str, Any] = None, connector_name: str = "Graylog") -> Dict[str, Any]:

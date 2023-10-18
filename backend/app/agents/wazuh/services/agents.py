@@ -56,17 +56,35 @@ def collect_wazuh_agents() -> WazuhAgentsList:
         )
 
 
+def handle_agent_deletion_response(agent_deleted: dict, agent_id: str):
+    if agent_deleted["success"]:
+        return AgentModifyResponse(success=True, message="Agent deleted successfully")
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Failed to delete agent {agent_id} from Wazuh Manager: {agent_deleted.get('message', 'Unknown error')}",
+        )
+
+
 def delete_agent_wazuh(agent_id: str) -> AgentModifyResponse:
     """Delete agent from Wazuh Manager."""
     logger.info(f"Deleting agent {agent_id} from Wazuh Manager")
+
     params = {
         "purge": True,
         "agents_list": [agent_id],
         "status": "all",
         "older_than": "0s",
     }
-    agent_deleted = send_delete_request(endpoint="/agents", params=params)
-    if agent_deleted["success"]:
-        return AgentModifyResponse(success=True, message="Agent deleted successfully")
-    else:
-        return AgentModifyResponse(success=False, message="Failed to delete agent")
+
+    try:
+        agent_deleted = send_delete_request(endpoint="/agents", params=params)
+        return handle_agent_deletion_response(agent_deleted, agent_id)
+
+    except HTTPException as http_e:
+        # * Catch any HTTPException and re-raise it
+        raise http_e
+
+    except Exception as e:
+        # * Catch-all for other exceptions
+        raise HTTPException(status_code=500, detail=f"Failed to delete agent {agent_id} from Wazuh Manager: {e}")

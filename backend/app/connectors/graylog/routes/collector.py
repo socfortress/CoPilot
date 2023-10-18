@@ -1,6 +1,8 @@
 from fastapi import APIRouter
+from fastapi import Security
 from loguru import logger
 
+from app.auth.utils import AuthHandler
 from app.connectors.graylog.schema.collector import ConfiguredInputsResponse
 from app.connectors.graylog.schema.collector import GraylogIndicesResponse
 from app.connectors.graylog.schema.collector import GraylogInputsResponse
@@ -16,25 +18,45 @@ from app.connectors.graylog.services.collector import get_inputs_running
 graylog_collector_router = APIRouter()
 
 
-@graylog_collector_router.get("/indices", response_model=GraylogIndicesResponse, description="Get all indices")
+@graylog_collector_router.get(
+    "/indices",
+    response_model=GraylogIndicesResponse,
+    description="Get all indices",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
 async def get_all_indices() -> GraylogIndicesResponse:
     logger.info("Fetching all graylog indices")
     return get_indices_full()
 
 
-@graylog_collector_router.get("/inputs", response_model=GraylogInputsResponse, description="Get all inputs")
+@graylog_collector_router.get(
+    "/inputs",
+    response_model=GraylogInputsResponse,
+    description="Get all inputs",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
 async def get_all_inputs() -> GraylogInputsResponse:
     logger.info("Fetching all graylog inputs")
     return get_inputs()
 
 
-@graylog_collector_router.get("/inputs/running", response_model=RunningInputsResponse, description="Get all running inputs")
+@graylog_collector_router.get(
+    "/inputs/running",
+    response_model=RunningInputsResponse,
+    description="Get all running inputs",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
 async def get_all_running_inputs() -> RunningInputsResponse:
     logger.info("Fetching all graylog running inputs")
     return get_inputs_running()
 
 
-@graylog_collector_router.get("/inputs/configured", response_model=ConfiguredInputsResponse, description="Get all configured inputs")
+@graylog_collector_router.get(
+    "/inputs/configured",
+    response_model=ConfiguredInputsResponse,
+    description="Get all configured inputs",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
 async def get_all_configured_inputs() -> ConfiguredInputsResponse:
     logger.info("Fetching all graylog configured inputs")
     return get_inputs_configured()

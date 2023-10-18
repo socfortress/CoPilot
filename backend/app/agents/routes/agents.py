@@ -30,6 +30,23 @@ from app.db.universal_models import Agents
 agents_router = APIRouter()
 
 
+def fetch_velociraptor_id(agent_id: str) -> str:
+    try:
+        return session.query(Agents).filter(Agents.agent_id == agent_id).first().velociraptor_id
+    except Exception as e:
+        logger.error(f"Failed to fetch agent {agent_id} from database: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch agent {agent_id} from database: {e}")
+
+
+def delete_agent_from_database(agent_id: str):
+    try:
+        session.query(Agents).filter(Agents.agent_id == agent_id).delete()
+        session.commit()
+    except Exception as e:
+        logger.error(f"Failed to delete agent {agent_id} from database: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to delete agent {agent_id} from database: {e}")
+
+
 @agents_router.get(
     "",
     response_model=AgentsResponse,
@@ -155,12 +172,10 @@ async def get_outdated_velociraptor_agents() -> OutdatedVelociraptorAgentsRespon
 async def delete_agent(agent_id: str) -> AgentModifyResponse:
     logger.info(f"Deleting agent {agent_id}")
     delete_agent_wazuh(agent_id)
-    client_id = session.query(Agents).filter(Agents.agent_id == agent_id).first().velociraptor_id
+    client_id = fetch_velociraptor_id(agent_id)
     delete_agent_velociraptor(client_id)
-    # Delete the agent from the database
-    session.query(Agents).filter(Agents.agent_id == agent_id).delete()
-    session.commit()
-    return {"success": True, "message": f"Agent {agent_id} deleted from database and Wazuh"}
+    delete_agent_from_database(agent_id)
+    return {"success": True, "message": f"Agent {agent_id} deleted from database, Wazuh, and Velociraptor"}
 
 
 @agents_router.put(
