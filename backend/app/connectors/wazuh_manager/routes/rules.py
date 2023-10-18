@@ -46,7 +46,7 @@ async def get_disabled_rules() -> AllDisabledRuleResponse:
 )
 async def disable_wazuh_rule(rule: RuleDisable, username: str = Depends(auth_handler.get_current_user)) -> RuleDisableResponse:
     if query_disabled_rule(rule.rule_id):
-        raise HTTPException(status_code=404, detail="Rule is already disabled")
+        raise HTTPException(status_code=500, detail="Rule is already disabled")
 
     rule_disabled = disable_rule(rule)
     if rule_disabled:
@@ -87,14 +87,15 @@ async def enable_wazuh_rule(rule: RuleEnable) -> RuleEnableResponse:
         raise HTTPException(status_code=404, detail="Was not able to enable rule")
 
 
-@wazuh_manager_router.post(
-    "/rule/exclude",
-    response_model=RuleExcludeResponse,
-    description="Retrieve recommended exclusion for a Wazuh Rule",
-)
-async def exclude_wazuh_rule(rule: RuleExclude) -> RuleExcludeResponse:
-    recommended_exclusion = exclude_rule(rule)
-    if recommended_exclusion:
-        return recommended_exclusion
-    else:
-        raise HTTPException(status_code=404, detail="Was not able to exclude rule")
+# ! TODO: Implement this endpoint
+# @wazuh_manager_router.post(
+#     "/rule/exclude",
+#     response_model=RuleExcludeResponse,
+#     description="Retrieve recommended exclusion for a Wazuh Rule",
+# )
+# async def exclude_wazuh_rule(rule: RuleExclude) -> RuleExcludeResponse:
+#     recommended_exclusion = exclude_rule(rule)
+#     if recommended_exclusion:
+#         return recommended_exclusion
+#     else:
+#         raise HTTPException(status_code=404, detail="Was not able to exclude rule")
