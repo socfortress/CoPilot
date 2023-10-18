@@ -5,6 +5,7 @@ from typing import Dict
 
 import grpc
 import pyvelociraptor
+from fastapi import HTTPException
 from loguru import logger
 from pyvelociraptor import api_pb2
 from pyvelociraptor import api_pb2_grpc
@@ -161,10 +162,7 @@ class UniversalService:
             }
         except Exception as e:
             logger.error(f"Failed to execute query: {e}")
-            return {
-                "success": False,
-                "message": f"Failed to execute query: {e}",
-            }
+            raise HTTPException(status_code=500, detail=f"Failed to execute query: {e}")
 
     def watch_flow_completion(self, flow_id: str):
         """
@@ -268,7 +266,10 @@ class UniversalService:
         Returns:
             str: The server version.
         """
-        return self.execute_query(vql)["results"][0]["version"]["version"]
+        try:
+            return self.execute_query(vql)["results"][0]["version"]["version"]
+        except IndexError as e:
+            raise HTTPException(status_code=500, detail=f"Failed to get server version: {e}")
 
     def _is_offline(self, last_seen_at: float):
         """

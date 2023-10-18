@@ -25,9 +25,22 @@ from app.db.universal_models import LogEntry
 ################## ! 422 VALIDATION ERROR TYPES FOR PYDANTIC VALUE ERROR RESPONSE ! ##################
 class ErrorType(str, Enum):
     PASSWORD_REGEX = "value_error.str.regex"
-    EMAIL = "value_error.email"
     TIME_RANGE = "value_error.time_range"
-    # Add other error types as needed
+    JSON_INVALID = "json_invalid"
+    MIN_LENGTH = "value_error.any_str.min_length"
+    MAX_LENGTH = "value_error.any_str.max_length"
+    NOT_A_NUMBER = "value_error.number.not_a_number"
+    TOO_SMALL = "value_error.number.too_small"
+    TOO_LARGE = "value_error.number.too_large"
+    INVALID_DATETIME = "value_error.datetime"
+    INVALID_DATE = "value_error.date"
+    MIN_ITEMS = "value_error.list.min_items"
+    MAX_ITEMS = "value_error.list.max_items"
+    UNIQUE = "value_error.list.unique"
+    NONE_NOT_ALLOWED = "value_error.none.not_allowed"
+    MISSING = "value_error.missing"
+    GENERAL = "value_error"
+    # Add other types as needed
 
 
 class ValidationErrorItem(BaseModel):
@@ -39,12 +52,27 @@ class ValidationErrorItem(BaseModel):
     def set_message(cls, value, values):
         error_type = values.get("error_type")
         logger.info(error_type)
-        if error_type == ErrorType.PASSWORD_REGEX:
-            return "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character"
-        elif error_type == ErrorType.TIME_RANGE:
-            return "Invalid time range. Use 'h' for hours, 'd' for days, and 'w' for weeks."
-        else:
-            return value
+
+        error_messages = {
+            ErrorType.PASSWORD_REGEX: "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.",
+            ErrorType.TIME_RANGE: "Invalid time range. Use 'h' for hours, 'd' for days, and 'w' for weeks.",
+            ErrorType.JSON_INVALID: "Invalid JSON. Please check your JSON syntax and try again.",
+            ErrorType.MIN_LENGTH: "Value is shorter than minimum length.",
+            ErrorType.MAX_LENGTH: "Value is longer than maximum length.",
+            ErrorType.NOT_A_NUMBER: "Input is not a number.",
+            ErrorType.TOO_SMALL: "Value is too small.",
+            ErrorType.TOO_LARGE: "Value is too large.",
+            ErrorType.INVALID_DATETIME: "Invalid datetime format.",
+            ErrorType.INVALID_DATE: "Invalid date format.",
+            ErrorType.MIN_ITEMS: "Number of items is less than minimum.",
+            ErrorType.MAX_ITEMS: "Number of items is more than maximum.",
+            ErrorType.UNIQUE: "Items are not unique.",
+            ErrorType.NONE_NOT_ALLOWED: "None is not an allowed value.",
+            ErrorType.MISSING: "Missing data for required field.",
+            ErrorType.GENERAL: "Invalid value.",
+        }
+
+        return error_messages.get(error_type, value)
 
 
 class ValidationErrorResponse(BaseModel):

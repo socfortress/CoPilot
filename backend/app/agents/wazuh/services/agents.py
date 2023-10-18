@@ -1,3 +1,4 @@
+from fastapi import HTTPException
 from loguru import logger
 
 from app.agents.schema.agents import AgentModifyResponse
@@ -10,29 +11,49 @@ from app.connectors.wazuh_manager.utils.universal import send_get_request
 def collect_wazuh_agents() -> WazuhAgentsList:
     logger.info("Collecting all agents from Wazuh Manager")
     agents_collected = send_get_request(endpoint="/agents", params={"limit": 1000})
-    logger.info(f"Agents collected: {agents_collected}")
-    if agents_collected["success"]:
-        wazuh_agents_list = []
-        for agent in agents_collected["data"]["data"]["affected_items"]:
-            os_name = agent.get("os", {}).get("name", "Unknown")
-            last_keep_alive = agent.get("lastKeepAlive", "Unknown")
-            agent_group_list = agent.get("group", [])
-            agent_group = agent_group_list[0] if agent_group_list else "Unknown"
 
-            wazuh_agent = WazuhAgent(
-                agent_id=agent["id"],
-                agent_name=agent["name"],
-                agent_ip=agent["ip"],
-                agent_os=os_name,
-                agent_label=agent_group,
-                agent_last_seen=last_keep_alive,
-                wazuh_agent_version=agent["version"] if "version" in agent else "n/a",
-            )
-            wazuh_agents_list.append(wazuh_agent)
+    if agents_collected.get("success") == False:
+        raise HTTPException(
+            status_code=500,
+            detail=agents_collected.get("message", "Unknown error"),
+        )
+    try:
+        if agents_collected.get("success"):
+            wazuh_agents_list = []
+            for agent in agents_collected.get("data", {}).get("data", {}).get("affected_items", []):
+                os_name = agent.get("os", {}).get("name", "Unknown")
+                last_keep_alive = agent.get("lastKeepAlive", "Unknown")
+                agent_group_list = agent.get("group", [])
+                agent_group = agent_group_list[0] if agent_group_list else "Unknown"
 
-        return WazuhAgentsList(agents=wazuh_agents_list, success=True, message="Agents collected successfully")
-    else:
-        return WazuhAgentsList(agents=[], success=False, message="Failed to collect agents")
+                wazuh_agent = WazuhAgent(
+                    agent_id=agent.get("id", "Unknown"),
+                    agent_name=agent.get("name", "Unknown"),
+                    agent_ip=agent.get("ip", "Unknown"),
+                    agent_os=os_name,
+                    agent_label=agent_group,
+                    agent_last_seen=last_keep_alive,
+                    wazuh_agent_version=agent.get("version", "n/a"),
+                )
+                wazuh_agents_list.append(wazuh_agent)
+
+            return WazuhAgentsList(agents=wazuh_agents_list, success=True, message="Agents collected successfully")
+
+    except (KeyError, IndexError, HTTPException) as e:
+        # Handle or log the error as needed
+        logger.error(f"An error occurred: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to collect agents: {e}",
+        )
+
+    except Exception as e:
+        # Catch-all for other exceptions
+        logger.error(f"An unexpected error occurred: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to collect agents: {e}",
+        )
 
 
 def delete_agent(agent_id: str) -> AgentModifyResponse:

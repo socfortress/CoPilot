@@ -37,8 +37,12 @@ agents_router = APIRouter()
 )
 async def get_agents() -> AgentsResponse:
     logger.info("Fetching all agents")
-    agents = session.query(Agents).all()
-    return AgentsResponse(agents=agents, success=True, message="Agents fetched successfully")
+    try:
+        agents = session.query(Agents).all()
+        return AgentsResponse(agents=agents, success=True, message="Agents fetched successfully")
+    except Exception as e:
+        logger.error(f"Failed to fetch agents: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch agents: {e}")
 
 
 @agents_router.get(
@@ -49,10 +53,13 @@ async def get_agents() -> AgentsResponse:
 )
 async def get_agent(agent_id: str) -> AgentsResponse:
     logger.info(f"Fetching agent with agent_id: {agent_id}")
-    agent = session.query(Agents).filter(Agents.agent_id == agent_id).first()
-    if not agent:
-        raise HTTPException(status_code=404, detail=f"Agent with agent_id {agent_id} not found")
-    return AgentsResponse(agents=[agent], success=True, message="Agent fetched successfully")
+    try:
+        agent = session.query(Agents).filter(Agents.agent_id == agent_id).first()
+        return AgentsResponse(agents=[agent], success=True, message="Agent fetched successfully")
+    except Exception as e:
+        if not agent:
+            raise HTTPException(status_code=404, detail=f"Agent with agent_id {agent_id} not found")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch agent: {e}")
 
 
 @agents_router.get(
@@ -63,10 +70,13 @@ async def get_agent(agent_id: str) -> AgentsResponse:
 )
 async def get_agent_by_hostname(hostname: str) -> AgentsResponse:
     logger.info(f"Fetching agent with hostname: {hostname}")
-    agent = session.query(Agents).filter(Agents.hostname == hostname).first()
-    if not agent:
-        raise HTTPException(status_code=404, detail=f"Agent with hostname {hostname} not found")
-    return AgentsResponse(agents=[agent], success=True, message="Agent fetched successfully")
+    try:
+        agent = session.query(Agents).filter(Agents.hostname == hostname).first()
+        return AgentsResponse(agents=[agent], success=True, message="Agent fetched successfully")
+    except Exception as e:
+        if not agent:
+            raise HTTPException(status_code=404, detail=f"Agent with hostname {hostname} not found")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch agent: {e}")
 
 
 @agents_router.post(
@@ -158,9 +168,11 @@ async def delete_agent(agent_id: str) -> AgentModifyResponse:
 )
 async def update_agent_customer_code(agent_id: str, body: AgentUpdateCustomerCodeBody) -> AgentUpdateCustomerCodeResponse:
     logger.info(f"Updating agent {agent_id} customer code to {body.customer_code}")
-    agent = session.query(Agents).filter(Agents.agent_id == agent_id).first()
-    if not agent:
-        raise HTTPException(status_code=404, detail=f"Agent with agent_id {agent_id} not found")
-    agent.customer_code = body.customer_code
-    session.commit()
-    return {"success": True, "message": f"Agent {agent_id} customer code updated to {body.customer_code}"}
+    try:
+        agent = session.query(Agents).filter(Agents.agent_id == agent_id).first()
+        agent.customer_code = body.customer_code
+        session.commit()
+        return {"success": True, "message": f"Agent {agent_id} customer code updated to {body.customer_code}"}
+    except Exception as e:
+        if not agent:
+            raise HTTPException(status_code=404, detail=f"Agent with agent_id {agent_id} not found")
