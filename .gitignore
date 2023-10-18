@@ -42,3 +42,4 @@ wheels/
 *.sqbpro
 site/
 backend/file-store/api.config.yaml
+unplugin.components.d.ts
