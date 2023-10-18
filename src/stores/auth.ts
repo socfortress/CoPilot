@@ -39,7 +39,24 @@ export const useAuthStore = defineStore("auth", {
 					.login(payload)
 					.then(res => {
 						if (res.data.access_token) {
-							useAuthStore().setLogged(res.data.access_token)
+							this.setLogged(res.data.access_token)
+							resolve(res.data)
+						} else {
+							reject(res.data)
+						}
+					})
+					.catch(err => {
+						reject(err.response?.data)
+					})
+			})
+		},
+		refreshToken() {
+			return new Promise((resolve, reject) => {
+				Api.auth
+					.refresh()
+					.then(res => {
+						if (res.data.access_token) {
+							this.setToken(res.data.access_token)
 							resolve(res.data)
 						} else {
 							reject(res.data)
@@ -60,6 +77,9 @@ export const useAuthStore = defineStore("auth", {
 		},
 		userRole(state): UserRole {
 			return state.user?.role
+		},
+		userRoleName(state): string {
+			return UserRole[(state.user?.role || 0) as number]
 		},
 		isRoleGranted() {
 			return (roles?: UserRole | UserRole[]) => {
