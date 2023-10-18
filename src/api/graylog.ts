@@ -10,8 +10,15 @@ import {
 } from "@/types/graylog.d" // Import Graylog interfaces
 
 export default {
-	getMessages() {
-		return HttpClient.get<FlaskBaseResponse & { messages: Message[] }>(`/graylog/messages`)
+	getMessages(page?: number) {
+		return HttpClient.get<FlaskBaseResponse & { graylog_messages: Message[]; total_messages: number }>(
+			`/graylog/messages`,
+			{
+				params: {
+					page_number: page || 1
+				}
+			}
+		)
 	},
 	getMetrics() {
 		return HttpClient.get<FlaskBaseResponse & { metrics: ThroughputMetric[] }>(`/graylog/metrics`)
