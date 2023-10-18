@@ -1,6 +1,5 @@
 import { useAuthStore } from "@/stores/auth"
 import { isDebounceTimeOver, isJwtExpiring } from "@/utils/auth"
-import Api from "@/api"
 import axios from "axios"
 import { useGlobalActions } from "@/composables/useGlobalActions"
 
@@ -24,12 +23,8 @@ HttpClient.interceptors.request.use(
 			__TOKEN_REFRESHING = true
 			__TOKEN_LAST_CHECK = new Date()
 
-			Api.auth.refresh().then(res => {
-				if (res.data.access_token) {
-					store.setToken(res.data.access_token)
-
-					__TOKEN_REFRESHING = false
-				}
+			store.refreshToken().then(res => {
+				__TOKEN_REFRESHING = false
 			})
 		}
 
