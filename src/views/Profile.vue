@@ -22,21 +22,10 @@
 								<template #trigger>
 									<div class="tooltip-wrap">
 										<Icon :name="RoleIcon"></Icon>
-										<span>Editor</span>
+										<span>{{ userRole }}</span>
 									</div>
 								</template>
 								<span>Role</span>
-							</n-tooltip>
-						</div>
-						<div class="item">
-							<n-tooltip placement="top">
-								<template #trigger>
-									<div class="tooltip-wrap">
-										<Icon :name="LocationIcon"></Icon>
-										<span>New York No. 1 Lake Park</span>
-									</div>
-								</template>
-								<span>Location</span>
 							</n-tooltip>
 						</div>
 						<div class="item">
@@ -89,14 +78,16 @@ import ImageCropper, { type ImageCropperResult } from "@/components/common/Image
 import ProfileActivity from "@/components/profile/ProfileActivity.vue"
 import ProfileSettings from "@/components/profile/ProfileSettings.vue"
 import Icon from "@/components/common/Icon.vue"
+import { useAuthStore } from "@/stores/auth"
 
 const RoleIcon = "tabler:user"
-const LocationIcon = "tabler:map-pin"
 const EditIcon = "uil:image-edit"
 const MailIcon = "tabler:mail"
 
 const tabActive = ref("activity")
 const propic = ref("/images/avatar-200.jpg")
+
+const userRole = useAuthStore().userRoleName
 
 function setCroppedImage(result: ImageCropperResult) {
 	const canvas = result.canvas as HTMLCanvasElement
