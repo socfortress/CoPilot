@@ -1,10 +1,8 @@
 import { defineStore, acceptHMRUpdate } from "pinia"
-const API_URL = import.meta.env.VITE_API_URL
 import { type LoadingBarInst } from "naive-ui/es/loading-bar/src/LoadingBarProvider"
 
 export const useMainStore = defineStore("main", {
 	state: () => ({
-		API_URL,
 		forceRefresh: new Date().getTime(),
 		loadingBar: null as LoadingBarInst | null
 	}),
