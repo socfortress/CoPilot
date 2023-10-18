@@ -63,6 +63,7 @@ import dayjs from "dayjs"
 import { handleDeleteAgent, isAgentOnline, toggleAgentCritical } from "./utils"
 import { NTooltip, NButton, NSpin, NCard, useMessage, useDialog } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
+import { useSettingsStore } from "@/stores/settings"
 
 const StarIcon = "carbon:star"
 const DeleteIcon = "carbon:delete"
@@ -77,6 +78,7 @@ const props = defineProps<{
 }>()
 const { agent, showActions } = toRefs(props)
 
+const dFormats = useSettingsStore().dateFormat
 const loading = ref(false)
 const message = useMessage()
 const dialog = useDialog()
@@ -87,7 +89,7 @@ const formatLastSeen = computed(() => {
 	const lastSeenDate = dayjs(agent.value.wazuh_last_seen)
 	if (!lastSeenDate.isValid()) return agent.value.wazuh_last_seen
 
-	return lastSeenDate.format("DD/MM/YYYY @ HH:mm")
+	return lastSeenDate.format(dFormats.datetime)
 })
 
 function handleDelete() {
