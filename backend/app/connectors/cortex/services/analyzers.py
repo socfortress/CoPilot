@@ -21,7 +21,11 @@ from app.connectors.cortex.utils.universal import (
 
 
 def fetch_analyzers(api: Api) -> List[Dict]:
-    return api.analyzers.find_all({}, range="all")
+    try:
+        return api.analyzers.find_all({}, range="all")
+    except Exception as e:
+        logger.error(f"Error fetching analyzers: {e}")
+        raise HTTPException(status_code=500, detail=f"Error fetching analyzers: {e}")
 
 
 def extract_analyzer_names(analyzers: List[Dict]) -> List[str]:
