@@ -1,4 +1,7 @@
+import asyncio
 import json
+from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import TimeoutError
 from datetime import datetime
 from typing import Any
 from typing import Dict
@@ -152,7 +155,7 @@ class UniversalService:
         client_request = self.create_vql_request(vql)
         try:
             results = []
-            for response in self.stub.Query(client_request):
+            for response in self.stub.Query(client_request, timeout=30):
                 if response.Response:
                     results += json.loads(response.Response)
             return {
@@ -160,6 +163,16 @@ class UniversalService:
                 "message": "Successfully executed query",
                 "results": results,
             }
+        except grpc.RpcError as e:  # Catch gRPC-specific errors
+            if e.code() == grpc.StatusCode.DEADLINE_EXCEEDED:
+                logger.error("Failed to execute query due to timeout.")
+                raise HTTPException(
+                    status_code=500,
+                    detail="Failed to execute query due to timeout. Make sure the Velocraptor server has stopped this artifact collection.",
+                )
+            else:
+                logger.error(f"Failed to execute query: {e}")
+                raise HTTPException(status_code=500, detail=f"Failed to execute query: {e.details()}")
         except Exception as e:
             logger.error(f"Failed to execute query: {e}")
             raise HTTPException(status_code=500, detail=f"Failed to execute query: {e}")
