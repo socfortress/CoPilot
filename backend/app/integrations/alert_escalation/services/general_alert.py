@@ -119,5 +119,9 @@ def create_alert(alert: CreateAlertRequest) -> CreateAlertResponse:
     iris_alert_payload = build_alert_payload(alert_details, agent_data, ioc_payload)
     client, alert = initialize_client_and_alert("DFIR-IRIS")
     result = fetch_and_validate_data(client, alert.add_alert, iris_alert_payload.to_dict())
-    alert_id = result["data"]["alert_id"]
-    return CreateAlertResponse(alert_id=alert_id, success=True, message=f"Alert {alert_id} created successfully")
+    try:
+        alert_id = result["data"]["alert_id"]
+        return CreateAlertResponse(alert_id=alert_id, success=True, message=f"Alert {alert_id} created successfully")
+    except Exception as e:
+        logger.error(f"Failed to create alert {alert.alert_id}: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to create alert for ID {alert.alert_id}: {e}")
