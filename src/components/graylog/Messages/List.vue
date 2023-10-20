@@ -11,7 +11,7 @@
 						</n-button>
 					</template>
 					<div class="flex flex-col gap-2">
-						<div class="total-box">
+						<div class="box">
 							Total:
 							<code>{{ total }}</code>
 						</div>
