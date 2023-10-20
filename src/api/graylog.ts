@@ -9,6 +9,7 @@ import {
 	type Streams
 } from "@/types/graylog/index.d" // Import Graylog interfaces
 import type { Alerts, AlertsQuery } from "@/types/graylog/alerts.d"
+import type { EventDefinition } from "@/types/graylog/event-definition.d"
 
 export default {
 	getMessages(page?: number) {
@@ -23,6 +24,11 @@ export default {
 	},
 	getAlerts(query: AlertsQuery) {
 		return HttpClient.post<FlaskBaseResponse & { alerts: Alerts }>(`/graylog/event/alerts`, query)
+	},
+	getEventDefinitions() {
+		return HttpClient.get<FlaskBaseResponse & { event_definitions: EventDefinition[] }>(
+			`/graylog/event/definitions`
+		)
 	},
 
 	getMetrics() {

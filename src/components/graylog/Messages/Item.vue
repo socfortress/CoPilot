@@ -14,7 +14,7 @@
 </template>
 
 <script setup lang="ts">
-import { type Message } from "@/types/graylog.d"
+import { type Message } from "@/types/graylog/index.d"
 
 export interface MessageExt extends Message {
 	id?: string

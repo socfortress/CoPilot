@@ -1,22 +1,24 @@
 <template>
 	<n-spin :show="loading">
-		<div class="header flex justify-end" ref="paginationContainer">
+		<div class="header flex justify-end gap-2">
 			<n-pagination
 				v-model:page="currentPage"
 				:page-size="pageSize"
 				:item-count="total"
 				:page-slot="6"
-				v-if="total"
+				show-size-picker
+				:page-sizes="[50, 100, 150, 200]"
 			/>
+			<n-select size="small" v-model:value="timerange" :options="timeOptions" class="!w-32" />
 		</div>
 		<div class="list my-3">...</div>
-		<div class="footer flex justify-end" ref="paginationContainer">
+		<div class="footer flex justify-end">
 			<n-pagination
 				v-model:page="currentPage"
 				:page-size="pageSize"
 				:item-count="total"
 				:page-slot="6"
-				v-if="total"
+				v-if="alerts.length > 3"
 			/>
 		</div>
 	</n-spin>
@@ -24,7 +26,7 @@
 
 <script setup lang="ts">
 import { ref, onBeforeMount, watch } from "vue"
-import { useMessage, NSpin, NPagination } from "naive-ui"
+import { useMessage, NSpin, NPagination, NSelect } from "naive-ui"
 import Api from "@/api"
 import { nanoid } from "nanoid"
 import dayjs from "dayjs"
@@ -33,26 +35,64 @@ import type { AlertsQuery } from "@/types/graylog/alerts.d"
 
 const dFormats = useSettingsStore().dateFormat
 const message = useMessage()
-const paginationContainer = ref(null)
 const loading = ref(false)
 const alerts = ref<any[]>([])
 const total = ref(0)
-const pageSize = ref(0)
+const pageSize = ref(100)
 const currentPage = ref(1)
 
-function getMessages(page: number) {
+const hour = 60 * 60
+const day = hour * 24
+const week = day * 7
+const month = week * 4
+const year = month * 12
+
+const timerange = ref(month)
+
+const timeOptions = [
+	{
+		label: "24 Hours",
+		value: day
+	},
+	{
+		label: "This week",
+		value: dayjs().startOf("week").unix()
+	},
+	{
+		label: "Last week",
+		value: week
+	},
+	{
+		label: "This month",
+		value: dayjs().startOf("month").unix()
+	},
+	{
+		label: "Last month",
+		value: month
+	},
+	{
+		label: "This year",
+		value: dayjs().startOf("year").unix()
+	},
+	{
+		label: "Last year",
+		value: year
+	}
+]
+
+function getData(page: number, pageSize: number, timerange: number) {
 	loading.value = true
 
 	const query: AlertsQuery = {
 		query: "",
-		page: 1,
-		per_page: 100,
+		page,
+		per_page: pageSize,
 		filter: {
 			alerts: "only",
 			event_definitions: []
 		},
 		timerange: {
-			range: 8640000,
+			range: timerange,
 			type: "relative"
 		}
 	}
@@ -74,12 +114,12 @@ function getMessages(page: number) {
 		})
 }
 
-watch(currentPage, val => {
-	getMessages(val)
+watch([currentPage, pageSize, timerange], ([page, pageSize, timerange]) => {
+	getData(page, pageSize, timerange)
 })
 
 onBeforeMount(() => {
-	getMessages(currentPage.value)
+	getData(currentPage.value, pageSize.value, timerange.value)
 })
 </script>
 

@@ -13,44 +13,36 @@ export interface AlertsQuery {
 }
 
 export interface Alerts {
-	context: Context
+	context: AlertsContext
 	duration: number
-	events: EventElement[]
-	parameters: Parameters
+	events: AlertsEventElement[]
+	parameters: AlertsParameters
 	total_events: number
 	used_indices: string[]
 }
 
-export interface Context {
-	event_definitions: EventDefinitions
-	streams: Streams
+export interface AlertsContext {
+	event_definitions: { [key: string]: AlertsEventDefinition }
+	streams: { [key: string]: AlertsEventDefinition }
 }
 
-export interface EventDefinitions {
-	[key: string]: EventDefinition
-}
-
-export interface EventDefinition {
+export interface AlertsEventDefinition {
 	description: string
 	id: string
 	title: string
 }
 
-export interface Streams {
-	[key: string]: EventDefinition
-}
-
-export interface EventElement {
-	event: EventEvent
+export interface AlertsEventElement {
+	event: AlertsEvent
 	index_name: string
 	index_type: string
 }
 
-export interface EventEvent {
+export interface AlertsEvent {
 	alert: boolean
 	event_definition_id: string
 	event_definition_type: string
-	fields: Fields
+	fields: { [key: string]: string }
 	group_by_fields: any
 	id: string
 	key: null
@@ -67,26 +59,22 @@ export interface EventEvent {
 	timestamp_processing: string
 }
 
-export interface Fields {
-	[key: string]: string
-}
-
-export interface Parameters {
+export interface AlertsParameters {
 	page: number
 	per_page: number
 	query: string
 	sort_by: string
 	sort_direction: string
-	timerange: Timerange
-	filter: Filter
+	timerange: AlertsParametersTimerange
+	filter: AlertsParametersFilter
 }
 
-export interface Filter {
+export interface AlertsParametersFilter {
 	alerts: string
 	event_definitions: any[]
 }
 
-export interface Timerange {
+export interface AlertsParametersTimerange {
 	range: number
 	type: string
 }

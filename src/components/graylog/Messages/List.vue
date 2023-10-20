@@ -1,24 +1,18 @@
 <template>
 	<n-spin :show="loading">
-		<div class="header flex justify-end" ref="paginationContainer">
-			<n-pagination
-				v-model:page="currentPage"
-				:page-size="pageSize"
-				:item-count="total"
-				:page-slot="6"
-				v-if="total"
-			/>
+		<div class="header flex justify-end gap-2">
+			<n-pagination v-model:page="currentPage" :page-size="pageSize" :item-count="total" :page-slot="6" />
 		</div>
 		<div class="list my-3">
 			<MessageItem v-for="msg of messages" :key="msg.id" :message="msg" />
 		</div>
-		<div class="footer flex justify-end" ref="paginationContainer">
+		<div class="footer flex justify-end">
 			<n-pagination
 				v-model:page="currentPage"
 				:page-size="pageSize"
 				:item-count="total"
 				:page-slot="6"
-				v-if="total"
+				v-if="messages.length > 3"
 			/>
 		</div>
 	</n-spin>
@@ -35,14 +29,13 @@ import { useSettingsStore } from "@/stores/settings"
 
 const dFormats = useSettingsStore().dateFormat
 const message = useMessage()
-const paginationContainer = ref(null)
 const loading = ref(false)
 const messages = ref<MessageExt[]>([])
 const total = ref(0)
-const pageSize = ref(0)
+const pageSize = ref(1)
 const currentPage = ref(1)
 
-function getMessages(page: number) {
+function getData(page: number) {
 	loading.value = true
 
 	Api.graylog
@@ -56,7 +49,7 @@ function getMessages(page: number) {
 					return o
 				})
 				total.value = res.data.total_messages || 0
-				if (!pageSize.value) pageSize.value = messages.value.length
+				if (pageSize.value <= 1) pageSize.value = messages.value.length
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
@@ -70,11 +63,11 @@ function getMessages(page: number) {
 }
 
 watch(currentPage, val => {
-	getMessages(val)
+	getData(val)
 })
 
 onBeforeMount(() => {
-	getMessages(currentPage.value)
+	getData(currentPage.value)
 })
 </script>
 
