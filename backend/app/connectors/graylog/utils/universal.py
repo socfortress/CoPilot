@@ -132,8 +132,8 @@ def send_post_request(endpoint: str, data: Dict[str, Any] = None, connector_name
             verify=False,
         )
 
-        if response.status_code == 204:
-            return {"data": None, "success": True, "message": "Successfully completed request with no content"}
+        if response.status_code == 204 or response.status_code == 200:
+            return {"data": response.json(), "success": True, "message": "Successfully completed request with no content"}
         else:
             raise HTTPException(
                 status_code=500,
@@ -142,8 +142,6 @@ def send_post_request(endpoint: str, data: Dict[str, Any] = None, connector_name
     except HTTPException as e:
         raise e
     except Exception as e:
-        logger.debug(f"Response: {response}")
-        logger.error(f"Failed to send POST request to {endpoint} with error: {e}")
         # return {"success": False, "message": f"Failed to send POST request to {endpoint} with error: {e}"}
         raise HTTPException(status_code=500, detail=f"Failed to send POST request to {endpoint} with error: {e}")
 
