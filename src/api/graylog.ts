@@ -7,7 +7,8 @@ import {
 	type Inputs,
 	InputState,
 	type Streams
-} from "@/types/graylog.d" // Import Graylog interfaces
+} from "@/types/graylog/index.d" // Import Graylog interfaces
+import type { Alerts, AlertsQuery } from "@/types/graylog/alerts.d"
 
 export default {
 	getMessages(page?: number) {
@@ -20,11 +21,15 @@ export default {
 			}
 		)
 	},
+	getAlerts(query: AlertsQuery) {
+		return HttpClient.post<FlaskBaseResponse & { alerts: Alerts }>(`/graylog/event/alerts`, query)
+	},
+
 	getMetrics() {
 		return HttpClient.get<FlaskBaseResponse & { metrics: ThroughputMetric[] }>(`/graylog/metrics`)
 	},
 	getIndices() {
-		return HttpClient.get<FlaskBaseResponse & { indexData: IndexData }>(`/graylog/indices`)
+		return HttpClient.get<FlaskBaseResponse & { indices: IndexData }>(`/graylog/indices`)
 	},
 	deleteIndex(indexName: string) {
 		return HttpClient.delete<FlaskBaseResponse>(`/graylog/index`, {

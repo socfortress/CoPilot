@@ -5,6 +5,8 @@ export interface Message {
 	timestamp: string
 }
 
+// TODO: review --------------------------------------------------------------------
+
 export interface ThroughputMetric {
 	metric: string
 	value: number
@@ -64,7 +66,6 @@ export interface IndexData {
 }
 
 // Graylog Inputs
-
 export enum InputState {
 	RUNNING = "RUNNING",
 	STOPPED = "STOPPED"
@@ -128,4 +129,4 @@ export interface Stream {
 }
 
 // Streams Array
-export interface Streams extends Array<Stream> {}
+export type Streams = Stream[]
