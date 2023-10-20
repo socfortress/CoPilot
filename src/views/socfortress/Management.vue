@@ -12,7 +12,7 @@
 			</n-tab-pane>
 			<n-tab-pane name="streams" tab="Streams">streams</n-tab-pane>
 			<template #suffix>
-				<n-button secondary type="primary">Inputs</n-button>
+				<n-button secondary type="primary" size="small">Inputs</n-button>
 			</template>
 		</n-tabs>
 	</div>

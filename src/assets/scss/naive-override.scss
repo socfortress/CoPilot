@@ -48,3 +48,7 @@
 .n-avatar .n-avatar__text {
 	transform: translateX(-50%) translateY(-50%) scale(1);
 }
+
+.v-binder-follower-content {
+	max-width: calc(100vw - (var(--view-padding) * 2));
+}

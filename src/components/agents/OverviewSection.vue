@@ -11,7 +11,7 @@
 
 <script setup lang="ts">
 import { computed, toRefs } from "vue"
-import dayjs from "dayjs"
+import dayjs from "@/utils/dayjs"
 import { type Agent } from "@/types/agents.d"
 import { NCard } from "naive-ui"
 import { useSettingsStore } from "@/stores/settings"

@@ -59,7 +59,7 @@
 <script setup lang="ts">
 import { computed, ref, toRefs } from "vue"
 import { type Agent } from "@/types/agents.d"
-import dayjs from "dayjs"
+import dayjs from "@/utils/dayjs"
 import { handleDeleteAgent, isAgentOnline, toggleAgentCritical } from "./utils"
 import { NTooltip, NButton, NSpin, NCard, useMessage, useDialog } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"

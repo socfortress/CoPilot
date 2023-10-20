@@ -1,7 +1,24 @@
 <template>
 	<n-spin :show="loading">
-		<div class="header flex justify-end gap-2">
-			<n-pagination v-model:page="currentPage" :page-size="pageSize" :item-count="total" :page-slot="6" />
+		<div class="header flex items-center justify-end gap-2">
+			<div class="info grow flex gap-5">
+				<n-popover overlap placement="bottom-start">
+					<template #trigger>
+						<n-button secondary size="small">
+							<template #icon>
+								<Icon :name="InfoIcon"></Icon>
+							</template>
+						</n-button>
+					</template>
+					<div class="flex flex-col gap-2">
+						<div class="total-box">
+							Total:
+							<code>{{ total }}</code>
+						</div>
+					</div>
+				</n-popover>
+			</div>
+			<n-pagination v-model:page="currentPage" :page-size="pageSize" :item-count="total" :page-slot="5" />
 		</div>
 		<div class="list my-3">
 			<MessageItem v-for="msg of messages" :key="msg.id" :message="msg" />
@@ -20,14 +37,19 @@
 
 <script setup lang="ts">
 import { ref, onBeforeMount, watch } from "vue"
-import { useMessage, NSpin, NPagination } from "naive-ui"
+import { useMessage, NSpin, NPagination, NPopover, NButton } from "naive-ui"
 import Api from "@/api"
-import MessageItem, { type MessageExt } from "./Item.vue"
+import MessageItem from "./Item.vue"
+import Icon from "@/components/common/Icon.vue"
 import { nanoid } from "nanoid"
-import dayjs from "dayjs"
-import { useSettingsStore } from "@/stores/settings"
+import type { Message } from "@/types/graylog/index.d"
 
-const dFormats = useSettingsStore().dateFormat
+export interface MessageExt extends Message {
+	id?: string
+}
+
+const InfoIcon = "carbon:information"
+
 const message = useMessage()
 const loading = ref(false)
 const messages = ref<MessageExt[]>([])
@@ -45,7 +67,6 @@ function getData(page: number) {
 				const data = (res.data.graylog_messages || []) as MessageExt[]
 				messages.value = data.map(o => {
 					o.id = nanoid()
-					o.timestamp = dayjs(o.timestamp).format(dFormats.datetimesec)
 					return o
 				})
 				total.value = res.data.total_messages || 0
