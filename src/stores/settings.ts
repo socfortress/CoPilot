@@ -27,15 +27,15 @@ export const useSettingsStore = defineStore("settings", {
 			return state.settings.dateFormat
 		},
 		dateFormat(state) {
-			const separator = "@"
+			const separator = " "
 			const date = state.settings.dateFormat
 			const time = state.settings.hours24 ? "HH:mm" : "h:mm a"
 			const timesec = state.settings.hours24 ? "HH:mm:ss" : "h:mm:ss a"
 
 			return {
 				date: `${date}`,
-				datetime: `${date} ${separator} ${time}`,
-				datetimesec: `${date} ${separator} ${timesec}`
+				datetime: `${date}${separator}${time}`,
+				datetimesec: `${date}${separator}${timesec}`
 			}
 		}
 	},

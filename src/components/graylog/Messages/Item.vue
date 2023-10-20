@@ -2,7 +2,7 @@
 	<div class="item flex flex-col mb-2 gap-2 px-5 py-3">
 		<div class="header-box flex justify-between">
 			<div class="caller">{{ message.caller }}</div>
-			<div class="time">{{ message.timestamp }}</div>
+			<div class="time">{{ formatDate(message.timestamp) }}</div>
 		</div>
 		<div class="main-box">
 			<div class="content">{{ message.content }}</div>
@@ -37,10 +37,10 @@ function formatDate(timestamp: string): string {
 		font-size: 13px;
 		.caller {
 			word-break: break-word;
-			opacity: 0.4;
+			color: var(--fg-secondary-color);
 		}
 		.time {
-			opacity: 0.5;
+			color: var(--fg-secondary-color);
 		}
 	}
 	.main-box {
@@ -56,7 +56,7 @@ function formatDate(timestamp: string): string {
 		margin-top: 10px;
 
 		.time {
-			opacity: 0.5;
+			color: var(--fg-secondary-color);
 			width: 100%;
 		}
 	}
@@ -68,7 +68,6 @@ function formatDate(timestamp: string): string {
 			}
 		}
 		.footer-box {
-			text-align: right;
 			display: flex;
 		}
 	}
