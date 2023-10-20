@@ -1,45 +1,95 @@
 <template>
 	<n-spin :show="loading">
-		<div class="header flex justify-end gap-2">
+		<div class="header flex items-center justify-end gap-2" ref="header">
+			<div class="info grow flex gap-5">
+				<n-popover overlap placement="bottom-start">
+					<template #trigger>
+						<n-button secondary size="small">
+							<template #icon>
+								<Icon :name="InfoIcon"></Icon>
+							</template>
+						</n-button>
+					</template>
+					<div class="flex flex-col gap-2">
+						<div class="total-box">
+							Total:
+							<code>{{ total }}</code>
+						</div>
+						<div class="indicies-box">
+							Indicies:
+							<code>{{ usedIndicies }}</code>
+						</div>
+					</div>
+				</n-popover>
+			</div>
 			<n-pagination
 				v-model:page="currentPage"
-				:page-size="pageSize"
+				v-model:page-size="pageSize"
 				:item-count="total"
-				:page-slot="6"
-				show-size-picker
-				:page-sizes="[50, 100, 150, 200]"
+				:page-slot="pageSlot"
+				:show-size-picker="showSizePicker"
+				:page-sizes="pageSizes"
+				:simple="simpleMode"
 			/>
-			<n-select size="small" v-model:value="timerange" :options="timeOptions" class="!w-32" />
+			<n-select size="small" v-model:value="timerange" :options="timeOptions" class="!w-32" v-if="!compactMode" />
+			<n-popover overlap v-if="compactMode" placement="bottom-end">
+				<template #trigger>
+					<n-button secondary size="small">
+						<template #icon>
+							<Icon :name="FilterIcon"></Icon>
+						</template>
+					</n-button>
+				</template>
+				<div>
+					<div class="opacity-50 text-sm mb-2">Time range:</div>
+					<n-select size="small" v-model:value="timerange" :options="timeOptions" class="!w-32 mb-1" />
+				</div>
+			</n-popover>
 		</div>
-		<div class="list my-3">...</div>
+		<div class="list my-3">
+			<AlertsEventItem
+				v-for="alertsEvent of alertsEvents"
+				:key="alertsEvent.event.id"
+				:alertsEvent="alertsEvent"
+			/>
+		</div>
 		<div class="footer flex justify-end">
 			<n-pagination
 				v-model:page="currentPage"
 				:page-size="pageSize"
 				:item-count="total"
 				:page-slot="6"
-				v-if="alerts.length > 3"
+				v-if="alertsEvents.length > 3"
 			/>
 		</div>
 	</n-spin>
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, watch } from "vue"
-import { useMessage, NSpin, NPagination, NSelect } from "naive-ui"
+import { ref, onBeforeMount, watch, computed } from "vue"
+import { useMessage, NSpin, NPagination, NSelect, NPopover, NButton } from "naive-ui"
 import Api from "@/api"
-import { nanoid } from "nanoid"
-import dayjs from "dayjs"
-import { useSettingsStore } from "@/stores/settings"
-import type { AlertsQuery } from "@/types/graylog/alerts.d"
+import AlertsEventItem from "./Item.vue"
+import { useResizeObserver } from "@vueuse/core"
+import dayjs from "@/utils/dayjs"
+import Icon from "@/components/common/Icon.vue"
+import type { AlertsQuery, AlertsEventElement } from "@/types/graylog/alerts.d"
 
-const dFormats = useSettingsStore().dateFormat
 const message = useMessage()
 const loading = ref(false)
-const alerts = ref<any[]>([])
+const alertsEvents = ref<AlertsEventElement[]>([])
 const total = ref(0)
-const pageSize = ref(100)
+const pageSize = ref(50)
 const currentPage = ref(1)
+const header = ref()
+const compactMode = ref(false)
+const simpleMode = ref(false)
+const showSizePicker = computed(() => !compactMode.value)
+const pageSizes = [50, 100, 150, 200]
+const pageSlot = ref(8)
+const usedIndicies = ref("")
+const FilterIcon = "carbon:filter-edit"
+const InfoIcon = "carbon:information"
 
 const hour = 60 * 60
 const day = hour * 24
@@ -47,7 +97,7 @@ const week = day * 7
 const month = week * 4
 const year = month * 12
 
-const timerange = ref(month)
+const timerange = ref(year)
 
 const timeOptions = [
 	{
@@ -101,7 +151,9 @@ function getData(page: number, pageSize: number, timerange: number) {
 		.getAlerts(query)
 		.then(res => {
 			if (res.data.success) {
-				//....
+				alertsEvents.value = res.data?.alerts?.events || []
+				total.value = res.data?.alerts?.total_events || 0
+				usedIndicies.value = res.data?.alerts?.used_indices?.join(", ")
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
@@ -113,6 +165,22 @@ function getData(page: number, pageSize: number, timerange: number) {
 			loading.value = false
 		})
 }
+
+useResizeObserver(header, entries => {
+	const entry = entries[0]
+	const { width } = entry.contentRect
+
+	if (width < 650) {
+		compactMode.value = true
+		pageSize.value = pageSizes[0]
+		pageSlot.value = 5
+	} else {
+		compactMode.value = false
+		pageSlot.value = 8
+	}
+
+	simpleMode.value = width < 450
+})
 
 watch([currentPage, pageSize, timerange], ([page, pageSize, timerange]) => {
 	getData(page, pageSize, timerange)

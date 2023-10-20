@@ -11,7 +11,7 @@ import { ref, onBeforeMount, watch } from "vue"
 import { useMessage, NSpin, NPagination, NSelect } from "naive-ui"
 import Api from "@/api"
 import { nanoid } from "nanoid"
-import dayjs from "dayjs"
+import dayjs from "@/utils/dayjs"
 import { useSettingsStore } from "@/stores/settings"
 import type { AlertsQuery } from "@/types/graylog/alerts.d"
 
