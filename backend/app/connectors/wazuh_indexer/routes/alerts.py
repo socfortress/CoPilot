@@ -4,8 +4,10 @@ from fastapi import APIRouter
 from fastapi import BackgroundTasks
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi import Security
 from loguru import logger
 
+from app.auth.utils import AuthHandler
 from app.connectors.wazuh_indexer.schema.alerts import AlertsByHostResponse
 from app.connectors.wazuh_indexer.schema.alerts import AlertsByRulePerHostResponse
 from app.connectors.wazuh_indexer.schema.alerts import AlertsByRuleResponse
@@ -47,19 +49,34 @@ def verify_index_name(index_alerts_search_body: IndexAlertsSearchBody) -> IndexA
     return index_alerts_search_body
 
 
-@wazuh_indexer_alerts_router.post("", response_model=AlertsSearchResponse, description="Get all alerts")
+@wazuh_indexer_alerts_router.post(
+    "",
+    response_model=AlertsSearchResponse,
+    description="Get all alerts",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
 async def get_all_alerts(alerts_search_body: AlertsSearchBody) -> AlertsSearchResponse:
     logger.info("Fetching all alerts")
     return get_alerts(alerts_search_body)
 
 
-@wazuh_indexer_alerts_router.post("/host", response_model=HostAlertsSearchResponse, description="Get all alerts for a host")
+@wazuh_indexer_alerts_router.post(
+    "/host",
+    response_model=HostAlertsSearchResponse,
+    description="Get all alerts for a host",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
 async def get_all_alerts_for_host(host_alerts_search_body: HostAlertsSearchBody) -> HostAlertsSearchResponse:
     logger.info(f"Fetching all alerts for host {host_alerts_search_body.agent_name}")
     return get_host_alerts(host_alerts_search_body)
 
 
-@wazuh_indexer_alerts_router.post("/index", response_model=IndexAlertsSearchResponse, description="Get all alerts for an index")
+@wazuh_indexer_alerts_router.post(
+    "/index",
+    response_model=IndexAlertsSearchResponse,
+    description="Get all alerts for an index",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
 async def get_all_alerts_for_index(
     index_alerts_search_body: IndexAlertsSearchBody = Depends(verify_index_name),
 ) -> IndexAlertsSearchResponse:
@@ -67,13 +84,23 @@ async def get_all_alerts_for_index(
     return get_index_alerts(index_alerts_search_body)
 
 
-@wazuh_indexer_alerts_router.post("/hosts/all", response_model=AlertsByHostResponse, description="Get number of all alerts for all hosts")
+@wazuh_indexer_alerts_router.post(
+    "/hosts/all",
+    response_model=AlertsByHostResponse,
+    description="Get number of all alerts for all hosts",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
 async def get_all_alerts_by_host(alerts_search_body: AlertsSearchBody) -> AlertsByHostResponse:
     logger.info("Fetching number of all alerts for all hosts")
     return get_alerts_by_host(alerts_search_body)
 
 
-@wazuh_indexer_alerts_router.post("/rules/all", response_model=AlertsByRuleResponse, description="Get number of all alerts for all rules")
+@wazuh_indexer_alerts_router.post(
+    "/rules/all",
+    response_model=AlertsByRuleResponse,
+    description="Get number of all alerts for all rules",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
 async def get_all_alerts_by_rule(alerts_search_body: AlertsSearchBody) -> AlertsByRuleResponse:
     logger.info("Fetching number of all alerts for all rules")
     return get_alerts_by_rule(alerts_search_body)
@@ -83,6 +110,7 @@ async def get_all_alerts_by_rule(alerts_search_body: AlertsSearchBody) -> Alerts
     "/rules/hosts/all",
     response_model=AlertsByRulePerHostResponse,
     description="Get number of all alerts for all rules per host",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_all_alerts_by_rule_per_host(alerts_search_body: AlertsSearchBody) -> AlertsByRulePerHostResponse:
     """

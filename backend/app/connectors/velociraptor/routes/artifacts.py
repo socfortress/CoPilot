@@ -3,8 +3,10 @@ from typing import List
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi import Security
 from loguru import logger
 
+from app.auth.utils import AuthHandler
 from app.connectors.velociraptor.schema.artifacts import ArtifactsResponse
 from app.connectors.velociraptor.schema.artifacts import CollectArtifactBody
 from app.connectors.velociraptor.schema.artifacts import CollectArtifactResponse
@@ -67,7 +69,12 @@ def get_velociraptor_id(hostname: str) -> str:
     return velociraptor_id
 
 
-@velociraptor_artifacts_router.get("", response_model=ArtifactsResponse, description="Get all artifacts")
+@velociraptor_artifacts_router.get(
+    "",
+    response_model=ArtifactsResponse,
+    description="Get all artifacts",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
 async def get_all_artifacts() -> ArtifactsResponse:
     logger.info("Fetching all artifacts")
     return get_artifacts()
@@ -77,6 +84,7 @@ async def get_all_artifacts() -> ArtifactsResponse:
     "/{os_prefix}",
     response_model=ArtifactsResponse,
     description="Get all artifacts for a specific OS prefix",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_all_artifacts_for_os_prefix(os_prefix: str = Depends(verify_os_prefix_exists)) -> ArtifactsResponse:
     logger.info(f"Fetching all artifacts for OS prefix {os_prefix}")
@@ -90,6 +98,7 @@ async def get_all_artifacts_for_os_prefix(os_prefix: str = Depends(verify_os_pre
     "/hostname/{hostname}",
     response_model=ArtifactsResponse,
     description="Get all artifacts for a specific host's OS prefix",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_all_artifacts_for_hostname(hostname: str) -> ArtifactsResponse:
     logger.info(f"Fetching all artifacts for hostname {hostname}")
@@ -107,7 +116,12 @@ async def get_all_artifacts_for_hostname(hostname: str) -> ArtifactsResponse:
     )
 
 
-@velociraptor_artifacts_router.post("/collect", response_model=CollectArtifactResponse, description="Run an analyzer")
+@velociraptor_artifacts_router.post(
+    "/collect",
+    response_model=CollectArtifactResponse,
+    description="Run an analyzer",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
 async def collect_artifact(collect_artifact_body: CollectArtifactBody) -> CollectArtifactResponse:
     logger.info(f"Received request to collect artifact {collect_artifact_body}")
     # Check that provided artifact name applies for the provided hostname and use the `get_all_artifacts_for_hostname` function to get the list of artifacts
@@ -124,7 +138,12 @@ async def collect_artifact(collect_artifact_body: CollectArtifactBody) -> Collec
     return run_artifact_collection(collect_artifact_body)
 
 
-@velociraptor_artifacts_router.post("/command", response_model=RunCommandResponse, description="Run a remote command")
+@velociraptor_artifacts_router.post(
+    "/command",
+    response_model=RunCommandResponse,
+    description="Run a remote command",
+    dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
+)
 async def run_command(run_command_body: RunCommandBody) -> RunCommandResponse:
     logger.info(f"Received request to run command {run_command_body}")
     result = await get_all_artifacts_for_hostname(run_command_body.hostname)
@@ -140,7 +159,12 @@ async def run_command(run_command_body: RunCommandBody) -> RunCommandResponse:
     return run_remote_command(run_command_body)
 
 
-@velociraptor_artifacts_router.post("/quarantine", response_model=QuarantineResponse, description="Quarantine a host")
+@velociraptor_artifacts_router.post(
+    "/quarantine",
+    response_model=QuarantineResponse,
+    description="Quarantine a host",
+    dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
+)
 async def quarantine(quarantine_body: QuarantineBody) -> QuarantineResponse:
     logger.info(f"Received request to quarantine host {quarantine_body}")
     result = await get_all_artifacts_for_hostname(quarantine_body.hostname)

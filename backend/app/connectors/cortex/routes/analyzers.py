@@ -3,8 +3,10 @@ from typing import List
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi import Security
 from loguru import logger
 
+from app.auth.utils import AuthHandler
 from app.connectors.cortex.schema.analyzers import AnalyzersResponse
 from app.connectors.cortex.schema.analyzers import RunAnalyzerBody
 from app.connectors.cortex.schema.analyzers import RunAnalyzerResponse
@@ -28,13 +30,23 @@ def verify_analyzer_exists(run_analyzer_body: RunAnalyzerBody) -> RunAnalyzerBod
     return run_analyzer_body
 
 
-@cortex_analyzer_router.get("", response_model=AnalyzersResponse, description="Get all analyzers")
+@cortex_analyzer_router.get(
+    "",
+    response_model=AnalyzersResponse,
+    description="Get all analyzers",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
 async def get_all_analyzers() -> AnalyzersResponse:
     logger.info("Fetching all analyzers")
     return get_analyzers()
 
 
-@cortex_analyzer_router.post("/run", response_model=RunAnalyzerResponse, description="Run an analyzer")
+@cortex_analyzer_router.post(
+    "/run",
+    response_model=RunAnalyzerResponse,
+    description="Run an analyzer",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
 async def run_analyzer_route(run_analyzer_body: RunAnalyzerBody = Depends(verify_analyzer_exists)) -> RunAnalyzerResponse:
     is_valid, data_type = RunAnalyzerBody.is_valid_datatype(run_analyzer_body.analyzer_data)
     if not is_valid:

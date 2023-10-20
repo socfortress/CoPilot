@@ -4,6 +4,7 @@ from typing import Any
 from typing import Dict
 
 from cortex4py.api import Api
+from fastapi import HTTPException
 from loguru import logger
 
 from app.connectors.cortex.schema.analyzers import AnalyzerJobData
@@ -70,11 +71,7 @@ def run_and_wait_for_analyzer(analyzer_name: str, job_data: AnalyzerJobData) -> 
         job = api.analyzers.run_by_name(analyzer_name, job_data.dict(), force=1)
         return monitor_analyzer_job(api, job)
     except Exception as e:
-        logger.error(f"Error running analyzer {analyzer_name}: {e}")
-        logger.debug(f"job_data dict: {job_data.dict()}")
-        logger.debug(f"Exception details: {traceback.format_exc()}")
-        logger.debug(f"Error running analyzer {analyzer_name}: {e}", exc_info=True)
-        return {"success": False, "message": f"Error running analyzer {analyzer_name}: {e}"}
+        raise HTTPException(status_code=500, detail=f"Error running analyzer {analyzer_name}: {e}")
 
 
 def monitor_analyzer_job(api: Api, job: Any) -> Dict[str, Any]:
