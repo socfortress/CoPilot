@@ -1,21 +1,18 @@
 <template>
 	<n-spin :show="loading">
-		<div class="header flex justify-end gap-2"></div>
-		<div class="list my-3">...</div>
-		<div class="footer flex justify-end"></div>
+		<div class="list">
+			<EventItem v-for="event of events" :key="event.id" :event="event" />
+		</div>
 	</n-spin>
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, watch } from "vue"
-import { useMessage, NSpin, NPagination, NSelect } from "naive-ui"
+import { ref, onBeforeMount } from "vue"
+import { useMessage, NSpin } from "naive-ui"
+import EventItem from "./Item.vue"
 import Api from "@/api"
-import { nanoid } from "nanoid"
-import dayjs from "@/utils/dayjs"
-import { useSettingsStore } from "@/stores/settings"
-import type { AlertsQuery } from "@/types/graylog/alerts.d"
+import type { EventDefinition } from "@/types/graylog/event-definition.d"
 
-const dFormats = useSettingsStore().dateFormat
 const message = useMessage()
 const loading = ref(false)
 const events = ref<EventDefinition[]>([])
