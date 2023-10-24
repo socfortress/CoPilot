@@ -1,12 +1,12 @@
 <template>
 	<n-spin :show="loading">
-		<div class="header flex items-center justify-end gap-2">
+		<div class="header flex items-center justify-end gap-2" ref="header">
 			<div class="info grow flex gap-5">
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
 						<n-button secondary size="small">
 							<template #icon>
-								<Icon :name="InfoIcon" class="cursor-help"></Icon>
+								<Icon :name="InfoIcon"></Icon>
 							</template>
 						</n-button>
 					</template>
@@ -18,10 +18,18 @@
 					</div>
 				</n-popover>
 			</div>
-			<n-pagination v-model:page="currentPage" :page-size="pageSize" :item-count="total" :page-slot="5" />
+			<n-pagination
+				v-model:page="currentPage"
+				v-model:page-size="pageSize"
+				:page-slot="pageSlot"
+				:show-size-picker="showSizePicker"
+				:page-sizes="pageSizes"
+				:item-count="total"
+				:simple="simpleMode"
+			/>
 		</div>
 		<div class="list my-3">
-			<MessageItem v-for="msg of messages" :key="msg.id" :message="msg" />
+			<StreamItem v-for="stream of itemsPaginated" :key="stream.id" :stream="stream" />
 		</div>
 		<div class="footer flex justify-end">
 			<n-pagination
@@ -29,48 +37,50 @@
 				:page-size="pageSize"
 				:item-count="total"
 				:page-slot="6"
-				v-if="messages.length > 3"
+				v-if="itemsPaginated.length > 3"
 			/>
 		</div>
 	</n-spin>
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, watch } from "vue"
+import { ref, onBeforeMount, computed } from "vue"
 import { useMessage, NSpin, NPagination, NPopover, NButton } from "naive-ui"
 import Api from "@/api"
-import MessageItem from "./Item.vue"
+import StreamItem from "./Item.vue"
 import Icon from "@/components/common/Icon.vue"
-import { nanoid } from "nanoid"
-import type { Message } from "@/types/graylog/index.d"
-
-export interface MessageExt extends Message {
-	id?: string
-}
+import type { Stream } from "@/types/graylog/stream.d"
+import { useResizeObserver } from "@vueuse/core"
 
 const InfoIcon = "carbon:information"
 
 const message = useMessage()
 const loading = ref(false)
-const messages = ref<MessageExt[]>([])
+const streams = ref<Stream[]>([])
 const total = ref(0)
-const pageSize = ref(1)
+const pageSize = ref(25)
 const currentPage = ref(1)
+const simpleMode = ref(false)
+const showSizePicker = ref(true)
+const pageSizes = [10, 25, 50, 100]
+const header = ref()
+const pageSlot = ref(8)
 
-function getData(page: number) {
+const itemsPaginated = computed(() => {
+	const from = (currentPage.value - 1) * pageSize.value
+	const to = currentPage.value * pageSize.value
+	return streams.value.slice(from, to)
+})
+
+function getData() {
 	loading.value = true
 
 	Api.graylog
-		.getMessages(page)
+		.getStreams()
 		.then(res => {
 			if (res.data.success) {
-				const data = (res.data.graylog_messages || []) as MessageExt[]
-				messages.value = data.map(o => {
-					o.id = nanoid()
-					return o
-				})
-				total.value = res.data.total_messages || 0
-				if (pageSize.value <= 1) pageSize.value = messages.value.length
+				streams.value = res.data.streams || []
+				total.value = res.data.total || 0
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
@@ -83,12 +93,16 @@ function getData(page: number) {
 		})
 }
 
-watch(currentPage, val => {
-	getData(val)
+useResizeObserver(header, entries => {
+	const entry = entries[0]
+	const { width } = entry.contentRect
+
+	pageSlot.value = width < 650 ? 5 : 8
+	simpleMode.value = width < 450
 })
 
 onBeforeMount(() => {
-	getData(currentPage.value)
+	getData()
 })
 </script>
 

@@ -8,7 +8,7 @@
 			role="dialog"
 			aria-modal="true"
 		>
-			<div class="search-box">
+			<div class="search-box" @keydown.up="prevItem()" @keydown.down="nextItem()">
 				<div class="search-input flex items-center">
 					<Icon :name="SearchIcon" :size="16"></Icon>
 					<input placeholder="Search" v-model="search" class="grow" />
@@ -21,17 +21,12 @@
 						<div class="group" v-for="group of filteredGroups" :key="group.name">
 							<div class="group-title">{{ group.name }}</div>
 							<div class="group-list">
-								<div
+								<button
 									v-for="item of group.items"
 									:key="item.key"
 									:id="item.key.toString()"
 									class="item flex items-center"
 									:class="{ active: item.key === activeItem }"
-									v-element-hover="
-										() => {
-											activeItem = item.key
-										}
-									"
 									@click="callAction(item.action)"
 								>
 									<div class="icon">
@@ -47,7 +42,7 @@
 										/>
 									</div>
 									<div class="label">{{ item.label }}</div>
-								</div>
+								</button>
 							</div>
 						</div>
 						<div v-if="!filteredGroups.length" class="group-empty">
@@ -76,13 +71,12 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted, ref, watch, onBeforeUnmount } from "vue"
+import { computed, onMounted, ref } from "vue"
 import { NText, NModal, NCard, NDivider, NAvatar, NScrollbar, type ScrollbarInst } from "naive-ui"
-import { useMagicKeys } from "@vueuse/core"
+import { useMagicKeys, whenever } from "@vueuse/core"
 import { faker } from "@faker-js/faker"
 import Highlighter from "vue-highlight-words"
 import { useRouter } from "vue-router"
-import { vElementHover } from "@vueuse/components"
 import { useThemeSwitch } from "@/composables/useThemeSwitch"
 import { useFullscreenSwitch } from "@/composables/useFullscreenSwitch"
 import { useSearchDialog } from "@/composables/useSearchDialog"
@@ -120,7 +114,6 @@ const router = useRouter()
 const showSearchBox = ref(false)
 const search = ref("")
 const activeItem = ref<null | string | number>(null)
-const downupTimer = ref<NodeJS.Timeout | null>(null)
 const commandIcon = ref("⌘")
 const scrollContent = ref<(ScrollbarInst & { $el: any }) | null>(null)
 
@@ -258,7 +251,6 @@ const filteredGroups = computed<Groups>(() => {
 })
 
 /*eslint  @typescript-eslint/no-unused-vars: "off"*/
-
 const filteredFlattenItems = computed<GroupItem[]>(() => {
 	const items = []
 
@@ -275,9 +267,6 @@ function openBox(e?: MouseEvent) {
 		setTimeout(() => {
 			search.value = ""
 			activeItem.value = null
-			if (downupTimer.value) {
-				clearInterval(downupTimer.value)
-			}
 		}, 100)
 	}
 	return e
@@ -286,9 +275,6 @@ function closeBox() {
 	showSearchBox.value = false
 	search.value = ""
 	activeItem.value = null
-	if (downupTimer.value) {
-		clearInterval(downupTimer.value)
-	}
 }
 function callAction(action: () => void) {
 	action()
@@ -321,9 +307,7 @@ function performAction() {
 function centerItem() {
 	const element = document.getElementById(activeItem.value?.toString() || "")
 	if (element && scrollContent.value) {
-		const wrap: HTMLElement = scrollContent.value.$el.nextSibling || scrollContent.value.$el.nextElementSibling
-		const middle = element.offsetTop - wrap.offsetHeight / 2
-		scrollContent.value?.scrollTo({ top: middle })
+		element.scrollIntoView({ block: "nearest" })
 	}
 }
 
@@ -333,133 +317,23 @@ onMounted(() => {
 
 	const keys = useMagicKeys()
 	const ActiveCMD = isWindows ? keys["ctrl+k"] : keys["cmd+k"]
-	const Up = keys["arrowup"]
-	const Down = keys["arrowdown"]
 	const Enter = keys["enter"]
-	// const Esc = keys["escape"]
 
 	useSearchDialog().trigger(openBox)
 
-	watch(ActiveCMD, v => {
-		if (v) openBox()
+	whenever(ActiveCMD, () => {
+		openBox()
 	})
 
-	watch(Down, v => {
+	whenever(Enter, () => {
 		if (showSearchBox.value) {
-			if (v) {
-				nextItem()
-				downupTimer.value = setInterval(() => {
-					nextItem()
-				}, 200)
-			} else {
-				if (downupTimer.value) {
-					clearInterval(downupTimer.value)
-				}
-			}
+			performAction()
 		}
 	})
-
-	watch(Up, v => {
-		if (showSearchBox.value) {
-			if (v) {
-				prevItem()
-				downupTimer.value = setInterval(() => {
-					prevItem()
-				}, 200)
-			} else {
-				if (downupTimer.value) {
-					clearInterval(downupTimer.value)
-				}
-			}
-		}
-	})
-
-	watch(Enter, v => {
-		if (showSearchBox.value) {
-			if (v) {
-				performAction()
-			}
-		}
-	})
-})
-
-onBeforeUnmount(() => {
-	if (downupTimer.value) clearInterval(downupTimer.value)
 })
 </script>
 
 <style lang="scss" scoped>
-@import "@/assets/scss/common.scss";
-.search-btn {
-	border-radius: 50px;
-	background-color: var(--bg-body);
-	gap: 10px;
-	height: 32px;
-	cursor: pointer;
-	padding: 4px 10px;
-	padding-right: 5px;
-	outline: none;
-	border: none;
-
-	.search-command {
-		span {
-			line-height: 0;
-			position: relative;
-			top: 1px;
-			font-size: 16px;
-
-			&.win {
-				font-size: inherit;
-				top: 0;
-			}
-		}
-	}
-
-	:deep() {
-		& > .n-icon {
-			opacity: 0.5;
-			transition: opacity 0.3s;
-		}
-	}
-	& > span {
-		opacity: 0.5;
-		padding-right: 2px;
-		font-size: 14px;
-		transition: opacity 0.3s;
-	}
-
-	:deep() {
-		& > code {
-			background-color: var(--hover-005-color);
-			border-top-right-radius: 10px;
-			border-bottom-right-radius: 10px;
-			padding-right: 10px;
-		}
-	}
-
-	&:hover {
-		:deep() {
-			& > .n-icon {
-				opacity: 0.9;
-			}
-		}
-		& > span {
-			opacity: 0.9;
-		}
-	}
-
-	@media (max-width: 1000px) {
-		padding-right: 10px;
-
-		& > span {
-			display: none;
-		}
-		& > .n-text--code {
-			display: none;
-		}
-	}
-}
-
 .search-box-modal {
 	.search-box {
 		border-radius: 4px;
@@ -507,6 +381,8 @@ onBeforeUnmount(() => {
 						gap: 10px;
 						cursor: pointer;
 						border-radius: 10px;
+						width: 100%;
+						text-align: left;
 
 						.icon {
 							width: 28px;
@@ -527,6 +403,9 @@ onBeforeUnmount(() => {
 
 						&.active {
 							background-color: var(--hover-005-color);
+						}
+						&:hover {
+							box-shadow: 0px 0px 0px 1px var(--primary-color) inset;
 						}
 					}
 				}

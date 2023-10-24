@@ -6,7 +6,7 @@
 					<template #trigger>
 						<div class="flex items-center gap-2">
 							<span>#{{ alertsEvent.event.id }}</span>
-							<Icon :name="InfoIcon"></Icon>
+							<Icon :name="InfoIcon" :size="16"></Icon>
 						</div>
 					</template>
 					<div class="flex flex-col gap-1">
@@ -40,7 +40,7 @@
 							<span>
 								{{ formatDate(alertsEvent.event.timestamp) }}
 							</span>
-							<Icon :name="TimeIcon"></Icon>
+							<Icon :name="TimeIcon" :size="16"></Icon>
 						</div>
 					</template>
 					<div class="flex flex-col gap-1">

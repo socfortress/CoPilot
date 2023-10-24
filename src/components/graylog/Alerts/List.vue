@@ -6,7 +6,7 @@
 					<template #trigger>
 						<n-button secondary size="small">
 							<template #icon>
-								<Icon :name="InfoIcon"></Icon>
+								<Icon :name="InfoIcon" class="cursor-help"></Icon>
 							</template>
 						</n-button>
 					</template>

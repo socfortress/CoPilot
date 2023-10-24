@@ -13,7 +13,7 @@
 				<div class="id">
 					<div class="flex items-center gap-2">
 						<span>#{{ event.id }}</span>
-						<Icon :name="InfoIcon" @click="showDetails = true" class="cursor-pointer"></Icon>
+						<Icon :name="InfoIcon" :size="16" @click="showDetails = true" class="cursor-pointer"></Icon>
 					</div>
 				</div>
 			</div>

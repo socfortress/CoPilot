@@ -1,15 +1,9 @@
 import { HttpClient } from "./httpClient"
 import type { FlaskBaseResponse } from "@/types/flask.d"
-import {
-	type Message,
-	type ThroughputMetric,
-	type IndexData,
-	type Inputs,
-	InputState,
-	type Streams
-} from "@/types/graylog/index.d" // Import Graylog interfaces
+import { type Message, type ThroughputMetric, type IndexData, type Inputs, InputState } from "@/types/graylog/index.d" // Import Graylog interfaces
 import type { Alerts, AlertsQuery } from "@/types/graylog/alerts.d"
 import type { EventDefinition } from "@/types/graylog/event-definition.d"
+import type { Stream } from "@/types/graylog/stream.d"
 
 export default {
 	getMessages(page?: number) {
@@ -30,6 +24,21 @@ export default {
 			`/graylog/event/definitions`
 		)
 	},
+	getStreams() {
+		return HttpClient.get<FlaskBaseResponse & { streams: Stream[]; total: number }>(`/graylog/streams`)
+	},
+	startStream(streamId: string) {
+		return HttpClient.post<FlaskBaseResponse>(`/graylog/streams/start`, {
+			stream_id: streamId
+		})
+	},
+	stopStream(streamId: string) {
+		return HttpClient.post<FlaskBaseResponse>(`/graylog/streams/stop`, {
+			stream_id: streamId
+		})
+	},
+
+	// TODO: review --------------------------------------------------------------------
 
 	getMetrics() {
 		return HttpClient.get<FlaskBaseResponse & { metrics: ThroughputMetric[] }>(`/graylog/metrics`)
@@ -56,14 +65,5 @@ export default {
 	},
 	getInputState(inputId: string) {
 		return HttpClient.get<FlaskBaseResponse & { state: InputState }>(`/graylog/inputs/${inputId}/state`)
-	},
-	getStreams() {
-		return HttpClient.get<FlaskBaseResponse & { streams: Streams }>(`/graylog/streams`)
-	},
-	stopStream(streamId: string) {
-		return HttpClient.post<FlaskBaseResponse>(`/graylog/streams/${streamId}/pause`)
-	},
-	startStream(streamId: string) {
-		return HttpClient.post<FlaskBaseResponse>(`/graylog/streams/${streamId}/resume`)
 	}
 }
