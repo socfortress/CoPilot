@@ -4,11 +4,13 @@
 			<div class="info grow flex gap-5">
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
-						<n-button secondary size="small">
-							<template #icon>
-								<Icon :name="InfoIcon" class="cursor-help"></Icon>
-							</template>
-						</n-button>
+						<div class="bg-color border-radius">
+							<n-button size="small">
+								<template #icon>
+									<Icon :name="InfoIcon"></Icon>
+								</template>
+							</n-button>
+						</div>
 					</template>
 					<div class="flex flex-col gap-2">
 						<div class="box">
@@ -88,6 +90,7 @@ const showSizePicker = computed(() => !compactMode.value)
 const pageSizes = [50, 100, 150, 200]
 const pageSlot = ref(8)
 const usedIndicies = ref("")
+
 const FilterIcon = "carbon:filter-edit"
 const InfoIcon = "carbon:information"
 

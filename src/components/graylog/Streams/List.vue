@@ -4,11 +4,13 @@
 			<div class="info grow flex gap-5">
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
-						<n-button secondary size="small">
-							<template #icon>
-								<Icon :name="InfoIcon"></Icon>
-							</template>
-						</n-button>
+						<div class="bg-color border-radius">
+							<n-button size="small">
+								<template #icon>
+									<Icon :name="InfoIcon"></Icon>
+								</template>
+							</n-button>
+						</div>
 					</template>
 					<div class="flex flex-col gap-2">
 						<div class="box">

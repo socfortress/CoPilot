@@ -4,16 +4,16 @@
 			<div class="flex items-center gap-3">
 				<n-tooltip trigger="hover">
 					<template #trigger>
-						<div class="priority">
+						<div class="priority cursor-help">
 							{{ event.priority }}
 						</div>
 					</template>
 					Priority
 				</n-tooltip>
 				<div class="id">
-					<div class="flex items-center gap-2">
+					<div class="flex items-center gap-2 cursor-pointer" @click="showDetails = true">
 						<span>#{{ event.id }}</span>
-						<Icon :name="InfoIcon" :size="16" @click="showDetails = true" class="cursor-pointer"></Icon>
+						<Icon :name="InfoIcon" :size="16"></Icon>
 					</div>
 				</div>
 			</div>
@@ -71,7 +71,7 @@ const { event } = defineProps<{ event: EventDefinition }>()
 const InfoIcon = "carbon:information"
 
 const showDetails = ref(false)
-const fieldSpec = computed(() => JSON.stringify(event?.field_spec))
+const fieldSpec = event?.field_spec ? JSON.stringify(event.field_spec) : ""
 const theme = computed(() => useThemeStore().themeName)
 </script>
 
@@ -85,17 +85,22 @@ const theme = computed(() => useThemeStore().themeName)
 		font-size: 13px;
 
 		.priority {
-			background-color: var(--divider-020-color);
+			background-color: var(--hover-005-color);
+			border: var(--border-small-100);
 			width: 20px;
 			height: 20px;
 			border-radius: 99999px;
 			text-align: center;
-			line-height: 21px;
+			line-height: 20px;
 			font-size: 12px;
 		}
 		.id {
 			word-break: break-word;
 			color: var(--fg-secondary-color);
+
+			&:hover {
+				color: var(--primary-color);
+			}
 		}
 		.notification {
 			color: var(--fg-secondary-color);

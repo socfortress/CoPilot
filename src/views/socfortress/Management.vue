@@ -10,11 +10,11 @@
 			<n-tab-pane name="events" tab="Events" display-directive="show:lazy">
 				<Events />
 			</n-tab-pane>
-			<n-tab-pane name="streams" tab="Streams">
+			<n-tab-pane name="streams" tab="Streams" display-directive="show:lazy">
 				<Streams />
 			</n-tab-pane>
 			<template #suffix>
-				<n-button secondary type="primary" size="small">Inputs</n-button>
+				<n-button ghost type="primary" size="small">Inputs</n-button>
 			</template>
 		</n-tabs>
 	</div>

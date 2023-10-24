@@ -28,12 +28,12 @@ export default {
 		return HttpClient.get<FlaskBaseResponse & { streams: Stream[]; total: number }>(`/graylog/streams`)
 	},
 	startStream(streamId: string) {
-		return HttpClient.post<FlaskBaseResponse>(`/graylog/streams/start`, {
+		return HttpClient.post<FlaskBaseResponse>(`/graylog/stream/start`, {
 			stream_id: streamId
 		})
 	},
 	stopStream(streamId: string) {
-		return HttpClient.post<FlaskBaseResponse>(`/graylog/streams/stop`, {
+		return HttpClient.post<FlaskBaseResponse>(`/graylog/stream/stop`, {
 			stream_id: streamId
 		})
 	},

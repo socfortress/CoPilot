@@ -4,7 +4,7 @@
 			<div class="id">
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
-						<div class="flex items-center gap-2">
+						<div class="flex items-center gap-2 cursor-help">
 							<span>#{{ alertsEvent.event.id }}</span>
 							<Icon :name="InfoIcon" :size="16"></Icon>
 						</div>
@@ -36,7 +36,7 @@
 			<div class="time">
 				<n-popover overlap placement="bottom-end">
 					<template #trigger>
-						<div class="flex items-center gap-2">
+						<div class="flex items-center gap-2 cursor-help">
 							<span>
 								{{ formatDate(alertsEvent.event.timestamp) }}
 							</span>
@@ -94,9 +94,17 @@ function formatDate(timestamp: string): string {
 		.id {
 			word-break: break-word;
 			color: var(--fg-secondary-color);
+
+			&:hover {
+				color: var(--primary-color);
+			}
 		}
 		.time {
 			color: var(--fg-secondary-color);
+
+			&:hover {
+				color: var(--primary-color);
+			}
 		}
 	}
 	.main-box {
