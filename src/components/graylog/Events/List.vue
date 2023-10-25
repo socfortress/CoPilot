@@ -1,6 +1,6 @@
 <template>
 	<n-spin :show="loading">
-		<div class="header flex items-center justify-end gap-2" ref="header">
+		<div class="header flex items-center justify-end gap-2">
 			<div class="info grow flex gap-5">
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
@@ -48,7 +48,6 @@ const InfoIcon = "carbon:information"
 
 const message = useMessage()
 const total = ref(0)
-const header = ref()
 const loading = ref(false)
 const events = ref<EventDefinition[]>([])
 const priorities = computed<SelectMixedOption[]>(() =>

@@ -97,6 +97,8 @@ const message = useMessage()
 const loading = ref(false)
 const streams = ref<Stream[]>([])
 const total = ref(0)
+// TODO: to complete
+const totalEnabled = ref(0)
 const pageSize = ref(25)
 const currentPage = ref(1)
 const simpleMode = ref(false)

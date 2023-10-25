@@ -1,9 +1,10 @@
 import { HttpClient } from "./httpClient"
 import type { FlaskBaseResponse } from "@/types/flask.d"
-import { type Message, type ThroughputMetric, type IndexData, type Inputs, InputState } from "@/types/graylog/index.d" // Import Graylog interfaces
+import { type Message, type ThroughputMetric, type IndexData } from "@/types/graylog/index.d"
 import type { Alerts, AlertsQuery } from "@/types/graylog/alerts.d"
 import type { EventDefinition } from "@/types/graylog/event-definition.d"
 import type { Stream } from "@/types/graylog/stream.d"
+import type { ConfiguredInput, RunningInput } from "@/types/graylog/inputs.d"
 
 export default {
 	getMessages(page?: number) {
@@ -37,6 +38,27 @@ export default {
 			stream_id: streamId
 		})
 	},
+	getInputs() {
+		return HttpClient.get<
+			FlaskBaseResponse & { configured_inputs: ConfiguredInput[]; running_inputs: RunningInput[] }
+		>(`/graylog/inputs`)
+	},
+	getInputsRunning() {
+		return HttpClient.get<FlaskBaseResponse & { configured_inputs: ConfiguredInput[] }>(`/graylog/inputs/running`)
+	},
+	getInputsConfigured() {
+		return HttpClient.get<FlaskBaseResponse & { running_inputs: RunningInput[] }>(`/graylog/inputs/configured`)
+	},
+	startInput(inputId: string) {
+		return HttpClient.post<FlaskBaseResponse>(`/graylog/input/start`, {
+			input_id: inputId
+		})
+	},
+	stopInput(inputId: string) {
+		return HttpClient.post<FlaskBaseResponse>(`/graylog/input/stop`, {
+			input_id: inputId
+		})
+	},
 
 	// TODO: review --------------------------------------------------------------------
 
@@ -50,20 +72,5 @@ export default {
 		return HttpClient.delete<FlaskBaseResponse>(`/graylog/index`, {
 			data: { index_name: indexName }
 		})
-	},
-	getInputsRunning() {
-		return HttpClient.get<FlaskBaseResponse & { inputs: Inputs }>(`/graylog/inputs/running`)
-	},
-	getInputsConfigured() {
-		return HttpClient.get<FlaskBaseResponse & { inputs: Inputs }>(`/graylog/inputs/configured`)
-	},
-	startInput(inputId: string) {
-		return HttpClient.put<FlaskBaseResponse>(`/graylog/inputs/${inputId}/start`)
-	},
-	stopInput(inputId: string) {
-		return HttpClient.delete<FlaskBaseResponse>(`/graylog/inputs/${inputId}/stop`)
-	},
-	getInputState(inputId: string) {
-		return HttpClient.get<FlaskBaseResponse & { state: InputState }>(`/graylog/inputs/${inputId}/state`)
 	}
 }

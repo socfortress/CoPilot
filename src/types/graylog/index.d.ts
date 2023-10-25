@@ -5,6 +5,10 @@ export interface Message {
 	timestamp: string
 }
 
+export interface MessageExtended extends Message {
+	id?: string
+}
+
 // TODO: review --------------------------------------------------------------------
 
 export interface ThroughputMetric {
@@ -63,38 +67,4 @@ export interface IndexData {
 	indices: { [key: string]: IndexDetails }
 	message: string
 	success: boolean
-}
-
-// Graylog Inputs
-export enum InputState {
-	RUNNING = "RUNNING",
-	STOPPED = "STOPPED"
-}
-
-export interface ConfiguredInput {
-	port: number
-	title: string
-}
-
-export interface RunningInput {
-	port: number
-	state: string
-	title: string
-}
-
-export interface ConfiguredInputsData {
-	configured_inputs: ConfiguredInput[]
-	message: string
-	success: boolean
-}
-
-export interface RunningInputsData {
-	inputs: RunningInput[]
-	message: string
-	success: boolean
-}
-
-export interface Inputs {
-	configured_inputs: ConfiguredInputsData
-	running_inputs: RunningInputsData
 }

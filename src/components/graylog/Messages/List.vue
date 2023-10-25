@@ -44,17 +44,13 @@ import Api from "@/api"
 import MessageItem from "./Item.vue"
 import Icon from "@/components/common/Icon.vue"
 import { nanoid } from "nanoid"
-import type { Message } from "@/types/graylog/index.d"
-
-export interface MessageExt extends Message {
-	id?: string
-}
+import type { MessageExtended } from "@/types/graylog/index.d"
 
 const InfoIcon = "carbon:information"
 
 const message = useMessage()
 const loading = ref(false)
-const messages = ref<MessageExt[]>([])
+const messages = ref<MessageExtended[]>([])
 const total = ref(0)
 const pageSize = ref(1)
 const currentPage = ref(1)
@@ -66,7 +62,7 @@ function getData(page: number) {
 		.getMessages(page)
 		.then(res => {
 			if (res.data.success) {
-				const data = (res.data.graylog_messages || []) as MessageExt[]
+				const data = (res.data.graylog_messages || []) as MessageExtended[]
 				messages.value = data.map(o => {
 					o.id = nanoid()
 					return o
