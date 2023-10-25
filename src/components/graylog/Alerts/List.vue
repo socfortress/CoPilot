@@ -34,16 +34,18 @@
 				:simple="simpleMode"
 			/>
 			<n-select size="small" v-model:value="timerange" :options="timeOptions" class="!w-32" v-if="!compactMode" />
-			<n-popover overlap v-if="compactMode" placement="bottom-end">
+			<n-popover overlap v-if="compactMode" placement="right">
 				<template #trigger>
-					<n-button secondary size="small">
-						<template #icon>
-							<Icon :name="FilterIcon"></Icon>
-						</template>
-					</n-button>
+					<div class="bg-color border-radius">
+						<n-button size="small">
+							<template #icon>
+								<Icon :name="FilterIcon"></Icon>
+							</template>
+						</n-button>
+					</div>
 				</template>
-				<div>
-					<div class="opacity-50 text-sm mb-2">Time range:</div>
+				<div class="mb-2">
+					<div class="opacity-50 text-sm my-1">Time range:</div>
 					<n-select size="small" v-model:value="timerange" :options="timeOptions" class="!w-32 mb-1" />
 				</div>
 			</n-popover>
@@ -87,7 +89,7 @@ const header = ref()
 const compactMode = ref(false)
 const simpleMode = ref(false)
 const showSizePicker = computed(() => !compactMode.value)
-const pageSizes = [50, 100, 150, 200]
+const pageSizes = [25, 50, 100, 150, 200]
 const pageSlot = ref(8)
 const usedIndicies = ref("")
 

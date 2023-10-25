@@ -31,6 +31,7 @@ function formatDate(timestamp: string): string {
 .item {
 	border-radius: var(--border-radius);
 	background-color: var(--bg-color);
+	transition: all 0.2s var(--bezier-ease);
 
 	.header-box {
 		font-family: var(--font-family-mono);
@@ -59,6 +60,10 @@ function formatDate(timestamp: string): string {
 			color: var(--fg-secondary-color);
 			width: 100%;
 		}
+	}
+
+	&:hover {
+		box-shadow: 0px 0px 0px 1px inset var(--primary-color);
 	}
 
 	@container (max-width: 650px) {

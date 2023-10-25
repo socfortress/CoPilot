@@ -29,6 +29,42 @@
 				:item-count="total"
 				:simple="simpleMode"
 			/>
+			<n-popover overlap placement="right" style="padding-left: 0; padding-right: 0">
+				<template #trigger>
+					<div class="bg-color border-radius">
+						<n-button size="small">
+							<template #icon>
+								<Icon :name="FilterIcon"></Icon>
+							</template>
+						</n-button>
+					</div>
+				</template>
+				<div class="py-1">
+					<div class="px-3">
+						<div class="opacity-50 text-sm mb-1">Enabled:</div>
+						<n-select
+							size="small"
+							v-model:value="enabledFilter"
+							:options="enabledOptions"
+							clearable
+							placeholder="All"
+							class="!w-36"
+						/>
+					</div>
+					<n-divider class="!my-3" />
+					<div class="px-3">
+						<div class="opacity-50 text-sm mb-1">Editable:</div>
+						<n-select
+							size="small"
+							v-model:value="editableFilter"
+							:options="editableOptions"
+							clearable
+							placeholder="All"
+							class="!w-36"
+						/>
+					</div>
+				</div>
+			</n-popover>
 		</div>
 		<div class="list my-3">
 			<StreamItem v-for="stream of itemsPaginated" :key="stream.id" :stream="stream" />
@@ -47,13 +83,14 @@
 
 <script setup lang="ts">
 import { ref, onBeforeMount, computed } from "vue"
-import { useMessage, NSpin, NPagination, NPopover, NButton } from "naive-ui"
+import { useMessage, NSpin, NPagination, NPopover, NButton, NSelect, NDivider } from "naive-ui"
 import Api from "@/api"
 import StreamItem from "./Item.vue"
 import Icon from "@/components/common/Icon.vue"
 import type { Stream } from "@/types/graylog/stream.d"
 import { useResizeObserver } from "@vueuse/core"
 
+const FilterIcon = "carbon:filter-edit"
 const InfoIcon = "carbon:information"
 
 const message = useMessage()
@@ -67,11 +104,43 @@ const showSizePicker = ref(true)
 const pageSizes = [10, 25, 50, 100]
 const header = ref()
 const pageSlot = ref(8)
+const enabledFilter = ref<null | number>(null)
+const editableFilter = ref<null | number>(null)
+const enabledOptions = [
+	{ label: "Enabled", value: 1 },
+	{ label: "Not Enabled", value: 0 }
+]
+const editableOptions = [
+	{ label: "Editable", value: 1 },
+	{ label: "Not Editable", value: 0 }
+]
 
 const itemsPaginated = computed(() => {
 	const from = (currentPage.value - 1) * pageSize.value
 	const to = currentPage.value * pageSize.value
-	return streams.value.slice(from, to)
+
+	return streams.value
+		.filter(o => {
+			switch (enabledFilter.value) {
+				case 1:
+					return o.disabled === false
+				case 0:
+					return o.disabled === true
+				default:
+					return true
+			}
+		})
+		.filter(o => {
+			switch (editableFilter.value) {
+				case 1:
+					return o.is_editable === true
+				case 0:
+					return o.is_editable === false
+				default:
+					return true
+			}
+		})
+		.slice(from, to)
 })
 
 function getData() {

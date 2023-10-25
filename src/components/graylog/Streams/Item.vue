@@ -31,16 +31,28 @@
 					</div>
 				</div>
 			</div>
-			<div class="actions-box flex flex-col justify-end">
-				<n-button @click="stop()" :loading="loading">
-					<template #icon>
-						<Icon :name="StopIcon"></Icon>
-					</template>
+			<div class="actions-box flex flex-col justify-end" v-if="stream.is_editable">
+				<n-button @click="stop()" :loading="loading" v-if="!stream.disabled">
+					<template #icon><Icon :name="StopIcon"></Icon></template>
 					Stop stream
+				</n-button>
+				<n-button @click="start()" :loading="loading" v-else type="primary">
+					<template #icon><Icon :name="StartIcon"></Icon></template>
+					Start stream
 				</n-button>
 			</div>
 		</div>
-		<div class="footer-box">
+		<div class="footer-box flex justify-between items-center">
+			<div class="actions-box flex flex-col justify-end" v-if="stream.is_editable">
+				<n-button @click="stop()" :loading="loading" v-if="!stream.disabled" size="small">
+					<template #icon><Icon :name="StopIcon"></Icon></template>
+					Stop
+				</n-button>
+				<n-button @click="start()" :loading="loading" v-else type="primary" size="small">
+					<template #icon><Icon :name="StartIcon"></Icon></template>
+					Start
+				</n-button>
+			</div>
 			<div class="time">{{ formatDate(stream.created_at) }}</div>
 		</div>
 
@@ -72,12 +84,13 @@ import { useSettingsStore } from "@/stores/settings"
 import Icon from "@/components/common/Icon.vue"
 import dayjs from "@/utils/dayjs"
 import { NModal, NButton, useMessage } from "naive-ui"
-import { computed, ref } from "vue"
+import { computed, ref, toRefs } from "vue"
 import { JsonTreeView } from "json-tree-view-vue3"
 import Api from "@/api"
 import { useThemeStore } from "@/stores/theme"
 
-const { stream } = defineProps<{ stream: Stream }>()
+const props = defineProps<{ stream: Stream }>()
+const { stream } = toRefs(props)
 
 const UserIcon = "carbon:user"
 const InfoIcon = "carbon:information"
@@ -89,7 +102,7 @@ const StartIcon = "carbon:play"
 const message = useMessage()
 const loading = ref(false)
 const showDetails = ref(false)
-const rules = stream?.rules ? JSON.stringify(stream.rules) : ""
+const rules = stream?.value?.rules ? JSON.stringify(stream.value.rules) : ""
 const theme = computed(() => useThemeStore().themeName)
 const dFormats = useSettingsStore().dateFormat
 
@@ -101,11 +114,32 @@ function stop() {
 	loading.value = true
 
 	Api.graylog
-		.stopStream(stream.id)
+		.stopStream(stream.value.id)
 		.then(res => {
 			if (res.data.success) {
-				console.log(res.data)
-				message.success("Stream stopped.")
+				stream.value.disabled = true
+				message.success(res.data?.message || "Stream stopped.")
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			loading.value = false
+		})
+}
+
+function start() {
+	loading.value = true
+
+	Api.graylog
+		.startStream(stream.value.id)
+		.then(res => {
+			if (res.data.success) {
+				stream.value.disabled = false
+				message.success(res.data?.message || "Stream started.")
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
@@ -123,6 +157,7 @@ function stop() {
 .item {
 	border-radius: var(--border-radius);
 	background-color: var(--bg-color);
+	transition: all 0.2s var(--bezier-ease);
 
 	.header-box {
 		font-family: var(--font-family-mono);
@@ -190,13 +225,13 @@ function stop() {
 	}
 
 	.footer-box {
-		font-family: var(--font-family-mono);
 		display: none;
 		text-align: right;
 		font-size: 13px;
 		margin-top: 10px;
 
 		.time {
+			font-family: var(--font-family-mono);
 			color: var(--fg-secondary-color);
 			width: 100%;
 		}
@@ -206,10 +241,18 @@ function stop() {
 		background-color: var(--primary-005-color);
 		box-shadow: 0px 0px 0px 1px inset var(--primary-030-color);
 	}
+	&:hover {
+		box-shadow: 0px 0px 0px 1px inset var(--primary-color);
+	}
 
 	@container (max-width: 650px) {
 		.header-box {
 			.time {
+				display: none;
+			}
+		}
+		.main-box {
+			.actions-box {
 				display: none;
 			}
 		}
