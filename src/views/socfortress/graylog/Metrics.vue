@@ -1,6 +1,13 @@
 <template>
 	<div class="page">
-		<div class="spacer">Metrics</div>
+		Graylog metrics detail the current load or backlog of logs being processed by the Graylog server. Also in this
+		payload is the
+		<code>uncommitted_journal_entries</code>
+		. If this value is greater than
+		<code>50,000</code>
+		I'd like for that to be
+		<strong>highlighted</strong>
+		on the page as an issue.
 	</div>
 </template>
 
@@ -8,20 +15,4 @@
 //TODO: Metrics
 </script>
 
-<style lang="scss" scoped>
-.spacer {
-	background: var(--divider-005-color);
-	background: repeating-linear-gradient(
-		-45deg,
-		var(--divider-005-color),
-		var(--divider-005-color) 1px,
-		transparent 1px,
-		transparent 20px
-	);
-	width: 100%;
-	height: 200vh;
-	border-radius: 14px;
-	border: 4px dashed var(--divider-005-color);
-	padding: 30px;
-}
-</style>
+<style lang="scss" scoped></style>

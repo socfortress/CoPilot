@@ -1,10 +1,11 @@
 import { HttpClient } from "./httpClient"
 import type { FlaskBaseResponse } from "@/types/flask.d"
-import { type Message, type ThroughputMetric, type IndexData } from "@/types/graylog/index.d"
+import type { Message, ThroughputMetric, IndexData } from "@/types/graylog/index.d"
 import type { Alerts, AlertsQuery } from "@/types/graylog/alerts.d"
 import type { EventDefinition } from "@/types/graylog/event-definition.d"
 import type { Stream } from "@/types/graylog/stream.d"
 import type { ConfiguredInput, RunningInput } from "@/types/graylog/inputs.d"
+import type { PipelineRule, Pipeline } from "@/types/graylog/pipelines.d"
 
 export default {
 	getMessages(page?: number) {
@@ -63,6 +64,12 @@ export default {
 		return HttpClient.get<
 			FlaskBaseResponse & { throughput_metrics: ThroughputMetric[]; uncommitted_journal_entries: number }
 		>(`/graylog/metrics`)
+	},
+	getPipelines() {
+		return HttpClient.get<FlaskBaseResponse & { pipelines: Pipeline[] }>(`/graylog/pipelines`)
+	},
+	getPipelinesRules() {
+		return HttpClient.get<FlaskBaseResponse & { pipeline_rules: PipelineRule[] }>(`/graylog/pipeline/rules`)
 	},
 
 	// TODO: review --------------------------------------------------------------------
