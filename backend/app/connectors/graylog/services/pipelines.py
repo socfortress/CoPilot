@@ -38,3 +38,20 @@ def get_pipeline_rules() -> PipelineRulesResponse:
     except Exception as e:
         logger.error(f"Failed to collect pipeline rules: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to collect pipeline rules: {e}")
+
+
+def get_pipeline_rule_by_id(pipeline_id) -> PipelineRulesResponse:
+    """Get pipeline rules from Graylog."""
+    logger.info(f"Getting pipeline rules from Graylog for pipeline {pipeline_id}")
+    pipeline_rules_collected = send_get_request(endpoint=f"/api/system/pipelines/rule/{pipeline_id}")
+    logger.info(pipeline_rules_collected)
+    try:
+        if pipeline_rules_collected["success"]:
+            pipeline_rule = PipelineRule(**pipeline_rules_collected["data"])
+            return PipelineRulesResponse(pipeline_rules=[pipeline_rule], success=True, message="Pipeline rules collected successfully")
+    except KeyError as e:
+        logger.error(f"Failed to collect pipeline rules key: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to collect pipeline rules key: {e}")
+    except Exception as e:
+        logger.error(f"Failed to collect pipeline rules: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to collect pipeline rules: {e}")

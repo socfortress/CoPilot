@@ -1,7 +1,7 @@
 from fastapi import APIRouter
+from fastapi import BackgroundTasks
 from fastapi import HTTPException
 from fastapi import Security
-from fastapi import BackgroundTasks
 from loguru import logger
 from starlette.status import HTTP_401_UNAUTHORIZED
 
@@ -107,7 +107,7 @@ async def get_agent_by_hostname(hostname: str) -> AgentsResponse:
 async def sync_all_agents(backgroud_tasks: BackgroundTasks) -> SyncedAgentsResponse:
     logger.info("Syncing agents from Wazuh Manager")
     backgroud_tasks.add_task(sync_agents)
-    #return sync_agents()
+    # return sync_agents()
     return SyncedAgentsResponse(success=True, message="Agents synced started successfully")
 
 
