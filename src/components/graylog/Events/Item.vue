@@ -43,7 +43,7 @@
 			segmented
 		>
 			<n-tabs type="line" animated justify-content="space-evenly">
-				<n-tab-pane name="alerts" tab="Alerts" display-directive="show:lazy">
+				<n-tab-pane name="query" tab="Query" display-directive="show:lazy">
 					<div class="p-3 break-all">
 						<n-input :value="event?.config?.query" type="textarea" readonly />
 					</div>

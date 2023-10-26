@@ -51,11 +51,16 @@
 			</n-popover>
 		</div>
 		<div class="list my-3">
-			<AlertsEventItem
-				v-for="alertsEvent of alertsEvents"
-				:key="alertsEvent.event.id"
-				:alertsEvent="alertsEvent"
-			/>
+			<template v-if="alertsEvents.length">
+				<AlertsEventItem
+					v-for="alertsEvent of alertsEvents"
+					:key="alertsEvent.event.id"
+					:alertsEvent="alertsEvent"
+				/>
+			</template>
+			<template v-else>
+				<n-empty description="No items found" v-if="!loading" />
+			</template>
 		</div>
 		<div class="footer flex justify-end">
 			<n-pagination
@@ -71,7 +76,7 @@
 
 <script setup lang="ts">
 import { ref, onBeforeMount, watch, computed } from "vue"
-import { useMessage, NSpin, NPagination, NSelect, NPopover, NButton } from "naive-ui"
+import { useMessage, NSpin, NPagination, NSelect, NPopover, NButton, NEmpty } from "naive-ui"
 import Api from "@/api"
 import AlertsEventItem from "./Item.vue"
 import { useResizeObserver } from "@vueuse/core"

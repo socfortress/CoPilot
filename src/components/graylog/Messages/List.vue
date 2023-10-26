@@ -23,7 +23,12 @@
 			<n-pagination v-model:page="currentPage" :page-size="pageSize" :item-count="total" :page-slot="5" />
 		</div>
 		<div class="list my-3">
-			<MessageItem v-for="msg of messages" :key="msg.id" :message="msg" />
+			<template v-if="messages.length">
+				<MessageItem v-for="msg of messages" :key="msg.id" :message="msg" />
+			</template>
+			<template v-else>
+				<n-empty description="No items found" v-if="!loading" />
+			</template>
 		</div>
 		<div class="footer flex justify-end">
 			<n-pagination
@@ -39,7 +44,7 @@
 
 <script setup lang="ts">
 import { ref, onBeforeMount, watch } from "vue"
-import { useMessage, NSpin, NPagination, NPopover, NButton } from "naive-ui"
+import { useMessage, NSpin, NPagination, NPopover, NButton, NEmpty } from "naive-ui"
 import Api from "@/api"
 import MessageItem from "./Item.vue"
 import Icon from "@/components/common/Icon.vue"

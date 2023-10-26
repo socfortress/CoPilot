@@ -76,4 +76,6 @@ export interface StaticFields {
 	[key: string]: string
 }
 
-export interface InputExtended extends Pick<RunningInput, "state", "started_at", "detailed_message">, ConfiguredInput {}
+export interface InputExtended
+	extends ConfiguredInput,
+		Pick<RunningInput, "state" | "started_at" | "detailed_message"> {}

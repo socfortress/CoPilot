@@ -77,12 +77,12 @@ export default function getItems(mode: "vertical" | "horizontal", collapsed: boo
 							RouterLink,
 							{
 								to: {
-									name: "Management"
+									name: "Graylog-Management"
 								}
 							},
 							{ default: () => "Management" }
 						),
-					key: "Management"
+					key: "Graylog-Management"
 				},
 				{
 					label: () =>
@@ -90,12 +90,12 @@ export default function getItems(mode: "vertical" | "horizontal", collapsed: boo
 							RouterLink,
 							{
 								to: {
-									name: "Metrics"
+									name: "Graylog-Metrics"
 								}
 							},
 							{ default: () => "Metrics" }
 						),
-					key: "Metrics"
+					key: "Graylog-Metrics"
 				},
 				{
 					label: () =>
@@ -103,12 +103,12 @@ export default function getItems(mode: "vertical" | "horizontal", collapsed: boo
 							RouterLink,
 							{
 								to: {
-									name: "Pipelines"
+									name: "Graylog-Pipelines"
 								}
 							},
 							{ default: () => "Pipelines" }
 						),
-					key: "Pipelines"
+					key: "Graylog-Pipelines"
 				}
 			]
 		},

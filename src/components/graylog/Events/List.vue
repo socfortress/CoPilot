@@ -30,14 +30,19 @@
 			/>
 		</div>
 		<div class="list my-3">
-			<EventItem v-for="event of itemsPaginated" :key="event.id" :event="event" />
+			<template v-if="itemsPaginated.length">
+				<EventItem v-for="event of itemsPaginated" :key="event.id" :event="event" />
+			</template>
+			<template v-else>
+				<n-empty description="No items found" v-if="!loading" />
+			</template>
 		</div>
 	</n-spin>
 </template>
 
 <script setup lang="ts">
 import { ref, onBeforeMount, computed } from "vue"
-import { useMessage, NSpin, NPopover, NButton, NSelect } from "naive-ui"
+import { useMessage, NSpin, NPopover, NButton, NSelect, NEmpty } from "naive-ui"
 import EventItem from "./Item.vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"

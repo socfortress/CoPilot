@@ -13,8 +13,11 @@
 			<n-tab-pane name="streams" tab="Streams" display-directive="show:lazy">
 				<Streams />
 			</n-tab-pane>
+			<n-tab-pane name="inputs" tab="Inputs" display-directive="show:lazy">
+				<Inputs />
+			</n-tab-pane>
 			<template #suffix>
-				<n-button ghost type="primary" size="small">Inputs</n-button>
+				<n-button ghost type="primary" size="small">Inputs ??</n-button>
 			</template>
 		</n-tabs>
 	</div>
@@ -26,6 +29,7 @@ import Messages from "@/components/graylog/Messages/List.vue"
 import Alerts from "@/components/graylog/Alerts/List.vue"
 import Events from "@/components/graylog/Events/List.vue"
 import Streams from "@/components/graylog/Streams/List.vue"
+import Inputs from "@/components/graylog/Inputs/List.vue"
 </script>
 
 <style lang="scss" scoped></style>

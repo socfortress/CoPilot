@@ -37,22 +37,32 @@ const router = createRouter({
 			meta: { title: "Agent", auth: true, roles: UserRole.All }
 		},
 		{
-			path: "/management",
-			name: "Management",
-			component: () => import("@/views/socfortress/Management.vue"),
-			meta: { title: "Management", auth: true, roles: UserRole.All }
-		},
-		{
-			path: "/metrics",
-			name: "Metrics",
-			component: () => import("@/views/socfortress/Metrics.vue"),
-			meta: { title: "Metrics", auth: true, roles: UserRole.All }
-		},
-		{
-			path: "/pipelines",
-			name: "Pipelines",
-			component: () => import("@/views/socfortress/Pipelines.vue"),
-			meta: { title: "Pipelines", auth: true, roles: UserRole.All }
+			path: "/graylog",
+			redirect: "/graylog/management",
+			meta: {
+				auth: true,
+				roles: UserRole.All
+			},
+			children: [
+				{
+					path: "management",
+					name: "Graylog-Management",
+					component: () => import("@/views/socfortress/graylog/Management.vue"),
+					meta: { title: "Management" }
+				},
+				{
+					path: "metrics",
+					name: "Graylog-Metrics",
+					component: () => import("@/views/socfortress/graylog/Metrics.vue"),
+					meta: { title: "Metrics" }
+				},
+				{
+					path: "pipelines",
+					name: "Graylog-Pipelines",
+					component: () => import("@/views/socfortress/graylog/Pipelines.vue"),
+					meta: { title: "Pipelines" }
+				}
+			]
 		},
 
 		{

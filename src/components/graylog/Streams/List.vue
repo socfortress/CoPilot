@@ -17,6 +17,10 @@
 							Total:
 							<code>{{ total }}</code>
 						</div>
+						<div class="box">
+							Enabled:
+							<code>{{ totalEnabled }}</code>
+						</div>
 					</div>
 				</n-popover>
 			</div>
@@ -67,7 +71,12 @@
 			</n-popover>
 		</div>
 		<div class="list my-3">
-			<StreamItem v-for="stream of itemsPaginated" :key="stream.id" :stream="stream" />
+			<template v-if="itemsPaginated.length">
+				<StreamItem v-for="stream of itemsPaginated" :key="stream.id" :stream="stream" />
+			</template>
+			<template v-else>
+				<n-empty description="No items found" v-if="!loading" />
+			</template>
 		</div>
 		<div class="footer flex justify-end">
 			<n-pagination
@@ -83,7 +92,7 @@
 
 <script setup lang="ts">
 import { ref, onBeforeMount, computed } from "vue"
-import { useMessage, NSpin, NPagination, NPopover, NButton, NSelect, NDivider } from "naive-ui"
+import { useMessage, NSpin, NPagination, NPopover, NButton, NSelect, NDivider, NEmpty } from "naive-ui"
 import Api from "@/api"
 import StreamItem from "./Item.vue"
 import Icon from "@/components/common/Icon.vue"
@@ -97,8 +106,7 @@ const message = useMessage()
 const loading = ref(false)
 const streams = ref<Stream[]>([])
 const total = ref(0)
-// TODO: to complete
-const totalEnabled = ref(0)
+const totalEnabled = computed(() => streams.value.filter(o => !o.disabled).length)
 const pageSize = ref(25)
 const currentPage = ref(1)
 const simpleMode = ref(false)
