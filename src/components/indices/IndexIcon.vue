@@ -11,9 +11,9 @@ import { toRefs } from "vue"
 import { type IndexStats, IndexHealth } from "@/types/indices.d"
 import Icon from "@/components/common/Icon.vue"
 
-const ShieldIcon = "fluent:shield-task-20-regular"
-const WarningIcon = "fluent:shield-error-20-regular"
-const DangerIcon = "fluent:warning-20-regular"
+const ShieldIcon = "majesticons:shield-check-line"
+const WarningIcon = "majesticons:shield-exclamation-line"
+const DangerIcon = "majesticons:exclamation-line"
 
 const props = defineProps<{
 	health: IndexStats["health"]

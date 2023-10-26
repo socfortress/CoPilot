@@ -24,7 +24,6 @@
 					</div>
 				</n-popover>
 			</div>
-			<div>⚠️ WORK IN PROGRESS ⚠️</div>
 			<n-select
 				v-model:value="stateFilter"
 				:options="stateOptions"
@@ -36,7 +35,12 @@
 		</div>
 		<div class="list my-3">
 			<template v-if="itemsFiltered.length">
-				<InputItem v-for="input of itemsFiltered" :key="input.id" :input="input" />
+				<InputItem
+					v-for="input of itemsFiltered"
+					:key="input.id"
+					:input="input"
+					@updated="getData('running')"
+				/>
 			</template>
 			<template v-else>
 				<n-empty description="No items found" v-if="!loading" />

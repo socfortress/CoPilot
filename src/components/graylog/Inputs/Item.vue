@@ -12,71 +12,125 @@
 		<div class="main-box flex justify-between">
 			<div class="content">
 				<div class="title">{{ input.title }}</div>
-				<div class="description mb-2">{{ input.type }}</div>
-			</div>
-			<!--
-
-				<div class="actions-box flex flex-col justify-end" v-if="stream.is_editable">
-					<n-button @click="stop()" :loading="loading" v-if="!stream.disabled">
-						<template #icon><Icon :name="StopIcon"></Icon></template>
-						Stop stream
-					</n-button>
-					<n-button @click="start()" :loading="loading" v-else type="primary">
-						<template #icon><Icon :name="StartIcon"></Icon></template>
-						Start stream
-					</n-button>
+				<div class="name mb-2">{{ input.name }}</div>
+				<div class="badges-box flex flex-wrap items-center gap-3">
+					<div class="badge cursor" @click="showDetails = true">
+						<Icon :name="InfoIcon" :size="14"></Icon>
+					</div>
+					<div class="badge" :class="{ active: input.global }">
+						<span>Global</span>
+						<Icon :name="input.global ? GlobalIcon : DisabledIcon" :size="14"></Icon>
+					</div>
+					<n-tooltip trigger="hover" :disabled="!isRunning">
+						<template #trigger>
+							<div class="badge" :class="{ active: isRunning, 'cursor-help': isRunning }">
+								<span>Running</span>
+								<Icon :name="isRunning ? TimeIcon : DisabledIcon" :size="14"></Icon>
+							</div>
+						</template>
+						{{ formatDate(input.started_at) }}
+					</n-tooltip>
 				</div>
-			-->
+			</div>
+
+			<div class="actions-box flex flex-col justify-end">
+				<n-button @click="stop()" :loading="loading" v-if="isRunning">
+					<template #icon><Icon :name="StopIcon"></Icon></template>
+					Stop input
+				</n-button>
+				<n-button @click="start()" :loading="loading" v-else type="primary">
+					<template #icon><Icon :name="StartIcon"></Icon></template>
+					Start input
+				</n-button>
+			</div>
 		</div>
 		<div class="footer-box flex justify-between items-center">
-			<!--
+			<div class="actions-box flex flex-col justify-end">
+				<n-button @click="stop()" :loading="loading" v-if="isRunning" size="small">
+					<template #icon><Icon :name="StopIcon"></Icon></template>
+					Stop
+				</n-button>
+				<n-button @click="start()" :loading="loading" v-else type="primary" size="small">
+					<template #icon><Icon :name="StartIcon"></Icon></template>
+					Start
+				</n-button>
+			</div>
 
-				<div class="actions-box flex flex-col justify-end" v-if="stream.is_editable">
-					<n-button @click="stop()" :loading="loading" v-if="!stream.disabled" size="small">
-						<template #icon><Icon :name="StopIcon"></Icon></template>
-						Stop
-					</n-button>
-					<n-button @click="start()" :loading="loading" v-else type="primary" size="small">
-						<template #icon><Icon :name="StartIcon"></Icon></template>
-						Start
-					</n-button>
-				</div>
-			-->
 			<div class="time">{{ formatDate(input.created_at) }}</div>
 		</div>
 
 		<n-modal
 			v-model:show="showDetails"
 			preset="card"
+			content-style="padding:0px"
 			:style="{ maxWidth: 'min(600px, 90vw)', overflow: 'hidden' }"
 			:title="input.title"
 			:bordered="false"
 			segmented
 		>
-			<p class="mb-1">Attributes :</p>
-			<JsonTreeView :data="attributes" :colorScheme="theme" />
+			<n-tabs type="line" animated justify-content="space-evenly">
+				<n-tab-pane name="info" tab="Info" display-directive="show:lazy">
+					<div class="p-7 pt-4">
+						<div class="mb-2">
+							Id :
+							<code>{{ input.id }}</code>
+						</div>
+						<div class="mb-2">
+							Node :
+							<code>{{ input.node }}</code>
+						</div>
+						<div class="mb-2">
+							Type :
+							<code>{{ input.type }}</code>
+						</div>
+						<div class="mb-2">
+							Content pack :
+							<code>{{ input.content_pack || "-" }}</code>
+						</div>
+						<div class="mb-2">Static fields :</div>
+						<SimpleJsonViewer
+							class="vuesjv-override"
+							:model-value="input.static_fields"
+							:initialExpandedDepth="1"
+						/>
+					</div>
+				</n-tab-pane>
+				<n-tab-pane name="attributes" tab="Attributes" display-directive="show:lazy">
+					<div class="p-7 pt-4">
+						<SimpleJsonViewer
+							class="vuesjv-override"
+							:model-value="input.attributes"
+							:initialExpandedDepth="1"
+						/>
+					</div>
+				</n-tab-pane>
+			</n-tabs>
 		</n-modal>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { type Stream } from "@/types/graylog/stream.d"
 import { useSettingsStore } from "@/stores/settings"
 import Icon from "@/components/common/Icon.vue"
 import dayjs from "@/utils/dayjs"
-import { NModal, NButton, useMessage } from "naive-ui"
-import { computed, ref, toRefs } from "vue"
-import { JsonTreeView } from "json-tree-view-vue3"
+import { NModal, NButton, useMessage, NTooltip, NTabs, NTabPane } from "naive-ui"
+import { computed, ref } from "vue"
+import { SimpleJsonViewer } from "vue-sjv"
+import "@/assets/scss/vuesjv-override.scss"
 import Api from "@/api"
-import { useThemeStore } from "@/stores/theme"
-import type { ConfiguredInput, InputExtended, RunningInput } from "@/types/graylog/inputs.d"
+import type { InputExtended } from "@/types/graylog/inputs.d"
 
-const props = defineProps<{ input: InputExtended }>()
-const { input } = toRefs(props)
+const emit = defineEmits<{
+	(e: "updated"): void
+}>()
+
+const { input } = defineProps<{ input: InputExtended }>()
 
 const UserIcon = "carbon:user"
 const InfoIcon = "carbon:information"
 const DisabledIcon = "ph:minus-bold"
+const TimeIcon = "carbon:time"
+const GlobalIcon = "ph:globe-light"
 const EnabledIcon = "ph:check-bold"
 const StopIcon = "carbon:stop"
 const StartIcon = "carbon:play"
@@ -84,24 +138,22 @@ const StartIcon = "carbon:play"
 const message = useMessage()
 const loading = ref(false)
 const showDetails = ref(false)
-const attributes = input?.value?.attributes ? JSON.stringify(input.value.attributes) : ""
-const theme = computed(() => useThemeStore().themeName)
+const isRunning = computed(() => input?.state === "RUNNING")
 const dFormats = useSettingsStore().dateFormat
 
 function formatDate(timestamp: string): string {
 	return dayjs(timestamp).format(dFormats.datetimesec)
 }
 
-/*
 function stop() {
 	loading.value = true
 
 	Api.graylog
-		.stopStream(stream.value.id)
+		.stopInput(input.id)
 		.then(res => {
 			if (res.data.success) {
-				stream.value.disabled = true
-				message.success(res.data?.message || "Stream stopped.")
+				emit("updated")
+				message.success(res.data?.message || "Successfully stopped input.")
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
@@ -118,11 +170,11 @@ function start() {
 	loading.value = true
 
 	Api.graylog
-		.startStream(stream.value.id)
+		.startInput(input.id)
 		.then(res => {
 			if (res.data.success) {
-				stream.value.disabled = false
-				message.success(res.data?.message || "Stream started.")
+				emit("updated")
+				message.success(res.data?.message || "Successfully started input.")
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
@@ -134,7 +186,6 @@ function start() {
 			loading.value = false
 		})
 }
-*/
 </script>
 
 <style lang="scss" scoped>
@@ -157,7 +208,7 @@ function start() {
 	.main-box {
 		word-break: break-word;
 
-		.description {
+		.name {
 			color: var(--fg-secondary-color);
 			font-size: 13px;
 		}

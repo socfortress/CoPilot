@@ -66,7 +66,7 @@ import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 
 const StarIcon = "carbon:star"
-const DeleteIcon = "carbon:delete"
+const DeleteIcon = "ph:trash"
 
 const emit = defineEmits<{
 	(e: "delete"): void

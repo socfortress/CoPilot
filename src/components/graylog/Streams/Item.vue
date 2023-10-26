@@ -64,16 +64,16 @@
 			:bordered="false"
 			segmented
 		>
-			<p class="mb-2">
+			<div class="mb-2">
 				Matching type :
 				<code>{{ stream.matching_type }}</code>
-			</p>
-			<p class="mb-2">
+			</div>
+			<div class="mb-2">
 				Remove matches from default stream :
 				<code>{{ stream.remove_matches_from_default_stream }}</code>
-			</p>
-			<p class="mb-1">Rules :</p>
-			<JsonTreeView :data="rules" :colorScheme="theme" />
+			</div>
+			<div class="mb-1">Rules :</div>
+			<SimpleJsonViewer class="vuesjv-override" :model-value="stream.rules" :initialExpandedDepth="2" />
 		</n-modal>
 	</div>
 </template>
@@ -84,10 +84,10 @@ import { useSettingsStore } from "@/stores/settings"
 import Icon from "@/components/common/Icon.vue"
 import dayjs from "@/utils/dayjs"
 import { NModal, NButton, useMessage } from "naive-ui"
-import { computed, ref, toRefs } from "vue"
-import { JsonTreeView } from "json-tree-view-vue3"
+import { ref, toRefs } from "vue"
+import { SimpleJsonViewer } from "vue-sjv"
+import "@/assets/scss/vuesjv-override.scss"
 import Api from "@/api"
-import { useThemeStore } from "@/stores/theme"
 
 const props = defineProps<{ stream: Stream }>()
 const { stream } = toRefs(props)
@@ -102,8 +102,6 @@ const StartIcon = "carbon:play"
 const message = useMessage()
 const loading = ref(false)
 const showDetails = ref(false)
-const rules = stream?.value?.rules ? JSON.stringify(stream.value.rules) : ""
-const theme = computed(() => useThemeStore().themeName)
 const dFormats = useSettingsStore().dateFormat
 
 function formatDate(timestamp: string): string {

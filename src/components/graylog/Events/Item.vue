@@ -44,13 +44,24 @@
 		>
 			<n-tabs type="line" animated justify-content="space-evenly">
 				<n-tab-pane name="query" tab="Query" display-directive="show:lazy">
-					<div class="p-3 break-all">
-						<n-input :value="event?.config?.query" type="textarea" readonly />
+					<div class="p-7 pt-4">
+						<n-input
+							:value="event?.config?.query"
+							type="textarea"
+							readonly
+							:autosize="{
+								minRows: 3
+							}"
+						/>
 					</div>
 				</n-tab-pane>
 				<n-tab-pane name="fieldSpec" tab="Field Spec" display-directive="show:lazy">
-					<div class="p-3">
-						<JsonTreeView :data="fieldSpec" :colorScheme="theme" />
+					<div class="p-7 pt-4">
+						<SimpleJsonViewer
+							class="vuesjv-override"
+							:model-value="event.field_spec"
+							:initialExpandedDepth="1"
+						/>
 					</div>
 				</n-tab-pane>
 			</n-tabs>
@@ -59,20 +70,18 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from "vue"
 import type { EventDefinition } from "@/types/graylog/event-definition.d"
 import Icon from "@/components/common/Icon.vue"
-import { JsonTreeView } from "json-tree-view-vue3"
-import { computed, ref } from "vue"
+import { SimpleJsonViewer } from "vue-sjv"
+import "@/assets/scss/vuesjv-override.scss"
 import { NModal, NTabs, NTabPane, NInput, NTooltip } from "naive-ui"
-import { useThemeStore } from "@/stores/theme"
 
 const { event } = defineProps<{ event: EventDefinition }>()
 
 const InfoIcon = "carbon:information"
 
 const showDetails = ref(false)
-const fieldSpec = event?.field_spec ? JSON.stringify(event.field_spec) : ""
-const theme = computed(() => useThemeStore().themeName)
 </script>
 
 <style lang="scss" scoped>

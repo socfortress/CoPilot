@@ -61,7 +61,7 @@ import Api from "@/api"
 import { useMessage, useDialog, NTooltip, NButton, NSpin } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 
-const DeleteIcon = "carbon:delete"
+const DeleteIcon = "ph:trash"
 
 const emit = defineEmits<{
 	(e: "delete"): void

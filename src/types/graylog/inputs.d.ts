@@ -36,7 +36,7 @@ export interface ConfiguredInputAttributes {
 
 export interface RunningInput {
 	id: string
-	state: string
+	state: "RUNNING" | string
 	started_at: string
 	detailed_message: null | string
 	message_input: MessageInput
