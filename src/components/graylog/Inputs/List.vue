@@ -1,5 +1,5 @@
 <template>
-	<n-spin :show="loading">
+	<n-spin :show="loading" class="flex flex-col grow">
 		<div class="header flex items-center justify-end gap-2">
 			<div class="info grow flex gap-5">
 				<n-popover overlap placement="bottom-start">
@@ -33,25 +33,27 @@
 				style="width: 125px"
 			/>
 		</div>
-		<div class="list my-3">
-			<template v-if="itemsFiltered.length">
-				<InputItem
-					v-for="input of itemsFiltered"
-					:key="input.id"
-					:input="input"
-					@updated="getData('running')"
-				/>
-			</template>
-			<template v-else>
-				<n-empty description="No items found" v-if="!loading" />
-			</template>
-		</div>
+		<n-scrollbar class="my-3">
+			<div class="list">
+				<template v-if="itemsFiltered.length">
+					<InputItem
+						v-for="input of itemsFiltered"
+						:key="input.id"
+						:input="input"
+						@updated="getData('running')"
+					/>
+				</template>
+				<template v-else>
+					<n-empty description="No items found" v-if="!loading" />
+				</template>
+			</div>
+		</n-scrollbar>
 	</n-spin>
 </template>
 
 <script setup lang="ts">
 import { ref, onBeforeMount, computed } from "vue"
-import { useMessage, NSpin, NPopover, NButton, NSelect, NEmpty } from "naive-ui"
+import { useMessage, NSpin, NPopover, NButton, NSelect, NEmpty, NScrollbar } from "naive-ui"
 import Api from "@/api"
 import InputItem from "./Item.vue"
 import Icon from "@/components/common/Icon.vue"
@@ -137,7 +139,32 @@ onBeforeMount(() => {
 </script>
 
 <style lang="scss" scoped>
+.n-spin-container {
+	height: 100%;
+	max-height: 100%;
+	overflow: hidden;
+	box-sizing: border-box;
+
+	:deep() {
+		.n-spin-content {
+			height: 100%;
+			box-sizing: border-box;
+			display: flex;
+			flex-direction: column;
+		}
+	}
+}
+
+.header {
+	padding: var(--n-header-padding);
+	box-sizing: border-box;
+	padding-bottom: 0;
+}
 .list {
+	padding: var(--n-body-padding);
+	padding-top: 0;
+	padding-bottom: 0;
 	container-type: inline-size;
+	box-sizing: border-box;
 }
 </style>

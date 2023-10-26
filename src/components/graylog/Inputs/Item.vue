@@ -131,7 +131,6 @@ const InfoIcon = "carbon:information"
 const DisabledIcon = "ph:minus-bold"
 const TimeIcon = "carbon:time"
 const GlobalIcon = "ph:globe-light"
-const EnabledIcon = "ph:check-bold"
 const StopIcon = "carbon:stop"
 const StartIcon = "carbon:play"
 
@@ -191,8 +190,9 @@ function start() {
 <style lang="scss" scoped>
 .item {
 	border-radius: var(--border-radius);
-	background-color: var(--bg-color);
+	background-color: var(--bg-secondary-color);
 	transition: all 0.2s var(--bezier-ease);
+	border: var(--border-small-100);
 
 	.header-box {
 		font-family: var(--font-family-mono);

@@ -9,12 +9,12 @@ export interface MessageExtended extends Message {
 	id?: string
 }
 
-// TODO: review --------------------------------------------------------------------
-
 export interface ThroughputMetric {
 	metric: string
 	value: number
 }
+
+// TODO: review --------------------------------------------------------------------
 
 export interface Documents {
 	count: number

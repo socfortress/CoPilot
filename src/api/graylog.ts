@@ -59,12 +59,14 @@ export default {
 			input_id: inputId
 		})
 	},
+	getMetrics() {
+		return HttpClient.get<
+			FlaskBaseResponse & { throughput_metrics: ThroughputMetric[]; uncommitted_journal_entries: number }
+		>(`/graylog/metrics`)
+	},
 
 	// TODO: review --------------------------------------------------------------------
 
-	getMetrics() {
-		return HttpClient.get<FlaskBaseResponse & { metrics: ThroughputMetric[] }>(`/graylog/metrics`)
-	},
 	getIndices() {
 		return HttpClient.get<FlaskBaseResponse & { indices: IndexData }>(`/graylog/indices`)
 	},
