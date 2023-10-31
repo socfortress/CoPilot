@@ -1,105 +1,87 @@
 <template>
 	<div class="page">
-		<div class="info mb-7">
-			Graylog metrics detail the current load or backlog of logs being processed by the Graylog server. Also in
-			this payload is the
-			<code>uncommitted_journal_entries</code>
-			. If this value is greater than
-			<code>50,000</code>
-			I'd like for that to be
-			<strong>highlighted</strong>
-			on the page as an issue.
+		<div class="header flex flex-wrap justify-between items-center gap-4">
+			<div class="info flex items-center gap-3">
+				<n-button size="small" @click="getData()" type="primary" secondary :loading="loading">
+					<template #icon><Icon :name="UpdatedIcon" :size="15"></Icon></template>
+				</n-button>
+				<span>Last check:</span>
+				<strong>{{ lastCheck ? formatDate(lastCheck) : "..." }}</strong>
+			</div>
+
+			<div class="toolbar flex items-center gap-3">
+				<n-button size="small" @click="start()" v-if="!isRunning" type="primary" class="!w-24">
+					<template #icon><Icon :name="StartIcon"></Icon></template>
+					Start
+				</n-button>
+				<n-button size="small" @click="stop()" v-if="isRunning" type="error" ghost class="!w-24">
+					<template #icon><Icon :name="StopIcon"></Icon></template>
+					Stop
+				</n-button>
+				<n-select size="small" v-model:value="intervalSelected" :options="intervalOptions" class="!w-36" />
+			</div>
 		</div>
 
-		<div class="debug">
-			<pre>lastCheck: {{ lastCheck }}</pre>
+		<div class="my-6">
+			<UncommittedEntries :value="uncommittedJournalEntries" />
 		</div>
 
-		<div class="debug">
-			<pre>uncommittedJournalEntries: {{ uncommittedJournalEntries }}</pre>
-		</div>
-
-		<div class="metrics-list">
-			<n-card
-				v-for="group of throughputMetrics"
-				:key="group.groupName"
-				:title="group.groupName"
-				size="small"
-				segmented
-				class="metrics-group"
-				content-style="padding:0"
-			>
-				<div class="list">
-					<div
-						v-for="metric of group.throughputMetrics"
-						:key="metric.metric"
-						class="flex items-center gap-4 metric-wrap"
-					>
-						<div class="metric basis-2/3">
-							{{ metric.metric }}
-						</div>
-						<div class="value basis-1/3">
-							<n-progress type="line" status="success" :percentage="metric.percentage">
-								{{ metric.value }}
-							</n-progress>
-						</div>
-					</div>
-				</div>
-			</n-card>
+		<div>
+			<MetricsList :throughput-metrics="throughputMetrics" />
 		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount } from "vue"
-import { useMessage, NCard, NProgress } from "naive-ui"
+import { ref, onBeforeMount, computed, watch, nextTick, onBeforeUnmount } from "vue"
+import { useMessage, NButton, NSelect } from "naive-ui"
 import Api from "@/api"
 import type { ThroughputMetric } from "@/types/graylog/index.d"
-import _groupBy from "lodash/groupBy"
-import _map from "lodash/map"
-import _trim from "lodash/trim"
-import { onBeforeUnmount } from "vue"
+import Icon from "@/components/common/Icon.vue"
+import UncommittedEntries from "@/components/graylog/Metrics/UncommittedEntries.vue"
+import MetricsList from "@/components/graylog/Metrics/List.vue"
+import dayjs from "@/utils/dayjs"
+import { useSettingsStore } from "@/stores/settings"
+import { useStorage } from "@vueuse/core"
 
-interface Metrics {
-	groupName: string
-	throughputMetrics: (ThroughputMetric & { name: string; percentage: number })[]
-}
+const UpdatedIcon = "carbon:update-now"
+const StopIcon = "carbon:stop"
+const StartIcon = "carbon:play"
 
 const message = useMessage()
 const loading = ref(false)
 const uncommittedJournalEntries = ref(0)
-const throughputMetrics = ref<Metrics[]>([])
+const throughputMetrics = ref<ThroughputMetric[]>([])
 const lastCheck = ref<null | Date>(null)
 const getDataTimer = ref<NodeJS.Timeout | null>(null)
+const dFormats = useSettingsStore().dateFormat
+const intervalOptions = [
+	{
+		label: "1 Second",
+		value: 1000
+	},
+	{
+		label: "5 Seconds",
+		value: 5000
+	},
+	{
+		label: "10 Seconds",
+		value: 10000
+	},
+	{
+		label: "30 Seconds",
+		value: 30000
+	},
+	{
+		label: "1 Minute",
+		value: 60000
+	}
+]
+const intervalSelected = useStorage<number>("metrics-interval", 5000, localStorage)
 
-function sanitizeMetrics(metrics: ThroughputMetric[]): Metrics[] {
-	const keywords = ["input", "output", "process"]
-
-	const tempData = metrics.map(o => {
-		const obj = { ...o } as ThroughputMetric & { name: string; percentage: number }
-		obj.name = obj.metric
-		for (const key of keywords) {
-			obj.name = _trim(obj.name.replace(key, "").replace("..", "."), ".")
-		}
-		return obj
-	})
-
-	const groups = _groupBy(tempData, "name")
-
-	return _map(groups, group => {
-		const max = Math.max(...group.map(g => g.value)) || 1
-
-		for (const m of group) {
-			m.percentage = (m.value / max) * 100
-		}
-
-		const groupObj: Metrics = {
-			groupName: group[0].name,
-			throughputMetrics: group
-		}
-		return groupObj
-	})
-}
+const isRunning = computed<boolean>(() => {
+	return !!getDataTimer.value
+})
 
 function getData() {
 	loading.value = true
@@ -108,7 +90,7 @@ function getData() {
 		.getMetrics()
 		.then(res => {
 			if (res.data.success) {
-				throughputMetrics.value = sanitizeMetrics(res.data.throughput_metrics || [])
+				throughputMetrics.value = res.data.throughput_metrics || []
 				uncommittedJournalEntries.value = res.data.uncommitted_journal_entries || 0
 				lastCheck.value = new Date()
 			} else {
@@ -123,40 +105,34 @@ function getData() {
 		})
 }
 
+function stop() {
+	if (getDataTimer.value !== null) {
+		clearInterval(getDataTimer.value)
+		getDataTimer.value = null
+	}
+}
+
+function start() {
+	getDataTimer.value = setInterval(getData, intervalSelected.value)
+}
+
+function formatDate(timestamp: string | Date): string {
+	return dayjs(timestamp).format(dFormats.datetimesec)
+}
+
+watch(intervalSelected, () => {
+	stop()
+	nextTick(() => {
+		start()
+	})
+})
+
 onBeforeMount(() => {
 	getData()
-	getDataTimer.value = setInterval(getData, 5000)
+	start()
 })
 
 onBeforeUnmount(() => {
-	if (getDataTimer.value !== null) {
-		clearInterval(getDataTimer.value)
-	}
+	stop()
 })
 </script>
-
-<style lang="scss" scoped>
-.page {
-	.metrics-list {
-		.metrics-group {
-			@apply mb-6;
-
-			.list {
-				background-color: var(--bg-secondary-color);
-				.metric-wrap {
-					@apply py-3 px-4;
-					.metric {
-						line-height: 1.1;
-					}
-					.value {
-					}
-
-					&:not(:last-child) {
-						border-bottom: var(--border-small-100);
-					}
-				}
-			}
-		}
-	}
-}
-</style>

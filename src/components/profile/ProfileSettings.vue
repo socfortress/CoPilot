@@ -8,7 +8,7 @@
 						<n-select v-model:value="formValue.dateFormat" :options="dateFormatsAvailables" />
 					</n-form-item>
 					<n-form-item label="24 Hour" path="hours24" class="basis-1/3">
-						<n-checkbox v-model:checked="formValue.hours24">hours24</n-checkbox>
+						<n-checkbox v-model:checked="formValue.hours24">Time 24 Hour</n-checkbox>
 					</n-form-item>
 				</div>
 				<div class="title">Profile</div>

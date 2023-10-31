@@ -43,14 +43,15 @@
 			segmented
 		>
 			<n-tabs type="line" animated justify-content="space-evenly">
-				<n-tab-pane name="query" tab="Query" display-directive="show:lazy">
+				<n-tab-pane name="query" tab="Query" display-directive="show">
 					<div class="p-7 pt-4">
 						<n-input
 							:value="event?.config?.query"
 							type="textarea"
 							readonly
 							:autosize="{
-								minRows: 3
+								minRows: 3,
+								maxRows: 10
 							}"
 						/>
 					</div>
