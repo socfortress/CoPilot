@@ -9,6 +9,9 @@ class Stage(BaseModel):
     rules: List[str]
     stage: int
 
+class StageWithRuleID(Stage):
+    rule_ids: List[Optional[str]]  # Add a new field to store rule IDs
+
 
 class Pipeline(BaseModel):
     created_at: str
@@ -42,3 +45,12 @@ class PipelineRulesResponse(BaseModel):
     message: str
     pipeline_rules: List[PipelineRule]
     success: bool
+
+class PipelineWithRuleID(Pipeline):
+    stages: List[StageWithRuleID]  # Override the `stages` field with the new class
+
+class GraylogPipelinesResponseWithRuleID(BaseModel):
+    message: str
+    pipelines: List[PipelineWithRuleID]
+    success: bool
+
