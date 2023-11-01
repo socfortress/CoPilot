@@ -2,120 +2,120 @@ import { renderIcon } from "@/utils"
 import { h } from "vue"
 import { RouterLink } from "vue-router"
 
-import ComponentsIcon from "@vicons/fluent/Apps24Regular"
+const ComponentsIcon = "fluent:apps-24-regular"
 import { type MenuMixedOption } from "naive-ui/es/menu/src/interface"
 
 const components = [
 	{
-		key: "components-group-common",
+		key: "Components-Group-common",
 		label: "Common",
 		items: [
-			{ key: "components-avatar", label: "Avatar" },
-			{ key: "components-button", label: "Button" },
-			{ key: "components-card", label: "Card" },
-			{ key: "components-carousel", label: "Carousel" },
-			{ key: "components-collapse", label: "Collapse" },
-			{ key: "components-divider", label: "Divider" },
-			{ key: "components-dropdown", label: "Dropdown" },
-			{ key: "components-ellipsis", label: "Ellipsis" },
-			{ key: "components-gradient-text", label: "Gradient Text" },
-			{ key: "components-icon", label: "Icon" },
-			{ key: "components-page-header", label: "Page Header" },
-			{ key: "components-tag", label: "Tag" },
-			{ key: "components-typography", label: "Typography" },
-			{ key: "components-watermark", label: "Watermark" }
+			{ key: "Components-Avatar", label: "Avatar" },
+			{ key: "Components-Button", label: "Button" },
+			{ key: "Components-Card", label: "Card" },
+			{ key: "Components-Carousel", label: "Carousel" },
+			{ key: "Components-Collapse", label: "Collapse" },
+			{ key: "Components-Divider", label: "Divider" },
+			{ key: "Components-Dropdown", label: "Dropdown" },
+			{ key: "Components-Ellipsis", label: "Ellipsis" },
+			{ key: "Components-GradientText", label: "Gradient Text" },
+			{ key: "Components-Icon", label: "Icon" },
+			{ key: "Components-PageHeader", label: "Page Header" },
+			{ key: "Components-Tag", label: "Tag" },
+			{ key: "Components-Typography", label: "Typography" },
+			{ key: "Components-Watermark", label: "Watermark" }
 		]
 	},
 	{
-		key: "components-group-input",
+		key: "Components-Group-input",
 		label: "Input",
 		items: [
-			{ key: "components-auto-complete", label: "Auto Complete" },
-			{ key: "components-cascader", label: "Cascader" },
-			{ key: "components-color-picker", label: "Color Picker" },
-			{ key: "components-checkbox", label: "Checkbox" },
-			{ key: "components-date-picker", label: "Date Picker" },
-			{ key: "components-dynamic-input", label: "Dynamic Input" },
-			{ key: "components-dynamic-tags", label: "Dynamic Tags" },
-			{ key: "components-form", label: "Form" },
-			{ key: "components-input", label: "Input" },
-			{ key: "components-input-number", label: "Input Number" },
-			{ key: "components-mention", label: "Mention" },
-			{ key: "components-radio", label: "Radio" },
-			{ key: "components-rate", label: "Rate" },
-			{ key: "components-select", label: "Select" },
-			{ key: "components-slider", label: "Slider" },
-			{ key: "components-switch", label: "Switch" },
-			{ key: "components-time-picker", label: "Time Picker" },
-			{ key: "components-transfer", label: "Transfer" },
-			{ key: "components-tree-select", label: "Tree Select" },
-			{ key: "components-upload", label: "Upload" }
+			{ key: "Components-AutoComplete", label: "Auto Complete" },
+			{ key: "Components-Cascader", label: "Cascader" },
+			{ key: "Components-ColorPicker", label: "Color Picker" },
+			{ key: "Components-Checkbox", label: "Checkbox" },
+			{ key: "Components-DatePicker", label: "Date Picker" },
+			{ key: "Components-DynamicInput", label: "Dynamic Input" },
+			{ key: "Components-DynamicTags", label: "Dynamic Tags" },
+			{ key: "Components-Form", label: "Form" },
+			{ key: "Components-Input", label: "Input" },
+			{ key: "Components-InputNumber", label: "Input Number" },
+			{ key: "Components-Mention", label: "Mention" },
+			{ key: "Components-Radio", label: "Radio" },
+			{ key: "Components-Rate", label: "Rate" },
+			{ key: "Components-Select", label: "Select" },
+			{ key: "Components-Slider", label: "Slider" },
+			{ key: "Components-Switch", label: "Switch" },
+			{ key: "Components-TimePicker", label: "Time Picker" },
+			{ key: "Components-Transfer", label: "Transfer" },
+			{ key: "Components-TreeSelect", label: "Tree Select" },
+			{ key: "Components-Upload", label: "Upload" }
 		]
 	},
 	{
-		key: "components-group-data-display",
+		key: "Components-Group-Data-Display",
 		label: "Data Display",
 		items: [
-			{ key: "components-calendar", label: "Calendar" },
-			{ key: "components-countdown", label: "Countdown" },
-			{ key: "components-data-table", label: "Data Table" },
-			{ key: "components-descriptions", label: "Descriptions" },
-			{ key: "components-empty", label: "Empty" },
-			{ key: "components-image", label: "Image" },
-			{ key: "components-list", label: "List" },
-			{ key: "components-number-animation", label: "Number Animation" },
-			{ key: "components-scrollbar", label: "Scrollbar" },
-			{ key: "components-statistic", label: "Statistic" },
-			{ key: "components-table", label: "Table" },
-			{ key: "components-thing", label: "Thing" },
-			{ key: "components-time", label: "Time" },
-			{ key: "components-timeline", label: "Timeline" },
-			{ key: "components-tree", label: "Tree" }
+			{ key: "Components-Calendar", label: "Calendar" },
+			{ key: "Components-Countdown", label: "Countdown" },
+			{ key: "Components-DataTable", label: "Data Table" },
+			{ key: "Components-Descriptions", label: "Descriptions" },
+			{ key: "Components-Empty", label: "Empty" },
+			{ key: "Components-Image", label: "Image" },
+			{ key: "Components-List", label: "List" },
+			{ key: "Components-NumberAnimation", label: "Number Animation" },
+			{ key: "Components-Scrollbar", label: "Scrollbar" },
+			{ key: "Components-Statistic", label: "Statistic" },
+			{ key: "Components-Table", label: "Table" },
+			{ key: "Components-Thing", label: "Thing" },
+			{ key: "Components-Time", label: "Time" },
+			{ key: "Components-Timeline", label: "Timeline" },
+			{ key: "Components-Tree", label: "Tree" }
 		]
 	},
 	{
-		key: "components-group-navigation",
+		key: "Components-Group-Navigation",
 		label: "Navigation",
 		items: [
-			{ key: "components-affix", label: "Affix" },
-			{ key: "components-anchor", label: "Anchor" },
-			{ key: "components-back-top", label: "Back Top" },
-			{ key: "components-breadcrumb", label: "Breadcrumb" },
-			{ key: "components-menu", label: "Menu" },
-			{ key: "components-pagination", label: "Pagination" },
-			{ key: "components-steps", label: "Steps" },
-			{ key: "components-tabs", label: "Tabs" }
+			{ key: "Components-Affix", label: "Affix" },
+			{ key: "Components-Anchor", label: "Anchor" },
+			{ key: "Components-BackTop", label: "Back Top" },
+			{ key: "Components-Breadcrumb", label: "Breadcrumb" },
+			{ key: "Components-Menu", label: "Menu" },
+			{ key: "Components-Pagination", label: "Pagination" },
+			{ key: "Components-Steps", label: "Steps" },
+			{ key: "Components-Tabs", label: "Tabs" }
 		]
 	},
 	{
-		key: "components-group-feedback",
+		key: "Components-Group-Feedback",
 		label: "Feedback",
 		items: [
-			{ key: "components-alert", label: "Alert" },
-			{ key: "components-badge", label: "Badge" },
-			{ key: "components-dialog", label: "Dialog" },
-			{ key: "components-drawer", label: "Drawer" },
-			{ key: "components-message", label: "Message" },
-			{ key: "components-modal", label: "Modal" },
-			{ key: "components-notification", label: "Notification" },
-			{ key: "components-popconfirm", label: "Popconfirm" },
-			{ key: "components-popover", label: "Popover" },
-			{ key: "components-popselect", label: "Popselect" },
-			{ key: "components-progress", label: "Progress" },
-			{ key: "components-result", label: "Result" },
-			{ key: "components-skeleton", label: "Skeleton" },
-			{ key: "components-spin", label: "Spin" },
-			{ key: "components-tooltip", label: "Tooltip" }
+			{ key: "Components-Alert", label: "Alert" },
+			{ key: "Components-Badge", label: "Badge" },
+			{ key: "Components-Dialog", label: "Dialog" },
+			{ key: "Components-Drawer", label: "Drawer" },
+			{ key: "Components-Message", label: "Message" },
+			{ key: "Components-Modal", label: "Modal" },
+			{ key: "Components-Notification", label: "Notification" },
+			{ key: "Components-Popconfirm", label: "Popconfirm" },
+			{ key: "Components-Popover", label: "Popover" },
+			{ key: "Components-Popselect", label: "Popselect" },
+			{ key: "Components-Progress", label: "Progress" },
+			{ key: "Components-Result", label: "Result" },
+			{ key: "Components-Skeleton", label: "Skeleton" },
+			{ key: "Components-Spin", label: "Spin" },
+			{ key: "Components-Tooltip", label: "Tooltip" }
 		]
 	},
 	{
-		key: "components-group-layout",
+		key: "Components-Group-Layout",
 		label: "Layout",
 		items: [
-			{ key: "components-layout", label: "Layout" },
-			{ key: "components-legacy-grid", label: "Legacy Grid" },
-			{ key: "components-grid", label: "Grid" },
-			{ key: "components-space", label: "Space" }
+			{ key: "Components-Layout", label: "Layout" },
+			{ key: "Components-LegacyGrid", label: "Legacy Grid" },
+			{ key: "Components-Grid", label: "Grid" },
+			{ key: "Components-Space", label: "Space" }
 		]
 	}
 ]

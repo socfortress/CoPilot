@@ -3,6 +3,7 @@ from typing import Dict
 from typing import Optional
 
 import requests
+from fastapi import HTTPException
 from loguru import logger
 
 from app.connectors.utils import get_connector_info_from_db
@@ -89,10 +90,16 @@ def send_get_request(endpoint: str, params: Optional[Dict[str, Any]] = None, con
             params=params,
             verify=False,
         )
+        if response.status_code == 404:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Failed to send GET request to {endpoint} with error: {response.json()['message']}",
+            )
         return {"data": response.json(), "success": True, "message": "Successfully retrieved data"}
+    except HTTPException as e:
+        raise e
     except Exception as e:
-        logger.error(f"Failed to send GET request to {endpoint} with error: {e}")
-        return {"success": False, "message": f"Failed to send GET request to {endpoint} with error: {e}"}
+        raise HTTPException(status_code=500, detail=f"Failed to send GET request to {endpoint} with error: {e}")
 
 
 def send_post_request(endpoint: str, data: Dict[str, Any] = None, connector_name: str = "Graylog") -> Dict[str, Any]:
@@ -125,18 +132,19 @@ def send_post_request(endpoint: str, data: Dict[str, Any] = None, connector_name
             verify=False,
         )
 
-        if response.status_code == 204:
+        if response.status_code == 200:
+            return {"data": response.json(), "success": True, "message": "Successfully completed request"}
+        elif response.status_code == 204:
             return {"data": None, "success": True, "message": "Successfully completed request with no content"}
         else:
-            return {
-                "data": response.json(),
-                "success": False if response.status_code >= 400 else True,
-                "message": "Successfully retrieved data" if response.status_code < 400 else "Failed to retrieve data",
-            }
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to send POST request to {endpoint} with error: {response.json()['message']}",
+            )
+    except HTTPException as e:
+        raise e
     except Exception as e:
-        logger.debug(f"Response: {response}")
-        logger.error(f"Failed to send POST request to {endpoint} with error: {e}")
-        return {"success": False, "message": f"Failed to send POST request to {endpoint} with error: {e}"}
+        raise HTTPException(status_code=500, detail=f"Failed to send POST request to {endpoint} with error: {e}")
 
 
 def send_delete_request(endpoint: str, params: Optional[Dict[str, Any]] = None, connector_name: str = "Graylog") -> Dict[str, Any]:
@@ -167,7 +175,14 @@ def send_delete_request(endpoint: str, params: Optional[Dict[str, Any]] = None, 
             params=params,
             verify=False,
         )
-        return {"data": response.json(), "success": True, "message": "Successfully retrieved data"}
+        if response.status_code != 200 and response.status_code != 204:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Failed to send DELETE request to {endpoint} with error: {response.json()['message']}",
+            )
+        return {"data": "No content returned", "success": True, "message": "Successfully deleted data"}
+    except HTTPException as e:
+        raise e
     except Exception as e:
         logger.error(f"Failed to send DELETE request to {endpoint} with error: {e}")
         return {"success": False, "message": f"Failed to send DELETE request to {endpoint} with error: {e}"}
@@ -201,7 +216,14 @@ def send_put_request(endpoint: str, data: Optional[Dict[str, Any]] = None, conne
             json=data,
             verify=False,
         )
+        if response.status_code != 200:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Failed to send PUT request to {endpoint} with error: {response.json()['message']}",
+            )
         return {"data": response.json(), "success": True, "message": "Successfully retrieved data"}
+    except HTTPException as e:
+        raise e
     except Exception as e:
         logger.error(f"Failed to send PUT request to {endpoint} with error: {e}")
         return {"success": False, "message": f"Failed to send PUT request to {endpoint} with error: {e}"}

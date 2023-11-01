@@ -3,20 +3,17 @@ import { h } from "vue"
 import { RouterLink } from "vue-router"
 import { type MenuMixedOption } from "naive-ui/es/menu/src/interface"
 
-import BlankIcon from "@vicons/carbon/DocumentBlank"
-import EmailIcon from "@vicons/carbon/Email"
-import ChatIcon from "@vicons/carbon/Chat"
-import KanbanIcon from "@vicons/fluent/GridKanban20Regular"
-import NotesIcon from "@vicons/carbon/Notebook"
-import TypographyIcon from "@vicons/fluent/TextFont16Regular"
-import MultiLanguageIcon from "@vicons/ionicons5/LanguageOutline"
-import GroupIcon from "@vicons/carbon/TreeView"
-import CalendarIcon from "@vicons/carbon/Calendar"
+const BlankIcon = "carbon:document-blank"
+const TypographyIcon = "fluent:text-font-16-regular"
+const MultiLanguageIcon = "ion:language-outline"
+const GroupIcon = "carbon:tree-view"
+const IconsIcon = "fluent:icons-24-regular"
 
 import dashboard from "./dashboard"
+import calendars from "./calendars"
+import apps from "./apps"
 import cards from "./cards"
 import getComponents from "./components"
-import icons from "./icons"
 import tables from "./tables"
 import layout from "./layout"
 import maps from "./maps"
@@ -33,13 +30,13 @@ export default function getItems(mode: "vertical" | "horizontal", collapsed: boo
 					RouterLink,
 					{
 						to: {
-							name: "indices"
+							name: "Indices"
 						}
 					},
 					{ default: () => "Indices" }
 				),
-			key: "indices",
-			icon: renderIcon(NotesIcon)
+			key: "Indices",
+			icon: renderIcon(BlankIcon)
 		},
 		{
 			label: () =>
@@ -47,13 +44,13 @@ export default function getItems(mode: "vertical" | "horizontal", collapsed: boo
 					RouterLink,
 					{
 						to: {
-							name: "agents"
+							name: "Agents"
 						}
 					},
 					{ default: () => "Agents" }
 				),
-			key: "agents",
-			icon: renderIcon(NotesIcon)
+			key: "Agents",
+			icon: renderIcon(BlankIcon)
 		},
 		{
 			label: () =>
@@ -61,96 +58,69 @@ export default function getItems(mode: "vertical" | "horizontal", collapsed: boo
 					RouterLink,
 					{
 						to: {
-							name: "connectors"
+							name: "Connectors"
 						}
 					},
 					{ default: () => "Connectors" }
 				),
-			key: "connectors",
-			icon: renderIcon(NotesIcon)
+			key: "Connectors",
+			icon: renderIcon(BlankIcon)
 		},
 		{
-			key: "divider",
-			type: "divider",
-			props: {
-				style: {
-					//marginLeft: "32px"
+			label: "Graylog",
+			key: "Graylog",
+			icon: renderIcon(BlankIcon),
+			children: [
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "Graylog-Management"
+								}
+							},
+							{ default: () => "Management" }
+						),
+					key: "Graylog-Management"
+				},
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "Graylog-Metrics"
+								}
+							},
+							{ default: () => "Metrics" }
+						),
+					key: "Graylog-Metrics"
+				},
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "Graylog-Pipelines"
+								}
+							},
+							{ default: () => "Pipelines" }
+						),
+					key: "Graylog-Pipelines"
 				}
-			}
+			]
 		},
+		{
+			type: "divider"
+		},
+
 		dashboard,
+		calendars,
+		...apps,
 		{
-			label: () =>
-				h(
-					RouterLink,
-					{
-						to: {
-							name: "calendar"
-						}
-					},
-					{ default: () => "Calendar" }
-				),
-			key: "calendar",
-			icon: renderIcon(CalendarIcon)
-		},
-		{
-			label: () =>
-				h(
-					RouterLink,
-					{
-						to: {
-							name: "email"
-						}
-					},
-					{ default: () => "Email" }
-				),
-			key: "email",
-			icon: renderIcon(EmailIcon)
-		},
-		{
-			label: () =>
-				h(
-					RouterLink,
-					{
-						to: {
-							name: "chat"
-						}
-					},
-					{ default: () => "Chat" }
-				),
-			key: "chat",
-			icon: renderIcon(ChatIcon)
-		},
-		{
-			label: () =>
-				h(
-					RouterLink,
-					{
-						to: {
-							name: "kanban"
-						}
-					},
-					{ default: () => "Kanban" }
-				),
-			key: "kanban",
-			icon: renderIcon(KanbanIcon)
-		},
-		{
-			label: () =>
-				h(
-					RouterLink,
-					{
-						to: {
-							name: "notes"
-						}
-					},
-					{ default: () => "Notes" }
-				),
-			key: "notes",
-			icon: renderIcon(NotesIcon)
-		},
-		{
-			key: "divider",
+			key: "divider-1",
 			type: "divider",
 			props: {
 				style: {
@@ -164,13 +134,13 @@ export default function getItems(mode: "vertical" | "horizontal", collapsed: boo
 					RouterLink,
 					{
 						to: {
-							name: "multi-language"
+							name: "Icons"
 						}
 					},
-					{ default: () => "Multi Language" }
+					{ default: () => "Icons" }
 				),
-			key: "multi-language",
-			icon: renderIcon(MultiLanguageIcon)
+			key: "Icons",
+			icon: renderIcon(IconsIcon)
 		},
 		{
 			label: () =>
@@ -178,16 +148,29 @@ export default function getItems(mode: "vertical" | "horizontal", collapsed: boo
 					RouterLink,
 					{
 						to: {
-							name: "typography"
+							name: "Typography"
 						}
 					},
 					{ default: () => "Typography" }
 				),
-			key: "typography",
+			key: "Typography",
 			icon: renderIcon(TypographyIcon)
 		},
+		{
+			label: () =>
+				h(
+					RouterLink,
+					{
+						to: {
+							name: "MultiLanguage"
+						}
+					},
+					{ default: () => "Multi Language" }
+				),
+			key: "MultiLanguage",
+			icon: renderIcon(MultiLanguageIcon)
+		},
 		authentication,
-		icons,
 		cards,
 		tables,
 		getComponents(),
@@ -196,7 +179,6 @@ export default function getItems(mode: "vertical" | "horizontal", collapsed: boo
 		editors,
 		layout,
 		toolbox,
-
 		{
 			label: () => (
 				<div class={"item-badge"}>

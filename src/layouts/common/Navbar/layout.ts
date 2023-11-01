@@ -2,11 +2,11 @@ import { renderIcon } from "@/utils"
 import { h } from "vue"
 import { RouterLink } from "vue-router"
 
-import LayoutIcon from "@vicons/fluent/DualScreenVerticalScroll24Regular"
+const LayoutIcon = "fluent:dual-screen-vertical-scroll-24-regular"
 
 export default {
 	label: "Layout",
-	key: "layout",
+	key: "Layout",
 	icon: renderIcon(LayoutIcon),
 	children: [
 		{
@@ -15,12 +15,12 @@ export default {
 					RouterLink,
 					{
 						to: {
-							name: "layout-full-width"
+							name: "Layout-FullWidth"
 						}
 					},
 					{ default: () => "Full Width" }
 				),
-			key: "layout-full-width"
+			key: "Layout-FullWidth"
 		},
 		{
 			label: () =>
@@ -28,12 +28,12 @@ export default {
 					RouterLink,
 					{
 						to: {
-							name: "layout-left-sidebar"
+							name: "Layout-LeftSidebar"
 						}
 					},
 					{ default: () => "Left Sidebar" }
 				),
-			key: "layout-left-sidebar"
+			key: "Layout-LeftSidebar"
 		},
 		{
 			label: () =>
@@ -41,12 +41,12 @@ export default {
 					RouterLink,
 					{
 						to: {
-							name: "layout-right-sidebar"
+							name: "Layout-RightSidebar"
 						}
 					},
 					{ default: () => "Right Sidebar" }
 				),
-			key: "layout-right-sidebar"
+			key: "Layout-RightSidebar"
 		}
 	]
 }

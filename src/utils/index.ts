@@ -1,6 +1,5 @@
-import { NIcon } from "naive-ui"
+import Icon from "@/components/common/Icon.vue"
 import { type Component, h } from "vue"
-import { colord } from "colord"
 import { isMobile as detectMobile } from "detect-touch-device"
 
 export type OS = "Unknown" | "Windows" | "MacOS" | "UNIX" | "Linux"
@@ -28,27 +27,14 @@ export const isMobile = () => {
 	return detectMobile
 }
 
-export function renderIcon(icon: Component) {
-	return () => h(NIcon, null, { default: () => h(icon) })
-}
-export function hex2rgb(hex: string): number[] {
-	const rgba = colord(hex).toRgb()
-	return [rgba.r, rgba.g, rgba.b]
-}
-export function hex2hsl(hex: string): number[] {
-	const hsl = colord(hex).toHsl()
-	return [hsl.h, hsl.s, hsl.l]
+export function renderIcon(icon: Component | string) {
+	if (typeof icon === "string") {
+		return () => h(Icon, { name: icon })
+	} else {
+		return () => h(Icon, null, { default: () => h(icon) })
+	}
 }
 
-export function exposure(color: string, amount: number): string {
-	if (amount >= 0) {
-		return colord(color).lighten(amount).desaturate(amount).toHex()
-	}
-	return colord(color)
-		.lighten(amount)
-		.desaturate(amount * -1)
-		.toHex()
-}
 export function getOS(): OS {
 	let os: OS = "Unknown"
 	if (navigator.userAgent.indexOf("Win") != -1) os = "Windows"

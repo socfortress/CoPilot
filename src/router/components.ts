@@ -10,457 +10,457 @@ export default {
 	children: [
 		{
 			path: "avatar",
-			name: "components-avatar",
+			name: "Components-Avatar",
 			component: () => import("@/views/Components/Avatar.vue"),
 			meta: { title: "Components Avatar" }
 		},
 		{
 			path: "button",
-			name: "components-button",
+			name: "Components-Button",
 			component: () => import("@/views/Components/Button.vue"),
 			meta: { title: "Components Button" }
 		},
 		{
 			path: "card",
-			name: "components-card",
+			name: "Components-Card",
 			component: () => import("@/views/Components/Card.vue"),
 			meta: { title: "Components Card" }
 		},
 		{
 			path: "carousel",
-			name: "components-carousel",
+			name: "Components-Carousel",
 			component: () => import("@/views/Components/Carousel.vue"),
 			meta: { title: "Components Carousel" }
 		},
 		{
 			path: "collapse",
-			name: "components-collapse",
+			name: "Components-Collapse",
 			component: () => import("@/views/Components/Collapse.vue"),
 			meta: { title: "Components Collapse" }
 		},
 		{
 			path: "divider",
-			name: "components-divider",
+			name: "Components-Divider",
 			component: () => import("@/views/Components/Divider.vue"),
 			meta: { title: "Components Divider" }
 		},
 		{
 			path: "dropdown",
-			name: "components-dropdown",
+			name: "Components-Dropdown",
 			component: () => import("@/views/Components/Dropdown.vue"),
 			meta: { title: "Components Dropdown" }
 		},
 		{
 			path: "ellipsis",
-			name: "components-ellipsis",
+			name: "Components-Ellipsis",
 			component: () => import("@/views/Components/Ellipsis.vue"),
 			meta: { title: "Components Ellipsis" }
 		},
 		{
-			path: "gradient-text",
-			name: "components-gradient-text",
+			path: "gradienttext",
+			name: "Components-GradientText",
 			component: () => import("@/views/Components/GradientText.vue"),
 			meta: { title: "Components Gradient Text" }
 		},
 		{
 			path: "icon",
-			name: "components-icon",
+			name: "Components-Icon",
 			component: () => import("@/views/Components/Icon.vue"),
 			meta: { title: "Components Icon" }
 		},
 		{
-			path: "page-header",
-			name: "components-page-header",
+			path: "pageheader",
+			name: "Components-PageHeader",
 			component: () => import("@/views/Components/PageHeader.vue"),
 			meta: { title: "Components Page Header" }
 		},
 		{
 			path: "tag",
-			name: "components-tag",
+			name: "Components-Tag",
 			component: () => import("@/views/Components/Tag.vue"),
 			meta: { title: "Components Tag" }
 		},
 		{
 			path: "typography",
-			name: "components-typography",
+			name: "Components-Typography",
 			component: () => import("@/views/Components/Typography.vue"),
 			meta: { title: "Components Typography" }
 		},
 		{
 			path: "watermark",
-			name: "components-watermark",
+			name: "Components-Watermark",
 			component: () => import("@/views/Components/Watermark.vue"),
 			meta: { title: "Components Watermark" }
 		},
 		{
-			path: "auto-complete",
-			name: "components-auto-complete",
+			path: "autocomplete",
+			name: "Components-AutoComplete",
 			component: () => import("@/views/Components/AutoComplete.vue"),
 			meta: { title: "Components Auto Complete" }
 		},
 		{
 			path: "cascader",
-			name: "components-cascader",
+			name: "Components-Cascader",
 			component: () => import("@/views/Components/Cascader.vue"),
 			meta: { title: "Components Cascader" }
 		},
 		{
-			path: "color-picker",
-			name: "components-color-picker",
+			path: "colorpicker",
+			name: "Components-ColorPicker",
 			component: () => import("@/views/Components/ColorPicker.vue"),
 			meta: { title: "Components Color Picker" }
 		},
 		{
 			path: "checkbox",
-			name: "components-checkbox",
+			name: "Components-Checkbox",
 			component: () => import("@/views/Components/Checkbox.vue"),
 			meta: { title: "Components Checkbox" }
 		},
 		{
-			path: "date-picker",
-			name: "components-date-picker",
+			path: "datepicker",
+			name: "Components-DatePicker",
 			component: () => import("@/views/Components/DatePicker.vue"),
 			meta: { title: "Components Date Picker" }
 		},
 		{
-			path: "dynamic-input",
-			name: "components-dynamic-input",
+			path: "dynamicinput",
+			name: "Components-DynamicInput",
 			component: () => import("@/views/Components/DynamicInput.vue"),
 			meta: { title: "Components Dynamic Input" }
 		},
 		{
-			path: "dynamic-tags",
-			name: "components-dynamic-tags",
+			path: "dynamictags",
+			name: "Components-DynamicTags",
 			component: () => import("@/views/Components/DynamicTags.vue"),
 			meta: { title: "Components Dynamic Tags" }
 		},
 		{
 			path: "form",
-			name: "components-form",
+			name: "Components-Form",
 			component: () => import("@/views/Components/Form.vue"),
 			meta: { title: "Components Form" }
 		},
 		{
 			path: "input",
-			name: "components-input",
+			name: "Components-Input",
 			component: () => import("@/views/Components/Input.vue"),
 			meta: { title: "Components Input" }
 		},
 		{
-			path: "input-number",
-			name: "components-input-number",
+			path: "inputnumber",
+			name: "Components-InputNumber",
 			component: () => import("@/views/Components/InputNumber.vue"),
 			meta: { title: "Components Input Number" }
 		},
 		{
 			path: "mention",
-			name: "components-mention",
+			name: "Components-Mention",
 			component: () => import("@/views/Components/Mention.vue"),
 			meta: { title: "Components Mention" }
 		},
 		{
 			path: "radio",
-			name: "components-radio",
+			name: "Components-Radio",
 			component: () => import("@/views/Components/Radio.vue"),
 			meta: { title: "Components Radio" }
 		},
 		{
 			path: "rate",
-			name: "components-rate",
+			name: "Components-Rate",
 			component: () => import("@/views/Components/Rate.vue"),
 			meta: { title: "Components Rate" }
 		},
 		{
 			path: "select",
-			name: "components-select",
+			name: "Components-Select",
 			component: () => import("@/views/Components/Select.vue"),
 			meta: { title: "Components Select" }
 		},
 		{
 			path: "slider",
-			name: "components-slider",
+			name: "Components-Slider",
 			component: () => import("@/views/Components/Slider.vue"),
 			meta: { title: "Components Slider" }
 		},
 		{
 			path: "switch",
-			name: "components-switch",
+			name: "Components-Switch",
 			component: () => import("@/views/Components/Switch.vue"),
 			meta: { title: "Components Switch" }
 		},
 		{
-			path: "time-picker",
-			name: "components-time-picker",
+			path: "timepicker",
+			name: "Components-TimePicker",
 			component: () => import("@/views/Components/TimePicker.vue"),
 			meta: { title: "Components Time Picker" }
 		},
 		{
 			path: "transfer",
-			name: "components-transfer",
+			name: "Components-Transfer",
 			component: () => import("@/views/Components/Transfer.vue"),
 			meta: { title: "Components Transfer" }
 		},
 		{
-			path: "tree-select",
-			name: "components-tree-select",
+			path: "treeselect",
+			name: "Components-TreeSelect",
 			component: () => import("@/views/Components/TreeSelect.vue"),
 			meta: { title: "Components Tree Select" }
 		},
 		{
 			path: "upload",
-			name: "components-upload",
+			name: "Components-Upload",
 			component: () => import("@/views/Components/Upload.vue"),
 			meta: { title: "Components Upload" }
 		},
 		{
 			path: "calendar",
-			name: "components-calendar",
+			name: "Components-Calendar",
 			component: () => import("@/views/Components/Calendar.vue"),
 			meta: { title: "Components Calendar" }
 		},
 		{
 			path: "countdown",
-			name: "components-countdown",
+			name: "Components-Countdown",
 			component: () => import("@/views/Components/Countdown.vue"),
 			meta: { title: "Components Countdown" }
 		},
 		{
-			path: "data-table",
-			name: "components-data-table",
+			path: "datatable",
+			name: "Components-DataTable",
 			component: () => import("@/views/Components/DataTable.vue"),
 			meta: { title: "Components Data Table" }
 		},
 		{
 			path: "descriptions",
-			name: "components-descriptions",
+			name: "Components-Descriptions",
 			component: () => import("@/views/Components/Descriptions.vue"),
 			meta: { title: "Components Descriptions" }
 		},
 		{
 			path: "empty",
-			name: "components-empty",
+			name: "Components-Empty",
 			component: () => import("@/views/Components/Empty.vue"),
 			meta: { title: "Components Empty" }
 		},
 		{
 			path: "image",
-			name: "components-image",
+			name: "Components-Image",
 			component: () => import("@/views/Components/Image.vue"),
 			meta: { title: "Components Image" }
 		},
 		{
 			path: "list",
-			name: "components-list",
+			name: "Components-List",
 			component: () => import("@/views/Components/List.vue"),
 			meta: { title: "Components List" }
 		},
 		{
-			path: "number-animation",
-			name: "components-number-animation",
+			path: "numberanimation",
+			name: "Components-NumberAnimation",
 			component: () => import("@/views/Components/NumberAnimation.vue"),
 			meta: { title: "Components Number Animation" }
 		},
 		{
 			path: "scrollbar",
-			name: "components-scrollbar",
+			name: "Components-Scrollbar",
 			component: () => import("@/views/Components/Scrollbar.vue"),
 			meta: { title: "Components Scrollbar" }
 		},
 		{
 			path: "statistic",
-			name: "components-statistic",
+			name: "Components-Statistic",
 			component: () => import("@/views/Components/Statistic.vue"),
 			meta: { title: "Components Statistic" }
 		},
 		{
 			path: "table",
-			name: "components-table",
+			name: "Components-Table",
 			component: () => import("@/views/Components/Table.vue"),
 			meta: { title: "Components Table" }
 		},
 		{
 			path: "thing",
-			name: "components-thing",
+			name: "Components-Thing",
 			component: () => import("@/views/Components/Thing.vue"),
 			meta: { title: "Components Thing" }
 		},
 		{
 			path: "time",
-			name: "components-time",
+			name: "Components-Time",
 			component: () => import("@/views/Components/Time.vue"),
 			meta: { title: "Components Time" }
 		},
 		{
 			path: "timeline",
-			name: "components-timeline",
+			name: "Components-Timeline",
 			component: () => import("@/views/Components/Timeline.vue"),
 			meta: { title: "Components Timeline" }
 		},
 		{
 			path: "tree",
-			name: "components-tree",
+			name: "Components-Tree",
 			component: () => import("@/views/Components/Tree.vue"),
 			meta: { title: "Components Tree" }
 		},
 		{
 			path: "affix",
-			name: "components-affix",
+			name: "Components-Affix",
 			component: () => import("@/views/Components/Affix.vue"),
 			meta: { title: "Components Affix" }
 		},
 		{
 			path: "anchor",
-			name: "components-anchor",
+			name: "Components-Anchor",
 			component: () => import("@/views/Components/Anchor.vue"),
 			meta: { title: "Components Anchor" }
 		},
 		{
-			path: "back-top",
-			name: "components-back-top",
+			path: "backtop",
+			name: "Components-BackTop",
 			component: () => import("@/views/Components/BackTop.vue"),
 			meta: { title: "Components Back Top" }
 		},
 		{
 			path: "breadcrumb",
-			name: "components-breadcrumb",
+			name: "Components-Breadcrumb",
 			component: () => import("@/views/Components/Breadcrumb.vue"),
 			meta: { title: "Components Breadcrumb" }
 		},
 		{
 			path: "menu",
-			name: "components-menu",
+			name: "Components-Menu",
 			component: () => import("@/views/Components/Menu.vue"),
 			meta: { title: "Components Menu" }
 		},
 		{
 			path: "pagination",
-			name: "components-pagination",
+			name: "Components-Pagination",
 			component: () => import("@/views/Components/Pagination.vue"),
 			meta: { title: "Components Pagination" }
 		},
 		{
 			path: "steps",
-			name: "components-steps",
+			name: "Components-Steps",
 			component: () => import("@/views/Components/Steps.vue"),
 			meta: { title: "Components Steps" }
 		},
 		{
 			path: "tabs",
-			name: "components-tabs",
+			name: "Components-Tabs",
 			component: () => import("@/views/Components/Tabs.vue"),
 			meta: { title: "Components Tabs" }
 		},
 		{
 			path: "alert",
-			name: "components-alert",
+			name: "Components-Alert",
 			component: () => import("@/views/Components/Alert.vue"),
 			meta: { title: "Components Alert" }
 		},
 		{
 			path: "badge",
-			name: "components-badge",
+			name: "Components-Badge",
 			component: () => import("@/views/Components/Badge.vue"),
 			meta: { title: "Components Badge" }
 		},
 		{
 			path: "dialog",
-			name: "components-dialog",
+			name: "Components-Dialog",
 			component: () => import("@/views/Components/Dialog.vue"),
 			meta: { title: "Components Dialog" }
 		},
 		{
 			path: "drawer",
-			name: "components-drawer",
+			name: "Components-Drawer",
 			component: () => import("@/views/Components/Drawer.vue"),
 			meta: { title: "Components Drawer" }
 		},
 		{
 			path: "message",
-			name: "components-message",
+			name: "Components-Message",
 			component: () => import("@/views/Components/Message.vue"),
 			meta: { title: "Components Message" }
 		},
 		{
 			path: "modal",
-			name: "components-modal",
+			name: "Components-Modal",
 			component: () => import("@/views/Components/Modal.vue"),
 			meta: { title: "Components Modal" }
 		},
 		{
 			path: "notification",
-			name: "components-notification",
+			name: "Components-Notification",
 			component: () => import("@/views/Components/Notification.vue"),
 			meta: { title: "Components Notification" }
 		},
 		{
 			path: "popconfirm",
-			name: "components-popconfirm",
+			name: "Components-Popconfirm",
 			component: () => import("@/views/Components/Popconfirm.vue"),
 			meta: { title: "Components Popconfirm" }
 		},
 		{
 			path: "popover",
-			name: "components-popover",
+			name: "Components-Popover",
 			component: () => import("@/views/Components/Popover.vue"),
 			meta: { title: "Components Popover" }
 		},
 		{
 			path: "popselect",
-			name: "components-popselect",
+			name: "Components-Popselect",
 			component: () => import("@/views/Components/Popselect.vue"),
 			meta: { title: "Components Popselect" }
 		},
 		{
 			path: "progress",
-			name: "components-progress",
+			name: "Components-Progress",
 			component: () => import("@/views/Components/Progress.vue"),
 			meta: { title: "Components Progress" }
 		},
 		{
 			path: "result",
-			name: "components-result",
+			name: "Components-Result",
 			component: () => import("@/views/Components/Result.vue"),
 			meta: { title: "Components Result" }
 		},
 		{
 			path: "skeleton",
-			name: "components-skeleton",
+			name: "Components-Skeleton",
 			component: () => import("@/views/Components/Skeleton.vue"),
 			meta: { title: "Components Skeleton" }
 		},
 		{
 			path: "spin",
-			name: "components-spin",
+			name: "Components-Spin",
 			component: () => import("@/views/Components/Spin.vue"),
 			meta: { title: "Components Spin" }
 		},
 		{
 			path: "tooltip",
-			name: "components-tooltip",
+			name: "Components-Tooltip",
 			component: () => import("@/views/Components/Tooltip.vue"),
 			meta: { title: "Components Tooltip" }
 		},
 		{
 			path: "layout",
-			name: "components-layout",
+			name: "Components-Layout",
 			component: () => import("@/views/Components/Layout.vue"),
 			meta: { title: "Components Layout" }
 		},
 		{
-			path: "legacy-grid",
-			name: "components-legacy-grid",
+			path: "legacygrid",
+			name: "Components-LegacyGrid",
 			component: () => import("@/views/Components/LegacyGrid.vue"),
 			meta: { title: "Components Legacy Grid" }
 		},
 		{
 			path: "grid",
-			name: "components-grid",
+			name: "Components-Grid",
 			component: () => import("@/views/Components/Grid.vue"),
 			meta: { title: "Components Grid" }
 		},
 		{
 			path: "space",
-			name: "components-space",
+			name: "Components-Space",
 			component: () => import("@/views/Components/Space.vue"),
 			meta: { title: "Components Space" }
 		}

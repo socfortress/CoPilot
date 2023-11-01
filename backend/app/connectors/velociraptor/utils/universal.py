@@ -1,10 +1,14 @@
+import asyncio
 import json
+from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import TimeoutError
 from datetime import datetime
 from typing import Any
 from typing import Dict
 
 import grpc
 import pyvelociraptor
+from fastapi import HTTPException
 from loguru import logger
 from pyvelociraptor import api_pb2
 from pyvelociraptor import api_pb2_grpc
@@ -151,7 +155,7 @@ class UniversalService:
         client_request = self.create_vql_request(vql)
         try:
             results = []
-            for response in self.stub.Query(client_request):
+            for response in self.stub.Query(client_request, timeout=30):
                 if response.Response:
                     results += json.loads(response.Response)
             return {
@@ -159,12 +163,19 @@ class UniversalService:
                 "message": "Successfully executed query",
                 "results": results,
             }
+        except grpc.RpcError as e:  # Catch gRPC-specific errors
+            if e.code() == grpc.StatusCode.DEADLINE_EXCEEDED:
+                logger.error("Failed to execute query due to timeout.")
+                raise HTTPException(
+                    status_code=500,
+                    detail="Failed to execute query due to timeout. Make sure the Velocraptor server has stopped this artifact collection.",
+                )
+            else:
+                logger.error(f"Failed to execute query: {e}")
+                raise HTTPException(status_code=500, detail=f"Failed to execute query: {e.details()}")
         except Exception as e:
             logger.error(f"Failed to execute query: {e}")
-            return {
-                "success": False,
-                "message": f"Failed to execute query: {e}",
-            }
+            raise HTTPException(status_code=500, detail=f"Failed to execute query: {e}")
 
     def watch_flow_completion(self, flow_id: str):
         """
@@ -177,6 +188,7 @@ class UniversalService:
             dict: A dictionary with the success status and a message.
         """
         vql = f"SELECT * FROM watch_monitoring(artifact='System.Flow.Completion') WHERE FlowId='{flow_id}' LIMIT 1"
+        logger.info(f"Watching flow {flow_id} for completion")
         return self.execute_query(vql)
 
     def read_collection_results(
@@ -268,7 +280,10 @@ class UniversalService:
         Returns:
             str: The server version.
         """
-        return self.execute_query(vql)["results"][0]["version"]["version"]
+        try:
+            return self.execute_query(vql)["results"][0]["version"]["version"]
+        except IndexError as e:
+            raise HTTPException(status_code=500, detail=f"Failed to get server version: {e}")
 
     def _is_offline(self, last_seen_at: float):
         """

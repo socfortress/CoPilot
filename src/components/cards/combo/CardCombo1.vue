@@ -11,9 +11,7 @@
 							{{ currentTitle ?? title }}
 						</span>
 						<span class="hint flex items-center" v-if="!isHovered">
-							<n-icon :size="12">
-								<InfoIcon />
-							</n-icon>
+							<Icon :size="12" :name="InfoIcon"></Icon>
 							<span class="ml-2">hover to see details</span>
 						</span>
 					</div>
@@ -21,7 +19,7 @@
 				</div>
 			</div>
 			<div class="chart-box" :style="{ height: chartHeight + 'px' }" :class="`type-${type}`">
-				<apexchart :type="type" height="100%" :options="chartOptions" :series="series" ref="chart"></apexchart>
+				<Apex :type="type" height="100%" :options="chartOptions" :series="series" ref="chart"></Apex>
 			</div>
 		</div>
 	</n-card>
@@ -29,15 +27,18 @@
 
 <script setup lang="ts">
 import { faker } from "@faker-js/faker"
-import { NCard, NIcon } from "naive-ui"
+import { NCard } from "naive-ui"
 import { ref, watch, toRefs, computed } from "vue"
-import InfoIcon from "@vicons/carbon/Information"
 import { onClickOutside, useElementHover } from "@vueuse/core"
 import dayjs from "@/utils/dayjs"
 import { useThemeStore } from "@/stores/theme"
+import Apex from "@/components/charts/Apex.vue"
+import Icon from "@/components/common/Icon.vue"
 
 type ChartData = [number, number][]
 type ChartType = "area" | "bar"
+
+const InfoIcon = "carbon:information"
 
 const props = withDefaults(
 	defineProps<{
@@ -61,7 +62,7 @@ const chart = ref()
 const isHovered = useElementHover(chart)
 const hoveredTimer = ref<NodeJS.Timeout | null>(null)
 
-const style: { [key: string]: any } = computed(() => useThemeStore().style)
+const style = computed<{ [key: string]: any }>(() => useThemeStore().style)
 
 const data = ref<ChartData>([])
 

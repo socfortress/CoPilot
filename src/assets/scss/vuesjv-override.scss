@@ -1,0 +1,58 @@
+.vuesjv-override {
+	color: var(--fg-color);
+	font-family: var(--font-family-mono);
+	line-height: 1.7;
+
+	.font-mono {
+		font-family: var(--font-family-mono);
+	}
+
+	i {
+		font-size: 1rem;
+
+		&.i-mdi-content-copy {
+			font-size: 0.85rem;
+		}
+	}
+
+	.bg-gray-200 {
+		background-color: var(--divider-010-color);
+	}
+	.c-gray-400 {
+		color: var(--fg-secondary-color);
+	}
+	.c-indigo-600 {
+		color: var(--secondary2-color);
+	}
+	.c-blue-600,
+	.c-purple-600,
+	.c-red-600,
+	.c-pink-600,
+	.c-blue-900,
+	.c-blue-600,
+	.c-amber-600 {
+		color: var(--primary-color);
+		font-weight: bold;
+	}
+	.hover\:bg-gray-100 {
+		&:hover {
+			background-color: transparent;
+		}
+	}
+
+	.cursor-pointer {
+		color: var(--fg-color);
+		background-color: transparent;
+		height: 18px;
+		border-radius: 0;
+
+		&:has(.i-mdi-content-copy) {
+			width: 30px;
+		}
+
+		&:hover {
+			color: var(--primary-color);
+			background-color: transparent;
+		}
+	}
+}

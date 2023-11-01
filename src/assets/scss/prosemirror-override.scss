@@ -30,7 +30,7 @@
 	}
 
 	code {
-		background-color: rgba(var(--fg-color-rgb), 0.8);
+		background-color: var(--fg-secondary-color);
 		padding: 3px 8px;
 		border-radius: var(--border-radius-small);
 		font-size: 13px;
@@ -66,13 +66,13 @@
 	}
 
 	blockquote {
-		border-left: 2px solid rgba(var(--fg-color-rgb), 0.2);
+		border-left: 2px solid var(--divider-020-color);
 		padding-left: 1rem;
 	}
 
 	hr {
 		border: none;
-		border-top: 2px solid rgba(var(--fg-color-rgb), 0.2);
+		border-top: 2px solid var(--divider-020-color);
 		margin: 2rem 0;
 	}
 

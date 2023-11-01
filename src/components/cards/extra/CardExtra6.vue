@@ -2,9 +2,7 @@
 	<n-card hoverable content-style="padding: 0;" :title="`Last ${tableRows || 5} orders`" class="overflow-hidden">
 		<template #header-extra>
 			<n-dropdown :options="menuOptions" placement="bottom-end" @select="menuSelect">
-				<n-icon :size="20" class="ml-3">
-					<MenuIcon />
-				</n-icon>
+				<Icon :size="20" :name="MenuIcon" class="ml-3" />
 			</n-dropdown>
 		</template>
 		<template #default>
@@ -18,22 +16,24 @@
 </template>
 
 <script setup lang="ts">
-import { NCard, NIcon, NDropdown, NScrollbar } from "naive-ui"
+import { NCard, NDropdown, NScrollbar } from "naive-ui"
 import TableBase from "@/components/tables/Base.vue"
-import MenuIcon from "@vicons/carbon/OverflowMenuVertical"
-import ExpandIcon from "@vicons/fluent/ExpandUpRight24Regular"
-import ContractIcon from "@vicons/fluent/ContractDownLeft24Regular"
-import ReloadIcon from "@vicons/tabler/Refresh"
+import Icon from "@/components/common/Icon.vue"
 import { renderIcon } from "@/utils"
 import { computed, onMounted, ref, toRefs } from "vue"
+
+const MenuIcon = "carbon:overflow-menu-vertical"
+const ExpandIcon = "fluent:expand-up-right-24-regular"
+const ContractIcon = "fluent:contract-down-left-24-regular"
+const ReloadIcon = "tabler:refresh"
 
 const props = defineProps<{
 	showActions?: boolean
 	showDate?: boolean
 	minWidth?: number
 	tableRows?: number
-	reload?: (state: boolean) => {}
-	expand?: (state: boolean) => {}
+	reload?: (state: boolean) => void
+	expand?: (state: boolean) => void
 	isExpand?: () => boolean
 }>()
 const { showActions, showDate, minWidth, reload, expand, isExpand } = toRefs(props)

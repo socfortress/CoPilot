@@ -17,14 +17,14 @@
 							:class="[`f-${folder.id}`, folder.id === store.activeFolder ? 'f-active' : '']"
 						>
 							<div class="f-icon">
-								<n-icon :size="18">
-									<InboxIcon v-if="folder.id === 'inbox'" />
-									<SentIcon v-if="folder.id === 'sent'" />
-									<DraftIcon v-if="folder.id === 'draft'" />
-									<StarredIcon v-if="folder.id === 'starred'" />
-									<SpamIcon v-if="folder.id === 'spam'" />
-									<TrashIcon v-if="folder.id === 'trash'" />
-								</n-icon>
+								<Icon :size="18">
+									<Iconify :icon="InboxIcon" v-if="folder.id === 'inbox'" />
+									<Iconify :icon="SentIcon" v-if="folder.id === 'sent'" />
+									<Iconify :icon="DraftIcon" v-if="folder.id === 'draft'" />
+									<Iconify :icon="StarredIcon" v-if="folder.id === 'starred'" />
+									<Iconify :icon="SpamIcon" v-if="folder.id === 'spam'" />
+									<Iconify :icon="TrashIcon" v-if="folder.id === 'trash'" />
+								</Icon>
 							</div>
 							<div class="f-title">
 								{{ folder.title }}
@@ -42,9 +42,7 @@
 								:class="[`l-${label.id}`, label.id === store.activeLabel ? 'l-active' : '']"
 							>
 								<div class="l-icon flex">
-									<n-icon :size="14">
-										<LabelIcon :color="labelsColors[label.id]" />
-									</n-icon>
+									<Icon :size="14" :name="LabelIcon" :color="labelsColors[label.id]"></Icon>
 								</div>
 								<div class="l-title">
 									{{ label.title }}
@@ -68,9 +66,7 @@
 						<n-tooltip>
 							<template #trigger>
 								<n-button text>
-									<n-icon :size="20">
-										<TrashIcon />
-									</n-icon>
+									<Icon :size="20" :name="TrashIcon"></Icon>
 								</n-button>
 							</template>
 							<span>Delete</span>
@@ -79,9 +75,7 @@
 						<n-tooltip>
 							<template #trigger>
 								<n-button text>
-									<n-icon :size="20">
-										<LabelOutIcon />
-									</n-icon>
+									<Icon :size="20" :name="LabelOutIcon"></Icon>
 								</n-button>
 							</template>
 							<span>Add label</span>
@@ -89,9 +83,7 @@
 						<n-tooltip>
 							<template #trigger>
 								<n-button text>
-									<n-icon :size="20">
-										<FolderIcon />
-									</n-icon>
+									<Icon :size="20" :name="FolderIcon"></Icon>
 								</n-button>
 							</template>
 							<span>Move to folder</span>
@@ -99,9 +91,7 @@
 						<n-tooltip>
 							<template #trigger>
 								<n-button text>
-									<n-icon :size="20">
-										<StarredIcon />
-									</n-icon>
+									<Icon :size="20" :name="StarredIcon"></Icon>
 								</n-button>
 							</template>
 							<span>Star</span>
@@ -110,29 +100,23 @@
 					<div class="flex grow search-box" v-if="!checkControl">
 						<n-input placeholder="Search..." clearable size="medium" v-model:value="search">
 							<template #prefix>
-								<n-icon :component="SearchIcon" />
+								<Icon :name="SearchIcon" />
 							</template>
 						</n-input>
 					</div>
 					<div class="flex justify-center opacity-50" v-if="!checkControl">
 						<n-button text>
-							<n-icon :size="18">
-								<RefreshIcon />
-							</n-icon>
+							<Icon :size="18" :name="RefreshIcon"></Icon>
 						</n-button>
 					</div>
 					<div class="menu-btn flex justify-center opacity-50" v-if="!checkControl">
 						<n-button text @click="sidebarOpen = true">
-							<n-icon :size="24">
-								<MenuIcon />
-							</n-icon>
+							<Icon :size="24" :name="MenuIcon"></Icon>
 						</n-button>
 					</div>
 					<div class="new-btn flex justify-center opacity-50" v-if="!checkControl">
 						<n-button text @click="newEmail()">
-							<n-icon :size="20">
-								<PenIcon />
-							</n-icon>
+							<Icon :size="20" :name="PenIcon"></Icon>
 						</n-button>
 					</div>
 				</div>
@@ -154,20 +138,10 @@
 </template>
 
 <script setup lang="ts">
-import { NIcon, NScrollbar, NCheckbox, NInput, NButton, NTooltip } from "naive-ui"
-import InboxIcon from "@vicons/carbon/Email"
-import SentIcon from "@vicons/carbon/Send"
-import DraftIcon from "@vicons/carbon/Edit"
-import StarredIcon from "@vicons/carbon/Star"
-import SpamIcon from "@vicons/ionicons5/AlertCircleOutline"
-import TrashIcon from "@vicons/carbon/TrashCan"
-import LabelIcon from "@vicons/carbon/BookmarkFilled"
-import LabelOutIcon from "@vicons/carbon/Bookmark"
-import MenuIcon from "@vicons/ionicons5/MenuSharp"
-import SearchIcon from "@vicons/carbon/Search"
-import FolderIcon from "@vicons/carbon/FolderMoveTo"
-import RefreshIcon from "@vicons/ionicons5/Reload"
-import PenIcon from "@vicons/carbon/Pen"
+import { NScrollbar, NCheckbox, NInput, NButton, NTooltip } from "naive-ui"
+import Icon from "@/components/common/Icon.vue"
+import { Icon as Iconify } from "@iconify/vue"
+
 import { useMailboxStore } from "@/stores/apps/useMailboxStore"
 import { ref, computed, type ComputedRef, onMounted } from "vue"
 import { onClickOutside } from "@vueuse/core"
@@ -178,6 +152,20 @@ import EmailView from "@/components/apps/Mailbox/EmailView.vue"
 import ComposeView from "@/components/apps/Mailbox/ComposeView.vue"
 import { useThemeStore } from "@/stores/theme"
 import { useHideLayoutFooter } from "@/composables/useHideLayoutFooter"
+
+const InboxIcon = "carbon:email"
+const SentIcon = "carbon:send"
+const DraftIcon = "carbon:edit"
+const StarredIcon = "carbon:star"
+const SpamIcon = "ion:alert-circle-outline"
+const TrashIcon = "carbon:trash-can"
+const LabelIcon = "carbon:bookmark-filled"
+const LabelOutIcon = "carbon:bookmark"
+const MenuIcon = "ion:menu-sharp"
+const SearchIcon = "carbon:search"
+const FolderIcon = "carbon:folder-move-to"
+const RefreshIcon = "ion:reload"
+const PenIcon = "carbon:pen"
 
 const store = useMailboxStore()
 const sidebarOpen = ref(false)
@@ -303,7 +291,7 @@ useHideLayoutFooter()
 						width: 100%;
 						display: flex;
 						align-items: center;
-						background-color: rgba(var(--primary-color-rgb), 0.1);
+						background-color: var(--primary-010-color);
 						.n-button__content {
 							gap: 14px;
 						}
@@ -330,7 +318,7 @@ useHideLayoutFooter()
 					}
 
 					&:hover {
-						background-color: rgba(var(--fg-color-rgb), 0.05);
+						background-color: var(--hover-005-color);
 					}
 
 					&.f-active {
@@ -411,7 +399,7 @@ useHideLayoutFooter()
 				.search-box {
 					margin: 0px 12px;
 					.n-input {
-						background-color: var(--bg-sidebar);
+						background-color: var(--bg-secondary-color);
 
 						:deep() {
 							.n-input__border,
@@ -444,7 +432,7 @@ useHideLayoutFooter()
 				content: "";
 				width: 100vw;
 				display: block;
-				background-color: rgba(var(--bg-body-rgb), 0.4);
+				background-color: var(--bg-body);
 				position: absolute;
 				top: 0;
 				left: 0;
@@ -496,7 +484,7 @@ useHideLayoutFooter()
 			&.sidebar-open {
 				&::before {
 					transform: translateX(0);
-					opacity: 1;
+					opacity: 0.4;
 					transition:
 						opacity 0.25s ease-in-out,
 						transform 0s linear 0s;

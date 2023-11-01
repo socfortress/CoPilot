@@ -116,19 +116,6 @@ const list = ref(data)
 			.n-avatar {
 				font-size: 12px;
 				position: relative;
-				/*
-				text-shadow: 0px 0px 0px rgba(var(--fg-color-rgb), 0.9);
-
-				&::before {
-					content: "";
-					display: block;
-					position: absolute;
-					width: 100%;
-					height: 100%;
-					background-color: rgba(var(--fg-color-rgb), 0.1);
-					z-index: 0;
-				}
-				*/
 			}
 		}
 		.info {

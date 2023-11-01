@@ -2,7 +2,7 @@
 	<div class="page">
 		<div class="agent-toolbar">
 			<div class="back-btn" @click="gotoAgents()">
-				<n-icon :size="16"><ArrowIcon /></n-icon>
+				<Icon :name="ArrowIcon" :size="16"></Icon>
 				<span>Agents list</span>
 			</div>
 			<div class="delete-btn" @click.stop="handleDelete" v-if="agent">Delete Agent</div>
@@ -24,7 +24,7 @@
 								@click.stop="toggleCritical(agent.agent_id, agent.critical_asset)"
 							>
 								<template #icon>
-									<n-icon><StarIcon /></n-icon>
+									<Icon :name="StarIcon"></Icon>
 								</template>
 							</n-button>
 						</template>
@@ -65,12 +65,14 @@ import { useRoute } from "vue-router"
 import Api from "@/api"
 import { type Agent } from "@/types/agents.d"
 import { handleDeleteAgent, isAgentOnline, toggleAgentCritical } from "@/components/agents/utils"
-import StarIcon from "@vicons/carbon/Star"
 import { useRouter } from "vue-router"
 import VulnerabilitiesSection from "@/components/agents/VulnerabilitiesSection.vue"
 import OverviewSection from "@/components/agents/OverviewSection.vue"
-import { useMessage, NSpin, NTooltip, NButton, NIcon, NTabs, NTabPane, NCard, useDialog } from "naive-ui"
-import ArrowIcon from "@vicons/carbon/ArrowLeft"
+import { useMessage, NSpin, NTooltip, NButton, NTabs, NTabPane, NCard, useDialog } from "naive-ui"
+import Icon from "@/components/common/Icon.vue"
+
+const StarIcon = "carbon:star"
+const ArrowIcon = "carbon:arrow-left"
 
 const message = useMessage()
 const router = useRouter()

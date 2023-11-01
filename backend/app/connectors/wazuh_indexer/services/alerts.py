@@ -19,25 +19,10 @@ from app.connectors.wazuh_indexer.schema.alerts import HostAlertsSearchBody
 from app.connectors.wazuh_indexer.schema.alerts import HostAlertsSearchResponse
 from app.connectors.wazuh_indexer.schema.alerts import IndexAlertsSearchBody
 from app.connectors.wazuh_indexer.schema.alerts import IndexAlertsSearchResponse
+from app.connectors.wazuh_indexer.schema.alerts import SkippableWazuhIndexerClientErrors
 from app.connectors.wazuh_indexer.utils.universal import AlertsQueryBuilder
 from app.connectors.wazuh_indexer.utils.universal import collect_indices
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
-
-# def collect_and_aggregate_alerts(field_name: str, search_body: AlertsSearchBody) -> Dict[str, int]:
-#     indices = collect_indices()
-#     aggregated_alerts_dict = {}
-
-#     for index_name in indices.indices_list:
-#         try:
-#             alerts_response = collect_alerts_generic(index_name, body=search_body)
-#             if alerts_response.success:
-#                 for alert in alerts_response.alerts:
-#                     field_value = alert["_source"][field_name]
-#                     aggregated_alerts_dict[field_value] = aggregated_alerts_dict.get(field_value, 0) + 1
-#         except HTTPException as e:
-#             logger.warning(f"An error occurred while processing index {index_name}: {e.detail}")
-
-#     return aggregated_alerts_dict
 
 
 def collect_and_aggregate_alerts(field_names: List[str], search_body: AlertsSearchBody) -> Dict[str, int]:
@@ -52,7 +37,13 @@ def collect_and_aggregate_alerts(field_names: List[str], search_body: AlertsSear
                     composite_key = tuple(alert["_source"][field] for field in field_names)
                     aggregated_alerts_dict[composite_key] = aggregated_alerts_dict.get(composite_key, 0) + 1
         except HTTPException as e:
-            logger.warning(f"An error occurred while processing index {index_name}: {e.detail}")
+            detail_str = str(e.detail)  # Convert to string to make sure it's comparable
+            if any(err.value in detail_str for err in SkippableWazuhIndexerClientErrors):
+                logger.warning(f"Skipping index {index_name} due to specific error: {e.detail}")
+                continue  # Skip this index and continue with the next one
+            else:
+                logger.warning(f"An error occurred while processing index {index_name}: {e.detail}")
+                raise HTTPException(status_code=500, detail=f"An error occurred while processing index {index_name}: {e.detail}")
 
     return aggregated_alerts_dict
 
@@ -76,8 +67,8 @@ def collect_alerts_generic(index_name: str, body: AlertsSearchBody, is_host_spec
         logger.info(f"Alerts collected: {alerts_list}")
         return CollectAlertsResponse(alerts=alerts_list, success=True, message="Alerts collected successfully")
     except Exception as e:
-        logger.debug(f"Failed to collect alerts: {e}")
-        return CollectAlertsResponse(alerts=[], success=False, message=f"Failed to collect alerts: {e}")
+        logger.warning(f"An error occurred while collecting alerts: {e}")
+        raise HTTPException(status_code=500, detail=f"An error occurred while collecting alerts: {e}")
 
 
 def get_alerts_generic(search_body: Type[AlertsSearchBody], is_host_specific: bool = False, index_name: Optional[str] = None):
@@ -98,7 +89,13 @@ def get_alerts_generic(search_body: Type[AlertsSearchBody], is_host_specific: bo
                     },
                 )
         except HTTPException as e:
-            logger.warning(f"An error occurred while processing index {index_name}: {e.detail}")
+            detail_str = str(e.detail)  # Convert to string to make sure it's comparable
+            if any(err.value in detail_str for err in SkippableWazuhIndexerClientErrors):
+                logger.warning(f"Skipping index {index_name} due to specific error: {e.detail}")
+                continue  # Skip this index and continue with the next one
+            else:
+                logger.warning(f"An error occurred while processing index {index_name}: {e.detail}")
+                raise HTTPException(status_code=500, detail=f"An error occurred while processing index {index_name}: {e.detail}")
 
     if len(alerts_summary) == 0:
         message = "No alerts found"

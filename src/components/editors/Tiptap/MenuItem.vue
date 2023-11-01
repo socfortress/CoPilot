@@ -1,38 +1,37 @@
 <template>
 	<button class="menu-item" :class="{ 'is-active': isActive ? isActive() : null }" @click="action" :title="title">
-		<n-icon class="remix" :size="22">
-			<component :is="iconComponent" />
-		</n-icon>
+		<Icon :size="22" :name="iconComponent"></Icon>
 	</button>
 </template>
 
 <script setup lang="ts">
-import { NIcon } from "naive-ui"
-import Bold from "@vicons/fluent/TextBold16Regular"
-import Italic from "@vicons/fluent/TextItalic16Filled"
-import Strikethrough from "@vicons/fluent/TextStrikethrough16Filled"
-import CodeView from "@vicons/tabler/Code"
-import MarkPen from "@vicons/fluent/Highlight24Regular"
-import H1 from "@vicons/fluent/TextHeader124Filled"
-import H2 from "@vicons/fluent/TextHeader224Filled"
-import Paragraph from "@vicons/carbon/Paragraph"
-import ListUnordered from "@vicons/fluent/AppsList24Regular"
-import ListOrdered from "@vicons/fluent/TextNumberListLtr24Regular"
-import ListCheck from "@vicons/fluent/TaskListLtr24Regular"
-import CodeBox from "@vicons/tabler/FileCode"
-import DoubleQuotes from "@vicons/fluent/TextQuote24Regular"
-import Separator from "@vicons/tabler/Separator"
-import TextWrap from "@vicons/fluent/TextWrap24Regular"
-import FormatClear from "@vicons/tabler/ClearFormatting"
-import ArrowBack from "@vicons/fluent/ArrowHookUpLeft24Regular"
-import ArrowForward from "@vicons/fluent/ArrowHookUpRight24Regular"
-import TextLeft from "@vicons/fluent/TextAlignLeft24Regular"
-import TextCenter from "@vicons/fluent/TextAlignCenter24Regular"
-import TextRight from "@vicons/fluent/TextAlignRight24Regular"
-import TextJustify from "@vicons/fluent/TextAlignJustify24Regular"
-import Link from "@vicons/fluent/Link24Regular"
+import Icon from "@/components/common/Icon.vue"
+
+const Bold = "fluent:text-bold-16-regular"
+const Italic = "fluent:text-italic-16-filled"
+const Strikethrough = "fluent:text-strikethrough-16-filled"
+const Underline = "fluent:text-underline-16-filled"
+const CodeView = "tabler:code"
+const MarkPen = "fluent:highlight-24-regular"
+const H1 = "fluent:text-header-1-24-filled"
+const H2 = "fluent:text-header-2-24-filled"
+const Paragraph = "carbon:paragraph"
+const ListUnordered = "fluent:apps-list-24-regular"
+const ListOrdered = "fluent:text-number-list-ltr-24-regular"
+const ListCheck = "fluent:task-list-ltr-24-regular"
+const CodeBox = "tabler:file-code"
+const DoubleQuotes = "fluent:text-quote-24-regular"
+const Separator = "tabler:separator"
+const TextWrap = "fluent:text-wrap-24-regular"
+const FormatClear = "tabler:clear-formatting"
+const ArrowBack = "fluent:arrow-hook-up-left-24-regular"
+const ArrowForward = "fluent:arrow-hook-up-right-24-regular"
+const TextLeft = "fluent:text-align-left-24-regular"
+const TextCenter = "fluent:text-align-center-24-regular"
+const TextRight = "fluent:text-align-right-24-regular"
+const TextJustify = "fluent:text-align-justify-24-regular"
+const Link = "fluent:link-24-regular"
 import { computed, toRefs } from "vue"
-import type { Component } from "vue"
 
 export interface ItemProps {
 	type?: string
@@ -48,6 +47,7 @@ const icons = {
 	bold: Bold,
 	italic: Italic,
 	strikethrough: Strikethrough,
+	underline: Underline,
 	"code-view": CodeView,
 	"mark-pen-line": MarkPen,
 	"h-1": H1,
@@ -68,9 +68,9 @@ const icons = {
 	"text-align-right": TextRight,
 	"text-align-justify": TextJustify,
 	link: Link
-} as { [key: string]: Component }
+} as { [key: string]: string }
 
-const iconComponent = computed<Component>(() => icons[icon.value])
+const iconComponent = computed(() => icons[icon.value])
 </script>
 
 <style lang="scss">
@@ -93,7 +93,7 @@ const iconComponent = computed<Component>(() => icons[icon.value])
 
 	&.is-active,
 	&:hover {
-		background-color: rgba(var(--primary-color-rgb), 0.05);
+		background-color: var(--primary-005-color);
 		color: var(--primary-color);
 	}
 }

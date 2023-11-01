@@ -1,3 +1,4 @@
+from fastapi import HTTPException
 from loguru import logger
 
 from app.connectors.graylog.schema.events import AlertEvent
@@ -17,7 +18,10 @@ def get_event_definitions() -> GraylogEventDefinitionsResponse:
     logger.info("Getting event definitions from Graylog")
     event_definitions_collected = send_get_request(endpoint="/api/events/definitions")
     if event_definitions_collected["success"]:
-        event_definitions_data = event_definitions_collected["data"]["event_definitions"]
+        try:
+            event_definitions_data = event_definitions_collected["data"]["event_definitions"]
+        except KeyError:
+            raise HTTPException(status_code=500, detail="Failed to collect event definitions key")
 
         # Convert the dictionary to a list of GraylogIndexItem
         event_definitions_list = [EventDefinition(**event_definition_data) for event_definition_data in event_definitions_data]
@@ -36,7 +40,10 @@ def get_alerts(alert_query: AlertQuery) -> GraylogAlertsResponse:
     response = send_post_request(endpoint="/api/events/search", data=alert_query.dict())
 
     if response["success"]:
-        raw_alerts_data = response["data"]
+        try:
+            raw_alerts_data = response["data"]
+        except KeyError:
+            raise HTTPException(status_code=500, detail="Failed to collect data key")
         # Convert raw event data to Event objects
         event_objects = [AlertEvent(**event_data) for event_data in raw_alerts_data["events"]]
 

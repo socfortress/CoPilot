@@ -9,9 +9,7 @@
 		</template>
 		<template #header-extra>
 			<n-dropdown :options="menuOptions" placement="bottom-end" @select="menuSelect" v-if="!hideMenu">
-				<n-icon :size="20" class="ml-3">
-					<MenuIcon />
-				</n-icon>
+				<Icon :size="20" :name="MenuIcon" class="ml-3" />
 			</n-dropdown>
 		</template>
 		<template #default>
@@ -32,21 +30,23 @@
 
 <script setup lang="ts">
 import { faker } from "@faker-js/faker"
-import { NCard, NIcon, NDropdown, NScrollbar } from "naive-ui"
-import MenuIcon from "@vicons/carbon/OverflowMenuVertical"
-import ContractIcon from "@vicons/fluent/ContractDownLeft24Regular"
-import ExpandIcon from "@vicons/fluent/ExpandUpRight24Regular"
-import ReloadIcon from "@vicons/tabler/Refresh"
+import { NCard, NDropdown, NScrollbar } from "naive-ui"
+import Icon from "@/components/common/Icon.vue"
 import { computed, toRefs, onMounted, ref } from "vue"
 import { renderIcon } from "@/utils"
+
+const MenuIcon = "carbon:overflow-menu-vertical"
+const ContractIcon = "fluent:contract-down-left-24-regular"
+const ExpandIcon = "fluent:expand-up-right-24-regular"
+const ReloadIcon = "tabler:refresh"
 
 const props = defineProps<{
 	showImage?: boolean
 	hideSubtitle?: boolean
 	actionBoxTransparent?: boolean
 	hideMenu?: boolean
-	reload?: (state: boolean) => {}
-	expand?: (state: boolean) => {}
+	reload?: (state: boolean) => void
+	expand?: (state: boolean) => void
 	isExpand?: () => boolean
 	title?: string
 	image?: string

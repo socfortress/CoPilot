@@ -63,11 +63,15 @@ def get_artifacts() -> ArtifactsResponse:
     logger.info("Fetching artifacts from Velociraptor")
     query = create_query("SELECT name,description FROM artifact_definitions()")
     all_artifacts = universal_service.execute_query(query)
-    if all_artifacts["success"]:
-        artifacts = [Artifacts(**artifact) for artifact in all_artifacts["results"]]
-        return ArtifactsResponse(success=True, message="All artifacts retrieved", artifacts=artifacts)
-    else:
-        raise HTTPException(status_code=500, detail=f"Failed to get all artifacts: {all_artifacts['message']}")
+    try:
+        if all_artifacts["success"]:
+            artifacts = [Artifacts(**artifact) for artifact in all_artifacts["results"]]
+            return ArtifactsResponse(success=True, message="All artifacts retrieved", artifacts=artifacts)
+        else:
+            raise HTTPException(status_code=500, detail=f"Failed to get all artifacts: {all_artifacts['message']}")
+    except Exception as err:
+        logger.error(f"Failed to get all artifacts: {err}")
+        raise HTTPException(status_code=500, detail=f"Failed to get all artifacts: {err}")
 
 
 def run_artifact_collection(collect_artifact_body: CollectArtifactBody) -> CollectArtifactResponse:
@@ -104,6 +108,9 @@ def run_artifact_collection(collect_artifact_body: CollectArtifactBody) -> Colle
         logger.info(f"Successfully read collection results on {results}")
 
         return CollectArtifactResponse(success=results["success"], message=results["message"], results=results["results"])
+    except HTTPException as he:  # Catch HTTPException separately to propagate the original message
+        logger.error(f"HTTPException while running artifact collection on {collect_artifact_body}: {he.detail}")
+        raise he
     except Exception as err:
         logger.error(f"Failed to run artifact collection on {collect_artifact_body}: {err}")
         raise HTTPException(status_code=500, detail=f"Failed to run artifact collection on {collect_artifact_body}: {err}")
@@ -195,43 +202,3 @@ def quarantine_host(quarantine_body: QuarantineBody) -> QuarantineResponse:
     except Exception as err:
         logger.error(f"Failed to run artifact collection on {quarantine_body}: {err}")
         raise HTTPException(status_code=500, detail=f"Failed to run artifact collection on {quarantine_body}: {err}")
-
-
-######################## KEEP
-class ArtifactsService:
-    def delete_client(self, client_id: str) -> dict:
-        """
-        Delete a client from Velociraptor.
-
-        Args:
-            client_id (str): The ID of the client.
-
-        Returns:
-            dict: A dictionary with the success status and a message.
-        """
-        try:
-            query = self._create_query(
-                f"SELECT collect_client(client_id='server', artifacts=['Server.Utils.DeleteClient'], env=dict(ClientIdList='{client_id}',ReallyDoIt='Y')) "
-                "FROM scope()",
-            )
-
-            flow = self.universal_service.execute_query(query)
-            logger.info(f"Successfully ran artifact collection on {flow}")
-
-            # artifact_key = f"collect_client(client_id='server', artifacts=['Server.Utils.DeleteClient'], env=dict(ClientIdList='{client_id}',ReallyDoIt='Y'))"
-            flow_id = flow["results"][0][query]["flow_id"]
-            logger.info(f"Extracted flow_id: {flow_id}")
-
-            completed = self.universal_service.watch_flow_completion(flow_id)
-            logger.info(f"Successfully watched flow completion on {completed}")
-
-            return {
-                "message": f"Successfully deleted client {client_id}",
-                "success": True,
-            }
-        except Exception as err:
-            logger.error(f"Failed to delete client {client_id}: {err}")
-            return {
-                "message": f"Failed to delete client {client_id}",
-                "success": False,
-            }

@@ -1,8 +1,10 @@
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi import Security
 from loguru import logger
 
+from app.auth.utils import AuthHandler
 from app.connectors.dfir_iris.schema.alerts import AlertResponse
 from app.connectors.dfir_iris.schema.users import User
 from app.connectors.dfir_iris.schema.users import UsersResponse
@@ -27,13 +29,23 @@ def verify_alert_exists(alert_id: str) -> str:
 dfir_iris_users_router = APIRouter()
 
 
-@dfir_iris_users_router.get("", response_model=UsersResponse, description="Get all users")
+@dfir_iris_users_router.get(
+    "",
+    response_model=UsersResponse,
+    description="Get all users",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
 async def get_all_users() -> UsersResponse:
     logger.info("Fetching all users")
     return get_users()
 
 
-@dfir_iris_users_router.post("/assign/{alert_id}/{user_id}", response_model=AlertResponse, description="Assign a user to an alert")
+@dfir_iris_users_router.post(
+    "/assign/{alert_id}/{user_id}",
+    response_model=AlertResponse,
+    description="Assign a user to an alert",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
 async def assign_user_to_alert_route(alert_id: str = Depends(verify_alert_exists), user_id: int = Depends(verify_user_exists)) -> User:
     logger.info(f"Assigning user {user_id} to alert {alert_id}")
     return assign_user_to_alert(alert_id, user_id)

@@ -2,11 +2,11 @@ import { renderIcon } from "@/utils"
 import { h } from "vue"
 import { RouterLink } from "vue-router"
 
-import CardsIcon from "@vicons/fluent/PreviewLink20Regular"
+const CardsIcon = "fluent:preview-link-20-regular"
 
 export default {
 	label: "Cards",
-	key: "cards",
+	key: "Cards",
 	icon: renderIcon(CardsIcon),
 	children: [
 		{
@@ -15,12 +15,12 @@ export default {
 					RouterLink,
 					{
 						to: {
-							name: "cards-basic"
+							name: "Cards-Basic"
 						}
 					},
 					{ default: () => "Basic" }
 				),
-			key: "cards-basic"
+			key: "Cards-Basic"
 		},
 		{
 			label: () =>
@@ -28,12 +28,12 @@ export default {
 					RouterLink,
 					{
 						to: {
-							name: "cards-ecommerce"
+							name: "Cards-Ecommerce"
 						}
 					},
 					{ default: () => "Ecommerce" }
 				),
-			key: "cards-ecommerce"
+			key: "Cards-Ecommerce"
 		},
 		{
 			label: () =>
@@ -41,12 +41,12 @@ export default {
 					RouterLink,
 					{
 						to: {
-							name: "cards-list"
+							name: "Cards-List"
 						}
 					},
 					{ default: () => "List" }
 				),
-			key: "cards-list"
+			key: "Cards-List"
 		},
 		{
 			label: () =>
@@ -54,12 +54,12 @@ export default {
 					RouterLink,
 					{
 						to: {
-							name: "cards-extra"
+							name: "Cards-Extra"
 						}
 					},
 					{ default: () => "Extra" }
 				),
-			key: "cards-extra"
+			key: "Cards-Extra"
 		},
 		{
 			label: () =>
@@ -67,12 +67,12 @@ export default {
 					RouterLink,
 					{
 						to: {
-							name: "cards-combo"
+							name: "Cards-Combo"
 						}
 					},
 					{ default: () => "Combo" }
 				),
-			key: "cards-combo"
+			key: "Cards-Combo"
 		}
 	]
 }

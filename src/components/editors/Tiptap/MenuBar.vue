@@ -36,6 +36,12 @@ const items: (ItemProps | { type: string; icon: string })[] = [
 		isActive: () => editor.value.isActive("italic")
 	},
 	{
+		icon: "underline",
+		title: "Underline",
+		action: () => editor.value.chain().focus().toggleUnderline().run(),
+		isActive: () => editor.value.isActive("underline")
+	},
+	{
 		icon: "strikethrough",
 		title: "Strike",
 		action: () => editor.value.chain().focus().toggleStrike().run(),

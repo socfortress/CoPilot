@@ -78,8 +78,8 @@ import {
 	NPopconfirm,
 	type FormValidationError
 } from "naive-ui"
+import type { CalendarEditEvent } from "@/mock/fullcalendar"
 import { useFullCalendarStore } from "@/stores/apps/useFullCalendarStore"
-import { type CalendarEditEvent } from "@/views/Apps/Calendars/FullCalendar.vue"
 
 defineOptions({
 	name: "EventEditor"

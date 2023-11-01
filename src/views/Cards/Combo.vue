@@ -4,18 +4,18 @@
 			<div class="card-wrap md:basis-1/2 basis-full">
 				<CardCombo1 title="Sales" class="h-full">
 					<template #icon>
-						<CardComboIcon boxed>
-							<SalesIcon />
-						</CardComboIcon>
+						<CardComboIcon :iconName="SalesIcon" boxed></CardComboIcon>
 					</template>
 				</CardCombo1>
 			</div>
 			<div class="card-wrap md:basis-1/2 basis-full">
 				<CardCombo1 title="Subscribers" type="bar" class="h-full" :chartColor="style['--secondary1-color']">
 					<template #icon>
-						<CardComboIcon boxed :color="style['--secondary1-color']">
-							<SubscribersIcon />
-						</CardComboIcon>
+						<CardComboIcon
+							:iconName="SubscribersIcon"
+							boxed
+							:color="style['--secondary1-color']"
+						></CardComboIcon>
 					</template>
 				</CardCombo1>
 			</div>
@@ -30,9 +30,7 @@
 						:style="`background-color: ${style['--secondary2-color']}`"
 					>
 						<template #icon>
-							<CardComboIcon boxed :boxSize="50" :color="'white'">
-								<ReportsIcon />
-							</CardComboIcon>
+							<CardComboIcon :iconName="ReportsIcon" boxed :boxSize="50" :color="'white'"></CardComboIcon>
 						</template>
 					</CardCombo2>
 				</div>
@@ -40,16 +38,17 @@
 					<div class="flex flex-col gap-5 w-full">
 						<CardCombo2 title="Issues" horizontal>
 							<template #icon>
-								<CardComboIcon boxed :boxSize="50" :color="style['--secondary4-color']">
-									<ErrorIcon />
-								</CardComboIcon>
+								<CardComboIcon
+									:iconName="ErrorIcon"
+									boxed
+									:boxSize="50"
+									:color="style['--secondary4-color']"
+								></CardComboIcon>
 							</template>
 						</CardCombo2>
 						<CardCombo2 title="Completed" horizontal>
 							<template #icon>
-								<CardComboIcon boxed :boxSize="50">
-									<CompletedIcon />
-								</CardComboIcon>
+								<CardComboIcon :iconName="CompletedIcon" boxed :boxSize="50"></CardComboIcon>
 							</template>
 						</CardCombo2>
 					</div>
@@ -60,16 +59,20 @@
 					<div class="flex flex-col gap-5 w-full">
 						<CardCombo2 title="Pending" horizontal>
 							<template #icon>
-								<CardComboIcon :boxSize="50" :color="style['--secondary3-color']">
-									<PendingIcon />
-								</CardComboIcon>
+								<CardComboIcon
+									:iconName="PendingIcon"
+									:boxSize="50"
+									:color="style['--secondary3-color']"
+								></CardComboIcon>
 							</template>
 						</CardCombo2>
 						<CardCombo2 title="Shipped" horizontal>
 							<template #icon>
-								<CardComboIcon :boxSize="50" :color="style['--secondary1-color']">
-									<ShippedIcon />
-								</CardComboIcon>
+								<CardComboIcon
+									:iconName="ShippedIcon"
+									:boxSize="50"
+									:color="style['--secondary1-color']"
+								></CardComboIcon>
 							</template>
 						</CardCombo2>
 					</div>
@@ -77,9 +80,7 @@
 				<div class="flex lg:basis-1/2 basis-full">
 					<CardCombo2 title="Earned" centered class="h-full" currency="USD">
 						<template #icon>
-							<CardComboIcon :boxSize="50">
-								<RevenueIcon />
-							</CardComboIcon>
+							<CardComboIcon :iconName="RevenueIcon" :boxSize="50"></CardComboIcon>
 						</template>
 					</CardCombo2>
 				</div>
@@ -94,14 +95,10 @@
 				<div class="flex flex-col gap-5 md:flex-row lg:flex-col xl:flex-row">
 					<CardCombo6 cardWrap titleLeft="Computer" titleRight="Tablet" valueLeft="75.6k" valueRight="143.7k">
 						<template #iconLeft>
-							<CardComboIcon boxed :boxSize="30">
-								<ComputerIcon />
-							</CardComboIcon>
+							<CardComboIcon :iconName="ComputerIcon" boxed :boxSize="30"></CardComboIcon>
 						</template>
 						<template #iconRight>
-							<CardComboIcon boxed :boxSize="30">
-								<TabletIcon />
-							</CardComboIcon>
+							<CardComboIcon :iconName="TabletIcon" boxed :boxSize="30"></CardComboIcon>
 						</template>
 					</CardCombo6>
 
@@ -112,9 +109,7 @@
 				<div class="flex flex-col gap-5 sm:flex-row">
 					<CardCombo7 cardWrap>
 						<template #icon>
-							<CardComboIcon boxed>
-								<SalesIcon />
-							</CardComboIcon>
+							<CardComboIcon :iconName="SalesIcon" boxed></CardComboIcon>
 						</template>
 					</CardCombo7>
 
@@ -130,9 +125,10 @@
 						}"
 					>
 						<template #icon>
-							<CardComboIcon :color="style['--secondary2-color']">
-								<ActivityIcon />
-							</CardComboIcon>
+							<CardComboIcon
+								:iconName="ActivityIcon"
+								:color="style['--secondary2-color']"
+							></CardComboIcon>
 						</template>
 					</CardCombo4>
 				</div>
@@ -151,9 +147,7 @@
 						}"
 					>
 						<template #icon>
-							<CardComboIcon boxed>
-								<UploadsIcon />
-							</CardComboIcon>
+							<CardComboIcon :iconName="UploadsIcon" boxed></CardComboIcon>
 						</template>
 					</CardCombo4>
 
@@ -180,20 +174,20 @@
 </template>
 
 <script lang="ts" setup>
-import RevenueIcon from "@vicons/carbon/Money"
-import SubscribersIcon from "@vicons/carbon/UserMultiple"
-import SalesIcon from "@vicons/carbon/ShoppingCart"
-import ReportsIcon from "@vicons/carbon/Report"
-import ErrorIcon from "@vicons/carbon/Debug"
-import ActivityIcon from "@vicons/carbon/Activity"
-import UploadsIcon from "@vicons/carbon/CloudUpload"
-import CompletedIcon from "@vicons/carbon/CheckmarkOutline"
-import PendingIcon from "@vicons/carbon/Hourglass"
-import ShippedIcon from "@vicons/carbon/Send"
-import TabletIcon from "@vicons/carbon/Tablet"
-import ComputerIcon from "@vicons/carbon/Screen"
+const RevenueIcon = "carbon:money"
+const SubscribersIcon = "carbon:user-multiple"
+const SalesIcon = "carbon:shopping-cart"
+const ReportsIcon = "carbon:report"
+const ErrorIcon = "carbon:debug"
+const ActivityIcon = "carbon:activity"
+const UploadsIcon = "carbon:cloud-upload"
+const CompletedIcon = "carbon:checkmark-outline"
+const PendingIcon = "carbon:hourglass"
+const ShippedIcon = "carbon:send"
+const TabletIcon = "carbon:tablet"
+const ComputerIcon = "carbon:screen"
 import { computed } from "vue"
 import { useThemeStore } from "@/stores/theme"
 
-const style: { [key: string]: any } = computed(() => useThemeStore().style)
+const style = computed<{ [key: string]: any }>(() => useThemeStore().style)
 </script>

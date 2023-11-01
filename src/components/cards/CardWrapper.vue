@@ -18,11 +18,11 @@ import { ref } from "vue"
 const showModal = ref(false)
 const showSpin = ref(false)
 
-function expand(state: boolean) {
+function expand(state: boolean): void {
 	showModal.value = state
 }
 
-function reload(state: boolean) {
+function reload(state: boolean): void {
 	showSpin.value = state
 }
 

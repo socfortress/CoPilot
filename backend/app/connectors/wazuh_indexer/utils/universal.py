@@ -6,6 +6,7 @@ from typing import Iterable
 from typing import Tuple
 
 from elasticsearch7 import Elasticsearch
+from fastapi import HTTPException
 from loguru import logger
 
 from app.connectors.utils import get_connector_info_from_db
@@ -62,16 +63,18 @@ def create_wazuh_indexer_client(connector_name: str) -> Elasticsearch:
     """
     attributes = get_connector_info_from_db(connector_name)
     if attributes is None:
-        logger.error("No Wazuh Indexer connector found in the database")
-        return None
-    return Elasticsearch(
-        [attributes["connector_url"]],
-        http_auth=(attributes["connector_username"], attributes["connector_password"]),
-        verify_certs=False,
-        timeout=15,
-        max_retries=10,
-        retry_on_timeout=False,
-    )
+        raise HTTPException(status_code=500, detail=f"No {connector_name} connector found in the database")
+    try:
+        return Elasticsearch(
+            [attributes["connector_url"]],
+            http_auth=(attributes["connector_username"], attributes["connector_password"]),
+            verify_certs=False,
+            timeout=15,
+            max_retries=10,
+            retry_on_timeout=False,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create Elasticsearch client: {e}")
 
 
 def format_node_allocation(node_allocation):
@@ -161,7 +164,7 @@ def collect_indices() -> Indices:
         return Indices(indices_list=indices_list, success=True, message="Indices collected successfully")
     except Exception as e:
         logger.error(f"Failed to collect indices: {e}")
-        return Indices(message="Failed to collect indices", success=False)
+        raise HTTPException(status_code=500, detail=f"Failed to collect indices: {e}")
 
 
 class AlertsQueryBuilder:

@@ -10,15 +10,15 @@
 		</div>
 		<Transition name="fade" mode="out-in">
 			<div class="sidebar-pin flex items-center" v-if="showPin">
-				<n-icon size="20" @click="sidebarCollapsed = !sidebarCollapsed">
+				<Icon :size="20" @click="sidebarCollapsed = !sidebarCollapsed">
 					<span class="i-large">
-						<CircleRegular v-if="sidebarCollapsed" />
-						<DotCircleRegular v-if="!sidebarCollapsed" />
+						<Iconify :icon="CircleRegular" v-if="sidebarCollapsed" />
+						<Iconify :icon="DotCircleRegular" v-if="!sidebarCollapsed" />
 					</span>
 					<span class="i-small">
-						<CloseOutline v-if="!sidebarCollapsed" />
+						<Iconify :icon="CloseOutline" v-if="!sidebarCollapsed" />
 					</span>
-				</n-icon>
+				</Icon>
 			</div>
 		</Transition>
 	</div>
@@ -27,14 +27,13 @@
 <script lang="ts" setup>
 import { computed, toRefs } from "vue"
 import { useThemeStore } from "@/stores/theme"
-import { NIcon } from "naive-ui"
-import { CircleRegular, DotCircleRegular } from "@vicons/fa"
-import { CloseOutline } from "@vicons/carbon"
+import Icon from "@/components/common/Icon.vue"
+import { Icon as Iconify } from "@iconify/vue"
 import Logo from "@/layouts/common/Logo.vue"
 
-defineOptions({
-	name: "SidebarHeader"
-})
+const CircleRegular = "fa6-regular:circle"
+const DotCircleRegular = "fa6-regular:circle-dot"
+const CloseOutline = "fa6-regular:circle-xmark"
 
 const props = defineProps<{
 	logoMini?: boolean

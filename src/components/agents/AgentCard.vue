@@ -21,7 +21,7 @@
 										@click.stop="toggleCritical(agent.agent_id, agent.critical_asset)"
 									>
 										<template #icon>
-											<n-icon><StarIcon /></n-icon>
+											<Icon :name="StarIcon"></Icon>
 										</template>
 									</n-button>
 								</template>
@@ -44,7 +44,7 @@
 							<template #trigger>
 								<n-button quaternary circle type="error" @click.stop="handleDelete">
 									<template #icon>
-										<n-icon><DeleteIcon /></n-icon>
+										<Icon :name="DeleteIcon"></Icon>
 									</template>
 								</n-button>
 							</template>
@@ -59,11 +59,14 @@
 <script setup lang="ts">
 import { computed, ref, toRefs } from "vue"
 import { type Agent } from "@/types/agents.d"
-import dayjs from "dayjs"
+import dayjs from "@/utils/dayjs"
 import { handleDeleteAgent, isAgentOnline, toggleAgentCritical } from "./utils"
-import StarIcon from "@vicons/carbon/Star"
-import DeleteIcon from "@vicons/carbon/Delete"
-import { NTooltip, NButton, NIcon, NSpin, NCard, useMessage, useDialog } from "naive-ui"
+import { NTooltip, NButton, NSpin, NCard, useMessage, useDialog } from "naive-ui"
+import Icon from "@/components/common/Icon.vue"
+import { useSettingsStore } from "@/stores/settings"
+
+const StarIcon = "carbon:star"
+const DeleteIcon = "ph:trash"
 
 const emit = defineEmits<{
 	(e: "delete"): void
@@ -75,6 +78,7 @@ const props = defineProps<{
 }>()
 const { agent, showActions } = toRefs(props)
 
+const dFormats = useSettingsStore().dateFormat
 const loading = ref(false)
 const message = useMessage()
 const dialog = useDialog()
@@ -85,7 +89,7 @@ const formatLastSeen = computed(() => {
 	const lastSeenDate = dayjs(agent.value.wazuh_last_seen)
 	if (!lastSeenDate.isValid()) return agent.value.wazuh_last_seen
 
-	return lastSeenDate.format("DD/MM/YYYY @ HH:mm")
+	return lastSeenDate.format(dFormats.datetime)
 })
 
 function handleDelete() {

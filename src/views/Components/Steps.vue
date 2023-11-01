@@ -8,11 +8,8 @@
 					target="_blank"
 					alt="docs"
 					rel="nofollow noopener noreferrer"
-					class="ml-4"
 				>
-					<n-icon :size="16">
-						<ExternalIcon />
-					</n-icon>
+					<Icon :name="ExternalIcon" :size="16" />
 					docs
 				</a>
 			</div>
@@ -25,16 +22,12 @@
 						<n-button-group>
 							<n-button @click="prev">
 								<template #icon>
-									<n-icon>
-										<arrow-back />
-									</n-icon>
+									<Icon :name="ArrowBack" />
 								</template>
 							</n-button>
 							<n-button @click="next">
 								<template #icon>
-									<n-icon>
-										<arrow-forward />
-									</n-icon>
+									<Icon :name="ArrowForward" />
 								</template>
 							</n-button>
 						</n-button-group>
@@ -149,16 +142,12 @@
 						<n-button-group>
 							<n-button @click="prev">
 								<template #icon>
-									<n-icon>
-										<arrow-back />
-									</n-icon>
+									<Icon :name="ArrowBack" />
 								</template>
 							</n-button>
 							<n-button @click="next">
 								<template #icon>
-									<n-icon>
-										<arrow-forward />
-									</n-icon>
+									<Icon :name="ArrowForward" />
 								</template>
 							</n-button>
 						</n-button-group>
@@ -245,20 +234,12 @@
 </template>
 
 <script lang="ts" setup>
-import {
-	NIcon,
-	NSpace,
-	NSteps,
-	NStep,
-	NButtonGroup,
-	NRadioGroup,
-	NRadioButton,
-	NButton,
-	type StepsProps
-} from "naive-ui"
-import ExternalIcon from "@vicons/tabler/ExternalLink"
+import { NSpace, NSteps, NStep, NButtonGroup, NRadioGroup, NRadioButton, NButton, type StepsProps } from "naive-ui"
+import Icon from "@/components/common/Icon.vue"
+const ExternalIcon = "tabler:external-link"
+const ArrowBack = "ion:arrow-back"
+const ArrowForward = "ion:arrow-forward"
 
-import { ArrowBack, ArrowForward } from "@vicons/ionicons5"
 import { ref } from "vue"
 
 const currentRef = ref<number | null>(1)

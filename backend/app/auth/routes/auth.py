@@ -5,6 +5,9 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import status
 from fastapi.security import OAuth2PasswordRequestForm
+from loguru import logger
+from sqlmodel import Session
+from sqlmodel import engine
 
 from app.auth.models.users import User
 from app.auth.models.users import UserInput

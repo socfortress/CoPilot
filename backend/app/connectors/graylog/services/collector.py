@@ -1,6 +1,7 @@
 from typing import List
 from typing import Tuple
 
+from fastapi import HTTPException
 from loguru import logger
 
 from app.connectors.graylog.schema.collector import ConfiguredInput
@@ -18,7 +19,10 @@ def get_indices_full() -> GraylogIndicesResponse:
     logger.info("Getting indices from Graylog")
     indices_collected = send_get_request(endpoint="/api/system/indexer/indices")
     if indices_collected["success"]:
-        indices_data = indices_collected["data"]["all"]["indices"]
+        try:
+            indices_data = indices_collected["data"]["all"]["indices"]
+        except KeyError:
+            raise HTTPException(status_code=500, detail="Failed to collect indices key")
 
         # Convert the dictionary to a list of GraylogIndexItem
         indices_list = [GraylogIndexItem(index_name=name, index_info=info) for name, info in indices_data.items()]

@@ -15,7 +15,7 @@
 		<a href="#" target="_blank" alt="docs" rel="nofollow noopener noreferrer">template documentation</a>
 		you can find out how it was implemented.
 
-		<n-card class="demo">
+		<n-card class="demo mt-6">
 			<LocaleSelect class="mb-5" />
 
 			<p>
@@ -29,25 +29,3 @@
 import { NCard } from "naive-ui"
 import LocaleSelect from "@/components/common/LocaleSelect.vue"
 </script>
-
-<style lang="scss" scoped>
-.page {
-	.header {
-		font-family: var(--font-family-display);
-		margin-bottom: 20px;
-
-		span {
-			font-weight: bold;
-			font-size: 30px;
-		}
-	}
-
-	a {
-		font-weight: 500;
-	}
-
-	.demo {
-		margin-top: 24px;
-	}
-}
-</style>

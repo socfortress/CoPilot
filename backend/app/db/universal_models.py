@@ -120,3 +120,16 @@ class Agents(SQLModel, table=True):
         self.velociraptor_last_seen = velociraptor_agent.client_last_seen_as_datetime
         self.velociraptor_agent_version = velociraptor_agent.client_version
         self.customer_code = customer_code
+
+
+class LogEntry(SQLModel, table=True):
+    __tablename__ = "log_entries"
+    id: Optional[int] = Field(primary_key=True)
+    timestamp: datetime = Field(default=datetime.utcnow())
+    event_type: str
+    user_id: int = Field(default=None, nullable=True)
+    route: str
+    method: str
+    status_code: int
+    message: str
+    additional_info: str = Field(default=None, nullable=True)

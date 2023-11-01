@@ -19,7 +19,7 @@ class SyncedAgent(WazuhAgent, VelociraptorAgent):
 
 
 class SyncedAgentsResponse(BaseModel):
-    agents_added: List[SyncedAgent]
+    # agents_added: List[SyncedAgent]
     success: bool
     message: str
 

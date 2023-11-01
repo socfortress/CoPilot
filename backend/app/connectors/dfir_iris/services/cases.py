@@ -69,10 +69,14 @@ def filter_cases_older_than(cases: List[Dict], older_than: datetime) -> List[Dic
 
 def get_all_cases() -> CaseResponse:
     result = get_client_and_cases()
-    if not result["success"]:
-        logger.error(f"Failed to get all cases: {result['message']}")
-        return HTTPException(status_code=500, detail=f"Failed to get all cases: {result['message']}")
-    return CaseResponse(success=True, message="Successfully fetched all cases", cases=result["data"])
+    try:
+        if not result["success"]:
+            logger.error(f"Failed to get all cases: {result['message']}")
+            raise HTTPException(status_code=500, detail=f"Failed to get all cases: {result['message']}")
+        return CaseResponse(success=True, message="Successfully fetched all cases", cases=result["data"])
+    except Exception as err:
+        logger.error(f"Failed to get all cases: {err}")
+        raise HTTPException(status_code=500, detail=f"Failed to get all cases: {err}")
 
 
 def get_cases_older_than(case_older_than_body: CaseOlderThanBody) -> CasesBreachedResponse:

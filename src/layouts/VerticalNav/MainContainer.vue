@@ -14,7 +14,7 @@
 import { computed, ref, onMounted } from "vue"
 import { NScrollbar } from "naive-ui"
 import { useRoute, useRouter } from "vue-router"
-import Toolbar from "@/layouts/common/Toolbar"
+import Toolbar from "@/layouts/common/Toolbar/index.vue"
 import FooterEL from "@/layouts/common/FooterEL.vue"
 import { useThemeStore } from "@/stores/theme"
 

@@ -9,11 +9,8 @@
 				target="_blank"
 				alt="docs"
 				rel="nofollow noopener noreferrer"
-				class="ml-4"
 				>
-				<n-icon :size="20">
-					<ExternalIcon />
-				</n-icon>
+				<Icon :name="ExternalIcon" :size="16" />
 				docs
 			</a>
 		</div>
@@ -206,7 +203,6 @@
 
 <script lang="ts" setup>
 import {
-	NIcon,
 	NRadioGroup,
 	NRadioButton,
 	NForm,
@@ -218,9 +214,10 @@ import {
 	type FormInst,
 	useMessage
 } from "naive-ui"
-import ExternalIcon from "@vicons/tabler/ExternalLink"
+import Icon from "@/components/common/Icon.vue"
+const ExternalIcon = "tabler:external-link"
 import { ref } from "vue"
-import { type  LabelPlacement, type  Size } from "naive-ui/es/form/src/interface"
+import { type LabelPlacement, type Size } from "naive-ui/es/form/src/interface"
 
 const size = ref<Size | undefined>("medium")
 const inline = ref(false)

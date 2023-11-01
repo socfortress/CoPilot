@@ -11,14 +11,17 @@
 
 <script setup lang="ts">
 import { computed, toRefs } from "vue"
-import dayjs from "dayjs"
+import dayjs from "@/utils/dayjs"
 import { type Agent } from "@/types/agents.d"
 import { NCard } from "naive-ui"
+import { useSettingsStore } from "@/stores/settings"
 
 const props = defineProps<{
 	agent: Agent
 }>()
 const { agent } = toRefs(props)
+
+const dFormats = useSettingsStore().dateFormat
 
 const propsSanitized = computed(() => {
 	const obj = []
@@ -39,7 +42,7 @@ const formatDate = (date: string) => {
 	const datejs = dayjs(date)
 	if (!datejs.isValid()) return date
 
-	return datejs.format("DD/MM/YYYY @ HH:mm")
+	return datejs.format(dFormats.datetime)
 }
 </script>
 

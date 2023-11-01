@@ -2,12 +2,24 @@ import { renderIcon } from "@/utils"
 import { h } from "vue"
 import { RouterLink } from "vue-router"
 
-import CalendarIcon from "@vicons/carbon/Calendar"
+const CalendarIcon = "carbon:calendar"
 
 export default {
-	label: "Calendars",
-	key: "calendars",
+	key: "Apps-Calendars-FullCalendar",
 	icon: renderIcon(CalendarIcon),
+	label: () =>
+		h(
+			RouterLink,
+			{
+				to: {
+					name: "Apps-Calendars-FullCalendar"
+				}
+			},
+			{ default: () => "Calendar" }
+		)
+
+	/*
+	label: "Calendars",
 	children: [
 		{
 			label: () =>
@@ -36,4 +48,5 @@ export default {
 			key: "vue-cal"
 		}
 	]
+	*/
 }

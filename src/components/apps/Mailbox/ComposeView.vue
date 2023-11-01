@@ -2,9 +2,7 @@
 	<div class="compose-view flex flex-col">
 		<div class="compose-view-toolbar flex items-center">
 			<n-button text @click="goBack()">
-				<n-icon :size="24">
-					<ArrowLeftIcon />
-				</n-icon>
+				<Icon :size="24" :name="ArrowLeftIcon"></Icon>
 			</n-button>
 			<span class="compose-view-title">Compose message</span>
 		</div>
@@ -30,21 +28,19 @@
 			</n-form>
 			<div class="compose-view-attachments flex justify-end">
 				<n-button ghost>
-					<n-icon :size="16" class="mr-2">
-						<DocumentAddIcon />
-					</n-icon>
+					<Icon :size="16" class="mr-2" :name="DocumentAddIcon"></Icon>
 
 					Add attachment
 				</n-button>
 			</div>
 			<div class="compose-view-body grow flex flex-col">
-				<QuillEditor theme="snow" toolbar="minimal" @blur="resetScroll()" />
+				<QuillEditor v-if="mounted" theme="snow" toolbar="minimal" @blur="resetScroll()" />
 			</div>
 			<div class="compose-view-footer flex justify-end">
 				<n-button-group>
 					<n-button type="primary" ghost>
 						<template #icon>
-							<n-icon><SentIcon /></n-icon>
+							<Icon :name="SentIcon"></Icon>
 						</template>
 						Send
 					</n-button>
@@ -63,7 +59,7 @@
 					>
 						<n-button type="primary" ghost>
 							<template #icon>
-								<n-icon><ChevronDownIcon /></n-icon>
+								<Icon :name="ChevronDownIcon"></Icon>
 							</template>
 						</n-button>
 					</n-dropdown>
@@ -74,14 +70,15 @@
 </template>
 
 <script setup lang="ts">
-import { NIcon, NInput, NAutoComplete, NInputGroup, NForm, NFormItem, NButton, NButtonGroup, NDropdown } from "naive-ui"
-import SentIcon from "@vicons/carbon/Send"
-import ArrowLeftIcon from "@vicons/carbon/ArrowLeft"
-import ChevronDownIcon from "@vicons/carbon/ChevronDown"
-import DocumentAddIcon from "@vicons/carbon/DocumentAdd"
-import { computed, toRefs } from "vue"
+import { NInput, NAutoComplete, NInputGroup, NForm, NFormItem, NButton, NButtonGroup, NDropdown } from "naive-ui"
+import Icon from "@/components/common/Icon.vue"
+
+const SentIcon = "carbon:send"
+const ArrowLeftIcon = "carbon:arrow-left"
+const ChevronDownIcon = "carbon:chevron-down"
+const DocumentAddIcon = "carbon:document-add"
+import { computed, toRefs, ref, defineAsyncComponent, type Component, onMounted } from "vue"
 import { type Email } from "@/mock/mailbox"
-import { QuillEditor } from "@vueup/vue-quill"
 import "@/assets/scss/quill-override.scss"
 
 defineOptions({
@@ -96,6 +93,15 @@ const { email: emailForm } = toRefs(props)
 const emit = defineEmits<{
 	(e: "back"): void
 }>()
+
+const mounted = ref(false)
+
+const QuillEditor = defineAsyncComponent<Component>(() => {
+	return (async () => {
+		const { QuillEditor } = await import("@vueup/vue-quill")
+		return QuillEditor
+	})()
+})
 
 function goBack() {
 	emit("back")
@@ -114,6 +120,10 @@ const autoCompleteOptions = computed(() => {
 function resetScroll() {
 	window.scrollTo(0, 0)
 }
+
+onMounted(() => {
+	mounted.value = true
+})
 </script>
 
 <style lang="scss" scoped>

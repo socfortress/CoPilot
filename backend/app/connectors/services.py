@@ -256,7 +256,7 @@ class ConnectorServices:
                 return connector_response
             except Exception as e:
                 logger.exception(f"Failed to update connector: {e}")
-                return None
+                return Exception(f"Failed to update connector: {e}")
 
     @staticmethod
     def allowed_file(filename):

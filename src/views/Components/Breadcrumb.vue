@@ -8,11 +8,8 @@
 					target="_blank"
 					alt="docs"
 					rel="nofollow noopener noreferrer"
-					class="ml-4"
 				>
-					<n-icon :size="16">
-						<ExternalIcon />
-					</n-icon>
+					<Icon :name="ExternalIcon" :size="16" />
 					docs
 				</a>
 			</div>
@@ -22,15 +19,15 @@
 			<CardCodeExample title="Basic">
 				<n-breadcrumb>
 					<n-breadcrumb-item>
-						<n-icon :component="Cash" />
+						<Icon :name="Cash" />
 						Home
 					</n-breadcrumb-item>
 					<n-breadcrumb-item>
-						<n-icon :component="Cash" />
+						<Icon :name="Cash" />
 						Account
 					</n-breadcrumb-item>
 					<n-breadcrumb-item>
-						<n-icon :component="Cash" />
+						<Icon :name="Cash" />
 						Category
 					</n-breadcrumb-item>
 				</n-breadcrumb>
@@ -128,10 +125,11 @@
 </template>
 
 <script lang="ts" setup>
-import { NIcon, NBreadcrumb, NBreadcrumbItem, NText, NDropdown } from "naive-ui"
-import ExternalIcon from "@vicons/tabler/ExternalLink"
+import { NBreadcrumb, NBreadcrumbItem, NText, NDropdown } from "naive-ui"
+import Icon from "@/components/common/Icon.vue"
+const ExternalIcon = "tabler:external-link"
 
-import { Cash } from "@vicons/ionicons5"
+const Cash = "ion:cash"
 
 const options1 = [
 	{

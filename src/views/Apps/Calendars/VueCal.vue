@@ -9,11 +9,8 @@
 						target="_blank"
 						alt="docs"
 						rel="nofollow noopener noreferrer"
-						class="ml-4"
 					>
-						<n-icon :size="20">
-							<ExternalIcon />
-						</n-icon>
+						<Icon :name="ExternalIcon" :size="20" />
 						docs
 					</a>
 					<a
@@ -22,9 +19,7 @@
 						alt="docs"
 						rel="nofollow noopener noreferrer"
 					>
-						<n-icon :size="20">
-							<ExternalIcon />
-						</n-icon>
+						<Icon :name="ExternalIcon" :size="20" />
 						examples
 					</a>
 				</div>
@@ -60,8 +55,9 @@
 
 <script lang="ts">
 import { defineComponent } from "vue"
-import ExternalIcon from "@vicons/tabler/ExternalLink"
-import { NCheckbox, NIcon } from "naive-ui"
+import { NCheckbox } from "naive-ui"
+import Icon from "@/components/common/Icon.vue"
+// @ts-ignore
 import VueCal from "vue-cal"
 import "vue-cal/dist/vuecal.css"
 import dayjs from "@/utils/dayjs"
@@ -93,6 +89,7 @@ export default defineComponent({
 		demoExample,
 		split: false,
 		monthEvents: false,
+		ExternalIcon: "tabler:external-link",
 		selectedDate: new Date(),
 		previousFirstDayOfWeek: dayjs(new Date().setDate(new Date().getDate() - ((new Date().getDay() + 6) % 7)))
 	}),
@@ -170,19 +167,19 @@ export default defineComponent({
 			this.addEvents()
 		}
 	},
-	components: { VueCal, NCheckbox, NIcon, ExternalIcon }
+	components: { VueCal, NCheckbox, Icon }
 })
 </script>
 
 <style lang="scss" scoped>
 .mini-card {
-	background: var(--bg-sidebar);
+	background: var(--bg-secondary-color);
 	border-radius: var(--border-radius);
 	padding: 10px 20px;
 
 	a {
 		text-decoration: underline;
-		text-decoration-color: rgba(var(--primary-color-rgb), 0.6);
+		text-decoration-color: var(--primary-060-color);
 	}
 }
 .vuecal {
@@ -250,18 +247,18 @@ export default defineComponent({
 
 					&.vuecal__cell--today,
 					&.vuecal__cell--current {
-						background: rgba(var(--bg-color-rgb), 0.8);
+						background: var(--bg-secondary-color);
 						background: repeating-linear-gradient(
 							45deg,
-							rgba(var(--bg-color-rgb), 0.8),
-							rgba(var(--bg-color-rgb), 0.8) 10px,
-							rgba(var(--primary-color-rgb), 0.02) 10px,
-							rgba(var(--primary-color-rgb), 0.02) 20px
+							var(--bg-secondary-color),
+							var(--bg-secondary-color) 10px,
+							var(--primary-005-color) 10px,
+							var(--primary-005-color) 20px
 						);
 					}
 
 					&.vuecal__cell--selected {
-						background: rgba(var(--primary-color-rgb), 0.05);
+						background: var(--primary-005-color);
 					}
 				}
 
@@ -310,7 +307,7 @@ export default defineComponent({
 
 								color: var(--primary-color);
 								border: 1px solid var(--primary-color);
-								background: rgba(var(--primary-color-rgb), 0.15);
+								background: var(--primary-010-color);
 
 								@media (max-height: 1000px) {
 									margin-bottom: 10px;

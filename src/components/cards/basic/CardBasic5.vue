@@ -13,21 +13,11 @@
 		</template>
 		<template #action>
 			<div class="flex justify-around">
-				<n-icon :size="20">
-					<CheckIcon />
-				</n-icon>
-				<n-icon :size="20">
-					<StarIcon />
-				</n-icon>
-				<n-icon :size="20">
-					<ShieldIcon />
-				</n-icon>
-				<n-icon :size="20">
-					<PremiumIcon />
-				</n-icon>
-				<n-icon :size="20">
-					<EcoIcon />
-				</n-icon>
+				<Icon :size="20" :name="CheckIcon"></Icon>
+				<Icon :size="20" :name="StarIcon"></Icon>
+				<Icon :size="20" :name="ShieldIcon"></Icon>
+				<Icon :size="20" :name="PremiumIcon"></Icon>
+				<Icon :size="20" :name="EcoIcon"></Icon>
 			</div>
 		</template>
 	</n-card>
@@ -35,12 +25,14 @@
 
 <script setup lang="ts">
 import { faker } from "@faker-js/faker"
-import { NCard, NIcon } from "naive-ui"
-import CheckIcon from "@vicons/fluent/CheckmarkStarburst16Regular"
-import StarIcon from "@vicons/fluent/Star16Regular"
-import ShieldIcon from "@vicons/fluent/ShieldKeyhole16Regular"
-import PremiumIcon from "@vicons/fluent/Premium24Regular"
-import EcoIcon from "@vicons/material/EcoOutlined"
+import { NCard } from "naive-ui"
+import Icon from "@/components/common/Icon.vue"
+
+const CheckIcon = "fluent:checkmark-starburst-16-regular"
+const StarIcon = "fluent:star-16-regular"
+const ShieldIcon = "fluent:shield-keyhole-16-regular"
+const PremiumIcon = "fluent:premium-24-regular"
+const EcoIcon = "material-symbols:eco-outline"
 
 const title = faker.lorem.sentence({ min: 2, max: 5 })
 const text = faker.lorem.paragraph()

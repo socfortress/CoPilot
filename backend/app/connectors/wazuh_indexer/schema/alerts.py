@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import Any
 from typing import Dict
 from typing import List
@@ -97,3 +98,10 @@ class AlertsByRulePerHostResponse(BaseModel):
     alerts_by_rule_per_host: List[AlertsByRulePerHost]
     success: bool
     message: str
+
+
+############# ! PASSABLE MESSAGES FROM ES CLIENT ! #############
+class SkippableWazuhIndexerClientErrors(Enum):
+    NO_MAPPING_FOR_TIMESTAMP = "No mapping found for [timestamp_utc] in order to sort on"
+    # Add other error messages here, for example:
+    # ANOTHER_ERROR = "Another specific error message"

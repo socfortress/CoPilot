@@ -2,11 +2,11 @@ import { renderIcon } from "@/utils"
 import { h } from "vue"
 import { RouterLink } from "vue-router"
 
-import EditorIcon from "@vicons/carbon/Pen"
+const EditorIcon = "carbon:pen"
 
 export default {
 	label: "Editors",
-	key: "editors",
+	key: "Editors",
 	icon: renderIcon(EditorIcon),
 	children: [
 		{
@@ -15,12 +15,12 @@ export default {
 					RouterLink,
 					{
 						to: {
-							name: "editors-quill"
+							name: "Editors-Quill"
 						}
 					},
 					{ default: () => "Quill" }
 				),
-			key: "editors-quill"
+			key: "Editors-Quill"
 		},
 		{
 			label: () =>
@@ -28,12 +28,12 @@ export default {
 					RouterLink,
 					{
 						to: {
-							name: "editors-tiptap"
+							name: "Editors-Tiptap"
 						}
 					},
 					{ default: () => "Tiptap" }
 				),
-			key: "editors-tiptap"
+			key: "Editors-Tiptap"
 		},
 		{
 			label: () =>
@@ -41,12 +41,12 @@ export default {
 					RouterLink,
 					{
 						to: {
-							name: "editors-milkdown"
+							name: "Editors-Milkdown"
 						}
 					},
 					{ default: () => "Milkdown" }
 				),
-			key: "editors-milkdown"
+			key: "Editors-Milkdown"
 		}
 	]
 }

@@ -9,9 +9,7 @@
 						@crop="setCroppedImage"
 						:placeholder="'Select your profile picture'"
 					>
-						<n-icon :size="16" class="edit" @click="openCropper()">
-							<EditIcon />
-						</n-icon>
+						<Icon :name="EditIcon" :size="16" class="edit" @click="openCropper()"></Icon>
 					</ImageCropper>
 				</div>
 				<div class="info grow flex flex-col justify-center">
@@ -23,8 +21,8 @@
 							<n-tooltip placement="top">
 								<template #trigger>
 									<div class="tooltip-wrap">
-										<n-icon><RoleIcon /></n-icon>
-										<span>Editor</span>
+										<Icon :name="RoleIcon"></Icon>
+										<span>{{ userRole }}</span>
 									</div>
 								</template>
 								<span>Role</span>
@@ -34,18 +32,7 @@
 							<n-tooltip placement="top">
 								<template #trigger>
 									<div class="tooltip-wrap">
-										<n-icon><LocationIcon /></n-icon>
-										<span>New York No. 1 Lake Park</span>
-									</div>
-								</template>
-								<span>Location</span>
-							</n-tooltip>
-						</div>
-						<div class="item">
-							<n-tooltip placement="top">
-								<template #trigger>
-									<div class="tooltip-wrap">
-										<n-icon><MailIcon /></n-icon>
+										<Icon :name="MailIcon"></Icon>
 										<span>sigmund67@gmail.com</span>
 									</div>
 								</template>
@@ -85,22 +72,22 @@
 </template>
 
 <script lang="ts" setup>
-import { NAvatar, NIcon, NButton, NTooltip, NTab, NTabs, NTabPane, NCard } from "naive-ui"
+import { NAvatar, NButton, NTooltip, NTab, NTabs, NTabPane, NCard } from "naive-ui"
 import { ref } from "vue"
-import RoleIcon from "@vicons/tabler/User"
-import LocationIcon from "@vicons/tabler/MapPin"
-import EditIcon from "@vicons/fluent/Edit16Filled"
-import MailIcon from "@vicons/tabler/Mail"
 import ImageCropper, { type ImageCropperResult } from "@/components/common/ImageCropper.vue"
 import ProfileActivity from "@/components/profile/ProfileActivity.vue"
 import ProfileSettings from "@/components/profile/ProfileSettings.vue"
+import Icon from "@/components/common/Icon.vue"
+import { useAuthStore } from "@/stores/auth"
 
-defineOptions({
-	name: "Profile"
-})
+const RoleIcon = "tabler:user"
+const EditIcon = "uil:image-edit"
+const MailIcon = "tabler:mail"
 
 const tabActive = ref("activity")
 const propic = ref("/images/avatar-200.jpg")
+
+const userRole = useAuthStore().userRoleName
 
 function setCroppedImage(result: ImageCropperResult) {
 	const canvas = result.canvas as HTMLCanvasElement

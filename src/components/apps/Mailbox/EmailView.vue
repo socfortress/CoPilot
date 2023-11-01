@@ -2,17 +2,13 @@
 	<div class="email-view flex flex-col">
 		<div class="email-view-toolbar flex items-center">
 			<n-button text @click="goBack()">
-				<n-icon :size="24">
-					<ArrowLeftIcon />
-				</n-icon>
+				<Icon :size="24" :name="ArrowLeftIcon" />
 			</n-button>
 			<div class="actions-btns flex items-center gap-2">
 				<n-tooltip>
 					<template #trigger>
 						<n-button text>
-							<n-icon :size="20">
-								<TrashIcon />
-							</n-icon>
+							<Icon :size="20" :name="TrashIcon" />
 						</n-button>
 					</template>
 					<span>Delete</span>
@@ -20,9 +16,7 @@
 				<n-tooltip>
 					<template #trigger>
 						<n-button text>
-							<n-icon :size="20">
-								<LabelOutIcon />
-							</n-icon>
+							<Icon :size="20" :name="LabelOutIcon" />
 						</n-button>
 					</template>
 					<span>Add label</span>
@@ -30,9 +24,7 @@
 				<n-tooltip>
 					<template #trigger>
 						<n-button text>
-							<n-icon :size="20">
-								<FolderIcon />
-							</n-icon>
+							<Icon :size="20" :name="FolderIcon" />
 						</n-button>
 					</template>
 					<span>Move to folder</span>
@@ -40,9 +32,7 @@
 				<n-tooltip>
 					<template #trigger>
 						<n-button text>
-							<n-icon :size="20">
-								<PrinterIcon />
-							</n-icon>
+							<Icon :size="20" :name="PrinterIcon" />
 						</n-button>
 					</template>
 					<span>Print</span>
@@ -50,10 +40,8 @@
 				<n-tooltip>
 					<template #trigger>
 						<n-button text @click.stop="toggleStar(email)">
-							<n-icon :size="20">
-								<StarActiveIcon v-if="email.starred" :color="primaryColor" />
-								<StarIcon v-else />
-							</n-icon>
+							<Icon :size="20" :name="StarActiveIcon" v-if="email.starred" :color="primaryColor" />
+							<Icon :size="20" :name="StarIcon" v-else />
 						</n-button>
 					</template>
 					<span>Star</span>
@@ -62,41 +50,29 @@
 			<div class="menu-btns flex items-center">
 				<n-dropdown :options="menuOptions">
 					<n-button text>
-						<n-icon :size="24">
-							<MenuHorizontalIcon />
-						</n-icon>
+						<Icon :size="24" :name="MenuHorizontalIcon" />
 					</n-button>
 				</n-dropdown>
 			</div>
 			<div class="grow"></div>
 			<div class="reply-btns flex items-center gap-2">
 				<n-button text>
-					<n-icon :size="20">
-						<ReplyIcon />
-					</n-icon>
+					<Icon :size="20" :name="ReplyIcon" />
 				</n-button>
 				<n-button text>
-					<n-icon :size="20">
-						<ReplyAllIcon />
-					</n-icon>
+					<Icon :size="20" :name="ReplyAllIcon" />
 				</n-button>
 				<n-button text>
-					<n-icon :size="20">
-						<ForwardIcon />
-					</n-icon>
+					<Icon :size="20" :name="ForwardIcon" />
 				</n-button>
 			</div>
 			<div class="nav-btns flex items-center gap-2">
 				<span class="opacity-70">1 - 30 of 635</span>
 				<n-button text size="small">
-					<n-icon :size="24">
-						<ChevronLeftIcon />
-					</n-icon>
+					<Icon :size="24" :name="ChevronLeftIcon" />
 				</n-button>
 				<n-button text size="small">
-					<n-icon :size="24">
-						<ChevronRightIcon />
-					</n-icon>
+					<Icon :size="24" :name="ChevronRightIcon" />
 				</n-button>
 			</div>
 		</div>
@@ -137,9 +113,7 @@
 				<div class="email-view-attachments flex flex-wrap" v-if="email.attachments.length">
 					<div class="attachment-item flex" v-for="attachment of email.attachments" :key="attachment.name">
 						<div class="attachment-icon">
-							<n-icon :size="26">
-								<FileIcon />
-							</n-icon>
+							<Icon :size="26" :name="FileIcon" />
 						</div>
 						<div class="attachment-info">
 							<div class="attachment-name">{{ attachment.name }}</div>
@@ -153,30 +127,28 @@
 </template>
 
 <script setup lang="ts">
-import { NIcon, NScrollbar, NAvatar, NButton, NTime, NTooltip, NDropdown } from "naive-ui"
-import StarActiveIcon from "@vicons/carbon/StarFilled"
-import StarIcon from "@vicons/carbon/Star"
-import TrashIcon from "@vicons/carbon/TrashCan"
-import LabelOutIcon from "@vicons/carbon/Bookmark"
-import MenuHorizontalIcon from "@vicons/carbon/OverflowMenuHorizontal"
-import FolderIcon from "@vicons/carbon/FolderMoveTo"
-import ArrowLeftIcon from "@vicons/carbon/ArrowLeft"
-import ChevronLeftIcon from "@vicons/carbon/ChevronLeft"
-import ChevronRightIcon from "@vicons/carbon/ChevronRight"
-import PrinterIcon from "@vicons/carbon/Printer"
-import FileIcon from "@vicons/tabler/FileInvoice"
-import ReplyAllIcon from "@vicons/fluent/ArrowReplyAll20Filled"
-import ReplyIcon from "@vicons/fluent/ArrowReply20Filled"
-import ForwardIcon from "@vicons/fluent/ArrowForward20Filled"
+import { NScrollbar, NAvatar, NButton, NTime, NTooltip, NDropdown } from "naive-ui"
+import Icon from "@/components/common/Icon.vue"
 import { useMailboxStore } from "@/stores/apps/useMailboxStore"
 import { toRefs, computed } from "vue"
 import { type Email } from "@/mock/mailbox"
 import { renderIcon } from "@/utils"
 import { useThemeStore } from "@/stores/theme"
 
-defineOptions({
-	name: "EmailView"
-})
+const StarActiveIcon = "carbon:star-filled"
+const StarIcon = "carbon:star"
+const TrashIcon = "carbon:trash-can"
+const LabelOutIcon = "carbon:bookmark"
+const MenuHorizontalIcon = "carbon:overflow-menu-horizontal"
+const FolderIcon = "carbon:folder-move-to"
+const ArrowLeftIcon = "carbon:arrow-left"
+const ChevronLeftIcon = "carbon:chevron-left"
+const ChevronRightIcon = "carbon:chevron-right"
+const PrinterIcon = "carbon:printer"
+const FileIcon = "tabler:file-invoice"
+const ReplyAllIcon = "fluent:arrow-reply-all-20-filled"
+const ReplyIcon = "fluent:arrow-reply-20-filled"
+const ForwardIcon = "fluent:arrow-forward-20-filled"
 
 const props = defineProps<{
 	email: Email
@@ -335,7 +307,7 @@ const menuOptions = [
 			gap: 20px;
 
 			.attachment-item {
-				background-color: rgba(var(--primary-color-rgb), 0.1);
+				background-color: var(--primary-010-color);
 				padding: 14px;
 				border-radius: var(--border-radius);
 				max-width: 100%;

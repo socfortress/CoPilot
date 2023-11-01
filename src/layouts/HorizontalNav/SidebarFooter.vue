@@ -9,8 +9,9 @@ import { computed, h, ref, toRefs } from "vue"
 import { NMenu } from "naive-ui"
 import { useThemeStore } from "@/stores/theme"
 import { renderIcon } from "@/utils"
-import BuyIcon from "@vicons/carbon/ShoppingCart"
-import DocsIcon from "@vicons/ionicons5/BookOutline"
+
+const BuyIcon = "carbon:shopping-cart"
+const DocsIcon = "ion:book-outline"
 
 defineOptions({
 	name: "SidebarFooter"

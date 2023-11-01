@@ -5,7 +5,7 @@
 				<div class="sidebar-toolbar flex items-center">
 					<n-input placeholder="Search..." clearable size="medium">
 						<template #prefix>
-							<n-icon :component="SearchIcon" />
+							<Icon :name="SearchIcon" />
 						</template>
 					</n-input>
 				</div>
@@ -44,9 +44,7 @@
 				<div class="main-toolbar flex items-center" v-if="store.activeChat">
 					<div class="menu-btn flex justify-center opacity-50">
 						<n-button text @click="sidebarOpen = true">
-							<n-icon :size="24">
-								<MenuIcon />
-							</n-icon>
+							<Icon :name="MenuIcon" :size="24" />
 						</n-button>
 					</div>
 
@@ -65,22 +63,16 @@
 
 					<div class="actions-btns flex items-center gap-4 opacity-50">
 						<n-button text>
-							<n-icon :size="20">
-								<VideoIcon />
-							</n-icon>
+							<Icon :name="VideoIcon" :size="20" />
 						</n-button>
 						<n-button text>
-							<n-icon :size="20">
-								<PhoneIcon />
-							</n-icon>
+							<Icon :name="PhoneIcon" :size="20" />
 						</n-button>
 					</div>
 					<div class="new-btn flex justify-center opacity-50">
 						<n-dropdown :options="menuOptions">
 							<n-button text>
-								<n-icon :size="24">
-									<MenuHorizontalIcon />
-								</n-icon>
+								<Icon :name="MenuHorizontalIcon" :size="24" />
 							</n-button>
 						</n-dropdown>
 					</div>
@@ -122,26 +114,19 @@
 					</div>
 					<div class="actions-group flex items-center">
 						<n-button text>
-							<n-icon :size="20">
-								<MicrophoneIcon />
-							</n-icon>
+							<Icon :name="MicrophoneIcon" :size="20" />
 						</n-button>
 						<n-button text>
-							<n-icon :size="20">
-								<AttachmentIcon />
-							</n-icon>
+							<Icon :name="AttachmentIcon" :size="20" />
 						</n-button>
 						<n-button strong ghost circle type="primary">
-							<n-icon :size="20">
-								<SendIcon />
-							</n-icon>
+							<Icon :name="SendIcon" :size="20" />
 						</n-button>
 					</div>
 				</div>
 				<div class="empty-view grow flex flex-col items-center justify-center" v-if="!store.activeChat">
-					<n-icon :size="48">
-						<ChatIcon />
-					</n-icon>
+					<Icon :name="ChatIcon" :size="48" />
+
 					<div class="text-xl mt-4">Select a Contact</div>
 				</div>
 			</div>
@@ -150,28 +135,31 @@
 </template>
 
 <script setup lang="ts">
-import { NIcon, NScrollbar, NAvatar, NInput, NButton, NDropdown, NTime } from "naive-ui"
-import ChatIcon from "@vicons/carbon/Chat"
-import TrashIcon from "@vicons/carbon/TrashCan"
-import MenuIcon from "@vicons/ionicons5/MenuSharp"
-import MenuHorizontalIcon from "@vicons/carbon/OverflowMenuHorizontal"
-import SearchIcon from "@vicons/carbon/Search"
-import VideoIcon from "@vicons/carbon/Video"
-import PhoneIcon from "@vicons/carbon/Phone"
-import InfoIcon from "@vicons/carbon/Information"
-import MuteIcon from "@vicons/fluent/AlertOff16Regular"
-import BlockUserIcon from "@vicons/tabler/UserOff"
-import MicrophoneIcon from "@vicons/carbon/Microphone"
-import AttachmentIcon from "@vicons/carbon/Attachment"
-import SendIcon from "@vicons/carbon/Send"
-import { ref, type VNode, type RendererNode, type RendererElement } from "vue"
+import { NScrollbar, NAvatar, NInput, NButton, NDropdown, NTime } from "naive-ui"
+import Icon from "@/components/common/Icon.vue"
+import { ref, type VNode, type RendererNode, type RendererElement, nextTick } from "vue"
 import { onClickOutside, useResizeObserver } from "@vueuse/core"
 import { renderIcon } from "@/utils"
 import "@vueup/vue-quill/dist/vue-quill.snow.css"
 import { useChatStore } from "@/stores/apps/useChatStore"
 import { type Contact } from "@/mock/chat"
+import { useThemeStore } from "@/stores/theme"
 import { onMounted } from "vue"
 import { useHideLayoutFooter } from "@/composables/useHideLayoutFooter"
+
+const ChatIcon = "carbon:chat"
+const TrashIcon = "carbon:trash-can"
+const MenuIcon = "ion:menu-sharp"
+const MenuHorizontalIcon = "carbon:overflow-menu-horizontal"
+const SearchIcon = "carbon:search"
+const VideoIcon = "carbon:video"
+const PhoneIcon = "carbon:phone"
+const InfoIcon = "carbon:information"
+const MuteIcon = "fluent:alert-off-16-regular"
+const BlockUserIcon = "tabler:user-off"
+const MicrophoneIcon = "carbon:microphone"
+const AttachmentIcon = "carbon:attachment"
+const SendIcon = "carbon:send"
 
 interface MenuItem {
 	label: string
@@ -179,6 +167,7 @@ interface MenuItem {
 	icon: () => VNode<RendererNode, RendererElement, { [key: string]: any }>
 }
 
+const themeStore = useThemeStore()
 const store = useChatStore()
 const sidebarOpen = ref(false)
 const sidebar = ref(null)
@@ -252,6 +241,16 @@ function resetWindowScroll() {
 
 onMounted(() => {
 	resetChatScroll()
+
+	nextTick(() => {
+		const duration = 1000 * themeStore.routerTransitionDuration
+		const gap = 500
+
+		// TIMEOUT REQUIRED BY PAGE ANIMATION
+		setTimeout(() => {
+			resetChatScroll()
+		}, duration + gap)
+	})
 })
 
 // :has() CSS relational pseudo-class not yet supported by Firefox
@@ -272,9 +271,10 @@ useHideLayoutFooter()
 		overflow: hidden;
 		border-radius: var(--border-radius);
 		border: 1px solid var(--border-color);
+		background-color: var(--bg-color);
 
 		.sidebar {
-			background-color: var(--bg-sidebar);
+			background-color: var(--bg-secondary-color);
 			min-width: 250px;
 			width: 40%;
 			max-width: 350px;
@@ -309,7 +309,7 @@ useHideLayoutFooter()
 
 						.u-avatar {
 							border-radius: 50%;
-							border: 2px solid rgba(var(--fg-color-rgb), 0.2);
+							border: 2px solid var(--divider-020-color);
 							position: relative;
 
 							&::after {
@@ -321,7 +321,7 @@ useHideLayoutFooter()
 								right: 0;
 								bottom: 0;
 								background-color: #b8b8b8;
-								border: 2px solid rgba(var(--fg-color-rgb), 0.2);
+								border: 2px solid var(--divider-020-color);
 								border-radius: 50%;
 							}
 							&.u-online {
@@ -355,12 +355,12 @@ useHideLayoutFooter()
 						}
 
 						&:hover {
-							background-color: rgba(var(--fg-color-rgb), 0.05);
+							background-color: var(--hover-005-color);
 						}
 
 						&.u-active {
-							background-color: rgba(var(--primary-color-rgb), 0.05);
-							color: rgba(var(--primary-color-rgb), 0.9);
+							background-color: var(--primary-005-color);
+							color: var(--primary-color);
 						}
 					}
 				}
@@ -403,7 +403,7 @@ useHideLayoutFooter()
 
 					.u-avatar {
 						border-radius: 50%;
-						border: 2px solid rgba(var(--fg-color-rgb), 0.2);
+						border: 2px solid var(--divider-020-color);
 						position: relative;
 
 						&::after {
@@ -415,7 +415,7 @@ useHideLayoutFooter()
 							right: 0;
 							bottom: 0;
 							background-color: #b8b8b8;
-							border: 2px solid rgba(var(--fg-color-rgb), 0.2);
+							border: 2px solid var(--divider-020-color);
 							border-radius: 50%;
 						}
 						&.u-online {
@@ -466,7 +466,7 @@ useHideLayoutFooter()
 						width: fit-content;
 						max-width: 60%;
 						.message {
-							background-color: var(--bg-sidebar);
+							background-color: var(--bg-secondary-color);
 							margin-bottom: 5px;
 							padding: 5px 10px;
 							border-radius: var(--border-radius);
@@ -544,7 +544,7 @@ useHideLayoutFooter()
 				content: "";
 				width: 100vw;
 				display: block;
-				background-color: rgba(var(--bg-body-rgb), 0.4);
+				background-color: var(--bg-body);
 				position: absolute;
 				top: 0;
 				left: 0;
@@ -591,7 +591,7 @@ useHideLayoutFooter()
 			&.sidebar-open {
 				&::before {
 					transform: translateX(0);
-					opacity: 1;
+					opacity: 0.4;
 					transition:
 						opacity 0.25s ease-in-out,
 						transform 0s linear 0s;

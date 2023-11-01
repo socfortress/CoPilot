@@ -2,7 +2,9 @@ from typing import Union
 
 from fastapi import APIRouter
 from fastapi import HTTPException
+from fastapi import Security
 
+from app.auth.utils import AuthHandler
 from app.connectors.wazuh_indexer.schema.monitoring import ClusterHealthResponse
 from app.connectors.wazuh_indexer.schema.monitoring import IndicesStatsResponse
 from app.connectors.wazuh_indexer.schema.monitoring import NodeAllocationResponse
@@ -17,7 +19,12 @@ from app.connectors.wazuh_indexer.services.monitoring import shards
 wazuh_indexer_router = APIRouter()
 
 
-@wazuh_indexer_router.get("/health", response_model=ClusterHealthResponse, description="Fetch Wazuh Indexer cluster health")
+@wazuh_indexer_router.get(
+    "/health",
+    response_model=ClusterHealthResponse,
+    description="Fetch Wazuh Indexer cluster health",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
 async def get_cluster_health() -> Union[ClusterHealthResponse, HTTPException]:
     """
     Fetch Wazuh Indexer cluster health.
@@ -34,10 +41,15 @@ async def get_cluster_health() -> Union[ClusterHealthResponse, HTTPException]:
     if cluster_health is not None:
         return cluster_health
     else:
-        raise HTTPException(status_code=500, detail="Failed to retrieve cluster health.")
+        raise Exception("Failed to retrieve cluster health.")
 
 
-@wazuh_indexer_router.get("/allocation", response_model=NodeAllocationResponse, description="Fetch Wazuh Indexer node allocation")
+@wazuh_indexer_router.get(
+    "/allocation",
+    response_model=NodeAllocationResponse,
+    description="Fetch Wazuh Indexer node allocation",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
 async def get_node_allocation() -> Union[NodeAllocationResponse, HTTPException]:
     """
     Fetch Wazuh Indexer node allocation.
@@ -57,7 +69,12 @@ async def get_node_allocation() -> Union[NodeAllocationResponse, HTTPException]:
         raise HTTPException(status_code=500, detail="Failed to retrieve node allocation.")
 
 
-@wazuh_indexer_router.get("/indices", response_model=IndicesStatsResponse, description="Fetch Wazuh Indexer indices stats")
+@wazuh_indexer_router.get(
+    "/indices",
+    response_model=IndicesStatsResponse,
+    description="Fetch Wazuh Indexer indices stats",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
 async def get_indices_stats() -> Union[IndicesStatsResponse, HTTPException]:
     """
     Fetch Wazuh Indexer indices stats.
@@ -77,7 +94,12 @@ async def get_indices_stats() -> Union[IndicesStatsResponse, HTTPException]:
         raise HTTPException(status_code=500, detail="Failed to retrieve indices stats.")
 
 
-@wazuh_indexer_router.get("/shards", response_model=ShardsResponse, description="Fetch Wazuh Indexer shards")
+@wazuh_indexer_router.get(
+    "/shards",
+    response_model=ShardsResponse,
+    description="Fetch Wazuh Indexer shards",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
 async def get_shards() -> Union[ShardsResponse, HTTPException]:
     """
     Fetch Wazuh Indexer shards.

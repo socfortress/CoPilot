@@ -1,6 +1,5 @@
 import dayjs from "@/utils/dayjs"
 import { faker } from "@faker-js/faker"
-import { type ApexOptions } from "apexcharts"
 
 export function getYearsSeries({ yearsCount = 8, name = "Trend" }) {
 	const years = []
@@ -66,7 +65,7 @@ export function getAreaOpts({
 	strokeWidth?: number
 	hideLegend?: boolean
 	hideXaxisLabels?: boolean
-}): ApexOptions {
+}) {
 	const id = faker.string.nanoid()
 
 	const overwriteCategories: any[] = categories ? [...categories] : []
@@ -207,7 +206,7 @@ export function getBarOpts({
 	strokeWidth?: number
 	hideLegend?: boolean
 	hideXaxisLabels?: boolean
-}): ApexOptions {
+}) {
 	const id = faker.string.nanoid()
 
 	const funcColor = function ({ dataPointIndex }: { dataPointIndex: number }) {

@@ -86,7 +86,7 @@ def create_dfir_iris_client(connector_name: str) -> ClientSession:
         )
     except Exception as e:
         logger.error(f"Error creating session with DFIR-IRIS: {e}")
-        return HTTPException(status_code=500, detail=f"Error creating session with DFIR-IRIS: {e}")
+        raise HTTPException(status_code=500, detail=f"Error creating session with DFIR-IRIS: {e}")
 
 
 def fetch_and_parse_data(session: ClientSession, action: Callable, *args) -> Dict[str, Union[bool, Optional[Dict]]]:
@@ -163,8 +163,15 @@ def check_case_exists(case_id: int) -> bool:
 
 def check_alert_exists(alert_id: str) -> bool:
     try:
-        logger.info(f"Checking if alert {alert_id} exists")
         dfir_iris_client = create_dfir_iris_client("DFIR-IRIS")
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to create DFIR-IRIS client. Make sure the DFIR-IRIS connector is configured correctly.",
+        )
+    try:
+        logger.info(f"Checking if alert {alert_id} exists")
+        # dfir_iris_client = create_dfir_iris_client("DFIR-IRIS")
         alert = Alert(session=dfir_iris_client)
         data = alert.get_alert(alert_id)
         assert_api_resp(data, soft_fail=False)

@@ -2,7 +2,19 @@ import { useAuthStore } from "@/stores/auth"
 import { type RouteMetaAuth, UserRole } from "@/types/auth.d"
 import { type RouteLocationNormalized } from "vue-router"
 import _castArray from "lodash/castArray"
+import _toNumber from "lodash/toNumber"
 import * as jose from "jose"
+
+const TOKEN_DEBOUNCE_TIME = import.meta.env.VITE_TOKEN_DEBOUNCE_TIME // seconds
+
+export function isDebounceTimeOver(lastCheck: Date | null) {
+	if (!lastCheck) return true
+
+	const timeOver = lastCheck.getTime() + _toNumber(TOKEN_DEBOUNCE_TIME) * 1000
+	const now = new Date().getTime()
+
+	return timeOver < now
+}
 
 /**
  * @param token jwt token
@@ -18,12 +30,6 @@ export function isJwtExpiring(token: string, threshold: number): boolean {
 		const now = new Date().getTime() / 1000
 		const delta = (exp || 0) - threshold
 
-		/*
-		console.log("exp", new Date((exp || 0) * 1000))
-		console.log("now", new Date())
-		console.log("del", new Date(delta * 1000))
-		*/
-
 		if (!exp) {
 			return true
 		}
@@ -38,7 +44,7 @@ export function authCheck(route: RouteLocationNormalized) {
 	const meta: RouteMetaAuth = route.meta
 	const { checkAuth, authRedirect, auth, roles } = meta
 
-	if (route?.redirectedFrom?.name === "logout") {
+	if (route?.redirectedFrom?.name === "Logout") {
 		useAuthStore().setLogout()
 	}
 

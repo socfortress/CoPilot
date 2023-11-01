@@ -8,11 +8,8 @@
 					target="_blank"
 					alt="docs"
 					rel="nofollow noopener noreferrer"
-					class="ml-4"
 				>
-					<n-icon :size="16">
-						<ExternalIcon />
-					</n-icon>
+					<Icon :name="ExternalIcon" :size="16" />
 					docs
 				</a>
 			</div>
@@ -59,9 +56,7 @@
 				<n-upload multiple directory-dnd action="https://www.mocky.io/v2/5e4bafc63100007100d8b70f" :max="5">
 					<n-upload-dragger>
 						<div style="margin-bottom: 12px">
-							<n-icon size="48" :depth="3">
-								<archive-icon />
-							</n-icon>
+							<Icon :name="ArchiveIcon" :size="48" :depth="3" />
 						</div>
 						<n-text style="font-size: 16px">Click or drag a file to this area to upload</n-text>
 						<n-p depth="3" style="margin: 8px 0 0 0">
@@ -159,10 +154,11 @@
 </template>
 
 <script lang="ts" setup>
-import { NIcon, NUpload, NButton, NText, NUploadDragger, NP, type UploadFileInfo } from "naive-ui"
-import ExternalIcon from "@vicons/tabler/ExternalLink"
+import { NUpload, NButton, NText, NUploadDragger, NP, type UploadFileInfo } from "naive-ui"
+import Icon from "@/components/common/Icon.vue"
+const ExternalIcon = "tabler:external-link"
 
-import { ArchiveOutline as ArchiveIcon } from "@vicons/ionicons5"
+const ArchiveIcon = "ion:archive-outline"
 import { ref } from "vue"
 
 const fileList = ref<UploadFileInfo[]>([

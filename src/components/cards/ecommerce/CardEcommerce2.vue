@@ -11,12 +11,8 @@
 						<span class="ml-3 opacity-70">$399,00</span>
 					</div>
 					<div class="flex items-center">
-						<n-icon class="mr-3" :size="20">
-							<HeartIcon />
-						</n-icon>
-						<n-icon :size="20">
-							<ShareIcon />
-						</n-icon>
+						<Icon class="mr-3" :size="20" :name="HeartIcon"></Icon>
+						<Icon :size="20" :name="ShareIcon"></Icon>
 					</div>
 				</div>
 				<div class="card-content grow">
@@ -39,9 +35,7 @@
 					<div class="flex items-center justify-between">
 						<n-button type="primary" quaternary>Details</n-button>
 						<n-button type="primary">
-							<n-icon class="mr-3">
-								<CartIcon />
-							</n-icon>
+							<Icon class="mr-3" :name="CartIcon"></Icon>
 							Add to cart
 						</n-button>
 					</div>
@@ -52,10 +46,12 @@
 </template>
 
 <script setup lang="ts">
-import { NCard, NButton, NIcon, NRate } from "naive-ui"
-import CartIcon from "@vicons/tabler/ShoppingCart"
-import HeartIcon from "@vicons/ionicons5/HeartOutline"
-import ShareIcon from "@vicons/carbon/Share"
+import { NCard, NButton, NRate } from "naive-ui"
+import Icon from "@/components/common/Icon.vue"
+
+const CartIcon = "tabler:shopping-cart"
+const HeartIcon = "ion:heart-outline"
+const ShareIcon = "carbon:share"
 </script>
 
 <style scoped lang="scss">

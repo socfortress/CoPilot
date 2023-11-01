@@ -3,16 +3,17 @@ import {
 	type ColorAction,
 	type ColorKey,
 	type ColorType,
+	type ThemeColor,
+	type ThemeName,
 	Layout,
 	RouterTransition,
-	type ThemeColor,
-	ThemeEnum,
-	type ThemeName
+	ThemeEnum
 } from "@/types/theme.d"
 import { type GlobalThemeOverrides, type ThemeCommonVars, darkTheme, lightTheme, useOsTheme } from "naive-ui"
-import { exposure, hex2hsl, hex2rgb } from "@/utils"
+import { exportPrimaryShades, exposure, getTypeValue, hex2rgb, type PrimaryShade } from "@/utils/theme"
 import _get from "lodash/get"
 import _set from "lodash/set"
+import _pick from "lodash/pick"
 import { type BuiltInGlobalTheme } from "naive-ui/es/themes/interface"
 import tokens from "@/design-tokens.json"
 const osTheme = useOsTheme()
@@ -22,6 +23,7 @@ export const useThemeStore = defineStore("theme", {
 		layout: Layout.VerticalNav,
 		themeName: osTheme.value || ThemeEnum.Light,
 		routerTransition: RouterTransition.FadeUp,
+		routerTransitionDuration: 0.3,
 		boxed: {
 			enabled: true,
 			toolbar: true,
@@ -59,7 +61,8 @@ export const useThemeStore = defineStore("theme", {
 		borderRadius: tokens["borderRadius"],
 		lineHeight: tokens["lineHeight"],
 		fontSize: tokens["fontSize"],
-		fontFamily: tokens["fontFamily"]
+		fontFamily: tokens["fontFamily"],
+		typography: tokens["typography"]
 	}),
 	actions: {
 		setLayout(layout: Layout): void {
@@ -88,6 +91,17 @@ export const useThemeStore = defineStore("theme", {
 		},
 		setColor(theme: ThemeName, colorType: ColorType, color: string): void {
 			this.colors[theme][colorType] = color
+
+			if (colorType === "primary") {
+				const primaryShades = exportPrimaryShades(color)
+
+				for (const k in primaryShades) {
+					const name = k as PrimaryShade
+					const shade = primaryShades[name]
+					// @ts-ignore
+					this.colors[theme][colorType + name] = shade
+				}
+			}
 		},
 		toggleTheme(): void {
 			if (this.isThemeDark) {
@@ -138,8 +152,19 @@ export const useThemeStore = defineStore("theme", {
 			return state.themeName === ThemeEnum.Dark ? darkTheme : lightTheme
 		},
 		themeOverrides(state): GlobalThemeOverrides {
-			const { primary, success, warning, error, info, background, bodyBackground, text, textSecondary } =
-				state.colors[state.themeName]
+			const {
+				primary,
+				success,
+				warning,
+				error,
+				info,
+				background,
+				bodyBackground,
+				text,
+				textSecondary,
+				divider005,
+				hover010
+			} = state.colors[state.themeName]
 
 			const themeColors = getThemeColors({ primary, success, warning, error, info })
 
@@ -164,7 +189,9 @@ export const useThemeStore = defineStore("theme", {
 					borderRadiusSmall,
 					fontSize: state.fontSize.base,
 					fontFamily: state.fontFamily.base,
-					fontFamilyMono: state.fontFamily.mono
+					fontFamilyMono: state.fontFamily.mono,
+					dividerColor: divider005,
+					hoverColor: hover010
 				},
 				Card: {
 					color: background,
@@ -175,6 +202,14 @@ export const useThemeStore = defineStore("theme", {
 				},
 				LoadingBar: {
 					colorLoading: primary
+				},
+				Typography: {
+					headerFontSize1: getTypeValue(state, state.typography.h1.fontSize),
+					headerFontSize2: getTypeValue(state, state.typography.h2.fontSize),
+					headerFontSize3: getTypeValue(state, state.typography.h3.fontSize),
+					headerFontSize4: getTypeValue(state, state.typography.h4.fontSize),
+					headerFontSize5: getTypeValue(state, state.typography.h5.fontSize),
+					headerFontSize6: getTypeValue(state, state.typography.h6.fontSize)
 				}
 			}
 		},
@@ -193,20 +228,54 @@ export const useThemeStore = defineStore("theme", {
 		bodyBackground(state): string {
 			return state.colors[state.themeName].bodyBackground
 		},
-		secondaryColors(state): { [key: string]: string } {
-			const { secondary1, secondary2, secondary3, secondary4 } = state.colors[state.themeName]
-			return {
-				secondary1,
-				secondary2,
-				secondary3,
-				secondary4
-			}
+		backgroundSecondaryColor(state): string {
+			return state.colors[state.themeName].backgroundSecondary
 		},
-		shadeColors(state): { [key: string]: string } {
-			const { shade1 } = state.colors[state.themeName]
-			return {
-				shade1
-			}
+		secondaryColors(state): { [key: string]: string } {
+			const pick = ["secondary1", "secondary2", "secondary3", "secondary4"]
+			return _pick(state.colors[state.themeName], pick)
+		},
+		secondaryOpacityColors(state): { [key: string]: string } {
+			const pick = [
+				"secondary1Opacity005",
+				"secondary1Opacity010",
+				"secondary1Opacity020",
+				"secondary1Opacity030",
+				"secondary2Opacity005",
+				"secondary2Opacity010",
+				"secondary2Opacity020",
+				"secondary2Opacity030",
+				"secondary3Opacity005",
+				"secondary3Opacity010",
+				"secondary3Opacity020",
+				"secondary3Opacity030",
+				"secondary4Opacity005",
+				"secondary4Opacity010",
+				"secondary4Opacity020",
+				"secondary4Opacity030"
+			]
+			return _pick(state.colors[state.themeName], pick)
+		},
+		dividerColors(state): { [key: string]: string } {
+			const pick = ["divider005", "divider010", "divider020"]
+			return _pick(state.colors[state.themeName], pick)
+		},
+		hoverColors(state): { [key: string]: string } {
+			const pick = ["hover005", "hover010", "hover050"]
+			return _pick(state.colors[state.themeName], pick)
+		},
+		primaryColors(state): { [key: string]: string } {
+			const pick = [
+				"primary005",
+				"primary010",
+				"primary015",
+				"primary020",
+				"primary030",
+				"primary040",
+				"primary050",
+				"primary060"
+			]
+			return _pick(state.colors[state.themeName], pick)
 		},
 		naiveCommon(): ThemeCommonVars {
 			return { ...this.naiveTheme.common, ...this.themeOverrides.common }
@@ -216,15 +285,13 @@ export const useThemeStore = defineStore("theme", {
 
 			const bgColor = naive.baseColor
 			const bgColorRGB = hex2rgb(bgColor).join(", ")
+			const bgSecondaryColor = this.backgroundSecondaryColor
 			const fgColor = naive.textColorBase
-			const fgColorRGB = hex2rgb(fgColor).join(", ")
 			const fgSecondaryColor = naive.textColor3
-			const fgSecondaryColorRGB = hex2rgb(fgSecondaryColor).join(", ")
+
 			const tabFgColorActive = naive.textColor2
 			const borderColor = naive.dividerColor
 			const primaryColor = naive.primaryColor
-			const primaryColorRGB = hex2rgb(primaryColor).join(", ")
-			const primaryColorHS = [hex2hsl(primaryColor)[0], hex2hsl(primaryColor)[1] + "%"].join(" ")
 
 			const successColor = naive.successColor
 			const errorColor = naive.errorColor
@@ -244,8 +311,9 @@ export const useThemeStore = defineStore("theme", {
 
 			const bgSidebar = this.sidebarBackground
 			const bgBody = this.bodyBackground
-			const bgBodyRGB = hex2rgb(bgBody).join(", ")
+
 			const boxedWidth = state.boxed.width
+			const routerTransitionDuration = state.routerTransitionDuration
 			const sidebarAnimEase = state.sidebar.animEase
 			const sidebarAnimDuration = state.sidebar.animDuration
 			const sidebarOpenWidth = state.sidebar.openWidth
@@ -260,27 +328,49 @@ export const useThemeStore = defineStore("theme", {
 			const borderRadius = state.borderRadius.base
 			const borderRadiusSmall = state.borderRadius.small
 
+			const { divider005, divider010, divider020 } = this.dividerColors
+			const { hover005, hover010, hover050 } = this.hoverColors
+			const { primary005, primary010, primary015, primary020, primary030, primary040, primary050, primary060 } =
+				this.primaryColors
+			const {
+				secondary1Opacity005,
+				secondary1Opacity010,
+				secondary1Opacity020,
+				secondary1Opacity030,
+				secondary2Opacity005,
+				secondary2Opacity010,
+				secondary2Opacity020,
+				secondary2Opacity030,
+				secondary3Opacity005,
+				secondary3Opacity010,
+				secondary3Opacity020,
+				secondary3Opacity030,
+				secondary4Opacity005,
+				secondary4Opacity010,
+				secondary4Opacity020,
+				secondary4Opacity030
+			} = this.secondaryOpacityColors
+
 			const { secondary1, secondary2, secondary3, secondary4 } = this.secondaryColors
 			const secondary1RGB = hex2rgb(secondary1).join(", ")
 			const secondary2RGB = hex2rgb(secondary2).join(", ")
 			const secondary3RGB = hex2rgb(secondary3).join(", ")
 			const secondary4RGB = hex2rgb(secondary4).join(", ")
 
-			const { shade1 } = this.shadeColors
-			const shade1RGB = hex2rgb(shade1).join(", ")
-
 			return {
-				"--fg-color": `${fgColor}`,
-				"--fg-color-rgb": `${fgColorRGB}`,
-				"--fg-secondary-color": `${fgSecondaryColor}`,
-				"--fg-secondary-color-rgb": `${fgSecondaryColorRGB}`,
-				"--bg-color": `${bgColor}`,
-				"--bg-color-rgb": `${bgColorRGB}`,
 				"--bg-sidebar": `${bgSidebar}`,
 				"--bg-body": `${bgBody}`,
-				"--bg-body-rgb": `${bgBodyRGB}`,
+
+				"--fg-color": `${fgColor}`,
+				"--fg-secondary-color": `${fgSecondaryColor}`,
+				"--bg-color": `${bgColor}`,
+				"--bg-secondary-color": `${bgSecondaryColor}`,
+
+				"--bg-color-rgb": `${bgColorRGB}`,
+
 				"--border-color": `${borderColor}`,
 				"--bezier-ease": `${bezierEase}`,
+				"--router-transition-duration": `${routerTransitionDuration}s`,
 				"--sidebar-anim-ease": `${sidebarAnimEase}`,
 				"--sidebar-anim-duration": `${sidebarAnimDuration}s`,
 				"--sidebar-open-width": `${sidebarOpenWidth}px`,
@@ -296,8 +386,6 @@ export const useThemeStore = defineStore("theme", {
 				"--font-family-mono": `${fontFamilyMono}`,
 				"--code-color": `${codeColor}`,
 				"--primary-color": `${primaryColor}`,
-				"--primary-color-rgb": `${primaryColorRGB}`,
-				"--primary-color-hs": `${primaryColorHS}`,
 				"--tab-color": `${tabColor}`,
 				"--tab-color-active": `${tabColorActive}`,
 				"--tab-fg-color-active": `${tabFgColorActive}`,
@@ -308,10 +396,28 @@ export const useThemeStore = defineStore("theme", {
 				"--button-color-secondary-hover": `${buttonColorSecondaryHover}`,
 				"--button-color-secondary-pressed": `${buttonColorSecondaryPressed}`,
 
+				"--primary-005-color": `${primary005}`,
+				"--primary-010-color": `${primary010}`,
+				"--primary-015-color": `${primary015}`,
+				"--primary-020-color": `${primary020}`,
+				"--primary-030-color": `${primary030}`,
+				"--primary-040-color": `${primary040}`,
+				"--primary-050-color": `${primary050}`,
+				"--primary-060-color": `${primary060}`,
+
+				"--hover-005-color": `${hover005}`,
+				"--hover-010-color": `${hover010}`,
+				"--hover-050-color": `${hover050}`,
+
+				"--divider-005-color": `${divider005}`,
+				"--divider-010-color": `${divider010}`,
+				"--divider-020-color": `${divider020}`,
+
 				"--success-color": `${successColor}`,
 				"--error-color": `${errorColor}`,
 				"--warning-color": `${warningColor}`,
 				"--info-color": `${infoColor}`,
+
 				"--secondary1-color": `${secondary1}`,
 				"--secondary1-color-rgb": `${secondary1RGB}`,
 				"--secondary2-color": `${secondary2}`,
@@ -320,8 +426,23 @@ export const useThemeStore = defineStore("theme", {
 				"--secondary3-color-rgb": `${secondary3RGB}`,
 				"--secondary4-color": `${secondary4}`,
 				"--secondary4-color-rgb": `${secondary4RGB}`,
-				"--shade1-color": `${shade1}`,
-				"--shade1-color-rgb": `${shade1RGB}`
+
+				"--secondary1-opacity-005-color": `${secondary1Opacity005}`,
+				"--secondary1-opacity-010-color": `${secondary1Opacity010}`,
+				"--secondary1-opacity-020-color": `${secondary1Opacity020}`,
+				"--secondary1-opacity-030-color": `${secondary1Opacity030}`,
+				"--secondary2-opacity-005-color": `${secondary2Opacity005}`,
+				"--secondary2-opacity-010-color": `${secondary2Opacity010}`,
+				"--secondary2-opacity-020-color": `${secondary2Opacity020}`,
+				"--secondary2-opacity-030-color": `${secondary2Opacity030}`,
+				"--secondary3-opacity-005-color": `${secondary3Opacity005}`,
+				"--secondary3-opacity-010-color": `${secondary3Opacity010}`,
+				"--secondary3-opacity-020-color": `${secondary3Opacity020}`,
+				"--secondary3-opacity-030-color": `${secondary3Opacity030}`,
+				"--secondary4-opacity-005-color": `${secondary4Opacity005}`,
+				"--secondary4-opacity-010-color": `${secondary4Opacity010}`,
+				"--secondary4-opacity-020-color": `${secondary4Opacity020}`,
+				"--secondary4-opacity-030-color": `${secondary4Opacity030}`
 			} as unknown as CSSStyleDeclaration
 		},
 		isThemeDark(state): boolean {
@@ -341,7 +462,7 @@ export const useThemeStore = defineStore("theme", {
 		}
 	},
 	persist: {
-		paths: ["layout", "themeName", "routerTransition", "boxed", "sidebar", "colors"]
+		paths: ["layout", "themeName", "routerTransition", "boxed", "sidebar"]
 	}
 })
 

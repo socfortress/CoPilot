@@ -23,12 +23,12 @@
 			background-color: var(--bg-color);
 
 			.shepherd-button {
-				background-color: rgba(var(--primary-color-rgb), 0.1);
+				background-color: var(--primary-010-color);
 				color: var(--primary-color);
 				padding: 4px 16px;
 
 				&.shepherd-button-secondary {
-					background-color: rgba(var(--fg-color-rgb), 0.05);
+					background-color: var(--hover-005-color);
 					color: var(--fg-color);
 				}
 			}

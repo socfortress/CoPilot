@@ -21,12 +21,11 @@
 					</CardActions>
 				</CardWrapper>
 
-				<CardWrapper v-slot="{ expand, isExpand, reload, getState }">
+				<CardWrapper v-slot="{ expand, isExpand, reload }">
 					<CardActions
 						:expand="expand"
 						:isExpand="isExpand"
 						:reload="reload"
-						:getState="getState"
 						:segmented="true"
 						:hideSubtitle="true"
 					>
@@ -168,11 +167,11 @@
 <script setup lang="ts">
 import { NButton } from "naive-ui"
 import { computed } from "vue"
-import DemoChart from "@/components/charts/Apex.vue"
+import DemoChart from "@/components/charts/DemoApex.vue"
 import DemoList from "@/components/list/List.vue"
 import { useThemeStore } from "@/stores/theme"
 
-const style: { [key: string]: any } = computed(() => useThemeStore().style)
+const style = computed<{ [key: string]: any }>(() => useThemeStore().style)
 const textColor = computed<string>(() => style.value["--fg-color"])
 const textSecondaryColor = computed<string>(() => style.value["--fg-secondary-color"])
 </script>

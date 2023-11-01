@@ -31,17 +31,13 @@
 					:class="{ active: commentActive }"
 					@click="commentActive = !commentActive"
 				>
-					<n-icon :size="18">
-						<CommentsActiveIcon v-if="commentActive" />
-						<CommentsIcon v-else />
-					</n-icon>
+					<Icon :size="18" v-if="commentActive" :name="CommentsActiveIcon"></Icon>
+					<Icon :size="18" v-else :name="CommentsIcon"></Icon>
 					<span class="count">{{ commentsCount }}</span>
 				</n-button>
 				<n-button text class="item likes" :class="{ active: likeActive }" @click="likeActive = !likeActive">
-					<n-icon :size="18">
-						<HeartActiveIcon v-if="likeActive" />
-						<HeartIcon v-else />
-					</n-icon>
+					<Icon :size="18" v-if="likeActive" :name="HeartActiveIcon"></Icon>
+					<Icon :size="18" v-else :name="HeartIcon"></Icon>
 					<span class="count">{{ likesCount }}</span>
 				</n-button>
 			</div>
@@ -80,9 +76,7 @@
 			</div>
 			<div class="actions-group flex items-center">
 				<n-button text type="primary" :disabled="!reply" @click="send()">
-					<n-icon :size="20">
-						<SendIcon />
-					</n-icon>
+					<Icon :size="20" :name="SendIcon"></Icon>
 				</n-button>
 			</div>
 		</div>
@@ -91,14 +85,16 @@
 
 <script setup lang="ts">
 import { faker } from "@faker-js/faker"
-import { NCard, NIcon, NAvatar, NInput, NButton, NTime, NImage } from "naive-ui"
-import SendIcon from "@vicons/carbon/Send"
-import HeartIcon from "@vicons/ionicons5/HeartOutline"
-import HeartActiveIcon from "@vicons/ionicons5/Heart"
-import CommentsIcon from "@vicons/ionicons5/ChatbubblesOutline"
-import CommentsActiveIcon from "@vicons/ionicons5/Chatbubbles"
+import { NCard, NAvatar, NInput, NButton, NTime, NImage } from "naive-ui"
 import { toRefs, ref } from "vue"
 import dayjs from "@/utils/dayjs"
+import Icon from "@/components/common/Icon.vue"
+
+const SendIcon = "carbon:send"
+const HeartIcon = "ion:heart-outline"
+const HeartActiveIcon = "ion:heart"
+const CommentsIcon = "ion:chatbubbles-outline"
+const CommentsActiveIcon = "ion:chatbubbles"
 
 export interface CardSocial {
 	showImage?: boolean

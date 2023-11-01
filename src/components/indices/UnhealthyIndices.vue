@@ -22,9 +22,7 @@
 				</template>
 				<n-empty description="No Unhealthy Indices found" v-else>
 					<template #icon>
-						<n-icon>
-							<ShieldIcon />
-						</n-icon>
+						<Icon :name="ShieldIcon"></Icon>
 					</template>
 					<template #extra>Great, all indices are healthy!</template>
 				</n-empty>
@@ -37,8 +35,10 @@
 import { computed, toRefs } from "vue"
 import { type IndexStats, IndexHealth } from "@/types/indices.d"
 import IndexCard from "@/components/indices/IndexCard.vue"
-import { NSpin, NCard, NEmpty, NIcon } from "naive-ui"
-import ShieldIcon from "@vicons/fluent/ShieldTask20Regular"
+import { NSpin, NCard, NEmpty } from "naive-ui"
+import Icon from "@/components/common/Icon.vue"
+
+const ShieldIcon = "fluent:shield-task-20-regular"
 
 const emit = defineEmits<{
 	(e: "click", value: IndexStats): void

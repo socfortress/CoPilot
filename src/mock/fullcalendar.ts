@@ -14,6 +14,11 @@ export interface CalendarEvent {
 	}
 }
 
+export interface CalendarEditEvent extends Omit<CalendarEvent, "start" | "end"> {
+	start: number
+	end: number
+}
+
 export const availableCalendars = [
 	{
 		label: "Personal"

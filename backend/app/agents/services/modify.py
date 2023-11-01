@@ -7,12 +7,15 @@ from app.db.universal_models import Agents
 
 def mark_agent_criticality(agent_id: str, critical: bool):
     """Mark agent as critical or not critical."""
-    agent = session.query(Agents).filter(Agents.agent_id == agent_id).first()
-    if not agent:
-        raise HTTPException(status_code=404, detail=f"Agent with agent_id {agent_id} not found")
-    agent.critical_asset = critical
-    session.commit()
-    return {"success": True, "message": f"Agent {agent_id} marked as critical: {critical}"}
+    try:
+        agent = session.query(Agents).filter(Agents.agent_id == agent_id).first()
+        agent.critical_asset = critical
+        session.commit()
+        return {"success": True, "message": f"Agent {agent_id} marked as critical: {critical}"}
+    except Exception as e:
+        if not agent:
+            raise HTTPException(status_code=404, detail=f"Agent with agent_id {agent_id} not found")
+        raise HTTPException(status_code=500, detail=f"Failed to mark agent as critical: {e}")
 
 
 def delete_agent_db(agent_id: str):

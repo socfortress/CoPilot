@@ -8,11 +8,8 @@
 					target="_blank"
 					alt="docs"
 					rel="nofollow noopener noreferrer"
-					class="ml-4"
 				>
-					<n-icon :size="16">
-						<ExternalIcon />
-					</n-icon>
+					<Icon :name="ExternalIcon" :size="16" />
 					docs
 				</a>
 			</div>
@@ -24,9 +21,7 @@
 					<n-col :span="12">
 						<n-statistic label="Statistic" :value="99">
 							<template #prefix>
-								<n-icon>
-									<Save />
-								</n-icon>
+								<Icon :name="Save" />
 							</template>
 							<template #suffix>/ 100</template>
 						</n-statistic>
@@ -60,7 +55,8 @@
 </template>
 
 <script lang="ts" setup>
-import { NIcon, NRow, NCol, NStatistic } from "naive-ui"
-import ExternalIcon from "@vicons/tabler/ExternalLink"
-import { Save } from "@vicons/carbon"
+import { NRow, NCol, NStatistic } from "naive-ui"
+import Icon from "@/components/common/Icon.vue"
+const ExternalIcon = "tabler:external-link"
+const Save = "carbon:save"
 </script>

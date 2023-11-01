@@ -8,11 +8,8 @@
 					target="_blank"
 					alt="docs"
 					rel="nofollow noopener noreferrer"
-					class="ml-4"
 				>
-					<n-icon :size="16">
-						<ExternalIcon />
-					</n-icon>
+					<Icon :name="ExternalIcon" :size="16" />
 					docs
 				</a>
 			</div>
@@ -36,7 +33,7 @@
 
 						const renderIcon = (icon: Component) => {
 							return () => {
-								return h(NIcon, null, {
+								return h(  null, {
 									default: () => h(icon)
 								})
 							}
@@ -108,7 +105,7 @@
 
 						const renderIcon = (icon: Component) => {
 							return () => {
-								return h(NIcon, null, {
+								return h(  null, {
 									default: () => h(icon)
 								})
 							}
@@ -181,7 +178,7 @@
 
 						const renderIcon = (icon: Component) => {
 							return () => {
-								return h(NIcon, null, {
+								return h(  null, {
 									default: () => h(icon)
 								})
 							}
@@ -309,7 +306,7 @@
 
 						const renderIcon = (icon: Component) => {
 							return () => {
-								return h(NIcon, null, {
+								return h(  null, {
 									default: () => h(icon)
 								})
 							}
@@ -397,24 +394,17 @@
 </template>
 
 <script lang="ts" setup>
-import { NIcon, NDropdown, NButton, useMessage, NSpace, NText } from "naive-ui"
-import ExternalIcon from "@vicons/tabler/ExternalLink"
-import { type Component, h, nextTick, ref } from "vue"
+import { NDropdown, NButton, useMessage, NSpace, NText } from "naive-ui"
+import { nextTick, ref } from "vue"
+import { renderIcon } from "@/utils"
 
-import {
-	PersonCircleOutline as UserIcon,
-	Pencil as EditIcon,
-	LogOutOutline as LogoutIcon,
-	ArrowRedoOutline
-} from "@vicons/ionicons5"
+import Icon from "@/components/common/Icon.vue"
+const ExternalIcon = "tabler:external-link"
 
-const renderIcon = (icon: Component) => {
-	return () => {
-		return h(NIcon, null, {
-			default: () => h(icon)
-		})
-	}
-}
+const UserIcon = "ion:person-circle-outline"
+const EditIcon = "ion:pencil"
+const LogoutIcon = "ion:log-out-outline"
+const ArrowRedoOutline = "ion:arrow-redo-outline"
 
 const xRef = ref(0)
 const yRef = ref(0)

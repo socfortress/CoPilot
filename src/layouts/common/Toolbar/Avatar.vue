@@ -6,11 +6,13 @@
 
 <script lang="ts" setup>
 import { NAvatar, NDropdown } from "naive-ui"
-import { PersonOutline as UserIcon, LogOutOutline as LogoutIcon } from "@vicons/ionicons5"
-import DocsIcon from "@vicons/ionicons5/BookOutline"
 import { renderIcon } from "@/utils"
 import { useRouter } from "vue-router"
 import { ref, h } from "vue"
+
+const UserIcon = "ion:person-outline"
+const LogoutIcon = "ion:log-out-outline"
+const DocsIcon = "ion:book-outline"
 
 defineOptions({
 	name: "Avatar"
@@ -21,7 +23,7 @@ const router = useRouter()
 const options = ref([
 	{
 		label: "Profile",
-		key: "route-profile",
+		key: "route-Profile",
 		icon: renderIcon(UserIcon)
 	},
 	{
@@ -40,7 +42,7 @@ const options = ref([
 	},
 	{
 		label: "Logout",
-		key: "route-logout",
+		key: "route-Logout",
 		icon: renderIcon(LogoutIcon)
 	}
 ])

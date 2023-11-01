@@ -1,6 +1,6 @@
 <template>
 	<div class="flex pinned-pages items-end">
-		<XyzTransitionGroup class="latest-list flex items-center gap-4" xyz="fade stagger-1 down-1">
+		<TransitionGroup name="anim" tag="div" class="latest-list flex items-center gap-4">
 			<n-tag
 				round
 				:bordered="false"
@@ -14,16 +14,15 @@
 				</span>
 				<template #icon>
 					<div class="icon-box" @click="pinPage(page)">
-						<n-icon :size="14">
-							<PinnedIcon />
-						</n-icon>
+						<Icon :size="14" :name="PinnedIcon"></Icon>
 					</div>
 				</template>
 			</n-tag>
-		</XyzTransitionGroup>
+		</TransitionGroup>
 
 		<div class="divider" v-if="latestSanitized.length && pinned.length"></div>
-		<XyzTransitionGroup class="pinned-list flex items-center gap-4" xyz="fade stagger-1 down-1">
+
+		<TransitionGroup name="anim" tag="div" class="pinned-list flex items-center gap-4">
 			<n-tag
 				round
 				:bordered="false"
@@ -36,7 +35,7 @@
 					{{ page.title }}
 				</div>
 			</n-tag>
-		</XyzTransitionGroup>
+		</TransitionGroup>
 		<div class="bar"></div>
 	</div>
 </template>
@@ -45,10 +44,13 @@
 import { useRouter, type RouteRecordName } from "vue-router"
 import { type RemovableRef, useStorage } from "@vueuse/core"
 import { computed, type ComputedRef } from "vue"
-import _uniqBy from "lodash/uniqBy"
-import PinnedIcon from "@vicons/tabler/Pinned"
-import { NIcon, NTag } from "naive-ui"
+import { NTag } from "naive-ui"
 import _takeRight from "lodash/takeRight"
+import _split from "lodash/split"
+import _uniqBy from "lodash/uniqBy"
+import Icon from "@/components/common/Icon.vue"
+
+const PinnedIcon = "tabler:pinned"
 
 interface Page {
 	name: RouteRecordName | string
@@ -77,7 +79,7 @@ const gotoPage = (pageName: RouteRecordName | string) => {
 const pinPage = (page: Page) => {
 	const isPresent = pinned.value.findIndex(p => p.name === page.name) !== -1
 	if (!isPresent) {
-		pinned.value = _uniqBy([page, ...pinned.value], "name").reverse()
+		pinned.value = [page, ...pinned.value]
 	}
 	return true
 }
@@ -92,11 +94,13 @@ const latestSanitized: ComputedRef<Page[]> = computed(() => {
 })
 
 router.afterEach(route => {
-	if (route.name && route.meta?.title) {
+	const title = route.meta?.title || _split(route.name?.toString(), "-").at(-1)
+
+	if (route.name && title) {
 		const page: Page = {
 			name: route.name,
 			fullPath: route.fullPath,
-			title: route.meta.title as string
+			title
 		}
 		latest.value = _uniqBy([page, ...latest.value, page], "name")
 	}
@@ -142,17 +146,9 @@ router.afterEach(route => {
 	}
 
 	.pinned-list {
-		--xyz-out-duration: 0;
-		--xyz-out-delay: 0;
-
 		.page-name {
 			color: var(--primary-color);
 		}
-	}
-
-	.latest-list {
-		--xyz-out-duration: 0;
-		--xyz-out-delay: 0;
 	}
 
 	.bar {
@@ -196,6 +192,22 @@ router.afterEach(route => {
 		&:hover {
 			color: var(--primary-color);
 		}
+	}
+
+	.anim-move,
+	.anim-enter-active,
+	.anim-leave-active {
+		transition: all 0.5s var(--bezier-ease);
+	}
+
+	.anim-enter-from,
+	.anim-leave-to {
+		opacity: 0;
+		transform: scale(0);
+	}
+
+	.anim-leave-active {
+		position: absolute;
 	}
 }
 </style>

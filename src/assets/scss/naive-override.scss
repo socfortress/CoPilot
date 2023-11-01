@@ -3,9 +3,10 @@
 }
 .n-modal,
 .n-card.n-modal[role] {
-	background-color: rgba(var(--modal-color-rgb), 0.7);
+	//background-color: rgba(var(--modal-color-rgb), 0.7);
 	backdrop-filter: blur(20px);
 	max-width: 90%;
+	margin: 10vh auto;
 }
 
 .n-image-preview-overlay {
@@ -44,4 +45,12 @@
 	& > .n-card__content {
 		max-height: 100%;
 	}
+}
+.n-avatar .n-avatar__text {
+	transform: translateX(-50%) translateY(-50%) scale(1);
+}
+
+// popover max-width
+.v-binder-follower-content {
+	max-width: calc(100vw - (var(--view-padding) * 2));
 }

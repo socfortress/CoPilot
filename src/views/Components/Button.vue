@@ -8,11 +8,8 @@
 					target="_blank"
 					alt="docs"
 					rel="nofollow noopener noreferrer"
-					class="ml-4"
 				>
-					<n-icon :size="16">
-						<ExternalIcon />
-					</n-icon>
+					<Icon :name="ExternalIcon" :size="16" />
 					docs
 				</a>
 			</div>
@@ -77,32 +74,32 @@
 					<n-button strong secondary round type="error">Error</n-button>
 					<n-button strong secondary circle>
 						<template #icon>
-							<n-icon><cash-icon /></n-icon>
+							<Icon :name="CashIcon" />
 						</template>
 					</n-button>
 					<n-button strong secondary circle type="primary">
 						<template #icon>
-							<n-icon><cash-icon /></n-icon>
+							<Icon :name="CashIcon" />
 						</template>
 					</n-button>
 					<n-button strong secondary circle type="info">
 						<template #icon>
-							<n-icon><cash-icon /></n-icon>
+							<Icon :name="CashIcon" />
 						</template>
 					</n-button>
 					<n-button strong secondary circle type="success">
 						<template #icon>
-							<n-icon><cash-icon /></n-icon>
+							<Icon :name="CashIcon" />
 						</template>
 					</n-button>
 					<n-button strong secondary circle type="warning">
 						<template #icon>
-							<n-icon><cash-icon /></n-icon>
+							<Icon :name="CashIcon" />
 						</template>
 					</n-button>
 					<n-button strong secondary circle type="error">
 						<template #icon>
-							<n-icon><cash-icon /></n-icon>
+							<Icon :name="CashIcon" />
 						</template>
 					</n-button>
 				</n-space>
@@ -214,7 +211,7 @@
 				<n-space>
 					<n-button circle>
 						<template #icon>
-							<n-icon><cash-icon /></n-icon>
+							<Icon :name="CashIcon" />
 						</template>
 					</n-button>
 					<n-button round>Round</n-button>
@@ -238,9 +235,7 @@
 				<n-space>
 					<n-button :loading="loading" @click="handleClick">
 						<template #icon>
-							<n-icon>
-								<cash-icon />
-							</n-icon>
+							<Icon :name="CashIcon" />
 						</template>
 						Click Me
 					</n-button>
@@ -278,19 +273,19 @@
 					<n-button-group vertical>
 						<n-button round>
 							<template #icon>
-								<n-icon><log-in-icon /></n-icon>
+								<Icon :name="LogInIcon" />
 							</template>
 							Live a
 						</n-button>
 						<n-button ghost>
 							<template #icon>
-								<n-icon><log-in-icon /></n-icon>
+								<Icon :name="LogInIcon" />
 							</template>
 							Sufficient
 						</n-button>
 						<n-button>
 							<template #icon>
-								<n-icon><log-in-icon /></n-icon>
+								<Icon :name="LogInIcon" />
 							</template>
 							Life
 						</n-button>
@@ -298,19 +293,19 @@
 					<n-button-group vertical size="large">
 						<n-button>
 							<template #icon>
-								<n-icon><log-in-icon /></n-icon>
+								<Icon :name="LogInIcon" />
 							</template>
 							With
 						</n-button>
 						<n-button>
 							<template #icon>
-								<n-icon><log-in-icon /></n-icon>
+								<Icon :name="LogInIcon" />
 							</template>
 							Enough
 						</n-button>
 						<n-button ghost round>
 							<template #icon>
-								<n-icon><log-in-icon /></n-icon>
+								<Icon :name="LogInIcon" />
 							</template>
 							Happiness
 						</n-button>
@@ -318,19 +313,19 @@
 					<n-button-group size="small">
 						<n-button round>
 							<template #icon>
-								<n-icon><log-in-icon /></n-icon>
+								<Icon :name="LogInIcon" />
 							</template>
 							Life
 						</n-button>
 						<n-button>
 							<template #icon>
-								<n-icon><log-in-icon /></n-icon>
+								<Icon :name="LogInIcon" />
 							</template>
 							Is
 						</n-button>
 						<n-button>
 							<template #icon>
-								<n-icon><log-in-icon /></n-icon>
+								<Icon :name="LogInIcon" />
 							</template>
 							Good
 						</n-button>
@@ -338,19 +333,19 @@
 					<n-button-group>
 						<n-button ghost>
 							<template #icon>
-								<n-icon><log-in-icon /></n-icon>
+								<Icon :name="LogInIcon" />
 							</template>
 							Eat
 						</n-button>
 						<n-button ghost>
 							<template #icon>
-								<n-icon><log-in-icon /></n-icon>
+								<Icon :name="LogInIcon" />
 							</template>
 							One More
 						</n-button>
 						<n-button round>
 							<template #icon>
-								<n-icon><log-in-icon /></n-icon>
+								<Icon :name="LogInIcon" />
 							</template>
 							Apple
 						</n-button>
@@ -446,10 +441,13 @@
 </template>
 
 <script lang="ts" setup>
-import { NIcon, NButton, NButtonGroup, NSpace, NText } from "naive-ui"
-import ExternalIcon from "@vicons/tabler/ExternalLink"
-import { LogInOutline as LogInIcon } from "@vicons/ionicons5"
-import { CashOutline as CashIcon } from "@vicons/ionicons5"
+import { NButton, NButtonGroup, NSpace, NText } from "naive-ui"
+import Icon from "@/components/common/Icon.vue"
+const ExternalIcon = "tabler:external-link"
+
+const LogInIcon = "ion:log-in-outline"
+const CashIcon = "ion:cash-outline"
+
 import { ref } from "vue"
 
 const loading = ref(false)

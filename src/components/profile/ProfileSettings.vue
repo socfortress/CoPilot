@@ -1,82 +1,73 @@
 <template>
-	<n-card class="settings">
-		<n-form ref="refForm" :label-width="80" :model="formValue" :rules="formRules">
-			<div class="title">General</div>
-			<div class="flex justify-between flex-col md:flex-row md:gap-4">
-				<n-form-item label="Username" path="username" class="basis-1/2">
-					<n-input v-model:value="formValue.username" placeholder="Type username">
-						<template #prefix>@</template>
-					</n-input>
+	<n-spin class="settings" :show="loading">
+		<n-card>
+			<n-form ref="formRef" :label-width="80" :model="formValue" :rules="formRules">
+				<div class="title">General</div>
+				<div class="flex flex-col md:flex-row md:gap-4">
+					<n-form-item label="Date Format" path="dateFormat" class="basis-1/3">
+						<n-select v-model:value="formValue.dateFormat" :options="dateFormatsAvailables" />
+					</n-form-item>
+					<n-form-item label="24 Hour" path="hours24" class="basis-1/3">
+						<n-checkbox v-model:checked="formValue.hours24">Time 24 Hour</n-checkbox>
+					</n-form-item>
+				</div>
+				<div class="title">Profile</div>
+				<div class="flex justify-between flex-col md:flex-row md:gap-4">
+					<n-form-item label="Username" path="username" class="basis-1/2">
+						<n-input v-model:value="formValue.username" placeholder="Type username">
+							<template #prefix>@</template>
+						</n-input>
+					</n-form-item>
+					<n-form-item label="Email" path="email" class="basis-1/2">
+						<n-input v-model:value="formValue.email" placeholder="Type email" />
+					</n-form-item>
+				</div>
+				<n-form-item label="Fullname" path="name">
+					<n-input v-model:value="formValue.name" placeholder="Type Fullname" />
 				</n-form-item>
-				<n-form-item label="Email" path="email" class="basis-1/2">
-					<n-input v-model:value="formValue.email" placeholder="Type email" />
+
+				<n-form-item>
+					<n-button type="primary" @click="save()">Save</n-button>
 				</n-form-item>
-			</div>
-			<div class="title">Profile</div>
-			<n-form-item label="Fullname" path="name">
-				<n-input v-model:value="formValue.name" placeholder="Type Fullname" />
-			</n-form-item>
-			<div class="flex justify-between flex-col md:flex-row md:gap-4">
-				<n-form-item label="Location" path="location" class="basis-1/2">
-					<n-input v-model:value="formValue.location" placeholder="Type location" />
-				</n-form-item>
-				<n-form-item label="Website" path="website" class="basis-1/2">
-					<n-input v-model:value="formValue.website" placeholder="Type website" />
-				</n-form-item>
-			</div>
-			<n-form-item label="Bio" path="bio">
-				<n-input v-model:value="formValue.bio" type="textarea" placeholder="Type bio" />
-			</n-form-item>
-			<div class="title">Social</div>
-			<div class="flex justify-between flex-col md:flex-row md:gap-4">
-				<n-form-item label="Twitter" path="twitter" class="basis-1/3">
-					<n-input v-model:value="formValue.twitter" placeholder="Type twitter" />
-				</n-form-item>
-				<n-form-item label="Facebook" path="facebook" class="basis-1/3">
-					<n-input v-model:value="formValue.facebook" placeholder="Type facebook" />
-				</n-form-item>
-				<n-form-item label="Google" path="google" class="basis-1/3">
-					<n-input v-model:value="formValue.google" placeholder="Type google" />
-				</n-form-item>
-			</div>
-			<div class="flex justify-between flex-col md:flex-row md:gap-4">
-				<n-form-item label="Instagram" path="instagram" class="basis-1/3">
-					<n-input v-model:value="formValue.instagram" placeholder="Type instagram" />
-				</n-form-item>
-				<n-form-item label="Github" path="github" class="basis-1/3">
-					<n-input v-model:value="formValue.github" placeholder="Type github" />
-				</n-form-item>
-				<n-form-item label="Threads" path="threads" class="basis-1/3">
-					<n-input v-model:value="formValue.threads" placeholder="Type threads" />
-				</n-form-item>
-			</div>
-			<n-form-item>
-				<n-button type="primary">Save</n-button>
-			</n-form-item>
-		</n-form>
-	</n-card>
+			</n-form>
+		</n-card>
+	</n-spin>
 </template>
 
 <script setup lang="ts">
 import { ref } from "vue"
-import { NCard, NForm, NFormItem, NInput, NButton } from "naive-ui"
+import {
+	NSpin,
+	NCard,
+	NForm,
+	NFormItem,
+	NInput,
+	NButton,
+	NSelect,
+	NCheckbox,
+	type FormValidationError,
+	useMessage,
+	type FormInst
+} from "naive-ui"
+import { useSettingsStore } from "@/stores/settings"
+
+const settingsStore = useSettingsStore()
+
+const dateFormatsAvailables = settingsStore.dateFormatsAvailables.map(i => ({ label: i, value: i }))
+const currentSateFormat = settingsStore.rawDateFormat
+const hours24 = settingsStore.hours24
 
 const formValue = ref({
 	username: "sigmund67",
 	email: "sigmund67@gmail.com",
 	name: "Margie Dibbert",
-	location: "New York No. 1 Lake Park",
-	bio: "",
-	website: "",
-	twitter: "",
-	facebook: "",
-	google: "",
-	instagram: "",
-	threads: "",
-	github: ""
+	dateFormat: currentSateFormat,
+	hours24
 })
 
-const refForm = ref()
+const loading = ref(false)
+const formRef = ref<FormInst | null>(null)
+const message = useMessage()
 
 const formRules = {
 	username: {
@@ -89,6 +80,22 @@ const formRules = {
 		message: "Please input email",
 		trigger: "blur"
 	}
+}
+
+function save() {
+	loading.value = true
+
+	formRef.value?.validate((errors: Array<FormValidationError> | undefined) => {
+		if (!errors) {
+			settingsStore.setDateFormat(formValue.value.dateFormat)
+			settingsStore.setHours24(formValue.value.hours24)
+
+			message.success("Settings saved")
+		} else {
+			message.error("Something was wrong")
+		}
+		loading.value = false
+	})
 }
 </script>
 

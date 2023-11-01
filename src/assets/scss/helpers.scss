@@ -1,0 +1,36 @@
+.scrollbar-styled {
+	/* Works on Firefox */
+
+	scrollbar-width: thin;
+	scrollbar-color: var(--hover-010-color) var(--bg-sidebar);
+
+	/* Works on Chrome, Edge, and Safari */
+	&::-webkit-scrollbar,
+	::-webkit-scrollbar {
+		width: 12px;
+	}
+
+	&::-webkit-scrollbar-track,
+	::-webkit-scrollbar-track {
+		background: var(--bg-sidebar);
+	}
+
+	&::-webkit-scrollbar-thumb,
+	::-webkit-scrollbar-thumb {
+		background-color: var(--hover-010-color);
+		border-radius: 20px;
+		border: 2px solid var(--bg-sidebar);
+	}
+}
+
+.bg-color {
+	background-color: var(--bg-color);
+}
+
+.border-radius {
+	border-radius: var(--border-radius);
+}
+
+.font-mono {
+	font-family: var(--font-family-mono);
+}

@@ -21,12 +21,8 @@
 			/>
 		</span>
 		<span v-if="icon && icon === 'arrow'" class="flex items-center percentage-icon">
-			<n-icon v-if="direction === 'up'">
-				<ChevronUp />
-			</n-icon>
-			<n-icon v-if="direction === 'down'">
-				<ChevronDown />
-			</n-icon>
+			<Icon v-if="direction === 'up'" :name="ChevronUp"></Icon>
+			<Icon v-if="direction === 'down'" :name="ChevronDown"></Icon>
 		</span>
 		<span v-if="icon && icon === 'operator'" class="percentage-icon">
 			{{ direction === "up" ? "+" : "-" }}
@@ -47,9 +43,11 @@
 
 <script setup lang="ts">
 import { toRefs } from "vue"
-import { NIcon, NProgress } from "naive-ui"
-import ChevronUp from "@vicons/tabler/ChevronUp"
-import ChevronDown from "@vicons/tabler/ChevronDown"
+import { NProgress } from "naive-ui"
+import Icon from "@/components/common/Icon.vue"
+
+const ChevronUp = "tabler:chevron-up"
+const ChevronDown = "tabler:chevron-down"
 
 export interface PercentageProps {
 	value: number
