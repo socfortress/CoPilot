@@ -5,7 +5,7 @@ import type { Alerts, AlertsQuery } from "@/types/graylog/alerts.d"
 import type { EventDefinition } from "@/types/graylog/event-definition.d"
 import type { Stream } from "@/types/graylog/stream.d"
 import type { ConfiguredInput, RunningInput } from "@/types/graylog/inputs.d"
-import type { PipelineRule, Pipeline } from "@/types/graylog/pipelines.d"
+import type { PipelineRule, Pipeline, PipelineFull } from "@/types/graylog/pipelines.d"
 
 export default {
 	getMessages(page?: number) {
@@ -67,6 +67,9 @@ export default {
 	},
 	getPipelines() {
 		return HttpClient.get<FlaskBaseResponse & { pipelines: Pipeline[] }>(`/graylog/pipelines`)
+	},
+	getPipelinesFull() {
+		return HttpClient.get<FlaskBaseResponse & { pipelines: PipelineFull[] }>(`/graylog/pipeline/full`)
 	},
 	getPipelinesRules() {
 		return HttpClient.get<FlaskBaseResponse & { pipeline_rules: PipelineRule[] }>(`/graylog/pipeline/rules`)

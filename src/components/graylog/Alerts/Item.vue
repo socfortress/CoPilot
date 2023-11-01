@@ -30,6 +30,14 @@
 							index_type:
 							<code>{{ alertsEvent.index_type }}</code>
 						</div>
+						<div class="box">
+							timestamp:
+							<code>{{ formatDate(alertsEvent.event.timestamp) }}</code>
+						</div>
+						<div class="box">
+							timestamp processing:
+							<code>{{ formatDate(alertsEvent.event.timestamp_processing) }}</code>
+						</div>
 					</div>
 				</n-popover>
 			</div>

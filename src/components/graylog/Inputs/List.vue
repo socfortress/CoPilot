@@ -1,5 +1,5 @@
 <template>
-	<n-spin :show="loading" class="flex flex-col grow">
+	<n-spin :show="loading" class="flex flex-col">
 		<div class="header flex items-center justify-end gap-2">
 			<div class="info grow flex gap-5">
 				<n-popover overlap placement="bottom-start">

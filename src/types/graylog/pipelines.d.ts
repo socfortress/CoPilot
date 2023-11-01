@@ -9,9 +9,20 @@ export interface Pipeline {
 	title: string
 }
 
+export interface PipelineFull extends Pipeline {
+	stages: PipelineFullStage[]
+}
+
 export interface PipelineStage {
-	match: string
+	match: "EITHER" | "PASS"
 	rules: string[]
+	stage: number
+}
+
+export interface PipelineFullStage {
+	match: "EITHER" | "PASS"
+	rules: string[]
+	rule_ids: string[]
 	stage: number
 }
 
