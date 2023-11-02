@@ -104,7 +104,7 @@ const isLight = computed(() => useThemeStore().isThemeLight)
 			width: 100%;
 			.anim-wrap {
 				img {
-					transform: translateX(22px);
+					transform: translateX(18px);
 				}
 			}
 		}
