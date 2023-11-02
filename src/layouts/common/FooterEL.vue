@@ -7,8 +7,8 @@
 					<BrainIcon />
 				</Icon>
 				By
-				<a href="https://dverse.studio/" target="_blank" alt="D*VERSE" rel="noopener noreferrer" class="mx-1">
-					D*VERSE Studio
+				<a href="https://www.socfortress.co/" target="_blank" alt="D*VERSE" rel="noopener noreferrer" class="mx-1">
+					SOCFortress
 				</a>
 				All rights Reserved © Copyright {{ year }}
 			</div>
