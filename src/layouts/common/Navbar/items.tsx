@@ -113,6 +113,20 @@ export default function getItems(mode: "vertical" | "horizontal", collapsed: boo
 			]
 		},
 		{
+			label: () =>
+				h(
+					RouterLink,
+					{
+						to: {
+							name: "Alerts"
+						}
+					},
+					{ default: () => "Alerts" }
+				),
+			key: "Alerts",
+			icon: renderIcon(BlankIcon)
+		},
+		{
 			type: "divider"
 		},
 
