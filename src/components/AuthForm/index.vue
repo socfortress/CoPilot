@@ -1,8 +1,8 @@
 <template>
 	<div class="form-wrap">
 		<div class="logo mb-4">
-			<img src="@/assets/images/brand-logo_dark.svg?url" v-if="isDark" />
-			<img src="@/assets/images/brand-logo_light.svg?url" v-else />
+			<img src="@/assets/images/socfortress_logo.svg?url" v-if="isDark" />
+			<img src="@/assets/images/socfortress_logo.svg?url" v-else />
 		</div>
 		<div class="title mb-4">{{ title }}</div>
 		<div class="text mb-12">
