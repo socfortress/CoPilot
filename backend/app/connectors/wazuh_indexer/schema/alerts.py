@@ -24,8 +24,8 @@ class AlertsSearchBody(BaseModel):
 
     @validator("timerange")
     def validate_timerange(cls, value):
-        if value[-1] not in ("h", "d", "w", "m"):
-            raise ValueError("Invalid timerange format. The string should end with either 'h', 'd', 'w', or 'm'.")
+        if value[-1] not in ("h", "d", "w"):
+            raise ValueError("Invalid timerange format. The string should end with either 'h', 'd', 'w'.")
 
         # Optionally, you can check that the prefix is a number
         if not value[:-1].isdigit():
