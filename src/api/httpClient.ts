@@ -23,7 +23,7 @@ HttpClient.interceptors.request.use(
 			__TOKEN_REFRESHING = true
 			__TOKEN_LAST_CHECK = new Date()
 
-			store.refreshToken().then(res => {
+			store.refreshToken().then(() => {
 				__TOKEN_REFRESHING = false
 			})
 		}

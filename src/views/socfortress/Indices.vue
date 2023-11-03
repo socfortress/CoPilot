@@ -43,17 +43,25 @@ import Details from "@/components/indices/Details.vue"
 import UnhealthyIndices from "@/components/indices/UnhealthyIndices.vue"
 import TopIndices from "@/components/indices/TopIndices.vue"
 import { useMessage } from "naive-ui"
+import { useRoute } from "vue-router"
 
 const message = useMessage()
+const route = useRoute()
 const indices = ref<IndexStats[] | null>(null)
 const loadingIndex = ref(false)
 const currentIndex = ref<IndexStats | null>(null)
+const requestedIndex = ref<string | null>(null)
 
-function setIndex(index: IndexStats) {
-	currentIndex.value = index
+function setIndex(index: IndexStats | string) {
+	if (typeof index === "string") {
+		const indexStats = indices.value?.find(o => o.index === index) || null
+		indexStats && (currentIndex.value = indexStats)
+	} else {
+		currentIndex.value = index
+	}
 }
 
-function getIndices() {
+function getIndices(cb?: () => void) {
 	loadingIndex.value = true
 
 	Api.indices
@@ -61,6 +69,8 @@ function getIndices() {
 		.then(res => {
 			if (res.data.success) {
 				indices.value = res.data.indices_stats
+
+				if (cb) cb()
 			} else {
 				message.error(res.data?.message || "An error occurred. Please try again later.")
 			}
@@ -83,7 +93,13 @@ function getIndices() {
 }
 
 onBeforeMount(() => {
-	getIndices()
+	if (route.query?.index_name) {
+		requestedIndex.value = route.query.index_name.toString()
+	}
+
+	getIndices(() => {
+		requestedIndex.value && setIndex(requestedIndex.value)
+	})
 })
 </script>
 

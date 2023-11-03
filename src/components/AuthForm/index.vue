@@ -38,7 +38,7 @@ import { useThemeStore } from "@/stores/theme"
 import SignIn from "./SignIn.vue"
 import ForgotPassword from "./ForgotPassword.vue"
 import SignUp from "./SignUp.vue"
-import { NButton, NDivider } from "naive-ui"
+import { NButton } from "naive-ui"
 import { ref, onBeforeMount, computed } from "vue"
 
 export type FormType = "signin" | "signup" | "forgotpassword"

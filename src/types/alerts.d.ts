@@ -40,12 +40,12 @@ export interface AlertSource {
 	agent_id: string
 	agent_name: string
 	data_win_eventdata_sourceProcessGUID?: string
-	gl2_remote_ip: AlertSourceGl2RemoteIP
+	gl2_remote_ip: AlertSourceIP
 	data_win_system_eventID?: string
 	gl2_remote_port: number
 	agent_labels_customer: string
 	agent_ip_city_name?: string
-	source: AlertSourceGl2RemoteIP
+	source: AlertSourceIP
 	data_win_eventdata_targetImage?: string
 	gl2_source_input: string
 	rule_level: number
@@ -231,7 +231,7 @@ export interface AlertSource {
 }
 
 export type AlertSourceAgentIP = IPAddress
-export type AlertSourceGl2RemoteIP = IPAddress
+export type AlertSourceIP = IPAddress
 export type AlertSourceAgentIPGeolocation = Location
 
 export enum AlertSourceDataGroup {
