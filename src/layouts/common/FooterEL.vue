@@ -7,7 +7,13 @@
 					<BrainIcon />
 				</Icon>
 				By
-				<a href="https://www.socfortress.co/" target="_blank" alt="D*VERSE" rel="noopener noreferrer" class="mx-1">
+				<a
+					href="https://www.socfortress.co/"
+					target="_blank"
+					alt="D*VERSE"
+					rel="noopener noreferrer"
+					class="mx-1"
+				>
 					SOCFortress
 				</a>
 				All rights Reserved © Copyright {{ year }}

@@ -131,17 +131,21 @@ def collect_alerts() -> List[SublimeAlertsResponse]:
     Get all Sublime Alerts from the database
     """
     logger.info("Getting all Sublime Alerts")
-    alerts = session.query(SublimeAlerts).all()
-    # Also add the relationships
-    for alert in alerts:
-        alert.flagged_rules = session.query(FlaggedRule).filter(FlaggedRule.sublime_alert_id == alert.id).all()
-        alert.mailbox = [session.query(Mailbox).filter(Mailbox.sublime_alert_id == alert.id).first()]
-        alert.triggered_actions = session.query(TriggeredAction).filter(TriggeredAction.sublime_alert_id == alert.id).all()
-        alert.sender = [session.query(Sender).filter(Sender.sublime_alert_id == alert.id).first()]
-        alert.recipients = session.query(Recipient).filter(Recipient.sublime_alert_id == alert.id).all()
-    logger.info("Successfully retrieved all Sublime Alerts")
-    return SublimeAlertsResponse(
-        success=True,
-        message="Successfully retrieved all Sublime Alerts",
-        sublime_alerts=[SublimeAlertsSchema.from_orm(alert) for alert in alerts],
-    )
+    try:
+        alerts = session.query(SublimeAlerts).all()
+        # Also add the relationships
+        for alert in alerts:
+            alert.flagged_rules = session.query(FlaggedRule).filter(FlaggedRule.sublime_alert_id == alert.id).all()
+            alert.mailbox = [session.query(Mailbox).filter(Mailbox.sublime_alert_id == alert.id).first()]
+            alert.triggered_actions = session.query(TriggeredAction).filter(TriggeredAction.sublime_alert_id == alert.id).all()
+            alert.sender = [session.query(Sender).filter(Sender.sublime_alert_id == alert.id).first()]
+            alert.recipients = session.query(Recipient).filter(Recipient.sublime_alert_id == alert.id).all()
+        logger.info("Successfully retrieved all Sublime Alerts")
+        return SublimeAlertsResponse(
+            success=True,
+            message="Successfully retrieved all Sublime Alerts",
+            sublime_alerts=[SublimeAlertsSchema.from_orm(alert) for alert in alerts],
+        )
+    except Exception as e:
+        logger.error(f"Failed to get all Sublime Alerts with error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get all Sublime Alerts with error: {e}")

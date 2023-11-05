@@ -1,8 +1,11 @@
 from fastapi import APIRouter
 from fastapi import HTTPException
 from fastapi import Query
+from fastapi import Security
 from loguru import logger
 from starlette.status import HTTP_401_UNAUTHORIZED
+
+from app.auth.utils import AuthHandler
 
 # App specific imports
 from app.customers.schema.customers import AgentModel
@@ -38,7 +41,12 @@ def verify_unique_customer_code(customer: CustomerRequestBody):
         raise HTTPException(status_code=400, detail="Customer with this customer_code already exists")
 
 
-@customers_router.post("", response_model=CustomerResponse, description="Create a new customer")
+@customers_router.post(
+    "",
+    response_model=CustomerResponse,
+    description="Create a new customer",
+    dependencies=[Security(AuthHandler().require_any_scope("admin"))],
+)
 async def create_customer(customer: CustomerRequestBody) -> CustomerResponse:
     verify_unique_customer_code(customer)
     logger.info(f"Creating new customer: {customer}")
@@ -48,7 +56,12 @@ async def create_customer(customer: CustomerRequestBody) -> CustomerResponse:
     return CustomerResponse(customer=customer, success=True, message="Customer created successfully")
 
 
-@customers_router.get("", response_model=CustomersResponse, description="Get all customers")
+@customers_router.get(
+    "",
+    response_model=CustomersResponse,
+    description="Get all customers",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
 async def get_customers() -> CustomersResponse:
     logger.info("Fetching all customers")
     customers = session.query(Customers).all()
@@ -57,7 +70,12 @@ async def get_customers() -> CustomersResponse:
     return CustomersResponse(customers=customers, success=True, message="Customers fetched successfully")
 
 
-@customers_router.get("/{customer_code}", response_model=CustomerResponse, description="Get customer by customer_code")
+@customers_router.get(
+    "/{customer_code}",
+    response_model=CustomerResponse,
+    description="Get customer by customer_code",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
 async def get_customer(customer_code: str) -> CustomerResponse:
     logger.info(f"Fetching customer with customer_code: {customer_code}")
     customer = session.query(Customers).filter(Customers.customer_code == customer_code).first()
@@ -70,7 +88,12 @@ async def get_customer(customer_code: str) -> CustomerResponse:
     )
 
 
-@customers_router.put("/{customer_code}", response_model=CustomerResponse, description="Update customer by customer_code")
+@customers_router.put(
+    "/{customer_code}",
+    response_model=CustomerResponse,
+    description="Update customer by customer_code",
+    dependencies=[Security(AuthHandler().require_any_scope("admin"))],
+)
 async def update_customer(customer_code: str, customer: CustomerRequestBody) -> CustomerResponse:
     logger.info(f"Updating customer with customer_code: {customer_code}")
     existing_customer = session.query(Customers).filter(Customers.customer_code == customer_code).first()
@@ -85,19 +108,30 @@ async def update_customer(customer_code: str, customer: CustomerRequestBody) -> 
     )
 
 
-# ! TODO: Fix delete customer
-# @customers_router.delete("/{customer_code}", response_model=CustomerResponse, description="Delete customer by customer_code")
-# async def delete_customer(customer_code: str) -> CustomerResponse:
-#     logger.info(f"Deleting customer with customer_code: {customer_code}")
-#     existing_customer = session.query(Customers).filter(Customers.customer_code == customer_code).first()
-#     if not existing_customer:
-#         raise HTTPException(status_code=404, detail=f"Customer with customer_code {customer_code} not found")
-#     session.delete(existing_customer)
-#     session.commit()
-#     return CustomerResponse(customer=CustomerRequestBody.parse_obj(existing_customer.__dict__), success=True, message="Customer deleted successfully")
+@customers_router.delete(
+    "/{customer_code}",
+    response_model=CustomerResponse,
+    description="Delete customer by customer_code",
+    dependencies=[Security(AuthHandler().require_any_scope("admin"))],
+)
+async def delete_customer(customer_code: str) -> CustomerResponse:
+    logger.info(f"Deleting customer with customer_code: {customer_code}")
+    existing_customer = session.query(Customers).filter(Customers.customer_code == customer_code).first()
+    if not existing_customer:
+        raise HTTPException(status_code=404, detail=f"Customer with customer_code {customer_code} not found")
+    session.delete(existing_customer)
+    session.commit()
+    return CustomerResponse(
+        customer=CustomerRequestBody.parse_obj(existing_customer.__dict__), success=True, message="Customer deleted successfully",
+    )
 
 
-@customers_router.post("/{customer_code}/meta", response_model=CustomerMetaResponse, description="Add new customer meta")
+@customers_router.post(
+    "/{customer_code}/meta",
+    response_model=CustomerMetaResponse,
+    description="Add new customer meta",
+    dependencies=[Security(AuthHandler().require_any_scope("admin"))],
+)
 async def add_customer_meta(customer_code: str, customer_meta: CustomerMetaRequestBody) -> CustomerMetaResponse:
     logger.info(f"Adding new customer meta: {customer_meta}")
     existing_customer = session.query(Customers).filter(Customers.customer_code == customer_code).first()
@@ -113,7 +147,12 @@ async def add_customer_meta(customer_code: str, customer_meta: CustomerMetaReque
     return CustomerMetaResponse(customer_meta=customer_meta, success=True, message="Customer meta added successfully")
 
 
-@customers_router.get("/{customer_code}/meta", response_model=CustomerMetaResponse, description="Get customer meta by customer_code")
+@customers_router.get(
+    "/{customer_code}/meta",
+    response_model=CustomerMetaResponse,
+    description="Get customer meta by customer_code",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
 async def get_customer_meta(customer_code: str) -> CustomerMetaResponse:
     logger.info(f"Fetching customer meta with customer_code: {customer_code}")
     customer_meta = session.query(CustomersMeta).filter(CustomersMeta.customer_code == customer_code).first()
@@ -126,7 +165,12 @@ async def get_customer_meta(customer_code: str) -> CustomerMetaResponse:
     )
 
 
-@customers_router.put("/{customer_code}/meta", response_model=CustomerMetaResponse, description="Update customer meta by customer_code")
+@customers_router.put(
+    "/{customer_code}/meta",
+    response_model=CustomerMetaResponse,
+    description="Update customer meta by customer_code",
+    dependencies=[Security(AuthHandler().require_any_scope("admin"))],
+)
 async def update_customer_meta(customer_code: str, customer_meta: CustomerMetaRequestBody) -> CustomerMetaResponse:
     logger.info(f"Updating customer meta with customer_code: {customer_code}")
     existing_customer_meta = session.query(CustomersMeta).filter(CustomersMeta.customer_code == customer_code).first()
@@ -147,22 +191,31 @@ async def update_customer_meta(customer_code: str, customer_meta: CustomerMetaRe
     )
 
 
-# ! TODO: Fix delete customer meta
-# @customers_router.delete("/{customer_code}/meta", response_model=CustomerMetaResponse, description="Delete customer meta by customer_code")
-# async def delete_customer_meta(customer_code: str) -> CustomerMetaResponse:
-#     logger.info(f"Deleting customer meta with customer_code: {customer_code}")
-#     existing_customer_meta = session.query(CustomersMeta).filter(CustomersMeta.customer_code == customer_code).first()
-#     if not existing_customer_meta:
-#         raise HTTPException(status_code=404, detail=f"Customer meta with customer_code {customer_code} not found")
-#     session.delete(existing_customer_meta)
-#     session.commit()
-#     return CustomerMetaResponse(customer_meta=CustomerMetaRequestBody.parse_obj(existing_customer_meta.__dict__), success=True, message="Customer meta deleted successfully")
+@customers_router.delete(
+    "/{customer_code}/meta",
+    response_model=CustomerMetaResponse,
+    description="Delete customer meta by customer_code",
+    dependencies=[Security(AuthHandler().require_any_scope("admin"))],
+)
+async def delete_customer_meta(customer_code: str) -> CustomerMetaResponse:
+    logger.info(f"Deleting customer meta with customer_code: {customer_code}")
+    existing_customer_meta = session.query(CustomersMeta).filter(CustomersMeta.customer_code == customer_code).first()
+    if not existing_customer_meta:
+        raise HTTPException(status_code=404, detail=f"Customer meta with customer_code {customer_code} not found")
+    session.delete(existing_customer_meta)
+    session.commit()
+    return CustomerMetaResponse(
+        customer_meta=CustomerMetaRequestBody.parse_obj(existing_customer_meta.__dict__),
+        success=True,
+        message="Customer meta deleted successfully",
+    )
 
 
 @customers_router.get(
     "/{customer_code}/full",
     response_model=CustomerFullResponse,
     description="Get customer and customer meta by customer_code",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_customer_full(customer_code: str) -> CustomerFullResponse:
     logger.info(f"Fetching customer and customer meta with customer_code: {customer_code}")
@@ -181,7 +234,12 @@ async def get_customer_full(customer_code: str) -> CustomerFullResponse:
 
 
 # Get Agents for the given customer_code
-@customers_router.get("/{customer_code}/agents", response_model=AgentsResponse, description="Get agents for the given customer_code")
+@customers_router.get(
+    "/{customer_code}/agents",
+    response_model=AgentsResponse,
+    description="Get agents for the given customer_code",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
 async def get_agents(customer_code: str) -> AgentsResponse:
     logger.info(f"Fetching agents for customer_code: {customer_code}")
     customer = session.query(Customers).filter(Customers.customer_code == customer_code).first()
@@ -198,6 +256,7 @@ async def get_agents(customer_code: str) -> AgentsResponse:
     "/{customer_code}/agents/healthcheck/wazuh",
     response_model=AgentHealthCheckResponse,
     description="Get agents healthcheck for the given customer_code",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_wazuh_agents_healthcheck(
     customer_code: str,
@@ -221,6 +280,7 @@ async def get_wazuh_agents_healthcheck(
     "/{customer_code}/agents/healthcheck/velociraptor",
     response_model=AgentHealthCheckResponse,
     description="Get agents healthcheck for the given customer_code",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_velociraptor_agents_healthcheck(
     customer_code: str,
