@@ -57,6 +57,7 @@
 					:key="alertsEvent.event.id"
 					:alertsEvent="alertsEvent"
 					@click-event="gotoEventsPage($event)"
+					class="mb-2"
 				/>
 			</template>
 			<template v-else>

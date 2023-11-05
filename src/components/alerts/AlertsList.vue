@@ -48,6 +48,7 @@
 						v-for="alertsSummary of alertsSummaryList"
 						:key="alertsSummary.index_name"
 						:alertsSummary="alertsSummary"
+						class="mb-2"
 					/>
 				</template>
 				<template v-else>
@@ -68,7 +69,12 @@
 			</n-drawer-content>
 		</n-drawer>
 
-		<n-drawer v-model:show="showFiltersDrawer" display-directive="show" style="max-width: 90vw; width: 500px">
+		<n-drawer
+			v-model:show="showFiltersDrawer"
+			display-directive="show"
+			:trap-focus="false"
+			style="max-width: 90vw; width: 500px"
+		>
 			<n-drawer-content title="Alerts filters" closable :native-scrollbar="false">
 				<AlertsFilters :filters="filters">
 					<div class="flex gap-2">
@@ -264,6 +270,27 @@ onBeforeMount(() => {
 	.list {
 		container-type: inline-size;
 		min-height: 200px;
+
+		.alert-summary {
+			animation: alert-summary-fade 0.3s forwards;
+			opacity: 0;
+
+			@for $i from 0 through 20 {
+				&:nth-child(#{$i}) {
+					animation-delay: $i * 0.05s;
+				}
+			}
+
+			@keyframes alert-summary-fade {
+				from {
+					opacity: 0;
+					transform: translateY(10px);
+				}
+				to {
+					opacity: 1;
+				}
+			}
+		}
 	}
 }
 </style>

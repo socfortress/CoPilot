@@ -1,5 +1,5 @@
 <template>
-	<div class="item flex flex-col mb-2 gap-2 px-5 py-3" :class="{ highlight }" :id="'event-' + event.id">
+	<div class="item flex flex-col gap-2 px-5 py-3" :class="{ highlight }" :id="'event-' + event.id">
 		<div class="header-box flex justify-between">
 			<div class="flex items-center gap-3">
 				<n-tooltip trigger="hover">

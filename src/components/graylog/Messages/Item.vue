@@ -1,5 +1,5 @@
 <template>
-	<div class="item flex flex-col mb-2 gap-2 px-5 py-3">
+	<div class="item flex flex-col gap-2 px-5 py-3">
 		<div class="header-box flex justify-between">
 			<div class="caller">{{ message.caller }}</div>
 			<div class="time">{{ formatDate(message.timestamp) }}</div>

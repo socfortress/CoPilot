@@ -135,25 +135,7 @@ function toggleCritical(agentId: string, criticalStatus: boolean) {
 	max-width: 100%;
 	box-sizing: border-box;
 	cursor: pointer;
-	opacity: 0;
 	transition: all 0.3s;
-	animation: agent-card-fade 0.3s forwards;
-
-	@for $i from 0 through 20 {
-		&:nth-child(#{$i}) {
-			animation-delay: $i * 0.05s;
-		}
-	}
-
-	@keyframes agent-card-fade {
-		from {
-			opacity: 0;
-			transform: translateY(10px);
-		}
-		to {
-			opacity: 1;
-		}
-	}
 
 	.wrapper {
 		display: flex;

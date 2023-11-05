@@ -24,7 +24,7 @@
 		</div>
 		<div class="list my-3">
 			<template v-if="messages.length">
-				<MessageItem v-for="msg of messages" :key="msg.id" :message="msg" />
+				<MessageItem v-for="msg of messages" :key="msg.id" :message="msg" class="mb-2" />
 			</template>
 			<template v-else>
 				<n-empty description="No items found" v-if="!loading" />

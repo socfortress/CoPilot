@@ -36,6 +36,7 @@
 					:key="event.id"
 					:event="event"
 					:highlight="event.id === highlight"
+					class="mb-2"
 				/>
 			</template>
 			<template v-else>

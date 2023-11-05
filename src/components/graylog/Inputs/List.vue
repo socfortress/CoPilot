@@ -41,6 +41,7 @@
 						:key="input.id"
 						:input="input"
 						@updated="getData('running')"
+						class="mb-2"
 					/>
 				</template>
 				<template v-else>

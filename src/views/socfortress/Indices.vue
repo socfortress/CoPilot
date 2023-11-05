@@ -19,16 +19,16 @@
 			</div>
 		</div>
 
-		<div class="section">
-			<div class="columns flex column-1200">
+		<n-card class="section overflow-hidden" content-style="padding:0">
+			<div class="columns flex column-1200 !gap-0">
 				<div class="col basis-2/5">
-					<NodeAllocation class="stretchy" />
+					<NodeAllocation class="stretchy" style="border-radius: 0" :bordered="false" />
 				</div>
 				<div class="col basis-3/5 overflow-hidden">
-					<TopIndices :indices="indices" />
+					<TopIndices :indices="indices" style="border-radius: 0" :bordered="false" />
 				</div>
 			</div>
-		</div>
+		</n-card>
 	</div>
 </template>
 
@@ -42,7 +42,7 @@ import ClusterHealth from "@/components/indices/ClusterHealth.vue"
 import Details from "@/components/indices/Details.vue"
 import UnhealthyIndices from "@/components/indices/UnhealthyIndices.vue"
 import TopIndices from "@/components/indices/TopIndices.vue"
-import { useMessage } from "naive-ui"
+import { useMessage, NCard } from "naive-ui"
 import { useRoute } from "vue-router"
 
 const message = useMessage()
