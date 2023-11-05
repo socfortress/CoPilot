@@ -12,7 +12,12 @@
 					<div class="flex flex-col gap-1">
 						<div class="box">
 							event_definition_id:
-							<code>{{ alertsEvent.event.event_definition_id }}</code>
+							<code
+								class="cursor-pointer text-primary-color"
+								@click="gotoEventsPage(alertsEvent.event.event_definition_id)"
+							>
+								{{ alertsEvent.event.event_definition_id }}
+							</code>
 						</div>
 						<div class="box">
 							event_definition_type:
@@ -24,7 +29,12 @@
 						</div>
 						<div class="box">
 							index_name:
-							<code>{{ alertsEvent.index_name }}</code>
+							<code
+								class="cursor-pointer text-primary-color"
+								@click="gotoIndicesPage(alertsEvent.index_name)"
+							>
+								{{ alertsEvent.index_name }}
+							</code>
 						</div>
 						<div class="box">
 							index_type:
@@ -79,15 +89,30 @@ import { NPopover } from "naive-ui"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
 import Icon from "@/components/common/Icon.vue"
+import { useRouter } from "vue-router"
 
 const { alertsEvent } = defineProps<{ alertsEvent: AlertsEventElement }>()
 
+const emit = defineEmits<{
+	(e: "clickEvent", value: string): void
+}>()
+
 const InfoIcon = "carbon:information"
 const TimeIcon = "carbon:time"
+
+const router = useRouter()
 const dFormats = useSettingsStore().dateFormat
 
 function formatDate(timestamp: string): string {
 	return dayjs(timestamp).format(dFormats.datetimesec)
+}
+
+function gotoIndicesPage(index: string) {
+	router.push(`/indices?index_name=${index}`).catch(() => {})
+}
+
+function gotoEventsPage(event_definition_id: string) {
+	emit("clickEvent", event_definition_id)
 }
 </script>
 
@@ -114,6 +139,11 @@ function formatDate(timestamp: string): string {
 			&:hover {
 				color: var(--primary-color);
 			}
+		}
+
+		.actionable {
+			cursor: pointer;
+			color: var(--primary-color);
 		}
 	}
 	.main-box {

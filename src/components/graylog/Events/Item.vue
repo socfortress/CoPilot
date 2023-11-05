@@ -1,5 +1,5 @@
 <template>
-	<div class="item flex flex-col mb-2 gap-2 px-5 py-3">
+	<div class="item flex flex-col mb-2 gap-2 px-5 py-3" :class="{ highlight }" :id="'event-' + event.id">
 		<div class="header-box flex justify-between">
 			<div class="flex items-center gap-3">
 				<n-tooltip trigger="hover">
@@ -49,6 +49,7 @@
 							:value="event?.config?.query"
 							type="textarea"
 							readonly
+							placeholder="Empty"
 							:autosize="{
 								minRows: 3,
 								maxRows: 10
@@ -71,14 +72,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue"
+import { ref, toRefs } from "vue"
 import type { EventDefinition } from "@/types/graylog/event-definition.d"
 import Icon from "@/components/common/Icon.vue"
 import { SimpleJsonViewer } from "vue-sjv"
 import "@/assets/scss/vuesjv-override.scss"
 import { NModal, NTabs, NTabPane, NInput, NTooltip } from "naive-ui"
 
-const { event } = defineProps<{ event: EventDefinition }>()
+const props = defineProps<{ event: EventDefinition; highlight: boolean | null | undefined }>()
+const { event, highlight } = toRefs(props)
 
 const InfoIcon = "carbon:information"
 
@@ -102,8 +104,8 @@ const showDetails = ref(false)
 			height: 20px;
 			border-radius: 99999px;
 			text-align: center;
-			line-height: 20px;
-			font-size: 12px;
+			line-height: 19px;
+			font-size: 11px;
 		}
 		.id {
 			word-break: break-word;
@@ -135,6 +137,11 @@ const showDetails = ref(false)
 			text-align: right;
 			color: var(--fg-secondary-color);
 		}
+	}
+
+	&.highlight {
+		background-color: var(--primary-005-color);
+		box-shadow: 0px 0px 0px 1px inset var(--primary-030-color);
 	}
 
 	&:hover {

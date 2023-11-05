@@ -60,7 +60,6 @@ const emit = defineEmits<{
 const props = defineProps<{ pipeline: PipelineFull }>()
 const { pipeline } = toRefs(props)
 
-const TimeIcon = "carbon:time"
 const RulesIcon = "ic:outline-swipe-right-alt"
 
 const dFormats = useSettingsStore().dateFormat

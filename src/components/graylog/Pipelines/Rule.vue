@@ -69,6 +69,7 @@
 					:value="rule.source"
 					type="textarea"
 					readonly
+					placeholder="Empty"
 					:autosize="{
 						minRows: 3,
 						maxRows: 10

@@ -5,7 +5,7 @@
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
 						<div class="bg-color border-radius">
-							<n-button size="small">
+							<n-button size="small" class="!cursor-help">
 								<template #icon>
 									<Icon :name="InfoIcon"></Icon>
 								</template>
@@ -56,6 +56,7 @@
 					v-for="alertsEvent of alertsEvents"
 					:key="alertsEvent.event.id"
 					:alertsEvent="alertsEvent"
+					@click-event="gotoEventsPage($event)"
 				/>
 			</template>
 			<template v-else>
@@ -83,6 +84,10 @@ import { useResizeObserver } from "@vueuse/core"
 import dayjs from "@/utils/dayjs"
 import Icon from "@/components/common/Icon.vue"
 import type { AlertsQuery, AlertsEventElement } from "@/types/graylog/alerts.d"
+
+const emit = defineEmits<{
+	(e: "clickEvent", value: string): void
+}>()
 
 const message = useMessage()
 const loading = ref(false)
@@ -139,6 +144,10 @@ const timeOptions = [
 		value: year
 	}
 ]
+
+function gotoEventsPage(event_definition_id: string) {
+	emit("clickEvent", event_definition_id)
+}
 
 function getData(page: number, pageSize: number, timerange: number) {
 	loading.value = true

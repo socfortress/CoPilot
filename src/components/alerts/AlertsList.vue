@@ -1,11 +1,11 @@
 <template>
-	<n-spin :show="loading">
+	<div class="alerts-list">
 		<div class="header flex items-center justify-end gap-2" ref="header">
 			<div class="info grow flex gap-5">
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
 						<div class="bg-color border-radius">
-							<n-button size="small">
+							<n-button size="small" class="!cursor-help">
 								<template #icon>
 									<Icon :name="InfoIcon"></Icon>
 								</template>
@@ -24,117 +24,112 @@
 					</div>
 				</n-popover>
 			</div>
-			<div class="filters flex gap-2">
-				<n-form-item label="Filter key/value" size="small">
-					<n-input-group>
-						<n-select
-							v-model:value="alertField"
-							:options="alertFieldOptions"
-							filterable
-							clearable
-							tag
-							:render-tag="renderFieldTag"
-							:render-label="renderFieldLabel"
-							placeholder="Alert Field"
-							class="!min-w-48"
-						>
-							<template #action>
-								<n-button size="small" @click="clearFieldsHistory()" quaternary class="!w-full">
-									<template #icon>
-										<Icon :name="ClearIcon"></Icon>
-									</template>
-									Clear history
-								</n-button>
-							</template>
-							<template #empty>
-								<n-empty description="Empty Field history" class="text-center"></n-empty>
-							</template>
-						</n-select>
-						<n-input v-model:value="alertValue" clearable placeholder="Field value" />
-					</n-input-group>
-				</n-form-item>
-				<n-form-item label="Agent" size="small">
-					<n-select
-						size="small"
-						v-model:value="hostname"
-						:options="hostnameOptions"
-						placeholder="Agents list"
-						clearable
-						class="!w-36"
-					/>
-				</n-form-item>
-				<n-form-item label="Index" size="small">
-					<n-select
-						size="small"
-						v-model:value="indexname"
-						:options="indexnameOptions"
-						clearable
-						filterable
-						placeholder="Indices list"
-						class="!w-36"
-					/>
-				</n-form-item>
-				<n-form-item label="Alerts for index" size="small">
-					<n-select size="small" v-model:value="maxAlerts" :options="maxAlertsOptions" class="!w-36" />
-				</n-form-item>
-				<n-form-item label="Time range" size="small">
-					<n-select size="small" v-model:value="timerange" :options="timerangeOptions" class="!w-32" />
-				</n-form-item>
+			<div class="actions flex gap-2 items-center">
+				<n-button size="small" @click="showStatsDrawer = true">
+					<template #icon>
+						<Icon :name="StatsIcon" :size="14"></Icon>
+					</template>
+					Stats
+				</n-button>
+				<n-button size="small" @click="showFiltersDrawer = true">
+					<template #icon>
+						<Icon :name="FilterIcon" :size="15"></Icon>
+					</template>
+					Filters
+				</n-button>
 			</div>
 		</div>
-		<div class="list my-3">
-			<template v-if="alertsSummaryList.length">
-				<AlertsSummaryItem
-					v-for="alertsSummary of alertsSummaryList"
-					:key="alertsSummary.index_name"
-					:alertsSummary="alertsSummary"
-				/>
-			</template>
-			<template v-else>
-				<n-empty description="No items found" v-if="!loading" />
-			</template>
-		</div>
-	</n-spin>
+		<n-spin :show="loading">
+			<template #description>Alerts are being fetched, this may take up to 1 minute.</template>
+
+			<div class="list my-3">
+				<template v-if="alertsSummaryList.length">
+					<AlertsSummaryItem
+						v-for="alertsSummary of alertsSummaryList"
+						:key="alertsSummary.index_name"
+						:alertsSummary="alertsSummary"
+					/>
+				</template>
+				<template v-else>
+					<n-empty description="No items found" v-if="!loading" />
+				</template>
+			</div>
+		</n-spin>
+
+		<n-drawer
+			v-model:show="showStatsDrawer"
+			:width="700"
+			style="max-width: 90vw"
+			:trap-focus="false"
+			display-directive="show"
+		>
+			<n-drawer-content title="Alerts stats" closable body-content-style="padding:0">
+				<div class="stats flex gap-2">stats...</div>
+			</n-drawer-content>
+		</n-drawer>
+
+		<n-drawer v-model:show="showFiltersDrawer" display-directive="show" style="max-width: 90vw; width: 500px">
+			<n-drawer-content title="Alerts filters" closable :native-scrollbar="false">
+				<AlertsFilters :filters="filters">
+					<div class="flex gap-2">
+						<n-form-item label="Agent" class="basis-1/2">
+							<n-select
+								v-model:value="filters.agentHostname"
+								:options="agentHostnameOptions"
+								placeholder="Agents list"
+								clearable
+								:loading="loadingAgents"
+							/>
+						</n-form-item>
+						<n-form-item label="Index" class="basis-1/2">
+							<n-select
+								v-model:value="filters.indexName"
+								:options="indexNameOptions"
+								clearable
+								filterable
+								placeholder="Indices list"
+								:loading="loadingIndex"
+							/>
+						</n-form-item>
+					</div>
+				</AlertsFilters>
+			</n-drawer-content>
+		</n-drawer>
+	</div>
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, toRefs, watch, type VNodeChild, h, computed } from "vue"
-import {
-	useMessage,
-	NSpin,
-	NSelect,
-	NPopover,
-	NButton,
-	NInput,
-	NInputGroup,
-	NEmpty,
-	NFormItem,
-	type SelectOption
-} from "naive-ui"
+import { ref, onBeforeMount, toRefs, computed } from "vue"
+import { useMessage, NSpin, NPopover, NButton, NEmpty, NDrawer, NDrawerContent, NFormItem, NSelect } from "naive-ui"
 import Api from "@/api"
+import AlertsFilters from "./AlertsFilters.vue"
 import AlertsSummaryItem, { type AlertsSummaryExt } from "./AlertsSummary.vue"
 import { useResizeObserver } from "@vueuse/core"
 import Icon from "@/components/common/Icon.vue"
 import type { AlertsSummary } from "@/types/alerts.d"
-import { useStorage } from "@vueuse/core"
-import type { AlertsQueryTimeRange, AlertsSummaryQuery } from "@/api/alerts"
-import _uniqBy from "lodash/uniqBy"
+import type { AlertsSummaryQuery } from "@/api/alerts"
 import { alerts_summary } from "./mock"
 import type { IndexStats } from "@/types/indices.d"
 import { nextTick } from "vue"
+import type { Agent } from "@/types/agents.d"
 
 const props = defineProps<{ agentHostname?: string }>()
 const { agentHostname } = toRefs(props)
 
 const message = useMessage()
 const loadingIndex = ref(false)
+const loadingAgents = ref(false)
 const loading = ref(false)
-const indices = ref<IndexStats[] | null>(null)
+const indices = ref<IndexStats[]>([])
+const agents = ref<Agent[]>([])
 const alertsSummaryList = ref<AlertsSummaryExt[]>([])
 const header = ref()
+const showFiltersDrawer = ref(false)
+const showStatsDrawer = ref(false)
 
 const InfoIcon = "carbon:information"
-const ClearIcon = "mdi:broom"
+const FilterIcon = "carbon:filter-edit"
+const StatsIcon = "carbon:chart-column"
 
 const totalAlertsSummary = computed<number>(() => {
 	return alertsSummaryList.value.length || 0
@@ -145,73 +140,15 @@ const totalAlerts = computed<number>(() => {
 	}, 0)
 })
 
-const timerangeOptions: { label: string; value: AlertsQueryTimeRange }[] = [
-	{ label: "1 Hour", value: "1h" },
-	{ label: "6 Hours", value: "6h" },
-	{ label: "12 Hours", value: "12h" },
-	{ label: "1 Day", value: "1d" },
-	{ label: "2 Day", value: "2d" },
-	{ label: "5 Day", value: "5d" },
-	{ label: "1 Week", value: "1w" },
-	{ label: "2 Week", value: "2w" },
-	{ label: "3 Week", value: "3w" },
-	{ label: "4 Week", value: "4w" }
-]
-const timerange = ref<AlertsQueryTimeRange>(timerangeOptions[2].value)
+const filters = ref<AlertsSummaryQuery>({})
 
-const maxAlertsOptions = [
-	{ label: "1 Alert", value: 1 },
-	{ label: "5 Alert", value: 5 },
-	{ label: "10 Alert", value: 10 },
-	{ label: "20 Alert", value: 20 }
-]
-const maxAlerts = ref<number>(maxAlertsOptions[1].value)
+const agentHostnameOptions = computed(() => {
+	return (agents.value || []).map(o => ({ value: o.hostname, label: o.hostname }))
+})
 
-const hostnameOptions = ref<{ label: string; value: string }[]>([])
-const hostname = ref<string | null>(null)
-
-const indexnameOptions = computed(() => {
+const indexNameOptions = computed(() => {
 	return (indices.value || []).map(o => ({ value: o.index, label: o.index }))
 })
-const indexname = ref<string | null>(null)
-
-const alertFieldOptions = useStorage<{ label: string; value: string }[]>("alert-fields-history", [], localStorage)
-const alertField = ref<string | null>(null)
-const alertValue = ref<string | null>(null)
-
-function clearFieldsHistory(field?: string) {
-	if (!field) {
-		alertFieldOptions.value = []
-	} else {
-		alertFieldOptions.value = alertFieldOptions.value.filter(o => o.label !== field)
-	}
-}
-
-function renderFieldTag({ option }: { option: SelectOption; handleClose: () => void }): VNodeChild {
-	return h("div", {}, [option.label as string])
-}
-
-function renderFieldLabel(option: SelectOption): VNodeChild {
-	if (option.type === "group") return option.label + "(Cool!)"
-	return [
-		h(Icon, {
-			style: {
-				verticalAlign: "-0.20em",
-				marginRight: "4px",
-				opacity: 0.6
-			},
-			name: `carbon:close`,
-			onClick(e: Event) {
-				e.stopImmediatePropagation()
-				e.stopPropagation()
-				clearFieldsHistory(option.label?.toString())
-			}
-		}),
-		option.label?.toString()
-	]
-}
-
-alertsSummaryList.value = alerts_summary as AlertsSummary[]
 
 function addIndexInfo() {
 	if (indices.value?.length && alertsSummaryList.value.length) {
@@ -225,17 +162,8 @@ function addIndexInfo() {
 function getData() {
 	loading.value = true
 
-	const filter: AlertsSummaryQuery = {}
-
-	indexname.value && (filter.indexName = indexname.value)
-	hostname.value && (filter.agentHostname = hostname.value)
-	maxAlerts.value && (filter.maxAlerts = maxAlerts.value)
-	timerange.value && (filter.timerange = timerange.value)
-	alertField.value && (filter.alertField = alertField.value)
-	alertValue.value && (filter.alertValue = alertValue.value)
-
 	Api.alerts
-		.getAll(filter)
+		.getAll(filters.value)
 		.then(res => {
 			if (res.data.success) {
 				alertsSummaryList.value = res.data?.alerts_summary || []
@@ -262,7 +190,7 @@ function getIndices() {
 		.getIndices()
 		.then(res => {
 			if (res.data.success) {
-				indices.value = res.data.indices_stats
+				indices.value = res.data.indices_stats || []
 
 				nextTick(() => {
 					addIndexInfo()
@@ -288,6 +216,26 @@ function getIndices() {
 		})
 }
 
+function getAgents() {
+	loadingAgents.value = true
+
+	Api.agents
+		.getAgents()
+		.then(res => {
+			if (res.data.success) {
+				agents.value = res.data.agents || []
+			} else {
+				message.error(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			loadingAgents.value = false
+		})
+}
+
 useResizeObserver(header, entries => {
 	const entry = entries[0]
 	const { width } = entry.contentRect
@@ -295,28 +243,27 @@ useResizeObserver(header, entries => {
 	console.log(width)
 })
 
-watch(alertField, val => {
-	if (val) {
-		alertFieldOptions.value = _uniqBy(
-			[...JSON.parse(JSON.stringify(alertFieldOptions.value)), { label: val, value: val }],
-			o => o.label
-		)
-	}
-})
 /*
 watch([currentPage, pageSize, timerange], ([page, pageSize, timerange]) => {
 	getData(page, pageSize, timerange)
 })
 */
 onBeforeMount(() => {
-	agentHostname?.value && (hostname.value = agentHostname.value)
-	//getData()
+	agentHostname?.value && (filters.value.agentHostname = agentHostname.value)
+
+	alertsSummaryList.value = alerts_summary as AlertsSummary[]
+	// getData()
+
 	getIndices()
+	getAgents()
 })
 </script>
 
 <style lang="scss" scoped>
-.list {
-	container-type: inline-size;
+.alerts-list {
+	.list {
+		container-type: inline-size;
+		min-height: 200px;
+	}
 }
 </style>
