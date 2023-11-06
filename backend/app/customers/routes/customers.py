@@ -122,7 +122,9 @@ async def delete_customer(customer_code: str) -> CustomerResponse:
     session.delete(existing_customer)
     session.commit()
     return CustomerResponse(
-        customer=CustomerRequestBody.parse_obj(existing_customer.__dict__), success=True, message="Customer deleted successfully",
+        customer=CustomerRequestBody.parse_obj(existing_customer.__dict__),
+        success=True,
+        message="Customer deleted successfully",
     )
 
 

@@ -1,4 +1,8 @@
+import requests
 import uvicorn
+from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.interval import IntervalTrigger
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi import HTTPException
@@ -42,17 +46,34 @@ from app.integrations.alert_escalation.routes.general_alert import (
     integration_general_alerts_router,
 )
 from app.integrations.dnstwist.routes.analyze import dnstwist_router
+from app.middleware.logger import log_requests
 from app.smtp.routes.configure import smtp_router
 from app.utils import ErrorType
 from app.utils import Logger
 from app.utils import ValidationErrorItem
 from app.utils import ValidationErrorResponse
 from app.utils import logs_router
+from settings import SQLALCHEMY_DATABASE_URI
 
 auth_handler = AuthHandler()
 
 
 app = FastAPI(description="CoPilot API", version="0.1.0", title="CoPilot API")
+
+# Initialize the scheduler with your preferred settings
+jobstores = {"default": SQLAlchemyJobStore(url=SQLALCHEMY_DATABASE_URI)}
+
+# Initialize the scheduler with the job store
+scheduler = AsyncIOScheduler(jobstores=jobstores)
+
+
+# Define the function to be scheduled
+def scheduled_task():
+    # Replace with your actual endpoint you want to call
+    response = requests.get("http://127.0.0.1:5000/agents/sync")
+    # Log the response or perform actions as needed
+    print(response.json())
+
 
 # Allow all origins, methods and headers
 app.add_middleware(
@@ -65,59 +86,7 @@ app.add_middleware(
 
 
 ################## ! Middleware LOGGING TO `log_entry` table ! ##################
-# Constants
-EXCLUDED_PATHS = ["/auth/token", "/auth/register"]
-INTERNAL_SERVER_ERROR = 500
-
-
-async def process_request(request: Request, call_next, session, logger_instance):
-    response = await call_next(request)
-    user_id = await logger_instance.get_user_id_from_request(request)
-    return response, user_id
-
-
-def is_excluded_path(path: str) -> bool:
-    """Check if the request path is in the list of excluded paths."""
-    return path in EXCLUDED_PATHS
-
-
-async def handle_exception(e, user_id, request, logger_instance):
-    """
-    Handle exceptions that occur during request processing.
-    """
-    user_id = await logger_instance.get_user_id_from_request(request) if user_id is None else user_id
-    await logger_instance.log_error(user_id, request, e)
-    if isinstance(e, HTTPException):
-        status_code = e.status_code
-    else:
-        status_code = INTERNAL_SERVER_ERROR
-    return JSONResponse(status_code=status_code, content={"message": str(e), "success": False})
-
-
-@app.middleware("http")
-async def log_requests(request: Request, call_next):
-    """
-    Middleware for logging requests.
-    """
-    # Skip logging for OPTIONS requests
-    if request.method == "OPTIONS":
-        return await call_next(request)
-
-    with Session(engine) as session:
-        logger_instance = Logger(session, auth_handler)
-        user_id = None
-
-        try:
-            if not is_excluded_path(request.url.path):
-                response, user_id = await process_request(request, call_next, session, logger_instance)
-            else:
-                response = await call_next(request)
-        except Exception as e:
-            return await handle_exception(e, user_id, request, logger_instance)
-
-        await logger_instance.log_route_access(user_id, request, response)
-
-    return response if response else await call_next(request)
+app.middleware("http")(log_requests)  # using the imported middleware
 
 
 ################## ! Exception Handlers ! ##################
@@ -199,6 +168,10 @@ app.include_router(logs_router, prefix="/logs", tags=["logs"])
 @app.on_event("startup")
 async def init_db():
     create_tables(engine)
+
+    logger.info("Starting scheduler")
+    scheduler.add_job(scheduled_task, "interval", minutes=1)
+    scheduler.start()
 
 
 @app.get("/")
