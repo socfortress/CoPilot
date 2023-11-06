@@ -8,11 +8,6 @@ const alerts_summary = [
 				_id: "54842c0a-7bd6-11ee-93bc-86000046278a",
 				_score: null,
 				_source: {
-					agent_id: "070",
-					agent_ip: "202.43.110.138",
-					agent_name: "web1",
-					agent_labels_customer: "wso4vxhq",
-
 					rule_level: 12,
 					rule_description:
 						"Possible code injection on explorer.exe by C:\\\\Program Files\\\\VMware\\\\VMware Tools\\\\vmtoolsd.exe",
@@ -23,6 +18,11 @@ const alerts_summary = [
 
 					syslog_type: "wazuh",
 					syslog_level: "ALERT",
+
+					agent_id: "070",
+					agent_ip: "202.43.110.138",
+					agent_name: "web1",
+					agent_labels_customer: "wso4vxhq",
 
 					source: "10.255.255.13",
 					streams: ["650d3da25e9a2d550c6d6491"],

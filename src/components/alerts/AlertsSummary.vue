@@ -14,7 +14,7 @@
 		</div>
 		<div class="main-box">
 			<div class="alert-list" :class="{ expand: showAllAlerts }">
-				<n-scrollbar class="list-scroll">
+				<n-scrollbar class="list-scroll" trigger="none">
 					<Alert v-for="alert of alertsSummary.alerts" :key="alert._id" :alert="alert" />
 				</n-scrollbar>
 
@@ -106,7 +106,7 @@ function gotoIndicesPage(index: string) {
 				height: 100%;
 				width: 100%;
 				background: rgba(var(--bg-color-rgb), 0.6);
-				background: linear-gradient(transparent 0%, var(--bg-color) 95%);
+				background: linear-gradient(transparent 0%, var(--bg-color) 85%);
 				display: flex;
 				align-items: center;
 				text-align: center;
@@ -138,7 +138,7 @@ function gotoIndicesPage(index: string) {
 	}
 
 	&:hover {
-		box-shadow: 0px 0px 0px 1px var(--primary-color);
+		//box-shadow: 0px 0px 0px 1px var(--primary-color);
 	}
 
 	@container (max-width: 650px) {
