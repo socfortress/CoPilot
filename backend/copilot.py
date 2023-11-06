@@ -46,6 +46,8 @@ from app.integrations.alert_escalation.routes.general_alert import (
     integration_general_alerts_router,
 )
 from app.integrations.dnstwist.routes.analyze import dnstwist_router
+from app.middleware.exception_handlers import custom_http_exception_handler
+from app.middleware.exception_handlers import validation_exception_handler
 from app.middleware.logger import log_requests
 from app.smtp.routes.configure import smtp_router
 from app.utils import ErrorType
@@ -90,49 +92,8 @@ app.middleware("http")(log_requests)  # using the imported middleware
 
 
 ################## ! Exception Handlers ! ##################
-# Utility function to get user_id from request
-async def get_user_id_from_request(request: Request, session, logger_instance):
-    return await logger_instance.get_user_id_from_request(request)
-
-
-@app.exception_handler(HTTPException)
-async def custom_http_exception_handler(request: Request, exc: HTTPException):
-    with Session(engine) as session:
-        logger_instance = Logger(session, auth_handler)
-        user_id = await get_user_id_from_request(request, session, logger_instance)
-        await logger_instance.log_error(user_id, request, exc.detail)
-
-    return JSONResponse(
-        status_code=exc.status_code,
-        content={
-            "success": False,
-            "message": exc.detail,
-        },
-    )
-
-
-@app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    errors = exc.errors()
-    details = []
-
-    for error in errors:
-        field = error["loc"][-1]
-        error_type = ErrorType(error["type"])
-        details.append(ValidationErrorItem(field=field, error_type=error_type))
-
-    # Extract the first message from details for use in ValidationErrorResponse
-    main_message = details[0].message if details else "Validation Error"
-
-    with Session(engine) as session:
-        logger_instance = Logger(session, auth_handler)
-        user_id = await get_user_id_from_request(request, session, logger_instance)
-        await logger_instance.log_error(user_id, request, main_message)
-
-    return JSONResponse(
-        status_code=422,
-        content=ValidationErrorResponse(message=main_message, details=details).dict(),
-    )
+app.add_exception_handler(HTTPException, custom_http_exception_handler)
+app.add_exception_handler(RequestValidationError, validation_exception_handler)
 
 
 ################## ! INCLUDE ROUTES ! ##################

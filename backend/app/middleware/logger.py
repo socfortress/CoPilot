@@ -1,30 +1,32 @@
-from fastapi import Request, HTTPException
+from fastapi import HTTPException
+from fastapi import Request
 from fastapi.responses import JSONResponse
 from sqlmodel import Session
 
-from app.db.db_session import engine
 from app.auth.utils import AuthHandler
+from app.db.db_session import engine
 from app.utils import Logger
-from app.utils import ErrorType
-from app.utils import ValidationErrorItem
-from app.utils import ValidationErrorResponse
 
 EXCLUDED_PATHS = ["/auth/token", "/auth/register"]
 INTERNAL_SERVER_ERROR = 500
+
 
 async def process_request(request: Request, call_next, session, logger_instance):
     response = await call_next(request)
     user_id = await logger_instance.get_user_id_from_request(request)
     return response, user_id
 
+
 def is_excluded_path(path: str) -> bool:
     return path in EXCLUDED_PATHS
+
 
 async def handle_exception(e, user_id, request, logger_instance):
     user_id = await logger_instance.get_user_id_from_request(request) if user_id is None else user_id
     await logger_instance.log_error(user_id, request, e)
     status_code = e.status_code if isinstance(e, HTTPException) else INTERNAL_SERVER_ERROR
     return JSONResponse(status_code=status_code, content={"message": str(e), "success": False})
+
 
 async def log_requests(request: Request, call_next):
     if request.method == "OPTIONS":

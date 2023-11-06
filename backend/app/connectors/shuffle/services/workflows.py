@@ -27,7 +27,7 @@ def get_workflows() -> WorkflowsResponse:
     logger.info("Getting workflows")
 
     try:
-        response = send_get_request("/api/v1/workflows")
+        response = send_get_request("/api/v1/workflow")
         if response is None:
             return WorkflowsResponse(success=False, message="Failed to get workflows", workflows=[])
 
