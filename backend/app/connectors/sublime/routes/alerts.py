@@ -1,6 +1,8 @@
 from fastapi import APIRouter
+from fastapi import Security
 from loguru import logger
 
+from app.auth.utils import AuthHandler
 from app.connectors.sublime.schema.alerts import AlertRequestBody
 from app.connectors.sublime.schema.alerts import AlertResponseBody
 from app.connectors.sublime.schema.alerts import SublimeAlertsResponse
@@ -23,7 +25,12 @@ async def receive_sublime_alert(alert_request_body: AlertRequestBody) -> AlertRe
     return store_sublime_alert(alert_request_body)
 
 
-@sublime_alerts_router.get("/alerts", response_model=SublimeAlertsResponse, description="Get all alerts")
+@sublime_alerts_router.get(
+    "/alerts",
+    response_model=SublimeAlertsResponse,
+    description="Get all alerts",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
 async def get_sublime_alerts() -> SublimeAlertsResponse:
     """
     Endpoint to retrieve alerts from the `sublimealerts` table.

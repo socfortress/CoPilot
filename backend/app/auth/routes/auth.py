@@ -22,11 +22,11 @@ from app.db.db_session import session
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 1440
 
-user_router = APIRouter()
+auth_router = APIRouter()
 auth_handler = AuthHandler()
 
 
-@user_router.post("/token", response_model=Token)
+@auth_router.post("/token", response_model=Token)
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
     user = auth_handler.authenticate_user(form_data.username, form_data.password)
     if not user:
@@ -40,14 +40,14 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@user_router.get("/refresh", response_model=Token)
+@auth_router.get("/refresh", response_model=Token)
 async def refresh_token(current_user: User = Depends(auth_handler.get_current_user)):
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = auth_handler.encode_token(current_user.username, access_token_expires)
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@user_router.post("/register", response_model=UserResponse, status_code=201, description="Register new user")
+@auth_router.post("/register", response_model=UserResponse, status_code=201, description="Register new user")
 def register(user: UserInput):
     users = select_all_users()
     if any(x.username == user.username for x in users):
@@ -59,7 +59,7 @@ def register(user: UserInput):
     return {"message": "User created successfully", "success": True}
 
 
-@user_router.post("/login", response_model=UserLoginResponse, description="Login user", deprecated=True)
+@auth_router.post("/login", response_model=UserLoginResponse, description="Login user", deprecated=True)
 def login(user: UserLogin):
     user_found = find_user(user.username)
     if not user_found:

@@ -18,10 +18,10 @@ def verify_case_exists(case_id: int) -> int:
     return case_id
 
 
-assets_router = APIRouter()
+dfir_iris_assets_router = APIRouter()
 
 
-@assets_router.get(
+@dfir_iris_assets_router.get(
     "/{case_id}",
     response_model=AssetResponse,
     description="Get all assets for a case",

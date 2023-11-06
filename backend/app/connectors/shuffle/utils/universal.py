@@ -3,6 +3,7 @@ from typing import Dict
 from typing import Optional
 
 import requests
+from fastapi import HTTPException
 from loguru import logger
 
 from app.connectors.utils import get_connector_info_from_db
@@ -74,7 +75,7 @@ def send_get_request(endpoint: str, params: Optional[Dict[str, Any]] = None, con
     logger.info(f"Sending GET request to {endpoint}")
     attributes = get_connector_info_from_db(connector_name)
     if attributes is None:
-        logger.error("No Graylog connector found in the database")
+        logger.error("No Shuffle connector found in the database")
         return None
     try:
         HEADERS = {
@@ -89,17 +90,18 @@ def send_get_request(endpoint: str, params: Optional[Dict[str, Any]] = None, con
         return {"data": response.json(), "success": True, "message": "Successfully retrieved data"}
     except Exception as e:
         logger.error(f"Failed to send GET request to {endpoint} with error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to send GET request to {endpoint} with error: {e}")
         return {"success": False, "message": f"Failed to send GET request to {endpoint} with error: {e}"}
 
 
-def send_post_request(endpoint: str, data: Dict[str, Any] = None, connector_name: str = "Graylog") -> Dict[str, Any]:
+def send_post_request(endpoint: str, data: Dict[str, Any] = None, connector_name: str = "Shuffle") -> Dict[str, Any]:
     """
-    Sends a POST request to the Graylog service.
+    Sends a POST request to the Shuffle service.
 
     Args:
         endpoint (str): The endpoint to send the POST request to.
         data (Dict[str, Any]): The data to send with the POST request.
-        connector_name (str, optional): The name of the connector to use. Defaults to "Graylog".
+        connector_name (str, optional): The name of the connector to use. Defaults to "Shuffle".
 
     Returns:
         Dict[str, Any]: The response from the POST request.
@@ -107,8 +109,8 @@ def send_post_request(endpoint: str, data: Dict[str, Any] = None, connector_name
     logger.info(f"Sending POST request to {endpoint}")
     attributes = get_connector_info_from_db(connector_name)
     if attributes is None:
-        logger.error("No Graylog connector found in the database")
-        return {"success": False, "message": "No Graylog connector found in the database"}
+        logger.error("No Shuffle connector found in the database")
+        return {"success": False, "message": "No Shuffle connector found in the database"}
 
     try:
         HEADERS = {
@@ -136,17 +138,18 @@ def send_post_request(endpoint: str, data: Dict[str, Any] = None, connector_name
     except Exception as e:
         logger.debug(f"Response: {response}")
         logger.error(f"Failed to send POST request to {endpoint} with error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to send POST request to {endpoint} with error: {e}")
         return {"success": False, "message": f"Failed to send POST request to {endpoint} with error: {e}"}
 
 
-def send_delete_request(endpoint: str, params: Optional[Dict[str, Any]] = None, connector_name: str = "Graylog") -> Dict[str, Any]:
+def send_delete_request(endpoint: str, params: Optional[Dict[str, Any]] = None, connector_name: str = "Shuffle") -> Dict[str, Any]:
     """
-    Sends a DELETE request to the Graylog service.
+    Sends a DELETE request to the Shuffle service.
 
     Args:
         endpoint (str): The endpoint to send the DELETE request to.
         params (Optional[Dict[str, Any]], optional): The parameters to send with the DELETE request. Defaults to None.
-        connector_name (str, optional): The name of the connector to use. Defaults to "Graylog".
+        connector_name (str, optional): The name of the connector to use. Defaults to "Shuffle".
 
     Returns:
         Dict[str, Any]: The response from the DELETE request.
@@ -154,7 +157,7 @@ def send_delete_request(endpoint: str, params: Optional[Dict[str, Any]] = None, 
     logger.info(f"Sending DELETE request to {endpoint}")
     attributes = get_connector_info_from_db(connector_name)
     if attributes is None:
-        logger.error("No Graylog connector found in the database")
+        logger.error("No Shuffle connector found in the database")
         return None
     try:
         HEADERS = {
@@ -173,17 +176,18 @@ def send_delete_request(endpoint: str, params: Optional[Dict[str, Any]] = None, 
         return {"data": response.json(), "success": True, "message": "Successfully retrieved data"}
     except Exception as e:
         logger.error(f"Failed to send DELETE request to {endpoint} with error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to send DELETE request to {endpoint} with error: {e}")
         return {"success": False, "message": f"Failed to send DELETE request to {endpoint} with error: {e}"}
 
 
-def send_put_request(endpoint: str, data: Optional[Dict[str, Any]] = None, connector_name: str = "Graylog") -> Dict[str, Any]:
+def send_put_request(endpoint: str, data: Optional[Dict[str, Any]] = None, connector_name: str = "Shuffle") -> Dict[str, Any]:
     """
-    Sends a PUT request to the Graylog service.
+    Sends a PUT request to the Shuffle service.
 
     Args:
         endpoint (str): The endpoint to send the PUT request to.
         data (Optional[Dict[str, Any]]): The data to send with the PUT request.
-        connector_name (str, optional): The name of the connector to use. Defaults to "Graylog".
+        connector_name (str, optional): The name of the connector to use. Defaults to "Shuffle".
 
     Returns:
         Dict[str, Any]: The response from the PUT request.
@@ -191,7 +195,7 @@ def send_put_request(endpoint: str, data: Optional[Dict[str, Any]] = None, conne
     logger.info(f"Sending PUT request to {endpoint}")
     attributes = get_connector_info_from_db(connector_name)
     if attributes is None:
-        logger.error("No Graylog connector found in the database")
+        logger.error("No Shuffle connector found in the database")
         return None
     try:
         HEADERS = {
@@ -210,4 +214,5 @@ def send_put_request(endpoint: str, data: Optional[Dict[str, Any]] = None, conne
         return {"data": response.json(), "success": True, "message": "Successfully retrieved data"}
     except Exception as e:
         logger.error(f"Failed to send PUT request to {endpoint} with error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to send PUT request to {endpoint} with error: {e}")
         return {"success": False, "message": f"Failed to send PUT request to {endpoint} with error: {e}"}

@@ -1,7 +1,9 @@
 from fastapi import APIRouter
 from fastapi import HTTPException
+from fastapi import Security
 from loguru import logger
 
+from app.auth.utils import AuthHandler
 from app.connectors.shuffle.schema.workflows import WorkflowExecutionBodyModel
 from app.connectors.shuffle.schema.workflows import WorkflowExecutionResponseModel
 from app.connectors.shuffle.schema.workflows import WorkflowsResponse
@@ -11,13 +13,23 @@ from app.connectors.shuffle.services.workflows import get_workflows
 shuffle_workflows_router = APIRouter()
 
 
-@shuffle_workflows_router.get("", response_model=WorkflowsResponse, description="Get all workflows")
+@shuffle_workflows_router.get(
+    "",
+    response_model=WorkflowsResponse,
+    description="Get all workflows",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
 async def get_all_workflows() -> WorkflowsResponse:
     logger.info("Fetching all workflows")
     return get_workflows()
 
 
-@shuffle_workflows_router.get("/executions", response_model=WorkflowExecutionResponseModel, description="Get all workflow executions")
+@shuffle_workflows_router.get(
+    "/executions",
+    response_model=WorkflowExecutionResponseModel,
+    description="Get all workflow executions",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
 async def get_all_workflow_executions() -> WorkflowExecutionResponseModel:
     logger.info("Fetching all workflow executions")
 

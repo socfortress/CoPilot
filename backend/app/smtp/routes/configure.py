@@ -9,11 +9,11 @@ from app.auth.utils import AuthHandler
 from app.db.db_session import session
 from app.smtp.schema.configure import SMTPResponse
 
-smtp_router = APIRouter()
+smtp_configure_router = APIRouter()
 auth_handler = AuthHandler()
 
 
-@smtp_router.post("/{user_id}/register", response_model=SMTPResponse, status_code=200, description="Register new SMTP for user")
+@smtp_configure_router.post("/{user_id}/register", response_model=SMTPResponse, status_code=200, description="Register new SMTP for user")
 async def register(user_id: int, smtp: SMTPInput):
     users = select_all_users()
     logger.info(users)
@@ -30,7 +30,7 @@ async def register(user_id: int, smtp: SMTPInput):
     return {"message": "SMTP created successfully", "success": True}
 
 
-@smtp_router.get("/{user_id}", response_model=SMTP, status_code=200, description="Get SMTP for user")
+@smtp_configure_router.get("/{user_id}", response_model=SMTP, status_code=200, description="Get SMTP for user")
 async def get_smtp(user_id: int):
     users = select_all_users()
     if not any(x.id == user_id for x in users):
@@ -41,7 +41,7 @@ async def get_smtp(user_id: int):
     return smtp_found
 
 
-@smtp_router.put("/{user_id}", response_model=SMTPResponse, status_code=200, description="Update SMTP for user")
+@smtp_configure_router.put("/{user_id}", response_model=SMTPResponse, status_code=200, description="Update SMTP for user")
 async def update_smtp(user_id: int, smtp: SMTPInput):
     users = select_all_users()
     if not any(x.id == user_id for x in users):
@@ -57,7 +57,7 @@ async def update_smtp(user_id: int, smtp: SMTPInput):
     return {"message": "SMTP updated successfully", "success": True}
 
 
-@smtp_router.delete("/{user_id}", response_model=SMTPResponse, status_code=200, description="Delete SMTP for user")
+@smtp_configure_router.delete("/{user_id}", response_model=SMTPResponse, status_code=200, description="Delete SMTP for user")
 async def delete_smtp(user_id: int):
     users = select_all_users()
     if not any(x.id == user_id for x in users):

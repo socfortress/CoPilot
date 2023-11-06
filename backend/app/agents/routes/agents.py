@@ -1,3 +1,5 @@
+import requests
+from celery.result import AsyncResult
 from fastapi import APIRouter
 from fastapi import BackgroundTasks
 from fastapi import HTTPException
