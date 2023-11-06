@@ -19,7 +19,7 @@ from app.connectors.wazuh_manager.services.rules import exclude_rule
 from app.db.db_session import session
 
 NEW_LEVEL = "1"
-wazuh_manager_router = APIRouter()
+wazuh_manager_rules_router = APIRouter()
 auth_handler = AuthHandler()
 
 
@@ -27,7 +27,7 @@ def query_disabled_rule(rule_id: str):
     return session.query(DisabledRule).filter(DisabledRule.rule_id == rule_id).first()
 
 
-@wazuh_manager_router.get(
+@wazuh_manager_rules_router.get(
     "/rule/disabled",
     response_model=AllDisabledRuleResponse,
     description="Get all disabled rules",
@@ -38,7 +38,7 @@ async def get_disabled_rules() -> AllDisabledRuleResponse:
     return AllDisabledRuleResponse(disabled_rules=disabled_rules, success=True, message="Successfully fetched all disabled rules")
 
 
-@wazuh_manager_router.post(
+@wazuh_manager_rules_router.post(
     "/rule/disable",
     response_model=RuleDisableResponse,
     description="Disable a Wazuh Rule",
@@ -65,7 +65,7 @@ async def disable_wazuh_rule(rule: RuleDisable, username: str = Depends(auth_han
         raise HTTPException(status_code=404, detail="Was not able to disable rule")
 
 
-@wazuh_manager_router.post(
+@wazuh_manager_rules_router.post(
     "/rule/enable",
     response_model=RuleEnableResponse,
     description="Enable a Wazuh Rule",

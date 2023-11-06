@@ -21,10 +21,10 @@ def verify_case_exists(case_id: int) -> int:
     return case_id
 
 
-notes_router = APIRouter()
+dfir_iris_notes_router = APIRouter()
 
 
-@notes_router.get(
+@dfir_iris_notes_router.get(
     "/{case_id}",
     response_model=NotesResponse,
     description="Get all notes for a case",
@@ -35,7 +35,7 @@ async def get_case_notes_route(case_id: int = Depends(verify_case_exists), searc
     return get_case_notes(case_id, search_term)
 
 
-@notes_router.post(
+@dfir_iris_notes_router.post(
     "/{case_id}",
     response_model=NoteCreationResponse,
     description="Create a note for a case",

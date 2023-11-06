@@ -25,7 +25,7 @@ def verify_case_exists(case_id: int) -> int:
     return case_id
 
 
-cases_router = APIRouter()
+dfir_iris_cases_router = APIRouter()
 
 
 def get_timedelta(older_than: int, time_unit: TimeUnit) -> CaseOlderThanBody:
@@ -39,7 +39,7 @@ def get_timedelta(older_than: int, time_unit: TimeUnit) -> CaseOlderThanBody:
     return CaseOlderThanBody(older_than=delta, time_unit=time_unit)
 
 
-@cases_router.get(
+@dfir_iris_cases_router.get(
     "",
     response_model=CaseResponse,
     description="Get all cases",
@@ -50,7 +50,7 @@ async def get_cases_route() -> CaseResponse:
     return get_all_cases()
 
 
-@cases_router.post(
+@dfir_iris_cases_router.post(
     "/older_than",
     response_model=CasesBreachedResponse,
     description="Get all cases older than a specified date",
@@ -61,7 +61,7 @@ async def get_cases_older_than_route(case_older_than_body: CaseOlderThanBody = D
     return get_cases_older_than(case_older_than_body)
 
 
-@cases_router.get(
+@dfir_iris_cases_router.get(
     "/{case_id}",
     response_model=SingleCaseResponse,
     description="Get a single case",

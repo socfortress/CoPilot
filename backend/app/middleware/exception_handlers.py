@@ -1,15 +1,21 @@
-from fastapi import Request, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi import HTTPException
+from fastapi import Request
 from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from sqlmodel import Session
 
-from app.db.db_session import engine
 from app.auth.utils import AuthHandler
-from app.utils import Logger, ErrorType, ValidationErrorItem, ValidationErrorResponse
+from app.db.db_session import engine
+from app.utils import ErrorType
+from app.utils import Logger
+from app.utils import ValidationErrorItem
+from app.utils import ValidationErrorResponse
+
 
 # Utility function to get user_id from request
 async def get_user_id_from_request(request: Request, session, logger_instance):
     return await logger_instance.get_user_id_from_request(request)
+
 
 async def custom_http_exception_handler(request: Request, exc: HTTPException):
     with Session(engine) as session:
@@ -24,6 +30,7 @@ async def custom_http_exception_handler(request: Request, exc: HTTPException):
             "message": exc.detail,
         },
     )
+
 
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     errors = exc.errors()
