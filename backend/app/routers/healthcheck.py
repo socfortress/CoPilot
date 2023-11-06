@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+
 from app.healthchecks.agents.routes.agents import healtcheck_agents_router
 
 # Instantiate the APIRouter

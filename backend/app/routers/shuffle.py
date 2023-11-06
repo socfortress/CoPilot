@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+
 from app.connectors.shuffle.routes.workflows import shuffle_workflows_router
 
 # Instantiate the APIRouter

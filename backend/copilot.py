@@ -32,26 +32,16 @@ from app.routers import sublime
 from app.routers import velociraptor
 from app.routers import wazuh_indexer
 from app.routers import wazuh_manager
-from settings import SQLALCHEMY_DATABASE_URI
+from app.schedulers.scheduler import init_scheduler
 
 auth_handler = AuthHandler()
 
 
 app = FastAPI(description="CoPilot API", version="0.1.0", title="CoPilot API")
 
-# Initialize the scheduler with your preferred settings
-jobstores = {"default": SQLAlchemyJobStore(url=SQLALCHEMY_DATABASE_URI)}
 
-# Initialize the scheduler with the job store
-scheduler = AsyncIOScheduler(jobstores=jobstores)
-
-
-# Define the function to be scheduled
-def scheduled_task():
-    # Replace with your actual endpoint you want to call
-    response = requests.get("http://127.0.0.1:5000/agents/sync")
-    # Log the response or perform actions as needed
-    print(response.json())
+# Initialize the scheduler
+scheduler = init_scheduler()
 
 
 # Allow all origins, methods and headers
@@ -97,13 +87,20 @@ async def init_db():
     create_tables(engine)
 
     logger.info("Starting scheduler")
-    scheduler.add_job(scheduled_task, "interval", minutes=1)
-    scheduler.start()
+    if not scheduler.running:
+        scheduler.start()
 
 
 @app.get("/")
 def hello():
     return {"message": "Hello World"}
+
+
+@app.on_event("shutdown")
+async def shutdown_scheduler():
+    logger.info("Shutting down scheduler")
+    if scheduler.running:
+        scheduler.shutdown()
 
 
 if __name__ == "__main__":
