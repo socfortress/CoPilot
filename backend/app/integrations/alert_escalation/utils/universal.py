@@ -10,6 +10,8 @@ import regex
 from elasticsearch7 import Elasticsearch
 from fastapi import HTTPException
 from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 
 from app.connectors.utils import get_connector_info_from_db
 from app.db.all_models import Agents
@@ -341,19 +343,24 @@ def create_wazuh_indexer_client(connector_name: str) -> Elasticsearch:
     )
 
 
-def get_agent_data(agent_id: str) -> AgentModel:
+async def get_agent_data(session: AsyncSession, agent_id: str) -> AgentModel:
     """
     Get agent data based on the agent id from the agents table.
 
     Args:
+        session (AsyncSession): The SQLAlchemy session.
         agent_id (str): Agent id.
 
     Returns:
-        Dict[str, Any]: Agent data.
+        AgentModel: Agent data.
     """
-    agent_details = session.query(Agents).filter(Agents.agent_id == agent_id).first()
+    agent_query = select(Agents).filter(Agents.agent_id == agent_id)
+    result = await session.execute(agent_query)
+    agent_details = result.scalars().first()
+
     if agent_details is not None:
-        return agent_details
+        # Assuming AgentModel can be created from the Agents ORM model
+        return AgentModel.from_orm(agent_details)
     else:
         raise HTTPException(status_code=404, detail=f"Agent with id {agent_id} not found in agents table")
 

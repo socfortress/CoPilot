@@ -7,9 +7,10 @@ from fastapi import HTTPException
 from loguru import logger
 
 from app.connectors.utils import get_connector_info_from_db
+from app.db.db_session import get_db_session
 
 
-def verify_shuffle_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
+async def verify_shuffle_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
     """
     Verifies the connection to Shuffle service.
 
@@ -48,19 +49,20 @@ def verify_shuffle_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
         return {"connectionSuccessful": False, "message": f"Connection to {attributes['connector_url']} failed with error: {e}"}
 
 
-def verify_shuffle_connection(connector_name: str) -> str:
+async def verify_shuffle_connection(connector_name: str) -> str:
     """
     Returns if connection to Shuffle service is successful.
     """
     logger.info("Getting Shuffle authentication token")
-    attributes = get_connector_info_from_db(connector_name)
+    async with get_db_session() as session:  # This will correctly enter the context manager
+        attributes = await get_connector_info_from_db(connector_name, session)
     if attributes is None:
         logger.error("No Shuffle connector found in the database")
         return None
-    return verify_shuffle_credentials(attributes)
+    return await verify_shuffle_credentials(attributes)
 
 
-def send_get_request(endpoint: str, params: Optional[Dict[str, Any]] = None, connector_name: str = "Shuffle") -> Dict[str, Any]:
+async def send_get_request(endpoint: str, params: Optional[Dict[str, Any]] = None, connector_name: str = "Shuffle") -> Dict[str, Any]:
     """
     Sends a GET request to the Shuffle service.
 
@@ -73,7 +75,8 @@ def send_get_request(endpoint: str, params: Optional[Dict[str, Any]] = None, con
         Dict[str, Any]: The response from the GET request.
     """
     logger.info(f"Sending GET request to {endpoint}")
-    attributes = get_connector_info_from_db(connector_name)
+    async with get_db_session() as session:  # This will correctly enter the context manager
+        attributes = await get_connector_info_from_db(connector_name, session)
     if attributes is None:
         logger.error("No Shuffle connector found in the database")
         return None

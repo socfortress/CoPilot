@@ -14,9 +14,11 @@ from pyvelociraptor import api_pb2
 from pyvelociraptor import api_pb2_grpc
 
 from app.connectors.utils import get_connector_info_from_db
+from app.db.db_session import AsyncSessionLocal
+from app.db.db_session import get_db_session
 
 
-def verify_velociraptor_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
+async def verify_velociraptor_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
     """
     Verifies the connection to Velociraptor service.
 
@@ -70,16 +72,45 @@ def verify_velociraptor_credentials(attributes: Dict[str, Any]) -> Dict[str, Any
         return {"connectionSuccessful": False, "message": f"Failed to get connector_api_key from the database: {e}"}
 
 
-def verify_velociraptor_connection(connector_name: str) -> str:
+async def verify_velociraptor_connection(connector_name: str) -> str:
     """
     Verifies the connection to Velociraptor service.
     """
     logger.info(f"Verifying the Velociraptor connection for connector: {connector_name}")
-    attributes = get_connector_info_from_db(connector_name)
+    async with get_db_session() as session:  # This will correctly enter the context manager
+        attributes = await get_connector_info_from_db(connector_name, session)
     if attributes is None:
         logger.error("No Velociraptor connector found in the database")
         return None
-    return verify_velociraptor_credentials(attributes)
+    return await verify_velociraptor_credentials(attributes)
+
+
+# class UniversalService:
+#     """
+#     A service class that encapsulates the logic for polling messages from Velociraptor.
+#     """
+
+#     def __init__(self) -> None:
+#         self.setup_velociraptor_connector("Velociraptor")
+#         self.setup_grpc_channel_and_stub()
+
+#     # def setup_velociraptor_connector(self, connector_name: str):
+#     #     """
+#     #     Collects the details of the Velociraptor connector and sets them up.
+
+#     #     Args:
+#     #         connector_name (str): The name of the Velociraptor connector.
+#     #     """
+#     #     attributes = get_connector_info_from_db(connector_name)
+#     async def setup_velociraptor_connector(self, connector_name: str):
+#         # Start the session asynchronously
+#         async with AsyncSessionLocal() as session:
+#             attributes = await get_connector_info_from_db(connector_name, session)
+#         if attributes is None:
+#             logger.error("No Velociraptor connector found in the database")
+#             return None
+#         self.connector_api_key = attributes["connector_api_key"]
+#         self.config = pyvelociraptor.LoadConfigFile(self.connector_api_key)
 
 
 class UniversalService:
@@ -87,25 +118,23 @@ class UniversalService:
     A service class that encapsulates the logic for polling messages from Velociraptor.
     """
 
+    #! Modify this to use AsyncSessionLocal Begin - ALSO SEE BELOW CLASS METHOD
     def __init__(self) -> None:
-        self.setup_velociraptor_connector("Velociraptor")
-        self.setup_grpc_channel_and_stub()
+        self.connector_api_key = None
+        self.config = None
 
-    def setup_velociraptor_connector(self, connector_name: str):
-        """
-        Collects the details of the Velociraptor connector and sets them up.
-
-        Args:
-            connector_name (str): The name of the Velociraptor connector.
-        """
-        attributes = get_connector_info_from_db(connector_name)
+    async def setup_velociraptor_connector(self, connector_name: str):
+        async with AsyncSessionLocal() as session:
+            attributes = await get_connector_info_from_db(connector_name, session)
         if attributes is None:
             logger.error("No Velociraptor connector found in the database")
             return None
         self.connector_api_key = attributes["connector_api_key"]
         self.config = pyvelociraptor.LoadConfigFile(self.connector_api_key)
 
-    def setup_grpc_channel_and_stub(self):
+    #! Modify this to use AsyncSessionLocal End
+
+    async def setup_grpc_channel_and_stub(self):
         """
         Sets up the gRPC channel and stub for Velociraptor.
         """
@@ -121,6 +150,16 @@ class UniversalService:
             options,
         )
         self.stub = api_pb2_grpc.APIStub(self.channel)
+
+    #! Modify this to use AsyncSessionLocal Begin
+    @classmethod
+    async def create(cls, connector_name: str):
+        instance = cls()
+        await instance.setup_velociraptor_connector(connector_name)
+        await instance.setup_grpc_channel_and_stub()
+        return instance
+
+    #! Modify this to use AsyncSessionLocal End
 
     def create_vql_request(self, vql: str):
         """
@@ -152,7 +191,10 @@ class UniversalService:
         Returns:
             dict: A dictionary with the success status, a message, and potentially the results.
         """
+        logger.info(f"Executing query: {vql}")
+
         client_request = self.create_vql_request(vql)
+
         try:
             results = []
             for response in self.stub.Query(client_request, timeout=30):
@@ -211,7 +253,7 @@ class UniversalService:
         vql = f"SELECT * FROM source(client_id='{client_id}', flow_id='{flow_id}', artifact='{artifact}')"
         return self.execute_query(vql)
 
-    def get_client_id(self, client_name: str):
+    async def get_client_id(self, client_name: str):
         """
         Get the client_id associated with a given client_name.
 
@@ -227,16 +269,15 @@ class UniversalService:
             vql_last_seen_at = f"select last_seen_at from clients(search='host:{client_name}')"
 
             # Get the last seen timestamp
-            last_seen_at = self._get_last_seen_timestamp(vql_last_seen_at)
+            logger.info(f"Getting last seen at timestamp for {client_name}")
+
+            last_seen_at = await self._get_last_seen_timestamp(vql_last_seen_at)
+
+            logger.info(f"Last seen at timestamp for {client_name}: {last_seen_at}")
 
             # if last_seen_at is longer than 30 seconds from now, return False
-            if self._is_offline(last_seen_at):
-                return {
-                    "success": False,
-                    "message": f"{client_name} has not been seen in the last 30 seconds and "
-                    "may not be online with the Velociraptor server.",
-                    "results": [{"client_id": None}],
-                }
+            if await self._is_offline(last_seen_at):
+                return self.execute_query(vql_client_id)
 
             return self.execute_query(vql_client_id)
         except Exception as e:
@@ -246,7 +287,7 @@ class UniversalService:
                 "results": [{"client_id": None}],
             }
 
-    def _get_last_seen_timestamp(self, vql: str):
+    async def _get_last_seen_timestamp(self, vql: str):
         """
         Executes the VQL query and returns the last_seen_at timestamp.
 
@@ -258,7 +299,7 @@ class UniversalService:
         """
         return self.execute_query(vql)["results"][0]["last_seen_at"]
 
-    def _get_client_version(self, vql: str):
+    async def _get_client_version(self, vql: str):
         """
         Executes the VQL query and returns the `agent_information``version` field
 
@@ -285,7 +326,7 @@ class UniversalService:
         except IndexError as e:
             raise HTTPException(status_code=500, detail=f"Failed to get server version: {e}")
 
-    def _is_offline(self, last_seen_at: float):
+    async def _is_offline(self, last_seen_at: float):
         """
         Determines if the client is offline based on the last_seen_at timestamp.
 

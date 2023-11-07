@@ -18,7 +18,7 @@ from app.connectors.wazuh_indexer.utils.universal import format_node_allocation
 from app.connectors.wazuh_indexer.utils.universal import format_shards
 
 
-def cluster_healthcheck() -> Union[ClusterHealthResponse, Dict[str, str]]:
+async def cluster_healthcheck() -> Union[ClusterHealthResponse, Dict[str, str]]:
     """
     Returns the cluster health of the Wazuh Indexer service.
 
@@ -29,7 +29,7 @@ def cluster_healthcheck() -> Union[ClusterHealthResponse, Dict[str, str]]:
         Exception: An exception is raised if the cluster health cannot be retrieved.
     """
     logger.info("Collecting Wazuh Indexer healthcheck")
-    es_client = create_wazuh_indexer_client("Wazuh-Indexer")
+    es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
     try:
         cluster_health_data = es_client.cluster.health()
         cluster_health_model = ClusterHealth(**cluster_health_data)
@@ -43,7 +43,7 @@ def cluster_healthcheck() -> Union[ClusterHealthResponse, Dict[str, str]]:
         raise Exception(str(e))
 
 
-def node_allocation() -> Union[NodeAllocationResponse, Dict[str, bool]]:
+async def node_allocation() -> Union[NodeAllocationResponse, Dict[str, bool]]:
     """
     Returns the node allocation of the Wazuh Indexer service.
 
@@ -54,12 +54,12 @@ def node_allocation() -> Union[NodeAllocationResponse, Dict[str, bool]]:
         Exception: An exception is raised if the node allocation cannot be retrieved.
     """
     logger.info("Collecting Wazuh Indexer node allocation")
-    es_client = create_wazuh_indexer_client("Wazuh-Indexer")
+    es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
     try:
         raw_node_allocation_data = es_client.cat.allocation(format="json")
         logger.info(raw_node_allocation_data)
 
-        formatted_node_allocation_data = format_node_allocation(raw_node_allocation_data)
+        formatted_node_allocation_data = await format_node_allocation(raw_node_allocation_data)
 
         node_allocation_models = [NodeAllocation(**node) for node in formatted_node_allocation_data]
 
@@ -73,7 +73,7 @@ def node_allocation() -> Union[NodeAllocationResponse, Dict[str, bool]]:
         raise Exception(str(e))
 
 
-def indices_stats() -> Union[IndicesStatsResponse, Dict[str, str]]:
+async def indices_stats() -> Union[IndicesStatsResponse, Dict[str, str]]:
     """
     Returns the indices stats of the Wazuh Indexer service.
 
@@ -84,11 +84,11 @@ def indices_stats() -> Union[IndicesStatsResponse, Dict[str, str]]:
         Exception: An exception is raised if the indices stats cannot be retrieved.
     """
     logger.info("Collecting Wazuh Indexer indices stats")
-    es_client = create_wazuh_indexer_client("Wazuh-Indexer")
+    es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
     try:
         raw_indices_stats_data = es_client.cat.indices(format="json")
 
-        formatted_indices_stats_data = format_indices_stats(raw_indices_stats_data)
+        formatted_indices_stats_data = await format_indices_stats(raw_indices_stats_data)
 
         indices_stats_models = [IndicesStats(**index) for index in formatted_indices_stats_data]
 
@@ -102,7 +102,7 @@ def indices_stats() -> Union[IndicesStatsResponse, Dict[str, str]]:
         raise Exception(str(e))
 
 
-def shards() -> Union[ShardsResponse, Dict[str, str]]:
+async def shards() -> Union[ShardsResponse, Dict[str, str]]:
     """
     Returns the shards of the Wazuh Indexer service.
 
@@ -113,11 +113,11 @@ def shards() -> Union[ShardsResponse, Dict[str, str]]:
         Exception: An exception is raised if the shards cannot be retrieved.
     """
     logger.info("Collecting Wazuh Indexer shards")
-    es_client = create_wazuh_indexer_client("Wazuh-Indexer")
+    es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
     try:
         raw_shards_data = es_client.cat.shards(format="json")
 
-        formatted_shards_data = format_shards(raw_shards_data)
+        formatted_shards_data = await format_shards(raw_shards_data)
 
         shard_models = [Shards(**shard) for shard in formatted_shards_data]
 

@@ -1,9 +1,15 @@
 from fastapi import APIRouter
+from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Query
+from fastapi import Security
 from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 from starlette.status import HTTP_401_UNAUTHORIZED
 
+from app.auth.utils import AuthHandler
+from app.db.db_session import get_session
 from app.db.db_session import session
 from app.db.universal_models import Agents
 from app.healthchecks.agents.schema.agents import AgentHealthCheckResponse
@@ -24,71 +30,106 @@ def verify_admin(user):
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail="Unauthorized")
 
 
-@healtcheck_agents_router.get("/wazuh", response_model=AgentHealthCheckResponse, description="Get Wazuh agents healthcheck")
+@healtcheck_agents_router.get(
+    "/wazuh",
+    response_model=AgentHealthCheckResponse,
+    description="Get Wazuh agents healthcheck",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
 async def get_wazuh_agent_healthcheck(
+    session: AsyncSession = Depends(get_session),
     minutes: int = Query(60, description="Number of minutes within which the agent should have been last seen to be considered healthy."),
     hours: int = Query(0, description="Number of hours within which the agent should have been last seen to be considered healthy."),
     days: int = Query(0, description="Number of days within which the agent should have been last seen to be considered healthy."),
 ) -> AgentHealthCheckResponse:
     time_criteria = TimeCriteriaModel(minutes=minutes, hours=hours, days=days)
-    agents = session.query(Agents).all()
-    return wazuh_agents_healthcheck(agents, time_criteria)
+
+    # Asynchronously fetch all agents
+    result = await session.execute(select(Agents))
+    agents = result.scalars().all()
+    return await wazuh_agents_healthcheck(agents, time_criteria)
 
 
-# Get single agent by agent_id
 @healtcheck_agents_router.get(
     "/wazuh/{agent_id}",
     response_model=AgentHealthCheckResponse,
     description="Get Wazuh agent healthcheck by agent_id",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_wazuh_agent_healthcheck_by_agent_id(
     agent_id: str,
+    session: AsyncSession = Depends(get_session),
     minutes: int = Query(60, description="Number of minutes within which the agent should have been last seen to be considered healthy."),
     hours: int = Query(0, description="Number of hours within which the agent should have been last seen to be considered healthy."),
     days: int = Query(0, description="Number of days within which the agent should have been last seen to be considered healthy."),
 ) -> AgentHealthCheckResponse:
     time_criteria = TimeCriteriaModel(minutes=minutes, hours=hours, days=days)
-    agent = session.query(Agents).filter(Agents.agent_id == agent_id).first()
+
+    # Asynchronously fetch the agent by id
+    result = await session.execute(select(Agents).filter(Agents.agent_id == agent_id))
+    agent = result.scalars().first()
+
     if not agent:
         raise HTTPException(status_code=404, detail=f"Agent with agent_id {agent_id} not found")
-    return wazuh_agent_healthcheck(agent, time_criteria)
+    return await wazuh_agent_healthcheck(agent, time_criteria)
 
 
-@healtcheck_agents_router.get("/velociraptor", response_model=AgentHealthCheckResponse, description="Get Velociraptor agents healthcheck")
+@healtcheck_agents_router.get(
+    "/velociraptor",
+    response_model=AgentHealthCheckResponse,
+    description="Get Velociraptor agents healthcheck",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
 async def get_velociraptor_agent_healthcheck(
+    session: AsyncSession = Depends(get_session),
     minutes: int = Query(60, description="Number of minutes within which the agent should have been last seen to be considered healthy."),
     hours: int = Query(0, description="Number of hours within which the agent should have been last seen to be considered healthy."),
     days: int = Query(0, description="Number of days within which the agent should have been last seen to be considered healthy."),
 ) -> AgentHealthCheckResponse:
     time_criteria = TimeCriteriaModel(minutes=minutes, hours=hours, days=days)
-    agents = session.query(Agents).all()
-    return velociraptor_agents_healthcheck(agents, time_criteria)
+
+    # Asynchronously fetch all agents
+    result = await session.execute(select(Agents))
+    agents = result.scalars().all()
+    return await velociraptor_agents_healthcheck(agents, time_criteria)
 
 
-# Get single agent by agent_id
 @healtcheck_agents_router.get(
     "/velociraptor/{agent_id}",
     response_model=AgentHealthCheckResponse,
     description="Get Velociraptor agent healthcheck by agent_id",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_velociraptor_agent_healthcheck_by_agent_id(
     agent_id: str,
+    session: AsyncSession = Depends(get_session),
     minutes: int = Query(60, description="Number of minutes within which the agent should have been last seen to be considered healthy."),
     hours: int = Query(0, description="Number of hours within which the agent should have been last seen to be considered healthy."),
     days: int = Query(0, description="Number of days within which the agent should have been last seen to be considered healthy."),
 ) -> AgentHealthCheckResponse:
     time_criteria = TimeCriteriaModel(minutes=minutes, hours=hours, days=days)
-    agent = session.query(Agents).filter(Agents.agent_id == agent_id).first()
+
+    # Asynchronously fetch the agent by id
+    result = await session.execute(select(Agents).filter(Agents.agent_id == agent_id))
+    agent = result.scalars().first()
     if not agent:
         raise HTTPException(status_code=404, detail=f"Agent with agent_id {agent_id} not found")
-    return velociraptor_agent_healthcheck(agent, time_criteria)
+    return await velociraptor_agent_healthcheck(agent, time_criteria)
 
 
-@healtcheck_agents_router.post("/logs", response_model=HostLogsSearchResponse, description="Get host logs")
-async def get_host_logs(body: HostLogsSearchBody) -> HostLogsSearchResponse:
+@healtcheck_agents_router.post(
+    "/logs",
+    response_model=HostLogsSearchResponse,
+    description="Get host logs",
+    dependencies=[Security(AuthHandler().get_current_user, scopes=["admin", "analyst"])],
+)
+async def get_host_logs(body: HostLogsSearchBody, session: AsyncSession = Depends(get_session)) -> HostLogsSearchResponse:
     logger.info(f"Received request to get host logs for {body.agent_name}")
-    # Verify the agent exists
-    agent = session.query(Agents).filter(Agents.hostname == body.agent_name).first()
+
+    # Asynchronously verify the agent exists
+    result = await session.execute(select(Agents).filter(Agents.hostname == body.agent_name))
+    agent = result.scalars().first()
+
     if not agent:
         raise HTTPException(status_code=404, detail=f"Agent with hostname {body.agent_name} not found")
-    return host_logs(body)
+    return await host_logs(body)

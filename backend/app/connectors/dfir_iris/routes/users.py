@@ -20,8 +20,8 @@ def verify_user_exists(user_id: int) -> int:
     return user_id
 
 
-def verify_alert_exists(alert_id: str) -> str:
-    if not check_alert_exists(alert_id):
+async def verify_alert_exists(alert_id: str) -> str:
+    if not await check_alert_exists(alert_id):
         raise HTTPException(status_code=400, detail=f"Alert {alert_id} does not exist.")
     return alert_id
 
@@ -37,7 +37,7 @@ dfir_iris_users_router = APIRouter()
 )
 async def get_all_users() -> UsersResponse:
     logger.info("Fetching all users")
-    return get_users()
+    return await get_users()
 
 
 @dfir_iris_users_router.post(
@@ -48,4 +48,4 @@ async def get_all_users() -> UsersResponse:
 )
 async def assign_user_to_alert_route(alert_id: str = Depends(verify_alert_exists), user_id: int = Depends(verify_user_exists)) -> User:
     logger.info(f"Assigning user {user_id} to alert {alert_id}")
-    return assign_user_to_alert(alert_id, user_id)
+    return await assign_user_to_alert(alert_id, user_id)

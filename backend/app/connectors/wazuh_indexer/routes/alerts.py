@@ -31,16 +31,16 @@ from app.connectors.wazuh_indexer.utils.universal import collect_indices
 wazuh_indexer_alerts_router = APIRouter()
 
 
-def get_index_names() -> List[str]:
-    indices = collect_indices()
+async def get_index_names() -> List[str]:
+    indices = await collect_indices()
     return indices.indices_list
 
 
-def verify_index_name(index_alerts_search_body: IndexAlertsSearchBody) -> IndexAlertsSearchBody:
+async def verify_index_name(index_alerts_search_body: IndexAlertsSearchBody) -> IndexAlertsSearchBody:
     # Remove any extra spaces from index_name
     index_alerts_search_body.index_name = index_alerts_search_body.index_name.strip()
 
-    managed_index_names = get_index_names()
+    managed_index_names = await get_index_names()
     if index_alerts_search_body.index_name not in managed_index_names:
         raise HTTPException(
             status_code=400,
@@ -57,7 +57,7 @@ def verify_index_name(index_alerts_search_body: IndexAlertsSearchBody) -> IndexA
 )
 async def get_all_alerts(alerts_search_body: AlertsSearchBody) -> AlertsSearchResponse:
     logger.info("Fetching all alerts")
-    return get_alerts(alerts_search_body)
+    return await get_alerts(alerts_search_body)
 
 
 @wazuh_indexer_alerts_router.post(
@@ -68,7 +68,7 @@ async def get_all_alerts(alerts_search_body: AlertsSearchBody) -> AlertsSearchRe
 )
 async def get_all_alerts_for_host(host_alerts_search_body: HostAlertsSearchBody) -> HostAlertsSearchResponse:
     logger.info(f"Fetching all alerts for host {host_alerts_search_body.agent_name}")
-    return get_host_alerts(host_alerts_search_body)
+    return await get_host_alerts(host_alerts_search_body)
 
 
 @wazuh_indexer_alerts_router.post(
@@ -81,7 +81,7 @@ async def get_all_alerts_for_index(
     index_alerts_search_body: IndexAlertsSearchBody = Depends(verify_index_name),
 ) -> IndexAlertsSearchResponse:
     logger.info(f"Fetching all alerts for index {index_alerts_search_body.index_name}")
-    return get_index_alerts(index_alerts_search_body)
+    return await get_index_alerts(index_alerts_search_body)
 
 
 @wazuh_indexer_alerts_router.post(
@@ -92,7 +92,7 @@ async def get_all_alerts_for_index(
 )
 async def get_all_alerts_by_host(alerts_search_body: AlertsSearchBody) -> AlertsByHostResponse:
     logger.info("Fetching number of all alerts for all hosts")
-    return get_alerts_by_host(alerts_search_body)
+    return await get_alerts_by_host(alerts_search_body)
 
 
 @wazuh_indexer_alerts_router.post(
@@ -103,7 +103,7 @@ async def get_all_alerts_by_host(alerts_search_body: AlertsSearchBody) -> Alerts
 )
 async def get_all_alerts_by_rule(alerts_search_body: AlertsSearchBody) -> AlertsByRuleResponse:
     logger.info("Fetching number of all alerts for all rules")
-    return get_alerts_by_rule(alerts_search_body)
+    return await get_alerts_by_rule(alerts_search_body)
 
 
 @wazuh_indexer_alerts_router.post(
@@ -123,4 +123,4 @@ async def get_all_alerts_by_rule_per_host(alerts_search_body: AlertsSearchBody) 
         AlertsByRulePerHostResponse: _description_
     """
     logger.info("Fetching number of all alerts for all rules per host")
-    return get_alerts_by_rule_per_host(alerts_search_body)
+    return await get_alerts_by_rule_per_host(alerts_search_body)

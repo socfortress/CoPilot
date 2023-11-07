@@ -68,7 +68,7 @@ class Connectors(SQLModel, table=True):
     connector_accepts_file: bool = Field(default=False)
 
     # Relationship
-    history_logs: List[ConnectorHistory] = Relationship(back_populates="connector")
+    history_logs: List[ConnectorHistory] = Relationship(back_populates="connector", sa_relationship_kwargs={"lazy": "selectin"})
 
 
 # Example usage

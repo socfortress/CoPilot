@@ -24,6 +24,7 @@ class CustomerRequestBody(BaseModel):
     logo_file: Optional[str] = Field(None, description="Logo file for the customer")
 
     class Config:
+        orm_mode = True
         schema_extra = {
             "example": {
                 "customer_code": "CUST123",
@@ -67,6 +68,7 @@ class CustomerMetaRequestBody(BaseModel):
     wazuh_log_ingestion_port: int = Field(..., description="Wazuh log ingestion port for the customer")
 
     class Config:
+        orm_mode = True
         schema_extra = {
             "example": {
                 "customer_meta_graylog_index": "graylog_index",

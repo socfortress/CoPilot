@@ -6,6 +6,7 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.security import SecurityScopes
+from loguru import logger
 from passlib.context import CryptContext
 
 from app.auth.services.universal import find_user
@@ -26,18 +27,39 @@ class AuthHandler:
     def verify_password(self, plain_password, hashed_password):
         return self.pwd_context.verify(plain_password, hashed_password)
 
-    def authenticate_user(self, username: str, password: str):
-        user = find_user(username)
+    # ! Old without Async
+    # def authenticate_user(self, username: str, password: str):
+    #     user = find_user(username)
+    #     if not user or not self.verify_password(password, user.password):
+    #         return False
+    #     return user
+
+    # ! New with Async
+    async def authenticate_user(self, username: str, password: str):
+        user = await find_user(username)
         if not user or not self.verify_password(password, user.password):
+            logger.info(f"Password is not verified")
             return False
         return user
 
-    def encode_token(self, username: str, access_token_expires: timedelta = timedelta(minutes=60)):
+    # ! Old without Async
+    # def encode_token(self, username: str, access_token_expires: timedelta = timedelta(minutes=60)):
+    #     payload = {
+    #         "exp": datetime.utcnow() + access_token_expires,
+    #         "iat": datetime.utcnow(),
+    #         "sub": username,
+    #         "scopes": [get_role(username)],
+    #     }
+    #     return jwt.encode(payload, self.secret, algorithm="HS256")
+
+    # ! New with Async
+    async def encode_token(self, username: str, access_token_expires: timedelta = timedelta(minutes=60)):
+        role = await get_role(username)
         payload = {
             "exp": datetime.utcnow() + access_token_expires,
             "iat": datetime.utcnow(),
             "sub": username,
-            "scopes": [get_role(username)],
+            "scopes": [role],
         }
         return jwt.encode(payload, self.secret, algorithm="HS256")
 
@@ -50,7 +72,7 @@ class AuthHandler:
         except jwt.InvalidTokenError:
             raise HTTPException(status_code=401, detail="Invalid token")
 
-    def get_current_user(self, security_scopes: SecurityScopes, token: str = Depends(security)):
+    async def get_current_user(self, security_scopes: SecurityScopes, token: str = Depends(security)):
         if security_scopes.scopes:
             authenticate_value = f'Bearer scope="{security_scopes.scope_str}"'
         else:
@@ -77,7 +99,8 @@ class AuthHandler:
                 detail="Username not found in token",
                 headers={"WWW-Authenticate": authenticate_value},
             )
-        user = find_user(username)
+        user = await find_user(username)
+
         if user is None:
             raise HTTPException(
                 status_code=401,

@@ -10,11 +10,11 @@ from app.connectors.graylog.schema.monitoring import GraylogUncommittedJournalEn
 from app.connectors.graylog.utils.universal import send_get_request
 
 
-def get_messages(page_number: int) -> GraylogMessagesResponse:
+async def get_messages(page_number: int) -> GraylogMessagesResponse:
     """Get messages from Graylog."""
     logger.info("Getting messages from Graylog")
     params = {"page": page_number}
-    messages_collected = send_get_request(endpoint="/api/system/messages", params=params)
+    messages_collected = await send_get_request(endpoint="/api/system/messages", params=params)
     try:
         if messages_collected["success"]:
             graylog_messages_list = []
@@ -42,12 +42,12 @@ def get_messages(page_number: int) -> GraylogMessagesResponse:
     return GraylogMessagesResponse(graylog_messages=[], success=False, message="Failed to collect messages")
 
 
-def fetch_metrics_from_graylog() -> dict:
-    return send_get_request(endpoint="/api/system/metrics")
+async def fetch_metrics_from_graylog() -> dict:
+    return await send_get_request(endpoint="/api/system/metrics")
 
 
-def fetch_uncommitted_journal_entries() -> dict:
-    return send_get_request(endpoint="/api/system/journal")
+async def fetch_uncommitted_journal_entries() -> dict:
+    return await send_get_request(endpoint="/api/system/journal")
 
 
 def merge_metrics_data(throughput_metrics_collected: dict) -> dict:
@@ -66,10 +66,10 @@ def filter_and_create_throughput_metrics(merged_metrics: dict) -> list:
     return throughput_metrics_list
 
 
-def get_metrics() -> GraylogMetricsResponse:
+async def get_metrics() -> GraylogMetricsResponse:
     logger.info("Getting metrics from Graylog")
-    throughput_metrics_collected = fetch_metrics_from_graylog()
-    uncommitted_journal_entries_collected = fetch_uncommitted_journal_entries()
+    throughput_metrics_collected = await fetch_metrics_from_graylog()
+    uncommitted_journal_entries_collected = await fetch_uncommitted_journal_entries()
     try:
         if throughput_metrics_collected["success"] and uncommitted_journal_entries_collected["success"]:
             merged_metrics = merge_metrics_data(throughput_metrics_collected)

@@ -6,9 +6,11 @@ import requests
 from loguru import logger
 
 from app.connectors.utils import get_connector_info_from_db
+from app.db.db_session import AsyncSessionLocal
+from app.db.db_session import get_db_session
 
 
-def verify_wazuh_manager_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
+async def verify_wazuh_manager_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
     """
     Verifies the connection to Wazuh manager service.
 
@@ -40,7 +42,7 @@ def verify_wazuh_manager_credentials(attributes: Dict[str, Any]) -> Dict[str, An
         return {"connectionSuccessful": False, "message": f"Connection to {attributes['connector_url']} failed with error."}
 
 
-def verify_wazuh_manager_connection(connector_name: str) -> str:
+async def verify_wazuh_manager_connection(connector_name: str) -> str:
     """
     Returns the authentication token for the Wazuh manager service.
 
@@ -48,14 +50,15 @@ def verify_wazuh_manager_connection(connector_name: str) -> str:
         str: Authentication token for the Wazuh manager service.
     """
     logger.info("Getting Wazuh Manager authentication token")
-    attributes = get_connector_info_from_db(connector_name)
+    async with get_db_session() as session:  # This will correctly enter the context manager
+        attributes = await get_connector_info_from_db(connector_name, session)
     if attributes is None:
         logger.error("No Wazuh Manager connector found in the database")
         return None
-    return verify_wazuh_manager_credentials(attributes)
+    return await verify_wazuh_manager_credentials(attributes)
 
 
-def create_wazuh_manager_client(connector_name: str) -> str:
+async def create_wazuh_manager_client(connector_name: str) -> str:
     """
     Returns the authentication token for the Wazuh manager service.
 
@@ -63,10 +66,13 @@ def create_wazuh_manager_client(connector_name: str) -> str:
         str: Authentication token for the Wazuh manager service.
     """
     logger.info("Getting Wazuh Manager authentication token")
-    attributes = get_connector_info_from_db(connector_name)
+    # attributes = get_connector_info_from_db(connector_name)
+    async with AsyncSessionLocal() as session:
+        attributes = await get_connector_info_from_db(connector_name, session)
     if attributes is None:
         logger.error("No Wazuh Manager connector found in the database")
         return None
+    logger.info(f"Verifying the wazuh-manager connection to {attributes['connector_url']}")
     try:
         wazuh_auth_token = requests.get(
             f"{attributes['connector_url']}/security/user/authenticate",
@@ -93,7 +99,7 @@ def create_wazuh_manager_client(connector_name: str) -> str:
         return None
 
 
-def send_get_request(endpoint: str, params: Optional[Dict[str, Any]] = None, connector_name: str = "Wazuh-Manager") -> Dict[str, Any]:
+async def send_get_request(endpoint: str, params: Optional[Dict[str, Any]] = None, connector_name: str = "Wazuh-Manager") -> Dict[str, Any]:
     """
     Sends a GET request to the Wazuh Manager service.
 
@@ -106,8 +112,11 @@ def send_get_request(endpoint: str, params: Optional[Dict[str, Any]] = None, con
         Dict[str, Any]: The response from the GET request.
     """
     logger.info(f"Sending GET request to {endpoint}")
-    wazuh_manager_client = create_wazuh_manager_client(connector_name)
-    attributes = get_connector_info_from_db(connector_name)
+    wazuh_manager_client = await create_wazuh_manager_client(connector_name)
+    # attributes = get_connector_info_from_db(connector_name)
+    async with AsyncSessionLocal() as session:
+        attributes = await get_connector_info_from_db(connector_name, session)
+
     if attributes is None:
         logger.error("No Wazuh Manager connector found in the database")
         return None
@@ -125,7 +134,7 @@ def send_get_request(endpoint: str, params: Optional[Dict[str, Any]] = None, con
         return {"success": False, "message": f"Failed to send GET request to {endpoint} with error: {e}"}
 
 
-def send_post_request(endpoint: str, data: Dict[str, Any], connector_name: str = "Wazuh-Manager") -> Dict[str, Any]:
+async def send_post_request(endpoint: str, data: Dict[str, Any], connector_name: str = "Wazuh-Manager") -> Dict[str, Any]:
     """
     Sends a POST request to the Wazuh Manager service.
 
@@ -138,8 +147,9 @@ def send_post_request(endpoint: str, data: Dict[str, Any], connector_name: str =
         Dict[str, Any]: The response from the POST request.
     """
     logger.info(f"Sending POST request to {endpoint}")
-    wazuh_manager_client = create_wazuh_manager_client(connector_name)
-    attributes = get_connector_info_from_db(connector_name)
+    wazuh_manager_client = await create_wazuh_manager_client(connector_name)
+    async with AsyncSessionLocal() as session:
+        attributes = await get_connector_info_from_db(connector_name, session)
     if attributes is None:
         logger.error("No Wazuh Manager connector found in the database")
         return None
@@ -157,7 +167,7 @@ def send_post_request(endpoint: str, data: Dict[str, Any], connector_name: str =
         return {"success": False, "message": f"Failed to send POST request to {endpoint} with error: {e}"}
 
 
-def send_put_request(
+async def send_put_request(
     endpoint: str,
     data: Optional[Dict[str, Any]],
     params: Optional[Dict[str, str]] = None,
@@ -175,8 +185,9 @@ def send_put_request(
         Dict[str, Any]: The response from the PUT request.
     """
     logger.info(f"Sending PUT request to {endpoint}")
-    wazuh_manager_client = create_wazuh_manager_client(connector_name)
-    attributes = get_connector_info_from_db(connector_name)
+    wazuh_manager_client = await create_wazuh_manager_client(connector_name)
+    async with AsyncSessionLocal() as session:
+        attributes = await get_connector_info_from_db(connector_name, session)
     if attributes is None:
         logger.error("No Wazuh Manager connector found in the database")
         return None
@@ -195,7 +206,11 @@ def send_put_request(
         return {"success": False, "message": f"Failed to send PUT request to {endpoint} with error: {e}"}
 
 
-def send_delete_request(endpoint: str, params: Optional[Dict[str, Any]] = None, connector_name: str = "Wazuh-Manager") -> Dict[str, Any]:
+async def send_delete_request(
+    endpoint: str,
+    params: Optional[Dict[str, Any]] = None,
+    connector_name: str = "Wazuh-Manager",
+) -> Dict[str, Any]:
     """
     Sends a DELETE request to the Wazuh Manager service.
 
@@ -208,8 +223,9 @@ def send_delete_request(endpoint: str, params: Optional[Dict[str, Any]] = None, 
         Dict[str, Any]: The response from the DELETE request.
     """
     logger.info(f"Sending DELETE request to {endpoint}")
-    wazuh_manager_client = create_wazuh_manager_client(connector_name)
-    attributes = get_connector_info_from_db(connector_name)
+    wazuh_manager_client = await create_wazuh_manager_client(connector_name)
+    async with AsyncSessionLocal() as session:
+        attributes = await get_connector_info_from_db(connector_name, session)
     if attributes is None:
         logger.error("No Wazuh Manager connector found in the database")
         return None
@@ -227,7 +243,7 @@ def send_delete_request(endpoint: str, params: Optional[Dict[str, Any]] = None, 
         return {"success": False, "message": f"Failed to send DELETE request to {endpoint} with error: {e}"}
 
 
-def restart_service(connector_name: str = "Wazuh-Manager") -> Dict[str, Any]:
+async def restart_service(connector_name: str = "Wazuh-Manager") -> Dict[str, Any]:
     """
     Restarts the Wazuh Manager service.
 
@@ -235,8 +251,9 @@ def restart_service(connector_name: str = "Wazuh-Manager") -> Dict[str, Any]:
         Dict[str, Any]: The response from the DELETE request.
     """
     logger.info("Restarting Wazuh Manager service")
-    wazuh_manager_client = create_wazuh_manager_client(connector_name)
-    attributes = get_connector_info_from_db(connector_name)
+    wazuh_manager_client = await create_wazuh_manager_client(connector_name)
+    async with AsyncSessionLocal() as session:
+        attributes = await get_connector_info_from_db(connector_name, session)
     if attributes is None:
         logger.error("No Wazuh Manager connector found in the database")
         return None

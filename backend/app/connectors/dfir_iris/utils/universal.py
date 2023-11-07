@@ -16,9 +16,10 @@ from fastapi import HTTPException
 from loguru import logger
 
 from app.connectors.utils import get_connector_info_from_db
+from app.db.db_session import get_db_session
 
 
-def verify_dfir_iris_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
+async def verify_dfir_iris_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
     """
     Verifies the connection to DFIR-IRIS service.
 
@@ -48,21 +49,22 @@ def verify_dfir_iris_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
         return {"connectionSuccessful": False, "message": f"Connection to {attributes['connector_url']} failed with error: {e}"}
 
 
-def verify_dfir_iris_connection(connector_name: str) -> str:
+async def verify_dfir_iris_connection(connector_name: str) -> str:
     """
     Returns the authentication token for the DFIR-IRIS service.
 
     Returns:
         str: Authentication token for the DFIR-IRIS service.
     """
-    attributes = get_connector_info_from_db(connector_name)
+    async with get_db_session() as session:  # This will correctly enter the context manager
+        attributes = await get_connector_info_from_db(connector_name, session)
     if attributes is None:
         logger.error("No DFIR-IRIS connector found in the database")
         return None
-    return verify_dfir_iris_credentials(attributes)
+    return await verify_dfir_iris_credentials(attributes)
 
 
-def create_dfir_iris_client(connector_name: str) -> ClientSession:
+async def create_dfir_iris_client(connector_name: str) -> ClientSession:
     """
     Creates a session with DFIR-IRIS.
 
@@ -74,7 +76,8 @@ def create_dfir_iris_client(connector_name: str) -> ClientSession:
         dict: A dictionary containing the success status and either the session object or an error message.
     """
     try:
-        attributes = get_connector_info_from_db(connector_name)
+        async with get_db_session() as session:  # This will correctly enter the context manager
+            attributes = await get_connector_info_from_db(connector_name, session)
         logger.info("Creating session with DFIR-IRIS.")
         return ClientSession(
             host=attributes["connector_url"],
@@ -89,7 +92,7 @@ def create_dfir_iris_client(connector_name: str) -> ClientSession:
         raise HTTPException(status_code=500, detail=f"Error creating session with DFIR-IRIS: {e}")
 
 
-def fetch_and_parse_data(session: ClientSession, action: Callable, *args) -> Dict[str, Union[bool, Optional[Dict]]]:
+async def fetch_and_parse_data(session: ClientSession, action: Callable, *args) -> Dict[str, Union[bool, Optional[Dict]]]:
     """
     Fetches and parses data from DFIR-IRIS using a specified action.
 
@@ -113,20 +116,20 @@ def fetch_and_parse_data(session: ClientSession, action: Callable, *args) -> Dic
         return HTTPException(status_code=500, detail=f"Failed to execute {action.__name__}: {err}")
 
 
-def initialize_client_and_case(service_name: str) -> Tuple[Any, Case]:
-    dfir_iris_client = create_dfir_iris_client(service_name)
+async def initialize_client_and_case(service_name: str) -> Tuple[Any, Case]:
+    dfir_iris_client = await create_dfir_iris_client(service_name)
     case = Case(session=dfir_iris_client)
     return dfir_iris_client, case
 
 
-def initialize_client_and_alert(service_name: str) -> Tuple[Any, Alert]:
-    dfir_iris_client = create_dfir_iris_client(service_name)
+async def initialize_client_and_alert(service_name: str) -> Tuple[Any, Alert]:
+    dfir_iris_client = await create_dfir_iris_client(service_name)
     alert = Alert(session=dfir_iris_client)
     return dfir_iris_client, alert
 
 
-def initialize_client_and_user(service_name: str) -> Tuple[Any, Alert]:
-    dfir_iris_client = create_dfir_iris_client(service_name)
+async def initialize_client_and_user(service_name: str) -> Tuple[Any, Alert]:
+    dfir_iris_client = await create_dfir_iris_client(service_name)
     user = User(session=dfir_iris_client)
     return dfir_iris_client, user
 
@@ -136,17 +139,17 @@ def handle_error(error_message: str, status_code: int = 500):
     raise HTTPException(status_code=status_code, detail=error_message)
 
 
-def fetch_and_validate_data(client: Any, func: Callable, *args: Any) -> Dict:
-    result = fetch_and_parse_data(client, func, *args)
+async def fetch_and_validate_data(client: Any, func: Callable, *args: Any) -> Dict:
+    result = await fetch_and_parse_data(client, func, *args)
     if not result["success"]:
         handle_error(f"Failed to fetch data: {result['message']}")
     return result
 
 
-def check_case_exists(case_id: int) -> bool:
+async def check_case_exists(case_id: int) -> bool:
     try:
         logger.info(f"Checking if case {case_id} exists")
-        dfir_iris_client = create_dfir_iris_client("DFIR-IRIS")
+        dfir_iris_client = await create_dfir_iris_client("DFIR-IRIS")
         case = Case(session=dfir_iris_client)
         data = case.get_case(case_id)
         assert_api_resp(data, soft_fail=False)
@@ -161,9 +164,9 @@ def check_case_exists(case_id: int) -> bool:
         return False
 
 
-def check_alert_exists(alert_id: str) -> bool:
+async def check_alert_exists(alert_id: str) -> bool:
     try:
-        dfir_iris_client = create_dfir_iris_client("DFIR-IRIS")
+        dfir_iris_client = await create_dfir_iris_client("DFIR-IRIS")
     except Exception as e:
         raise HTTPException(
             status_code=500,
@@ -186,10 +189,10 @@ def check_alert_exists(alert_id: str) -> bool:
         return False
 
 
-def check_user_exists(user_id: int) -> bool:
+async def check_user_exists(user_id: int) -> bool:
     try:
         logger.info(f"Checking if user {user_id} exists")
-        dfir_iris_client = create_dfir_iris_client("DFIR-IRIS")
+        dfir_iris_client = await create_dfir_iris_client("DFIR-IRIS")
         user = User(session=dfir_iris_client)
         data = user.get_user(user_id)
         assert_api_resp(data, soft_fail=False)

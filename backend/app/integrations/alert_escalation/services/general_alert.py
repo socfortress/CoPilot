@@ -3,6 +3,7 @@ from typing import Set
 
 from fastapi import HTTPException
 from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
 from app.connectors.dfir_iris.utils.universal import initialize_client_and_alert
@@ -32,9 +33,9 @@ def valid_ioc_fields() -> Set[str]:
     return {field.value for field in ValidIocFields}
 
 
-def get_single_alert_details(alert_details: CreateAlertRequest) -> GenericAlertModel:
+async def get_single_alert_details(alert_details: CreateAlertRequest) -> GenericAlertModel:
     logger.info(f"Fetching alert details for alert {alert_details.alert_id} in index {alert_details.index_name}")
-    es_client = create_wazuh_indexer_client("Wazuh-Indexer")
+    es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
     try:
         alert = es_client.get(index=alert_details.index_name, id=alert_details.alert_id)
         source_model = GenericSourceModel(**alert["_source"])
@@ -110,15 +111,15 @@ def build_alert_payload(alert_details: GenericAlertModel, agent_data, ioc_payloa
         )
 
 
-def create_alert(alert: CreateAlertRequest) -> CreateAlertResponse:
+async def create_alert(alert: CreateAlertRequest, session: AsyncSession) -> CreateAlertResponse:
     logger.info(f"Creating alert {alert.alert_id} in IRIS")
-    alert_details = get_single_alert_details(alert_details=alert)
-    agent_data = get_agent_data(agent_id=alert_details._source.agent_id)
+    alert_details = await get_single_alert_details(alert_details=alert)
+    agent_data = await get_agent_data(session, agent_id=alert_details._source.agent_id)
     alert_details.asset_type_id = get_asset_type_id(os=agent_data.os)
     ioc_payload = build_ioc_payload(alert_details)
     iris_alert_payload = build_alert_payload(alert_details, agent_data, ioc_payload)
-    client, alert = initialize_client_and_alert("DFIR-IRIS")
-    result = fetch_and_validate_data(client, alert.add_alert, iris_alert_payload.to_dict())
+    client, alert = await initialize_client_and_alert("DFIR-IRIS")
+    result = await fetch_and_validate_data(client, alert.add_alert, iris_alert_payload.to_dict())
     try:
         alert_id = result["data"]["alert_id"]
         return CreateAlertResponse(alert_id=alert_id, success=True, message=f"Alert {alert_id} created successfully")

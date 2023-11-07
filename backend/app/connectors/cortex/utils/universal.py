@@ -9,9 +9,10 @@ from loguru import logger
 
 from app.connectors.cortex.schema.analyzers import AnalyzerJobData
 from app.connectors.utils import get_connector_info_from_db
+from app.db.db_session import get_db_session
 
 
-def verify_cortex_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
+async def verify_cortex_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
     """
     Verifies the connection to Cortex service.
 
@@ -35,46 +36,48 @@ def verify_cortex_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
         return {"connectionSuccessful": False, "message": f"Connection to {attributes['connector_url']} failed with error: {e}"}
 
 
-def verify_cortex_connection(connector_name: str) -> str:
+async def verify_cortex_connection(connector_name: str) -> str:
     """
     Returns the authentication token for the Cortex service.
 
     Returns:
         str: Authentication token for the Cortex service.
     """
-    attributes = get_connector_info_from_db(connector_name)
+    async with get_db_session() as session:  # This will correctly enter the context manager
+        attributes = await get_connector_info_from_db(connector_name, session)
     if attributes is None:
         logger.error("No Cortex connector found in the database")
         return None
-    return verify_cortex_credentials(attributes)
+    return await verify_cortex_credentials(attributes)
 
 
-def create_cortex_client(connector_name: str) -> Api:
+async def create_cortex_client(connector_name: str) -> Api:
     """
     Returns an Cortex client for the Wazuh Indexer service.
 
     Returns:
         Cortex: Cortex client for the Cortex service.
     """
-    attributes = get_connector_info_from_db(connector_name)
+    async with get_db_session() as session:  # This will correctly enter the context manager
+        attributes = await get_connector_info_from_db(connector_name, session)
     if attributes is None:
         logger.error("No Wazuh Indexer connector found in the database")
         return None
     return Api(attributes["connector_url"], attributes["connector_api_key"], verify_cert=False)
 
 
-def run_and_wait_for_analyzer(analyzer_name: str, job_data: AnalyzerJobData) -> Dict[str, Any]:
-    api = create_cortex_client("Cortex")  # Create Api object
+async def run_and_wait_for_analyzer(analyzer_name: str, job_data: AnalyzerJobData) -> Dict[str, Any]:
+    api = await create_cortex_client("Cortex")  # Create Api object
     if api is None:
         return {"success": False, "message": "API initialization failed"}
     try:
         job = api.analyzers.run_by_name(analyzer_name, job_data.dict(), force=1)
-        return monitor_analyzer_job(api, job)
+        return await monitor_analyzer_job(api, job)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error running analyzer {analyzer_name}: {e}")
 
 
-def monitor_analyzer_job(api: Api, job: Any) -> Dict[str, Any]:
+async def monitor_analyzer_job(api: Api, job: Any) -> Dict[str, Any]:
     r_json = job.json()
     job_id = r_json["id"]
     logger.info(f"Job ID is: {job_id}")
@@ -100,10 +103,10 @@ def monitor_analyzer_job(api: Api, job: Any) -> Dict[str, Any]:
         r_json = followup_request.json()
         job_state = r_json["status"]
 
-    return retrieve_final_report(api, job_id)
+    return await retrieve_final_report(api, job_id)
 
 
-def retrieve_final_report(api: Api, job_id: str) -> Dict[str, Any]:
+async def retrieve_final_report(api: Api, job_id: str) -> Dict[str, Any]:
     report = api.jobs.get_report(job_id).report
     final_report = report["full"]
     return {"success": True, "message": "Analyzer ran successfully", "report": final_report}

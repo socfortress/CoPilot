@@ -14,10 +14,10 @@ from app.connectors.graylog.schema.collector import RunningInputsResponse
 from app.connectors.graylog.utils.universal import send_get_request
 
 
-def get_indices_full() -> GraylogIndicesResponse:
+async def get_indices_full() -> GraylogIndicesResponse:
     """Get indices from Graylog."""
     logger.info("Getting indices from Graylog")
-    indices_collected = send_get_request(endpoint="/api/system/indexer/indices")
+    indices_collected = await send_get_request(endpoint="/api/system/indexer/indices")
     if indices_collected["success"]:
         try:
             indices_data = indices_collected["data"]["all"]["indices"]
@@ -32,8 +32,8 @@ def get_indices_full() -> GraylogIndicesResponse:
         return GraylogIndicesResponse(indices=[], success=False, message="Failed to collect indices")
 
 
-def fetch_configured_inputs() -> Tuple[bool, List[ConfiguredInput]]:
-    configured_inputs_collected = send_get_request(endpoint="/api/system/inputs")
+async def fetch_configured_inputs() -> Tuple[bool, List[ConfiguredInput]]:
+    configured_inputs_collected = await send_get_request(endpoint="/api/system/inputs")
     success = configured_inputs_collected.get("success", False)
 
     if success:
@@ -43,8 +43,8 @@ def fetch_configured_inputs() -> Tuple[bool, List[ConfiguredInput]]:
         return False, []
 
 
-def fetch_running_inputs() -> Tuple[bool, List[RunningInput]]:
-    running_inputs_collected = send_get_request(endpoint="/api/system/inputstates")
+async def fetch_running_inputs() -> Tuple[bool, List[RunningInput]]:
+    running_inputs_collected = await send_get_request(endpoint="/api/system/inputstates")
     success = running_inputs_collected.get("success", False)
 
     if success:
@@ -54,12 +54,12 @@ def fetch_running_inputs() -> Tuple[bool, List[RunningInput]]:
         return False, []
 
 
-def get_inputs() -> GraylogInputsResponse:
+async def get_inputs() -> GraylogInputsResponse:
     """Get inputs from Graylog."""
     logger.info("Getting inputs from Graylog")
 
-    config_success, configured_inputs_list = fetch_configured_inputs()
-    run_success, running_inputs_list = fetch_running_inputs()
+    config_success, configured_inputs_list = await fetch_configured_inputs()
+    run_success, running_inputs_list = await fetch_running_inputs()
 
     if config_success and run_success:
         logger.info("Successfully fetched both configured and running inputs")
@@ -74,18 +74,18 @@ def get_inputs() -> GraylogInputsResponse:
         return GraylogInputsResponse(configured_inputs=[], running_inputs=[], success=False, message="Failed to collect inputs")
 
 
-def get_inputs_running() -> RunningInputsResponse:
+async def get_inputs_running() -> RunningInputsResponse:
     """Get running inputs from Graylog."""
     logger.info("Getting running inputs from Graylog")
-    run_success, running_inputs_list = fetch_running_inputs()
+    run_success, running_inputs_list = await fetch_running_inputs()
     if run_success:
         return RunningInputsResponse(running_inputs=running_inputs_list, success=True, message="Successfully retrieved running inputs")
 
 
-def get_inputs_configured() -> ConfiguredInputsResponse:
+async def get_inputs_configured() -> ConfiguredInputsResponse:
     """Get configured inputs from Graylog."""
     logger.info("Getting configured inputs from Graylog")
-    config_success, configured_inputs_list = fetch_configured_inputs()
+    config_success, configured_inputs_list = await fetch_configured_inputs()
     if config_success:
         return ConfiguredInputsResponse(
             configured_inputs=configured_inputs_list,
@@ -94,7 +94,7 @@ def get_inputs_configured() -> ConfiguredInputsResponse:
         )
 
 
-def get_index_names() -> List[str]:
+async def get_index_names() -> List[str]:
     """
     Gets the names of all the indices in Graylog.
 
@@ -103,7 +103,7 @@ def get_index_names() -> List[str]:
     """
     logger.info("Getting index names from Graylog")
 
-    indices_collected = get_indices_full()
+    indices_collected = await get_indices_full()
 
     if indices_collected.success:
         # Access the index_name attribute directly
@@ -112,7 +112,7 @@ def get_index_names() -> List[str]:
         return []
 
 
-def get_input_ids() -> List[str]:
+async def get_input_ids() -> List[str]:
     """
     Gets the IDs of all the inputs in Graylog.
 
@@ -121,7 +121,7 @@ def get_input_ids() -> List[str]:
     """
     logger.info("Getting input IDs from Graylog")
 
-    success, inputs_collected = fetch_configured_inputs()
+    success, inputs_collected = await fetch_configured_inputs()
 
     if success:
         # Access the input_id attribute directly

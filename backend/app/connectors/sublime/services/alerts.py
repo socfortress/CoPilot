@@ -3,6 +3,9 @@ from typing import List
 
 from fastapi import HTTPException
 from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
 
 from app.connectors.sublime.models.alerts import FlaggedRule
 from app.connectors.sublime.models.alerts import Mailbox
@@ -15,7 +18,6 @@ from app.connectors.sublime.schema.alerts import AlertResponseBody
 from app.connectors.sublime.schema.alerts import SublimeAlertsResponse
 from app.connectors.sublime.schema.alerts import SublimeAlertsSchema
 from app.connectors.sublime.utils.universal import send_get_request
-from app.db.db_session import session
 
 
 def create_sublime_alert(alert_request_body: AlertRequestBody) -> SublimeAlerts:
@@ -58,17 +60,17 @@ def create_triggered_actions(alert_request_body: AlertRequestBody, sublime_alert
     return triggered_actions
 
 
-def store_sublime_alert(alert_request_body: AlertRequestBody) -> AlertResponseBody:
+async def store_sublime_alert(session: AsyncSession, alert_request_body: AlertRequestBody) -> AlertResponseBody:
     try:
         sublime_alert = create_sublime_alert(alert_request_body)
         session.add(sublime_alert)
-        session.flush()
+        await session.flush()  # Flush to obtain the ID of the new alert
 
         flagged_rules = create_flagged_rules(alert_request_body, sublime_alert.id)
         mailbox = create_mailbox(alert_request_body, sublime_alert.id)
         triggered_actions = create_triggered_actions(alert_request_body, sublime_alert.id)
-        sender = create_sender(alert_request_body, sublime_alert.id)
-        recipient = create_recipient(alert_request_body, sublime_alert.id)
+        sender = await create_sender(alert_request_body, sublime_alert.id)
+        recipient = await create_recipient(alert_request_body, sublime_alert.id)
 
         session.add_all(flagged_rules)
         session.add(mailbox)
@@ -77,29 +79,31 @@ def store_sublime_alert(alert_request_body: AlertRequestBody) -> AlertResponseBo
         session.add(recipient)
 
         logger.info(f"Preparing to store: {sublime_alert}")
-        session.commit()
+        await session.commit()  # Commit the changes asynchronously
         logger.info(f"Alert {alert_request_body.id} stored in the database")
 
         return AlertResponseBody(success=True, message=f"Alert {alert_request_body.id} stored in the database")
     except Exception as e:
+        # Rollback in case of error
+        await session.rollback()
         logger.error(f"Failed to store alert {alert_request_body.id} in the database: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to store alert {alert_request_body.id} in the database: {e}")
 
 
-def create_sender(alert_request_body: AlertRequestBody, sublime_alert_id: int) -> Sender:
-    return Sender(email=collect_sender(alert_request_body.data.message.id), name="n/a", sublime_alert_id=sublime_alert_id)
+async def create_sender(alert_request_body: AlertRequestBody, sublime_alert_id: int) -> Sender:
+    return Sender(email=await collect_sender(alert_request_body.data.message.id), name="n/a", sublime_alert_id=sublime_alert_id)
 
 
-def create_recipient(alert_request_body: AlertRequestBody, sublime_alert_id: int) -> Recipient:
-    return Recipient(email=collect_recipient(alert_request_body.data.message.id), name="n/a", sublime_alert_id=sublime_alert_id)
+async def create_recipient(alert_request_body: AlertRequestBody, sublime_alert_id: int) -> Recipient:
+    return Recipient(email=await collect_recipient(alert_request_body.data.message.id), name="n/a", sublime_alert_id=sublime_alert_id)
 
 
-def collect_sender(message_id: str) -> Sender:
+async def collect_sender(message_id: str) -> Sender:
     """
     Get a single Sublime Alert from the database
     """
     logger.info(f"Getting Sublime Alert with message_id {message_id}")
-    message_details = send_get_request(f"/v0/messages/{message_id}")
+    message_details = await send_get_request(f"/v0/messages/{message_id}")
     if not message_details["success"]:
         logger.error(f"Failed to get Sublime Alert with message_id {message_id}: {message_details['message']}")
         raise HTTPException(
@@ -110,12 +114,12 @@ def collect_sender(message_id: str) -> Sender:
     return message_details["data"]["sender"]["email"]
 
 
-def collect_recipient(message_id: str) -> Recipient:
+async def collect_recipient(message_id: str) -> Recipient:
     """
     Get a single Sublime Alert from the database
     """
     logger.info(f"Getting Sublime Alert with message_id {message_id}")
-    message_details = send_get_request(f"/v0/messages/{message_id}")
+    message_details = await send_get_request(f"/v0/messages/{message_id}")
     if not message_details["success"]:
         logger.error(f"Failed to get Sublime Alert with message_id {message_id}: {message_details['message']}")
         raise HTTPException(
@@ -126,20 +130,29 @@ def collect_recipient(message_id: str) -> Recipient:
     return message_details["data"]["recipients"][0]["email"]
 
 
-def collect_alerts() -> List[SublimeAlertsResponse]:
+async def collect_alerts(session: AsyncSession) -> List[SublimeAlertsResponse]:
     """
-    Get all Sublime Alerts from the database
+    Get all Sublime Alerts from the database asynchronously.
+
+    Args:
+        session (AsyncSession): The database session.
+
+    Returns:
+        List[SublimeAlertsResponse]: A list of SublimeAlertsResponse objects.
     """
     logger.info("Getting all Sublime Alerts")
     try:
-        alerts = session.query(SublimeAlerts).all()
-        # Also add the relationships
-        for alert in alerts:
-            alert.flagged_rules = session.query(FlaggedRule).filter(FlaggedRule.sublime_alert_id == alert.id).all()
-            alert.mailbox = [session.query(Mailbox).filter(Mailbox.sublime_alert_id == alert.id).first()]
-            alert.triggered_actions = session.query(TriggeredAction).filter(TriggeredAction.sublime_alert_id == alert.id).all()
-            alert.sender = [session.query(Sender).filter(Sender.sublime_alert_id == alert.id).first()]
-            alert.recipients = session.query(Recipient).filter(Recipient.sublime_alert_id == alert.id).all()
+        # Asynchronous query to load all alerts and their related objects
+        stmt = select(SublimeAlerts).options(
+            selectinload(SublimeAlerts.flagged_rules),
+            selectinload(SublimeAlerts.mailbox),
+            selectinload(SublimeAlerts.triggered_actions),
+            selectinload(SublimeAlerts.sender),
+            selectinload(SublimeAlerts.recipients),
+        )
+        result = await session.execute(stmt)
+        alerts = result.scalars().all()
+
         logger.info("Successfully retrieved all Sublime Alerts")
         return SublimeAlertsResponse(
             success=True,

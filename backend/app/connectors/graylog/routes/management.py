@@ -29,23 +29,23 @@ from app.connectors.graylog.services.streams import get_stream_ids
 graylog_management_router = APIRouter()
 
 
-def get_managed_index_names() -> List[str]:
-    return get_index_names()
+async def get_managed_index_names() -> List[str]:
+    return await get_index_names()
 
 
-def get_managed_input_ids() -> List[str]:
-    return get_input_ids()
+async def get_managed_input_ids() -> List[str]:
+    return await get_input_ids()
 
 
-def get_managed_stream_ids() -> List[str]:
-    return get_stream_ids()
+async def get_managed_stream_ids() -> List[str]:
+    return await get_stream_ids()
 
 
-def verify_index_name(deleted_index_body: DeletedIndexBody) -> DeletedIndexBody:
+async def verify_index_name(deleted_index_body: DeletedIndexBody) -> DeletedIndexBody:
     # Remove any extra spaces from index_name
     deleted_index_body.index_name = deleted_index_body.index_name.strip()
 
-    managed_index_names = get_managed_index_names()
+    managed_index_names = await get_managed_index_names()
     if deleted_index_body.index_name not in managed_index_names:
         raise HTTPException(
             status_code=400,
@@ -54,21 +54,21 @@ def verify_index_name(deleted_index_body: DeletedIndexBody) -> DeletedIndexBody:
     return deleted_index_body
 
 
-def verify_input_id(stop_input_body: StopInputBody) -> StopInputBody:
+async def verify_input_id(stop_input_body: StopInputBody) -> StopInputBody:
     # Remove any extra spaces from input_id
     stop_input_body.input_id = stop_input_body.input_id.strip()
 
-    managed_input_ids = get_managed_input_ids()
+    managed_input_ids = await get_managed_input_ids()
     if stop_input_body.input_id not in managed_input_ids:
         raise HTTPException(status_code=400, detail=f"Input ID '{stop_input_body.input_id}' is not managed by Graylog or no longer exists.")
     return stop_input_body
 
 
-def verify_stream_id(stop_stream_body: StopStreamBody) -> StopStreamBody:
+async def verify_stream_id(stop_stream_body: StopStreamBody) -> StopStreamBody:
     # Remove any extra spaces from stream_id
     stop_stream_body.stream_id = stop_stream_body.stream_id.strip()
 
-    managed_stream_ids = get_managed_stream_ids()
+    managed_stream_ids = await get_managed_stream_ids()
     if stop_stream_body.stream_id not in managed_stream_ids:
         raise HTTPException(
             status_code=400,
@@ -86,7 +86,7 @@ def verify_stream_id(stop_stream_body: StopStreamBody) -> StopStreamBody:
 async def delete_index_route(deleted_index_body: DeletedIndexBody = Depends(verify_index_name)) -> DeletedIndexResponse:
     logger.info(f"Deleting index {deleted_index_body.index_name}")
 
-    return delete_index(deleted_index_body.index_name)
+    return await delete_index(deleted_index_body.index_name)
 
 
 @graylog_management_router.post(
@@ -98,7 +98,7 @@ async def delete_index_route(deleted_index_body: DeletedIndexBody = Depends(veri
 async def stop_input_route(stop_input_body: StopInputBody = Depends(verify_input_id)) -> StopInputResponse:
     logger.info(f"Stopping input {stop_input_body.input_id}")
 
-    return stop_input(stop_input_body.input_id)
+    return await stop_input(stop_input_body.input_id)
 
 
 @graylog_management_router.post(
@@ -110,7 +110,7 @@ async def stop_input_route(stop_input_body: StopInputBody = Depends(verify_input
 async def start_input_route(start_input_body: StartInputBody = Depends(verify_input_id)) -> StartInputResponse:
     logger.info(f"Starting input {start_input_body.input_id}")
 
-    return start_input(start_input_body.input_id)
+    return await start_input(start_input_body.input_id)
 
 
 @graylog_management_router.post(
@@ -122,7 +122,7 @@ async def start_input_route(start_input_body: StartInputBody = Depends(verify_in
 async def stop_stream_route(stop_stream_body: StopStreamBody = Depends(verify_stream_id)) -> StopStreamResponse:
     logger.info(f"Stopping stream {stop_stream_body.stream_id}")
 
-    return stop_stream(stop_stream_body.stream_id)
+    return await stop_stream(stop_stream_body.stream_id)
 
 
 @graylog_management_router.post(
@@ -134,4 +134,4 @@ async def stop_stream_route(stop_stream_body: StopStreamBody = Depends(verify_st
 async def start_stream_route(start_stream_body: StartStreamBody = Depends(verify_stream_id)) -> StartStreamResponse:
     logger.info(f"Starting stream {start_stream_body.stream_id}")
 
-    return start_stream(start_stream_body.stream_id)
+    return await start_stream(start_stream_body.stream_id)

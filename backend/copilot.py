@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 
 from app.auth.utils import AuthHandler
+from app.db.db_session import async_engine
 from app.db.db_session import engine
 from app.db.db_setup import create_tables
 from app.middleware.exception_handlers import custom_http_exception_handler
@@ -38,10 +39,6 @@ auth_handler = AuthHandler()
 
 
 app = FastAPI(description="CoPilot API", version="0.1.0", title="CoPilot API")
-
-
-# Initialize the scheduler
-scheduler = init_scheduler()
 
 
 # Allow all origins, methods and headers
@@ -84,11 +81,14 @@ app.include_router(logs.router)
 
 @app.on_event("startup")
 async def init_db():
-    create_tables(engine)
+    # create_tables(engine)
+    await create_tables(async_engine)
+    # Initialize the scheduler
+    # scheduler = init_scheduler()
 
-    logger.info("Starting scheduler")
-    if not scheduler.running:
-        scheduler.start()
+    # logger.info("Starting scheduler")
+    # if not scheduler.running:
+    #     scheduler.start()
 
 
 @app.get("/")
@@ -99,6 +99,8 @@ def hello():
 @app.on_event("shutdown")
 async def shutdown_scheduler():
     logger.info("Shutting down scheduler")
+    # Initialize the scheduler
+    scheduler = init_scheduler()
     if scheduler.running:
         scheduler.shutdown()
 

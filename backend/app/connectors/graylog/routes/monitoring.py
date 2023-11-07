@@ -23,7 +23,7 @@ graylog_monitoring_router = APIRouter()
 async def get_all_messages(page_number: int = 1) -> GraylogMessagesResponse:
     logger.info("Fetching all graylog messages")
     logger.info(f"Page number: {page_number}")
-    return get_messages(page_number)
+    return await get_messages(page_number)
 
 
 @graylog_monitoring_router.get(
@@ -34,4 +34,4 @@ async def get_all_messages(page_number: int = 1) -> GraylogMessagesResponse:
 )
 async def get_all_metrics() -> GraylogMetricsResponse:
     logger.info("Fetching all graylog metrics")
-    return get_metrics()
+    return await get_metrics()

@@ -21,7 +21,7 @@ shuffle_workflows_router = APIRouter()
 )
 async def get_all_workflows() -> WorkflowsResponse:
     logger.info("Fetching all workflows")
-    return get_workflows()
+    return await get_workflows()
 
 
 @shuffle_workflows_router.get(
@@ -49,7 +49,7 @@ async def get_all_workflow_executions() -> WorkflowExecutionResponseModel:
                 {
                     "workflow_id": workflow["id"],
                     "workflow_name": workflow["name"],
-                    "status": get_workflow_executions(WorkflowExecutionBodyModel(workflow_id=workflow["id"])),
+                    "status": await get_workflow_executions(WorkflowExecutionBodyModel(workflow_id=workflow["id"])),
                 },
             )
         return WorkflowExecutionResponseModel(success=True, message="Successfully fetched workflow executions", workflows=workflow_details)

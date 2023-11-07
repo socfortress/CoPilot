@@ -8,10 +8,10 @@ from app.connectors.graylog.schema.streams import Stream
 from app.connectors.graylog.utils.universal import send_get_request
 
 
-def get_streams() -> GraylogStreamsResponse:
+async def get_streams() -> GraylogStreamsResponse:
     """Get streams from Graylog."""
     logger.info("Getting streams from Graylog")
-    streams_collected = send_get_request(endpoint="/api/streams")
+    streams_collected = await send_get_request(endpoint="/api/streams")
     try:
         if streams_collected["success"]:
             streams_list = [Stream(**stream_data) for stream_data in streams_collected["data"]["streams"]]
@@ -31,10 +31,10 @@ def get_streams() -> GraylogStreamsResponse:
         raise HTTPException(status_code=500, detail=f"Failed to collect streams: {e}")
 
 
-def get_stream_ids() -> List[str]:
+async def get_stream_ids() -> List[str]:
     """Get stream IDs from Graylog."""
     logger.info("Getting stream IDs from Graylog")
-    streams_collected = send_get_request(endpoint="/api/streams")
+    streams_collected = await send_get_request(endpoint="/api/streams")
     try:
         if streams_collected["success"]:
             return [stream_data["id"] for stream_data in streams_collected["data"]["streams"]]

@@ -20,18 +20,18 @@ from app.connectors.wazuh_manager.utils.universal import send_get_request
 from app.connectors.wazuh_manager.utils.universal import send_put_request
 
 
-def fetch_filename(rule_id: str) -> str:
+async def fetch_filename(rule_id: str) -> str:
     endpoint = "rules"
     params = {"rule_ids": rule_id}
-    filename_data = send_get_request(endpoint=endpoint, params=params)
+    filename_data = await send_get_request(endpoint=endpoint, params=params)
     if filename_data["data"]["data"]["total_affected_items"] == 0:
         raise HTTPException(status_code=404, detail=f"Rule {rule_id} not found. Make sure the rule ID is correct within the Wazuh Manager.")
     return filename_data["data"]["data"]["affected_items"][0]["filename"]
 
 
-def fetch_file_content(filename: str) -> str:
+async def fetch_file_content(filename: str) -> str:
     endpoint = f"rules/files/{filename}"
-    file_content_data = send_get_request(endpoint=endpoint)
+    file_content_data = await send_get_request(endpoint=endpoint)
     if file_content_data["data"]["data"]["total_affected_items"] == 0:
         raise HTTPException(
             status_code=404,
@@ -40,7 +40,7 @@ def fetch_file_content(filename: str) -> str:
     return file_content_data["data"]["data"]["affected_items"][0]["group"]
 
 
-def set_rule_level(file_content: Any, rule_id: str, new_level: str) -> Tuple[str, Any]:
+async def set_rule_level(file_content: Any, rule_id: str, new_level: str) -> Tuple[str, Any]:
     previous_level = None
     try:
         if isinstance(file_content, dict):
@@ -60,7 +60,7 @@ def set_rule_level(file_content: Any, rule_id: str, new_level: str) -> Tuple[str
     return previous_level, file_content
 
 
-def convert_to_xml(updated_file_content: Union[Dict[str, str], List[Dict[str, str]]]) -> str:
+async def convert_to_xml(updated_file_content: Union[Dict[str, str], List[Dict[str, str]]]) -> str:
     xml_content_list = []
     try:
         for group in updated_file_content:
@@ -75,8 +75,8 @@ def convert_to_xml(updated_file_content: Union[Dict[str, str], List[Dict[str, st
     return xml_content
 
 
-def upload_updated_rule(filename: str, xml_content: str):
-    response = send_put_request(
+async def upload_updated_rule(filename: str, xml_content: str):
+    response = await send_put_request(
         endpoint=f"rules/files/{filename}",
         data=xml_content,
         params={"overwrite": "true"},
@@ -87,12 +87,12 @@ def upload_updated_rule(filename: str, xml_content: str):
     return response
 
 
-def process_rule(rule, rule_action_func, ResponseModel):
-    filename, file_content = fetch_filename_and_content(rule.rule_id)
-    previous_level, updated_file_content = rule_action_func(file_content, rule.rule_id)
-    xml_content = convert_to_xml(updated_file_content)
-    upload_updated_rule(filename, xml_content)
-    restart_service()
+async def process_rule(rule, rule_action_func, ResponseModel):
+    filename, file_content = await fetch_filename_and_content(rule.rule_id)
+    previous_level, updated_file_content = await rule_action_func(file_content, rule.rule_id)
+    xml_content = await convert_to_xml(updated_file_content)
+    await upload_updated_rule(filename, xml_content)
+    await restart_service()
     return ResponseModel(
         previous_level=previous_level,
         success=True,
@@ -100,18 +100,28 @@ def process_rule(rule, rule_action_func, ResponseModel):
     )
 
 
-def fetch_filename_and_content(rule_id: str) -> Tuple[str, str]:
-    filename = fetch_filename(rule_id)
-    file_content = fetch_file_content(filename)
+async def fetch_filename_and_content(rule_id: str) -> Tuple[str, str]:
+    filename = await fetch_filename(rule_id)
+    file_content = await fetch_file_content(filename)
     return filename, file_content
 
 
-def disable_rule(rule: RuleDisable) -> RuleDisableResponse:
-    return process_rule(rule, lambda fc, rid: set_rule_level(fc, rid, "1"), RuleDisableResponse)
+# async def disable_rule(rule: RuleDisable) -> RuleDisableResponse:
+#     return await process_rule(rule, lambda fc, rid: set_rule_level(fc, rid, "1"), RuleDisableResponse)
+async def disable_rule(rule: RuleDisable) -> RuleDisableResponse:
+    async def process(fc, rid):
+        return await set_rule_level(fc, rid, "1")
+
+    return await process_rule(rule, process, RuleDisableResponse)
 
 
-def enable_rule(rule: RuleEnable, previous_level: str) -> RuleEnableResponse:
-    return process_rule(rule, lambda fc, rid: set_rule_level(fc, rid, previous_level), RuleEnableResponse)
+# async def enable_rule(rule: RuleEnable, previous_level: str) -> RuleEnableResponse:
+#     return await process_rule(rule, lambda fc, rid: set_rule_level(fc, rid, previous_level), RuleEnableResponse)
+async def enable_rule(rule: RuleEnable, previous_level: str) -> RuleEnableResponse:
+    async def process(fc, rid):
+        return await set_rule_level(fc, rid, previous_level)
+
+    return await process_rule(rule, process, RuleEnableResponse)
 
 
 ################# ! EXCLUDE RULE ! #################

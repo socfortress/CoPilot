@@ -55,7 +55,7 @@ def transform_pipeline_with_rule_ids(pipeline: Pipeline, rule_title_to_id: Dict[
 )
 async def get_all_pipelines() -> GraylogPipelinesResponse:
     logger.info("Fetching all graylog pipelines")
-    return get_pipelines()
+    return await get_pipelines()
 
 
 @graylog_pipelines_router.get(
@@ -65,8 +65,8 @@ async def get_all_pipelines() -> GraylogPipelinesResponse:
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_all_pipelines_with_rule_ids() -> GraylogPipelinesResponseWithRuleID:
-    pipelines_response = get_pipelines()
-    pipeline_rules_response = get_pipeline_rules()
+    pipelines_response = await get_pipelines()
+    pipeline_rules_response = await get_pipeline_rules()
 
     rule_title_to_id = create_rule_title_to_id_dict(pipeline_rules_response.pipeline_rules)
 
@@ -87,7 +87,7 @@ async def get_all_pipelines_with_rule_ids() -> GraylogPipelinesResponseWithRuleI
 )
 async def get_all_pipeline_rules() -> PipelineRulesResponse:
     logger.info("Fetching all graylog pipeline rules")
-    return get_pipeline_rules()
+    return await get_pipeline_rules()
 
 
 @graylog_pipelines_router.get(
@@ -98,4 +98,4 @@ async def get_all_pipeline_rules() -> PipelineRulesResponse:
 )
 async def get_pipeline_rules_for_pipeline(pipeline_id: str) -> PipelineRulesResponse:
     logger.info(f"Fetching all graylog pipeline rules for pipeline {pipeline_id}")
-    return get_pipeline_rule_by_id(pipeline_id)
+    return await get_pipeline_rule_by_id(pipeline_id)

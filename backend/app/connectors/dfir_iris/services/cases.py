@@ -15,17 +15,17 @@ from app.connectors.dfir_iris.utils.universal import create_dfir_iris_client
 from app.connectors.dfir_iris.utils.universal import fetch_and_parse_data
 
 
-def get_client_and_cases() -> Dict:
+async def get_client_and_cases() -> Dict:
     """
     Initialize the client session and fetch all cases.
 
     Returns:
         Dictionary containing the success status and either the case data or an error message.
     """
-    dfir_iris_client = create_dfir_iris_client("DFIR-IRIS")
+    dfir_iris_client = await create_dfir_iris_client("DFIR-IRIS")
     case = Case(session=dfir_iris_client)
     logger.info("Fetching all cases after getting session")
-    result = fetch_and_parse_data(dfir_iris_client, case.list_cases)
+    result = await fetch_and_parse_data(dfir_iris_client, case.list_cases)
     return result
 
 
@@ -67,8 +67,8 @@ def filter_cases_older_than(cases: List[Dict], older_than: datetime) -> List[Dic
     return filtered_cases
 
 
-def get_all_cases() -> CaseResponse:
-    result = get_client_and_cases()
+async def get_all_cases() -> CaseResponse:
+    result = await get_client_and_cases()
     try:
         if not result["success"]:
             logger.error(f"Failed to get all cases: {result['message']}")
@@ -79,8 +79,8 @@ def get_all_cases() -> CaseResponse:
         raise HTTPException(status_code=500, detail=f"Failed to get all cases: {err}")
 
 
-def get_cases_older_than(case_older_than_body: CaseOlderThanBody) -> CasesBreachedResponse:
-    result = get_client_and_cases()
+async def get_cases_older_than(case_older_than_body: CaseOlderThanBody) -> CasesBreachedResponse:
+    result = await get_client_and_cases()
     if not result["success"]:
         logger.error(f"Failed to get all cases: {result['message']}")
         return HTTPException(status_code=500, detail=f"Failed to get all cases: {result['message']}")
@@ -94,8 +94,8 @@ def get_cases_older_than(case_older_than_body: CaseOlderThanBody) -> CasesBreach
     )
 
 
-def get_single_case(case_id: SingleCaseBody) -> SingleCaseResponse:
-    dfir_iris_client = create_dfir_iris_client("DFIR-IRIS")
+async def get_single_case(case_id: SingleCaseBody) -> SingleCaseResponse:
+    dfir_iris_client = await create_dfir_iris_client("DFIR-IRIS")
     case = Case(session=dfir_iris_client)
-    result = fetch_and_parse_data(dfir_iris_client, case.get_case, case_id)
+    result = await fetch_and_parse_data(dfir_iris_client, case.get_case, case_id)
     return SingleCaseResponse(success=True, message="Successfully fetched single case", case=result["data"])

@@ -12,9 +12,10 @@ from loguru import logger
 from app.connectors.utils import get_connector_info_from_db
 from app.connectors.wazuh_indexer.schema.indices import IndexConfigModel
 from app.connectors.wazuh_indexer.schema.indices import Indices
+from app.db.db_session import get_db_session
 
 
-def verify_wazuh_indexer_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
+async def verify_wazuh_indexer_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
     """
     Verifies the connection to Wazuh Indexer service.
 
@@ -40,28 +41,32 @@ def verify_wazuh_indexer_credentials(attributes: Dict[str, Any]) -> Dict[str, An
         return {"connectionSuccessful": False, "message": f"Connection to {attributes['connector_url']} failed with error: {e}"}
 
 
-def verify_wazuh_indexer_connection(connector_name: str) -> str:
+async def verify_wazuh_indexer_connection(connector_name: str) -> str:
     """
     Returns the authentication token for the Wazuh Indexer service.
 
     Returns:
         str: Authentication token for the Wazuh Indexer service.
     """
-    attributes = get_connector_info_from_db(connector_name)
+    async with get_db_session() as session:  # This will correctly enter the context manager
+        attributes = await get_connector_info_from_db(connector_name, session)
+    logger.info(f"Verifying the wazuh-indexer connection to {attributes['connector_url']}")
     if attributes is None:
         logger.error("No Wazuh Indexer connector found in the database")
         return None
-    return verify_wazuh_indexer_credentials(attributes)
+    return await verify_wazuh_indexer_credentials(attributes)
 
 
-def create_wazuh_indexer_client(connector_name: str) -> Elasticsearch:
+async def create_wazuh_indexer_client(connector_name: str) -> Elasticsearch:
     """
     Returns an Elasticsearch client for the Wazuh Indexer service.
 
     Returns:
         Elasticsearch: Elasticsearch client for the Wazuh Indexer service.
     """
-    attributes = get_connector_info_from_db(connector_name)
+    # attributes = get_connector_info_from_db(connector_name)
+    async with get_db_session() as session:  # This will correctly enter the context manager
+        attributes = await get_connector_info_from_db(connector_name, session)
     if attributes is None:
         raise HTTPException(status_code=500, detail=f"No {connector_name} connector found in the database")
     try:
@@ -77,7 +82,7 @@ def create_wazuh_indexer_client(connector_name: str) -> Elasticsearch:
         raise HTTPException(status_code=500, detail=f"Failed to create Elasticsearch client: {e}")
 
 
-def format_node_allocation(node_allocation):
+async def format_node_allocation(node_allocation):
     """
     Format the node allocation details into a list of dictionaries. Each dictionary contains disk used, disk available, total disk, disk
     usage percentage, and node name.
@@ -100,7 +105,7 @@ def format_node_allocation(node_allocation):
     ]
 
 
-def format_indices_stats(indices_stats):
+async def format_indices_stats(indices_stats):
     """
     Format the indices stats details into a list of dictionaries. Each dictionary contains the index name, the number of documents in the index,
     the size of the index, and the number of shards in the index.
@@ -123,7 +128,7 @@ def format_indices_stats(indices_stats):
     ]
 
 
-def format_shards(shards):
+async def format_shards(shards):
     """
     Format the shards details into a list of dictionaries. Each dictionary contains the index name, the shard number, the shard state, the shard
     size, and the node name.
@@ -146,7 +151,7 @@ def format_shards(shards):
     ]
 
 
-def collect_indices() -> Indices:
+async def collect_indices() -> Indices:
     """
     Collects the indices from Elasticsearch.
 
@@ -154,7 +159,7 @@ def collect_indices() -> Indices:
         dict: A dictionary containing the indices, shards, and indices stats.
     """
     logger.info("Collecting indices from Elasticsearch")
-    es = create_wazuh_indexer_client("Wazuh-Indexer")
+    es = await create_wazuh_indexer_client("Wazuh-Indexer")
     try:
         indices_dict = es.indices.get_alias("*")
         indices_list = list(indices_dict.keys())

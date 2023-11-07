@@ -20,7 +20,7 @@ from app.connectors.cortex.utils.universal import (
 )
 
 
-def fetch_analyzers(api: Api) -> List[Dict]:
+async def fetch_analyzers(api: Api) -> List[Dict]:
     try:
         return api.analyzers.find_all({}, range="all")
     except Exception as e:
@@ -36,8 +36,8 @@ def extract_analyzer_names(analyzers: List[Dict]) -> List[str]:
         raise HTTPException(status_code=500, detail=f"Error processing analyzers: {e}")
 
 
-def init_cortex_client() -> Union[Api, None]:
-    return create_cortex_client("Cortex")
+async def init_cortex_client() -> Union[Api, None]:
+    return await create_cortex_client("Cortex")
 
 
 def handle_api_initialization(api: Union[Api, None]) -> Api:
@@ -47,18 +47,18 @@ def handle_api_initialization(api: Union[Api, None]) -> Api:
     return api
 
 
-def get_analyzers() -> AnalyzersResponse:
-    api = init_cortex_client()
+async def get_analyzers() -> AnalyzersResponse:
+    api = await init_cortex_client()
     handle_api_initialization(api)
 
-    analyzers = fetch_analyzers(api)
+    analyzers = await fetch_analyzers(api)
     analyzer_names = extract_analyzer_names(analyzers)
 
     return AnalyzersResponse(success=True, message="Successfully fetched analyzers", analyzers=analyzer_names)
 
 
-def run_analyzer(run_analyzer_body: RunAnalyzerBody, data_type: str) -> RunAnalyzerResponse:
-    api = init_cortex_client()
+async def run_analyzer(run_analyzer_body: RunAnalyzerBody, data_type: str) -> RunAnalyzerResponse:
+    api = await init_cortex_client()
     handle_api_initialization(api)
 
     analyzer_name = run_analyzer_body.analyzer_name
@@ -66,7 +66,7 @@ def run_analyzer(run_analyzer_body: RunAnalyzerBody, data_type: str) -> RunAnaly
     logger.info(f"Running analyzer {analyzer_name} with data {analyzer_data} of type {data_type}")
     job_data = AnalyzerJobData(data=analyzer_data, dataType=data_type)
 
-    result = run_and_wait_for_analyzer(analyzer_name=analyzer_name, job_data=job_data)
+    result = await run_and_wait_for_analyzer(analyzer_name=analyzer_name, job_data=job_data)
 
     if result is None:
         logger.error(f"Failed to run analyzer {analyzer_name}")
