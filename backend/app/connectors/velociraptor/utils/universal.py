@@ -311,7 +311,7 @@ class UniversalService:
         """
         return self.execute_query(vql)["results"][0]["agent_information"]["version"]
 
-    def _get_server_version(self, vql: str):
+    async def _get_server_version(self, vql: str):
         """
         Executes the VQL query and returns the velociraptor server version.
 

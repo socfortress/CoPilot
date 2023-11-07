@@ -17,7 +17,6 @@ from app.agents.schema.agents import AgentUpdateCustomerCodeResponse
 from app.agents.schema.agents import OutdatedVelociraptorAgentsResponse
 from app.agents.schema.agents import OutdatedWazuhAgentsResponse
 from app.agents.schema.agents import SyncedAgentsResponse
-from app.agents.services.modify import mark_agent_criticality
 from app.agents.services.status import get_outdated_agents_velociraptor
 from app.agents.services.status import get_outdated_agents_wazuh
 from app.agents.services.sync import sync_agents
@@ -147,61 +146,91 @@ async def sync_all_agents(backgroud_tasks: BackgroundTasks, session: AsyncSessio
     return SyncedAgentsResponse(success=True, message="Agents synced started successfully")
 
 
-# @agents_router.post(
-#     "/{agent_id}/critical",
-#     response_model=AgentModifyResponse,
-#     description="Mark agent as critical",
-#     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
-# )
-# async def mark_agent_as_critical(agent_id: str) -> AgentModifyResponse:
-#     logger.info(f"Marking agent {agent_id} as critical")
-#     return mark_agent_criticality(agent_id, True)
+@agents_router.post(
+    "/{agent_id}/critical",
+    response_model=AgentModifyResponse,
+    description="Mark agent as critical",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def mark_agent_as_critical(agent_id: str, session: AsyncSession = Depends(get_session)) -> AgentModifyResponse:
+    logger.info(f"Marking agent {agent_id} as critical")
+    # return mark_agent_criticality(agent_id, True)
+    try:
+        # Asynchronously fetch the agent by id
+        result = await session.execute(select(Agents).filter(Agents.agent_id == agent_id))
+        agent = result.scalars().first()
+
+        if not agent:
+            raise HTTPException(status_code=404, detail=f"Agent with agent_id {agent_id} not found")
+
+        agent.critical_asset = True
+        await session.commit()
+
+        return AgentModifyResponse(success=True, message=f"Agent {agent_id} marked as critical: {True}")
+    except Exception as e:
+        session.rollback()  # Roll back the session in case of error
+        raise HTTPException(status_code=500, detail=f"Failed to mark agent as critical: {str(e)}")
 
 
-# @agents_router.post(
-#     "/{agent_id}/noncritical",
-#     response_model=AgentModifyResponse,
-#     description="Mark agent as not critical",
-#     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
-# )
-# async def mark_agent_as_not_critical(agent_id: str) -> AgentModifyResponse:
-#     logger.info(f"Marking agent {agent_id} as not critical")
-#     return mark_agent_criticality(agent_id, False)
+@agents_router.post(
+    "/{agent_id}/noncritical",
+    response_model=AgentModifyResponse,
+    description="Mark agent as not critical",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def mark_agent_as_not_critical(agent_id: str, session: AsyncSession = Depends(get_session)) -> AgentModifyResponse:
+    logger.info(f"Marking agent {agent_id} as not critical")
+    try:
+        # Asynchronously fetch the agent by id
+        result = await session.execute(select(Agents).filter(Agents.agent_id == agent_id))
+        agent = result.scalars().first()
+
+        if not agent:
+            raise HTTPException(status_code=404, detail=f"Agent with agent_id {agent_id} not found")
+
+        agent.critical_asset = False
+        await session.commit()
+
+        return AgentModifyResponse(success=True, message=f"Agent {agent_id} marked as not critical")
+    except Exception as e:
+        await session.rollback()  # Roll back the session in case of error
+        raise HTTPException(status_code=500, detail=f"Failed to mark agent as not critical: {str(e)}")
 
 
-# @agents_router.get(
-#     "/{agent_id}/vulnerabilities",
-#     response_model=WazuhAgentVulnerabilitiesResponse,
-#     description="Get agent vulnerabilities",
-#     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
-# )
-# async def get_agent_vulnerabilities(agent_id: str) -> WazuhAgentVulnerabilitiesResponse:
-#     logger.info(f"Fetching agent {agent_id} vulnerabilities")
-#     return collect_agent_vulnerabilities(agent_id)
+@agents_router.get(
+    "/{agent_id}/vulnerabilities",
+    response_model=WazuhAgentVulnerabilitiesResponse,
+    description="Get agent vulnerabilities",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_agent_vulnerabilities(agent_id: str) -> WazuhAgentVulnerabilitiesResponse:
+    logger.info(f"Fetching agent {agent_id} vulnerabilities")
+    return await collect_agent_vulnerabilities(agent_id)
 
 
-# @agents_router.get(
-#     "/wazuh/outdated",
-#     response_model=OutdatedWazuhAgentsResponse,
-#     description="Get all outdated Wazuh agents",
-#     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
-# )
-# async def get_outdated_wazuh_agents() -> OutdatedWazuhAgentsResponse:
-#     logger.info("Fetching all outdated Wazuh agents")
-#     return get_outdated_agents_wazuh()
+@agents_router.get(
+    "/wazuh/outdated",
+    response_model=OutdatedWazuhAgentsResponse,
+    description="Get all outdated Wazuh agents",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_outdated_wazuh_agents(session: AsyncSession = Depends(get_session)) -> OutdatedWazuhAgentsResponse:
+    logger.info("Fetching all outdated Wazuh agents")
+    return await get_outdated_agents_wazuh(session)
 
 
-# @agents_router.get(
-#     "/velociraptor/outdated",
-#     response_model=OutdatedVelociraptorAgentsResponse,
-#     description="Get all outdated Velociraptor agents",
-#     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
-# )
-# async def get_outdated_velociraptor_agents() -> OutdatedVelociraptorAgentsResponse:
-#     logger.info("Fetching all outdated Velociraptor agents")
-#     return get_outdated_agents_velociraptor()
+@agents_router.get(
+    "/velociraptor/outdated",
+    response_model=OutdatedVelociraptorAgentsResponse,
+    description="Get all outdated Velociraptor agents",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_outdated_velociraptor_agents(session: AsyncSession = Depends(get_session)) -> OutdatedVelociraptorAgentsResponse:
+    logger.info("Fetching all outdated Velociraptor agents")
+    return await get_outdated_agents_velociraptor(session)
 
 
+# ! TODO: FINISH THIS
 # @agents_router.delete(
 #     "/{agent_id}/delete",
 #     response_model=AgentModifyResponse,

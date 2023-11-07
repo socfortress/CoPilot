@@ -8,10 +8,10 @@ from app.agents.wazuh.schema.agents import WazuhAgentVulnerabilitiesResponse
 from app.connectors.wazuh_manager.utils.universal import send_get_request
 
 
-def collect_agent_vulnerabilities(agent_id: str):
+async def collect_agent_vulnerabilities(agent_id: str):
     """Collect agent vulnerabilities from Wazuh Manager."""
     logger.info(f"Collecting agent {agent_id} vulnerabilities from Wazuh Manager")
-    agent_vulnerabilities = send_get_request(endpoint=f"/vulnerability/{agent_id}")
+    agent_vulnerabilities = await send_get_request(endpoint=f"/vulnerability/{agent_id}")
     if agent_vulnerabilities["success"] is False:
         raise HTTPException(status_code=500, detail=agent_vulnerabilities["message"])
 

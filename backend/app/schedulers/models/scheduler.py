@@ -1,6 +1,9 @@
-from sqlmodel import SQLModel, Field
 from datetime import datetime
 from typing import Optional
+
+from sqlmodel import Field
+from sqlmodel import SQLModel
+
 
 class JobMetadata(SQLModel, table=True):
     __tablename__ = "scheduled_job_metadata"
