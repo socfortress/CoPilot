@@ -124,10 +124,10 @@ watch(
 
 onBeforeMount(() => {
 	if (!filters.value.timerange) {
-		filters.value.timerange = timerangeOptions[2].value
+		filters.value.timerange = timerangeOptions[3].value
 	}
 	if (!filters.value.maxAlerts) {
-		filters.value.maxAlerts = maxAlertsOptions[1].value
+		filters.value.maxAlerts = maxAlertsOptions[2].value
 	}
 })
 </script>

@@ -52,7 +52,7 @@
 			<n-drawer-content closable body-content-style="padding:0">
 				<template #header>
 					<span>Rules list</span>
-					<span class="font-mono ml-2 opacity-60" v-if="rulesTotal !== null">{{ rulesTotal }}</span>
+					<span class="font-mono ml-2 text-secondary-color" v-if="rulesTotal !== null">{{ rulesTotal }}</span>
 				</template>
 				<RulesList @loaded="rulesTotal = $event.total" :highlight="highlightRule" />
 			</n-drawer-content>

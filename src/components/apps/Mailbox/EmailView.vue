@@ -67,7 +67,7 @@
 				</n-button>
 			</div>
 			<div class="nav-btns flex items-center gap-2">
-				<span class="opacity-70">1 - 30 of 635</span>
+				<span class="text-secondary-color">1 - 30 of 635</span>
 				<n-button text size="small">
 					<Icon :size="24" :name="ChevronLeftIcon" />
 				</n-button>

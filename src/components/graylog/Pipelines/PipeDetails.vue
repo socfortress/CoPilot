@@ -29,7 +29,7 @@
 								<Icon :name="RulesIcon" :size="18"></Icon>
 							</template>
 							Rules
-							<span class="font-mono ml-2 opacity-60">{{ stage.rules.length }}</span>
+							<span class="font-mono ml-2 text-secondary-color">{{ stage.rules.length }}</span>
 						</n-button>
 					</template>
 

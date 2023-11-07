@@ -1,5 +1,5 @@
 <template>
-	<div class="alert-summary flex flex-col gap-2">
+	<div class="alert-summary flex flex-col">
 		<div class="header-box flex justify-between">
 			<div class="id flex items-center gap-2" @click="gotoIndicesPage(alertsSummary.index_name)">
 				<IndexIcon :health="alertsSummary.indexStats?.health" color v-if="alertsSummary.indexStats?.health" />
@@ -64,10 +64,13 @@ function gotoIndicesPage(index: string) {
 	background-color: var(--bg-color);
 	overflow: hidden;
 	transition: all 0.2s var(--bezier-ease);
+	border: var(--border-small-050);
 
 	.header-box {
 		font-size: 15px;
 		padding: 14px 16px;
+		border-bottom: var(--border-small-100);
+
 		.id {
 			word-break: break-word;
 			line-height: 1;
@@ -89,9 +92,10 @@ function gotoIndicesPage(index: string) {
 			transition: all 0.2s var(--bezier-ease);
 
 			.alert-details {
-				border-top: var(--border-small-100);
+				border-bottom: var(--border-small-100);
 
 				&:last-child {
+					border-bottom: none;
 					border-bottom-left-radius: var(--border-radius);
 					border-bottom-right-radius: var(--border-radius);
 				}
@@ -119,7 +123,7 @@ function gotoIndicesPage(index: string) {
 
 			:deep() {
 				.list-scroll {
-					max-height: 200px;
+					max-height: 250px;
 					transition: all 0.4s var(--bezier-ease);
 				}
 			}
@@ -138,7 +142,7 @@ function gotoIndicesPage(index: string) {
 	}
 
 	&:hover {
-		//box-shadow: 0px 0px 0px 1px var(--primary-color);
+		border-color: var(--primary-color);
 	}
 
 	@container (max-width: 650px) {

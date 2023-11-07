@@ -3,7 +3,7 @@
 		<template #header>
 			<div class="flex align-center justify-between">
 				<span>Nodes Allocation</span>
-				<small class="opacity-50">{{ indicesAllocation.length }}</small>
+				<span class="text-secondary-color font-mono">{{ indicesAllocation.length }}</span>
 			</div>
 		</template>
 		<n-spin :show="loading">

@@ -14,7 +14,7 @@
 					</template>
 					<div class="flex flex-col gap-2">
 						<div class="box">
-							Total Items:
+							Total Summaries:
 							<code>{{ totalAlertsSummary }}</code>
 						</div>
 						<div class="box">
@@ -64,8 +64,8 @@
 			:trap-focus="false"
 			display-directive="show"
 		>
-			<n-drawer-content title="Alerts stats" closable body-content-style="padding:0">
-				<div class="stats flex gap-2">stats...</div>
+			<n-drawer-content title="Alerts stats" closable body-content-style="padding:0" :native-scrollbar="false">
+				<AlertsStats :filters="filters" />
 			</n-drawer-content>
 		</n-drawer>
 
@@ -74,6 +74,8 @@
 			display-directive="show"
 			:trap-focus="false"
 			style="max-width: 90vw; width: 500px"
+			:show-mask="loadingFilters ? 'transparent' : undefined"
+			:class="{ 'opacity-0': loadingFilters }"
 		>
 			<n-drawer-content title="Alerts filters" closable :native-scrollbar="false">
 				<AlertsFilters :filters="filters">
@@ -105,18 +107,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, toRefs, computed } from "vue"
+import { ref, onBeforeMount, toRefs, computed, nextTick, onMounted } from "vue"
 import { useMessage, NSpin, NPopover, NButton, NEmpty, NDrawer, NDrawerContent, NFormItem, NSelect } from "naive-ui"
 import Api from "@/api"
+import AlertsStats from "./AlertsStats.vue"
 import AlertsFilters from "./AlertsFilters.vue"
 import AlertsSummaryItem, { type AlertsSummaryExt } from "./AlertsSummary.vue"
-import { useResizeObserver } from "@vueuse/core"
+import { useResizeObserver, watchDebounced } from "@vueuse/core"
 import Icon from "@/components/common/Icon.vue"
-import type { AlertsSummary } from "@/types/alerts.d"
 import type { AlertsSummaryQuery } from "@/api/alerts"
-import { alerts_summary } from "./mock"
+// import { alerts_summary } from "./mock"
 import type { IndexStats } from "@/types/indices.d"
-import { nextTick } from "vue"
+import axios from "axios"
 import type { Agent } from "@/types/agents.d"
 
 const props = defineProps<{ agentHostname?: string }>()
@@ -130,8 +132,10 @@ const indices = ref<IndexStats[]>([])
 const agents = ref<Agent[]>([])
 const alertsSummaryList = ref<AlertsSummaryExt[]>([])
 const header = ref()
-const showFiltersDrawer = ref(false)
+const loadingFilters = ref(true)
+const showFiltersDrawer = ref(true)
 const showStatsDrawer = ref(false)
+let abortController: AbortController | null = null
 
 const InfoIcon = "carbon:information"
 const FilterIcon = "carbon:filter-edit"
@@ -168,12 +172,14 @@ function addIndexInfo() {
 function getData() {
 	loading.value = true
 
-	Api.alerts
-		.getAll(filters.value)
-		.then(res => {
-			if (res.data.success) {
-				alertsSummaryList.value = res.data?.alerts_summary || []
+	abortController = new AbortController()
 
+	Api.alerts
+		.getAll(filters.value, abortController.signal)
+		.then(res => {
+			alertsSummaryList.value = res.data?.alerts_summary || []
+
+			if (res.data.success) {
 				nextTick(() => {
 					addIndexInfo()
 				})
@@ -182,7 +188,11 @@ function getData() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			if (!axios.isCancel(err)) {
+				alertsSummaryList.value = []
+
+				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			}
 		})
 		.finally(() => {
 			loading.value = false
@@ -212,7 +222,7 @@ function getIndices() {
 						"Wazuh-Indexer returned Unauthorized. Please check your connector credentials."
 				)
 			} else if (err.response?.status === 404) {
-				message.error(err.response?.data?.message || "No alerts were found.")
+				message.error(err.response?.data?.message || "No indices were found.")
 			} else {
 				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
 			}
@@ -249,24 +259,47 @@ useResizeObserver(header, entries => {
 	console.log(width)
 })
 
-/*
-watch([currentPage, pageSize, timerange], ([page, pageSize, timerange]) => {
-	getData(page, pageSize, timerange)
-})
-*/
+watchDebounced(
+	filters,
+	() => {
+		abortController?.abort()
+
+		setTimeout(() => {
+			getData()
+		}, 200)
+	},
+	{ deep: true, debounce: 500, maxWait: 1000 }
+)
+
 onBeforeMount(() => {
 	agentHostname?.value && (filters.value.agentHostname = agentHostname.value)
 
-	alertsSummaryList.value = alerts_summary as AlertsSummary[]
-	// getData()
-
 	getIndices()
 	getAgents()
+
+	// alertsSummaryList.value = alerts_summary as AlertsSummary[]
+	setTimeout(() => {
+		getData()
+	}, 200)
+})
+
+onMounted(() => {
+	showFiltersDrawer.value = false
+	setTimeout(() => {
+		loadingFilters.value = false
+	}, 1000)
 })
 </script>
 
 <style lang="scss" scoped>
 .alerts-list {
+	:deep() {
+		.n-spin-body {
+			top: 100px;
+			text-align: center;
+			width: 80%;
+		}
+	}
 	.list {
 		container-type: inline-size;
 		min-height: 200px;

@@ -35,7 +35,7 @@
 				</h1>
 				<span class="online-badge" v-if="isOnline">ONLINE</span>
 			</div>
-			<div class="label opacity-60 mt-2">Agent #{{ agent?.agent_id }}</div>
+			<div class="label text-secondary-color mt-2">Agent #{{ agent?.agent_id }}</div>
 		</n-spin>
 		<n-card class="p-2" content-style="padding:0">
 			<n-spin :show="loadingAgent">

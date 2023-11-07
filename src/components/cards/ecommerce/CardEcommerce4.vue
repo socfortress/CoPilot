@@ -40,7 +40,7 @@
 						<strong>$299</strong>
 						<span>/year</span>
 						<br />
-						<small class="opacity-60">$24,90/month</small>
+						<small class="text-secondary-color">$24,90/month</small>
 					</div>
 				</div>
 				<n-button type="primary">

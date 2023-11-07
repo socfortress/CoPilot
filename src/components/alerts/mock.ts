@@ -2011,4 +2011,92 @@ const alerts_summary = [
 	}
 ]
 
-export { alerts_summary }
+const alerts_by_host = [
+	{
+		agent_name: "ip-178-216-201-141",
+		number_of_alerts: 4
+	},
+	{
+		agent_name: "WinDev2308Eval",
+		number_of_alerts: 10
+	},
+	{
+		agent_name: "ANSYDWDC01",
+		number_of_alerts: 20
+	},
+	{
+		agent_name: "web1",
+		number_of_alerts: 10
+	},
+	{
+		agent_name: "ssdnodes-zabbix",
+		number_of_alerts: 4
+	}
+]
+
+const alerts_by_rule = [
+	{
+		rule: "Explorer process was accessed by C:\\\\Users\\\\Administrator\\\\AppData\\\\Roaming\\\\Telegram Desktop\\\\Telegram.exe, possible process injection",
+		number_of_alerts: 6
+	},
+	{
+		rule: "Explorer process was accessed by C:\\\\Users\\\\Administrator\\\\AppData\\\\Local\\\\Programs\\\\Messenger\\\\Messenger.exe, possible process injection",
+		number_of_alerts: 4
+	},
+	{
+		rule: "Adversaries may use binary padding to add junk data and change the on-disk representation of malware. This rule detect using dd and truncate to add a junk data to file.",
+		number_of_alerts: 1
+	},
+	{
+		rule: "Detects file and folder permission changes.",
+		number_of_alerts: 7
+	},
+	{
+		rule: "Process Explorer Driver Creation By Non-Sysinternals Binary",
+		number_of_alerts: 20
+	},
+	{
+		rule: "Application Compatibility Database launched",
+		number_of_alerts: 10
+	}
+]
+
+const alerts_by_rule_per_host = [
+	{
+		agent_name: "ANSYDWDC01",
+		number_of_alerts: 20,
+		rule: "Process Explorer Driver Creation By Non-Sysinternals Binary"
+	},
+	{
+		agent_name: "WinDev2308Eval",
+		number_of_alerts: 10,
+		rule: "Application Compatibility Database launched"
+	},
+	{
+		agent_name: "ip-178-216-201-141",
+		number_of_alerts: 4,
+		rule: "Detects file and folder permission changes."
+	},
+	{
+		agent_name: "web1",
+		number_of_alerts: 9,
+		rule: "Explorer process was accessed by C:\\\\Users\\\\Administrator\\\\AppData\\\\Roaming\\\\Telegram Desktop\\\\Telegram.exe, possible process injection"
+	},
+	{
+		agent_name: "web1",
+		number_of_alerts: 1,
+		rule: "Explorer process was accessed by C:\\\\Users\\\\Administrator\\\\AppData\\\\Local\\\\Programs\\\\Messenger\\\\Messenger.exe, possible process injection"
+	},
+	{
+		agent_name: "ssdnodes-zabbix",
+		number_of_alerts: 1,
+		rule: "Adversaries may use binary padding to add junk data and change the on-disk representation of malware. This rule detect using dd and truncate to add a junk data to file."
+	},
+	{
+		agent_name: "ssdnodes-zabbix",
+		number_of_alerts: 3,
+		rule: "Detects file and folder permission changes."
+	}
+]
+
+export { alerts_summary, alerts_by_host, alerts_by_rule, alerts_by_rule_per_host }

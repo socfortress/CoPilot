@@ -45,7 +45,7 @@
 					</div>
 				</template>
 				<div class="mb-2">
-					<div class="opacity-50 text-sm my-1">Time range:</div>
+					<div class="text-secondary-color text-sm my-1">Time range:</div>
 					<n-select size="small" v-model:value="timerange" :options="timeOptions" class="!w-32 mb-1" />
 				</div>
 			</n-popover>

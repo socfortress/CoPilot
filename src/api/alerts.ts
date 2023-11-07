@@ -32,14 +32,17 @@ function getQueryByFilter(filter?: AlertsSummaryQuery): AlertsQuery {
 
 	filter?.agentHostname && (query.agent_name = filter.agentHostname)
 	filter?.indexName && (query.index_name = filter.indexName)
-	filter?.alertField && (query.alert_field = filter.alertField)
-	filter?.alertValue && (query.alert_value = filter.alertValue)
+
+	if (filter?.alertField && filter?.alertValue) {
+		query.alert_field = filter.alertField
+		query.alert_value = filter.alertValue
+	}
 
 	return query
 }
 
 export default {
-	getAll(filter?: AlertsSummaryQuery) {
+	getAll(filter?: AlertsSummaryQuery, signal?: AbortSignal) {
 		const query = getQueryByFilter(filter)
 
 		let url = "/alerts"
@@ -51,24 +54,34 @@ export default {
 			url = "/alerts/index"
 		}
 
-		return HttpClient.post<FlaskBaseResponse & { alerts_summary: AlertsSummary[] }>(url, query)
+		return HttpClient.post<FlaskBaseResponse & { alerts_summary: AlertsSummary[] }>(
+			url,
+			query,
+			signal ? { signal } : {}
+		)
 	},
-	// TODO: to be used to create a select and then filter for hosts
-	getCountByHost(filter?: AlertsSummaryQuery) {
+	getCountByHost(filter?: AlertsSummaryQuery, signal?: AbortSignal) {
 		const query = getQueryByFilter(filter)
-		return HttpClient.post<FlaskBaseResponse & { alerts_by_host: AlertsByHost[] }>(`/alerts/hosts/all`, query)
+		return HttpClient.post<FlaskBaseResponse & { alerts_by_host: AlertsByHost[] }>(
+			`/alerts/hosts/all`,
+			query,
+			signal ? { signal } : {}
+		)
 	},
-	// TODO: to be used to create a select and then filter for rules
-	getCountByRule(filter?: AlertsSummaryQuery) {
+	getCountByRule(filter?: AlertsSummaryQuery, signal?: AbortSignal) {
 		const query = getQueryByFilter(filter)
-		return HttpClient.post<FlaskBaseResponse & { alerts_by_rule: AlertsByRule[] }>(`/alerts/rules/all`, query)
+		return HttpClient.post<FlaskBaseResponse & { alerts_by_rule: AlertsByRule[] }>(
+			`/alerts/rules/all`,
+			query,
+			signal ? { signal } : {}
+		)
 	},
-	// TODO: to be used to create a select and then filter for rules and hosts
-	getCountByRuleHost(filter?: AlertsSummaryQuery) {
+	getCountByRuleHost(filter?: AlertsSummaryQuery, signal?: AbortSignal) {
 		const query = getQueryByFilter(filter)
 		return HttpClient.post<FlaskBaseResponse & { alerts_by_rule_per_host: AlertsByRulePerHost[] }>(
 			`/alerts/rules/hosts/all`,
-			query
+			query,
+			signal ? { signal } : {}
 		)
 	},
 	create(indexName: string, alertId: string) {

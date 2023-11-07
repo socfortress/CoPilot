@@ -3,7 +3,7 @@
 		<template #header>
 			<div class="flex align-center justify-between">
 				<span>Unhealthy Indices</span>
-				<small class="opacity-50">{{ unhealthyIndices.length }}</small>
+				<span class="text-secondary-color font-mono">{{ unhealthyIndices.length }}</span>
 			</div>
 		</template>
 		<n-spin :show="loading">
