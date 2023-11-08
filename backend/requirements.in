@@ -1,5 +1,6 @@
 apscheduler
 aiofiles
+aiosqlite
 bcrypt
 blueprint
 cortex4py
