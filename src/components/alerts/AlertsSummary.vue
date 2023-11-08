@@ -1,15 +1,25 @@
 <template>
 	<div class="alert-summary flex flex-col">
-		<div class="header-box flex justify-between">
+		<div class="header-box flex justify-between gap-4">
 			<div class="id flex items-center gap-2" @click="gotoIndicesPage(alertsSummary.index_name)">
 				<IndexIcon :health="alertsSummary.indexStats?.health" color v-if="alertsSummary.indexStats?.health" />
 				<Icon :name="PlaceholderIcon" v-else :size="18" />
 
 				{{ alertsSummary.index_name }}
 			</div>
-			<div class="total-alerts">
-				Alerts:
-				<strong class="font-mono ml-2">{{ alertsSummary.total_alerts }}</strong>
+			<div class="total-alerts flex items-center flex-wrap justify-end">
+				<n-button
+					v-if="alertsSummary.alerts.length > 3 && showAllAlerts"
+					@click="showAllAlerts = false"
+					class="show-less"
+					size="tiny"
+				>
+					Show less
+				</n-button>
+				<span>
+					Alerts:
+					<strong class="font-mono ml-2">{{ alertsSummary.total_alerts }}</strong>
+				</span>
 			</div>
 		</div>
 		<div class="main-box">
@@ -69,11 +79,11 @@ function gotoIndicesPage(index: string) {
 	.header-box {
 		font-size: 15px;
 		padding: 14px 16px;
+		min-height: 52px;
 		border-bottom: var(--border-small-100);
 
 		.id {
 			word-break: break-word;
-			line-height: 1;
 			cursor: pointer;
 
 			&:hover {
@@ -81,7 +91,22 @@ function gotoIndicesPage(index: string) {
 			}
 		}
 		.total-alerts {
-			line-height: 1.5;
+			text-align: right;
+			gap: 7px;
+
+			.show-less {
+				opacity: 0;
+				animation: show-less-fade 0.3s forwards;
+
+				@keyframes show-less-fade {
+					from {
+						opacity: 0;
+					}
+					to {
+						opacity: 1;
+					}
+				}
+			}
 		}
 	}
 
@@ -130,7 +155,7 @@ function gotoIndicesPage(index: string) {
 			&.expand {
 				:deep() {
 					.list-scroll {
-						max-height: 400px;
+						max-height: 600px;
 					}
 				}
 
@@ -143,9 +168,6 @@ function gotoIndicesPage(index: string) {
 
 	&:hover {
 		border-color: var(--primary-color);
-	}
-
-	@container (max-width: 650px) {
 	}
 }
 </style>

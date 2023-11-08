@@ -1,6 +1,6 @@
 <template>
 	<div class="alerts-stats">
-		<n-tabs default-value="countByHost" justify-content="space-evenly" type="line">
+		<n-tabs default-value="countByHost" animated justify-content="space-evenly" type="line">
 			<n-tab-pane name="countByHost" tab="By Host">
 				<n-spin :show="loadingCountByHost">
 					<template #description>Alerts are being fetched, this may take up to 1 minute.</template>
@@ -199,6 +199,9 @@ onBeforeMount(() => {
 <style lang="scss" scoped>
 .alerts-stats {
 	:deep() {
+		.n-spin-container {
+			min-height: 200px;
+		}
 		.n-spin-body {
 			top: 100px;
 			text-align: center;

@@ -33,7 +33,7 @@
 		<slot />
 
 		<div class="flex gap-2">
-			<n-form-item label="Alerts for index" class="basis-1/2">
+			<n-form-item label="Alerts for group" class="basis-1/2">
 				<n-select v-model:value="filters.maxAlerts" :options="maxAlertsOptions" />
 			</n-form-item>
 			<n-form-item label="Time range" class="basis-1/2">

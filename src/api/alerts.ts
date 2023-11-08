@@ -89,6 +89,6 @@ export default {
 			index_name: indexName,
 			alert_id: alertId
 		}
-		return HttpClient.post<FlaskBaseResponse & { alert_id: number }>(`/alerts/create`, body)
+		return HttpClient.post<FlaskBaseResponse & { alert_id: number }>(`/soc/general_alert/create`, body)
 	}
 }

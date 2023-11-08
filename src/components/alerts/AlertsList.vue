@@ -1,6 +1,6 @@
 <template>
 	<div class="alerts-list">
-		<div class="header flex items-center justify-end gap-2" ref="header">
+		<div class="header flex items-center justify-end gap-2">
 			<div class="info grow flex gap-5">
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
@@ -79,27 +79,25 @@
 		>
 			<n-drawer-content title="Alerts filters" closable :native-scrollbar="false">
 				<AlertsFilters :filters="filters">
-					<div class="flex gap-2">
-						<n-form-item label="Agent" class="basis-1/2">
-							<n-select
-								v-model:value="filters.agentHostname"
-								:options="agentHostnameOptions"
-								placeholder="Agents list"
-								clearable
-								:loading="loadingAgents"
-							/>
-						</n-form-item>
-						<n-form-item label="Index" class="basis-1/2">
-							<n-select
-								v-model:value="filters.indexName"
-								:options="indexNameOptions"
-								clearable
-								filterable
-								placeholder="Indices list"
-								:loading="loadingIndex"
-							/>
-						</n-form-item>
-					</div>
+					<n-form-item label="Agent" v-if="!isFilterPreselected">
+						<n-select
+							v-model:value="filters.agentHostname"
+							:options="agentHostnameOptions"
+							placeholder="Agents list"
+							clearable
+							:loading="loadingAgents"
+						/>
+					</n-form-item>
+					<n-form-item label="Index" v-if="!isFilterPreselected">
+						<n-select
+							v-model:value="filters.indexName"
+							:options="indexNameOptions"
+							clearable
+							filterable
+							placeholder="Indices list"
+							:loading="loadingIndex"
+						/>
+					</n-form-item>
 				</AlertsFilters>
 			</n-drawer-content>
 		</n-drawer>
@@ -113,16 +111,17 @@ import Api from "@/api"
 import AlertsStats from "./AlertsStats.vue"
 import AlertsFilters from "./AlertsFilters.vue"
 import AlertsSummaryItem, { type AlertsSummaryExt } from "./AlertsSummary.vue"
-import { useResizeObserver, watchDebounced } from "@vueuse/core"
+import { watchDebounced } from "@vueuse/core"
 import Icon from "@/components/common/Icon.vue"
 import type { AlertsSummaryQuery } from "@/api/alerts"
 // import { alerts_summary } from "./mock"
+// import type { AlertsSummary } from "@/types/alerts"
 import type { IndexStats } from "@/types/indices.d"
 import axios from "axios"
 import type { Agent } from "@/types/agents.d"
 
-const props = defineProps<{ agentHostname?: string }>()
-const { agentHostname } = toRefs(props)
+const props = defineProps<{ agentHostname?: string; indexName?: string }>()
+const { agentHostname, indexName } = toRefs(props)
 
 const message = useMessage()
 const loadingIndex = ref(false)
@@ -131,7 +130,6 @@ const loading = ref(false)
 const indices = ref<IndexStats[]>([])
 const agents = ref<Agent[]>([])
 const alertsSummaryList = ref<AlertsSummaryExt[]>([])
-const header = ref()
 const loadingFilters = ref(true)
 const showFiltersDrawer = ref(true)
 const showStatsDrawer = ref(false)
@@ -152,11 +150,21 @@ const totalAlerts = computed<number>(() => {
 
 const filters = ref<AlertsSummaryQuery>({})
 
+const isFilterPreselected = computed(() => {
+	return !!agentHostname?.value || !!indexName?.value
+})
+
 const agentHostnameOptions = computed(() => {
+	if (agentHostname?.value) {
+		return [{ value: agentHostname.value, label: agentHostname.value }]
+	}
 	return (agents.value || []).map(o => ({ value: o.hostname, label: o.hostname }))
 })
 
 const indexNameOptions = computed(() => {
+	if (indexName?.value) {
+		return [{ value: indexName.value, label: indexName.value }]
+	}
 	return (indices.value || []).map(o => ({ value: o.index, label: o.index }))
 })
 
@@ -252,13 +260,6 @@ function getAgents() {
 		})
 }
 
-useResizeObserver(header, entries => {
-	const entry = entries[0]
-	const { width } = entry.contentRect
-
-	console.log(width)
-})
-
 watchDebounced(
 	filters,
 	() => {
@@ -272,22 +273,27 @@ watchDebounced(
 )
 
 onBeforeMount(() => {
-	agentHostname?.value && (filters.value.agentHostname = agentHostname.value)
-
 	getIndices()
 	getAgents()
 
 	// alertsSummaryList.value = alerts_summary as AlertsSummary[]
-	setTimeout(() => {
-		getData()
-	}, 200)
 })
 
 onMounted(() => {
-	showFiltersDrawer.value = false
-	setTimeout(() => {
-		loadingFilters.value = false
-	}, 1000)
+	if (agentHostname?.value) {
+		filters.value.agentHostname = agentHostname.value
+	}
+	if (indexName?.value) {
+		filters.value.indexName = indexName.value
+	}
+
+	nextTick(() => {
+		showFiltersDrawer.value = false
+
+		setTimeout(() => {
+			loadingFilters.value = false
+		}, 1000)
+	})
 })
 </script>
 

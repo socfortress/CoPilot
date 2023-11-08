@@ -45,13 +45,15 @@
 							<OverviewSection v-if="agent" :agent="agent" />
 						</div>
 					</n-tab-pane>
-					<n-tab-pane name="Vulnerabilities" tab="Vulnerabilities" display-directive="show">
+					<n-tab-pane name="Vulnerabilities" tab="Vulnerabilities" display-directive="show:lazy">
 						<div class="section">
 							<VulnerabilitiesSection v-if="agent" :agent="agent" />
 						</div>
 					</n-tab-pane>
-					<n-tab-pane name="Alerts" tab="Alerts" display-directive="show">
-						<div class="section">...yet to be implemented...</div>
+					<n-tab-pane name="Alerts" tab="Alerts" display-directive="show:lazy">
+						<div class="section">
+							<AlertsList v-if="agent" :agent-hostname="agent.hostname" />
+						</div>
 					</n-tab-pane>
 				</n-tabs>
 			</n-spin>
@@ -67,6 +69,7 @@ import { type Agent } from "@/types/agents.d"
 import { handleDeleteAgent, isAgentOnline, toggleAgentCritical } from "@/components/agents/utils"
 import { useRouter } from "vue-router"
 import VulnerabilitiesSection from "@/components/agents/VulnerabilitiesSection.vue"
+import AlertsList from "@/components/alerts/AlertsList.vue"
 import OverviewSection from "@/components/agents/OverviewSection.vue"
 import { useMessage, NSpin, NTooltip, NButton, NTabs, NTabPane, NCard, useDialog } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
