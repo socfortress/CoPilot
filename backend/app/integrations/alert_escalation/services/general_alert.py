@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
 from app.connectors.dfir_iris.utils.universal import initialize_client_and_alert
+from app.connectors.utils import get_connector_info_from_db
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
 from app.integrations.alert_escalation.schema.general_alert import CreateAlertRequest
 from app.integrations.alert_escalation.schema.general_alert import CreateAlertResponse
@@ -111,6 +112,36 @@ def build_alert_payload(alert_details: GenericAlertModel, agent_data, ioc_payloa
         )
 
 
+async def construct_soc_alert_url(root_url: str, soc_alert_id: int) -> str:
+    """Constructs the full URL for the SOC alert."""
+    url_path = f"/alerts?cid=1&page=1&per_page=10&sort=desc&alert_ids={soc_alert_id}"
+    return f"{root_url}{url_path}"
+
+
+async def add_alert_to_document(es_client, alert: CreateAlertRequest, soc_alert_id: int, session: AsyncSession) -> Optional[str]:
+    """
+    Update the alert document in Elasticsearch with the provided SOC alert ID URL.
+
+    Parameters:
+    - es_client: The Elasticsearch client instance to use for the update.
+    - alert: The alert request object containing alert_id and index_name.
+    - soc_alert_id: The alert ID as it exists within IRIS.
+    - session: The database session for retrieving connector information.
+
+    Returns:
+    - True if the update is successful, False otherwise.
+    """
+    try:
+        connector_info = await get_connector_info_from_db("DFIR-IRIS", session)
+        full_url = await construct_soc_alert_url(connector_info["connector_url"], soc_alert_id)
+        es_client.update(index=alert.index_name, id=alert.alert_id, body={"doc": {"alert_url": full_url}})
+        logger.info(f"Added alert ID {soc_alert_id} to alert {alert.alert_id} in index {alert.index_name}")
+        return full_url
+    except Exception as e:
+        logger.error(f"Failed to add alert ID {soc_alert_id} to alert {alert.alert_id} in index {alert.index_name}: {e}")
+        return None
+
+
 async def create_alert(alert: CreateAlertRequest, session: AsyncSession) -> CreateAlertResponse:
     logger.info(f"Creating alert {alert.alert_id} in IRIS")
     alert_details = await get_single_alert_details(alert_details=alert)
@@ -118,11 +149,13 @@ async def create_alert(alert: CreateAlertRequest, session: AsyncSession) -> Crea
     alert_details.asset_type_id = get_asset_type_id(os=agent_data.os)
     ioc_payload = build_ioc_payload(alert_details)
     iris_alert_payload = build_alert_payload(alert_details, agent_data, ioc_payload)
-    client, alert = await initialize_client_and_alert("DFIR-IRIS")
-    result = await fetch_and_validate_data(client, alert.add_alert, iris_alert_payload.to_dict())
+    client, alert_client = await initialize_client_and_alert("DFIR-IRIS")
+    result = await fetch_and_validate_data(client, alert_client.add_alert, iris_alert_payload.to_dict())
+    es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
+    iris_url = await add_alert_to_document(es_client, alert, result["data"]["alert_id"], session=session)
     try:
         alert_id = result["data"]["alert_id"]
-        return CreateAlertResponse(alert_id=alert_id, success=True, message=f"Alert {alert_id} created successfully")
+        return CreateAlertResponse(alert_id=alert_id, success=True, message=f"Alert {alert_id} created successfully", alert_url=iris_url)
     except Exception as e:
         logger.error(f"Failed to create alert {alert.alert_id}: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to create alert for ID {alert.alert_id}: {e}")
