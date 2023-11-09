@@ -24,6 +24,9 @@ const alerts_summary = [
 					agent_name: "web1",
 					agent_labels_customer: "wso4vxhq",
 
+					alert_url:
+						"https://ashirs01.socfortress.local/alerts?cid=1&page=1&per_page=10&sort=desc&alert_ids=2751",
+
 					source: "10.255.255.13",
 					streams: ["650d3da25e9a2d550c6d6491"],
 					decoder_name: "windows_eventchannel",

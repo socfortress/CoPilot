@@ -38,7 +38,7 @@
 									<Icon :name="AgentIcon" :size="13" class="!opacity-80"></Icon>
 									Agent
 								</span>
-								<span>{{ alert._source.agent_labels_customer }}</span>
+								<span>{{ alert._source.agent_name }} / {{ alert._source.agent_labels_customer }}</span>
 							</div>
 						</template>
 						<div class="flex flex-col gap-1">
@@ -84,7 +84,11 @@
 				</div>
 			</div>
 			<div class="actions-box flex flex-col justify-end">
-				<n-button :loading="loading" type="warning" secondary @click="createAlert()">
+				<n-button type="primary" secondary v-if="alertUrl" tag="a" :href="alertUrl" target="_blank">
+					<template #icon><Icon :name="ViewIcon"></Icon></template>
+					View Alert
+				</n-button>
+				<n-button :loading="loading" type="warning" secondary @click="createAlert()" v-else>
 					<template #icon><Icon :name="DangerIcon"></Icon></template>
 					Create SOC Alert
 				</n-button>
@@ -92,7 +96,19 @@
 		</div>
 		<div class="footer-box flex justify-between items-center gap-4">
 			<div class="actions-box flex flex-col justify-end">
-				<n-button :loading="loading" type="warning" secondary size="small" @click="createAlert()">
+				<n-button
+					type="primary"
+					secondary
+					size="small"
+					v-if="alertUrl"
+					tag="a"
+					:href="alertUrl"
+					target="_blank"
+				>
+					<template #icon><Icon :name="ViewIcon"></Icon></template>
+					View Alert
+				</n-button>
+				<n-button :loading="loading" type="warning" secondary size="small" @click="createAlert()" v-else>
 					<template #icon><Icon :name="DangerIcon"></Icon></template>
 					Create SOC Alert
 				</n-button>
@@ -124,7 +140,7 @@ import { SimpleJsonViewer } from "vue-sjv"
 import "@/assets/scss/vuesjv-override.scss"
 import { useRouter } from "vue-router"
 import Api from "@/api"
-import { ref } from "vue"
+import { onBeforeMount, ref } from "vue"
 import { useMessage } from "naive-ui/lib"
 
 const { alert } = defineProps<{ alert: Alert }>()
@@ -135,12 +151,15 @@ const DangerIcon = "majesticons:exclamation-line"
 const DisabledIcon = "ph:minus-bold"
 const MailIcon = "carbon:email"
 const AgentIcon = "carbon:police"
+const ViewIcon = "iconoir:eye-alt"
 
 const message = useMessage()
 const router = useRouter()
 const loading = ref(false)
 const showDetails = ref(false)
 const dFormats = useSettingsStore().dateFormat
+
+const alertUrl = ref("")
 
 function formatDate(timestamp: string): string {
 	return dayjs(timestamp).format(dFormats.datetimesec)
@@ -157,6 +176,7 @@ function createAlert() {
 		.create(alert._index, alert._id)
 		.then(res => {
 			if (res.data.success) {
+				res.data.alert_url && (alertUrl.value = res.data.alert_url)
 				message.success(res.data?.message || "SOC Alert created.")
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
@@ -169,6 +189,10 @@ function createAlert() {
 			loading.value = false
 		})
 }
+
+onBeforeMount(() => {
+	alert._source.alert_url && (alertUrl.value = alert._source.alert_url)
+})
 </script>
 
 <style lang="scss" scoped>

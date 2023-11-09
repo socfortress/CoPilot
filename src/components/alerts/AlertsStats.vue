@@ -63,20 +63,28 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, toRefs } from "vue"
+import { ref, onBeforeMount, toRefs, onBeforeUnmount } from "vue"
 import { useMessage, NSpin, NEmpty, NTabs, NTabPane } from "naive-ui"
 import Api from "@/api"
 import AlertsStatsItem from "./AlertsStatsItem.vue"
-import { watchDebounced } from "@vueuse/core"
 import type { AlertsByHost, AlertsByRule, AlertsByRulePerHost } from "@/types/alerts.d"
 import type { AlertsSummaryQuery } from "@/api/alerts"
 import axios from "axios"
+import { onMounted } from "vue"
 // import { alerts_by_host, alerts_by_rule, alerts_by_rule_per_host } from "./mock"
 
 const props = withDefaults(defineProps<{ filters?: AlertsSummaryQuery }>(), {
 	filters: () => ({})
 })
 const { filters } = toRefs(props)
+
+export interface AlertsStatsCTX {
+	startSearch: () => void
+}
+
+const emit = defineEmits<{
+	(e: "mounted", value: AlertsStatsCTX): void
+}>()
 
 const message = useMessage()
 const countByHost = ref<AlertsByHost[]>([])
@@ -167,21 +175,21 @@ function getCountByRuleHost() {
 		})
 }
 
-watchDebounced(
-	filters,
-	() => {
-		abortControllerByHost?.abort()
-		abortControllerByRule?.abort()
-		abortControllerByRuleHost?.abort()
+function startSearch() {
+	cancelSearch()
 
-		setTimeout(() => {
-			getCountByHost()
-			getCountByRule()
-			getCountByRuleHost()
-		}, 200)
-	},
-	{ deep: true, debounce: 500, maxWait: 1000 }
-)
+	setTimeout(() => {
+		getCountByHost()
+		getCountByRule()
+		getCountByRuleHost()
+	}, 200)
+}
+
+function cancelSearch() {
+	abortControllerByHost?.abort()
+	abortControllerByRule?.abort()
+	abortControllerByRuleHost?.abort()
+}
 
 onBeforeMount(() => {
 	/*
@@ -190,9 +198,17 @@ onBeforeMount(() => {
 	countByRuleHost.value = alerts_by_rule_per_host as AlertsByRulePerHost[]
 	*/
 
-	getCountByHost()
-	getCountByRule()
-	getCountByRuleHost()
+	startSearch()
+})
+
+onMounted(() => {
+	emit("mounted", {
+		startSearch
+	})
+})
+
+onBeforeUnmount(() => {
+	cancelSearch()
 })
 </script>
 

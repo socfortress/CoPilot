@@ -25,7 +25,7 @@
 				</n-popover>
 			</div>
 			<div class="actions flex gap-2 items-center">
-				<n-button size="small" @click="showStatsDrawer = true">
+				<n-button size="small" @click="showStatsDrawer = true" v-if="!isFilterPreselected">
 					<template #icon>
 						<Icon :name="StatsIcon" :size="14"></Icon>
 					</template>
@@ -65,7 +65,7 @@
 			display-directive="show"
 		>
 			<n-drawer-content title="Alerts stats" closable body-content-style="padding:0" :native-scrollbar="false">
-				<AlertsStats :filters="filters" />
+				<AlertsStats :filters="filters" @mounted="alertsStatsCTX = $event" />
 			</n-drawer-content>
 		</n-drawer>
 
@@ -78,13 +78,14 @@
 			:class="{ 'opacity-0': loadingFilters }"
 		>
 			<n-drawer-content title="Alerts filters" closable :native-scrollbar="false">
-				<AlertsFilters :filters="filters">
+				<AlertsFilters :filters="filters" @search="startSearch(true)">
 					<n-form-item label="Agent" v-if="!isFilterPreselected">
 						<n-select
 							v-model:value="filters.agentHostname"
 							:options="agentHostnameOptions"
 							placeholder="Agents list"
 							clearable
+							filterable
 							:loading="loadingAgents"
 						/>
 					</n-form-item>
@@ -108,10 +109,9 @@
 import { ref, onBeforeMount, toRefs, computed, nextTick, onMounted } from "vue"
 import { useMessage, NSpin, NPopover, NButton, NEmpty, NDrawer, NDrawerContent, NFormItem, NSelect } from "naive-ui"
 import Api from "@/api"
-import AlertsStats from "./AlertsStats.vue"
+import AlertsStats, { type AlertsStatsCTX } from "./AlertsStats.vue"
 import AlertsFilters from "./AlertsFilters.vue"
 import AlertsSummaryItem, { type AlertsSummaryExt } from "./AlertsSummary.vue"
-import { watchDebounced } from "@vueuse/core"
 import Icon from "@/components/common/Icon.vue"
 import type { AlertsSummaryQuery } from "@/api/alerts"
 // import { alerts_summary } from "./mock"
@@ -119,6 +119,7 @@ import type { AlertsSummaryQuery } from "@/api/alerts"
 import type { IndexStats } from "@/types/indices.d"
 import axios from "axios"
 import type { Agent } from "@/types/agents.d"
+import { onBeforeUnmount } from "vue"
 
 const props = defineProps<{ agentHostname?: string; indexName?: string }>()
 const { agentHostname, indexName } = toRefs(props)
@@ -138,6 +139,8 @@ let abortController: AbortController | null = null
 const InfoIcon = "carbon:information"
 const FilterIcon = "carbon:filter-edit"
 const StatsIcon = "carbon:chart-column"
+
+const alertsStatsCTX = ref<AlertsStatsCTX | null>(null)
 
 const totalAlertsSummary = computed<number>(() => {
 	return alertsSummaryList.value.length || 0
@@ -260,26 +263,37 @@ function getAgents() {
 		})
 }
 
-watchDebounced(
-	filters,
-	() => {
-		abortController?.abort()
+function getStatsFiltersString() {
+	return [filters.value.alertField, filters.value.alertValue, filters.value.maxAlerts, filters.value.timerange].join(
+		","
+	)
+}
 
-		setTimeout(() => {
-			getData()
-		}, 200)
-	},
-	{ deep: true, debounce: 500, maxWait: 1000 }
-)
+let lastStatsFilters = ""
+
+function startSearch(closeDrawer?: boolean) {
+	cancelSearch()
+
+	setTimeout(() => {
+		getData()
+
+		const statsFiltersString = getStatsFiltersString()
+		if (lastStatsFilters !== statsFiltersString) {
+			alertsStatsCTX.value?.startSearch()
+			lastStatsFilters = statsFiltersString
+		}
+	}, 200)
+
+	if (closeDrawer) {
+		showFiltersDrawer.value = false
+	}
+}
+
+function cancelSearch() {
+	abortController?.abort()
+}
 
 onBeforeMount(() => {
-	getIndices()
-	getAgents()
-
-	// alertsSummaryList.value = alerts_summary as AlertsSummary[]
-})
-
-onMounted(() => {
 	if (agentHostname?.value) {
 		filters.value.agentHostname = agentHostname.value
 	}
@@ -287,13 +301,23 @@ onMounted(() => {
 		filters.value.indexName = indexName.value
 	}
 
-	nextTick(() => {
-		showFiltersDrawer.value = false
+	getIndices()
+	getAgents()
 
-		setTimeout(() => {
-			loadingFilters.value = false
-		}, 1000)
-	})
+	// alertsSummaryList.value = alerts_summary as AlertsSummary[]
+	startSearch()
+})
+
+onMounted(() => {
+	showFiltersDrawer.value = false
+
+	setTimeout(() => {
+		loadingFilters.value = false
+	}, 1000)
+})
+
+onBeforeUnmount(() => {
+	cancelSearch()
 })
 </script>
 

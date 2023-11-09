@@ -40,6 +40,15 @@
 				<n-select v-model:value="filters.timerange" :options="timerangeOptions" />
 			</n-form-item>
 		</div>
+
+		<div class="flex justify-end">
+			<n-button strong secondary type="primary" @click="emit('search')">
+				<template #icon>
+					<Icon :name="SearchIcon"></Icon>
+				</template>
+				Search
+			</n-button>
+		</div>
 	</div>
 </template>
 
@@ -54,7 +63,12 @@ import type { AlertsQueryTimeRange, AlertsSummaryQuery } from "@/api/alerts"
 const props = defineProps<{ filters: AlertsSummaryQuery }>()
 const { filters } = toRefs(props)
 
+const emit = defineEmits<{
+	(e: "search"): void
+}>()
+
 const ClearIcon = "mdi:broom"
+const SearchIcon = "carbon:search"
 
 const timerangeOptions: { label: string; value: AlertsQueryTimeRange }[] = [
 	{ label: "1 Hour", value: "1h" },
