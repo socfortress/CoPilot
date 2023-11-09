@@ -25,13 +25,13 @@ from app.connectors.wazuh_indexer.utils.universal import collect_indices
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
 
 
-def collect_and_aggregate_alerts(field_names: List[str], search_body: AlertsSearchBody) -> Dict[str, int]:
-    indices = collect_indices()
+async def collect_and_aggregate_alerts(field_names: List[str], search_body: AlertsSearchBody) -> Dict[str, int]:
+    indices = await collect_indices()
     aggregated_alerts_dict = {}
 
     for index_name in indices.indices_list:
         try:
-            alerts_response = collect_alerts_generic(index_name, body=search_body)
+            alerts_response = await collect_alerts_generic(index_name, body=search_body)
             if alerts_response.success:
                 for alert in alerts_response.alerts:
                     composite_key = tuple(alert["_source"][field] for field in field_names)
@@ -48,8 +48,8 @@ def collect_and_aggregate_alerts(field_names: List[str], search_body: AlertsSear
     return aggregated_alerts_dict
 
 
-def collect_alerts_generic(index_name: str, body: AlertsSearchBody, is_host_specific: bool = False) -> CollectAlertsResponse:
-    es_client = create_wazuh_indexer_client("Wazuh-Indexer")
+async def collect_alerts_generic(index_name: str, body: AlertsSearchBody, is_host_specific: bool = False) -> CollectAlertsResponse:
+    es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
     query_builder = AlertsQueryBuilder()
     query_builder.add_time_range(timerange=body.timerange, timestamp_field=body.timestamp_field)
     query_builder.add_matches(matches=[(body.alert_field, body.alert_value)])
@@ -71,15 +71,15 @@ def collect_alerts_generic(index_name: str, body: AlertsSearchBody, is_host_spec
         raise HTTPException(status_code=500, detail=f"An error occurred while collecting alerts: {e}")
 
 
-def get_alerts_generic(search_body: Type[AlertsSearchBody], is_host_specific: bool = False, index_name: Optional[str] = None):
+async def get_alerts_generic(search_body: Type[AlertsSearchBody], is_host_specific: bool = False, index_name: Optional[str] = None):
     logger.info(f"Collecting Wazuh Indexer alerts for host {search_body.agent_name if is_host_specific else ''}")
     alerts_summary = []
-    indices = collect_indices()
+    indices = await collect_indices()
     index_list = [index_name] if index_name else indices.indices_list  # Use the provided index_name or get all indices
 
     for index_name in index_list:
         try:
-            alerts = collect_alerts_generic(index_name, body=search_body, is_host_specific=is_host_specific)
+            alerts = await collect_alerts_generic(index_name, body=search_body, is_host_specific=is_host_specific)
             if alerts.success and len(alerts.alerts) > 0:
                 alerts_summary.append(
                     {
@@ -105,23 +105,23 @@ def get_alerts_generic(search_body: Type[AlertsSearchBody], is_host_specific: bo
     return {"alerts_summary": alerts_summary, "success": len(alerts_summary) > 0, "message": message}
 
 
-def get_alerts(search_body: AlertsSearchBody) -> AlertsSearchResponse:
-    result = get_alerts_generic(search_body)
+async def get_alerts(search_body: AlertsSearchBody) -> AlertsSearchResponse:
+    result = await get_alerts_generic(search_body)
     return AlertsSearchResponse(**result)
 
 
-def get_host_alerts(search_body: HostAlertsSearchBody) -> HostAlertsSearchResponse:
-    result = get_alerts_generic(search_body, is_host_specific=True)
+async def get_host_alerts(search_body: HostAlertsSearchBody) -> HostAlertsSearchResponse:
+    result = await get_alerts_generic(search_body, is_host_specific=True)
     return HostAlertsSearchResponse(**result)
 
 
-def get_index_alerts(search_body: IndexAlertsSearchBody) -> IndexAlertsSearchResponse:
-    result = get_alerts_generic(search_body, index_name=search_body.index_name)
+async def get_index_alerts(search_body: IndexAlertsSearchBody) -> IndexAlertsSearchResponse:
+    result = await get_alerts_generic(search_body, index_name=search_body.index_name)
     return IndexAlertsSearchResponse(**result)
 
 
-def get_alerts_by_host(search_body: AlertsSearchBody) -> AlertsByHostResponse:
-    aggregated_by_host = collect_and_aggregate_alerts(["agent_name"], search_body)
+async def get_alerts_by_host(search_body: AlertsSearchBody) -> AlertsByHostResponse:
+    aggregated_by_host = await collect_and_aggregate_alerts(["agent_name"], search_body)
     alerts_by_host_list: List[AlertsByHost] = [
         AlertsByHost(agent_name=host[0], number_of_alerts=count)  # host[0] because host is now a tuple
         for host, count in aggregated_by_host.items()
@@ -133,8 +133,8 @@ def get_alerts_by_host(search_body: AlertsSearchBody) -> AlertsByHostResponse:
     )
 
 
-def get_alerts_by_rule(search_body: AlertsSearchBody) -> AlertsByRuleResponse:
-    aggregated_by_rule = collect_and_aggregate_alerts(["rule_description"], search_body)
+async def get_alerts_by_rule(search_body: AlertsSearchBody) -> AlertsByRuleResponse:
+    aggregated_by_rule = await collect_and_aggregate_alerts(["rule_description"], search_body)
     alerts_by_rule_list: List[AlertsByRule] = [
         AlertsByRule(rule=rule[0], number_of_alerts=count)  # rule[0] because rule is now a tuple
         for rule, count in aggregated_by_rule.items()
@@ -146,8 +146,8 @@ def get_alerts_by_rule(search_body: AlertsSearchBody) -> AlertsByRuleResponse:
     )
 
 
-def get_alerts_by_rule_per_host(search_body: AlertsSearchBody) -> AlertsByRulePerHostResponse:
-    aggregated_by_rule_per_host = collect_and_aggregate_alerts(["agent_name", "rule_description"], search_body)
+async def get_alerts_by_rule_per_host(search_body: AlertsSearchBody) -> AlertsByRulePerHostResponse:
+    aggregated_by_rule_per_host = await collect_and_aggregate_alerts(["agent_name", "rule_description"], search_body)
     alerts_by_rule_per_host_list: List[AlertsByRulePerHost] = [
         AlertsByRulePerHost(agent_name=agent_name, rule=rule, number_of_alerts=count)
         for (agent_name, rule), count in aggregated_by_rule_per_host.items()

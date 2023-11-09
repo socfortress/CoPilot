@@ -23,7 +23,7 @@ graylog_events_router = APIRouter()
 )
 async def get_all_event_definitions() -> GraylogEventDefinitionsResponse:
     logger.info("Fetching all graylog event definitions")
-    return get_event_definitions()
+    return await get_event_definitions()
 
 
 @graylog_events_router.post(
@@ -34,4 +34,4 @@ async def get_all_event_definitions() -> GraylogEventDefinitionsResponse:
 )
 async def get_all_alerts(alert_query: AlertQuery) -> GraylogAlertsResponse:
     logger.info("Fetching all graylog alerts")
-    return get_alerts(alert_query)
+    return await get_alerts(alert_query)

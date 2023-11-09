@@ -1,9 +1,6 @@
 <template>
 	<div class="form-wrap">
-		<div class="logo mb-4">
-			<img src="@/assets/images/socfortress_logo.svg?url" v-if="isDark" />
-			<img src="@/assets/images/socfortress_logo.svg?url" v-else />
-		</div>
+		<Logo mini :dark="isDark" class="mb-4" />
 		<div class="title mb-4">{{ title }}</div>
 		<div class="text mb-12">
 			Today is a new day. It's your day. You shape it. Sign in to start managing your projects.
@@ -38,7 +35,8 @@ import { useThemeStore } from "@/stores/theme"
 import SignIn from "./SignIn.vue"
 import ForgotPassword from "./ForgotPassword.vue"
 import SignUp from "./SignUp.vue"
-import { NButton, NDivider } from "naive-ui"
+import Logo from "@/layouts/common/Logo.vue"
+import { NButton } from "naive-ui"
 import { ref, onBeforeMount, computed } from "vue"
 
 export type FormType = "signin" | "signup" | "forgotpassword"
@@ -76,6 +74,12 @@ onBeforeMount(() => {
 	width: 100%;
 	min-width: 270px;
 	max-width: 400px;
+
+	.logo {
+		:deep(img) {
+			max-height: 37px;
+		}
+	}
 
 	.title {
 		font-size: 36px;

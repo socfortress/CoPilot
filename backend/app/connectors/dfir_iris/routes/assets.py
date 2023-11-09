@@ -12,16 +12,16 @@ from app.connectors.dfir_iris.utils.universal import check_case_exists
 # App specific imports
 
 
-def verify_case_exists(case_id: int) -> int:
-    if not check_case_exists(case_id):
+async def verify_case_exists(case_id: int) -> int:
+    if not await check_case_exists(case_id):
         raise HTTPException(status_code=400, detail=f"Case {case_id} does not exist.")
     return case_id
 
 
-assets_router = APIRouter()
+dfir_iris_assets_router = APIRouter()
 
 
-@assets_router.get(
+@dfir_iris_assets_router.get(
     "/{case_id}",
     response_model=AssetResponse,
     description="Get all assets for a case",
@@ -29,4 +29,4 @@ assets_router = APIRouter()
 )
 async def get_case_assets_route(case_id: int = Depends(verify_case_exists)) -> AssetResponse:
     logger.info(f"Fetching assets for case {case_id}")
-    return get_case_assets(case_id)
+    return await get_case_assets(case_id)

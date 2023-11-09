@@ -6,9 +6,10 @@ import requests
 from loguru import logger
 
 from app.connectors.utils import get_connector_info_from_db
+from app.db.db_session import get_db_session
 
 
-def verify_sublime_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
+async def verify_sublime_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
     """
     Verifies the connection to Sublime service.
 
@@ -52,19 +53,20 @@ def verify_sublime_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
         return {"connectionSuccessful": False, "message": f"Connection to {attributes['connector_url']} failed with error: {e}"}
 
 
-def verify_sublime_connection(connector_name: str) -> str:
+async def verify_sublime_connection(connector_name: str) -> str:
     """
     Returns if connection to Sublime service is successful.
     """
     logger.info("Getting Sublime authentication token")
-    attributes = get_connector_info_from_db(connector_name)
+    async with get_db_session() as session:  # This will correctly enter the context manager
+        attributes = await get_connector_info_from_db(connector_name, session)
     if attributes is None:
         logger.error("No Sublime connector found in the database")
         return None
-    return verify_sublime_credentials(attributes)
+    return await verify_sublime_credentials(attributes)
 
 
-def send_get_request(endpoint: str, params: Optional[Dict[str, Any]] = None, connector_name: str = "Sublime") -> Dict[str, Any]:
+async def send_get_request(endpoint: str, params: Optional[Dict[str, Any]] = None, connector_name: str = "Sublime") -> Dict[str, Any]:
     """
     Sends a GET request to the Sublime service.
 
@@ -77,7 +79,8 @@ def send_get_request(endpoint: str, params: Optional[Dict[str, Any]] = None, con
         Dict[str, Any]: The response from the GET request.
     """
     logger.info(f"Sending GET request to {endpoint}")
-    attributes = get_connector_info_from_db(connector_name)
+    async with get_db_session() as session:  # This will correctly enter the context manager
+        attributes = await get_connector_info_from_db(connector_name, session)
     if attributes is None:
         logger.error("No Sublime connector found in the database")
         return None

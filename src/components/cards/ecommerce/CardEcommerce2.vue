@@ -8,7 +8,7 @@
 				<div class="card-header flex justify-between items-center">
 					<div>
 						<span>Premium Headphones</span>
-						<span class="ml-3 opacity-70">$399,00</span>
+						<span class="ml-3 text-secondary-color">$399,00</span>
 					</div>
 					<div class="flex items-center">
 						<Icon class="mr-3" :size="20" :name="HeartIcon"></Icon>

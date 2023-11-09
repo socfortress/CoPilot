@@ -55,4 +55,10 @@
 			background-color: transparent;
 		}
 	}
+
+	.flex.flex-col > .flex {
+		& > div:first-child {
+			white-space: nowrap;
+		}
+	}
 }

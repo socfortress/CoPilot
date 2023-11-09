@@ -5,7 +5,7 @@
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
 						<div class="bg-color border-radius">
-							<n-button size="small">
+							<n-button size="small" class="!cursor-help">
 								<template #icon>
 									<Icon :name="InfoIcon"></Icon>
 								</template>
@@ -31,7 +31,13 @@
 		</div>
 		<div class="list my-3">
 			<template v-if="itemsPaginated.length">
-				<EventItem v-for="event of itemsPaginated" :key="event.id" :event="event" />
+				<EventItem
+					v-for="event of itemsPaginated"
+					:key="event.id"
+					:event="event"
+					:highlight="event.id === highlight"
+					class="mb-2"
+				/>
 			</template>
 			<template v-else>
 				<n-empty description="No items found" v-if="!loading" />
@@ -41,13 +47,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, computed } from "vue"
+import { ref, onBeforeMount, computed, toRefs, nextTick, watch } from "vue"
 import { useMessage, NSpin, NPopover, NButton, NSelect, NEmpty } from "naive-ui"
 import EventItem from "./Item.vue"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import type { EventDefinition } from "@/types/graylog/event-definition.d"
 import type { SelectMixedOption } from "naive-ui/es/select/src/interface"
+
+const props = defineProps<{ highlight: string | null | undefined }>()
+const { highlight } = toRefs(props)
 
 const InfoIcon = "carbon:information"
 
@@ -73,6 +82,17 @@ const itemsPaginated = computed(() => {
 	})
 })
 
+function scrollToEvent(id: string) {
+	const element = document.getElementById(`event-${id}`)
+	const scrollContent = document.querySelector("#main > .n-scrollbar > .n-scrollbar-container") as HTMLElement
+
+	if (element && scrollContent) {
+		const wrap: HTMLElement = scrollContent
+		const middle = element.offsetTop - wrap.offsetHeight / 2
+		scrollContent?.scrollTo({ top: middle, behavior: "smooth" })
+	}
+}
+
 function getData() {
 	loading.value = true
 
@@ -82,6 +102,14 @@ function getData() {
 			if (res.data.success) {
 				events.value = res.data.event_definitions || []
 				total.value = events.value.length || 0
+
+				nextTick(() => {
+					setTimeout(() => {
+						if (highlight.value) {
+							scrollToEvent(highlight.value)
+						}
+					}, 300)
+				})
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
@@ -93,6 +121,16 @@ function getData() {
 			loading.value = false
 		})
 }
+
+watch(highlight, val => {
+	if (val) {
+		nextTick(() => {
+			setTimeout(() => {
+				scrollToEvent(val)
+			})
+		})
+	}
+})
 
 onBeforeMount(() => {
 	getData()

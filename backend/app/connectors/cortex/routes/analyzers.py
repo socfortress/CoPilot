@@ -19,12 +19,13 @@ from app.connectors.cortex.services.analyzers import run_analyzer
 cortex_analyzer_router = APIRouter()
 
 
-def get_available_analyzers() -> List[str]:
-    return get_analyzers().analyzers
+async def get_available_analyzers() -> List[str]:
+    analyzers = await get_analyzers()
+    return analyzers.analyzers
 
 
-def verify_analyzer_exists(run_analyzer_body: RunAnalyzerBody) -> RunAnalyzerBody:
-    available_analyzers = get_available_analyzers()
+async def verify_analyzer_exists(run_analyzer_body: RunAnalyzerBody) -> RunAnalyzerBody:
+    available_analyzers = await get_available_analyzers()
     if run_analyzer_body.analyzer_name not in available_analyzers:
         raise HTTPException(status_code=400, detail=f"Analyzer {run_analyzer_body.analyzer_name} does not exist.")
     return run_analyzer_body
@@ -38,7 +39,7 @@ def verify_analyzer_exists(run_analyzer_body: RunAnalyzerBody) -> RunAnalyzerBod
 )
 async def get_all_analyzers() -> AnalyzersResponse:
     logger.info("Fetching all analyzers")
-    return get_analyzers()
+    return await get_analyzers()
 
 
 @cortex_analyzer_router.post(
@@ -53,4 +54,4 @@ async def run_analyzer_route(run_analyzer_body: RunAnalyzerBody = Depends(verify
         raise HTTPException(status_code=400, detail=f"Invalid data type: {data_type}")
 
     logger.info(f"Running analyzer {run_analyzer_body.analyzer_name} with data {run_analyzer_body.analyzer_data} of type {data_type}")
-    return run_analyzer(run_analyzer_body, data_type)
+    return await run_analyzer(run_analyzer_body, data_type)

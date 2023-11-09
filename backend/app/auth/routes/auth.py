@@ -22,13 +22,14 @@ from app.db.db_session import session
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 1440
 
-user_router = APIRouter()
+auth_router = APIRouter()
 auth_handler = AuthHandler()
 
 
-@user_router.post("/token", response_model=Token)
+@auth_router.post("/token", response_model=Token)
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
-    user = auth_handler.authenticate_user(form_data.username, form_data.password)
+    # user = auth_handler.authenticate_user(form_data.username, form_data.password)
+    user = await auth_handler.authenticate_user(form_data.username, form_data.password)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -36,20 +37,21 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
             headers={"WWW-Authenticate": "Bearer"},
         )
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = auth_handler.encode_token(user.username, access_token_expires)
+    access_token = await auth_handler.encode_token(user.username, access_token_expires)
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@user_router.get("/refresh", response_model=Token)
+@auth_router.get("/refresh", response_model=Token)
 async def refresh_token(current_user: User = Depends(auth_handler.get_current_user)):
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = auth_handler.encode_token(current_user.username, access_token_expires)
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@user_router.post("/register", response_model=UserResponse, status_code=201, description="Register new user")
-def register(user: UserInput):
-    users = select_all_users()
+@auth_router.post("/register", response_model=UserResponse, status_code=201, description="Register new user")
+async def register(user: UserInput):
+    # users = select_all_users()
+    users = await select_all_users()
     if any(x.username == user.username for x in users):
         raise HTTPException(status_code=400, detail="Username is taken")
     hashed_pwd = auth_handler.get_password_hash(user.password)
@@ -59,9 +61,10 @@ def register(user: UserInput):
     return {"message": "User created successfully", "success": True}
 
 
-@user_router.post("/login", response_model=UserLoginResponse, description="Login user", deprecated=True)
-def login(user: UserLogin):
-    user_found = find_user(user.username)
+@auth_router.post("/login", response_model=UserLoginResponse, description="Login user", deprecated=True)
+async def login(user: UserLogin):
+    # user_found = find_user(user.username)
+    user_found = await find_user(user.username)
     if not user_found:
         raise HTTPException(status_code=401, detail="Invalid username and/or password")
     verified = auth_handler.verify_password(user.password, user_found.password)

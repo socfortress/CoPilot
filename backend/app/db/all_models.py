@@ -7,3 +7,4 @@ from app.db.universal_models import Agents
 from app.db.universal_models import Customers
 from app.db.universal_models import CustomersMeta
 from app.db.universal_models import LogEntry
+from app.schedulers.models.scheduler import JobMetadata

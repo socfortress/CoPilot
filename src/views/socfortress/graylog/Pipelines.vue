@@ -52,7 +52,7 @@
 			<n-drawer-content closable body-content-style="padding:0">
 				<template #header>
 					<span>Rules list</span>
-					<span class="font-mono ml-2 opacity-60" v-if="rulesTotal !== null">{{ rulesTotal }}</span>
+					<span class="font-mono ml-2 text-secondary-color" v-if="rulesTotal !== null">{{ rulesTotal }}</span>
 				</template>
 				<RulesList @loaded="rulesTotal = $event.total" :highlight="highlightRule" />
 			</n-drawer-content>
@@ -62,7 +62,7 @@
 
 <script setup lang="ts">
 import { useMessage, NCollapse, NCollapseItem, NSpin, NButton, NModal, NCard, NDrawer, NDrawerContent } from "naive-ui"
-import { onBeforeMount, ref } from "vue"
+import { onBeforeMount, ref, watch } from "vue"
 import type { PipelineFull } from "@/types/graylog/pipelines.d"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
@@ -70,7 +70,6 @@ import PipeDetails from "@/components/graylog/Pipelines/PipeDetails.vue"
 import PipeInfo from "@/components/graylog/Pipelines/PipeInfo.vue"
 import PipeTitle from "@/components/graylog/Pipelines/PipeTitle.vue"
 import RulesList from "@/components/graylog/Pipelines/RulesList.vue"
-import { watch } from "vue"
 
 const RulesIcon = "ic:outline-swipe-right-alt"
 const InfoIcon = "carbon:information"

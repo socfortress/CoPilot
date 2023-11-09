@@ -5,7 +5,7 @@
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
 						<div class="bg-color border-radius">
-							<n-button size="small">
+							<n-button size="small" class="!cursor-help">
 								<template #icon>
 									<Icon :name="InfoIcon"></Icon>
 								</template>
@@ -45,7 +45,7 @@
 				</template>
 				<div class="py-1">
 					<div class="px-3">
-						<div class="opacity-50 text-sm mb-1">Enabled:</div>
+						<div class="text-secondary-color text-sm mb-1">Enabled:</div>
 						<n-select
 							size="small"
 							v-model:value="enabledFilter"
@@ -57,7 +57,7 @@
 					</div>
 					<n-divider class="!my-3" />
 					<div class="px-3">
-						<div class="opacity-50 text-sm mb-1">Editable:</div>
+						<div class="text-secondary-color text-sm mb-1">Editable:</div>
 						<n-select
 							size="small"
 							v-model:value="editableFilter"
@@ -72,7 +72,7 @@
 		</div>
 		<div class="list my-3">
 			<template v-if="itemsPaginated.length">
-				<StreamItem v-for="stream of itemsPaginated" :key="stream.id" :stream="stream" />
+				<StreamItem v-for="stream of itemsPaginated" :key="stream.id" :stream="stream" class="mb-2" />
 			</template>
 			<template v-else>
 				<n-empty description="No items found" v-if="!loading" />

@@ -19,13 +19,13 @@ from app.connectors.dfir_iris.services.cases import get_single_case
 from app.connectors.dfir_iris.utils.universal import check_case_exists
 
 
-def verify_case_exists(case_id: int) -> int:
-    if not check_case_exists(case_id):
+async def verify_case_exists(case_id: int) -> int:
+    if not await check_case_exists(case_id):
         raise HTTPException(status_code=400, detail=f"Case {case_id} does not exist.")
     return case_id
 
 
-cases_router = APIRouter()
+dfir_iris_cases_router = APIRouter()
 
 
 def get_timedelta(older_than: int, time_unit: TimeUnit) -> CaseOlderThanBody:
@@ -39,7 +39,7 @@ def get_timedelta(older_than: int, time_unit: TimeUnit) -> CaseOlderThanBody:
     return CaseOlderThanBody(older_than=delta, time_unit=time_unit)
 
 
-@cases_router.get(
+@dfir_iris_cases_router.get(
     "",
     response_model=CaseResponse,
     description="Get all cases",
@@ -47,10 +47,10 @@ def get_timedelta(older_than: int, time_unit: TimeUnit) -> CaseOlderThanBody:
 )
 async def get_cases_route() -> CaseResponse:
     logger.info("Fetching all cases")
-    return get_all_cases()
+    return await get_all_cases()
 
 
-@cases_router.post(
+@dfir_iris_cases_router.post(
     "/older_than",
     response_model=CasesBreachedResponse,
     description="Get all cases older than a specified date",
@@ -58,10 +58,10 @@ async def get_cases_route() -> CaseResponse:
 )
 async def get_cases_older_than_route(case_older_than_body: CaseOlderThanBody = Depends(get_timedelta)) -> CaseResponse:
     logger.info(f"Fetching all cases older than {case_older_than_body.older_than} ({case_older_than_body.time_unit.value})")
-    return get_cases_older_than(case_older_than_body)
+    return await get_cases_older_than(case_older_than_body)
 
 
-@cases_router.get(
+@dfir_iris_cases_router.get(
     "/{case_id}",
     response_model=SingleCaseResponse,
     description="Get a single case",
@@ -70,4 +70,4 @@ async def get_cases_older_than_route(case_older_than_body: CaseOlderThanBody = D
 async def get_single_case_route(case_id: int = Depends(verify_case_exists)) -> SingleCaseResponse:
     logger.info(f"Fetching case {case_id}")
     single_case_body = SingleCaseBody(case_id=case_id)
-    return get_single_case(single_case_body.case_id)
+    return await get_single_case(single_case_body.case_id)

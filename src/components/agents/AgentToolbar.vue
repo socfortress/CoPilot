@@ -13,7 +13,7 @@
 				<div class="search-info">
 					<strong v-if="agentsFilteredLength !== agentsLength">{{ agentsFilteredLength }}</strong>
 					<span class="mh-5" v-if="agentsFilteredLength !== agentsLength">/</span>
-					<strong>{{ agentsLength }}</strong>
+					<strong class="font-mono">{{ agentsLength }}</strong>
 					Agents
 				</div>
 			</div>
@@ -23,7 +23,7 @@
 					<div class="agents-critical-list" v-if="agentsCritical?.length">
 						<div class="title">
 							Critical Assets
-							<small class="opacity-50">({{ agentsCritical.length }})</small>
+							<small class="text-secondary-color font-mono">({{ agentsCritical.length }})</small>
 						</div>
 						<div class="list">
 							<div
@@ -39,7 +39,7 @@
 					<div class="agents-online-list" v-if="agentsOnline?.length">
 						<div class="title">
 							Online Agents
-							<small class="opacity-50">({{ agentsOnline.length }})</small>
+							<small class="text-secondary-color font-mono">({{ agentsOnline.length }})</small>
 						</div>
 						<div class="list">
 							<div
@@ -104,7 +104,7 @@ const textFilter = computed<string>({
 		height: 100%;
 
 		.search-info {
-			opacity: 0.5;
+			color: var(--fg-secondary-color);
 		}
 		.agents-list {
 			.title {

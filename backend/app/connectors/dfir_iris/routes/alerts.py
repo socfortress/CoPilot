@@ -16,8 +16,8 @@ from app.connectors.dfir_iris.utils.universal import check_alert_exists
 # App specific imports
 
 
-def verify_alert_exists(alert_id: str) -> str:
-    if not check_alert_exists(alert_id):
+async def verify_alert_exists(alert_id: str) -> str:
+    if not await check_alert_exists(alert_id):
         raise HTTPException(status_code=400, detail=f"Alert {alert_id} does not exist.")
     return alert_id
 
@@ -33,7 +33,7 @@ dfir_iris_alerts_router = APIRouter()
 )
 async def get_all_alerts() -> AlertsResponse:
     logger.info("Fetching all alerts")
-    return get_alerts()
+    return await get_alerts()
 
 
 @dfir_iris_alerts_router.get(
@@ -44,7 +44,7 @@ async def get_all_alerts() -> AlertsResponse:
 )
 async def get_all_bookmarked_alerts() -> BookmarkedAlertsResponse:
     logger.info("Fetching all bookmarked alerts")
-    return get_bookmarked_alerts()
+    return await get_bookmarked_alerts()
 
 
 @dfir_iris_alerts_router.post(
@@ -55,7 +55,7 @@ async def get_all_bookmarked_alerts() -> BookmarkedAlertsResponse:
 )
 async def bookmark_alert_route(alert_id: str = Depends(verify_alert_exists)) -> AlertResponse:
     logger.info(f"Bookmarking alert {alert_id}")
-    return bookmark_alert(alert_id, bookmarked=True)
+    return await bookmark_alert(alert_id, bookmarked=True)
 
 
 @dfir_iris_alerts_router.delete(
@@ -66,4 +66,4 @@ async def bookmark_alert_route(alert_id: str = Depends(verify_alert_exists)) -> 
 )
 async def unbookmark_alert_route(alert_id: str = Depends(verify_alert_exists)) -> AlertResponse:
     logger.info(f"Unbookmarking alert {alert_id}")
-    return bookmark_alert(alert_id, bookmarked=False)
+    return await bookmark_alert(alert_id, bookmarked=False)

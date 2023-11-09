@@ -11,7 +11,7 @@ from app.connectors.velociraptor.schema.artifacts import RunCommandBody
 from app.connectors.velociraptor.schema.artifacts import RunCommandResponse
 from app.connectors.velociraptor.utils.universal import UniversalService
 
-universal_service = UniversalService()
+# universal_service = UniversalService()
 
 
 def create_query(query: str) -> str:
@@ -53,7 +53,7 @@ def get_artifact_key(analyzer_body: CollectArtifactBody) -> str:
         return f"collect_client(client_id='{analyzer_body.velociraptor_id}', artifacts=['{analyzer_body.artifact_name}'])"
 
 
-def get_artifacts() -> ArtifactsResponse:
+async def get_artifacts() -> ArtifactsResponse:
     """
     Get all artifacts from Velociraptor.
 
@@ -61,8 +61,9 @@ def get_artifacts() -> ArtifactsResponse:
         ArtifactsResponse: A dictionary containing the artifacts.
     """
     logger.info("Fetching artifacts from Velociraptor")
+    velociraptor_service = await UniversalService.create("Velociraptor")
     query = create_query("SELECT name,description FROM artifact_definitions()")
-    all_artifacts = universal_service.execute_query(query)
+    all_artifacts = velociraptor_service.execute_query(query)
     try:
         if all_artifacts["success"]:
             artifacts = [Artifacts(**artifact) for artifact in all_artifacts["results"]]
@@ -74,7 +75,7 @@ def get_artifacts() -> ArtifactsResponse:
         raise HTTPException(status_code=500, detail=f"Failed to get all artifacts: {err}")
 
 
-def run_artifact_collection(collect_artifact_body: CollectArtifactBody) -> CollectArtifactResponse:
+async def run_artifact_collection(collect_artifact_body: CollectArtifactBody) -> CollectArtifactResponse:
     """
     Run an artifact collection on a client.
 
@@ -84,11 +85,12 @@ def run_artifact_collection(collect_artifact_body: CollectArtifactBody) -> Colle
     Returns:
         RunAnalyzerResponse: A dictionary containing the success status and a message.
     """
+    velociraptor_service = await UniversalService.create("Velociraptor")
     try:
         query = create_query(
             f"SELECT collect_client(client_id='{collect_artifact_body.velociraptor_id}', artifacts=['{collect_artifact_body.artifact_name}']) FROM scope()",
         )
-        flow = universal_service.execute_query(query)
+        flow = velociraptor_service.execute_query(query)
         logger.info(f"Successfully ran artifact collection on {flow}")
 
         artifact_key = get_artifact_key(analyzer_body=collect_artifact_body)
@@ -96,10 +98,10 @@ def run_artifact_collection(collect_artifact_body: CollectArtifactBody) -> Colle
         flow_id = flow["results"][0][artifact_key]["flow_id"]
         logger.info(f"Extracted flow_id: {flow_id}")
 
-        completed = universal_service.watch_flow_completion(flow_id)
+        completed = velociraptor_service.watch_flow_completion(flow_id)
         logger.info(f"Successfully watched flow completion on {completed}")
 
-        results = universal_service.read_collection_results(
+        results = velociraptor_service.read_collection_results(
             client_id=collect_artifact_body.velociraptor_id,
             flow_id=flow_id,
             artifact=collect_artifact_body.artifact_name,
@@ -116,7 +118,7 @@ def run_artifact_collection(collect_artifact_body: CollectArtifactBody) -> Colle
         raise HTTPException(status_code=500, detail=f"Failed to run artifact collection on {collect_artifact_body}: {err}")
 
 
-def run_remote_command(run_command_body: RunCommandBody) -> RunCommandResponse:
+async def run_remote_command(run_command_body: RunCommandBody) -> RunCommandResponse:
     """
     Run a remote command on a client.
 
@@ -126,6 +128,7 @@ def run_remote_command(run_command_body: RunCommandBody) -> RunCommandResponse:
     Returns:
         RunAnalyzerResponse: A dictionary containing the success status and a message.
     """
+    velociraptor_service = await UniversalService.create("Velociraptor")
     try:
         run_command_body.artifact_name = run_command_body.artifact_name.value
         logger.info(f"Running remote command on {run_command_body}")
@@ -133,7 +136,7 @@ def run_remote_command(run_command_body: RunCommandBody) -> RunCommandResponse:
             f"SELECT collect_client(client_id='{run_command_body.velociraptor_id}', urgent=true, artifacts=['{run_command_body.artifact_name}'], env=dict(Command='{run_command_body.command}')) "
             "FROM scope()",
         )
-        flow = universal_service.execute_query(query)
+        flow = velociraptor_service.execute_query(query)
         logger.info(f"Successfully ran artifact collection on {flow}")
 
         artifact_key = get_artifact_key(analyzer_body=run_command_body)
@@ -141,10 +144,10 @@ def run_remote_command(run_command_body: RunCommandBody) -> RunCommandResponse:
         flow_id = flow["results"][0][artifact_key]["flow_id"]
         logger.info(f"Extracted flow_id: {flow_id}")
 
-        completed = universal_service.watch_flow_completion(flow_id)
+        completed = velociraptor_service.watch_flow_completion(flow_id)
         logger.info(f"Successfully watched flow completion on {completed}")
 
-        results = universal_service.read_collection_results(
+        results = velociraptor_service.read_collection_results(
             client_id=run_command_body.velociraptor_id,
             flow_id=flow_id,
             artifact=run_command_body.artifact_name,
@@ -158,7 +161,7 @@ def run_remote_command(run_command_body: RunCommandBody) -> RunCommandResponse:
         raise HTTPException(status_code=500, detail=f"Failed to run artifact collection on {run_command_body}: {err}")
 
 
-def quarantine_host(quarantine_body: QuarantineBody) -> QuarantineResponse:
+async def quarantine_host(quarantine_body: QuarantineBody) -> QuarantineResponse:
     """
     Quarantine a host.
 
@@ -168,6 +171,7 @@ def quarantine_host(quarantine_body: QuarantineBody) -> QuarantineResponse:
     Returns:
         QuarantineResponse: A dictionary containing the success status and a message.
     """
+    velociraptor_service = await UniversalService.create("Velociraptor")
     try:
         quarantine_body.artifact_name = quarantine_body.artifact_name.value
         quarantine_body.action = quarantine_body.action.value
@@ -179,7 +183,7 @@ def quarantine_host(quarantine_body: QuarantineBody) -> QuarantineResponse:
             query = create_query(
                 f'SELECT collect_client(client_id="{quarantine_body.velociraptor_id}", artifacts=["{quarantine_body.artifact_name}"], spec=dict(`{quarantine_body.artifact_name}`=dict(`RemovePolicy`="Y"))) FROM scope()',
             )
-        flow = universal_service.execute_query(query)
+        flow = velociraptor_service.execute_query(query)
         logger.info(f"Successfully ran artifact collection on {flow}")
 
         artifact_key = get_artifact_key(analyzer_body=quarantine_body)
@@ -187,10 +191,10 @@ def quarantine_host(quarantine_body: QuarantineBody) -> QuarantineResponse:
         flow_id = flow["results"][0][artifact_key]["flow_id"]
         logger.info(f"Extracted flow_id: {flow_id}")
 
-        completed = universal_service.watch_flow_completion(flow_id)
+        completed = velociraptor_service.watch_flow_completion(flow_id)
         logger.info(f"Successfully watched flow completion on {completed}")
 
-        results = universal_service.read_collection_results(
+        results = velociraptor_service.read_collection_results(
             client_id=quarantine_body.velociraptor_id,
             flow_id=flow_id,
             artifact=quarantine_body.artifact_name,

@@ -64,6 +64,14 @@ const router = createRouter({
 				}
 			]
 		},
+		{
+			path: "/alerts",
+			name: "Alerts",
+			component: () => import("@/views/socfortress/Alerts.vue"),
+			meta: { title: "Alerts", auth: true, roles: UserRole.All }
+		},
+
+		// DEMO PAGES ==========================================================
 
 		{
 			path: "/dashboard",

@@ -8,9 +8,9 @@ from app.connectors.wazuh_manager.utils.universal import send_delete_request
 from app.connectors.wazuh_manager.utils.universal import send_get_request
 
 
-def collect_wazuh_agents() -> WazuhAgentsList:
+async def collect_wazuh_agents() -> WazuhAgentsList:
     logger.info("Collecting all agents from Wazuh Manager")
-    agents_collected = send_get_request(endpoint="/agents", params={"limit": 1000})
+    agents_collected = await send_get_request(endpoint="/agents", params={"limit": 1000})
 
     if agents_collected.get("success") == False:
         raise HTTPException(

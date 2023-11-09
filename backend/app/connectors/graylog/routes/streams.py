@@ -20,4 +20,4 @@ graylog_streams_router = APIRouter()
 )
 async def get_all_streams() -> GraylogStreamsResponse:
     logger.info("Fetching all graylog streams")
-    return get_streams()
+    return await get_streams()

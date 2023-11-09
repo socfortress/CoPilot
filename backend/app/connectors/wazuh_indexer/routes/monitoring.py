@@ -37,7 +37,7 @@ async def get_cluster_health() -> Union[ClusterHealthResponse, HTTPException]:
     Raises:
         HTTPException: An exception with a 500 status code is raised if the cluster health cannot be retrieved.
     """
-    cluster_health = cluster_healthcheck()
+    cluster_health = await cluster_healthcheck()
     if cluster_health is not None:
         return cluster_health
     else:
@@ -62,7 +62,7 @@ async def get_node_allocation() -> Union[NodeAllocationResponse, HTTPException]:
     Raises:
         HTTPException: An exception with a 500 status code is raised if the node allocation cannot be retrieved.
     """
-    node_allocation_response = node_allocation()
+    node_allocation_response = await node_allocation()
     if node_allocation_response is not None:
         return node_allocation_response
     else:
@@ -87,7 +87,7 @@ async def get_indices_stats() -> Union[IndicesStatsResponse, HTTPException]:
     Raises:
         HTTPException: An exception with a 500 status code is raised if the indices stats cannot be retrieved.
     """
-    indices_stats_response = indices_stats()
+    indices_stats_response = await indices_stats()
     if indices_stats_response is not None:
         return indices_stats_response
     else:
@@ -112,7 +112,7 @@ async def get_shards() -> Union[ShardsResponse, HTTPException]:
     Raises:
         HTTPException: An exception with a 500 status code is raised if the shards cannot be retrieved.
     """
-    shards_response = shards()
+    shards_response = await shards()
     if shards_response is not None:
         return shards_response
     else:

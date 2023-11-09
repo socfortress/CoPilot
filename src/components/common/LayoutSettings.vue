@@ -72,7 +72,7 @@
 					<div class="ls-section ls-nav-selection">
 						<div class="ls-label">
 							Navbar
-							<span v-if="isMobileView" class="opacity-60">(desktop only)</span>
+							<span v-if="isMobileView" class="text-secondary-color">(desktop only)</span>
 						</div>
 						<div class="flex items-center gap-2">
 							<div class="basis-1/2">
@@ -102,14 +102,14 @@
 							<div class="flex justify-between items-center">
 								<div class="switch-label">
 									View boxed
-									<span v-if="isMobileView" class="opacity-60">(desktop only)</span>
+									<span v-if="isMobileView" class="text-secondary-color">(desktop only)</span>
 								</div>
 								<n-switch v-model:value="boxed" :disabled="isMobileView" size="small" />
 							</div>
 							<div class="flex justify-between items-center">
 								<div class="switch-label">
 									Toolbar boxed
-									<span v-if="isMobileView" class="opacity-60">(desktop only)</span>
+									<span v-if="isMobileView" class="text-secondary-color">(desktop only)</span>
 								</div>
 								<n-switch
 									v-model:value="toolbarBoxed"

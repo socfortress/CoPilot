@@ -5,7 +5,7 @@
 		</template>
 		<template #header>
 			<span>Super bike</span>
-			<span class="ml-3 opacity-70">$644,00</span>
+			<span class="ml-3 text-secondary-color">$644,00</span>
 		</template>
 		<template #header-extra>
 			<Icon class="mr-3" :size="20" color="#FF0156" :name="HeartIcon"></Icon>

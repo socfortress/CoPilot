@@ -1,5 +1,5 @@
 <template>
-	<div class="item flex flex-col mb-2 gap-2 px-5 py-3" :class="{ default: stream.is_default }">
+	<div class="item flex flex-col gap-2 px-5 py-3" :class="{ default: stream.is_default }">
 		<div class="header-box flex justify-between">
 			<div class="info flex items-center gap-2">
 				<div class="user flex items-center gap-2">

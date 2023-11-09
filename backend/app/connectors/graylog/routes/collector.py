@@ -26,7 +26,7 @@ graylog_collector_router = APIRouter()
 )
 async def get_all_indices() -> GraylogIndicesResponse:
     logger.info("Fetching all graylog indices")
-    return get_indices_full()
+    return await get_indices_full()
 
 
 @graylog_collector_router.get(
@@ -37,7 +37,7 @@ async def get_all_indices() -> GraylogIndicesResponse:
 )
 async def get_all_inputs() -> GraylogInputsResponse:
     logger.info("Fetching all graylog inputs")
-    return get_inputs()
+    return await get_inputs()
 
 
 @graylog_collector_router.get(
@@ -48,7 +48,7 @@ async def get_all_inputs() -> GraylogInputsResponse:
 )
 async def get_all_running_inputs() -> RunningInputsResponse:
     logger.info("Fetching all graylog running inputs")
-    return get_inputs_running()
+    return await get_inputs_running()
 
 
 @graylog_collector_router.get(
@@ -59,4 +59,4 @@ async def get_all_running_inputs() -> RunningInputsResponse:
 )
 async def get_all_configured_inputs() -> ConfiguredInputsResponse:
     logger.info("Fetching all graylog configured inputs")
-    return get_inputs_configured()
+    return await get_inputs_configured()

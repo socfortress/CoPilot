@@ -6,6 +6,7 @@ from typing import Optional
 from typing import Union
 
 from fastapi import APIRouter
+from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Request
 from fastapi import Security
@@ -14,11 +15,14 @@ from loguru import logger
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import validator
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 
 from app.auth.services.universal import find_user
 from app.auth.utils import AuthHandler
 from app.db.db_session import Session
 from app.db.db_session import engine
+from app.db.db_session import get_session
 from app.db.universal_models import LogEntry
 
 
@@ -172,24 +176,36 @@ class TimeRangeModel(BaseModel):
 
 #########! LOGGER CLASS !#########
 class Logger:
-    def __init__(self, session, auth_handler: AuthHandler):
+    # def __init__(self, session, auth_handler: AuthHandler):
+    #     self.session = session
+    #     self.auth_handler = auth_handler
+    def __init__(self, session: AsyncSession, auth_handler: AuthHandler):
         self.session = session
         self.auth_handler = auth_handler
 
+    # async def get_user_id_from_request(self, request: Request):
+    #     auth_header = request.headers.get("Authorization")
+    #     if auth_header:
+    #         token = auth_header.replace("Bearer ", "")
+    #         username, _ = self.auth_handler.decode_token(token)
+    #         user = find_user(username)
+    #         if user:
+    #             return user.id
+    #     return None
     async def get_user_id_from_request(self, request: Request):
         auth_header = request.headers.get("Authorization")
         if auth_header:
-            token = auth_header.replace("Bearer ", "")
+            token = auth_header.split(" ")[1]  # Better split by space and take the second part
             username, _ = self.auth_handler.decode_token(token)
-            user = find_user(username)
+            user = await find_user(username)  # Correctly using await for an async call
             if user:
                 return user.id
         return None
 
-    def insert_log_entry(self, log_entry_model: LogEntryModel):
+    async def insert_log_entry(self, log_entry_model: LogEntryModel):
         log_entry = LogEntry(**log_entry_model.dict())
         self.session.add(log_entry)
-        self.session.commit()
+        await self.session.commit()
 
     async def log_route_access(self, user_id, request: Request, response):
         log_entry_model = LogEntryModel(
@@ -200,7 +216,7 @@ class Logger:
             status_code=response.status_code,
             message="Route accessed",
         )
-        self.insert_log_entry(log_entry_model)
+        await self.insert_log_entry(log_entry_model)
 
     async def log_error(self, user_id, request: Request, exception: Exception, additional_info: Optional[str] = None):
         log_entry_model = LogEntryModel(
@@ -212,14 +228,16 @@ class Logger:
             message=str(exception),
             additional_info=additional_info,
         )
-        self.insert_log_entry(log_entry_model)
+        await self.insert_log_entry(log_entry_model)
 
     async def log_and_raise_http_error(self, user_id, request: Request, exception: Exception):
         await self.log_error(user_id, request, exception)
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
-    def fetch_all_logs(self):
-        logs = self.session.query(LogEntry).all()  # Replace LogEntry with your actual LogEntry model
+    async def fetch_all_logs(self):
+        # Perform an asynchronous query to fetch all log entries
+        result = await self.session.execute(select(LogEntry))
+        logs = result.scalars().all()
         return logs
 
 
@@ -233,7 +251,7 @@ logs_router = APIRouter()
     description="Fetch all logs",
     dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
 )
-async def get_logs() -> LogsResponse:  # Update this line to use the new model
+async def get_logs(session: AsyncSession = Depends(get_session)) -> LogsResponse:
     """
     Fetch all logs from the database.
 
@@ -246,15 +264,14 @@ async def get_logs() -> LogsResponse:  # Update this line to use the new model
     Raises:
         HTTPException: An exception with a 404 status code is raised if no logs are found.
     """
-    with Session(engine) as session:
-        auth_handler_instance = AuthHandler()  # Replace with your actual AuthHandler initialization
-        logger_instance = Logger(session, auth_handler_instance)
+    auth_handler_instance = AuthHandler()  # Initialize your AuthHandler
+    logger_instance = Logger(session, auth_handler_instance)
 
-        logs = logger_instance.fetch_all_logs()
-        if logs:
-            return LogsResponse(logs=logs, success=True, message="Logs fetched successfully")
-        else:
-            raise HTTPException(status_code=404, detail="No logs found")
+    logs = await logger_instance.fetch_all_logs()  # Assuming fetch_all_logs is an async function
+    if logs:
+        return LogsResponse(logs=logs, success=True, message="Logs fetched successfully")
+    else:
+        raise HTTPException(status_code=404, detail="No logs found")
 
 
 @logs_router.get(
@@ -263,7 +280,7 @@ async def get_logs() -> LogsResponse:  # Update this line to use the new model
     description="Fetch logs by user ID",
     dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
 )
-async def get_logs_by_user_id(user_id: int) -> LogsResponse:  # Update this line to use the new model
+async def get_logs_by_user_id(user_id: int, session: AsyncSession = Depends(get_session)) -> LogsResponse:
     """
     Fetch all logs from the database where the user_id matches the provided user_id.
 
@@ -279,18 +296,13 @@ async def get_logs_by_user_id(user_id: int) -> LogsResponse:  # Update this line
     Raises:
         HTTPException: An exception with a 404 status code is raised if no logs are found.
     """
-    with Session(engine) as session:
-        auth_handler_instance = AuthHandler()
-        logger_instance = Logger(session, auth_handler_instance)
-        logs = logger_instance.fetch_all_logs()
-        if logs:
-            logs = [log for log in logs if log.user_id == user_id]
-            if logs != []:
-                return LogsResponse(logs=logs, success=True, message="Logs fetched successfully")
-            else:
-                raise HTTPException(status_code=404, detail=f"No logs found for user ID: {user_id}".format(user_id=user_id))
-        else:
-            raise HTTPException(status_code=404, detail="No logs found")
+    result = await session.execute(select(LogEntry).filter(LogEntry.user_id == user_id))
+    logs = result.scalars().all()
+
+    if not logs:
+        raise HTTPException(status_code=404, detail=f"No logs found for user ID: {user_id}")
+
+    return LogsResponse(logs=logs, success=True, message="Logs fetched successfully")
 
 
 @logs_router.post(
@@ -299,7 +311,7 @@ async def get_logs_by_user_id(user_id: int) -> LogsResponse:  # Update this line
     description="Fetch logs by time range",
     dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
 )
-async def get_logs_by_time_range(time_range: TimeRangeModel) -> LogsResponse:
+async def get_logs_by_time_range(time_range: TimeRangeModel, session: AsyncSession = Depends(get_session)) -> LogsResponse:
     """
     Fetch all logs from the database where the timestamp is within the provided time range.
 
@@ -315,21 +327,20 @@ async def get_logs_by_time_range(time_range: TimeRangeModel) -> LogsResponse:
     Raises:
         HTTPException: An exception with a 404 status code is raised if no logs are found.
     """
-    with Session(engine) as session:
-        auth_handler_instance = AuthHandler()
-        logger_instance = Logger(session, auth_handler_instance)
-        logs = logger_instance.fetch_all_logs()
-        if logs:
-            logs = [log for log in logs if log.timestamp >= datetime.now() - timedelta(days=int(time_range.time_range[:-1]))]
-            if logs != []:
-                return LogsResponse(logs=logs, success=True, message="Logs fetched successfully")
-            else:
-                raise HTTPException(
-                    status_code=404,
-                    detail=f"No logs found for time range: {time_range.time_range}".format(time_range=time_range.time_range),
-                )
+    result = await session.execute(select(LogEntry))
+    logs = result.scalars().all()
+
+    if logs:
+        logs = [log for log in logs if log.timestamp >= datetime.now() - timedelta(days=int(time_range.time_range[:-1]))]
+        if logs != []:
+            return LogsResponse(logs=logs, success=True, message="Logs fetched successfully")
         else:
-            raise HTTPException(status_code=404, detail="No logs found")
+            raise HTTPException(
+                status_code=404,
+                detail=f"No logs found for time range: {time_range.time_range}".format(time_range=time_range.time_range),
+            )
+    else:
+        raise HTTPException(status_code=404, detail="No logs found")
 
 
 @logs_router.post(
@@ -338,7 +349,10 @@ async def get_logs_by_time_range(time_range: TimeRangeModel) -> LogsResponse:
     description="Fetch logs by event type",
     dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
 )
-async def get_logs_by_event_type(event_type: EventType) -> LogsResponse:  # Update this line to use the new model
+async def get_logs_by_event_type(
+    event_type: EventType,
+    session: AsyncSession = Depends(get_session),
+) -> LogsResponse:  # Update this line to use the new model
     """
     Fetch all logs from the database where the event_type matches the provided event_type.
 
@@ -354,18 +368,13 @@ async def get_logs_by_event_type(event_type: EventType) -> LogsResponse:  # Upda
     Raises:
         HTTPException: An exception with a 404 status code is raised if no logs are found.
     """
-    with Session(engine) as session:
-        auth_handler_instance = AuthHandler()
-        logger_instance = Logger(session, auth_handler_instance)
-        logs = logger_instance.fetch_all_logs()
-        if logs:
-            logs = [log for log in logs if log.event_type == event_type]
-            if logs != []:
-                return LogsResponse(logs=logs, success=True, message="Logs fetched successfully")
-            else:
-                raise HTTPException(status_code=404, detail=f"No logs found for event type: {event_type}".format(event_type=event_type))
-        else:
-            raise HTTPException(status_code=404, detail="No logs found")
+    result = await session.execute(select(LogEntry).filter(LogEntry.event_type == event_type))
+    logs = result.scalars().all()
+
+    if not logs:
+        raise HTTPException(status_code=404, detail=f"No logs found for event type: {event_type}")
+
+    return LogsResponse(logs=logs, success=True, message="Logs fetched successfully")
 
 
 @logs_router.delete(
@@ -374,7 +383,7 @@ async def get_logs_by_event_type(event_type: EventType) -> LogsResponse:  # Upda
     description="Purge all logs",
     dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
 )
-async def purge_logs() -> LogsResponse:  # Update this line to use the new model
+async def purge_logs(session: AsyncSession = Depends(get_session)) -> LogsResponse:  # Update this line to use the new model
     """
     Purge all logs from the database.
 
@@ -386,17 +395,16 @@ async def purge_logs() -> LogsResponse:  # Update this line to use the new model
     Raises:
         HTTPException: An exception with a 404 status code is raised if no logs are found.
     """
-    with Session(engine) as session:
-        auth_handler_instance = AuthHandler()
-        logger_instance = Logger(session, auth_handler_instance)
-        logs = logger_instance.fetch_all_logs()
-        if logs:
-            for log in logs:
-                session.delete(log)
-            session.commit()
-            return LogsResponse(logs=[], success=True, message="Logs purged successfully")
-        else:
-            raise HTTPException(status_code=404, detail="No logs found")
+    result = await session.execute(select(LogEntry))
+    logs = result.scalars().all()
+
+    if logs:
+        for log in logs:
+            session.delete(log)
+        await session.commit()
+        return LogsResponse(logs=[], success=True, message="Logs purged successfully")
+    else:
+        raise HTTPException(status_code=404, detail="No logs found")
 
 
 @logs_router.delete(
@@ -405,7 +413,7 @@ async def purge_logs() -> LogsResponse:  # Update this line to use the new model
     description="Purge logs by time range",
     dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
 )
-async def purge_logs_by_time_range(time_range: TimeRangeModel) -> LogsResponse:
+async def purge_logs_by_time_range(time_range: TimeRangeModel, session: AsyncSession = Depends(get_session)) -> LogsResponse:
     """
     Purge all logs from the database where the timestamp is within the provided time range.
 
@@ -421,24 +429,23 @@ async def purge_logs_by_time_range(time_range: TimeRangeModel) -> LogsResponse:
     Raises:
         HTTPException: An exception with a 404 status code is raised if no logs are found.
     """
-    with Session(engine) as session:
-        auth_handler_instance = AuthHandler()
-        logger_instance = Logger(session, auth_handler_instance)
-        logs = logger_instance.fetch_all_logs()
-        if logs:
-            logs = [log for log in logs if log.timestamp >= datetime.now() - timedelta(days=int(time_range.time_range[:-1]))]
-            if logs != []:
-                for log in logs:
-                    session.delete(log)
-                session.commit()
-                return LogsResponse(logs=[], success=True, message="Logs purged successfully")
-            else:
-                raise HTTPException(
-                    status_code=404,
-                    detail=f"No logs found for time range: {time_range.time_range}".format(time_range=time_range.time_range),
-                )
+    result = await session.execute(select(LogEntry))
+    logs = result.scalars().all()
+
+    if logs:
+        logs = [log for log in logs if log.timestamp >= datetime.now() - timedelta(days=int(time_range.time_range[:-1]))]
+        if logs != []:
+            for log in logs:
+                session.delete(log)
+            await session.commit()
+            return LogsResponse(logs=[], success=True, message="Logs purged successfully")
         else:
-            raise HTTPException(status_code=404, detail="No logs found")
+            raise HTTPException(
+                status_code=404,
+                detail=f"No logs found for time range: {time_range.time_range}".format(time_range=time_range.time_range),
+            )
+    else:
+        raise HTTPException(status_code=404, detail="No logs found")
 
 
 ################## ! ALLOWED FILES ! ##################

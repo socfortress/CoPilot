@@ -32,10 +32,10 @@
 		<div class="attachments flex" v-if="email.attachments.length">
 			<Icon :size="16" :name="AttachmentIcon"></Icon>
 		</div>
-		<div class="date opacity-70">
+		<div class="date text-secondary-color">
 			{{ email.dateText }}
 		</div>
-		<div class="actions opacity-70 flex items-start gap-3">
+		<div class="actions text-secondary-color flex items-start gap-3">
 			<n-button text>
 				<Icon :size="20" :name="TrashIcon"></Icon>
 			</n-button>

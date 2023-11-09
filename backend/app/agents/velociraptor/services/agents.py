@@ -21,7 +21,7 @@ def create_query(query: str) -> str:
     return query
 
 
-def collect_velociraptor_agent(agent_name: str) -> VelociraptorAgent:
+async def collect_velociraptor_agent(agent_name: str) -> VelociraptorAgent:
     """
     Retrieves the client ID, last_seen_at and client version based on the agent name from Velociraptor.
 
@@ -33,15 +33,17 @@ def collect_velociraptor_agent(agent_name: str) -> VelociraptorAgent:
         str: The last seen at timestamp if found, Default timsetamp otherwise.
     """
     logger.info(f"Collecting agent {agent_name} from Velociraptor")
+    velociraptor_service = await UniversalService.create("Velociraptor")
     try:
-        client_id = UniversalService().get_client_id(agent_name)["results"][0]["client_id"]
+        client_id = await velociraptor_service.get_client_id(agent_name)
+        client_id = client_id["results"][0]["client_id"]
     except (KeyError, IndexError, TypeError) as e:
         logger.error(f"Failed to get client ID for {agent_name}. Error: {e}")
         return VelociraptorAgent(client_id="Unknown", client_last_seen="Unknown", client_version="Unknown")
 
     try:
         vql_last_seen_at = f"select last_seen_at from clients(search='host:{agent_name}')"
-        last_seen_at = UniversalService()._get_last_seen_timestamp(vql_last_seen_at)
+        last_seen_at = await velociraptor_service._get_last_seen_timestamp(vql_last_seen_at)
         client_last_seen = datetime.fromtimestamp(
             int(last_seen_at) / 1000000,
         ).strftime(
@@ -53,7 +55,8 @@ def collect_velociraptor_agent(agent_name: str) -> VelociraptorAgent:
 
     try:
         vql_client_version = f"select * from clients(search='host:{agent_name}')"
-        client_version = UniversalService()._get_client_version(vql_client_version)
+        # client_version = UniversalService()._get_client_version(vql_client_version)
+        client_version = await velociraptor_service._get_client_version(vql_client_version)
     except Exception as e:
         logger.error(f"Failed to get client version for {agent_name}. Error: {e}")
         client_version = "Unknown"

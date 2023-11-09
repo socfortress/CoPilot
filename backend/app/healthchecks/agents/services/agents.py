@@ -51,7 +51,7 @@ def is_velociraptor_agent_unhealthy(agent: AgentModel, time_criteria: TimeCriter
     return ExtendedAgentModel(**agent.dict(), unhealthy_velociraptor_agent=is_unhealthy)
 
 
-def wazuh_agents_healthcheck(agents: list, time_criteria: TimeCriteriaModel) -> AgentHealthCheckResponse:
+async def wazuh_agents_healthcheck(agents: list, time_criteria: TimeCriteriaModel) -> AgentHealthCheckResponse:
     healthy_wazuh_agents = []
     unhealthy_wazuh_agents = []
     for agent in agents:
@@ -74,7 +74,7 @@ def wazuh_agents_healthcheck(agents: list, time_criteria: TimeCriteriaModel) -> 
     )
 
 
-def wazuh_agent_healthcheck(agent: AgentModel, time_criteria: TimeCriteriaModel) -> AgentHealthCheckResponse:
+async def wazuh_agent_healthcheck(agent: AgentModel, time_criteria: TimeCriteriaModel) -> AgentHealthCheckResponse:
     extended_agent = is_wazuh_agent_unhealthy(agent, time_criteria)
     if extended_agent.unhealthy_wazuh_agent:
         return AgentHealthCheckResponse(
@@ -92,7 +92,7 @@ def wazuh_agent_healthcheck(agent: AgentModel, time_criteria: TimeCriteriaModel)
         )
 
 
-def velociraptor_agents_healthcheck(agents: list, time_criteria: TimeCriteriaModel) -> AgentHealthCheckResponse:
+async def velociraptor_agents_healthcheck(agents: list, time_criteria: TimeCriteriaModel) -> AgentHealthCheckResponse:
     healthy_velociraptor_agents = []
     unhealthy_velociraptor_agents = []
     for agent in agents:
@@ -115,7 +115,7 @@ def velociraptor_agents_healthcheck(agents: list, time_criteria: TimeCriteriaMod
     )
 
 
-def velociraptor_agent_healthcheck(agent: AgentModel, time_criteria: TimeCriteriaModel) -> AgentHealthCheckResponse:
+async def velociraptor_agent_healthcheck(agent: AgentModel, time_criteria: TimeCriteriaModel) -> AgentHealthCheckResponse:
     extended_agent = is_velociraptor_agent_unhealthy(agent, time_criteria)
     if extended_agent.unhealthy_velociraptor_agent:
         return AgentHealthCheckResponse(
@@ -133,8 +133,8 @@ def velociraptor_agent_healthcheck(agent: AgentModel, time_criteria: TimeCriteri
         )
 
 
-def host_logs(search_body: HostLogsSearchBody) -> HostLogsSearchResponse:
-    result = get_logs_generic(search_body, is_host_specific=True)
+async def host_logs(search_body: HostLogsSearchBody) -> HostLogsSearchResponse:
+    result = await get_logs_generic(search_body, is_host_specific=True)
     logger.info(f"Host logs search result: {result}")
 
     # Initialize variable to keep track of total logs
@@ -159,15 +159,15 @@ def host_logs(search_body: HostLogsSearchBody) -> HostLogsSearchResponse:
         )
 
 
-def get_logs_generic(search_body: Type[LogsSearchBody], is_host_specific: bool = False, index_name: Optional[str] = None):
+async def get_logs_generic(search_body: Type[LogsSearchBody], is_host_specific: bool = False, index_name: Optional[str] = None):
     logger.info(f"Collecting Wazuh Indexer alerts for host {search_body.agent_name if is_host_specific else ''}")
     logs_summary = []
-    indices = collect_indices()
+    indices = await collect_indices()
     index_list = [index_name] if index_name else indices.indices_list  # Use the provided index_name or get all indices
 
     for index_name in index_list:
         try:
-            logs = collect_logs_generic(index_name, body=search_body, is_host_specific=is_host_specific)
+            logs = await collect_logs_generic(index_name, body=search_body, is_host_specific=is_host_specific)
             if logs.success and len(logs.logs) > 0:
                 logs_summary.append(
                     {
@@ -188,8 +188,8 @@ def get_logs_generic(search_body: Type[LogsSearchBody], is_host_specific: bool =
     return {"logs_summary": logs_summary, "success": len(logs_summary) > 0, "message": message}
 
 
-def collect_logs_generic(index_name: str, body: LogsSearchBody, is_host_specific: bool = False) -> CollectLogsResponse:
-    es_client = create_wazuh_indexer_client("Wazuh-Indexer")
+async def collect_logs_generic(index_name: str, body: LogsSearchBody, is_host_specific: bool = False) -> CollectLogsResponse:
+    es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
     query_builder = LogsQueryBuilder()
     query_builder.add_time_range(timerange=body.timerange, timestamp_field=body.timestamp_field)
     query_builder.add_matches(matches=[(body.log_field, body.log_value)])
