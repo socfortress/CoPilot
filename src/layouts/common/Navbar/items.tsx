@@ -127,6 +127,20 @@ export default function getItems(mode: "vertical" | "horizontal", collapsed: boo
 			icon: renderIcon(BlankIcon)
 		},
 		{
+			label: () =>
+				h(
+					RouterLink,
+					{
+						to: {
+							name: "Artifacts"
+						}
+					},
+					{ default: () => "Artifacts" }
+				),
+			key: "Artifacts",
+			icon: renderIcon(BlankIcon)
+		},
+		{
 			type: "divider"
 		},
 
