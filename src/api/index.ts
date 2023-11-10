@@ -3,6 +3,7 @@ import indices from "./indices"
 import agents from "./agents"
 import graylog from "./graylog"
 import alerts from "./alerts"
+import artifacts from "./artifacts"
 import auth from "./auth"
 
 export default {
@@ -11,5 +12,6 @@ export default {
 	agents,
 	graylog,
 	alerts,
+	artifacts,
 	auth
 }
