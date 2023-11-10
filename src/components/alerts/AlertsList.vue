@@ -79,26 +79,49 @@
 		>
 			<n-drawer-content title="Alerts filters" closable :native-scrollbar="false">
 				<AlertsFilters :filters="filters" @search="startSearch(true)">
-					<n-form-item label="Agent" v-if="!isFilterPreselected">
+					<div v-if="!isFilterPreselected" class="mb-6">
 						<n-select
+							v-model:value="filterType"
+							@update:value="
+								() => {
+									filters.agentHostname = undefined
+									filters.indexName = undefined
+								}
+							"
+							:options="[
+								{
+									label: 'Filter by Agent Hostname',
+									value: 'agentHostname'
+								},
+								{
+									label: 'Filter by Index name',
+									value: 'indexName'
+								}
+							]"
+							placeholder="Filter by Agent or Index"
+							clearable
+						/>
+						<n-select
+							v-if="filterType === 'agentHostname'"
 							v-model:value="filters.agentHostname"
 							:options="agentHostnameOptions"
 							placeholder="Agents list"
 							clearable
 							filterable
 							:loading="loadingAgents"
+							class="mt-2"
 						/>
-					</n-form-item>
-					<n-form-item label="Index" v-if="!isFilterPreselected">
 						<n-select
+							v-if="filterType === 'indexName'"
 							v-model:value="filters.indexName"
 							:options="indexNameOptions"
 							clearable
 							filterable
 							placeholder="Indices list"
 							:loading="loadingIndex"
+							class="mt-2"
 						/>
-					</n-form-item>
+					</div>
 				</AlertsFilters>
 			</n-drawer-content>
 		</n-drawer>
@@ -152,6 +175,8 @@ const totalAlerts = computed<number>(() => {
 })
 
 const filters = ref<AlertsSummaryQuery>({})
+
+const filterType = ref<string | null>(null)
 
 const isFilterPreselected = computed(() => {
 	return !!agentHostname?.value || !!indexName?.value
