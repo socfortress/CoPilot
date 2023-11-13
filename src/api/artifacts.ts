@@ -2,25 +2,25 @@ import { HttpClient } from "./httpClient"
 import type { FlaskBaseResponse } from "@/types/flask.d"
 import type { Artifact, CollectResult, CommandResult, QuarantineResult } from "@/types/artifacts.d"
 
-interface ArtifactsQuery {
+export interface ArtifactsQuery {
 	os?: "windows" | "linux" | "macos"
 	hostname?: string
 }
 
-interface CollectRequest {
+export interface CollectRequest {
 	hostname: string
 	velociraptor_id?: string
 	artifact_name: string
 }
 
-interface CommandRequest {
+export interface CommandRequest {
 	hostname: string
 	velociraptor_id?: string
 	command: string
 	artifact_name: "Windows.System.PowerShell" | "Windows.System.CmdShell" | "Linux.Sys.BashShell"
 }
 
-interface QuarantineRequest {
+export interface QuarantineRequest {
 	hostname: string
 	velociraptor_id?: string
 	action: "quarantine" | "remove_quarantine"
