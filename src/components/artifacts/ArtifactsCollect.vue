@@ -29,6 +29,7 @@
 						placeholder="Agent hostname"
 						clearable
 						filterable
+						:disabled="loading"
 						size="small"
 						:loading="loadingAgents"
 					/>
@@ -39,6 +40,7 @@
 						:options="artifactsOptions"
 						placeholder="Artifact name"
 						clearable
+						:disabled="loading"
 						filterable
 						size="small"
 						:loading="loadingArtifacts"
@@ -49,10 +51,11 @@
 						v-model:value="filters.velociraptor_id"
 						placeholder="Velociraptor id"
 						clearable
+						:readonly="loading"
 						size="small"
 					/>
 				</div>
-				<div class="">
+				<div>
 					<n-button
 						size="small"
 						@click="getData()"
@@ -67,7 +70,7 @@
 			</div>
 		</div>
 		<n-spin :show="loading">
-			<div class="list flex flex-wrap gap-3 my-7">
+			<div class="list grid gap-3 my-7">
 				<template v-if="collectList.length">
 					<CollectItem v-for="collect of collectList" :key="collect.Name" :collect="collect" />
 				</template>
@@ -88,17 +91,23 @@ import CollectItem from "./CollectItem.vue"
 import type { Agent } from "@/types/agents.d"
 import type { CollectRequest } from "@/api/artifacts"
 import type { Artifact, CollectResult } from "@/types/artifacts.d"
-import { collectResult } from "./mock"
+import { nextTick } from "vue"
+// import { collectResult } from "./mock"
 
-const props = defineProps<{ agentHostname?: string }>()
-const { agentHostname } = toRefs(props)
+const emit = defineEmits<{
+	(e: "loaded-agents", value: Agent[]): void
+	(e: "loaded-artifacts", value: Artifact[]): void
+}>()
+
+const props = defineProps<{ agentHostname?: string; agents?: Agent[]; artifacts?: Artifact[] }>()
+const { agentHostname, agents, artifacts } = toRefs(props)
 
 const message = useMessage()
 const loadingAgents = ref(false)
 const loadingArtifacts = ref(false)
 const loading = ref(false)
-const agents = ref<Agent[]>([])
-const artifacts = ref<Artifact[]>([])
+const agentsList = ref<Agent[]>([])
+const artifactsList = ref<Artifact[]>([])
 const collectList = ref<CollectResult[]>([])
 
 const InfoIcon = "carbon:information"
@@ -121,11 +130,11 @@ const agentHostnameOptions = computed(() => {
 	if (agentHostname?.value) {
 		return [{ value: agentHostname.value, label: agentHostname.value }]
 	}
-	return (agents.value || []).map(o => ({ value: o.hostname, label: o.hostname }))
+	return (agentsList.value || []).map(o => ({ value: o.hostname, label: o.hostname }))
 })
 
 const artifactsOptions = computed(() => {
-	return (artifacts.value || []).map(o => ({ value: o.name, label: o.name }))
+	return (artifactsList.value || []).map(o => ({ value: o.name, label: o.name }))
 })
 
 function getData() {
@@ -152,14 +161,18 @@ function getData() {
 	}
 }
 
-function getAgents() {
+function getAgents(cb?: (agents: Agent[]) => void) {
 	loadingAgents.value = true
 
 	Api.agents
 		.getAgents()
 		.then(res => {
 			if (res.data.success) {
-				agents.value = res.data.agents || []
+				agentsList.value = res.data.agents || []
+
+				if (cb && typeof cb === "function") {
+					cb(agentsList.value)
+				}
 			} else {
 				message.error(res.data?.message || "An error occurred. Please try again later.")
 			}
@@ -172,14 +185,18 @@ function getAgents() {
 		})
 }
 
-function getArtifacts() {
+function getArtifacts(cb?: (artifacts: Artifact[]) => void) {
 	loadingArtifacts.value = true
 
 	Api.artifacts
 		.getAll()
 		.then(res => {
 			if (res.data.success) {
-				artifacts.value = res.data.artifacts || []
+				artifactsList.value = res.data.artifacts || []
+
+				if (cb && typeof cb === "function") {
+					cb(artifactsList.value)
+				}
 			} else {
 				message.error(res.data?.message || "An error occurred. Please try again later.")
 			}
@@ -197,11 +214,29 @@ onBeforeMount(() => {
 		filters.value.hostname = agentHostname.value
 	}
 
-	getAgents()
-	getArtifacts()
+	if (agents?.value?.length && !agentsList.value.length) {
+		agentsList.value = agents.value
+	}
+
+	if (artifacts?.value?.length && !artifactsList.value.length) {
+		artifactsList.value = artifacts.value
+	}
+
+	nextTick(() => {
+		if (!agentsList.value.length) {
+			getAgents((agents: Agent[]) => {
+				emit("loaded-agents", agents)
+			})
+		}
+		if (!artifactsList.value.length) {
+			getArtifacts((artifacts: Artifact[]) => {
+				emit("loaded-artifacts", artifacts)
+			})
+		}
+	})
 
 	// MOCK
-	collectList.value = collectResult as CollectResult[]
+	// collectList.value = collectResult as CollectResult[]
 })
 </script>
 
@@ -218,10 +253,11 @@ onBeforeMount(() => {
 	.list {
 		container-type: inline-size;
 		min-height: 200px;
+		grid-template-columns: repeat(auto-fit, minmax(390px, 1fr));
+		grid-auto-flow: row dense;
 
 		.collect-item {
-			flex: 1 0 390px;
-			animation: artifacts-fade 0.3s forwards;
+			animation: artifacts-collect-fade 0.3s forwards;
 			opacity: 0;
 
 			@for $i from 0 through 30 {
@@ -230,7 +266,7 @@ onBeforeMount(() => {
 				}
 			}
 
-			@keyframes artifacts-fade {
+			@keyframes artifacts-collect-fade {
 				from {
 					opacity: 0;
 					transform: translateY(10px);

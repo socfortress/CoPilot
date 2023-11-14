@@ -1,7 +1,7 @@
 <template>
 	<div class="artifacts-list">
 		<div class="header flex items-center justify-end gap-2" ref="header">
-			<div class="info grow flex gap-5">
+			<div class="info grow flex gap-2">
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
 						<div class="bg-color border-radius">
@@ -38,11 +38,18 @@
 			>
 				<template #trigger>
 					<div class="bg-color border-radius">
-						<n-button size="small" v-show="!isFilterPreselected" @click="showFilters = true">
-							<template #icon>
-								<Icon :name="FilterIcon"></Icon>
-							</template>
-						</n-button>
+						<n-badge
+							:show="!!lastFilters.hostname || !!lastFilters.os"
+							dot
+							type="success"
+							:offset="[-4, 0]"
+						>
+							<n-button size="small" v-show="!isFilterPreselected" @click="showFilters = true">
+								<template #icon>
+									<Icon :name="FilterIcon"></Icon>
+								</template>
+							</n-button>
+						</n-badge>
 					</div>
 				</template>
 				<div class="py-1 flex flex-col gap-2">
@@ -59,11 +66,11 @@
 								"
 								:options="[
 									{
-										label: 'Filter by Agent ',
+										label: 'Agent ',
 										value: 'agentHostname'
 									},
 									{
-										label: 'Filter by OS',
+										label: 'OS',
 										value: 'os'
 									}
 								]"
@@ -124,24 +131,31 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, toRefs, computed } from "vue"
-import { useMessage, NSpin, NPopover, NButton, NEmpty, NSelect, NPagination, NInputGroup } from "naive-ui"
+import { ref, onBeforeMount, toRefs, computed, nextTick } from "vue"
+import { useMessage, NSpin, NPopover, NButton, NEmpty, NSelect, NPagination, NInputGroup, NBadge } from "naive-ui"
 import Api from "@/api"
+import _cloneDeep from "lodash/cloneDeep"
 import Icon from "@/components/common/Icon.vue"
 import ArtifactItem from "./ArtifactItem.vue"
 import type { Agent } from "@/types/agents.d"
 import type { ArtifactsQuery } from "@/api/artifacts"
 import type { Artifact } from "@/types/artifacts.d"
 import { useResizeObserver } from "@vueuse/core"
+import { watch } from "vue"
 
-const props = defineProps<{ agentHostname?: string }>()
-const { agentHostname } = toRefs(props)
+const emit = defineEmits<{
+	(e: "loaded-agents", value: Agent[]): void
+	(e: "loaded-artifacts", value: Artifact[]): void
+}>()
+
+const props = defineProps<{ agentHostname?: string; agents?: Agent[]; artifacts?: Artifact[] }>()
+const { agentHostname, agents, artifacts } = toRefs(props)
 
 const message = useMessage()
 const loadingAgents = ref(false)
 const loading = ref(false)
 const showFilters = ref(false)
-const agents = ref<Agent[]>([])
+const agentsList = ref<Agent[]>([])
 const artifactsList = ref<Artifact[]>([])
 
 const pageSize = ref(25)
@@ -167,6 +181,7 @@ const totalArtifacts = computed<number>(() => {
 })
 
 const filters = ref<ArtifactsQuery>({})
+const lastFilters = ref<ArtifactsQuery>({})
 
 const filterType = ref<string | null>(null)
 
@@ -178,7 +193,7 @@ const agentHostnameOptions = computed(() => {
 	if (agentHostname?.value) {
 		return [{ value: agentHostname.value, label: agentHostname.value }]
 	}
-	return (agents.value || []).map(o => ({ value: o.hostname, label: o.hostname }))
+	return (agentsList.value || []).map(o => ({ value: o.hostname, label: o.hostname }))
 })
 
 const osOptions = [
@@ -187,14 +202,27 @@ const osOptions = [
 	{ label: "MacOS", value: "macos" }
 ]
 
-function getData() {
+watch(showFilters, val => {
+	if (!val) {
+		filters.value = _cloneDeep(lastFilters.value)
+	}
+})
+
+function getData(cb?: (artifacts: Artifact[]) => void) {
+	showFilters.value = false
 	loading.value = true
+
+	lastFilters.value = _cloneDeep(filters.value)
 
 	Api.artifacts
 		.getAll(filters.value)
 		.then(res => {
 			if (res.data.success) {
 				artifactsList.value = res.data?.artifacts || []
+
+				if (cb && typeof cb === "function") {
+					cb(artifactsList.value)
+				}
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
@@ -209,14 +237,18 @@ function getData() {
 		})
 }
 
-function getAgents() {
+function getAgents(cb?: (agents: Agent[]) => void) {
 	loadingAgents.value = true
 
 	Api.agents
 		.getAgents()
 		.then(res => {
 			if (res.data.success) {
-				agents.value = res.data.agents || []
+				agentsList.value = res.data.agents || []
+
+				if (cb && typeof cb === "function") {
+					cb(agentsList.value)
+				}
 			} else {
 				message.error(res.data?.message || "An error occurred. Please try again later.")
 			}
@@ -242,8 +274,26 @@ onBeforeMount(() => {
 		filters.value.hostname = agentHostname.value
 	}
 
-	getAgents()
-	getData()
+	if (agents?.value?.length) {
+		agentsList.value = agents.value
+	}
+
+	if (artifacts?.value?.length) {
+		artifactsList.value = artifacts.value
+	}
+
+	nextTick(() => {
+		if (!agentsList.value.length) {
+			getAgents((agents: Agent[]) => {
+				emit("loaded-agents", agents)
+			})
+		}
+		if (!artifactsList.value.length) {
+			getData((artifacts: Artifact[]) => {
+				emit("loaded-artifacts", artifacts)
+			})
+		}
+	})
 })
 </script>
 
@@ -262,7 +312,7 @@ onBeforeMount(() => {
 		min-height: 200px;
 
 		.artifact-item {
-			animation: artifacts-fade 0.3s forwards;
+			animation: artifacts-item-fade 0.3s forwards;
 			opacity: 0;
 
 			@for $i from 0 through 30 {
@@ -271,7 +321,7 @@ onBeforeMount(() => {
 				}
 			}
 
-			@keyframes artifacts-fade {
+			@keyframes artifacts-item-fade {
 				from {
 					opacity: 0;
 					transform: translateY(10px);
@@ -287,14 +337,20 @@ onBeforeMount(() => {
 
 <style lang="scss">
 .artifacts-list-filter-combo {
+	.artifacts-list-filter-type {
+		min-width: 130px;
+		max-width: 130px;
+	}
+
 	&.filters-active {
-		min-width: 290px;
+		min-width: 270px;
 		width: 50vw;
 		max-width: 400px;
-	}
-	.artifacts-list-filter-type {
-		min-width: 150px;
-		max-width: 150px;
+
+		.artifacts-list-filter-type {
+			min-width: 100px;
+			max-width: 100px;
+		}
 	}
 }
 </style>

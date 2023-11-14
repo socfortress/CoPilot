@@ -35,7 +35,9 @@ export const useSettingsStore = defineStore("settings", {
 			return {
 				date: `${date}`,
 				datetime: `${date}${separator}${time}`,
-				datetimesec: `${date}${separator}${timesec}`
+				datetimesec: `${date}${separator}${timesec}`,
+				time,
+				timesec
 			}
 		}
 	},
