@@ -1,25 +1,6 @@
 <template>
-	<div class="artifacts-collect">
+	<div class="artifacts-quarantine">
 		<div class="header flex justify-end items-start gap-2">
-			<div class="info flex gap-5">
-				<n-popover overlap placement="bottom-start">
-					<template #trigger>
-						<div class="bg-color border-radius">
-							<n-button size="small" class="!cursor-help">
-								<template #icon>
-									<Icon :name="InfoIcon"></Icon>
-								</template>
-							</n-button>
-						</div>
-					</template>
-					<div class="flex flex-col gap-2">
-						<div class="box">
-							Total :
-							<code>{{ total }}</code>
-						</div>
-					</div>
-				</n-popover>
-			</div>
 			<div class="grow flex items-center justify-end gap-2 flex-wrap">
 				<div class="grow basis-56">
 					<n-select
@@ -56,23 +37,37 @@
 					/>
 				</div>
 				<div>
-					<n-button
-						size="small"
-						@click="getData()"
-						type="primary"
-						secondary
-						:loading="loading"
-						:disabled="!areFiltersValid"
-					>
-						Submit
-					</n-button>
+					<n-input-group>
+						<n-select
+							v-model:value="filters.action"
+							:options="actionsOptions"
+							:disabled="loading"
+							size="small"
+							class="!w-32"
+							status="success"
+						/>
+						<n-button
+							size="small"
+							@click="getData()"
+							type="primary"
+							secondary
+							:loading="loading"
+							:disabled="!areFiltersValid"
+						>
+							<Icon :name="SubmitIcon"></Icon>
+						</n-button>
+					</n-input-group>
 				</div>
 			</div>
 		</div>
 		<n-spin :show="loading">
 			<div class="list grid gap-3 my-7">
-				<template v-if="collectList.length">
-					<CollectItem v-for="collect of collectList" :key="collect.Name" :collect="collect" />
+				<template v-if="quarantineList.length">
+					<QuarantineItem
+						v-for="quarantine of quarantineList"
+						:key="quarantine.Result + quarantine.Time"
+						:quarantine="quarantine"
+					/>
 				</template>
 				<template v-else>
 					<n-empty description="No items found" v-if="!loading" />
@@ -84,14 +79,14 @@
 
 <script setup lang="ts">
 import { ref, onBeforeMount, toRefs, computed, nextTick } from "vue"
-import { useMessage, NSpin, NPopover, NButton, NEmpty, NSelect, NInput } from "naive-ui"
+import { useMessage, NSpin, NButton, NEmpty, NSelect, NInput, NInputGroup } from "naive-ui"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import CollectItem from "./CollectItem.vue"
+import QuarantineItem from "./QuarantineItem.vue"
 import type { Agent } from "@/types/agents.d"
-import type { CollectRequest } from "@/api/artifacts"
-import type { Artifact, CollectResult } from "@/types/artifacts.d"
-// import { collectResult } from "./mock"
+import type { QuarantineRequest } from "@/api/artifacts"
+import type { Artifact, QuarantineResult } from "@/types/artifacts.d"
+// import { quarantineResult } from "./mock"
 
 const emit = defineEmits<{
 	(e: "loaded-agents", value: Agent[]): void
@@ -107,15 +102,11 @@ const loadingArtifacts = ref(false)
 const loading = ref(false)
 const agentsList = ref<Agent[]>([])
 const artifactsList = ref<Artifact[]>([])
-const collectList = ref<CollectResult[]>([])
+const quarantineList = ref<QuarantineResult[]>([])
 
-const InfoIcon = "carbon:information"
+const SubmitIcon = "carbon:play"
 
-const total = computed<number>(() => {
-	return collectList.value.length || 0
-})
-
-const filters = ref<Partial<CollectRequest>>({})
+const filters = ref<Partial<QuarantineRequest>>({})
 
 const isFilterPreselected = computed(() => {
 	return !!agentHostname?.value
@@ -136,21 +127,26 @@ const artifactsOptions = computed(() => {
 	return (artifactsList.value || []).map(o => ({ value: o.name, label: o.name }))
 })
 
+const actionsOptions = ref([
+	{ label: "Quarantine", value: "quarantine" },
+	{ label: "Remove", value: "remove_quarantine" }
+])
+
 function getData() {
 	if (areFiltersValid.value) {
 		loading.value = true
 
 		Api.artifacts
-			.collect(filters.value as CollectRequest)
+			.quarantine(filters.value as QuarantineRequest)
 			.then(res => {
 				if (res.data.success) {
-					collectList.value = res.data?.results || []
+					quarantineList.value = res.data?.results || []
 				} else {
 					message.warning(res.data?.message || "An error occurred. Please try again later.")
 				}
 			})
 			.catch(err => {
-				collectList.value = []
+				quarantineList.value = []
 
 				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
 			})
@@ -209,6 +205,10 @@ function getArtifacts(cb?: (artifacts: Artifact[]) => void) {
 }
 
 onBeforeMount(() => {
+	artifactsList.value = ["Windows.Remediation.Quarantine", "Linux.Remediation.Quarantine"].map(
+		o => ({ name: o }) as Artifact
+	)
+
 	if (agentHostname?.value) {
 		filters.value.hostname = agentHostname.value
 	}
@@ -220,6 +220,8 @@ onBeforeMount(() => {
 	if (artifacts?.value?.length && !artifactsList.value.length) {
 		artifactsList.value = artifacts.value
 	}
+
+	filters.value.action = actionsOptions.value[0].value as QuarantineRequest["action"]
 
 	nextTick(() => {
 		if (!agentsList.value.length) {
@@ -235,12 +237,12 @@ onBeforeMount(() => {
 	})
 
 	// MOCK
-	// collectList.value = collectResult as CollectResult[]
+	// quarantineList.value = quarantineResult as QuarantineResult[]
 })
 </script>
 
 <style lang="scss" scoped>
-.artifacts-collect {
+.artifacts-quarantine {
 	:deep() {
 		.n-spin-body {
 			top: 100px;
@@ -251,12 +253,10 @@ onBeforeMount(() => {
 
 	.list {
 		container-type: inline-size;
-		min-height: 200px;
-		grid-template-columns: repeat(auto-fit, minmax(390px, 1fr));
-		grid-auto-flow: row dense;
+		min-height: 100px;
 
-		.collect-item {
-			animation: artifacts-collect-fade 0.3s forwards;
+		.quarantine-item {
+			animation: artifacts-quarantine-fade 0.3s forwards;
 			opacity: 0;
 
 			@for $i from 0 through 30 {
@@ -265,7 +265,7 @@ onBeforeMount(() => {
 				}
 			}
 
-			@keyframes artifacts-collect-fade {
+			@keyframes artifacts-quarantine-fade {
 				from {
 					opacity: 0;
 					transform: translateY(10px);

@@ -131,7 +131,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, toRefs, computed, nextTick } from "vue"
+import { ref, onBeforeMount, toRefs, computed, nextTick, watch } from "vue"
 import { useMessage, NSpin, NPopover, NButton, NEmpty, NSelect, NPagination, NInputGroup, NBadge } from "naive-ui"
 import Api from "@/api"
 import _cloneDeep from "lodash/cloneDeep"
@@ -141,7 +141,6 @@ import type { Agent } from "@/types/agents.d"
 import type { ArtifactsQuery } from "@/api/artifacts"
 import type { Artifact } from "@/types/artifacts.d"
 import { useResizeObserver } from "@vueuse/core"
-import { watch } from "vue"
 
 const emit = defineEmits<{
 	(e: "loaded-agents", value: Agent[]): void

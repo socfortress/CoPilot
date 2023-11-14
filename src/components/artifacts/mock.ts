@@ -574,4 +574,59 @@ const commandResult = [
 	}
 ]
 
-export { collectResult, commandResult }
+const quarantineResult = [
+	{
+		Time: "2023-11-14T21:03:03Z",
+		Result: "VelociraptorQuarantine IPSec policy removed."
+	},
+	{
+		Time: "2023-11-14T21:03:03Z",
+		Result: "VelociraptorQuarantine IPSec policy created."
+	},
+	{
+		Time: "2023-11-14T21:03:03Z",
+		Result: "Entry added: netsh ipsec static add filter filterlist=VelociraptorQuarantine PermitFilterList srcaddr=me srcport=0 dstaddr=velo.socfortress.co dstport=8000 protocol=tcp mirrored=yes description=VelociraptorFrontEnd"
+	},
+	{
+		Time: "2023-11-14T21:03:04Z",
+		Result: "Entry added: netsh ipsec static add filter filterlist=VelociraptorQuarantine PermitFilterList srcaddr=me srcport=0 dstaddr=any dstport=53 protocol=udp mirrored=yes description=DNS"
+	},
+	{
+		Time: "2023-11-14T21:03:04Z",
+		Result: "Entry added: netsh ipsec static add filter filterlist=VelociraptorQuarantine PermitFilterList srcaddr=me srcport=0 dstaddr=any dstport=53 protocol=tcp mirrored=yes description=DNS TCP"
+	},
+	{
+		Time: "2023-11-14T21:03:04Z",
+		Result: "Entry added: netsh ipsec static add filter filterlist=VelociraptorQuarantine PermitFilterList srcaddr=me srcport=68 dstaddr=any dstport=67 protocol=udp mirrored=yes description=DHCP"
+	},
+	{
+		Time: "2023-11-14T21:03:04Z",
+		Result: "Entry added: netsh ipsec static add filter filterlist=VelociraptorQuarantine BlockFilterList srcaddr=any dstaddr=any mirrored=yes description=All other traffic"
+	},
+	{
+		Time: "2023-11-14T21:03:04Z",
+		Result: "FilterAction added: netsh ipsec static add filteraction name=VelociraptorQuarantine PermitAction action=Permit"
+	},
+	{
+		Time: "2023-11-14T21:03:04Z",
+		Result: "FilterAction added: netsh ipsec static add filteraction name=VelociraptorQuarantine BlockAction action=Block"
+	},
+	{
+		Time: "2023-11-14T21:03:05Z",
+		Result: "Rule added: netsh ipsec static add rule name=VelociraptorQuarantine PermitRule policy=VelociraptorQuarantine filterlist=VelociraptorQuarantine PermitFilterList filteraction=VelociraptorQuarantine PermitAction"
+	},
+	{
+		Time: "2023-11-14T21:03:05Z",
+		Result: "Rule added: netsh ipsec static add rule name=VelociraptorQuarantine BlockRule policy=VelociraptorQuarantine filterlist=VelociraptorQuarantine BlockFilterList filteraction=VelociraptorQuarantine BlockAction"
+	},
+	{
+		Time: "2023-11-14T21:03:05Z",
+		Result: "VelociraptorQuarantine IPSec policy applied."
+	},
+	{
+		Time: "2023-11-14T21:03:05Z",
+		Result: "VelociraptorQuarantine connection test successful."
+	}
+]
+
+export { collectResult, commandResult, quarantineResult }

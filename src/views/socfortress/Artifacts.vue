@@ -20,7 +20,14 @@
 					:artifacts="artifacts"
 				/>
 			</n-tab-pane>
-			<n-tab-pane name="quarantine" tab="Quarantine" display-directive="show:lazy">Quarantine...</n-tab-pane>
+			<n-tab-pane name="quarantine" tab="Quarantine" display-directive="show:lazy">
+				<ArtifactsQuarantine
+					@loaded-agents="agents = $event"
+					@loaded-artifacts="artifacts = $event"
+					:agents="agents"
+					:artifacts="artifacts"
+				/>
+			</n-tab-pane>
 		</n-tabs>
 	</div>
 </template>
@@ -31,6 +38,7 @@ import { NTabs, NTabPane } from "naive-ui"
 import ArtifactsList from "@/components/artifacts/ArtifactsList.vue"
 import ArtifactsCollect from "@/components/artifacts/ArtifactsCollect.vue"
 import ArtifactsCommand from "@/components/artifacts/ArtifactsCommand.vue"
+import ArtifactsQuarantine from "@/components/artifacts/ArtifactsQuarantine.vue"
 import type { Artifact } from "@/types/artifacts.d"
 import type { Agent } from "@/types/agents.d"
 

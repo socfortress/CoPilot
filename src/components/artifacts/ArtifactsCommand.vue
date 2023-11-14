@@ -104,14 +104,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, toRefs, computed } from "vue"
+import { ref, onBeforeMount, toRefs, computed, nextTick } from "vue"
 import { useMessage, NSpin, NButton, NEmpty, NSelect, NInput, NTooltip } from "naive-ui"
 import Api from "@/api"
 import CommandItem from "./CommandItem.vue"
 import type { Agent } from "@/types/agents.d"
 import type { CommandRequest } from "@/api/artifacts"
 import type { Artifact, CommandResult } from "@/types/artifacts.d"
-import { nextTick } from "vue"
 import dayjs from "@/utils/dayjs"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
@@ -270,10 +269,6 @@ onBeforeMount(() => {
 			})
 		}
 		if (!artifactsList.value.length) {
-			artifactsList.value = ["Windows.System.PowerShell", "Windows.System.CmdShell", "Linux.Sys.BashShell"].map(
-				o => ({ name: o }) as Artifact
-			)
-
 			getArtifacts((artifacts: Artifact[]) => {
 				emit("loaded-artifacts", artifacts)
 			})
