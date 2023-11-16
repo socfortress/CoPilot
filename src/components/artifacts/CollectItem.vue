@@ -1,56 +1,100 @@
 <template>
-	<div class="collect-item flex flex-col gap-2 px-5 py-3">
-		<div class="header-box flex justify-between">
-			<div class="name">#{{ collect.Pid }}</div>
-			<div class="time">{{ formatDate(collect.Timestamp) }}</div>
+	<div class="collect-item flex flex-wrap gap-2 p-2">
+		<div class="property" v-for="prop of displayData" :key="prop.key" :class="{ 'hide-mobile': prop.hideMobile }">
+			<div class="key">{{ prop.key }}</div>
+			<div class="value">{{ prop.value }}</div>
 		</div>
-		<div class="main-box">
-			<div class="content">
-				<div class="name mb-2">{{ collect.Name }}</div>
-				<div class="address flex items-center gap-2">
-					<Icon :name="NetworkIcon"></Icon>
-					<span>Laddr - {{ collect["Laddr.IP"] }}:{{ collect["Laddr.Port"] }}</span>
-				</div>
-				<div class="address flex items-center gap-2">
-					<Icon :name="NetworkIcon"></Icon>
-					<span>Raddr - {{ collect["Raddr.IP"] }}:{{ collect["Raddr.Port"] }}</span>
-				</div>
-
-				<div class="badges-box flex flex-wrap items-center gap-3">
-					<div class="badge splitted">
-						<span>family</span>
-						<span>{{ collect.Family || "-" }}</span>
-					</div>
-
-					<div class="badge splitted">
-						<span>type</span>
-						<span>{{ collect.Type || "-" }}</span>
-					</div>
-					<div class="badge splitted">
-						<span>status</span>
-						<span>{{ collect.Status || "-" }}</span>
-					</div>
-				</div>
+		<div class="property more" @click="showDetails = true">
+			<div class="key">
+				<Icon :name="MoreIcon" />
 			</div>
 		</div>
+
+		<n-modal
+			v-model:show="showDetails"
+			preset="card"
+			:style="{ maxWidth: 'min(800px, 90vw)', overflow: 'hidden' }"
+			:bordered="false"
+		>
+			<SimpleJsonViewer class="vuesjv-override" :model-value="jsonData" :initialExpandedDepth="2" />
+		</n-modal>
 	</div>
 </template>
 
 <script setup lang="ts">
+import { NModal } from "naive-ui"
 import { useSettingsStore } from "@/stores/settings"
 import type { CollectResult } from "@/types/artifacts.d"
-import Icon from "@/components/common/Icon.vue"
 import dayjs from "@/utils/dayjs"
+import { SimpleJsonViewer } from "vue-sjv"
+import "@/assets/scss/vuesjv-override.scss"
+import { onBeforeMount, ref } from "vue"
+import _isString from "lodash/isString"
+import _isNumber from "lodash/isNumber"
+import Icon from "@/components/common/Icon.vue"
+
+const MoreIcon = "mdi:code-json"
+
+interface Prop {
+	key: string
+	value: string | number
+	hideMobile: boolean
+}
 
 const { collect } = defineProps<{ collect: CollectResult }>()
 
-const NetworkIcon = "mdi:server-network-outline"
+const jsonData = ref<CollectResult>({})
+const displayData = ref<Prop[]>([])
 
+const showDetails = ref(false)
 const dFormats = useSettingsStore().dateFormat
 
-function formatDate(timestamp: string): string {
+function formatDate(timestamp: string | number): string {
 	return dayjs(timestamp).format(dFormats.datetimesec)
 }
+
+onBeforeMount(() => {
+	for (const key in collect) {
+		const value = collect[key]
+		console.log(key, value, typeof value)
+
+		const prop: Prop = {
+			key: "",
+			value: "",
+			hideMobile: false
+		}
+
+		if ((_isString(value) || _isNumber(value)) && value !== "" && key !== "___id") {
+			prop.key = key
+			prop.value = value
+		}
+
+		if (prop.value && typeof prop.value === "string") {
+			prop.value = dayjs(value).isValid() ? formatDate(value) : value.toString()
+		}
+
+		if (prop.value && typeof prop.value === "number") {
+			const numText = prop.value.toString()
+
+			if (numText.length === 10 || numText.length === 13) {
+				if (dayjs(value).isValid()) {
+					prop.value = formatDate(value)
+				}
+			}
+		}
+
+		if (prop.key && displayData.value.length < 5) {
+			if (displayData.value.length > 2) {
+				prop.hideMobile = true
+			}
+			displayData.value.push(prop)
+		}
+	}
+
+	jsonData.value = collect
+
+	delete jsonData.value.___id
+})
 </script>
 
 <style lang="scss" scoped>
@@ -59,73 +103,63 @@ function formatDate(timestamp: string): string {
 	background-color: var(--bg-color);
 	border: var(--border-small-050);
 	transition: all 0.2s var(--bezier-ease);
+	min-height: 160px;
 	max-width: 100%;
+	overflow: hidden;
 
-	.header-box {
-		font-family: var(--font-family-mono);
-		font-size: 14px;
-		.name {
-			word-break: break-word;
-			color: var(--fg-secondary-color);
+	.property {
+		border: var(--border-small-100);
+		background-color: var(--bg-secondary-color);
+		border-radius: var(--border-radius);
+		overflow: hidden;
+		flex-basis: 140px;
+		flex-grow: 1;
+
+		.key {
+			border-bottom: var(--border-small-050);
+			padding: 8px 12px;
+			font-size: 12px;
 		}
-		.time {
-			color: var(--fg-secondary-color);
+		.value {
+			font-size: 14px;
+			padding: 8px 12px;
+			background-color: var(--bg-color);
+			font-family: var(--font-family-mono);
+			height: 100%;
 		}
-	}
-	.main-box {
-		.content {
-			word-break: break-word;
-			.address {
-				font-family: var(--font-family-mono);
-				color: var(--fg-secondary-color);
+
+		&.more {
+			cursor: pointer;
+			transition: all 0.2s;
+			.key {
+				border-bottom: none;
+				font-size: 26px;
+				text-align: center;
+				height: 100%;
+				display: flex;
+				justify-content: center;
+				align-items: center;
 			}
 
-			.badges-box {
-				margin-top: 16px;
-
-				.badge {
-					border-radius: var(--border-radius);
-					border: var(--border-small-100);
-					display: flex;
-					align-items: center;
-					font-size: 14px;
-					padding: 0px 6px;
-					height: 26px;
-					line-height: 1;
-					gap: 6px;
-					transition: all 0.3s var(--bezier-ease);
-
-					&.splitted {
-						padding: 0px;
-						gap: 0;
-						overflow: hidden;
-
-						span {
-							padding: 0px 8px;
-							height: 100%;
-							line-height: 24px;
-							opacity: 1;
-
-							&:first-child {
-								border-right: var(--border-small-100);
-								background-color: var(--primary-005-color);
-							}
-						}
-					}
-				}
+			&:hover {
+				border-color: var(--primary-color);
 			}
 		}
 	}
-	.footer-box {
-		font-family: var(--font-family-mono);
-		display: none;
-		text-align: right;
-		font-size: 13px;
-		margin-top: 10px;
 
-		.time {
-			color: var(--fg-secondary-color);
-			width: 100%;
+	&:hover {
+		border-color: var(--primary-color);
+	}
+
+	@container (max-width: 500px) {
+		flex-direction: column;
+
+		.property {
+			flex-basis: initial;
+			flex-grow: initial;
+		}
+		.hide-mobile {
+			display: none;
 		}
 	}
 }

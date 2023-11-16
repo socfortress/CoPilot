@@ -3,9 +3,8 @@
 		<div class="header flex items-start gap-2">
 			<div class="flex flex-col gap-2 w-full">
 				<div class="grow flex items-center gap-2 flex-wrap">
-					<div class="grow basis-56">
+					<div class="grow basis-56" v-if="!isFilterPreselected">
 						<n-select
-							v-if="!isFilterPreselected"
 							v-model:value="filters.hostname"
 							:options="agentHostnameOptions"
 							placeholder="Agent hostname"

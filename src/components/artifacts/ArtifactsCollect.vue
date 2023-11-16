@@ -72,7 +72,7 @@
 		<n-spin :show="loading">
 			<div class="list grid gap-3 my-7">
 				<template v-if="collectList.length">
-					<CollectItem v-for="collect of collectList" :key="collect.Name" :collect="collect" />
+					<CollectItem v-for="collect of collectList" :key="collect.___id" :collect="collect" />
 				</template>
 				<template v-else>
 					<n-empty description="No items found" class="justify-center h-48" v-if="!loading" />
@@ -91,7 +91,12 @@ import CollectItem from "./CollectItem.vue"
 import type { Agent } from "@/types/agents.d"
 import type { CollectRequest } from "@/api/artifacts"
 import type { Artifact, CollectResult } from "@/types/artifacts.d"
+import { nanoid } from "nanoid"
 // import { collectResult } from "./mock"
+
+interface CollectResultExt extends CollectResult {
+	___id?: string
+}
 
 const emit = defineEmits<{
 	(e: "loaded-agents", value: Agent[]): void
@@ -107,7 +112,7 @@ const loadingArtifacts = ref(false)
 const loading = ref(false)
 const agentsList = ref<Agent[]>([])
 const artifactsList = ref<Artifact[]>([])
-const collectList = ref<CollectResult[]>([])
+const collectList = ref<CollectResultExt[]>([])
 
 const InfoIcon = "carbon:information"
 
@@ -144,7 +149,10 @@ function getData() {
 			.collect(filters.value as CollectRequest)
 			.then(res => {
 				if (res.data.success) {
-					collectList.value = res.data?.results || []
+					collectList.value = (res.data?.results || []).map(o => {
+						o.___id = nanoid()
+						return o
+					})
 				} else {
 					message.warning(res.data?.message || "An error occurred. Please try again later.")
 				}
@@ -235,7 +243,13 @@ onBeforeMount(() => {
 	})
 
 	// MOCK
-	// collectList.value = collectResult as CollectResult[]
+	/*
+	collectList.value = collectResult.map(o => {
+		// @ts-ignore
+		o.___id = nanoid()
+		return o
+	}) as CollectResultExt[]
+	*/
 })
 </script>
 
@@ -266,6 +280,13 @@ onBeforeMount(() => {
 					opacity: 1;
 				}
 			}
+		}
+	}
+
+	@media (max-width: 490px) {
+		.list {
+			display: flex;
+			flex-direction: column;
 		}
 	}
 }
