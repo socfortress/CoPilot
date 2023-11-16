@@ -39,7 +39,7 @@
 		</n-spin>
 		<n-card class="p-2" content-style="padding:0">
 			<n-spin :show="loadingAgent">
-				<n-tabs type="segment" animated default-value="Overview">
+				<n-tabs type="line" animated default-value="Overview">
 					<n-tab-pane name="Overview" tab="Overview" display-directive="show">
 						<div class="section">
 							<OverviewSection v-if="agent" :agent="agent" />
@@ -54,6 +54,30 @@
 						<div class="section">
 							<AlertsList v-if="agent" :agent-hostname="agent.hostname" />
 						</div>
+					</n-tab-pane>
+					<n-tab-pane name="collect" tab="Collect" display-directive="show:lazy">
+						<ArtifactsCollect
+							v-if="agent"
+							@loaded-artifacts="artifacts = $event"
+							:agent-hostname="agent.hostname"
+							:artifacts="artifacts"
+						/>
+					</n-tab-pane>
+					<n-tab-pane name="command" tab="Command" display-directive="show:lazy">
+						<ArtifactsCommand
+							v-if="agent"
+							@loaded-artifacts="artifacts = $event"
+							:agent-hostname="agent.hostname"
+							:artifacts="artifacts"
+						/>
+					</n-tab-pane>
+					<n-tab-pane name="quarantine" tab="Quarantine" display-directive="show:lazy">
+						<ArtifactsQuarantine
+							v-if="agent"
+							@loaded-artifacts="artifacts = $event"
+							:agent-hostname="agent.hostname"
+							:artifacts="artifacts"
+						/>
 					</n-tab-pane>
 				</n-tabs>
 			</n-spin>
@@ -73,6 +97,10 @@ import AlertsList from "@/components/alerts/AlertsList.vue"
 import OverviewSection from "@/components/agents/OverviewSection.vue"
 import { useMessage, NSpin, NTooltip, NButton, NTabs, NTabPane, NCard, useDialog } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
+import type { Artifact } from "@/types/artifacts.d"
+import ArtifactsCollect from "@/components/artifacts/ArtifactsCollect.vue"
+import ArtifactsCommand from "@/components/artifacts/ArtifactsCommand.vue"
+import ArtifactsQuarantine from "@/components/artifacts/ArtifactsQuarantine.vue"
 
 const StarIcon = "carbon:star"
 const ArrowIcon = "carbon:arrow-left"
@@ -83,6 +111,8 @@ const dialog = useDialog()
 const route = useRoute()
 const loadingAgent = ref(false)
 const agent = ref<Agent | null>(null)
+
+const artifacts = ref<Artifact[]>([])
 
 const isOnline = computed(() => {
 	return isAgentOnline(agent.value?.wazuh_last_seen ?? "")

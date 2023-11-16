@@ -25,5 +25,6 @@ function formatDate(timestamp: string): string {
 .quarantine-item {
 	border-radius: var(--border-radius);
 	background-color: var(--bg-color);
+	border: var(--border-small-050);
 }
 </style>

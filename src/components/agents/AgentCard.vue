@@ -136,6 +136,7 @@ function toggleCritical(agentId: string, criticalStatus: boolean) {
 	box-sizing: border-box;
 	cursor: pointer;
 	transition: all 0.3s;
+	border: var(--border-small-050);
 
 	.wrapper {
 		display: flex;

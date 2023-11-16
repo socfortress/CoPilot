@@ -75,7 +75,7 @@
 					<CollectItem v-for="collect of collectList" :key="collect.Name" :collect="collect" />
 				</template>
 				<template v-else>
-					<n-empty description="No items found" v-if="!loading" />
+					<n-empty description="No items found" class="justify-center h-48" v-if="!loading" />
 				</template>
 			</div>
 		</n-spin>
@@ -222,7 +222,7 @@ onBeforeMount(() => {
 	}
 
 	nextTick(() => {
-		if (!agentsList.value.length) {
+		if (!agentsList.value.length && !agentHostname?.value) {
 			getAgents((agents: Agent[]) => {
 				emit("loaded-agents", agents)
 			})
@@ -241,14 +241,6 @@ onBeforeMount(() => {
 
 <style lang="scss" scoped>
 .artifacts-collect {
-	:deep() {
-		.n-spin-body {
-			top: 100px;
-			text-align: center;
-			width: 80%;
-		}
-	}
-
 	.list {
 		container-type: inline-size;
 		min-height: 200px;

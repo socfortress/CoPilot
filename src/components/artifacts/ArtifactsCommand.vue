@@ -96,7 +96,7 @@
 					<CommandItem v-for="command of commandList" :key="command.Stdout" :command="command" />
 				</template>
 				<template v-else>
-					<n-empty description="No items found" v-if="!loading" />
+					<n-empty description="No items found" class="justify-center h-48" v-if="!loading" />
 				</template>
 			</div>
 		</n-spin>
@@ -263,7 +263,7 @@ onBeforeMount(() => {
 	}
 
 	nextTick(() => {
-		if (!agentsList.value.length) {
+		if (!agentsList.value.length && !agentHostname?.value) {
 			getAgents((agents: Agent[]) => {
 				emit("loaded-agents", agents)
 			})
@@ -282,14 +282,6 @@ onBeforeMount(() => {
 
 <style lang="scss" scoped>
 .artifacts-command {
-	:deep() {
-		.n-spin-body {
-			top: 100px;
-			text-align: center;
-			width: 80%;
-		}
-	}
-
 	.badges-box {
 		.badge {
 			border-radius: var(--border-radius);

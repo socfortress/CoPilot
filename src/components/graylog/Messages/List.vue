@@ -27,7 +27,7 @@
 				<MessageItem v-for="msg of messages" :key="msg.id" :message="msg" class="mb-2" />
 			</template>
 			<template v-else>
-				<n-empty description="No items found" v-if="!loading" />
+				<n-empty description="No items found" class="justify-center h-48" v-if="!loading" />
 			</template>
 		</div>
 		<div class="footer flex justify-end">
@@ -98,5 +98,6 @@ onBeforeMount(() => {
 <style lang="scss" scoped>
 .list {
 	container-type: inline-size;
+	min-height: 200px;
 }
 </style>

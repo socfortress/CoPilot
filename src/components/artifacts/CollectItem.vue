@@ -57,6 +57,7 @@ function formatDate(timestamp: string): string {
 .collect-item {
 	border-radius: var(--border-radius);
 	background-color: var(--bg-color);
+	border: var(--border-small-050);
 	transition: all 0.2s var(--bezier-ease);
 	max-width: 100%;
 

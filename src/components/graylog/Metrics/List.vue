@@ -87,6 +87,7 @@ function sanitizeMetrics(metrics: ThroughputMetric[]): Metrics[] {
 .metrics-list {
 	.metrics-group {
 		@apply mb-6;
+		overflow: hidden;
 
 		.list {
 			background-color: var(--bg-secondary-color);

@@ -17,5 +17,6 @@ const { artifact } = defineProps<{ artifact: Artifact }>()
 .artifact-item {
 	border-radius: var(--border-radius);
 	background-color: var(--bg-color);
+	border: var(--border-small-050);
 }
 </style>

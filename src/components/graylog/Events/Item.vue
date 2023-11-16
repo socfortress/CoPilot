@@ -92,6 +92,7 @@ const showDetails = ref(false)
 	border-radius: var(--border-radius);
 	background-color: var(--bg-color);
 	transition: all 0.2s var(--bezier-ease);
+	border: var(--border-small-050);
 
 	.header-box {
 		font-family: var(--font-family-mono);

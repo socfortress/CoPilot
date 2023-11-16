@@ -59,6 +59,7 @@ const DangerIcon = "majesticons:exclamation-line"
 	border-radius: var(--border-radius);
 	background-color: var(--bg-color);
 	transition: all 0.2s var(--bezier-ease);
+	border: var(--border-small-050);
 	max-width: 100%;
 	overflow: hidden;
 
