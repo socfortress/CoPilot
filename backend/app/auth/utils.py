@@ -68,9 +68,11 @@ class AuthHandler:
             payload = jwt.decode(token, self.secret, algorithms=["HS256"])
             return payload["sub"], payload.get("scopes", [])
         except jwt.ExpiredSignatureError:
-            raise HTTPException(status_code=401, detail="Expired signature")
+            #raise HTTPException(status_code=401, detail="Expired signature")
+            return "Expired signature", []
         except jwt.InvalidTokenError:
-            raise HTTPException(status_code=401, detail="Invalid token")
+            #raise HTTPException(status_code=401, detail="Invalid token")
+            return "Invalid token", []
 
     async def get_current_user(self, security_scopes: SecurityScopes, token: str = Depends(security)):
         if security_scopes.scopes:
@@ -86,6 +88,18 @@ class AuthHandler:
 
         try:
             username, token_scopes = self.decode_token(token)
+            if username == "Expired signature":
+                raise HTTPException(
+                    status_code=401,
+                    detail="Expired signature",
+                    headers={"WWW-Authenticate": authenticate_value},
+                )
+            if username == "Invalid token":
+                raise HTTPException(
+                    status_code=401,
+                    detail="Invalid token",
+                    headers={"WWW-Authenticate": authenticate_value},
+                )
         except Exception as e:
             raise HTTPException(
                 status_code=401,
@@ -132,6 +146,19 @@ class AuthHandler:
                 )
 
             username, token_scopes = self.decode_token(token)
+
+            if username == "Expired signature":
+                raise HTTPException(
+                    status_code=401,
+                    detail="Expired signature",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+            if username == "Invalid token":
+                raise HTTPException(
+                    status_code=401,
+                    detail="Invalid token",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
 
             if not any(scope in token_scopes for scope in required_scopes):
                 raise HTTPException(
