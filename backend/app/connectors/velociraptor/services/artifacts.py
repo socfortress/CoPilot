@@ -10,9 +10,9 @@ from app.connectors.velociraptor.schema.artifacts import QuarantineResponse
 from app.connectors.velociraptor.schema.artifacts import RunCommandBody
 from app.connectors.velociraptor.schema.artifacts import RunCommandResponse
 from app.connectors.velociraptor.utils.universal import UniversalService
+from app.db.universal_models import Agents
 
 # universal_service = UniversalService()
-
 
 def create_query(query: str) -> str:
     """

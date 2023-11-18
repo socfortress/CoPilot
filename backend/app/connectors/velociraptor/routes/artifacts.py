@@ -85,6 +85,31 @@ async def get_velociraptor_id(session: AsyncSession, hostname: str) -> str:
     logger.info(f"velociraptor_id for hostname {hostname} is {agent.velociraptor_id}")
     return agent.velociraptor_id
 
+async def update_agent_quarantine_status(session: AsyncSession, quarantine_body: QuarantineBody, quarantine_response: QuarantineResponse):
+    logger.info(f"Updating agent quarantine status for hostname {quarantine_body.hostname}")
+    result = await session.execute(select(Agents).filter(Agents.hostname == quarantine_body.hostname))
+    agent = result.scalars().first()
+
+    if not agent:
+        raise HTTPException(status_code=404, detail=f"Agent with hostname {quarantine_body.hostname} not found")
+
+    if quarantine_body.action == "quarantine":
+        if quarantine_response.success:
+            agent.quarantined = True
+        else:
+            raise HTTPException(status_code=500, detail=f"Failed to quarantine hostname {quarantine_body.hostname}")
+    elif quarantine_body.action == "remove_quarantine":
+        if quarantine_response.success:
+            agent.quarantined = False
+        else:
+            raise HTTPException(status_code=500, detail=f"Failed to remove quarantine for hostname {quarantine_body.hostname}")
+
+    await session.commit()
+
+    logger.info(f"Agent quarantine status for hostname {quarantine_body.hostname} updated to {agent.quarantined}")
+
+    return None
+
 
 @velociraptor_artifacts_router.get(
     "",
@@ -230,4 +255,9 @@ async def quarantine(quarantine_body: QuarantineBody, session: AsyncSession = De
     # Add the velociraptor_id to the quarantine_body object
     quarantine_body.velociraptor_id = await get_velociraptor_id(session, quarantine_body.hostname)
     # Quarantine the host
-    return await quarantine_host(quarantine_body)
+    quarantine_response = await quarantine_host(quarantine_body)
+
+    # If the host was successfully quarantined, update the database
+    await update_agent_quarantine_status(session, quarantine_body, quarantine_response)
+
+    return quarantine_response

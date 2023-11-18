@@ -89,6 +89,7 @@ class Agents(SQLModel, table=True):
     wazuh_agent_version: str = Field(max_length=256)
     velociraptor_agent_version: str = Field(max_length=256)
     customer_code: Optional[str] = Field(foreign_key="customers.customer_code")
+    quarantined: bool = Field(default=False)
 
     customer: Optional[Customers] = Relationship(back_populates="agents")
 
