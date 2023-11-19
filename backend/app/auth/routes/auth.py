@@ -8,6 +8,9 @@ from fastapi.security import OAuth2PasswordRequestForm
 from loguru import logger
 from sqlmodel import Session
 from sqlmodel import engine
+from app.db.db_session import get_session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 
 from app.auth.models.users import User
 from app.auth.models.users import UserInput
@@ -44,20 +47,21 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
 @auth_router.get("/refresh", response_model=Token)
 async def refresh_token(current_user: User = Depends(auth_handler.get_current_user)):
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = auth_handler.encode_token(current_user.username, access_token_expires)
+    access_token = await auth_handler.encode_token(current_user.username, access_token_expires)
     return {"access_token": access_token, "token_type": "bearer"}
 
 
 @auth_router.post("/register", response_model=UserResponse, status_code=201, description="Register new user")
-async def register(user: UserInput):
+async def register(user: UserInput, session: AsyncSession = Depends(get_session)):
     # users = select_all_users()
     users = await select_all_users()
     if any(x.username == user.username for x in users):
         raise HTTPException(status_code=400, detail="Username is taken")
     hashed_pwd = auth_handler.get_password_hash(user.password)
     u = User(username=user.username, password=hashed_pwd, email=user.email, role_id=user.role_id)
+    logger.info(f"User: {u}")
     session.add(u)
-    session.commit()
+    await session.commit()
     return {"message": "User created successfully", "success": True}
 
 

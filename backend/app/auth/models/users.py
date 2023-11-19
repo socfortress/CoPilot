@@ -37,6 +37,7 @@ class User(SQLModel, table=True):
 class RoleEnum(int, Enum):
     admin = 1
     analyst = 2
+    scheduler = 3
 
 
 class UserInput(SQLModel):
