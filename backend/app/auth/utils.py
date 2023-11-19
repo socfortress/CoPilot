@@ -16,7 +16,7 @@ from app.auth.services.universal import get_role
 class AuthHandler:
     security = OAuth2PasswordBearer(
         tokenUrl="auth/token",
-        scopes={"admin": "Admin users", "analyst": "SOC Analysts"},
+        scopes={"admin": "Admin users", "analyst": "SOC Analysts", "scheduler": "Scheduler for automated tasks"},
     )
     pwd_context = CryptContext(schemes=["bcrypt"])
     secret = "bL4unrkoxtFs1MT6A7Ns2yMLkduyuqrkTxDV9CjlbNc="
@@ -68,10 +68,10 @@ class AuthHandler:
             payload = jwt.decode(token, self.secret, algorithms=["HS256"])
             return payload["sub"], payload.get("scopes", [])
         except jwt.ExpiredSignatureError:
-            #raise HTTPException(status_code=401, detail="Expired signature")
+            # raise HTTPException(status_code=401, detail="Expired signature")
             return "Expired signature", []
         except jwt.InvalidTokenError:
-            #raise HTTPException(status_code=401, detail="Invalid token")
+            # raise HTTPException(status_code=401, detail="Invalid token")
             return "Invalid token", []
 
     async def get_current_user(self, security_scopes: SecurityScopes, token: str = Depends(security)):

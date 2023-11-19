@@ -1,7 +1,11 @@
 import datetime
+import random
+import string
 from enum import Enum
 from typing import Optional
 
+import bcrypt
+from pydantic import BaseModel
 from pydantic import EmailStr
 from pydantic import validator
 from sqlmodel import Field
@@ -75,3 +79,45 @@ class SMTPInput(SQLModel):
         if "smtp_password" in values and v != values["smtp_password"]:
             raise ValueError("passwords don't match")
         return v
+
+
+class Password(BaseModel):
+    length: int = Field(default=12, ge=8, le=128, description="The length of the password")
+    hashed: str  # Holds the hashed password
+    plain: str  # Holds the plain password
+
+    @validator("length")
+    def validate_length(cls, value):
+        if value < 8 or value > 128:
+            raise ValueError("Password length must be between 8 and 128 characters.")
+        return value
+
+    @classmethod
+    def generate(cls, length: int = 12) -> "Password":
+        if length < 8:  # Ensure the password is a reasonable length
+            raise ValueError("Password length should be at least 8 characters.")
+
+        # Define the characters that can be used in the password
+        lowercase = string.ascii_lowercase
+        uppercase = string.ascii_uppercase
+        digits = string.digits
+        punctuation = string.punctuation
+
+        # Ensure the password has at least one lowercase, one uppercase, one digit, and one symbol
+        password_chars = [random.choice(lowercase), random.choice(uppercase), random.choice(digits), random.choice(punctuation)]
+
+        # Fill the rest of the password length with a random mix of characters
+        if length > 4:
+            password_chars += random.choices(lowercase + uppercase + digits + punctuation, k=length - 4)
+
+        # Shuffle the resulting password list to avoid predictable patterns
+        random.shuffle(password_chars)
+
+        # Convert the list of characters into a string
+        password = "".join(password_chars)
+
+        # Hash the password
+        hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
+
+        # Return the Password object with both the plain and hashed password
+        return cls(length=length, hashed=hashed_password.decode("utf-8"), plain=password)

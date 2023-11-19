@@ -6,40 +6,35 @@ import requests
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
+from fastapi import BackgroundTasks
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.db_session import session
+from app.agents.services.sync import sync_agents
+from app.db.db_session import SyncSessionLocal
+from app.db.db_session import async_engine
+from app.db.db_session import get_sync_db_session
+from app.db.db_session import sync_engine
 from app.schedulers.models.scheduler import JobMetadata
+from app.schedulers.services.agent_sync import agent_sync
 from settings import SQLALCHEMY_DATABASE_URI
-
-
-def scheduled_task():
-    # Your actual task
-    response = requests.get("http://127.0.0.1:5000/agents/sync")
-    print(response.json())
-
-    # Update the last_success in the metadata table
-    job_metadata = session.get(JobMetadata, "scheduled_task")
-    if job_metadata:
-        job_metadata.last_success = datetime.utcnow()
-        session.add(job_metadata)
-        session.commit()
 
 
 def init_scheduler():
     scheduler = AsyncIOScheduler()
-    jobstores = {"default": SQLAlchemyJobStore(url=SQLALCHEMY_DATABASE_URI)}
+    jobstores = {"default": SQLAlchemyJobStore(engine=sync_engine)}
     scheduler.configure(jobstores=jobstores)
-    job = scheduler.add_job(scheduled_task, "interval", minutes=1, id="scheduled_task", replace_existing=True)
 
-    # Initialize or update the metadata in the database
-    job_metadata = session.get(JobMetadata, job.id)
-    if not job_metadata:
-        job_metadata = JobMetadata(job_id=job.id, last_success=None, time_interval=1, enabled=True)
-        session.add(job_metadata)
-    else:
-        # Update existing metadata if needed
-        job_metadata.time_interval = 1  # Update interval if it's changed
-        job_metadata.enabled = True  # Make sure the job is enabled
-    session.commit()
+    # Use SyncSessionLocal to create a synchronous session
+    with SyncSessionLocal() as session:
+        # Synchronous ORM operations
+        job_metadata = session.query(JobMetadata).filter_by(job_id="agent_sync").one_or_none()
+        if not job_metadata:
+            job_metadata = JobMetadata(job_id="agent_sync", last_success=None, time_interval=1, enabled=True)
+            session.add(job_metadata)
+        else:
+            job_metadata.time_interval = 1
+            job_metadata.enabled = True
+        session.commit()
 
+    job = scheduler.add_job(agent_sync, "interval", minutes=1, id="agent_sync", replace_existing=True)
     return scheduler

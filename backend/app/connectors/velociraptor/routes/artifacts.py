@@ -85,6 +85,7 @@ async def get_velociraptor_id(session: AsyncSession, hostname: str) -> str:
     logger.info(f"velociraptor_id for hostname {hostname} is {agent.velociraptor_id}")
     return agent.velociraptor_id
 
+
 async def update_agent_quarantine_status(session: AsyncSession, quarantine_body: QuarantineBody, quarantine_response: QuarantineResponse):
     logger.info(f"Updating agent quarantine status for hostname {quarantine_body.hostname}")
     result = await session.execute(select(Agents).filter(Agents.hostname == quarantine_body.hostname))

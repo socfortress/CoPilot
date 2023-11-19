@@ -1,8 +1,4 @@
-import requests
 import uvicorn
-from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.triggers.interval import IntervalTrigger
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi import HTTPException
@@ -12,8 +8,11 @@ from loguru import logger
 
 from app.auth.utils import AuthHandler
 from app.db.db_session import async_engine
-from app.db.db_session import engine
+from app.db.db_setup import create_roles
 from app.db.db_setup import create_tables
+from app.db.db_setup import ensure_admin_user
+from app.db.db_setup import ensure_scheduler_user
+from app.db.db_setup import ensure_scheduler_user_removed
 from app.middleware.exception_handlers import custom_http_exception_handler
 from app.middleware.exception_handlers import validation_exception_handler
 from app.middleware.logger import log_requests
@@ -83,12 +82,16 @@ app.include_router(logs.router)
 async def init_db():
     # create_tables(engine)
     await create_tables(async_engine)
-    # Initialize the scheduler
-    # scheduler = init_scheduler()
+    await create_roles(async_engine)
+    await ensure_admin_user(async_engine)
+    await ensure_scheduler_user(async_engine)
 
-    # logger.info("Starting scheduler")
-    # if not scheduler.running:
-    #     scheduler.start()
+    # Initialize the scheduler
+    scheduler = init_scheduler()
+
+    logger.info("Starting scheduler")
+    if not scheduler.running:
+        scheduler.start()
 
 
 @app.get("/")
@@ -103,6 +106,8 @@ async def shutdown_scheduler():
     scheduler = init_scheduler()
     if scheduler.running:
         scheduler.shutdown()
+
+    await ensure_scheduler_user_removed(async_engine)
 
 
 if __name__ == "__main__":

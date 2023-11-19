@@ -14,6 +14,7 @@ from app.db.universal_models import Agents
 
 # universal_service = UniversalService()
 
+
 def create_query(query: str) -> str:
     """
     Create a query string.

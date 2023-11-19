@@ -1,4 +1,6 @@
 from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 from sqlmodel import Session
 
 from app.auth.models.users import Role
@@ -144,28 +146,24 @@ def add_connectors_if_not_exist(session: Session):
     session.commit()
 
 
-def add_roles_if_not_exist(session: Session):
+async def add_roles_if_not_exist(session: AsyncSession) -> None:
     # List of roles to add
     role_list = [
-        {
-            "name": "admin",
-            "description": "Administrator",
-        },
-        {
-            "name": "analyst",
-            "description": "SOC Analyst",
-        },
+        {"name": "admin", "description": "Administrator"},
+        {"name": "analyst", "description": "SOC Analyst"},
+        {"name": "scheduler", "description": "Scheduler for automated tasks"},
     ]
 
     for role_data in role_list:
-        # Check if role already exists in the database
-        existing_role = session.query(Role).filter_by(name=role_data["name"]).first()
+        logger.info(f"Checking for existence of role {role_data['name']}")
+        query = select(Role).where(Role.name == role_data["name"])
+        result = await session.execute(query)
+        existing_role = result.scalars().first()
 
         if existing_role is None:
-            # If role does not exist, create new role entry
             new_role = Role(**role_data)
-            session.add(new_role)
+            session.add(new_role)  # Use session.add() to add new objects
             logger.info(f"Added new role: {role_data['name']}")
 
-    # Commit the changes if any new roles were added
-    session.commit()
+    await session.commit()  # Commit the transaction
+    logger.info("Role check and addition completed.")
