@@ -29,12 +29,12 @@ def init_scheduler():
         # Synchronous ORM operations
         job_metadata = session.query(JobMetadata).filter_by(job_id="agent_sync").one_or_none()
         if not job_metadata:
-            job_metadata = JobMetadata(job_id="agent_sync", last_success=None, time_interval=1, enabled=True)
+            job_metadata = JobMetadata(job_id="agent_sync", last_success=None, time_interval=60, enabled=True)
             session.add(job_metadata)
         else:
             job_metadata.time_interval = 1
             job_metadata.enabled = True
         session.commit()
 
-    job = scheduler.add_job(agent_sync, "interval", minutes=1, id="agent_sync", replace_existing=True)
+    job = scheduler.add_job(agent_sync, "interval", minutes=60, id="agent_sync", replace_existing=True)
     return scheduler
