@@ -81,6 +81,7 @@
 					<n-tab-pane name="quarantine" tab="Quarantine" display-directive="show:lazy">
 						<ArtifactsQuarantine
 							v-if="agent"
+							@action-performed="getAgent()"
 							@loaded-artifacts="artifacts = $event"
 							:agent-hostname="agent.hostname"
 							:artifacts="artifacts"
@@ -93,7 +94,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, computed } from "vue"
+import { ref, onBeforeMount, computed, nextTick } from "vue"
 import { useRoute } from "vue-router"
 import Api from "@/api"
 import { type Agent } from "@/types/agents.d"
@@ -119,6 +120,7 @@ const dialog = useDialog()
 const route = useRoute()
 const loadingAgent = ref(false)
 const agent = ref<Agent | null>(null)
+const agentId = ref<string | null>(null)
 
 const artifacts = ref<Artifact[]>([])
 
@@ -130,26 +132,28 @@ const isQuarantined = computed(() => {
 	return !!agent.value?.quarantined
 })
 
-function getAgent(id: string) {
-	loadingAgent.value = true
+function getAgent() {
+	if (agentId.value) {
+		loadingAgent.value = true
 
-	Api.agents
-		.getAgents(id)
-		.then(res => {
-			if (res.data.success) {
-				agent.value = res.data.agents[0] || null
-			} else {
-				message.error(res.data?.message || "An error occurred. Please try again later.")
+		Api.agents
+			.getAgents(agentId.value)
+			.then(res => {
+				if (res.data.success) {
+					agent.value = res.data.agents[0] || null
+				} else {
+					message.error(res.data?.message || "An error occurred. Please try again later.")
+					router.push(`/agents`).catch(() => {})
+				}
+			})
+			.catch(err => {
+				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
 				router.push(`/agents`).catch(() => {})
-			}
-		})
-		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-			router.push(`/agents`).catch(() => {})
-		})
-		.finally(() => {
-			loadingAgent.value = false
-		})
+			})
+			.finally(() => {
+				loadingAgent.value = false
+			})
+	}
 }
 
 function toggleCritical(agentId: string, criticalStatus: boolean) {
@@ -196,7 +200,11 @@ function gotoAgents() {
 
 onBeforeMount(() => {
 	if (route.params.id) {
-		getAgent(route.params.id.toString())
+		agentId.value = route.params.id.toString()
+
+		nextTick(() => {
+			getAgent()
+		})
 	} else {
 		router.replace(`/agents`).catch(() => {})
 	}

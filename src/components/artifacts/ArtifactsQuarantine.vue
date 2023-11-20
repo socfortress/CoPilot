@@ -91,6 +91,7 @@ import type { Artifact, QuarantineResult } from "@/types/artifacts.d"
 const emit = defineEmits<{
 	(e: "loaded-agents", value: Agent[]): void
 	(e: "loaded-artifacts", value: Artifact[]): void
+	(e: "action-performed"): void
 }>()
 
 const props = defineProps<{ agentHostname?: string; agents?: Agent[]; artifacts?: Artifact[] }>()
@@ -141,6 +142,7 @@ function getData() {
 			.then(res => {
 				if (res.data.success) {
 					quarantineList.value = res.data?.results || []
+					emit("action-performed")
 				} else {
 					message.warning(res.data?.message || "An error occurred. Please try again later.")
 				}
