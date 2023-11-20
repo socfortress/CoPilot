@@ -99,6 +99,7 @@ onBeforeMount(() => {
 		padding: var(--n-body-padding);
 		container-type: inline-size;
 		box-sizing: border-box;
+		min-height: 200px;
 	}
 }
 </style>

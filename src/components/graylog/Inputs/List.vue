@@ -45,7 +45,7 @@
 					/>
 				</template>
 				<template v-else>
-					<n-empty description="No items found" v-if="!loading" />
+					<n-empty description="No items found" class="justify-center h-48" v-if="!loading" />
 				</template>
 			</div>
 		</n-scrollbar>
@@ -167,5 +167,6 @@ onBeforeMount(() => {
 	padding-bottom: 0;
 	container-type: inline-size;
 	box-sizing: border-box;
+	min-height: 200px;
 }
 </style>

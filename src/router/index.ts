@@ -70,6 +70,12 @@ const router = createRouter({
 			component: () => import("@/views/socfortress/Alerts.vue"),
 			meta: { title: "Alerts", auth: true, roles: UserRole.All }
 		},
+		{
+			path: "/artifacts",
+			name: "Artifacts",
+			component: () => import("@/views/socfortress/Artifacts.vue"),
+			meta: { title: "Artifacts", auth: true, roles: UserRole.All }
+		},
 
 		// DEMO PAGES ==========================================================
 

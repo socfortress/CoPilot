@@ -23,7 +23,10 @@
 							</n-button>
 						</template>
 						<template #empty>
-							<n-empty description="Empty Field history" class="text-center"></n-empty>
+							<n-empty
+								description="Empty Field history"
+								class="text-center justify-center h-48"
+							></n-empty>
 						</template>
 					</n-select>
 					<n-input v-model:value="filters.alertValue" clearable placeholder="Field value" class="basis-1/2" />

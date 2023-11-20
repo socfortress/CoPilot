@@ -10,7 +10,7 @@
 		</div>
 		<n-card>
 			<n-spin :show="loading">
-				<n-collapse v-model:expanded-names="selectedPipeline" accordion>
+				<n-collapse v-model:expanded-names="selectedPipeline" accordion style="min-height: 100px">
 					<n-collapse-item :title="pipe.title" :name="pipe.id" v-for="pipe of pipelines" :key="pipe.id">
 						<template #header>
 							<PipeTitle :pipeline="pipe" />

@@ -1,7 +1,7 @@
 import { useAuthStore } from "@/stores/auth"
 import { isDebounceTimeOver, isJwtExpiring } from "@/utils/auth"
 import axios from "axios"
-import { useGlobalActions } from "@/composables/useGlobalActions"
+// import { useGlobalActions } from "@/composables/useGlobalActions"
 
 const BASE_URL = import.meta.env.VITE_API_URL
 
@@ -37,7 +37,12 @@ HttpClient.interceptors.response.use(
 	response => response,
 	error => {
 		if (error.response && error.response.status === 401) {
+			if (window.location.pathname.indexOf("login") === -1) {
+				window.location.href = "/logout"
+			}
+			/*
 			useGlobalActions().message("You are not authorized to access the resource", { type: "error" })
+			*/
 		}
 
 		return Promise.reject(error)

@@ -1,0 +1,20 @@
+export interface Artifact {
+	description: string
+	name: string
+}
+
+export interface CollectResult {
+	[key: string]: any
+}
+
+export interface CommandResult {
+	Stdout: string
+	Stderr: string
+	ReturnCode: number
+	Complete: boolean
+}
+
+export interface QuarantineResult {
+	Time: string
+	Result: string
+}

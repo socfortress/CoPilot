@@ -15,7 +15,11 @@
 							/>
 						</template>
 						<template v-else>
-							<n-empty description="No items found" v-if="!loadingCountByHost" />
+							<n-empty
+								description="No items found"
+								class="justify-center h-48"
+								v-if="!loadingCountByHost"
+							/>
 						</template>
 					</div>
 				</n-spin>
@@ -34,7 +38,11 @@
 							/>
 						</template>
 						<template v-else>
-							<n-empty description="No items found" v-if="!loadingCountByRule" />
+							<n-empty
+								description="No items found"
+								class="justify-center h-48"
+								v-if="!loadingCountByRule"
+							/>
 						</template>
 					</div>
 				</n-spin>
@@ -53,7 +61,11 @@
 							/>
 						</template>
 						<template v-else>
-							<n-empty description="No items found" v-if="!loadingCountByRuleHost" />
+							<n-empty
+								description="No items found"
+								class="justify-center h-48"
+								v-if="!loadingCountByRuleHost"
+							/>
 						</template>
 					</div>
 				</n-spin>

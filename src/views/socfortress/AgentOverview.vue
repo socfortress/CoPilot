@@ -30,16 +30,23 @@
 						</template>
 					</n-tooltip>
 				</div>
+
 				<h1 v-if="agent?.hostname">
 					{{ agent?.hostname }}
 				</h1>
+
 				<span class="online-badge" v-if="isOnline">ONLINE</span>
+
+				<span class="quarantined-badge flex items-center gap-1" v-if="isQuarantined">
+					<Icon :name="QuarantinedIcon" :size="15"></Icon>
+					<span>QUARANTINED</span>
+				</span>
 			</div>
 			<div class="label text-secondary-color mt-2">Agent #{{ agent?.agent_id }}</div>
 		</n-spin>
-		<n-card class="p-2" content-style="padding:0">
+		<n-card class="py-1 px-4 pb-4" content-style="padding:0">
 			<n-spin :show="loadingAgent">
-				<n-tabs type="segment" animated default-value="Overview">
+				<n-tabs type="line" animated default-value="Overview">
 					<n-tab-pane name="Overview" tab="Overview" display-directive="show">
 						<div class="section">
 							<OverviewSection v-if="agent" :agent="agent" />
@@ -55,6 +62,31 @@
 							<AlertsList v-if="agent" :agent-hostname="agent.hostname" />
 						</div>
 					</n-tab-pane>
+					<n-tab-pane name="collect" tab="Collect" display-directive="show:lazy">
+						<ArtifactsCollect
+							v-if="agent"
+							@loaded-artifacts="artifacts = $event"
+							:agent-hostname="agent.hostname"
+							:artifacts="artifacts"
+						/>
+					</n-tab-pane>
+					<n-tab-pane name="command" tab="Command" display-directive="show:lazy">
+						<ArtifactsCommand
+							v-if="agent"
+							@loaded-artifacts="artifacts = $event"
+							:agent-hostname="agent.hostname"
+							:artifacts="artifacts"
+						/>
+					</n-tab-pane>
+					<n-tab-pane name="quarantine" tab="Quarantine" display-directive="show:lazy">
+						<ArtifactsQuarantine
+							v-if="agent"
+							@action-performed="getAgent()"
+							@loaded-artifacts="artifacts = $event"
+							:agent-hostname="agent.hostname"
+							:artifacts="artifacts"
+						/>
+					</n-tab-pane>
 				</n-tabs>
 			</n-spin>
 		</n-card>
@@ -62,7 +94,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, computed } from "vue"
+import { ref, onBeforeMount, computed, nextTick } from "vue"
 import { useRoute } from "vue-router"
 import Api from "@/api"
 import { type Agent } from "@/types/agents.d"
@@ -73,8 +105,13 @@ import AlertsList from "@/components/alerts/AlertsList.vue"
 import OverviewSection from "@/components/agents/OverviewSection.vue"
 import { useMessage, NSpin, NTooltip, NButton, NTabs, NTabPane, NCard, useDialog } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
+import type { Artifact } from "@/types/artifacts.d"
+import ArtifactsCollect from "@/components/artifacts/ArtifactsCollect.vue"
+import ArtifactsCommand from "@/components/artifacts/ArtifactsCommand.vue"
+import ArtifactsQuarantine from "@/components/artifacts/ArtifactsQuarantine.vue"
 
 const StarIcon = "carbon:star"
+const QuarantinedIcon = "ph:seal-warning-light"
 const ArrowIcon = "carbon:arrow-left"
 
 const message = useMessage()
@@ -83,31 +120,40 @@ const dialog = useDialog()
 const route = useRoute()
 const loadingAgent = ref(false)
 const agent = ref<Agent | null>(null)
+const agentId = ref<string | null>(null)
+
+const artifacts = ref<Artifact[]>([])
 
 const isOnline = computed(() => {
 	return isAgentOnline(agent.value?.wazuh_last_seen ?? "")
 })
 
-function getAgent(id: string) {
-	loadingAgent.value = true
+const isQuarantined = computed(() => {
+	return !!agent.value?.quarantined
+})
 
-	Api.agents
-		.getAgents(id)
-		.then(res => {
-			if (res.data.success) {
-				agent.value = res.data.agents[0] || null
-			} else {
-				message.error(res.data?.message || "An error occurred. Please try again later.")
+function getAgent() {
+	if (agentId.value) {
+		loadingAgent.value = true
+
+		Api.agents
+			.getAgents(agentId.value)
+			.then(res => {
+				if (res.data.success) {
+					agent.value = res.data.agents[0] || null
+				} else {
+					message.error(res.data?.message || "An error occurred. Please try again later.")
+					router.push(`/agents`).catch(() => {})
+				}
+			})
+			.catch(err => {
+				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
 				router.push(`/agents`).catch(() => {})
-			}
-		})
-		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-			router.push(`/agents`).catch(() => {})
-		})
-		.finally(() => {
-			loadingAgent.value = false
-		})
+			})
+			.finally(() => {
+				loadingAgent.value = false
+			})
+	}
 }
 
 function toggleCritical(agentId: string, criticalStatus: boolean) {
@@ -154,7 +200,11 @@ function gotoAgents() {
 
 onBeforeMount(() => {
 	if (route.params.id) {
-		getAgent(route.params.id.toString())
+		agentId.value = route.params.id.toString()
+
+		nextTick(() => {
+			getAgent()
+		})
 	} else {
 		router.replace(`/agents`).catch(() => {})
 	}
@@ -212,12 +262,18 @@ onBeforeMount(() => {
 				display: flex;
 				align-items: center;
 			}
-			.online-badge {
+			.online-badge,
+			.quarantined-badge {
 				border: 2px solid var(--primary-color);
 				color: var(--primary-color);
 				font-weight: bold;
 				border-radius: var(--border-radius);
 				@apply text-xs py-1 px-2;
+			}
+
+			.quarantined-badge {
+				border-color: var(--warning-color);
+				color: var(--warning-color);
 			}
 		}
 

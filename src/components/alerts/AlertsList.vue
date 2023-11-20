@@ -52,7 +52,7 @@
 					/>
 				</template>
 				<template v-else>
-					<n-empty description="No items found" v-if="!loading" />
+					<n-empty description="No items found" class="justify-center h-48" v-if="!loading" />
 				</template>
 			</div>
 		</n-spin>
@@ -79,26 +79,49 @@
 		>
 			<n-drawer-content title="Alerts filters" closable :native-scrollbar="false">
 				<AlertsFilters :filters="filters" @search="startSearch(true)">
-					<n-form-item label="Agent" v-if="!isFilterPreselected">
+					<div v-if="!isFilterPreselected" class="mb-6">
 						<n-select
+							v-model:value="filterType"
+							@update:value="
+								() => {
+									filters.agentHostname = undefined
+									filters.indexName = undefined
+								}
+							"
+							:options="[
+								{
+									label: 'Filter by Agent Hostname',
+									value: 'agentHostname'
+								},
+								{
+									label: 'Filter by Index name',
+									value: 'indexName'
+								}
+							]"
+							placeholder="Filter by Agent or Index"
+							clearable
+						/>
+						<n-select
+							v-if="filterType === 'agentHostname'"
 							v-model:value="filters.agentHostname"
 							:options="agentHostnameOptions"
 							placeholder="Agents list"
 							clearable
 							filterable
 							:loading="loadingAgents"
+							class="mt-2"
 						/>
-					</n-form-item>
-					<n-form-item label="Index" v-if="!isFilterPreselected">
 						<n-select
+							v-if="filterType === 'indexName'"
 							v-model:value="filters.indexName"
 							:options="indexNameOptions"
 							clearable
 							filterable
 							placeholder="Indices list"
 							:loading="loadingIndex"
+							class="mt-2"
 						/>
-					</n-form-item>
+					</div>
 				</AlertsFilters>
 			</n-drawer-content>
 		</n-drawer>
@@ -107,7 +130,7 @@
 
 <script setup lang="ts">
 import { ref, onBeforeMount, toRefs, computed, nextTick, onMounted } from "vue"
-import { useMessage, NSpin, NPopover, NButton, NEmpty, NDrawer, NDrawerContent, NFormItem, NSelect } from "naive-ui"
+import { useMessage, NSpin, NPopover, NButton, NEmpty, NDrawer, NDrawerContent, NSelect } from "naive-ui"
 import Api from "@/api"
 import AlertsStats, { type AlertsStatsCTX } from "./AlertsStats.vue"
 import AlertsFilters from "./AlertsFilters.vue"
@@ -152,6 +175,8 @@ const totalAlerts = computed<number>(() => {
 })
 
 const filters = ref<AlertsSummaryQuery>({})
+
+const filterType = ref<string | null>(null)
 
 const isFilterPreselected = computed(() => {
 	return !!agentHostname?.value || !!indexName?.value
@@ -301,11 +326,15 @@ onBeforeMount(() => {
 		filters.value.indexName = indexName.value
 	}
 
-	getIndices()
-	getAgents()
+	nextTick(() => {
+		if (!isFilterPreselected.value) {
+			getAgents()
+			getIndices()
+		}
 
-	// alertsSummaryList.value = alerts_summary as AlertsSummary[]
-	startSearch()
+		// alertsSummaryList.value = alerts_summary as AlertsSummary[]
+		startSearch()
+	})
 })
 
 onMounted(() => {
@@ -323,13 +352,6 @@ onBeforeUnmount(() => {
 
 <style lang="scss" scoped>
 .alerts-list {
-	:deep() {
-		.n-spin-body {
-			top: 100px;
-			text-align: center;
-			width: 80%;
-		}
-	}
 	.list {
 		container-type: inline-size;
 		min-height: 200px;

@@ -137,7 +137,7 @@ async def get_agent_by_hostname(hostname: str, db: AsyncSession = Depends(get_se
     "/sync",
     response_model=SyncedAgentsResponse,
     description="Sync agents from Wazuh Manager",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "scheduler"))],
 )
 async def sync_all_agents(backgroud_tasks: BackgroundTasks, session: AsyncSession = Depends(get_session)) -> SyncedAgentsResponse:
     logger.info("Syncing agents from Wazuh Manager")
