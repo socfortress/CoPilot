@@ -53,7 +53,7 @@ class AuthHandler:
     #     return jwt.encode(payload, self.secret, algorithm="HS256")
 
     # ! New with Async
-    async def encode_token(self, username: str, access_token_expires: timedelta = timedelta(minutes=60)):
+    async def encode_token(self, username: str, access_token_expires: timedelta = timedelta(hours=24)):
         role = await get_role(username)
         payload = {
             "exp": datetime.utcnow() + access_token_expires,
