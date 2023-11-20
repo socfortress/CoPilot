@@ -30,14 +30,21 @@
 						</template>
 					</n-tooltip>
 				</div>
+
 				<h1 v-if="agent?.hostname">
 					{{ agent?.hostname }}
 				</h1>
+
 				<span class="online-badge" v-if="isOnline">ONLINE</span>
+
+				<span class="quarantined-badge flex items-center gap-1" v-if="isQuarantined">
+					<Icon :name="QuarantinedIcon" :size="15"></Icon>
+					<span>QUARANTINED</span>
+				</span>
 			</div>
 			<div class="label text-secondary-color mt-2">Agent #{{ agent?.agent_id }}</div>
 		</n-spin>
-		<n-card class="p-2" content-style="padding:0">
+		<n-card class="py-1 px-4 pb-4" content-style="padding:0">
 			<n-spin :show="loadingAgent">
 				<n-tabs type="line" animated default-value="Overview">
 					<n-tab-pane name="Overview" tab="Overview" display-directive="show">
@@ -103,6 +110,7 @@ import ArtifactsCommand from "@/components/artifacts/ArtifactsCommand.vue"
 import ArtifactsQuarantine from "@/components/artifacts/ArtifactsQuarantine.vue"
 
 const StarIcon = "carbon:star"
+const QuarantinedIcon = "ph:seal-warning-light"
 const ArrowIcon = "carbon:arrow-left"
 
 const message = useMessage()
@@ -116,6 +124,10 @@ const artifacts = ref<Artifact[]>([])
 
 const isOnline = computed(() => {
 	return isAgentOnline(agent.value?.wazuh_last_seen ?? "")
+})
+
+const isQuarantined = computed(() => {
+	return !!agent.value?.quarantined
 })
 
 function getAgent(id: string) {
@@ -242,12 +254,18 @@ onBeforeMount(() => {
 				display: flex;
 				align-items: center;
 			}
-			.online-badge {
+			.online-badge,
+			.quarantined-badge {
 				border: 2px solid var(--primary-color);
 				color: var(--primary-color);
 				font-weight: bold;
 				border-radius: var(--border-radius);
 				@apply text-xs py-1 px-2;
+			}
+
+			.quarantined-badge {
+				border-color: var(--warning-color);
+				color: var(--warning-color);
 			}
 		}
 

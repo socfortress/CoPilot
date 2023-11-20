@@ -14,6 +14,7 @@ export interface Agent {
 	customer_code: null | string
 	vulnerabilities?: AgentVulnerabilities[]
 	online?: boolean
+	quarantined?: boolean
 }
 
 export interface AgentVulnerabilities {

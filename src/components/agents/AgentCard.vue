@@ -27,6 +27,14 @@
 								</template>
 							</n-tooltip>
 						</div>
+						<div class="quarantined" v-show="agent.quarantined">
+							<n-tooltip>
+								Quarantined
+								<template #trigger>
+									<Icon :name="QuarantinedIcon" :size="18"></Icon>
+								</template>
+							</n-tooltip>
+						</div>
 					</div>
 					<div class="info">#{{ agent.agent_id }} / {{ agent.label }}</div>
 				</div>
@@ -65,6 +73,7 @@ import { NTooltip, NButton, NSpin, NCard, useMessage, useDialog } from "naive-ui
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
 
+const QuarantinedIcon = "ph:seal-warning-light"
 const StarIcon = "carbon:star"
 const DeleteIcon = "ph:trash"
 
@@ -173,6 +182,12 @@ function toggleCritical(agentId: string, criticalStatus: boolean) {
 						color: var(--primary-color);
 						border-color: var(--primary-color);
 					}
+				}
+
+				.quarantined {
+					display: flex;
+					padding-top: 1px;
+					color: var(--warning-color);
 				}
 			}
 			.info {
