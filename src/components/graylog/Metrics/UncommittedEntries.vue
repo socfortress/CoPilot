@@ -14,6 +14,8 @@
 </template>
 
 <script setup lang="ts">
+// TODO: here we can add a realtime chart
+
 import Icon from "@/components/common/Icon.vue"
 import { computed, toRefs } from "vue"
 

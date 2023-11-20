@@ -49,6 +49,7 @@
 									@click="gotoAgentPage(alert._source.agent_id)"
 								>
 									{{ alert._source.agent_id }}
+									<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
 								</code>
 							</div>
 							<div class="box">
@@ -152,6 +153,7 @@ const DisabledIcon = "ph:minus-bold"
 const MailIcon = "carbon:email"
 const AgentIcon = "carbon:police"
 const ViewIcon = "iconoir:eye-alt"
+const LinkIcon = "carbon:launch"
 
 const message = useMessage()
 const router = useRouter()

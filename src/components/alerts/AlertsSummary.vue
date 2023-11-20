@@ -6,6 +6,8 @@
 				<Icon :name="PlaceholderIcon" v-else :size="18" />
 
 				{{ alertsSummary.index_name }}
+
+				<Icon :name="LinkIcon" :size="14" />
 			</div>
 			<div class="total-alerts flex items-center flex-wrap justify-end">
 				<n-button
@@ -59,6 +61,7 @@ const { alertsSummary } = defineProps<{ alertsSummary: AlertsSummaryExt }>()
 
 const ExpandIcon = "carbon:chevron-down"
 const PlaceholderIcon = "ph:question"
+const LinkIcon = "carbon:launch"
 
 const router = useRouter()
 const showAllAlerts = ref(false)

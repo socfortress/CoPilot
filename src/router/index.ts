@@ -48,19 +48,19 @@ const router = createRouter({
 					path: "management",
 					name: "Graylog-Management",
 					component: () => import("@/views/socfortress/graylog/Management.vue"),
-					meta: { title: "Management" }
+					meta: { title: "Graylog Management" }
 				},
 				{
 					path: "metrics",
 					name: "Graylog-Metrics",
 					component: () => import("@/views/socfortress/graylog/Metrics.vue"),
-					meta: { title: "Metrics" }
+					meta: { title: "Graylog Metrics" }
 				},
 				{
 					path: "pipelines",
 					name: "Graylog-Pipelines",
 					component: () => import("@/views/socfortress/graylog/Pipelines.vue"),
-					meta: { title: "Pipelines" }
+					meta: { title: "Graylog Pipelines" }
 				}
 			]
 		},
@@ -75,6 +75,34 @@ const router = createRouter({
 			name: "Artifacts",
 			component: () => import("@/views/socfortress/Artifacts.vue"),
 			meta: { title: "Artifacts", auth: true, roles: UserRole.All }
+		},
+		{
+			path: "/soc",
+			redirect: "/soc/alerts",
+			meta: {
+				auth: true,
+				roles: UserRole.All
+			},
+			children: [
+				{
+					path: "alerts",
+					name: "Soc-Alerts",
+					component: () => import("@/views/socfortress/soc/Alerts.vue"),
+					meta: { title: "SOC Alerts" }
+				},
+				{
+					path: "cases",
+					name: "Soc-Cases",
+					component: () => import("@/views/socfortress/soc/Cases.vue"),
+					meta: { title: "SOC Cases" }
+				},
+				{
+					path: "users",
+					name: "Soc-Users",
+					component: () => import("@/views/socfortress/soc/Users.vue"),
+					meta: { title: "SOC Users" }
+				}
+			]
 		},
 
 		// DEMO PAGES ==========================================================

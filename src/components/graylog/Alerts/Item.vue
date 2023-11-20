@@ -17,6 +17,7 @@
 								@click="gotoEventsPage(alertsEvent.event.event_definition_id)"
 							>
 								{{ alertsEvent.event.event_definition_id }}
+								<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
 							</code>
 						</div>
 						<div class="box">
@@ -34,6 +35,7 @@
 								@click="gotoIndicesPage(alertsEvent.index_name)"
 							>
 								{{ alertsEvent.index_name }}
+								<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
 							</code>
 						</div>
 						<div class="box">
@@ -99,6 +101,7 @@ const emit = defineEmits<{
 
 const InfoIcon = "carbon:information"
 const TimeIcon = "carbon:time"
+const LinkIcon = "carbon:launch"
 
 const router = useRouter()
 const dFormats = useSettingsStore().dateFormat
