@@ -6,7 +6,7 @@
 					<n-popover overlap placement="bottom-start">
 						<template #trigger>
 							<div class="flex items-center gap-2 cursor-help">
-								<span>#{{ alert.alert_id }}</span>
+								<span>#{{ alert.alert_id }} - {{ alert.alert_uuid }}</span>
 								<Icon :name="InfoIcon" :size="16"></Icon>
 							</div>
 						</template>
@@ -69,6 +69,13 @@
 					<template #label>Severity</template>
 					<template #value>{{ alert.severity.severity_name }}</template>
 				</Badge>
+				<Badge type="splitted">
+					<template #iconLeft>
+						<Icon :name="SourceIcon" :size="13"></Icon>
+					</template>
+					<template #label>Source</template>
+					<template #value>{{ alert.alert_source }}</template>
+				</Badge>
 			</div>
 		</div>
 		<n-collapse>
@@ -107,6 +114,7 @@ const TimeIcon = "carbon:time"
 const LinkIcon = "carbon:launch"
 const StatusIcon = "fluent:status-20-regular"
 const SeverityIcon = "bi:shield-exclamation"
+const SourceIcon = "lucide:arrow-down-right-from-circle"
 
 const alertObject = ref<Alert>({} as Alert)
 const history = ref<
