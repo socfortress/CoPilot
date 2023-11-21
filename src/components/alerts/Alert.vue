@@ -16,30 +16,38 @@
 
 				<div class="badges-box flex flex-wrap items-center gap-3">
 					<!--
-						<div class="badge cursor">
-							<Icon :name="InfoIcon" :size="14"></Icon>
-						</div>
+						<Badge type="cursor">
+							<template #iconLeft>
+								<Icon :name="InfoIcon" :size="14"></Icon>
+							</template>
+						</Badge>
 					-->
-					<div class="badge splitted">
-						<span class="flex items-center gap-2">
+					<Badge type="splitted">
+						<template #iconLeft>
 							<Icon :name="TargetIcon" :size="13" class="!opacity-80"></Icon>
-							Fired times
-						</span>
-						<span class="font-mono">{{ alert._source.rule_firedtimes }}</span>
-					</div>
-					<div class="badge" :class="{ active: alert._source.rule_mail }">
-						<span>Rule mail</span>
-						<Icon :name="alert._source.rule_mail ? MailIcon : DisabledIcon" :size="14"></Icon>
-					</div>
+						</template>
+						<template #label>Fired times</template>
+						<template #value>{{ alert._source.rule_firedtimes }}</template>
+					</Badge>
+
+					<Badge :type="alert._source.rule_mail ? 'active' : 'muted'">
+						<template #iconRight>
+							<Icon :name="alert._source.rule_mail ? MailIcon : DisabledIcon" :size="14"></Icon>
+						</template>
+						<template #label>Rule mail</template>
+					</Badge>
+
 					<n-popover overlap placement="bottom-start">
 						<template #trigger>
-							<div class="badge splitted cursor-help">
-								<span class="flex items-center gap-2">
+							<Badge type="splitted" hint-cursor>
+								<template #iconLeft>
 									<Icon :name="AgentIcon" :size="13" class="!opacity-80"></Icon>
-									Agent
-								</span>
-								<span>{{ alert._source.agent_name }} / {{ alert._source.agent_labels_customer }}</span>
-							</div>
+								</template>
+								<template #label>Agent</template>
+								<template #value>
+									{{ alert._source.agent_name }} / {{ alert._source.agent_labels_customer }}
+								</template>
+							</Badge>
 						</template>
 						<div class="flex flex-col gap-1">
 							<div class="box">
@@ -66,25 +74,25 @@
 							</div>
 						</div>
 					</n-popover>
-					<div class="badge splitted">
-						<span>syslog</span>
-						<span>{{ alert._source.syslog_type }} / {{ alert._source.syslog_level }}</span>
-					</div>
-					<div class="badge splitted hide-on-small">
-						<span>manager</span>
-						<span>{{ alert._source.manager_name }}</span>
-					</div>
-					<div class="badge splitted hide-on-small">
-						<span>decoder</span>
-						<span>{{ alert._source.decoder_name }}</span>
-					</div>
-					<div class="badge splitted hide-on-small">
-						<span>source</span>
-						<span>{{ alert._source.source }}</span>
-					</div>
+					<Badge type="splitted">
+						<template #label>syslog</template>
+						<template #value>{{ alert._source.syslog_type }} / {{ alert._source.syslog_level }}</template>
+					</Badge>
+					<Badge type="splitted" class="hide-on-small">
+						<template #label>manager</template>
+						<template #value>{{ alert._source.manager_name }}</template>
+					</Badge>
+					<Badge type="splitted" class="hide-on-small">
+						<template #label>decoder</template>
+						<template #value>{{ alert._source.decoder_name }}</template>
+					</Badge>
+					<Badge type="splitted" class="hide-on-small">
+						<template #label>source</template>
+						<template #value>{{ alert._source.source }}</template>
+					</Badge>
 				</div>
 			</div>
-			<div class="actions-box flex flex-col justify-end">
+			<div class="actions-box flex flex-col justify-end" v-if="!hideActions">
 				<n-button type="primary" secondary v-if="alertUrl" tag="a" :href="alertUrl" target="_blank">
 					<template #icon><Icon :name="ViewIcon"></Icon></template>
 					View Alert
@@ -96,7 +104,7 @@
 			</div>
 		</div>
 		<div class="footer-box flex justify-between items-center gap-4">
-			<div class="actions-box flex flex-col justify-end">
+			<div class="actions-box flex flex-col justify-end" v-if="!hideActions">
 				<n-button
 					type="primary"
 					secondary
@@ -136,6 +144,7 @@ import { NButton, NPopover, NModal } from "naive-ui"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
 import Icon from "@/components/common/Icon.vue"
+import Badge from "@/components/common/Badge.vue"
 import type { Alert } from "@/types/alerts.d"
 import { SimpleJsonViewer } from "vue-sjv"
 import "@/assets/scss/vuesjv-override.scss"
@@ -144,7 +153,7 @@ import Api from "@/api"
 import { onBeforeMount, ref } from "vue"
 import { useMessage } from "naive-ui/lib"
 
-const { alert } = defineProps<{ alert: Alert }>()
+const { alert, hideActions } = defineProps<{ alert: Alert; hideActions?: boolean }>()
 
 const InfoIcon = "carbon:information"
 const TargetIcon = "zondicons:target"
@@ -228,73 +237,6 @@ onBeforeMount(() => {
 
 			.badges-box {
 				margin-top: 16px;
-
-				.badge {
-					border-radius: var(--border-radius);
-					border: var(--border-small-100);
-					display: flex;
-					align-items: center;
-					font-size: 14px;
-					padding: 0px 6px;
-					height: 26px;
-					line-height: 1;
-					gap: 6px;
-					transition: all 0.3s var(--bezier-ease);
-
-					span,
-					i {
-						opacity: 0.5;
-					}
-
-					&.active {
-						color: var(--primary-color);
-						background-color: var(--primary-005-color);
-
-						span,
-						i {
-							opacity: 1;
-						}
-
-						border-color: var(--primary-color);
-					}
-
-					&.cursor {
-						cursor: pointer;
-
-						i {
-							opacity: 1;
-						}
-
-						&:hover {
-							color: var(--primary-color);
-							border-color: var(--primary-color);
-						}
-					}
-
-					&.splitted {
-						padding: 0px;
-						gap: 0;
-						overflow: hidden;
-
-						span {
-							padding: 0px 8px;
-							height: 100%;
-							line-height: 24px;
-							opacity: 1;
-
-							&:first-child {
-								border-right: var(--border-small-100);
-								background-color: var(--primary-005-color);
-							}
-						}
-					}
-					&.default {
-						span,
-						i {
-							opacity: 1;
-						}
-					}
-				}
 			}
 		}
 	}

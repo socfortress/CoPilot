@@ -14,21 +14,29 @@
 				<div class="title">{{ stream.title }}</div>
 				<div class="description mb-2">{{ stream.description }}</div>
 				<div class="badges-box flex flex-wrap items-center gap-3">
-					<div class="badge cursor" @click="showDetails = true">
-						<Icon :name="InfoIcon" :size="14"></Icon>
-					</div>
-					<div class="badge" :class="{ active: !stream.disabled }">
-						<span>Enabled</span>
-						<Icon :name="stream.disabled ? DisabledIcon : EnabledIcon" :size="14"></Icon>
-					</div>
-					<div class="badge" :class="{ active: stream.is_default }">
-						<span>Default</span>
-						<Icon :name="stream.is_default ? EnabledIcon : DisabledIcon" :size="14"></Icon>
-					</div>
-					<div class="badge" :class="{ active: stream.is_editable }">
-						<span>Editable</span>
-						<Icon :name="stream.is_editable ? EnabledIcon : DisabledIcon" :size="14"></Icon>
-					</div>
+					<Badge type="cursor" @click="showDetails = true">
+						<template #iconLeft>
+							<Icon :name="InfoIcon" :size="14"></Icon>
+						</template>
+					</Badge>
+					<Badge :type="stream.disabled ? 'muted' : 'active'">
+						<template #iconRight>
+							<Icon :name="stream.disabled ? DisabledIcon : EnabledIcon" :size="14"></Icon>
+						</template>
+						<template #label>Enabled</template>
+					</Badge>
+					<Badge :type="stream.is_default ? 'active' : 'muted'">
+						<template #iconRight>
+							<Icon :name="stream.is_default ? EnabledIcon : DisabledIcon" :size="14"></Icon>
+						</template>
+						<template #label>Default</template>
+					</Badge>
+					<Badge :type="stream.is_editable ? 'active' : 'muted'">
+						<template #iconRight>
+							<Icon :name="stream.is_editable ? EnabledIcon : DisabledIcon" :size="14"></Icon>
+						</template>
+						<template #label>Editable</template>
+					</Badge>
 				</div>
 			</div>
 			<div class="actions-box flex flex-col justify-end" v-if="stream.is_editable">
@@ -82,6 +90,7 @@
 import { type Stream } from "@/types/graylog/stream.d"
 import { useSettingsStore } from "@/stores/settings"
 import Icon from "@/components/common/Icon.vue"
+import Badge from "@/components/common/Badge.vue"
 import dayjs from "@/utils/dayjs"
 import { NModal, NButton, useMessage } from "naive-ui"
 import { ref, toRefs } from "vue"
@@ -175,51 +184,6 @@ function start() {
 		.description {
 			color: var(--fg-secondary-color);
 			font-size: 13px;
-		}
-
-		.badges-box {
-			.badge {
-				border-radius: var(--border-radius);
-				border: var(--border-small-100);
-				display: flex;
-				align-items: center;
-				font-size: 14px;
-				padding: 0px 6px;
-				height: 26px;
-				line-height: 1;
-				gap: 6px;
-				transition: all 0.3s var(--bezier-ease);
-
-				span,
-				i {
-					opacity: 0.5;
-				}
-
-				&.active {
-					color: var(--primary-color);
-					background-color: var(--primary-005-color);
-
-					span,
-					i {
-						opacity: 1;
-					}
-
-					border-color: var(--primary-color);
-				}
-
-				&.cursor {
-					cursor: pointer;
-
-					i {
-						opacity: 1;
-					}
-
-					&:hover {
-						color: var(--primary-color);
-						border-color: var(--primary-color);
-					}
-				}
-			}
 		}
 	}
 

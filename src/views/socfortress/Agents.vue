@@ -17,14 +17,23 @@
 				<n-spin class="w-full h-full overflow-hidden flex flex-col" :show="loadingAgents">
 					<n-scrollbar class="grow">
 						<div class="agents-list flex flex-grow flex-col gap-3">
-							<AgentCard
-								v-for="agent in agentsFiltered"
-								:key="agent.agent_id"
-								:agent="agent"
-								show-actions
-								@delete="syncAgents()"
-								@click="gotoAgentPage(agent)"
-							/>
+							<template v-if="agentsFiltered.length">
+								<AgentCard
+									v-for="agent in agentsFiltered"
+									:key="agent.agent_id"
+									:agent="agent"
+									show-actions
+									@delete="syncAgents()"
+									@click="gotoAgentPage(agent)"
+								/>
+							</template>
+							<template v-else>
+								<n-empty
+									description="No items found"
+									class="justify-center h-48"
+									v-if="!loadingAgents"
+								/>
+							</template>
 						</div>
 					</n-scrollbar>
 				</n-spin>
@@ -41,7 +50,7 @@ import AgentToolbar from "@/components/agents/AgentToolbar.vue"
 import { isAgentOnline } from "@/components/agents/utils"
 import Api from "@/api"
 import { useRouter } from "vue-router"
-import { useMessage, NSpin, NScrollbar } from "naive-ui"
+import { useMessage, NSpin, NScrollbar, NEmpty } from "naive-ui"
 import _debounce from "lodash/debounce"
 
 const message = useMessage()
