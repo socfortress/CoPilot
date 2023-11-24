@@ -1,5 +1,10 @@
 <template>
-	<div class="badge" :class="[type, color, { 'cursor-help': hintCursor }]">
+	<component
+		:is="!!href ? 'a' : 'div'"
+		class="badge"
+		:href="href"
+		:class="[type, color, { 'cursor-help': hintCursor, 'cursor-pointer': pointCursor }]"
+	>
 		<span v-if="$slots.label || $slots.iconLeft || $slots.iconRight" class="flex items-center gap-2">
 			<slot name="iconLeft"></slot>
 			<slot name="label"></slot>
@@ -8,14 +13,16 @@
 		<span v-if="$slots.value">
 			<slot name="value"></slot>
 		</span>
-	</div>
+	</component>
 </template>
 
 <script setup lang="ts">
-const { type, hintCursor } = defineProps<{
+const { type, hintCursor, pointCursor, color } = defineProps<{
 	type?: "splitted" | "muted" | "active" | "cursor"
 	hintCursor?: boolean
+	pointCursor?: boolean
 	color?: "danger" | "warning"
+	href?: string
 }>()
 </script>
 

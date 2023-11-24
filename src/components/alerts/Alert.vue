@@ -216,7 +216,7 @@ onBeforeMount(() => {
 		.id {
 			word-break: break-word;
 			color: var(--fg-secondary-color);
-			line-height: 1;
+			line-height: 1.2;
 
 			&:hover {
 				color: var(--primary-color);
