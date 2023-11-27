@@ -21,7 +21,7 @@ export interface SocCase {
 type DateDay = number
 type DateMonth = number
 type DateYear = number
-type DateFormatted = `${DateMonth}/${DateDay}/${DateYear}`
+export type DateFormatted = `${DateMonth}/${DateDay}/${DateYear}`
 type DayFormatted = `${DateYear}-${DateMonth}-${DateDay}`
 
 export enum StateName {
@@ -37,7 +37,7 @@ export interface SocCaseExt {
 	case_tags: string
 	case_uuid: string
 	classification: string | null
-	classification_id: string | null
+	classification_id: number | null
 	close_date: DayFormatted
 	custom_attributes: string | null
 	customer_id: number
@@ -49,9 +49,9 @@ export interface SocCaseExt {
 	open_date: DayFormatted
 	owner: string
 	owner_id: number
-	protagonists: { [key: string]: any }
+	protagonists: string[]
 	reviewer: string | null
-	reviewer_id: string | null
+	reviewer_id: number | null
 	state_id: number
 	state_name: StateName
 	status_id: number

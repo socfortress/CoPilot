@@ -6,6 +6,11 @@ import type { SocAsset, SocAssetsState } from "@/types/soc/asset.d"
 import type { SocNewNote, SocNote } from "@/types/soc/note.d"
 import type { SocUser } from "@/types/soc/user.d"
 
+export interface CasesFilter {
+	olderThan: number
+	unit: TimeUnit
+}
+
 type TimeUnit = "hours" | "days" | "weeks"
 
 export default {
@@ -21,12 +26,36 @@ export default {
 	removeAlertBookmark(alertId: string) {
 		return HttpClient.delete<FlaskBaseResponse & { alert: SocAlert }>(`/soc/alerts/bookmark/${alertId}`)
 	},
-	getCases(caseId?: string) {
-		return HttpClient.get<FlaskBaseResponse & { cases?: SocCase[]; case?: SocCaseExt }>(
-			`/soc/cases${caseId ? "/" + caseId : ""}`
+	getCases(payload?: string | CasesFilter) {
+		let apiMethod: "get" | "post" = "get"
+		let url = `/soc/cases`
+
+		if (payload) {
+			if (typeof payload === "string") {
+				url = `/soc/cases/${payload}`
+			} else {
+				apiMethod = "post"
+				url = `/soc/cases/older_than`
+			}
+		}
+
+		return HttpClient[apiMethod]<
+			FlaskBaseResponse & { cases?: SocCase[]; case?: SocCaseExt; cases_breached?: SocCase[] }
+		>(
+			url,
+			{},
+			apiMethod === "post" && typeof payload !== "string"
+				? {
+						params: {
+							older_than: payload?.olderThan || 1,
+							time_unit: payload?.unit || "days"
+						}
+						// eslint-disable-next-line no-mixed-spaces-and-tabs
+				  }
+				: undefined
 		)
 	},
-	getCasesOlder(payload: { olderThan: number; unit: TimeUnit }) {
+	getCasesOlder(payload: CasesFilter) {
 		return HttpClient.post<FlaskBaseResponse & { cases_breached: SocCase[] }>(
 			`/soc/cases/older_than`,
 			{},
