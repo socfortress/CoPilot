@@ -10,7 +10,7 @@
 				</div>
 			</div>
 			<div class="time">
-				<n-popover overlap placement="bottom-end">
+				<n-popover overlap placement="top-end">
 					<template #trigger>
 						<div class="flex items-center gap-2 cursor-help">
 							<span>
@@ -19,15 +19,15 @@
 							<Icon :name="TimeIcon" :size="16"></Icon>
 						</div>
 					</template>
-					<div class="flex flex-col gap-1">
-						<div class="box">
-							created:
-							<code>{{ formatDate(rule.created_at) }}</code>
-						</div>
-						<div class="box">
-							modified:
-							<code>{{ formatDate(rule.modified_at) }}</code>
-						</div>
+					<div class="flex flex-col py-2 px-1">
+						<n-timeline>
+							<n-timeline-item type="success" title="Created" :time="formatDate(rule.created_at)" />
+							<n-timeline-item
+								v-if="rule.modified_at"
+								title="Modified"
+								:time="formatDate(rule.modified_at)"
+							/>
+						</n-timeline>
 					</div>
 				</n-popover>
 			</div>
@@ -82,7 +82,7 @@
 
 <script setup lang="ts">
 import { ref, toRefs } from "vue"
-import { NModal, NInput, NPopover } from "naive-ui"
+import { NModal, NInput, NPopover, NTimeline, NTimelineItem } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import type { PipelineRule } from "@/types/graylog/pipelines.d"
 import { useSettingsStore } from "@/stores/settings"

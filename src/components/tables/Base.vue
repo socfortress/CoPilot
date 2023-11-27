@@ -94,11 +94,6 @@
 <script lang="ts" setup>
 import { NTable, NImage, NProgress, NTag, NButton, NPopselect } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
-
-const DeleteIcon = "carbon:delete"
-const MenuIcon = "carbon:overflow-menu-vertical"
-const DownloadIcon = "carbon:cloud-download"
-
 import dayjs from "@/utils/dayjs"
 import { faker } from "@faker-js/faker"
 import { ref, toRefs } from "vue"
@@ -113,6 +108,10 @@ const props = withDefaults(
 	{ rows: 5, showActions: false, showDate: false }
 )
 const { rows, showActions, showDate } = toRefs(props)
+
+const DeleteIcon = "carbon:delete"
+const MenuIcon = "carbon:overflow-menu-vertical"
+const DownloadIcon = "carbon:cloud-download"
 
 const stock = [
 	{

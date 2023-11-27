@@ -1,5 +1,10 @@
 <template>
-	<n-spin :show="loading" class="soc-alert-item flex flex-col gap-0" :class="{ bookmarked: isBookmark }">
+	<n-spin
+		:show="loading"
+		class="soc-alert-item flex flex-col gap-0"
+		:class="{ bookmarked: isBookmark, highlight }"
+		:id="'alert-' + alert.alert_id"
+	>
 		<div class="soc-alert-info px-5 py-3 flex flex-col gap-2">
 			<div class="header-box flex justify-between">
 				<div class="flex items-center gap-2 cursor-pointer">
@@ -165,7 +170,7 @@ import type { SocAlert } from "@/types/soc/alert.d"
 import type { Alert } from "@/types/alerts.d"
 import Icon from "@/components/common/Icon.vue"
 import Badge from "@/components/common/Badge.vue"
-import { computed, onBeforeMount, ref } from "vue"
+import { computed, onBeforeMount, ref, toRefs } from "vue"
 import { SimpleJsonViewer } from "vue-sjv"
 import KVCard from "@/components/common/KVCard.vue"
 import SocAlertTimeline from "./SocAlertTimeline.vue"
@@ -179,7 +184,8 @@ const emit = defineEmits<{
 	(e: "bookmark"): void
 }>()
 
-const { alert, isBookmark } = defineProps<{ alert: SocAlert; isBookmark?: boolean }>()
+const props = defineProps<{ alert: SocAlert; isBookmark?: boolean; highlight?: boolean | null | undefined }>()
+const { alert, isBookmark, highlight } = toRefs(props)
 
 const ChevronIcon = "carbon:chevron-right"
 const InfoIcon = "carbon:information"
@@ -220,9 +226,9 @@ function formatDate(timestamp: string | number, utc: boolean = true): string {
 function toggleBookmark() {
 	loading.value = true
 
-	const method = isBookmark ? "removeAlertBookmark" : "addAlertBookmark"
+	const method = isBookmark.value ? "removeAlertBookmark" : "addAlertBookmark"
 
-	Api.soc[method](alert.alert_id.toString())
+	Api.soc[method](alert.value.alert_id.toString())
 		.then(res => {
 			if (res.data.success) {
 				emit("bookmark")
@@ -242,8 +248,8 @@ function toggleBookmark() {
 onBeforeMount(() => {
 	alertObject.value = {
 		_index: "",
-		_id: alert.alert_context.alert_id,
-		_source: alert.alert_source_content
+		_id: alert.value.alert_context.alert_id,
+		_source: alert.value.alert_source_content
 	} as Alert
 })
 </script>
@@ -322,7 +328,8 @@ onBeforeMount(() => {
 		box-shadow: 0px 0px 0px 1px inset var(--primary-030-color);
 	}
 
-	&:hover {
+	&:hover,
+	&.highlight {
 		box-shadow: 0px 0px 0px 1px inset var(--primary-color);
 	}
 

@@ -100,6 +100,7 @@ onBeforeMount(() => {
 		container-type: inline-size;
 		box-sizing: border-box;
 		min-height: 200px;
+		padding-bottom: 50vh;
 	}
 }
 </style>
