@@ -148,11 +148,6 @@ function gotoEventsPage(event_definition_id: string) {
 				color: var(--primary-color);
 			}
 		}
-
-		.actionable {
-			cursor: pointer;
-			color: var(--primary-color);
-		}
 	}
 	.main-box {
 		.content {

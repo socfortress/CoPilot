@@ -2,7 +2,7 @@
 	<div class="soc-case-item">
 		<div class="flex flex-col gap-2 px-5 py-3">
 			<div class="header-box flex justify-between">
-				<div class="flex items-center gap-2 cursor-pointer">
+				<div class="flex items-center gap-2">
 					<div class="id flex items-center gap-2 cursor-pointer" @click="showDetails = true">
 						<span>{{ caseData.case_uuid }}</span>
 						<Icon :name="InfoIcon" :size="16"></Icon>
@@ -62,7 +62,7 @@
 							<template #label>Client</template>
 							<template #value>{{ caseData.client_name }}</template>
 						</Badge>
-						<Badge v-if="caseData.case_soc_id" type="active" @click="gotoSoc(caseData.case_soc_id)">
+						<Badge v-if="caseData.case_soc_id" type="active" @click="gotoSocAlert(caseData.case_soc_id)">
 							<template #iconRight>
 								<Icon :name="LinkIcon" :size="14"></Icon>
 							</template>
@@ -97,7 +97,10 @@
 						<div class="flex flex-col gap-2 px-7 py-4" v-if="extendedInfo">
 							<div class="box">
 								soc id:
-								<code class="cursor-pointer text-primary-color" @click="gotoSoc(caseData.case_soc_id)">
+								<code
+									class="cursor-pointer text-primary-color"
+									@click="gotoSocAlert(caseData.case_soc_id)"
+								>
 									#{{ caseData.case_soc_id }}
 									<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
 								</code>
@@ -140,16 +143,22 @@
 				</n-tab-pane>
 				<n-tab-pane name="Assets" tab="Assets" display-directive="show:lazy">
 					<n-spin :show="loadingAssets">
-						<div class="flex flex-col gap-2 px-7 py-4" v-if="assetsState">
-							<div class="box">
-								object_state:
+						<div class="flex flex-col gap-2 px-7 py-4 pb-7">
+							<div class="box" v-if="assetsState">
+								State:
 								<code>{{ assetsState.object_state }}</code>
 							</div>
-							<div class="box">
-								object_last_update:
+							<div class="box" v-if="assetsState">
+								Last update:
 								<code>{{ formatDateTime(assetsState.object_last_update) }}</code>
 							</div>
 						</div>
+						<div v-if="assetsList?.length" class="px-7 flex flex-col gap-2">
+							<SocCaseAssetsItem v-for="asset of assetsList" :key="asset.asset_id" :asset="asset" />
+						</div>
+						<template v-else>
+							<n-empty description="No items found" class="justify-center h-48" v-if="!loadingAssets" />
+						</template>
 					</n-spin>
 				</n-tab-pane>
 			</n-tabs>
@@ -163,9 +172,21 @@ import KVCard from "@/components/common/KVCard.vue"
 import Badge from "@/components/common/Badge.vue"
 import { computed, ref, watch } from "vue"
 import SocCaseTimeline from "./SocCaseTimeline.vue"
+import SocCaseAssetsItem from "./SocCaseAssetsItem.vue"
 import "@/assets/scss/vuesjv-override.scss"
 import Api from "@/api"
-import { useMessage, NPopover, NSpin, NTimeline, NTimelineItem, NModal, NTabs, NTabPane, NInput } from "naive-ui"
+import {
+	useMessage,
+	NPopover,
+	NSpin,
+	NTimeline,
+	NTimelineItem,
+	NModal,
+	NTabs,
+	NTabPane,
+	NInput,
+	NEmpty
+} from "naive-ui"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
 import { type SocCase, StateName, type SocCaseExt } from "@/types/soc/case.d"
@@ -235,7 +256,7 @@ function formatDateTime(timestamp: string | number | Date, utc: boolean = true):
 	return dayjs(timestamp).utc(utc).format(dFormats.datetimesec)
 }
 
-function gotoSoc(socId: string) {
+function gotoSocAlert(socId: string) {
 	router.push(`/soc/alerts?id=${socId}`).catch(() => {})
 }
 
@@ -324,11 +345,6 @@ watch(showDetails, val => {
 			&:hover {
 				color: var(--primary-color);
 			}
-		}
-
-		.actionable {
-			cursor: pointer;
-			color: var(--primary-color);
 		}
 	}
 

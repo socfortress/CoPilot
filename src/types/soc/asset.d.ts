@@ -14,14 +14,14 @@ export interface SocAsset {
 	asset_type_id: number
 	asset_uuid: string
 	ioc_links: null | string
-	link: Link[]
+	link: SocAssetLink[]
 }
 type DateDay = number
 type DateMonth = number
 type DateYear = number
 type DayFormatted = `${DateYear}-${DateMonth}-${DateDay}`
 
-export interface Link {
+export interface SocAssetLink {
 	case_name: string
 	case_open_date: DayFormatted
 	asset_description: string
