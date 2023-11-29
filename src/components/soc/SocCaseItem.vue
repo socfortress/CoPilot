@@ -1,5 +1,5 @@
 <template>
-	<div class="soc-case-item">
+	<div class="soc-case-item" :class="{ embedded }">
 		<div class="flex flex-col gap-2 px-5 py-3">
 			<div class="header-box flex justify-between">
 				<div class="flex items-center gap-2">
@@ -60,13 +60,18 @@
 								<Icon :name="CustomerIcon" :size="13"></Icon>
 							</template>
 							<template #label>Client</template>
-							<template #value>{{ caseData.client_name }}</template>
+							<template #value>{{ caseData.client_name || "-" }}</template>
 						</Badge>
-						<Badge v-if="caseData.case_soc_id" type="active" @click="gotoSocAlert(caseData.case_soc_id)">
+						<Badge
+							v-if="caseData.case_soc_id"
+							type="active"
+							@click="gotoSocAlert(caseData.case_soc_id)"
+							class="cursor-pointer"
+						>
 							<template #iconRight>
 								<Icon :name="LinkIcon" :size="14"></Icon>
 							</template>
-							<template #label>#{{ caseData.case_soc_id }}</template>
+							<template #label>Alert #{{ caseData.case_soc_id }}</template>
 						</Badge>
 					</div>
 				</div>
@@ -195,7 +200,7 @@ import _split from "lodash/split"
 import { useRouter } from "vue-router"
 import type { SocAsset, SocAssetsState } from "@/types/soc/asset.d"
 
-const { caseData } = defineProps<{ caseData: SocCase }>()
+const { caseData, embedded } = defineProps<{ caseData: SocCase; embedded?: boolean }>()
 
 const TimeIcon = "carbon:time"
 const InfoIcon = "carbon:information"
@@ -313,10 +318,13 @@ watch(showDetails, val => {
 
 <style lang="scss" scoped>
 .soc-case-item {
-	border-radius: var(--border-radius);
-	background-color: var(--bg-color);
+	&:not(.embedded) {
+		border-radius: var(--border-radius);
+		background-color: var(--bg-color);
+		border: var(--border-small-050);
+	}
+	border-top: var(--border-small-050);
 	transition: all 0.2s var(--bezier-ease);
-	border: var(--border-small-050);
 
 	.header-box {
 		font-family: var(--font-family-mono);
@@ -369,8 +377,10 @@ watch(showDetails, val => {
 		}
 	}
 
-	&:hover {
-		box-shadow: 0px 0px 0px 1px inset var(--primary-color);
+	&:not(.embedded) {
+		&:hover {
+			box-shadow: 0px 0px 0px 1px inset var(--primary-color);
+		}
 	}
 
 	@container (max-width: 650px) {

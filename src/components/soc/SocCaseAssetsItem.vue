@@ -65,7 +65,7 @@
 					</div>
 				</n-tab-pane>
 				<n-tab-pane name="Link" tab="Link" display-directive="show:lazy">
-					<div v-if="asset.link?.length" class="px-7 flex flex-col gap-2">
+					<div v-if="asset.link?.length" class="px-4 flex flex-col gap-2">
 						<SocCaseAssetLink
 							v-for="link of asset.link"
 							:key="link.case_id + '-' + link.asset_id"

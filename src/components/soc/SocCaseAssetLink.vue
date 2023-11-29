@@ -1,15 +1,11 @@
 <template>
 	<div class="soc-asset-link">
-		<div class="flex flex-col gap-2 px-5 py-4">
+		<div class="flex flex-col gap-2 px-5 py-4 pb-2">
 			<div class="header-box flex justify-between">
 				<div class="flex items-center gap-2 cursor-helper">
 					<div class="id flex items-center gap-2">
 						<span>{{ link.case_name }}</span>
-						<Icon :name="InfoIcon" :size="16"></Icon>
 					</div>
-					<!--
-						aggiungere popup con mini view SOC CASE
-					-->
 				</div>
 			</div>
 			<div class="main-box flex justify-between gap-4">
@@ -33,40 +29,53 @@
 				</div>
 			</div>
 		</div>
+		<n-collapse @item-header-click="showSocCase($event.expanded)">
+			<template #arrow>
+				<div class="mx-5 flex">
+					<Icon :name="ChevronIcon"></Icon>
+				</div>
+			</template>
+			<n-collapse-item>
+				<template #header>
+					<div class="py-3 -ml-2">SOC Case details</div>
+				</template>
+				<div style="min-height: 50px">
+					<n-spin :show="loadingCase">
+						<SocCaseItem :case-data="socCase" v-if="socCase" :embedded="true" class="py-2 -mt-4" />
+						<template v-else>
+							<n-empty
+								description="No Case found"
+								class="justify-center h-28 -mt-4"
+								v-if="!loadingCase"
+							/>
+						</template>
+					</n-spin>
+				</div>
+			</n-collapse-item>
+		</n-collapse>
 	</div>
 </template>
 
 <script setup lang="ts">
 import Icon from "@/components/common/Icon.vue"
-import KVCard from "@/components/common/KVCard.vue"
 import Badge from "@/components/common/Badge.vue"
-import { computed, ref, watch } from "vue"
-import SocCaseTimeline from "./SocCaseTimeline.vue"
+import { ref } from "vue"
 import "@/assets/scss/vuesjv-override.scss"
 import Api from "@/api"
-import { useMessage, NPopover, NSpin, NTimeline, NTimelineItem, NModal, NTabs, NTabPane, NInput } from "naive-ui"
+import { useMessage, NSpin, NCollapse, NEmpty, NCollapseItem } from "naive-ui"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
-import _omit from "lodash/omit"
-import _split from "lodash/split"
-import _upperFirst from "lodash/upperFirst"
-import { useRouter } from "vue-router"
 import type { SocAssetLink } from "@/types/soc/asset.d"
+import type { SocCase } from "@/types/soc/case.d"
+import SocCaseItem from "./SocCaseItem.vue"
 
 const { link } = defineProps<{ link: SocAssetLink }>()
 
-const TimeIcon = "carbon:time"
-const InfoIcon = "carbon:information"
-const CustomerIcon = "carbon:user"
-const LinkIcon = "carbon:launch"
-const OwnerIcon = "carbon:user-military"
-const StatusIcon = "fluent:status-20-regular"
+const ChevronIcon = "carbon:chevron-right"
 
-const showDetails = ref(false)
-const loadingDetails = ref(false)
-const loadingAssets = ref(false)
+const socCase = ref<SocCase | null>(null)
+const loadingCase = ref(false)
 const message = useMessage()
-const router = useRouter()
 
 const dFormats = useSettingsStore().dateFormat
 
@@ -74,15 +83,20 @@ function formatDate(timestamp: string | number | Date, utc: boolean = true): str
 	return dayjs(timestamp).utc(utc).format(dFormats.date)
 }
 
-/*
-function getDetails() {
-	loadingDetails.value = true
+function showSocCase(show: boolean) {
+	if (show && !socCase.value) {
+		getSocCase(link.case_id.toString())
+	}
+}
+
+function getSocCase(caseId: string) {
+	loadingCase.value = true
 
 	Api.soc
-		.getCases(caseData.case_id.toString())
+		.getCases(caseId)
 		.then(res => {
 			if (res.data.success) {
-				extendedInfo.value = res.data?.case || null
+				socCase.value = (res.data?.case as unknown as SocCase) || null
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
@@ -91,40 +105,9 @@ function getDetails() {
 			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
-			loadingDetails.value = false
+			loadingCase.value = false
 		})
 }
-
-function getAssets() {
-	loadingAssets.value = true
-
-	Api.soc
-		.getAssetsByCase(caseData.case_id.toString())
-		.then(res => {
-			if (res.data.success) {
-				assetsList.value = res.data?.assets || null
-				assetsState.value = res.data?.state || null
-			} else {
-				message.warning(res.data?.message || "An error occurred. Please try again later.")
-			}
-		})
-		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-		})
-		.finally(() => {
-			loadingAssets.value = false
-		})
-}
-
-watch(showDetails, val => {
-	if (val && !extendedInfo.value) {
-		getDetails()
-	}
-	if (val && !assetsList.value) {
-		getAssets()
-	}
-})
-*/
 </script>
 
 <style lang="scss" scoped>
@@ -133,6 +116,7 @@ watch(showDetails, val => {
 	background-color: var(--bg-secondary-color);
 	transition: all 0.2s var(--bezier-ease);
 	border: var(--border-small-050);
+	container-type: inline-size;
 
 	.header-box {
 		font-family: var(--font-family-mono);
@@ -152,7 +136,6 @@ watch(showDetails, val => {
 		word-break: break-word;
 
 		.description {
-			color: var(--fg-secondary-color);
 			font-size: 13px;
 		}
 	}
