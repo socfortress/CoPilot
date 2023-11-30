@@ -171,7 +171,7 @@
 							</n-collapse-item>
 						</n-collapse>
 					</div>
-
+					<n-divider class="!my-2" />
 					<SocCaseNotesList :case-id="caseData.case_id" v-model:requested="updateNotes" />
 				</n-tab-pane>
 			</n-tabs>
@@ -199,6 +199,7 @@ import {
 	NModal,
 	NTabs,
 	NTabPane,
+	NDivider,
 	NInput,
 	NCollapse,
 	NCollapseItem
