@@ -66,6 +66,7 @@ class Connectors(SQLModel, table=True):
     connector_accepts_api_key: bool = Field(default=False)
     connector_accepts_username_password: bool = Field(default=False)
     connector_accepts_file: bool = Field(default=False)
+    connector_extra_data: Optional[str] = Field(default=None)
 
     # Relationship
     history_logs: List[ConnectorHistory] = Relationship(back_populates="connector", sa_relationship_kwargs={"lazy": "selectin"})

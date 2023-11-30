@@ -7,7 +7,7 @@ from app.auth.models.users import Role
 from app.connectors.models import Connectors
 
 
-def add_connectors_if_not_exist(session: Session):
+async def add_connectors_if_not_exist(session: AsyncSession):
     # List of connectors to add
     connector_list = [
         {
@@ -130,20 +130,32 @@ def add_connectors_if_not_exist(session: Session):
             "connector_configured": True,
             "connector_accepts_api_key": True,
         },
+        {
+            "connector_name": "InfluxDB",
+            "connector_type": "3",
+            "connector_url": "http://ashwzhma.socfortress.local:8086",
+            "connector_username": None,
+            "connector_password": None,
+            "connector_api_key": "23PySXxdhw7hUgwOCjEfUhSLL32A41GBZwflP1k0XFQbL64q4rfju23uc_elokQ0546Cp-s25DnVRj8urQmt5w==",
+            "connector_configured": True,
+            "connector_accepts_api_key": True,
+            "connector_extra_data": "telegraf",
+        },
     ]
 
     for connector_data in connector_list:
-        # Check if connector already exists in the database
-        existing_connector = session.query(Connectors).filter_by(connector_name=connector_data["connector_name"]).first()
+        # Asynchronously check if connector already exists in the database
+        query = select(Connectors).where(Connectors.connector_name == connector_data["connector_name"])
+        result = await session.execute(query)
+        existing_connector = result.scalars().first()
 
         if existing_connector is None:
-            # If connector does not exist, create new connector entry
             new_connector = Connectors(**connector_data)
-            session.add(new_connector)
+            session.add(new_connector)  # Use session.add() to add new objects
             logger.info(f"Added new connector: {connector_data['connector_name']}")
 
     # Commit the changes if any new connectors were added
-    session.commit()
+    await session.commit()
 
 
 async def add_roles_if_not_exist(session: AsyncSession) -> None:
