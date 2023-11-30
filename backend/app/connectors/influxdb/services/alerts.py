@@ -1,6 +1,7 @@
 from fastapi import HTTPException
 from loguru import logger
 from typing import List
+from datetime import datetime
 
 from app.connectors.influxdb.utils.universal import create_influxdb_client, get_influxdb_organization
 from app.connectors.influxdb.schema.alerts import InfluxDBAlert, InfluxDBAlertsResponse
@@ -12,7 +13,7 @@ def construct_query() -> str:
     """Constructs the InfluxDB query."""
     return '''
         from(bucket: "{bucket_name}")
-        |> range(start: -1d, stop: now())
+        |> range(start: -1h, stop: now())
         |> filter(fn: (r) => r._measurement == "statuses" and r._field == "_message")
         |> filter(fn: (r) => exists r._check_id and exists r._value and exists r._check_name and exists r._level)
         |> keep(columns: ["_time", "_value", "_check_id", "_check_name", "_level"])
