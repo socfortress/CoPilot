@@ -98,7 +98,6 @@ async def init_db():
 def hello():
     return {"message": "Hello World"}
 
-
 @app.on_event("shutdown")
 async def shutdown_scheduler():
     logger.info("Shutting down scheduler")

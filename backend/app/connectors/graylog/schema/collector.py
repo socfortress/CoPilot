@@ -62,7 +62,7 @@ class GraylogIndicesResponse(BaseModel):
 class ConfiguredInputAttributes(BaseModel):
     recv_buffer_size: int
     tcp_keepalive: bool
-    use_null_delimiter: bool
+    use_null_delimiter: Optional[bool]
     number_worker_threads: int
     tls_client_auth_cert_file: Optional[str]
     force_rdns: Optional[bool]
@@ -74,7 +74,7 @@ class ConfiguredInputAttributes(BaseModel):
     tls_key_file: Optional[str]
     tls_enable: bool
     tls_key_password: Optional[str]
-    max_message_size: int
+    max_message_size: Optional[int]
     tls_client_auth: str
     override_source: Optional[str]
     charset_name: Optional[str]
@@ -91,14 +91,14 @@ class ConfiguredInput(BaseModel):
     creator_user_id: str
     attributes: ConfiguredInputAttributes
     static_fields: Dict[str, str]
-    node: str
+    node: Optional[str]
     id: str
 
 
 class MessageInputAttributes(BaseModel):
     recv_buffer_size: int
     tcp_keepalive: bool
-    use_null_delimiter: bool
+    use_null_delimiter: Optional[bool]
     number_worker_threads: int
     tls_client_auth_cert_file: Optional[str]
     bind_address: str
@@ -107,7 +107,7 @@ class MessageInputAttributes(BaseModel):
     tls_key_file: Optional[str]
     tls_enable: bool
     tls_key_password: Optional[str]
-    max_message_size: int
+    max_message_size: Optional[int]
     tls_client_auth: str
 
 
@@ -121,7 +121,7 @@ class MessageInput(BaseModel):
     creator_user_id: str
     attributes: MessageInputAttributes
     static_fields: Dict[str, str]
-    node: str
+    node: Optional[str]
     id: str
 
 
