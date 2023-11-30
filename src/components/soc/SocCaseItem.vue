@@ -147,24 +147,32 @@
 					</n-spin>
 				</n-tab-pane>
 				<n-tab-pane name="Assets" tab="Assets" display-directive="show:lazy">
-					<n-spin :show="loadingAssets">
-						<div class="flex flex-col gap-2 px-7 py-4 pb-7">
-							<div class="box" v-if="assetsState">
-								State:
-								<code>{{ assetsState.object_state }}</code>
-							</div>
-							<div class="box" v-if="assetsState">
-								Last update:
-								<code>{{ formatDateTime(assetsState.object_last_update) }}</code>
-							</div>
-						</div>
-						<div v-if="assetsList?.length" class="px-7 flex flex-col gap-2">
-							<SocCaseAssetsItem v-for="asset of assetsList" :key="asset.asset_id" :asset="asset" />
-						</div>
-						<template v-else>
-							<n-empty description="No items found" class="justify-center h-48" v-if="!loadingAssets" />
-						</template>
-					</n-spin>
+					<SocCaseAssetsList :case-id="caseData.case_id" />
+				</n-tab-pane>
+				<n-tab-pane name="Notes" tab="Notes" display-directive="show:lazy">
+					<div class="px-4">
+						<n-collapse display-directive="show" v-model:expanded-names="noteFormVisible">
+							<template #arrow>
+								<div class="mx-4 flex">
+									<Icon :name="AddIcon"></Icon>
+								</div>
+							</template>
+							<n-collapse-item name="1">
+								<template #header>
+									<div class="py-3 -ml-2">New note</div>
+								</template>
+								<div class="p-3 pt-0 -mt-2">
+									<SocCaseNoteForm
+										:case-id="caseData.case_id"
+										@close="noteFormVisible = []"
+										@added="updateNotes = true"
+									/>
+								</div>
+							</n-collapse-item>
+						</n-collapse>
+					</div>
+
+					<SocCaseNotesList :case-id="caseData.case_id" v-model:requested="updateNotes" />
 				</n-tab-pane>
 			</n-tabs>
 		</n-modal>
@@ -177,7 +185,9 @@ import KVCard from "@/components/common/KVCard.vue"
 import Badge from "@/components/common/Badge.vue"
 import { computed, ref, watch } from "vue"
 import SocCaseTimeline from "./SocCaseTimeline.vue"
-import SocCaseAssetsItem from "./SocCaseAssetsItem.vue"
+import SocCaseAssetsList from "./SocCaseAssetsList.vue"
+import SocCaseNoteForm from "./SocCaseNoteForm.vue"
+import SocCaseNotesList from "./SocCaseNotesList.vue"
 import "@/assets/scss/vuesjv-override.scss"
 import Api from "@/api"
 import {
@@ -190,7 +200,8 @@ import {
 	NTabs,
 	NTabPane,
 	NInput,
-	NEmpty
+	NCollapse,
+	NCollapseItem
 } from "naive-ui"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
@@ -198,7 +209,6 @@ import { type SocCase, StateName, type SocCaseExt } from "@/types/soc/case.d"
 import _omit from "lodash/omit"
 import _split from "lodash/split"
 import { useRouter } from "vue-router"
-import type { SocAsset, SocAssetsState } from "@/types/soc/asset.d"
 
 const { caseData, embedded } = defineProps<{ caseData: SocCase; embedded?: boolean }>()
 
@@ -208,16 +218,16 @@ const CustomerIcon = "carbon:user"
 const LinkIcon = "carbon:launch"
 const OwnerIcon = "carbon:user-military"
 const StatusIcon = "fluent:status-20-regular"
+const AddIcon = "carbon:add-alt"
 
 const showDetails = ref(false)
 const loadingDetails = ref(false)
-const loadingAssets = ref(false)
 const message = useMessage()
 const router = useRouter()
+const noteFormVisible = ref([])
+const updateNotes = ref(false)
 
 const extendedInfo = ref<SocCaseExt | null>(null)
-const assetsList = ref<SocAsset[] | null>(null)
-const assetsState = ref<SocAssetsState | null>(null)
 
 const dFormats = useSettingsStore().dateFormat
 
@@ -257,10 +267,6 @@ function formatDate(timestamp: string | number | Date, utc: boolean = true): str
 	return dayjs(timestamp).utc(utc).format(dFormats.date)
 }
 
-function formatDateTime(timestamp: string | number | Date, utc: boolean = true): string {
-	return dayjs(timestamp).utc(utc).format(dFormats.datetimesec)
-}
-
 function gotoSocAlert(socId: string) {
 	router.push(`/soc/alerts?id=${socId}`).catch(() => {})
 }
@@ -285,33 +291,9 @@ function getDetails() {
 		})
 }
 
-function getAssets() {
-	loadingAssets.value = true
-
-	Api.soc
-		.getAssetsByCase(caseData.case_id.toString())
-		.then(res => {
-			if (res.data.success) {
-				assetsList.value = res.data?.assets || null
-				assetsState.value = res.data?.state || null
-			} else {
-				message.warning(res.data?.message || "An error occurred. Please try again later.")
-			}
-		})
-		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-		})
-		.finally(() => {
-			loadingAssets.value = false
-		})
-}
-
 watch(showDetails, val => {
 	if (val && !extendedInfo.value) {
 		getDetails()
-	}
-	if (val && !assetsList.value) {
-		getAssets()
 	}
 })
 </script>
