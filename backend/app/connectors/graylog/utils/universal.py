@@ -98,6 +98,7 @@ async def send_get_request(endpoint: str, params: Optional[Dict[str, Any]] = Non
                 status_code=404,
                 detail=f"Failed to send GET request to {endpoint} with error: {response.json()['message']}",
             )
+        logger.info(f"Full response: {response.json()}")
         return {"data": response.json(), "success": True, "message": "Successfully retrieved data"}
     except HTTPException as e:
         raise e
