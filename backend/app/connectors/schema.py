@@ -31,6 +31,7 @@ class ConnectorResponse(BaseModel):
     connector_accepts_api_key: bool
     connector_accepts_username_password: bool
     connector_accepts_file: bool
+    connector_extra_data: Optional[str]
     history_logs: Optional[List[ConnectorHistoryResponse]]
 
     class Config:
