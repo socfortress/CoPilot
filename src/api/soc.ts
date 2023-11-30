@@ -72,11 +72,12 @@ export default {
 			`/soc/assets/${caseId}`
 		)
 	},
-	getNotesByCase(caseId: string | number, payload?: { searchTerm?: string }) {
+	getNotesByCase(caseId: string | number, payload: { searchTerm?: string }, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { notes: SocNote[] }>(`/soc/notes/${caseId}`, {
 			params: {
-				search_term: payload?.searchTerm || "%"
-			}
+				search_term: payload.searchTerm || "%"
+			},
+			signal
 		})
 	},
 	createCaseNote(caseId: string | number, payload?: { title?: string; content?: string }) {
