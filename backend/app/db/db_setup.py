@@ -8,8 +8,8 @@ from sqlmodel import SQLModel
 from app.auth.services.universal import create_admin_user
 from app.auth.services.universal import create_scheduler_user
 from app.auth.services.universal import remove_scheduler_user
-from app.db.db_populate import add_roles_if_not_exist
 from app.db.db_populate import add_connectors_if_not_exist
+from app.db.db_populate import add_roles_if_not_exist
 
 # from sqlalchemy import inspect
 # from sqlmodel import Session

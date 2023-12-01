@@ -1,6 +1,8 @@
-from pydantic import BaseModel
-from typing import Optional
 from datetime import datetime
+from typing import Optional
+
+from pydantic import BaseModel
+
 
 class InfluxDBAlert(BaseModel):
     time: datetime
@@ -8,6 +10,7 @@ class InfluxDBAlert(BaseModel):
     checkID: str
     checkName: str
     level: str
+
 
 # If you need to parse a list of these alerts:
 class InfluxDBAlertsResponse(BaseModel):

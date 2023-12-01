@@ -20,7 +20,9 @@ from werkzeug.utils import secure_filename
 
 from app.connectors.cortex.utils.universal import verify_cortex_connection
 from app.connectors.dfir_iris.utils.universal import verify_dfir_iris_connection
+from app.connectors.grafana.utils.universal import verify_grafana_connection
 from app.connectors.graylog.utils.universal import verify_graylog_connection
+from app.connectors.influxdb.utils.universal import verify_influxdb_connection
 from app.connectors.models import Connectors
 from app.connectors.schema import ConnectorResponse
 from app.connectors.shuffle.utils.universal import verify_shuffle_connection
@@ -28,8 +30,6 @@ from app.connectors.sublime.utils.universal import verify_sublime_connection
 from app.connectors.velociraptor.utils.universal import verify_velociraptor_connection
 from app.connectors.wazuh_indexer.utils.universal import verify_wazuh_indexer_connection
 from app.connectors.wazuh_manager.utils.universal import verify_wazuh_manager_connection
-from app.connectors.influxdb.utils.universal import verify_influxdb_connection
-from app.connectors.grafana.utils.universal import verify_grafana_connection
 
 # from app.db.db_session import engine  # Import the shared engine
 from app.db.db_session import get_session
@@ -92,10 +92,12 @@ class SublimeService(ConnectorServiceInterface):
     async def verify_authentication(self, connector: ConnectorResponse) -> Optional[ConnectorResponse]:
         return await verify_sublime_connection(connector.connector_name)
 
+
 # InfluxDB Service
 class InfluxDBService(ConnectorServiceInterface):
     async def verify_authentication(self, connector: ConnectorResponse) -> Optional[ConnectorResponse]:
         return await verify_influxdb_connection(connector.connector_name)
+
 
 # Grafana Service
 class GrafanaService(ConnectorServiceInterface):

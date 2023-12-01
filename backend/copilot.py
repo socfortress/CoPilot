@@ -23,8 +23,10 @@ from app.routers import cortex
 from app.routers import customers
 from app.routers import dfir_iris
 from app.routers import dnstwist
+from app.routers import grafana
 from app.routers import graylog
 from app.routers import healthcheck
+from app.routers import influxdb
 from app.routers import logs
 from app.routers import shuffle
 from app.routers import smtp
@@ -32,7 +34,6 @@ from app.routers import sublime
 from app.routers import velociraptor
 from app.routers import wazuh_indexer
 from app.routers import wazuh_manager
-from app.routers import influxdb
 from app.schedulers.scheduler import init_scheduler
 
 auth_handler = AuthHandler()
@@ -78,6 +79,7 @@ app.include_router(smtp.router)
 app.include_router(dnstwist.router)
 app.include_router(logs.router)
 app.include_router(influxdb.router)
+app.include_router(grafana.router)
 
 
 @app.on_event("startup")
@@ -99,6 +101,7 @@ async def init_db():
 @app.get("/")
 def hello():
     return {"message": "Hello World"}
+
 
 @app.on_event("shutdown")
 async def shutdown_scheduler():

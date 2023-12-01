@@ -1,17 +1,21 @@
+from datetime import datetime
+from typing import List
+
 from fastapi import HTTPException
 from loguru import logger
-from typing import List
-from datetime import datetime
 
-from app.connectors.influxdb.utils.universal import create_influxdb_client, get_influxdb_organization
-from app.connectors.influxdb.schema.alerts import InfluxDBAlert, InfluxDBAlertsResponse
+from app.connectors.influxdb.schema.alerts import InfluxDBAlert
+from app.connectors.influxdb.schema.alerts import InfluxDBAlertsResponse
+from app.connectors.influxdb.utils.universal import create_influxdb_client
+from app.connectors.influxdb.utils.universal import get_influxdb_organization
 
 # Constants
 BUCKET_NAME = "_monitoring"
 
+
 def construct_query() -> str:
     """Constructs the InfluxDB query."""
-    return '''
+    return """
         from(bucket: "{bucket_name}")
         |> range(start: -1h, stop: now())
         |> filter(fn: (r) => r._measurement == "statuses" and r._field == "_message")
@@ -21,8 +25,9 @@ def construct_query() -> str:
         |> group()
         |> sort(columns: ["time"], desc: true)
         |> limit(n: 100, offset: 29)
-    '''.format(bucket_name=BUCKET_NAME)
-
+    """.format(
+        bucket_name=BUCKET_NAME,
+    )
 
 
 async def process_alert_records(result) -> List[InfluxDBAlert]:
@@ -35,10 +40,11 @@ async def process_alert_records(result) -> List[InfluxDBAlert]:
                 message=record.values.get("message"),
                 checkID=record.values.get("checkID"),
                 checkName=record.values.get("checkName"),
-                level=record.values.get("level")
+                level=record.values.get("level"),
             )
             alerts.append(alert)
     return alerts
+
 
 async def get_alerts() -> InfluxDBAlertsResponse:
     """Fetches alerts from InfluxDB and returns them."""

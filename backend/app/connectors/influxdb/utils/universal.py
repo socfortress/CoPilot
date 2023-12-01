@@ -4,10 +4,10 @@ from typing import Any
 from typing import Dict
 from typing import Iterable
 from typing import Tuple
-from influxdb_client.client.influxdb_client_async import InfluxDBClientAsync
 
 from elasticsearch7 import Elasticsearch
 from fastapi import HTTPException
+from influxdb_client.client.influxdb_client_async import InfluxDBClientAsync
 from loguru import logger
 
 from app.connectors.utils import get_connector_info_from_db
@@ -82,6 +82,7 @@ async def create_influxdb_client(connector_name: str) -> InfluxDBClientAsync:
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to create Elasticsearch client: {e}")
+
 
 async def get_influxdb_organization() -> str:
     """
