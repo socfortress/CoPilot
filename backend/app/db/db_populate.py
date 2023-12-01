@@ -141,6 +141,16 @@ async def add_connectors_if_not_exist(session: AsyncSession):
             "connector_accepts_api_key": True,
             "connector_extra_data": "telegraf",
         },
+        {
+            "connector_name": "Grafana",
+            "connector_type": "3",
+            "connector_url": "http://192.168.200.218:3000",
+            "connector_username": "admin",
+            "connector_password": "admin",
+            "connector_api_key": None,
+            "connector_configured": True,
+            "connector_accepts_username_password": True,
+        },
     ]
 
     for connector_data in connector_list:
