@@ -101,7 +101,9 @@ async def create_grafana_client(connector_name: str) -> GrafanaApi:
         raise HTTPException(status_code=500, detail=f"No {connector_name} connector found in the database")
     try:
         grafana_url = await construct_grafana_url(
-            attributes["connector_url"], attributes["connector_username"], attributes["connector_password"],
+            attributes["connector_url"],
+            attributes["connector_username"],
+            attributes["connector_password"],
         )
         return GrafanaApi.from_url(grafana_url)
     except Exception as e:

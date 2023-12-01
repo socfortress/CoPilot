@@ -1,1867 +1,1843 @@
 {
-  "annotations": {
-    "list": [
-      {
-        "builtIn": 1,
-        "datasource": {
-          "type": "grafana",
-          "uid": "-- Grafana --"
-        },
-        "enable": true,
-        "hide": true,
-        "iconColor": "rgba(0, 211, 255, 1)",
-        "name": "Annotations & Alerts",
-        "target": {
-          "limit": 100,
-          "matchAny": false,
-          "tags": [],
-          "type": "dashboard"
-        },
-        "type": "dashboard"
-      }
-    ]
-  },
-  "editable": true,
-  "fiscalYearStartMonth": 0,
-  "graphTooltip": 0,
-  "id": 43,
-  "links": [],
-  "liveNow": false,
-  "panels": [
-    {
-      "datasource": {
-        "type": "grafana",
-        "uid": "grafana"
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 12,
-        "x": 0,
-        "y": 0
-      },
-      "id": 30,
-      "links": [],
-      "maxDataPoints": 3,
-      "options": {
-        "code": {
-          "language": "plaintext",
-          "showLineNumbers": false,
-          "showMiniMap": false
-        },
-        "content": "<div class=\"text-center\"><img src=\"/public/img/acclamar_logo_black.png\" width=\"50%\" height=\"50%\"></div>",
-        "mode": "html"
-      },
-      "pluginVersion": "10.1.1",
-      "targets": [
-        {
-          "datasource": {
-            "type": "datasource",
-            "uid": "grafana"
-          },
-          "refId": "A"
-        }
-      ],
-      "transparent": true,
-      "type": "text"
-    },
-    {
-      "datasource": {
-        "type": "grafana",
-        "uid": "grafana"
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 12,
-        "x": 12,
-        "y": 0
-      },
-      "id": 2,
-      "links": [],
-      "maxDataPoints": 3,
-      "options": {
-        "code": {
-          "language": "plaintext",
-          "showLineNumbers": false,
-          "showMiniMap": false
-        },
-        "content": "<p style=\"font-size:40px\"></b>Security Operations Center Portal</b></p>\n<p style=\"font-size:20px\"></b>duane@acclamar.com</b></p>\n",
-        "mode": "html"
-      },
-      "pluginVersion": "10.1.1",
-      "targets": [
-        {
-          "datasource": {
-            "type": "datasource",
-            "uid": "grafana"
-          },
-          "refId": "A"
-        }
-      ],
-      "transparent": true,
-      "type": "text"
-    },
-    {
-      "datasource": {
-        "type": "grafana",
-        "uid": "grafana"
-      },
-      "gridPos": {
-        "h": 12,
-        "w": 12,
-        "x": 0,
-        "y": 6
-      },
-      "id": 4,
-      "links": [],
-      "maxDataPoints": 3,
-      "options": {
-        "code": {
-          "language": "plaintext",
-          "showLineNumbers": false,
-          "showMiniMap": false
-        },
-        "content": "## <span style=\"color: orange;\">SOCFortress Windows Installer</span>\n\nSecure your Windows systems with <span style=\"color: purple;\">SOCFortress EDR</span>.\n\nTo install SOCFortress EDR on Windows, follow these steps:\n\n1. Open a PowerShell session with administrative privileges.\n\n2. Copy and paste the following command:\n\n\n```\n$user = 'acclamar'; $pass = 'NTLAyVbaJtWHYGsVJJG9r7DTW'; $pair = \"$($user):$($pass)\"; $encodedCreds = [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes($pair)); $basicAuthValue = \"Basic $encodedCreds\"; $Headers = @{ Authorization = $basicAuthValue }; Invoke-RestMethod -Uri 'https://repo.socfortress.co/repository/acclamar/prod/Watchful_Digital_Link_EDR.exe' -Headers $Headers -OutFile \"$env:TMP\\Watchful_Digital_Link_EDR.exe\"; $app ='$env:TMP\\Watchful_Digital_Link_EDR.exe'; $args = \"WAZUHMANAGER='logs.watchfuldigitallink.co'\", \"WAZUHPASSWORD='g0qQkxNIxP2lsRDXoyClmQKYsXhHWwNIaaMOv14c8'\", \"CUSTOMERCODE='Windows_acclamar'\", \"WAZUHREGISTRATIONPORT='20001'\", \"WAZUHMANAGERPORT='20000'\"; Start-Process -FilePath \"$env:TMP\\Watchful_Digital_Link_EDR.exe\" -ArgumentList '/q WAZUHMANAGER=\"logs.watchfuldigitallink.co\" WAZUHPASSWORD=\"g0qQkxNIxP2lsRDXoyClmQKYsXhHWwNIaaMOv14c8\" CUSTOMERCODE=\"Windows_acclamar\" WAZUHREGISTRATIONPORT=\"20001\" WAZUHMANAGERPORT=\"20000\"';\n```",
-        "mode": "markdown"
-      },
-      "pluginVersion": "10.1.1",
-      "targets": [
-        {
-          "datasource": {
-            "type": "datasource",
-            "uid": "grafana"
-          },
-          "refId": "A"
-        }
-      ],
-      "type": "text"
-    },
-    {
-      "datasource": {
-        "type": "grafana",
-        "uid": "grafana"
-      },
-      "gridPos": {
-        "h": 12,
-        "w": 12,
-        "x": 12,
-        "y": 6
-      },
-      "id": 33,
-      "links": [],
-      "maxDataPoints": 3,
-      "options": {
-        "code": {
-          "language": "plaintext",
-          "showLineNumbers": false,
-          "showMiniMap": false
-        },
-        "content": "## <span style=\"color: orange;\">SOCFortress Linux Installer</span>\n\nSecure your Linux systems with <span style=\"color: purple;\">SOCFortress EDR</span>.\n\nTo install SOCFortress EDR on Linux, follow these steps:\n\n1. Open a shell session as the root user.\n\n2. Copy and paste the following command:\n\n\n```\nif command -v apt >/dev/null 2>&1; then sudo apt update && sudo apt install -y dos2unix; elif command -v yum >/dev/null 2>&1; then sudo yum install -y dos2unix; else echo \"Error: Neither apt nor yum package manager found.\"; exit 1; fi; curl -u acclamar:NTLAyVbaJtWHYGsVJJG9r7DTW -so ~/Client_EDR_install.bash https://repo.socfortress.co/repository/acclamar/installer/Client_EDR_install.bash && dos2unix ~/Client_EDR_install.bash && bash ~/Client_EDR_install.bash -i logs.watchfuldigitallink.co​ 20000 20001 g0qQkxNIxP2lsRDXoyClmQKYsXhHWwNIaaMOv14c8 Linux_acclamar\n```",
-        "mode": "markdown"
-      },
-      "pluginVersion": "10.1.1",
-      "targets": [
-        {
-          "datasource": {
-            "type": "datasource",
-            "uid": "grafana"
-          },
-          "refId": "A"
-        }
-      ],
-      "type": "text"
-    },
-    {
-      "datasource": {
-        "type": "grafana",
-        "uid": "grafana"
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 12,
-        "x": 0,
-        "y": 18
-      },
-      "id": 34,
-      "links": [],
-      "maxDataPoints": 3,
-      "options": {
-        "code": {
-          "language": "plaintext",
-          "showLineNumbers": false,
-          "showMiniMap": false
-        },
-        "content": "<div class=\"text-left\"><img src=\"/public/img/security.svg\" style=\"width:54px;height:42px;\"></div>\n<p style=\"font-size:20px\"><b>END POINT DETECTION & RESPONSE</b></p>\n",
-        "mode": "html"
-      },
-      "pluginVersion": "10.1.1",
-      "targets": [
-        {
-          "datasource": {
-            "type": "datasource",
-            "uid": "grafana"
-          },
-          "refId": "A"
-        }
-      ],
-      "type": "text"
-    },
-    {
-      "datasource": {
-        "type": "grafana",
-        "uid": "grafana"
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 12,
-        "x": 12,
-        "y": 18
-      },
-      "id": 36,
-      "links": [],
-      "maxDataPoints": 3,
-      "options": {
-        "code": {
-          "language": "plaintext",
-          "showLineNumbers": false,
-          "showMiniMap": false
-        },
-        "content": "<div class=\"text-left\"><img src=\"/public/img/sophos_logo.png\" style=\"width:20%;height:20%;\"></div>\n<p></p>\n<p style=\"font-size:20px\"><b>NETWORK & SYSTEMS LOGS (Sophos)</b></p>\n",
-        "mode": "html"
-      },
-      "pluginVersion": "10.1.1",
-      "targets": [
-        {
-          "datasource": {
-            "type": "datasource",
-            "uid": "grafana"
-          },
-          "refId": "A"
-        }
-      ],
-      "type": "text"
-    },
-    {
-      "datasource": {
-        "type": "grafana",
-        "uid": "grafana"
-      },
-      "gridPos": {
-        "h": 3,
-        "w": 12,
-        "x": 0,
-        "y": 22
-      },
-      "id": 35,
-      "links": [],
-      "maxDataPoints": 3,
-      "options": {
-        "code": {
-          "language": "plaintext",
-          "showLineNumbers": false,
-          "showMiniMap": false
-        },
-        "content": "<p style=\"font-size:20px\"></b>EDR - QUICK STATS (Last 24 Hours)</b></p>",
-        "mode": "html"
-      },
-      "pluginVersion": "10.1.1",
-      "targets": [
-        {
-          "datasource": {
-            "type": "datasource",
-            "uid": "grafana"
-          },
-          "refId": "A"
-        }
-      ],
-      "transparent": true,
-      "type": "text"
-    },
-    {
-      "datasource": {
-        "type": "grafana",
-        "uid": "grafana"
-      },
-      "gridPos": {
-        "h": 3,
-        "w": 12,
-        "x": 12,
-        "y": 22
-      },
-      "id": 37,
-      "links": [],
-      "maxDataPoints": 3,
-      "options": {
-        "code": {
-          "language": "plaintext",
-          "showLineNumbers": false,
-          "showMiniMap": false
-        },
-        "content": "<p style=\"font-size:20px\"></b>NETWORK LOGS - QUICK STATS (Last 24 Hours)</b></p>",
-        "mode": "html"
-      },
-      "pluginVersion": "10.1.1",
-      "targets": [
-        {
-          "datasource": {
-            "type": "datasource",
-            "uid": "grafana"
-          },
-          "refId": "A"
-        }
-      ],
-      "transparent": true,
-      "type": "text"
-    },
-    {
-      "datasource": {
-        "type": "elasticsearch",
-        "uid": "e5bf98eb-3cc2-4f18-954f-05244e0dd577"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "red"
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 3,
-        "x": 0,
-        "y": 25
-      },
-      "id": 9,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "sum"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "pluginVersion": "10.1.1",
-      "targets": [
-        {
-          "alias": "",
-          "bucketAggs": [
-            {
-              "field": "timestamp",
-              "id": "2",
-              "settings": {
-                "interval": "auto"
-              },
-              "type": "date_histogram"
-            }
-          ],
-          "datasource": {
-            "type": "elasticsearch",
-            "uid": "e5bf98eb-3cc2-4f18-954f-05244e0dd577"
-          },
-          "metrics": [
-            {
-              "id": "1",
-              "type": "count"
-            }
-          ],
-          "query": "rule_level:>=12 AND !rule_groups:vulnerability-detector",
-          "refId": "A",
-          "timeField": "timestamp"
-        }
-      ],
-      "title": "EDR ALERTS",
-      "transparent": true,
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "elasticsearch",
-        "uid": "e5bf98eb-3cc2-4f18-954f-05244e0dd577"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "red"
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 3,
-        "x": 3,
-        "y": 25
-      },
-      "id": 10,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "sum"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "pluginVersion": "10.1.1",
-      "targets": [
-        {
-          "alias": "",
-          "bucketAggs": [
-            {
-              "field": "timestamp",
-              "id": "2",
-              "settings": {
-                "interval": "auto"
-              },
-              "type": "date_histogram"
-            }
-          ],
-          "datasource": {
-            "type": "elasticsearch",
-            "uid": "e5bf98eb-3cc2-4f18-954f-05244e0dd577"
-          },
-          "metrics": [
-            {
-              "id": "1",
-              "type": "count"
-            }
-          ],
-          "query": "rule_groups:vulnerability-detector AND rule_level:>=12",
-          "refId": "A",
-          "timeField": "timestamp"
-        }
-      ],
-      "title": "CRITICAL SYSTEM VULN",
-      "transparent": true,
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "elasticsearch",
-        "uid": "e5bf98eb-3cc2-4f18-954f-05244e0dd577"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "blue"
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 3,
-        "x": 6,
-        "y": 25
-      },
-      "id": 11,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "sum"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "pluginVersion": "10.1.1",
-      "targets": [
-        {
-          "alias": "",
-          "bucketAggs": [
-            {
-              "field": "timestamp",
-              "id": "2",
-              "settings": {
-                "interval": "365d"
-              },
-              "type": "date_histogram"
-            }
-          ],
-          "datasource": {
-            "type": "elasticsearch",
-            "uid": "e5bf98eb-3cc2-4f18-954f-05244e0dd577"
-          },
-          "metrics": [
-            {
-              "field": "agent_name",
-              "id": "1",
-              "type": "cardinality"
-            }
-          ],
-          "query": "rule_level:>2",
-          "refId": "A",
-          "timeField": "timestamp"
-        }
-      ],
-      "title": "ACTIVE AGENTS",
-      "transparent": true,
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "elasticsearch",
-        "uid": "e5bf98eb-3cc2-4f18-954f-05244e0dd577"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "blue"
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 3,
-        "x": 9,
-        "y": 25
-      },
-      "id": 12,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "sum"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "pluginVersion": "10.1.1",
-      "targets": [
-        {
-          "alias": "",
-          "bucketAggs": [
-            {
-              "field": "timestamp",
-              "id": "2",
-              "settings": {
-                "interval": "365d"
-              },
-              "type": "date_histogram"
-            }
-          ],
-          "datasource": {
-            "type": "elasticsearch",
-            "uid": "e5bf98eb-3cc2-4f18-954f-05244e0dd577"
-          },
-          "metrics": [
-            {
-              "field": "rule_description",
-              "id": "1",
-              "type": "cardinality"
-            }
-          ],
-          "query": "",
-          "refId": "A",
-          "timeField": "timestamp"
-        }
-      ],
-      "title": "DETECTION RULES",
-      "transparent": true,
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "elasticsearch",
-        "uid": "b37229a3-8eca-4032-b2d6-72008c44351f"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "red"
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 3,
-        "x": 12,
-        "y": 25
-      },
-      "id": 19,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "sum"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "pluginVersion": "10.1.1",
-      "targets": [
-        {
-          "alias": "",
-          "bucketAggs": [
-            {
-              "field": "timestamp",
-              "id": "2",
-              "settings": {
-                "interval": "auto"
-              },
-              "type": "date_histogram"
-            }
-          ],
-          "datasource": {
-            "type": "elasticsearch",
-            "uid": "b37229a3-8eca-4032-b2d6-72008c44351f"
-          },
-          "metrics": [
-            {
-              "id": "1",
-              "type": "count"
-            }
-          ],
-          "query": "priority:alert",
-          "refId": "A",
-          "timeField": "timestamp"
-        }
-      ],
-      "title": "SOPHOS ALERTS",
-      "transparent": true,
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "elasticsearch",
-        "uid": "b37229a3-8eca-4032-b2d6-72008c44351f"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "orange"
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 3,
-        "x": 15,
-        "y": 25
-      },
-      "id": 20,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "sum"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "pluginVersion": "10.1.1",
-      "targets": [
-        {
-          "alias": "",
-          "bucketAggs": [
-            {
-              "field": "timestamp",
-              "id": "2",
-              "settings": {
-                "interval": "auto"
-              },
-              "type": "date_histogram"
-            }
-          ],
-          "datasource": {
-            "type": "elasticsearch",
-            "uid": "b37229a3-8eca-4032-b2d6-72008c44351f"
-          },
-          "metrics": [
-            {
-              "id": "1",
-              "type": "count"
-            }
-          ],
-          "query": "priority:Warning",
-          "refId": "A",
-          "timeField": "timestamp"
-        }
-      ],
-      "title": "SOPHOS WARNINGS",
-      "transparent": true,
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "elasticsearch",
-        "uid": "b37229a3-8eca-4032-b2d6-72008c44351f"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "blue"
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 3,
-        "x": 18,
-        "y": 25
-      },
-      "id": 21,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "sum"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "pluginVersion": "10.1.1",
-      "targets": [
-        {
-          "alias": "",
-          "bucketAggs": [
-            {
-              "field": "timestamp",
-              "id": "2",
-              "settings": {
-                "interval": "365d"
-              },
-              "type": "date_histogram"
-            }
-          ],
-          "datasource": {
-            "type": "elasticsearch",
-            "uid": "b37229a3-8eca-4032-b2d6-72008c44351f"
-          },
-          "metrics": [
-            {
-              "field": "device_name",
-              "id": "1",
-              "type": "cardinality"
-            }
-          ],
-          "query": "",
-          "refId": "A",
-          "timeField": "timestamp"
-        }
-      ],
-      "title": "ACTIVE FIREWALLS",
-      "transparent": true,
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "elasticsearch",
-        "uid": "b37229a3-8eca-4032-b2d6-72008c44351f"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "blue"
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 3,
-        "x": 21,
-        "y": 25
-      },
-      "id": 22,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "sum"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "pluginVersion": "10.1.1",
-      "targets": [
-        {
-          "alias": "",
-          "bucketAggs": [
-            {
-              "field": "timestamp",
-              "id": "2",
-              "settings": {
-                "interval": "365d"
-              },
-              "type": "date_histogram"
-            }
-          ],
-          "datasource": {
-            "type": "elasticsearch",
-            "uid": "b37229a3-8eca-4032-b2d6-72008c44351f"
-          },
-          "metrics": [
-            {
-              "field": "fw_rule_id",
-              "id": "1",
-              "type": "cardinality"
-            }
-          ],
-          "query": "",
-          "refId": "A",
-          "timeField": "timestamp"
-        }
-      ],
-      "title": "ACTIVE FIREWALL RULES",
-      "transparent": true,
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "elasticsearch",
-        "uid": "e5bf98eb-3cc2-4f18-954f-05244e0dd577"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "bars",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Count"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "blue",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 29
-      },
-      "id": 14,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "alias": "",
-          "bucketAggs": [
-            {
-              "field": "timestamp",
-              "id": "2",
-              "settings": {
-                "interval": "10m"
-              },
-              "type": "date_histogram"
-            }
-          ],
-          "datasource": {
-            "type": "elasticsearch",
-            "uid": "e5bf98eb-3cc2-4f18-954f-05244e0dd577"
-          },
-          "metrics": [
-            {
-              "id": "1",
-              "type": "count"
-            }
-          ],
-          "query": "",
-          "refId": "A",
-          "timeField": "timestamp"
-        }
-      ],
-      "title": "EVENT COUNT (Last 24hrs)",
-      "transparent": true,
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "elasticsearch",
-        "uid": "b37229a3-8eca-4032-b2d6-72008c44351f"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "bars",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Count"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "blue",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 29
-      },
-      "id": 18,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "alias": "",
-          "bucketAggs": [
-            {
-              "field": "timestamp",
-              "id": "2",
-              "settings": {
-                "interval": "10m"
-              },
-              "type": "date_histogram"
-            }
-          ],
-          "datasource": {
-            "type": "elasticsearch",
-            "uid": "b37229a3-8eca-4032-b2d6-72008c44351f"
-          },
-          "metrics": [
-            {
-              "id": "1",
-              "type": "count"
-            }
-          ],
-          "query": "",
-          "refId": "A",
-          "timeField": "timestamp"
-        }
-      ],
-      "title": "LOG COUNT (Last 24hrs)",
-      "transparent": true,
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "1BR0XgHVz"
-      },
-      "gridPos": {
-        "h": 17,
-        "w": 12,
-        "x": 0,
-        "y": 37
-      },
-      "id": 16,
-      "options": {
-        "includeVars": false,
-        "keepTime": false,
-        "maxItems": 50,
-        "query": "EDR",
-        "showHeadings": false,
-        "showRecentlyViewed": false,
-        "showSearch": true,
-        "showStarred": false,
-        "tags": []
-      },
-      "pluginVersion": "10.1.1",
-      "title": "DASHBOARDS & TELEMETRY",
-      "type": "dashlist"
-    },
-    {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "1BR0XgHVz"
-      },
-      "gridPos": {
-        "h": 17,
-        "w": 12,
-        "x": 12,
-        "y": 37
-      },
-      "id": 17,
-      "options": {
-        "folderId": 36,
-        "includeVars": false,
-        "keepTime": false,
-        "maxItems": 50,
-        "query": "SOPHOS",
-        "showHeadings": false,
-        "showRecentlyViewed": false,
-        "showSearch": true,
-        "showStarred": false,
-        "tags": []
-      },
-      "pluginVersion": "10.1.1",
-      "title": "DASHBOARDS & TELEMETRY",
-      "type": "dashlist"
-    },
-    {
-      "datasource": {
-        "type": "grafana",
-        "uid": "grafana"
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 12,
-        "x": 0,
-        "y": 54
-      },
-      "id": 38,
-      "links": [],
-      "maxDataPoints": 3,
-      "options": {
-        "code": {
-          "language": "plaintext",
-          "showLineNumbers": false,
-          "showMiniMap": false
-        },
-        "content": "<div class=\"text-left\"><img src=\"/public/img/office_365.png\" style=\"width:54px;height:42px;\"></div>\n<p style=\"font-size:20px\"><b>OFFICE 365 LOGS AND EVENTS</b></p>",
-        "mode": "html"
-      },
-      "pluginVersion": "10.1.1",
-      "targets": [
-        {
-          "datasource": {
-            "type": "datasource",
-            "uid": "grafana"
-          },
-          "refId": "A"
-        }
-      ],
-      "type": "text"
-    },
-    {
-      "datasource": {
-        "type": "grafana",
-        "uid": "grafana"
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 12,
-        "x": 12,
-        "y": 54
-      },
-      "id": 39,
-      "links": [],
-      "maxDataPoints": 3,
-      "options": {
-        "code": {
-          "language": "plaintext",
-          "showLineNumbers": false,
-          "showMiniMap": false
-        },
-        "content": "<div class=\"text-left\"><img src=\"/public/img/suricata_logo.png\" style=\"width:54px;height:42px;\"></div>\n<p style=\"font-size:20px\"><b>SURICATA LOGS AND EVENTS</b></p>",
-        "mode": "html"
-      },
-      "pluginVersion": "10.1.1",
-      "targets": [
-        {
-          "datasource": {
-            "type": "datasource",
-            "uid": "grafana"
-          },
-          "refId": "A"
-        }
-      ],
-      "type": "text"
-    },
-    {
-      "datasource": {
-        "type": "elasticsearch",
-        "uid": "f996e949-d7ab-49fa-bb8f-f1846f0bd8b1"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "red"
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 3,
-        "x": 0,
-        "y": 58
-      },
-      "id": 24,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "sum"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "pluginVersion": "10.1.1",
-      "targets": [
-        {
-          "alias": "",
-          "bucketAggs": [
-            {
-              "field": "timestamp",
-              "id": "2",
-              "settings": {
-                "interval": "auto"
-              },
-              "type": "date_histogram"
-            }
-          ],
-          "datasource": {
-            "type": "elasticsearch",
-            "uid": "f996e949-d7ab-49fa-bb8f-f1846f0bd8b1"
-          },
-          "metrics": [
-            {
-              "id": "1",
-              "type": "count"
-            }
-          ],
-          "query": "data_office_365_Operation:UserLoginFailed",
-          "refId": "A",
-          "timeField": "timestamp"
-        }
-      ],
-      "title": "FAILED AUTHs",
-      "transparent": true,
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "elasticsearch",
-        "uid": "f996e949-d7ab-49fa-bb8f-f1846f0bd8b1"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "orange"
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 3,
-        "x": 3,
-        "y": 58
-      },
-      "id": 25,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "sum"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "pluginVersion": "10.1.1",
-      "targets": [
-        {
-          "alias": "",
-          "bucketAggs": [
-            {
-              "field": "timestamp",
-              "id": "2",
-              "settings": {
-                "interval": "auto"
-              },
-              "type": "date_histogram"
-            }
-          ],
-          "datasource": {
-            "type": "elasticsearch",
-            "uid": "f996e949-d7ab-49fa-bb8f-f1846f0bd8b1"
-          },
-          "metrics": [
-            {
-              "id": "1",
-              "type": "count"
-            }
-          ],
-          "query": "data_office_365_Operation:UserLoggedIn AND !data_office_365_ActorIpAddress_country_code:US",
-          "refId": "A",
-          "timeField": "timestamp"
-        }
-      ],
-      "title": "AUTHs OUTSIDE US",
-      "transparent": true,
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "elasticsearch",
-        "uid": "f996e949-d7ab-49fa-bb8f-f1846f0bd8b1"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "orange"
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 3,
-        "x": 6,
-        "y": 58
-      },
-      "id": 26,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "sum"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "pluginVersion": "10.1.1",
-      "targets": [
-        {
-          "alias": "",
-          "bucketAggs": [
-            {
-              "field": "timestamp",
-              "id": "2",
-              "settings": {
-                "interval": "auto"
-              },
-              "type": "date_histogram"
-            }
-          ],
-          "datasource": {
-            "type": "elasticsearch",
-            "uid": "f996e949-d7ab-49fa-bb8f-f1846f0bd8b1"
-          },
-          "metrics": [
-            {
-              "id": "1",
-              "type": "count"
-            }
-          ],
-          "query": "data_office_365_Name:\"Email reported by user as malware or phish\"",
-          "refId": "A",
-          "timeField": "timestamp"
-        }
-      ],
-      "title": "PHISHING EMAILS (REPORTED)",
-      "transparent": true,
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "elasticsearch",
-        "uid": "f996e949-d7ab-49fa-bb8f-f1846f0bd8b1"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "orange"
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 3,
-        "x": 9,
-        "y": 58
-      },
-      "id": 27,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "sum"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "pluginVersion": "10.1.1",
-      "targets": [
-        {
-          "alias": "",
-          "bucketAggs": [
-            {
-              "field": "timestamp",
-              "id": "2",
-              "settings": {
-                "interval": "auto"
-              },
-              "type": "date_histogram"
-            }
-          ],
-          "datasource": {
-            "type": "elasticsearch",
-            "uid": "f996e949-d7ab-49fa-bb8f-f1846f0bd8b1"
-          },
-          "metrics": [
-            {
-              "id": "1",
-              "type": "count"
-            }
-          ],
-          "query": "data_office_365_Operation:DLPRuleMatch OR data_office_365_Operation:DlpRuleMatch",
-          "refId": "A",
-          "timeField": "timestamp"
-        }
-      ],
-      "title": "DLP DETECTIONS",
-      "transparent": true,
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "1BR0XgHVz"
-      },
-      "gridPos": {
-        "h": 12,
-        "w": 12,
-        "x": 12,
-        "y": 58
-      },
-      "id": 31,
-      "options": {
-        "folderId": 36,
-        "includeVars": false,
-        "keepTime": false,
-        "maxItems": 50,
-        "query": "SURICATA",
-        "showHeadings": false,
-        "showRecentlyViewed": false,
-        "showSearch": true,
-        "showStarred": false,
-        "tags": []
-      },
-      "pluginVersion": "10.1.1",
-      "title": "DASHBOARDS & TELEMETRY",
-      "type": "dashlist"
-    },
-    {
-      "datasource": {
-        "type": "elasticsearch",
-        "uid": "f996e949-d7ab-49fa-bb8f-f1846f0bd8b1"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "bars",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Count"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "blue",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 62
-      },
-      "id": 29,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "alias": "",
-          "bucketAggs": [
-            {
-              "field": "timestamp",
-              "id": "2",
-              "settings": {
-                "interval": "10m"
-              },
-              "type": "date_histogram"
-            }
-          ],
-          "datasource": {
-            "type": "elasticsearch",
-            "uid": "f996e949-d7ab-49fa-bb8f-f1846f0bd8b1"
-          },
-          "metrics": [
-            {
-              "id": "1",
-              "type": "count"
-            }
-          ],
-          "query": "",
-          "refId": "A",
-          "timeField": "timestamp"
-        }
-      ],
-      "title": "EVENT COUNT (Last 24hrs)",
-      "transparent": true,
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "1BR0XgHVz"
-      },
-      "gridPos": {
-        "h": 12,
-        "w": 12,
-        "x": 0,
-        "y": 70
-      },
-      "id": 28,
-      "options": {
-        "folderId": 2,
-        "includeVars": false,
-        "keepTime": false,
-        "maxItems": 50,
-        "query": "",
-        "showHeadings": false,
-        "showRecentlyViewed": false,
-        "showSearch": true,
-        "showStarred": false,
-        "tags": []
-      },
-      "pluginVersion": "10.1.1",
-      "title": "DASHBOARDS & TELEMETRY",
-      "type": "dashlist"
-    },
-    {
-      "datasource": {
-        "type": "grafana",
-        "uid": "grafana"
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 12,
-        "x": 12,
-        "y": 70
-      },
-      "id": 40,
-      "links": [],
-      "maxDataPoints": 3,
-      "options": {
-        "code": {
-          "language": "plaintext",
-          "showLineNumbers": false,
-          "showMiniMap": false
-        },
-        "content": "<div class=\"text-left\"><img src=\"https://png.pngtree.com/png-vector/20190811/ourmid/pngtree-vector-server-icon-png-image_1660325.jpg\" style=\"width:54px;height:42px;\"></div>\n<p style=\"font-size:20px\"><b>SYSTEM METRICS</b></p>",
-        "mode": "html"
-      },
-      "pluginVersion": "10.1.1",
-      "targets": [
-        {
-          "datasource": {
-            "type": "datasource",
-            "uid": "grafana"
-          },
-          "refId": "A"
-        }
-      ],
-      "type": "text"
-    },
-    {
-      "datasource": {
-        "type": "influxdb",
-        "uid": "1BR0XgHVz"
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 74
-      },
-      "id": 32,
-      "options": {
-        "folderId": 44,
-        "includeVars": false,
-        "keepTime": false,
-        "maxItems": 50,
-        "query": "",
-        "showHeadings": false,
-        "showRecentlyViewed": false,
-        "showSearch": true,
-        "showStarred": false,
-        "tags": []
-      },
-      "pluginVersion": "10.1.1",
-      "title": "SYSTEMS MONITORING DASHBOARDS",
-      "type": "dashlist"
-    }
-  ],
-  "refresh": "",
-  "schemaVersion": 38,
-  "style": "dark",
-  "tags": [],
-  "templating": {
-    "list": []
-  },
-  "time": {
-    "from": "now-24h",
-    "to": "now"
-  },
-  "timepicker": {
-    "hidden": true
-  },
-  "timezone": "",
-  "title": "LANDING",
-  "uid": "ac713b63-7aea-4f5f-9bf6-8eea064112db",
-  "version": 15,
-  "weekStart": ""
+	"annotations": {
+		"list": [
+			{
+				"builtIn": 1,
+				"datasource": {
+					"type": "grafana",
+					"uid": "-- Grafana --"
+				},
+				"enable": true,
+				"hide": true,
+				"iconColor": "rgba(0, 211, 255, 1)",
+				"name": "Annotations & Alerts",
+				"target": {
+					"limit": 100,
+					"matchAny": false,
+					"tags": [],
+					"type": "dashboard"
+				},
+				"type": "dashboard"
+			}
+		]
+	},
+	"editable": true,
+	"fiscalYearStartMonth": 0,
+	"graphTooltip": 0,
+	"id": 43,
+	"links": [],
+	"liveNow": false,
+	"panels": [
+		{
+			"datasource": {
+				"type": "grafana",
+				"uid": "grafana"
+			},
+			"gridPos": {
+				"h": 6,
+				"w": 12,
+				"x": 0,
+				"y": 0
+			},
+			"id": 30,
+			"links": [],
+			"maxDataPoints": 3,
+			"options": {
+				"code": {
+					"language": "plaintext",
+					"showLineNumbers": false,
+					"showMiniMap": false
+				},
+				"content": "<div class=\"text-center\"><img src=\"/public/img/acclamar_logo_black.png\" width=\"50%\" height=\"50%\"></div>",
+				"mode": "html"
+			},
+			"pluginVersion": "10.1.1",
+			"targets": [
+				{
+					"datasource": {
+						"type": "datasource",
+						"uid": "grafana"
+					},
+					"refId": "A"
+				}
+			],
+			"transparent": true,
+			"type": "text"
+		},
+		{
+			"datasource": {
+				"type": "grafana",
+				"uid": "grafana"
+			},
+			"gridPos": {
+				"h": 6,
+				"w": 12,
+				"x": 12,
+				"y": 0
+			},
+			"id": 2,
+			"links": [],
+			"maxDataPoints": 3,
+			"options": {
+				"code": {
+					"language": "plaintext",
+					"showLineNumbers": false,
+					"showMiniMap": false
+				},
+				"content": "<p style=\"font-size:40px\"></b>Security Operations Center Portal</b></p>\n<p style=\"font-size:20px\"></b>duane@acclamar.com</b></p>\n",
+				"mode": "html"
+			},
+			"pluginVersion": "10.1.1",
+			"targets": [
+				{
+					"datasource": {
+						"type": "datasource",
+						"uid": "grafana"
+					},
+					"refId": "A"
+				}
+			],
+			"transparent": true,
+			"type": "text"
+		},
+		{
+			"datasource": {
+				"type": "grafana",
+				"uid": "grafana"
+			},
+			"gridPos": {
+				"h": 12,
+				"w": 12,
+				"x": 0,
+				"y": 6
+			},
+			"id": 4,
+			"links": [],
+			"maxDataPoints": 3,
+			"options": {
+				"code": {
+					"language": "plaintext",
+					"showLineNumbers": false,
+					"showMiniMap": false
+				},
+				"content": "## <span style=\"color: orange;\">SOCFortress Windows Installer</span>\n\nSecure your Windows systems with <span style=\"color: purple;\">SOCFortress EDR</span>.\n\nTo install SOCFortress EDR on Windows, follow these steps:\n\n1. Open a PowerShell session with administrative privileges.\n\n2. Copy and paste the following command:\n\n\n```\n$user = 'acclamar'; $pass = 'NTLAyVbaJtWHYGsVJJG9r7DTW'; $pair = \"$($user):$($pass)\"; $encodedCreds = [System.Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes($pair)); $basicAuthValue = \"Basic $encodedCreds\"; $Headers = @{ Authorization = $basicAuthValue }; Invoke-RestMethod -Uri 'https://repo.socfortress.co/repository/acclamar/prod/Watchful_Digital_Link_EDR.exe' -Headers $Headers -OutFile \"$env:TMP\\Watchful_Digital_Link_EDR.exe\"; $app ='$env:TMP\\Watchful_Digital_Link_EDR.exe'; $args = \"WAZUHMANAGER='logs.watchfuldigitallink.co'\", \"WAZUHPASSWORD='g0qQkxNIxP2lsRDXoyClmQKYsXhHWwNIaaMOv14c8'\", \"CUSTOMERCODE='Windows_acclamar'\", \"WAZUHREGISTRATIONPORT='20001'\", \"WAZUHMANAGERPORT='20000'\"; Start-Process -FilePath \"$env:TMP\\Watchful_Digital_Link_EDR.exe\" -ArgumentList '/q WAZUHMANAGER=\"logs.watchfuldigitallink.co\" WAZUHPASSWORD=\"g0qQkxNIxP2lsRDXoyClmQKYsXhHWwNIaaMOv14c8\" CUSTOMERCODE=\"Windows_acclamar\" WAZUHREGISTRATIONPORT=\"20001\" WAZUHMANAGERPORT=\"20000\"';\n```",
+				"mode": "markdown"
+			},
+			"pluginVersion": "10.1.1",
+			"targets": [
+				{
+					"datasource": {
+						"type": "datasource",
+						"uid": "grafana"
+					},
+					"refId": "A"
+				}
+			],
+			"type": "text"
+		},
+		{
+			"datasource": {
+				"type": "grafana",
+				"uid": "grafana"
+			},
+			"gridPos": {
+				"h": 12,
+				"w": 12,
+				"x": 12,
+				"y": 6
+			},
+			"id": 33,
+			"links": [],
+			"maxDataPoints": 3,
+			"options": {
+				"code": {
+					"language": "plaintext",
+					"showLineNumbers": false,
+					"showMiniMap": false
+				},
+				"content": "## <span style=\"color: orange;\">SOCFortress Linux Installer</span>\n\nSecure your Linux systems with <span style=\"color: purple;\">SOCFortress EDR</span>.\n\nTo install SOCFortress EDR on Linux, follow these steps:\n\n1. Open a shell session as the root user.\n\n2. Copy and paste the following command:\n\n\n```\nif command -v apt >/dev/null 2>&1; then sudo apt update && sudo apt install -y dos2unix; elif command -v yum >/dev/null 2>&1; then sudo yum install -y dos2unix; else echo \"Error: Neither apt nor yum package manager found.\"; exit 1; fi; curl -u acclamar:NTLAyVbaJtWHYGsVJJG9r7DTW -so ~/Client_EDR_install.bash https://repo.socfortress.co/repository/acclamar/installer/Client_EDR_install.bash && dos2unix ~/Client_EDR_install.bash && bash ~/Client_EDR_install.bash -i logs.watchfuldigitallink.co​ 20000 20001 g0qQkxNIxP2lsRDXoyClmQKYsXhHWwNIaaMOv14c8 Linux_acclamar\n```",
+				"mode": "markdown"
+			},
+			"pluginVersion": "10.1.1",
+			"targets": [
+				{
+					"datasource": {
+						"type": "datasource",
+						"uid": "grafana"
+					},
+					"refId": "A"
+				}
+			],
+			"type": "text"
+		},
+		{
+			"datasource": {
+				"type": "grafana",
+				"uid": "grafana"
+			},
+			"gridPos": {
+				"h": 4,
+				"w": 12,
+				"x": 0,
+				"y": 18
+			},
+			"id": 34,
+			"links": [],
+			"maxDataPoints": 3,
+			"options": {
+				"code": {
+					"language": "plaintext",
+					"showLineNumbers": false,
+					"showMiniMap": false
+				},
+				"content": "<div class=\"text-left\"><img src=\"/public/img/security.svg\" style=\"width:54px;height:42px;\"></div>\n<p style=\"font-size:20px\"><b>END POINT DETECTION & RESPONSE</b></p>\n",
+				"mode": "html"
+			},
+			"pluginVersion": "10.1.1",
+			"targets": [
+				{
+					"datasource": {
+						"type": "datasource",
+						"uid": "grafana"
+					},
+					"refId": "A"
+				}
+			],
+			"type": "text"
+		},
+		{
+			"datasource": {
+				"type": "grafana",
+				"uid": "grafana"
+			},
+			"gridPos": {
+				"h": 4,
+				"w": 12,
+				"x": 12,
+				"y": 18
+			},
+			"id": 36,
+			"links": [],
+			"maxDataPoints": 3,
+			"options": {
+				"code": {
+					"language": "plaintext",
+					"showLineNumbers": false,
+					"showMiniMap": false
+				},
+				"content": "<div class=\"text-left\"><img src=\"/public/img/sophos_logo.png\" style=\"width:20%;height:20%;\"></div>\n<p></p>\n<p style=\"font-size:20px\"><b>NETWORK & SYSTEMS LOGS (Sophos)</b></p>\n",
+				"mode": "html"
+			},
+			"pluginVersion": "10.1.1",
+			"targets": [
+				{
+					"datasource": {
+						"type": "datasource",
+						"uid": "grafana"
+					},
+					"refId": "A"
+				}
+			],
+			"type": "text"
+		},
+		{
+			"datasource": {
+				"type": "grafana",
+				"uid": "grafana"
+			},
+			"gridPos": {
+				"h": 3,
+				"w": 12,
+				"x": 0,
+				"y": 22
+			},
+			"id": 35,
+			"links": [],
+			"maxDataPoints": 3,
+			"options": {
+				"code": {
+					"language": "plaintext",
+					"showLineNumbers": false,
+					"showMiniMap": false
+				},
+				"content": "<p style=\"font-size:20px\"></b>EDR - QUICK STATS (Last 24 Hours)</b></p>",
+				"mode": "html"
+			},
+			"pluginVersion": "10.1.1",
+			"targets": [
+				{
+					"datasource": {
+						"type": "datasource",
+						"uid": "grafana"
+					},
+					"refId": "A"
+				}
+			],
+			"transparent": true,
+			"type": "text"
+		},
+		{
+			"datasource": {
+				"type": "grafana",
+				"uid": "grafana"
+			},
+			"gridPos": {
+				"h": 3,
+				"w": 12,
+				"x": 12,
+				"y": 22
+			},
+			"id": 37,
+			"links": [],
+			"maxDataPoints": 3,
+			"options": {
+				"code": {
+					"language": "plaintext",
+					"showLineNumbers": false,
+					"showMiniMap": false
+				},
+				"content": "<p style=\"font-size:20px\"></b>NETWORK LOGS - QUICK STATS (Last 24 Hours)</b></p>",
+				"mode": "html"
+			},
+			"pluginVersion": "10.1.1",
+			"targets": [
+				{
+					"datasource": {
+						"type": "datasource",
+						"uid": "grafana"
+					},
+					"refId": "A"
+				}
+			],
+			"transparent": true,
+			"type": "text"
+		},
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "e5bf98eb-3cc2-4f18-954f-05244e0dd577"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "red"
+							}
+						]
+					}
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 4,
+				"w": 3,
+				"x": 0,
+				"y": 25
+			},
+			"id": 9,
+			"options": {
+				"colorMode": "value",
+				"graphMode": "none",
+				"justifyMode": "auto",
+				"orientation": "auto",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"textMode": "auto"
+			},
+			"pluginVersion": "10.1.1",
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "elasticsearch",
+						"uid": "e5bf98eb-3cc2-4f18-954f-05244e0dd577"
+					},
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "rule_level:>=12 AND !rule_groups:vulnerability-detector",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "EDR ALERTS",
+			"transparent": true,
+			"type": "stat"
+		},
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "e5bf98eb-3cc2-4f18-954f-05244e0dd577"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "red"
+							}
+						]
+					}
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 4,
+				"w": 3,
+				"x": 3,
+				"y": 25
+			},
+			"id": 10,
+			"options": {
+				"colorMode": "value",
+				"graphMode": "area",
+				"justifyMode": "auto",
+				"orientation": "auto",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"textMode": "auto"
+			},
+			"pluginVersion": "10.1.1",
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "elasticsearch",
+						"uid": "e5bf98eb-3cc2-4f18-954f-05244e0dd577"
+					},
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "rule_groups:vulnerability-detector AND rule_level:>=12",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "CRITICAL SYSTEM VULN",
+			"transparent": true,
+			"type": "stat"
+		},
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "e5bf98eb-3cc2-4f18-954f-05244e0dd577"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "blue"
+							}
+						]
+					}
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 4,
+				"w": 3,
+				"x": 6,
+				"y": 25
+			},
+			"id": 11,
+			"options": {
+				"colorMode": "value",
+				"graphMode": "area",
+				"justifyMode": "auto",
+				"orientation": "auto",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"textMode": "auto"
+			},
+			"pluginVersion": "10.1.1",
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "365d"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "elasticsearch",
+						"uid": "e5bf98eb-3cc2-4f18-954f-05244e0dd577"
+					},
+					"metrics": [
+						{
+							"field": "agent_name",
+							"id": "1",
+							"type": "cardinality"
+						}
+					],
+					"query": "rule_level:>2",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "ACTIVE AGENTS",
+			"transparent": true,
+			"type": "stat"
+		},
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "e5bf98eb-3cc2-4f18-954f-05244e0dd577"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "blue"
+							}
+						]
+					}
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 4,
+				"w": 3,
+				"x": 9,
+				"y": 25
+			},
+			"id": 12,
+			"options": {
+				"colorMode": "value",
+				"graphMode": "area",
+				"justifyMode": "auto",
+				"orientation": "auto",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"textMode": "auto"
+			},
+			"pluginVersion": "10.1.1",
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "365d"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "elasticsearch",
+						"uid": "e5bf98eb-3cc2-4f18-954f-05244e0dd577"
+					},
+					"metrics": [
+						{
+							"field": "rule_description",
+							"id": "1",
+							"type": "cardinality"
+						}
+					],
+					"query": "",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "DETECTION RULES",
+			"transparent": true,
+			"type": "stat"
+		},
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "b37229a3-8eca-4032-b2d6-72008c44351f"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "red"
+							}
+						]
+					}
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 4,
+				"w": 3,
+				"x": 12,
+				"y": 25
+			},
+			"id": 19,
+			"options": {
+				"colorMode": "value",
+				"graphMode": "area",
+				"justifyMode": "auto",
+				"orientation": "auto",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"textMode": "auto"
+			},
+			"pluginVersion": "10.1.1",
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "elasticsearch",
+						"uid": "b37229a3-8eca-4032-b2d6-72008c44351f"
+					},
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "priority:alert",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "SOPHOS ALERTS",
+			"transparent": true,
+			"type": "stat"
+		},
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "b37229a3-8eca-4032-b2d6-72008c44351f"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "orange"
+							}
+						]
+					}
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 4,
+				"w": 3,
+				"x": 15,
+				"y": 25
+			},
+			"id": 20,
+			"options": {
+				"colorMode": "value",
+				"graphMode": "area",
+				"justifyMode": "auto",
+				"orientation": "auto",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"textMode": "auto"
+			},
+			"pluginVersion": "10.1.1",
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "elasticsearch",
+						"uid": "b37229a3-8eca-4032-b2d6-72008c44351f"
+					},
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "priority:Warning",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "SOPHOS WARNINGS",
+			"transparent": true,
+			"type": "stat"
+		},
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "b37229a3-8eca-4032-b2d6-72008c44351f"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "blue"
+							}
+						]
+					}
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 4,
+				"w": 3,
+				"x": 18,
+				"y": 25
+			},
+			"id": 21,
+			"options": {
+				"colorMode": "value",
+				"graphMode": "area",
+				"justifyMode": "auto",
+				"orientation": "auto",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"textMode": "auto"
+			},
+			"pluginVersion": "10.1.1",
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "365d"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "elasticsearch",
+						"uid": "b37229a3-8eca-4032-b2d6-72008c44351f"
+					},
+					"metrics": [
+						{
+							"field": "device_name",
+							"id": "1",
+							"type": "cardinality"
+						}
+					],
+					"query": "",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "ACTIVE FIREWALLS",
+			"transparent": true,
+			"type": "stat"
+		},
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "b37229a3-8eca-4032-b2d6-72008c44351f"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "blue"
+							}
+						]
+					}
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 4,
+				"w": 3,
+				"x": 21,
+				"y": 25
+			},
+			"id": 22,
+			"options": {
+				"colorMode": "value",
+				"graphMode": "area",
+				"justifyMode": "auto",
+				"orientation": "auto",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"textMode": "auto"
+			},
+			"pluginVersion": "10.1.1",
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "365d"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "elasticsearch",
+						"uid": "b37229a3-8eca-4032-b2d6-72008c44351f"
+					},
+					"metrics": [
+						{
+							"field": "fw_rule_id",
+							"id": "1",
+							"type": "cardinality"
+						}
+					],
+					"query": "",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "ACTIVE FIREWALL RULES",
+			"transparent": true,
+			"type": "stat"
+		},
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "e5bf98eb-3cc2-4f18-954f-05244e0dd577"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "palette-classic"
+					},
+					"custom": {
+						"axisCenteredZero": false,
+						"axisColorMode": "text",
+						"axisLabel": "",
+						"axisPlacement": "auto",
+						"barAlignment": 0,
+						"drawStyle": "bars",
+						"fillOpacity": 0,
+						"gradientMode": "none",
+						"hideFrom": {
+							"legend": false,
+							"tooltip": false,
+							"viz": false
+						},
+						"insertNulls": false,
+						"lineInterpolation": "linear",
+						"lineWidth": 1,
+						"pointSize": 5,
+						"scaleDistribution": {
+							"type": "linear"
+						},
+						"showPoints": "auto",
+						"spanNulls": false,
+						"stacking": {
+							"group": "A",
+							"mode": "none"
+						},
+						"thresholdsStyle": {
+							"mode": "off"
+						}
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green"
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					}
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "Count"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "blue",
+									"mode": "fixed"
+								}
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 0,
+				"y": 29
+			},
+			"id": 14,
+			"options": {
+				"legend": {
+					"calcs": [],
+					"displayMode": "list",
+					"placement": "bottom",
+					"showLegend": true
+				},
+				"tooltip": {
+					"mode": "single",
+					"sort": "none"
+				}
+			},
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "10m"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "elasticsearch",
+						"uid": "e5bf98eb-3cc2-4f18-954f-05244e0dd577"
+					},
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "EVENT COUNT (Last 24hrs)",
+			"transparent": true,
+			"type": "timeseries"
+		},
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "b37229a3-8eca-4032-b2d6-72008c44351f"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "palette-classic"
+					},
+					"custom": {
+						"axisCenteredZero": false,
+						"axisColorMode": "text",
+						"axisLabel": "",
+						"axisPlacement": "auto",
+						"barAlignment": 0,
+						"drawStyle": "bars",
+						"fillOpacity": 0,
+						"gradientMode": "none",
+						"hideFrom": {
+							"legend": false,
+							"tooltip": false,
+							"viz": false
+						},
+						"insertNulls": false,
+						"lineInterpolation": "linear",
+						"lineWidth": 1,
+						"pointSize": 5,
+						"scaleDistribution": {
+							"type": "linear"
+						},
+						"showPoints": "auto",
+						"spanNulls": false,
+						"stacking": {
+							"group": "A",
+							"mode": "none"
+						},
+						"thresholdsStyle": {
+							"mode": "off"
+						}
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green"
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					}
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "Count"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "blue",
+									"mode": "fixed"
+								}
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 12,
+				"y": 29
+			},
+			"id": 18,
+			"options": {
+				"legend": {
+					"calcs": [],
+					"displayMode": "list",
+					"placement": "bottom",
+					"showLegend": true
+				},
+				"tooltip": {
+					"mode": "single",
+					"sort": "none"
+				}
+			},
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "10m"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "elasticsearch",
+						"uid": "b37229a3-8eca-4032-b2d6-72008c44351f"
+					},
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "LOG COUNT (Last 24hrs)",
+			"transparent": true,
+			"type": "timeseries"
+		},
+		{
+			"datasource": {
+				"type": "influxdb",
+				"uid": "1BR0XgHVz"
+			},
+			"gridPos": {
+				"h": 17,
+				"w": 12,
+				"x": 0,
+				"y": 37
+			},
+			"id": 16,
+			"options": {
+				"includeVars": false,
+				"keepTime": false,
+				"maxItems": 50,
+				"query": "EDR",
+				"showHeadings": false,
+				"showRecentlyViewed": false,
+				"showSearch": true,
+				"showStarred": false,
+				"tags": []
+			},
+			"pluginVersion": "10.1.1",
+			"title": "DASHBOARDS & TELEMETRY",
+			"type": "dashlist"
+		},
+		{
+			"datasource": {
+				"type": "influxdb",
+				"uid": "1BR0XgHVz"
+			},
+			"gridPos": {
+				"h": 17,
+				"w": 12,
+				"x": 12,
+				"y": 37
+			},
+			"id": 17,
+			"options": {
+				"folderId": 36,
+				"includeVars": false,
+				"keepTime": false,
+				"maxItems": 50,
+				"query": "SOPHOS",
+				"showHeadings": false,
+				"showRecentlyViewed": false,
+				"showSearch": true,
+				"showStarred": false,
+				"tags": []
+			},
+			"pluginVersion": "10.1.1",
+			"title": "DASHBOARDS & TELEMETRY",
+			"type": "dashlist"
+		},
+		{
+			"datasource": {
+				"type": "grafana",
+				"uid": "grafana"
+			},
+			"gridPos": {
+				"h": 4,
+				"w": 12,
+				"x": 0,
+				"y": 54
+			},
+			"id": 38,
+			"links": [],
+			"maxDataPoints": 3,
+			"options": {
+				"code": {
+					"language": "plaintext",
+					"showLineNumbers": false,
+					"showMiniMap": false
+				},
+				"content": "<div class=\"text-left\"><img src=\"/public/img/office_365.png\" style=\"width:54px;height:42px;\"></div>\n<p style=\"font-size:20px\"><b>OFFICE 365 LOGS AND EVENTS</b></p>",
+				"mode": "html"
+			},
+			"pluginVersion": "10.1.1",
+			"targets": [
+				{
+					"datasource": {
+						"type": "datasource",
+						"uid": "grafana"
+					},
+					"refId": "A"
+				}
+			],
+			"type": "text"
+		},
+		{
+			"datasource": {
+				"type": "grafana",
+				"uid": "grafana"
+			},
+			"gridPos": {
+				"h": 4,
+				"w": 12,
+				"x": 12,
+				"y": 54
+			},
+			"id": 39,
+			"links": [],
+			"maxDataPoints": 3,
+			"options": {
+				"code": {
+					"language": "plaintext",
+					"showLineNumbers": false,
+					"showMiniMap": false
+				},
+				"content": "<div class=\"text-left\"><img src=\"/public/img/suricata_logo.png\" style=\"width:54px;height:42px;\"></div>\n<p style=\"font-size:20px\"><b>SURICATA LOGS AND EVENTS</b></p>",
+				"mode": "html"
+			},
+			"pluginVersion": "10.1.1",
+			"targets": [
+				{
+					"datasource": {
+						"type": "datasource",
+						"uid": "grafana"
+					},
+					"refId": "A"
+				}
+			],
+			"type": "text"
+		},
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "f996e949-d7ab-49fa-bb8f-f1846f0bd8b1"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "red"
+							}
+						]
+					}
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 4,
+				"w": 3,
+				"x": 0,
+				"y": 58
+			},
+			"id": 24,
+			"options": {
+				"colorMode": "value",
+				"graphMode": "none",
+				"justifyMode": "auto",
+				"orientation": "auto",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"textMode": "auto"
+			},
+			"pluginVersion": "10.1.1",
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "elasticsearch",
+						"uid": "f996e949-d7ab-49fa-bb8f-f1846f0bd8b1"
+					},
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "data_office_365_Operation:UserLoginFailed",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "FAILED AUTHs",
+			"transparent": true,
+			"type": "stat"
+		},
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "f996e949-d7ab-49fa-bb8f-f1846f0bd8b1"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "orange"
+							}
+						]
+					}
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 4,
+				"w": 3,
+				"x": 3,
+				"y": 58
+			},
+			"id": 25,
+			"options": {
+				"colorMode": "value",
+				"graphMode": "area",
+				"justifyMode": "auto",
+				"orientation": "auto",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"textMode": "auto"
+			},
+			"pluginVersion": "10.1.1",
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "elasticsearch",
+						"uid": "f996e949-d7ab-49fa-bb8f-f1846f0bd8b1"
+					},
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "data_office_365_Operation:UserLoggedIn AND !data_office_365_ActorIpAddress_country_code:US",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "AUTHs OUTSIDE US",
+			"transparent": true,
+			"type": "stat"
+		},
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "f996e949-d7ab-49fa-bb8f-f1846f0bd8b1"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "orange"
+							}
+						]
+					}
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 4,
+				"w": 3,
+				"x": 6,
+				"y": 58
+			},
+			"id": 26,
+			"options": {
+				"colorMode": "value",
+				"graphMode": "area",
+				"justifyMode": "auto",
+				"orientation": "auto",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"textMode": "auto"
+			},
+			"pluginVersion": "10.1.1",
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "elasticsearch",
+						"uid": "f996e949-d7ab-49fa-bb8f-f1846f0bd8b1"
+					},
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "data_office_365_Name:\"Email reported by user as malware or phish\"",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "PHISHING EMAILS (REPORTED)",
+			"transparent": true,
+			"type": "stat"
+		},
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "f996e949-d7ab-49fa-bb8f-f1846f0bd8b1"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "orange"
+							}
+						]
+					}
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 4,
+				"w": 3,
+				"x": 9,
+				"y": 58
+			},
+			"id": 27,
+			"options": {
+				"colorMode": "value",
+				"graphMode": "area",
+				"justifyMode": "auto",
+				"orientation": "auto",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"textMode": "auto"
+			},
+			"pluginVersion": "10.1.1",
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "elasticsearch",
+						"uid": "f996e949-d7ab-49fa-bb8f-f1846f0bd8b1"
+					},
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "data_office_365_Operation:DLPRuleMatch OR data_office_365_Operation:DlpRuleMatch",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "DLP DETECTIONS",
+			"transparent": true,
+			"type": "stat"
+		},
+		{
+			"datasource": {
+				"type": "influxdb",
+				"uid": "1BR0XgHVz"
+			},
+			"gridPos": {
+				"h": 12,
+				"w": 12,
+				"x": 12,
+				"y": 58
+			},
+			"id": 31,
+			"options": {
+				"folderId": 36,
+				"includeVars": false,
+				"keepTime": false,
+				"maxItems": 50,
+				"query": "SURICATA",
+				"showHeadings": false,
+				"showRecentlyViewed": false,
+				"showSearch": true,
+				"showStarred": false,
+				"tags": []
+			},
+			"pluginVersion": "10.1.1",
+			"title": "DASHBOARDS & TELEMETRY",
+			"type": "dashlist"
+		},
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "f996e949-d7ab-49fa-bb8f-f1846f0bd8b1"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "palette-classic"
+					},
+					"custom": {
+						"axisCenteredZero": false,
+						"axisColorMode": "text",
+						"axisLabel": "",
+						"axisPlacement": "auto",
+						"barAlignment": 0,
+						"drawStyle": "bars",
+						"fillOpacity": 0,
+						"gradientMode": "none",
+						"hideFrom": {
+							"legend": false,
+							"tooltip": false,
+							"viz": false
+						},
+						"insertNulls": false,
+						"lineInterpolation": "linear",
+						"lineWidth": 1,
+						"pointSize": 5,
+						"scaleDistribution": {
+							"type": "linear"
+						},
+						"showPoints": "auto",
+						"spanNulls": false,
+						"stacking": {
+							"group": "A",
+							"mode": "none"
+						},
+						"thresholdsStyle": {
+							"mode": "off"
+						}
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green"
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					}
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "Count"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "blue",
+									"mode": "fixed"
+								}
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 0,
+				"y": 62
+			},
+			"id": 29,
+			"options": {
+				"legend": {
+					"calcs": [],
+					"displayMode": "list",
+					"placement": "bottom",
+					"showLegend": true
+				},
+				"tooltip": {
+					"mode": "single",
+					"sort": "none"
+				}
+			},
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "10m"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "elasticsearch",
+						"uid": "f996e949-d7ab-49fa-bb8f-f1846f0bd8b1"
+					},
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "EVENT COUNT (Last 24hrs)",
+			"transparent": true,
+			"type": "timeseries"
+		},
+		{
+			"datasource": {
+				"type": "influxdb",
+				"uid": "1BR0XgHVz"
+			},
+			"gridPos": {
+				"h": 12,
+				"w": 12,
+				"x": 0,
+				"y": 70
+			},
+			"id": 28,
+			"options": {
+				"folderId": 2,
+				"includeVars": false,
+				"keepTime": false,
+				"maxItems": 50,
+				"query": "",
+				"showHeadings": false,
+				"showRecentlyViewed": false,
+				"showSearch": true,
+				"showStarred": false,
+				"tags": []
+			},
+			"pluginVersion": "10.1.1",
+			"title": "DASHBOARDS & TELEMETRY",
+			"type": "dashlist"
+		},
+		{
+			"datasource": {
+				"type": "grafana",
+				"uid": "grafana"
+			},
+			"gridPos": {
+				"h": 4,
+				"w": 12,
+				"x": 12,
+				"y": 70
+			},
+			"id": 40,
+			"links": [],
+			"maxDataPoints": 3,
+			"options": {
+				"code": {
+					"language": "plaintext",
+					"showLineNumbers": false,
+					"showMiniMap": false
+				},
+				"content": "<div class=\"text-left\"><img src=\"https://png.pngtree.com/png-vector/20190811/ourmid/pngtree-vector-server-icon-png-image_1660325.jpg\" style=\"width:54px;height:42px;\"></div>\n<p style=\"font-size:20px\"><b>SYSTEM METRICS</b></p>",
+				"mode": "html"
+			},
+			"pluginVersion": "10.1.1",
+			"targets": [
+				{
+					"datasource": {
+						"type": "datasource",
+						"uid": "grafana"
+					},
+					"refId": "A"
+				}
+			],
+			"type": "text"
+		},
+		{
+			"datasource": {
+				"type": "influxdb",
+				"uid": "1BR0XgHVz"
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 12,
+				"y": 74
+			},
+			"id": 32,
+			"options": {
+				"folderId": 44,
+				"includeVars": false,
+				"keepTime": false,
+				"maxItems": 50,
+				"query": "",
+				"showHeadings": false,
+				"showRecentlyViewed": false,
+				"showSearch": true,
+				"showStarred": false,
+				"tags": []
+			},
+			"pluginVersion": "10.1.1",
+			"title": "SYSTEMS MONITORING DASHBOARDS",
+			"type": "dashlist"
+		}
+	],
+	"refresh": "",
+	"schemaVersion": 38,
+	"style": "dark",
+	"tags": [],
+	"templating": {
+		"list": []
+	},
+	"time": {
+		"from": "now-24h",
+		"to": "now"
+	},
+	"timepicker": {
+		"hidden": true
+	},
+	"timezone": "",
+	"title": "LANDING",
+	"uid": "ac713b63-7aea-4f5f-9bf6-8eea064112db",
+	"version": 15,
+	"weekStart": ""
 }
