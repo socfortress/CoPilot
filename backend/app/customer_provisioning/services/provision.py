@@ -1,16 +1,15 @@
 import json
 from datetime import datetime
-from loguru import logger
 
+from loguru import logger
 
 from app.connectors.graylog.utils.universal import send_post_request
 from app.customer_provisioning.schema.provision import GraylogIndexSetCreationResponse
 from app.customer_provisioning.schema.provision import ProvisionNewCustomer
 from app.customer_provisioning.schema.provision import TimeBasedIndexSet
 
+
 # ! GRAYLOG PROVISIONING ! #
-
-
 # Function to create index set configuration
 def build_index_set_config(request: ProvisionNewCustomer) -> TimeBasedIndexSet:
     return TimeBasedIndexSet(

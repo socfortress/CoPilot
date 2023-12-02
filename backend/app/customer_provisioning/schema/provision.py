@@ -13,7 +13,9 @@ from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
 class ProvisionNewCustomer(BaseModel):
     customer_name: str = Field(..., example="SOC Fortress", description="Name of the customer")
     customer_code: str = Field(
-        ..., example="SOCF", description="Code of the customer. Referenced in Wazuh Agent Label, Graylog Stream, etc.",
+        ...,
+        example="SOCF",
+        description="Code of the customer. Referenced in Wazuh Agent Label, Graylog Stream, etc.",
     )
     customer_index_name: str = Field(..., example="socf", description="Index prefix for the customer's Graylog instance")
     customer_grafana_org_name: str = Field(..., example="SOCFortress", description="Name of the customer's Grafana organization")
