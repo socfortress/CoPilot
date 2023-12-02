@@ -44,7 +44,7 @@
     {
       "datasource": {
         "type": "elasticsearch",
-        "uid": "e5bf98eb-3cc2-4f18-954f-05244e0dd577"
+        "uid": "wazuh_datasource_uid"
       },
       "fieldConfig": {
         "defaults": {
@@ -95,7 +95,7 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "10.1.1",
+      "pluginVersion": "10.0.2",
       "targets": [
         {
           "bucketAggs": [
@@ -128,7 +128,7 @@
     {
       "datasource": {
         "type": "elasticsearch",
-        "uid": "e5bf98eb-3cc2-4f18-954f-05244e0dd577"
+        "uid": "wazuh_datasource_uid"
       },
       "fieldConfig": {
         "defaults": {
@@ -241,7 +241,7 @@
                   {
                     "targetBlank": true,
                     "title": "VIEW EVENTS",
-                    "url": "https://grafana.accsoc.local/explore?left=%5B%22now-1h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22agent_name:${__value.text}%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D"
+                    "url": "https://grafana.company.local/explore?left=%5B%22now-1h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22agent_name:${__value.text}%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D"
                   }
                 ]
               }
@@ -291,7 +291,7 @@
         },
         "showHeader": true
       },
-      "pluginVersion": "10.1.1",
+      "pluginVersion": "10.0.2",
       "targets": [
         {
           "bucketAggs": [
@@ -334,7 +334,7 @@
     {
       "datasource": {
         "type": "elasticsearch",
-        "uid": "e5bf98eb-3cc2-4f18-954f-05244e0dd577"
+        "uid": "wazuh_datasource_uid"
       },
       "gridPos": {
         "h": 14,
@@ -359,7 +359,7 @@
           "bucketAggs": [],
           "datasource": {
             "type": "elasticsearch",
-            "uid": "e5bf98eb-3cc2-4f18-954f-05244e0dd577"
+            "uid": "wazuh_datasource_uid"
           },
           "metrics": [
             {
@@ -416,7 +416,7 @@
     {
       "datasource": {
         "type": "elasticsearch",
-        "uid": "e5bf98eb-3cc2-4f18-954f-05244e0dd577"
+        "uid": "wazuh_datasource_uid"
       },
       "fieldConfig": {
         "defaults": {
@@ -478,7 +478,7 @@
         "showThresholdMarkers": true,
         "text": {}
       },
-      "pluginVersion": "10.1.1",
+      "pluginVersion": "10.0.2",
       "targets": [
         {
           "bucketAggs": [
@@ -513,7 +513,7 @@
     {
       "datasource": {
         "type": "elasticsearch",
-        "uid": "e5bf98eb-3cc2-4f18-954f-05244e0dd577"
+        "uid": "wazuh_datasource_uid"
       },
       "fieldConfig": {
         "defaults": {
@@ -649,7 +649,7 @@
         },
         "showHeader": true
       },
-      "pluginVersion": "10.1.1",
+      "pluginVersion": "10.0.2",
       "targets": [
         {
           "bucketAggs": [
@@ -692,7 +692,7 @@
     {
       "datasource": {
         "type": "elasticsearch",
-        "uid": "e5bf98eb-3cc2-4f18-954f-05244e0dd577"
+        "uid": "wazuh_datasource_uid"
       },
       "fieldConfig": {
         "defaults": {
@@ -744,7 +744,7 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "10.1.1",
+      "pluginVersion": "10.0.2",
       "targets": [
         {
           "bucketAggs": [
@@ -781,7 +781,7 @@
     {
       "datasource": {
         "type": "elasticsearch",
-        "uid": "e5bf98eb-3cc2-4f18-954f-05244e0dd577"
+        "uid": "wazuh_datasource_uid"
       },
       "fieldConfig": {
         "defaults": {
@@ -802,7 +802,6 @@
               "tooltip": false,
               "viz": false
             },
-            "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 1,
             "pointSize": 5,
@@ -881,7 +880,7 @@
           ],
           "datasource": {
             "type": "elasticsearch",
-            "uid": "e5bf98eb-3cc2-4f18-954f-05244e0dd577"
+            "uid": "wazuh_datasource_uid"
           },
           "metrics": [
             {
@@ -901,7 +900,7 @@
     {
       "datasource": {
         "type": "elasticsearch",
-        "uid": "e5bf98eb-3cc2-4f18-954f-05244e0dd577"
+        "uid": "wazuh_datasource_uid"
       },
       "fieldConfig": {
         "defaults": {
@@ -952,7 +951,7 @@
         "text": {},
         "textMode": "auto"
       },
-      "pluginVersion": "10.1.1",
+      "pluginVersion": "10.0.2",
       "targets": [
         {
           "bucketAggs": [
@@ -987,7 +986,7 @@
     {
       "datasource": {
         "type": "elasticsearch",
-        "uid": "e5bf98eb-3cc2-4f18-954f-05244e0dd577"
+        "uid": "wazuh_datasource_uid"
       },
       "fieldConfig": {
         "defaults": {
@@ -1242,7 +1241,7 @@
     {
       "datasource": {
         "type": "elasticsearch",
-        "uid": "e5bf98eb-3cc2-4f18-954f-05244e0dd577"
+        "uid": "wazuh_datasource_uid"
       },
       "fieldConfig": {
         "defaults": {
@@ -1263,7 +1262,6 @@
               "tooltip": false,
               "viz": false
             },
-            "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 1,
             "pointSize": 5,
@@ -1342,7 +1340,7 @@
           ],
           "datasource": {
             "type": "elasticsearch",
-            "uid": "e5bf98eb-3cc2-4f18-954f-05244e0dd577"
+            "uid": "wazuh_datasource_uid"
           },
           "metrics": [
             {
@@ -1361,7 +1359,7 @@
     {
       "datasource": {
         "type": "elasticsearch",
-        "uid": "e5bf98eb-3cc2-4f18-954f-05244e0dd577"
+        "uid": "wazuh_datasource_uid"
       },
       "fieldConfig": {
         "defaults": {
@@ -1805,7 +1803,7 @@
                   {
                     "targetBlank": true,
                     "title": "VIEW EVENTS",
-                    "url": "https://grafana.accsoc.local/explore?left=%5B%22now-1h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22rule_groups:${__value.raw}%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D"
+                    "url": "https://grafana.company.local/explore?left=%5B%22now-1h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22rule_groups:${__value.raw}%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D"
                   }
                 ]
               }
@@ -1846,7 +1844,7 @@
         "showHeader": true,
         "sortBy": []
       },
-      "pluginVersion": "10.1.1",
+      "pluginVersion": "10.0.2",
       "targets": [
         {
           "bucketAggs": [
@@ -1892,7 +1890,7 @@
     {
       "datasource": {
         "type": "elasticsearch",
-        "uid": "e5bf98eb-3cc2-4f18-954f-05244e0dd577"
+        "uid": "wazuh_datasource_uid"
       },
       "fieldConfig": {
         "defaults": {
@@ -1913,7 +1911,6 @@
               "tooltip": false,
               "viz": false
             },
-            "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 1,
             "pointSize": 5,
@@ -1992,7 +1989,7 @@
           ],
           "datasource": {
             "type": "elasticsearch",
-            "uid": "e5bf98eb-3cc2-4f18-954f-05244e0dd577"
+            "uid": "wazuh_datasource_uid"
           },
           "metrics": [
             {
@@ -2012,7 +2009,7 @@
     {
       "datasource": {
         "type": "elasticsearch",
-        "uid": "e5bf98eb-3cc2-4f18-954f-05244e0dd577"
+        "uid": "wazuh_datasource_uid"
       },
       "fieldConfig": {
         "defaults": {
@@ -2032,8 +2029,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -2142,8 +2138,7 @@
                   "mode": "absolute",
                   "steps": [
                     {
-                      "color": "#37872D",
-                      "value": null
+                      "color": "#37872D"
                     },
                     {
                       "color": "rgba(237, 129, 40, 0.89)",
@@ -2277,7 +2272,7 @@
                   {
                     "targetBlank": true,
                     "title": "VIEW EVENT DETAILS",
-                    "url": "https://grafana.accsoc.local/explore?left=%7B%22datasource%22:%22WAZUH%22,%22queries%22:%5B%7B%22refId%22:%22A%22,%22query%22:%22_id:${__value.text}%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D,%22range%22:%7B%22from%22:%22now-6h%22,%22to%22:%22now%22%7D%7D"
+                    "url": "https://grafana.company.local/explore?left=%7B%22datasource%22:%22WAZUH%22,%22queries%22:%5B%7B%22refId%22:%22A%22,%22query%22:%22_id:${__value.text}%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D,%22range%22:%7B%22from%22:%22now-6h%22,%22to%22:%22now%22%7D%7D"
                   }
                 ]
               }
@@ -2310,13 +2305,13 @@
           }
         ]
       },
-      "pluginVersion": "10.1.1",
+      "pluginVersion": "10.0.2",
       "targets": [
         {
           "bucketAggs": [],
           "datasource": {
             "type": "elasticsearch",
-            "uid": "e5bf98eb-3cc2-4f18-954f-05244e0dd577"
+            "uid": "wazuh_datasource_uid"
           },
           "metrics": [
             {
@@ -2842,7 +2837,7 @@
       {
         "datasource": {
           "type": "elasticsearch",
-          "uid": "e5bf98eb-3cc2-4f18-954f-05244e0dd577"
+          "uid": "wazuh_datasource_uid"
         },
         "filters": [],
         "hide": 0,
@@ -2859,7 +2854,7 @@
         },
         "datasource": {
           "type": "elasticsearch",
-          "uid": "e5bf98eb-3cc2-4f18-954f-05244e0dd577"
+          "uid": "wazuh_datasource_uid"
         },
         "definition": "{ \"find\": \"terms\", \"field\": \"agent_name\", \"query\": \"\"}",
         "hide": 0,
@@ -2886,7 +2881,7 @@
         },
         "datasource": {
           "type": "elasticsearch",
-          "uid": "e5bf98eb-3cc2-4f18-954f-05244e0dd577"
+          "uid": "wazuh_datasource_uid"
         },
         "definition": "{ \"find\": \"terms\", \"field\": \"rule_level\", \"query\": \"\"}",
         "hide": 0,
@@ -2935,7 +2930,6 @@
   },
   "timezone": "",
   "title": "EDR - _SUMMARY",
-  "uid": null,
-  "version": 1,
-  "weekStart": ""
+  "weekStart": "",
+  "uid": null
 }
