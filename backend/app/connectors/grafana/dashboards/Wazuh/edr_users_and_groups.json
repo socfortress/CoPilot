@@ -1,0 +1,2584 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "datasource",
+          "uid": "grafana"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "target": {
+          "limit": 100,
+          "matchAny": false,
+          "tags": [],
+          "type": "dashboard"
+        },
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": false,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "iteration": 1658194437162,
+  "links": [
+    {
+      "asDropdown": true,
+      "icon": "external link",
+      "includeVars": true,
+      "keepTime": true,
+      "tags": [
+        "EDR"
+      ],
+      "targetBlank": true,
+      "title": "",
+      "type": "dashboards"
+    }
+  ],
+  "liveNow": false,
+  "panels": [
+    {
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 135,
+      "title": "USER ACCOUNTS",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "elasticsearch",
+        "uid": "wazuh_datasource_uid"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "links": [],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 0,
+        "y": 1
+      },
+      "id": 121,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.0.0",
+      "targets": [
+        {
+          "alias": "",
+          "bucketAggs": [
+            {
+              "field": "timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto"
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "datasource": {
+            "type": "elasticsearch",
+            "uid": "wazuh_datasource_uid"
+          },
+          "metrics": [
+            {
+              "id": "1",
+              "type": "count"
+            }
+          ],
+          "query": "data_win_system_eventID:4720",
+          "refId": "A",
+          "timeField": "timestamp"
+        }
+      ],
+      "title": "ACCOUNTS CREATED",
+      "transparent": true,
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "elasticsearch",
+        "uid": "wazuh_datasource_uid"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto",
+            "inspect": false
+          },
+          "links": [],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "ACCOUNT"
+            },
+            "properties": [
+              {
+                "id": "custom.displayMode",
+                "value": "color-text"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Count"
+            },
+            "properties": [
+              {
+                "id": "custom.displayMode",
+                "value": "color-text"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 5,
+        "x": 3,
+        "y": 1
+      },
+      "id": 125,
+      "options": {
+        "footer": {
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "9.0.0",
+      "targets": [
+        {
+          "alias": "",
+          "bucketAggs": [
+            {
+              "field": "data_win_eventdata_targetUserName",
+              "id": "2",
+              "settings": {
+                "min_doc_count": "1",
+                "order": "desc",
+                "orderBy": "_count",
+                "size": "10"
+              },
+              "type": "terms"
+            }
+          ],
+          "datasource": {
+            "type": "elasticsearch",
+            "uid": "wazuh_datasource_uid"
+          },
+          "metrics": [
+            {
+              "id": "1",
+              "type": "count"
+            }
+          ],
+          "query": "data_win_system_eventID:4720",
+          "refId": "A",
+          "timeField": "timestamp"
+        }
+      ],
+      "title": "ACCOUNTS CREATED",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {},
+            "renameByName": {
+              "data_win_eventdata_subjectUserName": "ACCOUNT",
+              "data_win_eventdata_targetUserName": "ACCOUNT"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "elasticsearch",
+        "uid": "wazuh_datasource_uid"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "links": [],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "orange",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 8,
+        "y": 1
+      },
+      "id": 132,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.0.0",
+      "targets": [
+        {
+          "alias": "",
+          "bucketAggs": [
+            {
+              "field": "timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto"
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "datasource": {
+            "type": "elasticsearch",
+            "uid": "wazuh_datasource_uid"
+          },
+          "metrics": [
+            {
+              "id": "1",
+              "type": "count"
+            }
+          ],
+          "query": "data_win_system_eventID:4740",
+          "refId": "A",
+          "timeField": "timestamp"
+        }
+      ],
+      "title": "ACCOUNTS LOCKED OUT",
+      "transparent": true,
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "elasticsearch",
+        "uid": "wazuh_datasource_uid"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto",
+            "inspect": false
+          },
+          "links": [],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "orange",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "ACCOUNT"
+            },
+            "properties": [
+              {
+                "id": "custom.displayMode",
+                "value": "color-text"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Count"
+            },
+            "properties": [
+              {
+                "id": "custom.displayMode",
+                "value": "color-text"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 5,
+        "x": 11,
+        "y": 1
+      },
+      "id": 133,
+      "options": {
+        "footer": {
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "9.0.0",
+      "targets": [
+        {
+          "alias": "",
+          "bucketAggs": [
+            {
+              "field": "data_win_eventdata_targetUserName",
+              "id": "2",
+              "settings": {
+                "min_doc_count": "1",
+                "order": "desc",
+                "orderBy": "_count",
+                "size": "10"
+              },
+              "type": "terms"
+            }
+          ],
+          "datasource": {
+            "type": "elasticsearch",
+            "uid": "wazuh_datasource_uid"
+          },
+          "metrics": [
+            {
+              "id": "1",
+              "type": "count"
+            }
+          ],
+          "query": "data_win_system_eventID:4740",
+          "refId": "A",
+          "timeField": "timestamp"
+        }
+      ],
+      "title": "ACCOUNTS LOCKED OUT",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {},
+            "renameByName": {
+              "data_win_eventdata_subjectUserName": "ACCOUNT",
+              "data_win_eventdata_targetUserName": "ACCOUNT"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "elasticsearch",
+        "uid": "wazuh_datasource_uid"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "links": [],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "orange",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 16,
+        "y": 1
+      },
+      "id": 127,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.0.0",
+      "targets": [
+        {
+          "alias": "",
+          "bucketAggs": [
+            {
+              "field": "timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto"
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "datasource": {
+            "type": "elasticsearch",
+            "uid": "wazuh_datasource_uid"
+          },
+          "metrics": [
+            {
+              "id": "1",
+              "type": "count"
+            }
+          ],
+          "query": "data_win_system_eventID:4723",
+          "refId": "A",
+          "timeField": "timestamp"
+        }
+      ],
+      "title": "ACCOUNT PASSWORD CHANGES",
+      "transparent": true,
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "elasticsearch",
+        "uid": "wazuh_datasource_uid"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto",
+            "inspect": false
+          },
+          "links": [],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "orange",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "ACCOUNT"
+            },
+            "properties": [
+              {
+                "id": "custom.displayMode",
+                "value": "color-text"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Count"
+            },
+            "properties": [
+              {
+                "id": "custom.displayMode",
+                "value": "color-text"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 5,
+        "x": 19,
+        "y": 1
+      },
+      "id": 129,
+      "options": {
+        "footer": {
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "9.0.0",
+      "targets": [
+        {
+          "alias": "",
+          "bucketAggs": [
+            {
+              "field": "data_win_eventdata_subjectUserName",
+              "id": "2",
+              "settings": {
+                "min_doc_count": "1",
+                "order": "desc",
+                "orderBy": "_term",
+                "size": "10"
+              },
+              "type": "terms"
+            }
+          ],
+          "datasource": {
+            "type": "elasticsearch",
+            "uid": "wazuh_datasource_uid"
+          },
+          "metrics": [
+            {
+              "id": "1",
+              "type": "count"
+            }
+          ],
+          "query": "data_win_system_eventID:4723",
+          "refId": "A",
+          "timeField": "timestamp"
+        }
+      ],
+      "title": "ACCOUNT PASSWORD CHANGES",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {},
+            "renameByName": {
+              "data_win_eventdata_subjectUserName": "ACCOUNT"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "elasticsearch",
+        "uid": "wazuh_datasource_uid"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "links": [],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "orange",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 0,
+        "y": 6
+      },
+      "id": 136,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.0.0",
+      "targets": [
+        {
+          "alias": "",
+          "bucketAggs": [
+            {
+              "field": "timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto"
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "datasource": {
+            "type": "elasticsearch",
+            "uid": "wazuh_datasource_uid"
+          },
+          "metrics": [
+            {
+              "id": "1",
+              "type": "count"
+            }
+          ],
+          "query": "data_win_system_eventID:4738",
+          "refId": "A",
+          "timeField": "timestamp"
+        }
+      ],
+      "title": "ACCOUNTS MODIFIED",
+      "transparent": true,
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "elasticsearch",
+        "uid": "wazuh_datasource_uid"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto",
+            "inspect": false
+          },
+          "links": [],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "orange",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "ACCOUNT"
+            },
+            "properties": [
+              {
+                "id": "custom.displayMode",
+                "value": "color-text"
+              },
+              {
+                "id": "custom.width",
+                "value": 269
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Count"
+            },
+            "properties": [
+              {
+                "id": "custom.displayMode",
+                "value": "color-text"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 5,
+        "x": 3,
+        "y": 6
+      },
+      "id": 137,
+      "options": {
+        "footer": {
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "9.0.0",
+      "targets": [
+        {
+          "alias": "",
+          "bucketAggs": [
+            {
+              "field": "data_win_eventdata_targetUserName",
+              "id": "2",
+              "settings": {
+                "min_doc_count": "1",
+                "order": "desc",
+                "orderBy": "_count",
+                "size": "10"
+              },
+              "type": "terms"
+            }
+          ],
+          "datasource": {
+            "type": "elasticsearch",
+            "uid": "wazuh_datasource_uid"
+          },
+          "metrics": [
+            {
+              "id": "1",
+              "type": "count"
+            }
+          ],
+          "query": "data_win_system_eventID:4738",
+          "refId": "A",
+          "timeField": "timestamp"
+        }
+      ],
+      "title": "ACCOUNTS MODIFIED",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {},
+            "renameByName": {
+              "data_win_eventdata_subjectUserName": "ACCOUNT",
+              "data_win_eventdata_targetUserName": "ACCOUNT"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "elasticsearch",
+        "uid": "wazuh_datasource_uid"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "links": [],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "orange",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 8,
+        "y": 6
+      },
+      "id": 131,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "9.0.0",
+      "targets": [
+        {
+          "alias": "",
+          "bucketAggs": [
+            {
+              "field": "timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto"
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "datasource": {
+            "type": "elasticsearch",
+            "uid": "wazuh_datasource_uid"
+          },
+          "metrics": [
+            {
+              "id": "1",
+              "type": "count"
+            }
+          ],
+          "query": "(data_win_system_eventID:4728 OR data_win_system_eventID:4732 OR data_win_system_eventID:4756) AND _exists_:data_win_eventdata_memberName",
+          "refId": "A",
+          "timeField": "timestamp"
+        }
+      ],
+      "title": "ACCOUNTS ADDED TO PRIVILEGE GROUP",
+      "transparent": true,
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "elasticsearch",
+        "uid": "wazuh_datasource_uid"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto",
+            "inspect": false
+          },
+          "links": [],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "orange",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "ACCOUNT"
+            },
+            "properties": [
+              {
+                "id": "custom.displayMode",
+                "value": "color-text"
+              },
+              {
+                "id": "custom.width",
+                "value": 462
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Count"
+            },
+            "properties": [
+              {
+                "id": "custom.displayMode",
+                "value": "color-text"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AD GROUP"
+            },
+            "properties": [
+              {
+                "id": "custom.displayMode",
+                "value": "color-text"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 12,
+        "y": 6
+      },
+      "id": 138,
+      "options": {
+        "footer": {
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "9.0.0",
+      "targets": [
+        {
+          "alias": "",
+          "bucketAggs": [
+            {
+              "field": "data_win_eventdata_targetUserName",
+              "id": "2",
+              "settings": {
+                "min_doc_count": "1",
+                "order": "desc",
+                "orderBy": "_count",
+                "size": "0"
+              },
+              "type": "terms"
+            },
+            {
+              "field": "data_win_eventdata_memberName",
+              "id": "3",
+              "settings": {
+                "min_doc_count": "1",
+                "order": "desc",
+                "orderBy": "_term",
+                "size": "0"
+              },
+              "type": "terms"
+            }
+          ],
+          "datasource": {
+            "type": "elasticsearch",
+            "uid": "wazuh_datasource_uid"
+          },
+          "metrics": [
+            {
+              "id": "1",
+              "type": "count"
+            }
+          ],
+          "query": "data_win_system_eventID:4728 OR data_win_system_eventID:4732 OR data_win_system_eventID:4756",
+          "refId": "A",
+          "timeField": "timestamp"
+        }
+      ],
+      "title": "ACCOUNTS ADDED TO PRIVILEGE GROUP",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {},
+            "renameByName": {
+              "data_win_eventdata_memberName": "ACCOUNT",
+              "data_win_eventdata_subjectUserName": "ACCOUNT",
+              "data_win_eventdata_targetUserName": "AD GROUP"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "elasticsearch",
+        "uid": "wazuh_datasource_uid"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto",
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "rule_level"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 93
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "windows_event_id"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 186
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "DATE/TIME"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 202
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AGENT"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 171
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SRC IP"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 167
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "MESSAGE"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 1622
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "rule_description"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 524
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "EVENT ID"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": true,
+                    "title": "VIEW EVENT DETAILS",
+                    "url": "https://grafana.company.local/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22_id:${__value.text}%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 11
+      },
+      "id": 148,
+      "options": {
+        "footer": {
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "9.0.0",
+      "targets": [
+        {
+          "alias": "",
+          "bucketAggs": [],
+          "datasource": {
+            "type": "elasticsearch",
+            "uid": "wazuh_datasource_uid"
+          },
+          "metrics": [
+            {
+              "id": "1",
+              "settings": {
+                "size": "500"
+              },
+              "type": "raw_data"
+            }
+          ],
+          "query": "(data_win_system_eventID:4720 OR data_win_system_eventID:4740 OR data_win_system_eventID:4738 OR data_win_system_eventID:4723 OR data_win_system_eventID:4728 OR data_win_system_eventID:4732 OR data_win_system_eventID:4756) AND agent_name:$agent_name",
+          "queryType": "lucene",
+          "refId": "A",
+          "timeField": "timestamp"
+        }
+      ],
+      "title": "USER ACCOUNTS - EVENTS",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "@metadata_beat": true,
+              "@metadata_type": true,
+              "@metadata_version": true,
+              "_id": false,
+              "_index": true,
+              "_type": true,
+              "agent_ephemeral_id": true,
+              "agent_hostname": true,
+              "agent_id": true,
+              "agent_ip": false,
+              "agent_ip_city_name": true,
+              "agent_ip_country_code": true,
+              "agent_ip_geolocation": true,
+              "agent_labels_customer": true,
+              "agent_name": false,
+              "agent_type": true,
+              "agent_version": true,
+              "beats_type": true,
+              "cluster_name": true,
+              "cluster_node": true,
+              "collector_node_id": true,
+              "data_win_eventXML_binaryData": true,
+              "data_win_eventXML_binaryDataSize": true,
+              "data_win_eventXML_param1": true,
+              "data_win_eventdata_accessMask": true,
+              "data_win_eventdata_authenticationPackageName": true,
+              "data_win_eventdata_binary": true,
+              "data_win_eventdata_data": true,
+              "data_win_eventdata_domain": true,
+              "data_win_eventdata_elevatedToken": true,
+              "data_win_eventdata_failureReason": true,
+              "data_win_eventdata_handleId": true,
+              "data_win_eventdata_imagePath": true,
+              "data_win_eventdata_impersonationLevel": true,
+              "data_win_eventdata_ipAddress": true,
+              "data_win_eventdata_ipPort": true,
+              "data_win_eventdata_keyLength": true,
+              "data_win_eventdata_lmPackageName": true,
+              "data_win_eventdata_logonGuid": true,
+              "data_win_eventdata_logonProcessName": true,
+              "data_win_eventdata_logonType": true,
+              "data_win_eventdata_memberName": true,
+              "data_win_eventdata_memberSid": true,
+              "data_win_eventdata_objectServer": true,
+              "data_win_eventdata_packageName": true,
+              "data_win_eventdata_passwordLastSet": true,
+              "data_win_eventdata_privilegeList": true,
+              "data_win_eventdata_processId": true,
+              "data_win_eventdata_processName": true,
+              "data_win_eventdata_restrictedAdminMode": true,
+              "data_win_eventdata_sID": true,
+              "data_win_eventdata_serviceName": true,
+              "data_win_eventdata_serviceSid": true,
+              "data_win_eventdata_serviceType": true,
+              "data_win_eventdata_startType": true,
+              "data_win_eventdata_status": true,
+              "data_win_eventdata_subStatus": true,
+              "data_win_eventdata_subjectDomainName": true,
+              "data_win_eventdata_subjectLogonId": true,
+              "data_win_eventdata_subjectUserName": true,
+              "data_win_eventdata_subjectUserSid": true,
+              "data_win_eventdata_targetDomainName": true,
+              "data_win_eventdata_targetLinkedLogonId": true,
+              "data_win_eventdata_targetLogonId": true,
+              "data_win_eventdata_targetSid": true,
+              "data_win_eventdata_targetUserName": true,
+              "data_win_eventdata_targetUserSid": true,
+              "data_win_eventdata_ticketEncryptionType": true,
+              "data_win_eventdata_ticketOptions": true,
+              "data_win_eventdata_user": true,
+              "data_win_eventdata_virtualAccount": true,
+              "data_win_eventdata_workstation": true,
+              "data_win_eventdata_workstationName": true,
+              "data_win_system_channel": true,
+              "data_win_system_computer": true,
+              "data_win_system_eventID": true,
+              "data_win_system_eventRecordID": true,
+              "data_win_system_eventSourceName": true,
+              "data_win_system_keywords": true,
+              "data_win_system_level": true,
+              "data_win_system_opcode": true,
+              "data_win_system_processID": true,
+              "data_win_system_providerGuid": true,
+              "data_win_system_providerName": true,
+              "data_win_system_severityValue": true,
+              "data_win_system_systemTime": true,
+              "data_win_system_task": true,
+              "data_win_system_threadID": true,
+              "data_win_system_version": true,
+              "decoder_name": true,
+              "ecs_version": true,
+              "gl2_accounted_message_size": true,
+              "gl2_message_id": true,
+              "gl2_processing_error": true,
+              "gl2_remote_ip": true,
+              "gl2_remote_port": true,
+              "gl2_source_collector": true,
+              "gl2_source_input": true,
+              "gl2_source_node": true,
+              "highlight": true,
+              "host_name": true,
+              "id": true,
+              "location": true,
+              "log_file_path": true,
+              "log_offset": true,
+              "manager_name": true,
+              "message": true,
+              "previous_output": true,
+              "process_id": true,
+              "rule_description": true,
+              "rule_firedtimes": true,
+              "rule_frequency": true,
+              "rule_gdpr": true,
+              "rule_gpg13": true,
+              "rule_group1": true,
+              "rule_group2": true,
+              "rule_group3": true,
+              "rule_groups": true,
+              "rule_hipaa": true,
+              "rule_id": true,
+              "rule_mail": true,
+              "rule_mitre_id": true,
+              "rule_mitre_tactic": true,
+              "rule_mitre_technique": true,
+              "rule_nist_800_53": true,
+              "rule_pci_dss": true,
+              "rule_tsc": true,
+              "sort": true,
+              "source": true,
+              "src_ip": true,
+              "src_ip_city_name": true,
+              "src_ip_country_code": true,
+              "src_ip_geolocation": true,
+              "streams": true,
+              "syslog_tag": true,
+              "syslog_type": true,
+              "timestamp": false,
+              "true": true,
+              "user_name": true,
+              "win_system_eventID": true,
+              "windows_auth_package": true,
+              "windows_domain": true,
+              "windows_event_id": true,
+              "windows_event_severity": false,
+              "windows_logon_type": true
+            },
+            "indexByName": {
+              "_id": 1,
+              "_index": 3,
+              "_type": 4,
+              "agent_id": 5,
+              "agent_ip": 6,
+              "agent_ip_city_name": 7,
+              "agent_ip_country_code": 8,
+              "agent_ip_geolocation": 9,
+              "agent_labels_customer": 54,
+              "agent_name": 2,
+              "data_win_eventdata_authenticationPackageName": 55,
+              "data_win_eventdata_elevatedToken": 56,
+              "data_win_eventdata_impersonationLevel": 57,
+              "data_win_eventdata_ipAddress": 58,
+              "data_win_eventdata_ipPort": 59,
+              "data_win_eventdata_keyLength": 60,
+              "data_win_eventdata_logonGuid": 61,
+              "data_win_eventdata_logonProcessName": 62,
+              "data_win_eventdata_logonType": 63,
+              "data_win_eventdata_processId": 64,
+              "data_win_eventdata_processName": 65,
+              "data_win_eventdata_serviceName": 66,
+              "data_win_eventdata_serviceSid": 67,
+              "data_win_eventdata_status": 68,
+              "data_win_eventdata_subjectDomainName": 69,
+              "data_win_eventdata_subjectLogonId": 70,
+              "data_win_eventdata_subjectUserName": 71,
+              "data_win_eventdata_subjectUserSid": 72,
+              "data_win_eventdata_targetDomainName": 73,
+              "data_win_eventdata_targetLinkedLogonId": 74,
+              "data_win_eventdata_targetLogonId": 75,
+              "data_win_eventdata_targetUserName": 76,
+              "data_win_eventdata_targetUserSid": 77,
+              "data_win_eventdata_ticketEncryptionType": 78,
+              "data_win_eventdata_ticketOptions": 79,
+              "data_win_eventdata_virtualAccount": 80,
+              "data_win_system_channel": 10,
+              "data_win_system_computer": 11,
+              "data_win_system_eventID": 12,
+              "data_win_system_eventRecordID": 13,
+              "data_win_system_keywords": 14,
+              "data_win_system_level": 15,
+              "data_win_system_message": 16,
+              "data_win_system_opcode": 17,
+              "data_win_system_processID": 18,
+              "data_win_system_providerGuid": 19,
+              "data_win_system_providerName": 20,
+              "data_win_system_severityValue": 21,
+              "data_win_system_systemTime": 22,
+              "data_win_system_task": 23,
+              "data_win_system_threadID": 24,
+              "data_win_system_version": 25,
+              "decoder_name": 26,
+              "gl2_accounted_message_size": 27,
+              "gl2_message_id": 28,
+              "gl2_processing_error": 81,
+              "gl2_remote_ip": 29,
+              "gl2_remote_port": 30,
+              "gl2_source_input": 31,
+              "gl2_source_node": 32,
+              "highlight": 33,
+              "id": 34,
+              "location": 35,
+              "manager_name": 36,
+              "message": 37,
+              "rule_description": 38,
+              "rule_firedtimes": 39,
+              "rule_gdpr": 40,
+              "rule_gpg13": 41,
+              "rule_group1": 82,
+              "rule_group2": 83,
+              "rule_group3": 84,
+              "rule_groups": 42,
+              "rule_hipaa": 43,
+              "rule_id": 44,
+              "rule_level": 45,
+              "rule_mail": 46,
+              "rule_mitre_id": 85,
+              "rule_mitre_tactic": 86,
+              "rule_mitre_technique": 87,
+              "rule_nist_800_53": 47,
+              "rule_pci_dss": 48,
+              "rule_tsc": 49,
+              "sort": 50,
+              "source": 51,
+              "streams": 52,
+              "syslog_level": 88,
+              "syslog_type": 53,
+              "timestamp": 0,
+              "true": 89
+            },
+            "renameByName": {
+              "_id": "EVENT ID",
+              "agent_ip": "SRC IP",
+              "agent_name": "AGENT",
+              "data_win_system_message": "MESSAGE",
+              "data_win_system_providerGuid": "",
+              "rule_level": "RULE LEVEL",
+              "syslog_level": "LEVEL",
+              "timestamp": "DATE/TIME",
+              "windows_event_severity": "EVENT LOG SEVERITY"
+            }
+          }
+        }
+      ],
+      "transparent": true,
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 21
+      },
+      "id": 140,
+      "panels": [],
+      "title": "USER GROUPS",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "elasticsearch",
+        "uid": "wazuh_datasource_uid"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 3,
+        "x": 0,
+        "y": 22
+      },
+      "id": 142,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "8.5.1",
+      "targets": [
+        {
+          "alias": "",
+          "bucketAggs": [
+            {
+              "field": "timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto"
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "datasource": {
+            "type": "elasticsearch",
+            "uid": "wazuh_datasource_uid"
+          },
+          "metrics": [
+            {
+              "id": "1",
+              "type": "count"
+            }
+          ],
+          "query": "data_win_system_eventID:4727",
+          "refId": "A",
+          "timeField": "timestamp"
+        }
+      ],
+      "title": "GROUPS CREATED",
+      "transparent": true,
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "elasticsearch",
+        "uid": "wazuh_datasource_uid"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto",
+            "inspect": false
+          },
+          "links": [],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue"
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "ACCOUNT"
+            },
+            "properties": [
+              {
+                "id": "custom.displayMode",
+                "value": "color-text"
+              },
+              {
+                "id": "custom.width",
+                "value": 269
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Count"
+            },
+            "properties": [
+              {
+                "id": "custom.displayMode",
+                "value": "color-text"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 5,
+        "x": 3,
+        "y": 22
+      },
+      "id": 144,
+      "options": {
+        "footer": {
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "8.5.1",
+      "targets": [
+        {
+          "alias": "",
+          "bucketAggs": [
+            {
+              "field": "data_win_eventdata_targetUserName",
+              "id": "2",
+              "settings": {
+                "min_doc_count": "1",
+                "order": "desc",
+                "orderBy": "_count",
+                "size": "10"
+              },
+              "type": "terms"
+            }
+          ],
+          "datasource": {
+            "type": "elasticsearch",
+            "uid": "wazuh_datasource_uid"
+          },
+          "metrics": [
+            {
+              "id": "1",
+              "type": "count"
+            }
+          ],
+          "query": "data_win_system_eventID:4727",
+          "refId": "A",
+          "timeField": "timestamp"
+        }
+      ],
+      "title": "GROUPS ADDED",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {},
+            "renameByName": {
+              "data_win_eventdata_subjectUserName": "ACCOUNT",
+              "data_win_eventdata_targetUserName": "ACCOUNT"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "elasticsearch",
+        "uid": "wazuh_datasource_uid"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "links": [],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "orange"
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 4,
+        "x": 8,
+        "y": 22
+      },
+      "id": 143,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "8.5.1",
+      "targets": [
+        {
+          "alias": "",
+          "bucketAggs": [
+            {
+              "field": "timestamp",
+              "id": "2",
+              "settings": {
+                "interval": "auto"
+              },
+              "type": "date_histogram"
+            }
+          ],
+          "datasource": {
+            "type": "elasticsearch",
+            "uid": "wazuh_datasource_uid"
+          },
+          "metrics": [
+            {
+              "id": "1",
+              "type": "count"
+            }
+          ],
+          "query": "data_win_system_eventID:4764",
+          "refId": "A",
+          "timeField": "timestamp"
+        }
+      ],
+      "title": "GROUPS MODIFIED",
+      "transparent": true,
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "elasticsearch",
+        "uid": "wazuh_datasource_uid"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto",
+            "inspect": false
+          },
+          "links": [],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "orange"
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "ACCOUNT"
+            },
+            "properties": [
+              {
+                "id": "custom.displayMode",
+                "value": "color-text"
+              },
+              {
+                "id": "custom.width",
+                "value": 269
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Count"
+            },
+            "properties": [
+              {
+                "id": "custom.displayMode",
+                "value": "color-text"
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 5,
+        "x": 12,
+        "y": 22
+      },
+      "id": 145,
+      "options": {
+        "footer": {
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "8.5.1",
+      "targets": [
+        {
+          "alias": "",
+          "bucketAggs": [
+            {
+              "field": "data_win_eventdata_targetUserName",
+              "id": "2",
+              "settings": {
+                "min_doc_count": "1",
+                "order": "desc",
+                "orderBy": "_count",
+                "size": "10"
+              },
+              "type": "terms"
+            }
+          ],
+          "datasource": {
+            "type": "elasticsearch",
+            "uid": "wazuh_datasource_uid"
+          },
+          "metrics": [
+            {
+              "id": "1",
+              "type": "count"
+            }
+          ],
+          "query": "data_win_system_eventID:4764",
+          "refId": "A",
+          "timeField": "timestamp"
+        }
+      ],
+      "title": "GROUPS MODIFIED",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {},
+            "renameByName": {
+              "data_win_eventdata_subjectUserName": "ACCOUNT",
+              "data_win_eventdata_targetUserName": "ACCOUNT"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "elasticsearch",
+        "uid": "wazuh_datasource_uid"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto",
+            "inspect": false
+          },
+          "links": [],
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "orange"
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "ACCOUNT"
+            },
+            "properties": [
+              {
+                "id": "custom.displayMode",
+                "value": "color-text"
+              },
+              {
+                "id": "custom.width",
+                "value": 462
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Count"
+            },
+            "properties": [
+              {
+                "id": "custom.displayMode",
+                "value": "color-text"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AD GROUP"
+            },
+            "properties": [
+              {
+                "id": "custom.displayMode",
+                "value": "color-text"
+              },
+              {
+                "id": "custom.width",
+                "value": 365
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 7,
+        "x": 17,
+        "y": 22
+      },
+      "id": 146,
+      "options": {
+        "footer": {
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "8.5.1",
+      "targets": [
+        {
+          "alias": "",
+          "bucketAggs": [
+            {
+              "field": "data_win_eventdata_targetUserName",
+              "id": "2",
+              "settings": {
+                "min_doc_count": "1",
+                "order": "desc",
+                "orderBy": "_count",
+                "size": "10"
+              },
+              "type": "terms"
+            }
+          ],
+          "datasource": {
+            "type": "elasticsearch",
+            "uid": "wazuh_datasource_uid"
+          },
+          "metrics": [
+            {
+              "id": "1",
+              "type": "count"
+            }
+          ],
+          "query": "data_win_system_eventID:4728 OR data_win_system_eventID:4732 OR data_win_system_eventID:4756",
+          "refId": "A",
+          "timeField": "timestamp"
+        }
+      ],
+      "title": "MODIFIED PRIVILEGE GROUPS",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {},
+            "renameByName": {
+              "data_win_eventdata_memberName": "ACCOUNT",
+              "data_win_eventdata_subjectUserName": "ACCOUNT",
+              "data_win_eventdata_targetUserName": "AD GROUP"
+            }
+          }
+        }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": {
+        "type": "elasticsearch",
+        "uid": "wazuh_datasource_uid"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "displayMode": "auto",
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green"
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "rule_level"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 93
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "windows_event_id"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 186
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "DATE/TIME"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 202
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "AGENT"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 171
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SRC IP"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 167
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "MESSAGE"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 1622
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "rule_description"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 524
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "EVENT ID"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "targetBlank": true,
+                    "title": "VIEW EVENT DETAILS",
+                    "url": "https://grafana.company.local/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,%22query%22:%22_id:${__value.text}%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 28
+      },
+      "id": 149,
+      "options": {
+        "footer": {
+          "fields": "",
+          "reducer": [
+            "sum"
+          ],
+          "show": false
+        },
+        "showHeader": true,
+        "sortBy": []
+      },
+      "pluginVersion": "8.5.1",
+      "targets": [
+        {
+          "alias": "",
+          "bucketAggs": [],
+          "datasource": {
+            "type": "elasticsearch",
+            "uid": "wazuh_datasource_uid"
+          },
+          "metrics": [
+            {
+              "id": "1",
+              "settings": {
+                "size": "500"
+              },
+              "type": "raw_data"
+            }
+          ],
+          "query": "(data_win_system_eventID:4727 OR data_win_system_eventID:4764 OR data_win_system_eventID:4728 OR data_win_system_eventID:4732 OR data_win_system_eventID:4756) AND agent_name:$agent_name",
+          "queryType": "lucene",
+          "refId": "A",
+          "timeField": "timestamp"
+        }
+      ],
+      "title": "USER GROUPS - EVENTS",
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "@metadata_beat": true,
+              "@metadata_type": true,
+              "@metadata_version": true,
+              "_id": false,
+              "_index": true,
+              "_type": true,
+              "agent_ephemeral_id": true,
+              "agent_hostname": true,
+              "agent_id": true,
+              "agent_ip": false,
+              "agent_ip_city_name": true,
+              "agent_ip_country_code": true,
+              "agent_ip_geolocation": true,
+              "agent_labels_customer": true,
+              "agent_name": false,
+              "agent_type": true,
+              "agent_version": true,
+              "beats_type": true,
+              "cluster_name": true,
+              "cluster_node": true,
+              "collector_node_id": true,
+              "data_win_eventXML_binaryData": true,
+              "data_win_eventXML_binaryDataSize": true,
+              "data_win_eventXML_param1": true,
+              "data_win_eventdata_accessMask": true,
+              "data_win_eventdata_authenticationPackageName": true,
+              "data_win_eventdata_binary": true,
+              "data_win_eventdata_data": true,
+              "data_win_eventdata_domain": true,
+              "data_win_eventdata_elevatedToken": true,
+              "data_win_eventdata_failureReason": true,
+              "data_win_eventdata_handleId": true,
+              "data_win_eventdata_imagePath": true,
+              "data_win_eventdata_impersonationLevel": true,
+              "data_win_eventdata_ipAddress": true,
+              "data_win_eventdata_ipPort": true,
+              "data_win_eventdata_keyLength": true,
+              "data_win_eventdata_lmPackageName": true,
+              "data_win_eventdata_logonGuid": true,
+              "data_win_eventdata_logonProcessName": true,
+              "data_win_eventdata_logonType": true,
+              "data_win_eventdata_memberName": true,
+              "data_win_eventdata_memberSid": true,
+              "data_win_eventdata_objectServer": true,
+              "data_win_eventdata_packageName": true,
+              "data_win_eventdata_passwordLastSet": true,
+              "data_win_eventdata_privilegeList": true,
+              "data_win_eventdata_processId": true,
+              "data_win_eventdata_processName": true,
+              "data_win_eventdata_restrictedAdminMode": true,
+              "data_win_eventdata_sID": true,
+              "data_win_eventdata_serviceName": true,
+              "data_win_eventdata_serviceSid": true,
+              "data_win_eventdata_serviceType": true,
+              "data_win_eventdata_startType": true,
+              "data_win_eventdata_status": true,
+              "data_win_eventdata_subStatus": true,
+              "data_win_eventdata_subjectDomainName": true,
+              "data_win_eventdata_subjectLogonId": true,
+              "data_win_eventdata_subjectUserName": true,
+              "data_win_eventdata_subjectUserSid": true,
+              "data_win_eventdata_targetDomainName": true,
+              "data_win_eventdata_targetLinkedLogonId": true,
+              "data_win_eventdata_targetLogonId": true,
+              "data_win_eventdata_targetSid": true,
+              "data_win_eventdata_targetUserName": true,
+              "data_win_eventdata_targetUserSid": true,
+              "data_win_eventdata_ticketEncryptionType": true,
+              "data_win_eventdata_ticketOptions": true,
+              "data_win_eventdata_user": true,
+              "data_win_eventdata_virtualAccount": true,
+              "data_win_eventdata_workstation": true,
+              "data_win_eventdata_workstationName": true,
+              "data_win_system_channel": true,
+              "data_win_system_computer": true,
+              "data_win_system_eventID": true,
+              "data_win_system_eventRecordID": true,
+              "data_win_system_eventSourceName": true,
+              "data_win_system_keywords": true,
+              "data_win_system_level": true,
+              "data_win_system_opcode": true,
+              "data_win_system_processID": true,
+              "data_win_system_providerGuid": true,
+              "data_win_system_providerName": true,
+              "data_win_system_severityValue": true,
+              "data_win_system_systemTime": true,
+              "data_win_system_task": true,
+              "data_win_system_threadID": true,
+              "data_win_system_version": true,
+              "decoder_name": true,
+              "ecs_version": true,
+              "gl2_accounted_message_size": true,
+              "gl2_message_id": true,
+              "gl2_processing_error": true,
+              "gl2_remote_ip": true,
+              "gl2_remote_port": true,
+              "gl2_source_collector": true,
+              "gl2_source_input": true,
+              "gl2_source_node": true,
+              "highlight": true,
+              "host_name": true,
+              "id": true,
+              "location": true,
+              "log_file_path": true,
+              "log_offset": true,
+              "manager_name": true,
+              "message": true,
+              "previous_output": true,
+              "process_id": true,
+              "rule_description": true,
+              "rule_firedtimes": true,
+              "rule_frequency": true,
+              "rule_gdpr": true,
+              "rule_gpg13": true,
+              "rule_group1": true,
+              "rule_group2": true,
+              "rule_group3": true,
+              "rule_groups": true,
+              "rule_hipaa": true,
+              "rule_id": true,
+              "rule_mail": true,
+              "rule_mitre_id": true,
+              "rule_mitre_tactic": true,
+              "rule_mitre_technique": true,
+              "rule_nist_800_53": true,
+              "rule_pci_dss": true,
+              "rule_tsc": true,
+              "sort": true,
+              "source": true,
+              "src_ip": true,
+              "src_ip_city_name": true,
+              "src_ip_country_code": true,
+              "src_ip_geolocation": true,
+              "streams": true,
+              "syslog_tag": true,
+              "syslog_type": true,
+              "timestamp": false,
+              "true": true,
+              "user_name": true,
+              "win_system_eventID": true,
+              "windows_auth_package": true,
+              "windows_domain": true,
+              "windows_event_id": true,
+              "windows_event_severity": false,
+              "windows_logon_type": true
+            },
+            "indexByName": {
+              "_id": 1,
+              "_index": 3,
+              "_type": 4,
+              "agent_id": 5,
+              "agent_ip": 6,
+              "agent_ip_city_name": 7,
+              "agent_ip_country_code": 8,
+              "agent_ip_geolocation": 9,
+              "agent_labels_customer": 54,
+              "agent_name": 2,
+              "data_win_eventdata_authenticationPackageName": 55,
+              "data_win_eventdata_elevatedToken": 56,
+              "data_win_eventdata_impersonationLevel": 57,
+              "data_win_eventdata_ipAddress": 58,
+              "data_win_eventdata_ipPort": 59,
+              "data_win_eventdata_keyLength": 60,
+              "data_win_eventdata_logonGuid": 61,
+              "data_win_eventdata_logonProcessName": 62,
+              "data_win_eventdata_logonType": 63,
+              "data_win_eventdata_processId": 64,
+              "data_win_eventdata_processName": 65,
+              "data_win_eventdata_serviceName": 66,
+              "data_win_eventdata_serviceSid": 67,
+              "data_win_eventdata_status": 68,
+              "data_win_eventdata_subjectDomainName": 69,
+              "data_win_eventdata_subjectLogonId": 70,
+              "data_win_eventdata_subjectUserName": 71,
+              "data_win_eventdata_subjectUserSid": 72,
+              "data_win_eventdata_targetDomainName": 73,
+              "data_win_eventdata_targetLinkedLogonId": 74,
+              "data_win_eventdata_targetLogonId": 75,
+              "data_win_eventdata_targetUserName": 76,
+              "data_win_eventdata_targetUserSid": 77,
+              "data_win_eventdata_ticketEncryptionType": 78,
+              "data_win_eventdata_ticketOptions": 79,
+              "data_win_eventdata_virtualAccount": 80,
+              "data_win_system_channel": 10,
+              "data_win_system_computer": 11,
+              "data_win_system_eventID": 12,
+              "data_win_system_eventRecordID": 13,
+              "data_win_system_keywords": 14,
+              "data_win_system_level": 15,
+              "data_win_system_message": 16,
+              "data_win_system_opcode": 17,
+              "data_win_system_processID": 18,
+              "data_win_system_providerGuid": 19,
+              "data_win_system_providerName": 20,
+              "data_win_system_severityValue": 21,
+              "data_win_system_systemTime": 22,
+              "data_win_system_task": 23,
+              "data_win_system_threadID": 24,
+              "data_win_system_version": 25,
+              "decoder_name": 26,
+              "gl2_accounted_message_size": 27,
+              "gl2_message_id": 28,
+              "gl2_processing_error": 81,
+              "gl2_remote_ip": 29,
+              "gl2_remote_port": 30,
+              "gl2_source_input": 31,
+              "gl2_source_node": 32,
+              "highlight": 33,
+              "id": 34,
+              "location": 35,
+              "manager_name": 36,
+              "message": 37,
+              "rule_description": 38,
+              "rule_firedtimes": 39,
+              "rule_gdpr": 40,
+              "rule_gpg13": 41,
+              "rule_group1": 82,
+              "rule_group2": 83,
+              "rule_group3": 84,
+              "rule_groups": 42,
+              "rule_hipaa": 43,
+              "rule_id": 44,
+              "rule_level": 45,
+              "rule_mail": 46,
+              "rule_mitre_id": 85,
+              "rule_mitre_tactic": 86,
+              "rule_mitre_technique": 87,
+              "rule_nist_800_53": 47,
+              "rule_pci_dss": 48,
+              "rule_tsc": 49,
+              "sort": 50,
+              "source": 51,
+              "streams": 52,
+              "syslog_level": 88,
+              "syslog_type": 53,
+              "timestamp": 0,
+              "true": 89
+            },
+            "renameByName": {
+              "_id": "EVENT ID",
+              "agent_ip": "SRC IP",
+              "agent_name": "AGENT",
+              "data_win_system_message": "MESSAGE",
+              "data_win_system_providerGuid": "",
+              "rule_level": "RULE LEVEL",
+              "syslog_level": "LEVEL",
+              "timestamp": "DATE/TIME",
+              "windows_event_severity": "EVENT LOG SEVERITY"
+            }
+          }
+        }
+      ],
+      "transparent": true,
+      "type": "table"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 36,
+  "style": "dark",
+  "tags": [
+    "EDR"
+  ],
+  "templating": {
+    "list": [
+      {
+        "datasource": {
+          "type": "elasticsearch",
+          "uid": "wazuh_datasource_uid"
+        },
+        "filters": [],
+        "hide": 0,
+        "label": "",
+        "name": "Filters",
+        "skipUrlSync": false,
+        "type": "adhoc"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": {
+          "type": "elasticsearch",
+          "uid": "wazuh_datasource_uid"
+        },
+        "definition": "{ \"find\": \"terms\", \"field\": \"agent_name\", \"query\": \"(rule_group2:windows_system OR rule_group2:windows_application OR rule_group2:windows_security OR rule_group3:policy_changed)\"}",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Agent",
+        "multi": false,
+        "name": "agent_name",
+        "options": [],
+        "query": "{ \"find\": \"terms\", \"field\": \"agent_name\", \"query\": \"(rule_group2:windows_system OR rule_group2:windows_application OR rule_group2:windows_security OR rule_group3:policy_changed)\"}",
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 2,
+        "tagValuesQuery": "",
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      }
+    ]
+  },
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "10s",
+      "30s",
+      "1m",
+      "5m",
+      "15m",
+      "30m",
+      "1h",
+      "2h",
+      "1d"
+    ],
+    "time_options": [
+      "5m",
+      "15m",
+      "1h",
+      "6h",
+      "12h",
+      "24h",
+      "2d",
+      "7d",
+      "30d"
+    ]
+  },
+  "timezone": "",
+  "title": "EDR - USERS AND GROUPS",
+  "uid": null,
+  "version": 1,
+  "weekStart": ""
+}

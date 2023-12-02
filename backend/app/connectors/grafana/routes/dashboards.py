@@ -1,3 +1,6 @@
+import json
+import os
+from pathlib import Path
 from typing import List
 
 from fastapi import APIRouter
@@ -5,12 +8,11 @@ from fastapi import BackgroundTasks
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Security
-from pathlib import Path
 from loguru import logger
-import json
-import os
 
 from app.auth.utils import AuthHandler
+from app.connectors.grafana.schema.dashboards import GrafanaDashboardResponse
+from app.connectors.grafana.services.dashboards import provision_dashboards
 from app.connectors.grafana.utils.universal import create_grafana_client
 from app.connectors.influxdb.utils.universal import create_influxdb_client
 from app.connectors.wazuh_indexer.schema.alerts import AlertsByHostResponse
@@ -29,8 +31,6 @@ from app.connectors.wazuh_indexer.services.alerts import get_alerts_by_rule_per_
 from app.connectors.wazuh_indexer.services.alerts import get_host_alerts
 from app.connectors.wazuh_indexer.services.alerts import get_index_alerts
 from app.connectors.wazuh_indexer.utils.universal import collect_indices
-from app.connectors.grafana.services.dashboards import provision_dashboards
-from app.connectors.grafana.schema.dashboards import GrafanaDashboardResponse
 
 # App specific imports
 
