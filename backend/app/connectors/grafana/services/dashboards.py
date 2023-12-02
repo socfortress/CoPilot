@@ -2,15 +2,13 @@ import json
 from pathlib import Path
 from typing import List
 
-from fastapi import APIRouter
-from fastapi import BackgroundTasks
-from fastapi import Depends
 from fastapi import HTTPException
-from fastapi import Security
 from loguru import logger
 
+from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
 from app.connectors.grafana.schema.dashboards import GrafanaDashboard
 from app.connectors.grafana.schema.dashboards import GrafanaDashboardResponse
+from app.connectors.grafana.schema.dashboards import Office365Dashboard
 from app.connectors.grafana.schema.dashboards import WazuhDashboard
 from app.connectors.grafana.utils.universal import create_grafana_client
 
@@ -46,26 +44,22 @@ async def update_dashboard(dashboard_json: dict) -> dict:
         raise HTTPException(status_code=500, detail=f"Error updating dashboard: {e}")
 
 
-async def provision_dashboards() -> GrafanaDashboardResponse:
-    logger.info("Provisioning Grafana dashboards")
-
-    provisioned_dashboards: List[GrafanaDashboard] = []
+async def provision_dashboards(dashboard_request: DashboardProvisionRequest) -> GrafanaDashboardResponse:
+    provisioned_dashboards = []
     errors = []
 
-    for dashboard in WazuhDashboard:
+    valid_dashboards = {item.name: item for item in list(WazuhDashboard) + list(Office365Dashboard)}
+
+    for dashboard_name in dashboard_request.dashboards:
+        dashboard_enum = valid_dashboards[dashboard_name]
         try:
-            logger.info(f"Loading dashboard from {dashboard.value[1]} in folder {dashboard.value[0]}")
-            dashboard_json = load_dashboard_json(dashboard.value)
+            dashboard_json = load_dashboard_json(dashboard_enum.value)
             updated_dashboard = await update_dashboard(dashboard_json)
-            logger.info(f"Successfully updated dashboard: {updated_dashboard}")
             provisioned_dashboards.append(GrafanaDashboard(**updated_dashboard))
         except HTTPException as e:
-            error_message = f"Failed to update dashboard {dashboard.value[1]}: {e.detail}"
-            logger.error(error_message)
-            errors.append(error_message)
-            raise HTTPException(status_code=500, detail=error_message)
+            errors.append(f"Failed to update dashboard {dashboard_name}: {e.detail}")
+            raise HTTPException(status_code=500, detail=f"Error updating dashboard: {e}")
 
     success = len(errors) == 0
     message = "All dashboards provisioned successfully" if success else "Some dashboards failed to provision"
-
     return GrafanaDashboardResponse(provisioned_dashboards=provisioned_dashboards, success=success, message=message)

@@ -1,6 +1,10 @@
 from enum import Enum
+from typing import List
+from typing import Union
 
 from pydantic import BaseModel
+from pydantic import Field
+from pydantic import validator
 
 
 class GrafanaDashboard(BaseModel):
@@ -39,3 +43,19 @@ class WazuhDashboard(Enum):
     EDR_AV_MALWARE_IOC = ("Wazuh", "edr_av_malware_ioc.json")
     EDR_AGENT_INVENTORY = ("Wazuh", "edr_agent_inventory.json")
     EDR_AD_INVENOTRY = ("Wazuh", "edr_ad_inventory.json")
+
+
+class Office365Dashboard(Enum):
+    DASHBOARD_1 = ("Office365", "dashboard1.json")
+    DASHBOARD_2 = ("Office365", "dashboard2.json")
+
+
+class DashboardProvisionRequest(BaseModel):
+    dashboards: List[str] = Field(..., description="List of dashboard identifiers to provision")
+
+    @validator("dashboards", each_item=True)
+    def check_dashboard_exists(cls, v):
+        valid_dashboards = {item.name: item for item in list(WazuhDashboard) + list(Office365Dashboard)}
+        if v not in valid_dashboards:
+            raise ValueError(f'Dashboard identifier "{v}" is not recognized.')
+        return v

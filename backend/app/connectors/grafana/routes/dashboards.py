@@ -5,12 +5,14 @@ from typing import List
 
 from fastapi import APIRouter
 from fastapi import BackgroundTasks
+from fastapi import Body
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Security
 from loguru import logger
 
 from app.auth.utils import AuthHandler
+from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
 from app.connectors.grafana.schema.dashboards import GrafanaDashboardResponse
 from app.connectors.grafana.services.dashboards import provision_dashboards
 from app.connectors.grafana.utils.universal import create_grafana_client
@@ -38,13 +40,13 @@ from app.connectors.wazuh_indexer.utils.universal import collect_indices
 grafana_dashboards_router = APIRouter()
 
 
-@grafana_dashboards_router.get(
+@grafana_dashboards_router.post(
     "/dashboards",
     response_model=GrafanaDashboardResponse,
-    description="Provion Grafana dashboards",
+    description="Provision Grafana dashboards",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def provision_dashboards_route():
+async def provision_dashboards_route(request: DashboardProvisionRequest = Body(...)):
     logger.info("Provisioning Grafana dashboards")
-    provision = await provision_dashboards()
+    provision = await provision_dashboards(request)
     return provision
