@@ -15,11 +15,13 @@ from app.db.db_setup import ensure_scheduler_user
 from app.db.db_setup import ensure_scheduler_user_removed
 from app.middleware.exception_handlers import custom_http_exception_handler
 from app.middleware.exception_handlers import validation_exception_handler
+from app.middleware.exception_handlers import value_error_handler
 from app.middleware.logger import log_requests
 from app.routers import agents
 from app.routers import auth
 from app.routers import connectors
 from app.routers import cortex
+from app.routers import customer_provisioning
 from app.routers import customers
 from app.routers import dfir_iris
 from app.routers import dnstwist
@@ -34,7 +36,6 @@ from app.routers import sublime
 from app.routers import velociraptor
 from app.routers import wazuh_indexer
 from app.routers import wazuh_manager
-from app.routers import customer_provisioning
 from app.schedulers.scheduler import init_scheduler
 
 auth_handler = AuthHandler()
@@ -60,6 +61,7 @@ app.middleware("http")(log_requests)  # using the imported middleware
 ################## ! Exception Handlers ! ##################
 app.add_exception_handler(HTTPException, custom_http_exception_handler)
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
+app.add_exception_handler(ValueError, value_error_handler)
 
 
 ################## ! INCLUDE ROUTES ! ##################
