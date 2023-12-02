@@ -124,8 +124,6 @@ async def send_post_request(endpoint: str, data: Dict[str, Any] = None, connecto
         logger.error("No Graylog connector found in the database")
         return {"success": False, "message": "No Graylog connector found in the database"}
 
-    logger.info(f"Raw Data: {data}")
-
     try:
         response = requests.post(
             f"{attributes['connector_url']}{endpoint}",
@@ -142,6 +140,8 @@ async def send_post_request(endpoint: str, data: Dict[str, Any] = None, connecto
             return {"data": response.json(), "success": True, "message": "Successfully completed request"}
         elif response.status_code == 204:
             return {"data": None, "success": True, "message": "Successfully completed request with no content"}
+        elif response.status_code == 201:
+            return {"data": response.json(), "success": True, "message": "Successfully created data"}
         else:
             raise HTTPException(
                 status_code=500,

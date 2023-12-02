@@ -1,6 +1,6 @@
 import re
 from datetime import datetime
-from typing import Dict
+from typing import Dict, List
 from typing import Optional
 
 from pydantic import BaseModel
@@ -37,8 +37,6 @@ class ProvisionNewCustomer(BaseModel):
 ####################################### ! GRAYLOG PROVISIONING ! #########################
 
 #! INDEX SETS !#
-
-
 class TimeBasedRotationStrategyConfig(BaseModel):
     type: str
     rotation_period: Optional[str] = None
@@ -132,3 +130,47 @@ class GraylogIndexSetCreationResponse(BaseModel):
     data: GraylogIndexSetData
     success: bool
     message: str
+
+# ! STREAMS ! #
+class StreamRule(BaseModel):
+    field: str
+    type: int
+    inverted: bool
+    value: str
+
+class WazuhEventStream(BaseModel):
+    title: str = Field(..., description="Title of the stream")
+    description: str = Field(..., description="Description of the stream")
+    index_set_id: str = Field(..., description="ID of the associated index set")
+    rules: List[StreamRule] = Field(..., description="List of rules for the stream")
+    matching_type: str = Field(..., description="Matching type for the rules")
+    remove_matches_from_default_stream: bool = Field(..., description="Whether to remove matches from the default stream")
+    content_pack: Optional[str] = Field(None, description="Associated content pack, if any")
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "title": "WAZUH EVENTS CUSTOMERS - Example Company",
+                "description": "WAZUH EVENTS CUSTOMERS - Example Company",
+                "index_set_id": "12345",
+                "rules": [
+                    {
+                        "field": "agent_labels_customer",
+                        "type": 1,
+                        "inverted": False,
+                        "value": "ExampleCode"
+                    }
+                ],
+                "matching_type": "AND",
+                "remove_matches_from_default_stream": True,
+                "content_pack": None
+            }
+        }
+
+class StreamData(BaseModel):
+    stream_id: str = Field(..., description="ID of the created stream")
+
+class StreamCreationResponse(BaseModel):
+    data: StreamData
+    success: bool = Field(..., description="Indicates if the request was successful")
+    message: str = Field(..., description="A message detailing the outcome of the request")

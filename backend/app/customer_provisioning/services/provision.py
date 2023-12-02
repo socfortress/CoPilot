@@ -5,11 +5,12 @@ from loguru import logger
 
 from app.connectors.graylog.utils.universal import send_post_request
 from app.customer_provisioning.schema.provision import GraylogIndexSetCreationResponse
-from app.customer_provisioning.schema.provision import ProvisionNewCustomer
+from app.customer_provisioning.schema.provision import ProvisionNewCustomer, WazuhEventStream, StreamCreationResponse
 from app.customer_provisioning.schema.provision import TimeBasedIndexSet
 
 
-# ! GRAYLOG PROVISIONING ! #
+######### ! GRAYLOG PROVISIONING ! ############
+# ! INDEX SETS ! #
 # Function to create index set configuration
 def build_index_set_config(request: ProvisionNewCustomer) -> TimeBasedIndexSet:
     return TimeBasedIndexSet(
@@ -59,10 +60,43 @@ def extract_index_set_id(response: GraylogIndexSetCreationResponse) -> str:
     return response.data.id
 
 
+# ! Event STREAMS ! #
+# Function to create event stream configuration
+def build_event_stream_config(request: ProvisionNewCustomer, index_set_id: str) -> WazuhEventStream:
+    return WazuhEventStream(
+        title=f"WAZUH EVENTS CUSTOMERS - {request.customer_name}",
+        description=f"WAZUH EVENTS CUSTOMERS - {request.customer_name}",
+        index_set_id=index_set_id,
+        rules=[
+            {
+                "field": "agent_labels_customer",
+                "type": 1,
+                "inverted": False,
+                "value": request.customer_code,
+            }
+        ],
+        matching_type="AND",
+        remove_matches_from_default_stream=True,
+        content_pack=None,
+    )
+
+async def send_event_stream_creation_request(event_stream: WazuhEventStream) -> StreamCreationResponse:
+    json_event_stream = json.dumps(event_stream.dict())
+    logger.info(f"json_event_stream set: {json_event_stream}")
+    response_json = await send_post_request(endpoint="/api/streams", data=event_stream.dict())
+    return StreamCreationResponse(**response_json)
+
+async def create_event_stream(request: ProvisionNewCustomer, index_set_id: str):
+    logger.info(f"Creating event stream for customer {request.customer_name}")
+    event_stream_config = build_event_stream_config(request, index_set_id)
+    return await send_event_stream_creation_request(event_stream_config)
+
 # ! MAIN FUNCTION ! #
 async def provision_customer(request: ProvisionNewCustomer):
     logger.info(f"Provisioning new customer {request}")
     created_index_response = await create_index_set(request)
-    index_set_id = extract_index_set_id(created_index_response)
-    logger.info(f"Index set ID: {index_set_id}")
+    index_set_id = created_index_response.data.id
+    created_stream_response = await create_event_stream(request, index_set_id)
+    stream_id = created_stream_response.data.stream_id
+    logger.info(f"Created index set with ID: {index_set_id} and stream with ID: {stream_id}")
     return {"message": "Provisioning new customer"}
