@@ -54,8 +54,8 @@ class DashboardProvisionRequest(BaseModel):
     dashboards: List[str] = Field(..., description="List of dashboard identifiers to provision")
 
     @validator("dashboards", each_item=True)
-    def check_dashboard_exists(cls, v):
+    def check_dashboard_exists(cls, e):
         valid_dashboards = {item.name: item for item in list(WazuhDashboard) + list(Office365Dashboard)}
-        if v not in valid_dashboards:
-            raise ValueError(f'Dashboard identifier "{v}" is not recognized.')
-        return v
+        if e not in valid_dashboards:
+            raise ValueError(f'Dashboard identifier "{e}" is not recognized.')
+        return e

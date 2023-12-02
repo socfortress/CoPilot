@@ -34,6 +34,7 @@ from app.routers import sublime
 from app.routers import velociraptor
 from app.routers import wazuh_indexer
 from app.routers import wazuh_manager
+from app.routers import customer_provisioning
 from app.schedulers.scheduler import init_scheduler
 
 auth_handler = AuthHandler()
@@ -80,6 +81,7 @@ app.include_router(dnstwist.router)
 app.include_router(logs.router)
 app.include_router(influxdb.router)
 app.include_router(grafana.router)
+app.include_router(customer_provisioning.router)
 
 
 @app.on_event("startup")

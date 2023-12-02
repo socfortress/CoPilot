@@ -124,6 +124,8 @@ async def send_post_request(endpoint: str, data: Dict[str, Any] = None, connecto
         logger.error("No Graylog connector found in the database")
         return {"success": False, "message": "No Graylog connector found in the database"}
 
+    logger.info(f"Raw Data: {data}")
+
     try:
         response = requests.post(
             f"{attributes['connector_url']}{endpoint}",
