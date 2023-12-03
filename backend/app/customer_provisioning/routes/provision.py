@@ -15,7 +15,7 @@ from sqlalchemy.future import select
 
 from app.auth.utils import AuthHandler
 from app.customer_provisioning.schema.provision import ProvisionNewCustomer
-from app.customer_provisioning.services.provision import provision_customer
+from app.customer_provisioning.services.provision_wazuh import provision_wazuh_customer
 from app.db.db_session import get_session
 from app.db.universal_models import Customers
 
@@ -44,6 +44,6 @@ async def check_customer_exists(customer_name: str, session: AsyncSession = Depe
 )
 async def provision_customer_route(request: ProvisionNewCustomer = Body(...), _customer: Customers = Depends(check_customer_exists)):
     logger.info("Provisioning new customer")
-    customer_provision = await provision_customer(request)
+    customer_provision = await provision_wazuh_customer(request)
 
     return {"message": "Provisioning new customer"}

@@ -20,7 +20,6 @@ from app.connectors.wazuh_indexer.schema.alerts import HostAlertsSearchBody
 from app.connectors.wazuh_indexer.schema.alerts import HostAlertsSearchResponse
 from app.connectors.wazuh_indexer.schema.alerts import IndexAlertsSearchBody
 from app.connectors.wazuh_indexer.schema.alerts import IndexAlertsSearchResponse
-from app.connectors.wazuh_indexer.services.alerts import get_alerts
 from app.connectors.wazuh_indexer.services.alerts import get_alerts_by_host
 from app.connectors.wazuh_indexer.services.alerts import get_alerts_by_rule
 from app.connectors.wazuh_indexer.services.alerts import get_alerts_by_rule_per_host
