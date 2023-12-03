@@ -21,7 +21,7 @@
 					></Icon>
 				</div>
 				<div class="time">
-					<n-popover overlap placement="top-end">
+					<n-popover overlap placement="top-end" style="max-height: 240px" scrollable>
 						<template #trigger>
 							<div class="flex items-center gap-2 cursor-help">
 								<span>
@@ -67,20 +67,40 @@
 					<template #label>Severity</template>
 					<template #value>{{ alert.severity?.severity_name || "-" }}</template>
 				</Badge>
-				<Badge type="splitted">
+				<Badge type="splitted" class="hide-on-small">
 					<template #iconLeft>
 						<Icon :name="SourceIcon" :size="13"></Icon>
 					</template>
 					<template #label>Source</template>
 					<template #value>{{ alert.alert_source || "-" }}</template>
 				</Badge>
-				<Badge type="splitted">
+				<Badge type="splitted" class="hide-on-small">
 					<template #iconLeft>
 						<Icon :name="CustomerIcon" :size="13"></Icon>
 					</template>
 					<template #label>Customer</template>
 					<template #value>{{ alert.customer?.customer_name || "-" }}</template>
 				</Badge>
+
+				<n-popselect
+					v-model:value="userSelected"
+					v-model:show="ownerListVisible"
+					:options="usersOptions"
+					:disabled="loadingUsers"
+					size="medium"
+					scrollable
+				>
+					<Badge type="active" class="cursor-pointer">
+						<template #iconLeft>
+							<n-spin :size="16" :show="loadingUsers">
+								<Icon :name="OwnerIcon" :size="16"></Icon>
+							</n-spin>
+						</template>
+						<template #label>Owner</template>
+						<template #value>{{ ownerName || "n/d" }}</template>
+					</Badge>
+				</n-popselect>
+
 				<Badge
 					v-if="alert.alert_source_link"
 					type="active"
@@ -144,6 +164,55 @@
 						</KVCard>
 					</div>
 				</n-tab-pane>
+				<n-tab-pane name="Owner" tab="Owner" display-directive="show:lazy">
+					<div class="grid gap-2 px-7 pt-4">
+						<Badge
+							type="active"
+							style="max-width: 145px"
+							class="cursor-pointer"
+							@click="gotoUsersPage(ownerId)"
+						>
+							<template #iconRight>
+								<Icon :name="LinkIcon" :size="14"></Icon>
+							</template>
+							<template #label>Go to users page</template>
+						</Badge>
+					</div>
+					<div class="grid gap-2 soc-alert-context-grid p-7 pt-4">
+						<KVCard>
+							<template #key>user_login</template>
+							<template #value>
+								<n-popselect
+									v-model:value="userSelected"
+									:options="usersOptions"
+									:disabled="loadingUsers"
+									size="medium"
+									scrollable
+								>
+									<div class="flex items-center gap-2 cursor-pointer text-primary-color">
+										<n-spin :size="16" :show="loadingUsers">
+											<Icon :name="EditIcon" :size="16"></Icon>
+										</n-spin>
+										<span>{{ ownerName || "Assign a user" }}</span>
+									</div>
+								</n-popselect>
+							</template>
+						</KVCard>
+						<KVCard v-if="alert.owner">
+							<template #key>user_name</template>
+							<template #value>
+								<span>#{{ alert.owner.id }}</span>
+								{{ alert.owner.user_name }}
+							</template>
+						</KVCard>
+						<KVCard v-if="alert.owner">
+							<template #key>user_email</template>
+							<template #value>
+								{{ alert.owner.user_email }}
+							</template>
+						</KVCard>
+					</div>
+				</n-tab-pane>
 				<n-tab-pane name="History" tab="History" display-directive="show:lazy">
 					<div class="p-7 pt-4">
 						<SocAlertTimeline :alert="alert" />
@@ -164,7 +233,6 @@
 </template>
 
 <script setup lang="ts">
-// TODO: assign user action ?
 import AlertItem from "@/components/alerts/Alert.vue"
 import type { SocAlert } from "@/types/soc/alert.d"
 import type { Alert } from "@/types/alerts.d"
@@ -176,16 +244,35 @@ import KVCard from "@/components/common/KVCard.vue"
 import SocAlertTimeline from "./SocAlertTimeline.vue"
 import "@/assets/scss/vuesjv-override.scss"
 import Api from "@/api"
-import { NCollapse, useMessage, NCollapseItem, NPopover, NModal, NTabs, NTabPane, NSpin, NTooltip } from "naive-ui"
+import {
+	NCollapse,
+	useMessage,
+	NCollapseItem,
+	NPopselect,
+	NPopover,
+	NModal,
+	NTabs,
+	NTabPane,
+	NSpin,
+	NTooltip
+} from "naive-ui"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
+import type { SocUser } from "@/types/soc/user.d"
+import { watch } from "vue"
+import { useRouter } from "vue-router"
 
 const emit = defineEmits<{
 	(e: "bookmark"): void
 }>()
 
-const props = defineProps<{ alert: SocAlert; isBookmark?: boolean; highlight?: boolean | null | undefined }>()
-const { alert, isBookmark, highlight } = toRefs(props)
+const props = defineProps<{
+	alert: SocAlert
+	isBookmark?: boolean
+	highlight?: boolean | null | undefined
+	users?: SocUser[]
+}>()
+const { alert, isBookmark, highlight, users } = toRefs(props)
 
 const ChevronIcon = "carbon:chevron-right"
 const InfoIcon = "carbon:information"
@@ -196,16 +283,31 @@ const SeverityIcon = "bi:shield-exclamation"
 const SourceIcon = "lucide:arrow-down-right-from-circle"
 const CustomerIcon = "carbon:user"
 const StarActiveIcon = "carbon:star-filled"
+const OwnerIcon = "carbon:user-military"
 const StarIcon = "carbon:star"
+const EditIcon = "uil:edit-alt"
 
 const showDetails = ref(false)
 const loading = ref(false)
+const loadingUsers = ref(false)
+const router = useRouter()
 const message = useMessage()
 
 const alertObject = ref<Alert>({} as Alert)
 
+const ownerListVisible = ref(false)
+const ownerName = computed(() => alert.value.owner?.user_login)
+const ownerId = computed(() => alert.value.owner?.id)
+const usersOptions = ref<
+	{
+		label: string
+		value: number
+	}[]
+>([])
+const userSelected = ref<number | null>(null)
+
 const socAlertDetail = computed<Partial<SocAlert>>(() => {
-	const clone: Partial<SocAlert> = JSON.parse(JSON.stringify(alert))
+	const clone: Partial<SocAlert> = JSON.parse(JSON.stringify(alert.value))
 
 	delete clone.alert_context
 	delete clone.alert_source_content
@@ -245,12 +347,96 @@ function toggleBookmark() {
 		})
 }
 
+function getUsers() {
+	loadingUsers.value = true
+
+	Api.soc
+		.getUsers()
+		.then(res => {
+			if (res.data.success) {
+				const usersList = res.data?.users || []
+				parseUsers(usersList)
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			loadingUsers.value = false
+		})
+}
+
+function assignUser() {
+	if (userSelected.value && userSelected.value !== ownerId.value) {
+		loadingUsers.value = true
+
+		Api.soc
+			.assignUserToAlert(alert.value.alert_id.toString(), userSelected.value.toString())
+			.then(res => {
+				if (res.data.success) {
+					const ownerObject = res.data.alert.owner
+					alert.value.owner = ownerObject
+				} else {
+					message.warning(res.data?.message || "An error occurred. Please try again later.")
+				}
+			})
+			.catch(err => {
+				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			})
+			.finally(() => {
+				loadingUsers.value = false
+			})
+	}
+}
+
+function gotoUsersPage(userId?: string | number) {
+	router.push(`/soc/users${userId ? "?user_id=" + userId : ""}`).catch(() => {})
+}
+
+function parseUsers(users: SocUser[]) {
+	usersOptions.value = users.map(o => ({ label: "#" + o.user_id + " • " + o.user_login, value: o.user_id }))
+}
+
+watch(
+	() => users?.value,
+	val => {
+		if (val !== undefined && val.length) {
+			parseUsers(val)
+		}
+	}
+)
+
+watch(userSelected, val => {
+	assignUser()
+})
+
+watch(ownerListVisible, val => {
+	if (val && !usersOptions.value.length) {
+		getUsers()
+	}
+})
+watch(showDetails, val => {
+	if (val && !usersOptions.value.length) {
+		getUsers()
+	}
+})
+
 onBeforeMount(() => {
 	alertObject.value = {
 		_index: "",
 		_id: alert.value.alert_context.alert_id,
 		_source: alert.value.alert_source_content
 	} as Alert
+
+	if (ownerId.value) {
+		userSelected.value = ownerId.value
+	}
+
+	if (users?.value?.length) {
+		parseUsers(users.value)
+	}
 })
 </script>
 
@@ -333,6 +519,13 @@ onBeforeMount(() => {
 			.header-box {
 				.time {
 					display: none;
+				}
+			}
+			.badges-box {
+				.badge {
+					&.hide-on-small {
+						display: none;
+					}
 				}
 			}
 			.footer-box {
