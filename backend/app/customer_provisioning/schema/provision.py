@@ -2,6 +2,7 @@ import re
 from datetime import datetime
 from typing import Dict, List
 from typing import Optional
+from enum import Enum
 
 from pydantic import BaseModel
 from pydantic import Field
@@ -9,6 +10,9 @@ from pydantic import validator
 
 from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
 
+class CustomerSubsctipion(Enum):
+    WAZUH = "Wazuh"
+    OFFICE365 = "Office365"
 
 class ProvisionNewCustomer(BaseModel):
     customer_name: str = Field(..., example="SOC Fortress", description="Name of the customer")
@@ -22,6 +26,7 @@ class ProvisionNewCustomer(BaseModel):
     hot_data_retention: int = Field(..., example=30, description="Number of days to retain hot data")
     index_replicas: int = Field(..., example=1, description="Number of replicas for the customer's Graylog instance")
     index_shards: int = Field(..., example=1, description="Number of shards for the customer's Graylog instance")
+    customer_subscription: List[CustomerSubsctipion] = Field(..., example=["Wazuh", "Office365"], description="List of subscriptions for the customer")
     dashboards_to_include: DashboardProvisionRequest = Field(..., description="Dashboards to include in the customer's Grafana instance")
 
     @validator("customer_index_name")

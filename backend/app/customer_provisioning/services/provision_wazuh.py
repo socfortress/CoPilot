@@ -2,10 +2,12 @@ import json
 from datetime import datetime
 
 from loguru import logger
-
+from fastapi import HTTPException
 from app.connectors.graylog.utils.universal import send_post_request
+from app.connectors.graylog.services.pipelines import get_pipelines
 from app.customer_provisioning.schema.provision import GraylogIndexSetCreationResponse
-from app.customer_provisioning.schema.provision import ProvisionNewCustomer, WazuhEventStream, StreamCreationResponse
+from app.customer_provisioning.schema.provision import ProvisionNewCustomer, WazuhEventStream, StreamCreationResponse, CustomerSubsctipion
+from app.connectors.graylog.schema.pipelines import GraylogPipelinesResponse
 from app.customer_provisioning.schema.provision import TimeBasedIndexSet
 
 
@@ -91,12 +93,29 @@ async def create_event_stream(request: ProvisionNewCustomer, index_set_id: str):
     event_stream_config = build_event_stream_config(request, index_set_id)
     return await send_event_stream_creation_request(event_stream_config)
 
+# ! PIPELINES ! #
+# Function to get pipeline ID
+async def get_pipeline_id(subscription: CustomerSubsctipion) -> str:
+    logger.info(f"Getting pipeline ID for subscription {subscription.value}")
+    pipelines_response = await get_pipelines()
+    if pipelines_response.success:
+        for pipeline in pipelines_response.pipelines:
+            if pipeline.description in subscription.value:
+                return pipeline.id
+        logger.error(f"Failed to get pipeline ID for subscription {subscription.value}")
+        raise HTTPException(status_code=500, detail=f"Failed to get pipeline ID for subscription {subscription.value}")
+    else:
+        logger.error(f"Failed to get pipelines: {pipelines_response.message}")
+        raise HTTPException(status_code=500, detail=f"Failed to get pipelines: {pipelines_response.message}")
+
 # ! MAIN FUNCTION ! #
-async def provision_customer(request: ProvisionNewCustomer):
+async def provision_wazuh_customer(request: ProvisionNewCustomer):
     logger.info(f"Provisioning new customer {request}")
     created_index_response = await create_index_set(request)
     index_set_id = created_index_response.data.id
     created_stream_response = await create_event_stream(request, index_set_id)
     stream_id = created_stream_response.data.stream_id
     logger.info(f"Created index set with ID: {index_set_id} and stream with ID: {stream_id}")
+    pipeline_id = await get_pipeline_id(subscription=request.customer_subscription)
+    logger.info(f"Pipeline ID: {pipeline_id}")
     return {"message": "Provisioning new customer"}
