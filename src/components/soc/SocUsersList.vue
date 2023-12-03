@@ -12,7 +12,11 @@
 						</tr>
 					</thead>
 					<tbody>
-						<tr v-for="user of usersList" :key="user.user_id">
+						<tr
+							v-for="user of usersList"
+							:key="user.user_id"
+							:class="{ highlight: highlight === user.user_id.toString() }"
+						>
 							<td>
 								<div class="flex gap-3 items-center">
 									<span>#{{ user.user_id }}</span>
@@ -47,12 +51,14 @@
 </template>
 
 <script setup lang="ts">
-// TODO: add user row highlight by query params
-import { ref, onBeforeMount } from "vue"
+import { ref, onBeforeMount, toRefs } from "vue"
 import { useMessage, NTable, NTooltip, NScrollbar, NSpin } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import Api from "@/api"
 import type { SocUser } from "@/types/soc/user.d"
+
+const props = defineProps<{ highlight: string | null | undefined }>()
+const { highlight } = toRefs(props)
 
 const InfoIcon = "carbon:information"
 
@@ -97,6 +103,14 @@ onBeforeMount(() => {
 		}
 		&.warning {
 			color: var(--warning-color);
+		}
+	}
+
+	.highlight {
+		td {
+			border-top: 1px solid var(--primary-030-color);
+			border-bottom: 1px solid var(--primary-030-color);
+			background-color: var(--primary-005-color);
 		}
 	}
 }
