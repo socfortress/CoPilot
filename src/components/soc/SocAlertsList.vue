@@ -20,6 +20,7 @@
 						:alert="alert.item"
 						class="mb-2"
 						:is-bookmark="alert.isBookmark"
+						:users="usersList"
 						:highlight="alert.id.toString() === highlight"
 						@bookmark="switchAlert(alert.id, alert.isBookmark)"
 					/>
@@ -39,6 +40,7 @@ import Api from "@/api"
 import SocAlertItem from "./SocAlertItem.vue"
 import type { SocAlert } from "@/types/soc/alert.d"
 import _uniqBy from "lodash/uniqBy"
+import type { SocUser } from "@/types/soc/user.d"
 
 const props = defineProps<{ highlight: string | null | undefined }>()
 const { highlight } = toRefs(props)
@@ -48,6 +50,7 @@ const loadingBookmarks = ref(false)
 const loadingAlerts = ref(false)
 const bookmarksList = ref<SocAlert[]>([])
 const alertsList = ref<SocAlert[]>([])
+const usersList = ref<SocUser[]>([])
 
 const list = computed(() => {
 	const list = [
@@ -123,9 +126,28 @@ function getBookmarks(silent?: boolean) {
 		})
 }
 
+function getUsers() {
+	Api.soc
+		.getUsers()
+		.then(res => {
+			if (res.data.success) {
+				usersList.value = res.data?.users || []
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+}
+
 function load(silent?: boolean) {
 	getAlerts(silent)
 	getBookmarks(silent)
+
+	if (!usersList.value.length) {
+		getUsers()
+	}
 }
 
 function scrollToAlert(id: string) {
