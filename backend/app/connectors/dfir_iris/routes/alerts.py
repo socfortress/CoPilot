@@ -46,6 +46,22 @@ async def get_alert_by_id(alert_id: str = Depends(verify_alert_exists)) -> Alert
     logger.info(f"Fetching alert {alert_id}")
     return await get_alert(alert_id=alert_id)
 
+@dfir_iris_alerts_router.get(
+    "/alerts_by_user/{user_id}",
+    response_model=AlertsResponse,
+    description="Get all alerts assigned to a user",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_all_alerts_assigned_to_user(user_id: int) -> AlertsResponse:
+    logger.info(f"Fetching all alerts assigned to user {user_id}")
+    alerts = (await get_alerts()).alerts
+    alerts_assigned_to_user = []
+    for alert in alerts:
+        if alert["alert_owner_id"] == user_id:
+            alerts_assigned_to_user.append(alert)
+
+    return AlertsResponse(success=True, message="Successfully fetched alerts assigned to user", alerts=alerts_assigned_to_user)
+
 
 @dfir_iris_alerts_router.get(
     "/bookmark",

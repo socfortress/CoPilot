@@ -5,6 +5,7 @@ from app.connectors.dfir_iris.schema.alerts import AlertsResponse
 from app.connectors.dfir_iris.schema.alerts import BookmarkedAlertsResponse
 from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
 from app.connectors.dfir_iris.utils.universal import initialize_client_and_alert
+from loguru import logger
 
 
 async def get_alerts() -> AlertsResponse:
