@@ -12,6 +12,7 @@ from app.connectors.dfir_iris.services.alerts import bookmark_alert
 from app.connectors.dfir_iris.services.alerts import get_alerts
 from app.connectors.dfir_iris.services.alerts import get_bookmarked_alerts
 from app.connectors.dfir_iris.utils.universal import check_alert_exists
+from app.connectors.dfir_iris.services.alerts import get_alert
 
 # App specific imports
 
@@ -34,6 +35,16 @@ dfir_iris_alerts_router = APIRouter()
 async def get_all_alerts() -> AlertsResponse:
     logger.info("Fetching all alerts")
     return await get_alerts()
+
+@dfir_iris_alerts_router.get(
+    "/{alert_id}",
+    response_model=AlertResponse,
+    description="Get an alert by ID",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_alert_by_id(alert_id: str = Depends(verify_alert_exists)) -> AlertResponse:
+    logger.info(f"Fetching alert {alert_id}")
+    return await get_alert(alert_id=alert_id)
 
 
 @dfir_iris_alerts_router.get(
