@@ -6,7 +6,7 @@ from fastapi import HTTPException
 from app.connectors.graylog.utils.universal import send_post_request
 from app.connectors.graylog.services.pipelines import get_pipelines
 from app.customer_provisioning.schema.provision import GraylogIndexSetCreationResponse
-from app.customer_provisioning.schema.provision import ProvisionNewCustomer, WazuhEventStream, StreamCreationResponse, CustomerSubsctipion
+from app.customer_provisioning.schema.provision import ProvisionNewCustomer, WazuhEventStream, StreamCreationResponse, CustomerSubsctipion, StreamConnectionToPipelineRequest
 from app.connectors.graylog.schema.pipelines import GraylogPipelinesResponse
 from app.customer_provisioning.schema.provision import TimeBasedIndexSet
 
@@ -95,30 +95,37 @@ async def create_event_stream(request: ProvisionNewCustomer, index_set_id: str):
 
 # ! PIPELINES ! #
 # Function to get pipeline ID
-async def get_pipeline_id(subscription: CustomerSubsctipion) -> str:
-    logger.info(f"Getting pipeline ID for subscription {subscription.value}")
+async def get_pipeline_id(subscription: str) -> str:
+    logger.info(f"Getting pipeline ID for subscription {subscription}")
     pipelines_response = await get_pipelines()
-    logger.info(f"pipelines_response: {pipelines_response}")
     if pipelines_response.success:
         for pipeline in pipelines_response.pipelines:
-            if pipeline.description in subscription.value:
+            if subscription.lower() in pipeline.description.lower():
                 return pipeline.id
-        logger.error(f"Failed to get pipeline ID for subscription {subscription.value}")
-        raise HTTPException(status_code=500, detail=f"Failed to get pipeline ID for subscription {subscription.value}")
+        logger.error(f"Failed to get pipeline ID for subscription {subscription}")
+        raise HTTPException(status_code=500, detail=f"Failed to get pipeline ID for subscription {subscription}")
     else:
         logger.error(f"Failed to get pipelines: {pipelines_response.message}")
         raise HTTPException(status_code=500, detail=f"Failed to get pipelines: {pipelines_response.message}")
 
+async def connect_stream_to_pipeline(stream_and_pipeline: StreamConnectionToPipelineRequest):
+    logger.info(f"Connecting stream {stream_and_pipeline.stream_id} to pipeline {stream_and_pipeline.pipeline_ids}")
+    event_data = StreamConnectionToPipelineRequest(stream_id=stream_and_pipeline.stream_id, pipeline_ids=stream_and_pipeline.pipeline_ids)
+    logger.info(f"Event data: {event_data.dict()}")
+    response_json = await send_post_request(endpoint="/api/system/pipelines/connections/to_stream", data=event_data.dict())
+    logger.info(f"Response: {response_json}")
+    return response_json
+
 # ! MAIN FUNCTION ! #
 async def provision_wazuh_customer(request: ProvisionNewCustomer):
     logger.info(f"Provisioning new customer {request}")
-    #created_index_response = await create_index_set(request)
-    #index_set_id = created_index_response.data.id
-    #created_stream_response = await create_event_stream(request, index_set_id)
-    #stream_id = created_stream_response.data.stream_id
-    #logger.info(f"Created index set with ID: {index_set_id} and stream with ID: {stream_id}")
-    for subscription in request.customer_subscription:
-        pipeline_id = await get_pipeline_id(subscription=subscription)
-        logger.info(f"Pipeline ID for {subscription.value}: {pipeline_id}")
+    created_index_response = await create_index_set(request)
+    index_set_id = created_index_response.data.id
+    created_stream_response = await create_event_stream(request, index_set_id)
+    stream_id = created_stream_response.data.stream_id
+    logger.info(f"Created index set with ID: {index_set_id} and stream with ID: {stream_id}")
+    pipeline_ids = (await get_pipeline_id(subscription="Wazuh")).convert_to_list()
     logger.info(f"Pipeline ID: {pipeline_id}")
+    stream_and_pipeline = StreamConnectionToPipelineRequest(stream_id=stream_id, pipeline_ids=pipeline_id)
+    await connect_stream_to_pipeline(stream_and_pipeline)
     return {"message": "Provisioning new customer"}

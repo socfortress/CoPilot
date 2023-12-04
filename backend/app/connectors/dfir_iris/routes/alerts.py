@@ -18,6 +18,7 @@ from app.connectors.dfir_iris.services.alerts import get_alert
 
 
 async def verify_alert_exists(alert_id: str) -> str:
+    logger.info(f"Verifying alert {alert_id} exists")
     if not await check_alert_exists(alert_id):
         raise HTTPException(status_code=400, detail=f"Alert {alert_id} does not exist.")
     return alert_id
@@ -25,6 +26,15 @@ async def verify_alert_exists(alert_id: str) -> str:
 
 dfir_iris_alerts_router = APIRouter()
 
+@dfir_iris_alerts_router.get(
+    "/bookmark",
+    response_model=BookmarkedAlertsResponse,
+    description="Get all bookmarked alerts",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_all_bookmarked_alerts() -> BookmarkedAlertsResponse:
+    logger.info("Fetching all bookmarked alerts")
+    return await get_bookmarked_alerts()
 
 @dfir_iris_alerts_router.get(
     "",
@@ -61,17 +71,6 @@ async def get_all_alerts_assigned_to_user(user_id: int) -> AlertsResponse:
             alerts_assigned_to_user.append(alert)
 
     return AlertsResponse(success=True, message="Successfully fetched alerts assigned to user", alerts=alerts_assigned_to_user)
-
-
-@dfir_iris_alerts_router.get(
-    "/bookmark",
-    response_model=BookmarkedAlertsResponse,
-    description="Get all bookmarked alerts",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
-)
-async def get_all_bookmarked_alerts() -> BookmarkedAlertsResponse:
-    logger.info("Fetching all bookmarked alerts")
-    return await get_bookmarked_alerts()
 
 
 @dfir_iris_alerts_router.post(
