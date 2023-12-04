@@ -15,6 +15,7 @@
 
 <script setup lang="ts">
 // TODO: here we can add a realtime chart
+// TODO: add goto grylog message page button
 
 import Icon from "@/components/common/Icon.vue"
 import { computed, toRefs } from "vue"
