@@ -98,6 +98,7 @@ async def create_event_stream(request: ProvisionNewCustomer, index_set_id: str):
 async def get_pipeline_id(subscription: CustomerSubsctipion) -> str:
     logger.info(f"Getting pipeline ID for subscription {subscription.value}")
     pipelines_response = await get_pipelines()
+    logger.info(f"pipelines_response: {pipelines_response}")
     if pipelines_response.success:
         for pipeline in pipelines_response.pipelines:
             if pipeline.description in subscription.value:
@@ -111,11 +112,13 @@ async def get_pipeline_id(subscription: CustomerSubsctipion) -> str:
 # ! MAIN FUNCTION ! #
 async def provision_wazuh_customer(request: ProvisionNewCustomer):
     logger.info(f"Provisioning new customer {request}")
-    created_index_response = await create_index_set(request)
-    index_set_id = created_index_response.data.id
-    created_stream_response = await create_event_stream(request, index_set_id)
-    stream_id = created_stream_response.data.stream_id
-    logger.info(f"Created index set with ID: {index_set_id} and stream with ID: {stream_id}")
-    pipeline_id = await get_pipeline_id(subscription=request.customer_subscription)
+    #created_index_response = await create_index_set(request)
+    #index_set_id = created_index_response.data.id
+    #created_stream_response = await create_event_stream(request, index_set_id)
+    #stream_id = created_stream_response.data.stream_id
+    #logger.info(f"Created index set with ID: {index_set_id} and stream with ID: {stream_id}")
+    for subscription in request.customer_subscription:
+        pipeline_id = await get_pipeline_id(subscription=subscription)
+        logger.info(f"Pipeline ID for {subscription.value}: {pipeline_id}")
     logger.info(f"Pipeline ID: {pipeline_id}")
     return {"message": "Provisioning new customer"}
