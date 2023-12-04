@@ -399,6 +399,8 @@ function parseUsers(users: SocUser[]) {
 	usersOptions.value = users.map(o => ({ label: "#" + o.user_id + " • " + o.user_login, value: o.user_id }))
 }
 
+// TODO: owner button "Select defilt owner"
+
 watch(
 	() => users?.value,
 	val => {
