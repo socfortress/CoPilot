@@ -1,5 +1,6 @@
 import json
 from datetime import datetime
+from pathlib import Path
 
 from loguru import logger
 from fastapi import HTTPException
@@ -7,8 +8,9 @@ from app.connectors.graylog.utils.universal import send_post_request
 from app.connectors.graylog.services.pipelines import get_pipelines
 from app.connectors.graylog.services.management import start_stream
 from app.connectors.wazuh_manager.utils.universal import send_post_request as send_wazuh_post_request
+from app.connectors.wazuh_manager.utils.universal import send_put_request as send_wazuh_put_request
 from app.customer_provisioning.schema.provision import GraylogIndexSetCreationResponse
-from app.customer_provisioning.schema.provision import ProvisionNewCustomer, WazuhEventStream, StreamCreationResponse, CustomerSubsctipion, StreamConnectionToPipelineRequest, StreamConnectionToPipelineResponse
+from app.customer_provisioning.schema.provision import ProvisionNewCustomer, WazuhEventStream, StreamCreationResponse, CustomerSubsctipion, StreamConnectionToPipelineRequest, StreamConnectionToPipelineResponse, WazuhAgentsTemplatePaths
 from app.connectors.graylog.schema.pipelines import GraylogPipelinesResponse
 from app.customer_provisioning.schema.provision import TimeBasedIndexSet
 
@@ -144,19 +146,60 @@ async def create_wazuh_groups(request: ProvisionNewCustomer):
             logger.error(f"Error creating group {group_code}: {e}")
 
 
+# Function to get the template file path
+def get_template_path(template_info: WazuhAgentsTemplatePaths) -> Path:
+    folder_name, file_name = template_info.value
+    current_file = Path(__file__)  # Path to the current file
+    base_dir = current_file.parent.parent  # Move up two levels to the base directory
+    return base_dir / folder_name / file_name
+
+# Function to update Wazuh group configuration
+async def configure_wazuh_group(group_code, template_path):
+    logger.info(f"Configuring Wazuh group {group_code}")
+
+    # Read the contents of the template file
+    with open(template_path, 'r') as template_file:
+        config_template = template_file.read()
+
+    # Replace placeholder with the customer code
+    group_config = config_template.replace("REPLACE", group_code.split('_')[-1])
+
+    # Make the API request to update the group configuration
+    return await send_wazuh_put_request(endpoint=f"groups/{group_code}/configuration", data=group_config, xml_data=True)
+
+# Function to apply configurations for all groups
+async def apply_group_configurations(request: ProvisionNewCustomer):
+    logger.info(f"Applying configurations for Wazuh groups for customer {request.customer_name} with code {request.customer_code}")
+
+    group_templates = {
+        'Linux': WazuhAgentsTemplatePaths.LINUX_AGENT,
+        'Windows': WazuhAgentsTemplatePaths.WINDOWS_AGENT,
+        'Mac': WazuhAgentsTemplatePaths.MAC_AGENT
+    }
+
+    for group, template in group_templates.items():
+        group_code = f"{group}_{request.customer_code}"
+        template_path = get_template_path(template)
+        try:
+            await configure_wazuh_group(group_code, template_path)
+        except Exception as e:
+            logger.error(f"Error configuring group {group_code}: {e}")
+
+
 # ! MAIN FUNCTION ! #
 async def provision_wazuh_customer(request: ProvisionNewCustomer):
     logger.info(f"Provisioning new customer {request}")
-    created_index_response = await create_index_set(request)
-    index_set_id = created_index_response.data.id
-    created_stream_response = await create_event_stream(request, index_set_id)
-    stream_id = created_stream_response.data.stream_id
-    logger.info(f"Created index set with ID: {index_set_id} and stream with ID: {stream_id}")
-    pipeline_ids = await get_pipeline_id(subscription="Wazuh")
-    logger.info(f"Pipeline ID: {pipeline_ids}")
-    stream_and_pipeline = StreamConnectionToPipelineRequest(stream_id=stream_id, pipeline_ids=pipeline_ids)
-    await connect_stream_to_pipeline(stream_and_pipeline)
-    if await start_stream(stream_id=stream_id) is False:
-        raise HTTPException(status_code=500, detail=f"Failed to start stream {stream_id}")
-    await create_wazuh_groups(request)
+    # created_index_response = await create_index_set(request)
+    # index_set_id = created_index_response.data.id
+    # created_stream_response = await create_event_stream(request, index_set_id)
+    # stream_id = created_stream_response.data.stream_id
+    # logger.info(f"Created index set with ID: {index_set_id} and stream with ID: {stream_id}")
+    # pipeline_ids = await get_pipeline_id(subscription="Wazuh")
+    # logger.info(f"Pipeline ID: {pipeline_ids}")
+    # stream_and_pipeline = StreamConnectionToPipelineRequest(stream_id=stream_id, pipeline_ids=pipeline_ids)
+    # await connect_stream_to_pipeline(stream_and_pipeline)
+    # if await start_stream(stream_id=stream_id) is False:
+    #     raise HTTPException(status_code=500, detail=f"Failed to start stream {stream_id}")
+    #await create_wazuh_groups(request)
+    await apply_group_configurations(request)
     return {"message": "Provisioning new customer"}
