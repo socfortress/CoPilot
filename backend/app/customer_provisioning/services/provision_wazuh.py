@@ -5,6 +5,8 @@ from loguru import logger
 from fastapi import HTTPException
 from app.connectors.graylog.utils.universal import send_post_request
 from app.connectors.graylog.services.pipelines import get_pipelines
+from app.connectors.graylog.services.management import start_stream
+from app.connectors.wazuh_manager.utils.universal import send_post_request as send_wazuh_post_request
 from app.customer_provisioning.schema.provision import GraylogIndexSetCreationResponse
 from app.customer_provisioning.schema.provision import ProvisionNewCustomer, WazuhEventStream, StreamCreationResponse, CustomerSubsctipion, StreamConnectionToPipelineRequest, StreamConnectionToPipelineResponse
 from app.connectors.graylog.schema.pipelines import GraylogPipelinesResponse
@@ -114,6 +116,34 @@ async def connect_stream_to_pipeline(stream_and_pipeline: StreamConnectionToPipe
     logger.info(f"Response: {response_json}")
     return StreamConnectionToPipelineResponse(**response_json)
 
+
+######### ! WAZUH MANAGER PROVISIONING ! ############
+# Function to generate group codes
+def generate_group_code(group, customer_code):
+    return f"{group}_{customer_code}"
+
+# Separate function for sending POST requests to Wazuh
+async def create_wazuh_group(group_code):
+    endpoint = "groups"
+    data = {"group_id": group_code}
+    return await send_wazuh_post_request(endpoint=endpoint, data=data)
+
+# Main function to create Wazuh groups
+async def create_wazuh_groups(request: ProvisionNewCustomer):
+    logger.info(f"Creating Wazuh groups for customer {request.customer_name} with code {request.customer_code}")
+
+    wazuh_groups = ['Linux', 'Windows', 'Mac']  # This list can be moved to a config file or a global variable
+
+    for group in wazuh_groups:
+        group_code = generate_group_code(group, request.customer_code)
+        logger.info(f"Creating group with code {group_code}")
+        try:
+            response = await create_wazuh_group(group_code)
+            logger.info(f"Response for {group_code}: {response}")
+        except Exception as e:
+            logger.error(f"Error creating group {group_code}: {e}")
+
+
 # ! MAIN FUNCTION ! #
 async def provision_wazuh_customer(request: ProvisionNewCustomer):
     logger.info(f"Provisioning new customer {request}")
@@ -126,4 +156,7 @@ async def provision_wazuh_customer(request: ProvisionNewCustomer):
     logger.info(f"Pipeline ID: {pipeline_ids}")
     stream_and_pipeline = StreamConnectionToPipelineRequest(stream_id=stream_id, pipeline_ids=pipeline_ids)
     await connect_stream_to_pipeline(stream_and_pipeline)
+    if await start_stream(stream_id=stream_id) is False:
+        raise HTTPException(status_code=500, detail=f"Failed to start stream {stream_id}")
+    await create_wazuh_groups(request)
     return {"message": "Provisioning new customer"}
