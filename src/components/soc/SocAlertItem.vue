@@ -369,15 +369,20 @@ function getUsers() {
 }
 
 function assignUser() {
-	if (userSelected.value && userSelected.value !== ownerId.value) {
+	if (userSelected.value !== ownerId.value) {
 		loadingUsers.value = true
 
-		Api.soc
-			.assignUserToAlert(alert.value.alert_id.toString(), userSelected.value.toString())
+		const method = userSelected.value ? "assignUserToAlert" : "removeUserAlertAssign"
+		const userId = userSelected.value ? userSelected.value : ownerId.value || 0
+
+		Api.soc[method](alert.value.alert_id.toString(), userId.toString())
 			.then(res => {
 				if (res.data.success) {
 					const ownerObject = res.data.alert.owner
+					const modificationHistory = res.data.alert.modification_history
+
 					alert.value.owner = ownerObject
+					alert.value.modification_history = modificationHistory
 				} else {
 					message.warning(res.data?.message || "An error occurred. Please try again later.")
 				}
@@ -397,9 +402,12 @@ function gotoUsersPage(userId?: string | number) {
 
 function parseUsers(users: SocUser[]) {
 	usersOptions.value = users.map(o => ({ label: "#" + o.user_id + " • " + o.user_login, value: o.user_id }))
-}
 
-// TODO: owner button "Select defilt owner"
+	usersOptions.value.push({
+		label: "- Set default owner -",
+		value: 0
+	})
+}
 
 watch(
 	() => users?.value,
