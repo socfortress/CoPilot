@@ -10,9 +10,14 @@ from app.connectors.graylog.services.management import start_stream
 from app.connectors.wazuh_manager.utils.universal import send_post_request as send_wazuh_post_request
 from app.connectors.wazuh_manager.utils.universal import send_put_request as send_wazuh_put_request
 from app.customer_provisioning.schema.provision import GraylogIndexSetCreationResponse
-from app.customer_provisioning.schema.provision import ProvisionNewCustomer, WazuhEventStream, StreamCreationResponse, CustomerSubsctipion, StreamConnectionToPipelineRequest, StreamConnectionToPipelineResponse, WazuhAgentsTemplatePaths
+from app.customer_provisioning.schema.provision import ProvisionNewCustomer, WazuhEventStream, StreamCreationResponse, CustomerSubsctipion, StreamConnectionToPipelineRequest, StreamConnectionToPipelineResponse, WazuhAgentsTemplatePaths, GrafanaOrganizationCreation, GrafanaDatasource, GrafanaDataSourceCreationResponse, GrafanaFolderCreationResponse
 from app.connectors.graylog.schema.pipelines import GraylogPipelinesResponse
 from app.customer_provisioning.schema.provision import TimeBasedIndexSet
+from app.connectors.grafana.utils.universal import create_grafana_client
+from app.connectors.grafana.services.dashboards import provision_dashboards
+from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
+from app.connectors.grafana.schema.dashboards import Office365Dashboard
+from app.connectors.grafana.schema.dashboards import WazuhDashboard
 
 
 ######### ! GRAYLOG PROVISIONING ! ############
@@ -186,6 +191,65 @@ async def apply_group_configurations(request: ProvisionNewCustomer):
             logger.error(f"Error configuring group {group_code}: {e}")
 
 
+######### ! Grafana PROVISIONING ! ############
+async def create_grafana_organization(request: ProvisionNewCustomer) -> GrafanaOrganizationCreation:
+    logger.info(f"Creating Grafana organization for customer {request.customer_name}")
+    grafana_client = await create_grafana_client("Grafana")
+    results = grafana_client.organization.create_organization(
+        organization={
+            "name": request.customer_grafana_org_name,
+        }
+    )
+    return GrafanaOrganizationCreation(**results)
+
+async def create_grafana_datasource(organization_id: int) -> GrafanaDataSourceCreationResponse:
+    logger.info(f"Creating Grafana datasource")
+    grafana_client = await create_grafana_client("Grafana")
+    # Switch to the newly created organization
+    grafana_client.user.switch_actual_user_organisation(organization_id)
+    datasource_payload = GrafanaDatasource(
+        name="WAZUH TEST",
+        type="grafana-opensearch-datasource",
+        typeName="OpenSearch",
+        access="proxy",
+        url="https://logs.socfortress.co:9200",
+        database="wazuh-*",
+        basicAuth=True,
+        basicAuthUser="admin",
+        secureJsonData={
+            "basicAuthPassword": "hmx7KPy15XPhJkgjlFrVgrWZ+Aid6QNm"
+        },
+        isDefault=False,
+        jsonData={
+            "database": "wazuh-*",
+            "flavor": "opensearch",
+            "logLevelField": "syslog_level",
+            "logMessageField": "rule_description",
+            "maxConcurrentShardRequests": 5,
+            "pplEnabled": True,
+            "timeField": "timestamp",
+            "tlsSkipVerify": True,
+            "version": "2.6.0"
+        },
+        readOnly=True,
+    )
+    results = grafana_client.datasource.create_datasource(
+        datasource=datasource_payload.dict(),
+    )
+    return GrafanaDataSourceCreationResponse(**results)
+
+async def create_grafana_folder(organization_id: int, folder_title: str) -> GrafanaFolderCreationResponse:
+    logger.info(f"Creating Grafana folder")
+    grafana_client = await create_grafana_client("Grafana")
+    # Switch to the newly created organization
+    grafana_client.user.switch_actual_user_organisation(organization_id)
+    results = grafana_client.folder.create_folder(
+        title=folder_title,
+    )
+    logger.info(f"Folder creation results: {results}")
+    return GrafanaFolderCreationResponse(**results)
+
+
 # ! MAIN FUNCTION ! #
 async def provision_wazuh_customer(request: ProvisionNewCustomer):
     logger.info(f"Provisioning new customer {request}")
@@ -201,5 +265,11 @@ async def provision_wazuh_customer(request: ProvisionNewCustomer):
     # if await start_stream(stream_id=stream_id) is False:
     #     raise HTTPException(status_code=500, detail=f"Failed to start stream {stream_id}")
     #await create_wazuh_groups(request)
-    await apply_group_configurations(request)
+    #await apply_group_configurations(request)
+    logger.info(f"Creating Grafana organization for customer {request.dashboards_to_include.dashboards}")
+    grafana_organization_id = (await create_grafana_organization(request)).orgId
+    await create_grafana_datasource(organization_id=grafana_organization_id)
+    grafana_edr_folder_id = (await create_grafana_folder(organization_id=grafana_organization_id, folder_title="EDR")).id
+    await provision_dashboards(DashboardProvisionRequest(dashboards=request.dashboards_to_include.dashboards, organizationId=grafana_organization_id, folderId=grafana_edr_folder_id))
+
     return {"message": "Provisioning new customer"}
