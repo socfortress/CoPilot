@@ -180,6 +180,15 @@ class StreamCreationResponse(BaseModel):
     success: bool = Field(..., description="Indicates if the request was successful")
     message: str = Field(..., description="A message detailing the outcome of the request")
 
+class StreamAndPipelineData(BaseModel):
+    stream_id: str = Field(..., description="ID of the stream")
+    pipeline_ids: List[str] = Field(..., description="List of pipeline IDs connected to the stream")
+
 class StreamConnectionToPipelineRequest(BaseModel):
     stream_id: str = Field(..., description="ID of the stream to connect")
     pipeline_ids: List[str] = Field(..., description="List of pipeline IDs to connect to the stream")
+
+class StreamConnectionToPipelineResponse(BaseModel):
+    data: StreamAndPipelineData
+    success: bool = Field(..., description="Indicates if the request was successful")
+    message: str = Field(..., description="A message detailing the outcome of the request")
