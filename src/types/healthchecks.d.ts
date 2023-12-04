@@ -3,5 +3,10 @@ export interface InfluxDBAlert {
 	message: string
 	checkID: string
 	checkName: string
-	level: string
+	level: InfluxDBAlertLevel
+}
+
+export enum InfluxDBAlertLevel {
+	Ok = "ok",
+	Crit = "crit"
 }
