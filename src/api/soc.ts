@@ -20,6 +20,11 @@ export default {
 	getAlertsBookmark() {
 		return HttpClient.get<FlaskBaseResponse & { bookmarked_alerts: SocAlert[] }>(`/soc/alerts/bookmark`)
 	},
+	getAlertsByUser(userId: string) {
+		return HttpClient.get<FlaskBaseResponse & { bookmarked_alerts: SocAlert[] }>(
+			`/soc/alerts/alerts_by_user/${userId}`
+		)
+	},
 	addAlertBookmark(alertId: string) {
 		return HttpClient.post<FlaskBaseResponse & { alert: SocAlert }>(`/soc/alerts/bookmark/${alertId}`)
 	},
@@ -91,5 +96,8 @@ export default {
 	},
 	assignUserToAlert(alertId: string, userId: string) {
 		return HttpClient.post<FlaskBaseResponse & { alert: SocAlert }>(`/soc/users/assign/${alertId}/${userId}`)
+	},
+	removeUserAlertAssign(alertId: string, userId: string) {
+		return HttpClient.delete<FlaskBaseResponse & { alert: SocAlert }>(`/soc/users/assign/${alertId}/${userId}`)
 	}
 }

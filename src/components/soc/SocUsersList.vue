@@ -51,6 +51,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO : add alerts by user
 import { ref, onBeforeMount, toRefs } from "vue"
 import { useMessage, NTable, NTooltip, NScrollbar, NSpin } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
