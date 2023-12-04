@@ -82,24 +82,17 @@
 					<template #value>{{ alert.customer?.customer_name || "-" }}</template>
 				</Badge>
 
-				<n-popselect
-					v-model:value="userSelected"
-					v-model:show="ownerListVisible"
-					:options="usersOptions"
-					:disabled="loadingUsers"
-					size="medium"
-					scrollable
-				>
+				<SocAssignUser :alert="alert" :users="users" v-slot="{ loading }" @updated="updateAlert">
 					<Badge type="active" class="cursor-pointer">
 						<template #iconLeft>
-							<n-spin :size="16" :show="loadingUsers">
+							<n-spin :size="16" :show="loading">
 								<Icon :name="OwnerIcon" :size="16"></Icon>
 							</n-spin>
 						</template>
 						<template #label>Owner</template>
 						<template #value>{{ ownerName || "n/d" }}</template>
 					</Badge>
-				</n-popselect>
+				</SocAssignUser>
 
 				<Badge
 					v-if="alert.alert_source_link"
@@ -182,20 +175,19 @@
 						<KVCard>
 							<template #key>user_login</template>
 							<template #value>
-								<n-popselect
-									v-model:value="userSelected"
-									:options="usersOptions"
-									:disabled="loadingUsers"
-									size="medium"
-									scrollable
+								<SocAssignUser
+									:alert="alert"
+									:users="users"
+									v-slot="{ loading }"
+									@updated="updateAlert"
 								>
 									<div class="flex items-center gap-2 cursor-pointer text-primary-color">
-										<n-spin :size="16" :show="loadingUsers">
+										<n-spin :size="16" :show="loading">
 											<Icon :name="EditIcon" :size="16"></Icon>
 										</n-spin>
 										<span>{{ ownerName || "Assign a user" }}</span>
 									</div>
-								</n-popselect>
+								</SocAssignUser>
 							</template>
 						</KVCard>
 						<KVCard v-if="alert.owner">
@@ -242,24 +234,13 @@ import { computed, onBeforeMount, ref, toRefs } from "vue"
 import { SimpleJsonViewer } from "vue-sjv"
 import KVCard from "@/components/common/KVCard.vue"
 import SocAlertTimeline from "./SocAlertTimeline.vue"
+import SocAssignUser from "./SocAssignUser.vue"
 import "@/assets/scss/vuesjv-override.scss"
 import Api from "@/api"
-import {
-	NCollapse,
-	useMessage,
-	NCollapseItem,
-	NPopselect,
-	NPopover,
-	NModal,
-	NTabs,
-	NTabPane,
-	NSpin,
-	NTooltip
-} from "naive-ui"
+import { NCollapse, useMessage, NCollapseItem, NPopover, NModal, NTabs, NTabPane, NSpin, NTooltip } from "naive-ui"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
 import type { SocUser } from "@/types/soc/user.d"
-import { watch } from "vue"
 import { useRouter } from "vue-router"
 
 const emit = defineEmits<{
@@ -289,22 +270,13 @@ const EditIcon = "uil:edit-alt"
 
 const showDetails = ref(false)
 const loading = ref(false)
-const loadingUsers = ref(false)
 const router = useRouter()
 const message = useMessage()
 
 const alertObject = ref<Alert>({} as Alert)
 
-const ownerListVisible = ref(false)
 const ownerName = computed(() => alert.value.owner?.user_login)
 const ownerId = computed(() => alert.value.owner?.id)
-const usersOptions = ref<
-	{
-		label: string
-		value: number
-	}[]
->([])
-const userSelected = ref<number | null>(null)
 
 const socAlertDetail = computed<Partial<SocAlert>>(() => {
 	const clone: Partial<SocAlert> = JSON.parse(JSON.stringify(alert.value))
@@ -347,91 +319,17 @@ function toggleBookmark() {
 		})
 }
 
-function getUsers() {
-	loadingUsers.value = true
+function updateAlert(alertUpdated: SocAlert) {
+	const ownerObject = alertUpdated.owner
+	const modificationHistory = alertUpdated.modification_history
 
-	Api.soc
-		.getUsers()
-		.then(res => {
-			if (res.data.success) {
-				const usersList = res.data?.users || []
-				parseUsers(usersList)
-			} else {
-				message.warning(res.data?.message || "An error occurred. Please try again later.")
-			}
-		})
-		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-		})
-		.finally(() => {
-			loadingUsers.value = false
-		})
-}
-
-function assignUser() {
-	if (userSelected.value !== ownerId.value) {
-		loadingUsers.value = true
-
-		const method = userSelected.value ? "assignUserToAlert" : "removeUserAlertAssign"
-		const userId = userSelected.value ? userSelected.value : ownerId.value || 0
-
-		Api.soc[method](alert.value.alert_id.toString(), userId.toString())
-			.then(res => {
-				if (res.data.success) {
-					const ownerObject = res.data.alert.owner
-					const modificationHistory = res.data.alert.modification_history
-
-					alert.value.owner = ownerObject
-					alert.value.modification_history = modificationHistory
-				} else {
-					message.warning(res.data?.message || "An error occurred. Please try again later.")
-				}
-			})
-			.catch(err => {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-			})
-			.finally(() => {
-				loadingUsers.value = false
-			})
-	}
+	alert.value.owner = ownerObject
+	alert.value.modification_history = modificationHistory
 }
 
 function gotoUsersPage(userId?: string | number) {
 	router.push(`/soc/users${userId ? "?user_id=" + userId : ""}`).catch(() => {})
 }
-
-function parseUsers(users: SocUser[]) {
-	usersOptions.value = users.map(o => ({ label: "#" + o.user_id + " • " + o.user_login, value: o.user_id }))
-
-	usersOptions.value.push({
-		label: "- Set default owner -",
-		value: 0
-	})
-}
-
-watch(
-	() => users?.value,
-	val => {
-		if (val !== undefined && val.length) {
-			parseUsers(val)
-		}
-	}
-)
-
-watch(userSelected, val => {
-	assignUser()
-})
-
-watch(ownerListVisible, val => {
-	if (val && !usersOptions.value.length) {
-		getUsers()
-	}
-})
-watch(showDetails, val => {
-	if (val && !usersOptions.value.length) {
-		getUsers()
-	}
-})
 
 onBeforeMount(() => {
 	alertObject.value = {
@@ -439,14 +337,6 @@ onBeforeMount(() => {
 		_id: alert.value.alert_context.alert_id,
 		_source: alert.value.alert_source_content
 	} as Alert
-
-	if (ownerId.value) {
-		userSelected.value = ownerId.value
-	}
-
-	if (users?.value?.length) {
-		parseUsers(users.value)
-	}
 })
 </script>
 

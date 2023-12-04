@@ -21,9 +21,7 @@ export default {
 		return HttpClient.get<FlaskBaseResponse & { bookmarked_alerts: SocAlert[] }>(`/soc/alerts/bookmark`)
 	},
 	getAlertsByUser(userId: string) {
-		return HttpClient.get<FlaskBaseResponse & { bookmarked_alerts: SocAlert[] }>(
-			`/soc/alerts/alerts_by_user/${userId}`
-		)
+		return HttpClient.get<FlaskBaseResponse & { alerts: SocAlert[] }>(`/soc/alerts/alerts_by_user/${userId}`)
 	},
 	addAlertBookmark(alertId: string) {
 		return HttpClient.post<FlaskBaseResponse & { alert: SocAlert }>(`/soc/alerts/bookmark/${alertId}`)
