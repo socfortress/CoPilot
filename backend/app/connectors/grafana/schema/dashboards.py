@@ -52,6 +52,8 @@ class Office365Dashboard(Enum):
 
 class DashboardProvisionRequest(BaseModel):
     dashboards: List[str] = Field(..., description="List of dashboard identifiers to provision")
+    organizationId: int = Field(0, description="Organization ID to provision dashboards to")
+    folderId: int = Field(0, description="Folder ID to provision dashboards to")
 
     @validator("dashboards", each_item=True)
     def check_dashboard_exists(cls, e):

@@ -171,6 +171,7 @@ async def send_put_request(
     endpoint: str,
     data: Optional[Dict[str, Any]],
     params: Optional[Dict[str, str]] = None,
+    xml_data: Optional[bool] = False,
     connector_name: str = "Wazuh-Manager",
 ) -> Dict[str, Any]:
     """
@@ -179,6 +180,8 @@ async def send_put_request(
     Args:
         endpoint (str): The endpoint to send the PUT request to.
         data (Dict[str, Any]): The data to send with the PUT request.
+        params (Optional[Dict[str, str]], optional): The parameters to send with the PUT request. Defaults to None.
+        xml_data (Optional[bool], optional): Whether or not the data is XML. Defaults to False.
         connector_name (str, optional): The name of the connector to use. Defaults to "Wazuh-Manager".
 
     Returns:
@@ -191,6 +194,9 @@ async def send_put_request(
     if attributes is None:
         logger.error("No Wazuh Manager connector found in the database")
         return None
+    # Add the `Content-Type` header to the request if the data is XML
+    if xml_data:
+        wazuh_manager_client["Content-Type"] = "application/xml"
     try:
         response = requests.put(
             f"{attributes['connector_url']}/{endpoint}",
