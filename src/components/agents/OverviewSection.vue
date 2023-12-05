@@ -1,10 +1,10 @@
 <template>
 	<div class="overview-section">
 		<div class="property-group">
-			<div v-for="item of propsSanitized" :key="item.key" class="property">
-				<div class="key">{{ item.key }}</div>
-				<div class="value">{{ item.val }}</div>
-			</div>
+			<KVCard v-for="item of propsSanitized" :key="item.key">
+				<template #key>{{ item.key }}</template>
+				<template #value>{{ item.val ?? "-" }}</template>
+			</KVCard>
 		</div>
 	</div>
 </template>
@@ -14,6 +14,7 @@ import { computed, toRefs } from "vue"
 import dayjs from "@/utils/dayjs"
 import { type Agent } from "@/types/agents.d"
 import { useSettingsStore } from "@/stores/settings"
+import KVCard from "@/components/common/KVCard.vue"
 
 const props = defineProps<{
 	agent: Agent
@@ -53,30 +54,8 @@ const formatDate = (date: string) => {
 		width: 100%;
 		display: grid;
 		@apply gap-2;
-		grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+		grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
 		grid-auto-flow: row dense;
-
-		.property {
-			border: var(--border-small-100);
-			background-color: var(--bg-secondary-color);
-			border-radius: var(--border-radius);
-			overflow: hidden;
-			flex-basis: 140px;
-			flex-grow: 1;
-
-			.key {
-				border-bottom: var(--border-small-050);
-				padding: 8px 12px;
-				font-size: 12px;
-			}
-			.value {
-				font-size: 14px;
-				padding: 8px 12px;
-				background-color: var(--bg-color);
-				font-family: var(--font-family-mono);
-				height: 100%;
-			}
-		}
 	}
 
 	@container (max-width: 500px) {

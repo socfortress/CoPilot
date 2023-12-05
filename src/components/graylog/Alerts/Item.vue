@@ -17,6 +17,7 @@
 								@click="gotoEventsPage(alertsEvent.event.event_definition_id)"
 							>
 								{{ alertsEvent.event.event_definition_id }}
+								<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
 							</code>
 						</div>
 						<div class="box">
@@ -34,6 +35,7 @@
 								@click="gotoIndicesPage(alertsEvent.index_name)"
 							>
 								{{ alertsEvent.index_name }}
+								<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
 							</code>
 						</div>
 						<div class="box">
@@ -52,7 +54,7 @@
 				</n-popover>
 			</div>
 			<div class="time">
-				<n-popover overlap placement="bottom-end">
+				<n-popover overlap placement="top-end">
 					<template #trigger>
 						<div class="flex items-center gap-2 cursor-help">
 							<span>
@@ -61,15 +63,19 @@
 							<Icon :name="TimeIcon" :size="16"></Icon>
 						</div>
 					</template>
-					<div class="flex flex-col gap-1">
-						<div class="box">
-							timestamp:
-							<code>{{ formatDate(alertsEvent.event.timestamp) }}</code>
-						</div>
-						<div class="box">
-							timestamp processing:
-							<code>{{ formatDate(alertsEvent.event.timestamp_processing) }}</code>
-						</div>
+					<div class="flex flex-col py-2 px-1">
+						<n-timeline>
+							<n-timeline-item
+								type="success"
+								title="Timestamp"
+								:time="formatDate(alertsEvent.event.timestamp)"
+							/>
+							<n-timeline-item
+								v-if="alertsEvent.event.timestamp_processing"
+								title="Processing"
+								:time="formatDate(alertsEvent.event.timestamp_processing)"
+							/>
+						</n-timeline>
 					</div>
 				</n-popover>
 			</div>
@@ -85,7 +91,7 @@
 
 <script setup lang="ts">
 import { type AlertsEventElement } from "@/types/graylog/alerts.d"
-import { NPopover } from "naive-ui"
+import { NPopover, NTimeline, NTimelineItem } from "naive-ui"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
 import Icon from "@/components/common/Icon.vue"
@@ -99,6 +105,7 @@ const emit = defineEmits<{
 
 const InfoIcon = "carbon:information"
 const TimeIcon = "carbon:time"
+const LinkIcon = "carbon:launch"
 
 const router = useRouter()
 const dFormats = useSettingsStore().dateFormat
@@ -140,11 +147,6 @@ function gotoEventsPage(event_definition_id: string) {
 			&:hover {
 				color: var(--primary-color);
 			}
-		}
-
-		.actionable {
-			cursor: pointer;
-			color: var(--primary-color);
 		}
 	}
 	.main-box {

@@ -1,0 +1,1922 @@
+{
+	"annotations": {
+		"list": [
+			{
+				"builtIn": 1,
+				"datasource": {
+					"type": "datasource",
+					"uid": "grafana"
+				},
+				"enable": true,
+				"hide": true,
+				"iconColor": "rgba(0, 211, 255, 1)",
+				"name": "Annotations & Alerts",
+				"target": {
+					"limit": 100,
+					"matchAny": false,
+					"tags": [],
+					"type": "dashboard"
+				},
+				"type": "dashboard"
+			}
+		]
+	},
+	"editable": false,
+	"fiscalYearStartMonth": 0,
+	"graphTooltip": 0,
+	"id": null,
+	"iteration": 1658194363330,
+	"links": [
+		{
+			"asDropdown": true,
+			"icon": "external link",
+			"includeVars": true,
+			"keepTime": true,
+			"tags": ["EDR"],
+			"targetBlank": true,
+			"title": "",
+			"type": "dashboards"
+		}
+	],
+	"liveNow": false,
+	"panels": [
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "wazuh_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"mappings": [
+						{
+							"options": {
+								"match": "null",
+								"result": {
+									"text": "N/A"
+								}
+							},
+							"type": "special"
+						}
+					],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "blue",
+								"value": null
+							}
+						]
+					},
+					"unit": "none"
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 4,
+				"x": 0,
+				"y": 0
+			},
+			"id": 43,
+			"links": [],
+			"options": {
+				"colorMode": "value",
+				"graphMode": "area",
+				"justifyMode": "auto",
+				"orientation": "horizontal",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"text": {},
+				"textMode": "auto"
+			},
+			"pluginVersion": "9.0.0",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"$$hashKey": "object:183",
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto",
+								"min_doc_count": 0,
+								"trimEdges": 0
+							},
+							"type": "date_histogram"
+						}
+					],
+					"metrics": [
+						{
+							"$$hashKey": "object:181",
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "agent_name:$agent_name AND (rule_groups:rootcheck OR rule_groups:oscap OR rule_groups:sca OR rule_groups:lynis)",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "EVENTS",
+			"type": "stat"
+		},
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "wazuh_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"custom": {
+						"align": "auto",
+						"displayMode": "auto",
+						"inspect": false
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "blue",
+								"value": null
+							}
+						]
+					}
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "Time"
+						},
+						"properties": [
+							{
+								"id": "displayName",
+								"value": "Time"
+							},
+							{
+								"id": "unit",
+								"value": "time: YYYY-MM-DD HH:mm:ss"
+							},
+							{
+								"id": "custom.align"
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "Count"
+						},
+						"properties": [
+							{
+								"id": "displayName",
+								"value": "EVENTS"
+							},
+							{
+								"id": "unit",
+								"value": "short"
+							},
+							{
+								"id": "decimals",
+								"value": -1
+							},
+							{
+								"id": "custom.align"
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "agent_name"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 388
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 8,
+				"x": 4,
+				"y": 0
+			},
+			"id": 31,
+			"options": {
+				"footer": {
+					"fields": "",
+					"reducer": ["sum"],
+					"show": false
+				},
+				"showHeader": true,
+				"sortBy": []
+			},
+			"pluginVersion": "9.0.0",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"$$hashKey": "object:65",
+							"fake": true,
+							"field": "agent_name",
+							"id": "4",
+							"settings": {
+								"min_doc_count": 1,
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "0"
+							},
+							"type": "terms"
+						}
+					],
+					"metrics": [
+						{
+							"$$hashKey": "object:63",
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "agent_name:$agent_name AND (rule_groups:rootcheck OR rule_groups:oscap OR rule_groups:sca OR rule_groups:lynis)",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "EVENTS BY AGENT",
+			"transformations": [
+				{
+					"id": "merge",
+					"options": {
+						"reducers": []
+					}
+				}
+			],
+			"type": "table"
+		},
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "wazuh_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"custom": {
+						"align": "auto",
+						"displayMode": "auto",
+						"inspect": false
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "dark-orange",
+								"value": null
+							}
+						]
+					}
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "Count"
+						},
+						"properties": [
+							{
+								"id": "displayName",
+								"value": "EVENTS"
+							},
+							{
+								"id": "unit",
+								"value": "short"
+							},
+							{
+								"id": "decimals",
+								"value": -1
+							},
+							{
+								"id": "custom.align"
+							},
+							{
+								"id": "thresholds",
+								"value": {
+									"mode": "absolute",
+									"steps": [
+										{
+											"color": "rgba(50, 172, 45, 0.97)",
+											"value": null
+										},
+										{
+											"color": "rgba(237, 129, 40, 0.89)",
+											"value": 0
+										},
+										{
+											"color": "#FA6400",
+											"value": 1
+										}
+									]
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "rule_description"
+						},
+						"properties": [
+							{
+								"id": "displayName",
+								"value": "ALERTS BY TYPE"
+							},
+							{
+								"id": "unit",
+								"value": "short"
+							},
+							{
+								"id": "decimals",
+								"value": -1
+							},
+							{
+								"id": "custom.align"
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "ALERTS BY TYPE"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 717
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 12,
+				"x": 12,
+				"y": 0
+			},
+			"id": 44,
+			"options": {
+				"footer": {
+					"fields": "",
+					"reducer": ["sum"],
+					"show": false
+				},
+				"showHeader": true,
+				"sortBy": []
+			},
+			"pluginVersion": "9.0.0",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"$$hashKey": "object:206",
+							"fake": true,
+							"field": "rule_description",
+							"id": "4",
+							"settings": {
+								"min_doc_count": 1,
+								"order": "desc",
+								"orderBy": "_term",
+								"size": "0"
+							},
+							"type": "terms"
+						}
+					],
+					"metrics": [
+						{
+							"$$hashKey": "object:204",
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "agent_name:$agent_name AND (rule_groups:rootcheck OR rule_groups:oscap OR rule_groups:sca OR rule_groups:lynis)",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "ALERTS BY TYPE",
+			"transformations": [
+				{
+					"id": "merge",
+					"options": {
+						"reducers": []
+					}
+				}
+			],
+			"type": "table"
+		},
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "wazuh_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "palette-classic"
+					},
+					"custom": {
+						"hideFrom": {
+							"legend": false,
+							"tooltip": false,
+							"viz": false
+						}
+					},
+					"decimals": 0,
+					"mappings": [],
+					"unit": "short"
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "1"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#C8F2C2",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "2"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#96D98D",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "3"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#56A64B",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "4"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#37872D",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "5"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#FFF899",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "7"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#F2CC0C",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "9"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#E0B400",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "10"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#FFCB7D",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "12"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#FFA6B0",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "13"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#FF7383",
+									"mode": "fixed"
+								}
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 12,
+				"w": 6,
+				"x": 0,
+				"y": 7
+			},
+			"id": 23,
+			"links": [],
+			"maxDataPoints": 3,
+			"options": {
+				"legend": {
+					"calcs": [],
+					"displayMode": "table",
+					"placement": "right",
+					"values": ["value"]
+				},
+				"pieType": "pie",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"tooltip": {
+					"mode": "single",
+					"sort": "none"
+				}
+			},
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"$$hashKey": "object:493",
+							"fake": true,
+							"field": "rule_level",
+							"id": "3",
+							"settings": {
+								"min_doc_count": 1,
+								"order": "desc",
+								"orderBy": "_term",
+								"size": "10"
+							},
+							"type": "terms"
+						},
+						{
+							"$$hashKey": "object:494",
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto",
+								"min_doc_count": 0,
+								"trimEdges": 0
+							},
+							"type": "date_histogram"
+						}
+					],
+					"metrics": [
+						{
+							"$$hashKey": "object:491",
+							"field": "select field",
+							"id": "1",
+							"meta": {},
+							"settings": {},
+							"type": "count"
+						}
+					],
+					"query": "agent_name:$agent_name AND (rule_groups:rootcheck OR rule_groups:oscap OR rule_groups:sca OR rule_groups:lynis)",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "SECURITY EVENTS BY ALERT LEVEL",
+			"type": "piechart"
+		},
+		{
+			"aliasColors": {},
+			"bars": true,
+			"dashLength": 10,
+			"dashes": false,
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "wazuh_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"links": []
+				},
+				"overrides": []
+			},
+			"fill": 1,
+			"fillGradient": 0,
+			"gridPos": {
+				"h": 12,
+				"w": 18,
+				"x": 6,
+				"y": 7
+			},
+			"hiddenSeries": false,
+			"id": 10,
+			"legend": {
+				"alignAsTable": true,
+				"avg": false,
+				"current": false,
+				"max": false,
+				"min": false,
+				"rightSide": true,
+				"show": true,
+				"total": false,
+				"values": false
+			},
+			"lines": false,
+			"linewidth": 1,
+			"links": [],
+			"nullPointMode": "null",
+			"options": {
+				"alertThreshold": true
+			},
+			"percentage": false,
+			"pluginVersion": "9.0.0",
+			"pointradius": 5,
+			"points": false,
+			"renderer": "flot",
+			"seriesOverrides": [],
+			"spaceLength": 10,
+			"stack": true,
+			"steppedLine": false,
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"$$hashKey": "object:543",
+							"fake": true,
+							"field": "agent_name",
+							"id": "3",
+							"settings": {
+								"min_doc_count": 1,
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "10"
+							},
+							"type": "terms"
+						},
+						{
+							"$$hashKey": "object:544",
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "5m",
+								"min_doc_count": 0,
+								"trimEdges": 0
+							},
+							"type": "date_histogram"
+						}
+					],
+					"metrics": [
+						{
+							"$$hashKey": "object:541",
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "agent_name:$agent_name AND (rule_groups:rootcheck OR rule_groups:oscap OR rule_groups:sca OR rule_groups:lynis)",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"thresholds": [],
+			"timeRegions": [],
+			"title": "TOP 10 AGENTS - HISTOGRAM",
+			"tooltip": {
+				"shared": true,
+				"sort": 0,
+				"value_type": "individual"
+			},
+			"type": "graph",
+			"xaxis": {
+				"mode": "time",
+				"show": true,
+				"values": []
+			},
+			"yaxes": [
+				{
+					"decimals": -1,
+					"format": "short",
+					"logBase": 1,
+					"show": true
+				},
+				{
+					"decimals": -1,
+					"format": "short",
+					"logBase": 1,
+					"show": true
+				}
+			],
+			"yaxis": {
+				"align": false
+			}
+		},
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "wazuh_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "palette-classic"
+					},
+					"custom": {
+						"hideFrom": {
+							"legend": false,
+							"tooltip": false,
+							"viz": false
+						}
+					},
+					"decimals": 0,
+					"mappings": [],
+					"unit": "short"
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "1"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#C8F2C2",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "2"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#96D98D",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "3"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#56A64B",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "4"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#37872D",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "5"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#FFF899",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "7"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#F2CC0C",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "9"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#E0B400",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "10"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#FFCB7D",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "12"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#FFA6B0",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "13"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#FF7383",
+									"mode": "fixed"
+								}
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 12,
+				"w": 6,
+				"x": 0,
+				"y": 19
+			},
+			"id": 45,
+			"links": [],
+			"maxDataPoints": 3,
+			"options": {
+				"legend": {
+					"calcs": [],
+					"displayMode": "hidden",
+					"placement": "right",
+					"values": ["value"]
+				},
+				"pieType": "donut",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"tooltip": {
+					"mode": "single",
+					"sort": "none"
+				}
+			},
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"$$hashKey": "object:493",
+							"fake": true,
+							"field": "data_sca_policy",
+							"id": "3",
+							"settings": {
+								"min_doc_count": 1,
+								"order": "desc",
+								"orderBy": "_term",
+								"size": "10"
+							},
+							"type": "terms"
+						},
+						{
+							"$$hashKey": "object:494",
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto",
+								"min_doc_count": 0,
+								"trimEdges": 0
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "elasticsearch",
+						"uid": "wazuh_datasource_uid"
+					},
+					"metrics": [
+						{
+							"$$hashKey": "object:491",
+							"field": "select field",
+							"id": "1",
+							"meta": {},
+							"settings": {},
+							"type": "count"
+						}
+					],
+					"query": "agent_name:$agent_name AND (rule_groups:rootcheck OR rule_groups:oscap OR rule_groups:sca OR rule_groups:lynis)",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "SECURITY CONTROLS BY POLICY",
+			"type": "piechart"
+		},
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "wazuh_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"custom": {
+						"align": "auto",
+						"displayMode": "auto",
+						"inspect": false
+					},
+					"decimals": 0,
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					},
+					"unit": "short"
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "1"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#C8F2C2",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "2"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#96D98D",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "3"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#56A64B",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "4"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#37872D",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "5"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#FFF899",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "7"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#F2CC0C",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "9"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#E0B400",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "10"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#FFCB7D",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "12"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#FFA6B0",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "13"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#FF7383",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "POLICY"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 665
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 12,
+				"w": 12,
+				"x": 6,
+				"y": 19
+			},
+			"id": 46,
+			"links": [],
+			"maxDataPoints": 3,
+			"options": {
+				"footer": {
+					"fields": "",
+					"reducer": ["sum"],
+					"show": false
+				},
+				"showHeader": true,
+				"sortBy": []
+			},
+			"pluginVersion": "9.0.0",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"$$hashKey": "object:493",
+							"fake": true,
+							"field": "data_sca_policy",
+							"id": "3",
+							"settings": {
+								"min_doc_count": 1,
+								"order": "desc",
+								"orderBy": "_term",
+								"size": "10"
+							},
+							"type": "terms"
+						}
+					],
+					"datasource": {
+						"type": "elasticsearch",
+						"uid": "wazuh_datasource_uid"
+					},
+					"metrics": [
+						{
+							"$$hashKey": "object:491",
+							"field": "select field",
+							"id": "1",
+							"meta": {},
+							"settings": {},
+							"type": "count"
+						}
+					],
+					"query": "agent_name:$agent_name AND (rule_groups:rootcheck OR rule_groups:oscap OR rule_groups:sca OR rule_groups:lynis)",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "SECURITY CONTROLS BY POLICY",
+			"transformations": [
+				{
+					"id": "organize",
+					"options": {
+						"excludeByName": {},
+						"indexByName": {},
+						"renameByName": {
+							"data_sca_policy": "POLICY"
+						}
+					}
+				}
+			],
+			"type": "table"
+		},
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "wazuh_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "palette-classic"
+					},
+					"custom": {
+						"hideFrom": {
+							"legend": false,
+							"tooltip": false,
+							"viz": false
+						}
+					},
+					"decimals": 0,
+					"mappings": [],
+					"unit": "short"
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "1"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#C8F2C2",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "2"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#96D98D",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "3"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#56A64B",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "4"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#37872D",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "5"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#FFF899",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "7"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#F2CC0C",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "9"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#E0B400",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "10"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#FFCB7D",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "12"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#FFA6B0",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "13"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#FF7383",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "N/A"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "semi-dark-orange",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "failed"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "semi-dark-red",
+									"mode": "fixed"
+								}
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 12,
+				"w": 6,
+				"x": 18,
+				"y": 19
+			},
+			"id": 47,
+			"links": [],
+			"maxDataPoints": 3,
+			"options": {
+				"legend": {
+					"calcs": [],
+					"displayMode": "table",
+					"placement": "right",
+					"values": ["value"]
+				},
+				"pieType": "donut",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"tooltip": {
+					"mode": "single",
+					"sort": "none"
+				}
+			},
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"$$hashKey": "object:493",
+							"fake": true,
+							"field": "data_sca_check_result",
+							"id": "3",
+							"settings": {
+								"min_doc_count": 1,
+								"missing": "N/A",
+								"order": "desc",
+								"orderBy": "_term",
+								"size": "10"
+							},
+							"type": "terms"
+						},
+						{
+							"$$hashKey": "object:494",
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto",
+								"min_doc_count": 0,
+								"trimEdges": 0
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "elasticsearch",
+						"uid": "wazuh_datasource_uid"
+					},
+					"metrics": [
+						{
+							"$$hashKey": "object:491",
+							"field": "select field",
+							"id": "1",
+							"meta": {},
+							"settings": {},
+							"type": "count"
+						}
+					],
+					"query": "agent_name:$agent_name AND (rule_groups:rootcheck OR rule_groups:oscap OR rule_groups:sca OR rule_groups:lynis)",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "RESULTS",
+			"type": "piechart"
+		},
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "wazuh_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"custom": {
+						"align": "auto",
+						"displayMode": "auto"
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "semi-dark-orange"
+							}
+						]
+					}
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "timestamp"
+						},
+						"properties": [
+							{
+								"id": "displayName",
+								"value": "DATE/TIME"
+							},
+							{
+								"id": "unit",
+								"value": "time: YYYY-MM-DD HH:mm:ss"
+							},
+							{
+								"id": "custom.align"
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "agent_name"
+						},
+						"properties": [
+							{
+								"id": "displayName",
+								"value": "AGENT"
+							},
+							{
+								"id": "unit",
+								"value": "short"
+							},
+							{
+								"id": "decimals",
+								"value": 2
+							},
+							{
+								"id": "custom.align"
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "data_sca_check_remediation"
+						},
+						"properties": [
+							{
+								"id": "displayName",
+								"value": "REMEDIATION"
+							},
+							{
+								"id": "unit",
+								"value": "short"
+							},
+							{
+								"id": "decimals",
+								"value": 2
+							},
+							{
+								"id": "custom.align"
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "data_sca_check_result"
+						},
+						"properties": [
+							{
+								"id": "noValue",
+								"value": "Not Applicable"
+							},
+							{
+								"id": "custom.displayMode",
+								"value": "color-background-solid"
+							},
+							{
+								"id": "mappings",
+								"value": [
+									{
+										"options": {
+											"Not Applicable": {
+												"color": "orange",
+												"index": 2
+											},
+											"failed": {
+												"color": "red",
+												"index": 1
+											},
+											"passed": {
+												"color": "semi-dark-green",
+												"index": 0
+											}
+										},
+										"type": "value"
+									}
+								]
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "DATE/TIME"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 185
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "AGENT"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 195
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "AGENT IP"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 164
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 16,
+				"w": 24,
+				"x": 0,
+				"y": 31
+			},
+			"id": 27,
+			"options": {
+				"footer": {
+					"fields": "",
+					"reducer": ["sum"],
+					"show": false
+				},
+				"showHeader": true,
+				"sortBy": []
+			},
+			"pluginVersion": "8.4.3",
+			"targets": [
+				{
+					"bucketAggs": [],
+					"datasource": {
+						"type": "elasticsearch",
+						"uid": "wazuh_datasource_uid"
+					},
+					"metrics": [
+						{
+							"id": "1",
+							"settings": {
+								"size": "500"
+							},
+							"type": "raw_data"
+						}
+					],
+					"query": "agent_name:$agent_name AND (rule_groups:rootcheck OR rule_groups:oscap OR rule_groups:sca OR rule_groups:lynis)",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "EVENTS",
+			"transformations": [
+				{
+					"id": "filterFieldsByName",
+					"options": {
+						"include": {
+							"names": [
+								"timestamp",
+								"agent_name",
+								"data_sca_check_reason",
+								"data_sca_check_remediation",
+								"data_sca_check_result",
+								"data_sca_check_title",
+								"data_sca_policy"
+							]
+						}
+					}
+				},
+				{
+					"id": "organize",
+					"options": {
+						"excludeByName": {},
+						"indexByName": {
+							"_id": 1,
+							"agent_ip": 3,
+							"agent_name": 2,
+							"data_sca_check_reason": 7,
+							"data_sca_check_remediation": 8,
+							"data_sca_check_result": 6,
+							"data_sca_check_status": 9,
+							"data_sca_check_title": 4,
+							"data_sca_policy": 5,
+							"rule_description": 10,
+							"timestamp": 0
+						},
+						"renameByName": {
+							"_id": "EVENT ID",
+							"agent_ip": "AGENT IP",
+							"agent_name": "AGENT",
+							"data_sca_check_reason": "REASON",
+							"data_sca_check_remediation": "REMEDIATION",
+							"data_sca_check_result": "RESULT",
+							"data_sca_check_title": "CONTROL",
+							"data_sca_policy": "POLICY",
+							"data_sca_type": "",
+							"timestamp": "DATE/TIME"
+						}
+					}
+				}
+			],
+			"type": "table"
+		}
+	],
+	"refresh": false,
+	"schemaVersion": 36,
+	"style": "dark",
+	"tags": ["EDR"],
+	"templating": {
+		"list": [
+			{
+				"datasource": {
+					"type": "elasticsearch",
+					"uid": "wazuh_datasource_uid"
+				},
+				"filters": [],
+				"hide": 0,
+				"label": "",
+				"name": "Filters",
+				"skipUrlSync": false,
+				"type": "adhoc"
+			},
+			{
+				"current": {
+					"selected": false,
+					"text": "All",
+					"value": "$__all"
+				},
+				"datasource": {
+					"type": "elasticsearch",
+					"uid": "wazuh_datasource_uid"
+				},
+				"definition": "{ \"find\": \"terms\", \"field\": \"agent_name\", \"query\": \"rule_groups:rootcheck OR rule_groups:oscap OR rule_groups:sca\"}",
+				"hide": 0,
+				"includeAll": true,
+				"label": "Agent",
+				"multi": false,
+				"name": "agent_name",
+				"options": [],
+				"query": "{ \"find\": \"terms\", \"field\": \"agent_name\", \"query\": \"rule_groups:rootcheck OR rule_groups:oscap OR rule_groups:sca\"}",
+				"refresh": 2,
+				"regex": "",
+				"skipUrlSync": false,
+				"sort": 2,
+				"tagValuesQuery": "",
+				"tagsQuery": "",
+				"type": "query",
+				"useTags": false
+			}
+		]
+	},
+	"time": {
+		"from": "now-6h",
+		"to": "now"
+	},
+	"timepicker": {
+		"refresh_intervals": ["5s", "10s", "30s", "1m", "5m", "15m", "30m", "1h", "2h", "1d"],
+		"time_options": ["5m", "15m", "1h", "6h", "12h", "24h", "2d", "7d", "30d"]
+	},
+	"timezone": "",
+	"title": "EDR - SYSTEM SECURITY AUDIT",
+	"uid": null,
+	"version": 2,
+	"weekStart": ""
+}

@@ -141,6 +141,52 @@ export default function getItems(mode: "vertical" | "horizontal", collapsed: boo
 			icon: renderIcon(BlankIcon)
 		},
 		{
+			label: "SOC",
+			key: "SOC",
+			icon: renderIcon(BlankIcon),
+			children: [
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "Soc-Alerts"
+								}
+							},
+							{ default: () => "Alerts" }
+						),
+					key: "Soc-Alerts"
+				},
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "Soc-Cases"
+								}
+							},
+							{ default: () => "Cases" }
+						),
+					key: "Soc-Cases"
+				},
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "Soc-Users"
+								}
+							},
+							{ default: () => "Users" }
+						),
+					key: "Soc-Users"
+				}
+			]
+		},
+		{
 			type: "divider"
 		},
 

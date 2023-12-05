@@ -30,11 +30,11 @@ export interface Alert {
 	_index: string
 	_id: string
 	_score: null
-	_source: AlertSource
+	_source: AlertSourceContent
 	sort: Timestamp[]
 }
 
-export interface AlertSource {
+export interface AlertSourceContent {
 	agent_id: string
 	agent_ip_city_name?: string
 	agent_ip_country_code?: string
@@ -253,7 +253,9 @@ export enum AlertSourceDataLogsourceCategory {
 
 export enum AlertSourceDataLogsourceProduct {
 	Sigma = "sigma",
-	Windows = "windows"
+	Windows = "windows",
+	Osquery = "osquery",
+	Sysmon = "sysmon"
 }
 
 export enum AlertSourceDataStatus {

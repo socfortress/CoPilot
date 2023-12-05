@@ -1,0 +1,843 @@
+{
+	"annotations": {
+		"list": [
+			{
+				"builtIn": 1,
+				"datasource": {
+					"type": "grafana",
+					"uid": "-- Grafana --"
+				},
+				"enable": true,
+				"hide": true,
+				"iconColor": "rgba(0, 211, 255, 1)",
+				"name": "Annotations & Alerts",
+				"target": {
+					"limit": 100,
+					"matchAny": false,
+					"tags": [],
+					"type": "dashboard"
+				},
+				"type": "dashboard"
+			}
+		]
+	},
+	"editable": false,
+	"fiscalYearStartMonth": 0,
+	"graphTooltip": 0,
+	"id": null,
+	"links": [],
+	"liveNow": false,
+	"panels": [
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "wazuh_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "blue",
+								"value": null
+							}
+						]
+					}
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 4,
+				"x": 0,
+				"y": 0
+			},
+			"id": 2,
+			"options": {
+				"colorMode": "value",
+				"graphMode": "none",
+				"justifyMode": "auto",
+				"orientation": "auto",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"textMode": "auto"
+			},
+			"pluginVersion": "9.3.1",
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "365d"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "elasticsearch",
+						"uid": "wazuh_datasource_uid"
+					},
+					"metrics": [
+						{
+							"field": "data_machine_name",
+							"id": "1",
+							"type": "cardinality"
+						}
+					],
+					"query": "rule_groups:ad_inventory",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "TOTAL MACHINES",
+			"type": "stat"
+		},
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "wazuh_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "palette-classic"
+					},
+					"custom": {
+						"hideFrom": {
+							"legend": false,
+							"tooltip": false,
+							"viz": false
+						}
+					},
+					"mappings": []
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 7,
+				"x": 4,
+				"y": 0
+			},
+			"id": 6,
+			"options": {
+				"legend": {
+					"displayMode": "table",
+					"placement": "right",
+					"showLegend": true
+				},
+				"pieType": "donut",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"tooltip": {
+					"mode": "single",
+					"sort": "none"
+				}
+			},
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "data_OperatingSystem",
+							"id": "3",
+							"settings": {
+								"min_doc_count": "1",
+								"order": "desc",
+								"orderBy": "_term",
+								"size": "10"
+							},
+							"type": "terms"
+						},
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "elasticsearch",
+						"uid": "wazuh_datasource_uid"
+					},
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "rule_groups:ad_inventory",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "COMPUTERS BY OS",
+			"type": "piechart"
+		},
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "wazuh_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					}
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 13,
+				"x": 11,
+				"y": 0
+			},
+			"id": 7,
+			"options": {
+				"displayMode": "gradient",
+				"minVizHeight": 10,
+				"minVizWidth": 0,
+				"orientation": "horizontal",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"showUnfilled": true
+			},
+			"pluginVersion": "9.3.1",
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "data_PrimaryGroup",
+							"id": "3",
+							"settings": {
+								"min_doc_count": "1",
+								"order": "desc",
+								"orderBy": "_term",
+								"size": "10"
+							},
+							"type": "terms"
+						},
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "elasticsearch",
+						"uid": "wazuh_datasource_uid"
+					},
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "rule_groups:ad_inventory",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "COMPUTERS BY PRIMARY GROUP",
+			"type": "bargauge"
+		},
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "wazuh_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "orange",
+								"value": null
+							}
+						]
+					}
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 4,
+				"x": 0,
+				"y": 7
+			},
+			"id": 8,
+			"options": {
+				"colorMode": "value",
+				"graphMode": "none",
+				"justifyMode": "auto",
+				"orientation": "auto",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"textMode": "auto"
+			},
+			"pluginVersion": "9.3.1",
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "365d"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "elasticsearch",
+						"uid": "wazuh_datasource_uid"
+					},
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "rule_groups:ad_inventory AND data_LockedOut:true",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "LOCKED OUT MACHINES",
+			"type": "stat"
+		},
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "wazuh_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "palette-classic"
+					},
+					"custom": {
+						"hideFrom": {
+							"legend": false,
+							"tooltip": false,
+							"viz": false
+						}
+					},
+					"mappings": []
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "13"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "orange",
+									"mode": "fixed"
+								}
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 7,
+				"x": 4,
+				"y": 7
+			},
+			"id": 9,
+			"options": {
+				"legend": {
+					"displayMode": "table",
+					"placement": "right",
+					"showLegend": true
+				},
+				"pieType": "donut",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"tooltip": {
+					"mode": "single",
+					"sort": "none"
+				}
+			},
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "data_asset_criticality",
+							"id": "3",
+							"settings": {
+								"min_doc_count": "1",
+								"order": "desc",
+								"orderBy": "_term",
+								"size": "10"
+							},
+							"type": "terms"
+						},
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "elasticsearch",
+						"uid": "wazuh_datasource_uid"
+					},
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "rule_groups:ad_inventory",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "COMPUTERS BY CRITICALITY",
+			"type": "piechart"
+		},
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "wazuh_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					}
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 13,
+				"x": 11,
+				"y": 7
+			},
+			"id": 10,
+			"options": {
+				"displayMode": "gradient",
+				"minVizHeight": 10,
+				"minVizWidth": 0,
+				"orientation": "horizontal",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"showUnfilled": true
+			},
+			"pluginVersion": "9.3.1",
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "data_Location",
+							"id": "3",
+							"settings": {
+								"min_doc_count": "1",
+								"order": "desc",
+								"orderBy": "_term",
+								"size": "10"
+							},
+							"type": "terms"
+						},
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "elasticsearch",
+						"uid": "wazuh_datasource_uid"
+					},
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "rule_groups:ad_inventory",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "COMPUTERS BY LOCATION",
+			"type": "bargauge"
+		},
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "wazuh_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"custom": {
+						"align": "auto",
+						"displayMode": "auto",
+						"filterable": true,
+						"inspect": false
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					}
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "CRITICALITY"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 149
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "LOCATION"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 124
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "CN"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 161
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "MEMBER OF"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 308
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "OS VERSION"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 169
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "COMPUTER"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 186
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 13,
+				"w": 24,
+				"x": 0,
+				"y": 14
+			},
+			"id": 4,
+			"options": {
+				"footer": {
+					"enablePagination": true,
+					"fields": "",
+					"reducer": ["sum"],
+					"show": false
+				},
+				"showHeader": true,
+				"sortBy": []
+			},
+			"pluginVersion": "9.3.1",
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [],
+					"datasource": {
+						"type": "elasticsearch",
+						"uid": "wazuh_datasource_uid"
+					},
+					"metrics": [
+						{
+							"id": "1",
+							"settings": {
+								"size": "500"
+							},
+							"type": "raw_data"
+						}
+					],
+					"query": "rule_groups:ad_inventory",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "AD INVENTORY",
+			"transformations": [
+				{
+					"id": "organize",
+					"options": {
+						"excludeByName": {
+							"_id": true,
+							"_index": true,
+							"_type": true,
+							"agent_id": true,
+							"agent_ip": true,
+							"agent_ip_city_name": true,
+							"agent_ip_country_code": true,
+							"agent_ip_geolocation": true,
+							"agent_labels_customer": true,
+							"agent_name": true,
+							"data_Created": true,
+							"data_DNSHostName": true,
+							"data_LastLogonDate": true,
+							"data_Modified": true,
+							"data_Name": true,
+							"data_ObjectCategory": true,
+							"data_ObjectClass": true,
+							"data_collection": true,
+							"decoder_name": true,
+							"gl2_accounted_message_size": true,
+							"gl2_message_id": true,
+							"gl2_processing_error": true,
+							"gl2_remote_ip": true,
+							"gl2_remote_port": true,
+							"gl2_source_input": true,
+							"gl2_source_node": true,
+							"highlight": true,
+							"id": true,
+							"location": true,
+							"manager_name": true,
+							"message": true,
+							"rule_description": true,
+							"rule_firedtimes": true,
+							"rule_group1": true,
+							"rule_groups": true,
+							"rule_id": true,
+							"rule_level": true,
+							"rule_mail": true,
+							"sort": true,
+							"source": true,
+							"streams": true,
+							"syslog_level": true,
+							"syslog_type": true,
+							"timestamp": true,
+							"timestamp_utc": true,
+							"true": true
+						},
+						"indexByName": {
+							"_id": 10,
+							"_index": 11,
+							"_type": 12,
+							"agent_id": 13,
+							"agent_ip": 14,
+							"agent_ip_city_name": 15,
+							"agent_ip_country_code": 16,
+							"agent_ip_geolocation": 17,
+							"agent_labels_customer": 18,
+							"agent_name": 19,
+							"data_CN": 5,
+							"data_Created": 20,
+							"data_DNSHostName": 21,
+							"data_DistinguishedName": 6,
+							"data_LastLogonDate": 22,
+							"data_Location": 8,
+							"data_LockedOut": 23,
+							"data_MemberOf": 9,
+							"data_Modified": 24,
+							"data_Name": 25,
+							"data_ObjectCategory": 26,
+							"data_ObjectClass": 27,
+							"data_OperatingSystem": 2,
+							"data_OperatingSystemVersion": 3,
+							"data_PrimaryGroup": 7,
+							"data_asset_criticality": 4,
+							"data_collection": 28,
+							"data_machine_name": 1,
+							"decoder_name": 29,
+							"gl2_accounted_message_size": 30,
+							"gl2_message_id": 31,
+							"gl2_processing_error": 32,
+							"gl2_remote_ip": 33,
+							"gl2_remote_port": 34,
+							"gl2_source_input": 35,
+							"gl2_source_node": 36,
+							"highlight": 37,
+							"id": 38,
+							"location": 39,
+							"manager_name": 40,
+							"message": 41,
+							"rule_description": 42,
+							"rule_firedtimes": 43,
+							"rule_group1": 44,
+							"rule_groups": 45,
+							"rule_id": 46,
+							"rule_level": 47,
+							"rule_mail": 48,
+							"sort": 49,
+							"source": 50,
+							"streams": 51,
+							"syslog_level": 52,
+							"syslog_type": 53,
+							"timestamp": 0,
+							"timestamp_utc": 54,
+							"true": 55
+						},
+						"renameByName": {
+							"data_CN": "CN",
+							"data_DistinguishedName": "DN",
+							"data_LastLogonDate": "",
+							"data_Location": "LOCATION",
+							"data_LockedOut": "LOCKED OUT",
+							"data_MemberOf": "MEMBER OF",
+							"data_ObjectCategory": "",
+							"data_ObjectClass": "CLASS",
+							"data_OperatingSystem": "OS",
+							"data_OperatingSystemVersion": "OS VERSION",
+							"data_PrimaryGroup": "PRIMARY AD GROUP",
+							"data_asset_criticality": "CRITICALITY",
+							"data_collection": "",
+							"data_machine_name": "COMPUTER",
+							"timestamp": "DATE/TIME"
+						}
+					}
+				}
+			],
+			"transparent": true,
+			"type": "table"
+		}
+	],
+	"schemaVersion": 37,
+	"style": "dark",
+	"tags": [],
+	"templating": {
+		"list": []
+	},
+	"time": {
+		"from": "now-6h",
+		"to": "now"
+	},
+	"timepicker": {},
+	"timezone": "",
+	"title": "EDR - ACTIVE DIRECTORY INVENTORY",
+	"weekStart": ""
+}

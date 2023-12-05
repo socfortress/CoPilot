@@ -8,6 +8,7 @@ from sqlmodel import SQLModel
 from app.auth.services.universal import create_admin_user
 from app.auth.services.universal import create_scheduler_user
 from app.auth.services.universal import remove_scheduler_user
+from app.db.db_populate import add_connectors_if_not_exist
 from app.db.db_populate import add_roles_if_not_exist
 
 # from sqlalchemy import inspect
@@ -48,6 +49,10 @@ async def create_tables(async_engine):
     async with async_engine.begin() as conn:
         # This will create all tables
         await conn.run_sync(SQLModel.metadata.create_all)
+    # Use AsyncSession for adding connectors
+    async with AsyncSession(async_engine) as session:
+        async with session.begin():
+            await add_connectors_if_not_exist(session)
 
 
 async def create_roles(async_engine):

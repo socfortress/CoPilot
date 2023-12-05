@@ -52,29 +52,34 @@
 				</div>
 				<div class="grow flex items-center justify-end gap-2 flex-wrap-reverse">
 					<div class="badges-box flex gap-2 flex-wrap grow">
-						<div class="badge" v-if="commandTime">
-							<span class="flex flex-col justify-center">
-								<n-tooltip trigger="hover">
-									<template #trigger>
+						<n-tooltip trigger="hover" v-if="commandTime">
+							<template #trigger>
+								<Badge type="splitted" hint-cursor>
+									<template #iconLeft>
 										<Icon :name="TimeIcon"></Icon>
 									</template>
-									Last request time / last response time
-								</n-tooltip>
-							</span>
-							<span class="flex">
-								{{ formatDate(commandTime) }}
+									<template #value>
+										<span class="flex">
+											{{ formatDate(commandTime) }}
 
-								<n-spin :size="12" v-if="loading" class="ml-2" />
+											<n-spin :size="12" v-if="loading" class="ml-2" />
 
-								{{ responseTime ? " / " + formatDate(responseTime) : "" }}
-							</span>
-						</div>
-						<div class="badge" v-if="diffTime">
-							<span class="flex flex-col justify-center">
+											{{ responseTime ? " / " + formatDate(responseTime) : "" }}
+										</span>
+									</template>
+								</Badge>
+							</template>
+							Last request time / last response time
+						</n-tooltip>
+
+						<Badge type="splitted" v-if="diffTime">
+							<template #iconLeft>
 								<Icon :name="StopWatchIcon" :size="15"></Icon>
-							</span>
-							<span>{{ diffTime }}</span>
-						</div>
+							</template>
+							<template #value>
+								{{ diffTime }}
+							</template>
+						</Badge>
 					</div>
 					<n-button
 						size="small"
@@ -107,6 +112,7 @@ import { ref, onBeforeMount, toRefs, computed, nextTick } from "vue"
 import { useMessage, NSpin, NButton, NEmpty, NSelect, NInput, NTooltip } from "naive-ui"
 import Api from "@/api"
 import CommandItem from "./CommandItem.vue"
+import Badge from "@/components/common/Badge.vue"
 import type { Agent } from "@/types/agents.d"
 import type { CommandRequest } from "@/api/artifacts"
 import type { Artifact, CommandResult } from "@/types/artifacts.d"
@@ -281,35 +287,6 @@ onBeforeMount(() => {
 
 <style lang="scss" scoped>
 .artifacts-command {
-	.badges-box {
-		.badge {
-			border-radius: var(--border-radius);
-			border: var(--border-small-100);
-			display: flex;
-			align-items: center;
-			font-size: 14px;
-			height: 28px;
-			line-height: 1;
-			transition: all 0.3s var(--bezier-ease);
-
-			padding: 0px;
-			gap: 0;
-			overflow: hidden;
-
-			span {
-				padding: 0px 8px;
-				height: 100%;
-				line-height: 26px;
-				opacity: 1;
-
-				&:first-child {
-					border-right: var(--border-small-100);
-					background-color: var(--primary-005-color);
-				}
-			}
-		}
-	}
-
 	.list {
 		container-type: inline-size;
 		min-height: 200px;

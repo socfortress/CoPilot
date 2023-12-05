@@ -9,6 +9,7 @@ from app.connectors.dfir_iris.schema.alerts import AlertResponse
 from app.connectors.dfir_iris.schema.users import User
 from app.connectors.dfir_iris.schema.users import UsersResponse
 from app.connectors.dfir_iris.services.users import assign_user_to_alert
+from app.connectors.dfir_iris.services.users import delete_user_from_alert
 from app.connectors.dfir_iris.services.users import get_users
 from app.connectors.dfir_iris.utils.universal import check_alert_exists
 from app.connectors.dfir_iris.utils.universal import check_user_exists
@@ -49,3 +50,14 @@ async def get_all_users() -> UsersResponse:
 async def assign_user_to_alert_route(alert_id: str = Depends(verify_alert_exists), user_id: int = Depends(verify_user_exists)) -> User:
     logger.info(f"Assigning user {user_id} to alert {alert_id}")
     return await assign_user_to_alert(alert_id, user_id)
+
+
+@dfir_iris_users_router.delete(
+    "/assign/{alert_id}/{user_id}",
+    response_model=AlertResponse,
+    description="Delete a user from an alert",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def delete_user_from_alert_route(alert_id: str = Depends(verify_alert_exists), user_id: int = Depends(verify_user_exists)) -> User:
+    logger.info(f"Deleting user {user_id} from alert {alert_id}")
+    return await delete_user_from_alert(alert_id, user_id)

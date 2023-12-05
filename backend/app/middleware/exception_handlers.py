@@ -58,6 +58,7 @@ from fastapi import HTTPException
 from fastapi import Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.utils import AuthHandler
@@ -109,4 +110,22 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     return JSONResponse(
         status_code=422,
         content=ValidationErrorResponse(message=main_message, details=details).dict(),
+    )
+
+
+async def value_error_handler(request: Request, exc: ValueError):
+    error_message = str(exc)
+
+    async with AsyncSession(async_engine) as session:
+        logger_instance = Logger(session, AuthHandler())
+        user_id = await get_user_id_from_request(request, logger_instance)
+        await logger_instance.log_error(user_id, request, error_message)
+        await session.commit()
+
+    return JSONResponse(
+        status_code=400,  # Bad Request
+        content={
+            "success": False,
+            "message": error_message,
+        },
     )

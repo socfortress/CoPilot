@@ -1,4 +1,5 @@
 from fastapi import HTTPException
+from loguru import logger
 
 from app.connectors.dfir_iris.schema.alerts import AlertResponse
 from app.connectors.dfir_iris.schema.alerts import AlertsResponse
@@ -11,6 +12,12 @@ async def get_alerts() -> AlertsResponse:
     client, alert = await initialize_client_and_alert("DFIR-IRIS")
     result = await fetch_and_validate_data(client, alert.filter_alerts)
     return AlertsResponse(success=True, message="Successfully fetched alerts", alerts=result["data"]["alerts"])
+
+
+async def get_alert(alert_id: str) -> AlertResponse:
+    client, alert = await initialize_client_and_alert("DFIR-IRIS")
+    result = await fetch_and_validate_data(client, alert.get_alert, alert_id)
+    return AlertResponse(success=True, message="Successfully fetched alert", alert=result["data"])
 
 
 async def bookmark_alert(alert_id: str, bookmarked: bool) -> AlertResponse:

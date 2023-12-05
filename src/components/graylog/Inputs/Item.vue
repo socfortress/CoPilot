@@ -14,19 +14,25 @@
 				<div class="title">{{ input.title }}</div>
 				<div class="name mb-2">{{ input.name }}</div>
 				<div class="badges-box flex flex-wrap items-center gap-3">
-					<div class="badge cursor" @click="showDetails = true">
-						<Icon :name="InfoIcon" :size="14"></Icon>
-					</div>
-					<div class="badge" :class="{ active: input.global }">
-						<span>Global</span>
-						<Icon :name="input.global ? GlobalIcon : DisabledIcon" :size="14"></Icon>
-					</div>
+					<Badge type="cursor" @click="showDetails = true">
+						<template #iconLeft>
+							<Icon :name="InfoIcon" :size="14"></Icon>
+						</template>
+					</Badge>
+					<Badge :type="input.global ? 'active' : 'muted'">
+						<template #iconRight>
+							<Icon :name="input.global ? GlobalIcon : DisabledIcon" :size="14"></Icon>
+						</template>
+						<template #label>Global</template>
+					</Badge>
 					<n-tooltip trigger="hover" :disabled="!isRunning">
 						<template #trigger>
-							<div class="badge" :class="{ active: isRunning, 'cursor-help': isRunning }">
-								<span>Running</span>
-								<Icon :name="isRunning ? TimeIcon : DisabledIcon" :size="14"></Icon>
-							</div>
+							<Badge :type="isRunning ? 'active' : 'muted'" :hint-cursor="isRunning">
+								<template #iconRight>
+									<Icon :name="isRunning ? TimeIcon : DisabledIcon" :size="14"></Icon>
+								</template>
+								<template #label>Running</template>
+							</Badge>
 						</template>
 						{{ formatDate(input.started_at) }}
 					</n-tooltip>
@@ -112,6 +118,7 @@
 <script setup lang="ts">
 import { useSettingsStore } from "@/stores/settings"
 import Icon from "@/components/common/Icon.vue"
+import Badge from "@/components/common/Badge.vue"
 import dayjs from "@/utils/dayjs"
 import { NModal, NButton, useMessage, NTooltip, NTabs, NTabPane } from "naive-ui"
 import { computed, ref } from "vue"
@@ -211,51 +218,6 @@ function start() {
 		.name {
 			color: var(--fg-secondary-color);
 			font-size: 13px;
-		}
-
-		.badges-box {
-			.badge {
-				border-radius: var(--border-radius);
-				border: var(--border-small-100);
-				display: flex;
-				align-items: center;
-				font-size: 14px;
-				padding: 0px 6px;
-				height: 26px;
-				line-height: 1;
-				gap: 6px;
-				transition: all 0.3s var(--bezier-ease);
-
-				span,
-				i {
-					opacity: 0.5;
-				}
-
-				&.active {
-					color: var(--primary-color);
-					background-color: var(--primary-005-color);
-
-					span,
-					i {
-						opacity: 1;
-					}
-
-					border-color: var(--primary-color);
-				}
-
-				&.cursor {
-					cursor: pointer;
-
-					i {
-						opacity: 1;
-					}
-
-					&:hover {
-						color: var(--primary-color);
-						border-color: var(--primary-color);
-					}
-				}
-			}
 		}
 	}
 

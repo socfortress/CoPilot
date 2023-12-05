@@ -1,0 +1,2078 @@
+{
+	"annotations": {
+		"list": [
+			{
+				"builtIn": 1,
+				"datasource": {
+					"type": "datasource",
+					"uid": "grafana"
+				},
+				"enable": true,
+				"hide": true,
+				"iconColor": "rgba(0, 211, 255, 1)",
+				"name": "Annotations & Alerts",
+				"target": {
+					"limit": 100,
+					"matchAny": false,
+					"tags": [],
+					"type": "dashboard"
+				},
+				"type": "dashboard"
+			}
+		]
+	},
+	"editable": false,
+	"fiscalYearStartMonth": 0,
+	"graphTooltip": 0,
+	"id": null,
+	"iteration": 1658194196381,
+	"links": [
+		{
+			"asDropdown": true,
+			"icon": "external link",
+			"includeVars": true,
+			"keepTime": true,
+			"tags": ["EDR"],
+			"targetBlank": true,
+			"title": "",
+			"type": "dashboards"
+		}
+	],
+	"liveNow": false,
+	"panels": [
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "wazuh_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"mappings": [
+						{
+							"options": {
+								"match": "null",
+								"result": {
+									"text": "N/A"
+								}
+							},
+							"type": "special"
+						}
+					],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "orange",
+								"value": null
+							}
+						]
+					},
+					"unit": "short"
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 4,
+				"x": 0,
+				"y": 0
+			},
+			"id": 63,
+			"links": [],
+			"options": {
+				"colorMode": "value",
+				"graphMode": "area",
+				"justifyMode": "auto",
+				"orientation": "horizontal",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"text": {},
+				"textMode": "auto"
+			},
+			"pluginVersion": "9.0.0",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"$$hashKey": "object:118",
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto",
+								"min_doc_count": 0,
+								"trimEdges": 0
+							},
+							"type": "date_histogram"
+						}
+					],
+					"metrics": [
+						{
+							"$$hashKey": "object:116",
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "rule_group3:sysmon_event7 AND data_win_eventdata_signed:false AND agent_name:$agent_name",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "IMAGE LOAD EVENTS - UNSIGNED DLLs",
+			"type": "stat"
+		},
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "wazuh_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"custom": {
+						"align": "auto",
+						"displayMode": "auto",
+						"filterable": false,
+						"inspect": false
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "orange",
+								"value": null
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					}
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "Count"
+						},
+						"properties": [
+							{
+								"id": "custom.displayMode",
+								"value": "color-text"
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "software_vendor"
+						},
+						"properties": [
+							{
+								"id": "custom.displayMode",
+								"value": "color-text"
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 6,
+				"x": 4,
+				"y": 0
+			},
+			"id": 64,
+			"links": [],
+			"options": {
+				"footer": {
+					"fields": "",
+					"reducer": ["sum"],
+					"show": false
+				},
+				"showHeader": true
+			},
+			"pluginVersion": "9.0.0",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"$$hashKey": "object:42",
+							"fake": true,
+							"field": "software_vendor",
+							"id": "3",
+							"settings": {
+								"min_doc_count": "1",
+								"missing": "Unknown",
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "10"
+							},
+							"type": "terms"
+						}
+					],
+					"datasource": {
+						"type": "elasticsearch",
+						"uid": "wazuh_datasource_uid"
+					},
+					"metrics": [
+						{
+							"$$hashKey": "object:40",
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "rule_group3:sysmon_event7 AND data_win_eventdata_signed:false AND agent_name:$agent_name",
+					"queryType": "lucene",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "UNSIGNED IMAGES / SOFTWARE VENDOR",
+			"type": "table"
+		},
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "wazuh_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"custom": {
+						"align": "auto",
+						"displayMode": "auto",
+						"filterable": false,
+						"inspect": false
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "orange",
+								"value": null
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					}
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "Count"
+						},
+						"properties": [
+							{
+								"id": "custom.displayMode",
+								"value": "color-text"
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "software_vendor"
+						},
+						"properties": [
+							{
+								"id": "custom.displayMode",
+								"value": "color-text"
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "data_win_eventdata_originalFileName"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 568
+							},
+							{
+								"id": "custom.displayMode",
+								"value": "color-text"
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "agent_name"
+						},
+						"properties": [
+							{
+								"id": "custom.displayMode",
+								"value": "color-text"
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "data_win_eventdata_imageLoaded"
+						},
+						"properties": [
+							{
+								"id": "custom.displayMode",
+								"value": "color-text"
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "DLL NAME"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 287
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "IMAGE FILE"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 290
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 14,
+				"x": 10,
+				"y": 0
+			},
+			"id": 65,
+			"links": [],
+			"options": {
+				"footer": {
+					"fields": "",
+					"reducer": ["sum"],
+					"show": false
+				},
+				"showHeader": true,
+				"sortBy": []
+			},
+			"pluginVersion": "9.0.0",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"$$hashKey": "object:250",
+							"fake": true,
+							"field": "agent_name",
+							"id": "4",
+							"settings": {
+								"min_doc_count": "1",
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "10"
+							},
+							"type": "terms"
+						},
+						{
+							"$$hashKey": "object:265",
+							"fake": true,
+							"field": "data_win_eventdata_originalFileName",
+							"id": "5",
+							"settings": {
+								"min_doc_count": "1",
+								"missing": "Unknown",
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "10"
+							},
+							"type": "terms"
+						},
+						{
+							"$$hashKey": "object:42",
+							"fake": true,
+							"field": "software_vendor",
+							"id": "3",
+							"settings": {
+								"min_doc_count": "1",
+								"missing": "Unknown",
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "10"
+							},
+							"type": "terms"
+						},
+						{
+							"field": "data_win_eventdata_imageLoaded",
+							"id": "6",
+							"settings": {
+								"min_doc_count": "1",
+								"order": "desc",
+								"orderBy": "_term",
+								"size": "10"
+							},
+							"type": "terms"
+						}
+					],
+					"datasource": {
+						"type": "elasticsearch",
+						"uid": "wazuh_datasource_uid"
+					},
+					"metrics": [
+						{
+							"$$hashKey": "object:40",
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "rule_group3:sysmon_event7 AND data_win_eventdata_signed:false AND agent_name:$agent_name",
+					"queryType": "lucene",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "UNSIGNED IMAGES / EVENTS",
+			"transformations": [
+				{
+					"id": "organize",
+					"options": {
+						"excludeByName": {},
+						"indexByName": {
+							"Count": 4,
+							"agent_name": 0,
+							"data_win_eventdata_imageLoaded": 2,
+							"data_win_eventdata_originalFileName": 1,
+							"software_vendor": 3
+						},
+						"renameByName": {
+							"Count": "COUNT",
+							"agent_name": "AGENT",
+							"data_win_eventdata_imageLoaded": "IMAGE FILE",
+							"data_win_eventdata_originalFileName": "DLL NAME",
+							"software_vendor": "VENDOR"
+						}
+					}
+				}
+			],
+			"type": "table"
+		},
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "wazuh_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"mappings": [
+						{
+							"options": {
+								"match": "null",
+								"result": {
+									"text": "N/A"
+								}
+							},
+							"type": "special"
+						}
+					],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "blue",
+								"value": null
+							}
+						]
+					},
+					"unit": "short"
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 4,
+				"x": 0,
+				"y": 7
+			},
+			"id": 43,
+			"links": [],
+			"options": {
+				"colorMode": "value",
+				"graphMode": "area",
+				"justifyMode": "auto",
+				"orientation": "horizontal",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"text": {},
+				"textMode": "auto"
+			},
+			"pluginVersion": "9.0.0",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"$$hashKey": "object:118",
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto",
+								"min_doc_count": 0,
+								"trimEdges": 0
+							},
+							"type": "date_histogram"
+						}
+					],
+					"metrics": [
+						{
+							"$$hashKey": "object:116",
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "rule_group3:sysmon_event7 AND agent_name:$agent_name",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "DLL LOAD EVENTS",
+			"type": "stat"
+		},
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "wazuh_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"custom": {
+						"align": "auto",
+						"displayMode": "auto",
+						"filterable": false,
+						"inspect": false
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "blue",
+								"value": null
+							}
+						]
+					}
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "Count"
+						},
+						"properties": [
+							{
+								"id": "custom.displayMode",
+								"value": "color-text"
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "software_vendor"
+						},
+						"properties": [
+							{
+								"id": "custom.displayMode",
+								"value": "color-text"
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 8,
+				"x": 4,
+				"y": 7
+			},
+			"id": 72,
+			"links": [],
+			"options": {
+				"footer": {
+					"fields": "",
+					"reducer": ["sum"],
+					"show": false
+				},
+				"showHeader": true
+			},
+			"pluginVersion": "9.0.0",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"$$hashKey": "object:42",
+							"fake": true,
+							"field": "data_win_eventdata_description",
+							"id": "3",
+							"settings": {
+								"min_doc_count": "1",
+								"missing": "Unknown",
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "0"
+							},
+							"type": "terms"
+						}
+					],
+					"datasource": {
+						"type": "elasticsearch",
+						"uid": "wazuh_datasource_uid"
+					},
+					"metrics": [
+						{
+							"$$hashKey": "object:40",
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "rule_group3:sysmon_event7 AND agent_name:$agent_name",
+					"queryType": "lucene",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "DLL IMAGES / DESCRIPTION",
+			"type": "table"
+		},
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "wazuh_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "palette-classic"
+					},
+					"custom": {
+						"hideFrom": {
+							"legend": false,
+							"tooltip": false,
+							"viz": false
+						}
+					},
+					"decimals": 0,
+					"mappings": [],
+					"unit": "short"
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 4,
+				"x": 12,
+				"y": 7
+			},
+			"id": 66,
+			"links": [],
+			"options": {
+				"displayLabels": [],
+				"legend": {
+					"calcs": [],
+					"displayMode": "hidden",
+					"placement": "bottom",
+					"values": ["value"]
+				},
+				"pieType": "donut",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"text": {},
+				"tooltip": {
+					"mode": "single",
+					"sort": "none"
+				}
+			},
+			"pluginVersion": "7.3.4",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"$$hashKey": "object:73",
+							"fake": true,
+							"field": "software_vendor",
+							"id": "3",
+							"settings": {
+								"min_doc_count": "1",
+								"missing": "Unknown",
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "10"
+							},
+							"type": "terms"
+						},
+						{
+							"$$hashKey": "object:74",
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto",
+								"min_doc_count": 0,
+								"trimEdges": 0
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "elasticsearch",
+						"uid": "wazuh_datasource_uid"
+					},
+					"metrics": [
+						{
+							"$$hashKey": "object:71",
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "rule_group3:sysmon_event7 AND agent_name:$agent_name",
+					"queryType": "lucene",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "IMAGE LOAD EVENTS  / SOFTWARE VENDOR",
+			"type": "piechart"
+		},
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "wazuh_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"custom": {
+						"align": "auto",
+						"displayMode": "auto",
+						"filterable": false,
+						"inspect": false
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					}
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 8,
+				"x": 16,
+				"y": 7
+			},
+			"id": 61,
+			"links": [],
+			"options": {
+				"footer": {
+					"fields": "",
+					"reducer": ["sum"],
+					"show": false
+				},
+				"showHeader": true
+			},
+			"pluginVersion": "9.0.0",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"$$hashKey": "object:42",
+							"fake": true,
+							"field": "software_vendor",
+							"id": "3",
+							"settings": {
+								"min_doc_count": "1",
+								"missing": "Unknown",
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "0"
+							},
+							"type": "terms"
+						}
+					],
+					"datasource": {
+						"type": "elasticsearch",
+						"uid": "wazuh_datasource_uid"
+					},
+					"metrics": [
+						{
+							"$$hashKey": "object:40",
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "rule_group3:sysmon_event7 AND agent_name:$agent_name",
+					"queryType": "lucene",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "IMAGE LOAD EVENTS / SOFTWARE VENDOR",
+			"type": "table"
+		},
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "wazuh_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					}
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 13,
+				"w": 24,
+				"x": 0,
+				"y": 14
+			},
+			"id": 74,
+			"options": {
+				"color": "blue",
+				"iteration": 20,
+				"monochrome": false,
+				"nodeColor": "grey",
+				"nodePadding": 30,
+				"nodeWidth": 30
+			},
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "process_image",
+							"id": "3",
+							"settings": {
+								"min_doc_count": "1",
+								"missing": "Unknown",
+								"order": "desc",
+								"orderBy": "_term",
+								"size": "5"
+							},
+							"type": "terms"
+						},
+						{
+							"field": "dll_name",
+							"id": "4",
+							"settings": {
+								"min_doc_count": "1",
+								"missing": "Unknown",
+								"order": "desc",
+								"orderBy": "_term",
+								"size": "5"
+							},
+							"type": "terms"
+						},
+						{
+							"field": "dll_signature",
+							"id": "5",
+							"settings": {
+								"min_doc_count": "1",
+								"missing": "Unknown",
+								"order": "desc",
+								"orderBy": "_term",
+								"size": "10"
+							},
+							"type": "terms"
+						},
+						{
+							"field": "data_win_eventdata_imageLoaded",
+							"id": "6",
+							"settings": {
+								"min_doc_count": "1",
+								"order": "desc",
+								"orderBy": "_term",
+								"size": "10"
+							},
+							"type": "terms"
+						}
+					],
+					"datasource": {
+						"type": "elasticsearch",
+						"uid": "wazuh_datasource_uid"
+					},
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "rule_group3:sysmon_event7 AND agent_name:$agent_name",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "DLL SIDE LOADING - MAP",
+			"type": "netsage-sankey-panel"
+		},
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "wazuh_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"custom": {
+						"align": "auto",
+						"displayMode": "auto",
+						"inspect": false
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green"
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					}
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 10,
+				"w": 6,
+				"x": 0,
+				"y": 27
+			},
+			"id": 59,
+			"links": [],
+			"options": {
+				"footer": {
+					"fields": "",
+					"reducer": ["sum"],
+					"show": false
+				},
+				"showHeader": true
+			},
+			"pluginVersion": "9.0.0",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"$$hashKey": "object:73",
+							"fake": true,
+							"field": "agent_name",
+							"id": "3",
+							"settings": {
+								"min_doc_count": "1",
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "10"
+							},
+							"type": "terms"
+						}
+					],
+					"metrics": [
+						{
+							"$$hashKey": "object:71",
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "rule_group3:sysmon_event7 AND agent_name:$agent_name",
+					"queryType": "lucene",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "IMAGE LOAD EVENTS  / AGENT",
+			"type": "table"
+		},
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "wazuh_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "palette-classic"
+					},
+					"custom": {
+						"axisLabel": "",
+						"axisPlacement": "auto",
+						"barAlignment": 0,
+						"drawStyle": "bars",
+						"fillOpacity": 0,
+						"gradientMode": "none",
+						"hideFrom": {
+							"legend": false,
+							"tooltip": false,
+							"viz": false
+						},
+						"lineInterpolation": "linear",
+						"lineWidth": 1,
+						"pointSize": 5,
+						"scaleDistribution": {
+							"type": "linear"
+						},
+						"showPoints": "auto",
+						"spanNulls": false,
+						"stacking": {
+							"group": "A",
+							"mode": "normal"
+						},
+						"thresholdsStyle": {
+							"mode": "off"
+						}
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green"
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					}
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 10,
+				"w": 18,
+				"x": 6,
+				"y": 27
+			},
+			"id": 76,
+			"options": {
+				"legend": {
+					"calcs": [],
+					"displayMode": "table",
+					"placement": "right"
+				},
+				"tooltip": {
+					"mode": "single",
+					"sort": "none"
+				}
+			},
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "agent_name",
+							"id": "3",
+							"settings": {
+								"min_doc_count": "1",
+								"order": "desc",
+								"orderBy": "_term",
+								"size": "10"
+							},
+							"type": "terms"
+						},
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "elasticsearch",
+						"uid": "wazuh_datasource_uid"
+					},
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "rule_group3:sysmon_event7 AND agent_name:$agent_name",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "TOP 10 AGENTS - HISTOGRAM",
+			"transparent": true,
+			"type": "timeseries"
+		},
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "wazuh_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green"
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					}
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 0,
+				"y": 37
+			},
+			"id": 67,
+			"links": [],
+			"options": {
+				"displayMode": "gradient",
+				"minVizHeight": 10,
+				"minVizWidth": 0,
+				"orientation": "horizontal",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"showUnfilled": true,
+				"text": {}
+			},
+			"pluginVersion": "9.0.0",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"$$hashKey": "object:73",
+							"fake": true,
+							"field": "process_image",
+							"id": "3",
+							"settings": {
+								"min_doc_count": "1",
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "10"
+							},
+							"type": "terms"
+						},
+						{
+							"$$hashKey": "object:74",
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto",
+								"min_doc_count": 0,
+								"trimEdges": 0
+							},
+							"type": "date_histogram"
+						}
+					],
+					"metrics": [
+						{
+							"$$hashKey": "object:71",
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "rule_group3:sysmon_event7 AND agent_name:$agent_name",
+					"queryType": "lucene",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "IMAGE LOAD EVENTS  / TOP 10 PROCESS",
+			"type": "bargauge"
+		},
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "wazuh_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"custom": {
+						"align": "auto",
+						"displayMode": "auto",
+						"filterable": false,
+						"inspect": false
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green"
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					}
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "process_image"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 699
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 16,
+				"w": 12,
+				"x": 12,
+				"y": 37
+			},
+			"id": 69,
+			"links": [],
+			"options": {
+				"footer": {
+					"fields": "",
+					"reducer": ["sum"],
+					"show": false
+				},
+				"showHeader": true,
+				"sortBy": [
+					{
+						"desc": true,
+						"displayName": "Count"
+					}
+				]
+			},
+			"pluginVersion": "9.0.0",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"$$hashKey": "object:42",
+							"fake": true,
+							"field": "process_image",
+							"id": "3",
+							"settings": {
+								"min_doc_count": "1",
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "0"
+							},
+							"type": "terms"
+						}
+					],
+					"metrics": [
+						{
+							"$$hashKey": "object:40",
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "rule_group3:sysmon_event7 AND agent_name:$agent_name",
+					"queryType": "lucene",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "IMAGE LOAD EVENTS / PROCESS",
+			"type": "table"
+		},
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "wazuh_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green"
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					}
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 12,
+				"x": 0,
+				"y": 45
+			},
+			"id": 68,
+			"links": [],
+			"options": {
+				"displayMode": "gradient",
+				"minVizHeight": 10,
+				"minVizWidth": 0,
+				"orientation": "horizontal",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"showUnfilled": true,
+				"text": {}
+			},
+			"pluginVersion": "9.0.0",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"$$hashKey": "object:73",
+							"fake": true,
+							"field": "process_image",
+							"id": "3",
+							"settings": {
+								"min_doc_count": "1",
+								"order": "asc",
+								"orderBy": "_count",
+								"size": "10"
+							},
+							"type": "terms"
+						},
+						{
+							"$$hashKey": "object:74",
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto",
+								"min_doc_count": 0,
+								"trimEdges": 0
+							},
+							"type": "date_histogram"
+						}
+					],
+					"metrics": [
+						{
+							"$$hashKey": "object:71",
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "rule_group3:sysmon_event7 AND agent_name:$agent_name",
+					"queryType": "lucene",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "IMAGE LOAD EVENTS  / LEAST SEEN PROCESS",
+			"type": "bargauge"
+		},
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "wazuh_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"custom": {
+						"align": "auto",
+						"displayMode": "auto",
+						"filterable": false,
+						"inspect": false
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green"
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					}
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "DATE/TIME"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 255
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "AGENT"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 229
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "CERT STATUS"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 234
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "DLL LOCATION"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 622
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "PROCESS FILE"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 345
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "EVENT ID"
+						},
+						"properties": [
+							{
+								"id": "links",
+								"value": [
+									{
+										"targetBlank": true,
+										"title": "VIEW EVENT DETAILS",
+										"url": "https://grafana.company.local/explore?left=%7B%22datasource%22:%22WAZUH%22,%22queries%22:%5B%7B%22refId%22:%22A%22,%22query%22:%22_id:${__value.text}%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D,%22range%22:%7B%22from%22:%22now-6h%22,%22to%22:%22now%22%7D%7D"
+									}
+								]
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 10,
+				"w": 24,
+				"x": 0,
+				"y": 53
+			},
+			"id": 71,
+			"options": {
+				"footer": {
+					"fields": "",
+					"reducer": ["sum"],
+					"show": false
+				},
+				"showHeader": true,
+				"sortBy": []
+			},
+			"pluginVersion": "9.0.0",
+			"targets": [
+				{
+					"bucketAggs": [],
+					"datasource": {
+						"type": "elasticsearch",
+						"uid": "wazuh_datasource_uid"
+					},
+					"metrics": [
+						{
+							"$$hashKey": "object:823",
+							"field": "select field",
+							"id": "1",
+							"meta": {},
+							"settings": {
+								"size": "250"
+							},
+							"type": "raw_data"
+						}
+					],
+					"query": "rule_group3:sysmon_event7 AND agent_name:$agent_name",
+					"queryType": "lucene",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "DLL SIDE LOADING - EVENTS",
+			"transformations": [
+				{
+					"id": "organize",
+					"options": {
+						"excludeByName": {
+							"@metadata_beat": true,
+							"@metadata_type": true,
+							"@metadata_version": true,
+							"IMPHASH": true,
+							"MD5": true,
+							"SHA1": true,
+							"_id": false,
+							"_index": true,
+							"_type": true,
+							"agent_ephemeral_id": true,
+							"agent_hostname": true,
+							"agent_id": true,
+							"agent_ip": false,
+							"agent_ip_city_name": true,
+							"agent_ip_country_code": true,
+							"agent_ip_geolocation": true,
+							"agent_labels_customer": true,
+							"agent_name": false,
+							"agent_type": true,
+							"agent_version": true,
+							"beats_type": true,
+							"collector_node_id": true,
+							"data_win_eventdata_description": true,
+							"data_win_eventdata_fileVersion": true,
+							"data_win_eventdata_fileVersion_city_name": true,
+							"data_win_eventdata_fileVersion_country_code": true,
+							"data_win_eventdata_fileVersion_geolocation": true,
+							"data_win_eventdata_hashes": true,
+							"data_win_eventdata_image": false,
+							"data_win_eventdata_originalFileName": true,
+							"data_win_eventdata_processGuid": true,
+							"data_win_eventdata_processId": true,
+							"data_win_eventdata_product": true,
+							"data_win_eventdata_ruleName": true,
+							"data_win_eventdata_signature": true,
+							"data_win_eventdata_user": true,
+							"data_win_eventdata_utcTime": true,
+							"data_win_system_channel": true,
+							"data_win_system_computer": true,
+							"data_win_system_eventID": true,
+							"data_win_system_eventRecordID": true,
+							"data_win_system_keywords": true,
+							"data_win_system_level": true,
+							"data_win_system_message": true,
+							"data_win_system_opcode": true,
+							"data_win_system_processID": true,
+							"data_win_system_providerGuid": true,
+							"data_win_system_providerName": true,
+							"data_win_system_severityValue": true,
+							"data_win_system_systemTime": true,
+							"data_win_system_task": true,
+							"data_win_system_threadID": true,
+							"data_win_system_version": true,
+							"date": true,
+							"decoder_name": true,
+							"dll_hashes": true,
+							"dll_name": true,
+							"dll_signature": true,
+							"dll_signature_status": true,
+							"dll_signed": true,
+							"ecs_version": true,
+							"firewall_rule_name": true,
+							"gl2_accounted_message_size": true,
+							"gl2_message_id": true,
+							"gl2_processing_error": true,
+							"gl2_remote_ip": true,
+							"gl2_remote_port": true,
+							"gl2_source_collector": true,
+							"gl2_source_input": true,
+							"gl2_source_node": true,
+							"hash_md5": true,
+							"hash_sha1": true,
+							"hash_sha256": true,
+							"highlight": true,
+							"host_name": true,
+							"id": true,
+							"image_loaded": true,
+							"location": true,
+							"log_file_path": true,
+							"log_offset": true,
+							"manager_name": true,
+							"message": true,
+							"process_id": true,
+							"process_image": true,
+							"rule_description": true,
+							"rule_firedtimes": true,
+							"rule_group1": true,
+							"rule_group2": true,
+							"rule_group3": true,
+							"rule_groups": true,
+							"rule_id": true,
+							"rule_level": true,
+							"rule_mail": true,
+							"rule_mitre_id": true,
+							"rule_mitre_tactic": true,
+							"rule_mitre_technique": true,
+							"software_package": false,
+							"sort": true,
+							"source": true,
+							"src_ip": true,
+							"src_ip_city_name": true,
+							"src_ip_country_code": true,
+							"src_ip_geolocation": true,
+							"streams": true,
+							"syslog_tag": true,
+							"syslog_type": true,
+							"sysmon_event_description": true,
+							"timestamp": false,
+							"true": true,
+							"win_system_eventID": true,
+							"windows_event_id": true,
+							"windows_event_severity": true
+						},
+						"indexByName": {
+							"_id": 1,
+							"_index": 4,
+							"_type": 5,
+							"agent_id": 6,
+							"agent_ip": 7,
+							"agent_ip_city_name": 78,
+							"agent_ip_country_code": 79,
+							"agent_ip_geolocation": 80,
+							"agent_labels_customer": 63,
+							"agent_name": 2,
+							"data_win_eventdata_company": 59,
+							"data_win_eventdata_description": 57,
+							"data_win_eventdata_fileVersion": 8,
+							"data_win_eventdata_hashes": 9,
+							"data_win_eventdata_image": 3,
+							"data_win_eventdata_imageLoaded": 10,
+							"data_win_eventdata_originalFileName": 58,
+							"data_win_eventdata_processGuid": 11,
+							"data_win_eventdata_processId": 12,
+							"data_win_eventdata_product": 13,
+							"data_win_eventdata_ruleName": 60,
+							"data_win_eventdata_signature": 61,
+							"data_win_eventdata_signatureStatus": 14,
+							"data_win_eventdata_signed": 15,
+							"data_win_eventdata_user": 64,
+							"data_win_eventdata_utcTime": 16,
+							"data_win_system_channel": 17,
+							"data_win_system_computer": 18,
+							"data_win_system_eventID": 19,
+							"data_win_system_eventRecordID": 20,
+							"data_win_system_keywords": 21,
+							"data_win_system_level": 22,
+							"data_win_system_message": 23,
+							"data_win_system_opcode": 24,
+							"data_win_system_processID": 25,
+							"data_win_system_providerGuid": 26,
+							"data_win_system_providerName": 27,
+							"data_win_system_severityValue": 28,
+							"data_win_system_systemTime": 29,
+							"data_win_system_task": 30,
+							"data_win_system_threadID": 31,
+							"data_win_system_version": 32,
+							"decoder_name": 33,
+							"dll_hashes": 65,
+							"dll_name": 66,
+							"dll_signature": 67,
+							"dll_signature_status": 68,
+							"dll_signed": 69,
+							"gl2_accounted_message_size": 34,
+							"gl2_message_id": 35,
+							"gl2_processing_error": 70,
+							"gl2_remote_ip": 36,
+							"gl2_remote_port": 37,
+							"gl2_source_input": 38,
+							"gl2_source_node": 39,
+							"highlight": 55,
+							"id": 40,
+							"image_loaded": 71,
+							"location": 41,
+							"manager_name": 42,
+							"message": 43,
+							"process_id": 44,
+							"process_image": 45,
+							"rule_description": 46,
+							"rule_firedtimes": 47,
+							"rule_group1": 72,
+							"rule_group2": 73,
+							"rule_group3": 74,
+							"rule_groups": 48,
+							"rule_id": 49,
+							"rule_level": 50,
+							"rule_mail": 51,
+							"rule_mitre_id": 75,
+							"rule_mitre_tactic": 76,
+							"rule_mitre_technique": 77,
+							"software_vendor": 62,
+							"sort": 56,
+							"source": 52,
+							"streams": 53,
+							"syslog_level": 81,
+							"syslog_type": 54,
+							"timestamp": 0,
+							"true": 82
+						},
+						"renameByName": {
+							"SHA256": "DLL HASH (SHA256)",
+							"_id": "EVENT ID",
+							"agent_name": "AGENT",
+							"data_win_eventdata_company": "VENDOR",
+							"data_win_eventdata_image": "PROCESS FILE",
+							"data_win_eventdata_imageLoaded": "DLL LOCATION",
+							"data_win_eventdata_signatureStatus": "CERT STATUS",
+							"data_win_eventdata_signed": "DIGITAL SIGNATURE",
+							"process_name": "DLL",
+							"software_package": "SOFTWARE",
+							"software_vendor": "VENDOR",
+							"source": "",
+							"syslog_level": "LEVEL",
+							"timestamp": "DATE/TIME"
+						}
+					}
+				},
+				{
+					"id": "filterFieldsByName",
+					"options": {
+						"include": {
+							"names": [
+								"DATE/TIME",
+								"AGENT",
+								"PROCESS FILE",
+								"DLL LOCATION",
+								"CERT STATUS",
+								"DIGITAL SIGNATURE",
+								"LEVEL",
+								"EVENT ID"
+							]
+						}
+					}
+				}
+			],
+			"type": "table"
+		}
+	],
+	"refresh": false,
+	"schemaVersion": 36,
+	"style": "dark",
+	"tags": ["EDR"],
+	"templating": {
+		"list": [
+			{
+				"datasource": {
+					"type": "elasticsearch",
+					"uid": "wazuh_datasource_uid"
+				},
+				"filters": [],
+				"hide": 0,
+				"label": "",
+				"name": "Filters",
+				"skipUrlSync": false,
+				"type": "adhoc"
+			},
+			{
+				"current": {
+					"selected": false,
+					"text": "All",
+					"value": "$__all"
+				},
+				"datasource": {
+					"type": "elasticsearch",
+					"uid": "wazuh_datasource_uid"
+				},
+				"definition": "{ \"find\": \"terms\", \"field\": \"agent_name\", \"query\": \"rule_group3:sysmon_event7\"}",
+				"hide": 0,
+				"includeAll": true,
+				"label": "Agent",
+				"multi": false,
+				"name": "agent_name",
+				"options": [],
+				"query": "{ \"find\": \"terms\", \"field\": \"agent_name\", \"query\": \"rule_group3:sysmon_event7\"}",
+				"refresh": 2,
+				"regex": "",
+				"skipUrlSync": false,
+				"sort": 2,
+				"tagValuesQuery": "",
+				"tagsQuery": "",
+				"type": "query",
+				"useTags": false
+			},
+			{
+				"current": {
+					"isNone": true,
+					"selected": false,
+					"text": "None",
+					"value": ""
+				},
+				"datasource": {
+					"type": "elasticsearch",
+					"uid": "wazuh_datasource_uid"
+				},
+				"definition": "{ \"find\": \"terms\", \"field\": \"process_name\", \"query\": \"rule_group3:sysmon_event7\"}",
+				"hide": 2,
+				"includeAll": false,
+				"multi": false,
+				"name": "process_name",
+				"options": [],
+				"query": "{ \"find\": \"terms\", \"field\": \"process_name\", \"query\": \"rule_group3:sysmon_event7\"}",
+				"refresh": 1,
+				"regex": "",
+				"skipUrlSync": false,
+				"sort": 0,
+				"tagValuesQuery": "",
+				"tagsQuery": "",
+				"type": "query",
+				"useTags": false
+			},
+			{
+				"current": {
+					"isNone": true,
+					"selected": false,
+					"text": "None",
+					"value": ""
+				},
+				"datasource": {
+					"type": "elasticsearch",
+					"uid": "wazuh_datasource_uid"
+				},
+				"definition": "{ \"find\": \"terms\", \"field\": \"parent_cmd_line\", \"query\": \"rule_group3:sysmon_event7\"}",
+				"hide": 2,
+				"includeAll": false,
+				"multi": false,
+				"name": "parent_cmd_line",
+				"options": [],
+				"query": "{ \"find\": \"terms\", \"field\": \"parent_cmd_line\", \"query\": \"rule_group3:sysmon_event7\"}",
+				"refresh": 1,
+				"regex": "",
+				"skipUrlSync": false,
+				"sort": 0,
+				"tagValuesQuery": "",
+				"tagsQuery": "",
+				"type": "query",
+				"useTags": false
+			},
+			{
+				"current": {
+					"isNone": true,
+					"selected": false,
+					"text": "None",
+					"value": ""
+				},
+				"datasource": {
+					"type": "elasticsearch",
+					"uid": "wazuh_datasource_uid"
+				},
+				"definition": "{ \"find\": \"terms\", \"field\": \"parent_process_id\", \"query\": \"rule_group3:sysmon_event7\"}",
+				"hide": 2,
+				"includeAll": false,
+				"multi": false,
+				"name": "parent_process_id",
+				"options": [],
+				"query": "{ \"find\": \"terms\", \"field\": \"parent_process_id\", \"query\": \"rule_group3:sysmon_event7\"}",
+				"refresh": 1,
+				"regex": "",
+				"skipUrlSync": false,
+				"sort": 0,
+				"tagValuesQuery": "",
+				"tagsQuery": "",
+				"type": "query",
+				"useTags": false
+			},
+			{
+				"current": {
+					"isNone": true,
+					"selected": false,
+					"text": "None",
+					"value": ""
+				},
+				"datasource": {
+					"type": "elasticsearch",
+					"uid": "wazuh_datasource_uid"
+				},
+				"definition": "{ \"find\": \"terms\", \"field\": \"parent_process_image\", \"query\": \"rule_group3:sysmon_event7\"}",
+				"hide": 2,
+				"includeAll": false,
+				"multi": false,
+				"name": "parent_process_image",
+				"options": [],
+				"query": "{ \"find\": \"terms\", \"field\": \"parent_process_image\", \"query\": \"rule_group3:sysmon_event7\"}",
+				"refresh": 1,
+				"regex": "",
+				"skipUrlSync": false,
+				"sort": 0,
+				"tagValuesQuery": "",
+				"tagsQuery": "",
+				"type": "query",
+				"useTags": false
+			},
+			{
+				"current": {
+					"selected": false,
+					"text": "C:\\\\Program Files (x86)\\\\DesktopCentral_Agent\\\\dcconfig.exe",
+					"value": "C:\\\\Program Files (x86)\\\\DesktopCentral_Agent\\\\dcconfig.exe"
+				},
+				"datasource": {
+					"type": "elasticsearch",
+					"uid": "wazuh_datasource_uid"
+				},
+				"definition": "{ \"find\": \"terms\", \"field\": \"process_image\", \"query\": \"rule_group3:sysmon_event7\"}",
+				"hide": 2,
+				"includeAll": false,
+				"multi": false,
+				"name": "process_image",
+				"options": [],
+				"query": "{ \"find\": \"terms\", \"field\": \"process_image\", \"query\": \"rule_group3:sysmon_event7\"}",
+				"refresh": 1,
+				"regex": "",
+				"skipUrlSync": false,
+				"sort": 0,
+				"tagValuesQuery": "",
+				"tagsQuery": "",
+				"type": "query",
+				"useTags": false
+			},
+			{
+				"current": {
+					"isNone": true,
+					"selected": false,
+					"text": "None",
+					"value": ""
+				},
+				"datasource": {
+					"type": "elasticsearch",
+					"uid": "wazuh_datasource_uid"
+				},
+				"definition": "{ \"find\": \"terms\", \"field\": \"process_cmd_line\", \"query\": \"rule_group3:sysmon_event7\"}",
+				"hide": 2,
+				"includeAll": false,
+				"multi": false,
+				"name": "process_cmd_line",
+				"options": [],
+				"query": "{ \"find\": \"terms\", \"field\": \"process_cmd_line\", \"query\": \"rule_group3:sysmon_event7\"}",
+				"refresh": 1,
+				"regex": "",
+				"skipUrlSync": false,
+				"sort": 0,
+				"tagValuesQuery": "",
+				"tagsQuery": "",
+				"type": "query",
+				"useTags": false
+			},
+			{
+				"current": {
+					"selected": false,
+					"text": "10008",
+					"value": "10008"
+				},
+				"datasource": {
+					"type": "elasticsearch",
+					"uid": "wazuh_datasource_uid"
+				},
+				"definition": "{ \"find\": \"terms\", \"field\": \"process_id\", \"query\": \"rule_group3:sysmon_event7\"}",
+				"hide": 2,
+				"includeAll": false,
+				"multi": false,
+				"name": "process_id",
+				"options": [],
+				"query": "{ \"find\": \"terms\", \"field\": \"process_id\", \"query\": \"rule_group3:sysmon_event7\"}",
+				"refresh": 1,
+				"regex": "",
+				"skipUrlSync": false,
+				"sort": 0,
+				"tagValuesQuery": "",
+				"tagsQuery": "",
+				"type": "query",
+				"useTags": false
+			}
+		]
+	},
+	"time": {
+		"from": "now-6h",
+		"to": "now"
+	},
+	"timepicker": {
+		"refresh_intervals": ["5s", "10s", "30s", "1m", "5m", "15m", "30m", "1h", "2h", "1d"],
+		"time_options": ["5m", "15m", "1h", "6h", "12h", "24h", "2d", "7d", "30d"]
+	},
+	"timezone": "",
+	"title": "EDR - DLL-Side LOADING",
+	"uid": null,
+	"version": 6,
+	"weekStart": ""
+}
