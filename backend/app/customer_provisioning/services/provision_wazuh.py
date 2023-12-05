@@ -21,7 +21,7 @@ from app.connectors.grafana.schema.dashboards import WazuhDashboard
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
 from app.connectors.services import ConnectorServices
-from app.utils import get_connector_url, get_connector_username, get_connector_password
+from app.utils import get_connector_attribute
 
 ######### ! GRAYLOG PROVISIONING ! ############
 # ! INDEX SETS ! #
@@ -215,12 +215,12 @@ async def create_grafana_datasource(request: ProvisionNewCustomer, organization_
         type="grafana-opensearch-datasource",
         typeName="OpenSearch",
         access="proxy",
-        url=await get_connector_url(connector_id=1, session=session),
+        url=await get_connector_attribute(connector_id=1, column_name="connector_url", session=session),
         database=f"{request.customer_index_name}*",
         basicAuth=True,
-        basicAuthUser=await get_connector_username(connector_id=1, session=session),
+        basicAuthUser=await get_connector_attribute(connector_id=1, column_name="connector_username", session=session),
         secureJsonData={
-            "basicAuthPassword": await get_connector_password(connector_id=1, session=session),
+            "basicAuthPassword": await get_connector_attribute(connector_id=1, column_name="connector_password", session=session)
         },
         isDefault=False,
         jsonData={

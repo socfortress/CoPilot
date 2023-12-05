@@ -4,6 +4,7 @@ from enum import Enum
 from typing import List
 from typing import Optional
 from typing import Union
+from typing import Any
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -457,17 +458,10 @@ def allowed_file(filename):
 
 
 ################## ! DATABASE UTILS ! ##################
-async def get_connector_url(connector_id: int, session: AsyncSession = Depends(get_session)):
+async def get_connector_attribute(connector_id: int, column_name: str, session: AsyncSession = Depends(get_session)) -> Optional[Any]:
     result = await session.execute(select(Connectors).filter(Connectors.id == connector_id))
     connector = result.scalars().first()
-    return connector.connector_url
 
-async def get_connector_username(connector_id: int, session: AsyncSession = Depends(get_session)):
-    result = await session.execute(select(Connectors).filter(Connectors.id == connector_id))
-    connector = result.scalars().first()
-    return connector.connector_username
-
-async def get_connector_password(connector_id: int, session: AsyncSession = Depends(get_session)):
-    result = await session.execute(select(Connectors).filter(Connectors.id == connector_id))
-    connector = result.scalars().first()
-    return connector.connector_password
+    if connector:
+        return getattr(connector, column_name, None)
+    return None
