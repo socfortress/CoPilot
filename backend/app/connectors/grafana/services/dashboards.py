@@ -34,10 +34,14 @@ def load_dashboard_json(dashboard_info: tuple) -> dict:
         raise HTTPException(status_code=500, detail="Error decoding JSON from file")
 
 
-async def update_dashboard(dashboard_json: dict) -> dict:
+async def update_dashboard(dashboard_json: dict, organization_id: int, folder_id: int) -> dict:
+    logger.info(f"Updating dashboards for organization {organization_id} and folder {folder_id}")
     try:
         grafana_client = await create_grafana_client("Grafana")
-        dashboard_update_payload = {"dashboard": dashboard_json, "folderId": 0, "overwrite": True}
+        # Switch to the newly created organization
+        grafana_client.user.switch_actual_user_organisation(organization_id)
+        logger.info(f"Updating dashboards for organization {organization_id} and folder {folder_id}")
+        dashboard_update_payload = {"dashboard": dashboard_json, "folderId": folder_id, "overwrite": True}
         return grafana_client.dashboard.update_dashboard(dashboard_update_payload)
     except Exception as e:
         logger.error(f"Error updating dashboard: {e}")
@@ -45,6 +49,7 @@ async def update_dashboard(dashboard_json: dict) -> dict:
 
 
 async def provision_dashboards(dashboard_request: DashboardProvisionRequest) -> GrafanaDashboardResponse:
+    logger.info(f"Received dashboard provision request: {dashboard_request}")
     provisioned_dashboards = []
     errors = []
 
@@ -54,7 +59,7 @@ async def provision_dashboards(dashboard_request: DashboardProvisionRequest) -> 
         dashboard_enum = valid_dashboards[dashboard_name]
         try:
             dashboard_json = load_dashboard_json(dashboard_enum.value)
-            updated_dashboard = await update_dashboard(dashboard_json)
+            updated_dashboard = await update_dashboard(dashboard_json=dashboard_json, organization_id=dashboard_request.organizationId, folder_id=dashboard_request.folderId)
             provisioned_dashboards.append(GrafanaDashboard(**updated_dashboard))
         except HTTPException as e:
             errors.append(f"Failed to update dashboard {dashboard_name}: {e.detail}")

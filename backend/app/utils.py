@@ -4,6 +4,7 @@ from enum import Enum
 from typing import List
 from typing import Optional
 from typing import Union
+from typing import Any
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -24,6 +25,8 @@ from app.db.db_session import Session
 from app.db.db_session import engine
 from app.db.db_session import get_session
 from app.db.universal_models import LogEntry
+from app.db.all_models import Connectors
+
 
 
 ################## ! 422 VALIDATION ERROR TYPES FOR PYDANTIC VALUE ERROR RESPONSE ! ##################
@@ -452,3 +455,13 @@ async def purge_logs_by_time_range(time_range: TimeRangeModel, session: AsyncSes
 def allowed_file(filename):
     ALLOWED_EXTENSIONS = {"yaml", "txt"}
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+################## ! DATABASE UTILS ! ##################
+async def get_connector_attribute(connector_id: int, column_name: str, session: AsyncSession = Depends(get_session)) -> Optional[Any]:
+    result = await session.execute(select(Connectors).filter(Connectors.id == connector_id))
+    connector = result.scalars().first()
+
+    if connector:
+        return getattr(connector, column_name, None)
+    return None
