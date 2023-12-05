@@ -28,6 +28,9 @@ class ProvisionNewCustomer(BaseModel):
     index_shards: int = Field(..., example=1, description="Number of shards for the customer's Graylog instance")
     customer_subscription: List[CustomerSubsctipion] = Field(..., example=["Wazuh", "Office365"], description="List of subscriptions for the customer")
     dashboards_to_include: DashboardProvisionRequest = Field(..., description="Dashboards to include in the customer's Grafana instance")
+    wazuh_auth_password: str = Field(..., description="Password for the Wazuh API user")
+    wazuh_registration_port: str = Field(..., description="Port for the Wazuh registration service")
+    wazuh_logs_port: str = Field(..., description="Port for the Wazuh logs service")
 
     @validator("customer_index_name")
     def validate_customer_index_name(cls, v):
@@ -37,6 +40,15 @@ class ProvisionNewCustomer(BaseModel):
                 "customer_index_name must start with a lowercase letter or number and can only contain lowercase letters, numbers, underscores, plus signs, and hyphens.",
             )
         return v
+
+
+class CustomerProvisionMeta(BaseModel):
+    index_set_id: str
+    stream_id: str
+    pipeline_ids: List[str]
+    grafana_organization_id: int
+    wazuh_datasource_uid: str
+    grafana_edr_folder_id: int
 
 
 class WazuhAgentsTemplatePaths(Enum):

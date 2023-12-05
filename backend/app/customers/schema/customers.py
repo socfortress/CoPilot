@@ -60,12 +60,12 @@ class CustomersResponse(BaseModel):
 class CustomerMetaRequestBody(BaseModel):
     customer_meta_graylog_index: str = Field(..., description="Graylog index for the customer")
     customer_meta_graylog_stream: str = Field(..., description="Graylog stream for the customer")
-    customer_meta_influx_org: str = Field(..., description="InfluxDB organization for the customer")
-    customer_meta_grafana_org: str = Field(..., description="Grafana organization for the customer")
+    customer_meta_grafana_org_id: str = Field(..., description="Grafana organization for the customer")
     customer_meta_wazuh_group: str = Field(..., description="Wazuh group for the customer")
-    index_retention: int = Field(..., description="Index retention for the customer")
-    wazuh_registration_port: int = Field(..., description="Wazuh registration port for the customer")
-    wazuh_log_ingestion_port: int = Field(..., description="Wazuh log ingestion port for the customer")
+    customer_meta_index_retention: str = Field(..., description="Index retention for the customer")
+    customer_meta_wazuh_registration_port: str = Field(..., description="Wazuh registration port for the customer")
+    customer_meta_wazuh_log_ingestion_port: str = Field(..., description="Wazuh log ingestion port for the customer")
+    customer_meta_wazuh_auth_password: str = Field(..., description="Wazuh auth password for the customer")
 
     class Config:
         orm_mode = True
@@ -73,12 +73,12 @@ class CustomerMetaRequestBody(BaseModel):
             "example": {
                 "customer_meta_graylog_index": "graylog_index",
                 "customer_meta_graylog_stream": "graylog_stream",
-                "customer_meta_influx_org": "influx_org",
-                "customer_meta_grafana_org": "grafana_org",
+                "customer_meta_grafana_org_id": "grafana_org",
                 "customer_meta_wazuh_group": "wazuh_group",
-                "index_retention": 30,
-                "wazuh_registration_port": 1514,
-                "wazuh_log_ingestion_port": 1515,
+                "customer_meta_index_retention": "30D",
+                "customer_meta_wazuh_registration_port": "1514",
+                "customer_meta_wazuh_log_ingestion_port": "1515",
+                "customer_meta_wazuh_auth_password": "wazuh_password",
             },
         }
 
