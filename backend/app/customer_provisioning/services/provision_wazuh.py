@@ -2,26 +2,42 @@ import json
 from datetime import datetime
 from pathlib import Path
 
-from loguru import logger
 from fastapi import HTTPException
-from app.connectors.graylog.utils.universal import send_post_request
-from app.connectors.graylog.services.pipelines import get_pipelines
-from app.connectors.graylog.services.management import start_stream
-from app.connectors.wazuh_manager.utils.universal import send_post_request as send_wazuh_post_request
-from app.connectors.wazuh_manager.utils.universal import send_put_request as send_wazuh_put_request
-from app.customer_provisioning.schema.provision import GraylogIndexSetCreationResponse
-from app.customer_provisioning.schema.provision import ProvisionNewCustomer, WazuhEventStream, StreamCreationResponse, CustomerSubsctipion, StreamConnectionToPipelineRequest, StreamConnectionToPipelineResponse, WazuhAgentsTemplatePaths, GrafanaOrganizationCreation, GrafanaDatasource, GrafanaDataSourceCreationResponse, GrafanaFolderCreationResponse, NodesVersionResponse
-from app.connectors.graylog.schema.pipelines import GraylogPipelinesResponse
-from app.customer_provisioning.schema.provision import TimeBasedIndexSet
-from app.connectors.grafana.utils.universal import create_grafana_client
-from app.connectors.grafana.services.dashboards import provision_dashboards
-from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
-from app.connectors.grafana.schema.dashboards import Office365Dashboard
-from app.connectors.grafana.schema.dashboards import WazuhDashboard
+from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
+from app.connectors.grafana.services.dashboards import provision_dashboards
+from app.connectors.grafana.utils.universal import create_grafana_client
+from app.connectors.graylog.services.management import start_stream
+from app.connectors.graylog.services.pipelines import get_pipelines
+from app.connectors.graylog.utils.universal import send_post_request
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
-from app.connectors.services import ConnectorServices
+from app.connectors.wazuh_manager.utils.universal import (
+    send_post_request as send_wazuh_post_request,
+)
+from app.connectors.wazuh_manager.utils.universal import (
+    send_put_request as send_wazuh_put_request,
+)
+from app.customer_provisioning.schema.provision import CustomerProvisionMeta
+from app.customer_provisioning.schema.provision import GrafanaDatasource
+from app.customer_provisioning.schema.provision import GrafanaDataSourceCreationResponse
+from app.customer_provisioning.schema.provision import GrafanaFolderCreationResponse
+from app.customer_provisioning.schema.provision import GrafanaOrganizationCreation
+from app.customer_provisioning.schema.provision import GraylogIndexSetCreationResponse
+from app.customer_provisioning.schema.provision import NodesVersionResponse
+from app.customer_provisioning.schema.provision import ProvisionNewCustomer
+from app.customer_provisioning.schema.provision import StreamConnectionToPipelineRequest
+from app.customer_provisioning.schema.provision import (
+    StreamConnectionToPipelineResponse,
+)
+from app.customer_provisioning.schema.provision import StreamCreationResponse
+from app.customer_provisioning.schema.provision import TimeBasedIndexSet
+from app.customer_provisioning.schema.provision import WazuhAgentsTemplatePaths
+from app.customer_provisioning.schema.provision import WazuhEventStream
+from app.db.universal_models import CustomersMeta
 from app.utils import get_connector_attribute
+
 
 ######### ! GRAYLOG PROVISIONING ! ############
 # ! INDEX SETS ! #
@@ -87,12 +103,13 @@ def build_event_stream_config(request: ProvisionNewCustomer, index_set_id: str) 
                 "type": 1,
                 "inverted": False,
                 "value": request.customer_code,
-            }
+            },
         ],
         matching_type="AND",
         remove_matches_from_default_stream=True,
         content_pack=None,
     )
+
 
 async def send_event_stream_creation_request(event_stream: WazuhEventStream) -> StreamCreationResponse:
     json_event_stream = json.dumps(event_stream.dict())
@@ -100,10 +117,12 @@ async def send_event_stream_creation_request(event_stream: WazuhEventStream) -> 
     response_json = await send_post_request(endpoint="/api/streams", data=event_stream.dict())
     return StreamCreationResponse(**response_json)
 
+
 async def create_event_stream(request: ProvisionNewCustomer, index_set_id: str):
     logger.info(f"Creating event stream for customer {request.customer_name}")
     event_stream_config = build_event_stream_config(request, index_set_id)
     return await send_event_stream_creation_request(event_stream_config)
+
 
 # ! PIPELINES ! #
 # Function to get pipeline ID
@@ -120,6 +139,7 @@ async def get_pipeline_id(subscription: str) -> str:
         logger.error(f"Failed to get pipelines: {pipelines_response.message}")
         raise HTTPException(status_code=500, detail=f"Failed to get pipelines: {pipelines_response.message}")
 
+
 async def connect_stream_to_pipeline(stream_and_pipeline: StreamConnectionToPipelineRequest):
     logger.info(f"Connecting stream {stream_and_pipeline.stream_id} to pipeline {stream_and_pipeline.pipeline_ids}")
     response_json = await send_post_request(endpoint="/api/system/pipelines/connections/to_stream", data=stream_and_pipeline.dict())
@@ -132,17 +152,19 @@ async def connect_stream_to_pipeline(stream_and_pipeline: StreamConnectionToPipe
 def generate_group_code(group, customer_code):
     return f"{group}_{customer_code}"
 
+
 # Separate function for sending POST requests to Wazuh
 async def create_wazuh_group(group_code):
     endpoint = "groups"
     data = {"group_id": group_code}
     return await send_wazuh_post_request(endpoint=endpoint, data=data)
 
+
 # Main function to create Wazuh groups
 async def create_wazuh_groups(request: ProvisionNewCustomer):
     logger.info(f"Creating Wazuh groups for customer {request.customer_name} with code {request.customer_code}")
 
-    wazuh_groups = ['Linux', 'Windows', 'Mac']  # This list can be moved to a config file or a global variable
+    wazuh_groups = ["Linux", "Windows", "Mac"]  # This list can be moved to a config file or a global variable
 
     for group in wazuh_groups:
         group_code = generate_group_code(group, request.customer_code)
@@ -161,28 +183,30 @@ def get_template_path(template_info: WazuhAgentsTemplatePaths) -> Path:
     base_dir = current_file.parent.parent  # Move up two levels to the base directory
     return base_dir / folder_name / file_name
 
+
 # Function to update Wazuh group configuration
 async def configure_wazuh_group(group_code, template_path):
     logger.info(f"Configuring Wazuh group {group_code}")
 
     # Read the contents of the template file
-    with open(template_path, 'r') as template_file:
+    with open(template_path, "r") as template_file:
         config_template = template_file.read()
 
     # Replace placeholder with the customer code
-    group_config = config_template.replace("REPLACE", group_code.split('_')[-1])
+    group_config = config_template.replace("REPLACE", group_code.split("_")[-1])
 
     # Make the API request to update the group configuration
     return await send_wazuh_put_request(endpoint=f"groups/{group_code}/configuration", data=group_config, xml_data=True)
+
 
 # Function to apply configurations for all groups
 async def apply_group_configurations(request: ProvisionNewCustomer):
     logger.info(f"Applying configurations for Wazuh groups for customer {request.customer_name} with code {request.customer_code}")
 
     group_templates = {
-        'Linux': WazuhAgentsTemplatePaths.LINUX_AGENT,
-        'Windows': WazuhAgentsTemplatePaths.WINDOWS_AGENT,
-        'Mac': WazuhAgentsTemplatePaths.MAC_AGENT
+        "Linux": WazuhAgentsTemplatePaths.LINUX_AGENT,
+        "Windows": WazuhAgentsTemplatePaths.WINDOWS_AGENT,
+        "Mac": WazuhAgentsTemplatePaths.MAC_AGENT,
     }
 
     for group, template in group_templates.items():
@@ -201,11 +225,16 @@ async def create_grafana_organization(request: ProvisionNewCustomer) -> GrafanaO
     results = grafana_client.organization.create_organization(
         organization={
             "name": request.customer_grafana_org_name,
-        }
+        },
     )
     return GrafanaOrganizationCreation(**results)
 
-async def create_grafana_datasource(request: ProvisionNewCustomer, organization_id: int, session: AsyncSession) -> GrafanaDataSourceCreationResponse:
+
+async def create_grafana_datasource(
+    request: ProvisionNewCustomer,
+    organization_id: int,
+    session: AsyncSession,
+) -> GrafanaDataSourceCreationResponse:
     logger.info(f"Creating Grafana datasource")
     grafana_client = await create_grafana_client("Grafana")
     # Switch to the newly created organization
@@ -220,7 +249,7 @@ async def create_grafana_datasource(request: ProvisionNewCustomer, organization_
         basicAuth=True,
         basicAuthUser=await get_connector_attribute(connector_id=1, column_name="connector_username", session=session),
         secureJsonData={
-            "basicAuthPassword": await get_connector_attribute(connector_id=1, column_name="connector_password", session=session)
+            "basicAuthPassword": await get_connector_attribute(connector_id=1, column_name="connector_password", session=session),
         },
         isDefault=False,
         jsonData={
@@ -241,6 +270,7 @@ async def create_grafana_datasource(request: ProvisionNewCustomer, organization_
         datasource=datasource_payload.dict(),
     )
     return GrafanaDataSourceCreationResponse(**results)
+
 
 async def create_grafana_folder(organization_id: int, folder_title: str) -> GrafanaFolderCreationResponse:
     logger.info(f"Creating Grafana folder")
@@ -270,26 +300,59 @@ async def get_opensearch_version() -> str:
     raise HTTPException(status_code=500, detail=f"Failed to retrieve OpenSearch version.")
 
 
+######### ! Update CustomerMeta Table ! ############
+async def update_customer_meta_table(request: ProvisionNewCustomer, customer_meta: CustomerProvisionMeta, session: AsyncSession):
+    logger.info(f"Updating customer meta table for customer {request.customer_name}")
+    customer_meta = CustomersMeta(
+        customer_code=request.customer_code,
+        customer_name=request.customer_name,
+        customer_meta_graylog_index=customer_meta.index_set_id,
+        customer_meta_graylog_stream=customer_meta.stream_id,
+        customer_meta_grafana_org_id=customer_meta.grafana_organization_id,
+        customer_meta_wazuh_group=request.customer_code,
+        customer_meta_index_retention=str(request.hot_data_retention),
+        customer_meta_wazuh_registration_port=request.wazuh_registration_port,
+        customer_meta_wazuh_log_ingestion_port=request.wazuh_logs_port,
+        customer_meta_wazuh_auth_password=request.wazuh_auth_password,
+    )
+    session.add(customer_meta)
+    await session.commit()
+
+
 # ! MAIN FUNCTION ! #
 async def provision_wazuh_customer(request: ProvisionNewCustomer, session: AsyncSession):
     logger.info(f"Provisioning new customer {request}")
-    # created_index_response = await create_index_set(request)
-    # index_set_id = created_index_response.data.id
-    # created_stream_response = await create_event_stream(request, index_set_id)
-    # stream_id = created_stream_response.data.stream_id
-    # logger.info(f"Created index set with ID: {index_set_id} and stream with ID: {stream_id}")
-    # pipeline_ids = await get_pipeline_id(subscription="Wazuh")
-    # logger.info(f"Pipeline ID: {pipeline_ids}")
-    # stream_and_pipeline = StreamConnectionToPipelineRequest(stream_id=stream_id, pipeline_ids=pipeline_ids)
-    # await connect_stream_to_pipeline(stream_and_pipeline)
-    # if await start_stream(stream_id=stream_id) is False:
-    #     raise HTTPException(status_code=500, detail=f"Failed to start stream {stream_id}")
-    #await create_wazuh_groups(request)
-    #await apply_group_configurations(request)
-    logger.info(f"Creating Grafana organization for customer {request.dashboards_to_include.dashboards}")
-    grafana_organization_id = (await create_grafana_organization(request)).orgId
-    wazuh_datasource_uid = (await create_grafana_datasource(request=request, organization_id=grafana_organization_id, session=session)).datasource.uid
-    grafana_edr_folder_id = (await create_grafana_folder(organization_id=grafana_organization_id, folder_title="EDR")).id
-    await provision_dashboards(DashboardProvisionRequest(dashboards=request.dashboards_to_include.dashboards, organizationId=grafana_organization_id, folderId=grafana_edr_folder_id, datasourceUid=wazuh_datasource_uid))
+    # Initialize an empty dictionary to store the meta data
+    provision_meta_data = {}
+    provision_meta_data["index_set_id"] = (await create_index_set(request)).data.id
+    provision_meta_data["stream_id"] = (await create_event_stream(request, provision_meta_data["index_set_id"])).data.stream_id
+    provision_meta_data["pipeline_ids"] = await get_pipeline_id(subscription="Wazuh")
+    stream_and_pipeline = StreamConnectionToPipelineRequest(
+        stream_id=provision_meta_data["stream_id"],
+        pipeline_ids=provision_meta_data["pipeline_ids"],
+    )
+    await connect_stream_to_pipeline(stream_and_pipeline)
+    if await start_stream(stream_id=provision_meta_data["stream_id"]) is False:
+        raise HTTPException(status_code=500, detail=f"Failed to start stream {provision_meta_data['stream_id']}")
+    await create_wazuh_groups(request)
+    await apply_group_configurations(request)
+    provision_meta_data["grafana_organization_id"] = (await create_grafana_organization(request)).orgId
+    provision_meta_data["wazuh_datasource_uid"] = (
+        await create_grafana_datasource(request=request, organization_id=provision_meta_data["grafana_organization_id"], session=session)
+    ).datasource.uid
+    provision_meta_data["grafana_edr_folder_id"] = (
+        await create_grafana_folder(organization_id=provision_meta_data["grafana_organization_id"], folder_title="EDR")
+    ).id
+    await provision_dashboards(
+        DashboardProvisionRequest(
+            dashboards=request.dashboards_to_include.dashboards,
+            organizationId=provision_meta_data["grafana_organization_id"],
+            folderId=provision_meta_data["grafana_edr_folder_id"],
+            datasourceUid=provision_meta_data["wazuh_datasource_uid"],
+        ),
+    )
+
+    customer_provision_meta = CustomerProvisionMeta(**provision_meta_data)
+    await update_customer_meta_table(request, customer_provision_meta, session)
 
     return {"message": "Provisioning new customer"}

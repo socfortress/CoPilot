@@ -50,12 +50,12 @@ class CustomersMeta(SQLModel, table=True):
     customer_name: str = Field(max_length=255)
     customer_meta_graylog_index: str = Field(max_length=1024)
     customer_meta_graylog_stream: str = Field(max_length=1024)
-    customer_meta_influx_org: str = Field(max_length=1024)
-    customer_meta_grafana_org: str = Field(max_length=1024)
+    customer_meta_grafana_org_id: str = Field(max_length=1024)
     customer_meta_wazuh_group: str = Field(max_length=1024)
-    index_retention: Optional[int] = Field()
-    wazuh_registration_port: Optional[int] = Field()
-    wazuh_log_ingestion_port: Optional[int] = Field()
+    customer_meta_index_retention: Optional[str] = Field()
+    customer_meta_wazuh_registration_port: Optional[str] = Field()
+    customer_meta_wazuh_log_ingestion_port: Optional[str] = Field()
+    customer_meta_wazuh_auth_password: Optional[str] = Field(max_length=1024)
 
     # Link back to Customers
     customer: Optional["Customers"] = Relationship(back_populates="meta")
@@ -67,12 +67,12 @@ class CustomersMeta(SQLModel, table=True):
             self.customer_name = customer_meta.customer_name
         self.customer_meta_graylog_index = customer_meta.customer_meta_graylog_index
         self.customer_meta_graylog_stream = customer_meta.customer_meta_graylog_stream
-        self.customer_meta_influx_org = customer_meta.customer_meta_influx_org
-        self.customer_meta_grafana_org = customer_meta.customer_meta_grafana_org
+        self.customer_meta_grafana_org_id = customer_meta.customer_meta_grafana_org_id
         self.customer_meta_wazuh_group = customer_meta.customer_meta_wazuh_group
-        self.index_retention = customer_meta.index_retention
-        self.wazuh_registration_port = customer_meta.wazuh_registration_port
-        self.wazuh_log_ingestion_port = customer_meta.wazuh_log_ingestion_port
+        self.customer_meta_index_retention = customer_meta.customer_meta_index_retention
+        self.customer_meta_wazuh_registration_port = customer_meta.customer_meta_wazuh_registration_port
+        self.customer_meta_wazuh_log_ingestion_port = customer_meta.customer_meta_wazuh_log_ingestion_port
+        self.customer_meta_wazuh_auth_password = customer_meta.customer_meta_wazuh_auth_password
 
 
 class Agents(SQLModel, table=True):

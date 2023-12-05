@@ -1,8 +1,9 @@
 import re
 from datetime import datetime
-from typing import Dict, List
-from typing import Optional
 from enum import Enum
+from typing import Dict
+from typing import List
+from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
@@ -10,9 +11,11 @@ from pydantic import validator
 
 from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
 
+
 class CustomerSubsctipion(Enum):
     WAZUH = "Wazuh"
     OFFICE365 = "Office365"
+
 
 class ProvisionNewCustomer(BaseModel):
     customer_name: str = Field(..., example="SOC Fortress", description="Name of the customer")
@@ -26,8 +29,15 @@ class ProvisionNewCustomer(BaseModel):
     hot_data_retention: int = Field(..., example=30, description="Number of days to retain hot data")
     index_replicas: int = Field(..., example=1, description="Number of replicas for the customer's Graylog instance")
     index_shards: int = Field(..., example=1, description="Number of shards for the customer's Graylog instance")
-    customer_subscription: List[CustomerSubsctipion] = Field(..., example=["Wazuh", "Office365"], description="List of subscriptions for the customer")
+    customer_subscription: List[CustomerSubsctipion] = Field(
+        ...,
+        example=["Wazuh", "Office365"],
+        description="List of subscriptions for the customer",
+    )
     dashboards_to_include: DashboardProvisionRequest = Field(..., description="Dashboards to include in the customer's Grafana instance")
+    wazuh_auth_password: str = Field(..., description="Password for the Wazuh API user")
+    wazuh_registration_port: str = Field(..., description="Port for the Wazuh registration service")
+    wazuh_logs_port: str = Field(..., description="Port for the Wazuh logs service")
 
     @validator("customer_index_name")
     def validate_customer_index_name(cls, v):
@@ -39,6 +49,15 @@ class ProvisionNewCustomer(BaseModel):
         return v
 
 
+class CustomerProvisionMeta(BaseModel):
+    index_set_id: str
+    stream_id: str
+    pipeline_ids: List[str]
+    grafana_organization_id: int
+    wazuh_datasource_uid: str
+    grafana_edr_folder_id: int
+
+
 class WazuhAgentsTemplatePaths(Enum):
     LINUX_AGENT = ("templates", "linux_agent.conf")
     WINDOWS_AGENT = ("templates", "windows_agent.conf")
@@ -46,6 +65,7 @@ class WazuhAgentsTemplatePaths(Enum):
 
 
 ####################################### ! GRAYLOG PROVISIONING ! #########################
+
 
 #! INDEX SETS !#
 class TimeBasedRotationStrategyConfig(BaseModel):
@@ -142,12 +162,14 @@ class GraylogIndexSetCreationResponse(BaseModel):
     success: bool
     message: str
 
+
 # ! STREAMS ! #
 class StreamRule(BaseModel):
     field: str
     type: int
     inverted: bool
     value: str
+
 
 class WazuhEventStream(BaseModel):
     title: str = Field(..., description="Title of the stream")
@@ -164,35 +186,33 @@ class WazuhEventStream(BaseModel):
                 "title": "WAZUH EVENTS CUSTOMERS - Example Company",
                 "description": "WAZUH EVENTS CUSTOMERS - Example Company",
                 "index_set_id": "12345",
-                "rules": [
-                    {
-                        "field": "agent_labels_customer",
-                        "type": 1,
-                        "inverted": False,
-                        "value": "ExampleCode"
-                    }
-                ],
+                "rules": [{"field": "agent_labels_customer", "type": 1, "inverted": False, "value": "ExampleCode"}],
                 "matching_type": "AND",
                 "remove_matches_from_default_stream": True,
-                "content_pack": None
-            }
+                "content_pack": None,
+            },
         }
+
 
 class StreamData(BaseModel):
     stream_id: str = Field(..., description="ID of the created stream")
+
 
 class StreamCreationResponse(BaseModel):
     data: StreamData
     success: bool = Field(..., description="Indicates if the request was successful")
     message: str = Field(..., description="A message detailing the outcome of the request")
 
+
 class StreamAndPipelineData(BaseModel):
     stream_id: str = Field(..., description="ID of the stream")
     pipeline_ids: List[str] = Field(..., description="List of pipeline IDs connected to the stream")
 
+
 class StreamConnectionToPipelineRequest(BaseModel):
     stream_id: str = Field(..., description="ID of the stream to connect")
     pipeline_ids: List[str] = Field(..., description="List of pipeline IDs to connect to the stream")
+
 
 class StreamConnectionToPipelineResponse(BaseModel):
     data: StreamAndPipelineData
@@ -202,14 +222,17 @@ class StreamConnectionToPipelineResponse(BaseModel):
 
 ####################################### ! GRAFANA PROVISIONING ! #########################
 
+
 # ! Organization ! #
 class GrafanaOrganizationCreation(BaseModel):
     message: str = Field(..., description="Message detailing the outcome of the request")
     orgId: int = Field(..., description="ID of the created organization")
 
+
 # ! Data Source ! #
 class GrafanaSecureJsonData(BaseModel):
     basicAuthPassword: str = Field(..., alias="basicAuthPassword")
+
 
 class GrafanaJsonData(BaseModel):
     database: str = Field(..., alias="database")
@@ -250,8 +273,10 @@ class DataSourceCreationJsonData(BaseModel):
     tlsSkipVerify: bool = Field(..., alias="tlsSkipVerify")
     version: str
 
+
 class DataSourceCreationSecureJsonFields(BaseModel):
     basicAuthPassword: bool = Field(..., alias="basicAuthPassword")
+
 
 class DataSourceCreationDatasource(BaseModel):
     id: int
@@ -273,11 +298,13 @@ class DataSourceCreationDatasource(BaseModel):
     version: int
     readOnly: bool = Field(..., alias="readOnly")
 
+
 class GrafanaDataSourceCreationResponse(BaseModel):
     datasource: DataSourceCreationDatasource
     id: int
     message: str
     name: str
+
 
 # ! Folder Creation Response! #
 class GrafanaFolderCreationResponse(BaseModel):
@@ -296,9 +323,11 @@ class GrafanaFolderCreationResponse(BaseModel):
     updated: datetime
     version: int
 
+
 # ! OpenSearch Version ! #
 class NodeInfo(BaseModel):
     version: str
+
 
 class NodesVersionResponse(BaseModel):
     nodes: Dict[str, NodeInfo]

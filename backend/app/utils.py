@@ -1,10 +1,10 @@
 from datetime import datetime
 from datetime import timedelta
 from enum import Enum
+from typing import Any
 from typing import List
 from typing import Optional
 from typing import Union
-from typing import Any
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -21,12 +21,11 @@ from sqlalchemy.future import select
 
 from app.auth.services.universal import find_user
 from app.auth.utils import AuthHandler
+from app.db.all_models import Connectors
 from app.db.db_session import Session
 from app.db.db_session import engine
 from app.db.db_session import get_session
 from app.db.universal_models import LogEntry
-from app.db.all_models import Connectors
-
 
 
 ################## ! 422 VALIDATION ERROR TYPES FOR PYDANTIC VALUE ERROR RESPONSE ! ##################
