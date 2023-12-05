@@ -1,6 +1,6 @@
 <template>
 	<div class="soc-users-list">
-		<n-spin :show="loading">
+		<n-spin :show="loadingUsers">
 			<n-scrollbar x-scrollable style="width: 100%">
 				<n-table :bordered="false" class="min-w-max">
 					<thead>
@@ -9,6 +9,7 @@
 							<th>Login</th>
 							<th>Name</th>
 							<th>Active</th>
+							<th style="max-width: 300px">Alerts</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -42,6 +43,9 @@
 									{{ user.user_active ? "Yes" : "No" }}
 								</strong>
 							</td>
+							<td style="max-width: 300px">
+								<SocUserAlerts :user-id="user.user_id" />
+							</td>
 						</tr>
 					</tbody>
 				</n-table>
@@ -51,11 +55,12 @@
 </template>
 
 <script setup lang="ts">
-// TODO : add alerts by user
 import { ref, onBeforeMount, toRefs } from "vue"
 import { useMessage, NTable, NTooltip, NScrollbar, NSpin } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
+import SocUserAlerts from "./SocUserAlerts.vue"
 import Api from "@/api"
+import type { SocAlert } from "@/types/soc/alert.d"
 import type { SocUser } from "@/types/soc/user.d"
 
 const props = defineProps<{ highlight: string | null | undefined }>()
@@ -64,11 +69,13 @@ const { highlight } = toRefs(props)
 const InfoIcon = "carbon:information"
 
 const message = useMessage()
-const loading = ref(false)
+const loadingAlerts = ref(false)
+const loadingUsers = ref(false)
 const usersList = ref<SocUser[]>([])
+const alertsList = ref<SocAlert[]>([])
 
-function getData() {
-	loading.value = true
+function getUsers() {
+	loadingUsers.value = true
 
 	Api.soc
 		.getUsers()
@@ -85,12 +92,33 @@ function getData() {
 			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
-			loading.value = false
+			loadingUsers.value = false
+		})
+}
+
+function getAlerts() {
+	loadingAlerts.value = true
+
+	Api.soc
+		.getAlerts()
+		.then(res => {
+			if (res.data.success) {
+				alertsList.value = res.data?.alerts || []
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			loadingAlerts.value = false
 		})
 }
 
 onBeforeMount(() => {
-	getData()
+	getUsers()
+	getAlerts()
 })
 </script>
 
