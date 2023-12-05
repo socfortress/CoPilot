@@ -288,8 +288,8 @@ async def provision_wazuh_customer(request: ProvisionNewCustomer, session: Async
     #await apply_group_configurations(request)
     logger.info(f"Creating Grafana organization for customer {request.dashboards_to_include.dashboards}")
     grafana_organization_id = (await create_grafana_organization(request)).orgId
-    await create_grafana_datasource(request=request, organization_id=grafana_organization_id, session=session)
-    #grafana_edr_folder_id = (await create_grafana_folder(organization_id=grafana_organization_id, folder_title="EDR")).id
-    #await provision_dashboards(DashboardProvisionRequest(dashboards=request.dashboards_to_include.dashboards, organizationId=grafana_organization_id, folderId=grafana_edr_folder_id))
+    wazuh_datasource_uid = (await create_grafana_datasource(request=request, organization_id=grafana_organization_id, session=session)).datasource.uid
+    grafana_edr_folder_id = (await create_grafana_folder(organization_id=grafana_organization_id, folder_title="EDR")).id
+    await provision_dashboards(DashboardProvisionRequest(dashboards=request.dashboards_to_include.dashboards, organizationId=grafana_organization_id, folderId=grafana_edr_folder_id, datasourceUid=wazuh_datasource_uid))
 
     return {"message": "Provisioning new customer"}

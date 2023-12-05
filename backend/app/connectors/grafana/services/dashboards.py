@@ -21,17 +21,34 @@ def get_dashboard_path(dashboard_info: tuple) -> Path:
     return base_dir / "dashboards" / folder_name / file_name
 
 
-def load_dashboard_json(dashboard_info: tuple) -> dict:
+def load_dashboard_json(dashboard_info: tuple, datasource_uid: str) -> dict:
     file_path = get_dashboard_path(dashboard_info)
     try:
         with open(file_path, "r") as file:
-            return json.load(file)
+            dashboard_data = json.load(file)
+
+        # Search for 'uid' with 'wazuh_datasource_uid' and replace it
+        replace_uid_value(dashboard_data, datasource_uid)
+
+        return dashboard_data
+
     except FileNotFoundError:
         logger.error(f"Dashboard JSON file not found at {file_path}")
         raise HTTPException(status_code=404, detail="Dashboard JSON file not found")
     except json.JSONDecodeError:
         logger.error("Error decoding JSON from file")
         raise HTTPException(status_code=500, detail="Error decoding JSON from file")
+
+def replace_uid_value(obj, new_value, key_to_replace='uid', old_value='wazuh_datasource_uid'):
+    if isinstance(obj, dict):
+        for k, v in obj.items():
+            if k == key_to_replace and v == old_value:
+                obj[k] = new_value
+            elif isinstance(v, (dict, list)):
+                replace_uid_value(v, new_value, key_to_replace, old_value)
+    elif isinstance(obj, list):
+        for item in obj:
+            replace_uid_value(item, new_value, key_to_replace, old_value)
 
 
 async def update_dashboard(dashboard_json: dict, organization_id: int, folder_id: int) -> dict:
@@ -58,7 +75,7 @@ async def provision_dashboards(dashboard_request: DashboardProvisionRequest) -> 
     for dashboard_name in dashboard_request.dashboards:
         dashboard_enum = valid_dashboards[dashboard_name]
         try:
-            dashboard_json = load_dashboard_json(dashboard_enum.value)
+            dashboard_json = load_dashboard_json(dashboard_enum.value, datasource_uid=dashboard_request.datasourceUid)
             updated_dashboard = await update_dashboard(dashboard_json=dashboard_json, organization_id=dashboard_request.organizationId, folder_id=dashboard_request.folderId)
             provisioned_dashboards.append(GrafanaDashboard(**updated_dashboard))
         except HTTPException as e:
