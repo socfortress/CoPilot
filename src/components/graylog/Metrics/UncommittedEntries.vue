@@ -24,6 +24,9 @@
 </template>
 
 <script setup lang="ts">
+// TODO:  add a realtime chart
+// TODO: add goto grylog message page button
+
 import Icon from "@/components/common/Icon.vue"
 import { NButton } from "naive-ui"
 import { computed, ref, toRefs } from "vue"
