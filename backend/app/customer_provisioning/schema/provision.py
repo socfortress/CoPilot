@@ -212,6 +212,8 @@ class GrafanaSecureJsonData(BaseModel):
     basicAuthPassword: str = Field(..., alias="basicAuthPassword")
 
 class GrafanaJsonData(BaseModel):
+    database: str = Field(..., alias="database")
+    flavor: str = Field(..., alias="flavor")
     version: str = Field(..., alias="version")
     includeFrozen: bool = Field(False, alias="includeFrozen")
     logLevelField: str = Field(..., alias="logLevelField")
@@ -238,6 +240,8 @@ class GrafanaDatasource(BaseModel):
 
 # ! Datasource Creation Response! #
 class DataSourceCreationJsonData(BaseModel):
+    database: str = Field(..., alias="database")
+    flavor: str = Field(..., alias="flavor")
     includeFrozen: bool = Field(..., alias="includeFrozen")
     logLevelField: str = Field(..., alias="logLevelField")
     logMessageField: str = Field(..., alias="logMessageField")
@@ -291,3 +295,10 @@ class GrafanaFolderCreationResponse(BaseModel):
     updatedBy: str = Field(..., alias="updatedBy")
     updated: datetime
     version: int
+
+# ! OpenSearch Version ! #
+class NodeInfo(BaseModel):
+    version: str
+
+class NodesVersionResponse(BaseModel):
+    nodes: Dict[str, NodeInfo]

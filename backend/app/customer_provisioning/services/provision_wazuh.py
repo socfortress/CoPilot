@@ -10,7 +10,7 @@ from app.connectors.graylog.services.management import start_stream
 from app.connectors.wazuh_manager.utils.universal import send_post_request as send_wazuh_post_request
 from app.connectors.wazuh_manager.utils.universal import send_put_request as send_wazuh_put_request
 from app.customer_provisioning.schema.provision import GraylogIndexSetCreationResponse
-from app.customer_provisioning.schema.provision import ProvisionNewCustomer, WazuhEventStream, StreamCreationResponse, CustomerSubsctipion, StreamConnectionToPipelineRequest, StreamConnectionToPipelineResponse, WazuhAgentsTemplatePaths, GrafanaOrganizationCreation, GrafanaDatasource, GrafanaDataSourceCreationResponse, GrafanaFolderCreationResponse
+from app.customer_provisioning.schema.provision import ProvisionNewCustomer, WazuhEventStream, StreamCreationResponse, CustomerSubsctipion, StreamConnectionToPipelineRequest, StreamConnectionToPipelineResponse, WazuhAgentsTemplatePaths, GrafanaOrganizationCreation, GrafanaDatasource, GrafanaDataSourceCreationResponse, GrafanaFolderCreationResponse, NodesVersionResponse
 from app.connectors.graylog.schema.pipelines import GraylogPipelinesResponse
 from app.customer_provisioning.schema.provision import TimeBasedIndexSet
 from app.connectors.grafana.utils.universal import create_grafana_client
@@ -18,7 +18,10 @@ from app.connectors.grafana.services.dashboards import provision_dashboards
 from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
 from app.connectors.grafana.schema.dashboards import Office365Dashboard
 from app.connectors.grafana.schema.dashboards import WazuhDashboard
-
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
+from app.connectors.services import ConnectorServices
+from app.utils import get_connector_url, get_connector_username, get_connector_password
 
 ######### ! GRAYLOG PROVISIONING ! ############
 # ! INDEX SETS ! #
@@ -202,7 +205,7 @@ async def create_grafana_organization(request: ProvisionNewCustomer) -> GrafanaO
     )
     return GrafanaOrganizationCreation(**results)
 
-async def create_grafana_datasource(organization_id: int) -> GrafanaDataSourceCreationResponse:
+async def create_grafana_datasource(request: ProvisionNewCustomer, organization_id: int, session: AsyncSession) -> GrafanaDataSourceCreationResponse:
     logger.info(f"Creating Grafana datasource")
     grafana_client = await create_grafana_client("Grafana")
     # Switch to the newly created organization
@@ -212,24 +215,25 @@ async def create_grafana_datasource(organization_id: int) -> GrafanaDataSourceCr
         type="grafana-opensearch-datasource",
         typeName="OpenSearch",
         access="proxy",
-        url="https://logs.socfortress.co:9200",
-        database="wazuh-*",
+        url=await get_connector_url(connector_id=1, session=session),
+        database=f"{request.customer_index_name}*",
         basicAuth=True,
-        basicAuthUser="admin",
+        basicAuthUser=await get_connector_username(connector_id=1, session=session),
         secureJsonData={
-            "basicAuthPassword": "hmx7KPy15XPhJkgjlFrVgrWZ+Aid6QNm"
+            "basicAuthPassword": await get_connector_password(connector_id=1, session=session),
         },
         isDefault=False,
         jsonData={
-            "database": "wazuh-*",
+            "database": f"{request.customer_index_name}*",
             "flavor": "opensearch",
+            "includeFrozen": False,
             "logLevelField": "syslog_level",
             "logMessageField": "rule_description",
             "maxConcurrentShardRequests": 5,
             "pplEnabled": True,
             "timeField": "timestamp",
             "tlsSkipVerify": True,
-            "version": "2.6.0"
+            "version": await get_opensearch_version(),
         },
         readOnly=True,
     )
@@ -250,8 +254,24 @@ async def create_grafana_folder(organization_id: int, folder_title: str) -> Graf
     return GrafanaFolderCreationResponse(**results)
 
 
+async def get_opensearch_version() -> str:
+    logger.info("Getting OpenSearch version")
+    opensearch_client = await create_wazuh_indexer_client("Wazuh-Indexer")
+
+    # Retrieve version information
+    version_response = opensearch_client.nodes.info(node_id="_local", filter_path=["nodes.*.version"])
+
+    # Parse the response to get the first version found
+    nodes_version_response = NodesVersionResponse(**version_response)
+    for node_id, node_info in nodes_version_response.nodes.items():
+        return node_info.version
+
+    # If no version is found, raise an exception
+    raise HTTPException(status_code=500, detail=f"Failed to retrieve OpenSearch version.")
+
+
 # ! MAIN FUNCTION ! #
-async def provision_wazuh_customer(request: ProvisionNewCustomer):
+async def provision_wazuh_customer(request: ProvisionNewCustomer, session: AsyncSession):
     logger.info(f"Provisioning new customer {request}")
     # created_index_response = await create_index_set(request)
     # index_set_id = created_index_response.data.id
@@ -268,8 +288,8 @@ async def provision_wazuh_customer(request: ProvisionNewCustomer):
     #await apply_group_configurations(request)
     logger.info(f"Creating Grafana organization for customer {request.dashboards_to_include.dashboards}")
     grafana_organization_id = (await create_grafana_organization(request)).orgId
-    await create_grafana_datasource(organization_id=grafana_organization_id)
-    grafana_edr_folder_id = (await create_grafana_folder(organization_id=grafana_organization_id, folder_title="EDR")).id
-    await provision_dashboards(DashboardProvisionRequest(dashboards=request.dashboards_to_include.dashboards, organizationId=grafana_organization_id, folderId=grafana_edr_folder_id))
+    await create_grafana_datasource(request=request, organization_id=grafana_organization_id, session=session)
+    #grafana_edr_folder_id = (await create_grafana_folder(organization_id=grafana_organization_id, folder_title="EDR")).id
+    #await provision_dashboards(DashboardProvisionRequest(dashboards=request.dashboards_to_include.dashboards, organizationId=grafana_organization_id, folderId=grafana_edr_folder_id))
 
     return {"message": "Provisioning new customer"}
