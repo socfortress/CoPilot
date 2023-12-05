@@ -14,11 +14,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.auth.utils import AuthHandler
+from app.connectors.services import ConnectorServices
 from app.customer_provisioning.schema.provision import ProvisionNewCustomer
 from app.customer_provisioning.services.provision_wazuh import provision_wazuh_customer
 from app.db.db_session import get_session
 from app.db.universal_models import Customers
-from app.connectors.services import ConnectorServices
+
 # App specific imports
 
 
@@ -42,7 +43,11 @@ async def check_customer_exists(customer_name: str, session: AsyncSession = Depe
     description="Provision New Customer",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def provision_customer_route(request: ProvisionNewCustomer = Body(...), _customer: Customers = Depends(check_customer_exists), session: AsyncSession = Depends(get_session)):
+async def provision_customer_route(
+    request: ProvisionNewCustomer = Body(...),
+    _customer: Customers = Depends(check_customer_exists),
+    session: AsyncSession = Depends(get_session),
+):
     logger.info("Provisioning new customer")
     customer_provision = await provision_wazuh_customer(request, session=session)
 

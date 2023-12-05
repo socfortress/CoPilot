@@ -39,7 +39,8 @@ def load_dashboard_json(dashboard_info: tuple, datasource_uid: str) -> dict:
         logger.error("Error decoding JSON from file")
         raise HTTPException(status_code=500, detail="Error decoding JSON from file")
 
-def replace_uid_value(obj, new_value, key_to_replace='uid', old_value='wazuh_datasource_uid'):
+
+def replace_uid_value(obj, new_value, key_to_replace="uid", old_value="wazuh_datasource_uid"):
     if isinstance(obj, dict):
         for k, v in obj.items():
             if k == key_to_replace and v == old_value:
@@ -76,7 +77,11 @@ async def provision_dashboards(dashboard_request: DashboardProvisionRequest) -> 
         dashboard_enum = valid_dashboards[dashboard_name]
         try:
             dashboard_json = load_dashboard_json(dashboard_enum.value, datasource_uid=dashboard_request.datasourceUid)
-            updated_dashboard = await update_dashboard(dashboard_json=dashboard_json, organization_id=dashboard_request.organizationId, folder_id=dashboard_request.folderId)
+            updated_dashboard = await update_dashboard(
+                dashboard_json=dashboard_json,
+                organization_id=dashboard_request.organizationId,
+                folder_id=dashboard_request.folderId,
+            )
             provisioned_dashboards.append(GrafanaDashboard(**updated_dashboard))
         except HTTPException as e:
             errors.append(f"Failed to update dashboard {dashboard_name}: {e.detail}")
