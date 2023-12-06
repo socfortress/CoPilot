@@ -136,7 +136,7 @@ async def add_connectors_if_not_exist(session: AsyncSession):
             "connector_url": "http://ashwzhma.socfortress.local:8086",
             "connector_username": None,
             "connector_password": None,
-            "connector_api_key": "23PySXxdhw7hUgwOCjEfUhSLL32A41GBZwflP1k0XFQbL64q4rfju23uc_elokQ0546Cp-s25DnVRj8urQmt5w==",
+            "connector_api_key": "DDMsDZzI1xRHYxQT60fNZ_2zZtCnAKq04GmqEF3prLJOIw5iNzEtlXkui1a5Y6d5_eWf1nomug9FmE0ue1J5iQ==",
             "connector_configured": True,
             "connector_accepts_api_key": True,
             "connector_extra_data": "telegraf",
@@ -150,6 +150,16 @@ async def add_connectors_if_not_exist(session: AsyncSession):
             "connector_api_key": None,
             "connector_configured": True,
             "connector_accepts_username_password": True,
+        },
+        {
+            "connector_name": "Wazuh Worker Provisioning",
+            "connector_type": "3",
+            "connector_url": "http://192.168.200.220:5003/provision_worker",
+            "connector_username": None,
+            "connector_password": None,
+            "connector_api_key": None,
+            "connector_configured": True,
+            "connector_accepts_api_key": False,
         },
     ]
 

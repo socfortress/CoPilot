@@ -1,3 +1,4 @@
+import requests
 from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,6 +10,8 @@ from app.customer_provisioning.schema.graylog import StreamConnectionToPipelineR
 from app.customer_provisioning.schema.provision import CustomerProvisionMeta
 from app.customer_provisioning.schema.provision import CustomerProvisionResponse
 from app.customer_provisioning.schema.provision import ProvisionNewCustomer
+from app.customer_provisioning.schema.wazuh_worker import ProvisionWorkerRequest
+from app.customer_provisioning.schema.wazuh_worker import ProvisionWorkerResponse
 from app.customer_provisioning.services.grafana import create_grafana_datasource
 from app.customer_provisioning.services.grafana import create_grafana_folder
 from app.customer_provisioning.services.grafana import create_grafana_organization
@@ -19,6 +22,7 @@ from app.customer_provisioning.services.graylog import get_pipeline_id
 from app.customer_provisioning.services.wazuh_manager import apply_group_configurations
 from app.customer_provisioning.services.wazuh_manager import create_wazuh_groups
 from app.db.universal_models import CustomersMeta
+from app.utils import get_connector_attribute
 
 
 # ! MAIN FUNCTION ! #
@@ -57,8 +61,32 @@ async def provision_wazuh_customer(request: ProvisionNewCustomer, session: Async
     customer_provision_meta = CustomerProvisionMeta(**provision_meta_data)
     customer_meta = await update_customer_meta_table(request, customer_provision_meta, session)
 
+    provision_worker = await provision_wazuh_worker(
+        ProvisionWorkerRequest(
+            customer_name=request.customer_name,
+            wazuh_auth_password=request.wazuh_auth_password,
+            wazuh_registration_port=request.wazuh_registration_port,
+            wazuh_logs_port=request.wazuh_logs_port,
+            wazuh_api_port=request.wazuh_api_port,
+            wazuh_cluster_name=request.wazuh_cluster_name,
+            wazuh_cluster_key=request.wazuh_cluster_key,
+            wazuh_master_ip=request.wazuh_master_ip,
+        ),
+        session,
+    )
+
+    if provision_worker.success is False:
+        return CustomerProvisionResponse(
+            message=f"Customer {request.customer_name} provisioned successfully, but the Wazuh worker failed to provision",
+            success=True,
+            customer_meta=customer_meta.dict(),
+            wazuh_worker_provisioned=False,
+        )
+
     return CustomerProvisionResponse(
-        message=f"Customer {request.customer_name} provisioned successfully", success=True, customer_meta=customer_meta.dict(),
+        message=f"Customer {request.customer_name} provisioned successfully",
+        success=True,
+        customer_meta=customer_meta.dict(),
     )
 
 
@@ -80,3 +108,18 @@ async def update_customer_meta_table(request: ProvisionNewCustomer, customer_met
     session.add(customer_meta)
     await session.commit()
     return customer_meta
+
+
+######### ! Provision Wazuh Worker ! ############
+async def provision_wazuh_worker(request: ProvisionWorkerRequest, session: AsyncSession) -> ProvisionWorkerResponse:
+    logger.info(f"Provisioning Wazuh worker {request}")
+    # Send the POST request to the Wazuh worker
+    response = requests.post(
+        url=await get_connector_attribute(connector_id=14, column_name="connector_url", session=session),
+        json=request.dict(),
+    )
+    # Check the response status code
+    if response.status_code != 200:
+        return ProvisionWorkerResponse(success=False, message=f"Failed to provision Wazuh worker: {response.text}")
+    # Return the response
+    return ProvisionWorkerResponse(success=True, message=f"Wazuh worker provisioned successfully")

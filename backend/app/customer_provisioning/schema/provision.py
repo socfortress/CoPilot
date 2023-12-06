@@ -1,6 +1,7 @@
 import re
 from enum import Enum
 from typing import List
+from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
@@ -36,6 +37,10 @@ class ProvisionNewCustomer(BaseModel):
     wazuh_auth_password: str = Field(..., description="Password for the Wazuh API user")
     wazuh_registration_port: str = Field(..., description="Port for the Wazuh registration service")
     wazuh_logs_port: str = Field(..., description="Port for the Wazuh logs service")
+    wazuh_api_port: str = Field(..., description="Port for the Wazuh API service")
+    wazuh_cluster_name: str = Field(..., description="Name of the Wazuh cluster")
+    wazuh_cluster_key: str = Field(..., description="Password for the Wazuh cluster")
+    wazuh_master_ip: str = Field(..., description="IP address of the Wazuh master")
 
     @validator("customer_index_name")
     def validate_customer_index_name(cls, v):
@@ -60,3 +65,4 @@ class CustomerProvisionResponse(BaseModel):
     message: str = Field(..., description="Message indicating the status of the customer provisioning process")
     success: bool = Field(..., description="Whether the customer provisioning process was successful or not")
     customer_meta: CustomersMeta = Field(..., description="Customer meta data for the newly provisioned customer")
+    wazuh_worker_provisioned: Optional[bool] = Field(None, description="Whether the Wazuh worker was provisioned successfully")
