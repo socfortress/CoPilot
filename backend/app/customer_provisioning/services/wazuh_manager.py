@@ -1,6 +1,5 @@
 from pathlib import Path
 
-
 from loguru import logger
 
 from app.connectors.wazuh_manager.utils.universal import (
@@ -9,12 +8,8 @@ from app.connectors.wazuh_manager.utils.universal import (
 from app.connectors.wazuh_manager.utils.universal import (
     send_put_request as send_wazuh_put_request,
 )
-
 from app.customer_provisioning.schema.provision import ProvisionNewCustomer
-
-
 from app.customer_provisioning.schema.wazuh_manager import WazuhAgentsTemplatePaths
-
 
 
 ######### ! WAZUH MANAGER PROVISIONING ! ############

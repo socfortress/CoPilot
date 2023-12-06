@@ -5,7 +5,6 @@ from pydantic import BaseModel
 from pydantic import Field
 
 
-
 #! INDEX SETS !#
 class TimeBasedRotationStrategyConfig(BaseModel):
     type: str

@@ -4,26 +4,21 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
 from app.connectors.grafana.services.dashboards import provision_dashboards
-
 from app.connectors.graylog.services.management import start_stream
-
-from app.customer_provisioning.services.graylog import (
-    create_event_stream, create_index_set, get_pipeline_id, connect_stream_to_pipeline
-)
-from app.customer_provisioning.services.wazuh_manager import (
-    apply_group_configurations, create_wazuh_groups
-)
-from app.customer_provisioning.services.grafana import (
-    create_grafana_organization, create_grafana_datasource, create_grafana_folder
-)
-from app.customer_provisioning.schema.provision import CustomerProvisionMeta
-from app.customer_provisioning.schema.provision import ProvisionNewCustomer
 from app.customer_provisioning.schema.graylog import StreamConnectionToPipelineRequest
+from app.customer_provisioning.schema.provision import CustomerProvisionMeta
 from app.customer_provisioning.schema.provision import CustomerProvisionResponse
-
+from app.customer_provisioning.schema.provision import ProvisionNewCustomer
+from app.customer_provisioning.services.grafana import create_grafana_datasource
+from app.customer_provisioning.services.grafana import create_grafana_folder
+from app.customer_provisioning.services.grafana import create_grafana_organization
+from app.customer_provisioning.services.graylog import connect_stream_to_pipeline
+from app.customer_provisioning.services.graylog import create_event_stream
+from app.customer_provisioning.services.graylog import create_index_set
+from app.customer_provisioning.services.graylog import get_pipeline_id
+from app.customer_provisioning.services.wazuh_manager import apply_group_configurations
+from app.customer_provisioning.services.wazuh_manager import create_wazuh_groups
 from app.db.universal_models import CustomersMeta
-
-
 
 
 # ! MAIN FUNCTION ! #
@@ -62,10 +57,9 @@ async def provision_wazuh_customer(request: ProvisionNewCustomer, session: Async
     customer_provision_meta = CustomerProvisionMeta(**provision_meta_data)
     customer_meta = await update_customer_meta_table(request, customer_provision_meta, session)
 
-    return CustomerProvisionResponse(message=f"Customer {request.customer_name} provisioned successfully",
-                                        success=True,
-                                        customer_meta=customer_meta.dict())
-
+    return CustomerProvisionResponse(
+        message=f"Customer {request.customer_name} provisioned successfully", success=True, customer_meta=customer_meta.dict(),
+    )
 
 
 ######### ! Update CustomerMeta Table ! ############
