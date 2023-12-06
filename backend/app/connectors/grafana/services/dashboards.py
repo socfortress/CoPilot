@@ -40,7 +40,7 @@ def load_dashboard_json(dashboard_info: tuple, datasource_uid: str) -> dict:
         raise HTTPException(status_code=500, detail="Error decoding JSON from file")
 
 
-def replace_uid_value(obj, new_value, key_to_replace="uid", old_value="wazuh_datasource_uid"):
+def replace_uid_value(obj, new_value, key_to_replace="uid", old_value="replace_datasource_uid"):
     if isinstance(obj, dict):
         for k, v in obj.items():
             if k == key_to_replace and v == old_value:

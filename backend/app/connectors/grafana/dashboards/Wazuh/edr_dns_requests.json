@@ -44,7 +44,7 @@
 			"collapsed": false,
 			"datasource": {
 				"type": "elasticsearch",
-				"uid": "wazuh_datasource_uid"
+				"uid": "replace_datasource_uid"
 			},
 			"gridPos": {
 				"h": 1,
@@ -60,7 +60,7 @@
 		{
 			"datasource": {
 				"type": "elasticsearch",
-				"uid": "wazuh_datasource_uid"
+				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
 				"defaults": {
@@ -126,7 +126,7 @@
 					],
 					"datasource": {
 						"type": "elasticsearch",
-						"uid": "wazuh_datasource_uid"
+						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
 						{
@@ -147,7 +147,7 @@
 			"columns": [],
 			"datasource": {
 				"type": "elasticsearch",
-				"uid": "wazuh_datasource_uid"
+				"uid": "replace_datasource_uid"
 			},
 			"fontSize": "100%",
 			"gridPos": {
@@ -216,7 +216,7 @@
 					],
 					"datasource": {
 						"type": "elasticsearch",
-						"uid": "wazuh_datasource_uid"
+						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
 						{
@@ -237,7 +237,7 @@
 		{
 			"datasource": {
 				"type": "elasticsearch",
-				"uid": "wazuh_datasource_uid"
+				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
 				"defaults": {
@@ -333,7 +333,7 @@
 					],
 					"datasource": {
 						"type": "elasticsearch",
-						"uid": "wazuh_datasource_uid"
+						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
 						{
@@ -353,7 +353,7 @@
 		{
 			"datasource": {
 				"type": "elasticsearch",
-				"uid": "wazuh_datasource_uid"
+				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
 				"defaults": {
@@ -433,7 +433,7 @@
 					],
 					"datasource": {
 						"type": "elasticsearch",
-						"uid": "wazuh_datasource_uid"
+						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
 						{
@@ -456,7 +456,7 @@
 		{
 			"datasource": {
 				"type": "elasticsearch",
-				"uid": "wazuh_datasource_uid"
+				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
 				"defaults": {
@@ -532,7 +532,7 @@
 					],
 					"datasource": {
 						"type": "elasticsearch",
-						"uid": "wazuh_datasource_uid"
+						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
 						{
@@ -555,7 +555,7 @@
 		{
 			"datasource": {
 				"type": "elasticsearch",
-				"uid": "wazuh_datasource_uid"
+				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
 				"defaults": {
@@ -628,7 +628,7 @@
 					],
 					"datasource": {
 						"type": "elasticsearch",
-						"uid": "wazuh_datasource_uid"
+						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
 						{
@@ -651,7 +651,7 @@
 		{
 			"datasource": {
 				"type": "elasticsearch",
-				"uid": "wazuh_datasource_uid"
+				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
 				"defaults": {
@@ -727,7 +727,7 @@
 					],
 					"datasource": {
 						"type": "elasticsearch",
-						"uid": "wazuh_datasource_uid"
+						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
 						{
@@ -750,7 +750,7 @@
 		{
 			"datasource": {
 				"type": "elasticsearch",
-				"uid": "wazuh_datasource_uid"
+				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
 				"defaults": {
@@ -822,7 +822,7 @@
 					],
 					"datasource": {
 						"type": "elasticsearch",
-						"uid": "wazuh_datasource_uid"
+						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
 						{
@@ -845,7 +845,7 @@
 		{
 			"datasource": {
 				"type": "elasticsearch",
-				"uid": "wazuh_datasource_uid"
+				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
 				"defaults": {
@@ -1149,7 +1149,7 @@
 					"bucketAggs": [],
 					"datasource": {
 						"type": "elasticsearch",
-						"uid": "wazuh_datasource_uid"
+						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
 						{
@@ -1220,7 +1220,7 @@
 			{
 				"datasource": {
 					"type": "elasticsearch",
-					"uid": "wazuh_datasource_uid"
+					"uid": "replace_datasource_uid"
 				},
 				"filters": [],
 				"hide": 0,
@@ -1237,7 +1237,7 @@
 				},
 				"datasource": {
 					"type": "elasticsearch",
-					"uid": "wazuh_datasource_uid"
+					"uid": "replace_datasource_uid"
 				},
 				"definition": "{ \"find\": \"terms\", \"field\": \"agent_name\", \"query\": \"rule_group3:sysmon_event_22 OR rule_group3:dns OR rule_group1:dnsstat\"}",
 				"hide": 0,

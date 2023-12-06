@@ -43,7 +43,7 @@
 		{
 			"datasource": {
 				"type": "elasticsearch",
-				"uid": "wazuh_datasource_uid"
+				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
 				"defaults": {
@@ -128,7 +128,7 @@
 					],
 					"datasource": {
 						"type": "elasticsearch",
-						"uid": "wazuh_datasource_uid"
+						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
 						{
@@ -156,7 +156,7 @@
 					],
 					"datasource": {
 						"type": "elasticsearch",
-						"uid": "wazuh_datasource_uid"
+						"uid": "replace_datasource_uid"
 					},
 					"hide": false,
 					"metrics": [
@@ -176,7 +176,7 @@
 		{
 			"datasource": {
 				"type": "elasticsearch",
-				"uid": "wazuh_datasource_uid"
+				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
 				"defaults": {
@@ -248,7 +248,7 @@
 		{
 			"datasource": {
 				"type": "elasticsearch",
-				"uid": "wazuh_datasource_uid"
+				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
 				"defaults": {
@@ -323,7 +323,7 @@
 		{
 			"datasource": {
 				"type": "elasticsearch",
-				"uid": "wazuh_datasource_uid"
+				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
 				"defaults": {
@@ -420,7 +420,7 @@
 		{
 			"datasource": {
 				"type": "elasticsearch",
-				"uid": "wazuh_datasource_uid"
+				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
 				"defaults": {
@@ -498,7 +498,7 @@
 		{
 			"datasource": {
 				"type": "elasticsearch",
-				"uid": "wazuh_datasource_uid"
+				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
 				"defaults": {
@@ -594,7 +594,7 @@
 		{
 			"datasource": {
 				"type": "elasticsearch",
-				"uid": "wazuh_datasource_uid"
+				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
 				"defaults": {
@@ -683,7 +683,7 @@
 		{
 			"datasource": {
 				"type": "elasticsearch",
-				"uid": "wazuh_datasource_uid"
+				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
 				"defaults": {
@@ -773,7 +773,7 @@
 		{
 			"datasource": {
 				"type": "elasticsearch",
-				"uid": "wazuh_datasource_uid"
+				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
 				"defaults": {
@@ -876,7 +876,7 @@
 		{
 			"datasource": {
 				"type": "elasticsearch",
-				"uid": "wazuh_datasource_uid"
+				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
 				"defaults": {
@@ -972,7 +972,7 @@
 		{
 			"datasource": {
 				"type": "elasticsearch",
-				"uid": "wazuh_datasource_uid"
+				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
 				"defaults": {
@@ -1061,7 +1061,7 @@
 		{
 			"datasource": {
 				"type": "elasticsearch",
-				"uid": "wazuh_datasource_uid"
+				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
 				"defaults": {
@@ -1155,7 +1155,7 @@
 			"dashes": false,
 			"datasource": {
 				"type": "elasticsearch",
-				"uid": "wazuh_datasource_uid"
+				"uid": "replace_datasource_uid"
 			},
 			"fill": 1,
 			"fillGradient": 0,
@@ -1269,7 +1269,7 @@
 		{
 			"datasource": {
 				"type": "elasticsearch",
-				"uid": "wazuh_datasource_uid"
+				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
 				"defaults": {
@@ -1491,7 +1491,7 @@
 					"bucketAggs": [],
 					"datasource": {
 						"type": "elasticsearch",
-						"uid": "wazuh_datasource_uid"
+						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
 						{
@@ -1571,7 +1571,7 @@
 			{
 				"datasource": {
 					"type": "elasticsearch",
-					"uid": "wazuh_datasource_uid"
+					"uid": "replace_datasource_uid"
 				},
 				"filters": [],
 				"hide": 0,
@@ -1588,7 +1588,7 @@
 				},
 				"datasource": {
 					"type": "elasticsearch",
-					"uid": "wazuh_datasource_uid"
+					"uid": "replace_datasource_uid"
 				},
 				"definition": "{ \"find\": \"terms\", \"field\": \"agent_name\", \"query\": \"_exists_:rule_mitre_tactic\"}",
 				"hide": 0,

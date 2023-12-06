@@ -34,7 +34,7 @@ async def create_grafana_datasource(
     # Switch to the newly created organization
     grafana_client.user.switch_actual_user_organisation(organization_id)
     datasource_payload = GrafanaDatasource(
-        name="WAZUH TEST",
+        name="WAZUH",
         type="grafana-opensearch-datasource",
         typeName="OpenSearch",
         access="proxy",
