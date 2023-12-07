@@ -103,6 +103,17 @@ async def provision_wazuh_customer(request: ProvisionNewCustomer, session: Async
 
 ######### ! Update CustomerMeta Table ! ############
 async def update_customer_meta_table(request: ProvisionNewCustomer, customer_meta: CustomerProvisionMeta, session: AsyncSession):
+    """
+    Update the customer meta table with the provided information.
+
+    Args:
+        request (ProvisionNewCustomer): The request object containing customer information.
+        customer_meta (CustomerProvisionMeta): The customer meta object containing additional information.
+        session (AsyncSession): The database session.
+
+    Returns:
+        CustomerProvisionMeta: The updated customer meta object.
+    """
     logger.info(f"Updating customer meta table for customer {request.customer_name}")
     customer_meta = CustomersMeta(
         customer_code=request.customer_code,
@@ -123,6 +134,16 @@ async def update_customer_meta_table(request: ProvisionNewCustomer, customer_met
 
 ######### ! Provision Wazuh Worker ! ############
 async def provision_wazuh_worker(request: ProvisionWorkerRequest, session: AsyncSession) -> ProvisionWorkerResponse:
+    """
+    Provisions a Wazuh worker.
+
+    Args:
+        request (ProvisionWorkerRequest): The request object containing the necessary information for provisioning.
+        session (AsyncSession): The async session object for making HTTP requests.
+
+    Returns:
+        ProvisionWorkerResponse: The response object indicating the success or failure of the provisioning operation.
+    """
     logger.info(f"Provisioning Wazuh worker {request}")
     # Send the POST request to the Wazuh worker
     response = requests.post(
