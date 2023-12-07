@@ -145,9 +145,10 @@ async def provision_wazuh_worker(request: ProvisionWorkerRequest, session: Async
         ProvisionWorkerResponse: The response object indicating the success or failure of the provisioning operation.
     """
     logger.info(f"Provisioning Wazuh worker {request}")
+    api_endpoint = await get_connector_attribute(connector_id=14, column_name="connector_url", session=session)
     # Send the POST request to the Wazuh worker
     response = requests.post(
-        url=await get_connector_attribute(connector_id=14, column_name="connector_url", session=session),
+        url=f"{api_endpoint}/provision_worker",
         json=request.dict(),
     )
     # Check the response status code

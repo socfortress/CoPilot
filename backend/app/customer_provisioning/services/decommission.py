@@ -8,6 +8,9 @@ from app.customer_provisioning.schema.decommission import DecommissionCustomerRe
 from app.customer_provisioning.services.wazuh_manager import gather_wazuh_agents, delete_wazuh_agents, delete_wazuh_groups
 from app.customer_provisioning.services.graylog import delete_stream, delete_index_set
 from app.customer_provisioning.services.grafana import delete_grafana_organization
+from app.customer_provisioning.schema.wazuh_worker import DecommissionWorkerRequest
+from app.customer_provisioning.schema.wazuh_worker import DecommissionWorkerResponse
+from app.utils import get_connector_attribute
 
 async def decomission_wazuh_customer(customer_meta: CustomersMeta, session: AsyncSession) -> DecommissionCustomerResponse:
     logger.info(f"Decomissioning customer {customer_meta.customer_name}")
@@ -29,6 +32,10 @@ async def decomission_wazuh_customer(customer_meta: CustomersMeta, session: Asyn
     # Delete Grafana Organization
     await delete_grafana_organization(organization_id=int(customer_meta.customer_meta_grafana_org_id))
 
+    # Decommission Wazuh Worker
+    await decommission_wazuh_worker(request=customer_meta.customer_name, session=session)
+
+
     # Delete Customer Meta
     await session.delete(customer_meta)
     await session.commit()
@@ -43,3 +50,30 @@ async def decomission_wazuh_customer(customer_meta: CustomersMeta, session: Asyn
             "index_deleted": customer_meta.customer_meta_graylog_index,
         },
     )
+
+
+
+######### ! Decommission Wazuh Worker ! ############
+async def decommission_wazuh_worker(request: DecommissionWorkerRequest, session: AsyncSession) -> DecommissionWorkerResponse:
+    """
+    Decomissions a Wazuh worker.
+
+    Args:
+        request (DecommissionWorkerRequest): The request object containing the necessary information for provisioning.
+        session (AsyncSession): The async session object for making HTTP requests.
+
+    Returns:
+        ProvisionWorkerResponse: The response object indicating the success or failure of the provisioning operation.
+    """
+    logger.info(f"Provisioning Wazuh worker {request}")
+    api_endpoint = await get_connector_attribute(connector_id=14, column_name="connector_url", session=session)
+    # Send the POST request to the Wazuh worker
+    response = requests.post(
+        url=f"{api_endpoint}/provision_worker/decommission",
+        json=request.dict(),
+    )
+    # Check the response status code
+    if response.status_code != 200:
+        return DecommissionWorkerResponse(success=False, message=f"Failed to provision Wazuh worker: {response.text}")
+    # Return the response
+    return DecommissionWorkerResponse(success=True, message=f"Wazuh worker provisioned successfully")
