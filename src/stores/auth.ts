@@ -3,6 +3,7 @@ import { UserRole, type User, type LoginPayload } from "@/types/auth.d"
 import _castArray from "lodash/castArray"
 import Api from "@/api"
 import * as jose from "jose"
+import _toNumber from "lodash/toNumber"
 import SecureLS from "secure-ls"
 import { scopeToRole } from "@/utils/auth"
 const ls = new SecureLS({ encodingType: "aes", isCompression: false })
@@ -12,7 +13,8 @@ export const useAuthStore = defineStore("auth", {
 		user: {
 			access_token: "",
 			role: UserRole.Unknown
-		} as User
+		} as User,
+		tokenDebounceTime: _toNumber(import.meta.env.VITE_TOKEN_DEBOUNCE_TIME) as number // seconds
 	}),
 	actions: {
 		setLogged(token: string) {

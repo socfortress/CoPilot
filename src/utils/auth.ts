@@ -5,9 +5,9 @@ import _castArray from "lodash/castArray"
 import _toNumber from "lodash/toNumber"
 import * as jose from "jose"
 
-const TOKEN_DEBOUNCE_TIME = import.meta.env.VITE_TOKEN_DEBOUNCE_TIME // seconds
-
 export function isDebounceTimeOver(lastCheck: Date | null) {
+	const TOKEN_DEBOUNCE_TIME = useAuthStore().tokenDebounceTime
+
 	if (!lastCheck) return true
 
 	const timeOver = lastCheck.getTime() + _toNumber(TOKEN_DEBOUNCE_TIME) * 1000
