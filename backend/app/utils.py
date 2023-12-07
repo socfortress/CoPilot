@@ -2,10 +2,12 @@ from datetime import datetime
 from datetime import timedelta
 from enum import Enum
 from typing import Any
+from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Union
 
+import requests
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -21,9 +23,11 @@ from sqlalchemy.future import select
 
 from app.auth.services.universal import find_user
 from app.auth.utils import AuthHandler
+from app.connectors.utils import get_connector_info_from_db
 from app.db.all_models import Connectors
 from app.db.db_session import Session
 from app.db.db_session import engine
+from app.db.db_session import get_db_session
 from app.db.db_session import get_session
 from app.db.universal_models import LogEntry
 
@@ -464,3 +468,44 @@ async def get_connector_attribute(connector_id: int, column_name: str, session: 
     if connector:
         return getattr(connector, column_name, None)
     return None
+
+
+################## ! Wazuh Worker Provisioning App ! ##################
+################## ! https://github.com/socfortress/Customer-Provisioning-Worker ! ##################
+async def verify_wazuh_worker_provisioning_healtcheck(attributes: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Verifies the connection to Wazuh Worker Provisioning service.
+
+    Returns:
+        dict: A dictionary containing 'connectionSuccessful' status.
+    """
+    logger.info(f"Verifying the wazuh-worker provisioning connection to {attributes['connector_url']}")
+
+    try:
+        wazuh_worker_provisioning_healthcheck = requests.get(
+            f"{attributes['connector_url']}/healthcheck",
+            verify=False,
+        )
+
+        if wazuh_worker_provisioning_healthcheck.status_code == 200:
+            return {"connectionSuccessful": True, "message": "Wazuh Worker Provisioning healthcheck successful"}
+        else:
+            logger.error(f"Connection to {attributes['connector_url']} failed with error: {wazuh_worker_provisioning_healthcheck.text}")
+
+            return {"connectionSuccessful": False, "message": f"Connection to {attributes['connector_url']} failed"}
+    except Exception as e:
+        logger.error(f"Connection to {attributes['connector_url']} failed with error: {e}")
+
+        return {"connectionSuccessful": False, "message": f"Connection to {attributes['connector_url']} failed with error."}
+
+
+async def verify_wazuh_worker_provisioning_connection(connector_name: str) -> str:
+    """
+    Returns the status of the connection to Wazuh Worker Provisioning service.
+    """
+    async with get_db_session() as session:  # This will correctly enter the context manager
+        attributes = await get_connector_info_from_db(connector_name, session)
+    if attributes is None:
+        logger.error("No Wazuh Worker Provisioning connector found in the database")
+        return None
+    return await verify_wazuh_worker_provisioning_healtcheck(attributes)

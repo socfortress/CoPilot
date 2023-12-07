@@ -33,6 +33,7 @@ from app.connectors.wazuh_manager.utils.universal import verify_wazuh_manager_co
 
 # from app.db.db_session import engine  # Import the shared engine
 from app.db.db_session import get_session
+from app.utils import verify_wazuh_worker_provisioning_connection
 
 UPLOAD_FOLDER = "file-store"
 UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), UPLOAD_FOLDER)
@@ -105,6 +106,12 @@ class GrafanaService(ConnectorServiceInterface):
         return await verify_grafana_connection(connector.connector_name)
 
 
+# Wazuh Worker Provisioning Service
+class WazuhWorkerProvisioningService(ConnectorServiceInterface):
+    async def verify_authentication(self, connector: ConnectorResponse) -> Optional[ConnectorResponse]:
+        return await verify_wazuh_worker_provisioning_connection(connector.connector_name)
+
+
 # Factory function to create a service instance based on connector name
 def get_connector_service(connector_name: str) -> Type[ConnectorServiceInterface]:
     service_map = {
@@ -118,6 +125,7 @@ def get_connector_service(connector_name: str) -> Type[ConnectorServiceInterface
         "Sublime": SublimeService,
         "InfluxDB": InfluxDBService,
         "Grafana": GrafanaService,
+        "Wazuh Worker Provisioning": WazuhWorkerProvisioningService,
     }
     return service_map.get(connector_name, None)
 
