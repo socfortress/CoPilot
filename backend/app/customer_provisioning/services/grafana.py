@@ -14,6 +14,16 @@ from app.utils import get_connector_attribute
 
 
 async def create_grafana_organization(request: ProvisionNewCustomer) -> GrafanaOrganizationCreation:
+    """
+    Creates a Grafana organization for a customer.
+
+    Args:
+        request (ProvisionNewCustomer): The request object containing customer information.
+
+    Returns:
+        GrafanaOrganizationCreation: The created Grafana organization.
+
+    """
     logger.info(f"Creating Grafana organization for customer {request.customer_name}")
     grafana_client = await create_grafana_client("Grafana")
     results = grafana_client.organization.create_organization(
@@ -29,6 +39,17 @@ async def create_grafana_datasource(
     organization_id: int,
     session: AsyncSession,
 ) -> GrafanaDataSourceCreationResponse:
+    """
+    Creates a Grafana Wazuh datasource for a new customer using the OpenSearch Data Source.
+
+    Args:
+        request (ProvisionNewCustomer): The request object containing customer information.
+        organization_id (int): The ID of the organization to create the datasource for.
+        session (AsyncSession): The database session.
+
+    Returns:
+        GrafanaDataSourceCreationResponse: The response object containing the result of the datasource creation.
+    """
     logger.info(f"Creating Grafana datasource")
     grafana_client = await create_grafana_client("Grafana")
     # Switch to the newly created organization
@@ -67,6 +88,16 @@ async def create_grafana_datasource(
 
 
 async def create_grafana_folder(organization_id: int, folder_title: str) -> GrafanaFolderCreationResponse:
+    """
+    Creates a Grafana folder in the specified organization.
+
+    Args:
+        organization_id (int): The ID of the organization where the folder will be created.
+        folder_title (str): The title of the folder.
+
+    Returns:
+        GrafanaFolderCreationResponse: The response object containing the details of the created folder.
+    """
     logger.info(f"Creating Grafana folder")
     grafana_client = await create_grafana_client("Grafana")
     # Switch to the newly created organization
@@ -79,6 +110,15 @@ async def create_grafana_folder(organization_id: int, folder_title: str) -> Graf
 
 
 async def get_opensearch_version() -> str:
+    """
+    Retrieves the version of OpenSearch.
+
+    Returns:
+        str: The version of OpenSearch.
+
+    Raises:
+        HTTPException: If the OpenSearch version cannot be retrieved.
+    """
     logger.info("Getting OpenSearch version")
     opensearch_client = await create_wazuh_indexer_client("Wazuh-Indexer")
 
