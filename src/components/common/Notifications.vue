@@ -5,20 +5,20 @@
 			v-for="item of listSanitized"
 			:key="item.id"
 			@click="item.action ? item.action() : () => {}"
-			:class="{ pointer: !!item.action }"
+			:class="[{ pointer: !!item.action }, item.type]"
 		>
-			<div class="icon-box" :class="item.type">
-				<Icon :name="MessageIcon" :size="21" v-if="item.type === 'message'"></Icon>
-				<Icon :name="CalendarIcon" :size="21" v-else-if="item.type === 'reminder'"></Icon>
-				<Icon :name="NewsIcon" :size="21" v-else-if="item.type === 'news'"></Icon>
-				<Icon :name="AlertIcon" :size="21" v-else-if="item.type === 'alert'"></Icon>
+			<div class="icon-box">
+				<Icon :name="AlertIcon" :size="21" v-if="item.category === 'alert'"></Icon>
 			</div>
 			<div class="content grow">
 				<div class="title">{{ item.title }}</div>
 				<div class="description">{{ item.description }}</div>
-				<div class="date">{{ item.date }}</div>
+				<div class="footer flex justify-between items-center">
+					<div class="date">{{ formatDatetime(item.date) }}</div>
+					<div class="action-text" v-if="!!item.action">{{ item.actionTitle || "Details" }}</div>
+				</div>
 			</div>
-			<div class="read-badge" v-if="!item.read"></div>
+			<div class="read-badge" v-if="!item.read" @click.stop="setRead(item.id)"></div>
 		</div>
 		<slot name="last"></slot>
 	</n-scrollbar>
@@ -31,9 +31,6 @@ import { useNotifications } from "@/composables/useNotifications"
 import { computed } from "vue"
 import _take from "lodash/take"
 
-const MessageIcon = "carbon:email"
-const CalendarIcon = "carbon:calendar"
-const NewsIcon = "fluent:news-24-regular"
 const AlertIcon = "mdi:alert-outline"
 
 const props = defineProps<{
@@ -48,6 +45,14 @@ const listSanitized = computed(() => {
 	}
 	return list.value
 })
+
+function setRead(id: string | number) {
+	useNotifications().setRead(id)
+}
+
+function formatDatetime(date: Date | string) {
+	return useNotifications().formatDatetime(date)
+}
 </script>
 
 <style lang="scss" scoped>
@@ -65,37 +70,10 @@ const listSanitized = computed(() => {
 				display: flex;
 				justify-content: center;
 				align-items: center;
-				background-color: var(--primary-005-color);
-				color: var(--primary-color);
 				border-radius: 50%;
 				width: 42px;
 				height: 42px;
 				margin-top: 2px;
-			}
-
-			&.message {
-				.n-icon {
-					background-color: var(--secondary1-opacity-010-color);
-					color: var(--secondary1-color);
-				}
-			}
-			&.reminder {
-				.n-icon {
-					background-color: var(--secondary2-opacity-010-color);
-					color: var(--secondary2-color);
-				}
-			}
-			&.news {
-				.n-icon {
-					background-color: var(--secondary3-opacity-010-color);
-					color: var(--secondary3-color);
-				}
-			}
-			&.alert {
-				.n-icon {
-					background-color: var(--secondary4-opacity-010-color);
-					color: var(--secondary4-color);
-				}
 			}
 		}
 		.content {
@@ -106,22 +84,66 @@ const listSanitized = computed(() => {
 			.title {
 				font-weight: bold;
 			}
-			.date {
-				font-size: 12px;
+
+			.footer {
 				margin-top: 6px;
-				opacity: 0.5;
+
+				.date {
+					font-size: 12px;
+					opacity: 0.5;
+				}
+				.action-text {
+					font-size: 12px;
+				}
 			}
 		}
 
 		.read-badge {
 			position: absolute;
-			top: 0;
-			left: 0;
-			width: 0;
-			height: 0;
-			border-style: solid;
-			border-width: 20px 20px 0 0;
-			border-color: var(--primary-050-color) transparent transparent transparent;
+			top: 14px;
+			right: 14px;
+			width: 10px;
+			height: 10px;
+			border-radius: 50%;
+			background-color: var(--primary-color);
+			cursor: pointer;
+		}
+
+		&.success {
+			.n-icon {
+				background-color: var(--primary-005-color);
+				color: var(--success-color);
+			}
+			.action-text {
+				color: var(--success-color);
+			}
+		}
+		&.info {
+			.n-icon {
+				background-color: var(--secondary1-opacity-010-color);
+				color: var(--info-color);
+			}
+			.action-text {
+				color: var(--info-color);
+			}
+		}
+		&.warning {
+			.n-icon {
+				background-color: var(--secondary3-opacity-010-color);
+				color: var(--warning-color);
+			}
+			.action-text {
+				color: var(--warning-color);
+			}
+		}
+		&.error {
+			.n-icon {
+				background-color: var(--secondary4-opacity-010-color);
+				color: var(--error-color);
+			}
+			.action-text {
+				color: var(--error-color);
+			}
 		}
 
 		&.pointer {
