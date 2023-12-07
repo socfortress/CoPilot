@@ -8,10 +8,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.auth.utils import AuthHandler
-from app.customer_provisioning.schema.decomission import DecomissionCustomerResponse
+from app.customer_provisioning.schema.decommission import DecommissionCustomerResponse
 from app.db.db_session import get_session
 from app.db.universal_models import Customers, CustomersMeta
-from app.customer_provisioning.services.decomission import decomission_wazuh_customer
+from app.customer_provisioning.services.decommission import decomission_wazuh_customer
 
 # App specific imports
 
@@ -44,7 +44,7 @@ async def check_customermeta_exists(customer_name: str, session: AsyncSession = 
 
 @customer_decommissioning_router.post(
     "/decommission",
-    response_model=DecomissionCustomerResponse,
+    response_model=DecommissionCustomerResponse,
     description="Decommission Customer",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
