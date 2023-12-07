@@ -33,7 +33,7 @@ async def decomission_wazuh_customer(customer_meta: CustomersMeta, session: Asyn
     await delete_grafana_organization(organization_id=int(customer_meta.customer_meta_grafana_org_id))
 
     # Decommission Wazuh Worker
-    await decommission_wazuh_worker(request=customer_meta.customer_name, session=session)
+    await decommission_wazuh_worker(request=DecommissionWorkerRequest(customer_name=customer_meta.customer_name), session=session)
 
 
     # Delete Customer Meta
@@ -65,7 +65,7 @@ async def decommission_wazuh_worker(request: DecommissionWorkerRequest, session:
     Returns:
         ProvisionWorkerResponse: The response object indicating the success or failure of the provisioning operation.
     """
-    logger.info(f"Provisioning Wazuh worker {request}")
+    logger.info(f"Decommissioning Wazuh worker {request}")
     api_endpoint = await get_connector_attribute(connector_id=14, column_name="connector_url", session=session)
     # Send the POST request to the Wazuh worker
     response = requests.post(
