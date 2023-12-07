@@ -3,6 +3,7 @@ import { usHealthcheckStore } from "@/stores/healthcheck"
 import { useNotifications, type Notification } from "./useNotifications"
 import { IndexHealth } from "@/types/indices.d"
 import { useRouter } from "vue-router"
+import _capitalize from "lodash/capitalize"
 
 export function useHealthchecksNotify() {
 	return {
@@ -38,7 +39,7 @@ export function useHealthchecksNotify() {
 					} else if (val >= uncommittedJournalEntriesThreshold) {
 						obj.type = "warning"
 						obj.title = "Uncommitted Journal Entries"
-						obj.description = "value over " + val
+						obj.description = `Value ${val} (over ${uncommittedJournalEntriesThreshold})`
 						useNotifications().prepend(obj)
 					}
 				}
@@ -65,14 +66,14 @@ export function useHealthchecksNotify() {
 					} else if (val !== IndexHealth.GREEN) {
 						obj.type = val === IndexHealth.YELLOW ? "warning" : "error"
 						obj.title = "Cluster Health"
-						obj.description = clusterName.value + ": " + val
+						obj.description = `${_capitalize(clusterName.value || "Cluster")} is ${val.toUpperCase()}`
 						useNotifications().prepend(obj)
 					}
 				}
 			})
 
 			watch(alerts, (val, old) => {
-				if (val != old) {
+				if (val?.length !== old?.length) {
 					const obj: Notification = {
 						id: "influxDBAlert",
 						category: "alert",
@@ -80,7 +81,10 @@ export function useHealthchecksNotify() {
 						title: "Error check",
 						description: "Influx Alert",
 						read: false,
-						date: new Date()
+						date: new Date(),
+						action() {
+						},
+						actionTitle: "See Healthcheck"
 					}
 
 					if (val === null) {
@@ -88,7 +92,7 @@ export function useHealthchecksNotify() {
 					} else if (val.length) {
 						obj.type = "warning"
 						obj.title = "Influx Alert"
-						obj.description = "Critical issues: " + val.length
+						obj.description = `${val.length} Critical ${val.length > 1 ? "issues" : "issue"}`
 						useNotifications().prepend(obj)
 					}
 				}

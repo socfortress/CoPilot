@@ -4,7 +4,7 @@
 			class="item flex"
 			v-for="item of listSanitized"
 			:key="item.id"
-			@click="item.action ? item.action() : () => {}"
+			@click="item.action ? preformAction(item.id, item.action) : () => {}"
 			:class="[{ pointer: !!item.action }, item.type]"
 		>
 			<div class="icon-box">
@@ -45,6 +45,11 @@ const listSanitized = computed(() => {
 	}
 	return list.value
 })
+
+function preformAction(id: string | number, action: () => void) {
+	action()
+	setRead(id)
+}
 
 function setRead(id: string | number) {
 	useNotifications().setRead(id)

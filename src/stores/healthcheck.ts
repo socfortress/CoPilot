@@ -64,7 +64,9 @@ export const usHealthcheckStore = defineStore("healthcheck", {
 		},
 
 		getData() {
-			this.getGraylogCheck()
+			if (this.uncommittedJournalEntriesThreshold) {
+				this.getGraylogCheck()
+			}
 			this.getClusterHealth()
 			this.getHealthchecks()
 		},
@@ -78,7 +80,9 @@ export const usHealthcheckStore = defineStore("healthcheck", {
 
 		start() {
 			this.getData()
-			this.getDataTimer = setInterval(this.getData, this.healthchecksInterval)
+			if (this.healthchecksInterval) {
+				this.getDataTimer = setInterval(this.getData, this.healthchecksInterval)
+			}
 		}
 	}
 })
