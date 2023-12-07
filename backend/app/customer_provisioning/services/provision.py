@@ -27,6 +27,17 @@ from app.utils import get_connector_attribute
 
 # ! MAIN FUNCTION ! #
 async def provision_wazuh_customer(request: ProvisionNewCustomer, session: AsyncSession) -> CustomerProvisionResponse:
+    """
+    This function is the main function for provisioning a new customer for their Wazuh instance.
+    It will call all the other functions to provision the customer.
+
+    Args:
+        request (ProvisionNewCustomer): The request body from the API endpoint
+        session (AsyncSession): The database session
+
+    Raises:
+        HTTPException: If the stream fails to start
+    """
     logger.info(f"Provisioning new customer {request}")
     # Initialize an empty dictionary to store the meta data
     provision_meta_data = {}
