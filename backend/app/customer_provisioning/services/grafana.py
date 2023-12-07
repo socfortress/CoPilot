@@ -12,7 +12,7 @@ from app.customer_provisioning.schema.grafana import NodesVersionResponse
 from app.customer_provisioning.schema.provision import ProvisionNewCustomer
 from app.utils import get_connector_attribute
 
-
+################# ! GRAFANA PROVISIONING ! #################
 async def create_grafana_organization(request: ProvisionNewCustomer) -> GrafanaOrganizationCreation:
     """
     Creates a Grafana organization for a customer.
@@ -132,3 +132,19 @@ async def get_opensearch_version() -> str:
 
     # If no version is found, raise an exception
     raise HTTPException(status_code=500, detail=f"Failed to retrieve OpenSearch version.")
+
+
+
+################# ! GRAFANA DECOMISSIONING ! #################
+async def delete_grafana_organization(organization_id: int):
+    """
+    Deletes a Grafana organization.
+
+    Args:
+        organization_id (int): The ID of the organization to delete.
+    """
+    logger.info(f"Deleting Grafana organization")
+    grafana_client = await create_grafana_client("Grafana")
+    organization_deleted = grafana_client.organizations.delete_organization(organization_id=organization_id)
+    logger.info(f"Organization deleted: {organization_deleted}")
+    return organization_deleted

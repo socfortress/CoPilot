@@ -5,7 +5,7 @@ from fastapi import HTTPException
 from loguru import logger
 
 from app.connectors.graylog.services.pipelines import get_pipelines
-from app.connectors.graylog.utils.universal import send_post_request
+from app.connectors.graylog.utils.universal import send_post_request, send_delete_request
 from app.customer_provisioning.schema.graylog import GraylogIndexSetCreationResponse
 from app.customer_provisioning.schema.graylog import StreamConnectionToPipelineRequest
 from app.customer_provisioning.schema.graylog import StreamConnectionToPipelineResponse
@@ -206,3 +206,33 @@ async def connect_stream_to_pipeline(stream_and_pipeline: StreamConnectionToPipe
     response_json = await send_post_request(endpoint="/api/system/pipelines/connections/to_stream", data=stream_and_pipeline.dict())
     logger.info(f"Response: {response_json}")
     return StreamConnectionToPipelineResponse(**response_json)
+
+
+######### ! GRAYLOG DECOMISSIONGING ! ############
+async def delete_stream(stream_id: str):
+    """
+    Deletes a stream.
+
+    Args:
+        stream_id (str): The ID of the stream to be deleted.
+
+    Returns:
+        The result of the stream deletion request.
+    """
+    logger.info(f"Deleting stream {stream_id}")
+    response = await send_delete_request(endpoint=f"/api/streams/{stream_id}")
+    return response
+
+async def delete_index_set(index_set_id: str):
+    """
+    Deletes an index set.
+
+    Args:
+        index_set_id (str): The ID of the index set to be deleted.
+
+    Returns:
+        The result of the index set deletion request.
+    """
+    logger.info(f"Deleting index set {index_set_id}")
+    response = await send_delete_request(endpoint=f"/api/system/indices/index_sets/{index_set_id}")
+    return response
