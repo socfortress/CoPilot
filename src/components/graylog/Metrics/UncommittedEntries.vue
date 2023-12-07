@@ -24,9 +24,6 @@
 </template>
 
 <script setup lang="ts">
-// TODO:  add a realtime chart
-// TODO: add goto grylog message page button
-
 import Icon from "@/components/common/Icon.vue"
 import { NButton } from "naive-ui"
 import { computed, ref, toRefs } from "vue"
@@ -35,6 +32,9 @@ import { useThemeStore } from "@/stores/theme"
 import dayjs from "@/utils/dayjs"
 import "@/assets/scss/apexchart-override.scss"
 import { watch } from "vue"
+import { usHealthcheckStore } from "@/stores/healthcheck"
+
+const UNCOMMITTED_JOURNAL_ENTRIES_THRESHOLD = usHealthcheckStore().uncommittedJournalEntriesThreshold
 
 const props = defineProps<{
 	value: number
@@ -49,8 +49,7 @@ const style = computed<{ [key: string]: any }>(() => useThemeStore().style)
 const isThemeDark = computed(() => useThemeStore().isThemeDark)
 
 const isWarning = computed<boolean>(() => {
-	// TODO: replace with env var
-	return value.value > 50000
+	return value.value > UNCOMMITTED_JOURNAL_ENTRIES_THRESHOLD
 })
 
 function gotoMessages() {
@@ -64,6 +63,8 @@ const series = ref<{ name: string; data: any }[]>([
 	}
 ])
 
+const serieLength = computed<number>(() => series.value[0].data.length || 0)
+
 function getOptions() {
 	return {
 		chart: {
@@ -73,7 +74,7 @@ function getOptions() {
 				enabled: true
 			},
 			animations: {
-				enabled: series.value[0].data.length < 100,
+				enabled: serieLength.value < 100,
 				easing: "linear",
 				dynamicAnimation: {
 					speed: 200
@@ -114,7 +115,7 @@ function getOptions() {
 const options = ref(getOptions())
 
 watch(value, val => {
-	if (series.value[0].data.length > 100) {
+	if (serieLength.value > 100) {
 		series.value[0].data.shift()
 
 		if (options.value.chart.animations.enabled) {
@@ -156,6 +157,8 @@ watch(isThemeDark, () => {
 			font-family: var(--font-family-mono);
 			min-width: 80px;
 			text-align: center;
+			border-top-right-radius: var(--border-radius);
+			border-bottom-right-radius: var(--border-radius);
 
 			&.warning {
 				color: var(--secondary3-color);
