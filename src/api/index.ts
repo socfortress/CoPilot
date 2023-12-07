@@ -6,6 +6,7 @@ import connectors from "./connectors"
 import graylog from "./graylog"
 import indices from "./indices"
 import soc from "./soc"
+import healthchecks from "./healthchecks"
 
 export default {
 	agents,
@@ -15,5 +16,6 @@ export default {
 	connectors,
 	graylog,
 	indices,
-	soc
+	soc,
+	healthchecks
 }
