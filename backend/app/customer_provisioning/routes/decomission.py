@@ -19,7 +19,7 @@ from app.customer_provisioning.services.decomission import decomission_wazuh_cus
 customer_decommissioning_router = APIRouter()
 
 
-async def check_customer_exists(customer_name: str, session: AsyncSession = Depends(get_session)) -> Customers:
+async def check_customermeta_exists(customer_name: str, session: AsyncSession = Depends(get_session)) -> CustomersMeta:
     """
     Check if a customer exists in the database.
 
@@ -28,34 +28,17 @@ async def check_customer_exists(customer_name: str, session: AsyncSession = Depe
         session (AsyncSession, optional): The database session. Defaults to Depends(get_session).
 
     Returns:
-        Customers: The customer object if found.
+        CustomersMeta: The customer object if found.
 
     Raises:
         HTTPException: If the customer is not found.
     """
     logger.info(f"Checking if customer {customer_name} exists")
-    result = await session.execute(select(Customers).filter(Customers.customer_name == customer_name))
-    customer = result.scalars().first()
-
-    if not customer:
-        raise HTTPException(status_code=404, detail=f"Customer: {customer_name} not found. Please create the customer first.")
-
-    return customer
-
-async def return_customer_meta(customer: Customers, session: AsyncSession = Depends(get_session)) -> CustomersMeta:
-    """
-    Return the customer meta data from the database.
-
-    Args:
-        customer_id (int): The ID of the customer to return the meta data for.
-        session (AsyncSession, optional): The database session. Defaults to Depends(get_session).
-
-    Returns:
-        CustomersMeta: The customer meta data object.
-    """
-    logger.info(f"Returning customer meta data for customer {customer.customer_name}")
-    result = await session.execute(select(CustomersMeta).filter(CustomersMeta.customer_name == customer.customer_name))
+    result = await session.execute(select(CustomersMeta).filter(CustomersMeta.customer_name == customer_name))
     customer_meta = result.scalars().first()
+
+    if not customer_meta:
+        raise HTTPException(status_code=404, detail=f"Customer: {customer_name} not found. Please create the customer first.")
 
     return customer_meta
 
@@ -66,10 +49,9 @@ async def return_customer_meta(customer: Customers, session: AsyncSession = Depe
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def decommission_customer_route(
-    _customer: Customers = Depends(check_customer_exists),
+    _customer: CustomersMeta = Depends(check_customermeta_exists),
     session: AsyncSession = Depends(get_session),
 ):
     logger.info("Decommissioning customer")
-    customer_meta = await return_customer_meta(_customer, session=session)
-    customer_decommission = await decomission_wazuh_customer(customer_meta, session=session)
+    customer_decommission = await decomission_wazuh_customer(_customer, session=session)
     return customer_decommission

@@ -21,19 +21,25 @@ async def decomission_wazuh_customer(customer_meta: CustomersMeta, session: Asyn
     groups_deleted = await delete_wazuh_groups(customer_meta.customer_code)
 
     # Delete Graylog Stream
-    stream_deleted = await delete_stream(customer_meta.customer_meta_graylog_stream)
+    await delete_stream(customer_meta.customer_meta_graylog_stream)
 
     # Delete Graylog Index Set
-    index_deleted = await delete_index_set(customer_meta.customer_meta_graylog_index)
+    await delete_index_set(customer_meta.customer_meta_graylog_index)
 
     # Delete Grafana Organization
     await delete_grafana_organization(organization_id=int(customer_meta.customer_meta_grafana_org_id))
 
-
-
-
+    # Delete Customer Meta
+    await session.delete(customer_meta)
+    await session.commit()
 
     return DecomissionCustomerResponse(
         message=f"Customer {customer_meta.customer_name} decomissioned successfully.",
         success=True,
+        decomissioned_data={
+            "agents_deleted": agents_deleted,
+            "groups_deleted": groups_deleted,
+            "stream_deleted": customer_meta.customer_meta_graylog_stream,
+            "index_deleted": customer_meta.customer_meta_graylog_index,
+        },
     )
