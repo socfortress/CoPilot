@@ -1,118 +1,88 @@
-import { computed, ref } from "vue"
+import { computed, h } from "vue"
 import dayjs from "@/utils/dayjs"
+import { NButton } from "naive-ui"
+import _uniqBy from "lodash/uniqBy"
+import { useGlobalActions, type NotificationObject } from "./useGlobalActions"
+import { useSettingsStore } from "@/stores/settings"
+import { useStorage } from "@vueuse/core"
 
-type NotificationType = "message" | "reminder" | "alert" | "news" | string
-interface Notification {
-	id: number
+export type NotificationCategory = "alert"
+export type NotificationType = "success" | "info" | "warning" | "error" | "default" | undefined
+export interface Notification {
+	id: number | string
+	category: NotificationCategory
 	type: NotificationType
 	title: string
 	description: string
 	read: boolean
-	date: string
+	date: string | Date
 	action?: () => void
+	actionTitle?: string
 }
 
-const items: Notification[] = [
-	{
-		id: 1,
-		type: "message",
-		title: "New Email",
-		description: "Important document to read",
-		read: false,
-		date: "Today"
-	},
-	{
-		id: 2,
-		type: "reminder",
-		title: "Appointment",
-		description: "Meeting with client at 3:00 PM",
-		read: false,
-		date: "Yesterday"
-	},
-	{
-		id: 9,
-		type: "alert",
-		title: "Alert",
-		description: "Limited-time super offer on desired product",
-		read: true,
-		date: "Yesterday"
-	},
-	{
-		id: 5,
-		type: "news",
-		title: "News",
-		description: "Networking event in your city",
-		read: false,
-		date: dayjs().subtract(3, "d").format("D MMM")
-	},
-	{
-		id: 3,
-		type: "reminder",
-		title: "Reminder",
-		description: "Overdue bill payment",
-		read: true,
-		date: dayjs().subtract(7, "d").format("D MMM")
-	},
-	{
-		id: 4,
-		type: "reminder",
-		title: "Deadline",
-		description: "Submit report by tomorrow",
-		read: true,
-		date: dayjs().subtract(2, "d").format("D MMM")
-	},
-	{
-		id: 6,
-		type: "message",
-		title: "Message",
-		description: "New comment on your post",
-		read: false,
-		date: dayjs().subtract(4, "d").format("D MMM")
-	},
-	{
-		id: 7,
-		type: "reminder",
-		title: "Reminder",
-		description: "Complete purchase in your online cart",
-		read: false,
-		date: dayjs().subtract(5, "d").format("D MMM")
-	},
-	{
-		id: 8,
-		type: "reminder",
-		title: "Invitation",
-		description: "Friend's birthday party",
-		read: true,
-		date: dayjs().subtract(6, "d").format("D MMM")
-	}
-]
-
-const list = ref<Notification[]>([])
-
-for (let i = 0; i < 30; i++) {
-	const item = items[i % items.length]
-	item.id = i
-
-	if (i > 2) {
-		item.date = dayjs().subtract(i, "d").format("D MMM")
-	}
-
-	list.value.push({ ...item })
-}
+const list = useStorage<Notification[]>("notifications-list", [], localStorage)
 
 export function useNotifications() {
 	const hasNotifications = computed(() => list.value.filter(o => !o.read).length !== 0)
+	const dFormats = useSettingsStore().dateFormat
+
+	function formatDatetime(date: Date | string) {
+		const datejs = dayjs(date)
+		if (!datejs.isValid()) return date
+
+		if (dayjs().isSame(datejs, "day")) {
+			return datejs.format(dFormats.time)
+		}
+		return datejs.format("D MMM")
+	}
 
 	return {
 		list,
 		hasNotifications,
+		formatDatetime,
+		setRead: (id: string | number) => {
+			const item = list.value.find(o => o.id === id)
+			if (item) {
+				item.read = true
+			}
+		},
 		setAllRead: () => {
 			for (const item of list.value) {
 				item.read = true
 			}
 		},
-		prepend: (newItem: Notification) => {
-			list.value = [newItem, ...list.value]
+		prepend: (newItem: Notification, sendNotify: boolean = true) => {
+			if (sendNotify) {
+				const notify: NotificationObject = {
+					title: newItem.title,
+					content: newItem.description,
+					type: newItem.type,
+					meta: formatDatetime(newItem.date).toString(),
+					action: undefined,
+					duration: 3000,
+					keepAliveOnHover: true
+				}
+
+				if (newItem.action) {
+					// @ts-ignore
+					notify.action = () =>
+						h(
+							NButton,
+							{
+								text: true,
+								type: newItem.type,
+								onClick: newItem.action
+							},
+							{
+								default: () => newItem.actionTitle || "Details"
+							}
+						)
+				}
+
+				useGlobalActions().notification(notify)
+			}
+
+			list.value = _uniqBy([newItem, ...list.value], o => o.id)
 		}
 	}
 }
