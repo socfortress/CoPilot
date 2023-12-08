@@ -13,6 +13,24 @@ from app.customer_provisioning.schema.wazuh_worker import DecommissionWorkerResp
 from app.utils import get_connector_attribute
 
 async def decomission_wazuh_customer(customer_meta: CustomersMeta, session: AsyncSession) -> DecommissionCustomerResponse:
+    """
+    Decommissions a Wazuh customer by performing the following steps:
+    1. Deletes the Wazuh Agents associated with the customer.
+    2. Deletes the Wazuh Group associated with the customer.
+    3. Deletes the Graylog Stream associated with the customer.
+    4. Deletes the Graylog Index Set associated with the customer.
+    5. Deletes the Grafana Organization associated with the customer.
+    6. Decommissions the Wazuh Worker associated with the customer.
+    7. Deletes the Customer Meta from the session.
+
+    Args:
+        customer_meta (CustomersMeta): The metadata of the customer to be decommissioned.
+        session (AsyncSession): The database session.
+
+    Returns:
+        DecommissionCustomerResponse: The response indicating the success of the decommissioning process and the deleted data.
+
+    """
     logger.info(f"Decomissioning customer {customer_meta.customer_name}")
 
     # Delete the Wazuh Agents
@@ -34,7 +52,6 @@ async def decomission_wazuh_customer(customer_meta: CustomersMeta, session: Asyn
 
     # Decommission Wazuh Worker
     await decommission_wazuh_worker(request=DecommissionWorkerRequest(customer_name=customer_meta.customer_name), session=session)
-
 
     # Delete Customer Meta
     await session.delete(customer_meta)
