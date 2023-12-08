@@ -4,7 +4,7 @@ from pydantic import Field
 
 class SocfortressThreatIntelRequest(BaseModel):
     ioc_value: str
-    customer_code: str
+    customer_code: Optional[str] = Field("socfortress_copilot", description="The customer code for the customer")
 
 
 class IoCMapping(BaseModel):
