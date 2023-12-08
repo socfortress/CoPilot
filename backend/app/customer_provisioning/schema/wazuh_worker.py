@@ -56,3 +56,23 @@ class ProvisionWorkerResponse(BaseModel):
         example="Worker provisioned successfully",
         description="The message returned by the API",
     )
+
+
+class DecommissionWorkerRequest(BaseModel):
+    customer_name: str = Field(
+        ...,
+        example="SOCFortress",
+        description="The name of the customer",
+    )
+
+class DecommissionWorkerResponse(BaseModel):
+    success: bool = Field(
+        ...,
+        example=True,
+        description="Whether the worker was decommissioned successfully",
+    )
+    message: str = Field(
+        ...,
+        example="Worker decommissioned successfully",
+        description="The message returned by the API",
+    )

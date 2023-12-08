@@ -5,7 +5,7 @@ from fastapi import HTTPException
 from loguru import logger
 
 from app.connectors.graylog.services.pipelines import get_pipelines
-from app.connectors.graylog.utils.universal import send_post_request
+from app.connectors.graylog.utils.universal import send_post_request, send_delete_request
 from app.customer_provisioning.schema.graylog import GraylogIndexSetCreationResponse
 from app.customer_provisioning.schema.graylog import StreamConnectionToPipelineRequest
 from app.customer_provisioning.schema.graylog import StreamConnectionToPipelineResponse
@@ -17,8 +17,16 @@ from app.customer_provisioning.schema.provision import ProvisionNewCustomer
 
 ######### ! GRAYLOG PROVISIONING ! ############
 # ! INDEX SETS ! #
-# Function to create index set configuration
 def build_index_set_config(request: ProvisionNewCustomer) -> TimeBasedIndexSet:
+    """
+    Build the configuration for a time-based index set.
+
+    Args:
+        request (ProvisionNewCustomer): The request object containing customer information.
+
+    Returns:
+        TimeBasedIndexSet: The configured time-based index set.
+    """
     return TimeBasedIndexSet(
         title=f"Wazuh - {request.customer_name}",
         description=f"Wazuh - {request.customer_name}",
@@ -48,6 +56,15 @@ def build_index_set_config(request: ProvisionNewCustomer) -> TimeBasedIndexSet:
 
 # Function to send the POST request and handle the response
 async def send_index_set_creation_request(index_set: TimeBasedIndexSet) -> GraylogIndexSetCreationResponse:
+    """
+    Sends a request to create an index set in Graylog.
+
+    Args:
+        index_set (TimeBasedIndexSet): The index set to be created.
+
+    Returns:
+        GraylogIndexSetCreationResponse: The response from Graylog after creating the index set.
+    """
     json_index_set = json.dumps(index_set.dict())
     logger.info(f"json_index_set set: {json_index_set}")
     response_json = await send_post_request(endpoint="/api/system/indices/index_sets", data=index_set.dict())
@@ -56,6 +73,15 @@ async def send_index_set_creation_request(index_set: TimeBasedIndexSet) -> Grayl
 
 # Refactored create_index_set function
 async def create_index_set(request: ProvisionNewCustomer) -> GraylogIndexSetCreationResponse:
+    """
+    Creates an index set for a new customer.
+
+    Args:
+        request (ProvisionNewCustomer): The request object containing the customer information.
+
+    Returns:
+        GraylogIndexSetCreationResponse: The response object containing the result of the index set creation.
+    """
     logger.info(f"Creating index set for customer {request.customer_name}")
     index_set_config = build_index_set_config(request)
     return await send_index_set_creation_request(index_set_config)
@@ -63,12 +89,31 @@ async def create_index_set(request: ProvisionNewCustomer) -> GraylogIndexSetCrea
 
 # Function to extract index set ID
 def extract_index_set_id(response: GraylogIndexSetCreationResponse) -> str:
+    """
+    Extracts the index set ID from the given GraylogIndexSetCreationResponse object.
+
+    Args:
+        response (GraylogIndexSetCreationResponse): The GraylogIndexSetCreationResponse object.
+
+    Returns:
+        str: The index set ID extracted from the response.
+    """
     return response.data.id
 
 
 # ! Event STREAMS ! #
 # Function to create event stream configuration
 def build_event_stream_config(request: ProvisionNewCustomer, index_set_id: str) -> WazuhEventStream:
+    """
+    Build the configuration for a Wazuh event stream.
+
+    Args:
+        request (ProvisionNewCustomer): The request object containing customer information.
+        index_set_id (str): The ID of the index set.
+
+    Returns:
+        WazuhEventStream: The configured Wazuh event stream.
+    """
     return WazuhEventStream(
         title=f"WAZUH EVENTS CUSTOMERS - {request.customer_name}",
         description=f"WAZUH EVENTS CUSTOMERS - {request.customer_name}",
@@ -88,6 +133,15 @@ def build_event_stream_config(request: ProvisionNewCustomer, index_set_id: str) 
 
 
 async def send_event_stream_creation_request(event_stream: WazuhEventStream) -> StreamCreationResponse:
+    """
+    Sends a request to create an event stream.
+
+    Args:
+        event_stream (WazuhEventStream): The event stream to be created.
+
+    Returns:
+        StreamCreationResponse: The response containing the created event stream.
+    """
     json_event_stream = json.dumps(event_stream.dict())
     logger.info(f"json_event_stream set: {json_event_stream}")
     response_json = await send_post_request(endpoint="/api/streams", data=event_stream.dict())
@@ -95,6 +149,16 @@ async def send_event_stream_creation_request(event_stream: WazuhEventStream) -> 
 
 
 async def create_event_stream(request: ProvisionNewCustomer, index_set_id: str):
+    """
+    Creates an event stream for a customer.
+
+    Args:
+        request (ProvisionNewCustomer): The request object containing customer information.
+        index_set_id (str): The ID of the index set.
+
+    Returns:
+        The result of the event stream creation request.
+    """
     logger.info(f"Creating event stream for customer {request.customer_name}")
     event_stream_config = build_event_stream_config(request, index_set_id)
     return await send_event_stream_creation_request(event_stream_config)
@@ -103,6 +167,18 @@ async def create_event_stream(request: ProvisionNewCustomer, index_set_id: str):
 # ! PIPELINES ! #
 # Function to get pipeline ID
 async def get_pipeline_id(subscription: str) -> str:
+    """
+    Retrieves the pipeline ID for a given subscription.
+
+    Args:
+        subscription (str): The subscription name.
+
+    Returns:
+        str: The pipeline ID.
+
+    Raises:
+        HTTPException: If the pipeline ID cannot be retrieved.
+    """
     logger.info(f"Getting pipeline ID for subscription {subscription}")
     pipelines_response = await get_pipelines()
     if pipelines_response.success:
@@ -117,7 +193,46 @@ async def get_pipeline_id(subscription: str) -> str:
 
 
 async def connect_stream_to_pipeline(stream_and_pipeline: StreamConnectionToPipelineRequest):
+    """
+    Connects a stream to a pipeline.
+
+    Args:
+        stream_and_pipeline (StreamConnectionToPipelineRequest): The request object containing the stream ID and pipeline IDs.
+
+    Returns:
+        StreamConnectionToPipelineResponse: The response object containing the connection details.
+    """
     logger.info(f"Connecting stream {stream_and_pipeline.stream_id} to pipeline {stream_and_pipeline.pipeline_ids}")
     response_json = await send_post_request(endpoint="/api/system/pipelines/connections/to_stream", data=stream_and_pipeline.dict())
     logger.info(f"Response: {response_json}")
     return StreamConnectionToPipelineResponse(**response_json)
+
+
+######### ! GRAYLOG DECOMISSIONGING ! ############
+async def delete_stream(stream_id: str):
+    """
+    Deletes a stream.
+
+    Args:
+        stream_id (str): The ID of the stream to be deleted.
+
+    Returns:
+        The result of the stream deletion request.
+    """
+    logger.info(f"Deleting stream {stream_id}")
+    response = await send_delete_request(endpoint=f"/api/streams/{stream_id}")
+    return response
+
+async def delete_index_set(index_set_id: str):
+    """
+    Deletes an index set.
+
+    Args:
+        index_set_id (str): The ID of the index set to be deleted.
+
+    Returns:
+        The result of the index set deletion request.
+    """
+    logger.info(f"Deleting index set {index_set_id}")
+    response = await send_delete_request(endpoint=f"/api/system/indices/index_sets/{index_set_id}")
+    return response

@@ -8,8 +8,16 @@ from app.connectors.wazuh_manager.utils.universal import (
 from app.connectors.wazuh_manager.utils.universal import (
     send_put_request as send_wazuh_put_request,
 )
+from app.connectors.wazuh_manager.utils.universal import (
+    send_get_request as send_wazuh_get_request,
+)
+from app.connectors.wazuh_manager.utils.universal import (
+    send_delete_request as send_wazuh_delete_request,
+)
 from app.customer_provisioning.schema.provision import ProvisionNewCustomer
 from app.customer_provisioning.schema.wazuh_manager import WazuhAgentsTemplatePaths
+from app.agents.wazuh.schema.agents import WazuhAgentsList, WazuhAgent
+from typing import List
 
 
 ######### ! WAZUH MANAGER PROVISIONING ! ############
@@ -81,3 +89,84 @@ async def apply_group_configurations(request: ProvisionNewCustomer):
             await configure_wazuh_group(group_code, template_path)
         except Exception as e:
             logger.error(f"Error configuring group {group_code}: {e}")
+
+
+
+######### ! WAZUH MANAGER DECOMISSIONING ! ############
+
+async def get_agent_ids(group_code: str) -> List[str]:
+    try:
+        response = await send_wazuh_get_request(endpoint="agents", params={"group": group_code})
+        logger.info(f"Response for {group_code}: {response}")
+
+        # Extracting agents from the nested response
+        agents_data = response.get('data', {}).get('data', {}).get('affected_items', [])
+
+        agent_ids = [agent.get('id') for agent in agents_data]
+        return agent_ids
+    except Exception as e:
+        logger.error(f"Error getting agents for group {group_code}: {e}")
+        return []
+
+
+async def gather_wazuh_agents(customer_meta_wazuh_group: str):
+    # Append the Group Templates from the WazuhAgentsTemplatePaths Enum
+    wazuh_groups = ["Linux", "Windows", "Mac"]
+
+    # Initialize an empty list to store the agents
+    agents = []
+
+    # Loop through the groups and get the agent IDs for each group and append them to the list
+    for group in wazuh_groups:
+        group_code = generate_group_code(group, customer_meta_wazuh_group)
+        logger.info(f"Getting agents for group {group_code}")
+        agent_ids = await get_agent_ids(group_code)
+        agents.extend(agent_ids)
+
+    return agents
+
+async def delete_wazuh_agents(agent_ids: List[str]):
+    # Initialize an empty list to store the agents
+    agents = []
+
+    # Loop through the groups and get the agent IDs for each group and append them to the list
+    for agent_id in agent_ids:
+        logger.info(f"Deleting agent {agent_id}")
+        try:
+            response = await send_wazuh_delete_request(endpoint=f"agents", params={
+                "older_than": "0s",
+                "agents_list": agent_id,
+                "status": "all",
+            })
+            logger.info(f"Response for {agent_id}: {response}")
+        except Exception as e:
+            logger.error(f"Error deleting agent {agent_id}: {e}")
+            continue
+
+        agents.append(agent_id)
+
+    return agents
+
+async def delete_wazuh_groups(customer_meta_wazuh_group: str):
+
+    wazuh_groups = ["Linux", "Windows", "Mac"]
+
+    # Initialize an empty list to store the groups deleted
+    groups_deleted = []
+
+    # Loop through the groups and get the agent IDs for each group and append them to the list
+    for group in wazuh_groups:
+        group_code = generate_group_code(group, customer_meta_wazuh_group)
+        logger.info(f"Deleting group {group_code}")
+        try:
+            response = await send_wazuh_delete_request(endpoint=f"groups", params={
+                "groups_list": group_code,
+            })
+            logger.info(f"Response for {group_code}: {response}")
+        except Exception as e:
+            logger.error(f"Error deleting group {group_code}: {e}")
+            continue
+
+        groups_deleted.append(group_code)
+
+    return groups_deleted

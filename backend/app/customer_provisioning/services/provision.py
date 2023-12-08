@@ -27,6 +27,17 @@ from app.utils import get_connector_attribute
 
 # ! MAIN FUNCTION ! #
 async def provision_wazuh_customer(request: ProvisionNewCustomer, session: AsyncSession) -> CustomerProvisionResponse:
+    """
+    This function is the main function for provisioning a new customer for their Wazuh instance.
+    It will call all the other functions to provision the customer.
+
+    Args:
+        request (ProvisionNewCustomer): The request body from the API endpoint
+        session (AsyncSession): The database session
+
+    Raises:
+        HTTPException: If the stream fails to start
+    """
     logger.info(f"Provisioning new customer {request}")
     # Initialize an empty dictionary to store the meta data
     provision_meta_data = {}
@@ -92,6 +103,17 @@ async def provision_wazuh_customer(request: ProvisionNewCustomer, session: Async
 
 ######### ! Update CustomerMeta Table ! ############
 async def update_customer_meta_table(request: ProvisionNewCustomer, customer_meta: CustomerProvisionMeta, session: AsyncSession):
+    """
+    Update the customer meta table with the provided information.
+
+    Args:
+        request (ProvisionNewCustomer): The request object containing customer information.
+        customer_meta (CustomerProvisionMeta): The customer meta object containing additional information.
+        session (AsyncSession): The database session.
+
+    Returns:
+        CustomerProvisionMeta: The updated customer meta object.
+    """
     logger.info(f"Updating customer meta table for customer {request.customer_name}")
     customer_meta = CustomersMeta(
         customer_code=request.customer_code,
@@ -112,10 +134,21 @@ async def update_customer_meta_table(request: ProvisionNewCustomer, customer_met
 
 ######### ! Provision Wazuh Worker ! ############
 async def provision_wazuh_worker(request: ProvisionWorkerRequest, session: AsyncSession) -> ProvisionWorkerResponse:
+    """
+    Provisions a Wazuh worker.
+
+    Args:
+        request (ProvisionWorkerRequest): The request object containing the necessary information for provisioning.
+        session (AsyncSession): The async session object for making HTTP requests.
+
+    Returns:
+        ProvisionWorkerResponse: The response object indicating the success or failure of the provisioning operation.
+    """
     logger.info(f"Provisioning Wazuh worker {request}")
+    api_endpoint = await get_connector_attribute(connector_id=14, column_name="connector_url", session=session)
     # Send the POST request to the Wazuh worker
     response = requests.post(
-        url=await get_connector_attribute(connector_id=14, column_name="connector_url", session=session),
+        url=f"{api_endpoint}/provision_worker",
         json=request.dict(),
     )
     # Check the response status code

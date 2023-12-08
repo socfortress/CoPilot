@@ -33,7 +33,7 @@ class ProvisionNewCustomer(BaseModel):
         example=["Wazuh", "Office365"],
         description="List of subscriptions for the customer",
     )
-    dashboards_to_include: DashboardProvisionRequest = Field(..., description="Dashboards to include in the customer's Grafana instance")
+    dashboards_to_include: DashboardProvisionRequest = Field("EDR_DLL_SIDE_LOADING", description="Dashboards to include in the customer's Grafana instance")
     wazuh_auth_password: str = Field(..., description="Password for the Wazuh API user")
     wazuh_registration_port: str = Field(..., description="Port for the Wazuh registration service")
     wazuh_logs_port: str = Field(..., description="Port for the Wazuh logs service")
