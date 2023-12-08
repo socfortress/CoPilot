@@ -56,11 +56,11 @@ async def invoke_socfortress_threat_intel_api(api_key: str, url: str, request: S
         "x-api-key": api_key
     }
     params = {
-        "value": f"{request.ioc_value}&customer_code={request.customer_code}"
+        "value":f"{request.ioc_value}&customer_code={request.customer_code}"
     }
+    logger.info(f"Invoking Socfortress Threat Intel API with params: {params}")
     async with httpx.AsyncClient() as client:
         response = await client.get(url, headers=headers, params=params)
-        response.raise_for_status()
         return response.json()
 
 async def get_ioc_response(request: SocfortressThreatIntelRequest, session: AsyncSession) -> IoCResponse:
