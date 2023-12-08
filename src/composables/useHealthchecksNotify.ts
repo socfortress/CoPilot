@@ -83,6 +83,7 @@ export function useHealthchecksNotify() {
 						read: false,
 						date: new Date(),
 						action() {
+							router.push({ name: "Healthcheck" })
 						},
 						actionTitle: "See Healthcheck"
 					}

@@ -104,6 +104,12 @@ const router = createRouter({
 				}
 			]
 		},
+		{
+			path: "/healthcheck",
+			name: "Healthcheck",
+			component: () => import("@/views/socfortress/Healthcheck.vue"),
+			meta: { title: "Healthcheck", auth: true, roles: UserRole.All }
+		},
 
 		// DEMO PAGES ==========================================================
 
