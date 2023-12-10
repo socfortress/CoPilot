@@ -5,7 +5,8 @@ from fastapi import HTTPException
 from loguru import logger
 
 from app.connectors.graylog.services.pipelines import get_pipelines
-from app.connectors.graylog.utils.universal import send_post_request, send_delete_request
+from app.connectors.graylog.utils.universal import send_delete_request
+from app.connectors.graylog.utils.universal import send_post_request
 from app.customer_provisioning.schema.graylog import GraylogIndexSetCreationResponse
 from app.customer_provisioning.schema.graylog import StreamConnectionToPipelineRequest
 from app.customer_provisioning.schema.graylog import StreamConnectionToPipelineResponse
@@ -222,6 +223,7 @@ async def delete_stream(stream_id: str):
     logger.info(f"Deleting stream {stream_id}")
     response = await send_delete_request(endpoint=f"/api/streams/{stream_id}")
     return response
+
 
 async def delete_index_set(index_set_id: str):
     """

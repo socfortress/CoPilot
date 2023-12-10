@@ -3,14 +3,18 @@ from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.universal_models import CustomersMeta
 from app.customer_provisioning.schema.decommission import DecommissionCustomerResponse
-from app.customer_provisioning.services.wazuh_manager import gather_wazuh_agents, delete_wazuh_agents, delete_wazuh_groups
-from app.customer_provisioning.services.graylog import delete_stream, delete_index_set
-from app.customer_provisioning.services.grafana import delete_grafana_organization
 from app.customer_provisioning.schema.wazuh_worker import DecommissionWorkerRequest
 from app.customer_provisioning.schema.wazuh_worker import DecommissionWorkerResponse
+from app.customer_provisioning.services.grafana import delete_grafana_organization
+from app.customer_provisioning.services.graylog import delete_index_set
+from app.customer_provisioning.services.graylog import delete_stream
+from app.customer_provisioning.services.wazuh_manager import delete_wazuh_agents
+from app.customer_provisioning.services.wazuh_manager import delete_wazuh_groups
+from app.customer_provisioning.services.wazuh_manager import gather_wazuh_agents
+from app.db.universal_models import CustomersMeta
 from app.utils import get_connector_attribute
+
 
 async def decomission_wazuh_customer(customer_meta: CustomersMeta, session: AsyncSession) -> DecommissionCustomerResponse:
     """
@@ -67,7 +71,6 @@ async def decomission_wazuh_customer(customer_meta: CustomersMeta, session: Asyn
             "index_deleted": customer_meta.customer_meta_graylog_index,
         },
     )
-
 
 
 ######### ! Decommission Wazuh Worker ! ############

@@ -9,9 +9,10 @@ from sqlalchemy.future import select
 
 from app.auth.utils import AuthHandler
 from app.customer_provisioning.schema.decommission import DecommissionCustomerResponse
-from app.db.db_session import get_session
-from app.db.universal_models import Customers, CustomersMeta
 from app.customer_provisioning.services.decommission import decomission_wazuh_customer
+from app.db.db_session import get_session
+from app.db.universal_models import Customers
+from app.db.universal_models import CustomersMeta
 
 # App specific imports
 
@@ -41,6 +42,7 @@ async def check_customermeta_exists(customer_name: str, session: AsyncSession = 
         raise HTTPException(status_code=404, detail=f"Customer: {customer_name} not found. Please create the customer first.")
 
     return customer_meta
+
 
 @customer_decommissioning_router.post(
     "/decommission",

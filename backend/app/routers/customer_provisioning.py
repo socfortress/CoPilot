@@ -1,7 +1,9 @@
 from fastapi import APIRouter
 
+from app.customer_provisioning.routes.decommission import (
+    customer_decommissioning_router,
+)
 from app.customer_provisioning.routes.provision import customer_provisioning_router
-from app.customer_provisioning.routes.decommission import customer_decommissioning_router
 
 # Instantiate the APIRouter
 router = APIRouter()

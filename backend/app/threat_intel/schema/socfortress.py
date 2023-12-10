@@ -1,6 +1,9 @@
+from typing import List
+from typing import Optional
+
 from pydantic import BaseModel
-from typing import Optional, List
 from pydantic import Field
+
 
 class SocfortressThreatIntelRequest(BaseModel):
     ioc_value: str

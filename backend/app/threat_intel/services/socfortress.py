@@ -1,3 +1,4 @@
+import httpx
 from fastapi import APIRouter
 from fastapi import Body
 from fastapi import Depends
@@ -6,11 +7,11 @@ from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+
+from app.threat_intel.schema.socfortress import IoCMapping
+from app.threat_intel.schema.socfortress import IoCResponse
+from app.threat_intel.schema.socfortress import SocfortressThreatIntelRequest
 from app.utils import get_connector_attribute
-import httpx
-
-from app.threat_intel.schema.socfortress import IoCResponse, SocfortressThreatIntelRequest, IoCMapping
-
 
 
 async def get_socfortress_threat_intel_attributes(column_name: str, session: AsyncSession) -> str:
@@ -51,17 +52,13 @@ async def invoke_socfortress_threat_intel_api(api_key: str, url: str, request: S
     Raises:
         httpx.HTTPStatusError: If the API request fails with a non-successful status code.
     """
-    headers = {
-        "module-version": "your_module_version",
-        "x-api-key": api_key
-    }
-    params = {
-        "value":f"{request.ioc_value}&customer_code={request.customer_code}"
-    }
+    headers = {"module-version": "your_module_version", "x-api-key": api_key}
+    params = {"value": f"{request.ioc_value}&customer_code={request.customer_code}"}
     logger.info(f"Invoking Socfortress Threat Intel API with params: {params}")
     async with httpx.AsyncClient() as client:
         response = await client.get(url, headers=headers, params=params)
         return response.json()
+
 
 async def get_ioc_response(request: SocfortressThreatIntelRequest, session: AsyncSession) -> IoCResponse:
     """
@@ -79,15 +76,11 @@ async def get_ioc_response(request: SocfortressThreatIntelRequest, session: Asyn
     response_data = await invoke_socfortress_threat_intel_api(api_key, url, request)
 
     # Using .get() with default values
-    data = response_data.get('data', {})
-    success = response_data.get('success', False)
-    message = response_data.get('message', 'No message provided')
+    data = response_data.get("data", {})
+    success = response_data.get("success", False)
+    message = response_data.get("message", "No message provided")
 
-    return IoCResponse(
-        data=IoCMapping(**data),
-        success=success,
-        message=message
-    )
+    return IoCResponse(data=IoCMapping(**data), success=success, message=message)
 
 
 async def socfortress_threat_intel_lookup(request: SocfortressThreatIntelRequest, session: AsyncSession) -> IoCResponse:
@@ -102,4 +95,3 @@ async def socfortress_threat_intel_lookup(request: SocfortressThreatIntelRequest
         IoCResponse: The response object containing the threat intelligence information.
     """
     return await get_ioc_response(request, session)
-

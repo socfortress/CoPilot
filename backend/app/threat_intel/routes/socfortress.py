@@ -8,15 +8,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.auth.utils import AuthHandler
-from app.threat_intel.schema.socfortress import IoCResponse, SocfortressThreatIntelRequest
 from app.db.db_session import get_session
-from app.db.universal_models import Customers, CustomersMeta
+from app.db.universal_models import Customers
+from app.db.universal_models import CustomersMeta
+from app.threat_intel.schema.socfortress import IoCResponse
+from app.threat_intel.schema.socfortress import SocfortressThreatIntelRequest
 from app.threat_intel.services.socfortress import socfortress_threat_intel_lookup
 from app.utils import get_connector_attribute
 
 # App specific imports
 
 threat_intel_socfortress_router = APIRouter()
+
 
 async def ensure_api_key_exists(session: AsyncSession = Depends(get_session)) -> bool:
     """
@@ -39,7 +42,6 @@ async def ensure_api_key_exists(session: AsyncSession = Depends(get_session)) ->
     return True
 
 
-
 @threat_intel_socfortress_router.post(
     "/socfortress",
     response_model=IoCResponse,
@@ -49,10 +51,9 @@ async def ensure_api_key_exists(session: AsyncSession = Depends(get_session)) ->
 async def threat_intel_socfortress(
     request: SocfortressThreatIntelRequest,
     session: AsyncSession = Depends(get_session),
-    _key_exists: bool = Depends(ensure_api_key_exists)
+    _key_exists: bool = Depends(ensure_api_key_exists),
 ):
     logger.info("Running SOCFortress Threat Intel")
 
     socfortress_lookup = await socfortress_threat_intel_lookup(request, session=session)
     return socfortress_lookup
-

@@ -12,6 +12,7 @@ from app.customer_provisioning.schema.grafana import NodesVersionResponse
 from app.customer_provisioning.schema.provision import ProvisionNewCustomer
 from app.utils import get_connector_attribute
 
+
 ################# ! GRAFANA PROVISIONING ! #################
 async def create_grafana_organization(request: ProvisionNewCustomer) -> GrafanaOrganizationCreation:
     """
@@ -132,7 +133,6 @@ async def get_opensearch_version() -> str:
 
     # If no version is found, raise an exception
     raise HTTPException(status_code=500, detail=f"Failed to retrieve OpenSearch version.")
-
 
 
 ################# ! GRAFANA DECOMISSIONING ! #################

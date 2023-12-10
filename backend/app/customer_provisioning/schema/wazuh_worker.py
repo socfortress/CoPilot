@@ -65,6 +65,7 @@ class DecommissionWorkerRequest(BaseModel):
         description="The name of the customer",
     )
 
+
 class DecommissionWorkerResponse(BaseModel):
     success: bool = Field(
         ...,
