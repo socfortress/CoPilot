@@ -1,10 +1,4 @@
-import json
-import os
-from pathlib import Path
-from typing import List
-
 from fastapi import APIRouter
-from fastapi import BackgroundTasks
 from fastapi import Body
 from fastapi import Depends
 from fastapi import HTTPException
@@ -14,9 +8,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.auth.utils import AuthHandler
-from app.connectors.services import ConnectorServices
+from app.customer_provisioning.schema.provision import CustomerProvisionResponse
 from app.customer_provisioning.schema.provision import ProvisionNewCustomer
-from app.customer_provisioning.services.provision_wazuh import provision_wazuh_customer
+from app.customer_provisioning.services.provision import provision_wazuh_customer
 from app.db.db_session import get_session
 from app.db.universal_models import Customers
 
@@ -39,7 +33,7 @@ async def check_customer_exists(customer_name: str, session: AsyncSession = Depe
 
 @customer_provisioning_router.post(
     "/provision",
-    # response_model=GrafanaDashboardResponse,
+    response_model=CustomerProvisionResponse,
     description="Provision New Customer",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
@@ -50,5 +44,4 @@ async def provision_customer_route(
 ):
     logger.info("Provisioning new customer")
     customer_provision = await provision_wazuh_customer(request, session=session)
-
-    return {"message": "Provisioning new customer"}
+    return customer_provision

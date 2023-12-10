@@ -187,6 +187,20 @@ export default function getItems(mode: "vertical" | "horizontal", collapsed: boo
 			]
 		},
 		{
+			label: () =>
+				h(
+					RouterLink,
+					{
+						to: {
+							name: "Healthcheck"
+						}
+					},
+					{ default: () => "Healthcheck" }
+				),
+			key: "Healthcheck",
+			icon: renderIcon(BlankIcon)
+		},
+		{
 			type: "divider"
 		},
 

@@ -8,24 +8,26 @@
 		</template>
 		<n-spin :show="loading">
 			<div class="info">
-				<template v-if="unhealthyIndices && unhealthyIndices.length">
-					<div
-						v-for="item of unhealthyIndices"
-						:key="item.index"
-						class="item"
-						:class="item.health"
-						@click="emit('click', item)"
-						title="Click for details"
-					>
-						<IndexCard :index="item" />
-					</div>
-				</template>
-				<n-empty description="No Unhealthy Indices found" v-else>
-					<template #icon>
-						<Icon :name="ShieldIcon"></Icon>
+				<n-scrollbar style="max-height: 500px" trigger="none">
+					<template v-if="unhealthyIndices && unhealthyIndices.length">
+						<div
+							v-for="item of unhealthyIndices"
+							:key="item.index"
+							class="item"
+							:class="item.health"
+							@click="emit('click', item)"
+							title="Click for details"
+						>
+							<IndexCard :index="item" />
+						</div>
 					</template>
-					<template #extra>Great, all indices are healthy!</template>
-				</n-empty>
+					<n-empty description="No Unhealthy Indices found" v-else>
+						<template #icon>
+							<Icon :name="ShieldIcon"></Icon>
+						</template>
+						<template #extra>Great, all indices are healthy!</template>
+					</n-empty>
+				</n-scrollbar>
 			</div>
 		</n-spin>
 	</n-card>
@@ -35,7 +37,7 @@
 import { computed, toRefs } from "vue"
 import { type IndexStats, IndexHealth } from "@/types/indices.d"
 import IndexCard from "@/components/indices/IndexCard.vue"
-import { NSpin, NCard, NEmpty } from "naive-ui"
+import { NSpin, NCard, NEmpty, NScrollbar } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 
 const ShieldIcon = "fluent:shield-task-20-regular"

@@ -33,6 +33,7 @@ from app.routers import logs
 from app.routers import shuffle
 from app.routers import smtp
 from app.routers import sublime
+from app.routers import threat_intel
 from app.routers import velociraptor
 from app.routers import wazuh_indexer
 from app.routers import wazuh_manager
@@ -84,6 +85,7 @@ app.include_router(logs.router)
 app.include_router(influxdb.router)
 app.include_router(grafana.router)
 app.include_router(customer_provisioning.router)
+app.include_router(threat_intel.router)
 
 
 @app.on_event("startup")

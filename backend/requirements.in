@@ -10,6 +10,7 @@ elasticsearch7==7.10.1
 environs
 fastapi
 grafana-client
+httpx
 influxdb-client[async]
 libmagic
 loguru
