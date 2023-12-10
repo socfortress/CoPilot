@@ -14,23 +14,8 @@
 					<Icon :name="WarningIcon" :size="20" v-if="alert.level === InfluxDBAlertLevel.Crit" />
 					<Icon :name="OKIcon" :size="20" v-else />
 				</div>
-				<div class="title grow">
-					{{ alert.checkName }}
-					<n-popover style="padding: 0">
-						<template #trigger>
-							<Icon :name="MoreIcon" class="relative top-0.5 ml-1" />
-						</template>
-						<n-input
-							:value="alert.message"
-							type="textarea"
-							readonly
-							placeholder="Message"
-							:autosize="{
-								minRows: 3,
-								maxRows: 10
-							}"
-						/>
-					</n-popover>
+				<div class="info grow">
+					<div class="message" v-html="message"></div>
 				</div>
 			</div>
 		</div>
@@ -43,16 +28,19 @@
 <script setup lang="ts">
 import Icon from "@/components/common/Icon.vue"
 import "@/assets/scss/vuesjv-override.scss"
-import { NPopover, NInput } from "naive-ui"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
 import { InfluxDBAlertLevel, type InfluxDBAlert } from "@/types/healthchecks.d"
+import { computed } from "vue"
 
 const { alert } = defineProps<{ alert: InfluxDBAlert }>()
 
 const WarningIcon = "carbon:warning-alt-filled"
 const OKIcon = "carbon:checkmark-filled"
-const MoreIcon = "iconoir:more-horiz-circle"
+
+const message = computed(() => {
+	return alert.message.replace(/\n/gim, " <span class='mx-1'>•</span> ")
+})
 
 const dFormats = useSettingsStore().dateFormat
 
