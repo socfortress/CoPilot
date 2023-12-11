@@ -7,6 +7,7 @@ import graylog from "./graylog"
 import indices from "./indices"
 import soc from "./soc"
 import healthchecks from "./healthchecks"
+import threatIntel from "./threatIntel"
 
 export default {
 	agents,
@@ -17,5 +18,6 @@ export default {
 	graylog,
 	indices,
 	soc,
-	healthchecks
+	healthchecks,
+	threatIntel
 }
