@@ -76,7 +76,7 @@ async def decomission_wazuh_customer(customer_meta: CustomersMeta, session: Asyn
 ######### ! Decommission Wazuh Worker ! ############
 async def decommission_wazuh_worker(request: DecommissionWorkerRequest, session: AsyncSession) -> DecommissionWorkerResponse:
     """
-    Decomissions a Wazuh worker.
+    Decomissions a Wazuh worker. https://github.com/socfortress/Customer-Provisioning-Worker
 
     Args:
         request (DecommissionWorkerRequest): The request object containing the necessary information for provisioning.
