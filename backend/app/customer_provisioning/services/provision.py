@@ -135,7 +135,7 @@ async def update_customer_meta_table(request: ProvisionNewCustomer, customer_met
 ######### ! Provision Wazuh Worker ! ############
 async def provision_wazuh_worker(request: ProvisionWorkerRequest, session: AsyncSession) -> ProvisionWorkerResponse:
     """
-    Provisions a Wazuh worker.
+    Provisions a Wazuh worker. https://github.com/socfortress/Customer-Provisioning-Worker
 
     Args:
         request (ProvisionWorkerRequest): The request object containing the necessary information for provisioning.
