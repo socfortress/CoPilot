@@ -17,7 +17,7 @@ class ValidIocFields(Enum):
 
 class CreateAlertRequest(BaseModel):
     index_name: str = Field(..., description="The name of the index to search alerts for.")
-    alert_id: str = Field(..., description="The alert id to create.")
+    alert_id: str = Field(..., description="The alert id.")
 
 
 class CreateAlertResponse(BaseModel):

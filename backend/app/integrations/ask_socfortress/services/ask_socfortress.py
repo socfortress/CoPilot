@@ -8,10 +8,26 @@ from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from app.integrations.ask_socfortress.schema.ask_socfortress import AskSocfortressSigmaRequest
+from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
+from app.integrations.ask_socfortress.schema.ask_socfortress import AskSocfortressSigmaRequest, AskSocfortressRequest
 from app.integrations.ask_socfortress.schema.ask_socfortress import AskSocfortressSigmaResponse
+from app.integrations.alert_escalation.schema.general_alert import CreateAlertRequest
+from app.integrations.alert_escalation.schema.general_alert import CreateAlertResponse
+from app.integrations.alert_escalation.schema.general_alert import GenericAlertModel
+from app.integrations.alert_escalation.schema.general_alert import GenericSourceModel
 from app.utils import get_connector_attribute
 
+
+async def get_single_alert_details(alert_details: CreateAlertRequest) -> GenericAlertModel:
+    logger.info(f"Fetching alert details for alert {alert_details.alert_id} in index {alert_details.index_name}")
+    es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
+    try:
+        alert = es_client.get(index=alert_details.index_name, id=alert_details.alert_id)
+        source_model = GenericSourceModel(**alert["_source"])
+        return GenericAlertModel(_source=source_model, _id=alert["_id"], _index=alert["_index"], _version=alert["_version"])
+    except Exception as e:
+        logger.debug(f"Failed to collect alert details: {e}")
+        raise HTTPException(status_code=400, detail=f"Failed to collect alert details: {e}")
 
 async def get_ask_socfortress_attributes(column_name: str, session: AsyncSession) -> str:
     """
@@ -80,7 +96,7 @@ async def get_ask_socfortress_response(request: AskSocfortressSigmaRequest, sess
     return AskSocfortressSigmaResponse(success=success, message=message)
 
 
-async def ask_socfortress_lookup(request: AskSocfortressSigmaRequest, session: AsyncSession) -> AskSocfortressSigmaResponse:
+async def ask_socfortress_lookup(alert: AskSocfortressRequest, session: AsyncSession) -> AskSocfortressSigmaResponse:
     """
     Performs a threat intelligence lookup using the Socfortress service.
 
@@ -91,4 +107,9 @@ async def ask_socfortress_lookup(request: AskSocfortressSigmaRequest, session: A
     Returns:
         IoCResponse: The response object containing the threat intelligence information.
     """
-    return await get_ask_socfortress_response(request, session)
+    alert_details = await get_single_alert_details(alert_details=alert)
+    logger.info(f"Alert details: {alert_details}")
+    if alert_details._source.rule_group3 != "sigma":
+        raise HTTPException(status_code=400, detail="Alert is not a Sigma alert.")
+    sigma_rule_name = AskSocfortressSigmaRequest(sigma_rule_name=alert_details._source.data_name)
+    return await get_ask_socfortress_response(sigma_rule_name, session)

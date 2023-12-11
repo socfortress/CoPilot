@@ -11,7 +11,7 @@ from app.auth.utils import AuthHandler
 from app.db.db_session import get_session
 from app.db.universal_models import Customers
 from app.db.universal_models import CustomersMeta
-from app.integrations.ask_socfortress.schema.ask_socfortress import AskSocfortressSigmaRequest
+from app.integrations.ask_socfortress.schema.ask_socfortress import AskSocfortressSigmaRequest, AskSocfortressRequest
 from app.integrations.ask_socfortress.schema.ask_socfortress import AskSocfortressSigmaResponse
 
 from app.integrations.ask_socfortress.services.ask_socfortress import ask_socfortress_lookup
@@ -50,11 +50,11 @@ async def ensure_api_key_exists(session: AsyncSession = Depends(get_session)) ->
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def ask_socfortress_sigma(
-    request: AskSocfortressSigmaRequest,
+    alert: AskSocfortressRequest,
     session: AsyncSession = Depends(get_session),
     _key_exists: bool = Depends(ensure_api_key_exists),
 ):
     logger.info("Running Ask SOCFortress Sigma lookup.")
 
-    ask_socfortress_result = await ask_socfortress_lookup(request, session=session)
+    ask_socfortress_result = await ask_socfortress_lookup(alert, session=session)
     return ask_socfortress_result
