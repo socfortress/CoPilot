@@ -37,6 +37,7 @@
 					</template>
 					Filters
 				</n-button>
+				<n-button size="small" type="primary" @click="showThreatIntelDrawer = true">Threat Intel</n-button>
 			</div>
 		</div>
 		<n-spin :show="loading">
@@ -56,6 +57,18 @@
 				</template>
 			</div>
 		</n-spin>
+
+		<n-drawer
+			v-model:show="showThreatIntelDrawer"
+			:width="500"
+			style="max-width: 90vw"
+			:trap-focus="false"
+			display-directive="show"
+		>
+			<n-drawer-content title="SOCFortress Threat Intel" closable :native-scrollbar="false">
+				<ThreatIntel @mounted="threatIntelCTX = $event" />
+			</n-drawer-content>
+		</n-drawer>
 
 		<n-drawer
 			v-model:show="showStatsDrawer"
@@ -132,6 +145,7 @@
 import { ref, onBeforeMount, toRefs, computed, nextTick, onMounted } from "vue"
 import { useMessage, NSpin, NPopover, NButton, NEmpty, NDrawer, NDrawerContent, NSelect } from "naive-ui"
 import Api from "@/api"
+import ThreatIntel from "./ThreatIntel.vue"
 import AlertsStats, { type AlertsStatsCTX } from "./AlertsStats.vue"
 import AlertsFilters from "./AlertsFilters.vue"
 import AlertsSummaryItem, { type AlertsSummaryExt } from "./AlertsSummary.vue"
@@ -143,6 +157,7 @@ import type { IndexStats } from "@/types/indices.d"
 import axios from "axios"
 import type { Agent } from "@/types/agents.d"
 import { onBeforeUnmount } from "vue"
+import { watch } from "vue"
 
 const props = defineProps<{ agentHostname?: string; indexName?: string }>()
 const { agentHostname, indexName } = toRefs(props)
@@ -157,6 +172,8 @@ const alertsSummaryList = ref<AlertsSummaryExt[]>([])
 const loadingFilters = ref(true)
 const showFiltersDrawer = ref(true)
 const showStatsDrawer = ref(false)
+const showThreatIntelDrawer = ref(false)
+const threatIntelCTX = ref<{ restore: () => void } | null>(null)
 let abortController: AbortController | null = null
 
 const InfoIcon = "carbon:information"
@@ -317,6 +334,10 @@ function startSearch(closeDrawer?: boolean) {
 function cancelSearch() {
 	abortController?.abort()
 }
+
+watch(showThreatIntelDrawer, () => {
+	threatIntelCTX.value?.restore()
+})
 
 onBeforeMount(() => {
 	if (agentHostname?.value) {
