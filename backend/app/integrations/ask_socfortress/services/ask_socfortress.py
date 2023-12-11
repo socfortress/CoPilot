@@ -7,6 +7,7 @@ from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from typing import Optional
 
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
 from app.integrations.ask_socfortress.schema.ask_socfortress import AskSocfortressSigmaRequest, AskSocfortressRequest
@@ -95,6 +96,48 @@ async def get_ask_socfortress_response(request: AskSocfortressSigmaRequest, sess
 
     return AskSocfortressSigmaResponse(success=success, message=message)
 
+async def add_alert_to_document(es_client, alert: CreateAlertRequest, result: str, session: AsyncSession) -> Optional[str]:
+    """
+    Update the alert document in Elasticsearch with the provided SOC alert ID URL.
+
+    Parameters:
+    - es_client: The Elasticsearch client instance to use for the update.
+    - alert: The alert request object containing alert_id and index_name.
+    - soc_alert_id: The alert ID as it exists within IRIS.
+    - session: The database session for retrieving connector information.
+
+    Returns:
+    - True if the update is successful, False otherwise.
+    """
+    try:
+        es_client.update(index=alert.index_name, id=alert.alert_id, body={"doc": {"ask_socfortress": result}})
+        logger.info(f"Added Ask SOCFortress Message to alert {alert.alert_id} in index {alert.index_name}")
+        return None
+    except Exception as e:
+        logger.error(f"Failed to add Ask SOCFortress Message to alert {alert.alert_id} in index {alert.index_name}: {e}")
+
+        # Attempt to remove read-only block
+        try:
+            es_client.indices.put_settings(
+                index=alert.index_name,
+                body={"index.blocks.write": None}
+            )
+            logger.info(f"Removed read-only block from index {alert.index_name}. Retrying update.")
+
+            # Retry the update operation
+            es_client.update(index=alert.index_name, id=alert.alert_id, body={"doc": {"ask_socfortress": result}})
+            logger.info(f"Added Ask SOCFortress Message to alert {alert.alert_id} in index {alert.index_name} after removing read-only block")
+
+            # Reenable the write block
+            es_client.indices.put_settings(
+                index=alert.index_name,
+                body={"index.blocks.write": True}
+            )
+            return True
+        except Exception as e2:
+            logger.error(f"Failed to remove read-only block from index {alert.index_name}: {e2}")
+            return False
+
 
 async def ask_socfortress_lookup(alert: AskSocfortressRequest, session: AsyncSession) -> AskSocfortressSigmaResponse:
     """
@@ -112,4 +155,8 @@ async def ask_socfortress_lookup(alert: AskSocfortressRequest, session: AsyncSes
     if alert_details._source.rule_group3 != "sigma":
         raise HTTPException(status_code=400, detail="Alert is not a Sigma alert.")
     sigma_rule_name = AskSocfortressSigmaRequest(sigma_rule_name=alert_details._source.data_name)
-    return await get_ask_socfortress_response(sigma_rule_name, session)
+    ask_socfortress_response = await get_ask_socfortress_response(sigma_rule_name, session)
+    result = ask_socfortress_response.message
+    es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
+    await add_alert_to_document(es_client, alert, result, session=session)
+    return ask_socfortress_response
