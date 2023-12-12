@@ -34,7 +34,7 @@ class ProvisionNewCustomer(BaseModel):
         description="List of subscriptions for the customer",
     )
     dashboards_to_include: DashboardProvisionRequest = Field(
-        "EDR_DLL_SIDE_LOADING",
+        ...,
         description="Dashboards to include in the customer's Grafana instance",
     )
     wazuh_auth_password: str = Field(..., description="Password for the Wazuh API user")
@@ -62,6 +62,7 @@ class CustomerProvisionMeta(BaseModel):
     grafana_organization_id: int
     wazuh_datasource_uid: str
     grafana_edr_folder_id: int
+    iris_customer_id: int
 
 
 class CustomerProvisionResponse(BaseModel):

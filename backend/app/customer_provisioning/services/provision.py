@@ -21,6 +21,7 @@ from app.customer_provisioning.services.graylog import create_index_set
 from app.customer_provisioning.services.graylog import get_pipeline_id
 from app.customer_provisioning.services.wazuh_manager import apply_group_configurations
 from app.customer_provisioning.services.wazuh_manager import create_wazuh_groups
+from app.customer_provisioning.services.dfir_iris import create_customer
 from app.db.universal_models import CustomersMeta
 from app.utils import get_connector_attribute
 
@@ -68,6 +69,8 @@ async def provision_wazuh_customer(request: ProvisionNewCustomer, session: Async
             datasourceUid=provision_meta_data["wazuh_datasource_uid"],
         ),
     )
+
+    provision_meta_data["iris_customer_id"] = (await create_customer(request.customer_name)).data.customer_id
 
     customer_provision_meta = CustomerProvisionMeta(**provision_meta_data)
     customer_meta = await update_customer_meta_table(request, customer_provision_meta, session)
@@ -126,6 +129,7 @@ async def update_customer_meta_table(request: ProvisionNewCustomer, customer_met
         customer_meta_wazuh_registration_port=request.wazuh_registration_port,
         customer_meta_wazuh_log_ingestion_port=request.wazuh_logs_port,
         customer_meta_wazuh_auth_password=request.wazuh_auth_password,
+        customer_meta_iris_customer_id=customer_meta.iris_customer_id,
     )
     session.add(customer_meta)
     await session.commit()
