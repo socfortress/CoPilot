@@ -7,12 +7,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import Depends
 from sqlalchemy.future import select
 from app.integrations.alert_creation.models.alert_settings import AlertCreationSettings
+from app.integrations.alert_creation.general.services.alert import create_alert
 from loguru import logger
 
 general_alerts_router = APIRouter()
 
 
-async def invalid_rule_id(create_alert_request: CreateAlertRequest, session: AsyncSession) -> bool:
+async def is_rule_id_valid(create_alert_request: CreateAlertRequest, session: AsyncSession) -> bool:
     logger.info(f"Checking if rule_id: {create_alert_request.rule_id} is valid for customer: {create_alert_request.agent_labels_customer}")
 
     result = await session.execute(
@@ -23,9 +24,9 @@ async def invalid_rule_id(create_alert_request: CreateAlertRequest, session: Asy
     settings = result.scalars().first()
 
     if settings and str(create_alert_request.rule_id) in (settings.excluded_wazuh_rules or '').split(','):
-        return True
+        return False
 
-    return False
+    return True
 
 
 
@@ -40,12 +41,11 @@ async def create_general_alert(
 ):
     logger.info(f"create_alert_request: {create_alert_request.dict()}")
 
-    if await invalid_rule_id(create_alert_request, session):
+    if await is_rule_id_valid(create_alert_request, session) is False:
         logger.info(f"Invalid rule_id: {create_alert_request.rule_id}")
-        raise HTTPException(status_code=200, detail="Invalid rule_id")
+        raise HTTPException(status_code=200, detail="Invalid rule_id.")
 
     logger.info(f"Rule id is valid: {create_alert_request.rule_id}")
-    # Rest of your logic here...
-    return None
+    return await create_alert(create_alert_request, session=session)
 
 

@@ -108,8 +108,8 @@ async def get_agent(agent_id: str, db: AsyncSession = Depends(get_session)) -> A
         else:
             raise HTTPException(status_code=404, detail=f"Agent with agent_id {agent_id} not found")
     except Exception as e:
-        logger.error(f"Failed to fetch agent: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to fetch agent: {e}")
+        logger.error(f"Failed to fetch agent: {agent_id}. Does it exist?")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch agent: {agent_id}. Does it exist?")
 
 
 @agents_router.get(

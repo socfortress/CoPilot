@@ -169,11 +169,6 @@ class IrisIoc(BaseModel):
 
 
 class IrisAlertContext(BaseModel):
-    customer_id_full: str = Field(
-        ...,
-        description="IRIS ID of the customer, customer name, and iris case index name in the Wazuh-Indexer",
-        example="1, SOCFortress, dfir_iris_00001",
-    )
     customer_iris_id: int = Field(
         ...,
         description="IRIS ID of the customer",

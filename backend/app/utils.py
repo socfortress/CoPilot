@@ -29,6 +29,7 @@ from app.db.db_session import Session
 from app.db.db_session import engine
 from app.db.db_session import get_db_session
 from app.db.db_session import get_session
+from app.integrations.alert_creation.models.alert_settings import AlertCreationSettings
 from app.db.universal_models import LogEntry
 
 
@@ -467,6 +468,14 @@ async def get_connector_attribute(connector_id: int, column_name: str, session: 
 
     if connector:
         return getattr(connector, column_name, None)
+    return None
+
+async def get_customer_alert_settings(customer_code: str, session: AsyncSession) -> Optional[AlertCreationSettings]:
+    result = await session.execute(select(AlertCreationSettings).filter(AlertCreationSettings.customer_code == customer_code))
+    settings = result.scalars().first()
+
+    if settings:
+        return settings
     return None
 
 
