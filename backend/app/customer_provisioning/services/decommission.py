@@ -13,6 +13,7 @@ from app.customer_provisioning.services.wazuh_manager import delete_wazuh_agents
 from app.customer_provisioning.services.wazuh_manager import delete_wazuh_groups
 from app.customer_provisioning.services.wazuh_manager import gather_wazuh_agents
 from app.db.universal_models import CustomersMeta
+from app.customer_provisioning.services.dfir_iris import delete_customer
 from app.utils import get_connector_attribute
 
 
@@ -53,6 +54,9 @@ async def decomission_wazuh_customer(customer_meta: CustomersMeta, session: Asyn
 
     # Delete Grafana Organization
     await delete_grafana_organization(organization_id=int(customer_meta.customer_meta_grafana_org_id))
+
+    # Delete DFIR-IRIS Customer
+    await delete_customer(customer_id=customer_meta.customer_meta_iris_customer_id)
 
     # Decommission Wazuh Worker
     await decommission_wazuh_worker(request=DecommissionWorkerRequest(customer_name=customer_meta.customer_name), session=session)

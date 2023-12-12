@@ -12,6 +12,7 @@ from app.customer_provisioning.schema.provision import CustomerProvisionResponse
 from app.customer_provisioning.schema.provision import ProvisionNewCustomer
 from app.customer_provisioning.schema.wazuh_worker import ProvisionWorkerRequest
 from app.customer_provisioning.schema.wazuh_worker import ProvisionWorkerResponse
+from app.integrations.alert_creation.models.alert_settings import AlertCreationSettings
 from app.customer_provisioning.services.grafana import create_grafana_datasource
 from app.customer_provisioning.services.grafana import create_grafana_folder
 from app.customer_provisioning.services.grafana import create_grafana_organization
@@ -21,6 +22,7 @@ from app.customer_provisioning.services.graylog import create_index_set
 from app.customer_provisioning.services.graylog import get_pipeline_id
 from app.customer_provisioning.services.wazuh_manager import apply_group_configurations
 from app.customer_provisioning.services.wazuh_manager import create_wazuh_groups
+from app.customer_provisioning.services.dfir_iris import create_customer
 from app.db.universal_models import CustomersMeta
 from app.utils import get_connector_attribute
 
@@ -69,8 +71,11 @@ async def provision_wazuh_customer(request: ProvisionNewCustomer, session: Async
         ),
     )
 
+    provision_meta_data["iris_customer_id"] = (await create_customer(request.customer_name)).data.customer_id
+
     customer_provision_meta = CustomerProvisionMeta(**provision_meta_data)
     customer_meta = await update_customer_meta_table(request, customer_provision_meta, session)
+    await update_customer_alert_settings_table(request, customer_provision_meta, session)
 
     provision_worker = await provision_wazuh_worker(
         ProvisionWorkerRequest(
@@ -126,11 +131,42 @@ async def update_customer_meta_table(request: ProvisionNewCustomer, customer_met
         customer_meta_wazuh_registration_port=request.wazuh_registration_port,
         customer_meta_wazuh_log_ingestion_port=request.wazuh_logs_port,
         customer_meta_wazuh_auth_password=request.wazuh_auth_password,
+        customer_meta_iris_customer_id=customer_meta.iris_customer_id,
     )
     session.add(customer_meta)
     await session.commit()
     return customer_meta
 
+
+
+######### ! Update Customer Alert Settings Table ! ############
+async def update_customer_alert_settings_table(request: ProvisionNewCustomer, customer_meta: CustomerProvisionMeta, session: AsyncSession):
+    """
+    Update the customer alert settings table with the provided information.
+
+    Args:
+        request (ProvisionNewCustomer): The request object containing customer information.
+        customer_meta (CustomerProvisionMeta): The customer meta object containing additional information.
+        session (AsyncSession): The database session.
+
+    Returns:
+        AlertCreationSettings: The updated customer meta object.
+    """
+    logger.info(f"Updating customer alert settings table for customer {request.customer_name}")
+    customer_alert_settings = AlertCreationSettings(
+        customer_code=request.customer_code,
+        customer_name=request.customer_name,
+        timefield='timestamp_utc',
+        iris_customer_id=customer_meta.iris_customer_id,
+        iris_customer_name=request.customer_name,
+        iris_index=f'dfir_iris_{request.customer_name.lower().replace(" ", "_")}',
+        grafana_url=request.grafana_url,
+        custom_message='Open In SOCFortress',
+        nvd_url='https://services.nvd.nist.gov/rest/json/cves/2.0?cveId',
+    )
+    session.add(customer_alert_settings)
+    await session.commit()
+    return customer_alert_settings
 
 ######### ! Provision Wazuh Worker ! ############
 async def provision_wazuh_worker(request: ProvisionWorkerRequest, session: AsyncSession) -> ProvisionWorkerResponse:
