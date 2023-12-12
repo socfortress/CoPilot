@@ -3,9 +3,10 @@ from typing import Dict
 from typing import List
 from typing import Tuple
 
-from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
 from elasticsearch7 import NotFoundError
 from loguru import logger
+
+from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
 
 
 class AlertDetailsService:
@@ -57,9 +58,7 @@ class AlertDetailsService:
             result = self.es.search(index="_all", body=query)
 
             # Extract (index, id) pairs from the result
-            index_id_pairs = [
-                (hit["_index"], hit["_id"]) for hit in result["hits"]["hits"]
-            ]
+            index_id_pairs = [(hit["_index"], hit["_id"]) for hit in result["hits"]["hits"]]
             logger.info(
                 f"Found {len(index_id_pairs)} alerts with syslog_level of 'ALERT' within the last 1 hour.",
             )
@@ -218,9 +217,7 @@ class AlertDetailsService:
             logger.info(f"Total alert timeline hits: {total_hits}")
 
             # Build and sort the list of events
-            events = [
-                event["_source"] for event in alert_timeline_events["hits"]["hits"]
-            ]
+            events = [event["_source"] for event in alert_timeline_events["hits"]["hits"]]
             events.sort(key=lambda x: x["timestamp_utc"])
 
             # return self.process_events(events)

@@ -6,17 +6,18 @@ from typing import Any
 from typing import Callable
 from typing import Dict
 from typing import Optional
-import httpx
 from typing import Tuple
 from typing import Union
 
+import httpx
 import regex
 import requests
+from fastapi import HTTPException
+from loguru import logger
+
 from app.integrations.alert_creation.utils.schema import ShufflePayload
 from app.integrations.alert_creation.utils.schema import WazuhAgentResponse
-from fastapi import HTTPException
 from app.utils import get_customer_alert_settings
-from loguru import logger
 
 
 #################### ! DFIR IRIS ASSET VALIDATOR ! ####################
@@ -328,7 +329,6 @@ async def validate_ioc_type(ioc_value: str) -> str:
     if ioc_type is None:
         logger.error("Failed to validate IoC value.")
     return ioc_type
-
 
 
 ############## ! SEND TO OTHER TOOLS ! ##############

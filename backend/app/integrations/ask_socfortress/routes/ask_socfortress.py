@@ -11,10 +11,18 @@ from app.auth.utils import AuthHandler
 from app.db.db_session import get_session
 from app.db.universal_models import Customers
 from app.db.universal_models import CustomersMeta
-from app.integrations.ask_socfortress.schema.ask_socfortress import AskSocfortressSigmaRequest, AskSocfortressRequest
-from app.integrations.ask_socfortress.schema.ask_socfortress import AskSocfortressSigmaResponse
-
-from app.integrations.ask_socfortress.services.ask_socfortress import ask_socfortress_lookup
+from app.integrations.ask_socfortress.schema.ask_socfortress import (
+    AskSocfortressRequest,
+)
+from app.integrations.ask_socfortress.schema.ask_socfortress import (
+    AskSocfortressSigmaRequest,
+)
+from app.integrations.ask_socfortress.schema.ask_socfortress import (
+    AskSocfortressSigmaResponse,
+)
+from app.integrations.ask_socfortress.services.ask_socfortress import (
+    ask_socfortress_lookup,
+)
 from app.utils import get_connector_attribute
 
 # App specific imports

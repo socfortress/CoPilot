@@ -1,8 +1,12 @@
-from typing import Optional, Dict, List
-from pydantic import BaseModel
-from pydantic import UUID4
-from datetime import datetime
 import uuid
+from datetime import datetime
+from typing import Dict
+from typing import List
+from typing import Optional
+
+from pydantic import UUID4
+from pydantic import BaseModel
+
 
 class CreateCustomerData(BaseModel):
     customer_id: int
@@ -13,6 +17,7 @@ class CreateCustomerData(BaseModel):
     custom_attributes: Dict
     last_update_date: datetime
     client_uuid: uuid.UUID
+
 
 class CreateCustomerResponse(BaseModel):
     success: bool
@@ -25,6 +30,7 @@ class Customer(BaseModel):
     customer_uuid: UUID4
     customer_description: Optional[str] = None
     customer_sla: Optional[str] = None
+
 
 class ListCustomers(BaseModel):
     success: bool

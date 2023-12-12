@@ -14,6 +14,7 @@ class AlertCreationEventConfig(SQLModel, table=True):
     value: str = Field(max_length=1024)
     alert_creation_settings: "AlertCreationSettings" = Relationship(back_populates="event_configs")
 
+
 class AlertCreationSettings(SQLModel, table=True):
     id: Optional[int] = Field(primary_key=True)
     customer_code: str = Field(max_length=11, nullable=False)
@@ -34,5 +35,3 @@ class AlertCreationSettings(SQLModel, table=True):
     event_order: Optional[str] = Field(max_length=1024)
     event_order2: Optional[str] = Field(max_length=1024)
     event_configs: List[AlertCreationEventConfig] = Relationship(back_populates="alert_creation_settings")
-
-

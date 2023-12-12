@@ -141,21 +141,17 @@ async def add_alert_to_document(es_client, alert: CreateAlertRequest, soc_alert_
         logger.error(f"Failed to add alert ID {soc_alert_id} to alert {alert.alert_id} in index {alert.index_name}: {e}")
         # Attempt to remove read-only block
         try:
-            es_client.indices.put_settings(
-                index=alert.index_name,
-                body={"index.blocks.write": None}
-            )
+            es_client.indices.put_settings(index=alert.index_name, body={"index.blocks.write": None})
             logger.info(f"Removed read-only block from index {alert.index_name}. Retrying update.")
 
             # Retry the update operation
             es_client.update(index=alert.index_name, id=alert.alert_id, body={"doc": {"alert_url": full_url}})
-            logger.info(f"Added alert ID {soc_alert_id} to alert {alert.alert_id} in index {alert.index_name} after removing read-only block")
+            logger.info(
+                f"Added alert ID {soc_alert_id} to alert {alert.alert_id} in index {alert.index_name} after removing read-only block",
+            )
 
             # Reenable the write block
-            es_client.indices.put_settings(
-                index=alert.index_name,
-                body={"index.blocks.write": True}
-            )
+            es_client.indices.put_settings(index=alert.index_name, body={"index.blocks.write": True})
             return full_url
         except Exception as e2:
             logger.error(f"Failed to remove read-only block from index {alert.index_name}: {e2}")

@@ -1,21 +1,27 @@
 from typing import Optional
 from typing import Set
 
-from app.integrations.alert_creation.general.schema.alert import CreateAlertRequest
-from app.integrations.alert_creation.general.schema.alert import CreateAlertResponse
-from app.integrations.alert_creation.general.schema.alert import ValidIocFields
-from app.integrations.alert_creation.general.schema.alert import IrisIoc, IrisAlertPayload, IrisAsset, IrisAlertContext
-from app.agents.routes.agents import get_agent
-from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
-from app.connectors.dfir_iris.utils.universal import initialize_client_and_alert
-from app.agents.schema.agents import AgentsResponse
-from app.integrations.alert_creation.utils.schema import ShufflePayload
-from app.integrations.alert_creation.utils.universal import validate_ioc_type, send_to_shuffle
-from app.integrations.alert_creation.utils.universal import get_asset_type_id
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.utils import get_customer_alert_settings
 from fastapi import HTTPException
 from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.agents.routes.agents import get_agent
+from app.agents.schema.agents import AgentsResponse
+from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
+from app.connectors.dfir_iris.utils.universal import initialize_client_and_alert
+from app.integrations.alert_creation.general.schema.alert import CreateAlertRequest
+from app.integrations.alert_creation.general.schema.alert import CreateAlertResponse
+from app.integrations.alert_creation.general.schema.alert import IrisAlertContext
+from app.integrations.alert_creation.general.schema.alert import IrisAlertPayload
+from app.integrations.alert_creation.general.schema.alert import IrisAsset
+from app.integrations.alert_creation.general.schema.alert import IrisIoc
+from app.integrations.alert_creation.general.schema.alert import ValidIocFields
+from app.integrations.alert_creation.utils.schema import ShufflePayload
+from app.integrations.alert_creation.utils.universal import get_asset_type_id
+from app.integrations.alert_creation.utils.universal import send_to_shuffle
+from app.integrations.alert_creation.utils.universal import validate_ioc_type
+from app.utils import get_customer_alert_settings
+
 
 def valid_ioc_fields() -> Set[str]:
     """
@@ -26,6 +32,7 @@ def valid_ioc_fields() -> Set[str]:
         The set of valid IoC fields.
     """
     return {field.value for field in ValidIocFields}
+
 
 async def construct_alert_source_link(alert_details: CreateAlertRequest, session: AsyncSession) -> str:
     """
@@ -40,13 +47,8 @@ async def construct_alert_source_link(alert_details: CreateAlertRequest, session
         The alert source link.
     """
     # Check if the alert has a process id and that it is not "No process ID found"
-    if (
-        hasattr(alert_details, "process_id")
-        and alert_details.process_id != "No process ID found"
-    ):
-        query_string = (
-            f"%22query%22:%22process_id:%5C%22{alert_details.process_id}%5C%22%20AND%20"
-        )
+    if hasattr(alert_details, "process_id") and alert_details.process_id != "No process ID found":
+        query_string = f"%22query%22:%22process_id:%5C%22{alert_details.process_id}%5C%22%20AND%20"
     else:
         query_string = f"%22query%22:%22_id:%5C%22{alert_details.id}%5C%22%20AND%20"
 
@@ -74,6 +76,7 @@ async def build_ioc_payload(alert_details: CreateAlertRequest) -> Optional[IrisI
             )
     return None
 
+
 async def build_asset_payload(agent_data: AgentsResponse, alert_details) -> IrisAsset:
     if agent_data.success:
         return IrisAsset(
@@ -84,14 +87,19 @@ async def build_asset_payload(agent_data: AgentsResponse, alert_details) -> Iris
         )
     return IrisAsset()
 
+
 async def build_alert_context_payload(
     alert_details: CreateAlertRequest,
     session: AsyncSession,
 ) -> IrisAlertContext:
     return IrisAlertContext(
-        customer_iris_id=(await get_customer_alert_settings(customer_code=alert_details.agent_labels_customer, session=session)).iris_customer_id,
+        customer_iris_id=(
+            await get_customer_alert_settings(customer_code=alert_details.agent_labels_customer, session=session)
+        ).iris_customer_id,
         customer_name=(await get_customer_alert_settings(customer_code=alert_details.agent_labels_customer, session=session)).customer_name,
-        customer_cases_index=(await get_customer_alert_settings(customer_code=alert_details.agent_labels_customer, session=session)).iris_index,
+        customer_cases_index=(
+            await get_customer_alert_settings(customer_code=alert_details.agent_labels_customer, session=session)
+        ).iris_index,
         alert_id=alert_details.id,
         alert_name=alert_details.rule_description,
         alert_level=alert_details.rule_level,
@@ -112,6 +120,7 @@ async def build_alert_context_payload(
             "No rule mitre technique found",
         ),
     )
+
 
 async def build_alert_payload(
     alert_details: CreateAlertRequest,
@@ -136,7 +145,9 @@ async def build_alert_payload(
             assets=[asset_payload],
             alert_status_id=3,
             alert_severity_id=5,
-            alert_customer_id=(await get_customer_alert_settings(customer_code=alert_details.agent_labels_customer, session=session)).iris_customer_id,
+            alert_customer_id=(
+                await get_customer_alert_settings(customer_code=alert_details.agent_labels_customer, session=session)
+            ).iris_customer_id,
             alert_source_content=alert_details.to_dict(),
             alert_context=context_payload,
             alert_iocs=[ioc_payload],
@@ -152,12 +163,13 @@ async def build_alert_payload(
             assets=[asset_payload],
             alert_status_id=3,
             alert_severity_id=5,
-            alert_customer_id=(await get_customer_alert_settings(customer_code=alert_details.agent_labels_customer, session=session)).iris_customer_id,
+            alert_customer_id=(
+                await get_customer_alert_settings(customer_code=alert_details.agent_labels_customer, session=session)
+            ).iris_customer_id,
             alert_source_content=alert_details.to_dict(),
             alert_context=context_payload,
             alert_source_event_time=alert_details.time_field,
         )
-
 
 
 async def create_alert(alert: CreateAlertRequest, session: AsyncSession) -> CreateAlertResponse:

@@ -1,3 +1,5 @@
+from typing import Optional
+
 import httpx
 from fastapi import APIRouter
 from fastapi import Body
@@ -7,15 +9,21 @@ from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from typing import Optional
 
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
-from app.integrations.ask_socfortress.schema.ask_socfortress import AskSocfortressSigmaRequest, AskSocfortressRequest
-from app.integrations.ask_socfortress.schema.ask_socfortress import AskSocfortressSigmaResponse
 from app.integrations.alert_escalation.schema.general_alert import CreateAlertRequest
 from app.integrations.alert_escalation.schema.general_alert import CreateAlertResponse
 from app.integrations.alert_escalation.schema.general_alert import GenericAlertModel
 from app.integrations.alert_escalation.schema.general_alert import GenericSourceModel
+from app.integrations.ask_socfortress.schema.ask_socfortress import (
+    AskSocfortressRequest,
+)
+from app.integrations.ask_socfortress.schema.ask_socfortress import (
+    AskSocfortressSigmaRequest,
+)
+from app.integrations.ask_socfortress.schema.ask_socfortress import (
+    AskSocfortressSigmaResponse,
+)
 from app.utils import get_connector_attribute
 
 
@@ -29,6 +37,7 @@ async def get_single_alert_details(alert_details: CreateAlertRequest) -> Generic
     except Exception as e:
         logger.debug(f"Failed to collect alert details: {e}")
         raise HTTPException(status_code=400, detail=f"Failed to collect alert details: {e}")
+
 
 async def get_ask_socfortress_attributes(column_name: str, session: AsyncSession) -> str:
     """
@@ -96,6 +105,7 @@ async def get_ask_socfortress_response(request: AskSocfortressSigmaRequest, sess
 
     return AskSocfortressSigmaResponse(success=success, message=message)
 
+
 async def add_alert_to_document(es_client, alert: CreateAlertRequest, result: str, session: AsyncSession) -> Optional[str]:
     """
     Update the alert document in Elasticsearch with the provided SOC alert ID URL.
@@ -118,21 +128,17 @@ async def add_alert_to_document(es_client, alert: CreateAlertRequest, result: st
 
         # Attempt to remove read-only block
         try:
-            es_client.indices.put_settings(
-                index=alert.index_name,
-                body={"index.blocks.write": None}
-            )
+            es_client.indices.put_settings(index=alert.index_name, body={"index.blocks.write": None})
             logger.info(f"Removed read-only block from index {alert.index_name}. Retrying update.")
 
             # Retry the update operation
             es_client.update(index=alert.index_name, id=alert.alert_id, body={"doc": {"ask_socfortress": result}})
-            logger.info(f"Added Ask SOCFortress Message to alert {alert.alert_id} in index {alert.index_name} after removing read-only block")
+            logger.info(
+                f"Added Ask SOCFortress Message to alert {alert.alert_id} in index {alert.index_name} after removing read-only block",
+            )
 
             # Reenable the write block
-            es_client.indices.put_settings(
-                index=alert.index_name,
-                body={"index.blocks.write": True}
-            )
+            es_client.indices.put_settings(index=alert.index_name, body={"index.blocks.write": True})
             return True
         except Exception as e2:
             logger.error(f"Failed to remove read-only block from index {alert.index_name}: {e2}")

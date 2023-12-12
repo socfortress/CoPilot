@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.customer_provisioning.schema.decommission import DecommissionCustomerResponse
 from app.customer_provisioning.schema.wazuh_worker import DecommissionWorkerRequest
 from app.customer_provisioning.schema.wazuh_worker import DecommissionWorkerResponse
+from app.customer_provisioning.services.dfir_iris import delete_customer
 from app.customer_provisioning.services.grafana import delete_grafana_organization
 from app.customer_provisioning.services.graylog import delete_index_set
 from app.customer_provisioning.services.graylog import delete_stream
@@ -13,7 +14,6 @@ from app.customer_provisioning.services.wazuh_manager import delete_wazuh_agents
 from app.customer_provisioning.services.wazuh_manager import delete_wazuh_groups
 from app.customer_provisioning.services.wazuh_manager import gather_wazuh_agents
 from app.db.universal_models import CustomersMeta
-from app.customer_provisioning.services.dfir_iris import delete_customer
 from app.utils import get_connector_attribute
 
 

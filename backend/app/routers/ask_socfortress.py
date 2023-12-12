@@ -1,6 +1,8 @@
 from fastapi import APIRouter
 
-from app.integrations.ask_socfortress.routes.ask_socfortress import ask_socfortress_router
+from app.integrations.ask_socfortress.routes.ask_socfortress import (
+    ask_socfortress_router,
+)
 
 # Instantiate the APIRouter
 router = APIRouter()
