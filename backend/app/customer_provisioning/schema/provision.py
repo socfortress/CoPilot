@@ -44,6 +44,7 @@ class ProvisionNewCustomer(BaseModel):
     wazuh_cluster_name: str = Field(..., description="Name of the Wazuh cluster")
     wazuh_cluster_key: str = Field(..., description="Password for the Wazuh cluster")
     wazuh_master_ip: str = Field(..., description="IP address of the Wazuh master")
+    grafana_url: str = Field(..., description="URL of the Grafana instance")
 
     @validator("customer_index_name")
     def validate_customer_index_name(cls, v):

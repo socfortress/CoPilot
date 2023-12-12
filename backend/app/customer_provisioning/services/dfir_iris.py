@@ -24,3 +24,10 @@ async def create_customer(customer_name: str) -> CreateCustomerResponse:
     client, admin = await initialize_client_and_admin("DFIR-IRIS")
     result = await fetch_and_validate_data(client, admin.add_customer, customer_name)
     return CreateCustomerResponse(success=result["success"], data=result["data"])
+
+
+async def delete_customer(customer_id: int):
+    client, admin = await initialize_client_and_admin("DFIR-IRIS")
+    result = await fetch_and_validate_data(client, admin.delete_customer, customer_id)
+    logger.info(f"Result: {result}")
+    return None
