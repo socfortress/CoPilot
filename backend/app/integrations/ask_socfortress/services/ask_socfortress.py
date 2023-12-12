@@ -110,7 +110,7 @@ async def add_alert_to_document(es_client, alert: CreateAlertRequest, result: st
     - True if the update is successful, False otherwise.
     """
     try:
-        es_client.update(index=alert.index_name, id=alert.alert_id, body={"doc": {"ask_socfortress": result}})
+        es_client.update(index=alert.index_name, id=alert.alert_id, body={"doc": {"ask_socfortress_message": result}})
         logger.info(f"Added Ask SOCFortress Message to alert {alert.alert_id} in index {alert.index_name}")
         return None
     except Exception as e:
