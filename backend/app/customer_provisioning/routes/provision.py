@@ -8,7 +8,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.auth.utils import AuthHandler
+from app.connectors.grafana.schema.dashboards import Office365Dashboard
+from app.connectors.grafana.schema.dashboards import WazuhDashboard
 from app.customer_provisioning.schema.provision import CustomerProvisionResponse
+from app.customer_provisioning.schema.provision import CustomerSubsctipion
+from app.customer_provisioning.schema.provision import GetDashboardsResponse
+from app.customer_provisioning.schema.provision import GetSubscriptionsResponse
 from app.customer_provisioning.schema.provision import ProvisionNewCustomer
 from app.customer_provisioning.services.provision import provision_wazuh_customer
 from app.db.db_session import get_session
@@ -18,6 +23,22 @@ from app.db.universal_models import Customers
 
 
 customer_provisioning_router = APIRouter()
+
+
+def get_available_dashboards():
+    try:
+        wazuh_dashboards = [dashboard.name for dashboard in WazuhDashboard]
+        office365_dashboards = [dashboard.name for dashboard in Office365Dashboard]
+        return wazuh_dashboards + office365_dashboards
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting available dashboards: {e}")
+
+
+def get_available_subscriptions():
+    try:
+        return [subscription.value for subscription in CustomerSubsctipion]
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting available subscriptions: {e}")
 
 
 async def check_customer_exists(customer_name: str, session: AsyncSession = Depends(get_session)) -> Customers:
@@ -45,3 +66,29 @@ async def provision_customer_route(
     logger.info("Provisioning new customer")
     customer_provision = await provision_wazuh_customer(request, session=session)
     return customer_provision
+
+
+@customer_provisioning_router.get(
+    "/provision/dashboards",
+    response_model=GetDashboardsResponse,
+    description="Return the list of dashboards available for provisioning",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_dashboards_route():
+    logger.info("Getting list of dashboards")
+    available_dashboards = get_available_dashboards()
+    return GetDashboardsResponse(available_dashboards=available_dashboards, success=True, message="Dashboards retrieved successfully")
+
+
+@customer_provisioning_router.get(
+    "/provision/subscriptions",
+    response_model=GetSubscriptionsResponse,
+    description="Return the list of subscriptions available for provisioning",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_subscriptions_route():
+    logger.info("Getting list of subscriptions")
+    available_subscriptions = get_available_subscriptions()
+    return GetSubscriptionsResponse(
+        available_subscriptions=available_subscriptions, success=True, message="Subscriptions retrieved successfully",
+    )
