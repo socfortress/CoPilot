@@ -142,6 +142,10 @@
 </template>
 
 <script setup lang="ts">
+// MOCK
+// import { alerts_summary } from "./mock"
+// import type { AlertsSummary } from "@/types/alerts"
+
 import { ref, onBeforeMount, toRefs, computed, nextTick, onMounted } from "vue"
 import { useMessage, NSpin, NPopover, NButton, NEmpty, NDrawer, NDrawerContent, NSelect } from "naive-ui"
 import Api from "@/api"
@@ -151,8 +155,6 @@ import AlertsFilters from "./AlertsFilters.vue"
 import AlertsSummaryItem, { type AlertsSummaryExt } from "./AlertsSummary.vue"
 import Icon from "@/components/common/Icon.vue"
 import type { AlertsSummaryQuery } from "@/api/alerts"
-// import { alerts_summary } from "./mock"
-// import type { AlertsSummary } from "@/types/alerts"
 import type { IndexStats } from "@/types/indices.d"
 import axios from "axios"
 import type { Agent } from "@/types/agents.d"
@@ -353,6 +355,7 @@ onBeforeMount(() => {
 			getIndices()
 		}
 
+		// MOCK
 		// alertsSummaryList.value = alerts_summary as AlertsSummary[]
 		startSearch()
 	})
