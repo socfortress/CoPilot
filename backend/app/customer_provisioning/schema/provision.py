@@ -34,7 +34,7 @@ class ProvisionNewCustomer(BaseModel):
         description="List of subscriptions for the customer",
     )
     dashboards_to_include: DashboardProvisionRequest = Field(
-        "EDR_DLL_SIDE_LOADING",
+        ...,
         description="Dashboards to include in the customer's Grafana instance",
     )
     wazuh_auth_password: str = Field(..., description="Password for the Wazuh API user")
@@ -44,6 +44,7 @@ class ProvisionNewCustomer(BaseModel):
     wazuh_cluster_name: str = Field(..., description="Name of the Wazuh cluster")
     wazuh_cluster_key: str = Field(..., description="Password for the Wazuh cluster")
     wazuh_master_ip: str = Field(..., description="IP address of the Wazuh master")
+    grafana_url: str = Field(..., description="URL of the Grafana instance")
 
     @validator("customer_index_name")
     def validate_customer_index_name(cls, v):
@@ -62,6 +63,7 @@ class CustomerProvisionMeta(BaseModel):
     grafana_organization_id: int
     wazuh_datasource_uid: str
     grafana_edr_folder_id: int
+    iris_customer_id: int
 
 
 class CustomerProvisionResponse(BaseModel):

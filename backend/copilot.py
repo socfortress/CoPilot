@@ -18,6 +18,8 @@ from app.middleware.exception_handlers import validation_exception_handler
 from app.middleware.exception_handlers import value_error_handler
 from app.middleware.logger import log_requests
 from app.routers import agents
+from app.routers import alert_creation
+from app.routers import ask_socfortress
 from app.routers import auth
 from app.routers import connectors
 from app.routers import cortex
@@ -86,6 +88,8 @@ app.include_router(influxdb.router)
 app.include_router(grafana.router)
 app.include_router(customer_provisioning.router)
 app.include_router(threat_intel.router)
+app.include_router(ask_socfortress.router)
+app.include_router(alert_creation.router)
 
 
 @app.on_event("startup")

@@ -103,7 +103,7 @@ async def add_connectors_if_not_exist(session: AsyncSession):
         {
             "connector_name": "AskSocfortress",
             "connector_type": "3",
-            "connector_url": "https://api.socfortress.co/rule",
+            "connector_url": "https://knowledge.socfortress.co",
             "connector_username": None,
             "connector_password": None,
             "connector_api_key": "CkKmw1B9NM1hG669tC4sTazLm1HlRfSXVvMZkxa9",

@@ -92,85 +92,163 @@
 					</Badge>
 				</div>
 			</div>
-			<div class="actions-box flex flex-col justify-end" v-if="!hideActions">
-				<n-button type="primary" secondary v-if="alertUrl" tag="a" :href="alertUrl" target="_blank">
-					<template #icon><Icon :name="ViewIcon"></Icon></template>
-					View Alert
-				</n-button>
-				<n-button :loading="loading" type="warning" secondary @click="createAlert()" v-else>
-					<template #icon><Icon :name="DangerIcon"></Icon></template>
-					Create SOC Alert
-				</n-button>
-			</div>
+			<AlertActions
+				v-if="!hideActions"
+				class="actions-box"
+				:alert="alert"
+				@start-loading="loading = true"
+				@stop-loading="loading = false"
+				@updated-url="alert._source.alert_url = $event"
+				@updated-ask-message="alert._source.ask_socfortress_message = $event"
+			/>
 		</div>
 		<div class="footer-box flex justify-between items-center gap-4">
-			<div class="actions-box flex flex-col justify-end" v-if="!hideActions">
-				<n-button
-					type="primary"
-					secondary
-					size="small"
-					v-if="alertUrl"
-					tag="a"
-					:href="alertUrl"
-					target="_blank"
-				>
-					<template #icon><Icon :name="ViewIcon"></Icon></template>
-					View Alert
-				</n-button>
-				<n-button :loading="loading" type="warning" secondary size="small" @click="createAlert()" v-else>
-					<template #icon><Icon :name="DangerIcon"></Icon></template>
-					Create SOC Alert
-				</n-button>
-			</div>
-
+			<AlertActions
+				v-if="!hideActions"
+				class="actions-box"
+				:alert="alert"
+				:size="'small'"
+				@start-loading="loading = true"
+				@stop-loading="loading = false"
+				@updated-url="alert._source.alert_url = $event"
+				@updated-ask-message="alert._source.ask_socfortress_message = $event"
+			/>
 			<div class="time">{{ formatDate(alert._source.timestamp_utc) }}</div>
 		</div>
 
 		<n-modal
 			v-model:show="showDetails"
 			preset="card"
-			:style="{ maxWidth: 'min(800px, 90vw)', overflow: 'hidden' }"
+			content-style="padding:0px"
+			:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(600px, 90vh)', overflow: 'hidden' }"
 			:title="`Alert: ${alert._id}`"
 			:bordered="false"
 			segmented
 		>
-			<SimpleJsonViewer class="vuesjv-override" :model-value="alert._source" :initialExpandedDepth="2" />
+			<n-tabs type="line" animated justify-content="space-evenly">
+				<n-tab-pane name="Agent" tab="Agent" display-directive="show">
+					<div class="grid gap-2 alert-context-grid p-7 pt-4" v-if="agentProperties">
+						<KVCard v-for="(value, key) of agentProperties" :key="key">
+							<template #key>{{ key }}</template>
+							<template #value>
+								<template v-if="key === 'agent_id'">
+									<code class="cursor-pointer text-primary-color" @click="gotoAgentPage(value + '')">
+										{{ value }}
+										<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
+									</code>
+								</template>
+								<template v-else>
+									{{ value || "-" }}
+								</template>
+							</template>
+						</KVCard>
+					</div>
+				</n-tab-pane>
+				<n-tab-pane
+					name="SOCFortress Response"
+					tab="SOCFortress Response"
+					v-if="alert._source.ask_socfortress_message"
+					display-directive="show"
+				>
+					<div class="p-7 pt-4">
+						<n-input
+							:value="alert._source.ask_socfortress_message"
+							type="textarea"
+							readonly
+							placeholder="Empty"
+							:autosize="{
+								minRows: 3
+							}"
+						/>
+					</div>
+				</n-tab-pane>
+				<n-tab-pane name="Message" tab="Message" v-if="alert._source.message" display-directive="show">
+					<div class="p-7 pt-4">
+						<n-input
+							:value="alert._source.message"
+							type="textarea"
+							readonly
+							placeholder="Empty"
+							:autosize="{
+								minRows: 3
+							}"
+						/>
+					</div>
+				</n-tab-pane>
+				<n-tab-pane
+					name="Data document"
+					tab="Data document"
+					v-if="alert._source.data_document"
+					display-directive="show"
+				>
+					<div class="p-7 pt-4">
+						<n-input
+							:value="alert._source.data_document"
+							type="textarea"
+							readonly
+							placeholder="Empty"
+							:autosize="{
+								minRows: 3
+							}"
+						/>
+					</div>
+				</n-tab-pane>
+				<n-tab-pane name="Details" tab="Details" display-directive="show:lazy">
+					<div class="p-7 pt-4">
+						<SimpleJsonViewer
+							class="vuesjv-override"
+							:model-value="alert._source"
+							:initialExpandedDepth="2"
+						/>
+					</div>
+				</n-tab-pane>
+			</n-tabs>
 		</n-modal>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { NButton, NPopover, NModal } from "naive-ui"
+import { NPopover, NModal, NTabs, NTabPane, NInput } from "naive-ui"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
 import Icon from "@/components/common/Icon.vue"
 import Badge from "@/components/common/Badge.vue"
+import AlertActions from "./AlertActions.vue"
 import type { Alert } from "@/types/alerts.d"
 import { SimpleJsonViewer } from "vue-sjv"
 import "@/assets/scss/vuesjv-override.scss"
 import { useRouter } from "vue-router"
-import Api from "@/api"
-import { onBeforeMount, ref } from "vue"
-import { useMessage } from "naive-ui/lib"
+import { computed, ref, toRefs } from "vue"
+import _pick from "lodash/pick"
+import KVCard from "@/components/common/KVCard.vue"
 
-const { alert, hideActions } = defineProps<{ alert: Alert; hideActions?: boolean }>()
+const props = defineProps<{ alert: Alert; hideActions?: boolean }>()
+const { alert, hideActions } = toRefs(props)
 
 const InfoIcon = "carbon:information"
 const TargetIcon = "zondicons:target"
-const DangerIcon = "majesticons:exclamation-line"
 const DisabledIcon = "ph:minus-bold"
 const MailIcon = "carbon:email"
 const AgentIcon = "carbon:police"
-const ViewIcon = "iconoir:eye-alt"
 const LinkIcon = "carbon:launch"
 
-const message = useMessage()
 const router = useRouter()
 const loading = ref(false)
 const showDetails = ref(false)
 const dFormats = useSettingsStore().dateFormat
 
-const alertUrl = ref("")
+const agentProperties = computed(() => {
+	return _pick(alert.value._source, [
+		"agent_id",
+		"agent_ip_city_name",
+		"agent_ip_country_code",
+		"agent_ip_geolocation",
+		"agent_ip_reserved_ip",
+		"agent_ip",
+		"agent_labels_customer",
+		"agent_name"
+	])
+})
 
 function formatDate(timestamp: string): string {
 	return dayjs(timestamp).format(dFormats.datetimesec)
@@ -179,31 +257,6 @@ function formatDate(timestamp: string): string {
 function gotoAgentPage(agentId: string) {
 	router.push(`/agent/${agentId}`).catch(() => {})
 }
-
-function createAlert() {
-	loading.value = true
-
-	Api.alerts
-		.create(alert._index, alert._id)
-		.then(res => {
-			if (res.data.success) {
-				res.data.alert_url && (alertUrl.value = res.data.alert_url)
-				message.success(res.data?.message || "SOC Alert created.")
-			} else {
-				message.warning(res.data?.message || "An error occurred. Please try again later.")
-			}
-		})
-		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-		})
-		.finally(() => {
-			loading.value = false
-		})
-}
-
-onBeforeMount(() => {
-	alert._source.alert_url && (alertUrl.value = alert._source.alert_url)
-})
 </script>
 
 <style lang="scss" scoped>
@@ -279,5 +332,11 @@ onBeforeMount(() => {
 			display: flex;
 		}
 	}
+}
+</style>
+<style lang="scss">
+.alert-context-grid {
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	grid-auto-flow: row dense;
 }
 </style>

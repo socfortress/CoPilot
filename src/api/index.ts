@@ -8,6 +8,7 @@ import indices from "./indices"
 import soc from "./soc"
 import healthchecks from "./healthchecks"
 import threatIntel from "./threatIntel"
+import askSocfortress from "./askSocfortress"
 
 export default {
 	agents,
@@ -19,5 +20,6 @@ export default {
 	indices,
 	soc,
 	healthchecks,
-	threatIntel
+	threatIntel,
+	askSocfortress
 }

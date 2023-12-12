@@ -6,8 +6,10 @@ from typing import Tuple
 from typing import Union
 
 import requests
+from dfir_iris_client.admin import AdminHelper
 from dfir_iris_client.alert import Alert
 from dfir_iris_client.case import Case
+from dfir_iris_client.customer import Customer
 from dfir_iris_client.helper.utils import assert_api_resp
 from dfir_iris_client.helper.utils import get_data_from_resp
 from dfir_iris_client.session import ClientSession
@@ -113,7 +115,7 @@ async def fetch_and_parse_data(session: ClientSession, action: Callable, *args) 
         return {"success": True, "data": data}
     except Exception as err:
         logger.error(f"Failed to execute {action.__name__}: {err}")
-        return HTTPException(status_code=500, detail=f"Failed to execute {action.__name__}: {err}")
+        raise HTTPException(status_code=500, detail=f"Failed to execute {action.__name__}: {err}")
 
 
 async def initialize_client_and_case(service_name: str) -> Tuple[Any, Case]:
@@ -132,6 +134,18 @@ async def initialize_client_and_user(service_name: str) -> Tuple[Any, Alert]:
     dfir_iris_client = await create_dfir_iris_client(service_name)
     user = User(session=dfir_iris_client)
     return dfir_iris_client, user
+
+
+async def initialize_client_and_admin(service_name: str) -> Tuple[Any, Alert]:
+    dfir_iris_client = await create_dfir_iris_client(service_name)
+    admin = AdminHelper(session=dfir_iris_client)
+    return dfir_iris_client, admin
+
+
+async def initialize_client_and_customer(service_name: str) -> Tuple[Any, Alert]:
+    dfir_iris_client = await create_dfir_iris_client(service_name)
+    customer = Customer(session=dfir_iris_client)
+    return dfir_iris_client, customer
 
 
 def handle_error(error_message: str, status_code: int = 500):

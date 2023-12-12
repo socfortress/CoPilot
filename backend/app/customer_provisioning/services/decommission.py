@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.customer_provisioning.schema.decommission import DecommissionCustomerResponse
 from app.customer_provisioning.schema.wazuh_worker import DecommissionWorkerRequest
 from app.customer_provisioning.schema.wazuh_worker import DecommissionWorkerResponse
+from app.customer_provisioning.services.dfir_iris import delete_customer
 from app.customer_provisioning.services.grafana import delete_grafana_organization
 from app.customer_provisioning.services.graylog import delete_index_set
 from app.customer_provisioning.services.graylog import delete_stream
@@ -54,6 +55,9 @@ async def decomission_wazuh_customer(customer_meta: CustomersMeta, session: Asyn
     # Delete Grafana Organization
     await delete_grafana_organization(organization_id=int(customer_meta.customer_meta_grafana_org_id))
 
+    # Delete DFIR-IRIS Customer
+    await delete_customer(customer_id=customer_meta.customer_meta_iris_customer_id)
+
     # Decommission Wazuh Worker
     await decommission_wazuh_worker(request=DecommissionWorkerRequest(customer_name=customer_meta.customer_name), session=session)
 
@@ -76,7 +80,7 @@ async def decomission_wazuh_customer(customer_meta: CustomersMeta, session: Asyn
 ######### ! Decommission Wazuh Worker ! ############
 async def decommission_wazuh_worker(request: DecommissionWorkerRequest, session: AsyncSession) -> DecommissionWorkerResponse:
     """
-    Decomissions a Wazuh worker.
+    Decomissions a Wazuh worker. https://github.com/socfortress/Customer-Provisioning-Worker
 
     Args:
         request (DecommissionWorkerRequest): The request object containing the necessary information for provisioning.

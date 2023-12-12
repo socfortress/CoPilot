@@ -9,6 +9,12 @@
 		>
 			<div class="icon-box">
 				<Icon :name="AlertIcon" :size="21" v-if="item.category === 'alert'"></Icon>
+				<n-tooltip trigger="hover" style="padding: 0" placement="right" v-if="!item.read">
+					<template #trigger>
+						<div class="read-badge" @click.stop="setRead(item.id)"></div>
+					</template>
+					Set as read
+				</n-tooltip>
 			</div>
 			<div class="content grow">
 				<div class="title">{{ item.title }}</div>
@@ -18,19 +24,22 @@
 					<div class="action-text" v-if="!!item.action">{{ item.actionTitle || "Details" }}</div>
 				</div>
 			</div>
-			<div class="read-badge" v-if="!item.read" @click.stop="setRead(item.id)"></div>
+			<div class="delete-btn" @click.stop="deleteOne(item.id)">
+				<Icon :name="DeleteIcon" :size="18"></Icon>
+			</div>
 		</div>
 		<slot name="last"></slot>
 	</n-scrollbar>
 </template>
 
 <script lang="ts" setup>
-import { NScrollbar } from "naive-ui"
+import { NScrollbar, NTooltip } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import { useNotifications } from "@/composables/useNotifications"
 import { computed } from "vue"
 import _take from "lodash/take"
 
+const DeleteIcon = "carbon:close"
 const AlertIcon = "mdi:alert-outline"
 
 const props = defineProps<{
@@ -55,6 +64,10 @@ function setRead(id: string | number) {
 	useNotifications().setRead(id)
 }
 
+function deleteOne(id: string | number) {
+	useNotifications().deleteOne(id)
+}
+
 function formatDatetime(date: Date | string) {
 	return useNotifications().formatDatetime(date)
 }
@@ -65,11 +78,13 @@ function formatDatetime(date: Date | string) {
 	.item {
 		position: relative;
 		padding: 14px 0;
+
 		.icon-box {
 			width: 70px;
 			min-width: 70px;
 			display: flex;
 			justify-content: center;
+			position: relative;
 
 			.n-icon {
 				display: flex;
@@ -80,7 +95,19 @@ function formatDatetime(date: Date | string) {
 				height: 42px;
 				margin-top: 2px;
 			}
+
+			.read-badge {
+				position: absolute;
+				top: 5px;
+				left: 14px;
+				width: 10px;
+				height: 10px;
+				border-radius: 50%;
+				background-color: var(--primary-color);
+				cursor: pointer;
+			}
 		}
+
 		.content {
 			max-width: 250px;
 			padding-right: 20px;
@@ -103,48 +130,53 @@ function formatDatetime(date: Date | string) {
 			}
 		}
 
-		.read-badge {
+		.delete-btn {
 			position: absolute;
-			top: 14px;
-			right: 14px;
-			width: 10px;
-			height: 10px;
-			border-radius: 50%;
-			background-color: var(--primary-color);
+			top: 8px;
+			right: 8px;
 			cursor: pointer;
+			opacity: 0;
 		}
 
 		&.success {
-			.n-icon {
-				background-color: var(--primary-005-color);
-				color: var(--success-color);
+			.icon-box {
+				.n-icon {
+					background-color: var(--primary-005-color);
+					color: var(--success-color);
+				}
 			}
 			.action-text {
 				color: var(--success-color);
 			}
 		}
 		&.info {
-			.n-icon {
-				background-color: var(--secondary1-opacity-010-color);
-				color: var(--info-color);
+			.icon-box {
+				.n-icon {
+					background-color: var(--secondary1-opacity-010-color);
+					color: var(--info-color);
+				}
 			}
 			.action-text {
 				color: var(--info-color);
 			}
 		}
 		&.warning {
-			.n-icon {
-				background-color: var(--secondary3-opacity-010-color);
-				color: var(--warning-color);
+			.icon-box {
+				.n-icon {
+					background-color: var(--secondary3-opacity-010-color);
+					color: var(--warning-color);
+				}
 			}
 			.action-text {
 				color: var(--warning-color);
 			}
 		}
 		&.error {
-			.n-icon {
-				background-color: var(--secondary4-opacity-010-color);
-				color: var(--error-color);
+			.icon-box {
+				.n-icon {
+					background-color: var(--secondary4-opacity-010-color);
+					color: var(--error-color);
+				}
 			}
 			.action-text {
 				color: var(--error-color);
@@ -161,6 +193,14 @@ function formatDatetime(date: Date | string) {
 
 		&:hover {
 			background-color: var(--hover-005-color);
+
+			.delete-btn {
+				opacity: 0.5;
+
+				&:hover {
+					opacity: 1;
+				}
+			}
 		}
 	}
 }
