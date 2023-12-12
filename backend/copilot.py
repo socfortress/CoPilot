@@ -38,6 +38,7 @@ from app.routers import velociraptor
 from app.routers import wazuh_indexer
 from app.routers import wazuh_manager
 from app.routers import ask_socfortress
+from app.routers import alert_creation
 from app.schedulers.scheduler import init_scheduler
 
 auth_handler = AuthHandler()
@@ -88,6 +89,7 @@ app.include_router(grafana.router)
 app.include_router(customer_provisioning.router)
 app.include_router(threat_intel.router)
 app.include_router(ask_socfortress.router)
+app.include_router(alert_creation.router)
 
 
 @app.on_event("startup")
