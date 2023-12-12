@@ -23,7 +23,8 @@ export interface Notification {
 const list = useStorage<Notification[]>("notifications-list", [], localStorage)
 
 export function useNotifications() {
-	const hasNotifications = computed(() => list.value.filter(o => !o.read).length !== 0)
+	const hasUnread = computed(() => list.value.filter(o => !o.read).length !== 0)
+	const hasNotifications = computed(() => list.value.length !== 0)
 	const dFormats = useSettingsStore().dateFormat
 
 	function formatDatetime(date: Date | string) {
@@ -38,6 +39,7 @@ export function useNotifications() {
 
 	return {
 		list,
+		hasUnread,
 		hasNotifications,
 		formatDatetime,
 		setRead: (id: string | number) => {
@@ -50,6 +52,12 @@ export function useNotifications() {
 			for (const item of list.value) {
 				item.read = true
 			}
+		},
+		deleteOne: (id: string | number) => {
+			list.value = list.value.filter(o => o.id !== id)
+		},
+		deleteAll: () => {
+			list.value = []
 		},
 		prepend: (newItem: Notification, sendNotify: boolean = true) => {
 			if (sendNotify) {
