@@ -19,8 +19,6 @@ from app.customer_provisioning.services.provision import provision_wazuh_custome
 from app.db.db_session import get_session
 from app.db.universal_models import Customers
 
-# App specific imports
-
 
 customer_provisioning_router = APIRouter()
 
