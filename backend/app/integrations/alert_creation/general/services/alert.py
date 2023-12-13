@@ -16,7 +16,7 @@ from app.integrations.alert_creation.general.schema.alert import IrisAlertPayloa
 from app.integrations.alert_creation.general.schema.alert import IrisAsset
 from app.integrations.alert_creation.general.schema.alert import IrisIoc
 from app.integrations.alert_creation.general.schema.alert import ValidIocFields
-from app.integrations.alert_creation.utils.schema import ShufflePayload
+from app.integrations.utils.schema import ShufflePayload
 from app.integrations.utils.alerts import get_asset_type_id
 from app.integrations.utils.alerts import send_to_shuffle
 from app.integrations.utils.alerts import validate_ioc_type
@@ -157,7 +157,7 @@ async def build_alert_payload(
         logger.info("Alert does not have IoC")
         return IrisAlertPayload(
             alert_title=alert_details.rule_description,
-            alert_source_link=construct_alert_source_link(alert_details),
+            alert_source_link=await construct_alert_source_link(alert_details, session=session),
             alert_description=alert_details.rule_description,
             alert_source="SOCFORTRESS RULE",
             assets=[asset_payload],
@@ -196,6 +196,7 @@ async def create_alert(alert: CreateAlertRequest, session: AsyncSession) -> Crea
         ioc_payload=ioc_payload,
         session=session,
     )
+    logger.info(f"iris_alert_payload: {iris_alert_payload}")
     client, alert_client = await initialize_client_and_alert("DFIR-IRIS")
     result = await fetch_and_validate_data(
         client,

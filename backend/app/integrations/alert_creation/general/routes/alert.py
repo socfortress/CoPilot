@@ -27,6 +27,19 @@ async def is_rule_id_valid(create_alert_request: CreateAlertRequest, session: As
 
     return True
 
+async def is_customer_code_valid(create_alert_request: CreateAlertRequest, session: AsyncSession) -> bool:
+    logger.info(f"Checking if customer_code: {create_alert_request.agent_labels_customer} is valid.")
+
+    result = await session.execute(
+        select(AlertCreationSettings).where(AlertCreationSettings.customer_code == create_alert_request.agent_labels_customer),
+    )
+    settings = result.scalars().first()
+
+    if settings:
+        return True
+
+    return False
+
 
 @general_alerts_router.post(
     "/general",
@@ -38,6 +51,10 @@ async def create_general_alert(
     session: AsyncSession = Depends(get_session),
 ):
     logger.info(f"create_alert_request: {create_alert_request.dict()}")
+
+    if await is_customer_code_valid(create_alert_request, session) is False:
+        logger.info(f"Invalid customer_code: {create_alert_request.agent_labels_customer}")
+        raise HTTPException(status_code=200, detail="Invalid customer_code.")
 
     if await is_rule_id_valid(create_alert_request, session) is False:
         logger.info(f"Invalid rule_id: {create_alert_request.rule_id}")
