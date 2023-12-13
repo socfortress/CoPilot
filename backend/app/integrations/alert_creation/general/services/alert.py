@@ -17,9 +17,9 @@ from app.integrations.alert_creation.general.schema.alert import IrisAsset
 from app.integrations.alert_creation.general.schema.alert import IrisIoc
 from app.integrations.alert_creation.general.schema.alert import ValidIocFields
 from app.integrations.alert_creation.utils.schema import ShufflePayload
-from app.integrations.alert_creation.utils.universal import get_asset_type_id
-from app.integrations.alert_creation.utils.universal import send_to_shuffle
-from app.integrations.alert_creation.utils.universal import validate_ioc_type
+from app.integrations.utils.alerts import get_asset_type_id
+from app.integrations.utils.alerts import send_to_shuffle
+from app.integrations.utils.alerts import validate_ioc_type
 from app.utils import get_customer_alert_settings
 
 

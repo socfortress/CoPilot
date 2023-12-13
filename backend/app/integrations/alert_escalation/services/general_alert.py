@@ -18,9 +18,11 @@ from app.integrations.alert_escalation.schema.general_alert import IrisAlertPayl
 from app.integrations.alert_escalation.schema.general_alert import IrisAsset
 from app.integrations.alert_escalation.schema.general_alert import IrisIoc
 from app.integrations.alert_escalation.schema.general_alert import ValidIocFields
-from app.integrations.alert_escalation.utils.universal import get_agent_data
-from app.integrations.alert_escalation.utils.universal import get_asset_type_id
-from app.integrations.alert_escalation.utils.universal import validate_ioc_type
+#from app.integrations.alert_escalation.utils.universal import get_agent_data
+from app.agents.routes.agents import get_agent
+from app.agents.schema.agents import AgentsResponse
+from app.integrations.utils.alerts import get_asset_type_id
+from app.integrations.utils.alerts import validate_ioc_type
 
 
 def valid_ioc_fields() -> Set[str]:
@@ -57,9 +59,12 @@ def build_ioc_payload(alert_details: GenericAlertModel) -> Optional[IrisIoc]:
 
 def build_asset_payload(agent_data, alert_details) -> IrisAsset:
     return IrisAsset(
-        asset_name=agent_data.hostname,
-        asset_ip=agent_data.ip_address,
-        asset_description=agent_data.os,
+        # asset_name=agent_data.hostname,
+        # asset_ip=agent_data.ip_address,
+        # asset_description=agent_data.os,
+        asset_name=agent_data.agents[0].hostname,
+        asset_ip=agent_data.agents[0].ip_address,
+        asset_description=agent_data.agents[0].os,
         asset_type_id=alert_details.asset_type_id,
     )
 
@@ -70,8 +75,8 @@ def build_alert_context_payload(alert_details: GenericAlertModel, agent_data) ->
         alert_name=alert_details._source.rule_description,
         alert_level=alert_details._source.rule_level,
         rule_id=alert_details._source.rule_id,
-        asset_name=agent_data.hostname,
-        asset_ip=agent_data.ip_address,
+        asset_name=agent_data.agents[0].hostname,
+        asset_ip=agent_data.agents[0].ip_address,
         asset_type=alert_details.asset_type_id,
         process_id=getattr(alert_details._source, "process_id", "No process id found"),
         rule_mitre_id=getattr(alert_details._source, "rule_mitre_id", "No rule mitre id found"),
@@ -161,10 +166,12 @@ async def add_alert_to_document(es_client, alert: CreateAlertRequest, soc_alert_
 async def create_alert(alert: CreateAlertRequest, session: AsyncSession) -> CreateAlertResponse:
     logger.info(f"Creating alert {alert.alert_id} in IRIS")
     alert_details = await get_single_alert_details(alert_details=alert)
-    agent_data = await get_agent_data(session, agent_id=alert_details._source.agent_id)
-    alert_details.asset_type_id = get_asset_type_id(os=agent_data.os)
+    agent_data = await get_agent(agent_id=alert_details._source.agent_id, db=session)
+    logger.info(f"Agent data: {agent_data}")
+    alert_details.asset_type_id = await get_asset_type_id(os=agent_data.agents[0].os)
     ioc_payload = build_ioc_payload(alert_details)
     iris_alert_payload = build_alert_payload(alert_details, agent_data, ioc_payload)
+    logger.info(f"Alert payload: {iris_alert_payload}")
     client, alert_client = await initialize_client_and_alert("DFIR-IRIS")
     result = await fetch_and_validate_data(client, alert_client.add_alert, iris_alert_payload.to_dict())
     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
