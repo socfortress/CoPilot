@@ -116,7 +116,6 @@ async def velociraptor_agents_healthcheck(agents: list, time_criteria: TimeCrite
     )
 
 
-
 async def velociraptor_agent_healthcheck(agent: AgentModel, time_criteria: TimeCriteriaModel) -> AgentHealthCheckResponse:
     extended_agent = is_velociraptor_agent_unhealthy(agent, time_criteria)
     if extended_agent.unhealthy_velociraptor_agent:

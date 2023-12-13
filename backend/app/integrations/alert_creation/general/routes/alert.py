@@ -27,6 +27,7 @@ async def is_rule_id_valid(create_alert_request: CreateAlertRequest, session: As
 
     return True
 
+
 async def is_customer_code_valid(create_alert_request: CreateAlertRequest, session: AsyncSession) -> bool:
     logger.info(f"Checking if customer_code: {create_alert_request.agent_labels_customer} is valid.")
 

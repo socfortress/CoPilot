@@ -1,4 +1,6 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
+from pydantic import Field
+
 
 ######### ! SEND TO SHUFFLE PAYLOAD ! #########
 class ShufflePayload(BaseModel):
