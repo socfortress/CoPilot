@@ -95,6 +95,7 @@ async def wazuh_agent_healthcheck(agent: AgentModel, time_criteria: TimeCriteria
 async def velociraptor_agents_healthcheck(agents: list, time_criteria: TimeCriteriaModel) -> AgentHealthCheckResponse:
     healthy_velociraptor_agents = []
     unhealthy_velociraptor_agents = []
+
     for agent in agents:
         # If agent_id is `000` skip it because this is the Wazuh manager
         if agent.agent_id == "000":
@@ -113,6 +114,7 @@ async def velociraptor_agents_healthcheck(agents: list, time_criteria: TimeCrite
         success=True,
         message="Velociraptor agent healthcheck fetched successfully",
     )
+
 
 
 async def velociraptor_agent_healthcheck(agent: AgentModel, time_criteria: TimeCriteriaModel) -> AgentHealthCheckResponse:

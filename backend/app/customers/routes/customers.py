@@ -395,4 +395,4 @@ async def get_velociraptor_agents_healthcheck(
     agents = agents_result.scalars().all()
     agents = [AgentModel.parse_obj(agent.__dict__) for agent in agents]
     time_criteria = TimeCriteriaModel(minutes=minutes, hours=hours, days=days)
-    return velociraptor_agents_healthcheck(agents, time_criteria)
+    return await velociraptor_agents_healthcheck(agents, time_criteria)
