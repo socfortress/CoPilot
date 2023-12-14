@@ -407,7 +407,7 @@ async def purge_logs(session: AsyncSession = Depends(get_session)) -> LogsRespon
 
     if logs:
         for log in logs:
-            session.delete(log)
+            await session.delete(log)
         await session.commit()
         return LogsResponse(logs=[], success=True, message="Logs purged successfully")
     else:
@@ -443,7 +443,7 @@ async def purge_logs_by_time_range(time_range: TimeRangeModel, session: AsyncSes
         logs = [log for log in logs if log.timestamp >= datetime.now() - timedelta(days=int(time_range.time_range[:-1]))]
         if logs != []:
             for log in logs:
-                session.delete(log)
+                await session.delete(log)
             await session.commit()
             return LogsResponse(logs=[], success=True, message="Logs purged successfully")
         else:
