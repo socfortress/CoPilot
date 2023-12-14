@@ -72,7 +72,12 @@
 		<n-spin :show="loading">
 			<div class="list grid gap-3 my-7">
 				<template v-if="collectList.length">
-					<CollectItem v-for="collect of collectList" :key="collect.___id" :collect="collect" />
+					<CollectItem
+						v-for="collect of collectList"
+						:key="collect.___id"
+						:collect="collect"
+						class="item-appear item-appear-bottom item-appear-005"
+					/>
 				</template>
 				<template v-else>
 					<n-empty description="No items found" class="justify-center h-48" v-if="!loading" />
@@ -260,27 +265,6 @@ onBeforeMount(() => {
 		min-height: 200px;
 		grid-template-columns: repeat(auto-fit, minmax(390px, 1fr));
 		grid-auto-flow: row dense;
-
-		.collect-item {
-			animation: artifacts-collect-fade 0.3s forwards;
-			opacity: 0;
-
-			@for $i from 0 through 30 {
-				&:nth-child(#{$i}) {
-					animation-delay: $i * 0.05s;
-				}
-			}
-
-			@keyframes artifacts-collect-fade {
-				from {
-					opacity: 0;
-					transform: translateY(10px);
-				}
-				to {
-					opacity: 1;
-				}
-			}
-		}
 	}
 
 	@media (max-width: 490px) {

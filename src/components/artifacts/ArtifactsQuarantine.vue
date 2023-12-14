@@ -67,6 +67,7 @@
 						v-for="quarantine of quarantineList"
 						:key="quarantine.Result + quarantine.Time"
 						:quarantine="quarantine"
+						class="item-appear item-appear-bottom item-appear-005"
 					/>
 				</template>
 				<template v-else>
@@ -248,27 +249,6 @@ onBeforeMount(() => {
 	.list {
 		container-type: inline-size;
 		min-height: 100px;
-
-		.quarantine-item {
-			animation: artifacts-quarantine-fade 0.3s forwards;
-			opacity: 0;
-
-			@for $i from 0 through 30 {
-				&:nth-child(#{$i}) {
-					animation-delay: $i * 0.05s;
-				}
-			}
-
-			@keyframes artifacts-quarantine-fade {
-				from {
-					opacity: 0;
-					transform: translateY(10px);
-				}
-				to {
-					opacity: 1;
-				}
-			}
-		}
 	}
 }
 </style>

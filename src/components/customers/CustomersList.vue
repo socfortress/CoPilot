@@ -1,10 +1,13 @@
 <template>
 	<div class="customers-list">
-		<div class="header mb-4 flex gap-2">
-			<span>
+		<div class="header mb-4 flex gap-2 justify-between">
+			<div>
 				Total:
 				<strong class="font-mono">{{ totalCustomers }}</strong>
-			</span>
+			</div>
+			<div>
+				<n-button size="small" type="primary">Add Customer</n-button>
+			</div>
 		</div>
 		<n-spin :show="loadingCustomers">
 			<div class="list">
@@ -14,7 +17,7 @@
 						:key="customer.customer_code"
 						:customer="customer"
 						:highlight="customer.customer_code === highlight"
-						class="mb-2"
+						class="item-appear item-appear-bottom item-appear-005 mb-2"
 					/>
 				</template>
 				<template v-else>
@@ -29,7 +32,7 @@
 // TODO: merge of customer-item-fade (*-fade) animations
 
 import { ref, onBeforeMount, computed, watch, toRefs, nextTick } from "vue"
-import { useMessage, NSpin, NEmpty } from "naive-ui"
+import { useMessage, NSpin, NEmpty, NButton } from "naive-ui"
 import Api from "@/api"
 import CustomerItem from "./CustomerItem.vue"
 import type { Customer } from "@/types/customers.d"
@@ -108,27 +111,6 @@ onBeforeMount(() => {
 	.list {
 		container-type: inline-size;
 		min-height: 200px;
-
-		.customer-item {
-			animation: customer-item-fade 0.3s forwards;
-			opacity: 0;
-
-			@for $i from 0 through 30 {
-				&:nth-child(#{$i}) {
-					animation-delay: $i * 0.05s;
-				}
-			}
-
-			@keyframes customer-item-fade {
-				from {
-					opacity: 0;
-					transform: translateY(10px);
-				}
-				to {
-					opacity: 1;
-				}
-			}
-		}
 	}
 }
 </style>

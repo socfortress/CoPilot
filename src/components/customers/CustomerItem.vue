@@ -1,10 +1,15 @@
 <template>
 	<n-spin :show="loading" :class="{ highlight }" :id="'customer-' + customer.customer_code" class="customer-item">
-		<div class="px-5 py-3 flex flex-col gap-2">
-			<div class="header-box flex justify-between">
-				<div class="id flex items-center gap-2 cursor-pointer" @click="showDetails = true">
-					<span>{{ customer.customer_code }}</span>
-					<Icon :name="InfoIcon" :size="16"></Icon>
+		<div class="px-4 py-3 flex flex-col gap-2">
+			<div class="header-box flex justify-between items-center">
+				<div class="id">#{{ customer.customer_code }}</div>
+				<div class="actions">
+					<Badge type="cursor" @click="showDetails = true">
+						<template #iconLeft>
+							<Icon :name="DetailsIcon" :size="14"></Icon>
+						</template>
+						<template #value>Details</template>
+					</Badge>
 				</div>
 			</div>
 			<div class="main-box flex items-center gap-3">
@@ -16,34 +21,65 @@
 				</div>
 			</div>
 
-			<!--
-		<div class="badges-box flex flex-wrap items-center gap-3 mt-2">
-			<Badge type="splitted" :color="alert.severity?.severity_id === 5 ? 'danger' : undefined">
-				<template #iconLeft>
-					<Icon :name="SeverityIcon" :size="13"></Icon>
-				</template>
-				<template #label>Severity</template>
-				<template #value>{{ alert.severity?.severity_name || "-" }}</template>
-			</Badge>
-			<Badge type="splitted" class="hide-on-small">
-				<template #iconLeft>
-					<Icon :name="SourceIcon" :size="13"></Icon>
-				</template>
-				<template #label>Source</template>
-				<template #value>{{ alert.alert_source || "-" }}</template>
-			</Badge>
-			<Badge type="splitted" class="hide-on-small">
-				<template #iconLeft>
-					<Icon :name="CustomerIcon" :size="13"></Icon>
-				</template>
-				<template #label>Customer</template>
-				<template #value>{{ alert.customer?.customer_name || "-" }}</template>
-			</Badge>
+			<div class="badges-box flex flex-wrap items-center gap-3 mt-2">
+				<Badge type="splitted">
+					<template #iconLeft>
+						<Icon :name="UserTypeIcon" :size="14"></Icon>
+					</template>
+					<template #label>Type</template>
+					<template #value>{{ customer.customer_type || "-" }}</template>
+				</Badge>
+				<n-popover trigger="hover">
+					<template #trigger>
+						<Badge type="splitted" class="cursor-help">
+							<template #iconLeft>
+								<Icon :name="LocationIcon" :size="13"></Icon>
+							</template>
+							<template #value>{{ [customer.city, customer.state].join(", ") || "-" }}</template>
+						</Badge>
+					</template>
 
-
-		</div>
-
-		-->
+					<div class="flex flex-col gap-1">
+						<div class="box">
+							address_line1:
+							<code>{{ customer.address_line1 }}</code>
+						</div>
+						<div class="box">
+							address_line2:
+							<code>{{ customer.address_line2 }}</code>
+						</div>
+						<div class="box">
+							postal_code:
+							<code>{{ customer.postal_code }}</code>
+						</div>
+						<div class="box">
+							city:
+							<code>{{ customer.city }}</code>
+						</div>
+						<div class="box">
+							state:
+							<code>{{ customer.state }}</code>
+						</div>
+						<div class="box">
+							country:
+							<code>{{ customer.country }}</code>
+						</div>
+					</div>
+				</n-popover>
+				<Badge type="splitted">
+					<template #iconLeft>
+						<Icon :name="PhoneIcon" :size="13"></Icon>
+					</template>
+					<template #value>{{ customer.phone || "-" }}</template>
+				</Badge>
+				<Badge type="splitted" v-if="customer.parent_customer_code">
+					<template #iconLeft>
+						<Icon :name="ParentIcon" :size="13"></Icon>
+					</template>
+					<template #label>Parent</template>
+					<template #value>{{ customer.parent_customer_code }}</template>
+				</Badge>
+			</div>
 
 			<!--
 		<n-modal
@@ -147,7 +183,7 @@
 </template>
 
 <script setup lang="ts">
-// TODO: add mablibre popup for address badge
+// TODO: add mablibre on location popup ??
 
 import AlertItem from "@/components/alerts/Alert.vue"
 import type { SocAlert } from "@/types/soc/alert.d"
@@ -188,6 +224,11 @@ const props = defineProps<{
 }>()
 const { customer, highlight } = toRefs(props)
 
+const DetailsIcon = "carbon:settings-adjust"
+const UserTypeIcon = "solar:shield-user-linear"
+const ParentIcon = "material-symbols-light:supervisor-account-outline-rounded"
+const LocationIcon = "carbon:location"
+const PhoneIcon = "carbon:phone"
 const ChevronIcon = "carbon:chevron-right"
 const InfoIcon = "carbon:information"
 const TimeIcon = "carbon:time"
@@ -215,32 +256,12 @@ const message = useMessage()
 	border: var(--border-small-050);
 
 	.header-box {
-		font-family: var(--font-family-mono);
 		font-size: 13px;
 		.id {
+			font-family: var(--font-family-mono);
 			word-break: break-word;
 			color: var(--fg-secondary-color);
 			line-height: 1.2;
-
-			&:hover {
-				color: var(--primary-color);
-			}
-		}
-
-		.toggler-bookmark {
-			&.active {
-				color: var(--primary-color);
-			}
-			&:hover {
-				color: var(--primary-color);
-			}
-		}
-		.time {
-			color: var(--fg-secondary-color);
-
-			&:hover {
-				color: var(--primary-color);
-			}
 		}
 	}
 

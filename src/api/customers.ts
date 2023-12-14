@@ -34,7 +34,7 @@ export default {
 		return HttpClient.delete<FlaskBaseResponse & { customer_meta: CustomerMeta }>(`/customers/${code}/meta`)
 	},
 	getCustomerFull(code: string) {
-		return HttpClient.get<FlaskBaseResponse & { customer: Customer; customer_meta: CustomerMeta }>(
+		return HttpClient.get<FlaskBaseResponse & { customer: Customer; customer_meta?: CustomerMeta }>(
 			`/customers/${code}/full`
 		)
 	},
