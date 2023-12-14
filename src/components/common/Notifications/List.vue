@@ -109,7 +109,6 @@ function formatDatetime(date: Date | string) {
 		}
 
 		.content {
-			max-width: 250px;
 			padding-right: 20px;
 			font-size: 14px;
 

@@ -25,3 +25,9 @@ function deleteAll() {
 	useNotifications().deleteAll()
 }
 </script>
+
+<style>
+.notifications-toolbar {
+	width: 100%;
+}
+</style>
