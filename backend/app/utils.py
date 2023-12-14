@@ -407,7 +407,7 @@ async def purge_logs(session: AsyncSession = Depends(get_session)) -> LogsRespon
 
     if logs:
         for log in logs:
-            session.delete(log)
+            await session.delete(log)
         await session.commit()
         return LogsResponse(logs=[], success=True, message="Logs purged successfully")
     else:
