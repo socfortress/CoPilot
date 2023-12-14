@@ -303,7 +303,11 @@ async def get_customer_full(customer_code: str, session: AsyncSession = Depends(
     customer_meta_result = await session.execute(select(CustomersMeta).filter(CustomersMeta.customer_code == customer_code))
     customer_meta = customer_meta_result.scalars().first()
     if not customer_meta:
-        raise HTTPException(status_code=404, detail=f"Customer meta with customer_code {customer_code} not found")
+        return CustomerFullResponse(
+            customer=CustomerRequestBody.from_orm(customer),
+            success=True,
+            message="Customer fetched successfully but customer meta not found",
+        )
 
     return CustomerFullResponse(
         customer=CustomerRequestBody.from_orm(customer),
