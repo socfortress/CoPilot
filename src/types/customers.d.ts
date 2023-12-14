@@ -25,3 +25,22 @@ export interface CustomerMeta {
 	customer_meta_wazuh_log_ingestion_port: string
 	customer_meta_wazuh_auth_password: string
 }
+
+export interface CustomerAgentHealth {
+	id: number
+	os: string
+	label: string
+	wazuh_last_seen: string
+	velociraptor_last_seen: string
+	velociraptor_agent_version: string
+	ip_address: string
+	agent_id: string
+	hostname: string
+	critical_asset: boolean
+	velociraptor_id: string
+	wazuh_agent_version: string
+	customer_code: string
+	unhealthy_wazuh_agent: boolean | null
+	unhealthy_velociraptor_agent: boolean | null
+	unhealthy_recent_logs_collected: null
+}

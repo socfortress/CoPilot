@@ -1,6 +1,6 @@
 import { type FlaskBaseResponse } from "@/types/flask.d"
 import { HttpClient } from "./httpClient"
-import type { Customer, CustomerMeta } from "@/types/customers.d"
+import type { Customer, CustomerAgentHealth, CustomerMeta } from "@/types/customers.d"
 import type { Agent } from "@/types/agents.d"
 
 export default {
@@ -40,8 +40,36 @@ export default {
 	},
 	getCustomerAgents(code: string) {
 		return HttpClient.get<FlaskBaseResponse & { agents: Agent[] }>(`/customers/${code}/agents`)
+	},
+	getCustomerAgentsHealthcheckWazuh(code: string, query?: { minutes?: number; hours?: number; days?: number }) {
+		return HttpClient.get<
+			FlaskBaseResponse & {
+				healthy_wazuh_agents: CustomerAgentHealth[]
+				unhealthy_wazuh_agents: CustomerAgentHealth[]
+			}
+		>(`/customers/${code}/agents/healthcheck/wazuh`, {
+			params: {
+				minutes: query?.minutes || 0,
+				hours: query?.hours || 0,
+				days: query?.days || 0
+			}
+		})
+	},
+	getCustomerAgentsHealthcheckVelociraptor(
+		code: string,
+		query?: { minutes?: number; hours?: number; days?: number }
+	) {
+		return HttpClient.get<
+			FlaskBaseResponse & {
+				healthy_velociraptor_agents: CustomerAgentHealth[]
+				unhealthy_velociraptor_agents: CustomerAgentHealth[]
+			}
+		>(`/customers/${code}/agents/healthcheck/velociraptor`, {
+			params: {
+				minutes: query?.minutes || 0,
+				hours: query?.hours || 0,
+				days: query?.days || 0
+			}
+		})
 	}
-
-	// TODO: /customers/{customer_code}/agents/healthcheck/wazuh
-	// TODO: /customers/{customer_code}/agents/healthcheck/velociraptor
 }
