@@ -19,7 +19,6 @@ from app.customer_provisioning.services.provision import provision_wazuh_custome
 from app.db.db_session import get_session
 from app.db.universal_models import Customers
 
-
 customer_provisioning_router = APIRouter()
 
 
@@ -88,5 +87,7 @@ async def get_subscriptions_route():
     logger.info("Getting list of subscriptions")
     available_subscriptions = get_available_subscriptions()
     return GetSubscriptionsResponse(
-        available_subscriptions=available_subscriptions, success=True, message="Subscriptions retrieved successfully",
+        available_subscriptions=available_subscriptions,
+        success=True,
+        message="Subscriptions retrieved successfully",
     )

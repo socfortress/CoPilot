@@ -36,6 +36,7 @@ class GenericSourceModel(BaseModel):
     rule_description: str = Field(..., description="The description of the rule.")
     timestamp: str = Field(..., description="The timestamp of the alert.")
     timestamp_utc: Optional[str] = Field(..., description="The UTC timestamp of the alert.")
+    process_id: Optional[str] = Field(None, description="The process id of the alert.")
 
     class Config:
         extra = Extra.allow
@@ -52,6 +53,10 @@ class GenericAlertModel(BaseModel):
     )
     ioc_value: Optional[str] = Field(None, description="The IoC value of the alert which is needed for when we add the IoC to IRIS.")
     ioc_type: Optional[str] = Field(None, description="The IoC type of the alert which is needed for when we add the IoC to IRIS.")
+    time_field: Optional[str] = Field(
+        "timestamp",
+        description="The timefield of the alert to be used when creating the IRIS alert.",
+    )
 
     class Config:
         extra = Extra.allow
