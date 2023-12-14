@@ -29,11 +29,12 @@
 			</div>
 		</div>
 		<slot name="last"></slot>
+		<n-empty v-if="!list.length" description="There is no notification" class="justify-center h-48" />
 	</n-scrollbar>
 </template>
 
 <script lang="ts" setup>
-import { NScrollbar, NTooltip } from "naive-ui"
+import { NScrollbar, NTooltip, NEmpty } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import { useNotifications } from "@/composables/useNotifications"
 import { computed } from "vue"
