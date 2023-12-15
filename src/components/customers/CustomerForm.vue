@@ -4,14 +4,18 @@
 			<div class="flex flex-col gap-4">
 				<div class="flex flex-wrap gap-4">
 					<div v-for="(val, key) of form" :key="key" class="grow">
-						<n-form-item :label="key" :path="key" class="grow">
-							<n-input v-model:value.trim="form[key]" :placeholder="key" clearable />
+						<n-form-item :label="fieldsMeta[key].label" :path="key" class="grow">
+							<n-input
+								v-model:value.trim="form[key]"
+								:placeholder="fieldsMeta[key].placeholder"
+								clearable
+							/>
 						</n-form-item>
 					</div>
 				</div>
 				<div class="flex justify-end gap-4">
-					<n-button>Reset</n-button>
-					<n-button type="primary" :disabled="!isValid">Submit</n-button>
+					<n-button @click="reset()">Reset</n-button>
+					<n-button type="primary" :disabled="!isValid" @click="validate()">Submit</n-button>
 				</div>
 			</div>
 		</n-form>
@@ -19,36 +23,31 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeMount, ref, toRefs } from "vue"
+import { computed, onBeforeMount, onMounted, ref } from "vue"
 import Api from "@/api"
 import {
-	NImage,
-	NAvatar,
 	useMessage,
 	NForm,
 	NFormItem,
 	NInput,
 	NButton,
-	NCollapseItem,
-	NPopover,
-	NModal,
-	NTabs,
-	NTabPane,
 	NSpin,
-	NTooltip,
-	type FormItemRule,
 	type FormValidationError,
 	type FormInst,
 	type FormRules
 } from "naive-ui"
 import type { Customer } from "@/types/customers.d"
-import Icon from "@/components/common/Icon.vue"
-import dayjs from "@/utils/dayjs"
 import _trim from "lodash/trim"
 import _get from "lodash/get"
 
 const emit = defineEmits<{
-	(e: "added"): void
+	(e: "added", value: Customer): void
+	(
+		e: "mounted",
+		value: {
+			reset: () => void
+		}
+	): void
 }>()
 
 /*
@@ -59,8 +58,6 @@ const props = defineProps<{
 const { customer, highlight } = toRefs(props)
 */
 
-const DetailsIcon = "carbon:settings-adjust"
-
 const loading = ref(false)
 const message = useMessage()
 const form = ref<Customer>(getClearForm())
@@ -69,8 +66,82 @@ const formRef = ref<FormInst | null>(null)
 const rules: FormRules = {
 	customer_code: {
 		required: true,
-		message: "Please input customer code",
+		message: "Please input code",
 		trigger: ["input", "blur"]
+	},
+	customer_name: {
+		required: true,
+		message: "Please input name",
+		trigger: ["input", "blur"]
+	},
+	contact_last_name: {
+		required: true,
+		message: "Please input last name",
+		trigger: ["input", "blur"]
+	},
+	contact_first_name: {
+		required: true,
+		message: "Please input first name",
+		trigger: ["input", "blur"]
+	}
+}
+
+const fieldsMeta = {
+	customer_code: {
+		label: "Code",
+		placeholder: "Unique code for the customer"
+	},
+	customer_name: {
+		label: "Name",
+		placeholder: "Name of the customer"
+	},
+	contact_last_name: {
+		label: "Last name",
+		placeholder: "Last name of the contact"
+	},
+	contact_first_name: {
+		label: "First name",
+		placeholder: "First name of the contact"
+	},
+	parent_customer_code: {
+		label: "Parent Customer Code",
+		placeholder: "Code for the parent customer"
+	},
+	phone: {
+		label: "Phone number",
+		placeholder: "Phone number"
+	},
+	address_line1: {
+		label: "First line address",
+		placeholder: "First line of the address"
+	},
+	address_line2: {
+		label: "Second line address",
+		placeholder: "Second line of the address"
+	},
+	city: {
+		label: "City",
+		placeholder: "City"
+	},
+	state: {
+		label: "State",
+		placeholder: "State"
+	},
+	postal_code: {
+		label: "Postal Code",
+		placeholder: "Postal Code"
+	},
+	country: {
+		label: "Country",
+		placeholder: "Country"
+	},
+	customer_type: {
+		label: "Type",
+		placeholder: "Type of the customer"
+	},
+	logo_file: {
+		label: "Logo",
+		placeholder: "Logo file for the customer"
 	}
 }
 
@@ -93,7 +164,7 @@ function validate() {
 
 	formRef.value.validate((errors?: Array<FormValidationError>) => {
 		if (!errors) {
-			console.log(errors)
+			submit()
 		} else {
 			message.warning("You must fill in the required fields correctly.")
 			return false
@@ -120,8 +191,35 @@ function getClearForm() {
 	}
 }
 
-onBeforeMount(() => {
-	//reset()
+function reset() {
+	form.value = getClearForm()
+}
+
+function submit() {
+	loading.value = true
+
+	Api.customers
+		.createCustomer(form.value)
+		.then(res => {
+			if (res.data.success) {
+				reset()
+				emit("added", res.data.customer)
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			loading.value = false
+		})
+}
+
+onMounted(() => {
+	emit("mounted", {
+		reset
+	})
 })
 </script>
 

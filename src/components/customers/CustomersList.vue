@@ -34,7 +34,7 @@
 			display-directive="show"
 		>
 			<n-drawer-content title="Add Customer" closable :native-scrollbar="false">
-				<CustomerForm />
+				<CustomerForm @mounted="customerFormCTX = $event" @added="getCustomers()" />
 			</n-drawer-content>
 		</n-drawer>
 	</div>
@@ -51,6 +51,7 @@ import type { Customer } from "@/types/customers.d"
 const props = defineProps<{ highlight: string | null | undefined }>()
 const { highlight } = toRefs(props)
 
+const customerFormCTX = ref<{ reset: () => void } | null>(null)
 const message = useMessage()
 const loadingCustomers = ref(false)
 const showAddCustomer = ref(false)
@@ -90,6 +91,10 @@ function scrollToAlert(id: string) {
 		scrollContent?.scrollTo({ top: middle, behavior: "smooth" })
 	}
 }
+
+watch(showAddCustomer, () => {
+	customerFormCTX.value?.reset()
+})
 
 watch(loadingCustomers, val => {
 	if (!val) {
