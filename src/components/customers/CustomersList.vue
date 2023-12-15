@@ -6,7 +6,7 @@
 				<strong class="font-mono">{{ totalCustomers }}</strong>
 			</div>
 			<div>
-				<n-button size="small" type="primary">Add Customer</n-button>
+				<n-button size="small" type="primary" @click="showAddCustomer = true">Add Customer</n-button>
 			</div>
 		</div>
 		<n-spin :show="loadingCustomers">
@@ -25,15 +25,26 @@
 				</template>
 			</div>
 		</n-spin>
+
+		<n-drawer
+			v-model:show="showAddCustomer"
+			:width="500"
+			style="max-width: 90vw"
+			:trap-focus="false"
+			display-directive="show"
+		>
+			<n-drawer-content title="Add Customer" closable :native-scrollbar="false">
+				<CustomerForm />
+			</n-drawer-content>
+		</n-drawer>
 	</div>
 </template>
 
 <script setup lang="ts">
-// TODO: merge of customer-item-fade (*-fade) animations
-
 import { ref, onBeforeMount, computed, watch, toRefs, nextTick } from "vue"
-import { useMessage, NSpin, NEmpty, NButton } from "naive-ui"
+import { useMessage, NSpin, NEmpty, NButton, NDrawer, NDrawerContent } from "naive-ui"
 import Api from "@/api"
+import CustomerForm from "./CustomerForm.vue"
 import CustomerItem from "./CustomerItem.vue"
 import type { Customer } from "@/types/customers.d"
 
@@ -42,6 +53,7 @@ const { highlight } = toRefs(props)
 
 const message = useMessage()
 const loadingCustomers = ref(false)
+const showAddCustomer = ref(false)
 const customersList = ref<Customer[]>([])
 
 const totalCustomers = computed<number>(() => {
