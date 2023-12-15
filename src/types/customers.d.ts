@@ -1,3 +1,4 @@
+// required: customer_code, customer_name, contact_last_name, contact_first_name
 export interface Customer {
 	customer_code: string
 	customer_name: string
@@ -15,6 +16,7 @@ export interface Customer {
 	logo_file: string
 }
 
+// all required
 export interface CustomerMeta {
 	customer_meta_graylog_index: string
 	customer_meta_graylog_stream: string

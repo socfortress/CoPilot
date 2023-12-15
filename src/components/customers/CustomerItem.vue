@@ -211,7 +211,7 @@ import {
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
 import type { SocUser } from "@/types/soc/user.d"
-import type { Customer } from "@/types/customers.d"
+import type { Customer, CustomerMeta } from "@/types/customers.d"
 import { useRouter } from "vue-router"
 
 const emit = defineEmits<{
@@ -246,6 +246,32 @@ const showDetails = ref(false)
 const loading = ref(false)
 const router = useRouter()
 const message = useMessage()
+const customerMeta = ref<CustomerMeta | {}>({})
+
+function getFull() {
+	loading.value = true
+
+	Api.customers
+		.getCustomerFull(customer.value.customer_code)
+		.then(res => {
+			if (res.data.success) {
+				customer.value = res.data.customer
+				customerMeta.value = res.data.customer_meta || {}
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			loading.value = false
+		})
+}
+
+onBeforeMount(() => {
+	getFull()
+})
 </script>
 
 <style lang="scss" scoped>
