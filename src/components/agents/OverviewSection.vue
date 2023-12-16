@@ -3,7 +3,18 @@
 		<div class="property-group">
 			<KVCard v-for="item of propsSanitized" :key="item.key">
 				<template #key>{{ item.key }}</template>
-				<template #value>{{ item.val ?? "-" }}</template>
+				<template #value>
+					<template v-if="item.key === 'customer_code'">
+						<code class="cursor-pointer text-primary-color" @click="gotoCustomer(item.val)" v-if="item.val">
+							{{ item.val }}
+							<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
+						</code>
+						<span v-else>-</span>
+					</template>
+					<template v-else>
+						{{ item.val ?? "-" }}
+					</template>
+				</template>
 			</KVCard>
 		</div>
 	</div>
@@ -15,12 +26,16 @@ import dayjs from "@/utils/dayjs"
 import { type Agent } from "@/types/agents.d"
 import { useSettingsStore } from "@/stores/settings"
 import KVCard from "@/components/common/KVCard.vue"
+import Icon from "@/components/common/Icon.vue"
+import { useRouter } from "vue-router"
 
 const props = defineProps<{
 	agent: Agent
 }>()
 const { agent } = toRefs(props)
 
+const LinkIcon = "carbon:launch"
+const router = useRouter()
 const dFormats = useSettingsStore().dateFormat
 
 const propsSanitized = computed(() => {
@@ -43,6 +58,10 @@ const formatDate = (date: string) => {
 	if (!datejs.isValid()) return date
 
 	return datejs.format(dFormats.datetime)
+}
+
+function gotoCustomer(code: string | number) {
+	router.push(`/customers?code=${code}`).catch(() => {})
 }
 </script>
 

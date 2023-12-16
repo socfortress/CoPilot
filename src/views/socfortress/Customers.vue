@@ -14,8 +14,8 @@ const route = useRoute()
 const highlight = ref<string | undefined>(undefined)
 
 onBeforeMount(() => {
-	if (route.query?.id) {
-		highlight.value = route.query.id.toString()
+	if (route.query?.code) {
+		highlight.value = route.query.code.toString()
 	}
 })
 </script>

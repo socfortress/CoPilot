@@ -70,7 +70,13 @@
 							</div>
 							<div class="box">
 								agent_labels_customer:
-								<code>{{ alert._source.agent_labels_customer }}</code>
+								<code
+									class="cursor-pointer text-primary-color"
+									@click="gotoCustomer(alert._source.agent_labels_customer)"
+								>
+									{{ alert._source.agent_labels_customer }}
+									<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
+								</code>
 							</div>
 						</div>
 					</n-popover>
@@ -125,14 +131,20 @@
 			:bordered="false"
 			segmented
 		>
-			<n-tabs type="line" animated justify-content="space-evenly">
+			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane name="Agent" tab="Agent" display-directive="show">
-					<div class="grid gap-2 alert-context-grid p-7 pt-4" v-if="agentProperties">
+					<div class="grid gap-2 grid-auto-flow-200 p-7 pt-4" v-if="agentProperties">
 						<KVCard v-for="(value, key) of agentProperties" :key="key">
 							<template #key>{{ key }}</template>
 							<template #value>
 								<template v-if="key === 'agent_id'">
 									<code class="cursor-pointer text-primary-color" @click="gotoAgentPage(value + '')">
+										{{ value }}
+										<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
+									</code>
+								</template>
+								<template v-else-if="key === 'agent_labels_customer'">
+									<code class="cursor-pointer text-primary-color" @click="gotoCustomer(value + '')">
 										{{ value }}
 										<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
 									</code>
@@ -208,6 +220,8 @@
 </template>
 
 <script setup lang="ts">
+// TODO: add global popover with map for coords property (agent_ip_geolocation) ??
+
 import { NPopover, NModal, NTabs, NTabPane, NInput } from "naive-ui"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
@@ -256,6 +270,9 @@ function formatDate(timestamp: string): string {
 
 function gotoAgentPage(agentId: string) {
 	router.push(`/agent/${agentId}`).catch(() => {})
+}
+function gotoCustomer(code: string | number) {
+	router.push(`/customers?code=${code}`).catch(() => {})
 }
 </script>
 
@@ -332,11 +349,5 @@ function gotoAgentPage(agentId: string) {
 			display: flex;
 		}
 	}
-}
-</style>
-<style lang="scss">
-.alert-context-grid {
-	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-	grid-auto-flow: row dense;
 }
 </style>
