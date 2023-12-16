@@ -1,5 +1,5 @@
 <template>
-	<n-spin :show="loading" :class="{ highlight }" :id="'customer-' + customer.customer_code" class="customer-item">
+	<n-spin :show="loadingFull" :class="{ highlight }" :id="'customer-' + customer.customer_code" class="customer-item">
 		<div class="px-4 py-3 flex flex-col gap-2">
 			<div class="header-box flex justify-between items-center">
 				<div class="id">#{{ customer.customer_code }}</div>
@@ -81,103 +81,50 @@
 				</Badge>
 			</div>
 
-			<!--
-		<n-modal
-			v-model:show="showDetails"
-			preset="card"
-			content-style="padding:0px"
-			:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(550px, 90vh)', overflow: 'hidden' }"
-			:title="`#${alert.alert_id} - ${alert.alert_uuid}`"
-			:bordered="false"
-			segmented
-		>
-			<n-tabs type="line" animated justify-content="space-evenly">
-				<n-tab-pane name="Context" tab="Context" display-directive="show:lazy">
-					<div class="grid gap-2 soc-alert-context-grid p-7 pt-4">
-						<KVCard v-for="(value, key) of alert.alert_context" :key="key">
-							<template #key>{{ key }}</template>
-							<template #value>{{ value ?? "-" }}</template>
-						</KVCard>
-					</div>
-				</n-tab-pane>
-				<n-tab-pane name="Note" tab="Note" display-directive="show:lazy">
-					<div class="p-7 pt-4">
-						{{ alert.alert_note }}
-					</div>
-				</n-tab-pane>
-				<n-tab-pane name="Customer" tab="Customer" display-directive="show:lazy">
-					<div class="grid gap-2 soc-alert-context-grid p-7 pt-4">
-						<KVCard v-for="(value, key) of alert.customer" :key="key">
-							<template #key>{{ key }}</template>
-							<template #value>{{ value || "-" }}</template>
-						</KVCard>
-					</div>
-				</n-tab-pane>
-				<n-tab-pane name="Owner" tab="Owner" display-directive="show:lazy">
-					<div class="grid gap-2 px-7 pt-4">
-						<Badge
-							type="active"
-							style="max-width: 145px"
-							class="cursor-pointer"
-							@click="gotoUsersPage(ownerId)"
-						>
-							<template #iconRight>
-								<Icon :name="LinkIcon" :size="14"></Icon>
-							</template>
-							<template #label>Go to users page</template>
-						</Badge>
-					</div>
-					<div class="grid gap-2 soc-alert-context-grid p-7 pt-4">
-						<KVCard>
-							<template #key>user_login</template>
-							<template #value>
-								<SocAssignUser
-									:alert="alert"
-									:users="users"
-									v-slot="{ loading }"
-									@updated="updateAlert"
-								>
-									<div class="flex items-center gap-2 cursor-pointer text-primary-color">
-										<n-spin :size="16" :show="loading">
-											<Icon :name="EditIcon" :size="16"></Icon>
-										</n-spin>
-										<span>{{ ownerName || "Assign a user" }}</span>
-									</div>
-								</SocAssignUser>
-							</template>
-						</KVCard>
-						<KVCard v-if="alert.owner">
-							<template #key>user_name</template>
-							<template #value>
-								<span>#{{ alert.owner.id }}</span>
-								{{ alert.owner.user_name }}
-							</template>
-						</KVCard>
-						<KVCard v-if="alert.owner">
-							<template #key>user_email</template>
-							<template #value>
-								{{ alert.owner.user_email }}
-							</template>
-						</KVCard>
-					</div>
-				</n-tab-pane>
-				<n-tab-pane name="History" tab="History" display-directive="show:lazy">
-					<div class="p-7 pt-4">
-						<SocAlertTimeline :alert="alert" />
-					</div>
-				</n-tab-pane>
-				<n-tab-pane name="Details" tab="Details" display-directive="show:lazy">
-					<div class="p-7 pt-4">
-						<SimpleJsonViewer
-							class="vuesjv-override"
-							:model-value="socAlertDetail"
-							:initialExpandedDepth="1"
-						/>
-					</div>
-				</n-tab-pane>
-			</n-tabs>
-		</n-modal>
-		-->
+			<n-modal
+				v-model:show="showDetails"
+				preset="card"
+				content-style="padding:0px"
+				:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(600px, 90vh)', overflow: 'hidden' }"
+				:title="customer.customer_name"
+				:bordered="false"
+				segmented
+			>
+				<n-tabs type="line" animated :tabs-padding="24">
+					<n-tab-pane name="Info" tab="Info" display-directive="show:lazy">
+						Edit,Delete
+						<div class="grid gap-2 grid-auto-flow-200 p-7 pt-4">
+							<KVCard v-for="(value, key) of customer" :key="key">
+								<template #key>{{ key }}</template>
+								<template #value>{{ value ?? "-" }}</template>
+							</KVCard>
+						</div>
+					</n-tab-pane>
+					<n-tab-pane name="Meta" tab="Meta" display-directive="show:lazy">
+						Edit,Delete
+						<div class="grid gap-2 grid-auto-flow-250 p-7 pt-4" v-if="customerMeta">
+							<KVCard v-for="(value, key) of customerMeta" :key="key">
+								<template #key>{{ key }}</template>
+								<template #value>{{ value || "-" }}</template>
+							</KVCard>
+						</div>
+						<div v-else>add</div>
+					</n-tab-pane>
+					<n-tab-pane name="Agents" tab="Agents" display-directive="show:lazy">
+						<CustomerAgents :customer="customer" />
+					</n-tab-pane>
+					<n-tab-pane name="Healthcheck Wazuh" tab="Healthcheck Wazuh" display-directive="show:lazy">
+						Healthcheck Wazuh
+					</n-tab-pane>
+					<n-tab-pane
+						name="Healthcheck Velociraptor"
+						tab="Healthcheck Velociraptor"
+						display-directive="show:lazy"
+					>
+						Healthcheck Velociraptor
+					</n-tab-pane>
+				</n-tabs>
+			</n-modal>
 		</div>
 	</n-spin>
 </template>
@@ -190,11 +137,10 @@ import type { SocAlert } from "@/types/soc/alert.d"
 import type { Alert } from "@/types/alerts.d"
 import Icon from "@/components/common/Icon.vue"
 import Badge from "@/components/common/Badge.vue"
-import { computed, onBeforeMount, ref, toRefs } from "vue"
-import { SimpleJsonViewer } from "vue-sjv"
+import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
 import KVCard from "@/components/common/KVCard.vue"
-import SocAlertTimeline from "./SocAlertTimeline.vue"
-import SocAssignUser from "./SocAssignUser.vue"
+import AgentCard from "@/components/agents/AgentCard.vue"
+import CustomerAgents from "./CustomerAgents.vue"
 import Api from "@/api"
 import {
 	NImage,
@@ -213,6 +159,8 @@ import dayjs from "@/utils/dayjs"
 import type { SocUser } from "@/types/soc/user.d"
 import type { Customer, CustomerMeta } from "@/types/customers.d"
 import { useRouter } from "vue-router"
+import type { Agent } from "@/types/agents.d"
+import { isAgentOnline } from "@/components/agents/utils"
 
 const emit = defineEmits<{
 	(e: "bookmark"): void
@@ -243,20 +191,22 @@ const StarIcon = "carbon:star"
 const EditIcon = "uil:edit-alt"
 
 const showDetails = ref(false)
-const loading = ref(false)
+const loadingFull = ref(false)
+const loadingAgents = ref(false)
 const router = useRouter()
 const message = useMessage()
-const customerMeta = ref<CustomerMeta | {}>({})
+const customerMeta = ref<CustomerMeta | null>(null)
+const customerAgents = ref<Agent[] | []>([])
 
 function getFull() {
-	loading.value = true
+	loadingFull.value = true
 
 	Api.customers
 		.getCustomerFull(customer.value.customer_code)
 		.then(res => {
 			if (res.data.success) {
 				customer.value = res.data.customer
-				customerMeta.value = res.data.customer_meta || {}
+				customerMeta.value = res.data.customer_meta || null
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
@@ -265,12 +215,22 @@ function getFull() {
 			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
-			loading.value = false
+			loadingFull.value = false
 		})
 }
 
+watch(showDetails, val => {
+	if (val) {
+		if (!customer.value.customer_name || !customerMeta.value?.customer_meta_graylog_index) {
+			getFull()
+		}
+	}
+})
+
 onBeforeMount(() => {
-	getFull()
+	if (!customer.value.customer_name) {
+		getFull()
+	}
 })
 </script>
 
@@ -302,7 +262,6 @@ onBeforeMount(() => {
 		}
 	}
 
-	&:hover,
 	&.highlight {
 		box-shadow: 0px 0px 0px 1px inset var(--primary-color);
 	}
