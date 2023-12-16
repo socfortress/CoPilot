@@ -93,7 +93,7 @@ export function handleDeleteAgent({
 		title: "Confirm",
 		content: () =>
 			h("div", {
-				innerHTML: `Are you sure you want to delete the agent:<br/><strong>${agent.hostname}</strong> ?`
+				innerHTML: `Are you sure you want to delete the Agent:<br/><strong>${agent.hostname}</strong> ?`
 			}),
 		positiveText: "Yes I'm sure",
 		negativeText: "Cancel",

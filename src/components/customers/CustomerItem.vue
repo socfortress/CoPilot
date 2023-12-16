@@ -92,7 +92,20 @@
 			>
 				<n-tabs type="line" animated :tabs-padding="24">
 					<n-tab-pane name="Info" tab="Info" display-directive="show:lazy">
-						Edit,Delete
+						<div class="flex items-center justify-between gap-4 px-7 pt-2">
+							<n-button size="small">
+								<template #icon>
+									<Icon :name="EditIcon" :size="14"></Icon>
+								</template>
+								Edit
+							</n-button>
+							<n-button size="small" type="error" ghost @click.stop="handleDelete">
+								<template #icon>
+									<Icon :name="DeleteIcon" :size="15"></Icon>
+								</template>
+								Delete Customer
+							</n-button>
+						</div>
 						<div class="grid gap-2 grid-auto-flow-200 p-7 pt-4">
 							<KVCard v-for="(value, key) of customer" :key="key">
 								<template #key>{{ key }}</template>
@@ -101,7 +114,20 @@
 						</div>
 					</n-tab-pane>
 					<n-tab-pane name="Meta" tab="Meta" display-directive="show:lazy">
-						Edit,Delete
+						<div class="flex items-center justify-between gap-4 px-7 pt-2">
+							<n-button size="small">
+								<template #icon>
+									<Icon :name="EditIcon" :size="14"></Icon>
+								</template>
+								Edit
+							</n-button>
+							<n-button size="small" type="error" ghost>
+								<template #icon>
+									<Icon :name="DeleteIcon" :size="15"></Icon>
+								</template>
+								Clear Meta
+							</n-button>
+						</div>
 						<div class="grid gap-2 grid-auto-flow-250 p-7 pt-4" v-if="customerMeta">
 							<KVCard v-for="(value, key) of customerMeta" :key="key">
 								<template #key>{{ key }}</template>
@@ -137,7 +163,7 @@ import type { SocAlert } from "@/types/soc/alert.d"
 import type { Alert } from "@/types/alerts.d"
 import Icon from "@/components/common/Icon.vue"
 import Badge from "@/components/common/Badge.vue"
-import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
+import { computed, h, onBeforeMount, ref, toRefs, watch } from "vue"
 import KVCard from "@/components/common/KVCard.vue"
 import AgentCard from "@/components/agents/AgentCard.vue"
 import CustomerAgents from "./CustomerAgents.vue"
@@ -152,7 +178,9 @@ import {
 	NTabs,
 	NTabPane,
 	NSpin,
-	NTooltip
+	NButton,
+	NTooltip,
+	useDialog
 } from "naive-ui"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
@@ -189,11 +217,13 @@ const StarActiveIcon = "carbon:star-filled"
 const OwnerIcon = "carbon:user-military"
 const StarIcon = "carbon:star"
 const EditIcon = "uil:edit-alt"
+const DeleteIcon = "ph:trash"
 
 const showDetails = ref(false)
 const loadingFull = ref(false)
 const loadingAgents = ref(false)
 const router = useRouter()
+const dialog = useDialog()
 const message = useMessage()
 const customerMeta = ref<CustomerMeta | null>(null)
 const customerAgents = ref<Agent[] | []>([])
@@ -217,6 +247,24 @@ function getFull() {
 		.finally(() => {
 			loadingFull.value = false
 		})
+}
+
+function handleDelete() {
+	dialog.warning({
+		title: "Confirm",
+		content: () =>
+			h("div", {
+				innerHTML: `Are you sure you want to delete the Customer:<br/><strong>${customer.value.customer_code}</strong> ?`
+			}),
+		positiveText: "Yes I'm sure",
+		negativeText: "Cancel",
+		onPositiveClick: () => {
+			/// deleteAgent({ agent, cbBefore, cbSuccess, cbAfter, cbError, dialog, message })
+		},
+		onNegativeClick: () => {
+			message.info("Delete canceled")
+		}
+	})
 }
 
 watch(showDetails, val => {
