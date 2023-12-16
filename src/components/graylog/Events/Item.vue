@@ -42,7 +42,7 @@
 			:bordered="false"
 			segmented
 		>
-			<n-tabs type="line" animated justify-content="space-evenly">
+			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane name="query" tab="Query" display-directive="show">
 					<div class="p-7 pt-4">
 						<n-input

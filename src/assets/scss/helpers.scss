@@ -69,6 +69,15 @@
 	}
 }
 
+.grid-auto-flow-200 {
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	grid-auto-flow: row dense;
+}
+.grid-auto-flow-250 {
+	grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+	grid-auto-flow: row dense;
+}
+
 .bg-color {
 	background-color: var(--bg-color);
 }

@@ -86,11 +86,11 @@
 			preset="card"
 			content-style="padding:0px"
 			:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(550px, 90vh)', overflow: 'hidden' }"
-			:title="caseData.case_uuid"
+			:title="'SOC Case: ' + caseData.case_uuid"
 			:bordered="false"
 			segmented
 		>
-			<n-tabs type="line" animated justify-content="space-evenly">
+			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane name="Info" tab="Info" display-directive="show">
 					<n-spin :show="loadingDetails">
 						<div class="px-7 py-4" v-if="extendedInfo">
@@ -117,7 +117,7 @@
 								</code>
 							</div>
 						</div>
-						<div class="grid gap-2 soc-case-context-grid p-7 pt-4" v-if="properties">
+						<div class="grid gap-2 grid-auto-flow-200 p-7 pt-4" v-if="properties">
 							<KVCard v-for="(value, key) of properties" :key="key">
 								<template #key>{{ key }}</template>
 								<template #value>{{ value || "-" }}</template>
@@ -180,6 +180,8 @@
 </template>
 
 <script setup lang="ts">
+// TODO: add customer goto function ??
+
 import Icon from "@/components/common/Icon.vue"
 import KVCard from "@/components/common/KVCard.vue"
 import Badge from "@/components/common/Badge.vue"
@@ -376,11 +378,5 @@ watch(showDetails, val => {
 			display: flex;
 		}
 	}
-}
-</style>
-<style lang="scss">
-.soc-case-context-grid {
-	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-	grid-auto-flow: row dense;
 }
 </style>

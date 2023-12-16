@@ -1,6 +1,6 @@
 <template>
 	<div class="alerts-stats">
-		<n-tabs default-value="countByHost" animated justify-content="space-evenly" type="line">
+		<n-tabs default-value="countByHost" animated type="line" :tabs-padding="24">
 			<n-tab-pane name="countByHost" tab="By Host">
 				<n-spin :show="loadingCountByHost">
 					<template #description>Alerts are being fetched, this may take up to 1 minute.</template>

@@ -57,13 +57,13 @@
 			preset="card"
 			content-style="padding:0px"
 			:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(600px, 90vh)', overflow: 'hidden' }"
-			:title="`#${note.note_id} - ${note.note_details.note_uuid}`"
+			:title="`Note: #${note.note_id} - ${note.note_details.note_uuid}`"
 			:bordered="false"
 			segmented
 		>
-			<n-tabs type="line" animated justify-content="space-evenly">
+			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane name="Info" tab="Info" display-directive="show">
-					<div class="grid gap-2 soc-case-context-grid p-7 pt-4" v-if="properties">
+					<div class="grid gap-2 grid-auto-flow-200 p-7 pt-4" v-if="properties">
 						<KVCard v-for="(value, key) of properties" :key="key">
 							<template #key>{{ key }}</template>
 							<template #value>{{ value || "-" }}</template>
@@ -194,11 +194,5 @@ const properties = computed(() => {
 			display: flex;
 		}
 	}
-}
-</style>
-<style lang="scss">
-.soc-case-context-grid {
-	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-	grid-auto-flow: row dense;
 }
 </style>
