@@ -17,6 +17,8 @@
 						:key="customer.customer_code"
 						:customer="customer"
 						:highlight="customer.customer_code === highlight"
+						:hideCardActions="loadingCustomers"
+						@delete="getCustomers()"
 						class="item-appear item-appear-bottom item-appear-005 mb-2"
 					/>
 				</template>
@@ -34,7 +36,7 @@
 			display-directive="show"
 		>
 			<n-drawer-content title="Add Customer" closable :native-scrollbar="false">
-				<CustomerForm @mounted="customerFormCTX = $event" @added="getCustomers()" />
+				<CustomerForm @mounted="customerFormCTX = $event" @submitted="getCustomers()" />
 			</n-drawer-content>
 		</n-drawer>
 	</div>

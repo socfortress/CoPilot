@@ -1,9 +1,9 @@
 <template>
-	<n-spin :show="loadingFull" :class="{ highlight }" :id="'customer-' + customer.customer_code" class="customer-item">
+	<n-spin :show="loading" :class="{ highlight }" :id="'customer-' + customer.customer_code" class="customer-item">
 		<div class="px-4 py-3 flex flex-col gap-2">
 			<div class="header-box flex justify-between items-center">
 				<div class="id">#{{ customer.customer_code }}</div>
-				<div class="actions">
+				<div class="actions" v-if="!hideCardActions">
 					<Badge type="cursor" @click="showDetails = true">
 						<template #iconLeft>
 							<Icon :name="DetailsIcon" :size="14"></Icon>
@@ -92,25 +92,39 @@
 			>
 				<n-tabs type="line" animated :tabs-padding="24">
 					<n-tab-pane name="Info" tab="Info" display-directive="show:lazy">
-						<div class="flex items-center justify-between gap-4 px-7 pt-2">
-							<n-button size="small">
-								<template #icon>
-									<Icon :name="EditIcon" :size="14"></Icon>
+						<div class="p-7 pt-4" v-if="editingCustomer">
+							<CustomerForm
+								@mounted="customerFormCTX = $event"
+								@submitted="customer = $event"
+								:customer="customer"
+							>
+								<template #additionalActions>
+									<n-button @click="editingCustomer = false">Close</n-button>
 								</template>
-								Edit
-							</n-button>
-							<n-button size="small" type="error" ghost @click.stop="handleDelete">
-								<template #icon>
-									<Icon :name="DeleteIcon" :size="15"></Icon>
-								</template>
-								Delete Customer
-							</n-button>
+							</CustomerForm>
 						</div>
-						<div class="grid gap-2 grid-auto-flow-200 p-7 pt-4">
-							<KVCard v-for="(value, key) of customer" :key="key">
-								<template #key>{{ key }}</template>
-								<template #value>{{ value ?? "-" }}</template>
-							</KVCard>
+						<div v-else>
+							<div class="flex items-center justify-between gap-4 px-7 pt-2">
+								<n-button size="small" @click="editingCustomer = true">
+									<template #icon>
+										<Icon :name="EditIcon" :size="14"></Icon>
+									</template>
+									Edit
+								</n-button>
+								<n-button size="small" type="error" ghost @click.stop="handleDelete">
+									<template #icon>
+										<Icon :name="DeleteIcon" :size="15"></Icon>
+									</template>
+									Delete Customer
+								</n-button>
+							</div>
+
+							<div class="grid gap-2 grid-auto-flow-200 p-7 pt-4">
+								<KVCard v-for="(value, key) of customer" :key="key">
+									<template #key>{{ key }}</template>
+									<template #value>{{ value || "-" }}</template>
+								</KVCard>
+							</div>
 						</div>
 					</n-tab-pane>
 					<n-tab-pane name="Meta" tab="Meta" display-directive="show:lazy">
@@ -165,6 +179,7 @@ import Icon from "@/components/common/Icon.vue"
 import Badge from "@/components/common/Badge.vue"
 import { computed, h, onBeforeMount, ref, toRefs, watch } from "vue"
 import KVCard from "@/components/common/KVCard.vue"
+import CustomerForm from "./CustomerForm.vue"
 import AgentCard from "@/components/agents/AgentCard.vue"
 import CustomerAgents from "./CustomerAgents.vue"
 import Api from "@/api"
@@ -191,14 +206,15 @@ import type { Agent } from "@/types/agents.d"
 import { isAgentOnline } from "@/components/agents/utils"
 
 const emit = defineEmits<{
-	(e: "bookmark"): void
+	(e: "delete"): void
 }>()
 
 const props = defineProps<{
 	customer: Customer
 	highlight?: boolean | null | undefined
+	hideCardActions?: boolean | null | undefined
 }>()
-const { customer, highlight } = toRefs(props)
+const { customer, highlight, hideCardActions } = toRefs(props)
 
 const DetailsIcon = "carbon:settings-adjust"
 const UserTypeIcon = "solar:shield-user-linear"
@@ -221,12 +237,16 @@ const DeleteIcon = "ph:trash"
 
 const showDetails = ref(false)
 const loadingFull = ref(false)
-const loadingAgents = ref(false)
+const loadingDelete = ref(false)
+const editingCustomer = ref(false)
 const router = useRouter()
 const dialog = useDialog()
 const message = useMessage()
 const customerMeta = ref<CustomerMeta | null>(null)
+const customerFormCTX = ref<{ reset: () => void } | null>(null)
 const customerAgents = ref<Agent[] | []>([])
+
+const loading = computed(() => loadingFull.value || loadingDelete.value)
 
 function getFull() {
 	loadingFull.value = true
@@ -249,17 +269,38 @@ function getFull() {
 		})
 }
 
+function deleteCustomer() {
+	loadingDelete.value = true
+	showDetails.value = false
+
+	Api.customers
+		.deleteCustomer(customer.value.customer_code)
+		.then(res => {
+			if (res.data.success) {
+				emit("delete")
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			loadingDelete.value = false
+		})
+}
+
 function handleDelete() {
 	dialog.warning({
 		title: "Confirm",
 		content: () =>
 			h("div", {
-				innerHTML: `Are you sure you want to delete the Customer:<br/><strong>${customer.value.customer_code}</strong> ?`
+				innerHTML: `Are you sure you want to delete the Customer: <strong>${customer.value.customer_code}</strong> ?`
 			}),
 		positiveText: "Yes I'm sure",
 		negativeText: "Cancel",
 		onPositiveClick: () => {
-			/// deleteAgent({ agent, cbBefore, cbSuccess, cbAfter, cbError, dialog, message })
+			deleteCustomer()
 		},
 		onNegativeClick: () => {
 			message.info("Delete canceled")

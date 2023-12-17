@@ -13,9 +13,14 @@
 						</n-form-item>
 					</div>
 				</div>
-				<div class="flex justify-end gap-4">
-					<n-button @click="reset()">Reset</n-button>
-					<n-button type="primary" :disabled="!isValid" @click="validate()">Submit</n-button>
+				<div class="flex justify-between gap-4">
+					<div class="flex gap-4">
+						<slot name="additionalActions"></slot>
+					</div>
+					<div class="flex gap-4">
+						<n-button @click="reset()">Reset</n-button>
+						<n-button type="primary" :disabled="!isValid" @click="validate()">Submit</n-button>
+					</div>
 				</div>
 			</div>
 		</n-form>
@@ -23,7 +28,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeMount, onMounted, ref } from "vue"
+import { computed, onBeforeMount, onMounted, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import {
 	useMessage,
@@ -41,7 +46,7 @@ import _trim from "lodash/trim"
 import _get from "lodash/get"
 
 const emit = defineEmits<{
-	(e: "added", value: Customer): void
+	(e: "submitted", value: Customer): void
 	(
 		e: "mounted",
 		value: {
@@ -50,13 +55,10 @@ const emit = defineEmits<{
 	): void
 }>()
 
-/*
 const props = defineProps<{
-	customer: Customer
-	highlight?: boolean | null | undefined
+	customer?: Customer
 }>()
-const { customer, highlight } = toRefs(props)
-*/
+const { customer } = toRefs(props)
 
 const loading = ref(false)
 const message = useMessage()
@@ -172,22 +174,22 @@ function validate() {
 	})
 }
 
-function getClearForm() {
+function getClearForm(customer?: Customer) {
 	return {
-		customer_code: "",
-		customer_name: "",
-		contact_last_name: "",
-		contact_first_name: "",
-		parent_customer_code: "",
-		phone: "",
-		address_line1: "",
-		address_line2: "",
-		city: "",
-		state: "",
-		postal_code: "",
-		country: "",
-		customer_type: "",
-		logo_file: ""
+		customer_code: customer?.customer_code || "",
+		customer_name: customer?.customer_name || "",
+		contact_last_name: customer?.contact_last_name || "",
+		contact_first_name: customer?.contact_first_name || "",
+		parent_customer_code: customer?.parent_customer_code || "",
+		phone: customer?.phone || "",
+		address_line1: customer?.address_line1 || "",
+		address_line2: customer?.address_line2 || "",
+		city: customer?.city || "",
+		state: customer?.state || "",
+		postal_code: customer?.postal_code || "",
+		country: customer?.country || "",
+		customer_type: customer?.customer_type || "",
+		logo_file: customer?.logo_file || ""
 	}
 }
 
@@ -198,12 +200,13 @@ function reset() {
 function submit() {
 	loading.value = true
 
-	Api.customers
-		.createCustomer(form.value)
+	const method = customer.value?.customer_code ? "updateCustomer" : "createCustomer"
+
+	Api.customers[method](form.value, customer.value?.customer_code)
 		.then(res => {
 			if (res.data.success) {
 				reset()
-				emit("added", res.data.customer)
+				emit("submitted", res.data.customer)
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
@@ -215,6 +218,22 @@ function submit() {
 			loading.value = false
 		})
 }
+
+function setForm() {
+	form.value = getClearForm(customer.value)
+}
+
+watch(customer, val => {
+	if (val) {
+		setForm()
+	}
+})
+
+onBeforeMount(() => {
+	if (customer.value) {
+		setForm()
+	}
+})
 
 onMounted(() => {
 	emit("mounted", {
