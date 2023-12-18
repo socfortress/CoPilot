@@ -107,6 +107,7 @@
 						:customer="customerInfo"
 						@delete="deletedItem()"
 						@submitted="customerInfo = $event"
+						v-model:loading="loadingDelete"
 						v-if="customerInfo"
 					/>
 				</n-tab-pane>
@@ -122,14 +123,14 @@
 					<CustomerAgents :customer="customerInfo" v-if="customerInfo" />
 				</n-tab-pane>
 				<n-tab-pane name="Healthcheck Wazuh" tab="Healthcheck Wazuh" display-directive="show:lazy">
-					<CustomerHealthcheck type="wazuh" :customerCode="customer.customer_code" />
+					<CustomerHealthcheckList type="wazuh" :customerCode="customer.customer_code" />
 				</n-tab-pane>
 				<n-tab-pane
 					name="Healthcheck Velociraptor"
 					tab="Healthcheck Velociraptor"
 					display-directive="show:lazy"
 				>
-					<CustomerHealthcheck type="velociraptor" :customerCode="customer.customer_code" />
+					<CustomerHealthcheckList type="velociraptor" :customerCode="customer.customer_code" />
 				</n-tab-pane>
 			</n-tabs>
 		</n-modal>
@@ -145,7 +146,7 @@ import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
 import CustomerInfoComponent from "./CustomerInfo.vue"
 import CustomerMetaComponent from "./CustomerMeta.vue"
 import CustomerAgents from "./CustomerAgents.vue"
-import CustomerHealthcheck from "./CustomerHealthcheck.vue"
+import CustomerHealthcheckList from "./CustomerHealthcheckList.vue"
 import Api from "@/api"
 import { NAvatar, useMessage, NPopover, NModal, NTabs, NTabPane, NSpin } from "naive-ui"
 import type { Customer, CustomerMeta } from "@/types/customers.d"

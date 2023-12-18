@@ -35,7 +35,7 @@
 
 <script setup lang="ts">
 import Icon from "@/components/common/Icon.vue"
-import { h, ref, toRefs } from "vue"
+import { h, ref, toRefs, watch } from "vue"
 import KVCard from "@/components/common/KVCard.vue"
 import CustomerForm from "./CustomerForm.vue"
 import Api from "@/api"
@@ -43,6 +43,7 @@ import { useMessage, NButton, useDialog } from "naive-ui"
 import type { Customer } from "@/types/customers.d"
 
 const emit = defineEmits<{
+	(e: "update:loading", value: boolean): void
 	(e: "delete"): void
 	(e: "submitted", value: Customer): void
 }>()
@@ -102,4 +103,8 @@ function handleDelete() {
 		}
 	})
 }
+
+watch(loadingDelete, val => {
+	emit("update:loading", val)
+})
 </script>

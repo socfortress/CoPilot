@@ -1,9 +1,11 @@
 <template>
 	<div>
 		<div v-for="item of healthyList" :key="item.id">
+			<CustomerHealthcheckItem :health-data="item" :type="type" />
 			<pre>{{ item }}</pre>
 		</div>
 		<div v-for="item of unhealthyList" :key="item.id">
+			<CustomerHealthcheckItem :health-data="item" :type="type" />
 			<pre>{{ item }}</pre>
 		</div>
 	</div>
@@ -15,11 +17,12 @@ import { h, onBeforeMount, ref, toRefs } from "vue"
 import KVCard from "@/components/common/KVCard.vue"
 import _get from "lodash/get"
 import Api from "@/api"
+import CustomerHealthcheckItem from "./CustomerHealthcheckItem.vue"
 import { useMessage, NButton, useDialog } from "naive-ui"
-import type { CustomerAgentHealth } from "@/types/customers.d"
+import type { CustomerAgentHealth, CustomerHealthcheckType } from "@/types/customers.d"
 
 const { type, customerCode } = defineProps<{
-	type: "wazuh" | "velociraptor"
+	type: CustomerHealthcheckType
 	customerCode: string
 }>()
 
