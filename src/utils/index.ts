@@ -35,6 +35,18 @@ export function renderIcon(icon: Component | string) {
 	}
 }
 
+export function iconFromOs(os: string): string {
+	const test = os.toLowerCase()
+	if (test.indexOf("mac") !== -1 || test.indexOf("darwin") !== -1 || test.indexOf("apple") !== -1) {
+		return "uit:apple-alt"
+	}
+	if (test.indexOf("win") !== -1 || test.indexOf("microsoft") !== -1) {
+		return "arcticons:microsoft-alt"
+	}
+
+	return "uil:linux"
+}
+
 export function getOS(): OS {
 	let os: OS = "Unknown"
 	if (navigator.userAgent.indexOf("Win") != -1) os = "Windows"

@@ -28,8 +28,7 @@ export interface CustomerMeta {
 	customer_meta_wazuh_auth_password: string
 }
 
-// TODO: type -> source
-export type CustomerHealthcheckType = "wazuh" | "velociraptor"
+export type CustomerHealthcheckSource = "wazuh" | "velociraptor"
 
 export interface CustomerAgentHealth {
 	id: number

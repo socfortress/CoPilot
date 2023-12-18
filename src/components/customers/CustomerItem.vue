@@ -123,14 +123,14 @@
 					<CustomerAgents :customer="customerInfo" v-if="customerInfo" />
 				</n-tab-pane>
 				<n-tab-pane name="Healthcheck Wazuh" tab="Healthcheck Wazuh" display-directive="show:lazy">
-					<CustomerHealthcheckList type="wazuh" :customerCode="customer.customer_code" />
+					<CustomerHealthcheckList source="wazuh" :customerCode="customer.customer_code" />
 				</n-tab-pane>
 				<n-tab-pane
 					name="Healthcheck Velociraptor"
 					tab="Healthcheck Velociraptor"
 					display-directive="show:lazy"
 				>
-					<CustomerHealthcheckList type="velociraptor" :customerCode="customer.customer_code" />
+					<CustomerHealthcheckList source="velociraptor" :customerCode="customer.customer_code" />
 				</n-tab-pane>
 			</n-tabs>
 		</n-modal>
