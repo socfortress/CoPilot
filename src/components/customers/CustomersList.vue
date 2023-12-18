@@ -36,7 +36,7 @@
 			display-directive="show"
 		>
 			<n-drawer-content title="Add Customer" closable :native-scrollbar="false">
-				<CustomerForm @mounted="customerFormCTX = $event" @submitted="getCustomers()" />
+				<CustomerForm @mounted="customerFormCTX = $event" @submitted="getCustomers()" :resetOnSubmit="true" />
 			</n-drawer-content>
 		</n-drawer>
 	</div>

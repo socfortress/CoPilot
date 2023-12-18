@@ -9,6 +9,8 @@
 								v-model:value.trim="form[key]"
 								:placeholder="fieldsMeta[key].placeholder"
 								clearable
+								:readonly="key === 'customer_code' && lockCode"
+								:disabled="key === 'customer_code' && lockCode"
 							/>
 						</n-form-item>
 					</div>
@@ -18,8 +20,10 @@
 						<slot name="additionalActions"></slot>
 					</div>
 					<div class="flex gap-4">
-						<n-button @click="reset()">Reset</n-button>
-						<n-button type="primary" :disabled="!isValid" @click="validate()">Submit</n-button>
+						<n-button @click="reset()" :disabled="loading">Reset</n-button>
+						<n-button type="primary" :disabled="!isValid" @click="validate()" :loading="loading">
+							Submit
+						</n-button>
 					</div>
 				</div>
 			</div>
@@ -46,6 +50,7 @@ import _trim from "lodash/trim"
 import _get from "lodash/get"
 
 const emit = defineEmits<{
+	(e: "update:loading", value: boolean): void
 	(e: "submitted", value: Customer): void
 	(
 		e: "mounted",
@@ -57,8 +62,11 @@ const emit = defineEmits<{
 
 const props = defineProps<{
 	customer?: Customer
+	resetOnSubmit?: boolean
+	/** lock customer_code on reset and editing (readonly) */
+	lockCode?: boolean
 }>()
-const { customer } = toRefs(props)
+const { customer, resetOnSubmit, lockCode } = toRefs(props)
 
 const loading = ref(false)
 const message = useMessage()
@@ -174,7 +182,7 @@ function validate() {
 	})
 }
 
-function getClearForm(customer?: Customer) {
+function getClearForm(customer?: Partial<Customer>) {
 	return {
 		customer_code: customer?.customer_code || "",
 		customer_name: customer?.customer_name || "",
@@ -194,7 +202,11 @@ function getClearForm(customer?: Customer) {
 }
 
 function reset() {
-	form.value = getClearForm()
+	let fields = undefined
+	if (lockCode.value) {
+		fields = { customer_code: customer.value?.customer_code || "" }
+	}
+	form.value = getClearForm(fields)
 }
 
 function submit() {
@@ -205,8 +217,10 @@ function submit() {
 	Api.customers[method](form.value, customer.value?.customer_code)
 		.then(res => {
 			if (res.data.success) {
-				reset()
 				emit("submitted", res.data.customer)
+				if (resetOnSubmit.value) {
+					reset()
+				}
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
@@ -222,6 +236,10 @@ function submit() {
 function setForm() {
 	form.value = getClearForm(customer.value)
 }
+
+watch(loading, val => {
+	emit("update:loading", val)
+})
 
 watch(customer, val => {
 	if (val) {
@@ -241,8 +259,3 @@ onMounted(() => {
 	})
 })
 </script>
-
-<style lang="scss" scoped>
-.customer-form {
-}
-</style>

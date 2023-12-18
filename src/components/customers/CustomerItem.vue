@@ -13,11 +13,19 @@
 				</div>
 			</div>
 			<div class="main-box flex items-center gap-3">
-				<n-avatar :src="customer.logo_file" fallback-src="/images/img-not-found.svg" round :size="40" lazy />
+				<n-avatar
+					:src="customerInfo?.logo_file"
+					fallback-src="/images/img-not-found.svg"
+					round
+					:size="40"
+					lazy
+				/>
 
 				<div class="content flex flex-col gap-1 grow">
-					<div class="title">{{ customer.customer_name }}</div>
-					<div class="description">{{ customer.contact_first_name }} {{ customer.contact_last_name }}</div>
+					<div class="title">{{ customerInfo?.customer_name }}</div>
+					<div class="description">
+						{{ customerInfo?.contact_first_name }} {{ customerInfo?.contact_last_name }}
+					</div>
 				</div>
 			</div>
 
@@ -27,7 +35,7 @@
 						<Icon :name="UserTypeIcon" :size="14"></Icon>
 					</template>
 					<template #label>Type</template>
-					<template #value>{{ customer.customer_type || "-" }}</template>
+					<template #value>{{ customerInfo?.customer_type || "-" }}</template>
 				</Badge>
 				<n-popover trigger="hover">
 					<template #trigger>
@@ -35,34 +43,36 @@
 							<template #iconLeft>
 								<Icon :name="LocationIcon" :size="13"></Icon>
 							</template>
-							<template #value>{{ [customer.city, customer.state].join(", ") || "-" }}</template>
+							<template #value>
+								{{ [customerInfo?.city, customerInfo?.state].join(", ") || "-" }}
+							</template>
 						</Badge>
 					</template>
 
 					<div class="flex flex-col gap-1">
 						<div class="box">
 							address_line1:
-							<code>{{ customer.address_line1 }}</code>
+							<code>{{ customerInfo?.address_line1 }}</code>
 						</div>
 						<div class="box">
 							address_line2:
-							<code>{{ customer.address_line2 }}</code>
+							<code>{{ customerInfo?.address_line2 }}</code>
 						</div>
 						<div class="box">
 							postal_code:
-							<code>{{ customer.postal_code }}</code>
+							<code>{{ customerInfo?.postal_code }}</code>
 						</div>
 						<div class="box">
 							city:
-							<code>{{ customer.city }}</code>
+							<code>{{ customerInfo?.city }}</code>
 						</div>
 						<div class="box">
 							state:
-							<code>{{ customer.state }}</code>
+							<code>{{ customerInfo?.state }}</code>
 						</div>
 						<div class="box">
 							country:
-							<code>{{ customer.country }}</code>
+							<code>{{ customerInfo?.country }}</code>
 						</div>
 					</div>
 				</n-popover>
@@ -70,140 +80,75 @@
 					<template #iconLeft>
 						<Icon :name="PhoneIcon" :size="13"></Icon>
 					</template>
-					<template #value>{{ customer.phone || "-" }}</template>
+					<template #value>{{ customerInfo?.phone || "-" }}</template>
 				</Badge>
-				<Badge type="splitted" v-if="customer.parent_customer_code">
+				<Badge type="splitted" v-if="customerInfo?.parent_customer_code">
 					<template #iconLeft>
 						<Icon :name="ParentIcon" :size="13"></Icon>
 					</template>
 					<template #label>Parent</template>
-					<template #value>{{ customer.parent_customer_code }}</template>
+					<template #value>{{ customerInfo?.parent_customer_code }}</template>
 				</Badge>
 			</div>
-
-			<n-modal
-				v-model:show="showDetails"
-				preset="card"
-				content-style="padding:0px"
-				:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(600px, 90vh)', overflow: 'hidden' }"
-				:title="customer.customer_name"
-				:bordered="false"
-				segmented
-			>
-				<n-tabs type="line" animated :tabs-padding="24">
-					<n-tab-pane name="Info" tab="Info" display-directive="show:lazy">
-						<div class="p-7 pt-4" v-if="editingCustomer">
-							<CustomerForm
-								@mounted="customerFormCTX = $event"
-								@submitted="customer = $event"
-								:customer="customer"
-							>
-								<template #additionalActions>
-									<n-button @click="editingCustomer = false">Close</n-button>
-								</template>
-							</CustomerForm>
-						</div>
-						<div v-else>
-							<div class="flex items-center justify-between gap-4 px-7 pt-2">
-								<n-button size="small" @click="editingCustomer = true">
-									<template #icon>
-										<Icon :name="EditIcon" :size="14"></Icon>
-									</template>
-									Edit
-								</n-button>
-								<n-button size="small" type="error" ghost @click.stop="handleDelete">
-									<template #icon>
-										<Icon :name="DeleteIcon" :size="15"></Icon>
-									</template>
-									Delete Customer
-								</n-button>
-							</div>
-
-							<div class="grid gap-2 grid-auto-flow-200 p-7 pt-4">
-								<KVCard v-for="(value, key) of customer" :key="key">
-									<template #key>{{ key }}</template>
-									<template #value>{{ value || "-" }}</template>
-								</KVCard>
-							</div>
-						</div>
-					</n-tab-pane>
-					<n-tab-pane name="Meta" tab="Meta" display-directive="show:lazy">
-						<div class="flex items-center justify-between gap-4 px-7 pt-2">
-							<n-button size="small">
-								<template #icon>
-									<Icon :name="EditIcon" :size="14"></Icon>
-								</template>
-								Edit
-							</n-button>
-							<n-button size="small" type="error" ghost>
-								<template #icon>
-									<Icon :name="DeleteIcon" :size="15"></Icon>
-								</template>
-								Clear Meta
-							</n-button>
-						</div>
-						<div class="grid gap-2 grid-auto-flow-250 p-7 pt-4" v-if="customerMeta">
-							<KVCard v-for="(value, key) of customerMeta" :key="key">
-								<template #key>{{ key }}</template>
-								<template #value>{{ value || "-" }}</template>
-							</KVCard>
-						</div>
-						<div v-else>add</div>
-					</n-tab-pane>
-					<n-tab-pane name="Agents" tab="Agents" display-directive="show:lazy">
-						<CustomerAgents :customer="customer" />
-					</n-tab-pane>
-					<n-tab-pane name="Healthcheck Wazuh" tab="Healthcheck Wazuh" display-directive="show:lazy">
-						Healthcheck Wazuh
-					</n-tab-pane>
-					<n-tab-pane
-						name="Healthcheck Velociraptor"
-						tab="Healthcheck Velociraptor"
-						display-directive="show:lazy"
-					>
-						Healthcheck Velociraptor
-					</n-tab-pane>
-				</n-tabs>
-			</n-modal>
 		</div>
+
+		<n-modal
+			v-model:show="showDetails"
+			preset="card"
+			content-style="padding:0px"
+			:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(600px, 90vh)', overflow: 'hidden' }"
+			:title="customerInfo?.customer_name"
+			:bordered="false"
+			segmented
+		>
+			<n-tabs type="line" animated :tabs-padding="24">
+				<n-tab-pane name="Info" tab="Info" display-directive="show:lazy">
+					<CustomerInfoComponent
+						:customer="customerInfo"
+						@delete="deletedItem()"
+						@submitted="customerInfo = $event"
+						v-if="customerInfo"
+					/>
+				</n-tab-pane>
+				<n-tab-pane name="Meta" tab="Meta" display-directive="show:lazy">
+					<CustomerMetaComponent
+						:customerMeta="customerMeta"
+						:customerCode="customer.customer_code"
+						@delete="customerMeta = null"
+						@submitted="customerMeta = $event"
+					/>
+				</n-tab-pane>
+				<n-tab-pane name="Agents" tab="Agents" display-directive="show:lazy">
+					<CustomerAgents :customer="customerInfo" v-if="customerInfo" />
+				</n-tab-pane>
+				<n-tab-pane name="Healthcheck Wazuh" tab="Healthcheck Wazuh" display-directive="show:lazy">
+					<CustomerHealthcheck type="wazuh" :customerCode="customer.customer_code" />
+				</n-tab-pane>
+				<n-tab-pane
+					name="Healthcheck Velociraptor"
+					tab="Healthcheck Velociraptor"
+					display-directive="show:lazy"
+				>
+					<CustomerHealthcheck type="velociraptor" :customerCode="customer.customer_code" />
+				</n-tab-pane>
+			</n-tabs>
+		</n-modal>
 	</n-spin>
 </template>
 
 <script setup lang="ts">
 // TODO: add mablibre on location popup ??
 
-import AlertItem from "@/components/alerts/Alert.vue"
-import type { SocAlert } from "@/types/soc/alert.d"
-import type { Alert } from "@/types/alerts.d"
 import Icon from "@/components/common/Icon.vue"
 import Badge from "@/components/common/Badge.vue"
-import { computed, h, onBeforeMount, ref, toRefs, watch } from "vue"
-import KVCard from "@/components/common/KVCard.vue"
-import CustomerForm from "./CustomerForm.vue"
-import AgentCard from "@/components/agents/AgentCard.vue"
+import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
+import CustomerInfoComponent from "./CustomerInfo.vue"
+import CustomerMetaComponent from "./CustomerMeta.vue"
 import CustomerAgents from "./CustomerAgents.vue"
+import CustomerHealthcheck from "./CustomerHealthcheck.vue"
 import Api from "@/api"
-import {
-	NImage,
-	NAvatar,
-	useMessage,
-	NCollapseItem,
-	NPopover,
-	NModal,
-	NTabs,
-	NTabPane,
-	NSpin,
-	NButton,
-	NTooltip,
-	useDialog
-} from "naive-ui"
-import { useSettingsStore } from "@/stores/settings"
-import dayjs from "@/utils/dayjs"
-import type { SocUser } from "@/types/soc/user.d"
+import { NAvatar, useMessage, NPopover, NModal, NTabs, NTabPane, NSpin } from "naive-ui"
 import type { Customer, CustomerMeta } from "@/types/customers.d"
-import { useRouter } from "vue-router"
-import type { Agent } from "@/types/agents.d"
-import { isAgentOnline } from "@/components/agents/utils"
 
 const emit = defineEmits<{
 	(e: "delete"): void
@@ -221,30 +166,13 @@ const UserTypeIcon = "solar:shield-user-linear"
 const ParentIcon = "material-symbols-light:supervisor-account-outline-rounded"
 const LocationIcon = "carbon:location"
 const PhoneIcon = "carbon:phone"
-const ChevronIcon = "carbon:chevron-right"
-const InfoIcon = "carbon:information"
-const TimeIcon = "carbon:time"
-const LinkIcon = "carbon:launch"
-const StatusIcon = "fluent:status-20-regular"
-const SeverityIcon = "bi:shield-exclamation"
-const SourceIcon = "lucide:arrow-down-right-from-circle"
-const CustomerIcon = "carbon:user"
-const StarActiveIcon = "carbon:star-filled"
-const OwnerIcon = "carbon:user-military"
-const StarIcon = "carbon:star"
-const EditIcon = "uil:edit-alt"
-const DeleteIcon = "ph:trash"
 
 const showDetails = ref(false)
 const loadingFull = ref(false)
 const loadingDelete = ref(false)
-const editingCustomer = ref(false)
-const router = useRouter()
-const dialog = useDialog()
 const message = useMessage()
+const customerInfo = ref<Customer | null>(null)
 const customerMeta = ref<CustomerMeta | null>(null)
-const customerFormCTX = ref<{ reset: () => void } | null>(null)
-const customerAgents = ref<Agent[] | []>([])
 
 const loading = computed(() => loadingFull.value || loadingDelete.value)
 
@@ -255,7 +183,7 @@ function getFull() {
 		.getCustomerFull(customer.value.customer_code)
 		.then(res => {
 			if (res.data.success) {
-				customer.value = res.data.customer
+				customerInfo.value = res.data.customer
 				customerMeta.value = res.data.customer_meta || null
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
@@ -269,55 +197,26 @@ function getFull() {
 		})
 }
 
-function deleteCustomer() {
-	loadingDelete.value = true
+function deletedItem() {
 	showDetails.value = false
-
-	Api.customers
-		.deleteCustomer(customer.value.customer_code)
-		.then(res => {
-			if (res.data.success) {
-				emit("delete")
-			} else {
-				message.warning(res.data?.message || "An error occurred. Please try again later.")
-			}
-		})
-		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-		})
-		.finally(() => {
-			loadingDelete.value = false
-		})
-}
-
-function handleDelete() {
-	dialog.warning({
-		title: "Confirm",
-		content: () =>
-			h("div", {
-				innerHTML: `Are you sure you want to delete the Customer: <strong>${customer.value.customer_code}</strong> ?`
-			}),
-		positiveText: "Yes I'm sure",
-		negativeText: "Cancel",
-		onPositiveClick: () => {
-			deleteCustomer()
-		},
-		onNegativeClick: () => {
-			message.info("Delete canceled")
-		}
-	})
+	emit("delete")
 }
 
 watch(showDetails, val => {
 	if (val) {
-		if (!customer.value.customer_name || !customerMeta.value?.customer_meta_graylog_index) {
+		if (
+			customer.value.customer_code &&
+			(!customer.value.customer_name || !customerMeta.value?.customer_meta_graylog_index)
+		) {
 			getFull()
 		}
 	}
 })
 
 onBeforeMount(() => {
-	if (!customer.value.customer_name) {
+	customerInfo.value = customer.value
+
+	if (customer.value.customer_code && !customer.value.customer_name) {
 		getFull()
 	}
 })
