@@ -38,6 +38,7 @@ class ConnectorResponse(BaseModel):
         orm_mode = True
         from_attributes = True
 
+
 class ConnectorsListResponse(BaseModel):
     connectors: List[ConnectorResponse]
     success: bool

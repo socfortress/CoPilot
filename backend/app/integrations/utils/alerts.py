@@ -15,8 +15,8 @@ import requests
 from fastapi import HTTPException
 from loguru import logger
 
-from app.integrations.utils.schema import WazuhAgentResponse
 from app.integrations.utils.schema import ShufflePayload
+from app.integrations.utils.schema import WazuhAgentResponse
 from app.utils import get_customer_alert_settings
 
 

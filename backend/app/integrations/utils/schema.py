@@ -160,7 +160,6 @@ class WazuhSublimeSocketPayload(WazuhSocketPayload):
         return self.dict(exclude_none=True)
 
 
-
 ######### ! SEND TO SHUFFLE PAYLOAD ! #########
 class ShufflePayload(BaseModel):
     alert_id: str = Field(
