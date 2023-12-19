@@ -3,6 +3,12 @@ import { HttpClient } from "./httpClient"
 import type { Customer, CustomerAgentHealth, CustomerMeta } from "@/types/customers.d"
 import type { Agent } from "@/types/agents.d"
 
+export interface CustomerAgentsHealthcheckQuery {
+	minutes?: number
+	hours?: number
+	days?: number
+}
+
 export default {
 	getCustomers(code?: string) {
 		return HttpClient.get<FlaskBaseResponse & { customers?: Customer[]; customer?: Customer }>(
@@ -41,7 +47,7 @@ export default {
 	getCustomerAgents(code: string) {
 		return HttpClient.get<FlaskBaseResponse & { agents: Agent[] }>(`/customers/${code}/agents`)
 	},
-	getCustomerAgentsHealthcheckWazuh(code: string, query?: { minutes?: number; hours?: number; days?: number }) {
+	getCustomerAgentsHealthcheckWazuh(code: string, query?: CustomerAgentsHealthcheckQuery) {
 		return HttpClient.get<
 			FlaskBaseResponse & {
 				healthy_wazuh_agents: CustomerAgentHealth[]
@@ -55,10 +61,7 @@ export default {
 			}
 		})
 	},
-	getCustomerAgentsHealthcheckVelociraptor(
-		code: string,
-		query?: { minutes?: number; hours?: number; days?: number }
-	) {
+	getCustomerAgentsHealthcheckVelociraptor(code: string, query?: CustomerAgentsHealthcheckQuery) {
 		return HttpClient.get<
 			FlaskBaseResponse & {
 				healthy_velociraptor_agents: CustomerAgentHealth[]

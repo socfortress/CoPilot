@@ -93,6 +93,11 @@
 .text-primary-color {
 	color: var(--primary-color);
 }
+.hover\:text-primary-color {
+	&:hover {
+		color: var(--primary-color);
+	}
+}
 
 .text-secondary-color {
 	color: var(--fg-secondary-color);

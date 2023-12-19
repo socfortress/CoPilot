@@ -55,7 +55,7 @@
 						<n-input-group>
 							<n-select
 								v-model:value="filters.unit"
-								:options="timeOptions"
+								:options="unitOptions"
 								placeholder="Time unit"
 								clearable
 								class="!w-28"
@@ -169,7 +169,7 @@ const filtered = computed<boolean>(() => {
 	return !!filters.value.unit && !!filters.value.olderThan
 })
 
-const timeOptions = [
+const unitOptions = [
 	{ label: "Hours", value: "hours" },
 	{ label: "Days", value: "days" },
 	{ label: "Weeks", value: "weeks" }

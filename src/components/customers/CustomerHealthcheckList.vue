@@ -1,4 +1,18 @@
 <template>
+	<div class="flex p-6 pt-4 pb-0 justify-end">
+		<div>
+			<n-input-group>
+				<n-select
+					v-model:value="filters.unit"
+					:options="unitOptions"
+					placeholder="Time unit"
+					clearable
+					class="!w-28"
+				/>
+				<n-input-number v-model:value="filters.time" :min="1" clearable placeholder="Time" class="!w-32" />
+			</n-input-group>
+		</div>
+	</div>
 	<n-spin :show="loading">
 		<div class="customer-healthcheck-list">
 			<div class="list flex flex-col gap-2 p-6 pt-4" v-if="healthyList.length">
@@ -40,29 +54,35 @@
 
 <script setup lang="ts">
 import Icon from "@/components/common/Icon.vue"
-import { h, onBeforeMount, ref, toRefs } from "vue"
-import KVCard from "@/components/common/KVCard.vue"
+import { onBeforeMount, ref, watch } from "vue"
 import _get from "lodash/get"
 import Api from "@/api"
 import CustomerHealthcheckItem from "./CustomerHealthcheckItem.vue"
-import { useMessage, NButton, useDialog, NSpin, NEmpty } from "naive-ui"
+import { useMessage, NSpin, NEmpty, NSelect, NInputGroup, NInputNumber } from "naive-ui"
 import type { CustomerAgentHealth, CustomerHealthcheckSource } from "@/types/customers.d"
+import { watchDebounced } from "@vueuse/core"
+import type { CustomerAgentsHealthcheckQuery } from "@/api/customers"
 
 const { source, customerCode } = defineProps<{
 	source: CustomerHealthcheckSource
 	customerCode: string
 }>()
 
-const EditIcon = "uil:edit-alt"
 const CheckIcon = "carbon:checkmark-outline"
-const DeleteIcon = "ph:trash"
 const AlertIcon = "mdi:alert-outline"
-const AddIcon = "carbon:add-alt"
 
 const loading = ref(false)
 const healthyList = ref<CustomerAgentHealth[]>([])
 const unhealthyList = ref<CustomerAgentHealth[]>([])
 const message = useMessage()
+
+const unitOptions = [
+	{ label: "Minutes", value: "minutes" },
+	{ label: "Hours", value: "hours" },
+	{ label: "Days", value: "days" }
+]
+
+const filters = ref<Partial<{ time: number; unit: "minutes" | "hours" | "days" }>>({})
 
 function getList() {
 	loading.value = true
@@ -90,7 +110,13 @@ function getList() {
 		return
 	}
 
-	Api.customers[params.method](customerCode)
+	let query: CustomerAgentsHealthcheckQuery | undefined = undefined
+	if (filters.value.time && filters.value.unit) {
+		query = {}
+		query[filters.value.unit] = filters.value.time
+	}
+
+	Api.customers[params.method](customerCode, query)
 		.then(res => {
 			if (res.data.success) {
 				healthyList.value = _get(res, `data.${params.healthy}`, [])
@@ -106,6 +132,24 @@ function getList() {
 			loading.value = false
 		})
 }
+
+watchDebounced(
+	() => filters.value.time,
+	() => {
+		if ((filters.value.time && filters.value.unit) || (!filters.value.time && !filters.value.unit)) {
+			getList()
+		}
+	},
+	{ debounce: 500 }
+)
+watch(
+	() => filters.value.unit,
+	() => {
+		if ((filters.value.time && filters.value.unit) || (!filters.value.time && !filters.value.unit)) {
+			getList()
+		}
+	}
+)
 
 onBeforeMount(() => {
 	getList()

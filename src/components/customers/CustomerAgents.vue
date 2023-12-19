@@ -11,7 +11,7 @@
 				@click="gotoAgentPage(agent)"
 				class="item-appear item-appear-bottom item-appear-005"
 			/>
-			<n-empty v-if="!list.length" description="No Alerts found" class="justify-center h-48" />
+			<n-empty v-if="!list.length" description="No Agents found" class="justify-center h-48" />
 		</div>
 	</n-spin>
 </template>

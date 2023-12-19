@@ -101,38 +101,61 @@
 			:bordered="false"
 			segmented
 		>
-			<n-tabs type="line" animated :tabs-padding="24">
-				<n-tab-pane name="Info" tab="Info" display-directive="show:lazy">
-					<CustomerInfoComponent
-						:customer="customerInfo"
-						@delete="deletedItem()"
-						@submitted="customerInfo = $event"
-						v-model:loading="loadingDelete"
-						v-if="customerInfo"
-					/>
-				</n-tab-pane>
-				<n-tab-pane name="Meta" tab="Meta" display-directive="show:lazy">
-					<CustomerMetaComponent
-						:customerMeta="customerMeta"
-						:customerCode="customer.customer_code"
-						@delete="customerMeta = null"
-						@submitted="customerMeta = $event"
-					/>
-				</n-tab-pane>
-				<n-tab-pane name="Agents" tab="Agents" display-directive="show:lazy">
-					<CustomerAgents :customer="customerInfo" v-if="customerInfo" />
-				</n-tab-pane>
-				<n-tab-pane name="Healthcheck Wazuh" tab="Healthcheck Wazuh" display-directive="show:lazy">
-					<CustomerHealthcheckList source="wazuh" :customerCode="customer.customer_code" />
-				</n-tab-pane>
-				<n-tab-pane
-					name="Healthcheck Velociraptor"
-					tab="Healthcheck Velociraptor"
-					display-directive="show:lazy"
-				>
-					<CustomerHealthcheckList source="velociraptor" :customerCode="customer.customer_code" />
-				</n-tab-pane>
-			</n-tabs>
+			<Transition :name="`slide-tabs-${selectedTabsGroup === 'customer' ? 'left' : 'right'}`">
+				<n-tabs type="line" animated :tabs-padding="24" v-if="selectedTabsGroup === 'customer'">
+					<n-tab-pane name="Info" tab="Info" display-directive="show:lazy">
+						<CustomerInfoComponent
+							:customer="customerInfo"
+							@delete="deletedItem()"
+							@submitted="customerInfo = $event"
+							v-model:loading="loadingDelete"
+							v-if="customerInfo"
+						/>
+					</n-tab-pane>
+					<n-tab-pane name="Meta" tab="Meta" display-directive="show:lazy">
+						<CustomerMetaComponent
+							:customerMeta="customerMeta"
+							:customerCode="customer.customer_code"
+							@delete="customerMeta = null"
+							@submitted="customerMeta = $event"
+						/>
+					</n-tab-pane>
+					<template #suffix>
+						<div class="pr-8 hover:text-primary-color cursor-pointer" @click="selectedTabsGroup = 'agents'">
+							Agents
+						</div>
+					</template>
+				</n-tabs>
+				<n-tabs type="line" animated :tabs-padding="24" v-else-if="selectedTabsGroup === 'agents'">
+					<template #prefix>
+						<div
+							class="pl-6 relative top-1 hover:text-primary-color cursor-pointer"
+							@click="selectedTabsGroup = 'customer'"
+						>
+							<Icon :name="ArrowIcon" :size="20"></Icon>
+						</div>
+					</template>
+					<n-tab-pane name="Agents" tab="Agents" display-directive="show:lazy">
+						<n-scrollbar style="max-height: 470px" trigger="none">
+							<CustomerAgents :customer="customerInfo" v-if="customerInfo" />
+						</n-scrollbar>
+					</n-tab-pane>
+					<n-tab-pane name="Healthcheck Wazuh" tab="Healthcheck Wazuh" display-directive="show:lazy">
+						<n-scrollbar style="max-height: 470px" trigger="none">
+							<CustomerHealthcheckList source="wazuh" :customerCode="customer.customer_code" />
+						</n-scrollbar>
+					</n-tab-pane>
+					<n-tab-pane
+						name="Healthcheck Velociraptor"
+						tab="Healthcheck Velociraptor"
+						display-directive="show:lazy"
+					>
+						<n-scrollbar style="max-height: 470px" trigger="none">
+							<CustomerHealthcheckList source="velociraptor" :customerCode="customer.customer_code" />
+						</n-scrollbar>
+					</n-tab-pane>
+				</n-tabs>
+			</Transition>
 		</n-modal>
 	</n-spin>
 </template>
@@ -148,7 +171,7 @@ import CustomerMetaComponent from "./CustomerMeta.vue"
 import CustomerAgents from "./CustomerAgents.vue"
 import CustomerHealthcheckList from "./CustomerHealthcheckList.vue"
 import Api from "@/api"
-import { NAvatar, useMessage, NPopover, NModal, NTabs, NTabPane, NSpin } from "naive-ui"
+import { NAvatar, useMessage, NPopover, NModal, NTabs, NTabPane, NSpin, NScrollbar } from "naive-ui"
 import type { Customer, CustomerMeta } from "@/types/customers.d"
 
 const emit = defineEmits<{
@@ -165,10 +188,12 @@ const { customer, highlight, hideCardActions } = toRefs(props)
 const DetailsIcon = "carbon:settings-adjust"
 const UserTypeIcon = "solar:shield-user-linear"
 const ParentIcon = "material-symbols-light:supervisor-account-outline-rounded"
+const ArrowIcon = "carbon:arrow-left"
 const LocationIcon = "carbon:location"
 const PhoneIcon = "carbon:phone"
 
 const showDetails = ref(false)
+const selectedTabsGroup = ref<"customer" | "agents">("customer")
 const loadingFull = ref(false)
 const loadingDelete = ref(false)
 const message = useMessage()
@@ -205,6 +230,8 @@ function deletedItem() {
 
 watch(showDetails, val => {
 	if (val) {
+		selectedTabsGroup.value = "customer"
+
 		if (
 			customer.value.customer_code &&
 			(!customer.value.customer_name || !customerMeta.value?.customer_meta_graylog_index)
@@ -254,5 +281,31 @@ onBeforeMount(() => {
 	&.highlight {
 		box-shadow: 0px 0px 0px 1px inset var(--primary-color);
 	}
+}
+</style>
+
+<style>
+.slide-tabs-right-enter-active,
+.slide-tabs-right-leave-active,
+.slide-tabs-left-enter-active,
+.slide-tabs-left-leave-active {
+	transition: all 0.2s ease-out;
+	position: absolute;
+}
+
+.slide-tabs-left-enter-from {
+	transform: translateX(-100%);
+}
+
+.slide-tabs-left-leave-to {
+	transform: translateX(100%);
+}
+
+.slide-tabs-right-enter-from {
+	transform: translateX(100%);
+}
+
+.slide-tabs-right-leave-to {
+	transform: translateX(-100%);
 }
 </style>
