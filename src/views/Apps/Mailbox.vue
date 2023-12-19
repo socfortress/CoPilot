@@ -127,6 +127,7 @@
 							:key="email.id"
 							:email="email"
 							@select="selectedEmail = $event"
+							class="item-appear item-appear-bottom item-appear-005"
 						/>
 					</n-scrollbar>
 				</div>

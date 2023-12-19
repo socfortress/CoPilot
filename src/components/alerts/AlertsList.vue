@@ -49,7 +49,7 @@
 						v-for="alertsSummary of alertsSummaryList"
 						:key="alertsSummary.index_name"
 						:alertsSummary="alertsSummary"
-						class="mb-2"
+						class="item-appear item-appear-bottom item-appear-005 mb-2"
 					/>
 				</template>
 				<template v-else>
@@ -379,27 +379,6 @@ onBeforeUnmount(() => {
 	.list {
 		container-type: inline-size;
 		min-height: 200px;
-
-		.alert-summary {
-			animation: alert-summary-fade 0.3s forwards;
-			opacity: 0;
-
-			@for $i from 0 through 20 {
-				&:nth-child(#{$i}) {
-					animation-delay: $i * 0.05s;
-				}
-			}
-
-			@keyframes alert-summary-fade {
-				from {
-					opacity: 0;
-					transform: translateY(10px);
-				}
-				to {
-					opacity: 1;
-				}
-			}
-		}
 	}
 }
 </style>

@@ -154,9 +154,11 @@ async def delete_customer(customer_code: str, session: AsyncSession = Depends(ge
     customer_data = CustomerRequestBody.from_orm(existing_customer)
 
     # Delete the customer
-    session.delete(existing_customer)
+    await session.delete(existing_customer)
     await session.flush()  # Optional: Flush the changes to the database
     await session.commit()  # Commit the transaction
+    # Close the session
+    await session.close()
 
     return CustomerResponse(
         customer=customer_data,
@@ -271,8 +273,11 @@ async def delete_customer_meta(customer_code: str, session: AsyncSession = Depen
     # Store customer meta data for response before deleting
     customer_meta_data = CustomerMetaRequestBody.from_orm(existing_customer_meta)
 
-    session.delete(existing_customer_meta)
+    await session.delete(existing_customer_meta)
+    await session.flush()  # Optional: Flush the changes to the database
     await session.commit()  # Ensure to await commit
+    # Close the session
+    await session.close()
 
     return CustomerMetaResponse(
         customer_meta=customer_meta_data,
@@ -298,7 +303,11 @@ async def get_customer_full(customer_code: str, session: AsyncSession = Depends(
     customer_meta_result = await session.execute(select(CustomersMeta).filter(CustomersMeta.customer_code == customer_code))
     customer_meta = customer_meta_result.scalars().first()
     if not customer_meta:
-        raise HTTPException(status_code=404, detail=f"Customer meta with customer_code {customer_code} not found")
+        return CustomerFullResponse(
+            customer=CustomerRequestBody.from_orm(customer),
+            success=True,
+            message="Customer fetched successfully but customer meta not found",
+        )
 
     return CustomerFullResponse(
         customer=CustomerRequestBody.from_orm(customer),
@@ -390,4 +399,4 @@ async def get_velociraptor_agents_healthcheck(
     agents = agents_result.scalars().all()
     agents = [AgentModel.parse_obj(agent.__dict__) for agent in agents]
     time_criteria = TimeCriteriaModel(minutes=minutes, hours=hours, days=days)
-    return velociraptor_agents_healthcheck(agents, time_criteria)
+    return await velociraptor_agents_healthcheck(agents, time_criteria)

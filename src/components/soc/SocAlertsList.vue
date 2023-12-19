@@ -18,7 +18,7 @@
 						v-for="alert of list"
 						:key="alert.id"
 						:alert="alert.item"
-						class="mb-2"
+						class="item-appear item-appear-bottom item-appear-005 mb-2"
 						:is-bookmark="alert.isBookmark"
 						:users="usersList"
 						:highlight="alert.id.toString() === highlight"
@@ -193,27 +193,6 @@ onBeforeMount(() => {
 	.list {
 		container-type: inline-size;
 		min-height: 200px;
-
-		.soc-alert-item {
-			animation: soc-alert-item-fade 0.3s forwards;
-			opacity: 0;
-
-			@for $i from 0 through 30 {
-				&:nth-child(#{$i}) {
-					animation-delay: $i * 0.05s;
-				}
-			}
-
-			@keyframes soc-alert-item-fade {
-				from {
-					opacity: 0;
-					transform: translateY(10px);
-				}
-				to {
-					opacity: 1;
-				}
-			}
-		}
 	}
 }
 </style>

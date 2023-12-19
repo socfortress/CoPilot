@@ -97,7 +97,12 @@
 		<n-spin :show="loading">
 			<div class="list flex flex-col gap-3 my-7">
 				<template v-if="commandList.length">
-					<CommandItem v-for="command of commandList" :key="command.Stdout" :command="command" />
+					<CommandItem
+						v-for="command of commandList"
+						:key="command.Stdout"
+						:command="command"
+						class="item-appear item-appear-bottom item-appear-005"
+					/>
 				</template>
 				<template v-else>
 					<n-empty description="No items found" class="justify-center h-48" v-if="!loading" />
@@ -290,27 +295,6 @@ onBeforeMount(() => {
 	.list {
 		container-type: inline-size;
 		min-height: 200px;
-
-		.command-item {
-			animation: artifacts-command-fade 0.3s forwards;
-			opacity: 0;
-
-			@for $i from 0 through 10 {
-				&:nth-child(#{$i}) {
-					animation-delay: $i * 0.05s;
-				}
-			}
-
-			@keyframes artifacts-command-fade {
-				from {
-					opacity: 0;
-					transform: translateY(10px);
-				}
-				to {
-					opacity: 1;
-				}
-			}
-		}
 	}
 }
 </style>

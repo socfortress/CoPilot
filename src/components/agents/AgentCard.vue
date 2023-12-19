@@ -1,5 +1,9 @@
 <template>
-	<n-card class="agent-card py-3 px-4" :class="{ critical: agent.critical_asset }" content-style="padding:0">
+	<n-card
+		class="agent-card py-3 px-4"
+		:class="{ critical: agent.critical_asset, 'bg-secondary': bgSecondary }"
+		content-style="padding:0"
+	>
 		<n-spin :show="loading">
 			<div class="wrapper">
 				<div class="agent-header">
@@ -84,8 +88,9 @@ const emit = defineEmits<{
 const props = defineProps<{
 	agent: Agent
 	showActions?: boolean
+	bgSecondary?: boolean
 }>()
-const { agent, showActions } = toRefs(props)
+const { agent, showActions, bgSecondary } = toRefs(props)
 
 const dFormats = useSettingsStore().dateFormat
 const loading = ref(false)
@@ -146,6 +151,10 @@ function toggleCritical(agentId: string, criticalStatus: boolean) {
 	cursor: pointer;
 	transition: all 0.3s;
 	border: var(--border-small-050);
+
+	&.bg-secondary {
+		background-color: var(--bg-secondary-color);
+	}
 
 	.wrapper {
 		display: flex;

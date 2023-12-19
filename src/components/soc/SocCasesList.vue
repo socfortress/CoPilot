@@ -55,7 +55,7 @@
 						<n-input-group>
 							<n-select
 								v-model:value="filters.unit"
-								:options="timeOptions"
+								:options="unitOptions"
 								placeholder="Time unit"
 								clearable
 								class="!w-28"
@@ -82,7 +82,7 @@
 						v-for="caseData of itemsPaginated"
 						:key="caseData.case_id"
 						:caseData="caseData"
-						class="mb-2"
+						class="item-appear item-appear-bottom item-appear-005 mb-2"
 					/>
 				</template>
 				<template v-else>
@@ -169,7 +169,7 @@ const filtered = computed<boolean>(() => {
 	return !!filters.value.unit && !!filters.value.olderThan
 })
 
-const timeOptions = [
+const unitOptions = [
 	{ label: "Hours", value: "hours" },
 	{ label: "Days", value: "days" },
 	{ label: "Weeks", value: "weeks" }
@@ -224,27 +224,6 @@ onBeforeMount(() => {
 	.list {
 		container-type: inline-size;
 		min-height: 200px;
-
-		.soc-case-item {
-			animation: soc-case-item-fade 0.3s forwards;
-			opacity: 0;
-
-			@for $i from 0 through 30 {
-				&:nth-child(#{$i}) {
-					animation-delay: $i * 0.05s;
-				}
-			}
-
-			@keyframes soc-case-item-fade {
-				from {
-					opacity: 0;
-					transform: translateY(10px);
-				}
-				to {
-					opacity: 1;
-				}
-			}
-		}
 	}
 }
 </style>

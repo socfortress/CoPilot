@@ -1,22 +1,23 @@
 import ipaddress
+import json
 import re
 from abc import ABC
 from typing import Any
+from typing import Callable
 from typing import Dict
 from typing import Optional
+from typing import Tuple
 from typing import Union
 
+import httpx
 import regex
-from elasticsearch7 import Elasticsearch
+import requests
 from fastapi import HTTPException
 from loguru import logger
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
 
-from app.connectors.utils import get_connector_info_from_db
-from app.db.all_models import Agents
-from app.db.db_session import session
-from app.healthchecks.agents.schema.agents import AgentModel
+from app.integrations.utils.schema import ShufflePayload
+from app.integrations.utils.schema import WazuhAgentResponse
+from app.utils import get_customer_alert_settings
 
 
 #################### ! DFIR IRIS ASSET VALIDATOR ! ####################
@@ -282,90 +283,7 @@ class DomainValidator(IoCValidator):
 #################### ! DFIR IRIS IOC VALIDATOR END ! ##########################
 
 
-def verify_wazuh_indexer_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Verifies the connection to Wazuh Indexer service.
-
-    Returns:
-        dict: A dictionary containing 'connectionSuccessful' status and 'authToken' if the connection is successful.
-    """
-    logger.info(f"Verifying the wazuh-indexer connection to {attributes['connector_url']}")
-
-    try:
-        es = Elasticsearch(
-            [attributes["connector_url"]],
-            http_auth=(attributes["connector_username"], attributes["connector_password"]),
-            verify_certs=False,
-            timeout=15,
-            max_retries=10,
-            retry_on_timeout=False,
-        )
-        es.cluster.health()
-        logger.debug("Wazuh Indexer connection successful")
-        return {"connectionSuccessful": True, "message": "Wazuh Indexer connection successful"}
-    except Exception as e:
-        logger.error(f"Connection to {attributes['connector_url']} failed with error: {e}")
-        return {"connectionSuccessful": False, "message": f"Connection to {attributes['connector_url']} failed with error: {e}"}
-
-
-def verify_wazuh_indexer_connection(connector_name: str) -> str:
-    """
-    Returns the authentication token for the Wazuh Indexer service.
-
-    Returns:
-        str: Authentication token for the Wazuh Indexer service.
-    """
-    attributes = get_connector_info_from_db(connector_name)
-    if attributes is None:
-        logger.error("No Wazuh Indexer connector found in the database")
-        return None
-    return verify_wazuh_indexer_credentials(attributes)
-
-
-def create_wazuh_indexer_client(connector_name: str) -> Elasticsearch:
-    """
-    Returns an Elasticsearch client for the Wazuh Indexer service.
-
-    Returns:
-        Elasticsearch: Elasticsearch client for the Wazuh Indexer service.
-    """
-    attributes = get_connector_info_from_db(connector_name)
-    if attributes is None:
-        logger.error("No Wazuh Indexer connector found in the database")
-        return None
-    return Elasticsearch(
-        [attributes["connector_url"]],
-        http_auth=(attributes["connector_username"], attributes["connector_password"]),
-        verify_certs=False,
-        timeout=15,
-        max_retries=10,
-        retry_on_timeout=False,
-    )
-
-
-async def get_agent_data(session: AsyncSession, agent_id: str) -> AgentModel:
-    """
-    Get agent data based on the agent id from the agents table.
-
-    Args:
-        session (AsyncSession): The SQLAlchemy session.
-        agent_id (str): Agent id.
-
-    Returns:
-        AgentModel: Agent data.
-    """
-    agent_query = select(Agents).filter(Agents.agent_id == agent_id)
-    result = await session.execute(agent_query)
-    agent_details = result.scalars().first()
-
-    if agent_details is not None:
-        # Assuming AgentModel can be created from the Agents ORM model
-        return AgentModel.from_orm(agent_details)
-    else:
-        raise HTTPException(status_code=404, detail=f"Agent with id {agent_id} not found in agents table")
-
-
-def get_asset_type_id(os: str) -> int:
+async def get_asset_type_id(os: str) -> int:
     """
     Use AssetTypeResolver to determine the asset type ID to set within DFIR-IRIS.
 
@@ -383,7 +301,7 @@ def get_asset_type_id(os: str) -> int:
     return asset_resolver.get_asset_type_id()
 
 
-def validate_ioc_type(ioc_value: str) -> str:
+async def validate_ioc_type(ioc_value: str) -> str:
     """
     Validate IoC type using validators.
 
@@ -411,3 +329,82 @@ def validate_ioc_type(ioc_value: str) -> str:
     if ioc_type is None:
         logger.error("Failed to validate IoC value.")
     return ioc_type
+
+
+############## ! SEND TO OTHER TOOLS ! ##############
+async def send_to_shuffle(payload: ShufflePayload) -> bool:
+    """
+    Sends payload to Shuffle listening Webhook asynchronously using httpx.
+    """
+    logger.info(f"Sending {payload} to Shuffle Webhook.")
+    try:
+        shuffle_endpoint = (await get_customer_alert_settings(customer_code=payload.customer_code)).shuffle_endpoint
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                shuffle_endpoint,
+                json=payload.to_dict(),
+                verify=False,  # Be cautious with verify=False in production
+            )
+
+        return response.status_code == 200
+
+    except Exception as e:
+        logger.error(f"Error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error: {e}",
+        )
+
+
+# def send_to_wazuh(msg) -> None:
+#     # Uncomment when doing dev work
+#     # logger.info(f"Sending {msg} to Wazuh Socket.")
+#     # return
+#     socketAddr = "/var/ossec/queue/sockets/queue"
+#     from socket import AF_UNIX
+#     from socket import SOCK_DGRAM
+#     from socket import socket
+
+#     if isinstance(msg, str):
+#         try:
+#             msg = json.loads(msg)
+#         except json.JSONDecodeError as e:
+#             logger.error(f"Invalid JSON string: {e}")
+#             raise HTTPException(
+#                 status_code=400,
+#                 detail="Invalid JSON string.",
+#             )
+#     elif not isinstance(msg, dict):
+#         logger.error("Invalid message type. Expected str or dict.")
+#         raise HTTPException(
+#             status_code=400,
+#             detail="Invalid message type. Expected str or dict.",
+#         )
+
+#     try:
+#         integration = msg["integration"]
+#     except KeyError as e:
+#         logger.error(f"KeyError: {e}")
+#         raise HTTPException(
+#             status_code=400,
+#             detail="Invalid message format. Could not extract 'integration'.",
+#         )
+
+#     socketAddr = "/var/ossec/queue/sockets/queue"
+
+#     try:
+#         msg_str = json.dumps(msg)
+#         logger.info(f"Sending {msg_str} to {socketAddr} socket.")
+#         message = f"1:{integration}:{msg_str}"
+#         sock = socket(AF_UNIX, SOCK_DGRAM)
+#         sock.connect(socketAddr)
+#         sock.send(message.encode())
+#         sock.close()
+#         logger.info(f"Message sent to {socketAddr} socket.")
+#         return {"success": True, "message": "Message sent to Wazuh Socket."}
+#     except Exception as e:
+#         logger.error(f"Error: {e}")
+#         raise HTTPException(
+#             status_code=500,
+#             detail=f"Error: {e}",
+#         )

@@ -201,6 +201,20 @@ export default function getItems(mode: "vertical" | "horizontal", collapsed: boo
 			icon: renderIcon(BlankIcon)
 		},
 		{
+			label: () =>
+				h(
+					RouterLink,
+					{
+						to: {
+							name: "Customers"
+						}
+					},
+					{ default: () => "Customers" }
+				),
+			key: "Customers",
+			icon: renderIcon(BlankIcon)
+		},
+		{
 			type: "divider"
 		},
 

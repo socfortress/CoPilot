@@ -48,25 +48,7 @@ const labelsColors = {
 	margin-top: 3px;
 	background-color: var(--bg-color);
 	transition: all 0.2s;
-	opacity: 0;
-	animation: task-fade 0.3s forwards;
 	border: 1px solid var(--border-color);
-
-	@for $i from 0 through 15 {
-		&:nth-child(#{$i}) {
-			animation-delay: $i * 0.1s;
-		}
-	}
-
-	@keyframes task-fade {
-		from {
-			opacity: 0;
-			transform: translateY(-10px);
-		}
-		to {
-			opacity: 1;
-		}
-	}
 
 	.pan-area {
 		margin-top: 2px;

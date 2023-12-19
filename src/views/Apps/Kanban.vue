@@ -37,7 +37,12 @@
 											</div>
 										</template>
 										<template #item="{ element: task }">
-											<TaskCard :task="task" :mobile="isMobile()" @click="selectTask(task)" />
+											<TaskCard
+												:task="task"
+												:mobile="isMobile()"
+												@click="selectTask(task)"
+												class="item-appear item-appear-bottom item-appear-005"
+											/>
 										</template>
 										<template #footer>
 											<button

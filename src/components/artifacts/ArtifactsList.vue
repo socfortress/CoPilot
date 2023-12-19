@@ -110,7 +110,7 @@
 						v-for="artifact of itemsPaginated"
 						:key="artifact.name"
 						:artifact="artifact"
-						class="mb-2"
+						class="item-appear item-appear-bottom item-appear-005 mb-2"
 					/>
 				</template>
 				<template v-else>
@@ -301,27 +301,6 @@ onBeforeMount(() => {
 	.list {
 		container-type: inline-size;
 		min-height: 200px;
-
-		.artifact-item {
-			animation: artifacts-item-fade 0.3s forwards;
-			opacity: 0;
-
-			@for $i from 0 through 30 {
-				&:nth-child(#{$i}) {
-					animation-delay: $i * 0.05s;
-				}
-			}
-
-			@keyframes artifacts-item-fade {
-				from {
-					opacity: 0;
-					transform: translateY(10px);
-				}
-				to {
-					opacity: 1;
-				}
-			}
-		}
 	}
 }
 </style>

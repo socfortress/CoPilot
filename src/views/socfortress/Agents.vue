@@ -25,6 +25,7 @@
 									show-actions
 									@delete="syncAgents()"
 									@click="gotoAgentPage(agent)"
+									class="item-appear item-appear-bottom item-appear-005"
 								/>
 							</template>
 							<template v-else>
@@ -177,27 +178,6 @@ onBeforeMount(() => {
 
 		.agents-list {
 			width: 100%;
-
-			.agent-card {
-				opacity: 0;
-				animation: agent-card-fade 0.3s forwards;
-
-				@for $i from 0 through 20 {
-					&:nth-child(#{$i}) {
-						animation-delay: $i * 0.05s;
-					}
-				}
-
-				@keyframes agent-card-fade {
-					from {
-						opacity: 0;
-						transform: translateY(10px);
-					}
-					to {
-						opacity: 1;
-					}
-				}
-			}
 		}
 	}
 	@container (max-width: 770px) {

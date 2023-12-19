@@ -1,5 +1,5 @@
 <template>
-	<n-tabs type="line" animated justify-content="space-evenly">
+	<n-tabs type="line" animated :tabs-padding="24">
 		<n-tab-pane name="info" tab="Info" display-directive="show">
 			<div class="p-7 pt-4">
 				<div class="mb-2">

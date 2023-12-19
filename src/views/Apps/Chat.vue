@@ -82,7 +82,7 @@
 						<div
 							v-for="conversation of store.activeChat.conversation"
 							:key="conversation.id"
-							class="conversation flex"
+							class="conversation item-appear item-appear-bottom item-appear-010 flex"
 							:class="{ mine: conversation.isMine }"
 						>
 							<div class="avatar">
@@ -443,24 +443,6 @@ useHideLayoutFooter()
 				.conversation {
 					padding: 20px 30px;
 					gap: 14px;
-					opacity: 0;
-					animation: conversation-fade 0.3s forwards;
-
-					@for $i from 0 through 40 {
-						&:nth-last-child(#{$i}) {
-							animation-delay: $i * 0.1s;
-						}
-					}
-
-					@keyframes conversation-fade {
-						from {
-							opacity: 0;
-							transform: translateY(10px);
-						}
-						to {
-							opacity: 1;
-						}
-					}
 
 					.messages-group {
 						width: fit-content;

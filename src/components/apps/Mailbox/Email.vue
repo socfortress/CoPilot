@@ -112,16 +112,8 @@ function toggleStar(email: Email) {
 	line-height: 1.2;
 	white-space: nowrap;
 	cursor: pointer;
-	opacity: 0;
 	transition: all 0.1s ease-in;
-	animation: email-fade 0.3s forwards;
 	container-type: inline-size;
-
-	@for $i from 0 through 40 {
-		&:nth-child(#{$i}) {
-			animation-delay: $i * 0.05s;
-		}
-	}
 
 	.title {
 		overflow: hidden;
@@ -165,16 +157,6 @@ function toggleStar(email: Email) {
 		.attachments,
 		.date {
 			display: none;
-		}
-	}
-
-	@keyframes email-fade {
-		from {
-			opacity: 0;
-			transform: translateY(10px);
-		}
-		to {
-			opacity: 1;
 		}
 	}
 

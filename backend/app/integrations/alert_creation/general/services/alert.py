@@ -16,10 +16,10 @@ from app.integrations.alert_creation.general.schema.alert import IrisAlertPayloa
 from app.integrations.alert_creation.general.schema.alert import IrisAsset
 from app.integrations.alert_creation.general.schema.alert import IrisIoc
 from app.integrations.alert_creation.general.schema.alert import ValidIocFields
-from app.integrations.alert_creation.utils.schema import ShufflePayload
-from app.integrations.alert_creation.utils.universal import get_asset_type_id
-from app.integrations.alert_creation.utils.universal import send_to_shuffle
-from app.integrations.alert_creation.utils.universal import validate_ioc_type
+from app.integrations.utils.alerts import get_asset_type_id
+from app.integrations.utils.alerts import send_to_shuffle
+from app.integrations.utils.alerts import validate_ioc_type
+from app.integrations.utils.schema import ShufflePayload
 from app.utils import get_customer_alert_settings
 
 
@@ -90,6 +90,7 @@ async def build_asset_payload(agent_data: AgentsResponse, alert_details) -> Iris
 
 async def build_alert_context_payload(
     alert_details: CreateAlertRequest,
+    agent_data: AgentsResponse,
     session: AsyncSession,
 ) -> IrisAlertContext:
     return IrisAlertContext(
@@ -106,7 +107,7 @@ async def build_alert_context_payload(
         rule_id=alert_details.rule_id,
         asset_name=alert_details.agent_name,
         asset_ip=alert_details.agent_ip,
-        asset_type=alert_details.asset_type_id,
+        asset_type=await get_asset_type_id(agent_data.agents[0].os),
         process_id=getattr(alert_details, "process_id", "No process id found"),
         rule_mitre_id=getattr(alert_details, "rule_mitre_id", "No rule mitre id found"),
         rule_mitre_tactic=getattr(
@@ -129,7 +130,7 @@ async def build_alert_payload(
     session: AsyncSession,
 ) -> IrisAlertPayload:
     asset_payload = await build_asset_payload(agent_data, alert_details)
-    context_payload = await build_alert_context_payload(alert_details, session=session)
+    context_payload = await build_alert_context_payload(alert_details=alert_details, agent_data=agent_data, session=session)
     timefield = (await get_customer_alert_settings(customer_code=alert_details.agent_labels_customer, session=session)).timefield
     # Get the timefield value from the alert_details
     if hasattr(alert_details, timefield):
@@ -141,7 +142,7 @@ async def build_alert_payload(
             alert_title=alert_details.rule_description,
             alert_source_link=await construct_alert_source_link(alert_details, session=session),
             alert_description=alert_details.rule_description,
-            alert_source="SOCFORTRESS RULE",
+            alert_source="CoPilot",
             assets=[asset_payload],
             alert_status_id=3,
             alert_severity_id=5,
@@ -157,7 +158,7 @@ async def build_alert_payload(
         logger.info("Alert does not have IoC")
         return IrisAlertPayload(
             alert_title=alert_details.rule_description,
-            alert_source_link=construct_alert_source_link(alert_details),
+            alert_source_link=await construct_alert_source_link(alert_details, session=session),
             alert_description=alert_details.rule_description,
             alert_source="SOCFORTRESS RULE",
             assets=[asset_payload],
@@ -204,7 +205,7 @@ async def create_alert(alert: CreateAlertRequest, session: AsyncSession) -> Crea
     )
     alert_id = result["data"]["alert_id"]
     logger.info(f"Successfully created alert {alert_id} in IRIS.")
-    send_to_shuffle(
+    await send_to_shuffle(
         ShufflePayload(
             alert_id=alert_id,
             customer=(await get_customer_alert_settings(customer_code=alert.agent_labels_customer, session=session)).customer_name,
