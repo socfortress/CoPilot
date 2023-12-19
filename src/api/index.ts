@@ -10,6 +10,7 @@ import healthchecks from "./healthchecks"
 import threatIntel from "./threatIntel"
 import askSocfortress from "./askSocfortress"
 import customers from "./customers"
+import logs from "./logs"
 
 export default {
 	agents,
@@ -23,5 +24,6 @@ export default {
 	healthchecks,
 	threatIntel,
 	askSocfortress,
-	customers
+	customers,
+	logs
 }
