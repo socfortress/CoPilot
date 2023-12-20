@@ -8,10 +8,28 @@ from sqlalchemy.orm import joinedload
 from typing import List
 
 from app.db.db_session import get_session
-from app.integrations.alert_creation_settings.schema.alert_creation_settings import AlertCreationSettingsCreate, AlertCreationSettingsResponse, EventOrderCreate, EventOrderResponse
+from app.integrations.alert_creation_settings.schema.alert_creation_settings import AlertCreationSettingsCreate, AlertCreationSettingsResponse, EventOrderCreate, EventOrderResponse, AlertCreationEventConfigResponse
 from app.integrations.alert_creation_settings.models.alert_creation_settings import AlertCreationSettings, EventOrder, AlertCreationEventConfig
+from app.utils import get_customer_alert_event_configs
 
 alert_creation_settings_router = APIRouter()
+
+
+@alert_creation_settings_router.get(
+    "/{customer_code}/event_configs",
+    response_model=List[List[AlertCreationEventConfigResponse]],
+    description="Get all alert event configs for a customer.",
+)
+async def get_customer_event_configs(
+    customer_code: str,
+    session: AsyncSession = Depends(get_session),
+):
+    event_configs = await get_customer_alert_event_configs(customer_code, session)
+
+    if not event_configs:
+        raise HTTPException(status_code=404, detail="No event configs found for this customer.")
+
+    return event_configs
 
 @alert_creation_settings_router.post(
     "/create",

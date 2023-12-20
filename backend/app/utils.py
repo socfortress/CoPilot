@@ -20,6 +20,7 @@ from pydantic import Field
 from pydantic import validator
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.orm import joinedload
 
 from app.auth.services.universal import find_user
 from app.auth.utils import AuthHandler
@@ -31,6 +32,7 @@ from app.db.db_session import get_db_session
 from app.db.db_session import get_session
 from app.db.universal_models import LogEntry
 from app.integrations.alert_creation_settings.models.alert_creation_settings import AlertCreationSettings
+from app.integrations.alert_creation_settings.models.alert_creation_settings import AlertCreationEventConfig, EventOrder
 
 
 ################## ! 422 VALIDATION ERROR TYPES FOR PYDANTIC VALUE ERROR RESPONSE ! ##################
@@ -479,6 +481,17 @@ async def get_customer_alert_settings(customer_code: str, session: AsyncSession)
         return settings
     return None
 
+async def get_customer_alert_event_configs(customer_code: str, session: AsyncSession = Depends(get_session)) -> Optional[List[List[AlertCreationEventConfig]]]:
+    result = await session.execute(
+        select(AlertCreationSettings)
+        .options(joinedload(AlertCreationSettings.event_orders).joinedload(EventOrder.event_configs))
+        .where(AlertCreationSettings.customer_code == customer_code)
+    )
+    settings = result.scalars().first()
+
+    if settings:
+        return [order.event_configs for order in settings.event_orders]
+    return None
 
 ################## ! Wazuh Worker Provisioning App ! ##################
 ################## ! https://github.com/socfortress/Customer-Provisioning-Worker ! ##################
