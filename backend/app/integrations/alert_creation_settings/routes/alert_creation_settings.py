@@ -5,9 +5,10 @@ from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
+from typing import List
 
 from app.db.db_session import get_session
-from app.integrations.alert_creation_settings.schema.alert_creation_settings import AlertCreationSettingsCreate, AlertCreationSettingsResponse
+from app.integrations.alert_creation_settings.schema.alert_creation_settings import AlertCreationSettingsCreate, AlertCreationSettingsResponse, EventOrderCreate
 from app.integrations.alert_creation_settings.models.alert_creation_settings import AlertCreationSettings, EventOrder, AlertCreationEventConfig
 
 alert_creation_settings_router = APIRouter()
@@ -67,5 +68,45 @@ async def get_alert_creation_settings(
 
     if not settings:
         raise HTTPException(status_code=404, detail="Alert creation settings not found.")
+
+    return settings
+
+
+@alert_creation_settings_router.put(
+    "/{customer_name}",
+    response_model=AlertCreationSettingsResponse,
+    description="Update a customer's event orders.",
+)
+async def update_event_orders(
+    customer_name: str,
+    event_orders: List[EventOrderCreate],
+    session: AsyncSession = Depends(get_session),
+):
+    result = await session.execute(
+        select(AlertCreationSettings)
+        .options(joinedload(AlertCreationSettings.event_orders).joinedload(EventOrder.event_configs))
+        .where(AlertCreationSettings.customer_name == customer_name)
+    )
+    settings = result.scalars().first()
+
+    if not settings:
+        raise HTTPException(status_code=404, detail="Alert creation settings not found.")
+
+    # Create new event orders and configs or add to existing ones
+    for event_order in event_orders:
+        # Check if an EventOrder with the given order_label already exists
+        existing_order = next((order for order in settings.event_orders if order.order_label == event_order.order_label), None)
+
+        if existing_order:
+            # If it does, add the new EventConfig instances to it
+            for event_config in event_order.event_configs:
+                event_config_db = AlertCreationEventConfig(**event_config.dict(), event_order=existing_order)
+                session.add(event_config_db)
+        else:
+            # If it doesn't, return a 404
+            raise HTTPException(status_code=404, detail=f"Event order with order_label: {event_order.order_label} not found.")
+
+    await session.commit()
+    await session.refresh(settings)
 
     return settings
