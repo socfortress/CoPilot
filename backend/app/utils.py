@@ -30,7 +30,7 @@ from app.db.db_session import engine
 from app.db.db_session import get_db_session
 from app.db.db_session import get_session
 from app.db.universal_models import LogEntry
-from app.integrations.alert_creation.models.alert_settings import AlertCreationSettings
+from app.integrations.alert_creation_settings.models.alert_creation_settings import AlertCreationSettings
 
 
 ################## ! 422 VALIDATION ERROR TYPES FOR PYDANTIC VALUE ERROR RESPONSE ! ##################

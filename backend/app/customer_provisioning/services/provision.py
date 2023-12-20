@@ -23,7 +23,7 @@ from app.customer_provisioning.services.graylog import get_pipeline_id
 from app.customer_provisioning.services.wazuh_manager import apply_group_configurations
 from app.customer_provisioning.services.wazuh_manager import create_wazuh_groups
 from app.db.universal_models import CustomersMeta
-from app.integrations.alert_creation.models.alert_settings import AlertCreationSettings
+from app.integrations.alert_creation_settings.models.alert_creation_settings import AlertCreationSettings
 from app.utils import get_connector_attribute
 
 

@@ -9,7 +9,7 @@ from app.db.db_session import get_session
 from app.integrations.alert_creation.general.schema.alert import CreateAlertRequest
 from app.integrations.alert_creation.general.schema.alert import CreateAlertResponse
 from app.integrations.alert_creation.general.services.alert import create_alert
-from app.integrations.alert_creation.models.alert_settings import AlertCreationSettings
+from app.integrations.alert_creation_settings.models.alert_creation_settings import AlertCreationSettings
 
 general_alerts_router = APIRouter()
 
