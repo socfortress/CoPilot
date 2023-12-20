@@ -5,9 +5,17 @@ import type { Log } from "@/types/logs.d"
 
 export type LogsQueryTimeRange = `${number}${"h" | "d" | "w"}`
 export type LogsQueryEventType = "info" | "error"
+export type LogsQuery = { userId: string } | { timeRange: LogsQueryTimeRange } | { eventType: LogsQueryEventType }
+
+// Extraction of keys from the union type LogsQuery
+type KeysOfLogsQuery<T> = T extends { [K in keyof T]: any } ? keyof T : never
+
+// Union of values extracted from keys
+export type LogsQueryTypes = KeysOfLogsQuery<LogsQuery>
+export type LogsQueryValues = string | LogsQueryTimeRange | LogsQueryEventType
 
 export default {
-	getLogs(query?: { userId: string } | { timeRange: LogsQueryTimeRange } | { eventType: LogsQueryEventType }) {
+	getLogs(query?: LogsQuery) {
 		let method: "get" | "post" = "get"
 		let url = "logs"
 		let body: any = undefined

@@ -2,7 +2,7 @@
 	<div class="log-item flex flex-col gap-2 px-5 py-3" :class="`status-${log.event_type}`">
 		<div class="header-box flex justify-between">
 			<div class="id">
-				<span>#{{ log.event_type }}</span>
+				<span>{{ log.event_type }} - user: {{ log.user_id }}</span>
 			</div>
 			<div class="time">
 				{{ formatDate(log.timestamp) }}
@@ -31,8 +31,10 @@ import "@/assets/scss/vuesjv-override.scss"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
 import { LogEventType, type Log } from "@/types/logs.d"
+import { useRouter } from "vue-router"
 
 // TODO: user_id -> http://127.0.0.1:5173/soc/users (gotoUsersPage)
+// TODO: use ON LogsList getUsers() to match "user_id"
 
 const { log } = defineProps<{ log: Log }>()
 

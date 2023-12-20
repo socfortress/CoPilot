@@ -37,6 +37,32 @@
 				:item-count="total"
 				:simple="simpleMode"
 			/>
+			<n-popover
+				:show="showFilters"
+				trigger="manual"
+				overlap
+				placement="right"
+				style="padding-left: 0; padding-right: 0"
+			>
+				<template #trigger>
+					<div class="bg-color border-radius">
+						<n-badge :show="filtered" dot type="success" :offset="[-4, 0]">
+							<n-button size="small" @click="showFilters = true">
+								<template #icon>
+									<Icon :name="FilterIcon"></Icon>
+								</template>
+							</n-button>
+						</n-badge>
+					</div>
+				</template>
+				<LogsFilters
+					v-model:type="filterType"
+					v-model:value="filterValue"
+					v-model:filtered="filtered"
+					@submit="getData()"
+					@close="showFilters = false"
+				/>
+			</n-popover>
 		</div>
 		<n-spin :show="loading">
 			<div class="list my-3">
@@ -66,19 +92,29 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, computed } from "vue"
-import { useMessage, NSpin, NPopover, NButton, NEmpty, NPagination } from "naive-ui"
+import { ref, onBeforeMount, computed, toRefs } from "vue"
+import { useMessage, NSpin, NPopover, NButton, NEmpty, NPagination, NBadge } from "naive-ui"
 import Api from "@/api"
 import _orderBy from "lodash/orderBy"
 import Icon from "@/components/common/Icon.vue"
 import { nanoid } from "nanoid"
 import { useResizeObserver } from "@vueuse/core"
+import LogsFilters from "./LogsFilters.vue"
 import LogItem from "./LogItem.vue"
 import { LogEventType, type Log } from "@/types/logs.d"
+import type { LogsQueryTypes, LogsQueryValues } from "@/api/logs"
+
+interface LogExt extends Log {
+	id?: string
+}
+
+const props = defineProps<{ userId?: string }>()
+const { userId } = toRefs(props)
 
 const message = useMessage()
 const loading = ref(false)
-const logsList = ref<Log[]>([])
+const logsList = ref<LogExt[]>([])
+const showFilters = ref(false)
 
 const pageSize = ref(25)
 const currentPage = ref(1)
@@ -97,6 +133,7 @@ const itemsPaginated = computed(() => {
 	return list.slice(from, to)
 })
 
+const FilterIcon = "carbon:filter-edit"
 const InfoIcon = "carbon:information"
 
 const total = computed<number>(() => {
@@ -110,7 +147,13 @@ const eventErrorTotal = computed<number>(() => {
 	return logsList.value.filter(o => o.event_type === LogEventType.Error).length || 0
 })
 
+const filterType = ref<LogsQueryTypes | null>(null)
+const filterValue = ref<LogsQueryValues | null>(null)
+
+const filtered = ref(false)
+
 function getData() {
+	showFilters.value = false
 	loading.value = true
 
 	// TODO: add filters
@@ -119,7 +162,7 @@ function getData() {
 		.getLogs()
 		.then(res => {
 			if (res.data.success) {
-				logsList.value = (res.data.logs || []).map(o => {
+				logsList.value = (res.data.logs || []).map((o: LogExt) => {
 					o.id = nanoid()
 					return o
 				})
@@ -146,6 +189,11 @@ useResizeObserver(header, entries => {
 })
 
 onBeforeMount(() => {
+	if (userId.value) {
+		filterType.value = "userId"
+		filterValue.value = userId.value
+	}
+
 	getData()
 })
 </script>
