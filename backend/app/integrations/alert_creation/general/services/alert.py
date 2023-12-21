@@ -175,7 +175,6 @@ async def build_alert_payload(
 
 async def create_alert(alert: CreateAlertRequest, session: AsyncSession) -> CreateAlertResponse:
     logger.info(f"Creating alert with {alert.id} in IRIS.")
-    # ! TODO: ALERT MULTI EXCLUSION ! #
     alert_detail_service = await AlertDetailsService.create()
     event_exclude_result = await alert_detail_service.collect_alert_timeline_process_id(
         agent_name=alert.agent_name,

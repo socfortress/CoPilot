@@ -6,10 +6,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
 from typing import List
+from sqlalchemy import delete
 
 from app.db.db_session import get_session
 from app.integrations.alert_creation_settings.schema.alert_creation_settings import AlertCreationSettingsCreate, AlertCreationSettingsResponse, EventOrderCreate, EventOrderResponse, AlertCreationEventConfigResponse
-from app.integrations.alert_creation_settings.models.alert_creation_settings import AlertCreationSettings, EventOrder, AlertCreationEventConfig
+from app.integrations.alert_creation_settings.models.alert_creation_settings import AlertCreationSettings, EventOrder, AlertCreationEventConfig, AlertCreationEventConfig
 from app.utils import get_customer_alert_event_configs
 
 alert_creation_settings_router = APIRouter()
@@ -167,3 +168,41 @@ async def update_event_orders(
     await session.refresh(settings)
 
     return settings
+
+
+@alert_creation_settings_router.delete(
+    "/{customer_name}/event/{order_label}",
+    description="Delete an event order by order_label.",
+)
+async def delete_event_order(
+    customer_name: str,
+    order_label: str,
+    session: AsyncSession = Depends(get_session),
+):
+    result = await session.execute(
+        select(AlertCreationSettings)
+        .options(joinedload(AlertCreationSettings.event_orders).joinedload(EventOrder.event_configs))
+        .where(AlertCreationSettings.customer_name == customer_name)
+    )
+    settings = result.scalars().first()
+
+    if not settings:
+        raise HTTPException(status_code=404, detail="Alert creation settings not found.")
+
+    # Check if an EventOrder with the given order_label exists
+    existing_order = next((order for order in settings.event_orders if order.order_label == order_label), None)
+
+    if existing_order:
+        # If it does, delete its AlertCreationEventConfig instances
+        for config in existing_order.event_configs:
+            await session.delete(config)
+
+        # Then delete the EventOrder itself
+        await session.delete(existing_order)
+    else:
+        # If it doesn't, return a 404
+        raise HTTPException(status_code=404, detail=f"Event order with order_label: {order_label} not found.")
+
+    await session.commit()
+
+    return {"message": f"Event order with order_label: {order_label} and related alert creation event configs deleted.", "success": True}
