@@ -7,6 +7,7 @@ from elasticsearch7 import NotFoundError
 from loguru import logger
 
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
+from app.utils import get_customer_alert_event_configs
 
 
 class AlertDetailsService:
