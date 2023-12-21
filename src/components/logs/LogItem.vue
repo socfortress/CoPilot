@@ -1,26 +1,67 @@
 <template>
-	<div class="log-item flex flex-col gap-2 px-5 py-3" :class="`status-${log.event_type}`">
-		<div class="header-box flex justify-between">
-			<div class="id">
-				<span>{{ log.event_type }} - user: {{ log.user_id }}</span>
-			</div>
+	<div class="log-item flex flex-col gap-2 px-5 py-3" :class="`type-${eventTypeLower}`">
+		<div class="header-box flex justify-end">
 			<div class="time">
 				{{ formatDate(log.timestamp) }}
 			</div>
 		</div>
 		<div class="main-box flex justify-between gap-4">
-			<div class="content flex gap-3 items-center">
-				<div class="level mt-1">
-					<Icon :name="WarningIcon" :size="20" v-if="log.event_type === LogEventType.ERROR" />
-					<Icon :name="OKIcon" :size="20" v-else />
+			<div class="content flex flex-col gap-2">
+				<div class="resource flex flex-wrap gap-3">
+					<div class="status" :class="`cat-${statusCategory}`">
+						<code>{{ log.status_code }}</code>
+					</div>
+					<div class="method" :class="methodLower">
+						<strong>{{ log.method }}</strong>
+					</div>
+					<div class="route">{{ log.route }}</div>
 				</div>
-				<div class="info grow">
-					<div class="message" v-html="log.message"></div>
+				<div class="title px-1">{{ log.message }}</div>
+				<div class="description px-1" v-if="log.additional_info">{{ log.additional_info }}</div>
+
+				<div class="badges-box flex flex-wrap items-center gap-3 mt-2">
+					<Badge type="splitted" :color="log.event_type === LogEventType.ERROR ? 'danger' : undefined">
+						<template #iconLeft>
+							<Icon
+								:name="log.event_type === LogEventType.ERROR ? ErrorIcon : InfoIcon"
+								:size="14"
+							></Icon>
+						</template>
+						<template #label>Type</template>
+						<template #value>{{ log.event_type }}</template>
+					</Badge>
+					<!--
+						<Badge type="splitted">
+							<template #iconLeft>
+								<Icon :name="OwnerIcon" :size="16"></Icon>
+							</template>
+							<template #label>Owner</template>
+							<template #value>{{ caseData.owner }}</template>
+						</Badge>
+						<Badge type="splitted">
+							<template #iconLeft>
+								<Icon :name="CustomerIcon" :size="13"></Icon>
+							</template>
+							<template #label>Client</template>
+							<template #value>{{ caseData.client_name || "-" }}</template>
+						</Badge>
+					-->
+					<Badge v-if="log.user_id" type="active" @click="gotoUsersPage(log.user_id)" class="cursor-pointer">
+						<template #iconLeft>
+							<Icon :name="UserIcon" :size="14"></Icon>
+						</template>
+						<template #label>
+							<span>#{{ log.user_id }}</span>
+							<span v-if="username" class="flex gap-2">
+								<span>/</span>
+								<span>
+									{{ username }}
+								</span>
+							</span>
+						</template>
+					</Badge>
 				</div>
 			</div>
-		</div>
-		<div class="footer-box flex justify-end items-center gap-3">
-			<div class="time">{{ formatDate(log.timestamp) }}</div>
 		</div>
 	</div>
 </template>
@@ -32,17 +73,29 @@ import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
 import { LogEventType, type Log } from "@/types/logs.d"
 import { useRouter } from "vue-router"
+import Badge from "@/components/common/Badge.vue"
+import type { SocUser } from "@/types/soc/user.d"
+import { computed } from "vue"
 
-// TODO: user_id -> http://127.0.0.1:5173/soc/users (gotoUsersPage)
-// TODO: use ON LogsList getUsers() to match "user_id"
+const { log, users } = defineProps<{ log: Log; users?: SocUser[] }>()
 
-const { log } = defineProps<{ log: Log }>()
-
-const WarningIcon = "carbon:warning-alt-filled"
-const OKIcon = "carbon:checkmark-filled"
+const InfoIcon = "carbon:information"
+const UserIcon = "carbon:user"
+const ErrorIcon = "majesticons:exclamation-line"
 
 const router = useRouter()
 const dFormats = useSettingsStore().dateFormat
+
+const statusCategory = computed(() => log.status_code.toString()[0])
+const methodLower = computed(() => log.method.toLowerCase())
+const eventTypeLower = computed(() => log.event_type.toLowerCase())
+const username = computed(() => {
+	if (!users?.length) return ""
+
+	const user = users.find(o => o.user_id.toString() === log.user_id?.toString())
+
+	return user?.user_login || ""
+})
 
 function formatDate(timestamp: string | number | Date, utc: boolean = true): string {
 	return dayjs(timestamp).utc(utc).format(dFormats.datetime)
@@ -62,11 +115,6 @@ function gotoUsersPage(userId?: string | number) {
 	.header-box {
 		font-family: var(--font-family-mono);
 		font-size: 13px;
-		.id {
-			word-break: break-word;
-			color: var(--fg-secondary-color);
-			line-height: 1.2;
-		}
 
 		.time {
 			color: var(--fg-secondary-color);
@@ -76,41 +124,63 @@ function gotoUsersPage(userId?: string | number) {
 	.main-box {
 		word-break: break-word;
 
-		.level {
-			color: var(--success-color);
+		.resource {
+			background-color: var(--bg-secondary-color);
+			font-family: var(--font-family-mono);
+			padding: 10px 12px;
+			border-radius: var(--border-radius);
+
+			.status {
+				&.cat-2 {
+					color: var(--success-color);
+				}
+				&.cat-3 {
+					color: var(--success-color);
+				}
+				&.cat-4 {
+					color: var(--warning-color);
+				}
+				&.cat-5 {
+					color: var(--error-color);
+				}
+			}
+
+			.method {
+				color: var(--secondary1-color);
+				&.option {
+					color: var(--secondary3-color);
+				}
+				&.put {
+					color: var(--secondary2-color);
+				}
+				&.post {
+					color: var(--primary-color);
+				}
+				&.delete {
+					color: var(--secondary4-color);
+				}
+			}
+
+			.route {
+				font-size: 14px;
+			}
 		}
-	}
 
-	.footer-box {
-		font-family: var(--font-family-mono);
-		font-size: 13px;
-		margin-top: 10px;
-		display: none;
-
-		.time {
-			text-align: right;
+		.description {
 			color: var(--fg-secondary-color);
+			font-size: 13px;
 		}
 	}
 
-	&.status- {
-		&crit {
-			border-color: var(--warning-color);
+	&.type- {
+		&error {
+			border-color: var(--secondary4-opacity-030-color);
+			background-color: var(--secondary4-opacity-005-color);
 
-			.level {
-				color: var(--warning-color);
+			.resource {
+				background-color: transparent;
+				border: 1px solid var(--secondary4-opacity-030-color);
 			}
-		}
-	}
-
-	@container (max-width: 450px) {
-		.header-box {
-			.time {
-				display: none;
-			}
-		}
-		.footer-box {
-			display: flex;
 		}
 	}
 }

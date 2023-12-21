@@ -80,6 +80,7 @@
 						v-for="log of itemsPaginated"
 						:key="log.id"
 						:log="log"
+						:users="usersList"
 						class="item-appear item-appear-bottom item-appear-005 mb-2"
 					/>
 				</template>
