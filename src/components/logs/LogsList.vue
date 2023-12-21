@@ -29,10 +29,10 @@
 				</n-popover>
 
 				<n-button size="small" type="error" ghost @click="showPurgeConfirm = true" :loading="loadingPurge">
-					<template #icon>
+					<div class="flex items-center gap-2">
 						<Icon :name="TrashIcon" :size="16"></Icon>
-					</template>
-					Purge
+						<span class="hidden xs:block">Purge</span>
+					</div>
 				</n-button>
 			</div>
 			<n-pagination
@@ -267,8 +267,8 @@ useResizeObserver(header, entries => {
 	const entry = entries[0]
 	const { width } = entry.contentRect
 
-	pageSlot.value = width < 650 ? 5 : 8
-	simpleMode.value = width < 450
+	pageSlot.value = width < 700 ? 5 : 8
+	simpleMode.value = width < 550
 })
 
 onBeforeMount(() => {
