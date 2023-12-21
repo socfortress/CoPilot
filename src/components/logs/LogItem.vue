@@ -11,7 +11,7 @@
 		<div class="main-box flex justify-between gap-4">
 			<div class="content flex gap-3 items-center">
 				<div class="level mt-1">
-					<Icon :name="WarningIcon" :size="20" v-if="log.event_type === LogEventType.Error" />
+					<Icon :name="WarningIcon" :size="20" v-if="log.event_type === LogEventType.ERROR" />
 					<Icon :name="OKIcon" :size="20" v-else />
 				</div>
 				<div class="info grow">

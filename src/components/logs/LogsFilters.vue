@@ -56,12 +56,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, computed, watch } from "vue"
+import { ref, onBeforeMount, computed, watch, toRefs } from "vue"
 import { NButton, NSelect, NInputGroup, NInputNumber, NInput } from "naive-ui"
 import _cloneDeep from "lodash/cloneDeep"
 import _toSafeInteger from "lodash/toSafeInteger"
 import type { LogsQueryEventType, LogsQueryTimeRange, LogsQueryTypes, LogsQueryValues } from "@/api/logs"
+import type { SocUser } from "@/types/soc/user.d"
 import Api from "@/api"
+import { LogEventType } from "@/types/logs.d"
 
 const emit = defineEmits<{
 	(e: "close"): void
@@ -72,7 +74,14 @@ const emit = defineEmits<{
 const type = defineModel<LogsQueryTypes | null>("type", { default: null })
 const value = defineModel<LogsQueryValues | null>("value", { default: null })
 
+const props = defineProps<{ users?: SocUser[]; fetchingUsers?: boolean }>()
+const { users, fetchingUsers } = toRefs(props)
+
 const loadingUsers = ref(false)
+
+watch(fetchingUsers, val => {
+	loadingUsers.value = val
+})
 
 const filtered = computed(() => type.value !== null && value.value !== null)
 
@@ -96,11 +105,11 @@ const unitOptions: { label: string; value: "h" | "d" | "w" }[] = [
 	{ label: "Weeks", value: "w" }
 ]
 
-const filterEventType = ref<LogsQueryEventType>("info")
+const filterEventType = ref<LogsQueryEventType>(LogEventType.INFO)
 
 const eventTypeOptions: { label: string; value: LogsQueryEventType }[] = [
-	{ label: "Info", value: "info" },
-	{ label: "Error", value: "error" }
+	{ label: "Info", value: LogEventType.INFO },
+	{ label: "Error", value: LogEventType.ERROR }
 ]
 
 const filterUserId = ref<string | null>(null)
@@ -142,10 +151,7 @@ function getUsers() {
 		.getUsers()
 		.then(res => {
 			if (res.data.success) {
-				userIdOptions.value = (res.data?.users || []).map(o => ({
-					label: `#${o.user_id} - ${o.user_login}`,
-					value: o.user_id + ""
-				}))
+				setUsers(res.data?.users)
 			}
 		})
 		.finally(() => {
@@ -153,8 +159,19 @@ function getUsers() {
 		})
 }
 
+function setUsers(users: SocUser[]) {
+	userIdOptions.value = (users || []).map(o => ({
+		label: `#${o.user_id} - ${o.user_login}`,
+		value: o.user_id + ""
+	}))
+}
+
 onBeforeMount(() => {
-	getUsers()
+	if (users.value !== undefined) {
+		setUsers(users.value)
+	} else {
+		getUsers()
+	}
 
 	filterType.value = _cloneDeep(type.value)
 	filterValue.value = _cloneDeep(value.value)

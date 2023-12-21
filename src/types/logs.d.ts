@@ -10,8 +10,8 @@ export interface Log {
 }
 
 export enum LogEventType {
-	Error = "Error",
-	Info = "Info"
+	ERROR = "Error",
+	INFO = "Info"
 }
 
 export enum LogMethod {
