@@ -14,10 +14,12 @@ import regex
 import requests
 from fastapi import HTTPException
 from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.integrations.utils.schema import ShufflePayload
 from app.integrations.utils.schema import WazuhAgentResponse
 from app.utils import get_customer_alert_settings
+import httpx
 
 
 #################### ! DFIR IRIS ASSET VALIDATOR ! ####################
@@ -331,19 +333,17 @@ async def validate_ioc_type(ioc_value: str) -> str:
     return ioc_type
 
 
-############## ! SEND TO OTHER TOOLS ! ##############
-async def send_to_shuffle(payload: ShufflePayload) -> bool:
+
+async def send_to_shuffle(payload: ShufflePayload, session: AsyncSession) -> bool:
     """
     Sends payload to Shuffle listening Webhook asynchronously using httpx.
     """
     logger.info(f"Sending {payload} to Shuffle Webhook.")
     try:
-        shuffle_endpoint = (await get_customer_alert_settings(customer_code=payload.customer_code)).shuffle_endpoint
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(verify=False) as client:
             response = await client.post(
-                shuffle_endpoint,
+                (await get_customer_alert_settings(customer_code=payload.customer_code, session=session)).shuffle_endpoint,
                 json=payload.to_dict(),
-                verify=False,  # Be cautious with verify=False in production
             )
 
         return response.status_code == 200

@@ -205,15 +205,17 @@ async def create_alert(alert: CreateAlertRequest, session: AsyncSession) -> Crea
     )
     alert_id = result["data"]["alert_id"]
     logger.info(f"Successfully created alert {alert_id} in IRIS.")
+    customer_name = (await get_customer_alert_settings(customer_code=alert.agent_labels_customer, session=session)).customer_name
     await send_to_shuffle(
         ShufflePayload(
             alert_id=alert_id,
-            customer=(await get_customer_alert_settings(customer_code=alert.agent_labels_customer, session=session)).customer_name,
+            customer=customer_name,
             customer_code=alert.agent_labels_customer,
             alert_source_link=await construct_alert_source_link(alert, session=session),
             rule_description=alert.rule_description,
             hostname=alert.agent_name,
         ),
+        session=session,
     )
     return CreateAlertResponse(
         alert_id=alert_id,
