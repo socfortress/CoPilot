@@ -21,7 +21,7 @@ from app.integrations.utils.alerts import send_to_shuffle
 from app.integrations.utils.alerts import validate_ioc_type
 from app.integrations.utils.schema import ShufflePayload
 from app.utils import get_customer_alert_settings
-
+from app.integrations.alert_creation.general.services.alert_multi_exclude import AlertDetailsService
 
 def valid_ioc_fields() -> Set[str]:
     """
@@ -176,18 +176,18 @@ async def build_alert_payload(
 async def create_alert(alert: CreateAlertRequest, session: AsyncSession) -> CreateAlertResponse:
     logger.info(f"Creating alert with {alert.id} in IRIS.")
     # ! TODO: ALERT MULTI EXCLUSION ! #
-    # event_exclude_result = AlertDetailsService().collect_alert_timeline_process_id(
-    #     agent_name=alert.agent_name,
-    #     process_id=getattr(alert, "process_id", "n/a"),
-    #     index=alert.index,
-    # )
-    # logger.info(f"Event exclude result: {event_exclude_result}")
-    # if event_exclude_result is not None:
-    #     if event_exclude_result["excluded"]:
-    #         raise HTTPException(
-    #             status_code=400,
-    #             detail="Alert excluded due to multi exclusion as set in the config.ini file.",
-    #         )
+    alert_detail_service = await AlertDetailsService.create()
+    event_exclude_result = await alert_detail_service.collect_alert_timeline_process_id(
+        agent_name=alert.agent_name,
+        process_id=getattr(alert, "process_id", "n/a"),
+        index=alert.index,
+        session=session,
+    )
+    if event_exclude_result is True:
+        raise HTTPException(
+            status_code=400,
+            detail="Alert excluded due to multi exclusion as set in the config.ini file.",
+        )
     logger.info(f"Getting agent data for {alert.agent_name}")
     agent_details = await get_agent(agent_id=alert.agent_id, db=session)
     ioc_payload = await build_ioc_payload(alert_details=alert)
@@ -205,15 +205,17 @@ async def create_alert(alert: CreateAlertRequest, session: AsyncSession) -> Crea
     )
     alert_id = result["data"]["alert_id"]
     logger.info(f"Successfully created alert {alert_id} in IRIS.")
+    customer_name = (await get_customer_alert_settings(customer_code=alert.agent_labels_customer, session=session)).customer_name
     await send_to_shuffle(
         ShufflePayload(
             alert_id=alert_id,
-            customer=(await get_customer_alert_settings(customer_code=alert.agent_labels_customer, session=session)).customer_name,
+            customer=customer_name,
             customer_code=alert.agent_labels_customer,
             alert_source_link=await construct_alert_source_link(alert, session=session),
             rule_description=alert.rule_description,
             hostname=alert.agent_name,
         ),
+        session=session,
     )
     return CreateAlertResponse(
         alert_id=alert_id,

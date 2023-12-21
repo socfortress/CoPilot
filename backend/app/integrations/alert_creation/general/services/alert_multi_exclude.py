@@ -5,8 +5,12 @@ from typing import Tuple
 
 from elasticsearch7 import NotFoundError
 from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.db.db_session import get_session
+from app.integrations.alert_creation_settings.models.alert_creation_settings import AlertCreationEventConfig
 
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
+from app.utils import get_customer_alert_event_configs
 
 
 class AlertDetailsService:
@@ -19,12 +23,18 @@ class AlertDetailsService:
     """
 
     def __init__(self):
+        self.es = None
+
+    @classmethod
+    async def create(cls):
         """
-        Initialize the AlertDetailsService class.
+        Asynchronously create an instance of AlertDetailsService.
 
         Establish a session with the Wazuh indexer and a ConfigManager instance for reading the configuration file.
         """
-        self.es = create_wazuh_indexer_client("Wazuh-Indexer")
+        self = cls()
+        self.es = await create_wazuh_indexer_client("Wazuh-Indexer")
+        return self
 
     def _collect_indices(self) -> Dict[str, object]:
         """
@@ -146,7 +156,7 @@ class AlertDetailsService:
             "query": {"bool": {"must": must_terms}},
         }
 
-    def process_events(self, events: list, order_key: str):
+    async def process_events(self, events: list, event_configs: List[AlertCreationEventConfig]):
         """
         Process the events and check for exclusions.
         For every event in the `config.ini` file there is a field and value to check for.
@@ -155,23 +165,25 @@ class AlertDetailsService:
 
         Args:
             events (list): A list of events to process.
-            order_key (str): The key in the configuration file that specifies the order of event processing.
+            event_configs (List[AlertCreationEventConfig]): A list of AlertCreationEventConfig instances.
 
         Returns:
             dict: A dictionary with a single key 'excluded' indicating whether the events match the exclusion criteria.
         """
-        event_order = self.config_manager.get("Order", order_key).split(",")
-        # strip the event order of whitespace
-        event_order = [event.strip() for event in event_order]
+        event_order = [config.event_id for config in event_configs]
+        logger.info(f"Events: {events}")
 
         first_match_found = False
 
         for index, event in enumerate(events):
             event_id = event_order[0 if not first_match_found else 1]
             logger.info(f"Checking for event_id: {event_id}")
-            event_config = self.config_manager.get_section(event_id)
-            field = event_config["field"]
-            value = event_config["value"]
+            event_config = next((config for config in event_configs if config.event_id == event_id), None)
+            if event_config is None:
+                continue
+
+            field = event_config.field
+            value = event_config.value
             logger.info(f"Checking for {field} containing {value}")
 
             if value == event.get(field, ""):
@@ -180,16 +192,17 @@ class AlertDetailsService:
                     first_match_found = True  # We found the first match
                 elif first_match_found:
                     logger.info("Both matches found.")
-                    return {"excluded": True}  # Both matches found, so return early
+                    return True  # Both matches found, so return early
 
         # If we've checked all events and didn't find both matches, return {"excluded": False}
-        return {"excluded": False}
+        return False
 
-    def collect_alert_timeline_process_id(
+    async def collect_alert_timeline_process_id(
         self,
         agent_name: str,
         process_id: str,
         index: str,
+        session: AsyncSession,
     ) -> Dict[str, Any]:
         """
         Collect the events where the process id and agent name match within a 24 hour window.
@@ -211,6 +224,7 @@ class AlertDetailsService:
             query = self.build_query(
                 {"agent_name": agent_name, "process_id": process_id},
             )
+            logger.info(f"Query: {query}")
             alert_timeline_events = self.es.search(index=index, body=query)
 
             total_hits = alert_timeline_events["hits"]["total"]["value"]
@@ -221,18 +235,24 @@ class AlertDetailsService:
             events.sort(key=lambda x: x["timestamp_utc"])
 
             # return self.process_events(events)
+            logger.info(f"Events: {events}")
 
             # Get all order keys from the 'Order' section in config.ini
-            order_keys = self.config_manager.options("Order")
+            order_keys = await get_customer_alert_event_configs(customer_code=events[0]["agent_labels_customer"], session=session)
+            logger.info(f"Order keys: {order_keys}")
 
             # Process events for each order key
             results = {}
             for order_key in order_keys:
-                results[order_key] = self.process_events(events, order_key)
-                if results[order_key]["excluded"] is True:
-                    return {"excluded": True}
+                logger.info(f"Processing events for order key: {order_key}")
+                #results[order_key] = await self.process_events(events, order_key)
+                results = await self.process_events(events, order_key)
+                logger.info(f"Results: {results}")
+                #if results[order_key]["excluded"] is True:
+                if results is True:
+                    return True
 
-            return {"excluded": False}
+            return False
         except Exception as e:
             logger.error(f"Error collecting alert timeline events: {e}")
             return None
