@@ -27,6 +27,13 @@
 						</div>
 					</div>
 				</n-popover>
+
+				<n-button size="small" type="error" ghost @click="showPurgeConfirm = true" :loading="loadingPurge">
+					<div class="flex items-center gap-2">
+						<Icon :name="TrashIcon" :size="16"></Icon>
+						<span class="hidden xs:block">Purge</span>
+					</div>
+				</n-button>
 			</div>
 			<n-pagination
 				v-model:page="currentPage"
@@ -37,6 +44,34 @@
 				:item-count="total"
 				:simple="simpleMode"
 			/>
+			<n-popover
+				:show="showFilters"
+				trigger="manual"
+				overlap
+				placement="right"
+				style="padding-left: 0; padding-right: 0"
+			>
+				<template #trigger>
+					<div class="bg-color border-radius">
+						<n-badge :show="filtered" dot type="success" :offset="[-4, 0]">
+							<n-button size="small" @click="showFilters = true">
+								<template #icon>
+									<Icon :name="FilterIcon"></Icon>
+								</template>
+							</n-button>
+						</n-badge>
+					</div>
+				</template>
+				<LogsFilters
+					v-model:type="filterType"
+					v-model:value="filterValue"
+					v-model:filtered="filtered"
+					:users="usersList"
+					:loadingUsers="loadingUsers"
+					@submit="getData()"
+					@close="showFilters = false"
+				/>
+			</n-popover>
 		</div>
 		<n-spin :show="loading">
 			<div class="list my-3">
@@ -49,7 +84,7 @@
 					/>
 				</template>
 				<template v-else>
-					<n-empty description="No items found" class="justify-center h-48" v-if="!loading" />
+					<n-empty description="No Logs found" class="justify-center h-48" v-if="!loading" />
 				</template>
 			</div>
 		</n-spin>
@@ -62,23 +97,58 @@
 				v-if="itemsPaginated.length > 3"
 			/>
 		</div>
+
+		<n-modal v-model:show="showPurgeConfirm" preset="dialog" type="warning" title="Purge Logs">
+			<div class="mt-5 flex flex-col gap-2">
+				<div>Are you sure you want to purge Logs ?</div>
+				<n-select
+					v-model:value="purgeSelected"
+					:options="purgeOptions"
+					:disabled="loadingPurge"
+					placeholder="Select time range"
+				/>
+			</div>
+			<template #action>
+				<div class="flex gap-3">
+					<n-button size="small" ghost @click="showPurgeConfirm = false">Cancel</n-button>
+					<n-button size="small" type="warning" @click="purge()" :loading="loadingPurge">
+						Yes I'm sure
+					</n-button>
+				</div>
+			</template>
+		</n-modal>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, computed } from "vue"
-import { useMessage, NSpin, NPopover, NButton, NEmpty, NPagination } from "naive-ui"
+import { ref, onBeforeMount, computed, toRefs } from "vue"
+import { useMessage, NSpin, NPopover, NButton, NEmpty, NPagination, NBadge, NModal, NSelect } from "naive-ui"
 import Api from "@/api"
 import _orderBy from "lodash/orderBy"
 import Icon from "@/components/common/Icon.vue"
 import { nanoid } from "nanoid"
 import { useResizeObserver } from "@vueuse/core"
+import LogsFilters from "./LogsFilters.vue"
 import LogItem from "./LogItem.vue"
 import { LogEventType, type Log } from "@/types/logs.d"
+import type { LogsQuery, LogsQueryTimeRange, LogsQueryTypes, LogsQueryValues } from "@/api/logs"
+import type { SocUser } from "@/types/soc/user.d"
+
+interface LogExt extends Log {
+	id?: string
+}
+
+const props = defineProps<{ userId?: string }>()
+const { userId } = toRefs(props)
 
 const message = useMessage()
+const loadingUsers = ref(false)
 const loading = ref(false)
-const logsList = ref<Log[]>([])
+const loadingPurge = ref(false)
+const showPurgeConfirm = ref(false)
+const usersList = ref<SocUser[]>([])
+const logsList = ref<LogExt[]>([])
+const showFilters = ref(false)
 
 const pageSize = ref(25)
 const currentPage = ref(1)
@@ -97,6 +167,8 @@ const itemsPaginated = computed(() => {
 	return list.slice(from, to)
 })
 
+const FilterIcon = "carbon:filter-edit"
+const TrashIcon = "carbon:trash-can"
 const InfoIcon = "carbon:information"
 
 const total = computed<number>(() => {
@@ -104,22 +176,61 @@ const total = computed<number>(() => {
 })
 
 const eventInfoTotal = computed<number>(() => {
-	return logsList.value.filter(o => o.event_type === LogEventType.Info).length || 0
+	return logsList.value.filter(o => o.event_type === LogEventType.INFO).length || 0
 })
 const eventErrorTotal = computed<number>(() => {
-	return logsList.value.filter(o => o.event_type === LogEventType.Error).length || 0
+	return logsList.value.filter(o => o.event_type === LogEventType.ERROR).length || 0
 })
 
-function getData() {
-	loading.value = true
+const filterType = ref<LogsQueryTypes | null>(null)
+const filterValue = ref<LogsQueryValues | null>(null)
 
-	// TODO: add filters
+const filtered = ref(false)
+
+const purgeSelected = ref<LogsQueryTimeRange | "">("")
+const purgeOptions: { label: string; value: LogsQueryTimeRange | string }[] = [
+	{ label: "All Logs", value: "" },
+	{ label: "1 Hour", value: "1h" },
+	{ label: "6 Hours", value: "6h" },
+	{ label: "12 Hours", value: "12h" },
+	{ label: "1 Day", value: "1d" },
+	{ label: "3 Days", value: "3d" },
+	{ label: "1 Week", value: "1w" }
+]
+
+function purge() {
+	loadingPurge.value = true
 
 	Api.logs
-		.getLogs()
+		.purge(purgeSelected.value || undefined)
 		.then(res => {
 			if (res.data.success) {
-				logsList.value = (res.data.logs || []).map(o => {
+				getData()
+				message.success(res.data?.message || "Logs purged successfully")
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			loadingPurge.value = false
+		})
+}
+
+function getData() {
+	showFilters.value = false
+	loading.value = true
+
+	const query =
+		filterType.value && filterValue.value ? <LogsQuery>{ [filterType.value]: filterValue.value } : undefined
+
+	Api.logs
+		.getLogs(query)
+		.then(res => {
+			if (res.data.success) {
+				logsList.value = (res.data.logs || []).map((o: LogExt) => {
 					o.id = nanoid()
 					return o
 				})
@@ -137,15 +248,36 @@ function getData() {
 		})
 }
 
+function getUsers() {
+	loadingUsers.value = true
+
+	Api.soc
+		.getUsers()
+		.then(res => {
+			if (res.data.success) {
+				usersList.value = res.data?.users || []
+			}
+		})
+		.finally(() => {
+			loadingUsers.value = false
+		})
+}
+
 useResizeObserver(header, entries => {
 	const entry = entries[0]
 	const { width } = entry.contentRect
 
-	pageSlot.value = width < 650 ? 5 : 8
-	simpleMode.value = width < 450
+	pageSlot.value = width < 700 ? 5 : 8
+	simpleMode.value = width < 550
 })
 
 onBeforeMount(() => {
+	if (userId.value) {
+		filterType.value = "userId"
+		filterValue.value = userId.value
+	}
+
+	getUsers()
 	getData()
 })
 </script>

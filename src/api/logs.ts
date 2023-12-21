@@ -1,13 +1,21 @@
 import { type FlaskBaseResponse } from "@/types/flask.d"
 import { HttpClient } from "./httpClient"
 import type { Customer } from "@/types/customers.d"
-import type { Log } from "@/types/logs.d"
+import type { Log, LogEventType } from "@/types/logs.d"
 
 export type LogsQueryTimeRange = `${number}${"h" | "d" | "w"}`
-export type LogsQueryEventType = "info" | "error"
+export type LogsQueryEventType = `${LogEventType}`
+export type LogsQuery = { userId: string } | { timeRange: LogsQueryTimeRange } | { eventType: LogsQueryEventType }
+
+// Extraction of keys from the union type LogsQuery
+type KeysOfLogsQuery<T> = T extends { [K in keyof T]: any } ? keyof T : never
+
+// Union of values extracted from keys
+export type LogsQueryTypes = KeysOfLogsQuery<LogsQuery>
+export type LogsQueryValues = string | LogsQueryTimeRange | LogsQueryEventType
 
 export default {
-	getLogs(query?: { userId: string } | { timeRange: LogsQueryTimeRange } | { eventType: LogsQueryEventType }) {
+	getLogs(query?: LogsQuery) {
 		let method: "get" | "post" = "get"
 		let url = "logs"
 		let body: any = undefined
@@ -18,7 +26,7 @@ export default {
 			body = undefined
 		} else if (query && "timeRange" in query) {
 			method = "post"
-			url = `/logs/timeRange`
+			url = `/logs/timerange`
 			body = {
 				time_range: query.timeRange
 			}
@@ -32,7 +40,7 @@ export default {
 	},
 	purge(timeRange?: LogsQueryTimeRange) {
 		const url = timeRange ? `/logs/timerange` : `/logs`
-		return HttpClient.delete<FlaskBaseResponse & { customer: Customer }>(
+		return HttpClient.delete<FlaskBaseResponse & { logs: Log[] }>(
 			url,
 			timeRange ? { data: { time_range: timeRange } } : undefined
 		)
