@@ -9,7 +9,7 @@ from sqlalchemy.future import select
 from starlette.status import HTTP_401_UNAUTHORIZED
 
 from app.auth.utils import AuthHandler
-from app.db.db_session import get_session
+from app.db.db_session import get_session, get_db
 from app.db.db_session import session
 from app.db.universal_models import Agents
 from app.healthchecks.agents.schema.agents import AgentHealthCheckResponse
@@ -37,7 +37,7 @@ def verify_admin(user):
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_wazuh_agent_healthcheck(
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
     minutes: int = Query(60, description="Number of minutes within which the agent should have been last seen to be considered healthy."),
     hours: int = Query(0, description="Number of hours within which the agent should have been last seen to be considered healthy."),
     days: int = Query(0, description="Number of days within which the agent should have been last seen to be considered healthy."),
@@ -58,7 +58,7 @@ async def get_wazuh_agent_healthcheck(
 )
 async def get_wazuh_agent_healthcheck_by_agent_id(
     agent_id: str,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
     minutes: int = Query(60, description="Number of minutes within which the agent should have been last seen to be considered healthy."),
     hours: int = Query(0, description="Number of hours within which the agent should have been last seen to be considered healthy."),
     days: int = Query(0, description="Number of days within which the agent should have been last seen to be considered healthy."),
@@ -81,7 +81,7 @@ async def get_wazuh_agent_healthcheck_by_agent_id(
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_velociraptor_agent_healthcheck(
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
     minutes: int = Query(60, description="Number of minutes within which the agent should have been last seen to be considered healthy."),
     hours: int = Query(0, description="Number of hours within which the agent should have been last seen to be considered healthy."),
     days: int = Query(0, description="Number of days within which the agent should have been last seen to be considered healthy."),
@@ -102,7 +102,7 @@ async def get_velociraptor_agent_healthcheck(
 )
 async def get_velociraptor_agent_healthcheck_by_agent_id(
     agent_id: str,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
     minutes: int = Query(60, description="Number of minutes within which the agent should have been last seen to be considered healthy."),
     hours: int = Query(0, description="Number of hours within which the agent should have been last seen to be considered healthy."),
     days: int = Query(0, description="Number of days within which the agent should have been last seen to be considered healthy."),
@@ -123,7 +123,7 @@ async def get_velociraptor_agent_healthcheck_by_agent_id(
     description="Get host logs",
     dependencies=[Security(AuthHandler().get_current_user, scopes=["admin", "analyst"])],
 )
-async def get_host_logs(body: HostLogsSearchBody, session: AsyncSession = Depends(get_session)) -> HostLogsSearchResponse:
+async def get_host_logs(body: HostLogsSearchBody, session: AsyncSession = Depends(get_db)) -> HostLogsSearchResponse:
     logger.info(f"Received request to get host logs for {body.agent_name}")
 
     # Asynchronously verify the agent exists

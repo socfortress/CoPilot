@@ -10,13 +10,13 @@ from app.connectors.sublime.schema.alerts import AlertResponseBody
 from app.connectors.sublime.schema.alerts import SublimeAlertsResponse
 from app.connectors.sublime.services.alerts import collect_alerts
 from app.connectors.sublime.services.alerts import store_sublime_alert
-from app.db.db_session import get_session
+from app.db.db_session import get_session, get_db
 
 sublime_alerts_router = APIRouter()
 
 
 @sublime_alerts_router.post("/alert", description="Receive alert from Sublime and store it in the database")
-async def receive_sublime_alert(alert_request_body: AlertRequestBody, session: AsyncSession = Depends(get_session)) -> AlertResponseBody:
+async def receive_sublime_alert(alert_request_body: AlertRequestBody, session: AsyncSession = Depends(get_db)) -> AlertResponseBody:
     """
     Endpoint to store alert in the `sublimealerts` table.
     Invoked by the Sublime alert webhook which is configured in the Sublime UI.
@@ -34,7 +34,7 @@ async def receive_sublime_alert(alert_request_body: AlertRequestBody, session: A
     description="Get all alerts",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_sublime_alerts(session: AsyncSession = Depends(get_session)) -> SublimeAlertsResponse:
+async def get_sublime_alerts(session: AsyncSession = Depends(get_db)) -> SublimeAlertsResponse:
     """
     Endpoint to retrieve alerts from the `sublimealerts` table.
 

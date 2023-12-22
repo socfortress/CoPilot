@@ -22,7 +22,7 @@ from app.auth.schema.user import UserBaseResponse
 from app.auth.services.universal import find_user
 from app.auth.services.universal import select_all_users
 from app.auth.utils import AuthHandler
-from app.db.db_session import get_session
+from app.db.db_session import get_session, get_db
 from app.db.db_session import session
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 1440
@@ -54,7 +54,7 @@ async def refresh_token(current_user: User = Depends(auth_handler.get_current_us
 
 
 @auth_router.post("/register", response_model=UserResponse, status_code=201, description="Register new user")
-async def register(user: UserInput, session: AsyncSession = Depends(get_session)):
+async def register(user: UserInput, session: AsyncSession = Depends(get_db)):
     # users = select_all_users()
     users = await select_all_users()
     if any(x.username == user.username for x in users):
@@ -82,7 +82,7 @@ async def login(user: UserLogin):
 
 # Get all users
 @auth_router.get("/users", response_model=UserBaseResponse, description="Get all users")
-async def get_users(session: AsyncSession = Depends(get_session)):
+async def get_users(session: AsyncSession = Depends(get_db)):
     # users = select_all_users()
     users = await select_all_users()
     return UserBaseResponse(users=users, message="Users retrieved successfully", success=True)

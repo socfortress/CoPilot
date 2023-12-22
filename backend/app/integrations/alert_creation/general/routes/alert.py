@@ -5,7 +5,7 @@ from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from app.db.db_session import get_session
+from app.db.db_session import get_session, get_db
 from app.integrations.alert_creation.general.schema.alert import CreateAlertRequest
 from app.integrations.alert_creation.general.schema.alert import CreateAlertResponse
 from app.integrations.alert_creation.general.services.alert import create_alert
@@ -51,7 +51,7 @@ async def is_customer_code_valid(create_alert_request: CreateAlertRequest, sessi
 )
 async def create_general_alert(
     create_alert_request: CreateAlertRequest,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
 ):
     logger.info(f"create_alert_request: {create_alert_request.dict()}")
 

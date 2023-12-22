@@ -71,12 +71,12 @@ def get_sync_db_session():
 #     async with get_db_session() as session:
 #         return session
 
+# ! NEW CODE RELATING TO THE SESSION NOT CLOSING ! #
 @asynccontextmanager
 async def get_session():
     async with get_db_session() as session:
         yield session
 
-# ! NEW CODE RELATING TO THE SESSION NOT CLOSING ! #
 async def get_db():
     async with get_session() as session:
         yield session

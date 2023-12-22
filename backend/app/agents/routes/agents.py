@@ -25,7 +25,7 @@ from app.agents.wazuh.services.vulnerabilities import collect_agent_vulnerabilit
 
 # App specific imports
 from app.auth.routes.auth import AuthHandler
-from app.db.db_session import get_session
+from app.db.db_session import get_session, get_db
 
 # App specific imports
 # from app.db.db_session import session
@@ -78,7 +78,7 @@ async def delete_agent_from_database(db: AsyncSession, agent_id: str):
     description="Get all agents currently synced to the database",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_agents(db: AsyncSession = Depends(get_session)) -> AgentsResponse:
+async def get_agents(db: AsyncSession = Depends(get_db)) -> AgentsResponse:
     logger.info("Fetching all agents")
     try:
         # agents = session.query(Agents).all()
@@ -96,7 +96,7 @@ async def get_agents(db: AsyncSession = Depends(get_session)) -> AgentsResponse:
     description="Get agent by agent_id",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_agent(agent_id: str, db: AsyncSession = Depends(get_session)) -> AgentsResponse:
+async def get_agent(agent_id: str, db: AsyncSession = Depends(get_db)) -> AgentsResponse:
     logger.info(f"Fetching agent with agent_id: {agent_id}")
     try:
         result = await db.execute(select(Agents).filter(Agents.agent_id == agent_id))
@@ -116,7 +116,7 @@ async def get_agent(agent_id: str, db: AsyncSession = Depends(get_session)) -> A
     description="Get agent by hostname",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_agent_by_hostname(hostname: str, db: AsyncSession = Depends(get_session)) -> AgentsResponse:
+async def get_agent_by_hostname(hostname: str, db: AsyncSession = Depends(get_db)) -> AgentsResponse:
     logger.info(f"Fetching agent with hostname: {hostname}")
     try:
         result = await db.execute(select(Agents).filter(Agents.hostname == hostname))
@@ -137,7 +137,7 @@ async def get_agent_by_hostname(hostname: str, db: AsyncSession = Depends(get_se
     description="Sync agents from Wazuh Manager",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst", "scheduler"))],
 )
-async def sync_all_agents(backgroud_tasks: BackgroundTasks, session: AsyncSession = Depends(get_session)) -> SyncedAgentsResponse:
+async def sync_all_agents(backgroud_tasks: BackgroundTasks, session: AsyncSession = Depends(get_db)) -> SyncedAgentsResponse:
     logger.info("Syncing agents from Wazuh Manager")
     backgroud_tasks.add_task(sync_agents, session)
     # return sync_agents()
@@ -150,7 +150,7 @@ async def sync_all_agents(backgroud_tasks: BackgroundTasks, session: AsyncSessio
     description="Mark agent as critical",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def mark_agent_as_critical(agent_id: str, session: AsyncSession = Depends(get_session)) -> AgentModifyResponse:
+async def mark_agent_as_critical(agent_id: str, session: AsyncSession = Depends(get_db)) -> AgentModifyResponse:
     logger.info(f"Marking agent {agent_id} as critical")
     # return mark_agent_criticality(agent_id, True)
     try:
@@ -176,7 +176,7 @@ async def mark_agent_as_critical(agent_id: str, session: AsyncSession = Depends(
     description="Mark agent as not critical",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def mark_agent_as_not_critical(agent_id: str, session: AsyncSession = Depends(get_session)) -> AgentModifyResponse:
+async def mark_agent_as_not_critical(agent_id: str, session: AsyncSession = Depends(get_db)) -> AgentModifyResponse:
     logger.info(f"Marking agent {agent_id} as not critical")
     try:
         # Asynchronously fetch the agent by id
@@ -212,7 +212,7 @@ async def get_agent_vulnerabilities(agent_id: str) -> WazuhAgentVulnerabilitiesR
     description="Get all outdated Wazuh agents",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_outdated_wazuh_agents(session: AsyncSession = Depends(get_session)) -> OutdatedWazuhAgentsResponse:
+async def get_outdated_wazuh_agents(session: AsyncSession = Depends(get_db)) -> OutdatedWazuhAgentsResponse:
     logger.info("Fetching all outdated Wazuh agents")
     return await get_outdated_agents_wazuh(session)
 
@@ -223,7 +223,7 @@ async def get_outdated_wazuh_agents(session: AsyncSession = Depends(get_session)
     description="Get all outdated Velociraptor agents",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_outdated_velociraptor_agents(session: AsyncSession = Depends(get_session)) -> OutdatedVelociraptorAgentsResponse:
+async def get_outdated_velociraptor_agents(session: AsyncSession = Depends(get_db)) -> OutdatedVelociraptorAgentsResponse:
     logger.info("Fetching all outdated Velociraptor agents")
     return await get_outdated_agents_velociraptor(session)
 

@@ -19,7 +19,7 @@ from app.customers.schema.customers import CustomerMetaResponse
 from app.customers.schema.customers import CustomerRequestBody
 from app.customers.schema.customers import CustomerResponse
 from app.customers.schema.customers import CustomersResponse
-from app.db.db_session import get_session
+from app.db.db_session import get_session, get_db
 from app.db.db_session import session
 from app.db.universal_models import Agents
 from app.db.universal_models import Customers
@@ -53,7 +53,7 @@ async def verify_unique_customer_code(session: AsyncSession, customer: CustomerR
     description="Create a new customer",
     dependencies=[Security(AuthHandler().require_any_scope("admin"))],
 )
-async def create_customer(customer: CustomerRequestBody, session: AsyncSession = Depends(get_session)) -> CustomerResponse:
+async def create_customer(customer: CustomerRequestBody, session: AsyncSession = Depends(get_db)) -> CustomerResponse:
     await verify_unique_customer_code(session, customer)
     logger.info(f"Creating new customer: {customer}")
     new_customer = Customers(**customer.dict())
@@ -68,7 +68,7 @@ async def create_customer(customer: CustomerRequestBody, session: AsyncSession =
     description="Get all customers",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_customers(session: AsyncSession = Depends(get_session)) -> CustomersResponse:
+async def get_customers(session: AsyncSession = Depends(get_db)) -> CustomersResponse:
     logger.info("Fetching all customers")
 
     # Asynchronous query to fetch all customers
@@ -86,7 +86,7 @@ async def get_customers(session: AsyncSession = Depends(get_session)) -> Custome
     description="Get customer by customer_code",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_customer(customer_code: str, session: AsyncSession = Depends(get_session)) -> CustomerResponse:
+async def get_customer(customer_code: str, session: AsyncSession = Depends(get_db)) -> CustomerResponse:
     logger.info(f"Fetching customer with customer_code: {customer_code}")
 
     # Asynchronous query to fetch customer
@@ -110,7 +110,7 @@ async def get_customer(customer_code: str, session: AsyncSession = Depends(get_s
 async def update_customer(
     customer_code: str,
     customer: CustomerRequestBody,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
 ) -> CustomerResponse:
     logger.info(f"Updating customer with customer_code: {customer_code}")
 
@@ -141,7 +141,7 @@ async def update_customer(
     description="Delete customer by customer_code",
     dependencies=[Security(AuthHandler().require_any_scope("admin"))],
 )
-async def delete_customer(customer_code: str, session: AsyncSession = Depends(get_session)) -> CustomerResponse:
+async def delete_customer(customer_code: str, session: AsyncSession = Depends(get_db)) -> CustomerResponse:
     logger.info(f"Deleting customer with customer_code: {customer_code}")
 
     result = await session.execute(select(Customers).filter(Customers.customer_code == customer_code))
@@ -172,11 +172,12 @@ async def delete_customer(customer_code: str, session: AsyncSession = Depends(ge
     response_model=CustomerMetaResponse,
     description="Add new customer meta",
     dependencies=[Security(AuthHandler().require_any_scope("admin"))],
+    deprecated=True,
 )
 async def add_customer_meta(
     customer_code: str,
     customer_meta: CustomerMetaRequestBody,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
 ) -> CustomerMetaResponse:
     logger.info(f"Adding new customer meta: {customer_meta}")
 
@@ -202,8 +203,9 @@ async def add_customer_meta(
     response_model=CustomerMetaResponse,
     description="Get customer meta by customer_code",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    deprecated=True,
 )
-async def get_customer_meta(customer_code: str, session: AsyncSession = Depends(get_session)) -> CustomerMetaResponse:
+async def get_customer_meta(customer_code: str, session: AsyncSession = Depends(get_db)) -> CustomerMetaResponse:
     logger.info(f"Fetching customer meta with customer_code: {customer_code}")
 
     result = await session.execute(select(CustomersMeta).filter(CustomersMeta.customer_code == customer_code))
@@ -226,11 +228,12 @@ async def get_customer_meta(customer_code: str, session: AsyncSession = Depends(
     response_model=CustomerMetaResponse,
     description="Update customer meta by customer_code",
     dependencies=[Security(AuthHandler().require_any_scope("admin"))],
+    deprecated=True,
 )
 async def update_customer_meta(
     customer_code: str,
     customer_meta: CustomerMetaRequestBody,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
 ) -> CustomerMetaResponse:
     logger.info(f"Updating customer meta with customer_code: {customer_code}")
 
@@ -260,8 +263,9 @@ async def update_customer_meta(
     response_model=CustomerMetaResponse,
     description="Delete customer meta by customer_code",
     dependencies=[Security(AuthHandler().require_any_scope("admin"))],
+    deprecated=True,
 )
-async def delete_customer_meta(customer_code: str, session: AsyncSession = Depends(get_session)) -> CustomerMetaResponse:
+async def delete_customer_meta(customer_code: str, session: AsyncSession = Depends(get_db)) -> CustomerMetaResponse:
     logger.info(f"Deleting customer meta with customer_code: {customer_code}")
 
     result = await session.execute(select(CustomersMeta).filter(CustomersMeta.customer_code == customer_code))
@@ -292,7 +296,7 @@ async def delete_customer_meta(customer_code: str, session: AsyncSession = Depen
     description="Get customer and customer meta by customer_code",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_customer_full(customer_code: str, session: AsyncSession = Depends(get_session)) -> CustomerFullResponse:
+async def get_customer_full(customer_code: str, session: AsyncSession = Depends(get_db)) -> CustomerFullResponse:
     logger.info(f"Fetching customer and customer meta with customer_code: {customer_code}")
 
     customer_result = await session.execute(select(Customers).filter(Customers.customer_code == customer_code))
@@ -323,7 +327,7 @@ async def get_customer_full(customer_code: str, session: AsyncSession = Depends(
     description="Get agents for the given customer_code",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_agents(customer_code: str, session: AsyncSession = Depends(get_session)) -> AgentsResponse:
+async def get_agents(customer_code: str, session: AsyncSession = Depends(get_db)) -> AgentsResponse:
     logger.info(f"Fetching agents for customer_code: {customer_code}")
 
     # Check if the customer exists
@@ -349,7 +353,7 @@ async def get_agents(customer_code: str, session: AsyncSession = Depends(get_ses
 )
 async def get_wazuh_agents_healthcheck(
     customer_code: str,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
     minutes: int = Query(60, description="Number of minutes within which the agent should have been last seen to be considered healthy."),
     hours: int = Query(0, description="Number of hours within which the agent should have been last seen to be considered healthy."),
     days: int = Query(0, description="Number of days within which the agent should have been last seen to be considered healthy."),
@@ -381,7 +385,7 @@ async def get_wazuh_agents_healthcheck(
 )
 async def get_velociraptor_agents_healthcheck(
     customer_code: str,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
     minutes: int = Query(60, description="Number of minutes within which the agent should have been last seen to be considered healthy."),
     hours: int = Query(0, description="Number of hours within which the agent should have been last seen to be considered healthy."),
     days: int = Query(0, description="Number of days within which the agent should have been last seen to be considered healthy."),
