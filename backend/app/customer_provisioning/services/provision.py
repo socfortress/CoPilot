@@ -103,6 +103,7 @@ async def provision_wazuh_customer(request: ProvisionNewCustomer, session: Async
         message=f"Customer {request.customer_name} provisioned successfully",
         success=True,
         customer_meta=customer_meta.dict(),
+        wazuh_worker_provisioned=True,
     )
 
 
