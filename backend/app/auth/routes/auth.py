@@ -1,4 +1,5 @@
 from datetime import timedelta
+from typing import List
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -17,6 +18,7 @@ from app.auth.models.users import UserLogin
 from app.auth.schema.auth import Token
 from app.auth.schema.auth import UserLoginResponse
 from app.auth.schema.auth import UserResponse
+from app.auth.schema.user import UserBaseResponse
 from app.auth.services.universal import find_user
 from app.auth.services.universal import select_all_users
 from app.auth.utils import AuthHandler
@@ -76,6 +78,14 @@ async def login(user: UserLogin):
         raise HTTPException(status_code=401, detail="Invalid username and/or password")
     token = auth_handler.encode_token(user_found.username)
     return {"token": token, "success": True, "message": "Login successful"}
+
+
+# Get all users
+@auth_router.get("/users", response_model=UserBaseResponse, description="Get all users")
+async def get_users(session: AsyncSession = Depends(get_session)):
+    # users = select_all_users()
+    users = await select_all_users()
+    return UserBaseResponse(users=users, message="Users retrieved successfully", success=True)
 
 
 # @user_router.get("/users/me", description="Get current user")

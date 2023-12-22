@@ -116,6 +116,12 @@ const router = createRouter({
 			component: () => import("@/views/socfortress/Customers.vue"),
 			meta: { title: "Customers", auth: true, roles: UserRole.All }
 		},
+		{
+			path: "/logs",
+			name: "Logs",
+			component: () => import("@/views/socfortress/Logs.vue"),
+			meta: { title: "Logs", auth: true, roles: UserRole.All }
+		},
 
 		// DEMO PAGES ==========================================================
 

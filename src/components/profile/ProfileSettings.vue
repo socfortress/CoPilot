@@ -3,12 +3,17 @@
 		<n-card>
 			<n-form ref="formRef" :label-width="80" :model="formValue" :rules="formRules">
 				<div class="title">General</div>
-				<div class="flex flex-col md:flex-row md:gap-4">
+				<div class="flex flex-col md:flex-row md:gap-6">
 					<n-form-item label="Date Format" path="dateFormat" class="basis-1/3">
 						<n-select v-model:value="formValue.dateFormat" :options="dateFormatsAvailables" />
 					</n-form-item>
-					<n-form-item label="24 Hour" path="hours24" class="basis-1/3">
-						<n-checkbox v-model:checked="formValue.hours24">Time 24 Hour</n-checkbox>
+					<n-form-item label="Time Format" path="hours24" class="basis-1/3">
+						<n-radio-group v-model:value="formValue.hours24" name="radiogroup">
+							<div class="flex flex-wrap gap-3">
+								<n-radio :value="true" :label="`24 Hours [ ${h24} ]`" />
+								<n-radio :value="false" :label="`12 Hours [ ${h12} ]`" />
+							</div>
+						</n-radio-group>
 					</n-form-item>
 				</div>
 				<div class="title">Profile</div>
@@ -44,15 +49,19 @@ import {
 	NInput,
 	NButton,
 	NSelect,
-	NCheckbox,
+	NRadio,
+	NRadioGroup,
 	type FormValidationError,
 	useMessage,
 	type FormInst
 } from "naive-ui"
 import { useSettingsStore } from "@/stores/settings"
+import dayjs from "@/utils/dayjs"
 
 const settingsStore = useSettingsStore()
 
+const h24 = dayjs().format("HH:mm")
+const h12 = dayjs().format("h:mm a")
 const dateFormatsAvailables = settingsStore.dateFormatsAvailables.map(i => ({ label: i, value: i }))
 const currentSateFormat = settingsStore.rawDateFormat
 const hours24 = settingsStore.hours24

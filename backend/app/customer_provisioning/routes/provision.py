@@ -11,6 +11,7 @@ from app.auth.utils import AuthHandler
 from app.connectors.grafana.schema.dashboards import Office365Dashboard
 from app.connectors.grafana.schema.dashboards import WazuhDashboard
 from app.customer_provisioning.schema.provision import CustomerProvisionResponse
+from app.customer_provisioning.schema.provision import CustomersMetaResponse
 from app.customer_provisioning.schema.provision import CustomerSubsctipion
 from app.customer_provisioning.schema.provision import GetDashboardsResponse
 from app.customer_provisioning.schema.provision import GetSubscriptionsResponse
@@ -18,6 +19,7 @@ from app.customer_provisioning.schema.provision import ProvisionNewCustomer
 from app.customer_provisioning.services.provision import provision_wazuh_customer
 from app.db.db_session import get_session
 from app.db.universal_models import Customers
+from app.db.universal_models import CustomersMeta
 
 customer_provisioning_router = APIRouter()
 
@@ -47,6 +49,26 @@ async def check_customer_exists(customer_name: str, session: AsyncSession = Depe
         raise HTTPException(status_code=404, detail=f"Customer: {customer_name} not found. Please create the customer first.")
 
     return customer
+
+
+# Get the customermeta based on the customer name
+@customer_provisioning_router.get(
+    "/provision/{customer_name}",
+    response_model=CustomersMetaResponse,
+    description="Get Customer Meta",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_customer_meta(customer_name: str, session: AsyncSession = Depends(get_session)):
+    logger.info(f"Getting customer meta for customer {customer_name}")
+    result = await session.execute(select(CustomersMeta).filter(CustomersMeta.customer_name == customer_name))
+    customer_meta = result.scalars().first()
+
+    if not customer_meta:
+        raise HTTPException(
+            status_code=404, detail=f"Customer meta not found for customer: {customer_name}. Please provision the customer first.",
+        )
+
+    return CustomersMetaResponse(message="Customer meta retrieved successfully", success=True, customer_meta=customer_meta)
 
 
 @customer_provisioning_router.post(

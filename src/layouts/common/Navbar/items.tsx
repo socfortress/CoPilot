@@ -215,6 +215,20 @@ export default function getItems(mode: "vertical" | "horizontal", collapsed: boo
 			icon: renderIcon(BlankIcon)
 		},
 		{
+			label: () =>
+				h(
+					RouterLink,
+					{
+						to: {
+							name: "Logs"
+						}
+					},
+					{ default: () => "Logs" }
+				),
+			key: "Logs",
+			icon: renderIcon(BlankIcon)
+		},
+		{
 			type: "divider"
 		},
 

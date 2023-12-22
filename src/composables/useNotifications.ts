@@ -20,6 +20,13 @@ export interface Notification {
 	actionTitle?: string
 }
 
+export interface PrependOptions {
+	/** prepend and send a notification */
+	sendNotify?: boolean
+	/** send a notification only if there isn't any item with match id/type/category */
+	autoNotify?: boolean
+}
+
 const list = useStorage<Notification[]>("notifications-list", [], localStorage)
 
 export function useNotifications() {
@@ -59,7 +66,20 @@ export function useNotifications() {
 		deleteAll: () => {
 			list.value = []
 		},
-		prepend: (newItem: Notification, sendNotify: boolean = true) => {
+		prepend: (newItem: Notification, options?: PrependOptions) => {
+			let sendNotify = options?.sendNotify || false
+			const autoNotify = options?.autoNotify || false
+
+			if (autoNotify) {
+				const item = list.value.find(
+					o => o.id === newItem.id && o.type === newItem.type && o.category === newItem.category
+				)
+
+				if (!item) {
+					sendNotify = true
+				}
+			}
+
 			if (sendNotify) {
 				const notify: NotificationObject = {
 					title: newItem.title,

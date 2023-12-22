@@ -23,6 +23,7 @@ import { useMessage, NSpin, NInput, NEmpty } from "naive-ui"
 import type { SocNote } from "@/types/soc/note.d"
 import { refDebounced } from "@vueuse/core"
 import { toRefs } from "vue"
+import axios from "axios"
 
 const requested = defineModel<boolean | undefined>("requested", { default: false })
 
@@ -56,7 +57,9 @@ function getNotes() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			if (!axios.isCancel(err)) {
+				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			}
 		})
 		.finally(() => {
 			loadingNotes.value = false

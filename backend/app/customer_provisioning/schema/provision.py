@@ -83,3 +83,9 @@ class GetSubscriptionsResponse(BaseModel):
     available_subscriptions: List[str] = Field(..., description="List of subscriptions available for provisioning")
     message: str = Field(..., description="Message indicating the status of the request")
     success: bool = Field(..., description="Whether the request was successful or not")
+
+
+class CustomersMetaResponse(BaseModel):
+    message: str = Field(..., description="Message indicating the status of the request")
+    success: bool = Field(..., description="Whether the request was successful or not")
+    customer_meta: CustomersMeta = Field(..., description="Customer meta data for the newly provisioned customer")

@@ -20,8 +20,11 @@ export default {
 	getAlertsBookmark() {
 		return HttpClient.get<FlaskBaseResponse & { bookmarked_alerts: SocAlert[] }>(`/soc/alerts/bookmark`)
 	},
-	getAlertsByUser(userId: string) {
-		return HttpClient.get<FlaskBaseResponse & { alerts: SocAlert[] }>(`/soc/alerts/alerts_by_user/${userId}`)
+	getAlertsByUser(userId: string, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { alerts: SocAlert[] }>(
+			`/soc/alerts/alerts_by_user/${userId}`,
+			signal ? { signal } : {}
+		)
 	},
 	addAlertBookmark(alertId: string) {
 		return HttpClient.post<FlaskBaseResponse & { alert: SocAlert }>(`/soc/alerts/bookmark/${alertId}`)
@@ -53,7 +56,6 @@ export default {
 							older_than: payload?.olderThan || 1,
 							time_unit: payload?.unit || "days"
 						}
-						// eslint-disable-next-line no-mixed-spaces-and-tabs
 				  }
 				: undefined
 		)
