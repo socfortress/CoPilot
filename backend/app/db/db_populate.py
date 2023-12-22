@@ -144,7 +144,7 @@ async def add_connectors_if_not_exist(session: AsyncSession):
         {
             "connector_name": "Grafana",
             "connector_type": "3",
-            "connector_url": "http://192.168.200.218:3000",
+            "connector_url": "http://10.255.255.5:3000",
             "connector_username": "admin",
             "connector_password": "admin",
             "connector_api_key": None,
@@ -154,7 +154,7 @@ async def add_connectors_if_not_exist(session: AsyncSession):
         {
             "connector_name": "Wazuh Worker Provisioning",
             "connector_type": "3",
-            "connector_url": "http://192.168.200.220:5003/provision_worker",
+            "connector_url": "http://10.255.255.5:5003/provision_worker",
             "connector_username": None,
             "connector_password": None,
             "connector_api_key": None,
