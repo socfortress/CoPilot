@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.auth.utils import AuthHandler
-from app.db.db_session import get_session
+from app.db.db_session import get_session, get_db
 from app.db.universal_models import Customers
 from app.db.universal_models import CustomersMeta
 from app.threat_intel.schema.socfortress import IoCResponse
@@ -21,7 +21,7 @@ from app.utils import get_connector_attribute
 threat_intel_socfortress_router = APIRouter()
 
 
-async def ensure_api_key_exists(session: AsyncSession = Depends(get_session)) -> bool:
+async def ensure_api_key_exists(session: AsyncSession = Depends(get_db)) -> bool:
     """
     Ensures that the SocFortress API key exists in the database.
 
@@ -50,7 +50,7 @@ async def ensure_api_key_exists(session: AsyncSession = Depends(get_session)) ->
 )
 async def threat_intel_socfortress(
     request: SocfortressThreatIntelRequest,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
     _key_exists: bool = Depends(ensure_api_key_exists),
 ):
     logger.info("Running SOCFortress Threat Intel")

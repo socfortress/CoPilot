@@ -29,7 +29,7 @@ from app.db.all_models import Connectors
 from app.db.db_session import Session
 from app.db.db_session import engine
 from app.db.db_session import get_db_session
-from app.db.db_session import get_session
+from app.db.db_session import get_session, get_db
 from app.db.universal_models import LogEntry
 from app.integrations.alert_creation_settings.models.alert_creation_settings import (
     AlertCreationEventConfig,
@@ -267,7 +267,7 @@ logs_router = APIRouter()
     description="Fetch all logs",
     dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
 )
-async def get_logs(session: AsyncSession = Depends(get_session)) -> LogsResponse:
+async def get_logs(session: AsyncSession = Depends(get_db)) -> LogsResponse:
     """
     Fetch all logs from the database.
 
@@ -296,7 +296,7 @@ async def get_logs(session: AsyncSession = Depends(get_session)) -> LogsResponse
     description="Fetch logs by user ID",
     dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
 )
-async def get_logs_by_user_id(user_id: int, session: AsyncSession = Depends(get_session)) -> LogsResponse:
+async def get_logs_by_user_id(user_id: int, session: AsyncSession = Depends(get_db)) -> LogsResponse:
     """
     Fetch all logs from the database where the user_id matches the provided user_id.
 
@@ -327,7 +327,7 @@ async def get_logs_by_user_id(user_id: int, session: AsyncSession = Depends(get_
     description="Fetch logs by time range",
     dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
 )
-async def get_logs_by_time_range(time_range: TimeRangeModel, session: AsyncSession = Depends(get_session)) -> LogsResponse:
+async def get_logs_by_time_range(time_range: TimeRangeModel, session: AsyncSession = Depends(get_db)) -> LogsResponse:
     """
     Fetch all logs from the database where the timestamp is within the provided time range.
 
@@ -367,7 +367,7 @@ async def get_logs_by_time_range(time_range: TimeRangeModel, session: AsyncSessi
 )
 async def get_logs_by_event_type(
     event_type: EventType,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
 ) -> LogsResponse:  # Update this line to use the new model
     """
     Fetch all logs from the database where the event_type matches the provided event_type.
@@ -399,7 +399,7 @@ async def get_logs_by_event_type(
     description="Purge all logs",
     dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
 )
-async def purge_logs(session: AsyncSession = Depends(get_session)) -> LogsResponse:  # Update this line to use the new model
+async def purge_logs(session: AsyncSession = Depends(get_db)) -> LogsResponse:  # Update this line to use the new model
     """
     Purge all logs from the database.
 
@@ -429,7 +429,7 @@ async def purge_logs(session: AsyncSession = Depends(get_session)) -> LogsRespon
     description="Purge logs by time range",
     dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
 )
-async def purge_logs_by_time_range(time_range: TimeRangeModel, session: AsyncSession = Depends(get_session)) -> LogsResponse:
+async def purge_logs_by_time_range(time_range: TimeRangeModel, session: AsyncSession = Depends(get_db)) -> LogsResponse:
     """
     Purge all logs from the database where the timestamp is within the provided time range.
 

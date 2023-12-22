@@ -19,7 +19,7 @@ from app.connectors.wazuh_manager.schema.rules import RuleExcludeResponse
 from app.connectors.wazuh_manager.services.rules import disable_rule
 from app.connectors.wazuh_manager.services.rules import enable_rule
 from app.connectors.wazuh_manager.services.rules import exclude_rule
-from app.db.db_session import get_session
+from app.db.db_session import get_session, get_db
 
 NEW_LEVEL = "1"
 wazuh_manager_rules_router = APIRouter()
@@ -36,7 +36,7 @@ def query_disabled_rule(rule_id: str):
     description="Get all disabled rules",
     dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
 )
-async def get_disabled_rules(session: AsyncSession = Depends(get_session)) -> AllDisabledRuleResponse:
+async def get_disabled_rules(session: AsyncSession = Depends(get_db)) -> AllDisabledRuleResponse:
     result = await session.execute(select(DisabledRule))
     disabled_rules = result.scalars().all()
     return AllDisabledRuleResponse(disabled_rules=disabled_rules, success=True, message="Successfully fetched all disabled rules")
@@ -77,7 +77,7 @@ async def get_disabled_rules(session: AsyncSession = Depends(get_session)) -> Al
 )
 async def disable_wazuh_rule(
     rule: RuleDisable,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
     username: str = Depends(AuthHandler().get_current_user),
 ) -> RuleDisableResponse:
     # Asynchronously check if the rule is already disabled
@@ -131,7 +131,7 @@ async def disable_wazuh_rule(
     description="Enable a Wazuh Rule",
     dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
 )
-async def enable_wazuh_rule(rule: RuleEnable, session: AsyncSession = Depends(get_session)) -> RuleEnableResponse:
+async def enable_wazuh_rule(rule: RuleEnable, session: AsyncSession = Depends(get_db)) -> RuleEnableResponse:
     # Asynchronously fetch the disabled rule
     logger.info(f"rule: {rule}")
     result = await session.execute(select(DisabledRule).where(DisabledRule.rule_id == rule.rule_id))

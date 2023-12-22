@@ -10,7 +10,7 @@ from sqlalchemy.future import select
 from app.auth.utils import AuthHandler
 from app.customer_provisioning.schema.decommission import DecommissionCustomerResponse
 from app.customer_provisioning.services.decommission import decomission_wazuh_customer
-from app.db.db_session import get_session
+from app.db.db_session import get_session, get_db
 from app.db.universal_models import Customers
 from app.db.universal_models import CustomersMeta
 
@@ -20,13 +20,13 @@ from app.db.universal_models import CustomersMeta
 customer_decommissioning_router = APIRouter()
 
 
-async def check_customermeta_exists(customer_name: str, session: AsyncSession = Depends(get_session)) -> CustomersMeta:
+async def check_customermeta_exists(customer_name: str, session: AsyncSession = Depends(get_db)) -> CustomersMeta:
     """
     Check if a customer exists in the database.
 
     Args:
         customer_name (str): The name of the customer to check.
-        session (AsyncSession, optional): The database session. Defaults to Depends(get_session).
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
 
     Returns:
         CustomersMeta: The customer object if found.
@@ -52,7 +52,7 @@ async def check_customermeta_exists(customer_name: str, session: AsyncSession = 
 )
 async def decommission_customer_route(
     _customer: CustomersMeta = Depends(check_customermeta_exists),
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
 ):
     logger.info("Decommissioning customer")
     customer_decommission = await decomission_wazuh_customer(_customer, session=session)

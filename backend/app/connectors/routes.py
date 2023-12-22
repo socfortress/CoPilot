@@ -17,7 +17,7 @@ from app.connectors.schema import ConnectorsListResponse
 from app.connectors.schema import UpdateConnector
 from app.connectors.schema import VerifyConnectorResponse
 from app.connectors.services import ConnectorServices
-from app.db.db_session import get_session
+from app.db.db_session import get_session, get_db
 
 connector_router = APIRouter()
 
@@ -28,7 +28,7 @@ connector_router = APIRouter()
     description="Fetch all available connectors",
     dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
 )
-async def get_connectors(session: AsyncSession = Depends(get_session)) -> ConnectorsListResponse:
+async def get_connectors(session: AsyncSession = Depends(get_db)) -> ConnectorsListResponse:
     """
     Fetch all available connectors from the database.
 
@@ -55,7 +55,7 @@ async def get_connectors(session: AsyncSession = Depends(get_session)) -> Connec
     description="Fetch a specific connector",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_connector(connector_id: int, session: AsyncSession = Depends(get_session)) -> Union[ConnectorResponse, HTTPException]:
+async def get_connector(connector_id: int, session: AsyncSession = Depends(get_db)) -> Union[ConnectorResponse, HTTPException]:
     """
     Fetch a specific connector by its ID.
 
@@ -85,7 +85,7 @@ async def get_connector(connector_id: int, session: AsyncSession = Depends(get_s
 )
 async def verify_connector(
     connector_id: int,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
 ) -> Union[VerifyConnectorResponse, HTTPException]:
     """
     Verify a connector by its ID.
@@ -118,7 +118,7 @@ async def verify_connector(
 async def update_connector(
     connector_id: int,
     connector: UpdateConnector,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
 ) -> ConnectorListResponse:
     """
     Update a connector by its ID.
@@ -147,7 +147,7 @@ async def update_connector(
     description="Upload a YAML file for a specific connector",
     dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
 )
-async def upload_yaml_file(connector_id: int, file: UploadFile = File(...), session: AsyncSession = Depends(get_session)) -> dict:
+async def upload_yaml_file(connector_id: int, file: UploadFile = File(...), session: AsyncSession = Depends(get_db)) -> dict:
     """
     Upload a YAML file for a specific connector ID.
 

@@ -66,7 +66,17 @@ def get_sync_db_session():
         logger.info("Closing sync DB session")
         session.close()
 
+# ! OLD CODE RELATING TO THE SESSION NOT CLOSING ! #
+# async def get_session():
+#     async with get_db_session() as session:
+#         return session
 
+# ! NEW CODE RELATING TO THE SESSION NOT CLOSING ! #
+@asynccontextmanager
 async def get_session():
     async with get_db_session() as session:
-        return session
+        yield session
+
+async def get_db():
+    async with get_session() as session:
+        yield session

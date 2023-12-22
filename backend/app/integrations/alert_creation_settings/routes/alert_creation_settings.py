@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
 
-from app.db.db_session import get_session
+from app.db.db_session import get_session, get_db
 from app.integrations.alert_creation_settings.models.alert_creation_settings import (
     AlertCreationEventConfig,
 )
@@ -46,7 +46,7 @@ alert_creation_settings_router = APIRouter()
 )
 async def get_customer_event_configs(
     customer_code: str,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
 ):
     event_configs = await get_customer_alert_event_configs(customer_code, session)
 
@@ -63,7 +63,7 @@ async def get_customer_event_configs(
 )
 async def create_alert_creation_settings(
     alert_creation_settings: AlertCreationSettingsCreate,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
 ):
     logger.info(f"alert_creation_settings: {alert_creation_settings.dict()}")
 
@@ -100,7 +100,7 @@ async def create_alert_creation_settings(
 )
 async def get_alert_creation_settings(
     customer_name: str,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
 ):
     result = await session.execute(
         select(AlertCreationSettings)
@@ -123,7 +123,7 @@ async def get_alert_creation_settings(
 async def add_event_order(
     customer_name: str,
     event_order: EventOrderCreate,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
 ):
     result = await session.execute(
         select(AlertCreationSettings)
@@ -161,7 +161,7 @@ async def add_event_order(
 async def update_event_orders(
     customer_name: str,
     event_orders: List[EventOrderCreate],
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
 ):
     result = await session.execute(
         select(AlertCreationSettings)
@@ -200,7 +200,7 @@ async def update_event_orders(
 async def delete_event_order(
     customer_name: str,
     order_label: str,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
 ):
     result = await session.execute(
         select(AlertCreationSettings)

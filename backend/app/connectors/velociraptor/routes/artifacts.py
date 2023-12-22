@@ -22,7 +22,7 @@ from app.connectors.velociraptor.services.artifacts import get_artifacts
 from app.connectors.velociraptor.services.artifacts import quarantine_host
 from app.connectors.velociraptor.services.artifacts import run_artifact_collection
 from app.connectors.velociraptor.services.artifacts import run_remote_command
-from app.db.db_session import get_session
+from app.db.db_session import get_session, get_db
 from app.db.universal_models import Agents
 
 # App specific imports
@@ -144,7 +144,7 @@ async def get_all_artifacts_for_os_prefix(os_prefix: str = Depends(verify_os_pre
     description="Get all artifacts for a specific host's OS prefix",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_all_artifacts_for_hostname(hostname: str, session: AsyncSession = Depends(get_session)) -> ArtifactsResponse:
+async def get_all_artifacts_for_hostname(hostname: str, session: AsyncSession = Depends(get_db)) -> ArtifactsResponse:
     logger.info(f"Fetching all artifacts for hostname {hostname}")
 
     # Asynchronous query to find the agent
@@ -198,7 +198,7 @@ async def get_all_artifacts_for_hostname(hostname: str, session: AsyncSession = 
 )
 async def collect_artifact(
     collect_artifact_body: CollectArtifactBody,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession = Depends(get_db),
 ) -> CollectArtifactResponse:
     logger.info(f"Received request to collect artifact {collect_artifact_body}")
     result = await get_all_artifacts_for_hostname(collect_artifact_body.hostname, session)
@@ -222,7 +222,7 @@ async def collect_artifact(
     description="Run a remote command",
     dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
 )
-async def run_command(run_command_body: RunCommandBody, session: AsyncSession = Depends(get_session)) -> RunCommandResponse:
+async def run_command(run_command_body: RunCommandBody, session: AsyncSession = Depends(get_db)) -> RunCommandResponse:
     logger.info(f"Received request to run command {run_command_body}")
     result = await get_all_artifacts_for_hostname(run_command_body.hostname, session)
     artifact_names = [artifact.name for artifact in result.artifacts]
@@ -243,7 +243,7 @@ async def run_command(run_command_body: RunCommandBody, session: AsyncSession = 
     description="Quarantine a host",
     dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
 )
-async def quarantine(quarantine_body: QuarantineBody, session: AsyncSession = Depends(get_session)) -> QuarantineResponse:
+async def quarantine(quarantine_body: QuarantineBody, session: AsyncSession = Depends(get_db)) -> QuarantineResponse:
     logger.info(f"Received request to quarantine host {quarantine_body}")
     result = await get_all_artifacts_for_hostname(quarantine_body.hostname, session)
     artifact_names = [artifact.name for artifact in result.artifacts]
