@@ -19,6 +19,7 @@ from app.middleware.exception_handlers import value_error_handler
 from app.middleware.logger import log_requests
 from app.routers import agents
 from app.routers import alert_creation
+from app.routers import alert_creation_settings
 from app.routers import ask_socfortress
 from app.routers import auth
 from app.routers import connectors
@@ -39,7 +40,6 @@ from app.routers import threat_intel
 from app.routers import velociraptor
 from app.routers import wazuh_indexer
 from app.routers import wazuh_manager
-from app.routers import alert_creation_settings
 from app.schedulers.scheduler import init_scheduler
 
 auth_handler = AuthHandler()

@@ -56,7 +56,7 @@ export default {
 							older_than: payload?.olderThan || 1,
 							time_unit: payload?.unit || "days"
 						}
-					}
+				  }
 				: undefined
 		)
 	},

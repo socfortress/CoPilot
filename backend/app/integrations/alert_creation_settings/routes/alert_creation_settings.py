@@ -1,16 +1,39 @@
+from typing import List
+
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
 from loguru import logger
+from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
-from typing import List
-from sqlalchemy import delete
 
 from app.db.db_session import get_session
-from app.integrations.alert_creation_settings.schema.alert_creation_settings import AlertCreationSettingsCreate, AlertCreationSettingsResponse, EventOrderCreate, EventOrderResponse, AlertCreationEventConfigResponse
-from app.integrations.alert_creation_settings.models.alert_creation_settings import AlertCreationSettings, EventOrder, AlertCreationEventConfig, AlertCreationEventConfig
+from app.integrations.alert_creation_settings.models.alert_creation_settings import (
+    AlertCreationEventConfig,
+)
+from app.integrations.alert_creation_settings.models.alert_creation_settings import (
+    AlertCreationSettings,
+)
+from app.integrations.alert_creation_settings.models.alert_creation_settings import (
+    EventOrder,
+)
+from app.integrations.alert_creation_settings.schema.alert_creation_settings import (
+    AlertCreationEventConfigResponse,
+)
+from app.integrations.alert_creation_settings.schema.alert_creation_settings import (
+    AlertCreationSettingsCreate,
+)
+from app.integrations.alert_creation_settings.schema.alert_creation_settings import (
+    AlertCreationSettingsResponse,
+)
+from app.integrations.alert_creation_settings.schema.alert_creation_settings import (
+    EventOrderCreate,
+)
+from app.integrations.alert_creation_settings.schema.alert_creation_settings import (
+    EventOrderResponse,
+)
 from app.utils import get_customer_alert_event_configs
 
 alert_creation_settings_router = APIRouter()
@@ -31,6 +54,7 @@ async def get_customer_event_configs(
         raise HTTPException(status_code=404, detail="No event configs found for this customer.")
 
     return event_configs
+
 
 @alert_creation_settings_router.post(
     "/create",
@@ -81,7 +105,7 @@ async def get_alert_creation_settings(
     result = await session.execute(
         select(AlertCreationSettings)
         .options(joinedload(AlertCreationSettings.event_orders).joinedload(EventOrder.event_configs))
-        .where(AlertCreationSettings.customer_name == customer_name)
+        .where(AlertCreationSettings.customer_name == customer_name),
     )
     settings = result.scalars().first()
 
@@ -89,6 +113,7 @@ async def get_alert_creation_settings(
         raise HTTPException(status_code=404, detail="Alert creation settings not found.")
 
     return settings
+
 
 @alert_creation_settings_router.post(
     "/{customer_name}/event",
@@ -103,7 +128,7 @@ async def add_event_order(
     result = await session.execute(
         select(AlertCreationSettings)
         .options(joinedload(AlertCreationSettings.event_orders).joinedload(EventOrder.event_configs))
-        .where(AlertCreationSettings.customer_name == customer_name)
+        .where(AlertCreationSettings.customer_name == customer_name),
     )
     settings = result.scalars().first()
 
@@ -121,9 +146,7 @@ async def add_event_order(
 
     # Query the EventOrder instance again to ensure event_configs are loaded
     result = await session.execute(
-        select(EventOrder)
-        .options(joinedload(EventOrder.event_configs))
-        .where(EventOrder.id == event_order_db.id)
+        select(EventOrder).options(joinedload(EventOrder.event_configs)).where(EventOrder.id == event_order_db.id),
     )
     event_order_db = result.scalars().first()
 
@@ -143,7 +166,7 @@ async def update_event_orders(
     result = await session.execute(
         select(AlertCreationSettings)
         .options(joinedload(AlertCreationSettings.event_orders).joinedload(EventOrder.event_configs))
-        .where(AlertCreationSettings.customer_name == customer_name)
+        .where(AlertCreationSettings.customer_name == customer_name),
     )
     settings = result.scalars().first()
 
@@ -182,7 +205,7 @@ async def delete_event_order(
     result = await session.execute(
         select(AlertCreationSettings)
         .options(joinedload(AlertCreationSettings.event_orders).joinedload(EventOrder.event_configs))
-        .where(AlertCreationSettings.customer_name == customer_name)
+        .where(AlertCreationSettings.customer_name == customer_name),
     )
     settings = result.scalars().first()
 

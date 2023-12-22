@@ -6,10 +6,12 @@ from typing import Tuple
 from elasticsearch7 import NotFoundError
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.db.db_session import get_session
-from app.integrations.alert_creation_settings.models.alert_creation_settings import AlertCreationEventConfig
 
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
+from app.db.db_session import get_session
+from app.integrations.alert_creation_settings.models.alert_creation_settings import (
+    AlertCreationEventConfig,
+)
 from app.utils import get_customer_alert_event_configs
 
 
@@ -245,10 +247,10 @@ class AlertDetailsService:
             results = {}
             for order_key in order_keys:
                 logger.info(f"Processing events for order key: {order_key}")
-                #results[order_key] = await self.process_events(events, order_key)
+                # results[order_key] = await self.process_events(events, order_key)
                 results = await self.process_events(events, order_key)
                 logger.info(f"Results: {results}")
-                #if results[order_key]["excluded"] is True:
+                # if results[order_key]["excluded"] is True:
                 if results is True:
                     return True
 

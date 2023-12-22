@@ -16,12 +16,15 @@ from app.integrations.alert_creation.general.schema.alert import IrisAlertPayloa
 from app.integrations.alert_creation.general.schema.alert import IrisAsset
 from app.integrations.alert_creation.general.schema.alert import IrisIoc
 from app.integrations.alert_creation.general.schema.alert import ValidIocFields
+from app.integrations.alert_creation.general.services.alert_multi_exclude import (
+    AlertDetailsService,
+)
 from app.integrations.utils.alerts import get_asset_type_id
 from app.integrations.utils.alerts import send_to_shuffle
 from app.integrations.utils.alerts import validate_ioc_type
 from app.integrations.utils.schema import ShufflePayload
 from app.utils import get_customer_alert_settings
-from app.integrations.alert_creation.general.services.alert_multi_exclude import AlertDetailsService
+
 
 def valid_ioc_fields() -> Set[str]:
     """

@@ -5,6 +5,7 @@ from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
 
+
 class Condition(SQLModel, table=True):
     __tablename__ = "custom_alert_creation_condition"
     id: int = Field(default=None, primary_key=True)
@@ -12,6 +13,7 @@ class Condition(SQLModel, table=True):
     field_name: str = Field(max_length=1024)
     field_value: str = Field(max_length=1024)
     event_order: "EventOrder" = Relationship(back_populates="conditions")
+
 
 class EventOrder(SQLModel, table=True):
     __tablename__ = "custom_alert_creation_event_order"
@@ -21,6 +23,7 @@ class EventOrder(SQLModel, table=True):
     conditions: List["Condition"] = Relationship(back_populates="event_order")
     alert_creation_settings: "AlertCreationSettings" = Relationship(back_populates="event_orders")
     event_configs: List["AlertCreationEventConfig"] = Relationship(back_populates="event_order")
+
 
 class AlertCreationSettings(SQLModel, table=True):
     __tablename__ = "custom_alert_creation_settings"
@@ -41,6 +44,7 @@ class AlertCreationSettings(SQLModel, table=True):
     shuffle_endpoint: Optional[str] = Field(max_length=1024)
     nvd_url: Optional[str] = Field(default="https://services.nvd.nist.gov/rest/json/cves/2.0?cveId", max_length=1024)
     event_orders: List[EventOrder] = Relationship(back_populates="alert_creation_settings")
+
 
 class AlertCreationEventConfig(SQLModel, table=True):
     __tablename__ = "custom_alert_creation_event_config"

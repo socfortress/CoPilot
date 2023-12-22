@@ -19,7 +19,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.integrations.utils.schema import ShufflePayload
 from app.integrations.utils.schema import WazuhAgentResponse
 from app.utils import get_customer_alert_settings
-import httpx
 
 
 #################### ! DFIR IRIS ASSET VALIDATOR ! ####################
@@ -331,7 +330,6 @@ async def validate_ioc_type(ioc_value: str) -> str:
     if ioc_type is None:
         logger.error("Failed to validate IoC value.")
     return ioc_type
-
 
 
 async def send_to_shuffle(payload: ShufflePayload, session: AsyncSession) -> bool:

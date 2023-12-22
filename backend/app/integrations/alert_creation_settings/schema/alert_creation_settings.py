@@ -1,6 +1,7 @@
-from typing import Optional
-from pydantic import BaseModel
 from typing import List
+from typing import Optional
+
+from pydantic import BaseModel
 
 
 class AlertCreationEventConfigCreate(BaseModel):
@@ -8,9 +9,11 @@ class AlertCreationEventConfigCreate(BaseModel):
     field: str
     value: str
 
+
 class EventOrderCreate(BaseModel):
     order_label: str
     event_configs: List[AlertCreationEventConfigCreate]
+
 
 class AlertCreationSettingsCreate(BaseModel):
     customer_code: str
@@ -30,14 +33,17 @@ class AlertCreationSettingsCreate(BaseModel):
     nvd_url: Optional[str] = "https://services.nvd.nist.gov/rest/json/cves/2.0?cveId"
     event_orders: Optional[List[EventOrderCreate]] = None
 
+
 class AlertCreationEventConfigResponse(BaseModel):
     event_id: str
     field: str
     value: str
 
+
 class EventOrderResponse(BaseModel):
     order_label: str
     event_configs: List[AlertCreationEventConfigResponse]
+
 
 class AlertCreationSettingsResponse(BaseModel):
     customer_code: str

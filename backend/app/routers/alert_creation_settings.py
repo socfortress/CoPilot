@@ -1,6 +1,8 @@
 from fastapi import APIRouter
 
-from app.integrations.alert_creation_settings.routes.alert_creation_settings import alert_creation_settings_router
+from app.integrations.alert_creation_settings.routes.alert_creation_settings import (
+    alert_creation_settings_router,
+)
 
 # Instantiate the APIRouter
 router = APIRouter()

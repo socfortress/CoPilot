@@ -13,7 +13,9 @@ from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
 from app.connectors.dfir_iris.utils.universal import initialize_client_and_alert
 from app.connectors.utils import get_connector_info_from_db
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
-from app.integrations.alert_creation_settings.models.alert_creation_settings import AlertCreationSettings
+from app.integrations.alert_creation_settings.models.alert_creation_settings import (
+    AlertCreationSettings,
+)
 from app.integrations.alert_escalation.schema.general_alert import CreateAlertRequest
 from app.integrations.alert_escalation.schema.general_alert import CreateAlertResponse
 from app.integrations.alert_escalation.schema.general_alert import GenericAlertModel

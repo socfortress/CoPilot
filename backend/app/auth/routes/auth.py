@@ -1,4 +1,5 @@
 from datetime import timedelta
+from typing import List
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -10,7 +11,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlmodel import Session
 from sqlmodel import engine
-from typing import List
 
 from app.auth.models.users import User
 from app.auth.models.users import UserInput
@@ -78,6 +78,7 @@ async def login(user: UserLogin):
         raise HTTPException(status_code=401, detail="Invalid username and/or password")
     token = auth_handler.encode_token(user_found.username)
     return {"token": token, "success": True, "message": "Login successful"}
+
 
 # Get all users
 @auth_router.get("/users", response_model=UserBaseResponse, description="Get all users")
