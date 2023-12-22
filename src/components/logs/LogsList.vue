@@ -225,7 +225,7 @@ function getData() {
 	loading.value = true
 
 	const query =
-		filterType.value && filterValue.value ? <LogsQuery>{ [filterType.value]: filterValue.value } : undefined
+		filterType.value && filterValue.value ? ({ [filterType.value]: filterValue.value } as LogsQuery) : undefined
 
 	Api.logs
 		.getLogs(query)
@@ -276,6 +276,7 @@ onBeforeMount(() => {
 	if (userId.value) {
 		filterType.value = "userId"
 		filterValue.value = userId.value
+		filtered.value = true
 	}
 
 	getUsers()

@@ -174,11 +174,10 @@ function gotoUsersPage(userId?: string | number) {
 
 	&.type- {
 		&error {
-			border-color: var(--secondary4-opacity-030-color);
-			background-color: var(--secondary4-opacity-005-color);
+			border-color: var(--secondary4-opacity-010-color);
 
 			.resource {
-				background-color: transparent;
+				background-color: var(--secondary4-opacity-005-color);
 				border: 1px solid var(--secondary4-opacity-030-color);
 			}
 		}

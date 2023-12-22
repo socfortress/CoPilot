@@ -116,9 +116,13 @@ const filterUserId = ref<string | null>(null)
 
 const userIdOptions = ref<{ label: string; value: string }[]>([])
 
-watch(filtered, val => {
-	emit("update:filtered", val)
-})
+watch(
+	filtered,
+	val => {
+		emit("update:filtered", val)
+	},
+	{ immediate: true }
+)
 
 function close() {
 	emit("close")
