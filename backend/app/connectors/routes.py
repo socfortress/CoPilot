@@ -17,7 +17,7 @@ from app.connectors.schema import ConnectorsListResponse
 from app.connectors.schema import UpdateConnector
 from app.connectors.schema import VerifyConnectorResponse
 from app.connectors.services import ConnectorServices
-from app.db.db_session import get_session
+from app.db.db_session import get_session, get_db
 
 connector_router = APIRouter()
 
@@ -28,7 +28,7 @@ connector_router = APIRouter()
     description="Fetch all available connectors",
     dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
 )
-async def get_connectors(session: AsyncSession = Depends(get_session)) -> ConnectorsListResponse:
+async def get_connectors(session: AsyncSession = Depends(get_db)) -> ConnectorsListResponse:
     """
     Fetch all available connectors from the database.
 
