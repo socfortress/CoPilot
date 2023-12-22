@@ -36,3 +36,8 @@ export interface User {
 	access_token: string
 	role: UserRole
 }
+
+export interface AuthUser {
+	id: number
+	username: string
+}

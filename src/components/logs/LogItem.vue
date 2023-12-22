@@ -30,16 +30,18 @@
 						<template #label>Type</template>
 						<template #value>{{ log.event_type }}</template>
 					</Badge>
-					<Badge v-if="log.user_id" type="active" @click="gotoUsersPage(log.user_id)" class="cursor-pointer">
+					<Badge type="splitted" v-if="log.user_id">
 						<template #iconLeft>
 							<Icon :name="UserIcon" :size="14"></Icon>
 						</template>
-						<template #label>
-							<span>#{{ log.user_id }}</span>
-							<span v-if="username" class="flex gap-2">
-								<span>/</span>
-								<span>
-									{{ username }}
+						<template #value>
+							<span class="flex items-center gap-2">
+								<span>#{{ log.user_id }}</span>
+								<span v-if="username" class="flex gap-2">
+									<span>/</span>
+									<span>
+										{{ username }}
+									</span>
 								</span>
 							</span>
 						</template>
@@ -56,18 +58,16 @@ import "@/assets/scss/vuesjv-override.scss"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
 import { LogEventType, type Log } from "@/types/logs.d"
-import { useRouter } from "vue-router"
 import Badge from "@/components/common/Badge.vue"
-import type { SocUser } from "@/types/soc/user.d"
 import { computed } from "vue"
+import type { AuthUser } from "@/types/auth.d"
 
-const { log, users } = defineProps<{ log: Log; users?: SocUser[] }>()
+const { log, users } = defineProps<{ log: Log; users?: AuthUser[] }>()
 
 const InfoIcon = "carbon:information"
 const UserIcon = "carbon:user"
 const ErrorIcon = "majesticons:exclamation-line"
 
-const router = useRouter()
 const dFormats = useSettingsStore().dateFormat
 
 const statusCategory = computed(() => log.status_code.toString()[0])
@@ -76,17 +76,13 @@ const eventTypeLower = computed(() => log.event_type.toLowerCase())
 const username = computed(() => {
 	if (!users?.length) return ""
 
-	const user = users.find(o => o.user_id.toString() === log.user_id?.toString())
+	const user = users.find(o => o.id.toString() === log.user_id?.toString())
 
-	return user?.user_login || ""
+	return user?.username || ""
 })
 
 function formatDate(timestamp: string | number | Date, utc: boolean = true): string {
 	return dayjs(timestamp).utc(utc).format(dFormats.datetime)
-}
-
-function gotoUsersPage(userId?: string | number) {
-	router.push(`/soc/users${userId ? "?user_id=" + userId : ""}`).catch(() => {})
 }
 </script>
 

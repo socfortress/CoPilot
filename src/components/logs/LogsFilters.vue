@@ -61,9 +61,9 @@ import { NButton, NSelect, NInputGroup, NInputNumber, NInput } from "naive-ui"
 import _cloneDeep from "lodash/cloneDeep"
 import _toSafeInteger from "lodash/toSafeInteger"
 import type { LogsQueryEventType, LogsQueryTimeRange, LogsQueryTypes, LogsQueryValues } from "@/api/logs"
-import type { SocUser } from "@/types/soc/user.d"
 import Api from "@/api"
 import { LogEventType } from "@/types/logs.d"
+import type { AuthUser } from "@/types/auth.d"
 
 const emit = defineEmits<{
 	(e: "close"): void
@@ -74,7 +74,7 @@ const emit = defineEmits<{
 const type = defineModel<LogsQueryTypes | null>("type", { default: null })
 const value = defineModel<LogsQueryValues | null>("value", { default: null })
 
-const props = defineProps<{ users?: SocUser[]; fetchingUsers?: boolean }>()
+const props = defineProps<{ users?: AuthUser[]; fetchingUsers?: boolean }>()
 const { users, fetchingUsers } = toRefs(props)
 
 const loadingUsers = ref(false)
@@ -151,7 +151,7 @@ function submit() {
 function getUsers() {
 	loadingUsers.value = true
 
-	Api.soc
+	Api.auth
 		.getUsers()
 		.then(res => {
 			if (res.data.success) {
@@ -163,10 +163,10 @@ function getUsers() {
 		})
 }
 
-function setUsers(users: SocUser[]) {
+function setUsers(users: AuthUser[]) {
 	userIdOptions.value = (users || []).map(o => ({
-		label: `#${o.user_id} - ${o.user_login}`,
-		value: o.user_id + ""
+		label: `#${o.id} - ${o.username}`,
+		value: o.id + ""
 	}))
 }
 

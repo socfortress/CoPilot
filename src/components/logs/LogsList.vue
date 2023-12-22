@@ -133,7 +133,7 @@ import LogsFilters from "./LogsFilters.vue"
 import LogItem from "./LogItem.vue"
 import { LogEventType, type Log } from "@/types/logs.d"
 import type { LogsQuery, LogsQueryTimeRange, LogsQueryTypes, LogsQueryValues } from "@/api/logs"
-import type { SocUser } from "@/types/soc/user.d"
+import type { AuthUser } from "@/types/auth.d"
 
 interface LogExt extends Log {
 	id?: string
@@ -147,7 +147,7 @@ const loadingUsers = ref(false)
 const loading = ref(false)
 const loadingPurge = ref(false)
 const showPurgeConfirm = ref(false)
-const usersList = ref<SocUser[]>([])
+const usersList = ref<AuthUser[]>([])
 const logsList = ref<LogExt[]>([])
 const showFilters = ref(false)
 
@@ -252,7 +252,7 @@ function getData() {
 function getUsers() {
 	loadingUsers.value = true
 
-	Api.soc
+	Api.auth
 		.getUsers()
 		.then(res => {
 			if (res.data.success) {

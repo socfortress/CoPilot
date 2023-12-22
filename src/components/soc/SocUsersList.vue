@@ -10,7 +10,6 @@
 							<th>Name</th>
 							<th>Active</th>
 							<th style="max-width: 300px">Alerts</th>
-							<th style="max-width: 45px"></th>
 						</tr>
 					</thead>
 					<tbody>
@@ -47,18 +46,6 @@
 							<td style="max-width: 300px">
 								<SocUserAlerts :user-id="user.user_id" />
 							</td>
-							<td style="max-width: 45px">
-								<Badge
-									type="active"
-									@click="gotoLogsPage(user.user_id)"
-									class="cursor-pointer !inline-flex"
-								>
-									<template #iconRight>
-										<Icon :name="LinkIcon" :size="14"></Icon>
-									</template>
-									<template #label>Logs</template>
-								</Badge>
-							</td>
 						</tr>
 					</tbody>
 				</n-table>
@@ -71,17 +58,14 @@
 import { ref, onBeforeMount, toRefs } from "vue"
 import { useMessage, NTable, NTooltip, NScrollbar, NSpin } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
-import Badge from "@/components/common/Badge.vue"
 import SocUserAlerts from "./SocUserAlerts.vue"
 import Api from "@/api"
 import type { SocAlert } from "@/types/soc/alert.d"
 import type { SocUser } from "@/types/soc/user.d"
-import { useRouter } from "vue-router"
 
 const props = defineProps<{ highlight: string | null | undefined }>()
 const { highlight } = toRefs(props)
 
-const LinkIcon = "carbon:launch"
 const InfoIcon = "carbon:information"
 
 const message = useMessage()
@@ -89,7 +73,6 @@ const loadingAlerts = ref(false)
 const loadingUsers = ref(false)
 const usersList = ref<SocUser[]>([])
 const alertsList = ref<SocAlert[]>([])
-const router = useRouter()
 
 function getUsers() {
 	loadingUsers.value = true
@@ -131,10 +114,6 @@ function getAlerts() {
 		.finally(() => {
 			loadingAlerts.value = false
 		})
-}
-
-function gotoLogsPage(userId?: string | number) {
-	router.push(`/logs${userId ? "?user_id=" + userId : ""}`).catch(() => {})
 }
 
 onBeforeMount(() => {
