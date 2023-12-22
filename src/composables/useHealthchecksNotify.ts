@@ -34,14 +34,13 @@ export function useHealthchecksNotify() {
 						actionTitle: "See Graylog Metrics"
 					}
 
-					if (val === null) {
-						useNotifications().prepend(obj)
-					} else if (val >= uncommittedJournalEntriesThreshold) {
+					if (val !== null && val >= uncommittedJournalEntriesThreshold) {
 						obj.type = "warning"
 						obj.title = "Uncommitted Journal Entries"
 						obj.description = `Value ${val} (over ${uncommittedJournalEntriesThreshold})`
-						useNotifications().prepend(obj)
 					}
+
+					useNotifications().prepend(obj, { autoNotify: true })
 				}
 			})
 
@@ -61,14 +60,13 @@ export function useHealthchecksNotify() {
 						actionTitle: "See Cluster"
 					}
 
-					if (val === null) {
-						useNotifications().prepend(obj)
-					} else if (val !== IndexHealth.GREEN) {
+					if (val !== null && val !== IndexHealth.GREEN) {
 						obj.type = val === IndexHealth.YELLOW ? "warning" : "error"
 						obj.title = "Cluster Health"
 						obj.description = `${_capitalize(clusterName.value || "Cluster")} is ${val.toUpperCase()}`
-						useNotifications().prepend(obj)
 					}
+
+					useNotifications().prepend(obj, { autoNotify: true })
 				}
 			})
 
@@ -88,14 +86,13 @@ export function useHealthchecksNotify() {
 						actionTitle: "See Healthcheck"
 					}
 
-					if (val === null) {
-						useNotifications().prepend(obj)
-					} else if (val.length) {
+					if (val !== null && val.length) {
 						obj.type = "warning"
 						obj.title = "Influx Alert"
 						obj.description = `${val.length} Critical ${val.length > 1 ? "issues" : "issue"}`
-						useNotifications().prepend(obj)
 					}
+
+					useNotifications().prepend(obj, { autoNotify: true })
 				}
 			})
 		}
