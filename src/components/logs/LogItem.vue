@@ -30,22 +30,6 @@
 						<template #label>Type</template>
 						<template #value>{{ log.event_type }}</template>
 					</Badge>
-					<!--
-						<Badge type="splitted">
-							<template #iconLeft>
-								<Icon :name="OwnerIcon" :size="16"></Icon>
-							</template>
-							<template #label>Owner</template>
-							<template #value>{{ caseData.owner }}</template>
-						</Badge>
-						<Badge type="splitted">
-							<template #iconLeft>
-								<Icon :name="CustomerIcon" :size="13"></Icon>
-							</template>
-							<template #label>Client</template>
-							<template #value>{{ caseData.client_name || "-" }}</template>
-						</Badge>
-					-->
 					<Badge v-if="log.user_id" type="active" @click="gotoUsersPage(log.user_id)" class="cursor-pointer">
 						<template #iconLeft>
 							<Icon :name="UserIcon" :size="14"></Icon>
