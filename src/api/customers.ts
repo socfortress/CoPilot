@@ -1,6 +1,6 @@
 import { type FlaskBaseResponse } from "@/types/flask.d"
 import { HttpClient } from "./httpClient"
-import type { Customer, CustomerAgentHealth, CustomerMeta } from "@/types/customers.d"
+import type { Customer, CustomerAgentHealth, CustomerMeta, CustomerProvision } from "@/types/customers.d"
 import type { Agent } from "@/types/agents.d"
 
 export interface CustomerAgentsHealthcheckQuery {
@@ -27,15 +27,19 @@ export default {
 	deleteCustomer(code: string) {
 		return HttpClient.delete<FlaskBaseResponse & { customer: Customer }>(`/customers/${code}`)
 	},
+	/** @deprecated */
 	getCustomerMeta(code: string) {
 		return HttpClient.get<FlaskBaseResponse & { customer_meta: CustomerMeta }>(`/customers/${code}/meta`)
 	},
+	/** @deprecated */
 	updateCustomerMeta(meta: CustomerMeta, code: string) {
 		return HttpClient.put<FlaskBaseResponse & { customer_meta: CustomerMeta }>(`/customers/${code}/meta`, meta)
 	},
+	/** @deprecated */
 	createCustomerMeta(meta: CustomerMeta, code: string) {
 		return HttpClient.post<FlaskBaseResponse & { customer_meta: CustomerMeta }>(`/customers/${code}/meta`, meta)
 	},
+	/** @deprecated */
 	deleteCustomerMeta(code: string) {
 		return HttpClient.delete<FlaskBaseResponse & { customer_meta: CustomerMeta }>(`/customers/${code}/meta`)
 	},
@@ -74,5 +78,31 @@ export default {
 				days: query?.days || 0
 			}
 		})
+	},
+	newCustomerProvision(provision: CustomerProvision, code: string) {
+		return HttpClient.post<FlaskBaseResponse & { customer_meta: CustomerMeta; wazuh_worker_provisioned: boolean }>(
+			`/customer_provisioning/provision`,
+			provision,
+			{
+				params: {
+					customer_name: code
+				}
+			}
+		)
+	},
+	getCustomerProvision(code: string) {
+		return HttpClient.get<FlaskBaseResponse & { customer_meta: CustomerMeta }>(
+			`/customer_provisioning/provision/${code}`
+		)
+	},
+	getProvisioningDashboards() {
+		return HttpClient.get<FlaskBaseResponse & { available_dashboards: string[] }>(
+			`/customer_provisioning/provision/dashboards`
+		)
+	},
+	getProvisioningSubscriptions() {
+		return HttpClient.get<FlaskBaseResponse & { available_subscriptions: string[] }>(
+			`/customer_provisioning/provision/subscriptions`
+		)
 	}
 }
