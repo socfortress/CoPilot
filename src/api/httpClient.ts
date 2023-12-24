@@ -1,6 +1,6 @@
 import { useAuthStore } from "@/stores/auth"
 import { isDebounceTimeOver, isJwtExpiring } from "@/utils/auth"
-import axios from "axios"
+import axios, { type AxiosRequestHeaders } from "axios"
 // import { useGlobalActions } from "@/composables/useGlobalActions"
 
 const BASE_URL = import.meta.env.VITE_API_URL
@@ -16,7 +16,7 @@ HttpClient.interceptors.request.use(
 	config => {
 		const store = useAuthStore()
 
-		if (!config.headers) config.headers = {}
+		if (!config.headers) config.headers = {} as AxiosRequestHeaders
 		config.headers.Authorization = `Bearer ${store.userToken}`
 
 		if (isJwtExpiring(store.userToken, 60 * 60) && !__TOKEN_REFRESHING && isDebounceTimeOver(__TOKEN_LAST_CHECK)) {
