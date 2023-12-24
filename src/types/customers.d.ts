@@ -16,8 +16,11 @@ export interface Customer {
 	logo_file: string
 }
 
-// all required
 export interface CustomerMeta {
+	id: 0
+	customer_code: "string"
+	customer_name: "string"
+
 	customer_meta_graylog_index: string
 	customer_meta_graylog_stream: string
 	customer_meta_grafana_org_id: string
@@ -26,6 +29,9 @@ export interface CustomerMeta {
 	customer_meta_wazuh_registration_port: string
 	customer_meta_wazuh_log_ingestion_port: string
 	customer_meta_wazuh_auth_password: string
+
+	customer_meta_iris_customer_id: number
+	customer_meta_office365_organization_id: string
 }
 
 export type CustomerHealthcheckSource = "wazuh" | "velociraptor"
@@ -47,4 +53,34 @@ export interface CustomerAgentHealth {
 	unhealthy_wazuh_agent: boolean | null
 	unhealthy_velociraptor_agent: boolean | null
 	unhealthy_recent_logs_collected: null
+}
+
+export interface CustomerProvision {
+	customer_name: string
+	customer_code: string
+	customer_index_name: string
+	customer_grafana_org_name: string
+	hot_data_retention: number
+	index_replicas: number
+	/** default this to 1 */
+	index_shards: number
+	/** default to Wazuh */
+	customer_subscription: string[] // ??
+	dashboards_to_include: {
+		dashboards: string[]
+		/** default to 0 */
+		organizationId: number
+		/** default to 0 */
+		folderId: number
+		/** default to "uid-to-be-replaced" */
+		datasourceUid: string
+	}
+	wazuh_auth_password: string
+	wazuh_registration_port: string
+	wazuh_logs_port: string
+	wazuh_api_port: string
+	wazuh_cluster_name: string
+	wazuh_cluster_key: string
+	wazuh_master_ip: string
+	grafana_url: string
 }
