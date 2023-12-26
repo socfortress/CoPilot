@@ -99,13 +99,19 @@ class Agents(SQLModel, table=True):
 
     @classmethod
     def create_from_model(cls, wazuh_agent, velociraptor_agent, customer_code):
+        # Check if agent_last_seen is 'Unknown' and set wazuh_last_seen accordingly
+        if wazuh_agent.agent_last_seen == 'Unknown':
+            wazuh_last_seen_value = "1970-01-01T00:00:00+00:00"  # default datetime value
+        else:
+            wazuh_last_seen_value = wazuh_agent.agent_last_seen_as_datetime
+
         return cls(
             agent_id=wazuh_agent.agent_id,
             hostname=wazuh_agent.agent_name,
             ip_address=wazuh_agent.agent_ip,
             os=wazuh_agent.agent_os,
             label=wazuh_agent.agent_label,
-            wazuh_last_seen=wazuh_agent.agent_last_seen_as_datetime,
+            wazuh_last_seen=wazuh_last_seen_value,
             wazuh_agent_version=wazuh_agent.wazuh_agent_version,
             velociraptor_id=velociraptor_agent.client_id if velociraptor_agent.client_id else "n/a",
             velociraptor_last_seen=velociraptor_agent.client_last_seen_as_datetime,
