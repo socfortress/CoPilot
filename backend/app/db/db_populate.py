@@ -6,6 +6,11 @@ from sqlmodel import Session
 from app.auth.models.users import Role
 from app.connectors.models import Connectors
 
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
 
 async def add_connectors_if_not_exist(session: AsyncSession):
     # List of connectors to add
@@ -13,9 +18,9 @@ async def add_connectors_if_not_exist(session: AsyncSession):
         {
             "connector_name": "Wazuh-Indexer",
             "connector_type": "4.4.1",
-            "connector_url": "https://ashwix01.socfortress.local:9200",
-            "connector_username": "admin",
-            "connector_password": "hmx7KPy15XPhJkgjlFrVgrWZ+Aid6QNm",
+            "connector_url": os.getenv("WAZUH_INDEXER_URL"),
+            "connector_username": os.getenv("WAZUH_INDEXER_USERNAME"),
+            "connector_password": os.getenv("WAZUH_INDEXER_PASSWORD"),
             "connector_api_key": None,
             "connector_configured": True,
             "connector_accepts_username_password": True,
