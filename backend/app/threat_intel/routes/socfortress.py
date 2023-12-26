@@ -34,7 +34,7 @@ async def ensure_api_key_exists(session: AsyncSession = Depends(get_db)) -> bool
     Returns:
         bool: True if the API key exists, otherwise raises HTTPException.
     """
-    api_key = await get_connector_attribute(connector_id=11, column_name="connector_api_key", session=session)
+    api_key = await get_connector_attribute(connector_id=10, column_name="connector_api_key", session=session)
     # Close the session
     await session.close()
     if not api_key:
