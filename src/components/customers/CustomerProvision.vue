@@ -1,6 +1,6 @@
 <template>
 	<div class="customer-provision">
-		<div class="p-7 pt-4" v-if="editing">
+		<div v-if="editing">
 			<CustomerProvisionWizard
 				@submitted="submitted"
 				:customerName="customerNameSanitized"
