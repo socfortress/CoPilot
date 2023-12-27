@@ -17,6 +17,9 @@ export interface Customer {
 }
 
 export interface CustomerMeta {
+	id: number
+	customer_code: string
+	customer_name: string
 	customer_meta_graylog_index: string
 	customer_meta_graylog_stream: string
 	customer_meta_grafana_org_id: string
@@ -25,14 +28,9 @@ export interface CustomerMeta {
 	customer_meta_wazuh_registration_port: string
 	customer_meta_wazuh_log_ingestion_port: string
 	customer_meta_wazuh_auth_password: string
+	customer_meta_iris_customer_id: number
+	customer_meta_office365_organization_id: string
 }
-/* TODO: add values to CustomerMeta
-id: number
-customer_code: string
-customer_name: string
-customer_meta_iris_customer_id: number
-customer_meta_office365_organization_id: string
-*/
 
 export type CustomerHealthcheckSource = "wazuh" | "velociraptor"
 
@@ -83,4 +81,11 @@ export interface CustomerProvision {
 	wazuh_cluster_key: string
 	wazuh_master_ip: string
 	grafana_url: string
+}
+
+export interface CustomerDecomissionedData {
+	agents_deleted: string[]
+	groups_deleted: string[]
+	stream_deleted: string
+	index_deleted: string
 }

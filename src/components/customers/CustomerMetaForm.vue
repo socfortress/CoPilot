@@ -8,6 +8,7 @@
 							<n-input
 								v-model:value.trim="form[key]"
 								:placeholder="fieldsMeta[key].placeholder"
+								:readonly="!!fieldsMeta[key].readonly"
 								clearable
 							/>
 						</n-form-item>
@@ -46,6 +47,13 @@ import {
 import type { CustomerMeta } from "@/types/customers.d"
 import _trim from "lodash/trim"
 import _get from "lodash/get"
+import _toSafeInteger from "lodash/toSafeInteger"
+import _omit from "lodash/omit"
+
+interface CustomerMetaExt extends Omit<CustomerMeta, "id" | "customer_meta_iris_customer_id"> {
+	id: string
+	customer_meta_iris_customer_id: string
+}
 
 const emit = defineEmits<{
 	(e: "update:loading", value: boolean): void
@@ -61,13 +69,15 @@ const emit = defineEmits<{
 const props = defineProps<{
 	customerMeta?: CustomerMeta
 	customerCode: string
+	customerName: string
+	metaId: number
 	resetOnSubmit?: boolean
 }>()
-const { customerMeta, customerCode, resetOnSubmit } = toRefs(props)
+const { customerMeta, customerCode, customerName, metaId, resetOnSubmit } = toRefs(props)
 
 const loading = ref(false)
 const message = useMessage()
-const form = ref<CustomerMeta>(getClearForm())
+const form = ref<CustomerMetaExt>(getClearForm())
 const formRef = ref<FormInst | null>(null)
 
 const rules: FormRules = {
@@ -110,10 +120,35 @@ const rules: FormRules = {
 		required: true,
 		message: "Please input Wazuh auth password",
 		trigger: ["input", "blur"]
+	},
+	customer_meta_iris_customer_id: {
+		required: true,
+		message: "Please input Wazuh auth password",
+		trigger: ["input", "blur"]
+	},
+	customer_meta_office365_organization_id: {
+		required: true,
+		message: "Please input Wazuh auth password",
+		trigger: ["input", "blur"]
 	}
 }
 
-const fieldsMeta = {
+const fieldsMeta: { [key: string]: { label: string; placeholder: string; readonly?: boolean } } = {
+	id: {
+		label: "Meta ID",
+		placeholder: "Meta ID...",
+		readonly: true
+	},
+	customer_code: {
+		label: "Customer Code",
+		placeholder: "Customer Code...",
+		readonly: true
+	},
+	customer_name: {
+		label: "Customer Name",
+		placeholder: "Customer Name...",
+		readonly: true
+	},
 	customer_meta_graylog_index: {
 		label: "Graylog Index",
 		placeholder: "Graylog Index..."
@@ -145,6 +180,14 @@ const fieldsMeta = {
 	customer_meta_wazuh_auth_password: {
 		label: "Wazuh auth password",
 		placeholder: "Wazuh auth password..."
+	},
+	customer_meta_iris_customer_id: {
+		label: "Iris Customer ID",
+		placeholder: "Iris Customer ID..."
+	},
+	customer_meta_office365_organization_id: {
+		label: "Office365 Organization ID",
+		placeholder: "Office365 Organization ID..."
 	}
 }
 
@@ -175,8 +218,11 @@ function validate() {
 	})
 }
 
-function getClearForm(customerMeta?: Partial<CustomerMeta>) {
+function getClearForm(customerMeta?: Partial<CustomerMeta>): CustomerMetaExt {
 	return {
+		id: metaId.value?.toString() || "",
+		customer_code: customerCode.value || "",
+		customer_name: customerName.value || "",
 		customer_meta_graylog_index: customerMeta?.customer_meta_graylog_index || "",
 		customer_meta_graylog_stream: customerMeta?.customer_meta_graylog_stream || "",
 		customer_meta_grafana_org_id: customerMeta?.customer_meta_grafana_org_id || "",
@@ -184,7 +230,27 @@ function getClearForm(customerMeta?: Partial<CustomerMeta>) {
 		customer_meta_wazuh_group: customerMeta?.customer_meta_wazuh_group || "",
 		customer_meta_wazuh_registration_port: customerMeta?.customer_meta_wazuh_registration_port || "",
 		customer_meta_wazuh_log_ingestion_port: customerMeta?.customer_meta_wazuh_log_ingestion_port || "",
-		customer_meta_wazuh_auth_password: customerMeta?.customer_meta_wazuh_auth_password || ""
+		customer_meta_wazuh_auth_password: customerMeta?.customer_meta_wazuh_auth_password || "",
+		customer_meta_iris_customer_id: customerMeta?.customer_meta_iris_customer_id?.toString() || "",
+		customer_meta_office365_organization_id: customerMeta?.customer_meta_office365_organization_id || ""
+	}
+}
+
+function getPayload(meta: CustomerMetaExt): CustomerMeta {
+	return {
+		id: _toSafeInteger(meta.id),
+		customer_code: meta.customer_code,
+		customer_name: meta.customer_name,
+		customer_meta_graylog_index: meta.customer_meta_graylog_index,
+		customer_meta_graylog_stream: meta.customer_meta_graylog_stream,
+		customer_meta_grafana_org_id: meta.customer_meta_grafana_org_id,
+		customer_meta_wazuh_group: meta.customer_meta_wazuh_group,
+		customer_meta_index_retention: meta.customer_meta_index_retention,
+		customer_meta_wazuh_registration_port: meta.customer_meta_wazuh_registration_port,
+		customer_meta_wazuh_log_ingestion_port: meta.customer_meta_wazuh_log_ingestion_port,
+		customer_meta_wazuh_auth_password: meta.customer_meta_wazuh_auth_password,
+		customer_meta_iris_customer_id: _toSafeInteger(meta.customer_meta_iris_customer_id),
+		customer_meta_office365_organization_id: meta.customer_meta_office365_organization_id
 	}
 }
 
@@ -197,7 +263,7 @@ function submit() {
 
 	const method = customerMeta.value?.customer_meta_graylog_index ? "updateCustomerMeta" : "createCustomerMeta"
 
-	Api.customers[method](form.value, customerCode.value)
+	Api.customers[method](getPayload(form.value), customerCode.value)
 		.then(res => {
 			if (res.data.success) {
 				emit("submitted", res.data.customer_meta)
