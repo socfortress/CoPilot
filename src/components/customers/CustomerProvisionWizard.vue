@@ -1,5 +1,5 @@
 <template>
-	<div class="customer-provision-wizard">
+	<n-spin :show="loading" class="customer-provision-wizard">
 		<div class="wrapper flex flex-col">
 			<div class="grow">
 				<n-scrollbar x-scrollable trigger="none">
@@ -21,31 +21,31 @@
 					<Transition :name="`slide-form-${slideFormDirection}`">
 						<div v-if="current === 1" class="px-7 flex flex-col gap-3">
 							<div class="flex flex-wrap gap-3">
-								<n-form-item label="customer_code" path="customer_code" class="grow">
+								<n-form-item label="Customer Code" path="customer_code" class="grow">
 									<n-input
 										v-model:value.trim="form.customer_code"
-										placeholder="customer_code"
+										placeholder="Input Customer Code..."
 										readonly
 										disabled
 									/>
 								</n-form-item>
-								<n-form-item label="customer_name" path="customer_name" class="grow">
+								<n-form-item label="Customer Name" path="customer_name" class="grow">
 									<n-input
 										v-model:value.trim="form.customer_name"
-										placeholder="customer_name"
+										placeholder="Input Customer Name..."
 										readonly
 										disabled
 									/>
 								</n-form-item>
 							</div>
 							<n-form-item
-								label="customer_grafana_org_name"
+								label="Customer Grafana.org Name"
 								path="customer_grafana_org_name"
 								class="grow"
 							>
 								<n-input
 									v-model:value.trim="form.customer_grafana_org_name"
-									placeholder="customer_grafana_org_name"
+									placeholder="Customer Grafana.org Name..."
 									clearable
 								/>
 							</n-form-item>
@@ -54,34 +54,34 @@
 						<div v-else-if="current === 2" class="px-7 flex flex-col gap-3">
 							<div class="flex flex-col sm:flex-row gap-3">
 								<n-form-item
-									label="customer_index_name"
+									label="Customer Index name"
 									path="customer_index_name"
 									class="grow basis-1/2"
 								>
 									<n-input
 										v-model:value.trim="form.customer_index_name"
-										placeholder="customer_index_name"
+										placeholder="Customer Index name..."
 										clearable
 										class="grow"
 									/>
 								</n-form-item>
 
-								<n-form-item label="index_replicas" path="index_replicas" class="grow basis-1/2">
+								<n-form-item label="Index replicas" path="index_replicas" class="grow basis-1/2">
 									<n-input-number v-model:value="form.index_replicas" min="0" class="grow" />
 								</n-form-item>
 							</div>
 							<div class="flex flex-wrap gap-3">
-								<n-form-item label="index_shards" path="index_shards" class="grow">
+								<n-form-item label="Index shards" path="index_shards" class="grow">
 									<n-input-number v-model:value="form.index_shards" min="0" class="grow" />
 								</n-form-item>
-								<n-form-item label="hot_data_retention" path="hot_data_retention" class="grow">
+								<n-form-item label="Hot Data Retention" path="hot_data_retention" class="grow">
 									<n-input-number v-model:value="form.hot_data_retention" min="0" class="grow" />
 								</n-form-item>
 							</div>
 						</div>
 
 						<div v-else-if="current === 3" class="px-7 flex flex-col gap-3">
-							<n-form-item label="customer_subscription" path="customer_subscription" class="grow">
+							<n-form-item label="Subscriptions" path="customer_subscription" class="grow">
 								<n-select
 									v-model:value="form.customer_subscription"
 									:options="subscriptionOptions"
@@ -95,11 +95,7 @@
 									class="grow"
 								/>
 							</n-form-item>
-							<n-form-item
-								label="dashboards_to_include"
-								path="dashboards_to_include.dashboards"
-								class="grow"
-							>
+							<n-form-item label="Dashboards" path="dashboards_to_include.dashboards" class="grow">
 								<n-select
 									v-model:value="form.dashboards_to_include.dashboards"
 									:options="dashboardOptions"
@@ -113,9 +109,47 @@
 							</n-form-item>
 						</div>
 
-						<div v-else-if="current === 4" class="px-7">
-							<n-button @click="prev()">prev</n-button>
-							<n-button type="primary" @click="submit()">submit</n-button>
+						<div v-else-if="current === 4" class="px-7 flex flex-wrap gap-3">
+							<n-form-item label="Auth Password" path="wazuh_auth_password" class="grow">
+								<n-input
+									v-model:value="form.wazuh_auth_password"
+									placeholder="Auth Password..."
+									clearable
+								/>
+							</n-form-item>
+							<n-form-item label="Registration Port" path="wazuh_registration_port" class="grow">
+								<n-input
+									v-model:value="form.wazuh_registration_port"
+									placeholder="Registration Port..."
+									clearable
+								/>
+							</n-form-item>
+							<n-form-item label="Logs Port" path="wazuh_logs_port" class="grow">
+								<n-input v-model:value="form.wazuh_logs_port" placeholder="Logs Port..." clearable />
+							</n-form-item>
+							<n-form-item label="Api Port" path="wazuh_api_port" class="grow">
+								<n-input v-model:value="form.wazuh_api_port" placeholder="Api Port..." clearable />
+							</n-form-item>
+							<n-form-item label="Cluster Name" path="wazuh_cluster_name" class="grow">
+								<n-input
+									v-model:value="form.wazuh_cluster_name"
+									placeholder="Cluster Name..."
+									clearable
+								/>
+							</n-form-item>
+							<n-form-item label="Cluster Key" path="wazuh_cluster_key" class="grow">
+								<n-input
+									v-model:value="form.wazuh_cluster_key"
+									placeholder="Cluster Key..."
+									clearable
+								/>
+							</n-form-item>
+							<n-form-item label="Master IP" path="wazuh_master_ip" class="grow">
+								<n-input v-model:value="form.wazuh_master_ip" placeholder="Master IP..." clearable />
+							</n-form-item>
+							<n-form-item label="Grafana Url" path="grafana_url" class="grow">
+								<n-input v-model:value="form.grafana_url" placeholder="Grafana Url..." clearable />
+							</n-form-item>
 						</div>
 					</Transition>
 				</n-form>
@@ -126,9 +160,19 @@
 					<slot name="additionalActions"></slot>
 				</div>
 				<div class="flex gap-4">
-					<n-button @click="prev()" v-if="isPrevStepEnabled">Prev</n-button>
-					<n-button @click="next()" v-if="isNextStepEnabled">Next</n-button>
-					<n-button type="primary" @click="submit()" v-if="isSubmitEnabled">Submit</n-button>
+					<n-button @click="prev()" v-if="isPrevStepEnabled">
+						<template #icon>
+							<Icon :name="ArrowLeftIcon"></Icon>
+						</template>
+						Prev
+					</n-button>
+					<n-button @click="next()" v-if="isNextStepEnabled" icon-placement="right">
+						<template #icon>
+							<Icon :name="ArrowRightIcon"></Icon>
+						</template>
+						Next
+					</n-button>
+					<n-button type="primary" @click="validate(submit)" v-if="isSubmitEnabled">Submit</n-button>
 
 					<!--
 						<n-button @click="reset()" :disabled="loading">Reset</n-button>
@@ -139,7 +183,7 @@
 				</div>
 			</div>
 		</div>
-	</div>
+	</n-spin>
 </template>
 
 <script setup lang="ts">
@@ -155,33 +199,36 @@ import {
 	NInput,
 	NSelect,
 	NInputNumber,
+	NSpin,
 	type StepsProps,
 	type FormRules,
-	type FormInst
+	type FormInst,
+	type FormItemRule,
+	type FormValidationError
 } from "naive-ui"
 import type { CustomerMeta, CustomerProvision } from "@/types/customers.d"
 import Icon from "@/components/common/Icon.vue"
 import Api from "@/api"
+import isURL from "validator/es/lib/isURL"
+import isPort from "validator/es/lib/isPort"
+import isIP from "validator/es/lib/isIP"
 import { onBeforeMount } from "vue"
 
 const emit = defineEmits<{
 	(e: "update:loading", value: boolean): void
 	(e: "submitted", value: CustomerMeta): void
-	(
-		e: "mounted",
-		value: {
-			reset: () => void
-		}
-	): void
 }>()
 
 const props = defineProps<{
 	customerCode: string
 	customerName: string
+	mode?: "new" | "update"
 }>()
-const { customerCode, customerName } = toRefs(props)
+const { customerCode, customerName, mode } = toRefs(props)
 
 const SkipIcon = "carbon:subtract"
+const ArrowRightIcon = "carbon:arrow-right"
+const ArrowLeftIcon = "carbon:arrow-left"
 
 const loading = ref(false)
 const loadingSubscriptions = ref(false)
@@ -195,7 +242,7 @@ const formRef = ref<FormInst | null>(null)
 const subscriptionOptions = ref<{ label: string; value: string }[]>([])
 const dashboardOptions = ref<{ label: string; value: string }[]>([])
 
-const isWazuhStepEnabled = computed(() => true)
+const isWazuhStepEnabled = computed(() => form.value.customer_subscription.map(o => o.toLowerCase()).includes("wazuh"))
 const isNextStepEnabled = computed(() => current.value < 3 || (current.value === 3 && isWazuhStepEnabled.value))
 const isPrevStepEnabled = computed(() => current.value > 1)
 const isSubmitEnabled = computed(
@@ -204,13 +251,65 @@ const isSubmitEnabled = computed(
 const slideFormDirection = ref<"right" | "left">("right")
 
 const rules: FormRules = {
-	/*
-	customer_meta_graylog_index: {
+	customer_name: {
 		required: true,
-		message: "Please input Graylog Index",
+		message: "Please input Customer Name",
 		trigger: ["input", "blur"]
 	},
-	*/
+	customer_code: {
+		required: true,
+		message: "Please input Customer Code",
+		trigger: ["input", "blur"]
+	},
+	customer_index_name: {
+		required: true,
+		message: "Please input Customer Index Name",
+		trigger: ["input", "blur"]
+	},
+	wazuh_registration_port: {
+		validator: validatePort,
+		trigger: ["blur"]
+	},
+	wazuh_logs_port: {
+		validator: validatePort,
+		trigger: ["blur"]
+	},
+	wazuh_api_port: {
+		validator: validatePort,
+		trigger: ["blur"]
+	},
+	wazuh_master_ip: {
+		validator: validateIp,
+		trigger: ["blur"]
+	},
+	grafana_url: {
+		validator: validateUrl,
+		trigger: ["blur"]
+	}
+}
+
+function validateUrl(rule: FormItemRule, value: string) {
+	if (value && !isURL(value)) {
+		return new Error("Please input a valid URL")
+	}
+
+	return true
+}
+
+function validatePort(rule: FormItemRule, value: string) {
+	if (value && !isPort(value)) {
+		return new Error("Please input a valid Port number")
+	}
+
+	return true
+}
+
+function validateIp(rule: FormItemRule, value: string) {
+	if (value && !isIP(value)) {
+		return new Error("Please input a valid IP Address")
+	}
+
+	return true
 }
 
 function getClearForm(): CustomerProvision {
@@ -248,19 +347,17 @@ function getClearForm(): CustomerProvision {
 }
 
 function next() {
-	currentStatus.value = "process"
-	slideFormDirection.value = "right"
-	current.value++
+	validate(() => {
+		currentStatus.value = "process"
+		slideFormDirection.value = "right"
+		current.value++
+	})
 }
 
 function prev() {
 	currentStatus.value = "process"
 	slideFormDirection.value = "left"
 	current.value--
-}
-
-function submit() {
-	currentStatus.value = "finish"
 }
 
 function getSubscriptions() {
@@ -300,6 +397,51 @@ function getDashboards() {
 		})
 		.finally(() => {
 			loadingDashboards.value = false
+		})
+}
+
+function validate(cb: () => void) {
+	if (!formRef.value) return
+
+	formRef.value.validate((errors?: Array<FormValidationError>) => {
+		if (!errors) {
+			cb()
+		} else {
+			message.warning("You must fill in the required fields correctly.")
+			return false
+		}
+	})
+}
+
+function reset() {
+	currentStatus.value = "process"
+	slideFormDirection.value = "right"
+	current.value = 1
+}
+
+async function submit() {
+	currentStatus.value = "finish"
+	loading.value = true
+
+	if (mode.value === "update") {
+		await Api.customers.decommissionCustomer(customerCode.value)
+	}
+
+	Api.customers
+		.newCustomerProvision(form.value, customerCode.value)
+		.then(res => {
+			if (res.data.success) {
+				emit("submitted", res.data.customer_meta)
+				reset()
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			loading.value = false
 		})
 }
 

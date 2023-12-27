@@ -5,6 +5,7 @@
 				@submitted="submitted"
 				:customerName="customerNameSanitized"
 				:customerCode="customerCode"
+				:mode="editingMode"
 			>
 				<template #additionalActions>
 					<n-button @click="editing = false">Close</n-button>
@@ -75,6 +76,7 @@ const editing = ref(false)
 const dialog = useDialog()
 const message = useMessage()
 
+const editingMode = computed<"new" | "update">(() => (customerMeta.value ? "update" : "new"))
 const customerNameSanitized = computed<string>(() => customerName.value || customerMeta.value?.customer_name || "")
 
 function submitted(newData: CustomerMeta) {
