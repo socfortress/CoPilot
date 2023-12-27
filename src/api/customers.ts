@@ -1,6 +1,12 @@
 import { type FlaskBaseResponse } from "@/types/flask.d"
 import { HttpClient } from "./httpClient"
-import type { Customer, CustomerAgentHealth, CustomerMeta, CustomerProvision } from "@/types/customers.d"
+import type {
+	Customer,
+	CustomerAgentHealth,
+	CustomerDecomissionedData,
+	CustomerMeta,
+	CustomerProvision
+} from "@/types/customers.d"
 import type { Agent } from "@/types/agents.d"
 
 export interface CustomerAgentsHealthcheckQuery {
@@ -85,7 +91,7 @@ export default {
 			provision,
 			{
 				params: {
-					customer_name: code
+					customer_code: code
 				}
 			}
 		)
@@ -93,6 +99,18 @@ export default {
 	getCustomerProvision(code: string) {
 		return HttpClient.get<FlaskBaseResponse & { customer_meta: CustomerMeta }>(
 			`/customer_provisioning/provision/${code}`
+		)
+	},
+	decommissionCustomer(code: string) {
+		return HttpClient.post<FlaskBaseResponse & { decomissioned_data: CustomerDecomissionedData }>(
+			`/customer_provisioning/decommission`,
+			{},
+			{
+				params: {
+					// TODO: replace with 'customer_code'
+					customer_name: code
+				}
+			}
 		)
 	},
 	getProvisioningDashboards() {
