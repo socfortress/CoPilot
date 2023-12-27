@@ -104,7 +104,7 @@
 			<Transition :name="`slide-tabs-${selectedTabsGroup === 'customer' ? 'left' : 'right'}`">
 				<n-tabs type="line" animated :tabs-padding="24" v-if="selectedTabsGroup === 'customer'">
 					<n-tab-pane name="Info" tab="Info" display-directive="show:lazy">
-						<CustomerInfoComponent
+						<CustomerInfo
 							:customer="customerInfo"
 							@delete="deletedItem()"
 							@submitted="customerInfo = $event"
@@ -112,10 +112,11 @@
 							v-if="customerInfo"
 						/>
 					</n-tab-pane>
-					<n-tab-pane name="Meta" tab="Meta" display-directive="show:lazy">
-						<CustomerMetaComponent
+					<n-tab-pane name="Provision" tab="Provision" display-directive="show:lazy">
+						<CustomerProvision
 							:customerMeta="customerMeta"
 							:customerCode="customer.customer_code"
+							:customerName="customer.customer_name"
 							@delete="customerMeta = null"
 							@submitted="customerMeta = $event"
 						/>
@@ -166,8 +167,8 @@
 import Icon from "@/components/common/Icon.vue"
 import Badge from "@/components/common/Badge.vue"
 import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
-import CustomerInfoComponent from "./CustomerInfo.vue"
-import CustomerMetaComponent from "./CustomerMeta.vue"
+import CustomerInfo from "./CustomerInfo.vue"
+import CustomerProvision from "./CustomerProvision.vue"
 import CustomerAgents from "./CustomerAgents.vue"
 import CustomerHealthcheckList from "./CustomerHealthcheckList.vue"
 import Api from "@/api"
