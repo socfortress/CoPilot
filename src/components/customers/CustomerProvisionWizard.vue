@@ -10,47 +10,159 @@
 							<n-step title="Subscription" />
 							<n-step title="Wazuh Worker">
 								<template #icon>
-									<Icon :name="SkipIcon" v-if="!isWazuhEnabled"></Icon>
+									<Icon :name="SkipIcon" v-if="!isWazuhStepEnabled"></Icon>
 								</template>
 							</n-step>
 						</n-steps>
 					</div>
 				</n-scrollbar>
 
-				<div class="form-container">
-					{{ current }}
-
+				<n-form :label-width="80" :model="form" :rules="rules" ref="formRef" class="form-container mt-4">
 					<Transition :name="`slide-form-${slideFormDirection}`">
-						<div v-if="current === 1">
-							<n-button @click="next()">next</n-button>
+						<div v-if="current === 1" class="px-7 flex flex-col gap-3">
+							<div class="flex flex-wrap gap-3">
+								<n-form-item label="customer_code" path="customer_code" class="grow">
+									<n-input
+										v-model:value.trim="form.customer_code"
+										placeholder="customer_code"
+										readonly
+										disabled
+									/>
+								</n-form-item>
+								<n-form-item label="customer_name" path="customer_name" class="grow">
+									<n-input
+										v-model:value.trim="form.customer_name"
+										placeholder="customer_name"
+										readonly
+										disabled
+									/>
+								</n-form-item>
+							</div>
+							<n-form-item
+								label="customer_grafana_org_name"
+								path="customer_grafana_org_name"
+								class="grow"
+							>
+								<n-input
+									v-model:value.trim="form.customer_grafana_org_name"
+									placeholder="customer_grafana_org_name"
+									clearable
+								/>
+							</n-form-item>
 						</div>
-						<div v-else-if="current === 2">
-							<n-button @click="prev()">prev</n-button>
-							<n-button @click="next()">next</n-button>
+
+						<div v-else-if="current === 2" class="px-7 flex flex-col gap-3">
+							<div class="flex flex-col sm:flex-row gap-3">
+								<n-form-item
+									label="customer_index_name"
+									path="customer_index_name"
+									class="grow basis-1/2"
+								>
+									<n-input
+										v-model:value.trim="form.customer_index_name"
+										placeholder="customer_index_name"
+										clearable
+										class="grow"
+									/>
+								</n-form-item>
+
+								<n-form-item label="index_replicas" path="index_replicas" class="grow basis-1/2">
+									<n-input-number v-model:value="form.index_replicas" min="0" class="grow" />
+								</n-form-item>
+							</div>
+							<div class="flex flex-wrap gap-3">
+								<n-form-item label="index_shards" path="index_shards" class="grow">
+									<n-input-number v-model:value="form.index_shards" min="0" class="grow" />
+								</n-form-item>
+								<n-form-item label="hot_data_retention" path="hot_data_retention" class="grow">
+									<n-input-number v-model:value="form.hot_data_retention" min="0" class="grow" />
+								</n-form-item>
+							</div>
 						</div>
-						<div v-else-if="current === 3">
-							<n-button @click="prev()">prev</n-button>
-							<n-button @click="next()" v-if="isWazuhEnabled">next</n-button>
-							<n-button type="primary" @click="submit()" v-else>submit</n-button>
+
+						<div v-else-if="current === 3" class="px-7 flex flex-col gap-3">
+							<n-form-item label="customer_subscription" path="customer_subscription" class="grow">
+								<n-select
+									v-model:value="form.customer_subscription"
+									:options="subscriptionOptions"
+									:loading="loadingSubscriptions"
+									:placeholder="
+										loadingSubscriptions ? 'Loading Subscriptions...' : 'Select Subscriptions'
+									"
+									multiple
+									clearable
+									to="body"
+									class="grow"
+								/>
+							</n-form-item>
+							<n-form-item
+								label="dashboards_to_include"
+								path="dashboards_to_include.dashboards"
+								class="grow"
+							>
+								<n-select
+									v-model:value="form.dashboards_to_include.dashboards"
+									:options="dashboardOptions"
+									:loading="loadingDashboards"
+									:placeholder="loadingDashboards ? 'Loading Dashboards...' : 'Select Dashboards'"
+									multiple
+									clearable
+									to="body"
+									class="grow"
+								/>
+							</n-form-item>
 						</div>
-						<div v-else-if="current === 4">
+
+						<div v-else-if="current === 4" class="px-7">
 							<n-button @click="prev()">prev</n-button>
 							<n-button type="primary" @click="submit()">submit</n-button>
 						</div>
 					</Transition>
-				</div>
+				</n-form>
 			</div>
 
-			<slot name="additionalActions"></slot>
+			<div class="flex justify-between gap-4 p-7 pt-4">
+				<div class="flex gap-4">
+					<slot name="additionalActions"></slot>
+				</div>
+				<div class="flex gap-4">
+					<n-button @click="prev()" v-if="isPrevStepEnabled">Prev</n-button>
+					<n-button @click="next()" v-if="isNextStepEnabled">Next</n-button>
+					<n-button type="primary" @click="submit()" v-if="isSubmitEnabled">Submit</n-button>
+
+					<!--
+						<n-button @click="reset()" :disabled="loading">Reset</n-button>
+						<n-button type="primary" :disabled="!isValid" @click="validate()" :loading="loading">
+							Submit
+						</n-button>
+					-->
+				</div>
+			</div>
 		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
 import { computed, ref, toRefs } from "vue"
-import { NSteps, NStep, useMessage, NScrollbar, NButton, type StepsProps } from "naive-ui"
-import type { CustomerMeta } from "@/types/customers.d"
+import {
+	NSteps,
+	NStep,
+	useMessage,
+	NScrollbar,
+	NButton,
+	NForm,
+	NFormItem,
+	NInput,
+	NSelect,
+	NInputNumber,
+	type StepsProps,
+	type FormRules,
+	type FormInst
+} from "naive-ui"
+import type { CustomerMeta, CustomerProvision } from "@/types/customers.d"
 import Icon from "@/components/common/Icon.vue"
+import Api from "@/api"
+import { onBeforeMount } from "vue"
 
 const emit = defineEmits<{
 	(e: "update:loading", value: boolean): void
@@ -72,12 +184,68 @@ const { customerCode, customerName } = toRefs(props)
 const SkipIcon = "carbon:subtract"
 
 const loading = ref(false)
+const loadingSubscriptions = ref(false)
+const loadingDashboards = ref(false)
 const message = useMessage()
 const current = ref<number>(1)
 const currentStatus = ref<StepsProps["status"]>("process")
+const form = ref<CustomerProvision>(getClearForm())
+const formRef = ref<FormInst | null>(null)
 
-const isWazuhEnabled = computed(() => false)
+const subscriptionOptions = ref<{ label: string; value: string }[]>([])
+const dashboardOptions = ref<{ label: string; value: string }[]>([])
+
+const isWazuhStepEnabled = computed(() => true)
+const isNextStepEnabled = computed(() => current.value < 3 || (current.value === 3 && isWazuhStepEnabled.value))
+const isPrevStepEnabled = computed(() => current.value > 1)
+const isSubmitEnabled = computed(
+	() => (current.value === 3 && !isWazuhStepEnabled.value) || (current.value === 4 && isWazuhStepEnabled.value)
+)
 const slideFormDirection = ref<"right" | "left">("right")
+
+const rules: FormRules = {
+	/*
+	customer_meta_graylog_index: {
+		required: true,
+		message: "Please input Graylog Index",
+		trigger: ["input", "blur"]
+	},
+	*/
+}
+
+function getClearForm(): CustomerProvision {
+	return {
+		// step1
+		customer_name: customerName.value,
+		customer_code: customerCode.value,
+		customer_grafana_org_name: "",
+
+		// step 2
+		customer_index_name: "",
+		hot_data_retention: 0,
+		index_replicas: 0,
+		index_shards: 1,
+
+		// step 3
+		customer_subscription: ["Wazuh"],
+		dashboards_to_include: {
+			dashboards: [],
+			organizationId: 0, // hide on form
+			folderId: 0, // hide on form
+			datasourceUid: "uid-to-be-replaced" // hide on form
+		},
+
+		// step 4
+		wazuh_auth_password: "",
+		wazuh_registration_port: "",
+		wazuh_logs_port: "",
+		wazuh_api_port: "",
+		wazuh_cluster_name: "",
+		wazuh_cluster_key: "",
+		wazuh_master_ip: "",
+		grafana_url: ""
+	}
+}
 
 function next() {
 	currentStatus.value = "process"
@@ -94,36 +262,82 @@ function prev() {
 function submit() {
 	currentStatus.value = "finish"
 }
+
+function getSubscriptions() {
+	loadingSubscriptions.value = true
+
+	Api.customers
+		.getProvisioningSubscriptions()
+		.then(res => {
+			if (res.data.success) {
+				subscriptionOptions.value = (res.data?.available_subscriptions || []).map(o => ({ label: o, value: o }))
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			loadingSubscriptions.value = false
+		})
+}
+
+function getDashboards() {
+	loadingDashboards.value = true
+
+	Api.customers
+		.getProvisioningDashboards()
+		.then(res => {
+			if (res.data.success) {
+				dashboardOptions.value = (res.data?.available_dashboards || []).map(o => ({ label: o, value: o }))
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			loadingDashboards.value = false
+		})
+}
+
+onBeforeMount(() => {
+	getSubscriptions()
+	getDashboards()
+})
 </script>
 
 <style lang="scss" scoped>
 .customer-provision-wizard {
 	.wrapper {
-		min-height: 400px;
+		min-height: 480px;
 	}
-}
 
-.slide-form-right-enter-active,
-.slide-form-right-leave-active,
-.slide-form-left-enter-active,
-.slide-form-left-leave-active {
-	transition: all 0.2s ease-out;
-	position: absolute;
-}
+	.slide-form-right-enter-active,
+	.slide-form-right-leave-active,
+	.slide-form-left-enter-active,
+	.slide-form-left-leave-active {
+		transition: all 0.2s ease-out;
+		position: absolute;
+		width: 100%;
+	}
 
-.slide-form-left-enter-from {
-	transform: translateX(-100%);
-}
+	.slide-form-left-enter-from {
+		transform: translateX(-100%);
+	}
 
-.slide-form-left-leave-to {
-	transform: translateX(100%);
-}
+	.slide-form-left-leave-to {
+		transform: translateX(100%);
+	}
 
-.slide-form-right-enter-from {
-	transform: translateX(100%);
-}
+	.slide-form-right-enter-from {
+		transform: translateX(100%);
+	}
 
-.slide-form-right-leave-to {
-	transform: translateX(-100%);
+	.slide-form-right-leave-to {
+		transform: translateX(-100%);
+	}
 }
 </style>

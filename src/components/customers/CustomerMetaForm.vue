@@ -48,7 +48,6 @@ import type { CustomerMeta } from "@/types/customers.d"
 import _trim from "lodash/trim"
 import _get from "lodash/get"
 import _toSafeInteger from "lodash/toSafeInteger"
-import _omit from "lodash/omit"
 
 interface CustomerMetaExt extends Omit<CustomerMeta, "id" | "customer_meta_iris_customer_id"> {
 	id: string

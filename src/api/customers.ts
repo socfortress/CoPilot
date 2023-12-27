@@ -107,8 +107,7 @@ export default {
 			{},
 			{
 				params: {
-					// TODO: replace with 'customer_code'
-					customer_name: code
+					customer_code: code
 				}
 			}
 		)
