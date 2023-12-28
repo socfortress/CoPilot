@@ -20,12 +20,12 @@ from app.db.universal_models import CustomersMeta
 customer_decommissioning_router = APIRouter()
 
 
-async def check_customermeta_exists(customer_name: str, session: AsyncSession = Depends(get_db)) -> CustomersMeta:
+async def check_customermeta_exists(customer_code: str, session: AsyncSession = Depends(get_db)) -> CustomersMeta:
     """
     Check if a customer exists in the database.
 
     Args:
-        customer_name (str): The name of the customer to check.
+        customer_code (str): The customer code of the customer to check.
         session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
 
     Returns:
@@ -34,12 +34,12 @@ async def check_customermeta_exists(customer_name: str, session: AsyncSession = 
     Raises:
         HTTPException: If the customer is not found.
     """
-    logger.info(f"Checking if customer {customer_name} exists")
-    result = await session.execute(select(CustomersMeta).filter(CustomersMeta.customer_name == customer_name))
+    logger.info(f"Checking if customer {customer_code} exists")
+    result = await session.execute(select(CustomersMeta).filter(CustomersMeta.customer_code == customer_code))
     customer_meta = result.scalars().first()
 
     if not customer_meta:
-        raise HTTPException(status_code=404, detail=f"Customer: {customer_name} not found. Please create the customer first.")
+        raise HTTPException(status_code=404, detail=f"Customer: {customer_code} not found. Please create the customer first.")
 
     return customer_meta
 

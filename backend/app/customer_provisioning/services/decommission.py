@@ -90,7 +90,7 @@ async def decommission_wazuh_worker(request: DecommissionWorkerRequest, session:
         ProvisionWorkerResponse: The response object indicating the success or failure of the provisioning operation.
     """
     logger.info(f"Decommissioning Wazuh worker {request}")
-    api_endpoint = await get_connector_attribute(connector_id=14, column_name="connector_url", session=session)
+    api_endpoint = await get_connector_attribute(connector_id=13, column_name="connector_url", session=session)
     # Send the POST request to the Wazuh worker
     response = requests.post(
         url=f"{api_endpoint}/provision_worker/decommission",

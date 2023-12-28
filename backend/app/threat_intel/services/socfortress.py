@@ -29,7 +29,7 @@ async def get_socfortress_threat_intel_attributes(column_name: str, session: Asy
         str: The SocFortress Threat Intel Attribute.
 
     """
-    attribute_value = await get_connector_attribute(connector_id=11, column_name=column_name, session=session)
+    attribute_value = await get_connector_attribute(connector_id=10, column_name=column_name, session=session)
     # Close the session
     await session.close()
     if not attribute_value:

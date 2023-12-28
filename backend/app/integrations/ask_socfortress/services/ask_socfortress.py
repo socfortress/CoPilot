@@ -54,7 +54,7 @@ async def get_ask_socfortress_attributes(column_name: str, session: AsyncSession
         str: The Ask SocFortress Attribute.
 
     """
-    attribute_value = await get_connector_attribute(connector_id=10, column_name=column_name, session=session)
+    attribute_value = await get_connector_attribute(connector_id=9, column_name=column_name, session=session)
     # Close the session
     await session.close()
     if not attribute_value:

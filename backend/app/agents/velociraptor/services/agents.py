@@ -98,16 +98,16 @@ def handle_exception(e: Exception, client_id: str) -> dict:
     )
 
 
-def delete_agent_velociraptor(client_id: str) -> AgentModifyResponse:
+async def delete_agent_velociraptor(client_id: str) -> AgentModifyResponse:
     try:
-        delete_client(client_id=client_id)
-        ensure_client_deleted(client_id=client_id)
+        await delete_client(client_id=client_id)
+        await ensure_client_deleted(client_id=client_id)
         return AgentModifyResponse(success=True, message="Agent deleted successfully")
     except Exception as e:
         return handle_exception(e, client_id)
 
 
-def delete_client(client_id: str) -> dict:
+async def delete_client(client_id: str) -> dict:
     universal_service = UniversalService()
     try:
         query = create_query(
@@ -119,7 +119,7 @@ def delete_client(client_id: str) -> dict:
         return handle_exception(e, client_id)
 
 
-def ensure_client_deleted(client_id: str) -> dict:
+async def ensure_client_deleted(client_id: str) -> dict:
     universal_service = UniversalService()
     try:
         query = create_query("SELECT collect_client(client_id='server', artifacts=['Server.Information.Clients'], env=dict()) FROM scope()")

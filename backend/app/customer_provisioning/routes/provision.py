@@ -40,13 +40,13 @@ def get_available_subscriptions():
         raise HTTPException(status_code=500, detail=f"Error getting available subscriptions: {e}")
 
 
-async def check_customer_exists(customer_name: str, session: AsyncSession = Depends(get_db)) -> Customers:
-    logger.info(f"Checking if customer {customer_name} exists")
-    result = await session.execute(select(Customers).filter(Customers.customer_name == customer_name))
+async def check_customer_exists(customer_code: str, session: AsyncSession = Depends(get_db)) -> Customers:
+    logger.info(f"Checking if customer {customer_code} exists")
+    result = await session.execute(select(Customers).filter(Customers.customer_code == customer_code))
     customer = result.scalars().first()
 
     if not customer:
-        raise HTTPException(status_code=404, detail=f"Customer: {customer_name} not found. Please create the customer first.")
+        raise HTTPException(status_code=404, detail=f"Customer: {customer_code} not found. Please create the customer first.")
 
     return customer
 
@@ -95,21 +95,21 @@ async def get_subscriptions_route():
         message="Subscriptions retrieved successfully",
     )
 
-# Get the customermeta based on the customer name
+# Get the customermeta based on the customer code
 @customer_provisioning_router.get(
-    "/provision/{customer_name}",
+    "/provision/{customer_code}",
     response_model=CustomersMetaResponse,
     description="Get Customer Meta",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_customer_meta(customer_name: str, session: AsyncSession = Depends(get_db)):
-    logger.info(f"Getting customer meta for customer {customer_name}")
-    result = await session.execute(select(CustomersMeta).filter(CustomersMeta.customer_name == customer_name))
+async def get_customer_meta(customer_code: str, session: AsyncSession = Depends(get_db)):
+    logger.info(f"Getting customer meta for customer {customer_code}")
+    result = await session.execute(select(CustomersMeta).filter(CustomersMeta.customer_code == customer_code))
     customer_meta = result.scalars().first()
 
     if not customer_meta:
         raise HTTPException(
-            status_code=404, detail=f"Customer meta not found for customer: {customer_name}. Please provision the customer first.",
+            status_code=404, detail=f"Customer meta not found for customer: {customer_code}. Please provision the customer first.",
         )
 
     return CustomersMetaResponse(message="Customer meta retrieved successfully", success=True, customer_meta=customer_meta)

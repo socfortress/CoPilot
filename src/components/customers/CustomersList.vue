@@ -6,7 +6,12 @@
 				<strong class="font-mono">{{ totalCustomers }}</strong>
 			</div>
 			<div>
-				<n-button size="small" type="primary" @click="showAddCustomer = true">Add Customer</n-button>
+				<n-button size="small" type="primary" @click="showAddCustomer = true">
+					<template #icon>
+						<Icon :name="AddUserIcon" :size="14"></Icon>
+					</template>
+					Add Customer
+				</n-button>
 			</div>
 		</div>
 		<n-spin :show="loadingCustomers">
@@ -45,6 +50,7 @@
 <script setup lang="ts">
 import { ref, onBeforeMount, computed, watch, toRefs, nextTick } from "vue"
 import { useMessage, NSpin, NEmpty, NButton, NDrawer, NDrawerContent } from "naive-ui"
+import Icon from "@/components/common/Icon.vue"
 import Api from "@/api"
 import CustomerForm from "./CustomerForm.vue"
 import CustomerItem from "./CustomerItem.vue"
@@ -52,6 +58,8 @@ import type { Customer } from "@/types/customers.d"
 
 const props = defineProps<{ highlight: string | null | undefined }>()
 const { highlight } = toRefs(props)
+
+const AddUserIcon = "carbon:user-follow"
 
 const customerFormCTX = ref<{ reset: () => void } | null>(null)
 const message = useMessage()

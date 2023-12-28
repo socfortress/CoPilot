@@ -6,175 +6,218 @@ from sqlmodel import Session
 from app.auth.models.users import Role
 from app.connectors.models import Connectors
 
+from dotenv import load_dotenv
+import os
 
-async def add_connectors_if_not_exist(session: AsyncSession):
-    # List of connectors to add
-    connector_list = [
-        {
-            "connector_name": "Wazuh-Indexer",
-            "connector_type": "4.4.1",
-            "connector_url": "https://ashwix01.socfortress.local:9200",
-            "connector_username": "admin",
-            "connector_password": "hmx7KPy15XPhJkgjlFrVgrWZ+Aid6QNm",
-            "connector_api_key": None,
-            "connector_configured": True,
-            "connector_accepts_username_password": True,
-        },
-        {
-            "connector_name": "Wazuh-Manager",
-            "connector_type": "4.4.1",
-            "connector_url": "https://ashwzhma.socfortress.local:55000",
-            "connector_username": "wazuh-wui",
-            "connector_password": "wazuh-wui",
-            "connector_api_key": None,
-            "connector_configured": True,
-            "connector_accepts_username_password": True,
-        },
-        {
-            "connector_name": "Graylog",
-            "connector_type": "5.0.7",
-            "connector_url": "http://ashgrl02.socfortress.local:9000",
-            "connector_username": "socfortress_graylog_manager",
-            "connector_password": "R{2PvE5TQkU7[xS$pX>fw>`y",
-            "connector_api_key": None,
-            "connector_configured": True,
-            "connector_accepts_username_password": True,
-        },
-        {
-            "connector_name": "Shuffle",
-            "connector_type": "1.1.0",
-            "connector_url": "https://ASHDKR02.socfortress.local:3443",
-            "connector_username": "sting",
-            "connector_password": "string",
-            "connector_api_key": "bc5d1e18-6230-40f0-b032-6ed898c307c5",
-            "connector_configured": True,
-            "connector_accepts_api_key": True,
-        },
-        {
-            "connector_name": "DFIR-IRIS",
-            "connector_type": "2.0",
-            "connector_url": "https://ashirs01.socfortress.local",
-            "connector_username": None,
-            "connector_password": None,
-            "connector_api_key": "I3Hwvkpvdk8Z0XRFlyGm4WXGw8jksnEzvKNoD9BobtSQ2AgWmdo_p-pfmJCg_ev2cm8I-zgWzAfya3jLBWZ6qw",
-            "connector_configured": True,
-            "connector_accepts_api_key": True,
-        },
-        {
-            "connector_name": "Velociraptor",
-            "connector_type": "0.6.8",
-            "connector_url": "https://ashvlo01.socfortress.local:8001",
-            "connector_username": None,
-            "connector_password": None,
-            "connector_api_key": "C:\\Users\\walto\\Desktop\\GitHub\\CoPilot\\backend\\file-store\\api.config.yaml",
-            "connector_configured": True,
-            "connector_accepts_file": True,
-        },
-        {
-            "connector_name": "RabbitMQ",
-            "connector_type": "3",
-            "connector_url": "ashdkr02.socfortress.local:5672",
-            "connector_username": "guest",
-            "connector_password": "guest",
-            "connector_api_key": None,
-            "connector_configured": True,
-            "connector_accepts_username_password": True,
-        },
-        {
-            "connector_name": "Sublime",
-            "connector_type": "3",
-            "connector_url": "http://ashdkr02.socfortress.local:8000",
-            "connector_username": None,
-            "connector_password": None,
-            "connector_api_key": "7653trxhakxn4wxdh8bbatbvu97hm8fopos7wztzjrwfd12gf5i2kyebhvke9rt4",
-            "connector_configured": True,
-            "connector_accepts_api_key": True,
-        },
-        {
-            "connector_name": "InfluxDB",
-            "connector_type": "3",
-            "connector_url": "http://ashdkr02.socfortress.local:8086",
-            "connector_username": "SOCFortress",
-            "connector_password": None,
-            "connector_api_key": "gOLoFKucQXXd5d1rDx59YYktIz6OfrHIe4jRowJKZ8iB4IcZES8rOhRPaDEejEkahch8Ze2FiMzZxbQ9ZV8K6g==",
-            "connector_configured": True,
-            "connector_accepts_api_key": True,
-        },
-        {
-            "connector_name": "AskSocfortress",
-            "connector_type": "3",
-            "connector_url": "https://knowledge.socfortress.co",
-            "connector_username": None,
-            "connector_password": None,
-            "connector_api_key": "CkKmw1B9NM1hG669tC4sTazLm1HlRfSXVvMZkxa9",
-            "connector_configured": True,
-            "connector_accepts_api_key": True,
-        },
-        {
-            "connector_name": "SocfortressThreatIntel",
-            "connector_type": "3",
-            "connector_url": "https://intel.socfortress.co/search",
-            "connector_username": None,
-            "connector_password": None,
-            "connector_api_key": "ozH1jHp1zmacCePYrAZmxarJCGptcMth93a86Jq8",
-            "connector_configured": True,
-            "connector_accepts_api_key": True,
-        },
-        {
-            "connector_name": "Cortex",
-            "connector_type": "3",
-            "connector_url": "http://ashvlo01.socfortress.local:9001",
-            "connector_username": None,
-            "connector_password": None,
-            "connector_api_key": "+k/DvVYMEYURbc8sUdXA5/hW9VhJZV3v",
-            "connector_configured": True,
-            "connector_accepts_api_key": True,
-        },
-        {
-            "connector_name": "InfluxDB",
-            "connector_type": "3",
-            "connector_url": "http://ashwzhma.socfortress.local:8086",
-            "connector_username": None,
-            "connector_password": None,
-            "connector_api_key": "DDMsDZzI1xRHYxQT60fNZ_2zZtCnAKq04GmqEF3prLJOIw5iNzEtlXkui1a5Y6d5_eWf1nomug9FmE0ue1J5iQ==",
-            "connector_configured": True,
-            "connector_accepts_api_key": True,
-            "connector_extra_data": "telegraf",
-        },
-        {
-            "connector_name": "Grafana",
-            "connector_type": "3",
-            "connector_url": "http://10.255.255.5:3000",
-            "connector_username": "admin",
-            "connector_password": "admin",
-            "connector_api_key": None,
-            "connector_configured": True,
-            "connector_accepts_username_password": True,
-        },
-        {
-            "connector_name": "Wazuh Worker Provisioning",
-            "connector_type": "3",
-            "connector_url": "http://10.255.255.5:5003/provision_worker",
-            "connector_username": None,
-            "connector_password": None,
-            "connector_api_key": None,
-            "connector_configured": True,
-            "connector_accepts_api_key": False,
-        },
+load_dotenv()
+
+# ! OLD BUT STILL WORKS ! #
+# async def add_connectors_if_not_exist(session: AsyncSession):
+#     # List of connectors to add
+#     connector_list = [
+#         {
+#             "connector_name": "Wazuh-Indexer",
+#             "connector_type": "4.4.1",
+#             "connector_url": os.getenv("WAZUH_INDEXER_URL"),
+#             "connector_username": os.getenv("WAZUH_INDEXER_USERNAME"),
+#             "connector_password": os.getenv("WAZUH_INDEXER_PASSWORD"),
+#             "connector_api_key": None,
+#             "connector_configured": True,
+#             "connector_accepts_username_password": True,
+#         },
+#         {
+#             "connector_name": "Wazuh-Manager",
+#             "connector_type": "4.4.1",
+#             "connector_url": os.getenv("WAZUH_MANAGER_URL"),
+#             "connector_username": os.getenv("WAZUH_MANAGER_USERNAME"),
+#             "connector_password": os.getenv("WAZUH_MANAGER_PASSWORD"),
+#             "connector_api_key": None,
+#             "connector_configured": True,
+#             "connector_accepts_username_password": True,
+#         },
+#         {
+#             "connector_name": "Graylog",
+#             "connector_type": "5.0.7",
+#             "connector_url": os.getenv("GRAYLOG_URL"),
+#             "connector_username": os.getenv("GRAYLOG_USERNAME"),
+#             "connector_password": os.getenv("GRAYLOG_PASSWORD"),
+#             "connector_api_key": None,
+#             "connector_configured": True,
+#             "connector_accepts_username_password": True,
+#         },
+#         {
+#             "connector_name": "Shuffle",
+#             "connector_type": "1.1.0",
+#             "connector_url": os.getenv("SHUFFLE_URL"),
+#             "connector_username": "sting",
+#             "connector_password": "string",
+#             "connector_api_key": os.getenv("SHUFFLE_API_KEY"),
+#             "connector_configured": True,
+#             "connector_accepts_api_key": True,
+#         },
+#         {
+#             "connector_name": "DFIR-IRIS",
+#             "connector_type": "2.0",
+#             "connector_url": os.getenv("DFIR_IRIS_URL"),
+#             "connector_username": None,
+#             "connector_password": None,
+#             "connector_api_key": os.getenv("DFIR_IRIS_API_KEY"),
+#             "connector_configured": True,
+#             "connector_accepts_api_key": True,
+#         },
+#         {
+#             "connector_name": "Velociraptor",
+#             "connector_type": "0.6.8",
+#             "connector_url": os.getenv("VELOCIRAPTOR_URL"),
+#             "connector_username": None,
+#             "connector_password": None,
+#             "connector_api_key": os.getenv("VELOCIRAPTOR_API_KEY_PATH"),
+#             "connector_configured": True,
+#             "connector_accepts_file": True,
+#         },
+#         {
+#             "connector_name": "Sublime",
+#             "connector_type": "3",
+#             "connector_url": os.getenv("SUBLIME_URL"),
+#             "connector_username": None,
+#             "connector_password": None,
+#             "connector_api_key": os.getenv("SUBLIME_API_KEY"),
+#             "connector_configured": True,
+#             "connector_accepts_api_key": True,
+#         },
+#         {
+#             "connector_name": "InfluxDB",
+#             "connector_type": "3",
+#             "connector_url": os.getenv("INFLUXDB_URL"),
+#             "connector_username": None,
+#             "connector_password": None,
+#             "connector_api_key": os.getenv("INFLUXDB_API_KEY"),
+#             "connector_configured": True,
+#             "connector_accepts_api_key": True,
+#             "connector_extra_data": os.getenv("INFLUXDB_ORG_AND_BUCKET"),
+#         },
+#         {
+#             "connector_name": "AskSocfortress",
+#             "connector_type": "3",
+#             "connector_url": os.getenv("ASK_SOCFORTRESS_URL"),
+#             "connector_username": None,
+#             "connector_password": None,
+#             "connector_api_key": os.getenv("ASK_SOCFORTRESS_API_KEY"),
+#             "connector_configured": True,
+#             "connector_accepts_api_key": True,
+#         },
+#         {
+#             "connector_name": "SocfortressThreatIntel",
+#             "connector_type": "3",
+#             "connector_url": os.getenv("SOCFORTRESS_THREAT_INTEL_URL"),
+#             "connector_username": None,
+#             "connector_password": None,
+#             "connector_api_key": os.getenv("SOCFORTRESS_THREAT_INTEL_API_KEY"),
+#             "connector_configured": True,
+#             "connector_accepts_api_key": True,
+#         },
+#         {
+#             "connector_name": "Cortex",
+#             "connector_type": "3",
+#             "connector_url": os.getenv("CORTEX_URL"),
+#             "connector_username": None,
+#             "connector_password": None,
+#             "connector_api_key": os.getenv("CORTEX_API_KEY"),
+#             "connector_configured": True,
+#             "connector_accepts_api_key": True,
+#         },
+#         {
+#             "connector_name": "Grafana",
+#             "connector_type": "3",
+#             "connector_url": os.getenv("GRAFANA_URL"),
+#             "connector_username": os.getenv("GRAFANA_USERNAME"),
+#             "connector_password": os.getenv("GRAFANA_PASSWORD"),
+#             "connector_api_key": None,
+#             "connector_configured": True,
+#             "connector_accepts_username_password": True,
+#         },
+#         {
+#             "connector_name": "Wazuh Worker Provisioning",
+#             "connector_type": "3",
+#             "connector_url": os.getenv("WAZUH_WORKER_PROVISIONING_URL"),
+#             "connector_username": None,
+#             "connector_password": None,
+#             "connector_api_key": None,
+#             "connector_configured": True,
+#             "connector_accepts_api_key": False,
+#         },
+#     ]
+
+#     for connector_data in connector_list:
+#         # Asynchronously check if connector already exists in the database
+#         query = select(Connectors).where(Connectors.connector_name == connector_data["connector_name"])
+#         result = await session.execute(query)
+#         existing_connector = result.scalars().first()
+
+#         if existing_connector is None:
+#             new_connector = Connectors(**connector_data)
+#             session.add(new_connector)  # Use session.add() to add new objects
+#             logger.info(f"Added new connector: {connector_data['connector_name']}")
+
+#     # Commit the changes if any new connectors were added
+#     await session.commit()
+
+def load_connector_data(connector_name, connector_type, accepts_key, extra_data_key=None):
+    env_prefix = connector_name.upper().replace("-", "_").replace(" ", "_")
+    url = os.getenv(f"{env_prefix}_URL")
+    logger.info(f"Loading connector data for {connector_name} from environment variables with URL: {url}")
+    return {
+        "connector_name": connector_name,
+        "connector_type": connector_type,
+        "connector_url": os.getenv(f"{env_prefix}_URL"),
+        "connector_username": os.getenv(f"{env_prefix}_USERNAME"),
+        "connector_password": os.getenv(f"{env_prefix}_PASSWORD"),
+        "connector_api_key": os.getenv(f"{env_prefix}_API_KEY"),
+        "connector_description": os.getenv(f"{env_prefix}_DESCRIPTION", "No description available."),
+        "connector_supports": os.getenv(f"{env_prefix}_SUPPORTS", "Not specified."),
+        "connector_configured": True,
+        "connector_verified": bool(os.getenv(f"{env_prefix}_VERIFIED", False)),
+        "connector_accepts_api_key": accepts_key == "api_key",
+        "connector_accepts_username_password": accepts_key == "username_password",
+        "connector_accepts_file": accepts_key == "file",
+        "connector_extra_data": os.getenv(extra_data_key) if extra_data_key else None,
+    }
+
+
+def get_connectors_list():
+    connectors = [
+        ("Wazuh-Indexer", "4.4.1", "username_password"),
+        ("Wazuh-Manager", "4.4.1", "username_password"),
+        ("Graylog", "5.0.7", "username_password"),
+        ("Shuffle", "1.1.0", "api_key"),
+        ("DFIR-IRIS", "2.0", "api_key"),
+        ("Velociraptor", "0.6.8", "file"),
+        ("Sublime", "3", "api_key"),
+        ("InfluxDB", "3", "api_key", "INFLUXDB_ORG_AND_BUCKET"),
+        ("AskSocfortress", "3", "api_key"),
+        ("SocfortressThreatIntel", "3", "api_key"),
+        ("Cortex", "3", "api_key"),
+        ("Grafana", "3", "username_password"),
+        ("Wazuh Worker Provisioning", "3", "api_key"),
+        # ... Add more connectors as needed ...
     ]
 
+    return [load_connector_data(*connector) for connector in connectors]
+
+
+async def add_connectors_if_not_exist(session: AsyncSession):
+    connector_list = get_connectors_list()
+
     for connector_data in connector_list:
-        # Asynchronously check if connector already exists in the database
         query = select(Connectors).where(Connectors.connector_name == connector_data["connector_name"])
         result = await session.execute(query)
         existing_connector = result.scalars().first()
 
         if existing_connector is None:
             new_connector = Connectors(**connector_data)
-            session.add(new_connector)  # Use session.add() to add new objects
+            session.add(new_connector)
             logger.info(f"Added new connector: {connector_data['connector_name']}")
 
-    # Commit the changes if any new connectors were added
     await session.commit()
 
 

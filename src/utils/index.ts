@@ -1,6 +1,7 @@
 import Icon from "@/components/common/Icon.vue"
 import { type Component, h } from "vue"
 import { isMobile as detectMobile } from "detect-touch-device"
+import { md5 } from "js-md5"
 
 export type OS = "Unknown" | "Windows" | "MacOS" | "UNIX" | "Linux"
 
@@ -59,4 +60,8 @@ export function getOS(): OS {
 
 export const delay = (t: number) => {
 	return new Promise(res => setTimeout(res, t))
+}
+
+export const hashMD5 = (text: number | string) => {
+	return md5(text.toString())
 }
