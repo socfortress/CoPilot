@@ -14,7 +14,11 @@ from app.connectors.graylog.utils.universal import send_post_request
 
 
 async def get_event_definitions() -> GraylogEventDefinitionsResponse:
-    """Get event definitions from Graylog."""
+    """Get event definitions from Graylog.
+
+    Returns:
+        GraylogEventDefinitionsResponse: The response containing the event definitions.
+    """
     logger.info("Getting event definitions from Graylog")
     event_definitions_collected = await send_get_request(endpoint="/api/events/definitions")
     if event_definitions_collected["success"]:
@@ -36,6 +40,18 @@ async def get_event_definitions() -> GraylogEventDefinitionsResponse:
 
 
 async def get_alerts(alert_query: AlertQuery) -> GraylogAlertsResponse:
+    """
+    Retrieves alerts from Graylog based on the provided alert query.
+
+    Args:
+        alert_query (AlertQuery): The query parameters for retrieving alerts.
+
+    Returns:
+        GraylogAlertsResponse: The response containing the collected alerts.
+
+    Raises:
+        HTTPException: If there is an error collecting the alerts.
+    """
     logger.info("Getting alerts from Graylog")
     response = await send_post_request(endpoint="/api/events/search", data=alert_query.dict())
 

@@ -17,7 +17,14 @@ from app.connectors.graylog.utils.universal import send_put_request
 
 
 async def delete_index(index_name: DeletedIndexBody) -> DeletedIndexResponse:
-    """Delete an index from Graylog."""
+    """Delete an index from Graylog.
+
+    Args:
+        index_name (DeletedIndexBody): The name of the index to be deleted.
+
+    Returns:
+        DeletedIndexResponse: The response indicating the success or failure of the index deletion.
+    """
     logger.info(f"Deleting index {index_name} from Graylog")
     await send_delete_request(endpoint=f"/api/system/indexer/indices/{index_name}")
     # Check if the index still exists
@@ -33,7 +40,14 @@ async def delete_index(index_name: DeletedIndexBody) -> DeletedIndexResponse:
 
 
 async def stop_input(input_id: StopInputBody) -> StopInputResponse:
-    """Stop an input in Graylog."""
+    """Stop an input in Graylog.
+
+    Args:
+        input_id (StopInputBody): The ID of the input to stop.
+
+    Returns:
+        StopInputResponse: The response indicating the success or failure of stopping the input.
+    """
     logger.info(f"Stopping input {input_id} in Graylog")
     response = await send_delete_request(endpoint=f"/api/system/inputstates/{input_id}")
     if response["success"]:
@@ -43,7 +57,14 @@ async def stop_input(input_id: StopInputBody) -> StopInputResponse:
 
 
 async def start_input(input_id: StartInputBody) -> StartInputResponse:
-    """Start an input in Graylog."""
+    """Start an input in Graylog.
+
+    Args:
+        input_id (StartInputBody): The ID of the input to start.
+
+    Returns:
+        StartInputResponse: The response indicating the success or failure of starting the input.
+    """
     logger.info(f"Starting input {input_id} in Graylog")
     response = await send_put_request(endpoint=f"/api/system/inputstates/{input_id}")
     if response["success"]:
@@ -53,7 +74,14 @@ async def start_input(input_id: StartInputBody) -> StartInputResponse:
 
 
 async def stop_stream(stream_id: StopStreamBody) -> StopStreamResponse:
-    """Stop a stream in Graylog."""
+    """Stop a stream in Graylog.
+
+    Args:
+        stream_id (StopStreamBody): The ID of the stream to stop.
+
+    Returns:
+        StopStreamResponse: The response indicating the success or failure of stopping the stream.
+    """
     logger.info(f"Stopping stream {stream_id} in Graylog")
     response = await send_post_request(endpoint=f"/api/streams/{stream_id}/pause")
     logger.info(f"Response: {response}")
@@ -64,7 +92,14 @@ async def stop_stream(stream_id: StopStreamBody) -> StopStreamResponse:
 
 
 async def start_stream(stream_id: StartStreamBody) -> StartStreamResponse:
-    """Start a stream in Graylog."""
+    """Start a stream in Graylog.
+
+    Args:
+        stream_id (StartStreamBody): The ID of the stream to start.
+
+    Returns:
+        StartStreamResponse: The response indicating the success or failure of starting the stream.
+    """
     logger.info(f"Starting stream {stream_id} in Graylog")
     response = await send_post_request(endpoint=f"/api/streams/{stream_id}/resume")
     if response["success"]:

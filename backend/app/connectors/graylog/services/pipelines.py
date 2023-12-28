@@ -9,7 +9,14 @@ from app.connectors.graylog.utils.universal import send_get_request
 
 
 async def get_pipelines() -> GraylogPipelinesResponse:
-    """Get pipelines from Graylog."""
+    """Get pipelines from Graylog.
+
+    Returns:
+        GraylogPipelinesResponse: The response object containing the collected pipelines.
+
+    Raises:
+        HTTPException: If there is an error collecting the pipelines.
+    """
     logger.info("Getting pipelines from Graylog")
     pipelines_collected = await send_get_request(endpoint="/api/system/pipelines/pipeline")
     try:
@@ -25,7 +32,12 @@ async def get_pipelines() -> GraylogPipelinesResponse:
 
 
 async def get_pipeline_rules() -> PipelineRulesResponse:
-    """Get pipeline rules from Graylog."""
+    """
+    Get pipeline rules from Graylog.
+
+    Returns:
+        PipelineRulesResponse: The response object containing the pipeline rules.
+    """
     logger.info("Getting pipeline rules from Graylog")
     pipeline_rules_collected = await send_get_request(endpoint="/api/system/pipelines/rule")
     try:
@@ -41,7 +53,18 @@ async def get_pipeline_rules() -> PipelineRulesResponse:
 
 
 async def get_pipeline_rule_by_id(rule_id) -> PipelineRulesResponse:
-    """Get pipeline rules from Graylog."""
+    """
+    Get pipeline rules from Graylog by ID.
+
+    Args:
+        rule_id (str): The ID of the pipeline rule.
+
+    Returns:
+        PipelineRulesResponse: The response containing the pipeline rule.
+
+    Raises:
+        HTTPException: If there is an error collecting the pipeline rules.
+    """
     logger.info(f"Getting pipeline rules from Graylog for pipeline {rule_id}")
     pipeline_rules_collected = await send_get_request(endpoint=f"/api/system/pipelines/rule/{rule_id}")
     logger.info(pipeline_rules_collected)

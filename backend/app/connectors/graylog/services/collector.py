@@ -15,7 +15,14 @@ from app.connectors.graylog.utils.universal import send_get_request
 
 
 async def get_indices_full() -> GraylogIndicesResponse:
-    """Get indices from Graylog."""
+    """Get indices from Graylog.
+
+    Returns:
+        GraylogIndicesResponse: The response object containing the collected indices.
+
+    Raises:
+        HTTPException: If there is an error collecting the indices.
+    """
     logger.info("Getting indices from Graylog")
     indices_collected = await send_get_request(endpoint="/api/system/indexer/indices")
     if indices_collected["success"]:
@@ -33,6 +40,12 @@ async def get_indices_full() -> GraylogIndicesResponse:
 
 
 async def fetch_configured_inputs() -> Tuple[bool, List[ConfiguredInput]]:
+    """
+    Fetches the configured inputs from the Graylog server.
+
+    Returns:
+        A tuple containing a boolean indicating the success of the request and a list of ConfiguredInput objects.
+    """
     configured_inputs_collected = await send_get_request(endpoint="/api/system/inputs")
     success = configured_inputs_collected.get("success", False)
 
@@ -44,6 +57,12 @@ async def fetch_configured_inputs() -> Tuple[bool, List[ConfiguredInput]]:
 
 
 async def fetch_running_inputs() -> Tuple[bool, List[RunningInput]]:
+    """
+    Fetches the running inputs from the Graylog API.
+
+    Returns:
+        A tuple containing a boolean indicating the success of the request and a list of RunningInput objects.
+    """
     running_inputs_collected = await send_get_request(endpoint="/api/system/inputstates")
     success = running_inputs_collected.get("success", False)
 
@@ -55,7 +74,20 @@ async def fetch_running_inputs() -> Tuple[bool, List[RunningInput]]:
 
 
 async def get_inputs() -> GraylogInputsResponse:
-    """Get inputs from Graylog."""
+    """Get inputs from Graylog.
+
+    This function retrieves both configured and running inputs from Graylog.
+    It first fetches the configured inputs using the `fetch_configured_inputs` function,
+    and then fetches the running inputs using the `fetch_running_inputs` function.
+    If both fetch operations are successful, it returns a `GraylogInputsResponse` object
+    containing the configured and running inputs, along with a success message.
+    If either of the fetch operations fails, it returns a `GraylogInputsResponse` object
+    with empty input lists and a failure message.
+
+    Returns:
+        GraylogInputsResponse: An object containing the configured and running inputs,
+        along with a success or failure message.
+    """
     logger.info("Getting inputs from Graylog")
 
     config_success, configured_inputs_list = await fetch_configured_inputs()
@@ -75,7 +107,11 @@ async def get_inputs() -> GraylogInputsResponse:
 
 
 async def get_inputs_running() -> RunningInputsResponse:
-    """Get running inputs from Graylog."""
+    """Get running inputs from Graylog.
+
+    Returns:
+        RunningInputsResponse: The response object containing the running inputs, success status, and message.
+    """
     logger.info("Getting running inputs from Graylog")
     run_success, running_inputs_list = await fetch_running_inputs()
     if run_success:
@@ -83,7 +119,11 @@ async def get_inputs_running() -> RunningInputsResponse:
 
 
 async def get_inputs_configured() -> ConfiguredInputsResponse:
-    """Get configured inputs from Graylog."""
+    """Get configured inputs from Graylog.
+
+    Returns:
+        ConfiguredInputsResponse: The response object containing the configured inputs, success status, and message.
+    """
     logger.info("Getting configured inputs from Graylog")
     config_success, configured_inputs_list = await fetch_configured_inputs()
     if config_success:
