@@ -20,6 +20,12 @@ shuffle_workflows_router = APIRouter()
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_all_workflows() -> WorkflowsResponse:
+    """
+    Retrieve all workflows.
+
+    Returns:
+        WorkflowsResponse: The response containing the list of workflows.
+    """
     logger.info("Fetching all workflows")
     return await get_workflows()
 
@@ -31,6 +37,15 @@ async def get_all_workflows() -> WorkflowsResponse:
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_all_workflow_executions() -> WorkflowExecutionResponseModel:
+    """
+    Retrieve all workflow executions.
+
+    Returns:
+        WorkflowExecutionResponseModel: The response model containing the workflow executions.
+
+    Raises:
+        HTTPException: If no workflows are found.
+    """
     logger.info("Fetching all workflow executions")
 
     # Initialize an empty list for storing workflow details
