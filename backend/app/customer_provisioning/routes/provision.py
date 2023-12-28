@@ -17,7 +17,7 @@ from app.customer_provisioning.schema.provision import GetDashboardsResponse
 from app.customer_provisioning.schema.provision import GetSubscriptionsResponse
 from app.customer_provisioning.schema.provision import ProvisionNewCustomer
 from app.customer_provisioning.services.provision import provision_wazuh_customer
-from app.db.db_session import get_session, get_db
+from app.db.db_session import get_db
 from app.db.universal_models import Customers
 from app.db.universal_models import CustomersMeta
 
@@ -25,6 +25,15 @@ customer_provisioning_router = APIRouter()
 
 
 def get_available_dashboards():
+    """
+    Get a list of available dashboards.
+
+    Returns:
+        list: A list of available dashboards.
+
+    Raises:
+        HTTPException: If there is an error getting the available dashboards.
+    """
     try:
         wazuh_dashboards = [dashboard.name for dashboard in WazuhDashboard]
         office365_dashboards = [dashboard.name for dashboard in Office365Dashboard]
@@ -34,6 +43,15 @@ def get_available_dashboards():
 
 
 def get_available_subscriptions():
+    """
+    Retrieves a list of available subscriptions.
+
+    Returns:
+        list: A list of available subscriptions.
+
+    Raises:
+        HTTPException: If there is an error getting the available subscriptions.
+    """
     try:
         return [subscription.value for subscription in CustomerSubsctipion]
     except Exception as e:
@@ -41,6 +59,19 @@ def get_available_subscriptions():
 
 
 async def check_customer_exists(customer_code: str, session: AsyncSession = Depends(get_db)) -> Customers:
+    """
+    Check if a customer exists in the database.
+
+    Args:
+        customer_code (str): The code of the customer to check.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        Customers: The customer object if found.
+
+    Raises:
+        HTTPException: If the customer is not found in the database.
+    """
     logger.info(f"Checking if customer {customer_code} exists")
     result = await session.execute(select(Customers).filter(Customers.customer_code == customer_code))
     customer = result.scalars().first()
@@ -63,6 +94,17 @@ async def provision_customer_route(
     _customer: Customers = Depends(check_customer_exists),
     session: AsyncSession = Depends(get_db),
 ):
+    """
+    Provisions a new customer.
+
+    Args:
+        request (ProvisionNewCustomer): The request data for provisioning a new customer.
+        _customer (Customers): The existing customer data.
+        session (AsyncSession): The database session.
+
+    Returns:
+        CustomerProvisionResponse: The response data for the provisioned customer.
+    """
     logger.info("Provisioning new customer")
     customer_provision = await provision_wazuh_customer(request, session=session)
     return customer_provision
@@ -75,6 +117,12 @@ async def provision_customer_route(
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_dashboards_route():
+    """
+    Get the list of dashboards available for provisioning.
+
+    Returns:
+        GetDashboardsResponse: The response containing the available dashboards.
+    """
     logger.info("Getting list of dashboards")
     available_dashboards = get_available_dashboards()
     return GetDashboardsResponse(available_dashboards=available_dashboards, success=True, message="Dashboards retrieved successfully")
@@ -87,6 +135,12 @@ async def get_dashboards_route():
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_subscriptions_route():
+    """
+    Get the list of subscriptions available for provisioning.
+
+    Returns:
+        GetSubscriptionsResponse: The response containing the available subscriptions.
+    """
     logger.info("Getting list of subscriptions")
     available_subscriptions = get_available_subscriptions()
     return GetSubscriptionsResponse(
@@ -103,6 +157,19 @@ async def get_subscriptions_route():
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_customer_meta(customer_code: str, session: AsyncSession = Depends(get_db)):
+    """
+    Retrieve customer meta data for a given customer code.
+
+    Args:
+        customer_code (str): The code of the customer to retrieve meta data for.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+    Raises:
+        HTTPException: If customer meta data is not found for the given customer code.
+
+    Returns:
+        CustomersMetaResponse: The response containing the customer meta data.
+    """
     logger.info(f"Getting customer meta for customer {customer_code}")
     result = await session.execute(select(CustomersMeta).filter(CustomersMeta.customer_code == customer_code))
     customer_meta = result.scalars().first()

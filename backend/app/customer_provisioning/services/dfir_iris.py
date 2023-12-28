@@ -9,6 +9,15 @@ from app.connectors.dfir_iris.utils.universal import initialize_client_and_custo
 
 
 async def check_customer_exists(customer_name: str) -> bool:
+    """
+    Check if a customer with the given name exists.
+
+    Args:
+        customer_name (str): The name of the customer to check.
+
+    Returns:
+        bool: True if the customer exists, False otherwise.
+    """
     client, customer = await initialize_client_and_customer("DFIR-IRIS")
     result = await fetch_and_validate_data(client, customer.list_customers)
     customers = ListCustomers(**result)
@@ -18,6 +27,15 @@ async def check_customer_exists(customer_name: str) -> bool:
 
 
 async def create_customer(customer_name: str) -> CreateCustomerResponse:
+    """
+    Creates a new customer with the given name.
+
+    Args:
+        customer_name (str): The name of the customer.
+
+    Returns:
+        CreateCustomerResponse: The response object indicating the success and data of the operation.
+    """
     # check if the customer exists
     exists = await check_customer_exists(customer_name)
     if exists:
@@ -28,6 +46,15 @@ async def create_customer(customer_name: str) -> CreateCustomerResponse:
 
 
 async def delete_customer(customer_id: int):
+    """
+    Deletes a customer with the given customer_id.
+
+    Args:
+        customer_id (int): The ID of the customer to be deleted.
+
+    Returns:
+        None
+    """
     client, admin = await initialize_client_and_admin("DFIR-IRIS")
     result = await fetch_and_validate_data(client, admin.delete_customer, customer_id)
     logger.info(f"Result: {result}")

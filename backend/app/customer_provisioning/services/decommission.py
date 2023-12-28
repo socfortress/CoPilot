@@ -1,5 +1,4 @@
 import requests
-from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
