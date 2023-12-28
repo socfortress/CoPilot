@@ -1,18 +1,11 @@
-from datetime import datetime
-from datetime import timedelta
 from typing import Any
 from typing import Dict
-from typing import Iterable
-from typing import Tuple
 
-from elasticsearch7 import Elasticsearch
 from fastapi import HTTPException
 from influxdb_client.client.influxdb_client_async import InfluxDBClientAsync
 from loguru import logger
 
 from app.connectors.utils import get_connector_info_from_db
-from app.connectors.wazuh_indexer.schema.indices import IndexConfigModel
-from app.connectors.wazuh_indexer.schema.indices import Indices
 from app.db.db_session import get_db_session
 
 
