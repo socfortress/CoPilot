@@ -1,19 +1,13 @@
-from datetime import datetime
-from datetime import timedelta
 from typing import Any
 from typing import Dict
-from typing import Iterable
-from typing import Tuple
 
-from elasticsearch7 import Elasticsearch
+
 from fastapi import HTTPException
 from grafana_client import GrafanaApi
 from loguru import logger
 
 from app.connectors.grafana.schema.organization import GrafanaCreateOrganizationResponse
 from app.connectors.utils import get_connector_info_from_db
-from app.connectors.wazuh_indexer.schema.indices import IndexConfigModel
-from app.connectors.wazuh_indexer.schema.indices import Indices
 from app.db.db_session import get_db_session
 
 
@@ -74,16 +68,23 @@ async def verify_grafana_credentials(attributes: Dict[str, Any]) -> Dict[str, An
 
 async def verify_grafana_connection(connector_name: str) -> str:
     """
-    Returns the authentication token for the InfluxDB service.
+    Returns the authentication token for the Grafana service.
+
+    Args:
+        connector_name (str): The name of the Grafana connector.
 
     Returns:
-        str: Authentication token for the InfluxDB service.
+        str: Authentication token for the Grafana service.
+
+    Raises:
+        None
+
     """
     async with get_db_session() as session:  # This will correctly enter the context manager
         attributes = await get_connector_info_from_db(connector_name, session)
-    logger.info(f"Verifying the InfluxDB connection to {attributes['connector_url']}")
+    logger.info(f"Verifying the Grafana connection to {attributes['connector_url']}")
     if attributes is None:
-        logger.error("No InfluxDB connector found in the database")
+        logger.error("No Grafana connector found in the database")
         return None
     return await verify_grafana_credentials(attributes)
 
