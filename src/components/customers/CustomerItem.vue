@@ -14,11 +14,10 @@
 			</div>
 			<div class="main-box flex items-center gap-3">
 				<n-avatar
-					:src="customerInfo?.logo_file"
-					fallback-src="/images/img-not-found.svg"
+					:src="customerInfo?.logo_file || fallbackAvatar"
+					:fallback-src="fallbackAvatar"
 					round
 					:size="40"
-					lazy
 				/>
 
 				<div class="content flex flex-col gap-1 grow">
@@ -37,51 +36,54 @@
 					<template #label>Type</template>
 					<template #value>{{ customerInfo?.customer_type || "-" }}</template>
 				</Badge>
-				<n-popover trigger="hover">
+
+				<n-popover trigger="hover" :disabled="addressLabel === '-'">
 					<template #trigger>
-						<Badge type="splitted" class="cursor-help">
+						<Badge type="splitted" :class="{ 'cursor-help': addressLabel !== '-' }">
 							<template #iconLeft>
 								<Icon :name="LocationIcon" :size="13"></Icon>
 							</template>
 							<template #value>
-								{{ [customerInfo?.city, customerInfo?.state].join(", ") || "-" }}
+								{{ addressLabel }}
 							</template>
 						</Badge>
 					</template>
 
 					<div class="flex flex-col gap-1">
-						<div class="box">
+						<div class="box" v-if="customerInfo?.address_line1">
 							address_line1:
-							<code>{{ customerInfo?.address_line1 }}</code>
+							<code>{{ customerInfo.address_line1 }}</code>
 						</div>
-						<div class="box">
+						<div class="box" v-if="customerInfo?.address_line2">
 							address_line2:
-							<code>{{ customerInfo?.address_line2 }}</code>
+							<code>{{ customerInfo.address_line2 }}</code>
 						</div>
-						<div class="box">
+						<div class="box" v-if="customerInfo?.postal_code">
 							postal_code:
-							<code>{{ customerInfo?.postal_code }}</code>
+							<code>{{ customerInfo.postal_code }}</code>
 						</div>
-						<div class="box">
+						<div class="box" v-if="customerInfo?.city">
 							city:
-							<code>{{ customerInfo?.city }}</code>
+							<code>{{ customerInfo.city }}</code>
 						</div>
-						<div class="box">
+						<div class="box" v-if="customerInfo?.state">
 							state:
-							<code>{{ customerInfo?.state }}</code>
+							<code>{{ customerInfo.state }}</code>
 						</div>
-						<div class="box">
+						<div class="box" v-if="customerInfo?.country">
 							country:
-							<code>{{ customerInfo?.country }}</code>
+							<code>{{ customerInfo.country }}</code>
 						</div>
 					</div>
 				</n-popover>
+
 				<Badge type="splitted">
 					<template #iconLeft>
 						<Icon :name="PhoneIcon" :size="13"></Icon>
 					</template>
 					<template #value>{{ customerInfo?.phone || "-" }}</template>
 				</Badge>
+
 				<Badge type="splitted" v-if="customerInfo?.parent_customer_code">
 					<template #iconLeft>
 						<Icon :name="ParentIcon" :size="13"></Icon>
@@ -174,6 +176,8 @@ import CustomerHealthcheckList from "./CustomerHealthcheckList.vue"
 import Api from "@/api"
 import { NAvatar, useMessage, NPopover, NModal, NTabs, NTabPane, NSpin, NScrollbar } from "naive-ui"
 import type { Customer, CustomerMeta } from "@/types/customers.d"
+import { hashMD5 } from "@/utils"
+import _toSafeInteger from "lodash/toSafeInteger"
 
 const emit = defineEmits<{
 	(e: "delete"): void
@@ -202,6 +206,23 @@ const customerInfo = ref<Customer | null>(null)
 const customerMeta = ref<CustomerMeta | null>(null)
 
 const loading = computed(() => loadingFull.value || loadingDelete.value)
+const fallbackAvatar = computed(() => {
+	let text = customer.value.customer_name.slice(0, 2).toUpperCase()
+
+	if (customer.value.customer_name.indexOf(" ") !== -1) {
+		const chunks = customer.value.customer_name.split(" ")
+		text = (chunks[0][0] + chunks[1][0]).toUpperCase()
+	}
+
+	const hash = hashMD5(customer.value.customer_code)
+	const uniq = hash.split("").find(o => _toSafeInteger(o).toString() === o)
+	const seed = hash.slice(0, _toSafeInteger(uniq))
+
+	return `https://avatar.vercel.sh/${seed}.svg?text=${text}`
+})
+const addressLabel = computed(
+	() => [customerInfo.value?.city, customerInfo.value?.state].filter(o => !!o).join(", ") || "-"
+)
 
 function getFull() {
 	loadingFull.value = true
