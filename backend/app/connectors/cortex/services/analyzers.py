@@ -1,5 +1,3 @@
-# analyzers.py
-
 from typing import Dict
 from typing import List
 from typing import Union
@@ -21,6 +19,15 @@ from app.connectors.cortex.utils.universal import (
 
 
 async def fetch_analyzers(api: Api) -> List[Dict]:
+    """
+    Fetches all analyzers from the API.
+
+    Args:
+        api (Api): The API object used to make the request.
+
+    Returns:
+        List[Dict]: A list of dictionaries representing the analyzers.
+    """
     try:
         return api.analyzers.find_all({}, range="all")
     except Exception as e:
@@ -29,6 +36,18 @@ async def fetch_analyzers(api: Api) -> List[Dict]:
 
 
 def extract_analyzer_names(analyzers: List[Dict]) -> List[str]:
+    """
+    Extracts the names of analyzers from a list of dictionaries.
+
+    Args:
+        analyzers (List[Dict]): A list of dictionaries representing analyzers.
+
+    Returns:
+        List[str]: A list of analyzer names.
+
+    Raises:
+        HTTPException: If there is an error processing the analyzers.
+    """
     try:
         return [analyzer.name for analyzer in analyzers]
     except Exception as e:
@@ -37,10 +56,28 @@ def extract_analyzer_names(analyzers: List[Dict]) -> List[str]:
 
 
 async def init_cortex_client() -> Union[Api, None]:
+    """
+    Initializes the Cortex client.
+
+    Returns:
+        Union[Api, None]: The initialized Cortex client or None if initialization fails.
+    """
     return await create_cortex_client("Cortex")
 
 
 def handle_api_initialization(api: Union[Api, None]) -> Api:
+    """
+    Handles the initialization of the API.
+
+    Args:
+        api (Union[Api, None]): The API object to be initialized.
+
+    Returns:
+        Api: The initialized API object.
+
+    Raises:
+        HTTPException: If the API initialization fails.
+    """
     if api is None:
         logger.error("API initialization failed")
         raise HTTPException(status_code=500, detail="API initialization failed")
@@ -48,6 +85,12 @@ def handle_api_initialization(api: Union[Api, None]) -> Api:
 
 
 async def get_analyzers() -> AnalyzersResponse:
+    """
+    Fetches the list of analyzers from the Cortex API.
+
+    Returns:
+        AnalyzersResponse: The response object containing the list of analyzer names.
+    """
     api = await init_cortex_client()
     handle_api_initialization(api)
 
@@ -58,6 +101,16 @@ async def get_analyzers() -> AnalyzersResponse:
 
 
 async def run_analyzer(run_analyzer_body: RunAnalyzerBody, data_type: str) -> RunAnalyzerResponse:
+    """
+    Runs an analyzer with the given analyzer name, analyzer data, and data type.
+
+    Args:
+        run_analyzer_body (RunAnalyzerBody): The body of the run analyzer request.
+        data_type (str): The type of data being analyzed.
+
+    Returns:
+        RunAnalyzerResponse: The response containing the success status, message, and analyzer report.
+    """
     api = await init_cortex_client()
     handle_api_initialization(api)
 
