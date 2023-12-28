@@ -1,5 +1,4 @@
 from fastapi import HTTPException
-from loguru import logger
 
 from app.connectors.dfir_iris.schema.assets import Asset
 from app.connectors.dfir_iris.schema.assets import AssetResponse
@@ -9,6 +8,15 @@ from app.connectors.dfir_iris.utils.universal import initialize_client_and_case
 
 
 async def get_case_assets(case_id: int) -> AssetResponse:
+    """
+    Retrieves assets for a given case.
+
+    Args:
+        case_id (int): The ID of the case.
+
+    Returns:
+        AssetResponse: The response containing the fetched assets and their state.
+    """
     client, case = await initialize_client_and_case("DFIR-IRIS")
     result = await fetch_and_validate_data(client, case.list_assets, case_id)
     try:

@@ -68,6 +68,15 @@ def filter_cases_older_than(cases: List[Dict], older_than: datetime) -> List[Dic
 
 
 async def get_all_cases() -> CaseResponse:
+    """
+    Retrieves all cases from DFIR-IRIS.
+
+    Returns:
+        CaseResponse: The response object containing the success status, message, and cases data.
+
+    Raises:
+        HTTPException: If there is an error retrieving the cases.
+    """
     result = await get_client_and_cases()
     try:
         if not result["success"]:
@@ -80,6 +89,15 @@ async def get_all_cases() -> CaseResponse:
 
 
 async def get_cases_older_than(case_older_than_body: CaseOlderThanBody) -> CasesBreachedResponse:
+    """
+    Retrieves cases that are older than a specified duration.
+
+    Args:
+        case_older_than_body (CaseOlderThanBody): The body containing the duration threshold.
+
+    Returns:
+        CasesBreachedResponse: The response object containing the breached cases.
+    """
     result = await get_client_and_cases()
     if not result["success"]:
         logger.error(f"Failed to get all cases: {result['message']}")
@@ -95,6 +113,18 @@ async def get_cases_older_than(case_older_than_body: CaseOlderThanBody) -> Cases
 
 
 async def get_single_case(case_id: SingleCaseBody) -> SingleCaseResponse:
+    """
+    Fetches a single case from DFIR-IRIS based on the provided case ID.
+
+    Args:
+        case_id (SingleCaseBody): The ID of the case to fetch.
+
+    Returns:
+        SingleCaseResponse: The response containing the fetched case.
+
+    Raises:
+        Any exceptions raised during the execution of the function will be propagated.
+    """
     dfir_iris_client = await create_dfir_iris_client("DFIR-IRIS")
     case = Case(session=dfir_iris_client)
     result = await fetch_and_parse_data(dfir_iris_client, case.get_case, case_id)
