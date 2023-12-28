@@ -95,7 +95,29 @@
 									class="grow"
 								/>
 							</n-form-item>
-							<n-form-item label="Dashboards" path="dashboards_to_include.dashboards" class="grow">
+							<n-form-item
+								path="dashboards_to_include.dashboards"
+								class="grow"
+								label-style="flex-direction: column; align-items: stretch;"
+								:show-require-mark="false"
+							>
+								<template #label>
+									<div class="flex items-center justify-between gap-4 w-full">
+										<div>
+											Dashboards
+											<span class="n-form-item-label__asterisk">*</span>
+										</div>
+										<div>
+											<n-button
+												size="tiny"
+												v-if="dashboardOptions.length"
+												@click="toggleDashboards()"
+											>
+												{{ allDashboardsSelected ? "Deselect All" : "Select All" }}
+											</n-button>
+										</div>
+									</div>
+								</template>
 								<n-select
 									v-model:value="form.dashboards_to_include.dashboards"
 									:options="dashboardOptions"
@@ -122,13 +144,24 @@
 									v-model:value="form.wazuh_registration_port"
 									placeholder="Registration Port..."
 									clearable
+									@blur="validate()"
 								/>
 							</n-form-item>
 							<n-form-item label="Logs Port" path="wazuh_logs_port" class="grow">
-								<n-input v-model:value="form.wazuh_logs_port" placeholder="Logs Port..." clearable />
+								<n-input
+									v-model:value="form.wazuh_logs_port"
+									placeholder="Logs Port..."
+									clearable
+									@blur="validate()"
+								/>
 							</n-form-item>
 							<n-form-item label="Api Port" path="wazuh_api_port" class="grow">
-								<n-input v-model:value="form.wazuh_api_port" placeholder="Api Port..." clearable />
+								<n-input
+									v-model:value="form.wazuh_api_port"
+									placeholder="Api Port..."
+									clearable
+									@blur="validate()"
+								/>
 							</n-form-item>
 							<n-form-item label="Cluster Name" path="wazuh_cluster_name" class="grow">
 								<n-input
@@ -150,6 +183,7 @@
 							<n-form-item label="Grafana Url" path="grafana_url" class="grow">
 								<n-input v-model:value="form.grafana_url" placeholder="Grafana Url..." clearable />
 							</n-form-item>
+							<div>* Registration Port, Logs Port, and Api Port must all be unique.</div>
 						</div>
 					</Transition>
 				</n-form>
@@ -172,14 +206,9 @@
 						</template>
 						Next
 					</n-button>
-					<n-button type="primary" @click="validate(submit)" v-if="isSubmitEnabled">Submit</n-button>
-
-					<!--
-						<n-button @click="reset()" :disabled="loading">Reset</n-button>
-						<n-button type="primary" :disabled="!isValid" @click="validate()" :loading="loading">
-							Submit
-						</n-button>
-					-->
+					<n-button type="primary" @click="validate(submit)" :loading="loading" v-if="isSubmitEnabled">
+						Submit
+					</n-button>
 				</div>
 			</div>
 		</div>
@@ -242,6 +271,10 @@ const formRef = ref<FormInst | null>(null)
 const subscriptionOptions = ref<{ label: string; value: string }[]>([])
 const dashboardOptions = ref<{ label: string; value: string }[]>([])
 
+const allDashboardsSelected = computed(
+	() => form.value.dashboards_to_include.dashboards.length === dashboardOptions.value.length
+)
+
 const isWazuhStepEnabled = computed(() => form.value.customer_subscription.map(o => o.toLowerCase()).includes("wazuh"))
 const isNextStepEnabled = computed(() => current.value < 3 || (current.value === 3 && isWazuhStepEnabled.value))
 const isPrevStepEnabled = computed(() => current.value > 1)
@@ -261,35 +294,72 @@ const rules: FormRules = {
 		message: "Please input Customer Code",
 		trigger: ["input", "blur"]
 	},
+	customer_grafana_org_name: {
+		required: true,
+		message: "Please input Customer Grafana.org Name",
+		trigger: ["input", "blur"]
+	},
 	customer_index_name: {
 		required: true,
 		message: "Please input Customer Index Name",
 		trigger: ["input", "blur"]
 	},
+	customer_subscription: {
+		required: true,
+		validator: validateAtLeastOne,
+		trigger: ["blur"]
+	},
+	dashboards_to_include: {
+		dashboards: {
+			required: true,
+			validator: validateAtLeastOne,
+			trigger: ["blur"]
+		}
+	},
+	wazuh_auth_password: {
+		required: true,
+		message: "Please input Auth password",
+		trigger: ["input", "blur"]
+	},
 	wazuh_registration_port: {
+		required: true,
 		validator: validatePort,
 		trigger: ["blur"]
 	},
 	wazuh_logs_port: {
+		required: true,
 		validator: validatePort,
 		trigger: ["blur"]
 	},
 	wazuh_api_port: {
+		required: true,
 		validator: validatePort,
 		trigger: ["blur"]
 	},
+	wazuh_cluster_name: {
+		required: true,
+		message: "Please input Cluster name",
+		trigger: ["input", "blur"]
+	},
+	wazuh_cluster_key: {
+		required: true,
+		message: "Please input Cluster key",
+		trigger: ["input", "blur"]
+	},
 	wazuh_master_ip: {
+		required: true,
 		validator: validateIp,
 		trigger: ["blur"]
 	},
 	grafana_url: {
+		required: true,
 		validator: validateUrl,
 		trigger: ["blur"]
 	}
 }
 
 function validateUrl(rule: FormItemRule, value: string) {
-	if (value && !isURL(value)) {
+	if (!value || !isURL(value)) {
 		return new Error("Please input a valid URL")
 	}
 
@@ -297,16 +367,32 @@ function validateUrl(rule: FormItemRule, value: string) {
 }
 
 function validatePort(rule: FormItemRule, value: string) {
-	if (value && !isPort(value)) {
+	if (!value || !isPort(value)) {
 		return new Error("Please input a valid Port number")
+	}
+
+	const array: string[] = [form.value.wazuh_registration_port, form.value.wazuh_logs_port, form.value.wazuh_api_port]
+	const filled: string[] = array.filter(value => !!value)
+	const uniques: string[] = array.filter((value, index, self) => self.indexOf(value) === index)
+
+	if (filled.length === array.length && uniques.length !== array.length) {
+		return new Error("Wazuh Ports must all be unique")
 	}
 
 	return true
 }
 
 function validateIp(rule: FormItemRule, value: string) {
-	if (value && !isIP(value)) {
+	if (!value || !isIP(value)) {
 		return new Error("Please input a valid IP Address")
+	}
+
+	return true
+}
+
+function validateAtLeastOne(rule: FormItemRule, value: string[]) {
+	if (!value || !value.length) {
+		return new Error("Please select at least one option")
 	}
 
 	return true
@@ -400,12 +486,20 @@ function getDashboards() {
 		})
 }
 
-function validate(cb: () => void) {
+function toggleDashboards() {
+	if (allDashboardsSelected.value) {
+		form.value.dashboards_to_include.dashboards = []
+	} else {
+		form.value.dashboards_to_include.dashboards = dashboardOptions.value.map(o => o.value)
+	}
+}
+
+function validate(cb?: () => void) {
 	if (!formRef.value) return
 
 	formRef.value.validate((errors?: Array<FormValidationError>) => {
 		if (!errors) {
-			cb()
+			if (cb) cb()
 		} else {
 			message.warning("You must fill in the required fields correctly.")
 			return false

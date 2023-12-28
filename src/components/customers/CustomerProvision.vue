@@ -5,7 +5,6 @@
 				@submitted="submitted"
 				:customerName="customerNameSanitized"
 				:customerCode="customerCode"
-				:mode="editingMode"
 			>
 				<template #additionalActions>
 					<n-button @click="editing = false">Close</n-button>
@@ -13,13 +12,7 @@
 			</CustomerProvisionWizard>
 		</div>
 		<template v-else>
-			<div class="flex items-center justify-between gap-4 px-7 pt-2" v-if="customerMeta">
-				<n-button size="small" @click="editing = true" :disabled="loadingDelete">
-					<template #icon>
-						<Icon :name="EditIcon" :size="14"></Icon>
-					</template>
-					Edit
-				</n-button>
+			<div class="flex items-center justify-end gap-4 px-7 pt-2" v-if="customerMeta">
 				<n-button size="small" type="error" ghost @click="handleDelete" :loading="loadingDelete">
 					<template #icon>
 						<Icon :name="DeleteIcon" :size="15"></Icon>
@@ -67,7 +60,6 @@ const props = defineProps<{
 }>()
 const { customerMeta, customerCode, customerName } = toRefs(props)
 
-const EditIcon = "uil:edit-alt"
 const DeleteIcon = "ph:trash"
 const AddIcon = "carbon:add-alt"
 
@@ -76,7 +68,6 @@ const editing = ref(false)
 const dialog = useDialog()
 const message = useMessage()
 
-const editingMode = computed<"new" | "update">(() => (customerMeta.value ? "update" : "new"))
 const customerNameSanitized = computed<string>(() => customerName.value || customerMeta.value?.customer_name || "")
 
 function submitted(newData: CustomerMeta) {
