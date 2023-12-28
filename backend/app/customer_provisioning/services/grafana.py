@@ -153,4 +153,5 @@ async def delete_grafana_organization(organization_id: int):
         grafana_client.user.switch_actual_user_organisation(1)
         organization_deleted = grafana_client.organizations.delete_organization(organization_id=organization_id)
         logger.info(f"Organization deleted: {organization_deleted}")
+        return organization_deleted
     return organization_deleted
