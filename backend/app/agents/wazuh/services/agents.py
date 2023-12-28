@@ -66,7 +66,7 @@ def handle_agent_deletion_response(agent_deleted: dict, agent_id: str):
         )
 
 
-def delete_agent_wazuh(agent_id: str) -> AgentModifyResponse:
+async def delete_agent_wazuh(agent_id: str) -> AgentModifyResponse:
     """Delete agent from Wazuh Manager."""
     logger.info(f"Deleting agent {agent_id} from Wazuh Manager")
 
@@ -78,7 +78,7 @@ def delete_agent_wazuh(agent_id: str) -> AgentModifyResponse:
     }
 
     try:
-        agent_deleted = send_delete_request(endpoint="/agents", params=params)
+        agent_deleted = await send_delete_request(endpoint="/agents", params=params)
         return handle_agent_deletion_response(agent_deleted, agent_id)
 
     except HTTPException as http_e:

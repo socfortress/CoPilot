@@ -6,6 +6,7 @@ from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy import delete
 from starlette.status import HTTP_401_UNAUTHORIZED
 
 from app.agents.schema.agents import AgentModifyResponse
@@ -64,7 +65,7 @@ async def fetch_velociraptor_id(db: AsyncSession, agent_id: str) -> str:
 
 async def delete_agent_from_database(db: AsyncSession, agent_id: str):
     try:
-        await db.execute(select(Agents).filter(Agents.agent_id == agent_id).delete())
+        await db.execute(delete(Agents).filter(Agents.agent_id == agent_id))
         await db.commit()
     except Exception as e:
         logger.error(f"Failed to delete agent {agent_id} from database: {e}")
@@ -229,19 +230,21 @@ async def get_outdated_velociraptor_agents(session: AsyncSession = Depends(get_d
 
 
 # ! TODO: FINISH THIS
-# @agents_router.delete(
-#     "/{agent_id}/delete",
-#     response_model=AgentModifyResponse,
-#     description="Delete agent",
-#     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
-# )
-# async def delete_agent(agent_id: str) -> AgentModifyResponse:
-#     logger.info(f"Deleting agent {agent_id}")
-#     delete_agent_wazuh(agent_id)
-#     client_id = fetch_velociraptor_id(agent_id)
-#     delete_agent_velociraptor(client_id)
-#     delete_agent_from_database(agent_id)
-#     return {"success": True, "message": f"Agent {agent_id} deleted from database, Wazuh, and Velociraptor"}
+@agents_router.delete(
+    "/{agent_id}/delete",
+    response_model=AgentModifyResponse,
+    description="Delete agent",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def delete_agent(agent_id: str, session: AsyncSession = Depends(get_db)) -> AgentModifyResponse:
+    logger.info(f"Deleting agent {agent_id}")
+    await delete_agent_wazuh(agent_id)
+    client_id = await fetch_velociraptor_id(db=session, agent_id=agent_id)
+    logger.info(f"Client ID: {client_id}")
+    if client_id != "n/a":
+        await delete_agent_velociraptor(client_id)
+    await delete_agent_from_database(db=session, agent_id=agent_id)
+    return {"success": True, "message": f"Agent {agent_id} deleted from database, Wazuh, and Velociraptor"}
 
 
 # @agents_router.put(
