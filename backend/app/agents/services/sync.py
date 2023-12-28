@@ -15,7 +15,16 @@ from app.db.universal_models import Agents
 
 
 async def fetch_wazuh_agents() -> WazuhAgentsList:
-    """Fetch agents from Wazuh service."""
+    """Fetch agents from Wazuh service.
+
+    This function retrieves a list of agents from the Wazuh service.
+    It calls the `collect_wazuh_agents` function from the `wazuh_services` module
+    and returns a `WazuhAgentsList` object containing the collected agents.
+
+    Returns:
+        WazuhAgentsList: A list of agents retrieved from the Wazuh service.
+
+    """
     collected_wazuh_agents = await wazuh_services.collect_wazuh_agents()
     return WazuhAgentsList(
         agents=collected_wazuh_agents.agents,
@@ -25,12 +34,31 @@ async def fetch_wazuh_agents() -> WazuhAgentsList:
 
 
 async def fetch_velociraptor_agent(agent_name: str) -> VelociraptorAgent:
-    """Fetch agent details from Velociraptor service."""
+    """
+    Fetches agent details from Velociraptor service.
+
+    Args:
+        agent_name (str): The name of the agent to fetch.
+
+    Returns:
+        VelociraptorAgent: The fetched agent details.
+    """
     return await velociraptor_services.collect_velociraptor_agent(agent_name)
 
 
 async def add_agent_to_db(session: AsyncSession, agent: WazuhAgent, client: VelociraptorAgent, customer_code: str):
-    """Add new agent to database."""
+    """Add new agent to database.
+
+    Args:
+        session (AsyncSession): The asynchronous session object for database operations.
+        agent (WazuhAgent): The Wazuh agent object to be added.
+        client (VelociraptorAgent): The Velociraptor agent object associated with the Wazuh agent.
+        customer_code (str): The customer code for the agent.
+
+    Returns:
+        None
+
+    """
     new_agent = Agents.create_from_model(agent, client, customer_code)
     session.add(new_agent)
     await session.commit()  # Use the await keyword to commit asynchronously
@@ -44,20 +72,50 @@ async def update_agent_in_db(
     client: VelociraptorAgent,
     customer_code: str,
 ):
-    """Update existing agent in database."""
+    """Update existing agent in database.
+
+    Args:
+        session (AsyncSession): The async session object for database operations.
+        existing_agent (Agents): The existing agent object in the database.
+        agent (WazuhAgent): The updated agent object.
+        client (VelociraptorAgent): The updated client object.
+        customer_code (str): The customer code associated with the agent.
+
+    Returns:
+        None
+
+    """
     existing_agent.update_from_model(agent, client, customer_code)
     await session.commit()  # Use the await keyword to commit asynchronously
     logger.info(f"Agent {agent.agent_name} updated in the database")
 
 
 def extract_customer_code(customer_code: str):
-    """Extract customer code from agent label."""
+    """Extracts the customer code from the agent label.
+
+    Args:
+        customer_code (str): The agent label containing the customer code.
+
+    Returns:
+        str: The extracted customer code, or None if the agent label is invalid.
+    """
     parts = customer_code.split("_")
     return parts[1] if len(parts) > 1 else None
 
 
 async def sync_agents(session: AsyncSession) -> SyncedAgentsResponse:
-    """Synchronize agents from Wazuh and Velociraptor services."""
+    """
+    Synchronize agents from Wazuh and Velociraptor services.
+
+    This function fetches the list of Wazuh agents, collects the corresponding Velociraptor agent for each Wazuh agent,
+    and synchronizes the agents in the database. It returns a response indicating the success of the synchronization
+    operation and the list of agents that were added.
+
+    :param session: The database session to use for querying and updating agents.
+    :type session: AsyncSession
+    :return: The response indicating the success of the synchronization operation and the list of agents added.
+    :rtype: SyncedAgentsResponse
+    """
     wazuh_agents_list = await fetch_wazuh_agents()
     logger.info(f"Collected Wazuh Agents: {wazuh_agents_list}")
 
