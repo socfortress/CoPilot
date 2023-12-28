@@ -20,6 +20,16 @@ from app.healthchecks.agents.schema.agents import TimeCriteriaModel
 
 
 def is_wazuh_agent_unhealthy(agent: AgentModel, time_criteria: TimeCriteriaModel) -> ExtendedAgentModel:
+    """
+    Checks if a Wazuh agent is unhealthy based on the last seen time and time criteria.
+
+    Args:
+        agent (AgentModel): The agent to check.
+        time_criteria (TimeCriteriaModel): The time criteria for determining agent health.
+
+    Returns:
+        ExtendedAgentModel: An extended agent model with the unhealthy status updated.
+    """
     current_time = datetime.now()
     wazuh_last_seen = agent.wazuh_last_seen
 
@@ -36,6 +46,16 @@ def is_wazuh_agent_unhealthy(agent: AgentModel, time_criteria: TimeCriteriaModel
 
 
 def is_velociraptor_agent_unhealthy(agent: AgentModel, time_criteria: TimeCriteriaModel) -> ExtendedAgentModel:
+    """
+    Checks if a velociraptor agent is unhealthy based on the last seen time and time criteria.
+
+    Args:
+        agent (AgentModel): The agent to check.
+        time_criteria (TimeCriteriaModel): The time criteria for determining agent health.
+
+    Returns:
+        ExtendedAgentModel: An extended agent model with the unhealthy_velociraptor_agent flag set.
+    """
     current_time = datetime.now()
     velociraptor_last_seen = agent.velociraptor_last_seen
 
@@ -52,6 +72,16 @@ def is_velociraptor_agent_unhealthy(agent: AgentModel, time_criteria: TimeCriter
 
 
 async def wazuh_agents_healthcheck(agents: list, time_criteria: TimeCriteriaModel) -> AgentHealthCheckResponse:
+    """
+    Perform a health check on Wazuh agents.
+
+    Args:
+        agents (list): List of agents to perform health check on.
+        time_criteria (TimeCriteriaModel): Time criteria for determining agent health.
+
+    Returns:
+        AgentHealthCheckResponse: Response object containing the results of the health check.
+    """
     healthy_wazuh_agents = []
     unhealthy_wazuh_agents = []
     for agent in agents:
@@ -75,6 +105,16 @@ async def wazuh_agents_healthcheck(agents: list, time_criteria: TimeCriteriaMode
 
 
 async def wazuh_agent_healthcheck(agent: AgentModel, time_criteria: TimeCriteriaModel) -> AgentHealthCheckResponse:
+    """
+    Performs a health check on a Wazuh agent.
+
+    Args:
+        agent (AgentModel): The agent to perform the health check on.
+        time_criteria (TimeCriteriaModel): The time criteria for the health check.
+
+    Returns:
+        AgentHealthCheckResponse: The health check response containing the results of the health check.
+    """
     extended_agent = is_wazuh_agent_unhealthy(agent, time_criteria)
     if extended_agent.unhealthy_wazuh_agent:
         return AgentHealthCheckResponse(
@@ -93,6 +133,16 @@ async def wazuh_agent_healthcheck(agent: AgentModel, time_criteria: TimeCriteria
 
 
 async def velociraptor_agents_healthcheck(agents: list, time_criteria: TimeCriteriaModel) -> AgentHealthCheckResponse:
+    """
+    Perform health check on Velociraptor agents.
+
+    Args:
+        agents (list): List of agents to perform health check on.
+        time_criteria (TimeCriteriaModel): Time criteria for determining agent health.
+
+    Returns:
+        AgentHealthCheckResponse: Response object containing healthy and unhealthy agents.
+    """
     healthy_velociraptor_agents = []
     unhealthy_velociraptor_agents = []
 
@@ -117,6 +167,16 @@ async def velociraptor_agents_healthcheck(agents: list, time_criteria: TimeCrite
 
 
 async def velociraptor_agent_healthcheck(agent: AgentModel, time_criteria: TimeCriteriaModel) -> AgentHealthCheckResponse:
+    """
+    Perform a health check on a Velociraptor agent.
+
+    Args:
+        agent (AgentModel): The agent to perform the health check on.
+        time_criteria (TimeCriteriaModel): The time criteria for the health check.
+
+    Returns:
+        AgentHealthCheckResponse: The health check response containing the status of the Velociraptor agent.
+    """
     extended_agent = is_velociraptor_agent_unhealthy(agent, time_criteria)
     if extended_agent.unhealthy_velociraptor_agent:
         return AgentHealthCheckResponse(
@@ -135,6 +195,15 @@ async def velociraptor_agent_healthcheck(agent: AgentModel, time_criteria: TimeC
 
 
 async def host_logs(search_body: HostLogsSearchBody) -> HostLogsSearchResponse:
+    """
+    Search for host logs based on the provided search criteria.
+
+    Args:
+        search_body (HostLogsSearchBody): The search criteria for host logs.
+
+    Returns:
+        HostLogsSearchResponse: The response containing the search result and status information.
+    """
     result = await get_logs_generic(search_body, is_host_specific=True)
     logger.info(f"Host logs search result: {result}")
 
@@ -161,6 +230,17 @@ async def host_logs(search_body: HostLogsSearchBody) -> HostLogsSearchResponse:
 
 
 async def get_logs_generic(search_body: Type[LogsSearchBody], is_host_specific: bool = False, index_name: Optional[str] = None):
+    """
+    Retrieves logs based on the provided search criteria.
+
+    Args:
+        search_body (Type[LogsSearchBody]): The search criteria for the logs.
+        is_host_specific (bool, optional): Specifies if the search is host-specific. Defaults to False.
+        index_name (str, optional): The name of the index to search in. If not provided, all indices will be searched.
+
+    Returns:
+        dict: A dictionary containing the logs summary, success status, and message.
+    """
     logger.info(f"Collecting Wazuh Indexer alerts for host {search_body.agent_name if is_host_specific else ''}")
     logs_summary = []
     indices = await collect_indices()
@@ -190,6 +270,17 @@ async def get_logs_generic(search_body: Type[LogsSearchBody], is_host_specific: 
 
 
 async def collect_logs_generic(index_name: str, body: LogsSearchBody, is_host_specific: bool = False) -> CollectLogsResponse:
+    """
+    Collects logs from Elasticsearch based on the specified parameters.
+
+    Args:
+        index_name (str): The name of the Elasticsearch index to search.
+        body (LogsSearchBody): The search body containing the timerange, log field, log value, and other parameters.
+        is_host_specific (bool, optional): Specifies whether the search should be limited to a specific agent. Defaults to False.
+
+    Returns:
+        CollectLogsResponse: The response object containing the collected logs, success status, and message.
+    """
     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
     query_builder = LogsQueryBuilder()
     query_builder.add_time_range(timerange=body.timerange, timestamp_field=body.timestamp_field)
