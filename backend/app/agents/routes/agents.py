@@ -34,22 +34,6 @@ from app.db.universal_models import Agents
 
 agents_router = APIRouter()
 
-# ! OLD
-# def fetch_velociraptor_id(agent_id: str) -> str:
-#     try:
-#         return session.query(Agents).filter(Agents.agent_id == agent_id).first().velociraptor_id
-#     except Exception as e:
-#         logger.error(f"Failed to fetch agent {agent_id} from database: {e}")
-#         raise HTTPException(status_code=500, detail=f"Failed to fetch agent {agent_id} from database: {e}")
-
-
-# def delete_agent_from_database(agent_id: str):
-#     try:
-#         session.query(Agents).filter(Agents.agent_id == agent_id).delete()
-#         session.commit()
-#     except Exception as e:
-#         logger.error(f"Failed to delete agent {agent_id} from database: {e}")
-#         raise HTTPException(status_code=500, detail=f"Failed to delete agent {agent_id} from database: {e}")
 async def fetch_velociraptor_id(db: AsyncSession, agent_id: str) -> str:
     try:
         result = await db.execute(select(Agents).filter(Agents.agent_id == agent_id))
