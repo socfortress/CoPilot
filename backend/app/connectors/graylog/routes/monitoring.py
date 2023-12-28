@@ -21,6 +21,15 @@ graylog_monitoring_router = APIRouter()
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_all_messages(page_number: int = 1) -> GraylogMessagesResponse:
+    """
+    Retrieve all graylog messages.
+
+    Args:
+        page_number (int, optional): The page number to retrieve. Defaults to 1.
+
+    Returns:
+        GraylogMessagesResponse: The response containing the graylog messages.
+    """
     logger.info("Fetching all graylog messages")
     logger.info(f"Page number: {page_number}")
     return await get_messages(page_number)
@@ -33,5 +42,11 @@ async def get_all_messages(page_number: int = 1) -> GraylogMessagesResponse:
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_all_metrics() -> GraylogMetricsResponse:
+    """
+    Fetches all graylog metrics.
+
+    Returns:
+        GraylogMetricsResponse: The response containing all the metrics.
+    """
     logger.info("Fetching all graylog metrics")
     return await get_metrics()
