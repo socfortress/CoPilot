@@ -32,6 +32,15 @@ def is_domain(domain: str) -> DomainRequestBody:
 
 @dnstwist_router.post("/analyze", response_model=DomainAnalysisResponse, status_code=200, description="Analyze domain with DNS Twist")
 async def analyze(body: DomainRequestBody = Depends(is_domain)):
+    """
+    Analyzes a domain using DNS Twist.
+
+    Args:
+        body (DomainRequestBody): The request body containing the domain to analyze.
+
+    Returns:
+        DomainAnalysisResponse: The analysis result for the domain.
+    """
     return analyze_domain(body.domain)
 
 
