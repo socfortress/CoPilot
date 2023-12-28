@@ -74,7 +74,7 @@ async def create_general_alert(
     session: AsyncSession = Depends(get_db),
 ):
     """
-    Create a general alert in IRIS.
+    Create a general alert in IRIS. This route is to be used with Praeco.
 
     Args:
         create_alert_request (CreateAlertRequest): The request payload for creating the alert.
