@@ -119,41 +119,107 @@ async def fetch_and_parse_data(session: ClientSession, action: Callable, *args) 
 
 
 async def initialize_client_and_case(service_name: str) -> Tuple[Any, Case]:
+    """
+    Initializes the DFIR Iris client for case operations.
+
+    Args:
+        service_name (str): The name of the DFIR Iris service.
+
+    Returns:
+        Tuple[Any, Case]: A tuple containing the DFIR Iris client and the newly created case.
+    """
     dfir_iris_client = await create_dfir_iris_client(service_name)
     case = Case(session=dfir_iris_client)
     return dfir_iris_client, case
 
 
 async def initialize_client_and_alert(service_name: str) -> Tuple[Any, Alert]:
+    """
+    Initializes the DFIR Iris client for alert operations.
+
+    Args:
+        service_name (str): The name of the service.
+
+    Returns:
+        Tuple[Any, Alert]: A tuple containing the DFIR Iris client and the alert.
+    """
     dfir_iris_client = await create_dfir_iris_client(service_name)
     alert = Alert(session=dfir_iris_client)
     return dfir_iris_client, alert
 
 
 async def initialize_client_and_user(service_name: str) -> Tuple[Any, Alert]:
+    """
+    Initializes the DFIR Iris client for user operations.
+
+    Args:
+        service_name (str): The name of the service.
+
+    Returns:
+        Tuple[Any, Alert]: A tuple containing the DFIR Iris client and the user.
+    """
     dfir_iris_client = await create_dfir_iris_client(service_name)
     user = User(session=dfir_iris_client)
     return dfir_iris_client, user
 
 
 async def initialize_client_and_admin(service_name: str) -> Tuple[Any, Alert]:
+    """
+    Initializes the DFIR Iris client and admin helper.
+
+    Args:
+        service_name (str): The name of the service.
+
+    Returns:
+        Tuple[Any, Alert]: A tuple containing the DFIR Iris client and the admin helper.
+    """
     dfir_iris_client = await create_dfir_iris_client(service_name)
     admin = AdminHelper(session=dfir_iris_client)
     return dfir_iris_client, admin
 
 
 async def initialize_client_and_customer(service_name: str) -> Tuple[Any, Alert]:
+    """
+    Initializes the DFIR Iris client for customer operations.
+
+    Args:
+        service_name (str): The name of the service.
+
+    Returns:
+        Tuple[Any, Alert]: A tuple containing the DFIR Iris client and the customer.
+    """
     dfir_iris_client = await create_dfir_iris_client(service_name)
     customer = Customer(session=dfir_iris_client)
     return dfir_iris_client, customer
 
 
 def handle_error(error_message: str, status_code: int = 500):
+    """
+    Handles an error by logging the error message and raising an HTTPException.
+
+    Args:
+        error_message (str): The error message to be logged and included in the HTTPException detail.
+        status_code (int, optional): The status code to be used in the HTTPException. Defaults to 500.
+    """
     logger.error(error_message)
     raise HTTPException(status_code=status_code, detail=error_message)
 
 
 async def fetch_and_validate_data(client: Any, func: Callable, *args: Any) -> Dict:
+    """
+    Fetches and validates data using the provided client, function, and arguments.
+
+    Args:
+        client (Any): The client object used to fetch the data.
+        func (Callable): The function to be called to fetch the data.
+        *args (Any): Variable length argument list for the function.
+
+    Returns:
+        Dict: The fetched and validated data.
+
+    Raises:
+        Exception: If the data fetching fails.
+    """
     result = await fetch_and_parse_data(client, func, *args)
     if not result["success"]:
         handle_error(f"Failed to fetch data: {result['message']}")
@@ -161,6 +227,15 @@ async def fetch_and_validate_data(client: Any, func: Callable, *args: Any) -> Di
 
 
 async def check_case_exists(case_id: int) -> bool:
+    """
+    Check if a case exists in DFIR-IRIS.
+
+    Args:
+        case_id (int): The ID of the case to check.
+
+    Returns:
+        bool: True if the case exists, False otherwise.
+    """
     try:
         logger.info(f"Checking if case {case_id} exists")
         dfir_iris_client = await create_dfir_iris_client("DFIR-IRIS")
@@ -179,6 +254,15 @@ async def check_case_exists(case_id: int) -> bool:
 
 
 async def check_alert_exists(alert_id: str) -> bool:
+    """
+    Check if an alert with the given ID exists.
+
+    Args:
+        alert_id (str): The ID of the alert to check.
+
+    Returns:
+        bool: True if the alert exists, False otherwise.
+    """
     try:
         dfir_iris_client = await create_dfir_iris_client("DFIR-IRIS")
     except Exception as e:
@@ -204,6 +288,15 @@ async def check_alert_exists(alert_id: str) -> bool:
 
 
 async def check_user_exists(user_id: int) -> bool:
+    """
+    Check if a user exists in the DFIR-IRIS system.
+
+    Args:
+        user_id (int): The ID of the user to check.
+
+    Returns:
+        bool: True if the user exists, False otherwise.
+    """
     try:
         logger.info(f"Checking if user {user_id} exists")
         dfir_iris_client = await create_dfir_iris_client("DFIR-IRIS")
