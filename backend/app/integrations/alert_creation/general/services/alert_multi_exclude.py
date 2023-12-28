@@ -8,7 +8,6 @@ from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
-from app.db.db_session import get_session
 from app.integrations.alert_creation_settings.models.alert_creation_settings import (
     AlertCreationEventConfig,
 )
