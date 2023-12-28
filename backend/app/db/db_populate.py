@@ -75,16 +75,6 @@ async def add_connectors_if_not_exist(session: AsyncSession):
             "connector_configured": True,
             "connector_accepts_file": True,
         },
-        # {
-        #     "connector_name": "RabbitMQ",
-        #     "connector_type": "3",
-        #     "connector_url": "ashdkr02.socfortress.local:5672",
-        #     "connector_username": "guest",
-        #     "connector_password": "guest",
-        #     "connector_api_key": None,
-        #     "connector_configured": True,
-        #     "connector_accepts_username_password": True,
-        # },
         {
             "connector_name": "Sublime",
             "connector_type": "3",
