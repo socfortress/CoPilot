@@ -359,19 +359,23 @@ async def delete_agent(agent_id: str, session: AsyncSession = Depends(get_db)) -
     await delete_agent_from_database(db=session, agent_id=agent_id)
     return AgentModifyResponse(success=True, message=f"Agent {agent_id} deleted successfully")
 
-
+# ! TODO: CURRENTLY UPDATES IN THE DB BUT NEED TO UPDATE IN WAZUH # !
 # @agents_router.put(
 #     "/{agent_id}/update-customer-code",
 #     response_model=AgentUpdateCustomerCodeResponse,
 #     description="Update `agent` customer code",
 #     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 # )
-# async def update_agent_customer_code(agent_id: str, body: AgentUpdateCustomerCodeBody) -> AgentUpdateCustomerCodeResponse:
+# async def update_agent_customer_code(agent_id: str, body: AgentUpdateCustomerCodeBody, db: AsyncSession = Depends(get_db)) -> AgentUpdateCustomerCodeResponse:
 #     logger.info(f"Updating agent {agent_id} customer code to {body.customer_code}")
 #     try:
-#         agent = session.query(Agents).filter(Agents.agent_id == agent_id).first()
+#         result = await db.execute(select(Agents).filter(Agents.agent_id == agent_id))
+#         agent = result.scalars().first()
+#         if not agent:
+#             raise HTTPException(status_code=404, detail=f"Agent with agent_id {agent_id} not found")
 #         agent.customer_code = body.customer_code
-#         session.commit()
+#         await db.commit()
+#         logger.info(f"Agent {agent_id} customer code updated to {body.customer_code}")
 #         return {"success": True, "message": f"Agent {agent_id} customer code updated to {body.customer_code}"}
 #     except Exception as e:
 #         if not agent:
