@@ -7,12 +7,9 @@ from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy import delete
-from starlette.status import HTTP_401_UNAUTHORIZED
 
 from app.agents.schema.agents import AgentModifyResponse
 from app.agents.schema.agents import AgentsResponse
-from app.agents.schema.agents import AgentUpdateCustomerCodeBody
-from app.agents.schema.agents import AgentUpdateCustomerCodeResponse
 from app.agents.schema.agents import OutdatedVelociraptorAgentsResponse
 from app.agents.schema.agents import OutdatedWazuhAgentsResponse
 from app.agents.schema.agents import SyncedAgentsResponse
