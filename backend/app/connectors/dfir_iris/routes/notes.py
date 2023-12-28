@@ -16,6 +16,18 @@ from app.connectors.dfir_iris.utils.universal import check_case_exists
 
 
 async def verify_case_exists(case_id: int) -> int:
+    """
+    Verify if a case exists based on the given case ID.
+
+    Args:
+        case_id (int): The ID of the case to verify.
+
+    Returns:
+        int: The verified case ID.
+
+    Raises:
+        HTTPException: If the case does not exist.
+    """
     if not await check_case_exists(case_id):
         raise HTTPException(status_code=400, detail=f"Case {case_id} does not exist.")
     return case_id
@@ -31,6 +43,16 @@ dfir_iris_notes_router = APIRouter()
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_case_notes_route(case_id: int = Depends(verify_case_exists), search_term: Optional[str] = "%") -> NotesResponse:
+    """
+    Retrieve all notes for a specific case.
+
+    Args:
+        case_id (int): The ID of the case.
+        search_term (str, optional): The search term to filter notes. Defaults to "%".
+
+    Returns:
+        NotesResponse: The response containing the notes for the case.
+    """
     logger.info(f"Fetching notes for case {case_id}")
     return await get_case_notes(case_id, search_term)
 
@@ -42,6 +64,19 @@ async def get_case_notes_route(case_id: int = Depends(verify_case_exists), searc
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def create_case_note_route(case_id: int, note_creation_body: NoteCreationBody) -> NoteCreationResponse:
+    """
+    Create a note for a case.
+
+    Args:
+        case_id (int): The ID of the case.
+        note_creation_body (NoteCreationBody): The body of the note creation request.
+
+    Returns:
+        NoteCreationResponse: The response containing the created note.
+
+    Raises:
+        CaseNotFoundError: If the case with the given ID does not exist.
+    """
     verify_case_exists(case_id)
     logger.info(f"Creating a note for case {case_id}")
     return await create_case_note(case_id, note_creation_body)

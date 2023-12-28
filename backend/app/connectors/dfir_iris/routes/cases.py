@@ -20,6 +20,18 @@ from app.connectors.dfir_iris.utils.universal import check_case_exists
 
 
 async def verify_case_exists(case_id: int) -> int:
+    """
+    Verify if a case exists based on the given case ID.
+
+    Args:
+        case_id (int): The ID of the case to verify.
+
+    Returns:
+        int: The verified case ID.
+
+    Raises:
+        HTTPException: If the case does not exist.
+    """
     if not await check_case_exists(case_id):
         raise HTTPException(status_code=400, detail=f"Case {case_id} does not exist.")
     return case_id
@@ -29,6 +41,17 @@ dfir_iris_cases_router = APIRouter()
 
 
 def get_timedelta(older_than: int, time_unit: TimeUnit) -> CaseOlderThanBody:
+    """
+    Calculate a timedelta based on the given older_than value and time_unit.
+
+    Args:
+        older_than (int): The value representing the duration.
+        time_unit (TimeUnit): The unit of time (hours, days, weeks).
+
+    Returns:
+        CaseOlderThanBody: An instance of CaseOlderThanBody with the calculated timedelta.
+
+    """
     delta = None
     if time_unit == TimeUnit.HOURS:
         delta = timedelta(hours=older_than)
@@ -46,6 +69,12 @@ def get_timedelta(older_than: int, time_unit: TimeUnit) -> CaseOlderThanBody:
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_cases_route() -> CaseResponse:
+    """
+    Get all cases.
+
+    Returns:
+        CaseResponse: The response containing all cases.
+    """
     logger.info("Fetching all cases")
     return await get_all_cases()
 
@@ -57,6 +86,15 @@ async def get_cases_route() -> CaseResponse:
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_cases_older_than_route(case_older_than_body: CaseOlderThanBody = Depends(get_timedelta)) -> CaseResponse:
+    """
+    Fetches all cases older than a specified date.
+
+    Args:
+        case_older_than_body (CaseOlderThanBody): The request body containing the date and time unit.
+
+    Returns:
+        CaseResponse: The response containing the cases older than the specified date.
+    """
     logger.info(f"Fetching all cases older than {case_older_than_body.older_than} ({case_older_than_body.time_unit.value})")
     return await get_cases_older_than(case_older_than_body)
 
@@ -68,6 +106,15 @@ async def get_cases_older_than_route(case_older_than_body: CaseOlderThanBody = D
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_single_case_route(case_id: int = Depends(verify_case_exists)) -> SingleCaseResponse:
+    """
+    Retrieve a single case by its ID.
+
+    Args:
+        case_id (int): The ID of the case to retrieve.
+
+    Returns:
+        SingleCaseResponse: The response containing the single case information.
+    """
     logger.info(f"Fetching case {case_id}")
     single_case_body = SingleCaseBody(case_id=case_id)
     return await get_single_case(single_case_body.case_id)
