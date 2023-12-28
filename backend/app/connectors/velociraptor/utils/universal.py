@@ -1,7 +1,5 @@
-import asyncio
 import json
-from concurrent.futures import ThreadPoolExecutor
-from concurrent.futures import TimeoutError
+
 from datetime import datetime
 from typing import Any
 from typing import Dict
@@ -84,33 +82,6 @@ async def verify_velociraptor_connection(connector_name: str) -> str:
         return None
     return await verify_velociraptor_credentials(attributes)
 
-
-# class UniversalService:
-#     """
-#     A service class that encapsulates the logic for polling messages from Velociraptor.
-#     """
-
-#     def __init__(self) -> None:
-#         self.setup_velociraptor_connector("Velociraptor")
-#         self.setup_grpc_channel_and_stub()
-
-#     # def setup_velociraptor_connector(self, connector_name: str):
-#     #     """
-#     #     Collects the details of the Velociraptor connector and sets them up.
-
-#     #     Args:
-#     #         connector_name (str): The name of the Velociraptor connector.
-#     #     """
-#     #     attributes = get_connector_info_from_db(connector_name)
-#     async def setup_velociraptor_connector(self, connector_name: str):
-#         # Start the session asynchronously
-#         async with AsyncSessionLocal() as session:
-#             attributes = await get_connector_info_from_db(connector_name, session)
-#         if attributes is None:
-#             logger.error("No Velociraptor connector found in the database")
-#             return None
-#         self.connector_api_key = attributes["connector_api_key"]
-#         self.config = pyvelociraptor.LoadConfigFile(self.connector_api_key)
 
 
 class UniversalService:
