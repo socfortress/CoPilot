@@ -26,6 +26,17 @@ from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_cl
 
 
 async def collect_and_aggregate_alerts(field_names: List[str], search_body: AlertsSearchBody) -> Dict[str, int]:
+    """
+    Collects and aggregates alerts based on the specified field names and search body.
+
+    Args:
+        field_names (List[str]): The list of field names to use for aggregation.
+        search_body (AlertsSearchBody): The search body to filter alerts.
+
+    Returns:
+        Dict[str, int]: A dictionary containing the aggregated alerts, where the keys are composite keys
+        based on the specified field names, and the values are the count of alerts for each composite key.
+    """
     indices = await collect_indices()
     aggregated_alerts_dict = {}
 
@@ -49,6 +60,22 @@ async def collect_and_aggregate_alerts(field_names: List[str], search_body: Aler
 
 
 async def collect_alerts_generic(index_name: str, body: AlertsSearchBody, is_host_specific: bool = False) -> CollectAlertsResponse:
+    """
+    Collects alerts from the specified index based on the provided search criteria.
+
+    Args:
+        index_name (str): The name of the index to search for alerts.
+        body (AlertsSearchBody): The search criteria for filtering alerts.
+        is_host_specific (bool, optional): Flag indicating whether the search should be limited to a specific host.
+            Defaults to False.
+
+    Returns:
+        CollectAlertsResponse: The response containing the collected alerts.
+
+    Raises:
+        HTTPException: If an error occurs while collecting alerts.
+
+    """
     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
     query_builder = AlertsQueryBuilder()
     query_builder.add_time_range(timerange=body.timerange, timestamp_field=body.timestamp_field)
@@ -72,6 +99,17 @@ async def collect_alerts_generic(index_name: str, body: AlertsSearchBody, is_hos
 
 
 async def get_alerts_generic(search_body: Type[AlertsSearchBody], is_host_specific: bool = False, index_name: Optional[str] = None):
+    """
+    Retrieves alerts from the Wazuh Indexer based on the provided search criteria.
+
+    Args:
+        search_body (Type[AlertsSearchBody]): The search criteria for the alerts.
+        is_host_specific (bool, optional): Specifies whether the search is host-specific. Defaults to False.
+        index_name (str, optional): The name of the index to search in. If not provided, all indices will be searched.
+
+    Returns:
+        dict: A dictionary containing the alerts summary, success status, and a message.
+    """
     logger.info(f"Collecting Wazuh Indexer alerts for host {search_body.agent_name if is_host_specific else ''}")
     alerts_summary = []
     indices = await collect_indices()
@@ -106,21 +144,58 @@ async def get_alerts_generic(search_body: Type[AlertsSearchBody], is_host_specif
 
 
 async def get_alerts(search_body: AlertsSearchBody) -> AlertsSearchResponse:
+    """
+    Retrieves alerts based on the provided search criteria.
+
+    Args:
+        search_body (AlertsSearchBody): The search criteria for retrieving alerts.
+
+    Returns:
+        AlertsSearchResponse: The response containing the retrieved alerts.
+    """
     result = await get_alerts_generic(search_body)
     return AlertsSearchResponse(**result)
 
 
 async def get_host_alerts(search_body: HostAlertsSearchBody) -> HostAlertsSearchResponse:
+    """
+    Retrieves alerts specific to a host.
+
+    Args:
+        search_body (HostAlertsSearchBody): The search criteria for retrieving host alerts.
+
+    Returns:
+        HostAlertsSearchResponse: The response containing the host alerts.
+    """
     result = await get_alerts_generic(search_body, is_host_specific=True)
     return HostAlertsSearchResponse(**result)
 
 
 async def get_index_alerts(search_body: IndexAlertsSearchBody) -> IndexAlertsSearchResponse:
+    """
+    Retrieves alerts from the specified index based on the search criteria.
+
+    Args:
+        search_body (IndexAlertsSearchBody): The search criteria for retrieving alerts.
+
+    Returns:
+        IndexAlertsSearchResponse: The response containing the retrieved alerts.
+    """
     result = await get_alerts_generic(search_body, index_name=search_body.index_name)
     return IndexAlertsSearchResponse(**result)
 
 
 async def get_alerts_by_host(search_body: AlertsSearchBody) -> AlertsByHostResponse:
+    """
+    Retrieves alerts grouped by host.
+
+    Args:
+        search_body (AlertsSearchBody): The search criteria for retrieving alerts.
+
+    Returns:
+        AlertsByHostResponse: The response containing alerts grouped by host.
+
+    """
     aggregated_by_host = await collect_and_aggregate_alerts(["agent_name"], search_body)
     alerts_by_host_list: List[AlertsByHost] = [
         AlertsByHost(agent_name=host[0], number_of_alerts=count)  # host[0] because host is now a tuple
@@ -134,6 +209,16 @@ async def get_alerts_by_host(search_body: AlertsSearchBody) -> AlertsByHostRespo
 
 
 async def get_alerts_by_rule(search_body: AlertsSearchBody) -> AlertsByRuleResponse:
+    """
+    Retrieves alerts grouped by rule based on the provided search criteria.
+
+    Args:
+        search_body (AlertsSearchBody): The search criteria for retrieving alerts.
+
+    Returns:
+        AlertsByRuleResponse: The response containing the alerts grouped by rule.
+
+    """
     aggregated_by_rule = await collect_and_aggregate_alerts(["rule_description"], search_body)
     alerts_by_rule_list: List[AlertsByRule] = [
         AlertsByRule(rule=rule[0], number_of_alerts=count)  # rule[0] because rule is now a tuple
@@ -147,6 +232,16 @@ async def get_alerts_by_rule(search_body: AlertsSearchBody) -> AlertsByRuleRespo
 
 
 async def get_alerts_by_rule_per_host(search_body: AlertsSearchBody) -> AlertsByRulePerHostResponse:
+    """
+    Retrieves alerts grouped by rule per host based on the provided search criteria.
+
+    Args:
+        search_body (AlertsSearchBody): The search criteria for retrieving alerts.
+
+    Returns:
+        AlertsByRulePerHostResponse: The response containing the alerts grouped by rule per host.
+
+    """
     aggregated_by_rule_per_host = await collect_and_aggregate_alerts(["agent_name", "rule_description"], search_body)
     alerts_by_rule_per_host_list: List[AlertsByRulePerHost] = [
         AlertsByRulePerHost(agent_name=agent_name, rule=rule, number_of_alerts=count)
