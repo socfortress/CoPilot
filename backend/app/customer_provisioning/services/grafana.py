@@ -145,6 +145,12 @@ async def delete_grafana_organization(organization_id: int):
     """
     logger.info(f"Deleting Grafana organization")
     grafana_client = await create_grafana_client("Grafana")
-    organization_deleted = grafana_client.organizations.delete_organization(organization_id=organization_id)
-    logger.info(f"Organization deleted: {organization_deleted}")
+    try:
+        organization_deleted = grafana_client.organizations.delete_organization(organization_id=organization_id)
+        logger.info(f"Organization deleted: {organization_deleted}")
+    except Exception as e:
+        # Switch the organization to the default and try again
+        grafana_client.user.switch_actual_user_organisation(1)
+        organization_deleted = grafana_client.organizations.delete_organization(organization_id=organization_id)
+        logger.info(f"Organization deleted: {organization_deleted}")
     return organization_deleted
