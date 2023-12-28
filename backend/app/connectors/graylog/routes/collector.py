@@ -25,6 +25,12 @@ graylog_collector_router = APIRouter()
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_all_indices() -> GraylogIndicesResponse:
+    """
+    Fetches all graylog indices.
+
+    Returns:
+        GraylogIndicesResponse: The response containing the graylog indices.
+    """
     logger.info("Fetching all graylog indices")
     return await get_indices_full()
 
@@ -36,6 +42,12 @@ async def get_all_indices() -> GraylogIndicesResponse:
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_all_inputs() -> GraylogInputsResponse:
+    """
+    Fetches all graylog inputs.
+
+    Returns:
+        GraylogInputsResponse: The response containing all graylog inputs.
+    """
     logger.info("Fetching all graylog inputs")
     return await get_inputs()
 
@@ -47,6 +59,12 @@ async def get_all_inputs() -> GraylogInputsResponse:
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_all_running_inputs() -> RunningInputsResponse:
+    """
+    Fetches all running inputs from Graylog.
+
+    Returns:
+        A RunningInputsResponse object containing information about all running inputs.
+    """
     logger.info("Fetching all graylog running inputs")
     return await get_inputs_running()
 
@@ -58,5 +76,11 @@ async def get_all_running_inputs() -> RunningInputsResponse:
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_all_configured_inputs() -> ConfiguredInputsResponse:
+    """
+    Fetches all graylog configured inputs.
+
+    Returns:
+        ConfiguredInputsResponse: The response model containing the configured inputs.
+    """
     logger.info("Fetching all graylog configured inputs")
     return await get_inputs_configured()
