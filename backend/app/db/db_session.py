@@ -8,11 +8,11 @@ from sqlmodel import create_engine
 from settings import SQLALCHEMY_DATABASE_URI
 
 engine = create_engine(SQLALCHEMY_DATABASE_URI, connect_args={"check_same_thread": False})
-# session = Session(bind=engine)
 session = "placeholder"
 
-
-#! New Testings with Async
+from contextlib import asynccontextmanager
+from contextlib import contextmanager
+from sqlmodel import Session
 
 from loguru import logger
 from sqlalchemy import create_engine
@@ -31,13 +31,18 @@ AsyncSessionLocal = sessionmaker(bind=async_engine, class_=AsyncSession, expire_
 SyncSessionLocal = sessionmaker(bind=sync_engine, class_=Session, expire_on_commit=False)
 
 
-# Dependency to get DB session for each request
-# @asynccontextmanager
-# async def get_db_session():
-#     async with AsyncSessionLocal() as session:
-#         yield session
 @asynccontextmanager
 async def get_db_session():
+    """
+    Context manager that provides an asynchronous database session.
+
+    Yields:
+        session: An asynchronous database session.
+
+    Raises:
+        Exception: If an error occurs during the database session.
+
+    """
     async with AsyncSessionLocal() as session:
         logger.info("DB session created")
         try:
@@ -54,6 +59,15 @@ async def get_db_session():
 # Synchronous context manager to get DB session for each request
 @contextmanager
 def get_sync_db_session():
+    """
+    Context manager that provides a synchronous database session.
+
+    Yields:
+        SyncSessionLocal: The synchronous database session.
+
+    Raises:
+        Exception: If an error occurs during the session.
+    """
     session = SyncSessionLocal()
     logger.info("Sync DB session created")
     try:
@@ -66,17 +80,28 @@ def get_sync_db_session():
         logger.info("Closing sync DB session")
         session.close()
 
-# ! OLD CODE RELATING TO THE SESSION NOT CLOSING ! #
-# async def get_session():
-#     async with get_db_session() as session:
-#         return session
-
-# ! NEW CODE RELATING TO THE SESSION NOT CLOSING ! #
 @asynccontextmanager
 async def get_session():
+    """
+    Context manager that provides an async session object.
+
+    Usage:
+    async with get_session() as session:
+        # Use the session object here
+    """
     async with get_db_session() as session:
         yield session
 
 async def get_db():
+    """
+    A coroutine function that returns an asynchronous context manager for a database session.
+
+    Usage:
+    async with get_db() as session:
+        # Use the session object to interact with the database
+
+    Returns:
+    An asynchronous context manager that yields a database session object.
+    """
     async with get_session() as session:
         yield session
