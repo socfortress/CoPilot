@@ -1,21 +1,14 @@
 from fastapi import APIRouter
-from fastapi import Body
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
 
 from app.auth.utils import AuthHandler
-from app.db.db_session import get_session, get_db
-from app.db.universal_models import Customers
-from app.db.universal_models import CustomersMeta
+from app.db.db_session import get_db
 from app.integrations.ask_socfortress.schema.ask_socfortress import (
     AskSocfortressRequest,
-)
-from app.integrations.ask_socfortress.schema.ask_socfortress import (
-    AskSocfortressSigmaRequest,
 )
 from app.integrations.ask_socfortress.schema.ask_socfortress import (
     AskSocfortressSigmaResponse,
@@ -62,6 +55,17 @@ async def ask_socfortress_sigma(
     session: AsyncSession = Depends(get_db),
     _key_exists: bool = Depends(ensure_api_key_exists),
 ):
+    """
+    Endpoint to ask SOCFortress for a Sigma rule.
+
+    Args:
+        alert (AskSocfortressRequest): The alert data.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+        _key_exists (bool, optional): The API key existence flag. Defaults to Depends(ensure_api_key_exists).
+
+    Returns:
+        AskSocfortressSigmaResponse: The response from SOCFortress.
+    """
     logger.info("Running Ask SOCFortress Sigma lookup.")
 
     ask_socfortress_result = await ask_socfortress_lookup(alert, session=session)
