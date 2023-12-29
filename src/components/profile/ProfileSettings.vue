@@ -16,20 +16,6 @@
 						</n-radio-group>
 					</n-form-item>
 				</div>
-				<div class="title">Profile</div>
-				<div class="flex justify-between flex-col md:flex-row md:gap-4">
-					<n-form-item label="Username" path="username" class="basis-1/2">
-						<n-input v-model:value="formValue.username" placeholder="Type username">
-							<template #prefix>@</template>
-						</n-input>
-					</n-form-item>
-					<n-form-item label="Email" path="email" class="basis-1/2">
-						<n-input v-model:value="formValue.email" placeholder="Type email" />
-					</n-form-item>
-				</div>
-				<n-form-item label="Fullname" path="name">
-					<n-input v-model:value="formValue.name" placeholder="Type Fullname" />
-				</n-form-item>
 
 				<n-form-item>
 					<n-button type="primary" @click="save()">Save</n-button>
