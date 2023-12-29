@@ -99,4 +99,4 @@ async def decommission_wazuh_worker(request: DecommissionWorkerRequest, session:
     if response.status_code != 200:
         return DecommissionWorkerResponse(success=False, message=f"Failed to provision Wazuh worker: {response.text}")
     # Return the response
-    return DecommissionWorkerResponse(success=True, message=f"Wazuh worker provisioned successfully")
+    return DecommissionWorkerResponse(success=True, message="Wazuh worker provisioned successfully")

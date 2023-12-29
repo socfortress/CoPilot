@@ -143,7 +143,7 @@ async def upload_updated_rule(filename: str, xml_content: str):
     )
     logger.info(response)
     if response["data"]["data"]["total_affected_items"] == 0:
-        raise HTTPException(status_code=500, detail=f"Failed to upload updated rule to Wazuh Manager.")
+        raise HTTPException(status_code=500, detail="Failed to upload updated rule to Wazuh Manager.")
     return response
 
 
