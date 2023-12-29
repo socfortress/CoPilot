@@ -15,6 +15,16 @@ from app.utils import ValidationErrorResponse
 
 # Utility function to get user_id from request
 async def get_user_id_from_request(request: Request, logger_instance):
+    """
+    Retrieves the user ID from the given request using the provided logger instance.
+
+    Args:
+        request (Request): The request object.
+        logger_instance: The logger instance used to retrieve the user ID.
+
+    Returns:
+        The user ID extracted from the request.
+    """
     return await logger_instance.get_user_id_from_request(request)
 
 
