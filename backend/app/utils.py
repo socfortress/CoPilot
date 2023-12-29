@@ -26,8 +26,6 @@ from app.auth.services.universal import find_user
 from app.auth.utils import AuthHandler
 from app.connectors.utils import get_connector_info_from_db
 from app.db.all_models import Connectors
-from app.db.db_session import Session
-from app.db.db_session import engine
 from app.db.db_session import get_db
 from app.db.db_session import get_db_session
 from app.db.db_session import get_session
@@ -103,7 +101,7 @@ class ValidationErrorResponse(BaseModel):
 
 
 ################## ! LOGGING TO `log_entry` table ! ##################
-########! MODELS !########
+# #######! MODELS !########
 class LogEntryModel(BaseModel):
     event_type: str = Field(..., example="Info", description="Event type")
     user_id: Optional[int] = Field(None, example=1, description="User ID")
