@@ -17,7 +17,7 @@ from app.connectors.schema import ConnectorsListResponse
 from app.connectors.schema import UpdateConnector
 from app.connectors.schema import VerifyConnectorResponse
 from app.connectors.services import ConnectorServices
-from app.db.db_session import get_session, get_db
+from app.db.db_session import get_db
 
 connector_router = APIRouter()
 

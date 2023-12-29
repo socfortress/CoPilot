@@ -9,7 +9,14 @@ from app.connectors.graylog.utils.universal import send_get_request
 
 
 async def get_streams() -> GraylogStreamsResponse:
-    """Get streams from Graylog."""
+    """Get streams from Graylog.
+
+    Returns:
+        GraylogStreamsResponse: The response object containing the streams collected from Graylog.
+
+    Raises:
+        HTTPException: If there is an error while collecting the streams.
+    """
     logger.info("Getting streams from Graylog")
     streams_collected = await send_get_request(endpoint="/api/streams")
     try:
@@ -32,7 +39,14 @@ async def get_streams() -> GraylogStreamsResponse:
 
 
 async def get_stream_ids() -> List[str]:
-    """Get stream IDs from Graylog."""
+    """Get stream IDs from Graylog.
+
+    Returns:
+        List[str]: A list of stream IDs.
+
+    Raises:
+        HTTPException: If there is an error collecting the stream IDs.
+    """
     logger.info("Getting stream IDs from Graylog")
     streams_collected = await send_get_request(endpoint="/api/streams")
     try:

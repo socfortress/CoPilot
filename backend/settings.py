@@ -6,14 +6,13 @@ For local development, use a .env file to set
 environment variables.
 """
 from pathlib import Path
-from loguru import logger
 
 from environs import Env
+from loguru import logger
 
 env = Env()
 env.read_env(Path(__file__).parent.parent / ".env")
 logger.info(f"Loading environment from {Path(__file__).parent.parent / '.env'}")
-
 
 
 basedir = Path().absolute()

@@ -67,6 +67,15 @@ async def construct_alert_source_link(alert_details: CreateAlertRequest, session
 
 
 async def build_ioc_payload(alert_details: CreateAlertRequest) -> Optional[IrisIoc]:
+    """
+    Builds an IoC payload based on the provided alert details.
+
+    Args:
+        alert_details (CreateAlertRequest): The details of the alert.
+
+    Returns:
+        Optional[IrisIoc]: The constructed IoC payload, or None if no valid IoC fields are found.
+    """
     for field in valid_ioc_fields():
         if hasattr(alert_details, field):
             ioc_value = getattr(alert_details, field)
@@ -81,6 +90,16 @@ async def build_ioc_payload(alert_details: CreateAlertRequest) -> Optional[IrisI
 
 
 async def build_asset_payload(agent_data: AgentsResponse, alert_details) -> IrisAsset:
+    """
+    Build the payload for an IrisAsset object based on the agent data and alert details.
+
+    Args:
+        agent_data (AgentsResponse): The response containing agent data.
+        alert_details: The details of the alert.
+
+    Returns:
+        IrisAsset: The constructed IrisAsset object.
+    """
     if agent_data.success:
         return IrisAsset(
             asset_name=agent_data.agents[0].hostname,
@@ -96,6 +115,17 @@ async def build_alert_context_payload(
     agent_data: AgentsResponse,
     session: AsyncSession,
 ) -> IrisAlertContext:
+    """
+    Builds the payload for the alert context.
+
+    Args:
+        alert_details (CreateAlertRequest): The details of the alert.
+        agent_data (AgentsResponse): The agent data.
+        session (AsyncSession): The async session.
+
+    Returns:
+        IrisAlertContext: The built alert context payload.
+    """
     return IrisAlertContext(
         customer_iris_id=(
             await get_customer_alert_settings(customer_code=alert_details.agent_labels_customer, session=session)
@@ -132,6 +162,18 @@ async def build_alert_payload(
     ioc_payload: Optional[IrisIoc],
     session: AsyncSession,
 ) -> IrisAlertPayload:
+    """
+    Builds the payload for an alert based on the provided alert details, agent data, IoC payload, and session.
+
+    Args:
+        alert_details (CreateAlertRequest): The details of the alert.
+        agent_data: The agent data associated with the alert.
+        ioc_payload (Optional[IrisIoc]): The IoC payload associated with the alert.
+        session (AsyncSession): The session used for database operations.
+
+    Returns:
+        IrisAlertPayload: The built alert payload.
+    """
     asset_payload = await build_asset_payload(agent_data, alert_details)
     context_payload = await build_alert_context_payload(alert_details=alert_details, agent_data=agent_data, session=session)
     timefield = (await get_customer_alert_settings(customer_code=alert_details.agent_labels_customer, session=session)).timefield
@@ -177,6 +219,16 @@ async def build_alert_payload(
 
 
 async def create_alert(alert: CreateAlertRequest, session: AsyncSession) -> CreateAlertResponse:
+    """
+    Creates an alert in IRIS.
+
+    Args:
+        alert (CreateAlertRequest): The alert details.
+        session (AsyncSession): The database session.
+
+    Returns:
+        CreateAlertResponse: The response containing the alert ID and other details.
+    """
     logger.info(f"Creating alert with {alert.id} in IRIS.")
     alert_detail_service = await AlertDetailsService.create()
     event_exclude_result = await alert_detail_service.collect_alert_timeline_process_id(

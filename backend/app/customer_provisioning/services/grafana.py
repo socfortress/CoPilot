@@ -51,7 +51,7 @@ async def create_grafana_datasource(
     Returns:
         GrafanaDataSourceCreationResponse: The response object containing the result of the datasource creation.
     """
-    logger.info(f"Creating Grafana datasource")
+    logger.info("Creating Grafana datasource")
     grafana_client = await create_grafana_client("Grafana")
     # Switch to the newly created organization
     grafana_client.user.switch_actual_user_organisation(organization_id)

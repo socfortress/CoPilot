@@ -4,8 +4,6 @@ from typing import Optional
 from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
-from loguru import logger
-from datetime import datetime
 
 
 class Customers(SQLModel, table=True):
@@ -102,7 +100,7 @@ class Agents(SQLModel, table=True):
     @classmethod
     def create_from_model(cls, wazuh_agent, velociraptor_agent, customer_code):
         # Check if agent_last_seen is 'Unknown' and set wazuh_last_seen accordingly
-        if wazuh_agent.agent_last_seen == 'Unknown':
+        if wazuh_agent.agent_last_seen == "Unknown":
             wazuh_last_seen_value = "1970-01-01T00:00:00+00:00"  # default datetime value
         else:
             wazuh_last_seen_value = wazuh_agent.agent_last_seen_as_datetime
@@ -122,7 +120,7 @@ class Agents(SQLModel, table=True):
         )
 
     def update_from_model(self, wazuh_agent, velociraptor_agent, customer_code):
-        if wazuh_agent.agent_last_seen == 'Unknown' or wazuh_agent.agent_last_seen == "1970-01-01T00:00:00+00:00":
+        if wazuh_agent.agent_last_seen == "Unknown" or wazuh_agent.agent_last_seen == "1970-01-01T00:00:00+00:00":
             wazuh_last_seen_value = datetime.strptime("1970-01-01T00:00:00+00:00", "%Y-%m-%dT%H:%M:%S%z")  # default datetime value
         else:
             wazuh_last_seen_value = wazuh_agent.agent_last_seen_as_datetime

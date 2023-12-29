@@ -18,6 +18,18 @@ from app.connectors.dfir_iris.utils.universal import check_alert_exists
 
 
 async def verify_alert_exists(alert_id: str) -> str:
+    """
+    Verifies if an alert with the given ID exists.
+
+    Args:
+        alert_id (str): The ID of the alert to verify.
+
+    Returns:
+        str: The ID of the alert if it exists.
+
+    Raises:
+        HTTPException: If the alert does not exist.
+    """
     logger.info(f"Verifying alert {alert_id} exists")
     if not await check_alert_exists(alert_id):
         raise HTTPException(status_code=400, detail=f"Alert {alert_id} does not exist.")
@@ -34,6 +46,12 @@ dfir_iris_alerts_router = APIRouter()
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_all_bookmarked_alerts() -> BookmarkedAlertsResponse:
+    """
+    Fetches all bookmarked alerts.
+
+    Returns:
+        BookmarkedAlertsResponse: The response containing the bookmarked alerts.
+    """
     logger.info("Fetching all bookmarked alerts")
     return await get_bookmarked_alerts()
 
@@ -45,6 +63,12 @@ async def get_all_bookmarked_alerts() -> BookmarkedAlertsResponse:
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_all_alerts() -> AlertsResponse:
+    """
+    Retrieve all alerts.
+
+    Returns:
+        AlertsResponse: The response containing all alerts.
+    """
     logger.info("Fetching all alerts")
     return await get_alerts()
 
@@ -56,6 +80,15 @@ async def get_all_alerts() -> AlertsResponse:
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_alert_by_id(alert_id: str = Depends(verify_alert_exists)) -> AlertResponse:
+    """
+    Retrieve an alert by its ID.
+
+    Args:
+        alert_id (str): The ID of the alert to retrieve.
+
+    Returns:
+        AlertResponse: The response containing the alert information.
+    """
     logger.info(f"Fetching alert {alert_id}")
     return await get_alert(alert_id=alert_id)
 
@@ -67,6 +100,15 @@ async def get_alert_by_id(alert_id: str = Depends(verify_alert_exists)) -> Alert
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_all_alerts_assigned_to_user(user_id: int) -> AlertsResponse:
+    """
+    Fetches all alerts assigned to a specific user.
+
+    Args:
+        user_id (int): The ID of the user.
+
+    Returns:
+        AlertsResponse: The response containing the fetched alerts assigned to the user.
+    """
     logger.info(f"Fetching all alerts assigned to user {user_id}")
     alerts = (await get_alerts()).alerts
     alerts_assigned_to_user = []
@@ -84,6 +126,15 @@ async def get_all_alerts_assigned_to_user(user_id: int) -> AlertsResponse:
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def bookmark_alert_route(alert_id: str = Depends(verify_alert_exists)) -> AlertResponse:
+    """
+    Bookmark an alert.
+
+    Args:
+        alert_id (str): The ID of the alert to be bookmarked.
+
+    Returns:
+        AlertResponse: The response containing the bookmarked alert.
+    """
     logger.info(f"Bookmarking alert {alert_id}")
     return await bookmark_alert(alert_id, bookmarked=True)
 
@@ -95,5 +146,14 @@ async def bookmark_alert_route(alert_id: str = Depends(verify_alert_exists)) -> 
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def unbookmark_alert_route(alert_id: str = Depends(verify_alert_exists)) -> AlertResponse:
+    """
+    Unbookmark an alert.
+
+    Args:
+        alert_id (str): The ID of the alert to unbookmark.
+
+    Returns:
+        AlertResponse: The response containing the unbookmarked alert.
+    """
     logger.info(f"Unbookmarking alert {alert_id}")
     return await bookmark_alert(alert_id, bookmarked=False)

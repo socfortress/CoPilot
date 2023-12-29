@@ -22,7 +22,7 @@ from app.connectors.velociraptor.services.artifacts import get_artifacts
 from app.connectors.velociraptor.services.artifacts import quarantine_host
 from app.connectors.velociraptor.services.artifacts import run_artifact_collection
 from app.connectors.velociraptor.services.artifacts import run_remote_command
-from app.db.db_session import get_session, get_db
+from app.db.db_session import get_db
 from app.db.universal_models import Agents
 
 # App specific imports
@@ -32,12 +32,33 @@ velociraptor_artifacts_router = APIRouter()
 
 
 # Get all valid OS prefixes
+from typing import List
+
+
 def get_valid_os_prefixes() -> List[str]:
+    """
+    Returns a list of valid operating system prefixes.
+
+    Returns:
+        List[str]: A list of valid operating system prefixes.
+    """
     return [prefix.name.lower() for prefix in OSPrefixEnum]
 
 
 # Verify the OS prefix exists and return the appropriate Enum value
 def verify_os_prefix_exists(os_prefix: str) -> str:
+    """
+    Verify if the given OS prefix exists.
+
+    Args:
+        os_prefix (str): The OS prefix to be verified.
+
+    Returns:
+        str: The value of the OS prefix.
+
+    Raises:
+        HTTPException: If the OS prefix does not exist.
+    """
     os_prefix_lower = os_prefix.lower()
     os_prefix_upper = os_prefix.upper()  # Convert to uppercase for Enum matching
     valid_os_prefixes = get_valid_os_prefixes()
@@ -49,6 +70,15 @@ def verify_os_prefix_exists(os_prefix: str) -> str:
 
 
 def get_os_prefix_from_os_name(os_name: str) -> str:
+    """
+    Get the OS prefix from the OS name.
+
+    Args:
+        os_name (str): The name of the operating system.
+
+    Returns:
+        str: The OS prefix corresponding to the OS name.
+    """
     # Use the OSPrefixModel to get the OS prefix from the OS name
     logger.info(f"Getting OS prefix from OS name {os_name}")
     os_prefix_model = OSPrefixModel(os_name=os_name)
@@ -57,21 +87,20 @@ def get_os_prefix_from_os_name(os_name: str) -> str:
     return result
 
 
-# def get_velociraptor_id(hostname: str) -> str:
-#     # Get the velociraptor_id from the hostname
-#     logger.info(f"Getting velociraptor_id from hostname {hostname}")
-#     agent = session.query(Agents).filter(Agents.hostname == hostname).first()
-#     if not agent:
-#         raise HTTPException(status_code=404, detail=f"Agent with hostname {hostname} not found")
-#     velociraptor_id = agent.velociraptor_id
-#     # If the velociraptor_id is `n/a`, raise an error
-#     if velociraptor_id == "n/a":
-#         raise HTTPException(status_code=404, detail=f"Velociraptor ID for hostname {hostname} is not available")
-#     logger.info(f"velociraptor_id for hostname {hostname} is {velociraptor_id}")
-#     return velociraptor_id
-
-
 async def get_velociraptor_id(session: AsyncSession, hostname: str) -> str:
+    """
+    Retrieves the velociraptor_id associated with the given hostname.
+
+    Args:
+        session (AsyncSession): The database session.
+        hostname (str): The hostname of the agent.
+
+    Returns:
+        str: The velociraptor_id associated with the hostname.
+
+    Raises:
+        HTTPException: If the agent with the given hostname is not found or if the velociraptor_id is not available.
+    """
     logger.info(f"Getting velociraptor_id from hostname {hostname}")
     result = await session.execute(select(Agents).filter(Agents.hostname == hostname))
     agent = result.scalars().first()
@@ -87,6 +116,20 @@ async def get_velociraptor_id(session: AsyncSession, hostname: str) -> str:
 
 
 async def update_agent_quarantine_status(session: AsyncSession, quarantine_body: QuarantineBody, quarantine_response: QuarantineResponse):
+    """
+    Updates the quarantine status of an agent.
+
+    Args:
+        session (AsyncSession): The database session.
+        quarantine_body (QuarantineBody): The body of the quarantine request.
+        quarantine_response (QuarantineResponse): The response of the quarantine request.
+
+    Raises:
+        HTTPException: If the agent with the specified hostname is not found or if the quarantine action fails.
+
+    Returns:
+        None
+    """
     logger.info(f"Updating agent quarantine status for hostname {quarantine_body.hostname}")
     result = await session.execute(select(Agents).filter(Agents.hostname == quarantine_body.hostname))
     agent = result.scalars().first()
@@ -119,6 +162,12 @@ async def update_agent_quarantine_status(session: AsyncSession, quarantine_body:
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_all_artifacts() -> ArtifactsResponse:
+    """
+    Retrieve all artifacts.
+
+    Returns:
+        ArtifactsResponse: The response containing all artifacts.
+    """
     logger.info("Fetching all artifacts")
     return await get_artifacts()
 
@@ -130,6 +179,15 @@ async def get_all_artifacts() -> ArtifactsResponse:
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_all_artifacts_for_os_prefix(os_prefix: str = Depends(verify_os_prefix_exists)) -> ArtifactsResponse:
+    """
+    Fetches all artifacts for a specific OS prefix.
+
+    Args:
+        os_prefix (str): The OS prefix to filter the artifacts.
+
+    Returns:
+        ArtifactsResponse: The response containing the success status, message, and artifacts.
+    """
     logger.info(f"Fetching all artifacts for OS prefix {os_prefix}")
     # Get all the artifacts names that begin with the OS prefix
     artifacts = await get_artifacts()
@@ -145,6 +203,16 @@ async def get_all_artifacts_for_os_prefix(os_prefix: str = Depends(verify_os_pre
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_all_artifacts_for_hostname(hostname: str, session: AsyncSession = Depends(get_db)) -> ArtifactsResponse:
+    """
+    Retrieve all artifacts for a specific host's OS prefix.
+
+    Args:
+        hostname (str): The hostname of the host.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        ArtifactsResponse: The response containing the retrieved artifacts.
+    """
     logger.info(f"Fetching all artifacts for hostname {hostname}")
 
     # Asynchronous query to find the agent
@@ -168,28 +236,6 @@ async def get_all_artifacts_for_hostname(hostname: str, session: AsyncSession = 
     )
 
 
-# @velociraptor_artifacts_router.post(
-#     "/collect",
-#     response_model=CollectArtifactResponse,
-#     description="Run an analyzer",
-#     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
-# )
-# async def collect_artifact(collect_artifact_body: CollectArtifactBody) -> CollectArtifactResponse:
-#     logger.info(f"Received request to collect artifact {collect_artifact_body}")
-#     # Check that provided artifact name applies for the provided hostname and use the `get_all_artifacts_for_hostname` function to get the list of artifacts
-#     result = await get_all_artifacts_for_hostname(collect_artifact_body.hostname)
-#     artifact_names = [artifact.name for artifact in result.artifacts]
-#     if collect_artifact_body.artifact_name not in artifact_names:
-#         raise HTTPException(
-#             status_code=400,
-#             detail=f"Artifact name {collect_artifact_body.artifact_name} does not apply for hostname {collect_artifact_body.hostname} or does not exist",
-#         )
-#     # Add the velociraptor_id to the run_analyzer_body object
-#     collect_artifact_body.velociraptor_id = get_velociraptor_id(collect_artifact_body.hostname)
-#     # Run the analyzer
-#     return run_artifact_collection(collect_artifact_body)
-
-
 @velociraptor_artifacts_router.post(
     "/collect",
     response_model=CollectArtifactResponse,
@@ -200,6 +246,16 @@ async def collect_artifact(
     collect_artifact_body: CollectArtifactBody,
     session: AsyncSession = Depends(get_db),
 ) -> CollectArtifactResponse:
+    """
+    Collects an artifact for a given hostname.
+
+    Args:
+        collect_artifact_body (CollectArtifactBody): The request body containing the hostname and artifact name.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        CollectArtifactResponse: The response containing the collected artifact.
+    """
     logger.info(f"Received request to collect artifact {collect_artifact_body}")
     result = await get_all_artifacts_for_hostname(collect_artifact_body.hostname, session)
     artifact_names = [artifact.name for artifact in result.artifacts]
@@ -223,6 +279,16 @@ async def collect_artifact(
     dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
 )
 async def run_command(run_command_body: RunCommandBody, session: AsyncSession = Depends(get_db)) -> RunCommandResponse:
+    """
+    Run a remote command.
+
+    Args:
+        run_command_body (RunCommandBody): The request body containing the command details.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        RunCommandResponse: The response containing the result of the command execution.
+    """
     logger.info(f"Received request to run command {run_command_body}")
     result = await get_all_artifacts_for_hostname(run_command_body.hostname, session)
     artifact_names = [artifact.name for artifact in result.artifacts]
@@ -244,6 +310,16 @@ async def run_command(run_command_body: RunCommandBody, session: AsyncSession = 
     dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
 )
 async def quarantine(quarantine_body: QuarantineBody, session: AsyncSession = Depends(get_db)) -> QuarantineResponse:
+    """
+    Quarantine a host.
+
+    Args:
+        quarantine_body (QuarantineBody): The body of the request containing the hostname and artifact name.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        QuarantineResponse: The response containing the result of the quarantine operation.
+    """
     logger.info(f"Received request to quarantine host {quarantine_body}")
     result = await get_all_artifacts_for_hostname(quarantine_body.hostname, session)
     artifact_names = [artifact.name for artifact in result.artifacts]

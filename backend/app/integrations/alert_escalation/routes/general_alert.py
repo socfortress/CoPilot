@@ -16,9 +16,19 @@ integration_general_alerts_router = APIRouter()
 @integration_general_alerts_router.post(
     "/create",
     response_model=CreateAlertResponse,
-    description="Create an alert in IRIS",
+    description="Manually create an alert in IRIS from Copilot WebUI",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def create_alert_route(create_alert_request: CreateAlertRequest, session: AsyncSession = Depends(get_session)) -> CreateAlertResponse:
+    """
+    Create an alert in IRIS. Manually create an alert in IRIS from Copilot WebUI.
+
+    Args:
+        create_alert_request (CreateAlertRequest): The request object containing the details of the alert to be created.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_session).
+
+    Returns:
+        CreateAlertResponse: The response object containing the result of the alert creation.
+    """
     logger.info(f"Creating alert {create_alert_request.alert_id} in IRIS")
     return await create_alert(create_alert_request, session)

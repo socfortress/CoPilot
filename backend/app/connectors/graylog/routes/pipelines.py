@@ -25,6 +25,15 @@ graylog_pipelines_router = APIRouter()
 
 
 def create_rule_title_to_id_dict(pipeline_rules: List[PipelineRule]) -> Dict[str, str]:
+    """
+    Creates a dictionary mapping rule titles to rule IDs.
+
+    Args:
+        pipeline_rules (List[PipelineRule]): List of pipeline rules.
+
+    Returns:
+        Dict[str, str]: Dictionary mapping rule titles to rule IDs.
+    """
     rule_title_to_id = {}
     for rule in pipeline_rules:
         rule_title_to_id[rule.title] = rule.id
@@ -32,6 +41,16 @@ def create_rule_title_to_id_dict(pipeline_rules: List[PipelineRule]) -> Dict[str
 
 
 def transform_stages_with_rule_ids(stages: List[Stage], rule_title_to_id: Dict[str, str]) -> List[StageWithRuleID]:
+    """
+    Transforms a list of stages by adding corresponding rule IDs based on a dictionary mapping rule titles to IDs.
+
+    Args:
+        stages (List[Stage]): The list of stages to transform.
+        rule_title_to_id (Dict[str, str]): The dictionary mapping rule titles to IDs.
+
+    Returns:
+        List[StageWithRuleID]: The transformed list of stages with added rule IDs.
+    """
     new_stages = []
     for stage in stages:
         rule_ids = [rule_title_to_id.get(rule_title, None) for rule_title in stage.rules]
@@ -41,6 +60,17 @@ def transform_stages_with_rule_ids(stages: List[Stage], rule_title_to_id: Dict[s
 
 
 def transform_pipeline_with_rule_ids(pipeline: Pipeline, rule_title_to_id: Dict[str, str]) -> PipelineWithRuleID:
+    """
+    Transforms a pipeline by replacing rule titles with rule IDs.
+
+    Args:
+        pipeline (Pipeline): The original pipeline object.
+        rule_title_to_id (Dict[str, str]): A dictionary mapping rule titles to rule IDs.
+
+    Returns:
+        PipelineWithRuleID: The transformed pipeline object with rule IDs.
+
+    """
     new_stages = transform_stages_with_rule_ids(pipeline.stages, rule_title_to_id)
     pipeline_dict = pipeline.dict()
     pipeline_dict["stages"] = new_stages
@@ -54,6 +84,12 @@ def transform_pipeline_with_rule_ids(pipeline: Pipeline, rule_title_to_id: Dict[
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_all_pipelines() -> GraylogPipelinesResponse:
+    """
+    Get all pipelines.
+
+    Returns:
+        GraylogPipelinesResponse: The response model containing the pipelines.
+    """
     logger.info("Fetching all graylog pipelines")
     return await get_pipelines()
 
@@ -65,6 +101,12 @@ async def get_all_pipelines() -> GraylogPipelinesResponse:
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_all_pipelines_with_rule_ids() -> GraylogPipelinesResponseWithRuleID:
+    """
+    Retrieve all pipelines with their associated rule IDs.
+
+    Returns:
+        GraylogPipelinesResponseWithRuleID: The response containing the pipelines with rule IDs.
+    """
     pipelines_response = await get_pipelines()
     pipeline_rules_response = await get_pipeline_rules()
 
@@ -86,6 +128,12 @@ async def get_all_pipelines_with_rule_ids() -> GraylogPipelinesResponseWithRuleI
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_all_pipeline_rules() -> PipelineRulesResponse:
+    """
+    Fetches all graylog pipeline rules.
+
+    Returns:
+        PipelineRulesResponse: The response containing all pipeline rules.
+    """
     logger.info("Fetching all graylog pipeline rules")
     return await get_pipeline_rules()
 
@@ -97,5 +145,14 @@ async def get_all_pipeline_rules() -> PipelineRulesResponse:
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_pipeline_rules_for_pipeline(pipeline_id: str) -> PipelineRulesResponse:
+    """
+    Get all pipeline rules for a specific pipeline.
+
+    Args:
+        pipeline_id (str): The ID of the pipeline.
+
+    Returns:
+        PipelineRulesResponse: The response containing the pipeline rules.
+    """
     logger.info(f"Fetching all graylog pipeline rules for pipeline {pipeline_id}")
     return await get_pipeline_rule_by_id(pipeline_id)

@@ -10,7 +10,7 @@ from app.connectors.sublime.schema.alerts import AlertResponseBody
 from app.connectors.sublime.schema.alerts import SublimeAlertsResponse
 from app.connectors.sublime.services.alerts import collect_alerts
 from app.connectors.sublime.services.alerts import store_sublime_alert
-from app.db.db_session import get_session, get_db
+from app.db.db_session import get_db
 
 sublime_alerts_router = APIRouter()
 

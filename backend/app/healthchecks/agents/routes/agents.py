@@ -6,11 +6,9 @@ from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from starlette.status import HTTP_401_UNAUTHORIZED
 
 from app.auth.utils import AuthHandler
-from app.db.db_session import get_session, get_db
-from app.db.db_session import session
+from app.db.db_session import get_db
 from app.db.universal_models import Agents
 from app.healthchecks.agents.schema.agents import AgentHealthCheckResponse
 from app.healthchecks.agents.schema.agents import HostLogsSearchBody
@@ -25,11 +23,6 @@ from app.healthchecks.agents.services.agents import wazuh_agents_healthcheck
 healtcheck_agents_router = APIRouter()
 
 
-def verify_admin(user):
-    if not user.is_admin:
-        raise HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail="Unauthorized")
-
-
 @healtcheck_agents_router.get(
     "/wazuh",
     response_model=AgentHealthCheckResponse,
@@ -42,6 +35,18 @@ async def get_wazuh_agent_healthcheck(
     hours: int = Query(0, description="Number of hours within which the agent should have been last seen to be considered healthy."),
     days: int = Query(0, description="Number of days within which the agent should have been last seen to be considered healthy."),
 ) -> AgentHealthCheckResponse:
+    """
+    Get the healthcheck of Wazuh agents based on the specified time criteria.
+
+    Args:
+        session (AsyncSession): The asynchronous database session.
+        minutes (int): Number of minutes within which the agent should have been last seen to be considered healthy. Default is 60.
+        hours (int): Number of hours within which the agent should have been last seen to be considered healthy. Default is 0.
+        days (int): Number of days within which the agent should have been last seen to be considered healthy. Default is 0.
+
+    Returns:
+        AgentHealthCheckResponse: The response containing the healthcheck information of Wazuh agents.
+    """
     time_criteria = TimeCriteriaModel(minutes=minutes, hours=hours, days=days)
 
     # Asynchronously fetch all agents
@@ -63,6 +68,22 @@ async def get_wazuh_agent_healthcheck_by_agent_id(
     hours: int = Query(0, description="Number of hours within which the agent should have been last seen to be considered healthy."),
     days: int = Query(0, description="Number of days within which the agent should have been last seen to be considered healthy."),
 ) -> AgentHealthCheckResponse:
+    """
+    Get the healthcheck of a Wazuh agent by agent_id.
+
+    Args:
+        agent_id (str): The ID of the agent.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+        minutes (int, optional): Number of minutes within which the agent should have been last seen to be considered healthy. Defaults to 60.
+        hours (int, optional): Number of hours within which the agent should have been last seen to be considered healthy. Defaults to 0.
+        days (int, optional): Number of days within which the agent should have been last seen to be considered healthy. Defaults to 0.
+
+    Returns:
+        AgentHealthCheckResponse: The healthcheck response for the agent.
+
+    Raises:
+        HTTPException: If the agent with the specified agent_id is not found.
+    """
     time_criteria = TimeCriteriaModel(minutes=minutes, hours=hours, days=days)
 
     # Asynchronously fetch the agent by id
@@ -86,6 +107,18 @@ async def get_velociraptor_agent_healthcheck(
     hours: int = Query(0, description="Number of hours within which the agent should have been last seen to be considered healthy."),
     days: int = Query(0, description="Number of days within which the agent should have been last seen to be considered healthy."),
 ) -> AgentHealthCheckResponse:
+    """
+    Get Velociraptor agents healthcheck.
+
+    Args:
+        session (AsyncSession): The async session object.
+        minutes (int): Number of minutes within which the agent should have been last seen to be considered healthy. Default is 60.
+        hours (int): Number of hours within which the agent should have been last seen to be considered healthy. Default is 0.
+        days (int): Number of days within which the agent should have been last seen to be considered healthy. Default is 0.
+
+    Returns:
+        AgentHealthCheckResponse: The response model containing the healthcheck results.
+    """
     time_criteria = TimeCriteriaModel(minutes=minutes, hours=hours, days=days)
 
     # Asynchronously fetch all agents
@@ -107,6 +140,19 @@ async def get_velociraptor_agent_healthcheck_by_agent_id(
     hours: int = Query(0, description="Number of hours within which the agent should have been last seen to be considered healthy."),
     days: int = Query(0, description="Number of days within which the agent should have been last seen to be considered healthy."),
 ) -> AgentHealthCheckResponse:
+    """
+    Get Velociraptor agent healthcheck by agent_id.
+
+    Args:
+        agent_id (str): The ID of the agent.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+        minutes (int, optional): Number of minutes within which the agent should have been last seen to be considered healthy. Defaults to 60.
+        hours (int, optional): Number of hours within which the agent should have been last seen to be considered healthy. Defaults to 0.
+        days (int, optional): Number of days within which the agent should have been last seen to be considered healthy. Defaults to 0.
+
+    Returns:
+        AgentHealthCheckResponse: The agent health check response.
+    """
     time_criteria = TimeCriteriaModel(minutes=minutes, hours=hours, days=days)
 
     # Asynchronously fetch the agent by id
@@ -124,6 +170,19 @@ async def get_velociraptor_agent_healthcheck_by_agent_id(
     dependencies=[Security(AuthHandler().get_current_user, scopes=["admin", "analyst"])],
 )
 async def get_host_logs(body: HostLogsSearchBody, session: AsyncSession = Depends(get_db)) -> HostLogsSearchResponse:
+    """
+    Get host logs for a specific agent.
+
+    Args:
+        body (HostLogsSearchBody): The search criteria for host logs.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        HostLogsSearchResponse: The response containing the host logs.
+
+    Raises:
+        HTTPException: If the agent with the specified hostname is not found.
+    """
     logger.info(f"Received request to get host logs for {body.agent_name}")
 
     # Asynchronously verify the agent exists

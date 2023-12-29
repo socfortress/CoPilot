@@ -41,6 +41,9 @@ async def provision_wazuh_customer(request: ProvisionNewCustomer, session: Async
 
     Raises:
         HTTPException: If the stream fails to start
+
+    Returns:
+        CustomerProvisionResponse: The response object containing the provisioned customer's information
     """
     logger.info(f"Provisioning new customer {request}")
     # Initialize an empty dictionary to store the meta data

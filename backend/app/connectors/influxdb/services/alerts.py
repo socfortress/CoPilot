@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import List
 
 from fastapi import HTTPException
@@ -14,7 +13,11 @@ BUCKET_NAME = "_monitoring"
 
 
 def construct_query() -> str:
-    """Constructs the InfluxDB query."""
+    """Constructs the InfluxDB query.
+
+    Returns:
+        str: The constructed InfluxDB query.
+    """
     return """
         from(bucket: "{bucket_name}")
         |> range(start: -1h, stop: now())
@@ -31,7 +34,14 @@ def construct_query() -> str:
 
 
 async def process_alert_records(result) -> List[InfluxDBAlert]:
-    """Processes alert records from InfluxDB query result."""
+    """Processes alert records from InfluxDB query result.
+
+    Args:
+        result: The query result from InfluxDB.
+
+    Returns:
+        A list of InfluxDBAlert objects representing the processed alert records.
+    """
     alerts = []
     for table in result:
         for record in table.records:
@@ -47,7 +57,14 @@ async def process_alert_records(result) -> List[InfluxDBAlert]:
 
 
 async def get_alerts() -> InfluxDBAlertsResponse:
-    """Fetches alerts from InfluxDB and returns them."""
+    """Fetches alerts from InfluxDB and returns them.
+
+    Returns:
+        InfluxDBAlertsResponse: The response object containing the fetched alerts.
+
+    Raises:
+        HTTPException: If there is an error fetching the alerts.
+    """
     client = await create_influxdb_client("InfluxDB")
     try:
         query = construct_query()

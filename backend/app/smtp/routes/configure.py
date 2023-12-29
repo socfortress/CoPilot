@@ -15,6 +15,16 @@ auth_handler = AuthHandler()
 
 @smtp_configure_router.post("/{user_id}/register", response_model=SMTPResponse, status_code=200, description="Register new SMTP for user")
 async def register(user_id: int, smtp: SMTPInput):
+    """
+    Register a new SMTP configuration for a user.
+
+    Args:
+        user_id (int): The ID of the user.
+        smtp (SMTPInput): The SMTP configuration input.
+
+    Returns:
+        dict: A dictionary containing the message and success status of the operation.
+    """
     users = select_all_users()
     logger.info(users)
     if not any(x.id == user_id for x in users):
@@ -32,6 +42,18 @@ async def register(user_id: int, smtp: SMTPInput):
 
 @smtp_configure_router.get("/{user_id}", response_model=SMTP, status_code=200, description="Get SMTP for user")
 async def get_smtp(user_id: int):
+    """
+    Get SMTP configuration for a specific user.
+
+    Args:
+        user_id (int): The ID of the user.
+
+    Returns:
+        SMTP: The SMTP configuration for the user.
+
+    Raises:
+        HTTPException: If the user is not found or if SMTP configuration is not found for the user.
+    """
     users = select_all_users()
     if not any(x.id == user_id for x in users):
         raise HTTPException(status_code=400, detail="User not found")
@@ -43,6 +65,19 @@ async def get_smtp(user_id: int):
 
 @smtp_configure_router.put("/{user_id}", response_model=SMTPResponse, status_code=200, description="Update SMTP for user")
 async def update_smtp(user_id: int, smtp: SMTPInput):
+    """
+    Update SMTP settings for a user.
+
+    Args:
+        user_id (int): The ID of the user.
+        smtp (SMTPInput): The SMTP settings to update.
+
+    Raises:
+        HTTPException: If the user is not found or SMTP settings are not found for the user.
+
+    Returns:
+        dict: A dictionary containing the message and success status of the update.
+    """
     users = select_all_users()
     if not any(x.id == user_id for x in users):
         raise HTTPException(status_code=400, detail="User not found")
@@ -59,6 +94,18 @@ async def update_smtp(user_id: int, smtp: SMTPInput):
 
 @smtp_configure_router.delete("/{user_id}", response_model=SMTPResponse, status_code=200, description="Delete SMTP for user")
 async def delete_smtp(user_id: int):
+    """
+    Delete SMTP configuration for a user.
+
+    Args:
+        user_id (int): The ID of the user.
+
+    Raises:
+        HTTPException: If the user is not found or if SMTP configuration is not found for the user.
+
+    Returns:
+        dict: A dictionary containing the success message.
+    """
     users = select_all_users()
     if not any(x.id == user_id for x in users):
         raise HTTPException(status_code=400, detail="User not found")

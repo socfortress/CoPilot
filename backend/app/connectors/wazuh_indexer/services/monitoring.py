@@ -1,7 +1,6 @@
 from typing import Dict
 from typing import Union
 
-from fastapi import HTTPException
 from loguru import logger
 
 from app.connectors.wazuh_indexer.schema.monitoring import ClusterHealth

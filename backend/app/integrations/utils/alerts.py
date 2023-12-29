@@ -1,23 +1,17 @@
 import ipaddress
-import json
 import re
 from abc import ABC
-from typing import Any
-from typing import Callable
 from typing import Dict
 from typing import Optional
-from typing import Tuple
 from typing import Union
 
 import httpx
 import regex
-import requests
 from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.integrations.utils.schema import ShufflePayload
-from app.integrations.utils.schema import WazuhAgentResponse
 from app.utils import get_customer_alert_settings
 
 

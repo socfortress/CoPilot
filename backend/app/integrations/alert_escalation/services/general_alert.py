@@ -31,6 +31,16 @@ from app.utils import get_customer_alert_settings
 
 
 async def is_customer_code_valid(customer_code: str, session: AsyncSession) -> bool:
+    """
+    Check if the customer code is valid.
+
+    Args:
+        customer_code (str): The customer code to check.
+        session (AsyncSession): The database session.
+
+    Returns:
+        bool: True if the customer code is valid, False otherwise.
+    """
     logger.info(f"Checking if customer_code: {customer_code} is valid.")
 
     result = await session.execute(
@@ -87,6 +97,18 @@ async def construct_alert_source_link(alert_details: GenericAlertModel, session:
 
 
 async def get_single_alert_details(alert_details: CreateAlertRequest) -> GenericAlertModel:
+    """
+    Fetches the details of a single alert.
+
+    Args:
+        alert_details (CreateAlertRequest): The details of the alert to fetch.
+
+    Returns:
+        GenericAlertModel: The model representing the fetched alert.
+
+    Raises:
+        HTTPException: If there is an error while fetching the alert details.
+    """
     logger.info(f"Fetching alert details for alert {alert_details.alert_id} in index {alert_details.index_name}")
     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
     try:
@@ -99,6 +121,15 @@ async def get_single_alert_details(alert_details: CreateAlertRequest) -> Generic
 
 
 async def build_ioc_payload(alert_details: GenericAlertModel) -> Optional[IrisIoc]:
+    """
+    Builds an IoC payload based on the given alert details.
+
+    Args:
+        alert_details (GenericAlertModel): The alert details.
+
+    Returns:
+        Optional[IrisIoc]: The IoC payload if an IoC is found in the alert, otherwise None.
+    """
     for field in valid_ioc_fields():
         if hasattr(alert_details._source, field):
             ioc_value = getattr(alert_details._source, field)
@@ -108,6 +139,16 @@ async def build_ioc_payload(alert_details: GenericAlertModel) -> Optional[IrisIo
 
 
 async def build_asset_payload(agent_data: AgentsResponse, alert_details) -> IrisAsset:
+    """
+    Builds the payload for an IrisAsset object based on the agent data and alert details.
+
+    Args:
+        agent_data (AgentsResponse): The response containing agent data.
+        alert_details: The details of the alert.
+
+    Returns:
+        IrisAsset: The constructed IrisAsset object.
+    """
     if agent_data.success:
         return IrisAsset(
             asset_name=agent_data.agents[0].hostname,
@@ -123,6 +164,17 @@ async def build_alert_context_payload(
     agent_data: AgentsResponse,
     session: AsyncSession,
 ) -> IrisAlertContext:
+    """
+    Builds the payload for the alert context.
+
+    Args:
+        alert_details (GenericAlertModel): The details of the alert.
+        agent_data (AgentsResponse): The data of the agent.
+        session (AsyncSession): The async session.
+
+    Returns:
+        IrisAlertContext: The built alert context payload.
+    """
     return IrisAlertContext(
         customer_iris_id=(
             await get_customer_alert_settings(customer_code=alert_details._source.agent_labels_customer, session=session)
@@ -153,6 +205,21 @@ async def build_alert_payload(
     ioc_payload: Optional[IrisIoc],
     session: AsyncSession,
 ) -> IrisAlertPayload:
+    """
+    Builds the alert payload based on the provided alert details, agent data, IoC payload, and session.
+
+    Args:
+        alert_details (GenericAlertModel): The details of the alert.
+        agent_data: The data of the agent.
+        ioc_payload (Optional[IrisIoc]): The IoC payload.
+        session (AsyncSession): The session object for database operations.
+
+    Returns:
+        IrisAlertPayload: The built alert payload.
+
+    Raises:
+        HTTPException: If there is an error while building the alert payload.
+    """
     asset_payload = await build_asset_payload(agent_data, alert_details)
     context_payload = await build_alert_context_payload(alert_details=alert_details, agent_data=agent_data, session=session)
     timefield = (await get_customer_alert_settings(customer_code=alert_details._source.agent_labels_customer, session=session)).timefield
@@ -202,7 +269,16 @@ async def build_alert_payload(
 
 
 async def construct_soc_alert_url(root_url: str, soc_alert_id: int) -> str:
-    """Constructs the full URL for the SOC alert."""
+    """Constructs the full URL for the SOC alert.
+
+    Args:
+        root_url (str): The root URL of the SOC alert system.
+        soc_alert_id (int): The ID of the SOC alert.
+
+    Returns:
+        str: The full URL for the SOC alert.
+
+    """
     url_path = f"/alerts?cid=1&page=1&per_page=10&sort=desc&alert_ids={soc_alert_id}"
     return f"{root_url}{url_path}"
 
@@ -248,6 +324,19 @@ async def add_alert_to_document(es_client, alert: CreateAlertRequest, soc_alert_
 
 
 async def create_alert(alert: CreateAlertRequest, session: AsyncSession) -> CreateAlertResponse:
+    """
+    Creates an alert in IRIS.
+
+    Args:
+        alert (CreateAlertRequest): The request object containing the alert details.
+        session (AsyncSession): The database session.
+
+    Returns:
+        CreateAlertResponse: The response object containing the created alert details.
+
+    Raises:
+        HTTPException: If there is an error creating the alert.
+    """
     logger.info(f"Creating alert {alert.alert_id} in IRIS")
     alert_details = await get_single_alert_details(alert_details=alert)
     logger.info(f"Alert details: {alert_details}")

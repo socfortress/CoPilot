@@ -19,13 +19,10 @@ from app.customers.schema.customers import CustomerMetaResponse
 from app.customers.schema.customers import CustomerRequestBody
 from app.customers.schema.customers import CustomerResponse
 from app.customers.schema.customers import CustomersResponse
-from app.db.db_session import get_session, get_db
-from app.db.db_session import session
+from app.db.db_session import get_db
 from app.db.universal_models import Agents
 from app.db.universal_models import Customers
 from app.db.universal_models import CustomersMeta
-
-# from app.healthchecks.agents.schema.agents import AgentModel
 from app.healthchecks.agents.schema.agents import AgentHealthCheckResponse
 from app.healthchecks.agents.schema.agents import TimeCriteriaModel
 from app.healthchecks.agents.services.agents import velociraptor_agents_healthcheck
@@ -35,11 +32,33 @@ customers_router = APIRouter()
 
 
 def verify_admin(user):
+    """
+    Verify if the user is an admin.
+
+    Args:
+        user: The user object to be verified.
+
+    Raises:
+        HTTPException: If the user is not an admin.
+
+    Returns:
+        None
+    """
     if not user.is_admin:
         raise HTTPException(status_code=HTTP_401_UNAUTHORIZED, detail="Unauthorized")
 
 
 async def verify_unique_customer_code(session: AsyncSession, customer: CustomerRequestBody):
+    """
+    Verifies if the given customer code is unique in the database.
+
+    Args:
+        session (AsyncSession): The database session.
+        customer (CustomerRequestBody): The customer data to be verified.
+
+    Raises:
+        HTTPException: If a customer with the same customer code already exists in the database.
+    """
     stmt = select(Customers).filter(Customers.customer_code == customer.customer_code)
     result = await session.execute(stmt)
     existing_customer = result.scalars().first()
@@ -54,6 +73,19 @@ async def verify_unique_customer_code(session: AsyncSession, customer: CustomerR
     dependencies=[Security(AuthHandler().require_any_scope("admin"))],
 )
 async def create_customer(customer: CustomerRequestBody, session: AsyncSession = Depends(get_db)) -> CustomerResponse:
+    """
+    Create a new customer.
+
+    Args:
+        customer (CustomerRequestBody): The customer data to be created.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        CustomerResponse: The response containing the created customer data.
+
+    Raises:
+        None
+    """
     await verify_unique_customer_code(session, customer)
     logger.info(f"Creating new customer: {customer}")
     new_customer = Customers(**customer.dict())
@@ -69,6 +101,15 @@ async def create_customer(customer: CustomerRequestBody, session: AsyncSession =
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_customers(session: AsyncSession = Depends(get_db)) -> CustomersResponse:
+    """
+    Fetches all customers from the database.
+
+    Args:
+        session (AsyncSession): The async session object used to interact with the database.
+
+    Returns:
+        CustomersResponse: The response containing the list of customers fetched successfully.
+    """
     logger.info("Fetching all customers")
 
     # Asynchronous query to fetch all customers
@@ -87,6 +128,19 @@ async def get_customers(session: AsyncSession = Depends(get_db)) -> CustomersRes
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_customer(customer_code: str, session: AsyncSession = Depends(get_db)) -> CustomerResponse:
+    """
+    Get customer by customer_code.
+
+    Args:
+        customer_code (str): The code of the customer to retrieve.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        CustomerResponse: The response containing the customer data.
+
+    Raises:
+        HTTPException: If the customer with the specified code is not found.
+    """
     logger.info(f"Fetching customer with customer_code: {customer_code}")
 
     # Asynchronous query to fetch customer
@@ -112,6 +166,20 @@ async def update_customer(
     customer: CustomerRequestBody,
     session: AsyncSession = Depends(get_db),
 ) -> CustomerResponse:
+    """
+    Update a customer with the given customer_code.
+
+    Args:
+        customer_code (str): The code of the customer to be updated.
+        customer (CustomerRequestBody): The updated customer data.
+        session (AsyncSession, optional): The asynchronous database session. Defaults to Depends(get_db).
+
+    Returns:
+        CustomerResponse: The response containing the updated customer data.
+
+    Raises:
+        HTTPException: If the customer with the given customer_code is not found.
+    """
     logger.info(f"Updating customer with customer_code: {customer_code}")
 
     # Asynchronous query to find the existing customer
@@ -142,6 +210,19 @@ async def update_customer(
     dependencies=[Security(AuthHandler().require_any_scope("admin"))],
 )
 async def delete_customer(customer_code: str, session: AsyncSession = Depends(get_db)) -> CustomerResponse:
+    """
+    Delete a customer by customer_code.
+
+    Args:
+        customer_code (str): The code of the customer to be deleted.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        CustomerResponse: The response containing the deleted customer data.
+
+    Raises:
+        HTTPException: If the customer with the given customer_code is not found.
+    """
     logger.info(f"Deleting customer with customer_code: {customer_code}")
 
     result = await session.execute(select(Customers).filter(Customers.customer_code == customer_code))
@@ -179,6 +260,20 @@ async def add_customer_meta(
     customer_meta: CustomerMetaRequestBody,
     session: AsyncSession = Depends(get_db),
 ) -> CustomerMetaResponse:
+    """
+    Add new customer meta.
+
+    Args:
+        customer_code (str): The code of the customer.
+        customer_meta (CustomerMetaRequestBody): The meta information of the customer.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        CustomerMetaResponse: The response containing the added customer meta.
+
+    Raises:
+        HTTPException: If the customer with the given customer_code is not found.
+    """
     logger.info(f"Adding new customer meta: {customer_meta}")
 
     result = await session.execute(select(Customers).filter(Customers.customer_code == customer_code))
@@ -206,6 +301,19 @@ async def add_customer_meta(
     deprecated=True,
 )
 async def get_customer_meta(customer_code: str, session: AsyncSession = Depends(get_db)) -> CustomerMetaResponse:
+    """
+    Retrieve customer meta data by customer_code.
+
+    Args:
+        customer_code (str): The customer code.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        CustomerMetaResponse: The response containing the customer meta data.
+
+    Raises:
+        HTTPException: If the customer meta data is not found.
+    """
     logger.info(f"Fetching customer meta with customer_code: {customer_code}")
 
     result = await session.execute(select(CustomersMeta).filter(CustomersMeta.customer_code == customer_code))
@@ -235,6 +343,20 @@ async def update_customer_meta(
     customer_meta: CustomerMetaRequestBody,
     session: AsyncSession = Depends(get_db),
 ) -> CustomerMetaResponse:
+    """
+    Update customer meta by customer_code.
+
+    Args:
+        customer_code (str): The customer code.
+        customer_meta (CustomerMetaRequestBody): The updated customer meta.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        CustomerMetaResponse: The updated customer meta response.
+
+    Raises:
+        HTTPException: If the customer meta with the given customer_code is not found.
+    """
     logger.info(f"Updating customer meta with customer_code: {customer_code}")
 
     result = await session.execute(select(CustomersMeta).filter(CustomersMeta.customer_code == customer_code))
@@ -257,7 +379,6 @@ async def update_customer_meta(
     )
 
 
-# ! TODO - DELETE NOT WORKING
 @customers_router.delete(
     "/{customer_code}/meta",
     response_model=CustomerMetaResponse,
@@ -266,6 +387,19 @@ async def update_customer_meta(
     deprecated=True,
 )
 async def delete_customer_meta(customer_code: str, session: AsyncSession = Depends(get_db)) -> CustomerMetaResponse:
+    """
+    Delete customer meta by customer_code.
+
+    Args:
+        customer_code (str): The code of the customer meta to be deleted.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        CustomerMetaResponse: The response containing the deleted customer meta data.
+
+    Raises:
+        HTTPException: If the customer meta with the given customer_code is not found.
+    """
     logger.info(f"Deleting customer meta with customer_code: {customer_code}")
 
     result = await session.execute(select(CustomersMeta).filter(CustomersMeta.customer_code == customer_code))
@@ -297,6 +431,20 @@ async def delete_customer_meta(customer_code: str, session: AsyncSession = Depen
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_customer_full(customer_code: str, session: AsyncSession = Depends(get_db)) -> CustomerFullResponse:
+    """
+    Retrieve the customer and customer meta information based on the customer code.
+
+    Args:
+        customer_code (str): The code of the customer to retrieve.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        CustomerFullResponse: The response containing the customer and customer meta information.
+
+    Raises:
+        HTTPException: If the customer with the specified code is not found.
+
+    """
     logger.info(f"Fetching customer and customer meta with customer_code: {customer_code}")
 
     customer_result = await session.execute(select(Customers).filter(Customers.customer_code == customer_code))
@@ -328,6 +476,16 @@ async def get_customer_full(customer_code: str, session: AsyncSession = Depends(
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_agents(customer_code: str, session: AsyncSession = Depends(get_db)) -> AgentsResponse:
+    """
+    Fetches agents for the given customer_code.
+
+    Args:
+        customer_code (str): The code of the customer.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        AgentsResponse: The response containing the fetched agents.
+    """
     logger.info(f"Fetching agents for customer_code: {customer_code}")
 
     # Check if the customer exists
@@ -358,6 +516,15 @@ async def get_wazuh_agents_healthcheck(
     hours: int = Query(0, description="Number of hours within which the agent should have been last seen to be considered healthy."),
     days: int = Query(0, description="Number of days within which the agent should have been last seen to be considered healthy."),
 ) -> AgentHealthCheckResponse:
+    """
+    Get agents healthcheck for the given customer_code.
+
+    Args:
+        customer_code (str): The code of the customer.
+
+    Returns:
+        AgentHealthCheckResponse: The response containing the healthcheck information for the agents.
+    """
     logger.info(f"Fetching agents for customer_code: {customer_code}")
 
     # Asynchronously fetch customer and agents
@@ -390,6 +557,19 @@ async def get_velociraptor_agents_healthcheck(
     hours: int = Query(0, description="Number of hours within which the agent should have been last seen to be considered healthy."),
     days: int = Query(0, description="Number of days within which the agent should have been last seen to be considered healthy."),
 ) -> AgentHealthCheckResponse:
+    """
+    Fetches the healthcheck of agents for the given customer_code.
+
+    Args:
+        customer_code (str): The code of the customer.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+        minutes (int, optional): Number of minutes within which the agent should have been last seen to be considered healthy. Defaults to 60.
+        hours (int, optional): Number of hours within which the agent should have been last seen to be considered healthy. Defaults to 0.
+        days (int, optional): Number of days within which the agent should have been last seen to be considered healthy. Defaults to 0.
+
+    Returns:
+        AgentHealthCheckResponse: The response containing the healthcheck of agents.
+    """
     logger.info(f"Fetching agents for customer_code: {customer_code}")
 
     # Asynchronously fetch customer

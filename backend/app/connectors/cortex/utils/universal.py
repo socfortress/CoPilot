@@ -1,5 +1,4 @@
 import time
-import traceback
 from typing import Any
 from typing import Dict
 
@@ -67,6 +66,16 @@ async def create_cortex_client(connector_name: str) -> Api:
 
 
 async def run_and_wait_for_analyzer(analyzer_name: str, job_data: AnalyzerJobData) -> Dict[str, Any]:
+    """
+    Runs an analyzer by name and waits for the job to complete.
+
+    Args:
+        analyzer_name (str): The name of the analyzer to run.
+        job_data (AnalyzerJobData): The data for the analyzer job.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the result of the analyzer job.
+    """
     api = await create_cortex_client("Cortex")  # Create Api object
     if api is None:
         return {"success": False, "message": "API initialization failed"}
@@ -78,6 +87,16 @@ async def run_and_wait_for_analyzer(analyzer_name: str, job_data: AnalyzerJobDat
 
 
 async def monitor_analyzer_job(api: Api, job: Any) -> Dict[str, Any]:
+    """
+    Monitors the status of an analyzer job and retrieves the final report when the job is completed.
+
+    Args:
+        api (Api): The API object used to make requests to the Cortex API.
+        job (Any): The job object representing the analyzer job.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the success status and message of the job.
+    """
     r_json = job.json()
     job_id = r_json["id"]
     logger.info(f"Job ID is: {job_id}")
@@ -107,6 +126,16 @@ async def monitor_analyzer_job(api: Api, job: Any) -> Dict[str, Any]:
 
 
 async def retrieve_final_report(api: Api, job_id: str) -> Dict[str, Any]:
+    """
+    Retrieves the final report for a given job ID from the Cortex API.
+
+    Args:
+        api (Api): The Cortex API instance.
+        job_id (str): The ID of the job.
+
+    Returns:
+        Dict[str, Any]: A dictionary containing the success status, message, and final report.
+    """
     report = api.jobs.get_report(job_id).report
     final_report = report["full"]
     return {"success": True, "message": "Analyzer ran successfully", "report": final_report}

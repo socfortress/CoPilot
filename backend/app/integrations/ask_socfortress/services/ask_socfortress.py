@@ -1,18 +1,12 @@
 from typing import Optional
 
 import httpx
-from fastapi import APIRouter
-from fastapi import Body
-from fastapi import Depends
 from fastapi import HTTPException
-from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
 
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
 from app.integrations.alert_escalation.schema.general_alert import CreateAlertRequest
-from app.integrations.alert_escalation.schema.general_alert import CreateAlertResponse
 from app.integrations.alert_escalation.schema.general_alert import GenericAlertModel
 from app.integrations.alert_escalation.schema.general_alert import GenericSourceModel
 from app.integrations.ask_socfortress.schema.ask_socfortress import (
@@ -28,6 +22,18 @@ from app.utils import get_connector_attribute
 
 
 async def get_single_alert_details(alert_details: CreateAlertRequest) -> GenericAlertModel:
+    """
+    Fetches the details of a single alert.
+
+    Args:
+        alert_details (CreateAlertRequest): The details of the alert to fetch.
+
+    Returns:
+        GenericAlertModel: The model representing the fetched alert.
+
+    Raises:
+        HTTPException: If there is an error while fetching the alert details.
+    """
     logger.info(f"Fetching alert details for alert {alert_details.alert_id} in index {alert_details.index_name}")
     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
     try:
@@ -147,14 +153,14 @@ async def add_alert_to_document(es_client, alert: CreateAlertRequest, result: st
 
 async def ask_socfortress_lookup(alert: AskSocfortressRequest, session: AsyncSession) -> AskSocfortressSigmaResponse:
     """
-    Performs a threat intelligence lookup using the Socfortress service.
+    Performs a Ask SOCFortress lookup using the Socfortress service.
 
     Args:
         request (SocfortressThreatIntelRequest): The request object containing the IoC to lookup.
         session (AsyncSession): The async session object for making HTTP requests.
 
     Returns:
-        IoCResponse: The response object containing the threat intelligence information.
+        IoCResponse: The response object containing the Ask SOCFortress information.
     """
     alert_details = await get_single_alert_details(alert_details=alert)
     logger.info(f"Alert details: {alert_details}")

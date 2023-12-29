@@ -1,7 +1,6 @@
 from datetime import datetime
 
 import requests
-from loguru import logger
 
 from app.db.db_session import get_sync_db_session
 from app.schedulers.models.scheduler import JobMetadata
@@ -9,6 +8,15 @@ from app.schedulers.utils.universal import scheduler_login
 
 
 def agent_sync():
+    """
+    Synchronizes agents by sending a request to the server and updating the job metadata.
+
+    This function retrieves the scheduler auth token, sends a POST request to the server
+    to synchronize agents, and updates the job metadata with the last success timestamp.
+
+    If the token retrieval fails, it prints a failure message. If the job metadata for
+    'agent_sync' does not exist, it prints a message indicating the absence of the metadata.
+    """
     # Get the scheduler auth token
     headers = scheduler_login()
 
