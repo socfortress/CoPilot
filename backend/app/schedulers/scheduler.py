@@ -31,5 +31,5 @@ def init_scheduler():
             job_metadata.enabled = True
         session.commit()
 
-    job = scheduler.add_job(agent_sync, "interval", minutes=60, id="agent_sync", replace_existing=True)
+    scheduler.add_job(agent_sync, "interval", minutes=60, id="agent_sync", replace_existing=True)
     return scheduler

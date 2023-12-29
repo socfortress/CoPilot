@@ -1,7 +1,6 @@
 from datetime import datetime
 
 import requests
-from loguru import logger
 
 from app.db.db_session import get_sync_db_session
 from app.schedulers.models.scheduler import JobMetadata
