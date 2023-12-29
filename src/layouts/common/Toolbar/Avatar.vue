@@ -1,6 +1,6 @@
 <template>
 	<n-dropdown :options="options" placement="bottom-end" @select="handleSelect">
-		<n-avatar round :size="32" src="/images/avatar-64.jpg" />
+		<n-avatar round :size="32" :src="userPic" />
 	</n-dropdown>
 </template>
 
@@ -9,6 +9,7 @@ import { NAvatar, NDropdown } from "naive-ui"
 import { renderIcon } from "@/utils"
 import { useRouter } from "vue-router"
 import { ref, h } from "vue"
+import { useAuthStore } from "@/stores/auth"
 
 const UserIcon = "ion:person-outline"
 const LogoutIcon = "ion:log-out-outline"
@@ -19,6 +20,8 @@ defineOptions({
 })
 
 const router = useRouter()
+
+const userPic = useAuthStore().userPic
 
 const options = ref([
 	{

@@ -3,7 +3,16 @@ import { h } from "vue"
 import { RouterLink } from "vue-router"
 import { type MenuMixedOption } from "naive-ui/es/menu/src/interface"
 
-const BlankIcon = "carbon:document-blank"
+const IndiciesIcon = "ph:list-magnifying-glass"
+const AgentsIcon = "ph:shield-checkered"
+const ConnectorsIcon = "carbon:hybrid-networking"
+const GraylogIcon = "icon-park-outline:monitor-two"
+const AlertsIcon = "carbon:warning-hex"
+const ArtifactsIcon = "carbon:document-multiple-01"
+const SOCIcon = "carbon:security"
+const HealthcheckIcon = "ph:heartbeat"
+const CustomersIcon = "carbon:user-multiple"
+const LogsIcon = "carbon:cloud-logging"
 
 export default function getItems(mode: "vertical" | "horizontal", collapsed: boolean): MenuMixedOption[] {
 	return [
@@ -19,7 +28,7 @@ export default function getItems(mode: "vertical" | "horizontal", collapsed: boo
 					{ default: () => "Indices" }
 				),
 			key: "Indices",
-			icon: renderIcon(BlankIcon)
+			icon: renderIcon(IndiciesIcon)
 		},
 		{
 			label: () =>
@@ -33,7 +42,7 @@ export default function getItems(mode: "vertical" | "horizontal", collapsed: boo
 					{ default: () => "Agents" }
 				),
 			key: "Agents",
-			icon: renderIcon(BlankIcon)
+			icon: renderIcon(AgentsIcon)
 		},
 		{
 			label: () =>
@@ -47,12 +56,12 @@ export default function getItems(mode: "vertical" | "horizontal", collapsed: boo
 					{ default: () => "Connectors" }
 				),
 			key: "Connectors",
-			icon: renderIcon(BlankIcon)
+			icon: renderIcon(ConnectorsIcon)
 		},
 		{
 			label: "Graylog",
 			key: "Graylog",
-			icon: renderIcon(BlankIcon),
+			icon: renderIcon(GraylogIcon),
 			children: [
 				{
 					label: () =>
@@ -107,7 +116,7 @@ export default function getItems(mode: "vertical" | "horizontal", collapsed: boo
 					{ default: () => "Alerts" }
 				),
 			key: "Alerts",
-			icon: renderIcon(BlankIcon)
+			icon: renderIcon(AlertsIcon)
 		},
 		{
 			label: () =>
@@ -121,12 +130,12 @@ export default function getItems(mode: "vertical" | "horizontal", collapsed: boo
 					{ default: () => "Artifacts" }
 				),
 			key: "Artifacts",
-			icon: renderIcon(BlankIcon)
+			icon: renderIcon(ArtifactsIcon)
 		},
 		{
 			label: "SOC",
 			key: "SOC",
-			icon: renderIcon(BlankIcon),
+			icon: renderIcon(SOCIcon),
 			children: [
 				{
 					label: () =>
@@ -181,7 +190,7 @@ export default function getItems(mode: "vertical" | "horizontal", collapsed: boo
 					{ default: () => "Healthcheck" }
 				),
 			key: "Healthcheck",
-			icon: renderIcon(BlankIcon)
+			icon: renderIcon(HealthcheckIcon)
 		},
 		{
 			label: () =>
@@ -195,7 +204,7 @@ export default function getItems(mode: "vertical" | "horizontal", collapsed: boo
 					{ default: () => "Customers" }
 				),
 			key: "Customers",
-			icon: renderIcon(BlankIcon)
+			icon: renderIcon(CustomersIcon)
 		},
 		{
 			label: () =>
@@ -209,7 +218,7 @@ export default function getItems(mode: "vertical" | "horizontal", collapsed: boo
 					{ default: () => "Logs" }
 				),
 			key: "Logs",
-			icon: renderIcon(BlankIcon)
+			icon: renderIcon(LogsIcon)
 		}
 	]
 }

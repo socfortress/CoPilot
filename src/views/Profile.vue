@@ -3,8 +3,9 @@
 		<n-card class="header flex flex-col" content-style="padding:0">
 			<div class="user-info flex flex-wrap">
 				<div class="propic">
-					<n-avatar :size="100" :src="propic" round />
+					<n-avatar :size="100" :src="userPic" round />
 					<ImageCropper
+						v-if="propicEnabled"
 						v-slot="{ openCropper }"
 						@crop="setCroppedImage"
 						:placeholder="'Select your profile picture'"
@@ -14,7 +15,7 @@
 				</div>
 				<div class="info grow flex flex-col justify-center">
 					<div class="name">
-						<h1>Margie Dibbert</h1>
+						<h1>{{ userName }}</h1>
 					</div>
 					<div class="details flex flex-wrap">
 						<div class="item">
@@ -28,21 +29,11 @@
 								<span>Role</span>
 							</n-tooltip>
 						</div>
-						<div class="item">
-							<n-tooltip placement="top">
-								<template #trigger>
-									<div class="tooltip-wrap">
-										<Icon :name="MailIcon"></Icon>
-										<span>sigmund67@gmail.com</span>
-									</div>
-								</template>
-								<span>Contacts</span>
-							</n-tooltip>
-						</div>
 					</div>
 				</div>
 				<div class="actions">
 					<ImageCropper
+						v-if="propicEnabled"
 						v-slot="{ openCropper }"
 						@crop="setCroppedImage"
 						:placeholder="'Select your profile picture'"
@@ -53,7 +44,6 @@
 			</div>
 			<div class="section-selector">
 				<n-tabs v-model:value="tabActive">
-					<n-tab name="activity">Activity</n-tab>
 					<n-tab name="settings">Settings</n-tab>
 				</n-tabs>
 			</div>
@@ -76,18 +66,20 @@ import ProfileSettings from "@/components/profile/ProfileSettings.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useAuthStore } from "@/stores/auth"
 
+const propicEnabled = false
+
 const RoleIcon = "tabler:user"
 const EditIcon = "uil:image-edit"
-const MailIcon = "tabler:mail"
 
-const tabActive = ref("activity")
-const propic = ref("/images/avatar-200.jpg")
+const tabActive = ref("settings")
 
 const userRole = useAuthStore().userRoleName
+const userName = useAuthStore().userName
+const userPic = ref(useAuthStore().userPic)
 
 function setCroppedImage(result: ImageCropperResult) {
 	const canvas = result.canvas as HTMLCanvasElement
-	propic.value = canvas.toDataURL()
+	userPic.value = canvas.toDataURL()
 }
 </script>
 

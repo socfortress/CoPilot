@@ -8,7 +8,9 @@
 
 			<div class="bubble flex items-center">
 				<Search />
-				<LocaleSwitch />
+				<!--
+					<LocaleSwitch />
+				-->
 				<FullscreenSwitch />
 				<ThemeSwitch />
 				<Notifications />
@@ -27,7 +29,7 @@ import Search from "./Search.vue"
 import PinnedPages from "./PinnedPages.vue"
 import ThemeSwitch from "./ThemeSwitch.vue"
 import Notifications from "./Notifications.vue"
-import LocaleSwitch from "./LocaleSwitch.vue"
+// import LocaleSwitch from "./LocaleSwitch.vue"
 import FullscreenSwitch from "./FullscreenSwitch.vue"
 import { useLoadingBar } from "naive-ui"
 import { useRouter } from "vue-router"
