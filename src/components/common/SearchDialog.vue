@@ -74,7 +74,6 @@
 import { computed, onMounted, ref } from "vue"
 import { NText, NModal, NCard, NDivider, NAvatar, NScrollbar, type ScrollbarInst } from "naive-ui"
 import { useMagicKeys, whenever } from "@vueuse/core"
-import { faker } from "@faker-js/faker"
 import Highlighter from "vue-highlight-words"
 import { useRouter } from "vue-router"
 import { useThemeSwitch } from "@/composables/useThemeSwitch"
@@ -160,8 +159,8 @@ const groups = ref<Groups>([
 				iconName: null,
 				iconImage: "https://i.pravatar.cc/56?_=" + Math.random(),
 				key: 4,
-				title: faker.person.fullName(),
-				label: faker.internet.email().toLowerCase(),
+				title: "Mr. Carlos Keebler DVM",
+				label: "maximillia_farrell85@yahoo.com",
 				action() {
 					router.push({ name: "Apps-Chat" })
 				}
@@ -170,8 +169,8 @@ const groups = ref<Groups>([
 				iconName: null,
 				iconImage: "https://i.pravatar.cc/56?_=" + Math.random(),
 				key: 5,
-				title: faker.person.fullName(),
-				label: faker.internet.email().toLowerCase(),
+				title: "Rosie Wisozk DDS",
+				label: "susie_cummings@gmail.com",
 				action() {
 					router.push({ name: "Apps-Chat" })
 				}
@@ -180,8 +179,8 @@ const groups = ref<Groups>([
 				iconName: null,
 				iconImage: "https://i.pravatar.cc/56?_=" + Math.random(),
 				key: 6,
-				title: faker.person.fullName(),
-				label: faker.internet.email().toLowerCase(),
+				title: "Craig Pollich",
+				label: "koby_mayert@gmail.com",
 				action() {
 					router.push({ name: "Apps-Chat" })
 				}

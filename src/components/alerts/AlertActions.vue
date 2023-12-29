@@ -53,12 +53,11 @@
 </template>
 
 <script setup lang="ts">
-import { NButton, NInput, NModal } from "naive-ui"
+import { NButton, NInput, NModal, useMessage } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import type { Alert } from "@/types/alerts.d"
 import Api from "@/api"
 import { computed, onBeforeMount, ref } from "vue"
-import { useMessage } from "naive-ui/lib"
 import { watch } from "vue"
 
 const emit = defineEmits<{

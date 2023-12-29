@@ -60,9 +60,6 @@
 		</n-card>
 		<div class="main">
 			<n-tabs :tab-style="{ display: 'none' }" v-model:value="tabActive" animated>
-				<n-tab-pane name="activity">
-					<ProfileActivity />
-				</n-tab-pane>
 				<n-tab-pane name="settings">
 					<ProfileSettings />
 				</n-tab-pane>
@@ -75,7 +72,6 @@
 import { NAvatar, NButton, NTooltip, NTab, NTabs, NTabPane, NCard } from "naive-ui"
 import { ref } from "vue"
 import ImageCropper, { type ImageCropperResult } from "@/components/common/ImageCropper.vue"
-import ProfileActivity from "@/components/profile/ProfileActivity.vue"
 import ProfileSettings from "@/components/profile/ProfileSettings.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useAuthStore } from "@/stores/auth"
