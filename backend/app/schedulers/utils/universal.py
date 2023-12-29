@@ -4,6 +4,13 @@ from app.auth.services.universal import get_scheduler_password
 
 
 def scheduler_login():
+    """
+    Retrieves an authentication token for the scheduler user.
+
+    Returns:
+        dict: The headers containing the authentication token.
+              Returns None if the token retrieval fails.
+    """
     # Get the password
     password = get_scheduler_password()
 
