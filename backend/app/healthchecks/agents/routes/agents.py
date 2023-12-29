@@ -6,7 +6,6 @@ from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from starlette.status import HTTP_401_UNAUTHORIZED
 
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
