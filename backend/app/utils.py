@@ -75,7 +75,8 @@ class ValidationErrorItem(BaseModel):
         logger.info(error_type)
 
         error_messages = {
-            ErrorType.PASSWORD_REGEX: "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character.",
+            ErrorType.PASSWORD_REGEX: "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one "
+            "special character.",
             ErrorType.TIME_RANGE: "Invalid time range. Use 'h' for hours, 'd' for days, and 'w' for weeks.",
             ErrorType.JSON_INVALID: "Invalid JSON. Please check your JSON syntax and try again.",
             ErrorType.MIN_LENGTH: "Value is shorter than minimum length.",
@@ -204,7 +205,7 @@ class TimeRangeModel(BaseModel):
             )
 
 
-#########! LOGGER CLASS !#########
+# ########! LOGGER CLASS !#########
 class Logger:
     def __init__(self, session: AsyncSession, auth_handler: AuthHandler):
         self.session = session
