@@ -5,12 +5,9 @@ from fastapi import HTTPException
 from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
 
 from app.auth.utils import AuthHandler
-from app.db.db_session import get_session, get_db
-from app.db.universal_models import Customers
-from app.db.universal_models import CustomersMeta
+from app.db.db_session import get_db
 from app.threat_intel.schema.socfortress import IoCResponse
 from app.threat_intel.schema.socfortress import SocfortressThreatIntelRequest
 from app.threat_intel.services.socfortress import socfortress_threat_intel_lookup
@@ -53,6 +50,19 @@ async def threat_intel_socfortress(
     session: AsyncSession = Depends(get_db),
     _key_exists: bool = Depends(ensure_api_key_exists),
 ):
+    """
+    Endpoint for SocFortress Threat Intel.
+
+    This endpoint allows authorized users with 'admin' or 'analyst' scope to perform SocFortress threat intelligence lookup.
+
+    Parameters:
+    - request: SocfortressThreatIntelRequest - The request payload containing the necessary information for the lookup.
+    - session: AsyncSession (optional) - The database session to use for the lookup.
+    - _key_exists: bool (optional) - A dependency to ensure the API key exists.
+
+    Returns:
+    - IoCResponse: The response model containing the results of the SocFortress threat intelligence lookup.
+    """
     logger.info("Running SOCFortress Threat Intel")
 
     socfortress_lookup = await socfortress_threat_intel_lookup(request, session=session)
