@@ -1,5 +1,4 @@
 import json
-
 from datetime import datetime
 from typing import Any
 from typing import Dict
@@ -81,7 +80,6 @@ async def verify_velociraptor_connection(connector_name: str) -> str:
         logger.error("No Velociraptor connector found in the database")
         return None
     return await verify_velociraptor_credentials(attributes)
-
 
 
 class UniversalService:

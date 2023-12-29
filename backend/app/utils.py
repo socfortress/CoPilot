@@ -28,8 +28,9 @@ from app.connectors.utils import get_connector_info_from_db
 from app.db.all_models import Connectors
 from app.db.db_session import Session
 from app.db.db_session import engine
+from app.db.db_session import get_db
 from app.db.db_session import get_db_session
-from app.db.db_session import get_session, get_db
+from app.db.db_session import get_session
 from app.db.universal_models import LogEntry
 from app.integrations.alert_creation_settings.models.alert_creation_settings import (
     AlertCreationEventConfig,
@@ -210,107 +211,107 @@ class Logger:
         self.auth_handler = auth_handler
 
     async def get_user_id_from_request(self, request: Request):
-            """
-            Retrieves the user ID from the request object.
+        """
+        Retrieves the user ID from the request object.
 
-            Args:
-                request (Request): The request object.
+        Args:
+            request (Request): The request object.
 
-            Returns:
-                int or None: The user ID if found, None otherwise.
-            """
-            auth_header = request.headers.get("Authorization")
-            if auth_header:
-                token = auth_header.split(" ")[1]  # Better split by space and take the second part
-                username, _ = self.auth_handler.decode_token(token)
-                user = await find_user(username)  # Correctly using await for an async call
-                if user:
-                    return user.id
-            return None
+        Returns:
+            int or None: The user ID if found, None otherwise.
+        """
+        auth_header = request.headers.get("Authorization")
+        if auth_header:
+            token = auth_header.split(" ")[1]  # Better split by space and take the second part
+            username, _ = self.auth_handler.decode_token(token)
+            user = await find_user(username)  # Correctly using await for an async call
+            if user:
+                return user.id
+        return None
 
     async def insert_log_entry(self, log_entry_model: LogEntryModel):
-            """
-            Inserts a log entry into the database.
+        """
+        Inserts a log entry into the database.
 
-            Args:
-                log_entry_model (LogEntryModel): The log entry model to be inserted.
+        Args:
+            log_entry_model (LogEntryModel): The log entry model to be inserted.
 
-            Returns:
-                None
-            """
-            log_entry = LogEntry(**log_entry_model.dict())
-            self.session.add(log_entry)
-            await self.session.commit()
+        Returns:
+            None
+        """
+        log_entry = LogEntry(**log_entry_model.dict())
+        self.session.add(log_entry)
+        await self.session.commit()
 
     async def log_route_access(self, user_id, request: Request, response):
-            """
-            Logs the access of a route.
+        """
+        Logs the access of a route.
 
-            Args:
-                user_id (int): The ID of the user accessing the route.
-                request (Request): The request object containing information about the request.
-                response: The response object containing information about the response.
+        Args:
+            user_id (int): The ID of the user accessing the route.
+            request (Request): The request object containing information about the request.
+            response: The response object containing information about the response.
 
-            Returns:
-                None
-            """
-            log_entry_model = LogEntryModel(
-                event_type="Info",
-                user_id=user_id,
-                route=str(request.url),
-                method=request.method,
-                status_code=response.status_code,
-                message="Route accessed",
-            )
-            await self.insert_log_entry(log_entry_model)
+        Returns:
+            None
+        """
+        log_entry_model = LogEntryModel(
+            event_type="Info",
+            user_id=user_id,
+            route=str(request.url),
+            method=request.method,
+            status_code=response.status_code,
+            message="Route accessed",
+        )
+        await self.insert_log_entry(log_entry_model)
 
     async def log_error(self, user_id, request: Request, exception: Exception, additional_info: Optional[str] = None):
-            """
-            Logs an error event with the provided information.
+        """
+        Logs an error event with the provided information.
 
-            Args:
-                user_id (int): The ID of the user associated with the error.
-                request (Request): The request object that triggered the error.
-                exception (Exception): The exception that occurred.
-                additional_info (Optional[str], optional): Additional information about the error. Defaults to None.
-            """
-            log_entry_model = LogEntryModel(
-                event_type="Error",
-                user_id=user_id,
-                route=str(request.url),
-                method=request.method,
-                status_code=500,  # Internal Server Error
-                message=str(exception),
-                additional_info=additional_info,
-            )
-            await self.insert_log_entry(log_entry_model)
+        Args:
+            user_id (int): The ID of the user associated with the error.
+            request (Request): The request object that triggered the error.
+            exception (Exception): The exception that occurred.
+            additional_info (Optional[str], optional): Additional information about the error. Defaults to None.
+        """
+        log_entry_model = LogEntryModel(
+            event_type="Error",
+            user_id=user_id,
+            route=str(request.url),
+            method=request.method,
+            status_code=500,  # Internal Server Error
+            message=str(exception),
+            additional_info=additional_info,
+        )
+        await self.insert_log_entry(log_entry_model)
 
     async def log_and_raise_http_error(self, user_id, request: Request, exception: Exception):
-            """
-            Logs the error, including the user ID, request details, and the exception,
-            and raises an HTTPException with a status code of 500 (Internal Server Error).
+        """
+        Logs the error, including the user ID, request details, and the exception,
+        and raises an HTTPException with a status code of 500 (Internal Server Error).
 
-            Args:
-                user_id (int): The ID of the user.
-                request (Request): The request object.
-                exception (Exception): The exception that occurred.
+        Args:
+            user_id (int): The ID of the user.
+            request (Request): The request object.
+            exception (Exception): The exception that occurred.
 
-            Raises:
-                HTTPException: An HTTPException with a status code of 500 (Internal Server Error).
-            """
-            await self.log_error(user_id, request, exception)
-            raise HTTPException(status_code=500, detail="Internal Server Error")
+        Raises:
+            HTTPException: An HTTPException with a status code of 500 (Internal Server Error).
+        """
+        await self.log_error(user_id, request, exception)
+        raise HTTPException(status_code=500, detail="Internal Server Error")
 
     async def fetch_all_logs(self):
-            """
-            Fetches all log entries asynchronously.
+        """
+        Fetches all log entries asynchronously.
 
-            Returns:
-                A list of log entries.
-            """
-            result = await self.session.execute(select(LogEntry))
-            logs = result.scalars().all()
-            return logs
+        Returns:
+            A list of log entries.
+        """
+        result = await self.session.execute(select(LogEntry))
+        logs = result.scalars().all()
+        return logs
 
 
 ################## ! RETRIEVE LOGS ROUTES ! ##################
@@ -576,7 +577,8 @@ async def get_customer_alert_settings(customer_code: str, session: AsyncSession)
 
 
 async def get_customer_alert_event_configs(
-    customer_code: str, session: AsyncSession = Depends(get_session),
+    customer_code: str,
+    session: AsyncSession = Depends(get_session),
 ) -> Optional[List[List[AlertCreationEventConfig]]]:
     """
     Retrieves the alert event configurations for a specific customer.

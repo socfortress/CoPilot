@@ -14,11 +14,13 @@ from app.connectors.wazuh_manager.schema.rules import RuleDisable
 from app.connectors.wazuh_manager.schema.rules import RuleDisableResponse
 from app.connectors.wazuh_manager.schema.rules import RuleEnable
 from app.connectors.wazuh_manager.schema.rules import RuleEnableResponse
-#from app.connectors.wazuh_manager.schema.rules import RuleExclude
-#from app.connectors.wazuh_manager.schema.rules import RuleExcludeResponse
+
+# from app.connectors.wazuh_manager.schema.rules import RuleExclude
+# from app.connectors.wazuh_manager.schema.rules import RuleExcludeResponse
 from app.connectors.wazuh_manager.services.rules import disable_rule
 from app.connectors.wazuh_manager.services.rules import enable_rule
-#from app.connectors.wazuh_manager.services.rules import exclude_rule
+
+# from app.connectors.wazuh_manager.services.rules import exclude_rule
 from app.db.db_session import get_db
 
 NEW_LEVEL = "1"

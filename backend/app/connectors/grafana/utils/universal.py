@@ -1,7 +1,6 @@
 from typing import Any
 from typing import Dict
 
-
 from fastapi import HTTPException
 from grafana_client import GrafanaApi
 from loguru import logger

@@ -82,7 +82,6 @@ async def check_customer_exists(customer_code: str, session: AsyncSession = Depe
     return customer
 
 
-
 @customer_provisioning_router.post(
     "/provision",
     response_model=CustomerProvisionResponse,
@@ -149,6 +148,7 @@ async def get_subscriptions_route():
         message="Subscriptions retrieved successfully",
     )
 
+
 # Get the customermeta based on the customer code
 @customer_provisioning_router.get(
     "/provision/{customer_code}",
@@ -176,7 +176,8 @@ async def get_customer_meta(customer_code: str, session: AsyncSession = Depends(
 
     if not customer_meta:
         raise HTTPException(
-            status_code=404, detail=f"Customer meta not found for customer: {customer_code}. Please provision the customer first.",
+            status_code=404,
+            detail=f"Customer meta not found for customer: {customer_code}. Please provision the customer first.",
         )
 
     return CustomersMetaResponse(message="Customer meta retrieved successfully", success=True, customer_meta=customer_meta)

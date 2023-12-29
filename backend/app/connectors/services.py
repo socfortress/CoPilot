@@ -11,7 +11,6 @@ from loguru import logger
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-
 from sqlmodel import select
 from werkzeug.utils import secure_filename
 
@@ -140,42 +139,43 @@ class ConnectorServices:
     """
     Service class for handling operations related to connectors.
     """
+
     @classmethod
     async def fetch_all_connectors(cls, session: AsyncSession) -> List[ConnectorResponse]:
-            """
-            Fetches all connectors from the database.
+        """
+        Fetches all connectors from the database.
 
-            Args:
-                session (AsyncSession): The database session.
+        Args:
+            session (AsyncSession): The database session.
 
-            Returns:
-                List[ConnectorResponse]: A list of ConnectorResponse objects representing the fetched connectors.
-            """
-            try:
-                result = await session.execute(select(Connectors))
-            except Exception as e:
-                logger.exception(f"Failed to fetch all connectors: {e}")
-                exit(0)
-            connectors = result.scalars().all()
-            return [ConnectorResponse.from_orm(connector) for connector in connectors]
+        Returns:
+            List[ConnectorResponse]: A list of ConnectorResponse objects representing the fetched connectors.
+        """
+        try:
+            result = await session.execute(select(Connectors))
+        except Exception as e:
+            logger.exception(f"Failed to fetch all connectors: {e}")
+            exit(0)
+        connectors = result.scalars().all()
+        return [ConnectorResponse.from_orm(connector) for connector in connectors]
 
     @classmethod
     async def fetch_connector_by_id(cls, connector_id: int, session: AsyncSession) -> Optional[ConnectorResponse]:
-            """
-            Fetches a connector by its ID from the database.
+        """
+        Fetches a connector by its ID from the database.
 
-            Args:
-                connector_id (int): The ID of the connector to fetch.
-                session (AsyncSession): The database session.
+        Args:
+            connector_id (int): The ID of the connector to fetch.
+            session (AsyncSession): The database session.
 
-            Returns:
-                Optional[ConnectorResponse]: The fetched connector, or None if not found.
-            """
-            result = await session.execute(select(Connectors).where(Connectors.id == connector_id))
-            connector = result.scalar_one_or_none()
-            if connector:
-                return ConnectorResponse.from_orm(connector)
-            return None
+        Returns:
+            Optional[ConnectorResponse]: The fetched connector, or None if not found.
+        """
+        result = await session.execute(select(Connectors).where(Connectors.id == connector_id))
+        connector = result.scalar_one_or_none()
+        if connector:
+            return ConnectorResponse.from_orm(connector)
+        return None
 
     @classmethod
     async def verify_connector_by_id(cls, connector_id: int, session: AsyncSession) -> Optional[ConnectorResponse]:
@@ -282,37 +282,37 @@ class ConnectorServices:
 
     @classmethod
     async def save_file(cls, file: UploadFile, session: AsyncSession) -> Union[ConnectorResponse, bool]:
-            """
-            Saves the uploaded file to a specified location and updates the connector record in the database.
+        """
+        Saves the uploaded file to a specified location and updates the connector record in the database.
 
-            Args:
-                file (UploadFile): The file to be saved.
-                session (AsyncSession): The async session for interacting with the database.
+        Args:
+            file (UploadFile): The file to be saved.
+            session (AsyncSession): The async session for interacting with the database.
 
-            Returns:
-                Union[ConnectorResponse, bool]: Returns a ConnectorResponse object if the file is saved and the connector record is updated successfully. Otherwise, returns False.
-            """
-            if file and cls.allowed_file(file.filename):
-                filename = secure_filename(file.filename)
-                file_path = os.path.join(UPLOAD_FOLDER, filename)
+        Returns:
+            Union[ConnectorResponse, bool]: Returns a ConnectorResponse object if the file is saved and the connector record is updated successfully. Otherwise, returns False.
+        """
+        if file and cls.allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            file_path = os.path.join(UPLOAD_FOLDER, filename)
 
-                # Save the file asynchronously
-                async with aiofiles.open(file_path, "wb") as buffer:
-                    await buffer.write(await file.read())  # Assuming file doesn't need to be read in chunks
+            # Save the file asynchronously
+            async with aiofiles.open(file_path, "wb") as buffer:
+                await buffer.write(await file.read())  # Assuming file doesn't need to be read in chunks
 
-                # Update connector using async session and ORM
-                query = select(Connectors).where(Connectors.id == 6)
-                connector_record = (await session.execute(query)).scalars().first()
+            # Update connector using async session and ORM
+            query = select(Connectors).where(Connectors.id == 6)
+            connector_record = (await session.execute(query)).scalars().first()
 
-                if connector_record:
-                    connector_record.connector_configured = True
-                    connector_record.connector_api_key = file_path
-                    session.add(connector_record)
-                    await session.commit()
+            if connector_record:
+                connector_record.connector_configured = True
+                connector_record.connector_api_key = file_path
+                session.add(connector_record)
+                await session.commit()
 
-                    connector_response = ConnectorResponse.from_orm(connector_record)
-                    return connector_response
-                else:
-                    return False
+                connector_response = ConnectorResponse.from_orm(connector_record)
+                return connector_response
             else:
                 return False
+        else:
+            return False

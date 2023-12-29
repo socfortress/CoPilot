@@ -23,7 +23,6 @@ from app.db.db_session import get_db
 from app.db.universal_models import Agents
 from app.db.universal_models import Customers
 from app.db.universal_models import CustomersMeta
-
 from app.healthchecks.agents.schema.agents import AgentHealthCheckResponse
 from app.healthchecks.agents.schema.agents import TimeCriteriaModel
 from app.healthchecks.agents.services.agents import velociraptor_agents_healthcheck
@@ -378,7 +377,6 @@ async def update_customer_meta(
         success=True,
         message="Customer meta updated successfully",
     )
-
 
 
 @customers_router.delete(

@@ -36,6 +36,7 @@ async def collect_agent_vulnerabilities(agent_id: str):
 
 from typing import List
 
+
 def process_agent_vulnerabilities(agent_vulnerabilities: dict) -> List[WazuhAgentVulnerabilities]:
     """
     Process agent vulnerabilities and return a list of WazuhAgentVulnerabilities objects.

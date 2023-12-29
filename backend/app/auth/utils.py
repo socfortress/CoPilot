@@ -29,141 +29,141 @@ class AuthHandler:
 
     # ! New with Async
     async def authenticate_user(self, username: str, password: str):
-            """
-            Authenticates a user by checking if the provided username and password match.
+        """
+        Authenticates a user by checking if the provided username and password match.
 
-            Args:
-                username (str): The username of the user.
-                password (str): The password of the user.
+        Args:
+            username (str): The username of the user.
+            password (str): The password of the user.
 
-            Returns:
-                Union[User, bool]: The authenticated user object if the username and password match,
-                                  otherwise False.
-            """
-            user = await find_user(username)
-            if not user or not self.verify_password(password, user.password):
-                logger.info(f"Password is not verified")
-                return False
-            return user
+        Returns:
+            Union[User, bool]: The authenticated user object if the username and password match,
+                              otherwise False.
+        """
+        user = await find_user(username)
+        if not user or not self.verify_password(password, user.password):
+            logger.info(f"Password is not verified")
+            return False
+        return user
 
     # ! New with Async
     async def encode_token(self, username: str, access_token_expires: timedelta = timedelta(hours=24)):
-            """
-            Encodes a JWT token with the given username and expiration time.
+        """
+        Encodes a JWT token with the given username and expiration time.
 
-            Args:
-                username (str): The username for which the token is being encoded.
-                access_token_expires (timedelta, optional): The expiration time for the token.
-                    Defaults to 24 hours.
+        Args:
+            username (str): The username for which the token is being encoded.
+            access_token_expires (timedelta, optional): The expiration time for the token.
+                Defaults to 24 hours.
 
-            Returns:
-                str: The encoded JWT token.
-            """
-            role = await get_role(username)
-            payload = {
-                "exp": datetime.utcnow() + access_token_expires,
-                "iat": datetime.utcnow(),
-                "sub": username,
-                "scopes": [role],
-            }
-            return jwt.encode(payload, self.secret, algorithm="HS256")
+        Returns:
+            str: The encoded JWT token.
+        """
+        role = await get_role(username)
+        payload = {
+            "exp": datetime.utcnow() + access_token_expires,
+            "iat": datetime.utcnow(),
+            "sub": username,
+            "scopes": [role],
+        }
+        return jwt.encode(payload, self.secret, algorithm="HS256")
 
     def decode_token(self, token):
-            """
-            Decode a JWT token and extract the subject and scopes.
+        """
+        Decode a JWT token and extract the subject and scopes.
 
-            Args:
-                token (str): The JWT token to decode.
+        Args:
+            token (str): The JWT token to decode.
 
-            Returns:
-                tuple: A tuple containing the subject and scopes extracted from the token.
+        Returns:
+            tuple: A tuple containing the subject and scopes extracted from the token.
 
-            Raises:
-                jwt.ExpiredSignatureError: If the token has expired.
-                jwt.InvalidTokenError: If the token is invalid.
-            """
-            try:
-                payload = jwt.decode(token, self.secret, algorithms=["HS256"])
-                return payload["sub"], payload.get("scopes", [])
-            except jwt.ExpiredSignatureError:
-                return "Expired signature", []
-            except jwt.InvalidTokenError:
-                return "Invalid token", []
+        Raises:
+            jwt.ExpiredSignatureError: If the token has expired.
+            jwt.InvalidTokenError: If the token is invalid.
+        """
+        try:
+            payload = jwt.decode(token, self.secret, algorithms=["HS256"])
+            return payload["sub"], payload.get("scopes", [])
+        except jwt.ExpiredSignatureError:
+            return "Expired signature", []
+        except jwt.InvalidTokenError:
+            return "Invalid token", []
 
     async def get_current_user(self, security_scopes: SecurityScopes, token: str = Depends(security)):
-            """
-            Retrieves the current user based on the provided security scopes and token.
+        """
+        Retrieves the current user based on the provided security scopes and token.
 
-            Args:
-                security_scopes (SecurityScopes): The security scopes required for authentication.
-                token (str): The authentication token.
+        Args:
+            security_scopes (SecurityScopes): The security scopes required for authentication.
+            token (str): The authentication token.
 
-            Raises:
-                HTTPException: If the credentials cannot be validated or if the token is expired, invalid, or cannot be decoded.
-                HTTPException: If the username is not found in the token.
-                HTTPException: If the user is not found.
-                HTTPException: If the user does not have enough permissions.
+        Raises:
+            HTTPException: If the credentials cannot be validated or if the token is expired, invalid, or cannot be decoded.
+            HTTPException: If the username is not found in the token.
+            HTTPException: If the user is not found.
+            HTTPException: If the user does not have enough permissions.
 
-            Returns:
-                User: The current user.
+        Returns:
+            User: The current user.
 
-            """
-            if security_scopes.scopes:
-                authenticate_value = f'Bearer scope="{security_scopes.scope_str}"'
-            else:
-                authenticate_value = "Bearer"
+        """
+        if security_scopes.scopes:
+            authenticate_value = f'Bearer scope="{security_scopes.scope_str}"'
+        else:
+            authenticate_value = "Bearer"
 
-            credentials_exception = HTTPException(
+        credentials_exception = HTTPException(
+            status_code=401,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": authenticate_value},
+        )
+
+        try:
+            username, token_scopes = self.decode_token(token)
+            if username == "Expired signature":
+                raise HTTPException(
+                    status_code=401,
+                    detail="Expired signature",
+                    headers={"WWW-Authenticate": authenticate_value},
+                )
+            if username == "Invalid token":
+                raise HTTPException(
+                    status_code=401,
+                    detail="Invalid token",
+                    headers={"WWW-Authenticate": authenticate_value},
+                )
+        except Exception as e:
+            raise HTTPException(
                 status_code=401,
-                detail="Could not validate credentials",
+                detail=f"Could not decode token: {e}",
                 headers={"WWW-Authenticate": authenticate_value},
             )
 
-            try:
-                username, token_scopes = self.decode_token(token)
-                if username == "Expired signature":
-                    raise HTTPException(
-                        status_code=401,
-                        detail="Expired signature",
-                        headers={"WWW-Authenticate": authenticate_value},
-                    )
-                if username == "Invalid token":
-                    raise HTTPException(
-                        status_code=401,
-                        detail="Invalid token",
-                        headers={"WWW-Authenticate": authenticate_value},
-                    )
-            except Exception as e:
+        if username is None:
+            raise HTTPException(
+                status_code=401,
+                detail="Username not found in token",
+                headers={"WWW-Authenticate": authenticate_value},
+            )
+        user = await find_user(username)
+
+        if user is None:
+            raise HTTPException(
+                status_code=401,
+                detail="User not found",
+                headers={"WWW-Authenticate": authenticate_value},
+            )
+
+        for scope in security_scopes.scopes:
+            if scope not in token_scopes:
                 raise HTTPException(
                     status_code=401,
-                    detail=f"Could not decode token: {e}",
+                    detail="Not enough permissions",
                     headers={"WWW-Authenticate": authenticate_value},
                 )
 
-            if username is None:
-                raise HTTPException(
-                    status_code=401,
-                    detail="Username not found in token",
-                    headers={"WWW-Authenticate": authenticate_value},
-                )
-            user = await find_user(username)
-
-            if user is None:
-                raise HTTPException(
-                    status_code=401,
-                    detail="User not found",
-                    headers={"WWW-Authenticate": authenticate_value},
-                )
-
-            for scope in security_scopes.scopes:
-                if scope not in token_scopes:
-                    raise HTTPException(
-                        status_code=401,
-                        detail="Not enough permissions",
-                        headers={"WWW-Authenticate": authenticate_value},
-                    )
-
-            return user
+        return user
 
     def return_username_for_logging(self, token: str = Depends(security)):
         """
@@ -179,45 +179,46 @@ class AuthHandler:
         return username
 
     def require_any_scope(self, *required_scopes: str):
-            """
-            Decorator that requires any of the specified scopes in the token.
+        """
+        Decorator that requires any of the specified scopes in the token.
 
-            Args:
-                *required_scopes (str): The required scopes.
+        Args:
+            *required_scopes (str): The required scopes.
 
-            Returns:
-                Callable: The decorated function that checks if the token has any of the required scopes.
-            """
-            async def _require_any_scope(token: str = Depends(self.security)):
-                if not token:
-                    raise HTTPException(
-                        status_code=401,
-                        detail="Not authenticated",
-                        headers={"WWW-Authenticate": "Bearer"},
-                    )
+        Returns:
+            Callable: The decorated function that checks if the token has any of the required scopes.
+        """
 
-                username, token_scopes = self.decode_token(token)
+        async def _require_any_scope(token: str = Depends(self.security)):
+            if not token:
+                raise HTTPException(
+                    status_code=401,
+                    detail="Not authenticated",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
 
-                if username == "Expired signature":
-                    raise HTTPException(
-                        status_code=401,
-                        detail="Expired signature",
-                        headers={"WWW-Authenticate": "Bearer"},
-                    )
-                if username == "Invalid token":
-                    raise HTTPException(
-                        status_code=401,
-                        detail="Invalid token",
-                        headers={"WWW-Authenticate": "Bearer"},
-                    )
+            username, token_scopes = self.decode_token(token)
 
-                if not any(scope in token_scopes for scope in required_scopes):
-                    raise HTTPException(
-                        status_code=401,
-                        detail="Not enough permissions, you don't have any of the required scopes.",
-                        headers={"WWW-Authenticate": "Bearer"},
-                    )
+            if username == "Expired signature":
+                raise HTTPException(
+                    status_code=401,
+                    detail="Expired signature",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+            if username == "Invalid token":
+                raise HTTPException(
+                    status_code=401,
+                    detail="Invalid token",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
 
-                return username
+            if not any(scope in token_scopes for scope in required_scopes):
+                raise HTTPException(
+                    status_code=401,
+                    detail="Not enough permissions, you don't have any of the required scopes.",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
 
-            return _require_any_scope
+            return username
+
+        return _require_any_scope

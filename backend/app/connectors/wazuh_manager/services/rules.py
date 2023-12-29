@@ -197,6 +197,7 @@ async def disable_rule(rule: RuleDisable) -> RuleDisableResponse:
     Returns:
         RuleDisableResponse: The response indicating the success or failure of the operation.
     """
+
     async def process(fc, rid):
         return await set_rule_level(fc, rid, "1")
 

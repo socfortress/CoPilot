@@ -12,13 +12,13 @@ session = "placeholder"
 
 from contextlib import asynccontextmanager
 from contextlib import contextmanager
-from sqlmodel import Session
 
 from loguru import logger
 from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import sessionmaker
+from sqlmodel import Session
 
 from settings import SQLALCHEMY_DATABASE_URI
 
@@ -80,6 +80,7 @@ def get_sync_db_session():
         logger.info("Closing sync DB session")
         session.close()
 
+
 @asynccontextmanager
 async def get_session():
     """
@@ -91,6 +92,7 @@ async def get_session():
     """
     async with get_db_session() as session:
         yield session
+
 
 async def get_db():
     """

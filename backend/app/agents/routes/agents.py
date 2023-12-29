@@ -4,9 +4,9 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Security
 from loguru import logger
+from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import delete
 
 from app.agents.schema.agents import AgentModifyResponse
 from app.agents.schema.agents import AgentsResponse
@@ -23,13 +23,15 @@ from app.agents.wazuh.services.vulnerabilities import collect_agent_vulnerabilit
 
 # App specific imports
 from app.auth.routes.auth import AuthHandler
-from app.db.db_session import get_session, get_db
+from app.db.db_session import get_db
+from app.db.db_session import get_session
 
 # App specific imports
 # from app.db.db_session import session
 from app.db.universal_models import Agents
 
 agents_router = APIRouter()
+
 
 async def fetch_velociraptor_id(db: AsyncSession, agent_id: str) -> str:
     """
@@ -355,6 +357,7 @@ async def delete_agent(agent_id: str, session: AsyncSession = Depends(get_db)) -
         await delete_agent_velociraptor(client_id)
     await delete_agent_from_database(db=session, agent_id=agent_id)
     return AgentModifyResponse(success=True, message=f"Agent {agent_id} deleted successfully")
+
 
 # ! TODO: CURRENTLY UPDATES IN THE DB BUT NEED TO UPDATE IN WAZUH # !
 # @agents_router.put(

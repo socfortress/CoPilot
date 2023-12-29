@@ -1,3 +1,6 @@
+import os
+
+from dotenv import load_dotenv
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -5,10 +8,8 @@ from sqlalchemy.future import select
 from app.auth.models.users import Role
 from app.connectors.models import Connectors
 
-from dotenv import load_dotenv
-import os
-
 load_dotenv()
+
 
 def load_connector_data(connector_name, connector_type, accepts_key, extra_data_key=None):
     """

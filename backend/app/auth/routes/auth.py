@@ -8,7 +8,6 @@ from fastapi.security import OAuth2PasswordRequestForm
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
-
 from app.auth.models.users import User
 from app.auth.models.users import UserInput
 from app.auth.models.users import UserLogin
@@ -20,7 +19,6 @@ from app.auth.services.universal import find_user
 from app.auth.services.universal import select_all_users
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
-
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 1440
 
