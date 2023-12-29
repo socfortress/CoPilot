@@ -6,7 +6,7 @@
 					class="marquee-wrap"
 					:duration="200"
 					:pauseOnHover="true"
-					:clone="true"
+					:clone="false"
 					:gradient="true"
 					:gradient-color="gradientColor"
 					gradient-length="10%"

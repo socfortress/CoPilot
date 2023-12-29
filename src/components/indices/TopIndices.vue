@@ -9,8 +9,12 @@
 </template>
 
 <script setup lang="ts">
+import { type ECharts, init as echartsInit, use as echartsUse } from "echarts/core"
+import { CanvasRenderer } from "echarts/renderers"
+import { PieChart } from "echarts/charts"
+import { TooltipComponent, LegendComponent, GridComponent } from "echarts/components"
+
 import { computed, onMounted, ref, toRefs, watch } from "vue"
-import * as echarts from "echarts"
 import { type IndexStats, IndexHealth } from "@/types/indices.d"
 import bytes from "bytes"
 import _ from "lodash"
@@ -24,7 +28,7 @@ const { indices } = toRefs(props)
 
 const style = computed<{ [key: string]: any }>(() => useThemeStore().style)
 const loading = computed(() => !indices?.value || indices.value === null)
-const chartCtx = ref<echarts.ECharts | null>(null)
+const chartCtx = ref<ECharts | null>(null)
 
 function getOptions() {
 	const data = _.chain(indices.value || [])
@@ -183,7 +187,16 @@ watch(style, () => {
 
 onMounted(() => {
 	const chartDom = document.getElementById("top-indices-chart")
-	chartCtx.value = echarts.init(chartDom)
+
+	echartsUse([
+		TooltipComponent,
+		LegendComponent,
+		GridComponent,
+		PieChart,
+		CanvasRenderer // If you only need to use the canvas rendering mode, the bundle will not include the SVGRenderer module, which is not needed.
+	])
+
+	chartCtx.value = echartsInit(chartDom)
 
 	chartCtx.value.setOption(getOptions())
 

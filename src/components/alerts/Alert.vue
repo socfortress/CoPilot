@@ -222,17 +222,17 @@
 <script setup lang="ts">
 // TODO: add global popover with map for coords property (agent_ip_geolocation) ??
 
+import { computed, defineAsyncComponent, ref, toRefs } from "vue"
 import { NPopover, NModal, NTabs, NTabPane, NInput } from "naive-ui"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
 import Icon from "@/components/common/Icon.vue"
 import Badge from "@/components/common/Badge.vue"
-import AlertActions from "./AlertActions.vue"
+const AlertActions = defineAsyncComponent(() => import("./AlertActions.vue"))
 import type { Alert } from "@/types/alerts.d"
 import { SimpleJsonViewer } from "vue-sjv"
 import "@/assets/scss/vuesjv-override.scss"
 import { useRouter } from "vue-router"
-import { computed, ref, toRefs } from "vue"
 import _pick from "lodash/pick"
 import KVCard from "@/components/common/KVCard.vue"
 

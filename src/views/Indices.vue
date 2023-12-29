@@ -35,13 +35,13 @@
 <script lang="ts" setup>
 import type { IndexStats } from "@/types/indices.d"
 import Api from "@/api"
-import { onBeforeMount, ref } from "vue"
+import { defineAsyncComponent, onBeforeMount, ref } from "vue"
 import IndicesMarquee from "@/components/indices/Marquee.vue"
 import NodeAllocation from "@/components/indices/NodeAllocation.vue"
 import ClusterHealth from "@/components/indices/ClusterHealth.vue"
 import Details from "@/components/indices/Details.vue"
 import UnhealthyIndices from "@/components/indices/UnhealthyIndices.vue"
-import TopIndices from "@/components/indices/TopIndices.vue"
+const TopIndices = defineAsyncComponent(() => import("@/components/indices/TopIndices.vue"))
 import { useMessage, NCard } from "naive-ui"
 import { useRoute } from "vue-router"
 

@@ -33,6 +33,7 @@ import dayjs from "@/utils/dayjs"
 import "@/assets/scss/apexchart-override.scss"
 import { watch } from "vue"
 import { usHealthcheckStore } from "@/stores/healthcheck"
+import apexchart from "vue3-apexcharts"
 
 const UNCOMMITTED_JOURNAL_ENTRIES_THRESHOLD = usHealthcheckStore().uncommittedJournalEntriesThreshold
 
@@ -102,6 +103,11 @@ function getOptions() {
 			x: {
 				formatter: (time: number) => {
 					return dayjs(time).format("HH:mm:ss")
+				}
+			},
+			y: {
+				formatter: (val: number | string) => {
+					return val || "&nbsp;0"
 				}
 			},
 			style: {
