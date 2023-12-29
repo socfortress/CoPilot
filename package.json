@@ -12,6 +12,7 @@
 		"dev:debug": "DEBUG=vite:* vite",
 		"build": "run-p type-check build-only",
 		"build-only": "vite build",
+		"build-analyzer": "vite-bundle-visualizer -t sunburst",
 		"preview": "vite build && echo '' && vite preview --port 4173 --host",
 		"preview-only": "vite preview --port 4173 --host",
 		"test:unit": "vitest --environment jsdom",
@@ -24,8 +25,7 @@
 		"start-server": "cd backend && uvicorn copilot:app --reload --port=5000",
 		"libs-check": "taze",
 		"open:swagger": "open http://127.0.0.1:5000/docs#/",
-		"open:redoc": "open http://127.0.0.1:5000/redoc",
-		"bundle-visualizer": "vite-bundle-visualizer -t sunburst"
+		"open:redoc": "open http://127.0.0.1:5000/redoc"
 	},
 	"dependencies": {
 		"@ajoelp/json-to-formdata": "^1.5.0",
