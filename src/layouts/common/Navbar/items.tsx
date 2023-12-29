@@ -3,8 +3,9 @@ import { h } from "vue"
 import { RouterLink } from "vue-router"
 import { type MenuMixedOption } from "naive-ui/es/menu/src/interface"
 
+const OverviewIcon = "carbon:dashboard"
 const IndiciesIcon = "ph:list-magnifying-glass"
-const AgentsIcon = "iconoir:network-reverse"
+const AgentsIcon = "carbon:network-3"
 const ConnectorsIcon = "carbon:hybrid-networking"
 const GraylogIcon = "majesticons:pulse-line"
 const AlertsIcon = "carbon:warning-hex"
@@ -16,6 +17,20 @@ const LogsIcon = "carbon:cloud-logging"
 
 export default function getItems(mode: "vertical" | "horizontal", collapsed: boolean): MenuMixedOption[] {
 	return [
+		{
+			label: () =>
+				h(
+					RouterLink,
+					{
+						to: {
+							name: "Overview"
+						}
+					},
+					{ default: () => "Overview" }
+				),
+			key: "Overview",
+			icon: renderIcon(OverviewIcon)
+		},
 		{
 			label: () =>
 				h(

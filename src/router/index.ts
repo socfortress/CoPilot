@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router"
-import Indices from "@/views/Indices.vue"
+import Overview from "@/views/Overview.vue"
+import Login from "@/views/Auth/Login.vue"
 import { UserRole } from "@/types/auth.d"
 import { Layout } from "@/types/theme.d"
 import { authCheck } from "@/utils/auth"
@@ -9,12 +10,18 @@ const router = createRouter({
 	routes: [
 		{
 			path: "/",
-			redirect: "/indices"
+			redirect: "/overview"
+		},
+		{
+			path: "/overview",
+			name: "Overview",
+			component: Overview,
+			meta: { title: "Overview", auth: true, roles: UserRole.All }
 		},
 		{
 			path: "/indices",
 			name: "Indices",
-			component: Indices,
+			component: () => import("@/views/Indices.vue"),
 			meta: { title: "Indices", auth: true, roles: UserRole.All }
 		},
 		{
@@ -131,7 +138,7 @@ const router = createRouter({
 		{
 			path: "/login",
 			name: "Login",
-			component: () => import("@/views/Auth/Login.vue"),
+			component: Login,
 			meta: { title: "Login", forceLayout: Layout.Blank, checkAuth: true }
 		},
 		{

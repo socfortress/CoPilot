@@ -12,7 +12,7 @@
 					gradient-length="10%"
 				>
 					<span
-						v-for="item in indices"
+						v-for="item in list"
 						:key="item.index"
 						class="item flex items-center gap-2"
 						:class="item.health"
@@ -25,7 +25,7 @@
 				</Vue3Marquee>
 			</n-spin>
 		</n-card>
-		<div class="info" v-if="indices?.length">
+		<div class="info" v-if="list?.length">
 			<i class="mdi mdi-information-outline"></i>
 			Click on an index to select
 		</div>
@@ -33,25 +33,63 @@
 </template>
 
 <script setup lang="ts">
-import { computed, toRefs } from "vue"
+import { computed, ref, toRefs, watch, onBeforeMount } from "vue"
 import type { IndexStats } from "@/types/indices.d"
 import { Vue3Marquee } from "vue3-marquee"
 import IndexIcon from "@/components/indices/IndexIcon.vue"
-import { NSpin, NCard } from "naive-ui"
+import { NSpin, NCard, useMessage } from "naive-ui"
 import { useThemeStore } from "@/stores/theme"
+import Api from "@/api"
 
 const emit = defineEmits<{
 	(e: "click", value: IndexStats): void
 }>()
 
 const props = defineProps<{
-	indices: IndexStats[] | null
+	indices?: IndexStats[] | null
 }>()
 const { indices } = toRefs(props)
 
+const list = ref(indices.value)
+
+watch(indices, val => {
+	list.value = val
+})
+
+const message = useMessage()
 const style = computed<{ [key: string]: any }>(() => useThemeStore().style)
 const gradientColor = computed(() => style.value["--bg-color-rgb"].split(", "))
-const loading = computed(() => !indices?.value || indices.value === null)
+const loading = computed(() => !list?.value || list.value === null)
+
+function getIndices() {
+	Api.indices
+		.getIndices()
+		.then(res => {
+			if (res.data.success) {
+				list.value = res.data.indices_stats
+			} else {
+				message.error(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			if (err.response?.status === 401) {
+				message.error(
+					err.response?.data?.message ||
+						"Wazuh-Indexer returned Unauthorized. Please check your connector credentials."
+				)
+			} else if (err.response?.status === 404) {
+				message.error(err.response?.data?.message || "No indices were found.")
+			} else {
+				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+}
+
+onBeforeMount(() => {
+	if (indices.value === undefined) {
+		getIndices()
+	}
+})
 </script>
 
 <style lang="scss" scoped>
