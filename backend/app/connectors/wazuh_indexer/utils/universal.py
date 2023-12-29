@@ -207,29 +207,84 @@ class AlertsQueryBuilder:
         }
 
     def add_time_range(self, timerange: str, timestamp_field: str):
+        """
+        Adds a time range filter to the query.
+
+        Args:
+            timerange (str): The time range to filter by.
+            timestamp_field (str): The name of the timestamp field in the index.
+
+        Returns:
+            self: The updated instance of the class.
+        """
         start = self._get_time_range_start(timerange)
         self.query["query"]["bool"]["must"].append({"range": {timestamp_field: {"gte": start, "lte": "now"}}})
         return self
 
     def add_matches(self, matches: Iterable[Tuple[str, str]]):
+        """
+        Adds matches to the query.
+
+        Args:
+            matches (Iterable[Tuple[str, str]]): A collection of field-value pairs to match.
+
+        Returns:
+            self: The current instance of the class.
+        """
         for field, value in matches:
             self.query["query"]["bool"]["must"].append({"match": {field: value}})
         return self
 
     def add_match_phrase(self, matches: Iterable[Tuple[str, str]]):
+        """
+        Adds match phrases to the query.
+
+        Args:
+            matches (Iterable[Tuple[str, str]]): A collection of field-value pairs to match.
+
+        Returns:
+            self: The instance of the class.
+
+        """
         for field, value in matches:
             self.query["query"]["bool"]["must"].append({"match_phrase": {field: value}})
         return self
 
     def add_range(self, field: str, value: str):
+        """
+        Adds a range query to the Elasticsearch query.
+
+        Args:
+            field (str): The field to apply the range query on.
+            value (str): The value to compare against in the range query.
+
+        Returns:
+            self: The current instance of the class.
+        """
         self.query["query"]["bool"]["must"].append({"range": {field: {"gte": value}}})
         return self
 
     def add_sort(self, field: str, order: str = "desc"):
+        """
+        Add a sort field to the query.
+
+        Args:
+            field (str): The field to sort by.
+            order (str, optional): The sort order. Defaults to "desc".
+
+        Returns:
+            self: The updated instance of the class.
+        """
         self.query["sort"].append({field: {"order": order}})
         return self
 
     def build(self):
+        """
+        Builds and returns the query.
+
+        Returns:
+            str: The built query.
+        """
         return self.query
 
 
@@ -270,25 +325,73 @@ class LogsQueryBuilder:
         }
 
     def add_time_range(self, timerange: str, timestamp_field: str):
+        """
+        Adds a time range filter to the query.
+
+        Args:
+            timerange (str): The time range to filter by.
+            timestamp_field (str): The name of the timestamp field in the query.
+
+        Returns:
+            self: The updated instance of the class.
+        """
         start = self._get_time_range_start(timerange)
         self.query["query"]["bool"]["must"].append({"range": {timestamp_field: {"gte": start, "lte": "now"}}})
         return self
 
     def add_matches(self, matches: Iterable[Tuple[str, str]]):
+        """
+        Adds matches to the query.
+
+        Args:
+            matches (Iterable[Tuple[str, str]]): A collection of field-value pairs to match.
+
+        Returns:
+            self: The current instance of the class.
+        """
         for field, value in matches:
             self.query["query"]["bool"]["must"].append({"match": {field: value}})
         return self
 
     def add_match_phrase(self, matches: Iterable[Tuple[str, str]]):
+        """
+        Adds match phrases to the query.
+
+        Args:
+            matches (Iterable[Tuple[str, str]]): A collection of field-value pairs to match.
+
+        Returns:
+            self: The current instance of the class.
+        """
         for field, value in matches:
             self.query["query"]["bool"]["must"].append({"match_phrase": {field: value}})
         return self
 
     def add_range(self, field: str, value: str):
+        """
+        Adds a range query to the Elasticsearch query.
+
+        Args:
+            field (str): The field to apply the range query on.
+            value (str): The value to compare against in the range query.
+
+        Returns:
+            self: The instance of the class with the range query added.
+        """
         self.query["query"]["bool"]["must"].append({"range": {field: {"gte": value}}})
         return self
 
     def add_sort(self, field: str, order: str = "desc"):
+        """
+        Adds a sort field to the query.
+
+        Args:
+            field (str): The field to sort by.
+            order (str, optional): The sort order. Defaults to "desc".
+
+        Returns:
+            self: The updated instance of the class.
+        """
         self.query["sort"].append({field: {"order": order}})
         return self
 

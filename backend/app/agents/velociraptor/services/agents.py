@@ -65,12 +65,35 @@ async def collect_velociraptor_agent(agent_name: str) -> VelociraptorAgent:
 
 
 def execute_query(universal_service, query: str) -> dict:
+    """
+    Executes a query using the provided universal service.
+
+    Args:
+        universal_service: The universal service to use for executing the query.
+        query: The query to execute.
+
+    Returns:
+        A dictionary containing the result of the query execution.
+    """
     flow = universal_service.execute_query(query)
     logger.info(f"Successfully ran artifact collection on {flow}")
     return flow
 
 
 def check_flow_success(flow: dict, client_id: str) -> dict:
+    """
+    Checks the success status of a flow and returns a dictionary with a message and success status.
+
+    Args:
+        flow (dict): The flow dictionary containing the success status.
+        client_id (str): The ID of the velociraptor client.
+
+    Returns:
+        dict: A dictionary with a message and success status.
+
+    Raises:
+        Exception: If there is an error while deleting the velociraptor client.
+    """
     if flow["success"]:
         logger.info(f"Successfully deleted velociraptor client {client_id}")
         return {"message": f"Successfully deleted velociraptor client {client_id}", "success": True}
@@ -80,6 +103,16 @@ def check_flow_success(flow: dict, client_id: str) -> dict:
 
 
 def check_client_in_results(results: dict, client_id: str) -> dict:
+    """
+    Checks if a client is present in the results dictionary.
+
+    Args:
+        results (dict): The dictionary containing the results.
+        client_id (str): The ID of the client to check.
+
+    Returns:
+        dict: A dictionary with a success message if the client is found, otherwise an error message.
+    """
     if results["results"] == []:
         logger.info(f"Successfully deleted velociraptor client {client_id}")
         return {"message": f"Successfully deleted velociraptor client {client_id}", "success": True}
@@ -91,6 +124,19 @@ def check_client_in_results(results: dict, client_id: str) -> dict:
 
 
 def handle_exception(e: Exception, client_id: str) -> dict:
+    """
+    Handles exceptions that occur during the deletion of a Velociraptor client.
+
+    Args:
+        e (Exception): The exception that occurred.
+        client_id (str): The ID of the client being deleted.
+
+    Raises:
+        HTTPException: An HTTP exception with a status code of 500 and a detailed error message.
+
+    Returns:
+        dict: An empty dictionary.
+    """
     logger.error(f"Failed to delete client {client_id}: {e}")
     raise HTTPException(
         status_code=500,
@@ -99,6 +145,15 @@ def handle_exception(e: Exception, client_id: str) -> dict:
 
 
 async def delete_agent_velociraptor(client_id: str) -> AgentModifyResponse:
+    """
+    Deletes an agent with the specified client ID.
+
+    Args:
+        client_id (str): The ID of the client to delete.
+
+    Returns:
+        AgentModifyResponse: An object representing the result of the agent deletion operation.
+    """
     try:
         await delete_client(client_id=client_id)
         await ensure_client_deleted(client_id=client_id)
@@ -108,6 +163,15 @@ async def delete_agent_velociraptor(client_id: str) -> AgentModifyResponse:
 
 
 async def delete_client(client_id: str) -> dict:
+    """
+    Deletes a client with the specified client ID.
+
+    Args:
+        client_id (str): The ID of the client to be deleted.
+
+    Returns:
+        dict: A dictionary containing the result of the deletion operation.
+    """
     universal_service = UniversalService()
     try:
         query = create_query(
@@ -120,6 +184,15 @@ async def delete_client(client_id: str) -> dict:
 
 
 async def ensure_client_deleted(client_id: str) -> dict:
+    """
+    Ensures that a client is deleted from the server.
+
+    Args:
+        client_id (str): The ID of the client to be deleted.
+
+    Returns:
+        dict: The result of the deletion operation.
+    """
     universal_service = UniversalService()
     try:
         query = create_query("SELECT collect_client(client_id='server', artifacts=['Server.Information.Clients'], env=dict()) FROM scope()")

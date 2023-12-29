@@ -4,8 +4,8 @@
 			<img :src="image || 'https://picsum.photos/seed/IqZMU/900/300'" width="900" height="300" />
 		</template>
 		<template #header>
-			<div class="title">{{ headerTitle }}</div>
-			<div class="subtitle" v-if="!hideSubtitle">{{ subtitle }}</div>
+			<div class="title" v-if="title">{{ title }}</div>
+			<div class="subtitle" v-if="!hideSubtitle && subtitle">{{ subtitle }}</div>
 		</template>
 		<template #header-extra>
 			<n-dropdown :options="menuOptions" placement="bottom-end" @select="menuSelect" v-if="!hideMenu">
@@ -29,7 +29,6 @@
 </template>
 
 <script setup lang="ts">
-import { faker } from "@faker-js/faker"
 import { NCard, NDropdown, NScrollbar } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import { computed, toRefs, onMounted, ref } from "vue"
@@ -49,9 +48,10 @@ const props = defineProps<{
 	expand?: (state: boolean) => void
 	isExpand?: () => boolean
 	title?: string
+	subtitle?: string
 	image?: string
 }>()
-const { showImage, hideSubtitle, title, image, actionBoxTransparent, hideMenu, reload, expand, isExpand } =
+const { showImage, hideSubtitle, title, subtitle, image, actionBoxTransparent, hideMenu, reload, expand, isExpand } =
 	toRefs(props)
 
 let reloadTimeout: NodeJS.Timeout | null = null
@@ -71,7 +71,7 @@ const menuOptions = computed(() =>
 					key: "reload",
 					icon: renderIcon(ReloadIcon)
 				}
-		  ]
+			]
 		: [
 				{
 					label: "Collapse",
@@ -83,7 +83,7 @@ const menuOptions = computed(() =>
 					key: "reload",
 					icon: renderIcon(ReloadIcon)
 				}
-		  ]
+			]
 )
 
 function menuSelect(key: string) {
@@ -111,8 +111,6 @@ onMounted(() => {
 		showExpandButton.value = !isExpand?.value()
 	}
 })
-const headerTitle = title?.value || faker.company.catchPhrase()
-const subtitle = faker.company.buzzPhrase()
 </script>
 
 <style lang="scss" scoped>

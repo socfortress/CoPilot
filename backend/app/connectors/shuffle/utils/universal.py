@@ -218,4 +218,3 @@ def send_put_request(endpoint: str, data: Optional[Dict[str, Any]] = None, conne
     except Exception as e:
         logger.error(f"Failed to send PUT request to {endpoint} with error: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to send PUT request to {endpoint} with error: {e}")
-        return {"success": False, "message": f"Failed to send PUT request to {endpoint} with error: {e}"}

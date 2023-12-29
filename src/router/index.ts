@@ -1,7 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router"
-import Analytics from "@/views/Dashboard/Analytics.vue"
+import Indices from "@/views/Indices.vue"
 import { UserRole } from "@/types/auth.d"
-import components from "./components"
 import { Layout } from "@/types/theme.d"
 import { authCheck } from "@/utils/auth"
 
@@ -15,25 +14,25 @@ const router = createRouter({
 		{
 			path: "/indices",
 			name: "Indices",
-			component: () => import("@/views/socfortress/Indices.vue"),
+			component: Indices,
 			meta: { title: "Indices", auth: true, roles: UserRole.All }
 		},
 		{
 			path: "/connectors",
 			name: "Connectors",
-			component: () => import("@/views/socfortress/Connectors.vue"),
+			component: () => import("@/views/Connectors.vue"),
 			meta: { title: "Connectors", auth: true, roles: UserRole.All }
 		},
 		{
 			path: "/agents",
 			name: "Agents",
-			component: () => import("@/views/socfortress/Agents.vue"),
+			component: () => import("@/views/Agents.vue"),
 			meta: { title: "Agents", auth: true, roles: UserRole.All }
 		},
 		{
 			path: "/agent/:id?",
 			name: "Agent",
-			component: () => import("@/views/socfortress/AgentOverview.vue"),
+			component: () => import("@/views/AgentOverview.vue"),
 			meta: { title: "Agent", auth: true, roles: UserRole.All }
 		},
 		{
@@ -47,19 +46,19 @@ const router = createRouter({
 				{
 					path: "management",
 					name: "Graylog-Management",
-					component: () => import("@/views/socfortress/graylog/Management.vue"),
+					component: () => import("@/views/graylog/Management.vue"),
 					meta: { title: "Graylog Management" }
 				},
 				{
 					path: "metrics",
 					name: "Graylog-Metrics",
-					component: () => import("@/views/socfortress/graylog/Metrics.vue"),
+					component: () => import("@/views/graylog/Metrics.vue"),
 					meta: { title: "Graylog Metrics" }
 				},
 				{
 					path: "pipelines",
 					name: "Graylog-Pipelines",
-					component: () => import("@/views/socfortress/graylog/Pipelines.vue"),
+					component: () => import("@/views/graylog/Pipelines.vue"),
 					meta: { title: "Graylog Pipelines" }
 				}
 			]
@@ -67,13 +66,13 @@ const router = createRouter({
 		{
 			path: "/alerts",
 			name: "Alerts",
-			component: () => import("@/views/socfortress/Alerts.vue"),
+			component: () => import("@/views/Alerts.vue"),
 			meta: { title: "Alerts", auth: true, roles: UserRole.All }
 		},
 		{
 			path: "/artifacts",
 			name: "Artifacts",
-			component: () => import("@/views/socfortress/Artifacts.vue"),
+			component: () => import("@/views/Artifacts.vue"),
 			meta: { title: "Artifacts", auth: true, roles: UserRole.All }
 		},
 		{
@@ -87,19 +86,19 @@ const router = createRouter({
 				{
 					path: "alerts",
 					name: "Soc-Alerts",
-					component: () => import("@/views/socfortress/soc/Alerts.vue"),
+					component: () => import("@/views/soc/Alerts.vue"),
 					meta: { title: "SOC Alerts" }
 				},
 				{
 					path: "cases",
 					name: "Soc-Cases",
-					component: () => import("@/views/socfortress/soc/Cases.vue"),
+					component: () => import("@/views/soc/Cases.vue"),
 					meta: { title: "SOC Cases" }
 				},
 				{
 					path: "users",
 					name: "Soc-Users",
-					component: () => import("@/views/socfortress/soc/Users.vue"),
+					component: () => import("@/views/soc/Users.vue"),
 					meta: { title: "SOC Users" }
 				}
 			]
@@ -107,293 +106,20 @@ const router = createRouter({
 		{
 			path: "/healthcheck",
 			name: "Healthcheck",
-			component: () => import("@/views/socfortress/Healthcheck.vue"),
+			component: () => import("@/views/Healthcheck.vue"),
 			meta: { title: "Healthcheck", auth: true, roles: UserRole.All }
 		},
 		{
 			path: "/customers",
 			name: "Customers",
-			component: () => import("@/views/socfortress/Customers.vue"),
+			component: () => import("@/views/Customers.vue"),
 			meta: { title: "Customers", auth: true, roles: UserRole.All }
 		},
 		{
 			path: "/logs",
 			name: "Logs",
-			component: () => import("@/views/socfortress/Logs.vue"),
+			component: () => import("@/views/Logs.vue"),
 			meta: { title: "Logs", auth: true, roles: UserRole.All }
-		},
-
-		// DEMO PAGES ==========================================================
-
-		{
-			path: "/dashboard",
-			redirect: "/dashboard/analytics",
-			meta: {
-				auth: true,
-				roles: UserRole.All
-			},
-			children: [
-				{
-					path: "analytics",
-					name: "Dashboard-Analytics",
-					component: Analytics,
-					meta: { title: "Analytics" }
-				},
-				{
-					path: "ecommerce",
-					name: "Dashboard-eCommerce",
-					component: () => import("@/views/Dashboard/eCommerce.vue"),
-					meta: { title: "eCommerce" }
-				}
-			]
-		},
-		{
-			path: "/calendar",
-			name: "Apps-Calendars-FullCalendar",
-			component: () => import("@/views/Apps/Calendars/FullCalendar.vue"),
-			meta: { title: "Calendar", auth: true, roles: UserRole.All }
-		},
-		{
-			path: "/email",
-			name: "Apps-Mailbox",
-			component: () => import("@/views/Apps/Mailbox.vue"),
-			meta: { title: "Email", auth: true, roles: UserRole.All }
-		},
-		{
-			path: "/chat",
-			name: "Apps-Chat",
-			component: () => import("@/views/Apps/Chat.vue"),
-			meta: { title: "Chat", auth: true, roles: UserRole.All }
-		},
-		{
-			path: "/kanban",
-			name: "Apps-Kanban",
-			component: () => import("@/views/Apps/Kanban.vue"),
-			meta: { title: "Kanban", auth: true, roles: UserRole.All }
-		},
-		{
-			path: "/notes",
-			name: "Apps-Notes",
-			component: () => import("@/views/Apps/Notes.vue"),
-			meta: { title: "Notes", auth: true, roles: UserRole.All }
-		},
-		{
-			path: "/typography",
-			name: "Typography",
-			component: () => import("@/views/Typography.vue"),
-			meta: { title: "Typography", auth: true, roles: UserRole.All }
-		},
-		{
-			path: "/cards",
-			redirect: "/cards/basic",
-			meta: {
-				auth: true,
-				roles: UserRole.All
-			},
-			children: [
-				{
-					path: "basic",
-					name: "Cards-Basic",
-					component: () => import("@/views/Cards/Basic.vue"),
-					meta: { title: "Cards Basic" }
-				},
-				{
-					path: "ecommerce",
-					name: "Cards-Ecommerce",
-					component: () => import("@/views/Cards/Ecommerce.vue"),
-					meta: { title: "Cards Ecommerce" }
-				},
-				{
-					path: "list",
-					name: "Cards-List",
-					component: () => import("@/views/Cards/List.vue"),
-					meta: { title: "Cards List" }
-				},
-				{
-					path: "extra",
-					name: "Cards-Extra",
-					component: () => import("@/views/Cards/Extra.vue"),
-					meta: { title: "Cards Extra" }
-				},
-				{
-					path: "combo",
-					name: "Cards-Combo",
-					component: () => import("@/views/Cards/Combo.vue"),
-					meta: { title: "Cards Combo" }
-				}
-			]
-		},
-		components,
-		{
-			path: "/toolbox",
-			redirect: "/toolbox/refresh-tool",
-			meta: {
-				auth: true,
-				roles: UserRole.All
-			},
-			children: [
-				{
-					path: "refresh-tool",
-					name: "Toolbox-RefreshTool",
-					// route level code-splitting
-					// this generates a separate chunk (About.[hash].js) for this route
-					// which is lazy-loaded when the route is visited.
-					component: () => import("@/views/Toolbox/RefreshTool.vue"),
-					meta: { title: "Refresh Tool" }
-				},
-				{
-					path: "tour",
-					name: "Toolbox-Tour",
-					component: () => import("@/views/Toolbox/Tour.vue"),
-					meta: { title: "Tour" }
-				}
-			]
-		},
-		{
-			path: "/layout",
-			redirect: "/layout/left-sidebar",
-			meta: {
-				auth: true,
-				roles: UserRole.All
-			},
-			children: [
-				{
-					path: "left-sidebar",
-					name: "Layout-LeftSidebar",
-					component: () => import("@/views/Layout/LeftSidebar.vue"),
-					meta: { title: "Left Sidebar" }
-				},
-				{
-					path: "right-sidebar",
-					name: "Layout-RightSidebar",
-					component: () => import("@/views/Layout/RightSidebar.vue"),
-					meta: { title: "Right Sidebar" }
-				},
-				{
-					path: "full-width",
-					name: "Layout-FullWidth",
-					component: () => import("@/views/Layout/FullWidth.vue"),
-					meta: { title: "Full Width" }
-				}
-			]
-		},
-		{
-			path: "/maps",
-			redirect: "/maps/google-maps",
-			meta: {
-				auth: true,
-				roles: UserRole.All
-			},
-			children: [
-				{
-					path: "google-maps",
-					name: "Maps-GoogleMaps",
-					component: () => import("@/views/Maps/GoogleMaps.vue"),
-					meta: { title: "Google maps" }
-				},
-				{
-					path: "maplibre",
-					name: "Maps-MapLibre",
-					component: () => import("@/views/Maps/MapLibre.vue"),
-					meta: { title: "MapLibre" }
-				},
-				{
-					path: "leaflet",
-					name: "Maps-Leaflet",
-					component: () => import("@/views/Maps/Leaflet.vue"),
-					meta: { title: "Leaflet" }
-				},
-				{
-					path: "vectormap",
-					name: "Maps-VectorMap",
-					component: () => import("@/views/Maps/VectorMap.vue"),
-					meta: { title: "Vector Map" }
-				}
-			]
-		},
-		{
-			path: "/editors",
-			redirect: "/editors/quill",
-			meta: {
-				auth: true,
-				roles: UserRole.All
-			},
-			children: [
-				{
-					path: "quill",
-					name: "Editors-Quill",
-					component: () => import("@/views/Editors/Quill.vue"),
-					meta: { title: "Quill" }
-				},
-				{
-					path: "tiptap",
-					name: "Editors-Tiptap",
-					component: () => import("@/views/Editors/Tiptap.vue"),
-					meta: { title: "Tiptap" }
-				},
-				{
-					path: "milkdown",
-					name: "Editors-Milkdown",
-					component: () => import("@/views/Editors/Milkdown.vue"),
-					meta: { title: "Milkdown" }
-				}
-			]
-		},
-		{
-			path: "/charts",
-			redirect: "/charts/apexcharts",
-			meta: {
-				auth: true,
-				roles: UserRole.All
-			},
-			children: [
-				{
-					path: "apexcharts",
-					name: "Charts-ApexCharts",
-					component: () => import("@/views/Charts/ApexCharts.vue"),
-					meta: { title: "ApexCharts" }
-				},
-				{
-					path: "chartjs",
-					name: "Charts-ChartJS",
-					component: () => import("@/views/Charts/ChartJS.vue"),
-					meta: { title: "ChartJS" }
-				}
-			]
-		},
-		{
-			path: "/multi-language",
-			name: "MultiLanguage",
-			component: () => import("@/views/MultiLanguage.vue"),
-			meta: { title: "Multi Language", auth: true, roles: UserRole.All }
-		},
-		{
-			path: "/icons",
-			name: "Icons",
-			component: () => import("@/views/Icons.vue"),
-			meta: { title: "Icons", auth: true, roles: UserRole.All }
-		},
-		{
-			path: "/tables",
-			redirect: "/tables/base",
-			meta: {
-				auth: true,
-				roles: UserRole.All
-			},
-			children: [
-				{
-					path: "base",
-					name: "Tables-Base",
-					component: () => import("@/views/Tables/Base.vue"),
-					meta: { title: "Tables Base" }
-				},
-				{
-					path: "data-table",
-					name: "Tables-DataTable",
-					component: () => import("@/views/Tables/DataTable.vue"),
-					meta: { title: "Data Table" }
-				}
-			]
 		},
 
 		{
@@ -402,7 +128,6 @@ const router = createRouter({
 			component: () => import("@/views/Profile.vue"),
 			meta: { title: "Profile", auth: true, roles: UserRole.All }
 		},
-
 		{
 			path: "/login",
 			name: "Login",

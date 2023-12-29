@@ -1,6 +1,5 @@
 import json
 from pathlib import Path
-from typing import List
 
 from fastapi import HTTPException
 from loguru import logger
@@ -14,7 +13,15 @@ from app.connectors.grafana.utils.universal import create_grafana_client
 
 
 def get_dashboard_path(dashboard_info: tuple) -> Path:
-    """Returns the path to the dashboard JSON file."""
+    """
+    Returns the path to the dashboard JSON file.
+
+    Parameters:
+    - dashboard_info (tuple): A tuple containing the folder name and file name of the dashboard.
+
+    Returns:
+    - Path: The path to the dashboard JSON file.
+    """
     folder_name, file_name = dashboard_info
     current_file = Path(__file__)  # Path to the current file
     base_dir = current_file.parent.parent  # Move up two levels to the 'grafana' directory
@@ -22,6 +29,20 @@ def get_dashboard_path(dashboard_info: tuple) -> Path:
 
 
 def load_dashboard_json(dashboard_info: tuple, datasource_uid: str) -> dict:
+    """
+    Load the JSON data of a dashboard from a file and replace the 'uid' value with the provided datasource UID.
+
+    Args:
+        dashboard_info (tuple): Information about the dashboard (e.g., file name, directory).
+        datasource_uid (str): The UID of the datasource to replace in the dashboard JSON.
+
+    Returns:
+        dict: The loaded dashboard data with the replaced 'uid' value.
+
+    Raises:
+        FileNotFoundError: If the dashboard JSON file is not found.
+        HTTPException: If there is an error decoding the JSON from the file.
+    """
     file_path = get_dashboard_path(dashboard_info)
     try:
         with open(file_path, "r") as file:
@@ -41,6 +62,15 @@ def load_dashboard_json(dashboard_info: tuple, datasource_uid: str) -> dict:
 
 
 def replace_uid_value(obj, new_value, key_to_replace="uid", old_value="replace_datasource_uid"):
+    """
+    Recursively replaces the value of a specified key in a nested dictionary or list.
+
+    Args:
+        obj (dict or list): The object to be traversed and modified.
+        new_value: The new value to replace the old value with.
+        key_to_replace (str): The key to be replaced. Defaults to "uid".
+        old_value: The old value to be replaced. Defaults to "replace_datasource_uid".
+    """
     if isinstance(obj, dict):
         for k, v in obj.items():
             if k == key_to_replace and v == old_value:
@@ -53,6 +83,20 @@ def replace_uid_value(obj, new_value, key_to_replace="uid", old_value="replace_d
 
 
 async def update_dashboard(dashboard_json: dict, organization_id: int, folder_id: int) -> dict:
+    """
+    Update a dashboard in Grafana.
+
+    Args:
+        dashboard_json (dict): The updated dashboard JSON.
+        organization_id (int): The ID of the organization.
+        folder_id (int): The ID of the folder.
+
+    Returns:
+        dict: The updated dashboard response.
+
+    Raises:
+        HTTPException: If there is an error updating the dashboard.
+    """
     logger.info(f"Updating dashboards for organization {organization_id} and folder {folder_id}")
     try:
         grafana_client = await create_grafana_client("Grafana")
@@ -67,6 +111,15 @@ async def update_dashboard(dashboard_json: dict, organization_id: int, folder_id
 
 
 async def provision_dashboards(dashboard_request: DashboardProvisionRequest) -> GrafanaDashboardResponse:
+    """
+    Provisions dashboards in Grafana.
+
+    Args:
+        dashboard_request (DashboardProvisionRequest): The request object containing the details of the dashboards to provision.
+
+    Returns:
+        GrafanaDashboardResponse: The response object containing the provisioned dashboards, success status, and message.
+    """
     logger.info(f"Received dashboard provision request: {dashboard_request}")
     provisioned_dashboards = []
     errors = []

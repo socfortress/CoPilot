@@ -35,6 +35,7 @@ export enum UserRole {
 export interface User {
 	access_token: string
 	role: UserRole
+	username: string
 }
 
 export interface AuthUser {

@@ -12,6 +12,12 @@ from app.connectors.shuffle.utils.universal import send_get_request
 def remove_large_images_from_actions(workflows: List) -> List:
     """
     Removes the `large_image` keys from actions in each workflow.
+
+    Args:
+        workflows (List): A list of workflows.
+
+    Returns:
+        List: The updated list of workflows with `large_image` keys removed from actions.
     """
     for workflow in workflows:
         if "actions" in workflow:
@@ -23,6 +29,9 @@ def remove_large_images_from_actions(workflows: List) -> List:
 async def get_workflows() -> WorkflowsResponse:
     """
     Returns a list of workflows.
+
+    :return: WorkflowsResponse object containing the list of workflows.
+    :rtype: WorkflowsResponse
     """
     logger.info("Getting workflows")
 
@@ -44,6 +53,15 @@ async def get_workflows() -> WorkflowsResponse:
 async def get_workflow_executions(exection_body: WorkflowExecutionBodyModel) -> WorkflowExecutionStatusResponseModel:
     """
     Returns a list of workflow executions.
+
+    Parameters:
+    - exection_body (WorkflowExecutionBodyModel): The body of the workflow execution request.
+
+    Returns:
+    - WorkflowExecutionStatusResponseModel: The response model containing the status of the last run.
+
+    Raises:
+    - HTTPException: If there is an error while getting the workflow executions.
     """
     logger.info("Getting workflow executions")
     response = await send_get_request(f"/api/v1/workflows/{exection_body.workflow_id}/executions")

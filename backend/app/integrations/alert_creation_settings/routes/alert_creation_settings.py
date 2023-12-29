@@ -4,12 +4,11 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
 from loguru import logger
-from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
 
-from app.db.db_session import get_session, get_db
+from app.db.db_session import get_db
 from app.integrations.alert_creation_settings.models.alert_creation_settings import (
     AlertCreationEventConfig,
 )
@@ -48,6 +47,19 @@ async def get_customer_event_configs(
     customer_code: str,
     session: AsyncSession = Depends(get_db),
 ):
+    """
+    Retrieve all alert event configurations for a specific customer.
+
+    Args:
+        customer_code (str): The code of the customer.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        List[List[AlertCreationEventConfigResponse]]: A list of alert event configurations.
+
+    Raises:
+        HTTPException: If no event configurations are found for the customer.
+    """
     event_configs = await get_customer_alert_event_configs(customer_code, session)
 
     if not event_configs:
@@ -65,6 +77,16 @@ async def create_alert_creation_settings(
     alert_creation_settings: AlertCreationSettingsCreate,
     session: AsyncSession = Depends(get_db),
 ):
+    """
+    Create a new alert creation setting.
+
+    Args:
+        alert_creation_settings (AlertCreationSettingsCreate): The data for creating the alert creation setting.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        AlertCreationSettings: The created alert creation setting.
+    """
     logger.info(f"alert_creation_settings: {alert_creation_settings.dict()}")
 
     result = await session.execute(
@@ -102,6 +124,18 @@ async def get_alert_creation_settings(
     customer_name: str,
     session: AsyncSession = Depends(get_db),
 ):
+    """
+    Retrieve alert creation settings by customer name.
+
+    Args:
+        customer_name (str): The name of the customer.
+
+    Returns:
+        AlertCreationSettings: The alert creation settings for the specified customer.
+
+    Raises:
+        HTTPException: If the alert creation settings are not found.
+    """
     result = await session.execute(
         select(AlertCreationSettings)
         .options(joinedload(AlertCreationSettings.event_orders).joinedload(EventOrder.event_configs))
@@ -125,6 +159,17 @@ async def add_event_order(
     event_order: EventOrderCreate,
     session: AsyncSession = Depends(get_db),
 ):
+    """
+    Add a new event to a customer's alert creation settings.
+
+    Args:
+        customer_name (str): The name of the customer.
+        event_order (EventOrderCreate): The event order to be added.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        EventOrder: The newly created event order.
+    """
     result = await session.execute(
         select(AlertCreationSettings)
         .options(joinedload(AlertCreationSettings.event_orders).joinedload(EventOrder.event_configs))
@@ -163,6 +208,17 @@ async def update_event_orders(
     event_orders: List[EventOrderCreate],
     session: AsyncSession = Depends(get_db),
 ):
+    """
+    Update a customer's event orders.
+
+    Args:
+        customer_name (str): The name of the customer.
+        event_orders (List[EventOrderCreate]): The list of event orders to update.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        AlertCreationSettings: The updated alert creation settings.
+    """
     result = await session.execute(
         select(AlertCreationSettings)
         .options(joinedload(AlertCreationSettings.event_orders).joinedload(EventOrder.event_configs))
@@ -202,6 +258,17 @@ async def delete_event_order(
     order_label: str,
     session: AsyncSession = Depends(get_db),
 ):
+    """
+    Delete an event order by order_label.
+
+    Args:
+        customer_name (str): The name of the customer.
+        order_label (str): The label of the event order.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        dict: A dictionary containing the success message.
+    """
     result = await session.execute(
         select(AlertCreationSettings)
         .options(joinedload(AlertCreationSettings.event_orders).joinedload(EventOrder.event_configs))

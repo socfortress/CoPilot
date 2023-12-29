@@ -1,45 +1,25 @@
-import asyncio
-import random
-import string
-
 from loguru import logger
 
 # ! New with Async
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import Session
 from sqlmodel import select
 
 from app.auth.models.users import Password
 from app.auth.models.users import Role
+from fastapi import HTTPException
 from app.auth.models.users import User
 from app.db.db_session import async_engine
 
 passwords_in_memory = {}
 
-# def select_all_users():
-#     with Session(engine) as session:
-#         statement = select(User)
-#         res = session.exec(statement).all()
-#         return res
-
-
-# def find_user(name):
-#     with Session(engine) as session:
-#         statement = select(User).where(User.username == name)
-#         return session.exec(statement).first()
-
-
-# def get_role(name):
-#     with Session(engine) as session:
-#         statement = select(User).where(User.username == name)
-#         res = session.exec(statement).first()
-#         # Get the role name
-#         statement = select(Role).where(Role.id == res.role_id)
-#         role = session.exec(statement).first()
-#         return role.name
-
 
 async def select_all_users():
+    """
+    Retrieves all users from the database.
+
+    Returns:
+        List[User]: A list of User objects representing all the users in the database.
+    """
     async with AsyncSession(async_engine) as session:
         statement = select(User)
         results = await session.execute(statement)
@@ -47,6 +27,15 @@ async def select_all_users():
 
 
 async def find_user(name: str):
+    """
+    Find a user by their username.
+
+    Args:
+        name (str): The username of the user to find.
+
+    Returns:
+        User: The user object if found, None otherwise.
+    """
     async with AsyncSession(async_engine) as session:
         statement = select(User).where(User.username == name)
         result = await session.execute(statement)
@@ -54,6 +43,15 @@ async def find_user(name: str):
 
 
 async def get_role(name: str):
+    """
+    Retrieve the role name for a given user name.
+
+    Args:
+        name (str): The name of the user.
+
+    Returns:
+        str: The name of the user's role.
+    """
     async with AsyncSession(async_engine) as session:
         user = await find_user(name)
         if user:
@@ -67,6 +65,11 @@ async def check_admin_user_exists(session: AsyncSession) -> bool:
     """
     Check if admin user exists in the database
     If not, return False
+
+    :param session: The database session
+    :type session: AsyncSession
+    :return: True if admin user exists, False otherwise
+    :rtype: bool
     """
     statement = select(User).where(User.username == "admin")
     result = await session.execute(statement)
@@ -78,6 +81,11 @@ async def check_scheduler_user_exists(session: AsyncSession) -> bool:
     """
     Check if scheduler user exists in the database
     If not, return False
+
+    :param session: The database session to use for the query
+    :type session: AsyncSession
+    :return: True if the scheduler user exists, False otherwise
+    :rtype: bool
     """
     statement = select(User).where(User.username == "scheduler")
     result = await session.execute(statement)
@@ -89,6 +97,12 @@ async def create_admin_user(session: AsyncSession):
     """
     Check if the admin user exists in the database.
     If not, create the admin user.
+
+    Parameters:
+    - session: The database session to use for querying and committing changes.
+
+    Returns:
+    - None
     """
     if not await check_admin_user_exists(session):  # The check function needs to be passed the session as well
         # Create the admin user
@@ -113,6 +127,12 @@ async def create_scheduler_user(session: AsyncSession):
     """
     Check if the scheduler user exists in the database.
     If not, create the scheduler user.
+
+    Parameters:
+    - session: The database session to use for querying and committing changes.
+
+    Returns:
+    - None
     """
     if not await check_scheduler_user_exists(session):  # The check function needs to be passed the session as well
         # Create the scheduler user
@@ -139,6 +159,12 @@ async def remove_scheduler_user(session: AsyncSession):
     """
     Check if the scheduler user exists in the database.
     If so, remove the scheduler user.
+
+    Args:
+        session (AsyncSession): The async session object used for database operations.
+
+    Returns:
+        None
     """
     # Check if the scheduler user exists
     statement = select(User).where(User.username == "scheduler")
@@ -157,5 +183,9 @@ async def remove_scheduler_user(session: AsyncSession):
 def get_scheduler_password():
     """
     Retrieve the scheduler user's unhashed password from memory.
+
+    Returns:
+        str: The unhashed password of the scheduler user.
     """
     return passwords_in_memory.get("scheduler")
+

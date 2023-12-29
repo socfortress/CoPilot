@@ -11,7 +11,17 @@ from app.connectors.graylog.utils.universal import send_get_request
 
 
 async def get_messages(page_number: int) -> GraylogMessagesResponse:
-    """Get messages from Graylog."""
+    """Get messages from Graylog.
+
+    Args:
+        page_number (int): The page number of messages to retrieve.
+
+    Returns:
+        GraylogMessagesResponse: The response object containing the retrieved messages.
+
+    Raises:
+        HTTPException: If there is an error collecting the messages.
+    """
     logger.info("Getting messages from Graylog")
     params = {"page": page_number}
     messages_collected = await send_get_request(endpoint="/api/system/messages", params=params)
@@ -43,20 +53,50 @@ async def get_messages(page_number: int) -> GraylogMessagesResponse:
 
 
 async def fetch_metrics_from_graylog() -> dict:
+    """
+    Fetches metrics from Graylog.
+
+    Returns:
+        A dictionary containing the fetched metrics.
+    """
     return await send_get_request(endpoint="/api/system/metrics")
 
 
 async def fetch_uncommitted_journal_entries() -> dict:
+    """
+    Fetches uncommitted journal entries from the Graylog system.
+
+    Returns:
+        dict: A dictionary containing the uncommitted journal entries.
+    """
     return await send_get_request(endpoint="/api/system/journal")
 
 
 def merge_metrics_data(throughput_metrics_collected: dict) -> dict:
+    """
+    Merge the throughput metrics and input/output metrics into a single dictionary.
+
+    Args:
+        throughput_metrics_collected (dict): The collected metrics data.
+
+    Returns:
+        dict: The merged metrics data.
+    """
     throughput_metrics = throughput_metrics_collected["data"]["gauges"]
     input_output_metrics = throughput_metrics_collected["data"]["counters"]
     return {**throughput_metrics, **input_output_metrics}
 
 
 def filter_and_create_throughput_metrics(merged_metrics: dict) -> list:
+    """
+    Filters the merged metrics based on the model fields and creates a list of GraylogThroughputMetrics objects.
+
+    Args:
+        merged_metrics (dict): A dictionary containing merged metrics.
+
+    Returns:
+        list: A list of GraylogThroughputMetrics objects.
+    """
     model_fields = [field_info.alias for field_info in GraylogThroughputMetricsCollection.__fields__.values()]
     throughput_metrics_list = [
         GraylogThroughputMetrics(metric=metric_name, value=metric_data.get("value", 0))
@@ -67,6 +107,12 @@ def filter_and_create_throughput_metrics(merged_metrics: dict) -> list:
 
 
 async def get_metrics() -> GraylogMetricsResponse:
+    """
+    Retrieves metrics from Graylog.
+
+    Returns:
+        GraylogMetricsResponse: The response object containing the collected metrics.
+    """
     logger.info("Getting metrics from Graylog")
     throughput_metrics_collected = await fetch_metrics_from_graylog()
     uncommitted_journal_entries_collected = await fetch_uncommitted_journal_entries()

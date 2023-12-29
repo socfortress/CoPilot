@@ -30,8 +30,8 @@ const props = withDefaults(
 )
 const { mini, dark } = toRefs(props)
 
-const isDark = computed<boolean>(() => dark.value ?? useThemeStore().isThemeDark)
-const isLight = computed<boolean>(() => !dark.value ?? useThemeStore().isThemeLight)
+const isDark = computed<boolean>(() => dark.value || useThemeStore().isThemeDark)
+const isLight = computed<boolean>(() => !dark.value || useThemeStore().isThemeLight)
 </script>
 
 <style lang="scss" scoped>

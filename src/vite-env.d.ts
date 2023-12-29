@@ -12,10 +12,4 @@ declare module "*.svg" {
 	export default component
 }
 
-declare module "vue-cal" {
-	import type { DefineComponent } from "vue"
-	const component: DefineComponent
-	export default component
-}
-
 declare module "v-calendar"

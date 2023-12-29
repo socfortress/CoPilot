@@ -1,7 +1,4 @@
-import asyncio
 import json
-from concurrent.futures import ThreadPoolExecutor
-from concurrent.futures import TimeoutError
 from datetime import datetime
 from typing import Any
 from typing import Dict
@@ -85,40 +82,12 @@ async def verify_velociraptor_connection(connector_name: str) -> str:
     return await verify_velociraptor_credentials(attributes)
 
 
-# class UniversalService:
-#     """
-#     A service class that encapsulates the logic for polling messages from Velociraptor.
-#     """
-
-#     def __init__(self) -> None:
-#         self.setup_velociraptor_connector("Velociraptor")
-#         self.setup_grpc_channel_and_stub()
-
-#     # def setup_velociraptor_connector(self, connector_name: str):
-#     #     """
-#     #     Collects the details of the Velociraptor connector and sets them up.
-
-#     #     Args:
-#     #         connector_name (str): The name of the Velociraptor connector.
-#     #     """
-#     #     attributes = get_connector_info_from_db(connector_name)
-#     async def setup_velociraptor_connector(self, connector_name: str):
-#         # Start the session asynchronously
-#         async with AsyncSessionLocal() as session:
-#             attributes = await get_connector_info_from_db(connector_name, session)
-#         if attributes is None:
-#             logger.error("No Velociraptor connector found in the database")
-#             return None
-#         self.connector_api_key = attributes["connector_api_key"]
-#         self.config = pyvelociraptor.LoadConfigFile(self.connector_api_key)
-
-
 class UniversalService:
     """
     A service class that encapsulates the logic for polling messages from Velociraptor.
     """
 
-    #! Modify this to use AsyncSessionLocal Begin - ALSO SEE BELOW CLASS METHOD
+    # ! Modify this to use AsyncSessionLocal Begin - ALSO SEE BELOW CLASS METHOD
     def __init__(self) -> None:
         self.connector_api_key = None
         self.config = None
@@ -132,7 +101,7 @@ class UniversalService:
         self.connector_api_key = attributes["connector_api_key"]
         self.config = pyvelociraptor.LoadConfigFile(self.connector_api_key)
 
-    #! Modify this to use AsyncSessionLocal End
+    # ! Modify this to use AsyncSessionLocal End
 
     async def setup_grpc_channel_and_stub(self):
         """
@@ -151,7 +120,7 @@ class UniversalService:
         )
         self.stub = api_pb2_grpc.APIStub(self.channel)
 
-    #! Modify this to use AsyncSessionLocal Begin
+    # ! Modify this to use AsyncSessionLocal Begin
     @classmethod
     async def create(cls, connector_name: str):
         instance = cls()
@@ -159,7 +128,7 @@ class UniversalService:
         await instance.setup_grpc_channel_and_stub()
         return instance
 
-    #! Modify this to use AsyncSessionLocal End
+    # ! Modify this to use AsyncSessionLocal End
 
     def create_vql_request(self, vql: str):
         """
