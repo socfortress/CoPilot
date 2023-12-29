@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router"
-import Indices from "@/views/socfortress/Indices.vue"
+import Indices from "@/views/Indices.vue"
 import { UserRole } from "@/types/auth.d"
 import { Layout } from "@/types/theme.d"
 import { authCheck } from "@/utils/auth"
@@ -20,19 +20,19 @@ const router = createRouter({
 		{
 			path: "/connectors",
 			name: "Connectors",
-			component: () => import("@/views/socfortress/Connectors.vue"),
+			component: () => import("@/views/Connectors.vue"),
 			meta: { title: "Connectors", auth: true, roles: UserRole.All }
 		},
 		{
 			path: "/agents",
 			name: "Agents",
-			component: () => import("@/views/socfortress/Agents.vue"),
+			component: () => import("@/views/Agents.vue"),
 			meta: { title: "Agents", auth: true, roles: UserRole.All }
 		},
 		{
 			path: "/agent/:id?",
 			name: "Agent",
-			component: () => import("@/views/socfortress/AgentOverview.vue"),
+			component: () => import("@/views/AgentOverview.vue"),
 			meta: { title: "Agent", auth: true, roles: UserRole.All }
 		},
 		{
@@ -46,19 +46,19 @@ const router = createRouter({
 				{
 					path: "management",
 					name: "Graylog-Management",
-					component: () => import("@/views/socfortress/graylog/Management.vue"),
+					component: () => import("@/views/graylog/Management.vue"),
 					meta: { title: "Graylog Management" }
 				},
 				{
 					path: "metrics",
 					name: "Graylog-Metrics",
-					component: () => import("@/views/socfortress/graylog/Metrics.vue"),
+					component: () => import("@/views/graylog/Metrics.vue"),
 					meta: { title: "Graylog Metrics" }
 				},
 				{
 					path: "pipelines",
 					name: "Graylog-Pipelines",
-					component: () => import("@/views/socfortress/graylog/Pipelines.vue"),
+					component: () => import("@/views/graylog/Pipelines.vue"),
 					meta: { title: "Graylog Pipelines" }
 				}
 			]
@@ -66,13 +66,13 @@ const router = createRouter({
 		{
 			path: "/alerts",
 			name: "Alerts",
-			component: () => import("@/views/socfortress/Alerts.vue"),
+			component: () => import("@/views/Alerts.vue"),
 			meta: { title: "Alerts", auth: true, roles: UserRole.All }
 		},
 		{
 			path: "/artifacts",
 			name: "Artifacts",
-			component: () => import("@/views/socfortress/Artifacts.vue"),
+			component: () => import("@/views/Artifacts.vue"),
 			meta: { title: "Artifacts", auth: true, roles: UserRole.All }
 		},
 		{
@@ -86,19 +86,19 @@ const router = createRouter({
 				{
 					path: "alerts",
 					name: "Soc-Alerts",
-					component: () => import("@/views/socfortress/soc/Alerts.vue"),
+					component: () => import("@/views/soc/Alerts.vue"),
 					meta: { title: "SOC Alerts" }
 				},
 				{
 					path: "cases",
 					name: "Soc-Cases",
-					component: () => import("@/views/socfortress/soc/Cases.vue"),
+					component: () => import("@/views/soc/Cases.vue"),
 					meta: { title: "SOC Cases" }
 				},
 				{
 					path: "users",
 					name: "Soc-Users",
-					component: () => import("@/views/socfortress/soc/Users.vue"),
+					component: () => import("@/views/soc/Users.vue"),
 					meta: { title: "SOC Users" }
 				}
 			]
@@ -106,19 +106,19 @@ const router = createRouter({
 		{
 			path: "/healthcheck",
 			name: "Healthcheck",
-			component: () => import("@/views/socfortress/Healthcheck.vue"),
+			component: () => import("@/views/Healthcheck.vue"),
 			meta: { title: "Healthcheck", auth: true, roles: UserRole.All }
 		},
 		{
 			path: "/customers",
 			name: "Customers",
-			component: () => import("@/views/socfortress/Customers.vue"),
+			component: () => import("@/views/Customers.vue"),
 			meta: { title: "Customers", auth: true, roles: UserRole.All }
 		},
 		{
 			path: "/logs",
 			name: "Logs",
-			component: () => import("@/views/socfortress/Logs.vue"),
+			component: () => import("@/views/Logs.vue"),
 			meta: { title: "Logs", auth: true, roles: UserRole.All }
 		},
 
