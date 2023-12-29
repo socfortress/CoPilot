@@ -133,6 +133,19 @@ class TimeRangeModel(BaseModel):
 
     @validator("time_range")
     def validate_time_range(cls, value):
+        """
+        Validate the time range value.
+
+        Args:
+            value (int or str): The time range value to be validated.
+
+        Returns:
+            str: The validated time range value.
+
+        Raises:
+            RequestValidationError: If the time range value is invalid.
+
+        """
         try:
             if isinstance(value, int):
                 if value < 1 or value > 7:
@@ -192,69 +205,112 @@ class TimeRangeModel(BaseModel):
 
 #########! LOGGER CLASS !#########
 class Logger:
-    # def __init__(self, session, auth_handler: AuthHandler):
-    #     self.session = session
-    #     self.auth_handler = auth_handler
     def __init__(self, session: AsyncSession, auth_handler: AuthHandler):
         self.session = session
         self.auth_handler = auth_handler
 
-    # async def get_user_id_from_request(self, request: Request):
-    #     auth_header = request.headers.get("Authorization")
-    #     if auth_header:
-    #         token = auth_header.replace("Bearer ", "")
-    #         username, _ = self.auth_handler.decode_token(token)
-    #         user = find_user(username)
-    #         if user:
-    #             return user.id
-    #     return None
     async def get_user_id_from_request(self, request: Request):
-        auth_header = request.headers.get("Authorization")
-        if auth_header:
-            token = auth_header.split(" ")[1]  # Better split by space and take the second part
-            username, _ = self.auth_handler.decode_token(token)
-            user = await find_user(username)  # Correctly using await for an async call
-            if user:
-                return user.id
-        return None
+            """
+            Retrieves the user ID from the request object.
+
+            Args:
+                request (Request): The request object.
+
+            Returns:
+                int or None: The user ID if found, None otherwise.
+            """
+            auth_header = request.headers.get("Authorization")
+            if auth_header:
+                token = auth_header.split(" ")[1]  # Better split by space and take the second part
+                username, _ = self.auth_handler.decode_token(token)
+                user = await find_user(username)  # Correctly using await for an async call
+                if user:
+                    return user.id
+            return None
 
     async def insert_log_entry(self, log_entry_model: LogEntryModel):
-        log_entry = LogEntry(**log_entry_model.dict())
-        self.session.add(log_entry)
-        await self.session.commit()
+            """
+            Inserts a log entry into the database.
+
+            Args:
+                log_entry_model (LogEntryModel): The log entry model to be inserted.
+
+            Returns:
+                None
+            """
+            log_entry = LogEntry(**log_entry_model.dict())
+            self.session.add(log_entry)
+            await self.session.commit()
 
     async def log_route_access(self, user_id, request: Request, response):
-        log_entry_model = LogEntryModel(
-            event_type="Info",
-            user_id=user_id,
-            route=str(request.url),
-            method=request.method,
-            status_code=response.status_code,
-            message="Route accessed",
-        )
-        await self.insert_log_entry(log_entry_model)
+            """
+            Logs the access of a route.
+
+            Args:
+                user_id (int): The ID of the user accessing the route.
+                request (Request): The request object containing information about the request.
+                response: The response object containing information about the response.
+
+            Returns:
+                None
+            """
+            log_entry_model = LogEntryModel(
+                event_type="Info",
+                user_id=user_id,
+                route=str(request.url),
+                method=request.method,
+                status_code=response.status_code,
+                message="Route accessed",
+            )
+            await self.insert_log_entry(log_entry_model)
 
     async def log_error(self, user_id, request: Request, exception: Exception, additional_info: Optional[str] = None):
-        log_entry_model = LogEntryModel(
-            event_type="Error",
-            user_id=user_id,
-            route=str(request.url),
-            method=request.method,
-            status_code=500,  # Internal Server Error
-            message=str(exception),
-            additional_info=additional_info,
-        )
-        await self.insert_log_entry(log_entry_model)
+            """
+            Logs an error event with the provided information.
+
+            Args:
+                user_id (int): The ID of the user associated with the error.
+                request (Request): The request object that triggered the error.
+                exception (Exception): The exception that occurred.
+                additional_info (Optional[str], optional): Additional information about the error. Defaults to None.
+            """
+            log_entry_model = LogEntryModel(
+                event_type="Error",
+                user_id=user_id,
+                route=str(request.url),
+                method=request.method,
+                status_code=500,  # Internal Server Error
+                message=str(exception),
+                additional_info=additional_info,
+            )
+            await self.insert_log_entry(log_entry_model)
 
     async def log_and_raise_http_error(self, user_id, request: Request, exception: Exception):
-        await self.log_error(user_id, request, exception)
-        raise HTTPException(status_code=500, detail="Internal Server Error")
+            """
+            Logs the error, including the user ID, request details, and the exception,
+            and raises an HTTPException with a status code of 500 (Internal Server Error).
+
+            Args:
+                user_id (int): The ID of the user.
+                request (Request): The request object.
+                exception (Exception): The exception that occurred.
+
+            Raises:
+                HTTPException: An HTTPException with a status code of 500 (Internal Server Error).
+            """
+            await self.log_error(user_id, request, exception)
+            raise HTTPException(status_code=500, detail="Internal Server Error")
 
     async def fetch_all_logs(self):
-        # Perform an asynchronous query to fetch all log entries
-        result = await self.session.execute(select(LogEntry))
-        logs = result.scalars().all()
-        return logs
+            """
+            Fetches all log entries asynchronously.
+
+            Returns:
+                A list of log entries.
+            """
+            result = await self.session.execute(select(LogEntry))
+            logs = result.scalars().all()
+            return logs
 
 
 ################## ! RETRIEVE LOGS ROUTES ! ##################
@@ -466,12 +522,32 @@ async def purge_logs_by_time_range(time_range: TimeRangeModel, session: AsyncSes
 
 ################## ! ALLOWED FILES ! ##################
 def allowed_file(filename):
+    """
+    Check if the given filename has an allowed extension.
+
+    Args:
+        filename (str): The name of the file to check.
+
+    Returns:
+        bool: True if the file has an allowed extension, False otherwise.
+    """
     ALLOWED_EXTENSIONS = {"yaml", "txt"}
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 ################## ! DATABASE UTILS ! ##################
 async def get_connector_attribute(connector_id: int, column_name: str, session: AsyncSession = Depends(get_session)) -> Optional[Any]:
+    """
+    Retrieve the value of a specific column from a connector.
+
+    Args:
+        connector_id (int): The ID of the connector.
+        column_name (str): The name of the column to retrieve.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_session).
+
+    Returns:
+        Optional[Any]: The value of the column, or None if the connector or column does not exist.
+    """
     result = await session.execute(select(Connectors).filter(Connectors.id == connector_id))
     connector = result.scalars().first()
 
@@ -481,6 +557,16 @@ async def get_connector_attribute(connector_id: int, column_name: str, session: 
 
 
 async def get_customer_alert_settings(customer_code: str, session: AsyncSession) -> Optional[AlertCreationSettings]:
+    """
+    Retrieve the alert creation settings for a specific customer.
+
+    Args:
+        customer_code (str): The code of the customer.
+        session (AsyncSession): The database session.
+
+    Returns:
+        Optional[AlertCreationSettings]: The alert creation settings for the customer, or None if not found.
+    """
     result = await session.execute(select(AlertCreationSettings).filter(AlertCreationSettings.customer_code == customer_code))
     settings = result.scalars().first()
 
@@ -492,6 +578,16 @@ async def get_customer_alert_settings(customer_code: str, session: AsyncSession)
 async def get_customer_alert_event_configs(
     customer_code: str, session: AsyncSession = Depends(get_session),
 ) -> Optional[List[List[AlertCreationEventConfig]]]:
+    """
+    Retrieves the alert event configurations for a specific customer.
+
+    Args:
+        customer_code (str): The code of the customer.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_session).
+
+    Returns:
+        Optional[List[List[AlertCreationEventConfig]]]: A list of event configurations, or None if no settings found.
+    """
     result = await session.execute(
         select(AlertCreationSettings)
         .options(joinedload(AlertCreationSettings.event_orders).joinedload(EventOrder.event_configs))
