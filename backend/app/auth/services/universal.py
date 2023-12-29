@@ -9,7 +9,6 @@ from app.auth.models.users import Role
 from fastapi import HTTPException
 from app.auth.models.users import User
 from app.db.db_session import async_engine
-from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 
 passwords_in_memory = {}
 
@@ -190,49 +189,3 @@ def get_scheduler_password():
     """
     return passwords_in_memory.get("scheduler")
 
-# ! TODO: Password Reset Token Generation ! #
-# def get_reset_token(user, expires_sec=1800):
-#     """
-#     Generate a password reset token for the given user.
-
-#     Args:
-#         user (User): The user to generate the token for.
-#         expires_sec (int, optional): The number of seconds the token will be valid for.
-#             Defaults to 1800.
-
-#     Returns:
-#         str: The generated token.
-#     """
-#     s = Serializer(user.password, expires_sec)
-#     return s.dumps({"user_id": user.id}).decode("utf-8")
-
-# async def reset_password(token, new_password):
-#     """
-#     Reset the password for the user associated with the given token.
-
-#     Args:
-#         token (str): The token associated with the user.
-#         new_password (str): The new password to set for the user.
-
-#     Returns:
-#         bool: True if the password was reset, False otherwise.
-#     """
-#     s = Serializer(secret)
-#     try:
-#         username = s.loads(token)['username']
-#     except:
-#         raise HTTPException(
-#             status_code=401,
-#             detail="Invalid or expired reset token",
-#             headers={"WWW-Authenticate": "Bearer"},
-#         )
-
-#     user = await find_user(username)
-#     if user is None:
-#         return False
-
-#     hashed_password = self.get_password_hash(new_password)
-#     # Here you would need to implement a method to update the user's password in your database
-#     await update_user_password(username, hashed_password)
-
-#     return True

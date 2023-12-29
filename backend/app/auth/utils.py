@@ -27,6 +27,32 @@ class AuthHandler:
     def verify_password(self, plain_password, hashed_password):
         return self.pwd_context.verify(plain_password, hashed_password)
 
+    def get_reset_token(self, username: str, expires_delta: timedelta = timedelta(minutes=30)):
+        to_encode = {"exp": datetime.utcnow() + expires_delta, "sub": username}
+        encoded_jwt = jwt.encode(to_encode, self.secret, algorithm="HS256")
+        return encoded_jwt
+
+    # ! TODO: Password Reset Token Generation ! #
+
+    # async def reset_password(self, token: str, new_password: str):
+    #     try:
+    #         payload = jwt.decode(token, self.secret, algorithms=["HS256"])
+    #         username = payload.get("sub")
+    #         if username is None:
+    #             raise HTTPException(status_code=400, detail="Invalid token")
+    #     except jwt.PyJWTError:
+    #         raise HTTPException(status_code=400, detail="Invalid token")
+
+    #     user = await find_user(username)
+    #     if user is None:
+    #         return False
+
+    #     hashed_password = self.get_password_hash(new_password)
+    #     # Here you would need to implement a method to update the user's password in your database
+    #     await update_user_password(username, hashed_password)
+
+    #     return True
+
     # ! New with Async
     async def authenticate_user(self, username: str, password: str):
         """
