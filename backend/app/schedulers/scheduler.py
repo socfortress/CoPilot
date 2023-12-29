@@ -1,7 +1,6 @@
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-from app.agents.services.sync import sync_agents
 from app.db.db_session import SyncSessionLocal
 from app.db.db_session import sync_engine
 from app.schedulers.models.scheduler import JobMetadata
