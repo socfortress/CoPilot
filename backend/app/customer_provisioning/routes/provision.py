@@ -122,6 +122,7 @@ async def get_customer_meta_by_port(port: int, session: AsyncSession):
         select(CustomersMeta).filter(
             (CustomersMeta.customer_meta_wazuh_registration_port == port)
             | (CustomersMeta.customer_meta_wazuh_log_ingestion_port == port)
+            | (CustomersMeta.customer_meta_wazuh_api_port == port)
         )
     )
     return result.scalars().first()

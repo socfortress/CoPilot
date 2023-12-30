@@ -136,6 +136,7 @@ async def update_customer_meta_table(request: ProvisionNewCustomer, customer_met
         customer_meta_index_retention=str(request.hot_data_retention),
         customer_meta_wazuh_registration_port=request.wazuh_registration_port,
         customer_meta_wazuh_log_ingestion_port=request.wazuh_logs_port,
+        customer_meta_wazuh_api_port=request.wazuh_api_port,
         customer_meta_wazuh_auth_password=request.wazuh_auth_password,
         customer_meta_iris_customer_id=customer_meta.iris_customer_id,
     )
