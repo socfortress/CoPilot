@@ -1,6 +1,13 @@
 <template>
 	<n-spin :show="loading">
-		<CardStats title="SOC Alerts" :value="total" :vertical="vertical" class="h-full">
+		<CardStats
+			title="SOC Alerts"
+			:value="total"
+			:vertical="vertical"
+			hovered
+			class="cursor-pointer h-full"
+			@click="gotoSocAlertsPage()"
+		>
 			<template #icon>
 				<CardStatsIcon :iconName="SOCIcon" boxed :boxSize="40"></CardStatsIcon>
 			</template>
@@ -15,6 +22,7 @@ import CardStats from "@/components/common/CardStats.vue"
 import Api from "@/api"
 import { useMessage, NSpin } from "naive-ui"
 import type { SocAlert } from "@/types/soc/alert.d"
+import { useRouter } from "vue-router"
 
 const props = defineProps<{
 	vertical?: boolean
@@ -22,6 +30,7 @@ const props = defineProps<{
 const { vertical } = toRefs(props)
 
 const SOCIcon = "carbon:security"
+const router = useRouter()
 const message = useMessage()
 const loading = ref(false)
 const alerts = ref<SocAlert[]>([])
@@ -48,6 +57,10 @@ function getData() {
 		.finally(() => {
 			loading.value = false
 		})
+}
+
+function gotoSocAlertsPage() {
+	router.push(`/soc/alerts`).catch(() => {})
 }
 
 onBeforeMount(() => {

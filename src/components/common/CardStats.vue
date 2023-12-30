@@ -1,5 +1,5 @@
 <template>
-	<n-card>
+	<n-card :class="{ hovered }">
 		<div class="flex items-center h-full overflow-hidden">
 			<div class="card-wrap flex gap-4" :class="{ 'flex-col items-center text-center': vertical }">
 				<div class="icon flex flex-col justify-center">
@@ -22,6 +22,7 @@ const props = defineProps<{
 	title: string
 	value?: number | string
 	vertical?: boolean
+	hovered?: boolean
 }>()
 const { title, value, vertical } = toRefs(props)
 </script>
@@ -48,6 +49,12 @@ const { title, value, vertical } = toRefs(props)
 			text-overflow: ellipsis;
 			white-space: nowrap;
 			overflow: hidden;
+		}
+	}
+
+	&.hovered {
+		&:hover {
+			border-color: var(--primary-color);
 		}
 	}
 }

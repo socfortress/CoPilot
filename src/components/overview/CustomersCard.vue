@@ -1,6 +1,13 @@
 <template>
 	<n-spin :show="loading">
-		<CardStats title="Customers" :value="total" :vertical="vertical" class="h-full">
+		<CardStats
+			title="Customers"
+			:value="total"
+			:vertical="vertical"
+			hovered
+			class="cursor-pointer h-full"
+			@click="gotoCustomersPage()"
+		>
 			<template #icon>
 				<CardStatsIcon :iconName="CustomersIcon" boxed :boxSize="40"></CardStatsIcon>
 			</template>
@@ -15,6 +22,7 @@ import CardStats from "@/components/common/CardStats.vue"
 import Api from "@/api"
 import { useMessage, NSpin } from "naive-ui"
 import type { Customer } from "@/types/customers.d"
+import { useRouter } from "vue-router"
 
 const props = defineProps<{
 	vertical?: boolean
@@ -22,6 +30,7 @@ const props = defineProps<{
 const { vertical } = toRefs(props)
 
 const CustomersIcon = "carbon:user-multiple"
+const router = useRouter()
 const message = useMessage()
 const loading = ref(false)
 const customers = ref<Customer[]>([])
@@ -48,6 +57,10 @@ function getData() {
 		.finally(() => {
 			loading.value = false
 		})
+}
+
+function gotoCustomersPage() {
+	router.push(`/customers`).catch(() => {})
 }
 
 onBeforeMount(() => {
