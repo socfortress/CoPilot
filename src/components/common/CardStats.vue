@@ -1,16 +1,13 @@
 <template>
 	<n-card>
-		<div class="flex items-center h-full">
-			<div
-				class="card-wrap flex gap-4"
-				:class="{ 'items-center': centered, 'text-center': centered, 'flex-col': !horizontal }"
-			>
-				<div class="icon">
+		<div class="flex items-center h-full overflow-hidden">
+			<div class="card-wrap flex gap-4" :class="{ 'flex-col items-center text-center': vertical }">
+				<div class="icon flex flex-col justify-center">
 					<slot name="icon"></slot>
 				</div>
-				<div class="info flex flex-col">
-					<div class="value">{{ valueString }}</div>
+				<div class="info flex flex-col grow overflow-hidden">
 					<div class="title">{{ title }}</div>
+					<div class="value mt-1" v-if="value">{{ value }}</div>
 				</div>
 			</div>
 		</div>
@@ -19,44 +16,38 @@
 
 <script setup lang="ts">
 import { NCard } from "naive-ui"
-import { toRefs, computed } from "vue"
+import { toRefs } from "vue"
 
 const props = defineProps<{
 	title: string
-	value?: number
-	currency?: string
-	centered?: boolean
-	horizontal?: boolean
+	value?: number | string
+	vertical?: boolean
 }>()
-const { title, value, currency, centered, horizontal } = toRefs(props)
-
-const valueString = computed(() => {
-	const val = value?.value
-
-	if (!val) return ""
-
-	if (currency?.value) {
-		return new Intl.NumberFormat("en-EN", { style: "currency", currency: "USD" }).format(val)
-	} else {
-		return new Intl.NumberFormat("en-EN").format(val)
-	}
-})
+const { title, value, vertical } = toRefs(props)
 </script>
 
 <style scoped lang="scss">
 .n-card {
+	overflow: hidden;
+
 	.card-wrap {
 		width: 100%;
+		overflow: hidden;
 
 		.title {
-			font-size: 18px;
-			word-break: initial;
+			font-size: 16px;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+			overflow: hidden;
 		}
+
 		.value {
 			font-family: var(--font-family-display);
 			font-size: 22px;
 			font-weight: bold;
-			margin-bottom: 6px;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+			overflow: hidden;
 		}
 	}
 }
