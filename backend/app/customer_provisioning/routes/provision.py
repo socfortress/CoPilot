@@ -1,9 +1,10 @@
+from typing import List
+
 from fastapi import APIRouter
 from fastapi import Body
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Security
-from typing import List
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -82,6 +83,7 @@ async def check_customer_exists(customer_code: str, session: AsyncSession = Depe
 
     return customer
 
+
 async def check_unique_ports(request: ProvisionNewCustomer, session: AsyncSession):
     """
     Ensures that the ports specified in the request are unique.
@@ -93,11 +95,7 @@ async def check_unique_ports(request: ProvisionNewCustomer, session: AsyncSessio
     Raises:
         HTTPException: If the ports are not unique.
     """
-    ports = {
-        'registration': request.wazuh_registration_port,
-        'logs': request.wazuh_logs_port,
-        'api': request.wazuh_api_port
-    }
+    ports = {"registration": request.wazuh_registration_port, "logs": request.wazuh_logs_port, "api": request.wazuh_api_port}
 
     for port_type, port_value in ports.items():
         customer_meta = await get_customer_meta_by_port(port_value, session)
@@ -106,6 +104,7 @@ async def check_unique_ports(request: ProvisionNewCustomer, session: AsyncSessio
                 status_code=400,
                 detail=f"Ports must be unique. {port_type.capitalize()} port {port_value} is already in use for customer {customer_meta.customer_code}.",
             )
+
 
 async def get_customer_meta_by_port(port: int, session: AsyncSession):
     """
@@ -122,11 +121,10 @@ async def get_customer_meta_by_port(port: int, session: AsyncSession):
         select(CustomersMeta).filter(
             (CustomersMeta.customer_meta_wazuh_registration_port == port)
             | (CustomersMeta.customer_meta_wazuh_log_ingestion_port == port)
-            | (CustomersMeta.customer_meta_wazuh_api_port == port)
-        )
+            | (CustomersMeta.customer_meta_wazuh_api_port == port),
+        ),
     )
     return result.scalars().first()
-
 
 
 @customer_provisioning_router.post(
