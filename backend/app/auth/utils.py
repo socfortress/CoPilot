@@ -32,7 +32,7 @@ class AuthHandler:
         encoded_jwt = jwt.encode(to_encode, self.secret, algorithm="HS256")
         return encoded_jwt
 
-    # ! TODO: Password Reset Token Generation ! #
+    # ! TODO: Password Reset Token Generation - Send Back Token! #
 
     # async def reset_password(self, token: str, new_password: str):
     #     try:
