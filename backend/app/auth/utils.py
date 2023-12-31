@@ -2,6 +2,7 @@ from datetime import datetime
 from datetime import timedelta
 
 import jwt
+from jwt import PyJWTError
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi.security import OAuth2PasswordBearer
@@ -27,31 +28,38 @@ class AuthHandler:
     def verify_password(self, plain_password, hashed_password):
         return self.pwd_context.verify(plain_password, hashed_password)
 
-    def get_reset_token(self, username: str, expires_delta: timedelta = timedelta(minutes=30)):
+    def generate_reset_token(self, username: str, expires_delta: timedelta = timedelta(minutes=30)):
+        """
+        Generates a password reset token.
+
+        Args:
+            username (str): The username for which the token is being generated.
+            expires_delta (timedelta, optional): The expiration time for the token.
+                Defaults to 30 minutes.
+
+        Returns:
+            str: The generated reset token.
+        """
         to_encode = {"exp": datetime.utcnow() + expires_delta, "sub": username}
         encoded_jwt = jwt.encode(to_encode, self.secret, algorithm="HS256")
         return encoded_jwt
 
-    # ! TODO: Password Reset Token Generation - Send Back Token! #
+    def verify_reset_token(self, token: str, username: str):
+        """
+        Verifies a password reset token.
 
-    # async def reset_password(self, token: str, new_password: str):
-    #     try:
-    #         payload = jwt.decode(token, self.secret, algorithms=["HS256"])
-    #         username = payload.get("sub")
-    #         if username is None:
-    #             raise HTTPException(status_code=400, detail="Invalid token")
-    #     except jwt.PyJWTError:
-    #         raise HTTPException(status_code=400, detail="Invalid token")
+        Args:
+            token (str): The reset token to verify.
+            username (str): The username for which the token was generated.
 
-    #     user = await find_user(username)
-    #     if user is None:
-    #         return False
-
-    #     hashed_password = self.get_password_hash(new_password)
-    #     # Here you would need to implement a method to update the user's password in your database
-    #     await update_user_password(username, hashed_password)
-
-    #     return True
+        Returns:
+            bool: True if the token is valid and not expired, False otherwise.
+        """
+        try:
+            payload = jwt.decode(token, self.secret, algorithms=["HS256"])
+            return payload["sub"] == username
+        except PyJWTError:
+            return False
 
     # ! New with Async
     async def authenticate_user(self, username: str, password: str):

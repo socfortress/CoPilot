@@ -55,7 +55,10 @@ async def handle_exception(e, user_id, request, logger_instance):
     Returns:
         JSONResponse: The response containing the error message.
     """
-    user_id = await logger_instance.get_user_id_from_request(request) if user_id is None else user_id
+    try:
+        user_id = await logger_instance.get_user_id_from_request(request) if user_id is None else user_id
+    except HTTPException as http_exc:
+        return JSONResponse(status_code=http_exc.status_code, content={"message": str(http_exc), "success": False})
     await logger_instance.log_error(user_id, request, e)
     status_code = e.status_code if isinstance(e, HTTPException) else INTERNAL_SERVER_ERROR
     return JSONResponse(status_code=status_code, content={"message": str(e), "success": False})

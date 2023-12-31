@@ -221,7 +221,10 @@ class Logger:
         """
         auth_header = request.headers.get("Authorization")
         if auth_header:
-            token = auth_header.split(" ")[1]  # Better split by space and take the second part
+            try:
+                token = auth_header.split(" ")[1]  # Better split by space and take the second part
+            except IndexError:
+                raise HTTPException(status_code=401, detail="Invalid token")
             username, _ = self.auth_handler.decode_token(token)
             user = await find_user(username)  # Correctly using await for an async call
             if user:
