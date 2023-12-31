@@ -130,7 +130,8 @@ async def get_users(session: AsyncSession = Depends(get_db)):
     users = await select_all_users()
     return UserBaseResponse(users=users, message="Users retrieved successfully", success=True)
 
-@auth_router.post("/reset-token", status_code=200, description="Request password reset")
+# ! TODO: HAVE LOGIC TO HANDLE PASSWORD RESET VIA A TOKEN BUT NOT IMPLEMENTED YET ! #
+@auth_router.post("/reset-token", status_code=200, description="Request password reset", include_in_schema=False)
 async def request_password_reset(password_reset_request: PasswordResetRequest, session: AsyncSession = Depends(get_db)):
     """
     Request a password reset.
@@ -148,7 +149,9 @@ async def request_password_reset(password_reset_request: PasswordResetRequest, s
     reset_token = auth_handler.generate_reset_token(user.username)
     return {"reset_token": reset_token}
 
-@auth_router.post("/reset-password", status_code=200, description="Reset user's password")
+
+# ! TODO: HAVE LOGIC TO HANDLE PASSWORD RESET VIA A TOKEN BUT NOT IMPLEMENTED YET ! #
+@auth_router.post("/reset-password", status_code=200, description="Reset user's password", include_in_schema=False)
 async def reset_password(password_reset: PasswordReset, session: AsyncSession = Depends(get_db)):
     """
     Reset a user's password.
