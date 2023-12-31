@@ -8,27 +8,8 @@
 				View All Rules
 			</n-button>
 		</div>
-		<n-card>
-			<n-spin :show="loading">
-				<n-collapse v-model:expanded-names="selectedPipeline" accordion style="min-height: 100px">
-					<n-collapse-item :title="pipe.title" :name="pipe.id" v-for="pipe of pipelines" :key="pipe.id">
-						<template #header>
-							<PipeTitle :pipeline="pipe" />
-						</template>
-						<template #header-extra>
-							<n-button size="small" @click.stop="openModal(pipe)">
-								<template #icon>
-									<Icon :name="InfoIcon"></Icon>
-								</template>
-							</n-button>
-						</template>
-						<div class="overflow-hidden">
-							<PipeDetails :pipeline="pipe" @click-rule="openRule($event)" />
-						</div>
-					</n-collapse-item>
-				</n-collapse>
-			</n-spin>
-		</n-card>
+
+		<PipeList @open-rule="openRule($event)" minHeight="100px" />
 
 		<n-modal
 			v-model:show="showDetails"
@@ -61,24 +42,19 @@
 </template>
 
 <script setup lang="ts">
-import { useMessage, NCollapse, NCollapseItem, NSpin, NButton, NModal, NCard, NDrawer, NDrawerContent } from "naive-ui"
+import { NButton, NModal, NDrawer, NDrawerContent } from "naive-ui"
 import { onBeforeMount, ref, watch } from "vue"
 import type { PipelineFull } from "@/types/graylog/pipelines.d"
-import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
-import PipeDetails from "@/components/graylog/Pipelines/PipeDetails.vue"
+import PipeList from "@/components/graylog/Pipelines/PipeList.vue"
 import PipeInfo from "@/components/graylog/Pipelines/PipeInfo.vue"
-import PipeTitle from "@/components/graylog/Pipelines/PipeTitle.vue"
 import RulesList from "@/components/graylog/Pipelines/RulesList.vue"
+import { useRoute } from "vue-router"
 
 const RulesIcon = "ic:outline-swipe-right-alt"
-const InfoIcon = "carbon:information"
 
-const message = useMessage()
+const route = useRoute()
 const showDetails = ref(false)
-const loading = ref(false)
-const pipelines = ref<PipelineFull[]>([])
-const selectedPipeline = ref<string | null>(null)
 const highlightPipe = ref<PipelineFull | undefined>(undefined)
 const highlightRule = ref<string | null>(null)
 const showRulesDrawer = ref(false)
@@ -89,38 +65,6 @@ function openRule(id: string) {
 	showRulesDrawer.value = true
 }
 
-function setHighlightPipe(pipeline: PipelineFull) {
-	highlightPipe.value = pipeline
-}
-
-function openModal(pipeline: PipelineFull) {
-	setHighlightPipe(pipeline)
-	showDetails.value = true
-}
-
-function getPipelines() {
-	loading.value = true
-
-	Api.graylog
-		.getPipelinesFull()
-		.then(res => {
-			if (res.data.success) {
-				pipelines.value = res.data.pipelines || []
-				if (pipelines.value.length && !selectedPipeline.value) {
-					selectedPipeline.value = pipelines.value[0].id
-				}
-			} else {
-				message.warning(res.data?.message || "An error occurred. Please try again later.")
-			}
-		})
-		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-		})
-		.finally(() => {
-			loading.value = false
-		})
-}
-
 watch(showRulesDrawer, val => {
 	if (!val) {
 		highlightRule.value = null
@@ -128,6 +72,8 @@ watch(showRulesDrawer, val => {
 })
 
 onBeforeMount(() => {
-	getPipelines()
+	if (route.query?.rule) {
+		openRule(route.query.rule.toString())
+	}
 })
 </script>

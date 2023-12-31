@@ -1,3 +1,5 @@
+from typing import List
+
 from fastapi import APIRouter
 from fastapi import Body
 from fastapi import Depends
@@ -82,6 +84,49 @@ async def check_customer_exists(customer_code: str, session: AsyncSession = Depe
     return customer
 
 
+async def check_unique_ports(request: ProvisionNewCustomer, session: AsyncSession):
+    """
+    Ensures that the ports specified in the request are unique.
+
+    Args:
+        request: The request data containing the ports to check.
+        session: The database session.
+
+    Raises:
+        HTTPException: If the ports are not unique.
+    """
+    ports = {"registration": request.wazuh_registration_port, "logs": request.wazuh_logs_port, "api": request.wazuh_api_port}
+
+    for port_type, port_value in ports.items():
+        customer_meta = await get_customer_meta_by_port(port_value, session)
+        if customer_meta:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Ports must be unique. {port_type.capitalize()} port {port_value} is already in use for customer {customer_meta.customer_code}.",
+            )
+
+
+async def get_customer_meta_by_port(port: int, session: AsyncSession):
+    """
+    Retrieves customer metadata based on the provided port.
+
+    Args:
+        port: The port to check.
+        session: The database session.
+
+    Returns:
+        Customer metadata if a match is found, otherwise None.
+    """
+    result = await session.execute(
+        select(CustomersMeta).filter(
+            (CustomersMeta.customer_meta_wazuh_registration_port == port)
+            | (CustomersMeta.customer_meta_wazuh_log_ingestion_port == port)
+            | (CustomersMeta.customer_meta_wazuh_api_port == port),
+        ),
+    )
+    return result.scalars().first()
+
+
 @customer_provisioning_router.post(
     "/provision",
     response_model=CustomerProvisionResponse,
@@ -104,6 +149,7 @@ async def provision_customer_route(
     Returns:
         CustomerProvisionResponse: The response data for the provisioned customer.
     """
+    await check_unique_ports(request, session)
     logger.info("Provisioning new customer")
     customer_provision = await provision_wazuh_customer(request, session=session)
     return customer_provision
