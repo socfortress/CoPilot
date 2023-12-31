@@ -65,6 +65,28 @@ class AuthHandler:
         except PyJWTError:
             return False
 
+    async def verify_reset_token_me(self, token: str, user):
+        """
+        Verifies a password reset token and checks that the username in the token matches the provided user's username.
+
+        Args:
+            token (str): The reset token to verify.
+            user: The user for which the token should be verified.
+
+        Returns:
+            The username from the token if the token is valid, None otherwise.
+        """
+        try:
+            payload = jwt.decode(token, self.secret, algorithms=["HS256"])
+            if payload["sub"] == user.username:
+                return payload["sub"]
+            else:
+                raise HTTPException(status_code=401, detail="Invalid token. Username does not match.")
+        except jwt.ExpiredSignatureError:
+            raise HTTPException(status_code=401, detail="Token expired")
+        except jwt.InvalidTokenError:
+            raise HTTPException(status_code=401, detail="Invalid token")
+
     # ! New with Async
     async def authenticate_user(self, username: str, password: str):
         """

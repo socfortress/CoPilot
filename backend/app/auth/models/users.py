@@ -124,11 +124,11 @@ class Password(BaseModel):
         # Return the Password object with both the plain and hashed password
         return cls(length=length, hashed=hashed_password.decode("utf-8"), plain=password)
 
-# ! PASSWORD RESET TOKEN GENERATION ! #
+# ! PASSWORD RESET TOKEN GENERATION NOT USING FOR NOW! #
 class PasswordResetRequest(BaseModel):
     username: str
 
-class PasswordReset(BaseModel):
+class PasswordResetToken(BaseModel):
     username: str
     reset_token: str
     new_password: str
@@ -146,3 +146,12 @@ class PasswordReset(BaseModel):
         if not re.search(r'[@$!%*?&#]', password):
             raise ValueError("Password must contain at least one special character.")
         return password
+
+class PasswordReset(BaseModel):
+    username: str
+    new_password: str = Field(
+        max_length=256,
+        min_length=8,
+        regex="^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&#])[A-Za-z\\d@$!%*?&#]{8,}$",
+        description="Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character",
+    )
