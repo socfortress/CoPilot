@@ -523,6 +523,7 @@ async def purge_logs_by_time_range(time_range: TimeRangeModel, session: AsyncSes
         raise HTTPException(status_code=404, detail="No logs found")
 
 
+
 ################## ! ALLOWED FILES ! ##################
 def allowed_file(filename):
     """
