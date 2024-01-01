@@ -35,13 +35,35 @@ ENV PATH="/opt/venv/bin:$PATH"
 # Install setuptools
 RUN /opt/venv/bin/pip install setuptools
 
+# ! Original Working ! #
 # Install your application's dependencies
 WORKDIR /app
-COPY backend/requirements.in ./
-RUN /opt/venv/bin/pip install --no-cache-dir -r requirements.in
+COPY backend/requirements.txt ./
+RUN /opt/venv/bin/pip install --no-cache-dir -r requirements.txt
+
 
 # Copy your application into the Docker image
-COPY backend/ ./
+#COPY backend/ ./
 
 # Run your application
-CMD ["uvicorn", "copilot:app", "--host", "0.0.0.0", "--port", "5000", "--log-level", "debug"]
+# CMD ["uvicorn", "copilot:app", "--host", "0.0.0.0", "--port", "5000", "--log-level", "debug"]
+
+# Install Node.js and npm
+RUN curl -sL https://deb.nodesource.com/setup_14.x | bash -
+RUN apt-get install -y nodejs
+
+# Install your Vue.js application's dependencies
+COPY package*.json ./
+RUN npm install
+
+# Build your Vue.js application
+RUN npm run dev
+
+# Install serve to serve your Vue.js application
+RUN npm install -g serve
+
+# Expose ports
+EXPOSE 5000 8080
+
+# Run your application
+CMD ["uvicorn", "copilot:app", "--host", "0.0.0.0", "--port", "5000", "--log-level", "debug"] & serve -s dist -l 8080

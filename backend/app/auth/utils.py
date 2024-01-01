@@ -2,7 +2,6 @@ from datetime import datetime
 from datetime import timedelta
 
 import jwt
-from jwt import PyJWTError
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi.security import OAuth2PasswordBearer
@@ -48,22 +47,22 @@ class AuthHandler:
 
 
     # ! TODO: HAVE LOGIC TO HANDLE PASSWORD RESET VIA A TOKEN BUT NOT IMPLEMENTED YET ! #
-    def verify_reset_token(self, token: str, username: str):
-        """
-        Verifies a password reset token.
+    # def verify_reset_token(self, token: str, username: str):
+    #     """
+    #     Verifies a password reset token.
 
-        Args:
-            token (str): The reset token to verify.
-            username (str): The username for which the token was generated.
+    #     Args:
+    #         token (str): The reset token to verify.
+    #         username (str): The username for which the token was generated.
 
-        Returns:
-            bool: True if the token is valid and not expired, False otherwise.
-        """
-        try:
-            payload = jwt.decode(token, self.secret, algorithms=["HS256"])
-            return payload["sub"] == username
-        except PyJWTError:
-            return False
+    #     Returns:
+    #         bool: True if the token is valid and not expired, False otherwise.
+    #     """
+    #     try:
+    #         payload = jwt.decode(token, self.secret, algorithms=["HS256"])
+    #         return payload["sub"] == username
+    #     except jwt.ExpiredSignatureError:
+    #         return False
 
     async def verify_reset_token_me(self, token: str, user):
         """
