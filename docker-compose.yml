@@ -1,0 +1,9 @@
+version: '3.8'
+services:
+  app:
+    image: ghcr.io/socfortress/copilot:latest
+    environment:
+      TAYLOR_TEST: http://${TAYLOR_TEST}:5000
+    ports:
+      - "5000:5000"
+      - "5173:5173"
