@@ -11,7 +11,40 @@ from app.connectors.models import Connectors
 load_dotenv()
 
 
-def load_connector_data(connector_name, connector_type, accepts_key, extra_data_key=None):
+# def load_connector_data(connector_name, connector_type, accepts_key, extra_data_key=None):
+#     """
+#     Load connector data from environment variables.
+
+#     Args:
+#         connector_name (str): The name of the connector.
+#         connector_type (str): The type of the connector.
+#         accepts_key (str): The type of key the connector accepts.
+#         extra_data_key (str, optional): The key for extra data. Defaults to None.
+
+#     Returns:
+#         dict: A dictionary containing the connector data.
+#     """
+#     env_prefix = connector_name.upper().replace("-", "_").replace(" ", "_")
+#     url = os.getenv(f"{env_prefix}_URL")
+#     logger.info(f"Loading connector data for {connector_name} from environment variables with URL: {url}")
+#     return {
+#         "connector_name": connector_name,
+#         "connector_type": connector_type,
+#         "connector_url": os.getenv(f"{env_prefix}_URL"),
+#         "connector_username": os.getenv(f"{env_prefix}_USERNAME"),
+#         "connector_password": os.getenv(f"{env_prefix}_PASSWORD"),
+#         "connector_api_key": os.getenv(f"{env_prefix}_API_KEY"),
+#         "connector_description": os.getenv(f"{env_prefix}_DESCRIPTION", "Not specified."),
+#         "connector_supports": os.getenv(f"{env_prefix}_SUPPORTS", "Not specified."),
+#         "connector_configured": True,
+#         "connector_verified": bool(os.getenv(f"{env_prefix}_VERIFIED", False)),
+#         "connector_accepts_api_key": accepts_key == "api_key",
+#         "connector_accepts_username_password": accepts_key == "username_password",
+#         "connector_accepts_file": accepts_key == "file",
+#         "connector_extra_data": os.getenv(extra_data_key) if extra_data_key else None,
+#     }
+
+def load_connector_data(connector_name, connector_type, accepts_key, description, extra_data_key=None):
     """
     Load connector data from environment variables.
 
@@ -19,6 +52,7 @@ def load_connector_data(connector_name, connector_type, accepts_key, extra_data_
         connector_name (str): The name of the connector.
         connector_type (str): The type of the connector.
         accepts_key (str): The type of key the connector accepts.
+        description (str): The description of the connector.
         extra_data_key (str, optional): The key for extra data. Defaults to None.
 
     Returns:
@@ -34,7 +68,7 @@ def load_connector_data(connector_name, connector_type, accepts_key, extra_data_
         "connector_username": os.getenv(f"{env_prefix}_USERNAME"),
         "connector_password": os.getenv(f"{env_prefix}_PASSWORD"),
         "connector_api_key": os.getenv(f"{env_prefix}_API_KEY"),
-        "connector_description": os.getenv(f"{env_prefix}_DESCRIPTION", "No description available."),
+        "connector_description": description,
         "connector_supports": os.getenv(f"{env_prefix}_SUPPORTS", "Not specified."),
         "connector_configured": True,
         "connector_verified": bool(os.getenv(f"{env_prefix}_VERIFIED", False)),
@@ -53,19 +87,19 @@ def get_connectors_list():
         list: A list of connector data, where each item contains the connector name, version, and authentication method.
     """
     connectors = [
-        ("Wazuh-Indexer", "4.4.1", "username_password"),
-        ("Wazuh-Manager", "4.4.1", "username_password"),
-        ("Graylog", "5.0.7", "username_password"),
-        ("Shuffle", "1.1.0", "api_key"),
-        ("DFIR-IRIS", "2.0", "api_key"),
-        ("Velociraptor", "0.6.8", "file"),
-        ("Sublime", "3", "api_key"),
-        ("InfluxDB", "3", "api_key", "INFLUXDB_ORG_AND_BUCKET"),
-        ("AskSocfortress", "3", "api_key"),
-        ("SocfortressThreatIntel", "3", "api_key"),
-        ("Cortex", "3", "api_key"),
-        ("Grafana", "3", "username_password"),
-        ("Wazuh Worker Provisioning", "3", "api_key"),
+        ("Wazuh-Indexer", "4.4.1", "username_password", "Connection to Wazuh-Indexer. Make sure to use the an admin role user."),
+        ("Wazuh-Manager", "4.4.1", "username_password", "Connection to Wazuh-Manager. Default is wazuh-wui:wazuh-wui"),
+        ("Graylog", "5.0.7", "username_password", "Connection to Graylog. Make sure to use the an admin role user."),
+        ("Shuffle", "1.1.0", "api_key", "Connection to Shuffle. Make sure to use the an admin role user."),
+        ("DFIR-IRIS", "2.0", "api_key", "Connection to DFIR-IRIS. Make sure to use the an admin role user."),
+        ("Velociraptor", "0.6.8", "file", "Connection to Velociraptor. Make sure you have generated the api file first."),
+        ("Sublime", "3", "api_key", "Connection to Sublime. Make sure to use the an admin role user."),
+        ("InfluxDB", "3", "api_key", "INFLUXDB_ORG_AND_BUCKET", "Connection to InfluxDB. Make sure to use the an admin role user."),
+        ("AskSocfortress", "3", "api_key", "Connection to AskSocfortress. Make sure you have requested an API key."),
+        ("SocfortressThreatIntel", "3", "api_key", "Connection to Socfortress Threat Intel. Make sure you have requested an API key."),
+        ("Cortex", "3", "api_key", "Connection to Cortex. Make sure you have created an API key."),
+        ("Grafana", "3", "username_password", "Connection to Grafana. Make sure to use the an admin role user."),
+        ("Wazuh Worker Provisioning", "3", "api_key", "Connection to Wazuh Worker Provisioning. Make sure you have deployed the Wazuh Worker Provisioning Application provided by SOCFortress: https://github.com/socfortress/Customer-Provisioning-Worker"),
         # ... Add more connectors as needed ...
     ]
 
