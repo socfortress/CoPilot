@@ -153,26 +153,26 @@ async def request_password_reset(password_reset_request: PasswordResetToken, ses
 
 
 # ! TODO: HAVE LOGIC TO HANDLE PASSWORD RESET VIA A TOKEN BUT NOT IMPLEMENTED YET ! #
-@auth_router.post("/reset-password", status_code=200, description="Reset user's password", include_in_schema=False)
-async def reset_password(password_reset: PasswordReset, session: AsyncSession = Depends(get_db)):
-    """
-    Reset a user's password.
+# @auth_router.post("/reset-password", status_code=200, description="Reset user's password", include_in_schema=False)
+# async def reset_password(password_reset: PasswordReset, session: AsyncSession = Depends(get_db)):
+#     """
+#     Reset a user's password.
 
-    Args:
-        password_reset (PasswordReset): The password reset data.
-        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+#     Args:
+#         password_reset (PasswordReset): The password reset data.
+#         session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
 
-    Returns:
-        dict: A dictionary containing the message and success status.
-    """
-    user = await find_user(password_reset.username)
-    if not user or not auth_handler.verify_reset_token(password_reset.reset_token, user.username):
-        raise HTTPException(status_code=404, detail="Invalid username or reset token")
-    hashed_pwd = auth_handler.get_password_hash(password_reset.new_password)
-    user.password = hashed_pwd
-    session.add(user)
-    await session.commit()
-    return {"message": "Password reset successfully", "success": True}
+#     Returns:
+#         dict: A dictionary containing the message and success status.
+#     """
+#     user = await find_user(password_reset.username)
+#     if not user or not auth_handler.verify_reset_token(password_reset.reset_token, user.username):
+#         raise HTTPException(status_code=404, detail="Invalid username or reset token")
+#     hashed_pwd = auth_handler.get_password_hash(password_reset.new_password)
+#     user.password = hashed_pwd
+#     session.add(user)
+#     await session.commit()
+#     return {"message": "Password reset successfully", "success": True}
 
 # Reset a user's password via the username, must be an admin
 @auth_router.post("/reset-password", status_code=200, description="Reset user's password via username", dependencies=[Security(AuthHandler().require_any_scope("admin"))],)
