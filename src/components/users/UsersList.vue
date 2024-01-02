@@ -6,7 +6,7 @@
 					<thead>
 						<tr>
 							<th>ID</th>
-							<th>Name</th>
+							<th>Username</th>
 							<th>Email</th>
 							<th style="max-width: 300px"></th>
 						</tr>
