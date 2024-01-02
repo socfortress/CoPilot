@@ -25,11 +25,20 @@
 								{{ user.email }}
 							</td>
 							<td style="max-width: 300px">
-								<div class="flex justify-end">
-									<n-dropdown trigger="hover" :options="options">
-										<n-button>...</n-button>
+								<div class="flex justify-end" v-if="isAdmin">
+									<n-dropdown
+										trigger="hover"
+										:options="options"
+										display-directive="show"
+										:keyboard="false"
+										@click="selectedUser = user.username"
+									>
+										<n-button text>
+											<template #icon>
+												<Icon :name="DropdownIcon" :size="24"></Icon>
+											</template>
+										</n-button>
 									</n-dropdown>
-									<ChangePassword v-if="isAdmin" :username="user.username" size="small" />
 								</div>
 							</td>
 						</tr>
@@ -47,26 +56,25 @@ import Api from "@/api"
 import type { AuthUser } from "@/types/auth.d"
 import ChangePassword from "./ChangePassword.vue"
 import { useAuthStore } from "@/stores/auth"
+import Icon from "@/components/common/Icon.vue"
 
 const props = defineProps<{ highlight: string | null | undefined }>()
 const { highlight } = toRefs(props)
 
+const DropdownIcon = "carbon:overflow-menu-horizontal"
 const message = useMessage()
 const loadingUsers = ref(false)
 const usersList = ref<AuthUser[]>([])
 const isAdmin = useAuthStore().isAdmin
+const selectedUser = ref("")
 
 const options = [
 	{
 		key: "ChangePassword",
 		type: "render",
-		render: renderCustomHeader
+		render: () => h(ChangePassword, { username: selectedUser.value })
 	}
 ]
-
-function renderCustomHeader() {
-	return h(ChangePassword)
-}
 
 function getUsers() {
 	loadingUsers.value = true
