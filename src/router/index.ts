@@ -128,6 +128,12 @@ const router = createRouter({
 			component: () => import("@/views/Logs.vue"),
 			meta: { title: "Logs", auth: true, roles: UserRole.All }
 		},
+		{
+			path: "/users",
+			name: "Users",
+			component: () => import("@/views/Users.vue"),
+			meta: { title: "Users", auth: true, roles: UserRole.All }
+		},
 
 		{
 			path: "/profile",

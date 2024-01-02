@@ -19,5 +19,18 @@ export default {
 	},
 	getUsers() {
 		return HttpClient.get<FlaskBaseResponse & { users: AuthUser[] }>("/auth/users")
+	},
+	/** need admin role */
+	resetPassword(username: string, password: string) {
+		return HttpClient.post<FlaskBaseResponse>("/auth/reset-password", {
+			username,
+			new_password: password
+		})
+	},
+	resetOwnPassword(username: string, password: string) {
+		return HttpClient.post<FlaskBaseResponse>("/auth/reset-password/me", {
+			username,
+			new_password: password
+		})
 	}
 }
