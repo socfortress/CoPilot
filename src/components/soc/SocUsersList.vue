@@ -135,6 +135,12 @@ onBeforeMount(() => {
 		}
 	}
 
+	tr:hover {
+		td {
+			background-color: var(--primary-005-color);
+		}
+	}
+
 	.highlight {
 		td {
 			border-top: 1px solid var(--primary-030-color);
