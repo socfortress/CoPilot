@@ -16,7 +16,7 @@ logger.info(f"Loading environment from {Path(__file__).parent.parent / '.env'}")
 
 
 basedir = Path().absolute()
-db_path = str(basedir / "copilot.db")
+db_path = str(basedir / "data" / "copilot.db")
 
 ENV = env.str("SECRET_KEY", default="production")
 DEBUG = env.bool("FLASK_DEBUG", default=False)
