@@ -94,7 +94,7 @@ def get_connectors_list():
         ("DFIR-IRIS", "2.0", "api_key", "Connection to DFIR-IRIS. Make sure to use the an admin role user."),
         ("Velociraptor", "0.6.8", "file", "Connection to Velociraptor. Make sure you have generated the api file first."),
         ("Sublime", "3", "api_key", "Connection to Sublime. Make sure to use the an admin role user."),
-        ("InfluxDB", "3", "api_key", "INFLUXDB_ORG_AND_BUCKET", "Connection to InfluxDB. Make sure to use the an admin role user."),
+        ("InfluxDB", "3", "api_key", "Connection to InfluxDB. Make sure to use the an admin role user.", "INFLUXDB_ORG_AND_BUCKET"),
         ("AskSocfortress", "3", "api_key", "Connection to AskSocfortress. Make sure you have requested an API key."),
         ("SocfortressThreatIntel", "3", "api_key", "Connection to Socfortress Threat Intel. Make sure you have requested an API key."),
         ("Cortex", "3", "api_key", "Connection to Cortex. Make sure you have created an API key."),
