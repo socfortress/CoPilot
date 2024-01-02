@@ -1,3 +1,74 @@
+# # build with `docker build -t python-backend -f Dockerfile.deb .`
+# # run with `docker run -p 5000:5000 -d python-backend`
+# # Start with the base Debian 11 image
+# FROM debian:11
+
+# # Set environment variables
+# ENV PYTHONDONTWRITEBYTECODE 1
+# ENV PYTHONUNBUFFERED 1
+
+# # Update the package lists
+# RUN apt-get update
+
+# # Install necessary dependencies
+# RUN apt-get install -y \
+#     apt-transport-https \
+#     ca-certificates \
+#     curl \
+#     gnupg \
+#     lsb-release
+
+# # Add the deadsnakes PPA
+# RUN echo "deb http://ppa.launchpad.net/deadsnakes/ppa/ubuntu focal main" | tee /etc/apt/sources.list.d/focal.list
+# RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys F23C5A6CF475977595C89F51BA6932366A755776
+
+# # Update the package lists
+# RUN apt-get update
+
+# # Install Python 3.11, pip and venv
+# RUN apt-get install -y python3.11 python3-pip python3.11-venv
+
+# # Create a Python virtual environment and activate it
+# RUN python3.11 -m venv /opt/venv
+# ENV PATH="/opt/venv/bin:$PATH"
+
+# # Install setuptools
+# RUN /opt/venv/bin/pip install setuptools
+
+# # ! Original Working ! #
+# # Install your application's dependencies
+# WORKDIR /app
+# COPY backend/requirements.txt ./
+# RUN /opt/venv/bin/pip install --no-cache-dir -r requirements.txt
+
+
+# # Copy your application into the Docker image
+# COPY backend/ ./
+
+# # Run your application
+# # CMD ["uvicorn", "copilot:app", "--host", "0.0.0.0", "--port", "5000", "--log-level", "debug"]
+
+# # Install Node.js and npm
+# RUN curl -sL https://deb.nodesource.com/setup_14.x | bash -
+# RUN apt-get install -y nodejs
+
+# # Install your Vue.js application's dependencies
+# COPY package*.json ./
+# RUN npm install
+
+# # Build your Vue.js application
+# RUN npm run dev
+
+# # Install serve to serve your Vue.js application
+# RUN npm install -g serve
+
+# # Expose ports
+# EXPOSE 5000 8080
+
+# # Run your application
+# CMD ["uvicorn", "copilot:app", "--host", "0.0.0.0", "--port", "5000", "--log-level", "debug"] & serve -s dist -l 8080
+
+# ! NEW TEST ! #
 # build with `docker build -t python-backend -f Dockerfile.deb .`
 # run with `docker run -p 5000:5000 -d python-backend`
 # Start with the base Debian 11 image
@@ -35,35 +106,28 @@ ENV PATH="/opt/venv/bin:$PATH"
 # Install setuptools
 RUN /opt/venv/bin/pip install setuptools
 
-# ! Original Working ! #
 # Install your application's dependencies
-WORKDIR /app
+WORKDIR /opt/copilot/backend
 COPY backend/requirements.txt ./
 RUN /opt/venv/bin/pip install --no-cache-dir -r requirements.txt
 
-
 # Copy your application into the Docker image
-#COPY backend/ ./
-
-# Run your application
-# CMD ["uvicorn", "copilot:app", "--host", "0.0.0.0", "--port", "5000", "--log-level", "debug"]
+WORKDIR /opt/copilot
+COPY . .
 
 # Install Node.js and npm
-RUN curl -sL https://deb.nodesource.com/setup_14.x | bash -
+RUN curl -sL https://deb.nodesource.com/setup_18.x | bash -
 RUN apt-get install -y nodejs
 
 # Install your Vue.js application's dependencies
-COPY package*.json ./
+WORKDIR /opt/copilot
 RUN npm install
 
 # Build your Vue.js application
-RUN npm run dev
-
-# Install serve to serve your Vue.js application
-RUN npm install -g serve
+#RUN npm run dev
 
 # Expose ports
-EXPOSE 5000 8080
+EXPOSE 5000 5173
 
 # Run your application
-CMD ["uvicorn", "copilot:app", "--host", "0.0.0.0", "--port", "5000", "--log-level", "debug"] & serve -s dist -l 8080
+CMD ["sh", "-c", "cd backend && uvicorn copilot:app --host 0.0.0.0 --port 5000 --log-level debug & cd /opt/copilot && npm run dev:debug --host 0.0.0.0"]

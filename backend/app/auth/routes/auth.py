@@ -114,7 +114,7 @@ async def login(user: UserLogin):
 
 
 # Get all users
-@auth_router.get("/users", response_model=UserBaseResponse, description="Get all users")
+@auth_router.get("/users", response_model=UserBaseResponse, description="Get all users", dependencies=[Security(AuthHandler().require_any_scope("analyst","admin"))],)
 async def get_users(session: AsyncSession = Depends(get_db)):
     """
     Retrieve all users from the database.
