@@ -27,4 +27,3 @@ SQLALCHEMY_TRACK_MODIFICATIONS = env.bool(
     "SQLALCHEMY_TRACK_MODIFICATIONS",
     default=False,
 )
-UPLOAD_FOLDER = env.str("UPLOAD_FOLDER", str(Path.home() / "Desktop/copilot_uploads"))
