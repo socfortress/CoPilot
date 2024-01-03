@@ -7,10 +7,11 @@ from loguru import logger
 from app.auth.utils import AuthHandler
 from app.connectors.dfir_iris.schema.alerts import AlertResponse
 from app.connectors.dfir_iris.schema.alerts import AlertsResponse
-from app.connectors.dfir_iris.schema.alerts import BookmarkedAlertsResponse
+from app.connectors.dfir_iris.schema.alerts import BookmarkedAlertsResponse, FilterAlertsRequest
 from app.connectors.dfir_iris.services.alerts import bookmark_alert
 from app.connectors.dfir_iris.services.alerts import get_alert
 from app.connectors.dfir_iris.services.alerts import get_alerts
+from app.connectors.dfir_iris.services.alerts import create_case
 from app.connectors.dfir_iris.services.alerts import get_bookmarked_alerts
 from app.connectors.dfir_iris.utils.universal import check_alert_exists
 
@@ -56,21 +57,21 @@ async def get_all_bookmarked_alerts() -> BookmarkedAlertsResponse:
     return await get_bookmarked_alerts()
 
 
-@dfir_iris_alerts_router.get(
+@dfir_iris_alerts_router.post(
     "",
     response_model=AlertsResponse,
-    description="Get all alerts",
+    description="Get alerts from IRIS based on the provided filters",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_all_alerts() -> AlertsResponse:
+async def get_alerts_filtered(request: FilterAlertsRequest) -> AlertsResponse:
     """
-    Retrieve all alerts.
+    Retrieve alerts from DFIR-IRIS based on the provided filters.
 
     Returns:
         AlertsResponse: The response containing all alerts.
     """
     logger.info("Fetching all alerts")
-    return await get_alerts()
+    return await get_alerts(request)
 
 
 @dfir_iris_alerts_router.get(
@@ -117,6 +118,25 @@ async def get_all_alerts_assigned_to_user(user_id: int) -> AlertsResponse:
             alerts_assigned_to_user.append(alert)
 
     return AlertsResponse(success=True, message="Successfully fetched alerts assigned to user", alerts=alerts_assigned_to_user)
+
+@dfir_iris_alerts_router.post(
+    "/create_case/{alert_id}",
+    response_model=AlertResponse,
+    description="Assign an alert to a user",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def create_case_from_alert(alert_id: str = Depends(verify_alert_exists)) -> AlertResponse:
+    """
+    Create a case from an alert.
+
+    Args:
+        alert_id (str): The ID of the alert to create a case from.
+
+    Returns:
+        AlertResponse: The response containing the created case.
+    """
+    logger.info(f"Creating case from alert {alert_id}")
+    return await create_case(alert_id)
 
 
 @dfir_iris_alerts_router.post(
