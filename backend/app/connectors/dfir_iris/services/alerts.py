@@ -81,10 +81,31 @@ async def create_case(alert_id: str) -> AlertResponse:
     client, alert = await initialize_client_and_alert("DFIR-IRIS")
     # Get the alert
     alert_details = await fetch_and_validate_data(client, alert.get_alert, alert_id)
-    logger.info(f"Creating case for alert {alert_details}")
-    result = await fetch_and_validate_data(client, alert.escalate_alert, int(alert_id))
+    params = construct_case_creation_params(alert_details["data"])
+    logger.info(f"Creating case with params {params}")
+    result = await fetch_and_validate_data(client, lambda: alert.escalate_alert(int(alert_id), **params))
     return AlertResponse(success=True, message="Successfully created case for alert", alert=result["data"])
 
+def construct_case_creation_params(alert_details: dict) -> dict:
+    """
+    Constructs the parameters for the case creation request.
+
+    Args:
+        alert_details (dict): The alert details.
+
+    Returns:
+        dict: A dictionary of parameters for the case creation request.
+    """
+    params = {
+        'case_title': alert_details["alert_title"],
+        'case_tags': alert_details["alert_tags"],
+        'escalation_note': 'Case created from CoPilot',
+        'iocs_import_list': [ioc['ioc_uuid'] for ioc in alert_details["iocs"]],
+        'assets_import_list': [asset['asset_uuid'] for asset in alert_details["assets"]],
+    }
+
+    # Replace None values with the string "None"
+    return {k: v if v is not None else "None" for k, v in params.items()}
 
 async def bookmark_alert(alert_id: str, bookmarked: bool) -> AlertResponse:
     """
