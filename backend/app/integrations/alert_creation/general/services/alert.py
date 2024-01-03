@@ -100,12 +100,14 @@ async def build_asset_payload(agent_data: AgentsResponse, alert_details) -> Iris
     Returns:
         IrisAsset: The constructed IrisAsset object.
     """
+    # Get the agent_id based on the hostname from the Agents table
     if agent_data.success:
         return IrisAsset(
             asset_name=agent_data.agents[0].hostname,
             asset_ip=agent_data.agents[0].ip_address,
             asset_description=agent_data.agents[0].os,
             asset_type_id=await get_asset_type_id(agent_data.agents[0].os),
+            asset_tags=agent_data.agents[0].agent_id,
         )
     return IrisAsset()
 
