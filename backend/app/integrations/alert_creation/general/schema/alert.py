@@ -152,6 +152,9 @@ class IrisAsset(BaseModel):
         example=1,
     )
 
+    def to_dict(self):
+        return self.dict(exclude_none=True)
+
 
 class IrisIoc(BaseModel):
     ioc_value: str = Field(

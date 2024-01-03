@@ -259,6 +259,13 @@ async def create_alert(alert: CreateAlertRequest, session: AsyncSession) -> Crea
     )
     alert_id = result["data"]["alert_id"]
     logger.info(f"Successfully created alert {alert_id} in IRIS.")
+    # Update the alert with the asset payload
+    await fetch_and_validate_data(
+        client,
+        alert_client.update_alert,
+        alert_id,
+        {"assets": [dict(IrisAsset(**iris_alert_payload.assets[0].to_dict()))]},
+    )
     customer_name = (await get_customer_alert_settings(customer_code=alert.agent_labels_customer, session=session)).customer_name
     await send_to_shuffle(
         ShufflePayload(
