@@ -48,15 +48,16 @@ COPY . .
 RUN curl -sL https://deb.nodesource.com/setup_18.x | bash -
 RUN apt-get install -y nodejs
 
+# Install concurrently
+RUN npm install -g concurrently
+
 # Install your Vue.js application's dependencies
 WORKDIR /opt/copilot
 RUN npm install
-
-# Build your Vue.js application
-#RUN npm run dev
 
 # Expose ports
 EXPOSE 5000 5173
 
 # Run your application
-CMD ["sh", "-c", "cd backend && python copilot.py & cd /opt/copilot && npm run dev"]
+#CMD ["sh", "-c", "cd backend && python copilot.py & cd /opt/copilot && npm run dev"]
+CMD ["sh", "-c", "cd /opt/copilot && npm run start"]

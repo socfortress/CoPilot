@@ -3,7 +3,7 @@ services:
   app:
     image: ghcr.io/socfortress/copilot:latest
     volumes:
-      - ./backend/data:/opt/copilot/backend/copilot.db
+      - ./backend/data:/opt/copilot/backend/data
     network_mode: "host"
     environment:
       SERVER_IP: ${SERVER_IP}
