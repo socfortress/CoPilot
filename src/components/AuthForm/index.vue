@@ -2,9 +2,7 @@
 	<div class="form-wrap">
 		<Logo mini :dark="isDark" class="mb-4" />
 		<div class="title mb-4">{{ title }}</div>
-		<div class="text mb-12">
-			Today is a new day. It's your day. You shape it. Sign in to start managing your projects.
-		</div>
+		<div class="text mb-12">Access the world of OpenSource security: Simplified, Streamlined, Accessible.</div>
 
 		<div class="form">
 			<transition name="form-fade" mode="out-in" appear>
@@ -49,7 +47,11 @@ const typeRef = ref<FormType>("signin")
 
 const isDark = computed<boolean>(() => useThemeStore().isThemeDark)
 const title = computed<string>(() =>
-	typeRef.value === "signin" ? "Welcome Back" : typeRef.value === "signup" ? "Hello" : "Forgot Password"
+	typeRef.value === "signin"
+		? "SOCFortress CoPilot"
+		: typeRef.value === "signup"
+			? "SOCFortress CoPilot"
+			: "Forgot Password"
 )
 
 function gotoSignIn() {

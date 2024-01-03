@@ -51,7 +51,12 @@
 			<div class="form-box basis-1/3 flex items-center justify-center" :class="{ centered: align === 'center' }">
 				<AuthForm :type="type" />
 			</div>
-			<div class="image-box basis-2/3" v-if="align === 'left'"></div>
+			<div class="image-box basis-2/3" v-if="align === 'left'">
+				<video playsinline autoplay muted loop poster="/images/login/cover.webp">
+					<source src="/images/login/video.mp4" type="video/mp4" />
+					Your browser does not support the video tag.
+				</video>
+			</div>
 		</div>
 	</div>
 </template>
@@ -123,6 +128,17 @@ onBeforeMount(() => {
 			background-color: v-bind(activeColor);
 			position: relative;
 
+			video {
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				object-fit: cover;
+				object-position: center;
+			}
+
+			/*
 			&::after {
 				content: "";
 				width: 100%;
@@ -134,6 +150,7 @@ onBeforeMount(() => {
 				background-size: 500px;
 				background-position: center center;
 			}
+			*/
 		}
 
 		.form-box {
