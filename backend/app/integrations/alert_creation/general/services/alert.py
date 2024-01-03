@@ -266,6 +266,14 @@ async def create_alert(alert: CreateAlertRequest, session: AsyncSession) -> Crea
         alert_id,
         {"assets": [dict(IrisAsset(**iris_alert_payload.assets[0].to_dict()))]},
     )
+    # Updae the alert if the ioc_payload is not None
+    if ioc_payload:
+        await fetch_and_validate_data(
+            client,
+            alert_client.update_alert,
+            alert_id,
+            {"iocs": [dict(IrisIoc(**iris_alert_payload.alert_iocs[0].to_dict()))]},
+        )
     customer_name = (await get_customer_alert_settings(customer_code=alert.agent_labels_customer, session=session)).customer_name
     await send_to_shuffle(
         ShufflePayload(

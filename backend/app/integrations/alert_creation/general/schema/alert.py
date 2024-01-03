@@ -170,6 +170,9 @@ class IrisIoc(BaseModel):
     ioc_tlp_id: int = Field(1, description="TLP ID of the IoC", example=1)
     ioc_type_id: int = Field(20, description="Type ID of the IoC", example=20)
 
+    def to_dict(self):
+        return self.dict(exclude_none=True)
+
 
 class IrisAlertContext(BaseModel):
     customer_iris_id: int = Field(
