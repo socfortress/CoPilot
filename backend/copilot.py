@@ -115,7 +115,7 @@ async def init_db():
 
 @app.get("/")
 def hello():
-    return {"message": "Hello World"}
+    return {"message": "We Made It!"}
 
 
 @app.on_event("shutdown")
