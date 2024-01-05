@@ -17,7 +17,7 @@
 					<SocAlertItem
 						v-for="alert of list"
 						:key="alert.id"
-						:alert="alert.item"
+						:alertData="alert.item"
 						class="item-appear item-appear-bottom item-appear-005 mb-2"
 						:is-bookmark="alert.isBookmark"
 						:users="usersList"

@@ -1,10 +1,10 @@
 .vuesjv-override {
-	color: var(--fg-color);
-	font-family: var(--font-family-mono);
-	line-height: 1.7;
+	color: var(--fg-color) !important;
+	font-family: var(--font-family-mono) !important;
+	line-height: 1.7 !important;
 
 	.font-mono {
-		font-family: var(--font-family-mono);
+		font-family: var(--font-family-mono) !important;
 	}
 
 	i {

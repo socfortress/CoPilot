@@ -228,6 +228,7 @@ export interface AlertSourceContent {
 	syslog_type: AlertSourceSyslogType
 	timestamp_utc: string
 	timestamp: string
+	type?: string
 	true: number
 }
 
