@@ -6,6 +6,7 @@
 		:disabled="loadingUsers"
 		size="medium"
 		scrollable
+		to="body"
 	>
 		<slot :loading="loadingUsers" />
 	</n-popselect>

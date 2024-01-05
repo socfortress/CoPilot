@@ -2,10 +2,10 @@
 	<n-spin
 		:show="loading"
 		class="soc-alert-item flex flex-col gap-0"
-		:class="{ bookmarked: isBookmark, highlight }"
-		:id="'alert-' + alert.alert_id"
+		:class="{ bookmarked: isBookmark, highlight, embedded }"
+		:id="'alert-' + alert?.alert_id"
 	>
-		<div class="soc-alert-info px-5 py-3 flex flex-col gap-2">
+		<div class="soc-alert-info px-5 py-3 flex flex-col gap-2" v-if="alert">
 			<div class="header-box flex justify-between">
 				<div class="flex items-center gap-2 cursor-pointer">
 					<div class="id flex items-center gap-2 cursor-pointer" @click="showDetails = true">
@@ -13,7 +13,8 @@
 						<Icon :name="InfoIcon" :size="16"></Icon>
 					</div>
 					<Icon
-						:name="isBookmark ? StarActiveIcon : StarIcon"
+						v-if="!hideBookmarkAction"
+						:name="loadingBookmark ? LoadingIcon : isBookmark ? StarActiveIcon : StarIcon"
 						:size="16"
 						@click="toggleBookmark()"
 						class="toggler-bookmark"
@@ -21,7 +22,7 @@
 					></Icon>
 				</div>
 				<div class="time">
-					<n-popover overlap placement="top-end" style="max-height: 240px" scrollable>
+					<n-popover overlap placement="top-end" style="max-height: 240px" scrollable to="body">
 						<template #trigger>
 							<div class="flex items-center gap-2 cursor-help">
 								<span>
@@ -36,7 +37,7 @@
 					</n-popover>
 				</div>
 			</div>
-			<div class="main-box">
+			<div class="main-box flex justify-between gap-4">
 				<div class="content">
 					<div class="title">{{ alert.alert_title }}</div>
 					<div
@@ -46,8 +47,18 @@
 						{{ alert.alert_description }}
 					</div>
 				</div>
+				<div class="actions flex flex-col gap-2 justify-end" v-if="!hideSocCaseAction">
+					<n-button v-if="caseId" type="primary" secondary @click="openSocCase()">
+						<template #icon><Icon :name="ViewIcon"></Icon></template>
+						View SOC Case
+					</n-button>
+					<n-button :loading="loadingCaseCreation" type="warning" secondary @click="createCase()" v-else>
+						<template #icon><Icon :name="DangerIcon"></Icon></template>
+						Create SOC Case
+					</n-button>
+				</div>
 			</div>
-			<div class="badges-box flex flex-wrap items-center gap-3 mt-2">
+			<div class="badges-box flex flex-wrap items-center gap-3 mt-4">
 				<n-tooltip placement="top-start" trigger="hover">
 					<template #trigger>
 						<Badge type="splitted" hint-cursor>
@@ -108,7 +119,24 @@
 					<template #label>Source link</template>
 				</Badge>
 			</div>
-			<div class="footer-box flex justify-end items-center gap-3">
+			<div class="footer-box flex justify-between items-center gap-4">
+				<div class="actions" v-if="!hideSocCaseAction">
+					<n-button v-if="caseId" type="primary" secondary size="small" @click="openSocCase()">
+						<template #icon><Icon :name="ViewIcon"></Icon></template>
+						View SOC Case
+					</n-button>
+					<n-button
+						:loading="loadingCaseCreation"
+						size="small"
+						type="warning"
+						secondary
+						@click="createCase()"
+						v-else
+					>
+						<template #icon><Icon :name="DangerIcon"></Icon></template>
+						Create SOC Case
+					</n-button>
+				</div>
 				<div class="time">{{ formatDate(alert.alert_creation_time) }}</div>
 			</div>
 		</div>
@@ -127,15 +155,29 @@
 		</n-collapse>
 
 		<n-modal
+			v-model:show="showSocCaseDetails"
+			preset="card"
+			content-style="padding:0px"
+			:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(250px, 90vh)', overflow: 'hidden' }"
+			:title="`SOC Case: #${caseId}`"
+			:bordered="false"
+			segmented
+		>
+			<div class="h-full w-full flex items-center justify-center">
+				<SocCaseItem v-if="caseId" :caseId="caseId" embedded hideSocAlertLink class="w-full" />
+			</div>
+		</n-modal>
+
+		<n-modal
 			v-model:show="showDetails"
 			preset="card"
 			content-style="padding:0px"
 			:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(550px, 90vh)', overflow: 'hidden' }"
-			:title="`SOC Alert: #${alert.alert_id} - ${alert.alert_uuid}`"
+			:title="`SOC Alert: #${alert?.alert_id} - ${alert?.alert_uuid}`"
 			:bordered="false"
 			segmented
 		>
-			<n-tabs type="line" animated :tabs-padding="24">
+			<n-tabs type="line" animated :tabs-padding="24" v-if="alert">
 				<n-tab-pane name="Context" tab="Context" display-directive="show:lazy">
 					<div class="grid gap-2 grid-auto-flow-200 p-7 pt-4">
 						<KVCard v-for="(value, key) of alert.alert_context" :key="key">
@@ -235,26 +277,43 @@ import { computed, onBeforeMount, ref, toRefs } from "vue"
 import { SimpleJsonViewer } from "vue-sjv"
 import KVCard from "@/components/common/KVCard.vue"
 import SocAlertTimeline from "./SocAlertTimeline.vue"
+import SocCaseItem from "./SocCaseItem.vue"
 import SocAssignUser from "./SocAssignUser.vue"
 import "@/assets/scss/vuesjv-override.scss"
 import Api from "@/api"
-import { NCollapse, useMessage, NCollapseItem, NPopover, NModal, NTabs, NTabPane, NSpin, NTooltip } from "naive-ui"
+import {
+	NCollapse,
+	useMessage,
+	NButton,
+	NCollapseItem,
+	NPopover,
+	NModal,
+	NTabs,
+	NTabPane,
+	NSpin,
+	NTooltip
+} from "naive-ui"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
 import type { SocUser } from "@/types/soc/user.d"
 import { useRouter } from "vue-router"
 
 const emit = defineEmits<{
-	(e: "bookmark"): void
+	(e: "bookmark", value: boolean): void
 }>()
 
 const props = defineProps<{
-	alert: SocAlert
+	alertData?: SocAlert
+	alertId?: string | number
 	isBookmark?: boolean
 	highlight?: boolean | null | undefined
+	embedded?: boolean
 	users?: SocUser[]
+	hideSocCaseAction?: boolean
+	hideBookmarkAction?: boolean
 }>()
-const { alert, isBookmark, highlight, users } = toRefs(props)
+const { alertData, alertId, isBookmark, highlight, users, embedded, hideSocCaseAction, hideBookmarkAction } =
+	toRefs(props)
 
 const ChevronIcon = "carbon:chevron-right"
 const InfoIcon = "carbon:information"
@@ -268,16 +327,26 @@ const StarActiveIcon = "carbon:star-filled"
 const OwnerIcon = "carbon:user-military"
 const StarIcon = "carbon:star"
 const EditIcon = "uil:edit-alt"
+const DangerIcon = "majesticons:exclamation-line"
+const LoadingIcon = "eos-icons:loading"
+const ViewIcon = "iconoir:eye-alt"
 
 const showDetails = ref(false)
-const loading = ref(false)
+const showSocCaseDetails = ref(false)
+const loadingData = ref(false)
+const loadingBookmark = ref(false)
+const loadingCaseCreation = ref(false)
 const router = useRouter()
 const message = useMessage()
 
+const alert = ref(alertData.value || null)
+
 const alertObject = ref<Alert>({} as Alert)
 
-const ownerName = computed(() => alert.value.owner?.user_login)
-const ownerId = computed(() => alert.value.owner?.id)
+const loading = computed(() => loadingBookmark.value || loadingCaseCreation.value || loadingData.value)
+const ownerName = computed(() => alert.value?.owner?.user_login)
+const ownerId = computed(() => alert.value?.owner?.id)
+const caseId = computed<number | null>(() => (alert.value?.cases?.length ? alert.value?.cases[0] : null))
 
 const socAlertDetail = computed<Partial<SocAlert>>(() => {
 	const clone: Partial<SocAlert> = JSON.parse(JSON.stringify(alert.value))
@@ -299,15 +368,81 @@ function formatDate(timestamp: string | number, utc: boolean = true): string {
 }
 
 function toggleBookmark() {
-	loading.value = true
+	if (alert.value?.alert_id) {
+		loadingBookmark.value = true
 
-	const method = isBookmark.value ? "removeAlertBookmark" : "addAlertBookmark"
+		const method = isBookmark.value ? "removeAlertBookmark" : "addAlertBookmark"
 
-	Api.soc[method](alert.value.alert_id.toString())
+		Api.soc[method](alert.value.alert_id.toString())
+			.then(res => {
+				if (res.data.success) {
+					emit("bookmark", method === "removeAlertBookmark" ? false : true)
+					message.success(res.data?.message || "Stream started.")
+				} else {
+					message.warning(res.data?.message || "An error occurred. Please try again later.")
+				}
+			})
+			.catch(err => {
+				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			})
+			.finally(() => {
+				loadingBookmark.value = false
+			})
+	}
+}
+
+function createCase() {
+	if (alert.value?.alert_id) {
+		loadingCaseCreation.value = true
+
+		Api.soc
+			.createCase(alert.value.alert_id.toString())
+			.then(res => {
+				if (res.data.success) {
+					if (alert.value) {
+						alert.value.cases = [res.data.case.case_id]
+					}
+					message.success(res.data?.message || "SOC Case created.")
+				} else {
+					message.warning(res.data?.message || "An error occurred. Please try again later.")
+				}
+			})
+			.catch(err => {
+				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			})
+			.finally(() => {
+				loadingCaseCreation.value = false
+			})
+	}
+}
+
+function updateAlert(alertUpdated: SocAlert) {
+	const ownerObject = alertUpdated.owner
+	const modificationHistory = alertUpdated.modification_history
+
+	if (alert.value) {
+		alert.value.owner = ownerObject
+		alert.value.modification_history = modificationHistory
+	}
+}
+
+function gotoUsersPage(userId?: string | number) {
+	router.push({ name: "Soc-Users", query: userId ? { user_id: userId } : {} })
+}
+
+function openSocCase() {
+	showSocCaseDetails.value = true
+}
+
+function getAlert(id: string | number, cb?: () => void) {
+	loadingData.value = true
+
+	Api.soc
+		.getAlert(id.toString())
 		.then(res => {
 			if (res.data.success) {
-				emit("bookmark")
-				message.success(res.data?.message || "Stream started.")
+				alert.value = res.data?.alert || null
+				if (cb) cb()
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
@@ -316,37 +451,37 @@ function toggleBookmark() {
 			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
-			loading.value = false
+			loadingData.value = false
 		})
 }
 
-function updateAlert(alertUpdated: SocAlert) {
-	const ownerObject = alertUpdated.owner
-	const modificationHistory = alertUpdated.modification_history
-
-	alert.value.owner = ownerObject
-	alert.value.modification_history = modificationHistory
-}
-
-function gotoUsersPage(userId?: string | number) {
-	router.push({ name: "Soc-Users", query: userId ? { user_id: userId } : {} })
+function createAlertObject() {
+	alertObject.value = {
+		_index: "",
+		_id: alert.value?.alert_context.alert_id,
+		_source: alert.value?.alert_source_content
+	} as Alert
 }
 
 onBeforeMount(() => {
-	alertObject.value = {
-		_index: "",
-		_id: alert.value.alert_context.alert_id,
-		_source: alert.value.alert_source_content
-	} as Alert
+	createAlertObject()
+
+	if (!alertData.value && alertId.value) {
+		getAlert(alertId.value, () => {
+			createAlertObject()
+		})
+	}
 })
 </script>
 
 <style lang="scss" scoped>
 .soc-alert-item {
-	border-radius: var(--border-radius);
-	background-color: var(--bg-color);
+	&:not(.embedded) {
+		border-radius: var(--border-radius);
+		background-color: var(--bg-color);
+		border: var(--border-small-050);
+	}
 	transition: all 0.2s var(--bezier-ease);
-	border: var(--border-small-050);
 
 	.soc-alert-info {
 		border-bottom: var(--border-small-050);
@@ -393,12 +528,12 @@ onBeforeMount(() => {
 		}
 
 		.footer-box {
-			font-family: var(--font-family-mono);
 			font-size: 13px;
 			margin-top: 10px;
 			display: none;
 
 			.time {
+				font-family: var(--font-family-mono);
 				text-align: right;
 				color: var(--fg-secondary-color);
 			}
@@ -410,9 +545,11 @@ onBeforeMount(() => {
 		box-shadow: 0px 0px 0px 1px inset var(--primary-030-color);
 	}
 
-	&:hover,
-	&.highlight {
-		box-shadow: 0px 0px 0px 1px inset var(--primary-color);
+	&:not(.embedded) {
+		&:hover,
+		&.highlight {
+			box-shadow: 0px 0px 0px 1px inset var(--primary-color);
+		}
 	}
 
 	@container (max-width: 650px) {
@@ -422,10 +559,16 @@ onBeforeMount(() => {
 					display: none;
 				}
 			}
-			.badges-box {
-				.badge {
-					&.hide-on-small {
-						display: none;
+
+			.main-box {
+				.actions {
+					display: none;
+				}
+				.badges-box {
+					.badge {
+						&.hide-on-small {
+							display: none;
+						}
 					}
 				}
 			}
