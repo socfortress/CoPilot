@@ -98,3 +98,29 @@ export interface Status {
 export enum StatusName {
 	Assigned = "Assigned"
 }
+
+type DateDay = number
+type DateMonth = number
+type DateYear = number
+type DayFormatted = `${DateYear}-${DateMonth}-${DateDay}`
+
+export interface SocAlertCaseResponse {
+	case_customer: number
+	case_description: string
+	case_id: number
+	case_name: string
+	case_soc_id: string
+	case_uuid: string
+	classification_id: number | null
+	close_date: DayFormatted
+	closing_note: string | null
+	custom_attributes: { [key: string]: any } | null
+	modification_history: { [key: string]: ModificationHistory }
+	open_date: DayFormatted
+	owner_id: number
+	review_status_id: string | number | null
+	reviewer_id: number | null
+	state_id: number
+	status_id: number
+	user_id: number
+}

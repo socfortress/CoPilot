@@ -1,6 +1,6 @@
 import { type FlaskBaseResponse } from "@/types/flask.d"
 import { HttpClient } from "./httpClient"
-import type { SocAlert } from "@/types/soc/alert.d"
+import type { SocAlert, SocAlertCaseResponse } from "@/types/soc/alert.d"
 import type { SocCase, SocCaseExt } from "@/types/soc/case.d"
 import type { SocAsset, SocAssetsState } from "@/types/soc/asset.d"
 import type { SocNewNote, SocNote } from "@/types/soc/note.d"
@@ -31,6 +31,9 @@ export default {
 	},
 	removeAlertBookmark(alertId: string) {
 		return HttpClient.delete<FlaskBaseResponse & { alert: SocAlert }>(`/soc/alerts/bookmark/${alertId}`)
+	},
+	createCase(alertId: string) {
+		return HttpClient.post<FlaskBaseResponse & { case: SocAlertCaseResponse }>(`/soc/alerts/create_case/${alertId}`)
 	},
 	getCases(payload?: string | CasesFilter) {
 		let apiMethod: "get" | "post" = "get"
