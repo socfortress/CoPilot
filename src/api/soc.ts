@@ -11,11 +11,26 @@ export interface CasesFilter {
 	unit: TimeUnit
 }
 
+export interface AlertsFilter {
+	pageSize: number
+	page: number
+	sort: "desc" | "asc"
+	alertTitle: string
+}
+
 type TimeUnit = "hours" | "days" | "weeks"
 
 export default {
-	getAlerts() {
-		return HttpClient.get<FlaskBaseResponse & { alerts: SocAlert[] }>(`/soc/alerts`)
+	getAlerts(filters?: Partial<AlertsFilter>) {
+		return HttpClient.post<FlaskBaseResponse & { alerts: SocAlert[] }>(`/soc/alerts`, {
+			per_page: filters?.pageSize || 100,
+			page: filters?.page || 1,
+			sort: filters?.sort || "desc",
+			alert_title: filters?.alertTitle || ""
+		})
+	},
+	getAlert(alertId: string) {
+		return HttpClient.get<FlaskBaseResponse & { alert: SocAlert }>(`/soc/alerts/${alertId}`)
 	},
 	getAlertsBookmark() {
 		return HttpClient.get<FlaskBaseResponse & { bookmarked_alerts: SocAlert[] }>(`/soc/alerts/bookmark`)
@@ -59,7 +74,7 @@ export default {
 							older_than: payload?.olderThan || 1,
 							time_unit: payload?.unit || "days"
 						}
-				  }
+					}
 				: undefined
 		)
 	},
