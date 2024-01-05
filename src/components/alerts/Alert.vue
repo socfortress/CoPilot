@@ -2,7 +2,7 @@
 	<div class="alert-details flex flex-col gap-2 px-5 py-4">
 		<div class="header-box flex justify-between">
 			<div class="id flex items-center gap-2 cursor-pointer" @click="showDetails = true">
-				<span>#{{ alert._id }}</span>
+				<span>#{{ alert._id || alert._source.id }}</span>
 				<Icon :name="InfoIcon" :size="16"></Icon>
 			</div>
 			<div class="time">
@@ -11,10 +11,10 @@
 		</div>
 		<div class="main-box flex justify-between gap-4">
 			<div class="content">
-				<div class="rule-description">{{ alert._source.rule_description }}</div>
+				<div class="rule-description">{{ alert._source.rule_description || alert._source.type }}</div>
 				<div class="rule-groups">{{ alert._source.rule_groups }}</div>
 
-				<div class="badges-box flex flex-wrap items-center gap-3">
+				<div class="badges-box flex flex-wrap items-center gap-3" v-if="alert._id">
 					<!--
 						<Badge type="cursor">
 							<template #iconLeft>
@@ -127,12 +127,12 @@
 			preset="card"
 			content-style="padding:0px"
 			:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(600px, 90vh)', overflow: 'hidden' }"
-			:title="`Alert: ${alert._id}`"
+			:title="`Alert: ${alert._id || alert._source.id}`"
 			:bordered="false"
 			segmented
 		>
 			<n-tabs type="line" animated :tabs-padding="24">
-				<n-tab-pane name="Agent" tab="Agent" display-directive="show">
+				<n-tab-pane name="Agent" tab="Agent" display-directive="show" v-if="alert._id">
 					<div class="grid gap-2 grid-auto-flow-200 p-7 pt-4" v-if="agentProperties">
 						<KVCard v-for="(value, key) of agentProperties" :key="key">
 							<template #key>{{ key }}</template>
@@ -271,6 +271,7 @@ function formatDate(timestamp: string): string {
 function gotoAgentPage(agentId: string) {
 	router.push({ name: "Agent", params: { id: agentId } })
 }
+
 function gotoCustomer(code: string | number) {
 	router.push({ name: "Customers", query: { code } })
 }
