@@ -100,12 +100,14 @@ async def build_asset_payload(agent_data: AgentsResponse, alert_details) -> Iris
     Returns:
         IrisAsset: The constructed IrisAsset object.
     """
+    # Get the agent_id based on the hostname from the Agents table
     if agent_data.success:
         return IrisAsset(
             asset_name=agent_data.agents[0].hostname,
             asset_ip=agent_data.agents[0].ip_address,
             asset_description=agent_data.agents[0].os,
             asset_type_id=await get_asset_type_id(agent_data.agents[0].os),
+            asset_tags=agent_data.agents[0].agent_id,
         )
     return IrisAsset()
 
@@ -259,6 +261,21 @@ async def create_alert(alert: CreateAlertRequest, session: AsyncSession) -> Crea
     )
     alert_id = result["data"]["alert_id"]
     logger.info(f"Successfully created alert {alert_id} in IRIS.")
+    # Update the alert with the asset payload
+    await fetch_and_validate_data(
+        client,
+        alert_client.update_alert,
+        alert_id,
+        {"assets": [dict(IrisAsset(**iris_alert_payload.assets[0].to_dict()))]},
+    )
+    # Updae the alert if the ioc_payload is not None
+    if ioc_payload:
+        await fetch_and_validate_data(
+            client,
+            alert_client.update_alert,
+            alert_id,
+            {"iocs": [dict(IrisIoc(**iris_alert_payload.alert_iocs[0].to_dict()))]},
+        )
     customer_name = (await get_customer_alert_settings(customer_code=alert.agent_labels_customer, session=session)).customer_name
     await send_to_shuffle(
         ShufflePayload(

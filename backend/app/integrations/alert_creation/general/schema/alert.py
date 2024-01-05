@@ -151,6 +151,14 @@ class IrisAsset(BaseModel):
         description="Type ID of the asset",
         example=1,
     )
+    asset_tags: Optional[str] = Field(
+        "Agent ID not found. Ensure the agent has been registered with Wazuh Manager and synced to the Agents table.",
+        description="Tags of the asset",
+        example="001",
+    )
+
+    def to_dict(self):
+        return self.dict(exclude_none=True)
 
 
 class IrisIoc(BaseModel):
@@ -166,6 +174,9 @@ class IrisIoc(BaseModel):
     )
     ioc_tlp_id: int = Field(1, description="TLP ID of the IoC", example=1)
     ioc_type_id: int = Field(20, description="Type ID of the IoC", example=20)
+
+    def to_dict(self):
+        return self.dict(exclude_none=True)
 
 
 class IrisAlertContext(BaseModel):
