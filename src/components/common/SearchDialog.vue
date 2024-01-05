@@ -81,16 +81,19 @@ import { useFullscreenSwitch } from "@/composables/useFullscreenSwitch"
 import { useSearchDialog } from "@/composables/useSearchDialog"
 import { getOS } from "@/utils"
 import Icon from "@/components/common/Icon.vue"
+import { emitter } from "@/emitter"
 
 const SearchIcon = "ion:search-outline"
-const TodoIcon = "fluent:task-list-square-add-20-regular"
-const EmailIcon = "fluent:mail-edit-20-regular"
-const NotesIcon = "fluent:chart-person-20-regular"
 const ArrowEnterIcon = "fluent:arrow-enter-left-24-regular"
 const ArrowSortIcon = "fluent:arrow-sort-24-regular"
 const FullScreenIcon = "fluent:full-screen-maximize-24-regular"
 const DarkModeIcon = "ion:moon-outline"
 const CloseIcon = "ion:close"
+
+const ConnectorsIcon = "carbon:hybrid-networking"
+const AlertsIcon = "carbon:warning-hex"
+const SocAlertsIcon = "carbon:security"
+const CustomerIcon = "carbon:user-follow"
 
 interface GroupItem {
 	iconName: string | null
@@ -116,73 +119,53 @@ const activeItem = ref<null | string | number>(null)
 const commandIcon = ref("⌘")
 const scrollContent = ref<(ScrollbarInst & { $el: any }) | null>(null)
 
+// TODO: updated all router.push with:
+// - router.push({ name: "...", query: { key: "value" } })
+// - router.push({ name: "...", param: { key: "value" } }) for agents
+
 const groups = ref<Groups>([
 	{
 		name: "Applications",
 		items: [
 			{
-				iconName: TodoIcon,
+				iconName: CustomerIcon,
 				iconImage: null,
 				key: 1,
-				title: "Add todo list",
+				title: "Add a Customer",
 				label: "Shortcut",
 				action() {
-					router.push({ name: "Apps-Kanban" })
+					router.push({ name: "Customers", query: { action: "add-customer" } })
+					emitter.emit("action:add-customer")
 				}
 			},
 			{
-				iconName: EmailIcon,
+				iconName: ConnectorsIcon,
 				iconImage: null,
 				key: 2,
-				title: "Compose new email",
+				title: "Configure a connector",
 				label: "Shortcut",
 				action() {
-					router.push({ name: "Apps-Mailbox" })
+					router.push({ name: "Connectors" })
 				}
 			},
 			{
-				iconName: NotesIcon,
+				iconName: SocAlertsIcon,
 				iconImage: null,
 				key: 3,
-				title: "View Notes",
+				title: "View Escalated Alerts",
 				label: "Shortcut",
 				action() {
-					router.push({ name: "Apps-Notes" })
+					router.push({ name: "Soc-Alerts" })
 				}
-			}
-		]
-	},
-	{
-		name: "Contacts",
-		items: [
+			},
 			{
-				iconName: null,
-				iconImage: "https://i.pravatar.cc/56?_=" + Math.random(),
+				iconName: AlertsIcon,
+				iconImage: null,
 				key: 4,
-				title: "Mr. Carlos Keebler DVM",
-				label: "maximillia_farrell85@yahoo.com",
+				title: "View Identified Alerts",
+				label: "Shortcut",
 				action() {
-					router.push({ name: "Apps-Chat" })
-				}
-			},
-			{
-				iconName: null,
-				iconImage: "https://i.pravatar.cc/56?_=" + Math.random(),
-				key: 5,
-				title: "Rosie Wisozk DDS",
-				label: "susie_cummings@gmail.com",
-				action() {
-					router.push({ name: "Apps-Chat" })
-				}
-			},
-			{
-				iconName: null,
-				iconImage: "https://i.pravatar.cc/56?_=" + Math.random(),
-				key: 6,
-				title: "Craig Pollich",
-				label: "koby_mayert@gmail.com",
-				action() {
-					router.push({ name: "Apps-Chat" })
+					router.push({ name: "Alerts" })
 				}
 			}
 		]

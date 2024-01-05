@@ -1,17 +1,12 @@
 <template>
 	<div class="customers-list">
-		<div class="header mb-4 flex gap-2 justify-between">
+		<div class="header mb-4 flex gap-2 justify-between items-center">
 			<div>
 				Total:
 				<strong class="font-mono">{{ totalCustomers }}</strong>
 			</div>
 			<div>
-				<n-button size="small" type="primary" @click="showAddCustomer = true">
-					<template #icon>
-						<Icon :name="AddUserIcon" :size="14"></Icon>
-					</template>
-					Add Customer
-				</n-button>
+				<slot></slot>
 			</div>
 		</div>
 		<n-spin :show="loadingCustomers">
@@ -32,39 +27,25 @@
 				</template>
 			</div>
 		</n-spin>
-
-		<n-drawer
-			v-model:show="showAddCustomer"
-			:width="500"
-			style="max-width: 90vw"
-			:trap-focus="false"
-			display-directive="show"
-		>
-			<n-drawer-content title="Add Customer" closable :native-scrollbar="false">
-				<CustomerForm @mounted="customerFormCTX = $event" @submitted="getCustomers()" :resetOnSubmit="true" />
-			</n-drawer-content>
-		</n-drawer>
 	</div>
 </template>
 
 <script setup lang="ts">
 import { ref, onBeforeMount, computed, watch, toRefs, nextTick } from "vue"
-import { useMessage, NSpin, NEmpty, NButton, NDrawer, NDrawerContent } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
+import { useMessage, NSpin, NEmpty } from "naive-ui"
 import Api from "@/api"
-import CustomerForm from "./CustomerForm.vue"
 import CustomerItem from "./CustomerItem.vue"
 import type { Customer } from "@/types/customers.d"
 
-const props = defineProps<{ highlight: string | null | undefined }>()
-const { highlight } = toRefs(props)
+const props = defineProps<{ highlight: string | null | undefined; reload?: boolean }>()
+const { highlight, reload } = toRefs(props)
 
-const AddUserIcon = "carbon:user-follow"
+const emit = defineEmits<{
+	(e: "reloaded"): void
+}>()
 
-const customerFormCTX = ref<{ reset: () => void } | null>(null)
 const message = useMessage()
 const loadingCustomers = ref(false)
-const showAddCustomer = ref(false)
 const customersList = ref<Customer[]>([])
 
 const totalCustomers = computed<number>(() => {
@@ -88,6 +69,7 @@ function getCustomers() {
 		})
 		.finally(() => {
 			loadingCustomers.value = false
+			emit("reloaded")
 		})
 }
 
@@ -102,8 +84,10 @@ function scrollToAlert(id: string) {
 	}
 }
 
-watch(showAddCustomer, () => {
-	customerFormCTX.value?.reset()
+watch(reload, val => {
+	if (val) {
+		getCustomers()
+	}
 })
 
 watch(loadingCustomers, val => {
