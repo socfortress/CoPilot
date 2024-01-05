@@ -61,7 +61,7 @@ const formatDate = (date: string) => {
 }
 
 function gotoCustomer(code: string | number) {
-	router.push(`/customers?code=${code}`).catch(() => {})
+	router.push({ name: "Customers", query: { code } })
 }
 </script>
 

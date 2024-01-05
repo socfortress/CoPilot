@@ -60,7 +60,7 @@ function getData() {
 }
 
 function gotoCustomersPage() {
-	router.push(`/customers`).catch(() => {})
+	router.push({ name: "Customers" })
 }
 
 onBeforeMount(() => {

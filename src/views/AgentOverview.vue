@@ -143,12 +143,12 @@ function getAgent() {
 					agent.value = res.data.agents[0] || null
 				} else {
 					message.error(res.data?.message || "An error occurred. Please try again later.")
-					router.push(`/agents`).catch(() => {})
+					gotoAgents()
 				}
 			})
 			.catch(err => {
 				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-				router.push(`/agents`).catch(() => {})
+				gotoAgents()
 			})
 			.finally(() => {
 				loadingAgent.value = false
@@ -195,7 +195,7 @@ function handleDelete() {
 }
 
 function gotoAgents() {
-	router.push(`/agents`).catch(() => {})
+	router.push({ name: "Agents" })
 }
 
 onBeforeMount(() => {

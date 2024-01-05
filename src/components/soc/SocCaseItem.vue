@@ -271,7 +271,7 @@ function formatDate(timestamp: string | number | Date, utc: boolean = true): str
 }
 
 function gotoSocAlert(socId: string) {
-	router.push(`/soc/alerts?id=${socId}`).catch(() => {})
+	router.push({ name: "Soc-Alerts", query: { id: socId } })
 }
 
 function getDetails() {

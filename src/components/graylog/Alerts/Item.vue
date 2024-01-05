@@ -115,7 +115,7 @@ function formatDate(timestamp: string): string {
 }
 
 function gotoIndicesPage(index: string) {
-	router.push(`/indices?index_name=${index}`).catch(() => {})
+	router.push({ name: "Indices", query: { index_name: index } })
 }
 
 function gotoEventsPage(event_definition_id: string) {

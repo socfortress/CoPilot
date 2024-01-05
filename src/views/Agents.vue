@@ -90,7 +90,7 @@ const agentsOnline = computed(() => {
 })
 
 function gotoAgentPage(agent: Agent) {
-	router.push(`/agent/${agent.agent_id}`).catch(() => {})
+	router.push({ name: "Agent", params: { id: agent.agent_id } })
 }
 
 function getAgents() {

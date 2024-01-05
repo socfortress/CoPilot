@@ -67,7 +67,7 @@ const router = useRouter()
 const showAllAlerts = ref(false)
 
 function gotoIndicesPage(index: string) {
-	router.push(`/indices?index_name=${index}`).catch(() => {})
+	router.push({ name: "Indices", query: { index_name: index } })
 }
 </script>
 

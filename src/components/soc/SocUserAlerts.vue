@@ -35,7 +35,7 @@ const message = useMessage()
 let abortController: AbortController | null = null
 
 function gotoSocAlert(socId: string | number) {
-	router.push(`/soc/alerts?id=${socId}`).catch(() => {})
+	router.push({ name: "Soc-Alerts", query: { id: socId } })
 }
 
 function getAlerts() {

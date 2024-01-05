@@ -329,7 +329,7 @@ function updateAlert(alertUpdated: SocAlert) {
 }
 
 function gotoUsersPage(userId?: string | number) {
-	router.push(`/soc/users${userId ? "?user_id=" + userId : ""}`).catch(() => {})
+	router.push({ name: "Soc-Users", query: userId ? { user_id: userId } : {} })
 }
 
 onBeforeMount(() => {

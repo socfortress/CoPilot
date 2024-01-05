@@ -72,7 +72,7 @@ function getData() {
 }
 
 function gotoHealthcheckPage() {
-	router.push(`/healthcheck`).catch(() => {})
+	router.push({ name: "Healthcheck" })
 }
 
 onBeforeMount(() => {

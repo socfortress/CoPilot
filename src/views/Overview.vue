@@ -60,11 +60,11 @@ const page = ref()
 const cardDirection = ref<"horizontal" | "vertical">("horizontal")
 
 function gotoIndicesPage(index: IndexStats) {
-	router.push(`/indices?index_name=${index.index}`).catch(() => {})
+	router.push({ name: "Indices", query: { index_name: index.index } })
 }
 
 function gotoPipelinesPage(rule: string) {
-	router.push(`/graylog/pipelines?rule=${rule}`).catch(() => {})
+	router.push({ name: "Graylog-Pipelines", query: { rule } })
 }
 
 useResizeObserver(page, entries => {

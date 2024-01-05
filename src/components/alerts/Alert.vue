@@ -269,10 +269,10 @@ function formatDate(timestamp: string): string {
 }
 
 function gotoAgentPage(agentId: string) {
-	router.push(`/agent/${agentId}`).catch(() => {})
+	router.push({ name: "Agent", params: { id: agentId } })
 }
 function gotoCustomer(code: string | number) {
-	router.push(`/customers?code=${code}`).catch(() => {})
+	router.push({ name: "Customers", query: { code } })
 }
 </script>
 

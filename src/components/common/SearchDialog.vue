@@ -119,10 +119,6 @@ const activeItem = ref<null | string | number>(null)
 const commandIcon = ref("⌘")
 const scrollContent = ref<(ScrollbarInst & { $el: any }) | null>(null)
 
-// TODO: updated all router.push with:
-// - router.push({ name: "...", query: { key: "value" } })
-// - router.push({ name: "...", param: { key: "value" } }) for agents
-
 const groups = ref<Groups>([
 	{
 		name: "Applications",
