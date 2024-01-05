@@ -111,7 +111,7 @@ async def get_all_alerts_assigned_to_user(user_id: int) -> AlertsResponse:
         AlertsResponse: The response containing the fetched alerts assigned to the user.
     """
     logger.info(f"Fetching all alerts assigned to user {user_id}")
-    alerts = (await get_alerts()).alerts
+    alerts = (await get_alerts(request=FilterAlertsRequest(alert_owner_id=user_id,per_page=1000))).alerts
     alerts_assigned_to_user = []
     for alert in alerts:
         if alert["alert_owner_id"] == user_id:

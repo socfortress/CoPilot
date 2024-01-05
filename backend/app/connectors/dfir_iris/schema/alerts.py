@@ -34,6 +34,7 @@ class FilterAlertsRequest(BaseModel):
     page: int = Field(1, description="The page number to return.")
     sort: SortOrder = Field(SortOrder.desc, description="The sort order for the alerts.")
     alert_title: Optional[str] = Field(None, description="The title of the alert.")
+    alert_owner_id: Optional[int] = Field(None, description="The ID of the alert owner.")
 
 
 class CaseModificationHistory(BaseModel):
