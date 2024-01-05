@@ -30,7 +30,7 @@ class SortOrder(Enum):
     asc = "asc"
 
 class FilterAlertsRequest(BaseModel):
-    per_page: int = Field(100, description="The number of alerts to return per page.")
+    per_page: int = Field(1000, description="The number of alerts to return per page.")
     page: int = Field(1, description="The page number to return.")
     sort: SortOrder = Field(SortOrder.desc, description="The sort order for the alerts.")
     alert_title: Optional[str] = Field(None, description="The title of the alert.")

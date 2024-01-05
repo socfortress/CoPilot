@@ -71,6 +71,7 @@ async def get_alerts_filtered(request: FilterAlertsRequest) -> AlertsResponse:
         AlertsResponse: The response containing all alerts.
     """
     logger.info("Fetching all alerts")
+    logger.info(f"Request: {request}")
     return await get_alerts(request)
 
 

@@ -22,7 +22,7 @@ async def get_alerts(request: FilterAlertsRequest) -> AlertsResponse:
         client, alert = await initialize_client_and_alert("DFIR-IRIS")
         params = construct_params(request)
         result = await fetch_and_validate_data(client, lambda: alert.filter_alerts(**params))
-        logger.info(f"Successfully fetched alerts: {result}")
+        logger.info(f"Successfully fetched length {len(result['data']['alerts'])} alerts")
         return AlertsResponse(success=True, message="Successfully fetched alerts", alerts=result["data"]["alerts"])
     except Exception as e:
         logger.error(f"Error fetching alerts: {e}")
