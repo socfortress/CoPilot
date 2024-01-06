@@ -42,7 +42,7 @@ import type { SocAlert } from "@/types/soc/alert.d"
 import { onBeforeMount, onBeforeUnmount, ref } from "vue"
 import Api from "@/api"
 import { useMessage, NTooltip, NSpin, NModal } from "naive-ui"
-import SocAlertItem from "./SocAlertItem.vue"
+import SocAlertItem from "../SocAlerts/SocAlertItem.vue"
 import axios from "axios"
 
 const { userId } = defineProps<{

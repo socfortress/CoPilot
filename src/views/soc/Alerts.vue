@@ -1,11 +1,11 @@
 <template>
 	<div class="page">
-		<SocAlertsList :highlight="highlight" />
+		<SocAlertsFullList :highlight="highlight" />
 	</div>
 </template>
 
 <script setup lang="ts">
-import SocAlertsList from "@/components/soc/SocAlertsList.vue"
+import SocAlertsFullList from "@/components/soc/SocAlerts/SocAlertsFullList.vue"
 import { onBeforeMount, ref } from "vue"
 import { useRoute } from "vue-router"
 

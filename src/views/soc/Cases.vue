@@ -5,5 +5,5 @@
 </template>
 
 <script setup lang="ts">
-import SocCasesList from "@/components/soc/SocCasesList.vue"
+import SocCasesList from "@/components/soc/SocCases/SocCasesList.vue"
 </script>

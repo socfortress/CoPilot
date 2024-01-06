@@ -5,7 +5,7 @@
 </template>
 
 <script setup lang="ts">
-import SocUsersList from "@/components/soc/SocUsersList.vue"
+import SocUsersList from "@/components/soc/SocUsers/SocUsersList.vue"
 import { onBeforeMount, ref } from "vue"
 import { useRoute } from "vue-router"
 
