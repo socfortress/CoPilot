@@ -17,10 +17,19 @@
 		</n-input-number>
 		<n-select
 			size="small"
+			v-if="showPageSizes"
 			v-model:value="pageSize"
 			:options="pageSizesOptions"
 			:show-checkmark="false"
 			class="page-sizes"
+			:disabled="disabled"
+		/>
+		<n-select
+			size="small"
+			v-model:value="sort"
+			:options="sortOptions"
+			:show-checkmark="false"
+			class="sort"
 			:disabled="disabled"
 		/>
 	</div>
@@ -35,13 +44,19 @@ import { watch } from "vue"
 
 const page = defineModel<number>("page", { default: 1 })
 const pageSize = defineModel<number>("pageSize", { default: 10 })
+const sort = defineModel<"asc" | "desc">("sort", { default: "desc" })
 
-const props = defineProps<{ pageSizes?: number[]; disabled?: boolean }>()
-const { pageSizes, disabled } = toRefs(props)
+const props = defineProps<{ showPageSizes?: boolean; pageSizes?: number[]; disabled?: boolean }>()
+const { pageSizes, disabled, showPageSizes } = toRefs(props)
 
 const pageSizesOptions = computed(() =>
 	(pageSizes.value || [10, 25, 50, 100]).map(o => ({ label: o + " / page", value: o }))
 )
+
+const sortOptions = [
+	{ label: "Desc", value: "desc" },
+	{ label: "Asc", value: "asc" }
+]
 
 const ArrowForwardIcon = "ion:chevron-forward"
 const ArrowBackIcon = "ion:chevron-back"
@@ -60,6 +75,9 @@ watch(page, val => {
 		text-align: center;
 	}
 	.page-sizes {
+		width: auto;
+	}
+	.sort {
 		width: auto;
 	}
 }

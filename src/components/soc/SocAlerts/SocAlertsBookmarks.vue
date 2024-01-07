@@ -1,24 +1,11 @@
 <template>
 	<div class="soc-alerts-bookmarks">
 		<div class="header flex items-center">
-			<div class="info grow flex gap-5">
-				<n-popover overlap placement="bottom-start">
-					<template #trigger>
-						<div class="bg-color border-radius">
-							<n-button size="small" class="!cursor-help">
-								<template #icon>
-									<Icon :name="InfoIcon"></Icon>
-								</template>
-							</n-button>
-						</div>
-					</template>
-					<div class="flex flex-col gap-2">
-						<div class="box">
-							Bookmarked:
-							<code>{{ bookmarksList.length }}</code>
-						</div>
-					</div>
-				</n-popover>
+			<div class="info">
+				Bookmarked:
+				<code>
+					<strong>{{ bookmarksList.length }}</strong>
+				</code>
 			</div>
 		</div>
 
@@ -44,13 +31,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, toRefs } from "vue"
-import { useMessage, NSpin, NEmpty, NPopover, NButton } from "naive-ui"
+import { ref, onBeforeMount, toRefs, onMounted } from "vue"
+import { useMessage, NSpin, NEmpty } from "naive-ui"
 import Api from "@/api"
 import SocAlertItem from "./SocAlertItem.vue"
 import type { SocAlert } from "@/types/soc/alert.d"
 import type { SocUser } from "@/types/soc/user.d"
-import Icon from "@/components/common/Icon.vue"
 
 const props = defineProps<{
 	usersList?: SocUser[]
@@ -60,9 +46,13 @@ const { usersList } = toRefs(props)
 const emit = defineEmits<{
 	(e: "bookmark"): void
 	(e: "loaded", value: SocAlert[]): void
+	(
+		e: "mounted",
+		value: {
+			reload: () => void
+		}
+	): void
 }>()
-
-const InfoIcon = "carbon:information"
 
 const message = useMessage()
 const loadingBookmarks = ref(false)
@@ -97,10 +87,21 @@ function getBookmarks() {
 onBeforeMount(() => {
 	getBookmarks()
 })
+
+onMounted(() => {
+	emit("mounted", {
+		reload: () => {
+			getBookmarks()
+		}
+	})
+})
 </script>
 
 <style lang="scss" scoped>
 .soc-alerts-bookmarks {
+	.header {
+		height: 50px;
+	}
 	.list {
 		container-type: inline-size;
 		min-height: 200px;

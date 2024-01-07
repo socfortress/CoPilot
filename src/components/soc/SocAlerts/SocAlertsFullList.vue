@@ -1,31 +1,31 @@
 <template>
-	<div class="soc-alerts-list">
+	<div class="soc-alerts-list" ref="list">
 		<n-split
 			direction="horizontal"
-			:default-size="compactMode ? 0 : 0.4"
+			:default-size="splitDefault"
 			:resize-trigger-size="26"
-			:disabled="compactMode"
-			:min="compactMode ? 0 : 0.25"
-			:max="compactMode ? 1 : 0.75"
+			:min="splitMin"
+			:max="splitMax"
+			v-if="!compactMode"
 		>
-			<template #1 v-if="!compactMode">
+			<template #1>
 				<SocAlertsBookmarks
-					class="my-3"
 					:usersList="usersList"
 					@bookmark="reloadAlerts()"
 					@loaded="bookmarksList = $event"
+					@mounted="socAlertsBookmarksCTX = $event"
 				/>
 			</template>
 			<template #2>
 				<SocAlertsList
-					class="my-3"
 					:highlight="highlight"
 					:bookmarksList="bookmarksList"
 					:usersList="usersList"
 					@bookmark="reloadBookmarks()"
+					@mounted="socAlertsCTX = $event"
 				/>
 			</template>
-			<template #resize-trigger v-if="!compactMode">
+			<template #resize-trigger>
 				<div class="split-trigger">
 					<div class="split-trigger-icon">
 						<Icon :name="SplitIcon"></Icon>
@@ -33,35 +33,64 @@
 				</div>
 			</template>
 		</n-split>
+
+		<template v-else>
+			<SocAlertsList
+				:highlight="highlight"
+				:bookmarksList="bookmarksList"
+				:usersList="usersList"
+				@bookmark="reloadBookmarks()"
+				@mounted="socAlertsCTX = $event"
+			>
+				<template #header>
+					<n-button size="small">
+						<template #icon>
+							<Icon :name="StarIcon"></Icon>
+						</template>
+					</n-button>
+				</template>
+			</SocAlertsList>
+		</template>
+
+		<n-back-top :visibility-height="300"></n-back-top>
 	</div>
 </template>
 
 <script setup lang="ts">
 import { ref, onBeforeMount, toRefs } from "vue"
-import { useMessage, NSplit } from "naive-ui"
+import { useMessage, NSplit, NBackTop, NButton } from "naive-ui"
 import Api from "@/api"
 import SocAlertsBookmarks from "./SocAlertsBookmarks.vue"
 import SocAlertsList from "./SocAlertsList.vue"
 import type { SocAlert } from "@/types/soc/alert.d"
 import Icon from "@/components/common/Icon.vue"
 import type { SocUser } from "@/types/soc/user.d"
+import { useResizeObserver } from "@vueuse/core"
 
 const props = defineProps<{ highlight: string | null | undefined }>()
 const { highlight } = toRefs(props)
 
 const SplitIcon = "carbon:draggable"
+const StarIcon = "carbon:star-filled"
 
 const message = useMessage()
 const bookmarksList = ref<SocAlert[]>([])
 const usersList = ref<SocUser[]>([])
+const socAlertsBookmarksCTX = ref<{ reload: () => void } | null>(null)
+const socAlertsCTX = ref<{ reload: () => void } | null>(null)
 
-const pageSize = ref(50)
-const sort = ref<"desc" | "asc">("desc")
-const alertTitle = ref("")
+const list = ref(null)
 const compactMode = ref(false)
+const splitMin = ref(0.25)
+const splitMax = ref(0.75)
+const splitDefault = ref(0.3)
 
-function reloadBookmarks() {}
-function reloadAlerts() {}
+function reloadBookmarks() {
+	socAlertsBookmarksCTX.value?.reload()
+}
+function reloadAlerts() {
+	socAlertsCTX.value?.reload()
+}
 
 function getUsers() {
 	Api.soc
@@ -78,6 +107,16 @@ function getUsers() {
 		})
 }
 
+useResizeObserver(list, entries => {
+	const entry = entries[0]
+	const { width } = entry.contentRect
+
+	compactMode.value = width < 680
+	splitMin.value = width < 850 ? 0.5 : 0.25
+	splitMax.value = width < 850 ? 0.5 : 0.75
+	splitDefault.value = width < 850 ? 0.5 : 0.3
+})
+
 onBeforeMount(() => {
 	getUsers()
 })
@@ -85,6 +124,14 @@ onBeforeMount(() => {
 
 <style lang="scss" scoped>
 .soc-alerts-list {
+	.n-split {
+		:deep() {
+			.n-split-pane-1 {
+				min-width: 290px;
+				max-width: 500px;
+			}
+		}
+	}
 	.split-trigger {
 		height: 100%;
 		width: 3px;
@@ -96,7 +143,7 @@ onBeforeMount(() => {
 
 		.split-trigger-icon {
 			position: relative;
-			top: min(50%, 200px);
+			top: min(48%, 300px);
 			background-color: var(--border-color);
 			border-radius: var(--border-radius-small);
 			height: 20px;
@@ -113,10 +160,6 @@ onBeforeMount(() => {
 				background-color: var(--primary-color);
 			}
 		}
-	}
-	.list {
-		container-type: inline-size;
-		min-height: 200px;
 	}
 }
 </style>

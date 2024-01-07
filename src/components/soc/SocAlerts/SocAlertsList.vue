@@ -1,26 +1,17 @@
 <template>
 	<div class="soc-alerts-list">
 		<div class="header flex items-center justify-end gap-2" ref="header">
-			<PaginationIndeterminate v-model:page="page" v-model:pageSize="pageSize" :pageSizes="pageSizes" />
-
-			<!--
-				<n-select size="small" v-model:value="timerange" :options="timeOptions" class="!w-32" v-if="!compactMode" />
-				<n-popover overlap v-if="compactMode" placement="right">
-					<template #trigger>
-						<div class="bg-color border-radius">
-							<n-button size="small">
-								<template #icon>
-									<Icon :name="FilterIcon"></Icon>
-								</template>
-							</n-button>
-						</div>
-					</template>
-					<div class="mb-2">
-						<div class="text-secondary-color text-sm my-1">Time range:</div>
-						<n-select size="small" v-model:value="timerange" :options="timeOptions" class="!w-32 mb-1" />
-					</div>
-				</n-popover>
-			-->
+			<slot name="header"></slot>
+			<div class="grow">
+				<n-input v-model:value="alertTitle" size="small" placeholder="Search by title..." clearable />
+			</div>
+			<PaginationIndeterminate
+				v-model:page="page"
+				v-model:pageSize="pageSize"
+				v-model:sort="sort"
+				:pageSizes="pageSizes"
+				:showPageSizes="!compactMode"
+			/>
 		</div>
 
 		<n-spin :show="loadingAlerts">
@@ -34,6 +25,7 @@
 						:is-bookmark="isBookmarked(alert)"
 						:users="usersList"
 						:highlight="alert.alert_id.toString() === highlight"
+						show-badges-toggle
 						@bookmark="bookmark()"
 					/>
 				</template>
@@ -46,8 +38,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, watch, toRefs, nextTick, onBeforeUnmount } from "vue"
-import { useMessage, NSpin, NEmpty, NPagination, NSelect, NPopover, NButton, NInputNumber, NSplit } from "naive-ui"
+import { ref, onBeforeMount, watch, toRefs, nextTick, onBeforeUnmount, onMounted } from "vue"
+import { useMessage, NSpin, NEmpty, NInput } from "naive-ui"
 import Api from "@/api"
 import SocAlertItem from "./SocAlertItem.vue"
 import type { SocAlert } from "@/types/soc/alert.d"
@@ -55,7 +47,7 @@ import type { SocUser } from "@/types/soc/user.d"
 import type { AlertsFilter } from "@/api/soc"
 import { useResizeObserver, watchDebounced } from "@vueuse/core"
 import PaginationIndeterminate from "@/components/common/PaginationIndeterminate.vue"
-import Icon from "@/components/common/Icon.vue"
+import axios from "axios"
 
 const props = defineProps<{
 	highlight: string | null | undefined
@@ -66,6 +58,12 @@ const { highlight, bookmarksList, usersList } = toRefs(props)
 
 const emit = defineEmits<{
 	(e: "bookmark"): void
+	(
+		e: "mounted",
+		value: {
+			reload: () => void
+		}
+	): void
 }>()
 
 const message = useMessage()
@@ -120,7 +118,9 @@ function getAlerts() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			if (!axios.isCancel(err)) {
+				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			}
 		})
 		.finally(() => {
 			loadingAlerts.value = false
@@ -161,8 +161,8 @@ watch(highlight, val => {
 })
 
 watchDebounced(
-	[page, pageSize],
-	(a, b, c) => {
+	[page, pageSize, sort, alertTitle],
+	() => {
 		abortController?.abort()
 
 		setTimeout(() => {
@@ -176,7 +176,7 @@ useResizeObserver(header, entries => {
 	const entry = entries[0]
 	const { width } = entry.contentRect
 
-	if (width < 650) {
+	if (width < 500) {
 		compactMode.value = true
 		pageSize.value = pageSizes[0]
 	} else {
@@ -188,6 +188,14 @@ onBeforeMount(() => {
 	getAlerts()
 })
 
+onMounted(() => {
+	emit("mounted", {
+		reload: () => {
+			getAlerts()
+		}
+	})
+})
+
 onBeforeUnmount(() => {
 	abortController?.abort()
 })
@@ -195,6 +203,9 @@ onBeforeUnmount(() => {
 
 <style lang="scss" scoped>
 .soc-alerts-list {
+	.header {
+		height: 50px;
+	}
 	.list {
 		container-type: inline-size;
 		min-height: 200px;

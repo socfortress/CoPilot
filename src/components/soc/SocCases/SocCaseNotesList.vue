@@ -86,5 +86,6 @@ watch(requested, val => {
 
 onBeforeMount(() => {
 	getNotes()
+	abortControllerNotes?.abort()
 })
 </script>
