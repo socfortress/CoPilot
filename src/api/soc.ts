@@ -36,8 +36,11 @@ export default {
 	getAlert(alertId: string) {
 		return HttpClient.get<FlaskBaseResponse & { alert: SocAlert }>(`/soc/alerts/${alertId}`)
 	},
-	getAlertsBookmark() {
-		return HttpClient.get<FlaskBaseResponse & { bookmarked_alerts: SocAlert[] }>(`/soc/alerts/bookmark`)
+	getAlertsBookmark(signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { bookmarked_alerts: SocAlert[] }>(
+			`/soc/alerts/bookmark`,
+			signal ? { signal } : {}
+		)
 	},
 	getAlertsByUser(userId: string, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { alerts: SocAlert[] }>(

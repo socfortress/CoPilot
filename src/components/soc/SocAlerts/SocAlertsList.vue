@@ -66,6 +66,7 @@ const emit = defineEmits<{
 	): void
 }>()
 
+let reloadTimeout: NodeJS.Timeout | null = null
 const message = useMessage()
 const loadingAlerts = ref(false)
 const alertsList = ref<SocAlert[]>([])
@@ -86,7 +87,7 @@ function isBookmarked(alert: SocAlert): boolean {
 
 function bookmark() {
 	emit("bookmark")
-	getAlerts()
+	safeReload()
 }
 
 function getAlerts() {
@@ -163,11 +164,7 @@ watch(highlight, val => {
 watchDebounced(
 	[page, pageSize, sort, alertTitle],
 	() => {
-		abortController?.abort()
-
-		setTimeout(() => {
-			getAlerts()
-		}, 200)
+		safeReload()
 	},
 	{ debounce: 500 }
 )
@@ -184,6 +181,18 @@ useResizeObserver(header, entries => {
 	}
 })
 
+function safeReload() {
+	abortController?.abort()
+
+	if (reloadTimeout) {
+		clearTimeout(reloadTimeout)
+	}
+
+	reloadTimeout = setTimeout(() => {
+		getAlerts()
+	}, 200)
+}
+
 onBeforeMount(() => {
 	getAlerts()
 })
@@ -191,7 +200,7 @@ onBeforeMount(() => {
 onMounted(() => {
 	emit("mounted", {
 		reload: () => {
-			getAlerts()
+			safeReload()
 		}
 	})
 })

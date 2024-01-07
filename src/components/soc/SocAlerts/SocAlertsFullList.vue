@@ -43,13 +43,31 @@
 				@mounted="socAlertsCTX = $event"
 			>
 				<template #header>
-					<n-button size="small">
+					<n-button size="small" @click="showBookmarkedDrawer = true">
 						<template #icon>
-							<Icon :name="StarIcon"></Icon>
+							<Icon :name="StarIcon" :size="14"></Icon>
 						</template>
 					</n-button>
 				</template>
 			</SocAlertsList>
+
+			<n-drawer
+				v-model:show="showBookmarkedDrawer"
+				:width="700"
+				style="max-width: 90vw"
+				:trap-focus="false"
+				display-directive="show"
+				placement="left"
+			>
+				<n-drawer-content title="Alerts list" closable :native-scrollbar="false">
+					<SocAlertsBookmarks
+						:usersList="usersList"
+						@bookmark="reloadAlerts()"
+						@loaded="bookmarksList = $event"
+						@mounted="socAlertsBookmarksCTX = $event"
+					/>
+				</n-drawer-content>
+			</n-drawer>
 		</template>
 
 		<n-back-top :visibility-height="300"></n-back-top>
@@ -58,7 +76,7 @@
 
 <script setup lang="ts">
 import { ref, onBeforeMount, toRefs } from "vue"
-import { useMessage, NSplit, NBackTop, NButton } from "naive-ui"
+import { useMessage, NSplit, NBackTop, NButton, NDrawer, NDrawerContent } from "naive-ui"
 import Api from "@/api"
 import SocAlertsBookmarks from "./SocAlertsBookmarks.vue"
 import SocAlertsList from "./SocAlertsList.vue"
@@ -80,6 +98,7 @@ const socAlertsBookmarksCTX = ref<{ reload: () => void } | null>(null)
 const socAlertsCTX = ref<{ reload: () => void } | null>(null)
 
 const list = ref(null)
+const showBookmarkedDrawer = ref(false)
 const compactMode = ref(false)
 const splitMin = ref(0.25)
 const splitMax = ref(0.75)
@@ -115,6 +134,10 @@ useResizeObserver(list, entries => {
 	splitMin.value = width < 850 ? 0.5 : 0.25
 	splitMax.value = width < 850 ? 0.5 : 0.75
 	splitDefault.value = width < 850 ? 0.5 : 0.3
+
+	if (width > 680) {
+		showBookmarkedDrawer.value = false
+	}
 })
 
 onBeforeMount(() => {

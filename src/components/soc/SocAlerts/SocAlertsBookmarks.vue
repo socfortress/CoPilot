@@ -31,12 +31,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount, toRefs, onMounted } from "vue"
+import { ref, onBeforeMount, toRefs, onMounted, onBeforeUnmount } from "vue"
 import { useMessage, NSpin, NEmpty } from "naive-ui"
 import Api from "@/api"
 import SocAlertItem from "./SocAlertItem.vue"
 import type { SocAlert } from "@/types/soc/alert.d"
 import type { SocUser } from "@/types/soc/user.d"
+import axios from "axios"
 
 const props = defineProps<{
 	usersList?: SocUser[]
@@ -54,20 +55,25 @@ const emit = defineEmits<{
 	): void
 }>()
 
+let reloadTimeout: NodeJS.Timeout | null = null
 const message = useMessage()
 const loadingBookmarks = ref(false)
 const bookmarksList = ref<SocAlert[]>([])
 
+let abortController: AbortController | null = null
+
 function bookmark() {
 	emit("bookmark")
-	getBookmarks()
+	safeReload()
 }
 
 function getBookmarks() {
 	loadingBookmarks.value = true
 
+	abortController = new AbortController()
+
 	Api.soc
-		.getAlertsBookmark()
+		.getAlertsBookmark(abortController.signal)
 		.then(res => {
 			if (res.data.success) {
 				bookmarksList.value = res.data.bookmarked_alerts || []
@@ -77,11 +83,25 @@ function getBookmarks() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			if (!axios.isCancel(err)) {
+				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			}
 		})
 		.finally(() => {
 			loadingBookmarks.value = false
 		})
+}
+
+function safeReload() {
+	abortController?.abort()
+
+	if (reloadTimeout) {
+		clearTimeout(reloadTimeout)
+	}
+
+	reloadTimeout = setTimeout(() => {
+		getBookmarks()
+	}, 200)
 }
 
 onBeforeMount(() => {
@@ -91,9 +111,13 @@ onBeforeMount(() => {
 onMounted(() => {
 	emit("mounted", {
 		reload: () => {
-			getBookmarks()
+			safeReload()
 		}
 	})
+})
+
+onBeforeUnmount(() => {
+	abortController?.abort()
 })
 </script>
 

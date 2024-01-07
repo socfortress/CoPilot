@@ -58,79 +58,83 @@
 					</n-button>
 				</div>
 			</div>
-			<div
-				class="show-badges-toggle flex items-center gap-2"
-				v-if="showBadgesToggle"
-				@click="showBadges = !showBadges"
-			>
-				{{ showBadges ? "Less info" : "More info" }}
-				<span class="transition-transform flex items-center" :class="{ 'rotate-90': showBadges }">
-					<Icon :name="ChevronIcon" :size="14"></Icon>
-				</span>
-			</div>
-			<n-collapse-transition :show="!showBadgesToggle || showBadges">
-				<div class="badges-box flex flex-wrap items-center gap-3 mt-4">
-					<n-tooltip placement="top-start" trigger="hover">
-						<template #trigger>
-							<Badge type="splitted" hint-cursor>
-								<template #iconLeft>
-									<Icon :name="StatusIcon" :size="14"></Icon>
-								</template>
-								<template #label>Status</template>
-								<template #value>{{ alert.status?.status_name || "-" }}</template>
-							</Badge>
-						</template>
-						{{ alert.status.status_description }}
-					</n-tooltip>
-					<Badge type="splitted" :color="alert.severity?.severity_id === 5 ? 'danger' : undefined">
-						<template #iconLeft>
-							<Icon :name="SeverityIcon" :size="13"></Icon>
-						</template>
-						<template #label>Severity</template>
-						<template #value>{{ alert.severity?.severity_name || "-" }}</template>
-					</Badge>
-					<Badge type="splitted" class="hide-on-small">
-						<template #iconLeft>
-							<Icon :name="SourceIcon" :size="13"></Icon>
-						</template>
-						<template #label>Source</template>
-						<template #value>{{ alert.alert_source || "-" }}</template>
-					</Badge>
-					<Badge type="splitted" class="hide-on-small">
-						<template #iconLeft>
-							<Icon :name="CustomerIcon" :size="13"></Icon>
-						</template>
-						<template #label>Customer</template>
-						<template #value>{{ alert.customer?.customer_name || "-" }}</template>
-					</Badge>
 
-					<SocAssignUser :alert="alert" :users="users" v-slot="{ loading }" @updated="updateAlert">
-						<Badge type="active" class="cursor-pointer">
-							<template #iconLeft>
-								<n-spin :size="16" :show="loading">
-									<Icon :name="OwnerIcon" :size="16"></Icon>
-								</n-spin>
-							</template>
-							<template #label>Owner</template>
-							<template #value>{{ ownerName || "n/d" }}</template>
-						</Badge>
-					</SocAssignUser>
-
-					<Badge
-						v-if="alert.alert_source_link"
-						type="active"
-						:href="alert.alert_source_link"
-						target="_blank"
-						alt="Source link"
-						rel="nofollow noopener noreferrer"
-					>
-						<template #iconRight>
-							<Icon :name="LinkIcon" :size="14"></Icon>
-						</template>
-						<template #label>Source link</template>
-					</Badge>
+			<div>
+				<div
+					class="show-badges-toggle flex items-center gap-2"
+					v-if="showBadgesToggle"
+					@click="showBadges = !showBadges"
+				>
+					{{ showBadges ? "Less info" : "More info" }}
+					<span class="transition-transform flex items-center" :class="{ 'rotate-90': showBadges }">
+						<Icon :name="ChevronIcon" :size="14"></Icon>
+					</span>
 				</div>
-			</n-collapse-transition>
+				<n-collapse-transition :show="!showBadgesToggle || showBadges">
+					<div class="badges-box flex flex-wrap items-center gap-3 mt-3">
+						<n-tooltip placement="top-start" trigger="hover">
+							<template #trigger>
+								<Badge type="splitted" hint-cursor>
+									<template #iconLeft>
+										<Icon :name="StatusIcon" :size="14"></Icon>
+									</template>
+									<template #label>Status</template>
+									<template #value>{{ alert.status?.status_name || "-" }}</template>
+								</Badge>
+							</template>
+							{{ alert.status.status_description }}
+						</n-tooltip>
+						<Badge type="splitted" :color="alert.severity?.severity_id === 5 ? 'danger' : undefined">
+							<template #iconLeft>
+								<Icon :name="SeverityIcon" :size="13"></Icon>
+							</template>
+							<template #label>Severity</template>
+							<template #value>{{ alert.severity?.severity_name || "-" }}</template>
+						</Badge>
+						<Badge type="splitted" class="hide-on-small">
+							<template #iconLeft>
+								<Icon :name="SourceIcon" :size="13"></Icon>
+							</template>
+							<template #label>Source</template>
+							<template #value>{{ alert.alert_source || "-" }}</template>
+						</Badge>
+						<Badge type="splitted" class="hide-on-small">
+							<template #iconLeft>
+								<Icon :name="CustomerIcon" :size="13"></Icon>
+							</template>
+							<template #label>Customer</template>
+							<template #value>{{ alert.customer?.customer_name || "-" }}</template>
+						</Badge>
+
+						<SocAssignUser :alert="alert" :users="users" v-slot="{ loading }" @updated="updateAlert">
+							<Badge type="active" class="cursor-pointer">
+								<template #iconLeft>
+									<n-spin :size="16" :show="loading">
+										<Icon :name="OwnerIcon" :size="16"></Icon>
+									</n-spin>
+								</template>
+								<template #label>Owner</template>
+								<template #value>{{ ownerName || "n/d" }}</template>
+							</Badge>
+						</SocAssignUser>
+
+						<Badge
+							v-if="alert.alert_source_link"
+							type="active"
+							:href="alert.alert_source_link"
+							target="_blank"
+							alt="Source link"
+							rel="nofollow noopener noreferrer"
+						>
+							<template #iconRight>
+								<Icon :name="LinkIcon" :size="14"></Icon>
+							</template>
+							<template #label>Source link</template>
+						</Badge>
+					</div>
+				</n-collapse-transition>
+			</div>
+
 			<div class="footer-box flex justify-between items-center gap-4">
 				<div class="actions" v-if="!hideSocCaseAction">
 					<n-button v-if="caseId" type="primary" secondary size="small" @click="openSocCase()">
