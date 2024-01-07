@@ -10,8 +10,7 @@ import { NMenu } from "naive-ui"
 import { useThemeStore } from "@/stores/theme"
 import { renderIcon } from "@/utils"
 
-const BuyIcon = "carbon:shopping-cart"
-const DocsIcon = "ion:book-outline"
+const ContactIcon = "ic:outline-alternate-email"
 
 defineOptions({
 	name: "SidebarFooter"
@@ -31,28 +30,14 @@ const menuOptions = ref([
 			h(
 				"a",
 				{
-					href: "https://pinx-docs.vercel.app/",
+					href: "https://www.socfortress.co/contact_form.html",
 					target: "_blank",
 					rel: "noopenner noreferrer"
 				},
-				"Documentation"
+				"Contact SOCFortress"
 			),
-		key: "documentation",
-		icon: renderIcon(DocsIcon)
-	},
-	{
-		label: () =>
-			h(
-				"a",
-				{
-					href: "https://themeforest.net/item/pinx-vuejs-admin-template/47799543",
-					target: "_blank",
-					rel: "noopenner noreferrer"
-				},
-				"Buy now"
-			),
-		key: "buy-now",
-		icon: renderIcon(BuyIcon)
+		key: "contact-socfortress",
+		icon: renderIcon(ContactIcon)
 	}
 ])
 
