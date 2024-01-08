@@ -47,7 +47,7 @@
 									</strong>
 								</td>
 								<td style="width: 170px">
-									<div class="flex justify-end">
+									<div class="flex justify-end items-center gap-3">
 										<!--If the connector is not already configured then display the configure button -->
 										<n-button
 											type="primary"
