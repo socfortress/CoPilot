@@ -210,6 +210,19 @@ class ConnectorServices:
                 service_instance = ServiceClass()
                 # If verify_authentication is an async function, you will need to await it
                 connector_response = await service_instance.verify_authentication(connector_response)
+                # If the connector is verified, update the connector record in the database
+                if connector_response['connectionSuccessful']:
+                    connector.connector_verified = True
+                    connector.connector_last_updated = datetime.now()
+                    session.add(connector)
+                    await session.commit()
+                else:
+                    # If the connector is not verified, set the connector_verified field to False
+                    connector.connector_verified = False
+                    connector.connector_last_updated = datetime.now()
+                    session.add(connector)
+                    await session.commit()
+
             else:
                 logger.error(f"Connector type {connector_response.connector_name} is not supported")
                 return None
@@ -266,6 +279,7 @@ class ConnectorServices:
             logger.exception(f"Failed to update connector: {e}")
             session.rollback()
             return Exception(f"Failed to update connector: {e}")
+
 
     @staticmethod
     def allowed_file(filename):
