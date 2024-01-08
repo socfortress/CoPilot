@@ -48,7 +48,7 @@
 					</div>
 				</div>
 				<div class="actions flex flex-col gap-2 justify-end" v-if="!hideSocCaseAction">
-					<n-button v-if="caseId" type="primary" secondary @click="openSocCase()">
+					<n-button v-if="caseId" type="success" secondary @click="openSocCase()">
 						<template #icon><Icon :name="ViewIcon"></Icon></template>
 						View SOC Case
 					</n-button>
@@ -137,7 +137,7 @@
 
 			<div class="footer-box flex justify-between items-center gap-4">
 				<div class="actions" v-if="!hideSocCaseAction">
-					<n-button v-if="caseId" type="primary" secondary size="small" @click="openSocCase()">
+					<n-button v-if="caseId" type="success" secondary size="small" @click="openSocCase()">
 						<template #icon><Icon :name="ViewIcon"></Icon></template>
 						View SOC Case
 					</n-button>

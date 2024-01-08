@@ -141,7 +141,7 @@ function formatDatetime(date: Date | string) {
 		&.success {
 			.icon-box {
 				.n-icon {
-					background-color: var(--primary-005-color);
+					background-color: var(--success-005-color);
 					color: var(--success-color);
 				}
 			}

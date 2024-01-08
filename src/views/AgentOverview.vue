@@ -264,8 +264,8 @@ onBeforeMount(() => {
 			}
 			.online-badge,
 			.quarantined-badge {
-				border: 2px solid var(--primary-color);
-				color: var(--primary-color);
+				border: 2px solid var(--success-color);
+				color: var(--success-color);
 				font-weight: bold;
 				border-radius: var(--border-radius);
 				@apply text-xs py-1 px-2;

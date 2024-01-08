@@ -47,9 +47,9 @@ const { type, hintCursor, pointCursor, color } = defineProps<{
 	}
 
 	&.active {
-		color: var(--primary-color);
-		background-color: var(--primary-005-color);
-		border-color: var(--primary-color);
+		color: var(--success-color);
+		background-color: var(--success-005-color);
+		border-color: var(--success-color);
 	}
 
 	&.cursor {

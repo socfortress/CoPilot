@@ -188,8 +188,8 @@ function toggleCritical(agentId: string, criticalStatus: boolean) {
 
 					&.online {
 						padding: 0px 15px;
-						color: var(--primary-color);
-						border-color: var(--primary-color);
+						color: var(--success-color);
+						border-color: var(--success-color);
 					}
 				}
 
