@@ -13,42 +13,51 @@
 							<tr>
 								<th scope="col">Connector Name</th>
 								<th scope="col">Connector Description</th>
-								<th scope="col">Connector Supports</th>
-								<th scope="col">Connector Configured</th>
-								<th scope="col">Connector Verified</th>
-								<th scope="col">Connector Options</th>
+								<th scope="col" style="width: 190px" class="!text-center">Connector Configured</th>
+								<th scope="col" style="width: 170px" class="!text-center">Connector Verified</th>
+								<th scope="col" style="width: 170px" class="!text-right">Connector Options</th>
 							</tr>
 						</thead>
 						<tbody>
 							<tr v-for="connector in connectors" :key="connector.id">
 								<!-- Display the connector details in the table -->
 								<td>{{ connector.connector_name }}</td>
-								<td>{{ connector.connector_description }}</td>
-								<td>{{ connector.connector_supports }}</td>
-								<td>
-									<n-button type="primary" v-if="connector.connector_configured">True</n-button>
-									<n-button type="info" v-else>False</n-button>
+								<td>{{ connector.connector_description || "-" }}</td>
+								<td style="width: 190px" class="text-center">
+									<strong
+										class="flag-field"
+										:class="{
+											success: connector.connector_configured,
+											warning: !connector.connector_configured
+										}"
+									>
+										{{ connector.connector_configured ? "Yes" : "No" }}
+									</strong>
 								</td>
 								<!-- Show the connector verified which is in the `connector` table -->
-								<td>
-									<n-button type="success" v-if="connector.connector_verified">True</n-button>
-									<n-button type="error" v-else>False</n-button>
+								<td style="width: 170px" class="text-center">
+									<strong
+										class="flag-field"
+										:class="{
+											success: connector.connector_verified,
+											warning: !connector.connector_verified
+										}"
+									>
+										{{ connector.connector_verified ? "Yes" : "No" }}
+									</strong>
 								</td>
-								<td>
-									<div class="btn-group" role="group">
+								<td style="width: 170px">
+									<div class="flex justify-end">
 										<!--If the connector is not already configured then display the configure button -->
 										<n-button
 											type="primary"
-											round
 											v-if="!connector.connector_configured"
 											@click="openConfigDialog(connector)"
 										>
 											Configure
 										</n-button>
 
-										<n-button type="warning" round v-else @click="openConfigDialog(connector)">
-											Update
-										</n-button>
+										<n-button v-else @click="openConfigDialog(connector)">Update</n-button>
 										<!--<button type="button" class="btn btn-info btn-sm" @click="deleteConnector(connector)">Delete</button>-->
 									</div>
 								</td>
@@ -83,24 +92,8 @@ import { NScrollbar, NSpin, NModal, NTable, NButton, NCard } from "naive-ui"
 const connectors = ref<Connector[]>([])
 const currentConnector = ref<Connector | null>(null)
 
-// Configure Modal
-const isConfigureModalActive = ref(false)
-const isConfigureModalFileActive = ref(false)
-
-// Update Modal
-const isUpdateModalActive = ref(false)
-
 const loading = ref(false)
 const showConfigDialog = ref(false)
-
-const successMessage = ref("")
-const errorMessage = ref("")
-const connectorForm = ref({
-	connector_url: "",
-	username: "",
-	password: "",
-	connector_api_key: ""
-})
 
 function openConfigDialog(connector: Connector) {
 	currentConnector.value = connector
@@ -135,3 +128,22 @@ onBeforeMount(() => {
 	getConnectors()
 })
 </script>
+
+<style scoped lang="scss">
+.table-box {
+	.flag-field {
+		&.success {
+			color: var(--success-color);
+		}
+		&.warning {
+			color: var(--warning-color);
+		}
+	}
+
+	tr:hover {
+		td {
+			background-color: var(--primary-005-color);
+		}
+	}
+}
+</style>
