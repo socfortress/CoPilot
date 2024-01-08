@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field, root_validator
 from typing import List, Optional
 from fastapi import HTTPException
+from loguru import logger
 
 class FlowSpecParameter(BaseModel):
     key: str
@@ -40,7 +41,8 @@ class FlowRequest(BaseModel):
                     validated_spec = FlowSpec(**spec)
                     validated_specs.append(validated_spec)
                 except Exception as e:
-                    raise HTTPException(status_code=400, detail=f"Failed to validate spec: {e}")
+                    #raise HTTPException(status_code=400, detail=f"Failed to validate spec: {e}")
+                    logger.error(f"Failed to validate spec: {e}")
             values['specs'] = validated_specs
         return values
 
