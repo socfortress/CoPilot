@@ -198,13 +198,38 @@ onBeforeMount(() => {
 			}
 
 			.pagination-wrapper {
+				--size: 10px;
 				position: absolute;
 				bottom: 0;
 				right: 0;
 				background-color: var(--bg-body);
-				padding-left: 10px;
-				padding-top: 10px;
-				border-top-left-radius: var(--border-radius);
+				padding-left: var(--size);
+				padding-top: var(--size);
+				border-top-left-radius: var(--size);
+
+				&::before,
+				&::after {
+					content: "";
+					position: absolute;
+					width: var(--size);
+					height: var(--size);
+					left: calc(var(--size) * -1);
+					display: block;
+					bottom: 0px;
+					z-index: 1;
+					background-image: radial-gradient(
+						circle at 0 0,
+						rgba(0, 0, 0, 0) calc(var(--size) - 1px),
+						var(--bg-body) calc(var(--size) + 0px)
+					);
+				}
+
+				&::after {
+					bottom: initial;
+					left: initial;
+					top: calc(var(--size) * -1);
+					right: 0;
+				}
 			}
 		}
 
