@@ -2,7 +2,7 @@ from typing import List
 from typing import Optional
 
 from pydantic import BaseModel
-from pydantic import Field
+from pydantic import Field, validator
 
 
 class RuleDisable(BaseModel):
@@ -44,17 +44,11 @@ class AllDisabledRuleResponse(BaseModel):
 
 
 class RuleExclude(BaseModel):
-    rule_value: str = Field(
-        ...,
-        description="The value of the field trying to be exclude",
-        example="C:\\Windows\\ServiceState\\EventLog\\Data\\lastalive1.dat",
-    )
     input_value: str = Field(
         ...,
         description="The proposed value of the field trying to be exclude that would result in an exclusiong",
-        example="C:\\\\Windows\\\\ServiceState\\\\EventLog\\\\Data\\\\lastalive1\.dat",
+        example="C:\\Windows\\ServiceState\\EventLog\\Data\\lastalive1.dat",
     )
-
 
 class RuleExcludeResponse(BaseModel):
     success: bool
