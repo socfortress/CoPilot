@@ -94,3 +94,7 @@ class FlowResponse(BaseModel):
     results: List[FlowClientSession]
     success: bool
     message: str
+
+class RetrieveFlowRequest(BaseModel):
+    client_id: str
+    flow_id: str
