@@ -62,7 +62,7 @@ async def get_flow(retrieve_flow_request: RetrieveFlowRequest):
     logger.info("Fetching artifacts from Velociraptor")
     velociraptor_service = await UniversalService.create("Velociraptor")
     query = create_query(
-            f"SELECT * FROM flow_results(client_id='{retrieve_flow_request.client_id}', flow_id='{retrieve_flow_request.flow_id}')",
+            f"SELECT * FROM flow_results(client_id='{retrieve_flow_request.client_id}', flow_id='{retrieve_flow_request.session_id}')",
         )
     flow_results = velociraptor_service.execute_query(query)
     logger.info(f"flow_results: {flow_results}")

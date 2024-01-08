@@ -102,5 +102,5 @@ async def retrieve_flow(retrieve_flow_request: RetrieveFlowRequest) -> CollectAr
     Returns:
         CollectArtifactResponse: The response containing the retrieved flows.
     """
-    logger.info(f"Fetching flow for flow_id {retrieve_flow_request.flow_id}")
+    logger.info(f"Fetching flow for flow_id {retrieve_flow_request.session_id}")
     return await get_flow(retrieve_flow_request)

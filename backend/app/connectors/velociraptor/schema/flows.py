@@ -97,4 +97,4 @@ class FlowResponse(BaseModel):
 
 class RetrieveFlowRequest(BaseModel):
     client_id: str
-    flow_id: str
+    session_id: str
