@@ -28,17 +28,9 @@
 
 .page-wrapped {
 	height: calc(100svh - var(--toolbar-height) - var(--view-padding) - (var(--view-padding) / 2));
-
-	&.layout-HorizontalNav {
-		height: calc(100svh - var(--toolbar-height) - var(--view-padding) - var(--header-bar-height));
-	}
 }
 .page-min-wrapped {
 	min-height: calc(100svh - var(--toolbar-height) - var(--view-padding) - (var(--view-padding) / 2));
-
-	&.layout-HorizontalNav {
-		min-height: calc(100svh - var(--toolbar-height) - var(--view-padding) - var(--header-bar-height));
-	}
 }
 
 .page {

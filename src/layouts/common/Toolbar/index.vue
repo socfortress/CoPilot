@@ -102,7 +102,7 @@ onMounted(() => {
 			gap: 14px;
 		}
 
-		@media (max-width: 1400px) {
+		@media (max-width: 1250px) {
 			.pinned-pages {
 				display: none;
 			}

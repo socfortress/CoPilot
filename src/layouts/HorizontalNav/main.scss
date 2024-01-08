@@ -1,0 +1,16 @@
+@import "./variables";
+
+.page-wrapped {
+	@media (min-width: calc($sidebar-bp + 1px)) {
+		&.layout-HorizontalNav {
+			height: calc(100svh - var(--toolbar-height) - var(--view-padding) - var(--header-bar-height));
+		}
+	}
+}
+.page-min-wrapped {
+	@media (min-width: calc($sidebar-bp + 1px)) {
+		&.layout-HorizontalNav {
+			min-height: calc(100svh - var(--toolbar-height) - var(--view-padding) - var(--header-bar-height));
+		}
+	}
+}
