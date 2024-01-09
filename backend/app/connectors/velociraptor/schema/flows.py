@@ -98,3 +98,9 @@ class FlowResponse(BaseModel):
 class RetrieveFlowRequest(BaseModel):
     client_id: str
     session_id: str
+
+    @root_validator(pre=True)
+    def validate_session_id(cls, values):
+        if 'session_id' in values and values['session_id'] == "":
+            raise HTTPException(status_code=400, detail="The session_id cannot be an empty string")
+        return values
