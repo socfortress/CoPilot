@@ -10,12 +10,12 @@
 		</div>
 		<div class="list my-3">
 			<template v-if="collectList.length">
-				<AgentFlowCollectItem
+				<CollectItem
 					v-for="item of collectList"
-					:key="item.id"
+					:key="item.___id"
 					:collect="item"
 					embedded
-					class="mb-2 item-appear item-appear-bottom item-appear-005"
+					class="mb-4 item-appear item-appear-bottom item-appear-005"
 				/>
 			</template>
 			<template v-else>
@@ -28,13 +28,13 @@
 <script setup lang="ts">
 import { ref, onBeforeMount } from "vue"
 import { useMessage, NSpin, NEmpty } from "naive-ui"
-import AgentFlowCollectItem from "./AgentFlowCollectItem.vue"
+import CollectItem from "@/components/artifacts/CollectItem.vue"
 import Api from "@/api"
 import type { CollectResult, FlowResult } from "@/types/flow.d"
 import { nanoid } from "nanoid"
 
 interface CollectResultExt extends CollectResult {
-	id?: string
+	___id?: string
 }
 
 const { flow } = defineProps<{
@@ -52,8 +52,8 @@ function getData() {
 		.retrieve(flow.client_id, flow.session_id)
 		.then(res => {
 			if (res.data.success) {
-				collectList.value = ((res.data.results as CollectResultExt[]) || []).map(o => {
-					o.id = nanoid()
+				collectList.value = (res.data.results || []).map(o => {
+					o.___id = nanoid()
 					return o
 				})
 			} else {

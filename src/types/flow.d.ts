@@ -75,16 +75,7 @@ export interface FlowRequestSpecs {
 }
 
 export interface CollectResult {
-	Pid: number
-	Name: string
-	Family: IPFamily
-	Type: ConnectionType
-	Status: ConnectionStatus
-	"Laddr.IP": string
-	"Laddr.Port": number
-	"Raddr.IP": string
-	"Raddr.Port": number
-	Timestamp: string
+	[key: string]: any
 }
 
 export enum IPFamily {
