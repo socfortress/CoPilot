@@ -27,6 +27,7 @@ from app.connectors.velociraptor.utils.universal import verify_velociraptor_conn
 from app.connectors.wazuh_indexer.utils.universal import verify_wazuh_indexer_connection
 from app.connectors.wazuh_manager.utils.universal import verify_wazuh_manager_connection
 from app.threat_intel.services.socfortress import verifiy_socfortress_threat_intel_connector
+from app.integrations.ask_socfortress.services.ask_socfortress import verify_ask_socfortress_connector
 
 # from app.db.db_session import engine  # Import the shared engine
 from app.db.db_session import get_session
@@ -113,6 +114,11 @@ class SocfortressThreatIntelService(ConnectorServiceInterface):
     async def verify_authentication(self, connector: ConnectorResponse) -> Optional[ConnectorResponse]:
         return await verifiy_socfortress_threat_intel_connector(connector.connector_name)
 
+# ASK SOCFortress Service
+class AskSocfortressService(ConnectorServiceInterface):
+    async def verify_authentication(self, connector: ConnectorResponse) -> Optional[ConnectorResponse]:
+        return await verify_ask_socfortress_connector(connector.connector_name)
+
 
 # Factory function to create a service instance based on connector name
 def get_connector_service(connector_name: str) -> Type[ConnectorServiceInterface]:
@@ -138,6 +144,7 @@ def get_connector_service(connector_name: str) -> Type[ConnectorServiceInterface
         "Grafana": GrafanaService,
         "Wazuh Worker Provisioning": WazuhWorkerProvisioningService,
         "SocfortressThreatIntel": SocfortressThreatIntelService,
+        "AskSocfortress": AskSocfortressService,
     }
     return service_map.get(connector_name, None)
 

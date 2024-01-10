@@ -38,7 +38,7 @@ async def get_socfortress_threat_intel_attributes(column_name: str, session: Asy
 
 async def verify_socfortress_threat_intel_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Verifies the AskSocFortress credentials.
+    Verifies the SOCFortress Threat Intel credentials.
 
     Args:
         attributes (Dict[str, Any]): The connector attributes.
@@ -47,13 +47,13 @@ async def verify_socfortress_threat_intel_credentials(attributes: Dict[str, Any]
         Dict[str, Any]: The connector attributes.
 
     Raises:
-        HTTPException: Raised if the AskSocFortress credentials are invalid.
+        HTTPException: Raised if the SOCFortress Threat Intel credentials are invalid.
     """
     api_key = attributes.get("connector_api_key", None)
     url = attributes.get("connector_url", None)
     if api_key is None or url is None:
-        logger.error("No AskSocFortress credentials found in the database")
-        raise HTTPException(status_code=500, detail="AskSocFortress credentials not found in the database")
+        logger.error("No SOCFortress Threat Intel credentials found in the database")
+        raise HTTPException(status_code=500, detail="SOCFortress Threat Intel credentials not found in the database")
     return attributes
 
 async def verifiy_socfortress_threat_intel_connector(connector_name: str) -> str:
