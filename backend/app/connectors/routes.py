@@ -137,6 +137,7 @@ async def update_connector(
     """
     updated_connector = await ConnectorServices.update_connector_by_id(connector_id, connector, session=session)
     if updated_connector is not None:
+        await ConnectorServices.verify_connector_by_id(connector_id, session=session)
         return {"connector": updated_connector, "success": True, "message": "Connector updated successfully"}
     else:
         raise HTTPException(status_code=404, detail=f"No connector found for ID: {connector_id}".format(connector_id=connector_id))
