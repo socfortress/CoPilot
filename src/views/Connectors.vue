@@ -36,28 +36,35 @@
 								</td>
 								<!-- Show the connector verified which is in the `connector` table -->
 								<td style="width: 170px" class="text-center">
-									<strong
-										class="flag-field"
-										:class="{
-											success: connector.connector_verified,
-											warning: !connector.connector_verified
-										}"
+									<strong v-if="connector.connector_verified" class="flag-field success">Yes</strong>
+									<n-button
+										type="primary"
+										v-else
+										@click="verify(connector)"
+										:loading="connector.loading"
 									>
-										{{ connector.connector_verified ? "Yes" : "No" }}
-									</strong>
+										Verify
+									</n-button>
 								</td>
 								<td style="width: 170px">
 									<div class="flex justify-end items-center gap-3">
 										<!--If the connector is not already configured then display the configure button -->
 										<n-button
 											type="primary"
+											:disabled="connector.loading"
 											v-if="!connector.connector_configured"
 											@click="openConfigDialog(connector)"
 										>
 											Configure
 										</n-button>
 
-										<n-button v-else @click="openConfigDialog(connector)">Update</n-button>
+										<n-button
+											v-else
+											@click="openConfigDialog(connector)"
+											:disabled="connector.loading"
+										>
+											Update
+										</n-button>
 										<!--<button type="button" class="btn btn-info btn-sm" @click="deleteConnector(connector)">Delete</button>-->
 									</div>
 								</td>
@@ -87,13 +94,18 @@ import Api from "@/api"
 import { onBeforeMount, ref } from "vue"
 import ConfigForm from "@/components/connectors/ConfigForm"
 import { type Connector } from "@/types/connectors.d"
-import { NScrollbar, NSpin, NModal, NTable, NButton, NCard } from "naive-ui"
+import { NScrollbar, NSpin, NModal, NTable, NButton, NCard, useMessage } from "naive-ui"
 
-const connectors = ref<Connector[]>([])
+interface ConnectorExt extends Connector {
+	loading?: boolean
+}
+
+const connectors = ref<ConnectorExt[]>([])
 const currentConnector = ref<Connector | null>(null)
 
 const loading = ref(false)
 const showConfigDialog = ref(false)
+const message = useMessage()
 
 function openConfigDialog(connector: Connector) {
 	currentConnector.value = connector
@@ -114,13 +126,34 @@ function getConnectors() {
 	Api.connectors
 		.getAll()
 		.then(res => {
-			connectors.value = res.data.connectors
+			if (res.data.success) {
+				connectors.value = res.data.connectors
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
 		})
 		.catch(err => {
-			console.error(err)
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loading.value = false
+		})
+}
+
+function verify(connector: ConnectorExt) {
+	connector.loading = true
+
+	Api.connectors
+		.verify(connector.id)
+		.then(res => {
+			message.success(res.data?.message || "Connector was successfully verified.")
+			getConnectors()
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			connector.loading = false
 		})
 }
 
