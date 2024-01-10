@@ -122,19 +122,27 @@
 						/>
 					</div>
 				</n-tab-pane>
+				<n-tab-pane name="Collect" tab="Collect" display-directive="show:lazy">
+					<n-scrollbar style="max-height: 430px" trigger="none">
+						<div class="px-7">
+							<AgentFlowCollectList :flow="flow" />
+						</div>
+					</n-scrollbar>
+				</n-tab-pane>
 			</n-tabs>
 		</n-modal>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { NPopover, NModal, NTabs, NTabPane, NEmpty } from "naive-ui"
+import { NPopover, NModal, NTabs, NTabPane, NEmpty, NScrollbar } from "naive-ui"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
 import type { FlowResult } from "@/types/flow.d"
 import Icon from "@/components/common/Icon.vue"
 import AgentFlowTimeline from "./AgentFlowTimeline.vue"
 import AgentFlowQueryStat from "./AgentFlowQueryStat.vue"
+import AgentFlowCollectList from "./AgentFlowCollectList.vue"
 import KVCard from "@/components/common/KVCard.vue"
 import { computed, ref } from "vue"
 import _pick from "lodash/pick"
