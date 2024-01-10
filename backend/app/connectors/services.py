@@ -26,6 +26,7 @@ from app.connectors.sublime.utils.universal import verify_sublime_connection
 from app.connectors.velociraptor.utils.universal import verify_velociraptor_connection
 from app.connectors.wazuh_indexer.utils.universal import verify_wazuh_indexer_connection
 from app.connectors.wazuh_manager.utils.universal import verify_wazuh_manager_connection
+from app.threat_intel.services.socfortress import verifiy_socfortress_threat_intel_connector
 
 # from app.db.db_session import engine  # Import the shared engine
 from app.db.db_session import get_session
@@ -107,6 +108,11 @@ class WazuhWorkerProvisioningService(ConnectorServiceInterface):
     async def verify_authentication(self, connector: ConnectorResponse) -> Optional[ConnectorResponse]:
         return await verify_wazuh_worker_provisioning_connection(connector.connector_name)
 
+# SOCFortress Threat Intel Service
+class SocfortressThreatIntelService(ConnectorServiceInterface):
+    async def verify_authentication(self, connector: ConnectorResponse) -> Optional[ConnectorResponse]:
+        return await verifiy_socfortress_threat_intel_connector(connector.connector_name)
+
 
 # Factory function to create a service instance based on connector name
 def get_connector_service(connector_name: str) -> Type[ConnectorServiceInterface]:
@@ -131,6 +137,7 @@ def get_connector_service(connector_name: str) -> Type[ConnectorServiceInterface
         "InfluxDB": InfluxDBService,
         "Grafana": GrafanaService,
         "Wazuh Worker Provisioning": WazuhWorkerProvisioningService,
+        "SocfortressThreatIntel": SocfortressThreatIntelService,
     }
     return service_map.get(connector_name, None)
 

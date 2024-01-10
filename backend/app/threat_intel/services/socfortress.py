@@ -1,12 +1,17 @@
 import httpx
 from fastapi import HTTPException
 from loguru import logger
+from typing import Any
+from typing import Dict
+from typing import Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.threat_intel.schema.socfortress import IoCMapping
 from app.threat_intel.schema.socfortress import IoCResponse
 from app.threat_intel.schema.socfortress import SocfortressThreatIntelRequest
+from app.connectors.utils import get_connector_info_from_db
 from app.utils import get_connector_attribute
+from app.db.db_session import get_db_session
 
 
 async def get_socfortress_threat_intel_attributes(column_name: str, session: AsyncSession) -> str:
@@ -30,6 +35,54 @@ async def get_socfortress_threat_intel_attributes(column_name: str, session: Asy
     if not attribute_value:
         raise HTTPException(status_code=500, detail="SocFortress Threat Intel attributes not found in the database.")
     return attribute_value
+
+async def verify_socfortress_threat_intel_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Verifies the AskSocFortress credentials.
+
+    Args:
+        attributes (Dict[str, Any]): The connector attributes.
+
+    Returns:
+        Dict[str, Any]: The connector attributes.
+
+    Raises:
+        HTTPException: Raised if the AskSocFortress credentials are invalid.
+    """
+    api_key = attributes.get("connector_api_key", None)
+    url = attributes.get("connector_url", None)
+    if api_key is None or url is None:
+        logger.error("No AskSocFortress credentials found in the database")
+        raise HTTPException(status_code=500, detail="AskSocFortress credentials not found in the database")
+    return attributes
+
+async def verifiy_socfortress_threat_intel_connector(connector_name: str) -> str:
+    """
+    Verifies the SOCFortress Threat Intel connector.
+
+    Args:
+        connector_name (str): The name of the connector.
+
+    Returns:
+        str: The connector name.
+
+    Raises:
+        HTTPException: Raised if the connector name is not SOCFortress Threat Intel.
+    """
+    logger.info("Verifying SOCFortress Threat Intel connector")
+    async with get_db_session() as session:  # This will correctly enter the context manager
+        attributes = await get_connector_info_from_db(connector_name, session)
+    if attributes is None:
+        logger.error("No SOCFortress Threat Intel connector found in the database")
+        return None
+    request = SocfortressThreatIntelRequest(ioc_value="evil.socfortress.co", customer_code="00001")
+    response = await invoke_socfortress_threat_intel_api(attributes["connector_api_key"], attributes["connector_url"], request)
+    if 'data' in response and response['data'].get('comment') == 'This is a test IoC':
+        logger.info("Verified SOCFortress Threat Intel connector")
+        return {"connectionSuccessful": True, "message": "Successfully verified SOCFortress Threat Intel connector"}
+    else:
+        logger.error("Failed to verify SOCFortress Threat Intel connector")
+        return {"connectionSuccessful": False, "message": "Failed to verify SOCFortress Threat Intel connector"}
 
 
 async def invoke_socfortress_threat_intel_api(api_key: str, url: str, request: SocfortressThreatIntelRequest) -> dict:
