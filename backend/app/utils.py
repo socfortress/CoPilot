@@ -618,7 +618,7 @@ async def verify_wazuh_worker_provisioning_healtcheck(attributes: Dict[str, Any]
 
     try:
         wazuh_worker_provisioning_healthcheck = requests.get(
-            f"{attributes['connector_url']}/healthcheck",
+            f"{attributes['connector_url']}/provision_worker/healthcheck",
             verify=False,
         )
 
