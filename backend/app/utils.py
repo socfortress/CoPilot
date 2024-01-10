@@ -65,7 +65,7 @@ class ErrorType(str, Enum):
 class ValidationErrorItem(BaseModel):
     field: str
     error_type: ErrorType
-    message: str = None  # Initialize as None or some default
+    message: str = None  # Initialize as None
 
     @validator("message", pre=True, always=True)
     def set_message(cls, value, values):
