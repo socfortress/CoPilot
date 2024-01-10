@@ -24,7 +24,6 @@
 
 <script setup lang="ts">
 import { ref } from "vue"
-import "@/assets/scss/vuesjv-override.scss"
 import Api from "@/api"
 import { useMessage, NSpin, NInput, NButton } from "naive-ui"
 import type { SocNewNote } from "@/types/soc/note.d"

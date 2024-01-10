@@ -14,7 +14,9 @@
 
 		<SplashScreen :loading="loading" />
 		<SearchDialog v-if="isLogged" />
-		<LayoutSettings />
+		<!--
+			<LayoutSettings />
+		-->
 	</Provider>
 </template>
 
@@ -28,7 +30,7 @@ import HorizontalNav from "@/layouts/HorizontalNav/index.vue"
 import Blank from "@/layouts/Blank/index.vue"
 import Provider from "@/layouts/common/Provider.vue"
 import SplashScreen from "@/layouts/common/SplashScreen.vue"
-import LayoutSettings from "@/components/common/LayoutSettings.vue"
+// import LayoutSettings from "@/components/common/LayoutSettings.vue"
 import SearchDialog from "@/components/common/SearchDialog.vue"
 import { Layout, RouterTransition, type ThemeName } from "@/types/theme.d"
 import { type RouteLocationNormalized, useRouter, useRoute } from "vue-router"

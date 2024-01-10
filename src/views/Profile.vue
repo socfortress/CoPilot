@@ -21,7 +21,7 @@
 						<div class="item">
 							<n-tooltip placement="top">
 								<template #trigger>
-									<div class="tooltip-wrap">
+									<div class="item-wrap">
 										<Icon :name="RoleIcon"></Icon>
 										<span>{{ userRole }}</span>
 									</div>
@@ -29,9 +29,17 @@
 								<span>Role</span>
 							</n-tooltip>
 						</div>
+						<div class="item" v-if="userEmail">
+							<div class="item-wrap">
+								<Icon :name="EmailIcon"></Icon>
+								<span>{{ userEmail }}</span>
+							</div>
+						</div>
 					</div>
 				</div>
 				<div class="actions">
+					<ChangePassword :username="userName" size="small" />
+
 					<ImageCropper
 						v-if="propicEnabled"
 						v-slot="{ openCropper }"
@@ -65,16 +73,19 @@ import ImageCropper, { type ImageCropperResult } from "@/components/common/Image
 import ProfileSettings from "@/components/profile/ProfileSettings.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useAuthStore } from "@/stores/auth"
+import ChangePassword from "@/components/users/ChangePassword.vue"
 
 const propicEnabled = false
 
 const RoleIcon = "tabler:user"
 const EditIcon = "uil:image-edit"
+const EmailIcon = "carbon:email"
 
 const tabActive = ref("settings")
 
 const userRole = useAuthStore().userRoleName
 const userName = useAuthStore().userName
+const userEmail = useAuthStore().userEmail
 const userPic = ref(useAuthStore().userPic)
 
 function setCroppedImage(result: ImageCropperResult) {
@@ -128,7 +139,7 @@ function setCroppedImage(result: ImageCropperResult) {
 					gap: 24px;
 
 					.item {
-						.tooltip-wrap {
+						.item-wrap {
 							display: flex;
 							align-items: center;
 
@@ -148,7 +159,7 @@ function setCroppedImage(result: ImageCropperResult) {
 					}
 				}
 				.actions {
-					display: none;
+					// display: none;
 				}
 			}
 		}

@@ -13,7 +13,7 @@ import { useAuthStore } from "@/stores/auth"
 
 const UserIcon = "ion:person-outline"
 const LogoutIcon = "ion:log-out-outline"
-const DocsIcon = "ion:book-outline"
+const ContactIcon = "ic:outline-alternate-email"
 
 defineOptions({
 	name: "Avatar"
@@ -34,14 +34,14 @@ const options = ref([
 			h(
 				"a",
 				{
-					href: "https://pinx-docs.vercel.app/",
+					href: "https://www.socfortress.co/contact_form.html",
 					target: "_blank",
 					rel: "noopenner noreferrer"
 				},
-				"Documentation"
+				"Contact SOCFortress"
 			),
-		key: "documentation",
-		icon: renderIcon(DocsIcon)
+		key: "contact-socfortress",
+		icon: renderIcon(ContactIcon)
 	},
 	{
 		label: "Logout",

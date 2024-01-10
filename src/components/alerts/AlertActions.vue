@@ -1,6 +1,6 @@
 <template>
 	<div class="alert-actions flex flex-col gap-2 justify-end">
-		<n-button type="primary" secondary :size="size" v-if="alertUrl" tag="a" :href="alertUrl" target="_blank">
+		<n-button type="success" secondary :size="size" v-if="alertUrl" tag="a" :href="alertUrl" target="_blank">
 			<template #icon><Icon :name="ViewIcon"></Icon></template>
 			View SOC Alert
 		</n-button>
@@ -15,7 +15,7 @@
 			<template #icon><Icon :name="DangerIcon"></Icon></template>
 			Create SOC Alert
 		</n-button>
-		<n-button type="primary" secondary :size="size" v-if="alertAskMessage" @click="showSocResponse = true">
+		<n-button type="success" secondary :size="size" v-if="alertAskMessage" @click="showSocResponse = true">
 			<template #icon><Icon :name="ViewIcon"></Icon></template>
 			View SOCFortress Response
 		</n-button>

@@ -14,6 +14,7 @@ const SOCIcon = "carbon:security"
 const HealthcheckIcon = "ph:heartbeat"
 const CustomersIcon = "carbon:user-multiple"
 const LogsIcon = "carbon:cloud-logging"
+const UsersIcon = "carbon:group-security"
 
 export default function getItems(mode: "vertical" | "horizontal", collapsed: boolean): MenuMixedOption[] {
 	return [
@@ -234,6 +235,20 @@ export default function getItems(mode: "vertical" | "horizontal", collapsed: boo
 				),
 			key: "Logs",
 			icon: renderIcon(LogsIcon)
+		},
+		{
+			label: () =>
+				h(
+					RouterLink,
+					{
+						to: {
+							name: "Users"
+						}
+					},
+					{ default: () => "Users" }
+				),
+			key: "Users",
+			icon: renderIcon(UsersIcon)
 		}
 	]
 }

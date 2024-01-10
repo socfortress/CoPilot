@@ -2,7 +2,10 @@
 	<n-card content-style="padding:0" :class="{ hovered }">
 		<div class="flex flex-col overflow-hidden">
 			<div class="card-header flex gap-4 items-center justify-between">
-				<div class="title">{{ title }}</div>
+				<div class="title flex items-center gap-2">
+					{{ title }}
+					<Icon :name="ArrowRightIcon" v-if="hovered" :size="12"></Icon>
+				</div>
 				<div class="icon">
 					<slot name="icon"></slot>
 				</div>
@@ -24,6 +27,7 @@
 <script setup lang="ts">
 import { NCard } from "naive-ui"
 import { toRefs } from "vue"
+import Icon from "@/components/common/Icon.vue"
 
 const props = defineProps<{
 	title: string
@@ -36,6 +40,8 @@ const props = defineProps<{
 	hovered?: boolean
 }>()
 const { title, value, subValue, firstLabel, secondLabel, firstStatus, secondStatus } = toRefs(props)
+
+const ArrowRightIcon = "carbon:arrow-right"
 </script>
 
 <style scoped lang="scss">

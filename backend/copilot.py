@@ -4,6 +4,8 @@ from fastapi import HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
+import os
+from dotenv import load_dotenv
 
 from app.auth.utils import AuthHandler
 from app.db.db_session import async_engine
@@ -42,7 +44,9 @@ from app.routers import wazuh_manager
 from app.schedulers.scheduler import init_scheduler
 
 auth_handler = AuthHandler()
-
+# Get the `SERVER_IP` from the `.env` file
+load_dotenv()
+server_ip = os.getenv("SERVER_IP", "localhost")
 
 app = FastAPI(description="CoPilot API", version="0.1.0", title="CoPilot API")
 
@@ -111,7 +115,7 @@ async def init_db():
 
 @app.get("/")
 def hello():
-    return {"message": "Hello World"}
+    return {"message": "We Made It!"}
 
 
 @app.on_event("shutdown")
@@ -126,4 +130,4 @@ async def shutdown_scheduler():
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="localhost", port=5000)
+    uvicorn.run(app, host=server_ip, port=5000)

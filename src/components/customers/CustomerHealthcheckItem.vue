@@ -144,7 +144,7 @@ function formatDate(timestamp: string | number, utc: boolean = true): string {
 }
 
 function gotoAgentPage(agentId: string) {
-	router.push(`/agent/${agentId}`).catch(() => {})
+	router.push({ name: "Agent", params: { id: agentId } })
 }
 </script>
 
@@ -208,7 +208,7 @@ function gotoAgentPage(agentId: string) {
 		box-shadow: 0px 0px 0px 1px inset var(--primary-color);
 
 		&.healthy {
-			background-color: var(--primary-005-color);
+			background-color: var(--success-005-color);
 			box-shadow: none;
 		}
 		&.unhealthy {

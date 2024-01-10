@@ -19,7 +19,7 @@
 						<div class="agents-list flex flex-grow flex-col gap-3">
 							<template v-if="agentsFiltered.length">
 								<AgentCard
-									v-for="agent in agentsFiltered"
+									v-for="agent in itemsPaginated"
 									:key="agent.agent_id"
 									:agent="agent"
 									show-actions
@@ -38,6 +38,15 @@
 						</div>
 					</n-scrollbar>
 				</n-spin>
+
+				<div class="pagination-wrapper">
+					<n-pagination
+						v-model:page="page"
+						:page-size="pageSize"
+						:page-slot="5"
+						:item-count="agentsFiltered.length"
+					/>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -51,7 +60,7 @@ import AgentToolbar from "@/components/agents/AgentToolbar.vue"
 import { isAgentOnline } from "@/components/agents/utils"
 import Api from "@/api"
 import { useRouter } from "vue-router"
-import { useMessage, NSpin, NScrollbar, NEmpty } from "naive-ui"
+import { useMessage, NSpin, NScrollbar, NEmpty, NPagination } from "naive-ui"
 import _debounce from "lodash/debounce"
 
 const message = useMessage()
@@ -60,6 +69,8 @@ const loadingAgents = ref(false)
 const loadingSync = ref(false)
 const agents = ref<Agent[]>([])
 const textFilter = ref("")
+const page = ref(1)
+const pageSize = ref(20)
 
 const textFilterDebounced = ref("")
 
@@ -81,6 +92,13 @@ const agentsFiltered = computed(() => {
 	)
 })
 
+const itemsPaginated = computed(() => {
+	const from = (page.value - 1) * pageSize.value
+	const to = page.value * pageSize.value
+
+	return agentsFiltered.value.slice(from, to)
+})
+
 const agentsCritical = computed(() => {
 	return agents.value.filter(({ critical_asset }) => critical_asset)
 })
@@ -90,7 +108,7 @@ const agentsOnline = computed(() => {
 })
 
 function gotoAgentPage(agent: Agent) {
-	router.push(`/agent/${agent.agent_id}`).catch(() => {})
+	router.push({ name: "Agent", params: { id: agent.agent_id } })
 }
 
 function getAgents() {
@@ -169,8 +187,47 @@ onBeforeMount(() => {
 		}
 
 		.main {
+			position: relative;
+			border-radius: var(--border-radius);
+
 			:deep() {
 				.n-scrollbar > .n-scrollbar-rail.n-scrollbar-rail--vertical {
+					right: 0;
+					bottom: 50px;
+				}
+			}
+
+			.pagination-wrapper {
+				--size: 10px;
+				position: absolute;
+				bottom: 0;
+				right: 0;
+				background-color: var(--bg-body);
+				padding-left: var(--size);
+				padding-top: var(--size);
+				border-top-left-radius: var(--size);
+
+				&::before,
+				&::after {
+					content: "";
+					position: absolute;
+					width: var(--size);
+					height: var(--size);
+					left: calc(var(--size) * -1);
+					display: block;
+					bottom: 0px;
+					z-index: 1;
+					background-image: radial-gradient(
+						circle at 0 0,
+						rgba(0, 0, 0, 0) calc(var(--size) - 1px),
+						var(--bg-body) calc(var(--size) + 0px)
+					);
+				}
+
+				&::after {
+					bottom: initial;
+					left: initial;
+					top: calc(var(--size) * -1);
 					right: 0;
 				}
 			}
@@ -178,6 +235,12 @@ onBeforeMount(() => {
 
 		.agents-list {
 			width: 100%;
+
+			.item-appear {
+				&:last-child {
+					margin-bottom: 50px;
+				}
+			}
 		}
 	}
 	@container (max-width: 770px) {

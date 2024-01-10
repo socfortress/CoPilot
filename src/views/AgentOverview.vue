@@ -57,6 +57,11 @@
 							<VulnerabilitiesSection v-if="agent" :agent="agent" />
 						</div>
 					</n-tab-pane>
+					<n-tab-pane name="Artifacts" tab="Artifacts" display-directive="show:lazy">
+						<div class="section">
+							<AgentFlowList v-if="agent" :agent="agent" />
+						</div>
+					</n-tab-pane>
 					<n-tab-pane name="Alerts" tab="Alerts" display-directive="show:lazy">
 						<div class="section">
 							<AlertsList v-if="agent" :agent-hostname="agent.hostname" />
@@ -103,6 +108,7 @@ import { useRouter } from "vue-router"
 import VulnerabilitiesSection from "@/components/agents/VulnerabilitiesSection.vue"
 import AlertsList from "@/components/alerts/AlertsList.vue"
 import OverviewSection from "@/components/agents/OverviewSection.vue"
+import AgentFlowList from "@/components/agents/agentFlow/AgentFlowList.vue"
 import { useMessage, NSpin, NTooltip, NButton, NTabs, NTabPane, NCard, useDialog } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import type { Artifact } from "@/types/artifacts.d"
@@ -143,12 +149,12 @@ function getAgent() {
 					agent.value = res.data.agents[0] || null
 				} else {
 					message.error(res.data?.message || "An error occurred. Please try again later.")
-					router.push(`/agents`).catch(() => {})
+					gotoAgents()
 				}
 			})
 			.catch(err => {
 				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-				router.push(`/agents`).catch(() => {})
+				gotoAgents()
 			})
 			.finally(() => {
 				loadingAgent.value = false
@@ -195,7 +201,7 @@ function handleDelete() {
 }
 
 function gotoAgents() {
-	router.push(`/agents`).catch(() => {})
+	router.push({ name: "Agents" })
 }
 
 onBeforeMount(() => {
@@ -264,8 +270,8 @@ onBeforeMount(() => {
 			}
 			.online-badge,
 			.quarantined-badge {
-				border: 2px solid var(--primary-color);
-				color: var(--primary-color);
+				border: 2px solid var(--success-color);
+				color: var(--success-color);
 				font-weight: bold;
 				border-radius: var(--border-radius);
 				@apply text-xs py-1 px-2;

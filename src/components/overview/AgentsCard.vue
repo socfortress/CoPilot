@@ -66,7 +66,7 @@ function getData() {
 }
 
 function gotoAgentsPage() {
-	router.push(`/agents`).catch(() => {})
+	router.push({ name: "Agents" })
 }
 
 onBeforeMount(() => {

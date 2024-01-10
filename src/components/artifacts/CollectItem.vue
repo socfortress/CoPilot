@@ -1,5 +1,5 @@
 <template>
-	<div class="collect-item flex flex-wrap gap-2 p-2">
+	<div class="collect-item flex flex-wrap gap-2 p-2" :class="{ embedded }">
 		<KVCard v-for="prop of displayData" :key="prop.key" :class="{ 'hide-mobile': prop.hideMobile }">
 			<template #key>{{ prop.key }}</template>
 			<template #value>{{ prop.value }}</template>
@@ -39,7 +39,7 @@ interface Prop {
 	hideMobile: boolean
 }
 
-const { collect } = defineProps<{ collect: CollectResult }>()
+const { collect, embedded } = defineProps<{ collect: CollectResult; embedded?: boolean }>()
 
 const jsonData = ref<CollectResult>({})
 const displayData = ref<Prop[]>([])
@@ -118,6 +118,10 @@ onBeforeMount(() => {
 
 	&:hover {
 		border-color: var(--primary-color);
+	}
+
+	&.embedded {
+		background-color: var(--bg-secondary-color);
 	}
 
 	@container (max-width: 500px) {

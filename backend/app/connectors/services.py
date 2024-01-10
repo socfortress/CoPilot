@@ -26,6 +26,8 @@ from app.connectors.sublime.utils.universal import verify_sublime_connection
 from app.connectors.velociraptor.utils.universal import verify_velociraptor_connection
 from app.connectors.wazuh_indexer.utils.universal import verify_wazuh_indexer_connection
 from app.connectors.wazuh_manager.utils.universal import verify_wazuh_manager_connection
+from app.threat_intel.services.socfortress import verifiy_socfortress_threat_intel_connector
+from app.integrations.ask_socfortress.services.ask_socfortress import verify_ask_socfortress_connector
 
 # from app.db.db_session import engine  # Import the shared engine
 from app.db.db_session import get_session
@@ -107,6 +109,16 @@ class WazuhWorkerProvisioningService(ConnectorServiceInterface):
     async def verify_authentication(self, connector: ConnectorResponse) -> Optional[ConnectorResponse]:
         return await verify_wazuh_worker_provisioning_connection(connector.connector_name)
 
+# SOCFortress Threat Intel Service
+class SocfortressThreatIntelService(ConnectorServiceInterface):
+    async def verify_authentication(self, connector: ConnectorResponse) -> Optional[ConnectorResponse]:
+        return await verifiy_socfortress_threat_intel_connector(connector.connector_name)
+
+# ASK SOCFortress Service
+class AskSocfortressService(ConnectorServiceInterface):
+    async def verify_authentication(self, connector: ConnectorResponse) -> Optional[ConnectorResponse]:
+        return await verify_ask_socfortress_connector(connector.connector_name)
+
 
 # Factory function to create a service instance based on connector name
 def get_connector_service(connector_name: str) -> Type[ConnectorServiceInterface]:
@@ -131,6 +143,8 @@ def get_connector_service(connector_name: str) -> Type[ConnectorServiceInterface
         "InfluxDB": InfluxDBService,
         "Grafana": GrafanaService,
         "Wazuh Worker Provisioning": WazuhWorkerProvisioningService,
+        "SocfortressThreatIntel": SocfortressThreatIntelService,
+        "AskSocfortress": AskSocfortressService,
     }
     return service_map.get(connector_name, None)
 
@@ -210,6 +224,19 @@ class ConnectorServices:
                 service_instance = ServiceClass()
                 # If verify_authentication is an async function, you will need to await it
                 connector_response = await service_instance.verify_authentication(connector_response)
+                # If the connector is verified, update the connector record in the database
+                if connector_response['connectionSuccessful']:
+                    connector.connector_verified = True
+                    connector.connector_last_updated = datetime.now()
+                    session.add(connector)
+                    await session.commit()
+                else:
+                    # If the connector is not verified, set the connector_verified field to False
+                    connector.connector_verified = False
+                    connector.connector_last_updated = datetime.now()
+                    session.add(connector)
+                    await session.commit()
+
             else:
                 logger.error(f"Connector type {connector_response.connector_name} is not supported")
                 return None
@@ -266,6 +293,7 @@ class ConnectorServices:
             logger.exception(f"Failed to update connector: {e}")
             session.rollback()
             return Exception(f"Failed to update connector: {e}")
+
 
     @staticmethod
     def allowed_file(filename):

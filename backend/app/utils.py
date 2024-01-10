@@ -65,7 +65,7 @@ class ErrorType(str, Enum):
 class ValidationErrorItem(BaseModel):
     field: str
     error_type: ErrorType
-    message: str = None  # Initialize as None or some default
+    message: str = None  # Initialize as None
 
     @validator("message", pre=True, always=True)
     def set_message(cls, value, values):
@@ -221,7 +221,10 @@ class Logger:
         """
         auth_header = request.headers.get("Authorization")
         if auth_header:
-            token = auth_header.split(" ")[1]  # Better split by space and take the second part
+            try:
+                token = auth_header.split(" ")[1]  # Better split by space and take the second part
+            except IndexError:
+                raise HTTPException(status_code=401, detail="Invalid token")
             username, _ = self.auth_handler.decode_token(token)
             user = await find_user(username)  # Correctly using await for an async call
             if user:
@@ -520,6 +523,7 @@ async def purge_logs_by_time_range(time_range: TimeRangeModel, session: AsyncSes
         raise HTTPException(status_code=404, detail="No logs found")
 
 
+
 ################## ! ALLOWED FILES ! ##################
 def allowed_file(filename):
     """
@@ -614,7 +618,7 @@ async def verify_wazuh_worker_provisioning_healtcheck(attributes: Dict[str, Any]
 
     try:
         wazuh_worker_provisioning_healthcheck = requests.get(
-            f"{attributes['connector_url']}/healthcheck",
+            f"{attributes['connector_url']}/provision_worker/healthcheck",
             verify=False,
         )
 

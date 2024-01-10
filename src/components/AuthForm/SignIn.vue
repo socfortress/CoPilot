@@ -21,9 +21,11 @@
 			/>
 		</n-form-item>
 		<div class="flex flex-col items-end gap-6">
-			<div class="flex justify-end w-full">
-				<n-button text type="primary" @click="emit('goto-forgot-password')">Forgot Password?</n-button>
-			</div>
+			<!--
+				<div class="flex justify-end w-full">
+					<n-button text type="primary" @click="emit('goto-forgot-password')">Forgot Password?</n-button>
+				</div>
+			-->
 			<div class="w-full">
 				<n-button type="primary" @click="signIn" class="!w-full" size="large">Sign in</n-button>
 			</div>

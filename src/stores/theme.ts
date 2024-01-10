@@ -20,12 +20,12 @@ const osTheme = useOsTheme()
 
 export const useThemeStore = defineStore("theme", {
 	state: () => ({
-		layout: Layout.VerticalNav,
-		themeName: osTheme.value || ThemeEnum.Light,
+		layout: Layout.HorizontalNav,
+		themeName: osTheme.value || ThemeEnum.Dark,
 		routerTransition: RouterTransition.FadeUp,
 		routerTransitionDuration: 0.3,
 		boxed: {
-			enabled: true,
+			enabled: false,
 			toolbar: true,
 			width: 1600
 		},
@@ -298,6 +298,8 @@ export const useThemeStore = defineStore("theme", {
 			const warningColor = naive.warningColor
 			const infoColor = naive.infoColor
 
+			const { success005, warning005, error005, info005 } = state.colors[state.themeName]
+
 			const modalColor = naive.modalColor
 			const modalColorRGB = hex2rgb(modalColor).join(", ")
 			const codeColor = naive.codeColor
@@ -365,7 +367,6 @@ export const useThemeStore = defineStore("theme", {
 				"--fg-secondary-color": `${fgSecondaryColor}`,
 				"--bg-color": `${bgColor}`,
 				"--bg-secondary-color": `${bgSecondaryColor}`,
-
 				"--bg-color-rgb": `${bgColorRGB}`,
 
 				"--border-color": `${borderColor}`,
@@ -417,6 +418,10 @@ export const useThemeStore = defineStore("theme", {
 				"--error-color": `${errorColor}`,
 				"--warning-color": `${warningColor}`,
 				"--info-color": `${infoColor}`,
+				"--success-005-color": `${success005}`,
+				"--error-005-color": `${error005}`,
+				"--warning-005-color": `${warning005}`,
+				"--info-005-color": `${info005}`,
 
 				"--secondary1-color": `${secondary1}`,
 				"--secondary1-color-rgb": `${secondary1RGB}`,

@@ -11,6 +11,7 @@ import threatIntel from "./threatIntel"
 import askSocfortress from "./askSocfortress"
 import customers from "./customers"
 import logs from "./logs"
+import flow from "./flow"
 
 export default {
 	agents,
@@ -25,5 +26,6 @@ export default {
 	threatIntel,
 	askSocfortress,
 	customers,
-	logs
+	logs,
+	flow
 }

@@ -5,7 +5,11 @@
 				<template #key>{{ item.key }}</template>
 				<template #value>
 					<template v-if="item.key === 'customer_code'">
-						<code class="cursor-pointer text-primary-color" @click="gotoCustomer(item.val)" v-if="item.val">
+						<code
+							class="cursor-pointer text-primary-color"
+							@click="gotoCustomer(item.val)"
+							v-if="item.val && item.val !== '-'"
+						>
 							{{ item.val }}
 							<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
 						</code>
@@ -61,7 +65,7 @@ const formatDate = (date: string) => {
 }
 
 function gotoCustomer(code: string | number) {
-	router.push(`/customers?code=${code}`).catch(() => {})
+	router.push({ name: "Customers", query: { code } })
 }
 </script>
 

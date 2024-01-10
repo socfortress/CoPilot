@@ -3,6 +3,7 @@ import random
 import string
 from enum import Enum
 from typing import Optional
+import re
 
 import bcrypt
 from pydantic import BaseModel
@@ -11,7 +12,7 @@ from pydantic import validator
 from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
-
+from fastapi import HTTPException
 
 class Role(SQLModel, table=True):
     id: Optional[int] = Field(primary_key=True)
@@ -122,3 +123,35 @@ class Password(BaseModel):
 
         # Return the Password object with both the plain and hashed password
         return cls(length=length, hashed=hashed_password.decode("utf-8"), plain=password)
+
+# ! PASSWORD RESET TOKEN GENERATION NOT USING FOR NOW! #
+class PasswordResetRequest(BaseModel):
+    username: str
+
+class PasswordResetToken(BaseModel):
+    username: str
+    reset_token: str
+    new_password: str
+
+    @validator('new_password')
+    def validate_password(cls, password):
+        if len(password) < 8 or len(password) > 256:
+            raise ValueError("Password length must be between 8 and 256 characters.")
+        if not re.search(r'[a-z]', password):
+            raise ValueError("Password must contain at least one lowercase letter.")
+        if not re.search(r'[A-Z]', password):
+            raise ValueError("Password must contain at least one uppercase letter.")
+        if not re.search(r'\d', password):
+            raise ValueError("Password must contain at least one digit.")
+        if not re.search(r'[@$!%*?&#]', password):
+            raise ValueError("Password must contain at least one special character.")
+        return password
+
+class PasswordReset(BaseModel):
+    username: str
+    new_password: str = Field(
+        max_length=256,
+        min_length=8,
+        regex="^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&#])[A-Za-z\\d@$!%*?&#]{8,}$",
+        description="Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character",
+    )

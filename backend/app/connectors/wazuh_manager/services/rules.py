@@ -4,7 +4,9 @@ from typing import List
 from typing import Tuple
 from typing import Union
 
+import re
 import pcre2
+from enum import Enum
 import xmltodict
 from fastapi import HTTPException
 from loguru import logger
@@ -239,7 +241,37 @@ def make_pcre2_compatible(input_string: str) -> str:
     return input_string.replace("\\", "\\\\")
 
 
-def exclude_rule(rule: RuleExclude) -> RuleExcludeResponse:
+class RegexSpecialCharacters(Enum):
+    DOT = ('.', '\.')
+    CARET = ('^', '\^')
+    DOLLAR = ('$', '\$')
+    STAR = ('*', '\*')
+    PLUS = ('+', '\+')
+    QUESTION = ('?', '\?')
+    CURLY_OPEN = ('{', '\{')
+    CURLY_CLOSE = ('}', '\}')
+    SQUARE_OPEN = ('[', '\[')
+    SQUARE_CLOSE = (']', '\]')
+    SINGLE_BACKSLASH = ('\\', '\\\\')
+    DOUBLE_BACKSLASH = ('\\\\', '\\\\\\\\')
+    PIPE = ('|', '\|')
+    PAREN_OPEN = ('(', '\(')
+    PAREN_CLOSE = (')', '\)')
+    COLON = (':', '\:')
+    DASH = ('-', '\-')
+
+# Create a dictionary for easy lookup
+REGEX_REPLACE_DICT = {char.value[0]: char.value[1] for char in RegexSpecialCharacters}
+
+async def replace_special_chars(rule: RuleExclude):
+    for char, replacement in REGEX_REPLACE_DICT.items():
+        # Use Python's raw string notation for regular expressions
+        pattern = re.compile(re.escape(char))
+        input_string = pattern.sub(replacement, rule.input_value)
+        logger.info(f"Input String: {input_string}")
+    return input_string
+
+async def exclude_rule(rule: RuleExclude) -> RuleExcludeResponse:
     """
     Exclude a rule based on the provided input value and rule value.
 
@@ -252,23 +284,30 @@ def exclude_rule(rule: RuleExclude) -> RuleExcludeResponse:
     Raises:
         Exception: If an error occurs while excluding the rule.
     """
-    try:
-        # Convert rule_value to a PCRE2 compatible regex pattern
-        pcre2_pattern = make_pcre2_compatible(rule.rule_value)
+    # Function to replace special characters
+    # repr of the input string
+    input_string = repr(rule.input_value)
+    logger.info(f"Input String: {input_string}")
+    excluded_string = await replace_special_chars(rule)
+    logger.info(f"Excluded String: {excluded_string}")
+    return None
+    # try:
+    #     # Convert rule_value to a PCRE2 compatible regex pattern
+    #     pcre2_pattern = make_pcre2_compatible(rule.rule_value)
 
-        compiled_pattern = pcre2.compile(pcre2_pattern)
-        print(f"Compiled Pattern: {compiled_pattern}")  # Debugging line
+    #     compiled_pattern = pcre2.compile(pcre2_pattern)
+    #     print(f"Compiled Pattern: {compiled_pattern}")  # Debugging line
 
-        print(f"Input Value: {rule.input_value}")  # Debugging line
+    #     print(f"Input Value: {rule.input_value}")  # Debugging line
 
-        match_data = compiled_pattern.match(rule.input_value)
+    #     match_data = compiled_pattern.match(rule.input_value)
 
-        if match_data:
-            return RuleExcludeResponse(success=True, message="Successfully excluded rule", recommended_exclusion=rule.input_value)
-        else:
-            return RuleExcludeResponse(success=False, message="Failed to exclude rule", recommended_exclusion="")
+    #     if match_data:
+    #         return RuleExcludeResponse(success=True, message="Successfully excluded rule", recommended_exclusion=rule.input_value)
+    #     else:
+    #         return RuleExcludeResponse(success=False, message="Failed to exclude rule", recommended_exclusion="")
 
-    except Exception as e:
-        print(f"Exception: {e}")  # Debugging line
-        logger.error(f"Failed to exclude rule: {e}")
-        return RuleExcludeResponse(success=False, message=f"Failed to exclude rule: {e}", recommended_exclusion="")
+    # except Exception as e:
+    #     print(f"Exception: {e}")  # Debugging line
+    #     logger.error(f"Failed to exclude rule: {e}")
+    #     return RuleExcludeResponse(success=False, message=f"Failed to exclude rule: {e}", recommended_exclusion="")

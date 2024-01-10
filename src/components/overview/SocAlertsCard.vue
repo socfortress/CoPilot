@@ -60,7 +60,7 @@ function getData() {
 }
 
 function gotoSocAlertsPage() {
-	router.push(`/soc/alerts`).catch(() => {})
+	router.push({ name: "Soc-Alerts" })
 }
 
 onBeforeMount(() => {

@@ -7,6 +7,7 @@ import _toNumber from "lodash/toNumber"
 import { scopeToRole } from "@/utils/auth"
 import { hashMD5 } from "@/utils"
 import _toSafeInteger from "lodash/toSafeInteger"
+import _toLower from "lodash/toLower"
 import SecureLS from "secure-ls"
 const ls = new SecureLS({ encodingType: "aes", isCompression: false })
 
@@ -15,6 +16,7 @@ export const useAuthStore = defineStore("auth", {
 		user: {
 			access_token: "",
 			username: "",
+			email: "",
 			role: UserRole.Unknown
 		} as User,
 		tokenDebounceTime: _toNumber(import.meta.env.VITE_TOKEN_DEBOUNCE_TIME) as number // seconds
@@ -27,6 +29,7 @@ export const useAuthStore = defineStore("auth", {
 			this.user = {
 				access_token: token,
 				username: jwtPayload.sub || "",
+				email: "",
 				role: scopeToRole(scopes)
 			}
 		},
@@ -37,6 +40,7 @@ export const useAuthStore = defineStore("auth", {
 			this.user = {
 				access_token: "",
 				username: "",
+				email: "",
 				role: UserRole.Unknown
 			}
 		},
@@ -47,6 +51,7 @@ export const useAuthStore = defineStore("auth", {
 					.then(res => {
 						if (res.data.access_token) {
 							this.setLogged(res.data.access_token)
+							this.getEmail()
 							resolve(res.data)
 						} else {
 							reject(res.data)
@@ -55,6 +60,14 @@ export const useAuthStore = defineStore("auth", {
 					.catch(err => {
 						reject(err.response?.data)
 					})
+			})
+		},
+		getEmail() {
+			Api.auth.getUsers().then(res => {
+				if (res.data.users) {
+					const user = res.data.users.find(o => o.username === this.userName)
+					this.user.email = user?.email || ""
+				}
 			})
 		},
 		refreshToken() {
@@ -85,6 +98,9 @@ export const useAuthStore = defineStore("auth", {
 		userName(state): string {
 			return state.user?.username
 		},
+		userEmail(state): string {
+			return state.user?.email
+		},
 		userRole(state): UserRole {
 			return state.user?.role
 		},
@@ -104,6 +120,9 @@ export const useAuthStore = defineStore("auth", {
 			const seed = hash.slice(0, _toSafeInteger(uniq))
 
 			return `https://avatar.vercel.sh/${seed}.svg?text=${text}`
+		},
+		isAdmin(): boolean {
+			return _toLower(this.userRoleName) === "admin"
 		},
 		isRoleGranted() {
 			return (roles?: UserRole | UserRole[]) => {

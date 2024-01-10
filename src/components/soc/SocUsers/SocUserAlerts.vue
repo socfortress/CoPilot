@@ -7,21 +7,42 @@
 			<div class="flex flex-wrap gap-2">
 				<n-tooltip v-for="alert of alertsList" :key="alert.alert_id">
 					<template #trigger>
-						<code class="alert-btn" @click="gotoSocAlert(alert.alert_id)">#{{ alert.alert_id }}</code>
+						<code class="alert-btn" @click="openSocAlert(alert.alert_id)">#{{ alert.alert_id }}</code>
 					</template>
 					{{ alert.alert_title }}
 				</n-tooltip>
 			</div>
 		</div>
 	</n-spin>
+
+	<n-modal
+		v-model:show="showSocAlertDetails"
+		preset="card"
+		content-style="padding:0px"
+		:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(250px, 90vh)', overflow: 'hidden' }"
+		:title="`SOC Alert: #${selectedAlertId}`"
+		:bordered="false"
+		segmented
+	>
+		<div class="h-full w-full flex items-center justify-center">
+			<SocAlertItem
+				v-if="selectedAlertId"
+				:alertId="selectedAlertId"
+				embedded
+				hideSocCaseAction
+				hideBookmarkAction
+				class="w-full"
+			/>
+		</div>
+	</n-modal>
 </template>
 
 <script setup lang="ts">
 import type { SocAlert } from "@/types/soc/alert.d"
 import { onBeforeMount, onBeforeUnmount, ref } from "vue"
 import Api from "@/api"
-import { useMessage, NTooltip, NSpin } from "naive-ui"
-import { useRouter } from "vue-router"
+import { useMessage, NTooltip, NSpin, NModal } from "naive-ui"
+import SocAlertItem from "../SocAlerts/SocAlertItem.vue"
 import axios from "axios"
 
 const { userId } = defineProps<{
@@ -30,12 +51,14 @@ const { userId } = defineProps<{
 
 const loadingAlerts = ref(false)
 const alertsList = ref<SocAlert[]>([])
-const router = useRouter()
 const message = useMessage()
 let abortController: AbortController | null = null
+const showSocAlertDetails = ref(false)
+const selectedAlertId = ref<string | number | null>(null)
 
-function gotoSocAlert(socId: string | number) {
-	router.push(`/soc/alerts?id=${socId}`).catch(() => {})
+function openSocAlert(socId: string | number) {
+	selectedAlertId.value = socId
+	showSocAlertDetails.value = true
 }
 
 function getAlerts() {

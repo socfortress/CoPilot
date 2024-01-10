@@ -103,7 +103,7 @@ const { stream } = toRefs(props)
 
 const UserIcon = "carbon:user"
 const InfoIcon = "carbon:information"
-const DisabledIcon = "ph:minus-bold"
+const DisabledIcon = "carbon:subtract"
 const EnabledIcon = "ph:check-bold"
 const StopIcon = "carbon:stop"
 const StartIcon = "carbon:play"

@@ -1,6 +1,6 @@
 <template>
-	<n-card class="agent-toolbar">
-		<div class="wrapper flex flex-col gap-6">
+	<n-card class="agent-toolbar" content-style="padding:0">
+		<div class="wrapper flex flex-col gap-6 py-3 px-4">
 			<div class="flex flex-col gap-2">
 				<div class="agent-search flex gap-3">
 					<n-input placeholder="Search for an agent" clearable v-model:value="textFilter">

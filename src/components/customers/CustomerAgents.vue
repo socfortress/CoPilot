@@ -37,7 +37,7 @@ const message = useMessage()
 const list = ref<Agent[] | []>([])
 
 function gotoAgentPage(agent: Agent) {
-	router.push(`/agent/${agent.agent_id}`).catch(() => {})
+	router.push({ name: "Agent", params: { id: agent.agent_id } })
 }
 
 function getAgents() {

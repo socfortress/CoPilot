@@ -12,7 +12,12 @@
 			:secondStatus="criticalTotal ? 'warning' : undefined"
 		>
 			<template #icon>
-				<CardStatsIcon :iconName="HealthcheckIcon" boxed :boxSize="30"></CardStatsIcon>
+				<CardStatsIcon
+					:iconName="HealthcheckIcon"
+					boxed
+					:boxSize="30"
+					:color="criticalTotal ? style['--warning-color'] : undefined"
+				></CardStatsIcon>
 			</template>
 		</CardStatsDouble>
 	</n-spin>
@@ -26,12 +31,15 @@ import Api from "@/api"
 import { useMessage, NSpin } from "naive-ui"
 import { InfluxDBAlertLevel, type InfluxDBAlert } from "@/types/healthchecks.d"
 import { useRouter } from "vue-router"
+import { useThemeStore } from "@/stores/theme"
 
 const HealthcheckIcon = "ph:heartbeat"
 const router = useRouter()
 const message = useMessage()
 const loading = ref(false)
 const healthcheck = ref<InfluxDBAlert[]>([])
+
+const style = computed<{ [key: string]: any }>(() => useThemeStore().style)
 
 const total = computed<number>(() => {
 	return healthcheck.value.length || 0
@@ -64,7 +72,7 @@ function getData() {
 }
 
 function gotoHealthcheckPage() {
-	router.push(`/healthcheck`).catch(() => {})
+	router.push({ name: "Healthcheck" })
 }
 
 onBeforeMount(() => {

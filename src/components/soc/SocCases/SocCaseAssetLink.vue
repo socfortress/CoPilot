@@ -60,7 +60,6 @@
 import Icon from "@/components/common/Icon.vue"
 import Badge from "@/components/common/Badge.vue"
 import { ref } from "vue"
-import "@/assets/scss/vuesjv-override.scss"
 import Api from "@/api"
 import { useMessage, NSpin, NCollapse, NEmpty, NCollapseItem } from "naive-ui"
 import { useSettingsStore } from "@/stores/settings"

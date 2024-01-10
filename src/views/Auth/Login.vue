@@ -1,57 +1,65 @@
 <template>
 	<div class="page">
-		<div class="settings flex items-center justify-between" v-if="!isLogged">
-			<div class="layout">
-				<n-button quaternary circle @click="align = 'left'">
-					<template #icon>
-						<Icon>
-							<Iconify :icon="AlignLeftActive" v-if="align === 'left'" />
-							<Iconify :icon="AlignLeft" v-else />
-						</Icon>
-					</template>
-				</n-button>
-				<n-button quaternary circle @click="align = 'center'">
-					<template #icon>
-						<Icon>
-							<Iconify :icon="AlignCenterActive" v-if="align === 'center'" />
-							<Iconify :icon="AlignCenter" v-else />
-						</Icon>
-					</template>
-				</n-button>
-				<n-button quaternary circle @click="align = 'right'">
-					<template #icon>
-						<Icon>
-							<Iconify :icon="AlignRightActive" v-if="align === 'right'" />
-							<Iconify :icon="AlignRight" v-else />
-						</Icon>
-					</template>
-				</n-button>
+		<!--
+			<div class="settings flex items-center justify-between" v-if="!isLogged">
+				<div class="layout">
+					<n-button quaternary circle @click="align = 'left'">
+						<template #icon>
+							<Icon>
+								<Iconify :icon="AlignLeftActive" v-if="align === 'left'" />
+								<Iconify :icon="AlignLeft" v-else />
+							</Icon>
+						</template>
+					</n-button>
+					<n-button quaternary circle @click="align = 'center'">
+						<template #icon>
+							<Icon>
+								<Iconify :icon="AlignCenterActive" v-if="align === 'center'" />
+								<Iconify :icon="AlignCenter" v-else />
+							</Icon>
+						</template>
+					</n-button>
+					<n-button quaternary circle @click="align = 'right'">
+						<template #icon>
+							<Icon>
+								<Iconify :icon="AlignRightActive" v-if="align === 'right'" />
+								<Iconify :icon="AlignRight" v-else />
+							</Icon>
+						</template>
+					</n-button>
+				</div>
+				<div class="colors">
+					<n-button quaternary circle v-for="color of colors" :key="color" @click="activeColor = color">
+						<template #icon>
+							<Icon :color="color">
+								<Iconify :icon="SquareActive" v-if="activeColor === color" />
+								<Iconify :icon="Square" v-else />
+							</Icon>
+						</template>
+					</n-button>
+					<n-button quaternary circle @click="activeColor = primaryColor">
+						<template #icon>
+							<Icon :color="primaryColor">
+								<Iconify :icon="SquareActive" v-if="activeColor === primaryColor" />
+								<Iconify :icon="Square" v-else />
+							</Icon>
+						</template>
+					</n-button>
+				</div>
 			</div>
-			<div class="colors">
-				<n-button quaternary circle v-for="color of colors" :key="color" @click="activeColor = color">
-					<template #icon>
-						<Icon :color="color">
-							<Iconify :icon="SquareActive" v-if="activeColor === color" />
-							<Iconify :icon="Square" v-else />
-						</Icon>
-					</template>
-				</n-button>
-				<n-button quaternary circle @click="activeColor = primaryColor">
-					<template #icon>
-						<Icon :color="primaryColor">
-							<Iconify :icon="SquareActive" v-if="activeColor === primaryColor" />
-							<Iconify :icon="Square" v-else />
-						</Icon>
-					</template>
-				</n-button>
-			</div>
-		</div>
+		-->
+
 		<div class="flex wrapper justify-center" v-if="!isLogged">
 			<div class="image-box basis-2/3" v-if="align === 'right'"></div>
 			<div class="form-box basis-1/3 flex items-center justify-center" :class="{ centered: align === 'center' }">
 				<AuthForm :type="type" />
 			</div>
-			<div class="image-box basis-2/3" v-if="align === 'left'"></div>
+			<div class="image-box basis-2/3" v-if="align === 'left'">
+				<video playsinline autoplay muted loop poster="/images/login/cover.webp">
+					<source src="/images/login/video.mp4" type="video/mp4" />
+					Your browser does not support the video tag.
+				</video>
+			</div>
 		</div>
 	</div>
 </template>
@@ -123,6 +131,17 @@ onBeforeMount(() => {
 			background-color: v-bind(activeColor);
 			position: relative;
 
+			video {
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				object-fit: cover;
+				object-position: center;
+			}
+
+			/*
 			&::after {
 				content: "";
 				width: 100%;
@@ -134,6 +153,7 @@ onBeforeMount(() => {
 				background-size: 500px;
 				background-position: center center;
 			}
+			*/
 		}
 
 		.form-box {

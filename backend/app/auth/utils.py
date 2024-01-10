@@ -27,31 +27,64 @@ class AuthHandler:
     def verify_password(self, plain_password, hashed_password):
         return self.pwd_context.verify(plain_password, hashed_password)
 
-    def get_reset_token(self, username: str, expires_delta: timedelta = timedelta(minutes=30)):
+
+    # ! TODO: HAVE LOGIC TO HANDLE PASSWORD RESET VIA A TOKEN BUT NOT IMPLEMENTED YET ! #
+    def generate_reset_token(self, username: str, expires_delta: timedelta = timedelta(minutes=30)):
+        """
+        Generates a password reset token.
+
+        Args:
+            username (str): The username for which the token is being generated.
+            expires_delta (timedelta, optional): The expiration time for the token.
+                Defaults to 30 minutes.
+
+        Returns:
+            str: The generated reset token.
+        """
         to_encode = {"exp": datetime.utcnow() + expires_delta, "sub": username}
         encoded_jwt = jwt.encode(to_encode, self.secret, algorithm="HS256")
         return encoded_jwt
 
-    # ! TODO: Password Reset Token Generation ! #
 
-    # async def reset_password(self, token: str, new_password: str):
+    # ! TODO: HAVE LOGIC TO HANDLE PASSWORD RESET VIA A TOKEN BUT NOT IMPLEMENTED YET ! #
+    # def verify_reset_token(self, token: str, username: str):
+    #     """
+    #     Verifies a password reset token.
+
+    #     Args:
+    #         token (str): The reset token to verify.
+    #         username (str): The username for which the token was generated.
+
+    #     Returns:
+    #         bool: True if the token is valid and not expired, False otherwise.
+    #     """
     #     try:
     #         payload = jwt.decode(token, self.secret, algorithms=["HS256"])
-    #         username = payload.get("sub")
-    #         if username is None:
-    #             raise HTTPException(status_code=400, detail="Invalid token")
-    #     except jwt.PyJWTError:
-    #         raise HTTPException(status_code=400, detail="Invalid token")
-
-    #     user = await find_user(username)
-    #     if user is None:
+    #         return payload["sub"] == username
+    #     except jwt.ExpiredSignatureError:
     #         return False
 
-    #     hashed_password = self.get_password_hash(new_password)
-    #     # Here you would need to implement a method to update the user's password in your database
-    #     await update_user_password(username, hashed_password)
+    async def verify_reset_token_me(self, token: str, user):
+        """
+        Verifies a password reset token and checks that the username in the token matches the provided user's username.
 
-    #     return True
+        Args:
+            token (str): The reset token to verify.
+            user: The user for which the token should be verified.
+
+        Returns:
+            The username from the token if the token is valid, None otherwise.
+        """
+        try:
+            payload = jwt.decode(token, self.secret, algorithms=["HS256"])
+            if payload["sub"] == user.username:
+                return payload["sub"]
+            else:
+                raise HTTPException(status_code=401, detail="Invalid token. Username does not match.")
+        except jwt.ExpiredSignatureError:
+            raise HTTPException(status_code=401, detail="Token expired")
+        except jwt.InvalidTokenError:
+            raise HTTPException(status_code=401, detail="Invalid token")
 
     # ! New with Async
     async def authenticate_user(self, username: str, password: str):

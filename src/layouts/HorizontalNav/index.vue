@@ -12,6 +12,7 @@
 import HeaderBar from "./HeaderBar.vue"
 import Sidebar from "./Sidebar.vue"
 import MainContainer from "./MainContainer.vue"
+import "./main.scss"
 
 defineOptions({
 	name: "VerticalNav"

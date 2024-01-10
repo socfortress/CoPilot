@@ -12,6 +12,11 @@ export default {
 	update(connectorId: string | number, payload: ConnectorRequestPayload) {
 		return HttpClient.put<FlaskBaseResponse & { connectors: Connector[] }>(`/connectors/${connectorId}`, payload)
 	},
+	verify(connectorId: string | number) {
+		return HttpClient.post<FlaskBaseResponse & { connectionSuccessful: boolean }>(
+			`/connectors/verify/${connectorId}`
+		)
+	},
 	upload(connectorId: string | number, formData: FormData) {
 		return HttpClient.post<FlaskBaseResponse & { connectors: Connector[] }>(
 			`/connectors/upload/${connectorId}`,

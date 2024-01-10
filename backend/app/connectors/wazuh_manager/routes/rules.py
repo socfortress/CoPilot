@@ -13,12 +13,12 @@ from app.connectors.wazuh_manager.schema.rules import AllDisabledRuleResponse
 from app.connectors.wazuh_manager.schema.rules import RuleDisable
 from app.connectors.wazuh_manager.schema.rules import RuleDisableResponse
 from app.connectors.wazuh_manager.schema.rules import RuleEnable
-from app.connectors.wazuh_manager.schema.rules import RuleEnableResponse
+from app.connectors.wazuh_manager.schema.rules import RuleEnableResponse, RuleExclude, RuleExcludeResponse
 
 # from app.connectors.wazuh_manager.schema.rules import RuleExclude
 # from app.connectors.wazuh_manager.schema.rules import RuleExcludeResponse
 from app.connectors.wazuh_manager.services.rules import disable_rule
-from app.connectors.wazuh_manager.services.rules import enable_rule
+from app.connectors.wazuh_manager.services.rules import enable_rule, exclude_rule
 
 # from app.connectors.wazuh_manager.services.rules import exclude_rule
 from app.db.db_session import get_db
@@ -150,13 +150,14 @@ async def enable_wazuh_rule(rule: RuleEnable, session: AsyncSession = Depends(ge
 
 
 # ! TODO: Implement this endpoint - Maybe use OpenAI?
-# @wazuh_manager_router.post(
+# @wazuh_manager_rules_router.post(
 #     "/rule/exclude",
 #     response_model=RuleExcludeResponse,
 #     description="Retrieve recommended exclusion for a Wazuh Rule",
 # )
 # async def exclude_wazuh_rule(rule: RuleExclude) -> RuleExcludeResponse:
-#     recommended_exclusion = exclude_rule(rule)
+#     logger.info(f"rule: {rule}")
+#     recommended_exclusion = await exclude_rule(rule)
 #     if recommended_exclusion:
 #         return recommended_exclusion
 #     else:
