@@ -219,7 +219,6 @@ import SocCaseAssetsList from "./SocCaseAssetsList.vue"
 import SocCaseNoteForm from "./SocCaseNoteForm.vue"
 import SocCaseNotesList from "./SocCaseNotesList.vue"
 import SocAlertItem from "../SocAlerts/SocAlertItem.vue"
-import "@/assets/scss/vuesjv-override.scss"
 import Api from "@/api"
 import {
 	useMessage,

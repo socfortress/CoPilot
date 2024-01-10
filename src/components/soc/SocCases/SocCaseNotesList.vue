@@ -17,7 +17,6 @@
 <script setup lang="ts">
 import { ref, watch, onBeforeMount } from "vue"
 import SocCaseNote from "./SocCaseNote.vue"
-import "@/assets/scss/vuesjv-override.scss"
 import Api from "@/api"
 import { useMessage, NSpin, NInput, NEmpty } from "naive-ui"
 import type { SocNote } from "@/types/soc/note.d"

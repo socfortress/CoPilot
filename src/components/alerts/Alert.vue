@@ -241,7 +241,7 @@ const { alert, hideActions } = toRefs(props)
 
 const InfoIcon = "carbon:information"
 const TargetIcon = "zondicons:target"
-const DisabledIcon = "ph:minus-bold"
+const DisabledIcon = "carbon:subtract"
 const MailIcon = "carbon:email"
 const AgentIcon = "carbon:police"
 const LinkIcon = "carbon:launch"

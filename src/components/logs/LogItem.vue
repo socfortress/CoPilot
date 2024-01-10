@@ -54,7 +54,6 @@
 
 <script setup lang="ts">
 import Icon from "@/components/common/Icon.vue"
-import "@/assets/scss/vuesjv-override.scss"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
 import { LogEventType, type Log } from "@/types/logs.d"

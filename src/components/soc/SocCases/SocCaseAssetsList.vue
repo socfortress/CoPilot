@@ -24,7 +24,6 @@
 <script setup lang="ts">
 import { ref } from "vue"
 import SocCaseAssetsItem from "./SocCaseAssetsItem.vue"
-import "@/assets/scss/vuesjv-override.scss"
 import Api from "@/api"
 import { useMessage, NSpin, NEmpty } from "naive-ui"
 import { useSettingsStore } from "@/stores/settings"

@@ -31,15 +31,18 @@ export const useSettingsStore = defineStore("settings", {
 			const date = state.settings.dateFormat
 			const time = state.settings.hours24 ? "HH:mm" : "h:mm a"
 			const timesec = state.settings.hours24 ? "HH:mm:ss" : "h:mm:ss a"
+			const timesecmill = "HH:mm:ss.SSS"
 
 			return {
 				date: `${date}`,
 				datetime: `${date}${separator}${time}`,
 				datetimesec: `${date}${separator}${timesec}`,
+				datetimesecmill: `${date}${separator}${timesecmill}`,
 				/** "HH:mm" or "h:mm a" */
 				time,
 				/** "HH:mm:ss" or "h:mm:ss a" */
-				timesec
+				timesec,
+				timesecmill
 			}
 		}
 	},

@@ -135,7 +135,7 @@ const { input } = defineProps<{ input: InputExtended }>()
 
 const UserIcon = "carbon:user"
 const InfoIcon = "carbon:information"
-const DisabledIcon = "ph:minus-bold"
+const DisabledIcon = "carbon:subtract"
 const TimeIcon = "carbon:time"
 const GlobalIcon = "ph:globe-light"
 const StopIcon = "carbon:stop"
