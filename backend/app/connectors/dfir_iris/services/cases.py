@@ -129,3 +129,69 @@ async def get_single_case(case_id: SingleCaseBody) -> SingleCaseResponse:
     case = Case(session=dfir_iris_client)
     result = await fetch_and_parse_data(dfir_iris_client, case.get_case, case_id)
     return SingleCaseResponse(success=True, message="Successfully fetched single case", case=result["data"])
+
+async def purge_cases() -> CaseResponse:
+    """
+    Purges all cases from DFIR-IRIS.
+
+    Returns:
+        CaseResponse: The response object containing the success status, message, and cases data.
+
+    Raises:
+        HTTPException: If there is an error purging the cases.
+    """
+    dfir_iris_client = await create_dfir_iris_client("DFIR-IRIS")
+    case = Case(session=dfir_iris_client)
+
+    case_ids = await get_case_ids_to_purge()
+
+    for case_id in case_ids:
+        await purge_case(dfir_iris_client, case, case_id)
+
+    return CaseResponse(success=True, message="Successfully purged all cases")
+
+
+async def get_case_ids_to_purge() -> List[int]:
+    """
+    Retrieves all case IDs to be purged, skipping over specific cases as needed.
+
+    Returns:
+        List[int]: List of case IDs to purge.
+    """
+    result = await get_client_and_cases()
+    handle_cases_retrieval_failure(result)
+
+    # Extract case IDs, skipping over specific cases
+    return [case["case_id"] for case in result["data"] if case["case_id"] != 1]
+
+
+def handle_cases_retrieval_failure(result: Dict) -> None:
+    """
+    Handles failure in retrieving cases.
+
+    Args:
+        result (Dict): The result of the cases retrieval attempt.
+    """
+    if not result["success"]:
+        error_message = f"Failed to get all cases: {result['message']}"
+        logger.error(error_message)
+        raise HTTPException(status_code=500, detail=error_message)
+
+
+async def purge_case(client, case, case_id) -> None:
+    """
+    Purges a single case.
+
+    Args:
+        client: The DFIR-IRIS client.
+        case: The case object.
+        case_id (int): The ID of the case to purge.
+    """
+    try:
+        logger.info(f"Purging case: {case_id}")
+        await fetch_and_parse_data(client, case.delete_case, case_id)
+    except Exception as err:
+        error_message = f"Failed to purge case {case_id}: {err}"
+        logger.error(error_message)
+        raise HTTPException(status_code=500, detail=error_message)
+

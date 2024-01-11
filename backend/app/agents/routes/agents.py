@@ -20,6 +20,7 @@ from app.agents.velociraptor.services.agents import delete_agent_velociraptor
 from app.agents.wazuh.schema.agents import WazuhAgentVulnerabilitiesResponse
 from app.agents.wazuh.services.agents import delete_agent_wazuh
 from app.agents.wazuh.services.vulnerabilities import collect_agent_vulnerabilities
+from app.agents.dfir_iris.services.cases import collect_agent_soc_cases
 
 # App specific imports
 from app.auth.routes.auth import AuthHandler
@@ -290,6 +291,25 @@ async def get_agent_vulnerabilities(agent_id: str) -> WazuhAgentVulnerabilitiesR
     """
     logger.info(f"Fetching agent {agent_id} vulnerabilities")
     return await collect_agent_vulnerabilities(agent_id)
+
+@agents_router.get(
+    "/{agent_id}/soc_cases",
+    #response_model=SocCasesResponse,
+    description="Get SOC cases for agent",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_agent_soc_cases(agent_id: str):
+    """
+    Fetches the SOC cases of a specific agent.
+
+    Args:
+        agent_id (str): The ID of the agent.
+
+    Returns:
+        SocCasesResponse: The response containing the agent SOC cases.
+    """
+    logger.info(f"Fetching agent {agent_id} SOC cases")
+    return await collect_agent_soc_cases(agent_id)
 
 
 @agents_router.get(

@@ -17,6 +17,7 @@ from app.connectors.dfir_iris.services.cases import get_all_cases
 from app.connectors.dfir_iris.services.cases import get_cases_older_than
 from app.connectors.dfir_iris.services.cases import get_single_case
 from app.connectors.dfir_iris.utils.universal import check_case_exists
+from app.connectors.dfir_iris.services.cases import purge_cases
 
 
 async def verify_case_exists(case_id: int) -> int:
@@ -97,6 +98,22 @@ async def get_cases_older_than_route(case_older_than_body: CaseOlderThanBody = D
     """
     logger.info(f"Fetching all cases older than {case_older_than_body.older_than} ({case_older_than_body.time_unit.value})")
     return await get_cases_older_than(case_older_than_body)
+
+@dfir_iris_cases_router.delete(
+    "/purge",
+    response_model=CaseResponse,
+    description="Purge all cases",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def purge_cases_route() -> CaseResponse:
+    """
+    Purge all cases.
+
+    Returns:
+        CaseResponse: The response containing all cases.
+    """
+    logger.info("Purging all cases")
+    return await purge_cases()
 
 
 @dfir_iris_cases_router.get(
