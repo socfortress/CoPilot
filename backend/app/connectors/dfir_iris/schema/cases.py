@@ -39,12 +39,10 @@ class PurgeCaseResponse(BaseModel):
     message: str
     success: bool
 
-
 class ModificationHistoryItem(BaseModel):
     action: str
     user: str
     user_id: int
-
 
 class SingleCaseModel(BaseModel):
     case_description: str
@@ -101,7 +99,7 @@ class CasesBreachedResponse(BaseModel):
     message: str
     success: bool
 
-class ModificationHistoryItem(BaseModel):
+class CaseModificationHistoryItem(BaseModel):
     user: str
     user_id: int
     action: str
@@ -119,7 +117,7 @@ class CaseData(BaseModel):
     reviewer_id: Optional[int] = None
     closing_note: Optional[str] = None
     case_id: int
-    modification_history: Dict[str, ModificationHistoryItem]
+    modification_history: Dict[str, CaseModificationHistoryItem]
     classification_id: Optional[int] = None
     review_status_id: Optional[int] = None
     user_id: int
@@ -130,3 +128,29 @@ class ClosedCaseResponse(BaseModel):
     success: bool
     case: CaseData
     message: str
+
+class ReopenedCaseData(BaseModel):
+    owner_id: int
+    case_soc_id: str
+    status_id: int
+    case_name: str
+    custom_attributes: Optional[str] = None
+    open_date: date
+    close_date: Optional[date] = None
+    state_id: int
+    case_description: str
+    reviewer_id: Optional[int] = None
+    closing_note: Optional[str] = None
+    case_id: int
+    modification_history: Dict[str, CaseModificationHistoryItem]
+    classification_id: Optional[int] = None
+    review_status_id: Optional[int] = None
+    user_id: int
+    case_uuid: str
+    case_customer: int
+
+class ReopenedCaseResponse(BaseModel):
+    success: bool
+    case: ReopenedCaseData
+    message: str
+

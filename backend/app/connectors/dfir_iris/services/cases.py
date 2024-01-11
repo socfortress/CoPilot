@@ -6,7 +6,7 @@ from dfir_iris_client.case import Case
 from fastapi import HTTPException
 from loguru import logger
 
-from app.connectors.dfir_iris.schema.cases import CaseOlderThanBody, PurgeCaseResponse, ClosedCaseResponse
+from app.connectors.dfir_iris.schema.cases import CaseOlderThanBody, PurgeCaseResponse, ClosedCaseResponse, ReopenedCaseResponse
 from app.connectors.dfir_iris.schema.cases import CaseResponse
 from app.connectors.dfir_iris.schema.cases import CasesBreachedResponse
 from app.connectors.dfir_iris.schema.cases import SingleCaseBody
@@ -148,6 +148,27 @@ async def close_case(case_id: SingleCaseBody) -> ClosedCaseResponse:
     case = Case(session=dfir_iris_client)
     result = await fetch_and_parse_data(dfir_iris_client, case.close_case, case_id)
     return ClosedCaseResponse(success=True, case=result["data"], message="Successfully closed case")
+
+
+async def reopen_case(case_id: SingleCaseBody) -> ReopenedCaseResponse:
+    """
+    Opens a single case from DFIR-IRIS based on the provided case ID.
+
+    Args:
+        case_id (SingleCaseBody): The ID of the case to open.
+
+    Returns:
+        OpenCaseResponse: The response containing the opened case.
+
+    Raises:
+        Any exceptions raised during the execution of the function will be propagated.
+    """
+    logger.info(f"Opening case: {case_id}")
+    dfir_iris_client = await create_dfir_iris_client("DFIR-IRIS")
+    case = Case(session=dfir_iris_client)
+    result = await fetch_and_parse_data(dfir_iris_client, case.reopen_case, case_id)
+    logger.info(f"Successfully opened case: {result}")
+    return ReopenedCaseResponse(success=True, case=result["data"], message="Successfully opened case")
 
 ############# ! DELETE ACTIONS ! #############
 async def purge_cases() -> PurgeCaseResponse:
