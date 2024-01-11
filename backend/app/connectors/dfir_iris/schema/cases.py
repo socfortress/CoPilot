@@ -4,6 +4,7 @@ from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Union
+from datetime import date
 
 from pydantic import BaseModel
 from pydantic import Field
@@ -99,3 +100,33 @@ class CasesBreachedResponse(BaseModel):
     cases_breached: List[CaseModel]
     message: str
     success: bool
+
+class ModificationHistoryItem(BaseModel):
+    user: str
+    user_id: int
+    action: str
+
+class CaseData(BaseModel):
+    owner_id: int
+    case_soc_id: str
+    status_id: int
+    case_name: str
+    custom_attributes: Optional[str] = None
+    open_date: date
+    close_date: date
+    state_id: int
+    case_description: str
+    reviewer_id: Optional[int] = None
+    closing_note: Optional[str] = None
+    case_id: int
+    modification_history: Dict[str, ModificationHistoryItem]
+    classification_id: Optional[int] = None
+    review_status_id: Optional[int] = None
+    user_id: int
+    case_uuid: str
+    case_customer: int
+
+class ClosedCaseResponse(BaseModel):
+    success: bool
+    case: CaseData
+    message: str

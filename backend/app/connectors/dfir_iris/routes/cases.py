@@ -7,7 +7,7 @@ from fastapi import Security
 from loguru import logger
 
 from app.auth.utils import AuthHandler
-from app.connectors.dfir_iris.schema.cases import CaseOlderThanBody, PurgeCaseResponse
+from app.connectors.dfir_iris.schema.cases import CaseOlderThanBody, PurgeCaseResponse, ClosedCaseResponse
 from app.connectors.dfir_iris.schema.cases import CaseResponse
 from app.connectors.dfir_iris.schema.cases import CasesBreachedResponse
 from app.connectors.dfir_iris.schema.cases import SingleCaseBody
@@ -17,7 +17,7 @@ from app.connectors.dfir_iris.services.cases import get_all_cases
 from app.connectors.dfir_iris.services.cases import get_cases_older_than
 from app.connectors.dfir_iris.services.cases import get_single_case
 from app.connectors.dfir_iris.utils.universal import check_case_exists
-from app.connectors.dfir_iris.services.cases import purge_cases, delete_single_case
+from app.connectors.dfir_iris.services.cases import purge_cases, delete_single_case, close_case
 
 
 async def verify_case_exists(case_id: int) -> int:
@@ -155,3 +155,23 @@ async def get_single_case_route(case_id: int = Depends(verify_case_exists)) -> S
     logger.info(f"Fetching case {case_id}")
     single_case_body = SingleCaseBody(case_id=case_id)
     return await get_single_case(single_case_body.case_id)
+
+@dfir_iris_cases_router.put(
+    "/close/{case_id}",
+    response_model=ClosedCaseResponse,
+    description="Close a single case",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def close_single_case_route(case_id: int = Depends(verify_case_exists)) -> ClosedCaseResponse:
+    """
+    Close a single case by its ID.
+
+    Args:
+        case_id (int): The ID of the case to close.
+
+    Returns:
+        ClosedCaseResponse: The response containing the closed case information.
+    """
+    logger.info(f"Closing case {case_id}")
+    single_case_body = SingleCaseBody(case_id=case_id)
+    return await close_case(single_case_body.case_id)

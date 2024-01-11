@@ -6,7 +6,7 @@ from dfir_iris_client.case import Case
 from fastapi import HTTPException
 from loguru import logger
 
-from app.connectors.dfir_iris.schema.cases import CaseOlderThanBody, PurgeCaseResponse
+from app.connectors.dfir_iris.schema.cases import CaseOlderThanBody, PurgeCaseResponse, ClosedCaseResponse
 from app.connectors.dfir_iris.schema.cases import CaseResponse
 from app.connectors.dfir_iris.schema.cases import CasesBreachedResponse
 from app.connectors.dfir_iris.schema.cases import SingleCaseBody
@@ -130,6 +130,26 @@ async def get_single_case(case_id: SingleCaseBody) -> SingleCaseResponse:
     result = await fetch_and_parse_data(dfir_iris_client, case.get_case, case_id)
     return SingleCaseResponse(success=True, message="Successfully fetched single case", case=result["data"])
 
+async def close_case(case_id: SingleCaseBody) -> ClosedCaseResponse:
+    """
+    Closes a single case from DFIR-IRIS based on the provided case ID.
+
+    Args:
+        case_id (SingleCaseBody): The ID of the case to close.
+
+    Returns:
+        ClosedCaseResponse: The response containing the closed case.
+
+    Raises:
+        Any exceptions raised during the execution of the function will be propagated.
+    """
+    logger.info(f"Closing case: {case_id}")
+    dfir_iris_client = await create_dfir_iris_client("DFIR-IRIS")
+    case = Case(session=dfir_iris_client)
+    result = await fetch_and_parse_data(dfir_iris_client, case.close_case, case_id)
+    return ClosedCaseResponse(success=True, case=result["data"], message="Successfully closed case")
+
+############# ! DELETE ACTIONS ! #############
 async def purge_cases() -> PurgeCaseResponse:
     """
     Purges all cases from DFIR-IRIS.
