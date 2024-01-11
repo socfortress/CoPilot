@@ -23,6 +23,13 @@ export default {
 			`/agents/${id}/vulnerabilities`
 		)
 	},
+	getSocCases(id: string | number, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { case_ids: number[] }>(
+			`/agents/${id}/soc_cases`,
+			signal ? { signal } : {}
+		)
+	},
+
 	// IGNORE AT THE MOMENT !
 	agentsWazuhOutdated() {
 		return HttpClient.get<FlaskBaseResponse & { outdated_wazuh_agents: OutdatedWazuhAgents }>(

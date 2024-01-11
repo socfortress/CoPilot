@@ -1,5 +1,5 @@
 <template>
-	<n-spin :show="loadingDetails">
+	<n-spin :show="loadingDetails" description="Loading Soc Case">
 		<div class="soc-case-item" :class="{ embedded }">
 			<div class="flex flex-col gap-2 px-5 py-3" v-if="baseInfo">
 				<div class="header-box flex justify-between">
