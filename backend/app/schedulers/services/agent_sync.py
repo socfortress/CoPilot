@@ -1,10 +1,13 @@
 from datetime import datetime
 
 import requests
-
+from dotenv import load_dotenv
+import os
 from app.db.db_session import get_sync_db_session
 from app.schedulers.models.scheduler import JobMetadata
 from app.schedulers.utils.universal import scheduler_login
+
+load_dotenv()
 
 
 def agent_sync():
@@ -23,7 +26,7 @@ def agent_sync():
     # Check if the token was successfully retrieved
     if headers:
         # Your actual task
-        response = requests.post("http://localhost:5000/agents/sync", headers=headers)
+        response = requests.post(f"http://{os.getenv('SERVER_IP')}:5000/agents/sync", headers=headers)
 
         # Process the response here if needed
         print(response.json())
