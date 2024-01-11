@@ -107,7 +107,8 @@ async def build_asset_payload(agent_data: AgentsResponse, alert_details) -> Iris
             asset_ip=agent_data.agents[0].ip_address,
             asset_description=agent_data.agents[0].os,
             asset_type_id=await get_asset_type_id(agent_data.agents[0].os),
-            asset_tags=agent_data.agents[0].agent_id,
+            #asset_tags=agent_data.agents[0].agent_id,
+            asset_tags=f"agent_id:{agent_data.agents[0].agent_id}",
         )
     return IrisAsset()
 

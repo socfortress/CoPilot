@@ -65,7 +65,7 @@ async def is_customer_code_valid(create_alert_request: CreateAlertRequest, sessi
 
 
 @general_alerts_router.post(
-    "/general",
+    "",
     response_model=CreateAlertResponse,
     description="Create a general alert in IRIS.",
 )
