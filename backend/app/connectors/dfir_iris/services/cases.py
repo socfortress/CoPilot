@@ -6,7 +6,7 @@ from dfir_iris_client.case import Case
 from fastapi import HTTPException
 from loguru import logger
 
-from app.connectors.dfir_iris.schema.cases import CaseOlderThanBody
+from app.connectors.dfir_iris.schema.cases import CaseOlderThanBody, PurgeCaseResponse
 from app.connectors.dfir_iris.schema.cases import CaseResponse
 from app.connectors.dfir_iris.schema.cases import CasesBreachedResponse
 from app.connectors.dfir_iris.schema.cases import SingleCaseBody
@@ -130,12 +130,12 @@ async def get_single_case(case_id: SingleCaseBody) -> SingleCaseResponse:
     result = await fetch_and_parse_data(dfir_iris_client, case.get_case, case_id)
     return SingleCaseResponse(success=True, message="Successfully fetched single case", case=result["data"])
 
-async def purge_cases() -> CaseResponse:
+async def purge_cases() -> PurgeCaseResponse:
     """
     Purges all cases from DFIR-IRIS.
 
     Returns:
-        CaseResponse: The response object containing the success status, message, and cases data.
+        PurgeCaseResponse: The response containing the purge status.
 
     Raises:
         HTTPException: If there is an error purging the cases.
@@ -148,7 +148,7 @@ async def purge_cases() -> CaseResponse:
     for case_id in case_ids:
         await purge_case(dfir_iris_client, case, case_id)
 
-    return CaseResponse(success=True, message="Successfully purged all cases")
+    return PurgeCaseResponse(success=True, message="Successfully purged all cases")
 
 
 async def get_case_ids_to_purge() -> List[int]:
@@ -178,7 +178,7 @@ def handle_cases_retrieval_failure(result: Dict) -> None:
         raise HTTPException(status_code=500, detail=error_message)
 
 
-async def purge_case(client, case, case_id) -> None:
+async def purge_case(client, case, case_id) -> PurgeCaseResponse:
     """
     Purges a single case.
 
@@ -190,8 +190,27 @@ async def purge_case(client, case, case_id) -> None:
     try:
         logger.info(f"Purging case: {case_id}")
         await fetch_and_parse_data(client, case.delete_case, case_id)
+        return PurgeCaseResponse(success=True, message=f"Successfully purged case {case_id}")
     except Exception as err:
         error_message = f"Failed to purge case {case_id}: {err}"
         logger.error(error_message)
         raise HTTPException(status_code=500, detail=error_message)
+
+async def delete_single_case(case_id: SingleCaseBody) -> PurgeCaseResponse:
+    """
+    Deletes a single case from DFIR-IRIS based on the provided case ID.
+
+    Args:
+        case_id (SingleCaseBody): The ID of the case to delete.
+
+    Returns:
+        SingleCaseResponse: The response containing the deleted case.
+
+    Raises:
+        Any exceptions raised during the execution of the function will be propagated.
+    """
+    dfir_iris_client = await create_dfir_iris_client("DFIR-IRIS")
+    case = Case(session=dfir_iris_client)
+    result = await fetch_and_parse_data(dfir_iris_client, case.delete_case, case_id)
+    return PurgeCaseResponse(success=True, message="Successfully deleted single case")
 

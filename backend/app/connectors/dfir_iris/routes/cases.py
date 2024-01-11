@@ -7,7 +7,7 @@ from fastapi import Security
 from loguru import logger
 
 from app.auth.utils import AuthHandler
-from app.connectors.dfir_iris.schema.cases import CaseOlderThanBody
+from app.connectors.dfir_iris.schema.cases import CaseOlderThanBody, PurgeCaseResponse
 from app.connectors.dfir_iris.schema.cases import CaseResponse
 from app.connectors.dfir_iris.schema.cases import CasesBreachedResponse
 from app.connectors.dfir_iris.schema.cases import SingleCaseBody
@@ -17,7 +17,7 @@ from app.connectors.dfir_iris.services.cases import get_all_cases
 from app.connectors.dfir_iris.services.cases import get_cases_older_than
 from app.connectors.dfir_iris.services.cases import get_single_case
 from app.connectors.dfir_iris.utils.universal import check_case_exists
-from app.connectors.dfir_iris.services.cases import purge_cases
+from app.connectors.dfir_iris.services.cases import purge_cases, delete_single_case
 
 
 async def verify_case_exists(case_id: int) -> int:
@@ -101,19 +101,39 @@ async def get_cases_older_than_route(case_older_than_body: CaseOlderThanBody = D
 
 @dfir_iris_cases_router.delete(
     "/purge",
-    response_model=CaseResponse,
+    response_model=PurgeCaseResponse,
     description="Purge all cases",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def purge_cases_route() -> CaseResponse:
+async def purge_cases_route() -> PurgeCaseResponse:
     """
     Purge all cases.
 
     Returns:
-        CaseResponse: The response containing all cases.
+        PurgeCaseResponse: The response containing the purge status.
     """
     logger.info("Purging all cases")
     return await purge_cases()
+
+@dfir_iris_cases_router.delete(
+    "/purge/{case_id}",
+    response_model=PurgeCaseResponse,
+    description="Purge a single case",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def purge_single_case_route(case_id: int = Depends(verify_case_exists)) -> PurgeCaseResponse:
+    """
+    Purge a single case by its ID.
+
+    Args:
+        case_id (int): The ID of the case to purge.
+
+    Returns:
+        PurgeCaseResponse: The response containing the purge status.
+    """
+    logger.info(f"Purging case {case_id}")
+    single_case_body = SingleCaseBody(case_id=case_id)
+    return await delete_single_case(single_case_body.case_id)
 
 
 @dfir_iris_cases_router.get(

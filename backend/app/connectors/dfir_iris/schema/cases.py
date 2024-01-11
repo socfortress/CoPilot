@@ -34,6 +34,10 @@ class CaseResponse(BaseModel):
     message: str
     success: bool
 
+class PurgeCaseResponse(BaseModel):
+    message: str
+    success: bool
+
 
 class ModificationHistoryItem(BaseModel):
     action: str
