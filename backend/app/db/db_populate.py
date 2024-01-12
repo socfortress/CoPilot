@@ -7,42 +7,10 @@ from sqlalchemy.future import select
 
 from app.auth.models.users import Role
 from app.connectors.models import Connectors
+from app.integrations.models.customer_integration_settings import AvailableIntegrations
 
 load_dotenv()
 
-
-# def load_connector_data(connector_name, connector_type, accepts_key, extra_data_key=None):
-#     """
-#     Load connector data from environment variables.
-
-#     Args:
-#         connector_name (str): The name of the connector.
-#         connector_type (str): The type of the connector.
-#         accepts_key (str): The type of key the connector accepts.
-#         extra_data_key (str, optional): The key for extra data. Defaults to None.
-
-#     Returns:
-#         dict: A dictionary containing the connector data.
-#     """
-#     env_prefix = connector_name.upper().replace("-", "_").replace(" ", "_")
-#     url = os.getenv(f"{env_prefix}_URL")
-#     logger.info(f"Loading connector data for {connector_name} from environment variables with URL: {url}")
-#     return {
-#         "connector_name": connector_name,
-#         "connector_type": connector_type,
-#         "connector_url": os.getenv(f"{env_prefix}_URL"),
-#         "connector_username": os.getenv(f"{env_prefix}_USERNAME"),
-#         "connector_password": os.getenv(f"{env_prefix}_PASSWORD"),
-#         "connector_api_key": os.getenv(f"{env_prefix}_API_KEY"),
-#         "connector_description": os.getenv(f"{env_prefix}_DESCRIPTION", "Not specified."),
-#         "connector_supports": os.getenv(f"{env_prefix}_SUPPORTS", "Not specified."),
-#         "connector_configured": True,
-#         "connector_verified": bool(os.getenv(f"{env_prefix}_VERIFIED", False)),
-#         "connector_accepts_api_key": accepts_key == "api_key",
-#         "connector_accepts_username_password": accepts_key == "username_password",
-#         "connector_accepts_file": accepts_key == "file",
-#         "connector_extra_data": os.getenv(extra_data_key) if extra_data_key else None,
-#     }
 
 def load_connector_data(connector_name, connector_type, accepts_key, description, extra_data_key=None):
     """
@@ -100,6 +68,7 @@ def get_connectors_list():
         ("Cortex", "3", "api_key", "Connection to Cortex. Make sure you have created an API key."),
         ("Grafana", "3", "username_password", "Connection to Grafana. Make sure to use the an admin role user."),
         ("Wazuh Worker Provisioning", "3", "api_key", "Connection to Wazuh Worker Provisioning. Make sure you have deployed the Wazuh Worker Provisioning Application provided by SOCFortress: https://github.com/socfortress/Customer-Provisioning-Worker"),
+        ("Event Shipper", "3", "api_key", "Connection to Graylog GELF Input to receive events from integrations. Make sure you have created a GELF Input in Graylog.", "GELF_INPUT_PORT"),
         # ... Add more connectors as needed ...
     ]
 
@@ -161,3 +130,59 @@ async def add_roles_if_not_exist(session: AsyncSession) -> None:
 
     await session.commit()  # Commit the transaction
     logger.info("Role check and addition completed.")
+
+def load_available_integrations_data(integration_name: str, description: str):
+    """
+    Load available integrations data from environment variables.
+
+    Args:
+        integration_name (str): The name of the integration.
+        description (str): The description of the integration.
+
+    Returns:
+        dict: A dictionary containing the integration data.
+    """
+    logger.info(f"Loading available integrations data for {integration_name}.")
+    return {
+        "integration_name": integration_name,
+        "description": description,
+    }
+
+def get_available_integrations_list():
+    """
+    Get a list of available integrations.
+
+    Returns:
+        list: A list of available integrations data, where each item contains the integration name and description.
+    """
+    available_integrations = [
+        ("Office Defender For Endpoint", "Integrate Office Defender For Endpoint with SOCFortress."),
+        ("Mimecast", "Integrate Mimecast with SOCFortress."),
+        # ... Add more available integrations as needed ...
+    ]
+
+    return [load_available_integrations_data(*available_integration) for available_integration in available_integrations]
+
+async def add_available_integrations_if_not_exist(session: AsyncSession):
+    """
+    Adds available integrations to the database if they do not already exist.
+
+    Args:
+        session (AsyncSession): The database session.
+
+    Returns:
+        None
+    """
+    available_integrations_list = get_available_integrations_list()
+
+    for available_integration_data in available_integrations_list:
+        query = select(AvailableIntegrations).where(AvailableIntegrations.integration_name == available_integration_data["integration_name"])
+        result = await session.execute(query)
+        existing_available_integration = result.scalars().first()
+
+        if existing_available_integration is None:
+            new_available_integration = AvailableIntegrations(**available_integration_data)
+            session.add(new_available_integration)
+            logger.info(f"Added new available integration: {available_integration_data['integration_name']}")
+
+    await session.commit()

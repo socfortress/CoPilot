@@ -11,6 +11,7 @@ from app.auth.utils import AuthHandler
 from app.db.db_session import async_engine
 from app.db.db_setup import create_roles
 from app.db.db_setup import create_tables
+from app.db.db_setup import create_available_integrations
 from app.db.db_setup import ensure_admin_user
 from app.db.db_setup import ensure_scheduler_user
 from app.db.db_setup import ensure_scheduler_user_removed
@@ -41,6 +42,8 @@ from app.routers import threat_intel
 from app.routers import velociraptor
 from app.routers import wazuh_indexer
 from app.routers import wazuh_manager
+from app.routers import log_shipper_test
+from app.routers import integrations
 from app.schedulers.scheduler import init_scheduler
 
 auth_handler = AuthHandler()
@@ -95,6 +98,8 @@ app.include_router(threat_intel.router)
 app.include_router(ask_socfortress.router)
 app.include_router(alert_creation.router)
 app.include_router(alert_creation_settings.router)
+app.include_router(log_shipper_test.router)
+app.include_router(integrations.router)
 
 
 @app.on_event("startup")
@@ -102,6 +107,7 @@ async def init_db():
     # create_tables(engine)
     await create_tables(async_engine)
     await create_roles(async_engine)
+    await create_available_integrations(async_engine)
     await ensure_admin_user(async_engine)
     await ensure_scheduler_user(async_engine)
 
