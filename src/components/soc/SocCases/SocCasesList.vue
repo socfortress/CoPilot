@@ -221,7 +221,7 @@ function getData() {
 function handlePurge() {
 	dialog.warning({
 		title: "Confirm",
-		content: "Are you sure you want to purge all SOC Cases ?",
+		content: "This will remove ALL cases, are you sure you want to proceed?",
 		positiveText: "Yes I'm sure",
 		negativeText: "Cancel",
 		onPositiveClick: () => {
