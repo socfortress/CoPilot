@@ -11,3 +11,6 @@ from app.integrations.alert_creation_settings.models.alert_creation_settings imp
     AlertCreationSettings,
 )
 from app.schedulers.models.scheduler import JobMetadata
+from app.integrations.models.customer_integration_settings import (
+    CustomerIntegrations,
+)
