@@ -41,7 +41,13 @@
 				</template>
 				<div style="min-height: 50px">
 					<n-spin :show="loadingCase">
-						<SocCaseItem :case-data="socCase" v-if="socCase" :embedded="true" class="py-2 -mt-4" />
+						<SocCaseItem
+							:case-data="socCase"
+							v-if="socCase"
+							:embedded="true"
+							@deleted="getSocCase(link.case_id)"
+							class="py-2 -mt-4"
+						/>
 						<template v-else>
 							<n-empty
 								description="No Case found"
@@ -88,11 +94,11 @@ function showSocCase(show: boolean) {
 	}
 }
 
-function getSocCase(caseId: string) {
+function getSocCase(caseId: string | number) {
 	loadingCase.value = true
 
 	Api.soc
-		.getCases(caseId)
+		.getCases(caseId.toString())
 		.then(res => {
 			if (res.data.success) {
 				socCase.value = (res.data?.case as unknown as SocCase) || null
