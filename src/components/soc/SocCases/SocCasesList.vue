@@ -19,6 +19,13 @@
 						</div>
 					</div>
 				</n-popover>
+
+				<n-button size="small" type="error" ghost @click="handlePurge()" :loading="loadingPurge">
+					<div class="flex items-center gap-2">
+						<Icon :name="TrashIcon" :size="16"></Icon>
+						<span class="hidden xs:block">Purge</span>
+					</div>
+				</n-button>
 			</div>
 			<n-pagination
 				v-model:page="currentPage"
@@ -82,6 +89,7 @@
 						v-for="caseData of itemsPaginated"
 						:key="caseData.case_id"
 						:caseData="caseData"
+						@deleted="getData()"
 						class="item-appear item-appear-bottom item-appear-005 mb-2"
 					/>
 				</template>
@@ -114,7 +122,8 @@ import {
 	NPagination,
 	NInputGroup,
 	NBadge,
-	NInputNumber
+	NInputNumber,
+	useDialog
 } from "naive-ui"
 import Api from "@/api"
 import _cloneDeep from "lodash/cloneDeep"
@@ -126,7 +135,9 @@ import type { DateFormatted, SocCase } from "@/types/soc/case.d"
 import SocCaseItem from "./SocCaseItem.vue"
 import dayjs from "@/utils/dayjs"
 
+const dialog = useDialog()
 const message = useMessage()
+const loadingPurge = ref(false)
 const loading = ref(false)
 const showFilters = ref(false)
 const casesList = ref<SocCase[]>([])
@@ -157,6 +168,7 @@ const itemsPaginated = computed(() => {
 
 const FilterIcon = "carbon:filter-edit"
 const InfoIcon = "carbon:information"
+const TrashIcon = "carbon:trash-can"
 
 const total = computed<number>(() => {
 	return casesList.value.length || 0
@@ -206,12 +218,48 @@ function getData() {
 		})
 }
 
+function handlePurge() {
+	dialog.warning({
+		title: "Confirm",
+		content: "Are you sure you want to purge all SOC Cases ?",
+		positiveText: "Yes I'm sure",
+		negativeText: "Cancel",
+		onPositiveClick: () => {
+			purge()
+		},
+		onNegativeClick: () => {
+			message.info("Purge canceled")
+		}
+	})
+}
+
+function purge() {
+	loadingPurge.value = true
+
+	Api.soc
+		.purgeAllCases()
+		.then(res => {
+			if (res.data.success) {
+				getData()
+				message.success(res.data?.message || "SOC Cases purged successfully")
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			loadingPurge.value = false
+		})
+}
+
 useResizeObserver(header, entries => {
 	const entry = entries[0]
 	const { width } = entry.contentRect
 
-	pageSlot.value = width < 650 ? 5 : 8
-	simpleMode.value = width < 450
+	pageSlot.value = width < 700 ? 5 : 8
+	simpleMode.value = width < 550
 })
 
 onBeforeMount(() => {
