@@ -180,7 +180,14 @@
 			segmented
 		>
 			<div class="h-full w-full flex items-center justify-center">
-				<SocCaseItem v-if="caseId" :caseId="caseId" embedded hideSocAlertLink class="w-full" />
+				<SocCaseItem
+					v-if="caseId"
+					:caseId="caseId"
+					embedded
+					hideSocAlertLink
+					hide-soc-case-action
+					class="w-full"
+				/>
 			</div>
 		</n-modal>
 

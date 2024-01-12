@@ -14,6 +14,7 @@
 					v-for="item of casesList"
 					:key="item"
 					:caseId="item"
+					@deleted="getData()"
 					class="mb-2 item-appear item-appear-bottom item-appear-005"
 				/>
 			</template>
