@@ -41,6 +41,7 @@ from app.routers import threat_intel
 from app.routers import velociraptor
 from app.routers import wazuh_indexer
 from app.routers import wazuh_manager
+from app.routers import log_shipper_test
 from app.schedulers.scheduler import init_scheduler
 
 auth_handler = AuthHandler()
@@ -95,6 +96,7 @@ app.include_router(threat_intel.router)
 app.include_router(ask_socfortress.router)
 app.include_router(alert_creation.router)
 app.include_router(alert_creation_settings.router)
+app.include_router(log_shipper_test.router)
 
 
 @app.on_event("startup")

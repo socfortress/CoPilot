@@ -100,6 +100,7 @@ def get_connectors_list():
         ("Cortex", "3", "api_key", "Connection to Cortex. Make sure you have created an API key."),
         ("Grafana", "3", "username_password", "Connection to Grafana. Make sure to use the an admin role user."),
         ("Wazuh Worker Provisioning", "3", "api_key", "Connection to Wazuh Worker Provisioning. Make sure you have deployed the Wazuh Worker Provisioning Application provided by SOCFortress: https://github.com/socfortress/Customer-Provisioning-Worker"),
+        ("Event Shipper", "3", "api_key", "Connection to Graylog GELF Input to receive events from integrations. Make sure you have created a GELF Input in Graylog.", "GELF_INPUT_PORT"),
         # ... Add more connectors as needed ...
     ]
 

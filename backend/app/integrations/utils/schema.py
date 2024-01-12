@@ -195,3 +195,32 @@ class ShufflePayload(BaseModel):
 
     def to_dict(self):
         return self.dict(exclude_none=True)
+
+
+######### ! SEND TO EVENT SHIPPER ! #########
+class EventShipperPayload(BaseModel):
+    integration: str = Field(
+        ...,
+        description="The integration name.",
+        examples="mimecast",
+    )
+    customer_code: str = Field(
+        ...,
+        description="The customer code.",
+        examples="socfortress",
+    )
+    class Config:
+        extra = Extra.allow
+
+    def to_dict(self):
+        return self.dict(exclude_none=True)
+
+class EventShipperPayloadResponse(BaseModel):
+    message: str
+    success: bool
+    data: Optional[dict] = Field(
+        None,
+        description="The Event Shipper response data.",
+    )
+
+
