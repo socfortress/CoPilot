@@ -1,6 +1,12 @@
 from typing import List, Optional
 from sqlmodel import Field, Relationship, SQLModel
 
+class AvailableIntegrations(SQLModel, table=True):
+    __tablename__ = "available_integrations"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    integration_name: str = Field(max_length=255, nullable=False)
+    description: str = Field(max_length=1024)
+
 class CustomerIntegrations(SQLModel, table=True):
     __tablename__ = "customer_integrations"
     id: Optional[int] = Field(default=None, primary_key=True)
