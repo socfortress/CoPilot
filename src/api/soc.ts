@@ -124,5 +124,17 @@ export default {
 	},
 	removeUserAlertAssign(alertId: string, userId: string) {
 		return HttpClient.delete<FlaskBaseResponse & { alert: SocAlert }>(`/soc/users/assign/${alertId}/${userId}`)
+	},
+	closeCase(caseId: string) {
+		return HttpClient.put<FlaskBaseResponse & { case: SocAlertCaseResponse }>(`/soc/cases/close/${caseId}`)
+	},
+	reopenCase(caseId: string) {
+		return HttpClient.put<FlaskBaseResponse & { case: SocAlertCaseResponse }>(`/soc/cases/open/${caseId}`)
+	},
+	deleteCase(caseId: string) {
+		return HttpClient.delete<FlaskBaseResponse>(`/soc/cases/purge/${caseId}`)
+	},
+	purgeAllCases() {
+		return HttpClient.delete<FlaskBaseResponse>(`/soc/cases/purge`)
 	}
 }
