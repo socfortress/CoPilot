@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from pydantic import Field
 from app.integrations.models.customer_integration_settings import AvailableIntegrations
+from typing import List
 
 class AvailableIntegrationsResponse(BaseModel):
     """
@@ -82,3 +83,25 @@ class CustomerIntegrationCreateResponse(BaseModel):
         ...,
         description="The success status.",
     )
+
+class IntegrationService(BaseModel):
+    auth_type: str
+    service_name: str
+    id: int
+
+class IntegrationSubscription(BaseModel):
+    id: int
+    customer_id: int
+    integration_service_id: int
+    integration_service: IntegrationService
+
+class CustomerIntegrations(BaseModel):
+    customer_code: str
+    id: int
+    customer_name: str
+    integration_subscriptions: List[IntegrationSubscription]
+
+class CustomerIntegrationsResponse(BaseModel):
+    available_integrations: List[CustomerIntegrations]
+    message: str
+    success: bool
