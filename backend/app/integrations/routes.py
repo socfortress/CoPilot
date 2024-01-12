@@ -28,6 +28,20 @@ from app.integrations.schema import AvailableIntegrationsResponse
 
 integration_settings_router = APIRouter()
 
+async def fetch_available_integrations(session: AsyncSession):
+    """
+    Fetches available integrations from the database.
+
+    Args:
+        session (AsyncSession): The database session.
+
+    Returns:
+        List[AvailableIntegrations]: A list of available integrations.
+    """
+    stmt = select(AvailableIntegrations)
+    result = await session.execute(stmt)
+    return result.scalars().all()
+
 @integration_settings_router.get(
     "/available_integrations",
     response_model=AvailableIntegrationsResponse,
@@ -37,11 +51,9 @@ async def get_available_integrations(
     session: AsyncSession = Depends(get_db),
 ):
     """
-    Get a list of available integrations.
+    Endpoint to get a list of available integrations.
     """
-    stmt = select(AvailableIntegrations)
-    result = await session.execute(stmt)
-    available_integrations = result.scalars().all()
+    available_integrations = await fetch_available_integrations(session)
     return AvailableIntegrationsResponse(
         available_integrations=available_integrations,
         message="Available integrations successfully retrieved.",
