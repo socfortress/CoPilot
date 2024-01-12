@@ -128,6 +128,26 @@ async def get_available_integrations(
         success=True,
     )
 
+# @integration_settings_router.get(
+#     "/customer_integrations",
+#     response_model=CustomerIntegrationsResponse,
+#     description="Get a list of customer integrations."
+# )
+# async def get_customer_integrations(
+#     session: AsyncSession = Depends(get_db),
+# ):
+#     """
+#     Endpoint to get a list of customer integrations.
+#     """
+#     stmt = select(CustomerIntegrations).options(joinedload(CustomerIntegrations.integration_subscriptions).joinedload(IntegrationSubscription.integration_service))
+#     result = await session.execute(stmt)
+#     customer_integrations = result.scalars().unique().all()
+#     logger.info(customer_integrations)
+#     return CustomerIntegrationsResponse(
+#         available_integrations=customer_integrations,
+#         message="Customer integrations successfully retrieved.",
+#         success=True,
+#     )
 @integration_settings_router.get(
     "/customer_integrations",
     response_model=CustomerIntegrationsResponse,
@@ -139,10 +159,17 @@ async def get_customer_integrations(
     """
     Endpoint to get a list of customer integrations.
     """
-    stmt = select(CustomerIntegrations).options(joinedload(CustomerIntegrations.integration_subscriptions).joinedload(IntegrationSubscription.integration_service))
+    stmt = (
+        select(CustomerIntegrations)
+        .options(
+            joinedload(CustomerIntegrations.integration_subscriptions)
+            .joinedload(IntegrationSubscription.integration_service),
+            joinedload(CustomerIntegrations.integration_subscriptions)
+            .subqueryload(IntegrationSubscription.integration_metadata)  # Load IntegrationMetadata
+        )
+    )
     result = await session.execute(stmt)
     customer_integrations = result.scalars().unique().all()
-    logger.info(customer_integrations)
     return CustomerIntegrationsResponse(
         available_integrations=customer_integrations,
         message="Customer integrations successfully retrieved.",
@@ -161,10 +188,18 @@ async def get_customer_integrations_by_customer_code(
     """
     Endpoint to get a list of customer integrations for a specific customer.
     """
-    stmt = select(CustomerIntegrations).options(joinedload(CustomerIntegrations.integration_subscriptions).joinedload(IntegrationSubscription.integration_service)).where(CustomerIntegrations.customer_code == customer_code)
+    stmt = (
+        select(CustomerIntegrations)
+        .options(
+            joinedload(CustomerIntegrations.integration_subscriptions)
+            .joinedload(IntegrationSubscription.integration_service),
+            joinedload(CustomerIntegrations.integration_subscriptions)
+            .subqueryload(IntegrationSubscription.integration_metadata)  # Load IntegrationMetadata
+        )
+        .where(CustomerIntegrations.customer_code == customer_code)
+    )
     result = await session.execute(stmt)
     customer_integrations = result.scalars().unique().all()
-    logger.info(customer_integrations)
     return CustomerIntegrationsResponse(
         available_integrations=customer_integrations,
         message="Customer integrations successfully retrieved.",

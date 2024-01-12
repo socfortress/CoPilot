@@ -84,6 +84,40 @@ class CustomerIntegrationCreateResponse(BaseModel):
         description="The success status.",
     )
 
+# class IntegrationConfig(BaseModel):
+#     config_id: int
+#     config_value: str
+#     config_key: str
+
+# class IntegrationService(BaseModel):
+#     auth_type: str
+#     service_name: str
+#     id: int
+
+# class IntegrationSubscription(BaseModel):
+#     id: int
+#     customer_id: int
+#     integration_service_id: int
+#     integration_service: IntegrationService
+#     integration_config: IntegrationConfig
+
+# class CustomerIntegrations(BaseModel):
+#     customer_code: str
+#     id: int
+#     customer_name: str
+#     integration_subscriptions: List[IntegrationSubscription]
+
+# class CustomerIntegrationsResponse(BaseModel):
+#     available_integrations: List[CustomerIntegrations]
+#     message: str
+#     success: bool
+
+class IntegrationMetadata(BaseModel):
+    id: int
+    metadata_value: str
+    metadata_key: str
+    subscription_id: int
+
 class IntegrationService(BaseModel):
     auth_type: str
     service_name: str
@@ -94,6 +128,7 @@ class IntegrationSubscription(BaseModel):
     customer_id: int
     integration_service_id: int
     integration_service: IntegrationService
+    integration_metadata: List[IntegrationMetadata]  # Changed from IntegrationConfig
 
 class CustomerIntegrations(BaseModel):
     customer_code: str
