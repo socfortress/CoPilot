@@ -7,13 +7,13 @@ export interface SocCase {
 	case_open_date: DateFormatted
 	case_soc_id: string
 	case_uuid: string
-	classification: string | null
 	classification_id: number | null
+	classification: string | null
 	client_name: string
-	opened_by: string
 	opened_by_user_id: number
-	owner: string
+	opened_by: string
 	owner_id: number
+	owner: string
 	state_id: number
 	state_name: StateName
 }

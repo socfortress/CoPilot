@@ -57,6 +57,11 @@
 							<VulnerabilitiesSection v-if="agent" :agent="agent" />
 						</div>
 					</n-tab-pane>
+					<n-tab-pane name="Cases" tab="Cases" display-directive="show:lazy">
+						<div class="section">
+							<AgentCases v-if="agent" :agent="agent" />
+						</div>
+					</n-tab-pane>
 					<n-tab-pane name="Artifacts" tab="Artifacts" display-directive="show:lazy">
 						<div class="section">
 							<AgentFlowList v-if="agent" :agent="agent" />
@@ -108,6 +113,7 @@ import { useRouter } from "vue-router"
 import VulnerabilitiesSection from "@/components/agents/VulnerabilitiesSection.vue"
 import AlertsList from "@/components/alerts/AlertsList.vue"
 import OverviewSection from "@/components/agents/OverviewSection.vue"
+import AgentCases from "@/components/agents/AgentCases.vue"
 import AgentFlowList from "@/components/agents/agentFlow/AgentFlowList.vue"
 import { useMessage, NSpin, NTooltip, NButton, NTabs, NTabPane, NCard, useDialog } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"

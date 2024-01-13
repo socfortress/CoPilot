@@ -1,5 +1,8 @@
 <template>
-	<n-spin :show="loadingDetails">
+	<n-spin
+		:show="loadingDetails || loadingDelete"
+		:description="loadingDelete ? 'Deleting Soc Case' : 'Loading Soc Case'"
+	>
 		<div class="soc-case-item" :class="{ embedded }">
 			<div class="flex flex-col gap-2 px-5 py-3" v-if="baseInfo">
 				<div class="header-box flex justify-between">
@@ -36,7 +39,7 @@
 						</n-popover>
 					</div>
 				</div>
-				<div class="main-box flex justify-between gap-4">
+				<div class="main-box flex items-center justify-between gap-4">
 					<div class="content">
 						<div class="title" v-html="baseInfo.case_name"></div>
 						<div class="description mt-2" v-if="baseInfo.case_description">{{ excerpt }}</div>
@@ -79,8 +82,27 @@
 							</Badge>
 						</div>
 					</div>
+					<SocCaseItemActions
+						v-if="!hideSocCaseAction"
+						class="actions-box"
+						:caseData="baseInfo"
+						@closed="setClosed()"
+						@reopened="setReopened()"
+						@deleted="deleteCase()"
+						@startDeleting="loadingDelete = true"
+					/>
 				</div>
-				<div class="footer-box flex justify-end items-center gap-3">
+				<div class="footer-box flex justify-between items-center gap-3">
+					<SocCaseItemActions
+						v-if="!hideSocCaseAction"
+						class="actions-box !flex-row"
+						:caseData="baseInfo"
+						:size="'small'"
+						@closed="setClosed()"
+						@reopened="setReopened()"
+						@deleted="deleteCase()"
+						@startDeleting="loadingDelete = true"
+					/>
 					<div class="time" v-if="caseOpenDate">{{ formatDate(caseOpenDate) }}</div>
 				</div>
 			</div>
@@ -218,6 +240,7 @@ import SocCaseTimeline from "./SocCaseTimeline.vue"
 import SocCaseAssetsList from "./SocCaseAssetsList.vue"
 import SocCaseNoteForm from "./SocCaseNoteForm.vue"
 import SocCaseNotesList from "./SocCaseNotesList.vue"
+import SocCaseItemActions from "./SocCaseItemActions.vue"
 import SocAlertItem from "../SocAlerts/SocAlertItem.vue"
 import Api from "@/api"
 import {
@@ -240,11 +263,16 @@ import { type SocCase, StateName, type SocCaseExt } from "@/types/soc/case.d"
 import _omit from "lodash/omit"
 import _split from "lodash/split"
 
-const { caseData, caseId, embedded } = defineProps<{
+const { caseData, caseId, embedded, hideSocCaseAction } = defineProps<{
 	caseData?: SocCase
 	caseId?: number | string
 	embedded?: boolean
 	hideSocAlertLink?: boolean
+	hideSocCaseAction?: boolean
+}>()
+
+const emit = defineEmits<{
+	(e: "deleted"): void
 }>()
 
 const TimeIcon = "carbon:time"
@@ -258,6 +286,7 @@ const AddIcon = "carbon:add-alt"
 const showSocAlertDetails = ref(false)
 const showDetails = ref(false)
 const loadingDetails = ref(false)
+const loadingDelete = ref(false)
 const message = useMessage()
 const noteFormVisible = ref([])
 const updateNotes = ref(false)
@@ -341,6 +370,23 @@ const properties = computed(() => {
 
 function formatDate(timestamp: string | number | Date, utc: boolean = true): string {
 	return dayjs(timestamp).utc(utc).format(dFormats.date)
+}
+
+function setClosed() {
+	if (baseInfo.value) {
+		baseInfo.value.state_name = StateName.Closed
+	}
+}
+
+function setReopened() {
+	if (baseInfo.value) {
+		baseInfo.value.state_name = StateName.Open
+	}
+}
+
+function deleteCase() {
+	loadingDetails.value = true
+	emit("deleted")
 }
 
 function openSocAlert() {
@@ -433,13 +479,13 @@ onBeforeMount(() => {
 	}
 
 	.footer-box {
-		font-family: var(--font-family-mono);
 		font-size: 13px;
 		margin-top: 10px;
 		display: none;
 
 		.time {
 			text-align: right;
+			font-family: var(--font-family-mono);
 			color: var(--fg-secondary-color);
 		}
 	}
@@ -456,6 +502,13 @@ onBeforeMount(() => {
 				display: none;
 			}
 		}
+
+		.main-box {
+			.actions-box {
+				display: none;
+			}
+		}
+
 		.footer-box {
 			display: flex;
 		}
