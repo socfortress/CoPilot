@@ -7,6 +7,8 @@ from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
+from sqlalchemy.exc import NoResultFound
+from sqlalchemy import delete
 
 from app.db.db_session import get_db
 from app.integrations.models.customer_integration_settings import (
@@ -25,7 +27,7 @@ from app.integrations.models.customer_integration_settings import (
     IntegrationMetadata, AvailableIntegrations
 )
 from app.db.universal_models import Customers
-from app.integrations.schema import AvailableIntegrationsResponse, CustomerIntegrationCreate, CreateIntegrationService, CreateIntegrationMetadata, CustomerIntegrationCreateResponse, CustomerIntegrationsResponse
+from app.integrations.schema import AvailableIntegrationsResponse, CustomerIntegrationCreate, CreateIntegrationService, CreateIntegrationMetadata, CustomerIntegrationCreateResponse, CustomerIntegrationsResponse, DeleteCustomerIntegration, CustomerIntegrationDeleteResponse
 
 integration_settings_router = APIRouter()
 
@@ -204,7 +206,7 @@ async def create_integration(
     await validate_customer_code(customer_integration_create.customer_code, session)
     await check_existing_customer_integration(customer_integration_create.customer_code, customer_integration_create.integration_name, session)
 
-    integration_service = await create_integration_service(customer_integration_create.integration_name, settings=customer_integration_create.integration_details, session=session)
+    integration_service = await create_integration_service(customer_integration_create.integration_name, settings=customer_integration_create.integration_config, session=session)
     customer_integrations = await create_customer_integrations(customer_integration_create.customer_code, customer_integration_create.customer_name, session)
     await create_integration_subscription(customer_integrations, integration_service, integration_metadata=customer_integration_create.integration_metadata, session=session)
 
@@ -212,3 +214,91 @@ async def create_integration(
         message=f"Customer integration {customer_integration_create.customer_code} {customer_integration_create.integration_name} successfully created.",
         success=True,
     )
+
+
+
+@integration_settings_router.delete(
+    "/delete_integration",
+    response_model=CustomerIntegrationDeleteResponse,
+    description="Delete a customer integration."
+)
+async def delete_integration(
+    delete_customer_integration: DeleteCustomerIntegration,
+    session: AsyncSession = Depends(get_db),
+):
+    """
+    Endpoint to delete a customer integration.
+    """
+    customer_code = delete_customer_integration.customer_code
+    integration_name = delete_customer_integration.integration_name
+
+    # Find customer and integration service IDs
+    try:
+        result = await session.execute(
+            select(CustomerIntegrations.id, IntegrationService.id)
+            .join(IntegrationSubscription, CustomerIntegrations.id == IntegrationSubscription.customer_id)
+            .join(IntegrationService, IntegrationSubscription.integration_service_id == IntegrationService.id)
+            .where(CustomerIntegrations.customer_code == customer_code,
+                   IntegrationService.service_name == integration_name)
+        )
+        customer_id, integration_service_id = result.one()
+    except NoResultFound:
+        raise HTTPException(status_code=404, detail="Customer integration not found")
+
+    # Fetch subscription IDs to delete
+    result = await session.execute(
+        select(IntegrationSubscription.id)
+        .where(IntegrationSubscription.customer_id == customer_id,
+            IntegrationSubscription.integration_service_id == integration_service_id)
+    )
+    subscription_ids_raw = result.scalars().all()
+
+    # Check if the result is a list of tuples or a list of integers
+    if subscription_ids_raw and isinstance(subscription_ids_raw[0], tuple):
+        subscription_ids = [id_tuple[0] for id_tuple in subscription_ids_raw]
+    else:
+        subscription_ids = subscription_ids_raw
+
+    if not subscription_ids:
+        raise HTTPException(status_code=404, detail="No subscriptions found for customer integration")
+
+    # Delete related metadata records
+    await session.execute(
+        delete(IntegrationMetadata)
+        .where(IntegrationMetadata.subscription_id.in_(subscription_ids))
+    )
+
+    # Delete integration subscriptions
+    await session.execute(
+        delete(IntegrationSubscription)
+        .where(IntegrationSubscription.id.in_(subscription_ids))
+    )
+
+    # Delete integration configs
+    await session.execute(
+        delete(IntegrationConfig)
+        .where(IntegrationConfig.integration_service_id == integration_service_id)
+    )
+
+    # Delete integration service
+    await session.execute(
+        delete(IntegrationService)
+        .where(IntegrationService.id == integration_service_id)
+    )
+
+    # Delete customer integration
+    await session.execute(
+        delete(CustomerIntegrations)
+        .where(CustomerIntegrations.id == customer_id)
+    )
+
+    # Commit the transaction
+    await session.commit()
+
+    # Return a response
+    return CustomerIntegrationDeleteResponse(
+        message=f"Customer integration {customer_code} {integration_name} successfully deleted.",
+        success=True,
+    )
+
+
