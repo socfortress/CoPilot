@@ -134,7 +134,7 @@ async def get_bookmarked_alerts() -> BookmarkedAlertsResponse:
     Returns:
         BookmarkedAlertsResponse: The response object containing the bookmarked alerts.
     """
-    alerts = await get_alerts(request=FilterAlertsRequest(per_page=1000))
+    alerts = await get_alerts(request=FilterAlertsRequest(per_page=10000))
     alerts = alerts.alerts
     bookmarked_alerts = []
     for alert in alerts:

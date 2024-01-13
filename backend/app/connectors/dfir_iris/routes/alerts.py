@@ -159,6 +159,25 @@ async def bookmark_alert_route(alert_id: str = Depends(verify_alert_exists)) -> 
     logger.info(f"Bookmarking alert {alert_id}")
     return await bookmark_alert(alert_id, bookmarked=True)
 
+@dfir_iris_alerts_router.delete(
+    "/bookmark/{alert_id}",
+    response_model=AlertResponse,
+    description="Unbookmark an alert",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def unbookmark_alert_route(alert_id: str = Depends(verify_alert_exists)) -> AlertResponse:
+    """
+    Unbookmark an alert.
+
+    Args:
+        alert_id (str): The ID of the alert to unbookmark.
+
+    Returns:
+        AlertResponse: The response containing the unbookmarked alert.
+    """
+    logger.info(f"Unbookmarking alert {alert_id}")
+    return await bookmark_alert(alert_id, bookmarked=False)
+
 
 @dfir_iris_alerts_router.post(
     "/delete_multiple",
@@ -183,6 +202,25 @@ async def delete_multiple_alerts_route(request: DeleteMultipleAlertsRequest) -> 
     return DeleteAlertResponse(success=True, message="Successfully deleted alerts.")
 
 @dfir_iris_alerts_router.delete(
+    "/purge",
+    response_model=DeleteAlertResponse,
+    description="Delete all alerts",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def purge_alerts_route() -> DeleteAlertResponse:
+    """
+    Delete all alerts.
+
+    Returns:
+        AlertResponse: The response containing the deleted alerts.
+    """
+    logger.info(f"Purging all alerts, up to 1000")
+    alerts = (await get_alerts(request=FilterAlertsRequest(per_page=1000))).alerts
+    for alert in alerts:
+        await delete_alert(int(alert["alert_id"]))
+    return DeleteAlertResponse(success=True, message="Successfully deleted alerts.")
+
+@dfir_iris_alerts_router.delete(
     "/{alert_id}",
     response_model=DeleteAlertResponse,
     description="Delete an alert",
@@ -200,23 +238,3 @@ async def delete_alert_route(alert_id: str = Depends(verify_alert_exists)) -> De
     """
     logger.info(f"Deleting alert {alert_id}")
     return await delete_alert(int(alert_id))
-
-
-@dfir_iris_alerts_router.delete(
-    "/bookmark/{alert_id}",
-    response_model=AlertResponse,
-    description="Unbookmark an alert",
-    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
-)
-async def unbookmark_alert_route(alert_id: str = Depends(verify_alert_exists)) -> AlertResponse:
-    """
-    Unbookmark an alert.
-
-    Args:
-        alert_id (str): The ID of the alert to unbookmark.
-
-    Returns:
-        AlertResponse: The response containing the unbookmarked alert.
-    """
-    logger.info(f"Unbookmarking alert {alert_id}")
-    return await bookmark_alert(alert_id, bookmarked=False)
