@@ -25,6 +25,9 @@ class BookmarkedAlertsResponse(BaseModel):
     message: str
     success: bool
 
+class DeleteMultipleAlertsRequest(BaseModel):
+    alert_ids: List[str] = Field([], description="The IDs of the alerts to delete.")
+
 class DeleteAlertResponse(BaseModel):
     message: str
     success: bool

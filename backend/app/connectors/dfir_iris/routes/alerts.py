@@ -7,7 +7,7 @@ from loguru import logger
 from app.auth.utils import AuthHandler
 from app.connectors.dfir_iris.schema.alerts import AlertResponse
 from app.connectors.dfir_iris.schema.alerts import AlertsResponse
-from app.connectors.dfir_iris.schema.alerts import BookmarkedAlertsResponse, FilterAlertsRequest, CaseCreationResponse, DeleteAlertResponse
+from app.connectors.dfir_iris.schema.alerts import BookmarkedAlertsResponse, FilterAlertsRequest, CaseCreationResponse, DeleteAlertResponse, DeleteMultipleAlertsRequest
 from app.connectors.dfir_iris.services.alerts import bookmark_alert
 from app.connectors.dfir_iris.services.alerts import get_alert
 from app.connectors.dfir_iris.services.alerts import get_alerts
@@ -158,6 +158,29 @@ async def bookmark_alert_route(alert_id: str = Depends(verify_alert_exists)) -> 
     """
     logger.info(f"Bookmarking alert {alert_id}")
     return await bookmark_alert(alert_id, bookmarked=True)
+
+
+@dfir_iris_alerts_router.post(
+    "/delete_multiple",
+    response_model=DeleteAlertResponse,
+    description="Delete multiple alerts",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def delete_multiple_alerts_route(request: DeleteMultipleAlertsRequest) -> DeleteAlertResponse:
+    """
+    Delete multiple alerts.
+
+    Args:
+        request (DeleteMultipleAlertsRequest): The request containing the IDs of the alerts to delete.
+
+    Returns:
+        DeleteAlertResponse: The response containing the deleted alerts.
+    """
+    logger.info(f"Deleting alerts {request.alert_ids}")
+    for alert_id in request.alert_ids:
+        await verify_alert_exists(alert_id)
+        await delete_alert(int(alert_id))
+    return DeleteAlertResponse(success=True, message="Successfully deleted alerts.")
 
 @dfir_iris_alerts_router.delete(
     "/{alert_id}",
