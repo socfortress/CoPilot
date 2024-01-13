@@ -7,12 +7,12 @@ from loguru import logger
 from app.auth.utils import AuthHandler
 from app.connectors.dfir_iris.schema.alerts import AlertResponse
 from app.connectors.dfir_iris.schema.alerts import AlertsResponse
-from app.connectors.dfir_iris.schema.alerts import BookmarkedAlertsResponse, FilterAlertsRequest, CaseCreationResponse
+from app.connectors.dfir_iris.schema.alerts import BookmarkedAlertsResponse, FilterAlertsRequest, CaseCreationResponse, DeleteAlertResponse
 from app.connectors.dfir_iris.services.alerts import bookmark_alert
 from app.connectors.dfir_iris.services.alerts import get_alert
 from app.connectors.dfir_iris.services.alerts import get_alerts
 from app.connectors.dfir_iris.services.alerts import create_case
-from app.connectors.dfir_iris.services.alerts import get_bookmarked_alerts
+from app.connectors.dfir_iris.services.alerts import get_bookmarked_alerts, delete_alert
 from app.connectors.dfir_iris.utils.universal import check_alert_exists
 
 # App specific imports
@@ -154,10 +154,29 @@ async def bookmark_alert_route(alert_id: str = Depends(verify_alert_exists)) -> 
         alert_id (str): The ID of the alert to be bookmarked.
 
     Returns:
-        AlertResponse: The response containing the bookmarked alert.
+        DeleteAlertResponse: The response containing the bookmarked alert.
     """
     logger.info(f"Bookmarking alert {alert_id}")
     return await bookmark_alert(alert_id, bookmarked=True)
+
+@dfir_iris_alerts_router.delete(
+    "/{alert_id}",
+    response_model=DeleteAlertResponse,
+    description="Delete an alert",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def delete_alert_route(alert_id: str = Depends(verify_alert_exists)) -> DeleteAlertResponse:
+    """
+    Delete an alert.
+
+    Args:
+        alert_id (str): The ID of the alert to delete.
+
+    Returns:
+        AlertResponse: The response containing the deleted alert.
+    """
+    logger.info(f"Deleting alert {alert_id}")
+    return await delete_alert(int(alert_id))
 
 
 @dfir_iris_alerts_router.delete(

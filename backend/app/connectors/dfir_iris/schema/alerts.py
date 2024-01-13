@@ -25,6 +25,10 @@ class BookmarkedAlertsResponse(BaseModel):
     message: str
     success: bool
 
+class DeleteAlertResponse(BaseModel):
+    message: str
+    success: bool
+
 class SortOrder(Enum):
     desc = "desc"
     asc = "asc"
