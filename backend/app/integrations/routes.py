@@ -112,6 +112,69 @@ async def create_integration_subscription(customer_integrations: CustomerIntegra
     session.add(new_integration_subscription)
     await session.commit()
 
+async def get_customer_and_service_ids(session, customer_code, integration_name):
+    try:
+        result = await session.execute(
+            select(CustomerIntegrations.id, IntegrationService.id)
+            .join(IntegrationSubscription, CustomerIntegrations.id == IntegrationSubscription.customer_id)
+            .join(IntegrationService, IntegrationSubscription.integration_service_id == IntegrationService.id)
+            .where(CustomerIntegrations.customer_code == customer_code,
+                   IntegrationService.service_name == integration_name)
+        )
+        return result.one()
+    except NoResultFound:
+        raise HTTPException(status_code=404, detail="Customer integration not found")
+
+async def get_subscription_ids(session, customer_id, integration_service_id):
+    result = await session.execute(
+        select(IntegrationSubscription.id)
+        .where(IntegrationSubscription.customer_id == customer_id,
+               IntegrationSubscription.integration_service_id == integration_service_id)
+    )
+    # Fetch all results
+    subscription_ids_raw = result.scalars().all()
+
+    # Process the results
+    # If the result is a list of tuples (even with one element), extract the first element
+    if subscription_ids_raw and isinstance(subscription_ids_raw[0], tuple):
+        return [id_tuple[0] for id_tuple in subscription_ids_raw]
+    # If the result is a list of integers
+    elif subscription_ids_raw and isinstance(subscription_ids_raw[0], int):
+        return subscription_ids_raw
+    # If there are no results
+    else:
+        return []
+
+async def delete_metadata(session, subscription_ids):
+    await session.execute(
+        delete(IntegrationMetadata)
+        .where(IntegrationMetadata.subscription_id.in_(subscription_ids))
+    )
+
+async def delete_subscriptions(session, subscription_ids):
+    await session.execute(
+        delete(IntegrationSubscription)
+        .where(IntegrationSubscription.id.in_(subscription_ids))
+    )
+
+async def delete_configs(session, integration_service_id):
+    await session.execute(
+        delete(IntegrationConfig)
+        .where(IntegrationConfig.integration_service_id == integration_service_id)
+    )
+
+async def delete_integration_service(session, integration_service_id):
+    await session.execute(
+        delete(IntegrationService)
+        .where(IntegrationService.id == integration_service_id)
+    )
+
+async def delete_customer_integration_record(session, customer_id):
+    await session.execute(
+        delete(CustomerIntegrations)
+        .where(CustomerIntegrations.id == customer_id)
+    )
+
 @integration_settings_router.get(
     "/available_integrations",
     response_model=AvailableIntegrationsResponse,
@@ -216,7 +279,6 @@ async def create_integration(
     )
 
 
-
 @integration_settings_router.delete(
     "/delete_integration",
     response_model=CustomerIntegrationDeleteResponse,
@@ -226,79 +288,27 @@ async def delete_integration(
     delete_customer_integration: DeleteCustomerIntegration,
     session: AsyncSession = Depends(get_db),
 ):
-    """
-    Endpoint to delete a customer integration.
-    """
     customer_code = delete_customer_integration.customer_code
     integration_name = delete_customer_integration.integration_name
 
-    # Find customer and integration service IDs
-    try:
-        result = await session.execute(
-            select(CustomerIntegrations.id, IntegrationService.id)
-            .join(IntegrationSubscription, CustomerIntegrations.id == IntegrationSubscription.customer_id)
-            .join(IntegrationService, IntegrationSubscription.integration_service_id == IntegrationService.id)
-            .where(CustomerIntegrations.customer_code == customer_code,
-                   IntegrationService.service_name == integration_name)
-        )
-        customer_id, integration_service_id = result.one()
-    except NoResultFound:
-        raise HTTPException(status_code=404, detail="Customer integration not found")
-
-    # Fetch subscription IDs to delete
-    result = await session.execute(
-        select(IntegrationSubscription.id)
-        .where(IntegrationSubscription.customer_id == customer_id,
-            IntegrationSubscription.integration_service_id == integration_service_id)
+    customer_id, integration_service_id = await get_customer_and_service_ids(
+        session, customer_code, integration_name
     )
-    subscription_ids_raw = result.scalars().all()
 
-    # Check if the result is a list of tuples or a list of integers
-    if subscription_ids_raw and isinstance(subscription_ids_raw[0], tuple):
-        subscription_ids = [id_tuple[0] for id_tuple in subscription_ids_raw]
-    else:
-        subscription_ids = subscription_ids_raw
-
+    subscription_ids = await get_subscription_ids(session, customer_id, integration_service_id)
     if not subscription_ids:
         raise HTTPException(status_code=404, detail="No subscriptions found for customer integration")
 
-    # Delete related metadata records
-    await session.execute(
-        delete(IntegrationMetadata)
-        .where(IntegrationMetadata.subscription_id.in_(subscription_ids))
-    )
+    await delete_metadata(session, subscription_ids)
+    await delete_subscriptions(session, subscription_ids)
+    await delete_configs(session, integration_service_id)
+    await delete_integration_service(session, integration_service_id)
+    await delete_customer_integration_record(session, customer_id)
 
-    # Delete integration subscriptions
-    await session.execute(
-        delete(IntegrationSubscription)
-        .where(IntegrationSubscription.id.in_(subscription_ids))
-    )
-
-    # Delete integration configs
-    await session.execute(
-        delete(IntegrationConfig)
-        .where(IntegrationConfig.integration_service_id == integration_service_id)
-    )
-
-    # Delete integration service
-    await session.execute(
-        delete(IntegrationService)
-        .where(IntegrationService.id == integration_service_id)
-    )
-
-    # Delete customer integration
-    await session.execute(
-        delete(CustomerIntegrations)
-        .where(CustomerIntegrations.id == customer_id)
-    )
-
-    # Commit the transaction
     await session.commit()
 
-    # Return a response
     return CustomerIntegrationDeleteResponse(
         message=f"Customer integration {customer_code} {integration_name} successfully deleted.",
         success=True,
     )
-
 
