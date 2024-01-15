@@ -20,6 +20,7 @@
 						:is-bookmark="true"
 						:users="usersList"
 						@bookmark="bookmark()"
+						@deleted="getBookmarks()"
 					/>
 				</template>
 				<template v-else>

@@ -27,6 +27,7 @@
 						:highlight="alert.alert_id.toString() === highlight"
 						show-badges-toggle
 						@bookmark="bookmark()"
+						@deleted="getAlerts()"
 					/>
 				</template>
 				<template v-else>
@@ -48,6 +49,7 @@ import type { AlertsFilter } from "@/api/soc"
 import { useResizeObserver, watchDebounced } from "@vueuse/core"
 import PaginationIndeterminate from "@/components/common/PaginationIndeterminate.vue"
 import axios from "axios"
+import { alerts as alertsMock } from "./mock"
 
 const props = defineProps<{
 	highlight: string | null | undefined
@@ -194,7 +196,9 @@ function safeReload() {
 }
 
 onBeforeMount(() => {
-	getAlerts()
+	alertsList.value = alertsMock as unknown as SocAlert[]
+
+	// getAlerts()
 })
 
 onMounted(() => {
