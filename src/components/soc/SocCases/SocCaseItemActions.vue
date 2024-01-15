@@ -26,8 +26,7 @@
 import { NButton, useDialog, useMessage } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import Api from "@/api"
-import { computed, h, ref } from "vue"
-import { watch } from "vue"
+import { computed, watch, ref } from "vue"
 import { StateName, type SocCase, type SocCaseExt } from "@/types/soc/case.d"
 
 const emit = defineEmits<{
@@ -131,7 +130,6 @@ function deleteCase() {
 			.deleteCase(caseData.case_id.toString())
 			.then(res => {
 				if (res.data.success) {
-					emit("deleted")
 					message.success(res.data?.message || "SOC Case deleted.")
 				} else {
 					message.warning(res.data?.message || "An error occurred. Please try again later.")
@@ -141,6 +139,7 @@ function deleteCase() {
 				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
 			})
 			.finally(() => {
+				emit("deleted")
 				loadingCaseDelete.value = false
 			})
 	}

@@ -385,7 +385,7 @@ function setReopened() {
 }
 
 function deleteCase() {
-	loadingDetails.value = true
+	loadingDelete.value = false
 	emit("deleted")
 }
 
