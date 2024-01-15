@@ -54,6 +54,18 @@ export default {
 	removeAlertBookmark(alertId: string) {
 		return HttpClient.delete<FlaskBaseResponse & { alert: SocAlert }>(`/soc/alerts/bookmark/${alertId}`)
 	},
+	deleteAlert(alertId: string) {
+		return HttpClient.delete<FlaskBaseResponse>(`/soc/alerts/${alertId}`)
+	},
+	deleteMultipleAlerts(alertIds: string[]) {
+		return HttpClient.post<FlaskBaseResponse>(`/soc/alerts/delete_multiple`, {
+			alert_ids: alertIds
+		})
+	},
+	/** Delete all alerts (up to 1000 per time) */
+	purgeAlerts() {
+		return HttpClient.delete<FlaskBaseResponse>(`/soc/alerts/purge`)
+	},
 	createCase(alertId: string) {
 		return HttpClient.post<FlaskBaseResponse & { case: SocAlertCaseResponse }>(`/soc/alerts/create_case/${alertId}`)
 	},
