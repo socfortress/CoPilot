@@ -68,13 +68,27 @@
 						</KVCard>
 					</div>
 				</n-tab-pane>
+				<n-tab-pane name="Backtrace" tab="Backtrace" display-directive="show">
+					<div class="p-7 pt-4">
+						<n-input
+							:value="stat.backtrace"
+							type="textarea"
+							readonly
+							placeholder="Empty"
+							:autosize="{
+								minRows: 3,
+								maxRows: 18
+							}"
+						/>
+					</div>
+				</n-tab-pane>
 			</n-tabs>
 		</n-modal>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { NModal, NTabs, NTabPane } from "naive-ui"
+import { NModal, NTabs, NTabPane, NInput } from "naive-ui"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
 import type { FlowQueryStat } from "@/types/flow.d"
@@ -95,7 +109,6 @@ const duration = computed(() => dayjs.duration(stat.duration).humanize())
 
 const properties = computed(() => {
 	return _pick(stat, [
-		"backtrace",
 		"Artifact",
 		"log_rows",
 		"uploaded_files",
