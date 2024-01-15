@@ -9,6 +9,9 @@
 		<div class="soc-alert-info px-5 py-3 flex flex-col gap-3" v-if="alert">
 			<div class="header-box flex justify-between">
 				<div class="flex items-center gap-2 cursor-pointer">
+					<div v-if="showCheckbox" class="check-box mr-2">
+						<n-checkbox size="large" v-model:checked="checked" />
+					</div>
 					<div class="id flex items-center gap-2 cursor-pointer" @click="showDetails = true">
 						<span>#{{ alert.alert_id }} - {{ alert.alert_uuid }}</span>
 						<Icon :name="InfoIcon" :size="16"></Icon>
@@ -286,6 +289,7 @@ import {
 	NTabs,
 	NTabPane,
 	NSpin,
+	NCheckbox,
 	NTooltip,
 	NCollapseTransition
 } from "naive-ui"
@@ -293,6 +297,8 @@ import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
 import type { SocUser } from "@/types/soc/user.d"
 import { useRouter } from "vue-router"
+
+const checked = defineModel<boolean>("checked", { default: false })
 
 const emit = defineEmits<{
 	(e: "bookmark", value: boolean): void
@@ -309,6 +315,7 @@ const props = defineProps<{
 	hideSocCaseAction?: boolean
 	hideBookmarkAction?: boolean
 	showBadgesToggle?: boolean
+	showCheckbox?: boolean
 }>()
 const { alertData, alertId, isBookmark, highlight, users, embedded, hideSocCaseAction, hideBookmarkAction } =
 	toRefs(props)
@@ -530,13 +537,13 @@ onBeforeMount(() => {
 
 	&.bookmarked {
 		background-color: var(--primary-005-color);
-		box-shadow: 0px 0px 0px 1px inset var(--primary-030-color);
+		border-color: var(--primary-030-color);
 	}
 
 	&:not(.embedded) {
 		&:hover,
 		&.highlight {
-			box-shadow: 0px 0px 0px 1px inset var(--primary-color);
+			border-color: var(--primary-color);
 		}
 	}
 

@@ -492,7 +492,7 @@ onBeforeMount(() => {
 
 	&:not(.embedded) {
 		&:hover {
-			box-shadow: 0px 0px 0px 1px inset var(--primary-color);
+			border-color: var(--primary-color);
 		}
 	}
 
