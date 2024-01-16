@@ -277,7 +277,7 @@ function purge() {
 	loadingPurge.value = true
 
 	Api.soc
-		.purgeAllCases()
+		.purgeAlerts()
 		.then(res => {
 			if (res.data.success) {
 				getAlerts()
