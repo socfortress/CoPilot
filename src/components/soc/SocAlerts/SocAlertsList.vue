@@ -6,19 +6,44 @@
 				<n-input v-model:value="alertTitle" size="small" placeholder="Search by title..." clearable />
 			</div>
 			<div class="delete-box">
-				<n-button
-					size="small"
-					type="error"
-					ghost
-					@click="handleDelete()"
-					:loading="loadingPurge"
-					v-if="checkedCount"
-				>
-					<div class="flex items-center gap-2">
-						<Icon :name="TrashIcon" :size="16"></Icon>
-						<span class="hidden xs:block">Delete Alerts: {{ checkedCount }}</span>
+				<n-popover :width="200" placement="bottom" style="max-height: 240px" scrollable v-if="checkedCount">
+					<template #trigger>
+						<n-button
+							size="small"
+							type="error"
+							ghost
+							@click="handleDelete()"
+							:loading="loadingPurge"
+							:disabled="loadingAlerts"
+						>
+							<div class="flex items-center gap-2">
+								<Icon :name="TrashIcon" :size="16"></Icon>
+								<span class="flex items-center gap-2">
+									<span v-if="!compactMode">Delete Alerts:</span>
+									<span class="font-mono">
+										{{ checkedCount }}
+									</span>
+								</span>
+							</div>
+						</n-button>
+					</template>
+					<template #header>Selected Alerts</template>
+					<template #footer>
+						<div class="flex justify-end">
+							<n-button size="tiny" @click="clearChecked()">Clear selection</n-button>
+						</div>
+					</template>
+					<div class="checked-list flex flex-col gap-2">
+						<div v-for="alertId of checkedList" :key="alertId" class="w-full">
+							<n-button size="small" @click="clearChecked(alertId)" class="!w-full !justify-start">
+								<template #icon>
+									<Icon :name="CloseIcon" :size="18"></Icon>
+								</template>
+								<span class="font-mono">#{{ alertId }}</span>
+							</n-button>
+						</div>
 					</div>
-				</n-button>
+				</n-popover>
 				<n-button size="small" type="error" ghost @click="handlePurge()" :loading="loadingPurge" v-else>
 					<div class="flex items-center gap-2">
 						<Icon :name="TrashIcon" :size="16"></Icon>
@@ -32,10 +57,11 @@
 				v-model:sort="sort"
 				:pageSizes="pageSizes"
 				:showPageSizes="!compactMode"
+				:showSort="!smallDeviceMode"
 			/>
 		</div>
 
-		<n-spin :show="loadingAlerts">
+		<n-spin :show="loadingAlerts || loadingPurge">
 			<div class="list">
 				<template v-if="alertsList.length">
 					<SocAlertItem
@@ -48,9 +74,10 @@
 						:highlight="alert.id === highlight"
 						show-badges-toggle
 						show-checkbox
+						@check="toggleCheckedList(alert.id, $event)"
 						v-model:checked="alert.checked"
 						@bookmark="bookmark()"
-						@deleted="getAlerts()"
+						@deleted="itemDeleted(alert.id)"
 					/>
 				</template>
 				<template v-else>
@@ -63,7 +90,7 @@
 
 <script setup lang="ts">
 import { ref, onBeforeMount, watch, toRefs, nextTick, onBeforeUnmount, onMounted, computed } from "vue"
-import { useMessage, NSpin, NEmpty, NInput, useDialog, NButton } from "naive-ui"
+import { useMessage, NSpin, NEmpty, NInput, useDialog, NButton, NPopover } from "naive-ui"
 import Api from "@/api"
 import SocAlertItem from "./SocAlertItem.vue"
 import type { SocAlert } from "@/types/soc/alert.d"
@@ -85,15 +112,18 @@ const { highlight, bookmarksList, usersList } = toRefs(props)
 
 const emit = defineEmits<{
 	(e: "bookmark"): void
+	(e: "deleted", value?: string): void
 	(
 		e: "mounted",
 		value: {
 			reload: () => void
+			itemDeleted: (alertId: string, noEmit?: boolean) => void
 		}
 	): void
 }>()
 
 const TrashIcon = "carbon:trash-can"
+const CloseIcon = "carbon:close"
 
 let reloadTimeout: NodeJS.Timeout | null = null
 const dialog = useDialog()
@@ -101,6 +131,7 @@ const message = useMessage()
 const loadingPurge = ref(false)
 const loadingAlerts = ref(false)
 const alertsList = ref<{ checked: boolean; id: string; data: SocAlert }[]>([])
+const checkedList = ref<string[]>([])
 
 const pageSize = ref(50)
 const pageSizes = [25, 50, 100, 150, 200]
@@ -109,10 +140,11 @@ const sort = ref<"desc" | "asc">("desc")
 const alertTitle = ref("")
 const header = ref()
 const compactMode = ref(false)
+const smallDeviceMode = ref(false)
 
 let abortController: AbortController | null = null
 
-const checkedCount = computed(() => alertsList.value.filter(o => o.checked).length)
+const checkedCount = computed(() => checkedList.value.length)
 
 function isBookmarked(alert: SocAlert): boolean {
 	return !!(bookmarksList.value || []).filter(o => o.alert_id === alert.alert_id).length
@@ -147,7 +179,7 @@ function getAlerts() {
 		.then(res => {
 			if (res.data.success) {
 				alertsList.value = (res.data?.alerts || []).map(o => ({
-					checked: false,
+					checked: isChecked(o.alert_id.toString()),
 					data: o,
 					id: o.alert_id.toString()
 				}))
@@ -195,8 +227,7 @@ function handleDelete() {
 		positiveText: "Yes I'm sure",
 		negativeText: "Cancel",
 		onPositiveClick: () => {
-			// TODO: delete more actions
-			purge()
+			deleteMultipleAlerts()
 		},
 		onNegativeClick: () => {
 			message.info("Purge canceled")
@@ -219,14 +250,16 @@ function handlePurge() {
 	})
 }
 
-function purge() {
+function deleteMultipleAlerts() {
 	loadingPurge.value = true
 
 	Api.soc
-		.purgeAllCases()
+		.deleteMultipleAlerts(checkedList.value)
 		.then(res => {
 			if (res.data.success) {
+				clearChecked()
 				getAlerts()
+				emit("deleted")
 				message.success(res.data?.message || "SOC Alerts purged successfully")
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
@@ -238,6 +271,64 @@ function purge() {
 		.finally(() => {
 			loadingPurge.value = false
 		})
+}
+
+function purge() {
+	loadingPurge.value = true
+
+	Api.soc
+		.purgeAllCases()
+		.then(res => {
+			if (res.data.success) {
+				getAlerts()
+				emit("deleted")
+				message.success(res.data?.message || "SOC Alerts purged successfully")
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			loadingPurge.value = false
+		})
+}
+
+function itemDeleted(alertId: string, noEmit = false) {
+	console.log("itemDeleted", alertId, noEmit)
+	clearChecked(alertId)
+	getAlerts()
+	if (!noEmit) {
+		emit("deleted", alertId)
+	}
+}
+
+function toggleCheckedList(alertId: string, value: boolean) {
+	if (value) {
+		checkedList.value.push(alertId)
+	} else {
+		checkedList.value = checkedList.value.filter(o => o !== alertId)
+	}
+}
+
+function isChecked(alertId: string) {
+	return checkedList.value.filter(o => o === alertId).length !== 0
+}
+
+function clearChecked(alertId?: string) {
+	if (alertId) {
+		const alert = alertsList.value.find(o => o.id === alertId)
+		if (alert) {
+			alert.checked = false
+		}
+		checkedList.value = checkedList.value.filter(o => o !== alertId)
+	} else {
+		for (const alert of alertsList.value) {
+			alert.checked = false
+		}
+		checkedList.value = []
+	}
 }
 
 watch(loadingAlerts, val => {
@@ -267,19 +358,21 @@ watchDebounced(
 	() => {
 		safeReload()
 	},
-	{ debounce: 500 }
+	{ debounce: 300 }
 )
 
 useResizeObserver(header, entries => {
 	const entry = entries[0]
 	const { width } = entry.contentRect
 
-	if (width < 500) {
+	if (width < 600) {
 		compactMode.value = true
 		pageSize.value = pageSizes[0]
 	} else {
 		compactMode.value = false
 	}
+
+	smallDeviceMode.value = width < 450
 })
 
 onBeforeMount(() => {
@@ -292,7 +385,8 @@ onMounted(() => {
 	emit("mounted", {
 		reload: () => {
 			safeReload()
-		}
+		},
+		itemDeleted
 	})
 })
 

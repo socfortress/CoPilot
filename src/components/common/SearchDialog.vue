@@ -88,7 +88,7 @@ const ArrowEnterIcon = "fluent:arrow-enter-left-24-regular"
 const ArrowSortIcon = "fluent:arrow-sort-24-regular"
 const FullScreenIcon = "fluent:full-screen-maximize-24-regular"
 const DarkModeIcon = "ion:moon-outline"
-const CloseIcon = "ion:close"
+const CloseIcon = "carbon:close"
 
 const ConnectorsIcon = "carbon:hybrid-networking"
 const AlertsIcon = "carbon:warning-hex"
