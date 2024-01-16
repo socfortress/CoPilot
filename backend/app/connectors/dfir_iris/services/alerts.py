@@ -1,6 +1,6 @@
 from app.connectors.dfir_iris.schema.alerts import AlertResponse
 from app.connectors.dfir_iris.schema.alerts import AlertsResponse
-from app.connectors.dfir_iris.schema.alerts import BookmarkedAlertsResponse, FilterAlertsRequest, CaseCreationResponse
+from app.connectors.dfir_iris.schema.alerts import BookmarkedAlertsResponse, FilterAlertsRequest, CaseCreationResponse, DeleteAlertResponse
 from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
 from app.connectors.dfir_iris.utils.universal import initialize_client_and_alert
 from loguru import logger
@@ -134,7 +134,7 @@ async def get_bookmarked_alerts() -> BookmarkedAlertsResponse:
     Returns:
         BookmarkedAlertsResponse: The response object containing the bookmarked alerts.
     """
-    alerts = await get_alerts(request=FilterAlertsRequest(per_page=1000))
+    alerts = await get_alerts(request=FilterAlertsRequest(per_page=10000))
     alerts = alerts.alerts
     bookmarked_alerts = []
     for alert in alerts:
@@ -142,3 +142,18 @@ async def get_bookmarked_alerts() -> BookmarkedAlertsResponse:
             bookmarked_alerts.append(alert)
 
     return BookmarkedAlertsResponse(success=True, message="Successfully fetched bookmarked alerts", bookmarked_alerts=bookmarked_alerts)
+
+
+async def delete_alert(alert_id: int) -> DeleteAlertResponse:
+    """
+    Deletes an alert.
+
+    Args:
+        alert_id (int): The ID of the alert to delete.
+
+    Returns:
+        DeleteAlertResponse: The response object containing the success status, message, and deleted alert.
+    """
+    client, alert = await initialize_client_and_alert("DFIR-IRIS")
+    result = await fetch_and_validate_data(client, alert.delete_alert, alert_id)
+    return DeleteAlertResponse(success=True, message="Successfully deleted alert", alert=result["data"])

@@ -20,6 +20,7 @@
 						:is-bookmark="true"
 						:users="usersList"
 						@bookmark="bookmark()"
+						@deleted="itemDeleted(alert.alert_id)"
 					/>
 				</template>
 				<template v-else>
@@ -46,6 +47,7 @@ const { usersList } = toRefs(props)
 
 const emit = defineEmits<{
 	(e: "bookmark"): void
+	(e: "deleted", value?: string): void
 	(e: "loaded", value: SocAlert[]): void
 	(
 		e: "mounted",
@@ -102,6 +104,11 @@ function safeReload() {
 	reloadTimeout = setTimeout(() => {
 		getBookmarks()
 	}, 200)
+}
+
+function itemDeleted(alertId: string | number) {
+	getBookmarks()
+	emit("deleted", alertId.toString())
 }
 
 onBeforeMount(() => {

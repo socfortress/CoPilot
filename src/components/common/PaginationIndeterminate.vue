@@ -26,6 +26,7 @@
 		/>
 		<n-select
 			size="small"
+			v-if="showSort"
 			v-model:value="sort"
 			:options="sortOptions"
 			:show-checkmark="false"
@@ -46,8 +47,8 @@ const page = defineModel<number>("page", { default: 1 })
 const pageSize = defineModel<number>("pageSize", { default: 10 })
 const sort = defineModel<"asc" | "desc">("sort", { default: "desc" })
 
-const props = defineProps<{ showPageSizes?: boolean; pageSizes?: number[]; disabled?: boolean }>()
-const { pageSizes, disabled, showPageSizes } = toRefs(props)
+const props = defineProps<{ showPageSizes?: boolean; showSort?: boolean; pageSizes?: number[]; disabled?: boolean }>()
+const { pageSizes, disabled, showPageSizes, showSort } = toRefs(props)
 
 const pageSizesOptions = computed(() =>
 	(pageSizes.value || [10, 25, 50, 100]).map(o => ({ label: o + " / page", value: o }))

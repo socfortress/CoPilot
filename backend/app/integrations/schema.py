@@ -63,9 +63,9 @@ class CustomerIntegrationCreate(BaseModel):
     integration_name: str = Field(
         ...,
         description="The integration name.",
-        examples=["mimecast"],
+        examples=["Mimecast"],
     )
-    integration_details: CreateIntegrationService = Field(
+    integration_config: CreateIntegrationService = Field(
         ...,
         description="The integration service.",
     )
@@ -75,6 +75,16 @@ class CustomerIntegrationCreate(BaseModel):
     )
 
 class CustomerIntegrationCreateResponse(BaseModel):
+    message: str = Field(
+        ...,
+        description="The message.",
+    )
+    success: bool = Field(
+        ...,
+        description="The success status.",
+    )
+
+class CustomerIntegrationDeleteResponse(BaseModel):
     message: str = Field(
         ...,
         description="The message.",
@@ -140,3 +150,15 @@ class CustomerIntegrationsResponse(BaseModel):
     available_integrations: List[CustomerIntegrations]
     message: str
     success: bool
+
+class DeleteCustomerIntegration(BaseModel):
+    customer_code: str = Field(
+        ...,
+        description="The customer code.",
+        examples=["00002"],
+    )
+    integration_name: str = Field(
+        ...,
+        description="The integration name.",
+        examples=["Mimecast"],
+    )

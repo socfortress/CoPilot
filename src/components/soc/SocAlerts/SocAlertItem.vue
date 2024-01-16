@@ -1,13 +1,17 @@
 <template>
 	<n-spin
 		:show="loading"
+		:description="loadingDelete ? 'Deleting Soc Alert' : 'Loading Soc Alert'"
 		class="soc-alert-item flex flex-col gap-0"
 		:class="{ bookmarked: isBookmark, highlight, embedded }"
 		:id="'alert-' + alert?.alert_id"
 	>
-		<div class="soc-alert-info px-5 py-3 flex flex-col gap-2" v-if="alert">
+		<div class="soc-alert-info px-5 py-3 flex flex-col gap-3" v-if="alert">
 			<div class="header-box flex justify-between">
 				<div class="flex items-center gap-2 cursor-pointer">
+					<div v-if="showCheckbox" class="check-box mr-2">
+						<n-checkbox size="large" v-model:checked="checked" />
+					</div>
 					<div class="id flex items-center gap-2 cursor-pointer" @click="showDetails = true">
 						<span>#{{ alert.alert_id }} - {{ alert.alert_uuid }}</span>
 						<Icon :name="InfoIcon" :size="16"></Icon>
@@ -47,16 +51,15 @@
 						{{ alert.alert_description }}
 					</div>
 				</div>
-				<div class="actions flex flex-col gap-2 justify-end" v-if="!hideSocCaseAction">
-					<n-button v-if="caseId" type="success" secondary @click="openSocCase()">
-						<template #icon><Icon :name="ViewIcon"></Icon></template>
-						View SOC Case
-					</n-button>
-					<n-button :loading="loadingCaseCreation" type="warning" secondary @click="createCase()" v-else>
-						<template #icon><Icon :name="DangerIcon"></Icon></template>
-						Create SOC Case
-					</n-button>
-				</div>
+				<SocAlertItemActions
+					v-if="!hideSocCaseAction"
+					class="actions-box"
+					:caseId="caseId"
+					:alertId="alert.alert_id"
+					@caseCreated="caseCreated($event)"
+					@deleted="deleted()"
+					@startDeleting="loadingDelete = true"
+				/>
 			</div>
 
 			<div>
@@ -136,23 +139,17 @@
 			</div>
 
 			<div class="footer-box flex justify-between items-center gap-4">
-				<div class="actions" v-if="!hideSocCaseAction">
-					<n-button v-if="caseId" type="success" secondary size="small" @click="openSocCase()">
-						<template #icon><Icon :name="ViewIcon"></Icon></template>
-						View SOC Case
-					</n-button>
-					<n-button
-						:loading="loadingCaseCreation"
-						size="small"
-						type="warning"
-						secondary
-						@click="createCase()"
-						v-else
-					>
-						<template #icon><Icon :name="DangerIcon"></Icon></template>
-						Create SOC Case
-					</n-button>
-				</div>
+				<SocAlertItemActions
+					v-if="!hideSocCaseAction"
+					class="actions-box grow !flex-wrap !justify-start"
+					style="flex-direction: initial"
+					size="small"
+					:caseId="caseId"
+					:alertId="alert.alert_id"
+					@caseCreated="caseCreated($event)"
+					@deleted="deleted()"
+					@startDeleting="loadingDelete = true"
+				/>
 				<div class="time">{{ formatDate(alert.alert_creation_time) }}</div>
 			</div>
 		</div>
@@ -169,27 +166,6 @@
 				<AlertItem :alert="alertObject" :hide-actions="true" class="-mt-4" />
 			</n-collapse-item>
 		</n-collapse>
-
-		<n-modal
-			v-model:show="showSocCaseDetails"
-			preset="card"
-			content-style="padding:0px"
-			:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(250px, 90vh)', overflow: 'hidden' }"
-			:title="`SOC Case: #${caseId}`"
-			:bordered="false"
-			segmented
-		>
-			<div class="h-full w-full flex items-center justify-center">
-				<SocCaseItem
-					v-if="caseId"
-					:caseId="caseId"
-					embedded
-					hideSocAlertLink
-					hide-soc-case-action
-					class="w-full"
-				/>
-			</div>
-		</n-modal>
 
 		<n-modal
 			v-model:show="showDetails"
@@ -296,24 +272,24 @@ import type { SocAlert } from "@/types/soc/alert.d"
 import type { Alert } from "@/types/alerts.d"
 import Icon from "@/components/common/Icon.vue"
 import Badge from "@/components/common/Badge.vue"
-import { computed, onBeforeMount, ref, toRefs } from "vue"
+import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
 import { SimpleJsonViewer } from "vue-sjv"
 import KVCard from "@/components/common/KVCard.vue"
 import SocAlertTimeline from "./SocAlertTimeline.vue"
-import SocCaseItem from "../SocCases/SocCaseItem.vue"
 import SocAssignUser from "./SocAssignUser.vue"
+import SocAlertItemActions from "./SocAlertItemActions.vue"
 import "@/assets/scss/vuesjv-override.scss"
 import Api from "@/api"
 import {
 	NCollapse,
 	useMessage,
-	NButton,
 	NCollapseItem,
 	NPopover,
 	NModal,
 	NTabs,
 	NTabPane,
 	NSpin,
+	NCheckbox,
 	NTooltip,
 	NCollapseTransition
 } from "naive-ui"
@@ -322,8 +298,14 @@ import dayjs from "@/utils/dayjs"
 import type { SocUser } from "@/types/soc/user.d"
 import { useRouter } from "vue-router"
 
+const checked = defineModel<boolean>("checked", { default: false })
+
 const emit = defineEmits<{
 	(e: "bookmark", value: boolean): void
+	(e: "deleted"): void
+	(e: "checked"): void
+	(e: "unchecked"): void
+	(e: "check", value: boolean): void
 }>()
 
 const props = defineProps<{
@@ -336,6 +318,7 @@ const props = defineProps<{
 	hideSocCaseAction?: boolean
 	hideBookmarkAction?: boolean
 	showBadgesToggle?: boolean
+	showCheckbox?: boolean
 }>()
 const { alertData, alertId, isBookmark, highlight, users, embedded, hideSocCaseAction, hideBookmarkAction } =
 	toRefs(props)
@@ -352,16 +335,13 @@ const StarActiveIcon = "carbon:star-filled"
 const OwnerIcon = "carbon:user-military"
 const StarIcon = "carbon:star"
 const EditIcon = "uil:edit-alt"
-const DangerIcon = "majesticons:exclamation-line"
 const LoadingIcon = "eos-icons:loading"
-const ViewIcon = "iconoir:eye-alt"
 
 const showDetails = ref(false)
 const showBadges = ref(false)
-const showSocCaseDetails = ref(false)
+const loadingDelete = ref(false)
 const loadingData = ref(false)
 const loadingBookmark = ref(false)
-const loadingCaseCreation = ref(false)
 const router = useRouter()
 const message = useMessage()
 
@@ -369,7 +349,7 @@ const alert = ref(alertData.value || null)
 
 const alertObject = ref<Alert>({} as Alert)
 
-const loading = computed(() => loadingBookmark.value || loadingCaseCreation.value || loadingData.value)
+const loading = computed(() => loadingBookmark.value || loadingData.value || loadingDelete.value)
 const ownerName = computed(() => alert.value?.owner?.user_login)
 const ownerId = computed(() => alert.value?.owner?.id)
 const caseId = computed<number | null>(() => (alert.value?.cases?.length ? alert.value?.cases[0] : null))
@@ -417,31 +397,6 @@ function toggleBookmark() {
 	}
 }
 
-function createCase() {
-	if (alert.value?.alert_id) {
-		loadingCaseCreation.value = true
-
-		Api.soc
-			.createCase(alert.value.alert_id.toString())
-			.then(res => {
-				if (res.data.success) {
-					if (alert.value) {
-						alert.value.cases = [res.data.case.case_id]
-					}
-					message.success(res.data?.message || "SOC Case created.")
-				} else {
-					message.warning(res.data?.message || "An error occurred. Please try again later.")
-				}
-			})
-			.catch(err => {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-			})
-			.finally(() => {
-				loadingCaseCreation.value = false
-			})
-	}
-}
-
 function updateAlert(alertUpdated: SocAlert) {
 	const ownerObject = alertUpdated.owner
 	const modificationHistory = alertUpdated.modification_history
@@ -454,10 +409,6 @@ function updateAlert(alertUpdated: SocAlert) {
 
 function gotoUsersPage(userId?: string | number) {
 	router.push({ name: "Soc-Users", query: userId ? { user_id: userId } : {} })
-}
-
-function openSocCase() {
-	showSocCaseDetails.value = true
 }
 
 function getAlert(id: string | number, cb?: () => void) {
@@ -488,6 +439,26 @@ function createAlertObject() {
 		_source: alert.value?.alert_source_content
 	} as Alert
 }
+
+function caseCreated(caseId: string | number) {
+	if (alert.value) {
+		alert.value.cases = [caseId]
+	}
+}
+
+function deleted() {
+	loadingDelete.value = false
+	emit("deleted")
+}
+
+watch(checked, val => {
+	emit("check", val)
+	if (val) {
+		emit("checked")
+	} else {
+		emit("unchecked")
+	}
+})
 
 onBeforeMount(() => {
 	createAlertObject()
@@ -578,13 +549,13 @@ onBeforeMount(() => {
 
 	&.bookmarked {
 		background-color: var(--primary-005-color);
-		box-shadow: 0px 0px 0px 1px inset var(--primary-030-color);
+		border-color: var(--primary-030-color);
 	}
 
 	&:not(.embedded) {
 		&:hover,
 		&.highlight {
-			box-shadow: 0px 0px 0px 1px inset var(--primary-color);
+			border-color: var(--primary-color);
 		}
 	}
 
@@ -597,7 +568,7 @@ onBeforeMount(() => {
 			}
 
 			.main-box {
-				.actions {
+				.actions-box {
 					display: none;
 				}
 				.badges-box {

@@ -78,6 +78,20 @@
 						</KVCard>
 					</div>
 				</n-tab-pane>
+				<n-tab-pane name="Backtrace" tab="Backtrace" display-directive="show">
+					<div class="p-7 pt-4">
+						<n-input
+							:value="flow.backtrace"
+							type="textarea"
+							readonly
+							placeholder="Empty"
+							:autosize="{
+								minRows: 3,
+								maxRows: 18
+							}"
+						/>
+					</div>
+				</n-tab-pane>
 				<n-tab-pane name="Timeline" tab="Timeline" display-directive="show:lazy">
 					<div class="p-7 pt-4">
 						<AgentFlowTimeline :flow="flow" />
@@ -135,7 +149,7 @@
 </template>
 
 <script setup lang="ts">
-import { NPopover, NModal, NTabs, NTabPane, NEmpty, NScrollbar } from "naive-ui"
+import { NPopover, NModal, NTabs, NTabPane, NEmpty, NScrollbar, NInput } from "naive-ui"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
 import type { FlowResult } from "@/types/flow.d"
@@ -164,7 +178,6 @@ const executionDuration = computed(() => dayjs.duration(flow.execution_duration)
 
 const properties = computed(() => {
 	return _pick(flow, [
-		"backtrace",
 		"client_id",
 		"next_response_id",
 		"outstanding_requests",
