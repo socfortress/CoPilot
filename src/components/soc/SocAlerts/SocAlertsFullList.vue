@@ -12,6 +12,7 @@
 				<SocAlertsBookmarks
 					:usersList="usersList"
 					@bookmark="reloadAlerts()"
+					@deleted="itemDeleted($event)"
 					@loaded="bookmarksList = $event"
 					@mounted="socAlertsBookmarksCTX = $event"
 				/>
@@ -22,6 +23,7 @@
 					:bookmarksList="bookmarksList"
 					:usersList="usersList"
 					@bookmark="reloadBookmarks()"
+					@deleted="reloadBookmarks()"
 					@mounted="socAlertsCTX = $event"
 				/>
 			</template>
@@ -40,6 +42,7 @@
 				:bookmarksList="bookmarksList"
 				:usersList="usersList"
 				@bookmark="reloadBookmarks()"
+				@deleted="reloadBookmarks()"
 				@mounted="socAlertsCTX = $event"
 			>
 				<template #header>
@@ -63,6 +66,7 @@
 					<SocAlertsBookmarks
 						:usersList="usersList"
 						@bookmark="reloadAlerts()"
+						@deleted="itemDeleted($event)"
 						@loaded="bookmarksList = $event"
 						@mounted="socAlertsBookmarksCTX = $event"
 					/>
@@ -95,7 +99,7 @@ const message = useMessage()
 const bookmarksList = ref<SocAlert[]>([])
 const usersList = ref<SocUser[]>([])
 const socAlertsBookmarksCTX = ref<{ reload: () => void } | null>(null)
-const socAlertsCTX = ref<{ reload: () => void } | null>(null)
+const socAlertsCTX = ref<{ reload: () => void; itemDeleted: (alertId: string, noEmit?: boolean) => void } | null>(null)
 
 const list = ref(null)
 const showBookmarkedDrawer = ref(false)
@@ -107,8 +111,15 @@ const splitDefault = ref(0.3)
 function reloadBookmarks() {
 	socAlertsBookmarksCTX.value?.reload()
 }
+
 function reloadAlerts() {
 	socAlertsCTX.value?.reload()
+}
+
+function itemDeleted(alertId?: string) {
+	if (alertId) {
+		socAlertsCTX.value?.itemDeleted(alertId, true)
+	}
 }
 
 function getUsers() {

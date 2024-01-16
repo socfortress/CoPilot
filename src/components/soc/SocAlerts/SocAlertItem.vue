@@ -272,7 +272,7 @@ import type { SocAlert } from "@/types/soc/alert.d"
 import type { Alert } from "@/types/alerts.d"
 import Icon from "@/components/common/Icon.vue"
 import Badge from "@/components/common/Badge.vue"
-import { computed, onBeforeMount, ref, toRefs } from "vue"
+import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
 import { SimpleJsonViewer } from "vue-sjv"
 import KVCard from "@/components/common/KVCard.vue"
 import SocAlertTimeline from "./SocAlertTimeline.vue"
@@ -303,6 +303,9 @@ const checked = defineModel<boolean>("checked", { default: false })
 const emit = defineEmits<{
 	(e: "bookmark", value: boolean): void
 	(e: "deleted"): void
+	(e: "checked"): void
+	(e: "unchecked"): void
+	(e: "check", value: boolean): void
 }>()
 
 const props = defineProps<{
@@ -447,6 +450,15 @@ function deleted() {
 	loadingDelete.value = false
 	emit("deleted")
 }
+
+watch(checked, val => {
+	emit("check", val)
+	if (val) {
+		emit("checked")
+	} else {
+		emit("unchecked")
+	}
+})
 
 onBeforeMount(() => {
 	createAlertObject()
