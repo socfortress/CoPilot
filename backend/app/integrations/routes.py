@@ -284,6 +284,41 @@ async def create_integration(
         success=True,
     )
 
+@integration_settings_router.put(
+    "/available_integrations",
+    response_model=AvailableIntegrationsResponse,
+    description="Update an available integration.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def update_available_integrations(
+    available_integrations: List[AvailableIntegrations],
+    session: AsyncSession = Depends(get_db),
+):
+    """
+    Endpoint to update an available integration.
+    """
+    for integration in available_integrations:
+        stmt = (
+            select(AvailableIntegrations)
+            .where(AvailableIntegrations.integration_name == integration.integration_name)
+        )
+        result = await session.execute(stmt)
+        existing_integration = result.scalars().first()
+
+        if existing_integration is None:
+            raise HTTPException(status_code=404, detail=f"Integration {integration.integration_name} not found.")
+
+        existing_integration.description = integration.description
+        existing_integration.integration_details = integration.integration_details
+
+    await session.commit()
+
+    return AvailableIntegrationsResponse(
+        available_integrations=available_integrations,
+        message="Available integrations successfully updated.",
+        success=True,
+    )
+
 
 @integration_settings_router.delete(
     "/delete_integration",
