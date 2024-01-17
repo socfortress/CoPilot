@@ -13,6 +13,7 @@ from fastapi import Security
 from app.auth.utils import AuthHandler
 from pydantic import ValidationError
 from sqlalchemy import update
+from typing import Optional
 
 from app.db.db_session import get_db
 from app.integrations.models.customer_integration_settings import (
@@ -222,6 +223,23 @@ async def delete_customer_integration_record(session, customer_id):
         .where(CustomerIntegrations.id == customer_id)
     )
 
+async def find_customer_integration(customer_code: str, integration_name: str, customer_integration_response) -> Optional[CustomerIntegrations]:
+    for ci in customer_integration_response.available_integrations:
+        for subscription in ci.integration_subscriptions:
+            if subscription.integration_service.service_name == integration_name:
+                return ci
+    return None
+
+def get_subscription_id(customer_integration, integration_name: str, auth_key_name: str) -> Optional[int]:
+    for subscription in customer_integration.integration_subscriptions:
+        if subscription.integration_service.service_name == integration_name:
+            for auth_key in subscription.integration_auth_keys:
+                if auth_key.auth_key_name == auth_key_name:
+                    return subscription.id
+    return None
+
+
+
 @integration_settings_router.get(
     "/available_integrations",
     response_model=AvailableIntegrationsResponse,
@@ -316,20 +334,13 @@ async def create_integration(
     """
     Endpoint to create a new customer integration.
     """
-    logger.info("Validating customer integration create request.")
     await validate_integration_name(customer_integration_create.integration_name, session)
-    logger.info("Integration name validated.")
     await validate_integration_auth_keys(customer_integration_create.integration_name, customer_integration_create.integration_auth_keys, session)
-    logger.info("Integration auth keys validated.")
     await validate_customer_code(customer_integration_create.customer_code, session)
-    logger.info("Customer code validated.")
     await check_existing_customer_integration(customer_integration_create.customer_code, customer_integration_create.integration_name, session)
-    logger.info("Customer integration validated.")
 
     integration_service = await create_integration_service(customer_integration_create.integration_name, settings=customer_integration_create.integration_config, session=session)
-    logger.info(f"Integration service created: {integration_service}")
     customer_integrations = await create_customer_integrations(customer_integration_create.customer_code, customer_integration_create.customer_name, session)
-    logger.info(f"Customer integrations created: {customer_integrations}")
     await create_integration_subscription(customer_integrations, integration_service, integration_auth_keys=customer_integration_create.integration_auth_keys, session=session)
 
     return CustomerIntegrationCreateResponse(
@@ -348,55 +359,24 @@ async def update_integration(
     customer_integration_update: UpdateCustomerIntegration,
     session: AsyncSession = Depends(get_db),
 ):
-    """
-    Endpoint to update a customer integration.
-    """
     await validate_integration_name(customer_integration_update.integration_name, session)
     customer_integration_response = await get_customer_integrations_by_customer_code(customer_code, session)
+
     if not customer_integration_response:
         raise HTTPException(status_code=404, detail="Customer integrations not found")
 
-    logger.info(f"customer_integration_response: {customer_integration_response}")
-
-    # Find the CustomerIntegrations object where one of the IntegrationSubscriptions has a matching service_name
-    customer_integration = None
-    for ci in customer_integration_response.available_integrations:
-        for subscription in ci.integration_subscriptions:
-            if subscription.integration_service.service_name == customer_integration_update.integration_name:
-                customer_integration = ci
-                break
-        if customer_integration:
-            break
+    customer_integration = await find_customer_integration(customer_code, customer_integration_update.integration_name, customer_integration_response)
 
     if not customer_integration:
-        raise HTTPException(status_code=404, detail="Customer integration with specified service name not found. Make sure the customer code and integration name are created.")
+        raise HTTPException(status_code=404, detail="Customer integration with specified service name not found.")
 
-
-    # check if the integration name exists in the customer integrations
-    logger.info(f"customer_integration: {customer_integration}")
-    if customer_integration_update.integration_name not in [isub.integration_service.service_name for isub in customer_integration.integration_subscriptions]:
-        raise HTTPException(status_code=404, detail=f"Integration {customer_integration_update.integration_name} not found.")
-
-    # check if the integration auth keys are valid
     await validate_integration_auth_key_update(customer_integration_update.integration_name, customer_integration_update.integration_auth_keys, session)
 
-    # Get the subscription_id for the auth_key_name from the customer_integration integration_service
-    subscription_id = None
-    for subscription in customer_integration.integration_subscriptions:
-        if subscription.integration_service.service_name == customer_integration_update.integration_name:
-            for auth_key in subscription.integration_auth_keys:
-                if auth_key.auth_key_name == customer_integration_update.integration_auth_keys[0].auth_key_name:
-                    subscription_id = subscription.id
-                    break
-            if subscription_id:
-                break
-
-    logger.info(f"subscription_id: {subscription_id}")
+    subscription_id = get_subscription_id(customer_integration, customer_integration_update.integration_name, customer_integration_update.integration_auth_keys[0].auth_key_name)
 
     if not subscription_id:
         raise HTTPException(status_code=404, detail=f"Integration auth key {customer_integration_update.integration_auth_keys[0].auth_key_name} not found.")
 
-    # update the `integration_auth_keys` value for the `subscription_id`
     await session.execute(
         update(IntegrationAuthKeys)
         .where(IntegrationAuthKeys.subscription_id == subscription_id)
@@ -409,6 +389,7 @@ async def update_integration(
         message=f"Customer integration {customer_code} {customer_integration_update.integration_name} successfully updated.",
         success=True,
     )
+
 
 @integration_settings_router.put(
     "/available_integrations",
