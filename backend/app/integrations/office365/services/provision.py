@@ -167,6 +167,7 @@ async def update_wazuh_configuration(wazuh_config: str, provision_office365_auth
 
     except Exception as e:
         logger.error(f"Exception occurred during retry of Wazuh configuration update: {e}")
+        raise HTTPException(status_code=500, detail="Failed to update Wazuh configuration.")
 
 
 async def check_if_office365_is_already_provisioned(customer_code: str, wazuh_config: str) -> bool:
