@@ -169,6 +169,19 @@ async def update_wazuh_configuration(wazuh_config: str, provision_office365_auth
         logger.error(f"Exception occurred during retry of Wazuh configuration update: {e}")
 
 
+async def check_if_office365_is_already_provisioned(customer_code: str, wazuh_config: str) -> bool:
+    """
+    If the string "Office365 Integration For {customer_code}" is found in the Wazuh configuration, return True.
+
+    Args:
+        customer_code (str): The customer code.
+        wazuh_config (str): The Wazuh configuration in string format.
+
+    Returns:
+        bool: True if the Office365 integration is already provisioned, False otherwise.
+    """
+    if f"Office365 Integration For {customer_code}" in wazuh_config:
+        raise HTTPException(status_code=400, detail=f"Office365 integration already provisioned for customer {customer_code}.")
 
 
 
@@ -176,6 +189,9 @@ async def provision_office365(customer_code: str, provision_office365_auth_keys:
     logger.info(f"Provisioning Office365 integration for customer {customer_code}.")
     # Get Wazuh configuration
     wazuh_config = await get_wazuh_configuration()
+
+    # Check if Office365 is already provisioned
+    await check_if_office365_is_already_provisioned(customer_code, wazuh_config)
 
     logger.info(f"Wazuh configuration: {wazuh_config}")
 
