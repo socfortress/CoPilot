@@ -45,7 +45,7 @@ class IntegrationSubscription(SQLModel, table=True):
     # Relationships
     customer_integrations: "CustomerIntegrations" = Relationship(back_populates="integration_subscriptions")
     integration_service: "IntegrationService" = Relationship(back_populates="integration_subscriptions")
-    integration_metadata: List["IntegrationMetadata"] = Relationship(back_populates="integration_subscription")  # Moved here
+    integration_auth_keys: List["IntegrationAuthKeys"] = Relationship(back_populates="integration_subscription")  # Moved here
 
 class IntegrationConfig(SQLModel, table=True):
     __tablename__ = "integration_configs"
@@ -56,12 +56,12 @@ class IntegrationConfig(SQLModel, table=True):
     # Relationships
     integration_service: "IntegrationService" = Relationship(back_populates="configs")
 
-class IntegrationMetadata(SQLModel, table=True):
-    __tablename__ = "integration_metadata"
+class IntegrationAuthKeys(SQLModel, table=True):
+    __tablename__ = "integration_auth_keys"
     id: Optional[int] = Field(default=None, primary_key=True)
     subscription_id: int = Field(default=None, foreign_key="integration_subscriptions.id")
-    metadata_key: str = Field(max_length=255)  # e.g., 'credentials', 'rate_limit'
-    metadata_value: str = Field(max_length=1024)  # e.g., JSON/encrypted credentials
+    auth_key_name: str = Field(max_length=255)  # e.g., 'credentials', 'rate_limit'
+    auth_value: str = Field(max_length=1024)  # e.g., JSON/encrypted credentials
     # Relationships
-    integration_subscription: "IntegrationSubscription" = Relationship(back_populates="integration_metadata")  # Adjusted relationship
+    integration_subscription: "IntegrationSubscription" = Relationship(back_populates="integration_auth_keys")  # Adjusted relationship
 

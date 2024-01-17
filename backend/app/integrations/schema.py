@@ -37,15 +37,15 @@ class CreateIntegrationService(BaseModel):
         examples=["https://api.mimecast.com"],
     )
 
-class CreateIntegrationMetadata(BaseModel):
-    metadata_key: str = Field(
+class CreateIntegrationAuthKeys(BaseModel):
+    auth_key_name: str = Field(
         ...,
-        description="The metadata key.",
+        description="The auth key.",
         examples=["username"],
     )
-    metadata_value: str = Field(
+    auth_value: str = Field(
         ...,
-        description="The metadata value.",
+        description="The auth value.",
         examples=["test-user"],
     )
 
@@ -69,9 +69,13 @@ class CustomerIntegrationCreate(BaseModel):
         ...,
         description="The integration service.",
     )
-    integration_metadata: CreateIntegrationMetadata = Field(
+    # integration_auth_key: CreateIntegrationAuthKeys = Field(
+    #     ...,
+    #     description="The integration metadata.",
+    # )
+    integration_auth_keys: List[CreateIntegrationAuthKeys] = Field(
         ...,
-        description="The integration metadata.",
+        description="The integration auth keys.",
     )
 
 class CustomerIntegrationCreateResponse(BaseModel):
@@ -122,10 +126,10 @@ class CustomerIntegrationDeleteResponse(BaseModel):
 #     message: str
 #     success: bool
 
-class IntegrationMetadata(BaseModel):
+class IntegrationAuthKeys(BaseModel):
     id: int
-    metadata_value: str
-    metadata_key: str
+    auth_key_name: str
+    auth_value: str
     subscription_id: int
 
 class IntegrationService(BaseModel):
@@ -138,7 +142,7 @@ class IntegrationSubscription(BaseModel):
     customer_id: int
     integration_service_id: int
     integration_service: IntegrationService
-    integration_metadata: List[IntegrationMetadata]  # Changed from IntegrationConfig
+    integration_auth_keys: List[IntegrationAuthKeys]  # Changed from IntegrationConfig
 
 class CustomerIntegrations(BaseModel):
     customer_code: str
