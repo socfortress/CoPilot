@@ -166,3 +166,14 @@ class DeleteCustomerIntegration(BaseModel):
         description="The integration name.",
         examples=["Mimecast"],
     )
+
+class UpdateCustomerIntegration(BaseModel):
+    integration_name: str = Field(
+        ...,
+        description="The integration name.",
+        examples=["Mimecast"],
+    )
+    integration_auth_keys: List[CreateIntegrationAuthKeys] = Field(
+        ...,
+        description="The integration auth keys.",
+    )
