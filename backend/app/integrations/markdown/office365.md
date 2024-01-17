@@ -38,21 +38,21 @@ For **Wazuh** to successfully connect to the **Office365 API**, an authenticatio
 
    To authenticate with the Microsoft identity platform endpoint, you need to register an app in your `Microsoft Azure portal app registrations <https://portal.azure.com/#blade/Microsoft_AAD_RegisteredApps/ApplicationsListBlade>`_  section. Once there click on **New registration**:
 
-   .. thumbnail:: /images/cloud-security/office365/0-azure-app-new-registration.png
+   .. thumbnail:: /assets/images/office365/0-azure-app-new-registration.png
        :title: Register your app
        :align: center
        :width: 100%
 
    Fill in the name of your app, choose the desired account type and click on the **Register** button:
 
-   .. thumbnail:: /images/cloud-security/office365/1-azure-wazuh-app-register-application.png
+   .. thumbnail:: /assets/images/office365/1-azure-wazuh-app-register-application.png
        :title: Register your app
        :align: center
        :width: 100%
 
    The app is now registered, and you can see information about it in its **Overview** section, at this point we can get the ``client`` and ``tenant`` IDs:
 
-   .. thumbnail:: /images/cloud-security/office365/2-azure-wazuh-app-overview.png
+   .. thumbnail:: /assets/images/office365/2-azure-wazuh-app-overview.png
        :title: Register your app
        :align: center
        :width: 100%
@@ -62,14 +62,14 @@ For **Wazuh** to successfully connect to the **Office365 API**, an authenticatio
    You can generate a password to use during the authentication process. Go to **Certificates & secrets** and click on **New client secret**,
    then the name and the expiration date of the **New client secret** are requested:
 
-   .. thumbnail:: /images/cloud-security/office365/3-azure-wazuh-app-create-password.png
+   .. thumbnail:: /assets/images/office365/3-azure-wazuh-app-create-password.png
        :title: Certificates & secrets
        :align: center
        :width: 100%
 
    Copy and save the value section.
 
-   .. thumbnail:: /images/cloud-security/office365/3-azure-wazuh-app-create-password-copy-value.png
+   .. thumbnail:: /assets/images/office365/3-azure-wazuh-app-create-password-copy-value.png
        :title: Copy secrets value
        :align: center
        :width: 100%
@@ -88,14 +88,14 @@ For **Wazuh** to successfully connect to the **Office365 API**, an authenticatio
 
    - ``ActivityFeed.ReadDlp``. Read DLP policy events including detected sensitive data.
 
-   .. thumbnail:: /images/cloud-security/office365/4-azure-wazuh-app-configure-permissions.png
+   .. thumbnail:: /assets/images/office365/4-azure-wazuh-app-configure-permissions.png
        :title: API permissions
        :align: center
        :width: 100%
 
    .. note:: Admin consent is required for API permission changes.
 
-   .. thumbnail:: /images/cloud-security/office365/4-azure-wazuh-app-configure-permissions-admin-consent.png
+   .. thumbnail:: /assets/images/office365/4-azure-wazuh-app-configure-permissions-admin-consent.png
        :title: API permissions admin consent
        :align: center
        :width: 100%
@@ -242,30 +242,5 @@ If Wazuh successfully connects to Office 365 API, the events raised above will t
         "location":"office365"
     }
 
-
-Enabling dashboard visualization
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Once the configuration is complete, you can activate the corresponding Security Information Management module on the Wazuh Dashboard. This module provides additional details and insights about events, as shown in the screenshots below.
-
-    .. thumbnail:: /images/office365/office365-dashboard.png
-       :title: Office 365 dashboard
-       :alt: Office 365 dashboard
-       :align: center
-       :width: 80%
-
-    .. thumbnail:: /images/office365/office365-events.png
-       :title: Office 365 events
-       :alt: Office 365 events
-       :align: center
-       :width: 80%
-
-To activate the **Office 365** module, navigate to your Wazuh Dashboard and click on **Wazuh > Settings > Modules**. In the **Security Information Management** section, enable the **Office 365** module as shown in the image below.
-
-    .. thumbnail:: /images/office365/office365-module.png
-       :title: Office 365 module
-       :alt: Office 365 module
-       :align: center
-       :width: 80%
 
 For further information, please refer to the `modules <https://documentation.wazuh.com/current/user-manual/wazuh-dashboard/settings.html#modules>`_ section.
