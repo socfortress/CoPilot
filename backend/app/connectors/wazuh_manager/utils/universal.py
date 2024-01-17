@@ -121,6 +121,16 @@ async def send_get_request(endpoint: str, params: Optional[Dict[str, Any]] = Non
         logger.error("No Wazuh Manager connector found in the database")
         return None
     try:
+        # if params is {"raw": "true"} then we want to return the raw response
+        if params == {"raw": True}:
+            response = requests.get(
+                f"{attributes['connector_url']}/{endpoint}",
+                headers=wazuh_manager_client,
+                params=params,
+                verify=False,
+            )
+            response.raise_for_status()
+            return {"data": response.text, "success": True, "message": "Successfully retrieved data"}
         response = requests.get(
             f"{attributes['connector_url']}/{endpoint}",
             headers=wazuh_manager_client,
