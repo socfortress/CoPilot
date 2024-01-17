@@ -30,23 +30,54 @@ from app.integrations.models.customer_integration_settings import (
     IntegrationMetadata, AvailableIntegrations
 )
 from app.db.universal_models import Customers
-from app.integrations.schema import AvailableIntegrationsResponse, CustomerIntegrationCreate, CreateIntegrationService, CreateIntegrationMetadata, CustomerIntegrationCreateResponse, CustomerIntegrationsResponse, DeleteCustomerIntegration, CustomerIntegrationDeleteResponse
+from app.integrations.schema import AvailableIntegrationsResponse, CustomerIntegrationCreate, CreateIntegrationService, CreateIntegrationMetadata, CustomerIntegrationCreateResponse, CustomerIntegrationsResponse, DeleteCustomerIntegration, CustomerIntegrationDeleteResponse, AuthKey, IntegrationWithAuthKeys
 
 integration_settings_router = APIRouter()
 
+# async def fetch_available_integrations(session: AsyncSession):
+#     """
+#     Fetches available integrations from the database.
+
+#     Args:
+#         session (AsyncSession): The database session.
+
+#     Returns:
+#         List[AvailableIntegrations]: A list of available integrations.
+#     """
+#     stmt = select(AvailableIntegrations)
+#     result = await session.execute(stmt)
+#     return result.scalars().all()
+
 async def fetch_available_integrations(session: AsyncSession):
     """
-    Fetches available integrations from the database.
+    Fetches available integrations and their auth keys from the database.
 
     Args:
         session (AsyncSession): The database session.
 
     Returns:
-        List[AvailableIntegrations]: A list of available integrations.
+        List[IntegrationWithAuthKeys]: A list of available integrations with their auth keys.
     """
-    stmt = select(AvailableIntegrations)
+    stmt = select(AvailableIntegrations).options(joinedload(AvailableIntegrations.auth_keys))
     result = await session.execute(stmt)
-    return result.scalars().all()
+
+    # Use unique() to avoid duplicates caused by joined eager loading
+    unique_integrations = result.unique().scalars().all()
+
+    integrations_with_auth_keys = []
+    for integration in unique_integrations:
+        auth_keys = [AuthKey(auth_key_name=key.auth_key_name) for key in integration.auth_keys]
+        integration_data = IntegrationWithAuthKeys(
+            id=integration.id,
+            integration_name=integration.integration_name,
+            description=integration.description,
+            integration_details=integration.integration_details,
+            auth_keys=auth_keys
+        )
+        integrations_with_auth_keys.append(integration_data)
+
+    return integrations_with_auth_keys
+
 
 async def validate_integration_name(integration_name: str, session: AsyncSession):
     """

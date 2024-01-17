@@ -5,22 +5,20 @@ from typing import List, Optional, Union
 from typing import Dict
 from typing import Type
 
+class AuthKey(BaseModel):
+    auth_key_name: str
+
+class IntegrationWithAuthKeys(BaseModel):
+    id: int
+    integration_name: str
+    description: str
+    integration_details: str
+    auth_keys: List[AuthKey]
+
 class AvailableIntegrationsResponse(BaseModel):
-    """
-    The response model for the /integrations/available_integrations endpoint.
-    """
-    available_integrations: list[AvailableIntegrations] = Field(
-        ...,
-        description="The available integrations.",
-    )
-    message: str = Field(
-        ...,
-        description="The message.",
-    )
-    success: bool = Field(
-        ...,
-        description="The success status.",
-    )
+    available_integrations: List[IntegrationWithAuthKeys]
+    message: str
+    success: bool
 
 class CreateIntegrationService(BaseModel):
     auth_type: str = Field(
