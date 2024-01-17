@@ -9,6 +9,8 @@ from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy import delete
+from fastapi import Security
+from app.auth.utils import AuthHandler
 
 from app.db.db_session import get_db
 from app.integrations.models.customer_integration_settings import (
@@ -178,7 +180,8 @@ async def delete_customer_integration_record(session, customer_id):
 @integration_settings_router.get(
     "/available_integrations",
     response_model=AvailableIntegrationsResponse,
-    description="Get a list of available integrations."
+    description="Get a list of available integrations.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_available_integrations(
     session: AsyncSession = Depends(get_db),
@@ -197,7 +200,8 @@ async def get_available_integrations(
 @integration_settings_router.get(
     "/customer_integrations",
     response_model=CustomerIntegrationsResponse,
-    description="Get a list of customer integrations."
+    description="Get a list of customer integrations.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_customer_integrations(
     session: AsyncSession = Depends(get_db),
@@ -225,7 +229,8 @@ async def get_customer_integrations(
 @integration_settings_router.get(
     "/customer_integrations/{customer_code}",
     response_model=CustomerIntegrationsResponse,
-    description="Get a list of customer integrations for a specific customer."
+    description="Get a list of customer integrations for a specific customer.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_customer_integrations_by_customer_code(
     customer_code: str,
@@ -255,7 +260,8 @@ async def get_customer_integrations_by_customer_code(
 @integration_settings_router.post(
     "/create_integration",
     response_model=CustomerIntegrationCreateResponse,
-    description="Create a new customer integration."
+    description="Create a new customer integration.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def create_integration(
     customer_integration_create: CustomerIntegrationCreate,
@@ -282,7 +288,8 @@ async def create_integration(
 @integration_settings_router.delete(
     "/delete_integration",
     response_model=CustomerIntegrationDeleteResponse,
-    description="Delete a customer integration."
+    description="Delete a customer integration.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def delete_integration(
     delete_customer_integration: DeleteCustomerIntegration,
