@@ -150,20 +150,45 @@ def load_available_integrations_data(integration_name: str, description: str, in
         "integration_details": integration_details,
     }
 
+def load_markdown_for_integration(integration_name: str) -> str:
+    """
+    Load markdown content for a given integration from a file.
+
+    Args:
+        integration_name (str): The name of the integration.
+
+    Returns:
+        str: The content of the markdown file.
+    """
+    #file_path = os.path.join("integrations_markdown", f"{integration_name.lower()}.md")
+    file_path = os.path.join("app", "integrations", "markdown", f"{integration_name.lower()}.md")
+    try:
+        with open(file_path, "r") as file:
+            return file.read()
+    except FileNotFoundError:
+        return "No deployment intrusctions available."
+
 def get_available_integrations_list():
     """
     Get a list of available integrations.
 
     Returns:
-        list: A list of available integrations data, where each item contains the integration name and description.
+        list: A list of available integrations data, where each item contains the integration name, description, and markdown details.
     """
     available_integrations = [
-        ("Office365", "Integrate Office365 with SOCFortress.", "## Markdown Test"),
-        ("Mimecast", "Integrate Mimecast with SOCFortress.", "## Markdown Test"),
+        ("Office365", "Integrate Office365 with SOCFortress."),
+        ("Mimecast", "Integrate Mimecast with SOCFortress."),
         # ... Add more available integrations as needed ...
     ]
 
-    return [load_available_integrations_data(*available_integration) for available_integration in available_integrations]
+    return [
+        load_available_integrations_data(
+            integration_name,
+            description,
+            load_markdown_for_integration(integration_name)
+        ) for integration_name, description in available_integrations
+    ]
+
 
 async def add_available_integrations_if_not_exist(session: AsyncSession):
     """
