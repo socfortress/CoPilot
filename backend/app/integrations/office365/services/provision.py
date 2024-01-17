@@ -115,21 +115,6 @@ async def append_office365_template(wazuh_config: str, office365_template: str) 
 
     return wazuh_config + office365_template
 
-# async def update_wazuh_configuration(wazuh_config: str) -> None:
-#     """
-#     Updates the Wazuh configuration.
-
-#     Args:
-#         wazuh_config (str): The Wazuh configuration in string format.
-#     """
-#     endpoint = "manager/configuration"
-#     # Convert the string config to bytes
-#     data = wazuh_config.encode('utf-8')
-#     response = await send_put_request(endpoint=endpoint, data=data, binary_data=True)
-#     logger.info(f"Response from Wazuh: {response}")
-#     response_data = response['data']
-#     return response_data
-
 async def update_wazuh_configuration(wazuh_config: str, provision_office365_auth_keys: ProvisionOffice365AuthKeys) -> None:
     """
     Updates the Wazuh configuration. If it fails, remove the <api_type> tag and retry.
