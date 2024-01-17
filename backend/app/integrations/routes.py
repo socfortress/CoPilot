@@ -11,6 +11,7 @@ from sqlalchemy.exc import NoResultFound
 from sqlalchemy import delete
 from fastapi import Security
 from app.auth.utils import AuthHandler
+from pydantic import ValidationError
 
 from app.db.db_session import get_db
 from app.integrations.models.customer_integration_settings import (
@@ -195,6 +196,7 @@ async def get_available_integrations(
         message="Available integrations successfully retrieved.",
         success=True,
     )
+
 
 
 @integration_settings_router.get(

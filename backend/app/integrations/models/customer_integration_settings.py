@@ -8,6 +8,17 @@ class AvailableIntegrations(SQLModel, table=True):
     integration_name: str = Field(max_length=255, nullable=False)
     description: str = Field(max_length=1024)
     integration_details: str = Field(sa_column=Text)
+    # Relationships
+    auth_keys: List["AvailableIntegrationsAuthKeys"] = Relationship(back_populates="integration")
+
+class AvailableIntegrationsAuthKeys(SQLModel, table=True):
+    __tablename__ = "available_integrations_auth_keys"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    integration_id: int = Field(default=None, foreign_key="available_integrations.id")
+    integration_name: str = Field(max_length=255, nullable=False)
+    auth_key_name: str = Field(max_length=255, nullable=False)
+    # Relationships
+    integration: "AvailableIntegrations" = Relationship(back_populates="auth_keys")
 
 class CustomerIntegrations(SQLModel, table=True):
     __tablename__ = "customer_integrations"

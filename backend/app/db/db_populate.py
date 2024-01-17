@@ -4,10 +4,11 @@ from dotenv import load_dotenv
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy import and_
 
 from app.auth.models.users import Role
 from app.connectors.models import Connectors
-from app.integrations.models.customer_integration_settings import AvailableIntegrations
+from app.integrations.models.customer_integration_settings import AvailableIntegrations, AvailableIntegrationsAuthKeys
 
 load_dotenv()
 
@@ -157,7 +158,7 @@ def get_available_integrations_list():
         list: A list of available integrations data, where each item contains the integration name and description.
     """
     available_integrations = [
-        ("Office Defender For Endpoint", "Integrate Office Defender For Endpoint with SOCFortress.", "https://docs.microsoft.com/en-us/windows/security/threat-protection/microsoft-defender-atp/microsoft-defender-advanced-threat-protection"),
+        ("Office365", "Integrate Office365 with SOCFortress.", "## Markdown Test"),
         ("Mimecast", "Integrate Mimecast with SOCFortress.", "## Markdown Test"),
         # ... Add more available integrations as needed ...
     ]
@@ -186,4 +187,90 @@ async def add_available_integrations_if_not_exist(session: AsyncSession):
             session.add(new_available_integration)
             logger.info(f"Added new available integration: {available_integration_data['integration_name']}")
 
-    await session.commit()
+
+def load_available_integrations_auth_keys(integration_id: int, integration_name: str, auth_key_name: str):
+    """
+    Load available integrations auth keys from environment variables.
+
+    Args:
+        integration_id (int): The ID of the integration.
+        integration_name (str): The name of the integration.
+        auth_key_name (str): The name of the auth key.
+
+    Returns:
+        dict: A dictionary containing the auth key data.
+    """
+    logger.info(f"Loading available integrations auth keys data for {integration_name}.")
+    return {
+        "integration_id": integration_id,
+        "integration_name": integration_name,
+        "auth_key_name": auth_key_name,
+    }
+
+async def get_available_integrations_auth_keys_list(session: AsyncSession):
+    """
+    Get a list of available integrations auth keys with their corresponding integration IDs.
+
+    Args:
+        session (AsyncSession): The database session.
+
+    Returns:
+        list: A list of available integrations auth keys data, where each item contains the integration ID, integration name, and auth key name.
+    """
+    available_integrations_auth_keys = []
+    available_integrations = [
+        ("Office365", "TENANT_ID"),
+        ("Office365", "CLIENT_ID"),
+        ("Office365", "CLIENT_SECRET"),
+        ("Office365", "API_TYPE"),
+        ("Mimecast", "APP_ID"),
+        ("Mimecast", "APP_KEY"),
+        ("Mimecast", "EMAIL_ADDRESS"),
+        ("Mimecast", "ACCESS_KEY"),
+        ("Mimecast", "SECRET_KEY"),
+        # ... Add more available integrations auth keys as needed ...
+    ]
+
+    for integration_name, auth_key_name in available_integrations:
+        query = select(AvailableIntegrations.id).where(AvailableIntegrations.integration_name == integration_name)
+        result = await session.execute(query)
+        integration_id = result.scalars().first()
+
+        if integration_id:
+            available_integrations_auth_keys.append(load_available_integrations_auth_keys(integration_id, integration_name, auth_key_name))
+
+    return available_integrations_auth_keys
+
+
+async def add_available_integrations_auth_keys_if_not_exist(session: AsyncSession):
+    """
+    Adds available integrations auth keys to the database if they do not already exist.
+
+    Args:
+        session (AsyncSession): The database session.
+
+    Returns:
+        None
+    """
+    available_integrations_auth_keys_list = await get_available_integrations_auth_keys_list(session=session)
+
+    for available_integration_auth_keys_data in available_integrations_auth_keys_list:
+        query = select(AvailableIntegrations).where(AvailableIntegrations.integration_name == available_integration_auth_keys_data["integration_name"])
+        result = await session.execute(query)
+        existing_integration = result.scalars().first()
+
+        if existing_integration:
+            available_integration_auth_keys_data["integration_id"] = existing_integration.id
+            auth_key_query = select(AvailableIntegrationsAuthKeys).where(
+                and_(
+                    AvailableIntegrationsAuthKeys.integration_id == existing_integration.id,
+                    AvailableIntegrationsAuthKeys.auth_key_name == available_integration_auth_keys_data["auth_key_name"]
+                )
+            )
+            auth_key_result = await session.execute(auth_key_query)
+            existing_auth_key = auth_key_result.scalars().first()
+
+            if existing_auth_key is None:
+                new_auth_key = AvailableIntegrationsAuthKeys(**available_integration_auth_keys_data)
+                session.add(new_auth_key)
+                logger.info(f"Added new available integration auth keys: {available_integration_auth_keys_data['auth_key_name']} for {available_integration_auth_keys_data['integration_name']}")

@@ -1,7 +1,9 @@
 from pydantic import BaseModel
 from pydantic import Field
 from app.integrations.models.customer_integration_settings import AvailableIntegrations
-from typing import List
+from typing import List, Optional, Union
+from typing import Dict
+from typing import Type
 
 class AvailableIntegrationsResponse(BaseModel):
     """
