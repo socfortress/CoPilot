@@ -1,11 +1,13 @@
 from typing import List, Optional
 from sqlmodel import Field, Relationship, SQLModel
+from sqlalchemy import Text
 
 class AvailableIntegrations(SQLModel, table=True):
     __tablename__ = "available_integrations"
     id: Optional[int] = Field(default=None, primary_key=True)
     integration_name: str = Field(max_length=255, nullable=False)
     description: str = Field(max_length=1024)
+    integration_details: str = Field(sa_column=Text)
 
 class CustomerIntegrations(SQLModel, table=True):
     __tablename__ = "customer_integrations"

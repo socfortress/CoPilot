@@ -131,7 +131,7 @@ async def add_roles_if_not_exist(session: AsyncSession) -> None:
     await session.commit()  # Commit the transaction
     logger.info("Role check and addition completed.")
 
-def load_available_integrations_data(integration_name: str, description: str):
+def load_available_integrations_data(integration_name: str, description: str, integration_details: str):
     """
     Load available integrations data from environment variables.
 
@@ -146,6 +146,7 @@ def load_available_integrations_data(integration_name: str, description: str):
     return {
         "integration_name": integration_name,
         "description": description,
+        "integration_details": integration_details,
     }
 
 def get_available_integrations_list():
@@ -156,8 +157,8 @@ def get_available_integrations_list():
         list: A list of available integrations data, where each item contains the integration name and description.
     """
     available_integrations = [
-        ("Office Defender For Endpoint", "Integrate Office Defender For Endpoint with SOCFortress."),
-        ("Mimecast", "Integrate Mimecast with SOCFortress."),
+        ("Office Defender For Endpoint", "Integrate Office Defender For Endpoint with SOCFortress.", "https://docs.microsoft.com/en-us/windows/security/threat-protection/microsoft-defender-atp/microsoft-defender-advanced-threat-protection"),
+        ("Mimecast", "Integrate Mimecast with SOCFortress.", "## Markdown Test"),
         # ... Add more available integrations as needed ...
     ]
 
