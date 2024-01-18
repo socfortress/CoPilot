@@ -350,7 +350,7 @@ async def create_event_stream(customer_code: str, provision_office365_auth_keys:
     return await send_event_stream_creation_request(event_stream_config)
 
 
-# ! PIPELINES ! #
+# ! PIPELINES AND RULES ! #
 async def check_pipeline_rules() -> None:
     """
     Checks if the pipeline rules exist in Graylog. If they don't, create them.
@@ -377,6 +377,10 @@ async def create_pipeline_rules(non_existing_rules: List[str]) -> None:
     """
     rule_creators = {
         "Office365 Timestamp - UTC": create_office365_utc_rule,
+        "WAZUH CREATE FIELD SYSLOG LEVEL - INFO": create_wazuh_info_rule,
+        "WAZUH CREATE FIELD SYSLOG LEVEL - WARNING": create_wazuh_warning_rule,
+        "WAZUH CREATE FIELD SYSLOG LEVEL - NOTICE": create_wazuh_notice_rule,
+        "WAZUH CREATE FIELD SYSLOG LEVEL - ALERT": create_wazuh_alert_rule,
     }
 
     for rule_title in non_existing_rules:
@@ -394,6 +398,62 @@ async def create_office365_utc_rule(rule_title: str) -> None:
         "then\n"
         "  let creation_time = $message.data_office_365_CreationTime;\n"
         "  set_field(\"timestamp_utc\", creation_time);\n"
+        "end"
+    )
+    await create_pipeline_rule(CreatePipelineRule(title=rule_title, description=rule_title, source=rule_source))
+
+async def create_wazuh_info_rule(rule_title: str) -> None:
+    """
+    Creates the 'WAZUH CREATE FIELD SYSLOG LEVEL - INFO' pipeline rule.
+    """
+    rule_source = (
+        f"rule \"{rule_title}\"\n"
+        "when\n"
+        "  to_long($message.rule_level) > 0 AND to_long($message.rule_level) < 4\n"
+        "then\n"
+        "  set_field(\"syslog_level\", \"INFO\");\n"
+        "end"
+    )
+    await create_pipeline_rule(CreatePipelineRule(title=rule_title, description=rule_title, source=rule_source))
+
+async def create_wazuh_warning_rule(rule_title: str) -> None:
+    """
+    Creates the 'WAZUH CREATE FIELD SYSLOG LEVEL - WARNING' pipeline rule.
+    """
+    rule_source = (
+        f"rule \"{rule_title}\"\n"
+        "when\n"
+        "  to_long($message.rule_level) > 7 AND to_long($message.rule_level) < 12\n"
+        "then\n"
+        "  set_field(\"syslog_level\", \"WARNING\");\n"
+        "end"
+    )
+    await create_pipeline_rule(CreatePipelineRule(title=rule_title, description=rule_title, source=rule_source))
+
+async def create_wazuh_notice_rule(rule_title: str) -> None:
+    """
+    Creates the 'WAZUH CREATE FIELD SYSLOG LEVEL - NOTICE' pipeline rule.
+    """
+    rule_source = (
+        f"rule \"{rule_title}\"\n"
+        "when\n"
+        "  to_long($message.rule_level) > 3 AND to_long($message.rule_level) < 8\n"
+        "then\n"
+        "  set_field(\"syslog_level\", \"NOTICE\");\n"
+        "end"
+    )
+    await create_pipeline_rule(CreatePipelineRule(title=rule_title, description=rule_title, source=rule_source))
+
+async def create_wazuh_alert_rule(rule_title: str) -> None:
+    """
+    Creates the 'WAZUH CREATE FIELD SYSLOG LEVEL - ALERT' pipeline rule.
+    """
+    rule_source = (
+        f"rule \"{rule_title}\"\n"
+        "when\n"
+        "  to_long($message.rule_level) > 11\n"
+        "then\n"
+        "  set_field(\"syslog_level\", \"ALERT\");\n"
         "end"
     )
     await create_pipeline_rule(CreatePipelineRule(title=rule_title, description=rule_title, source=rule_source))
