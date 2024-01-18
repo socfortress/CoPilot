@@ -18,7 +18,7 @@ class PipelineRuleTitles(Enum):
     OFFICE365_TIMESTAMP = "Office365 Timestamp - UTC"
 
 class PipelineTitles(Enum):
-    OFFICE365 = "OFFICE365 PROCESSINING PIPELINE"
+    OFFICE365 = "OFFICE365 PROCESSING PIPELINE"
 
 class CreatePipelineRule(BaseModel):
     title: str

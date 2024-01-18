@@ -5,7 +5,9 @@ import json
 from fastapi import HTTPException
 from app.customer_provisioning.schema.graylog import StreamCreationResponse
 from app.connectors.graylog.schema.pipelines import PipelineRulesResponse
-
+from app.customer_provisioning.schema.graylog import StreamConnectionToPipelineRequest
+from app.customer_provisioning.schema.graylog import StreamConnectionToPipelineResponse
+from app.connectors.graylog.services.management import start_stream
 from app.integrations.office365.schema.provision import ProvisionOffice365Request
 from app.customer_provisioning.schema.graylog import GraylogIndexSetCreationResponse
 from app.integrations.office365.schema.provision import ProvisionOffice365Response, ProvisionOffice365AuthKeys, PipelineRuleTitles, CreatePipelineRule, CreatePipeline, PipelineTitles
@@ -336,7 +338,7 @@ async def send_event_stream_creation_request(event_stream: Office365EventStream)
     return StreamCreationResponse(**response_json)
 
 
-async def create_event_stream(customer_code: str, provision_office365_auth_keys: ProvisionOffice365AuthKeys, index_set_id: str, session: AsyncSession):
+async def create_event_stream(customer_code: str, provision_office365_auth_keys: ProvisionOffice365AuthKeys, index_set_id: str, session: AsyncSession) -> StreamCreationResponse:
     """
     Creates an event stream for a customer.
 
@@ -499,7 +501,7 @@ async def create_pipeline(non_existing_pipelines: List[str]) -> None:
     Creates the given pipeline.
     """
     pipeline_creators = {
-        "Office365 Pipeline": create_office365_pipeline,
+        "OFFICE365 PROCESSING PIPELINE": create_office365_pipeline,
     }
 
     for pipeline_title in non_existing_pipelines:
@@ -508,11 +510,11 @@ async def create_pipeline(non_existing_pipelines: List[str]) -> None:
 
 async def create_office365_pipeline(pipeline_title: str) -> None:
     """
-    Creates the 'Office365 Pipeline' pipeline.
+    Creates the 'OFFICE365 PROCESSING PIPELINE' pipeline.
     """
-    pipeline_description = "OFFICE365 PROCESSINING PIPELINE"
+    pipeline_description = "OFFICE365 PROCESSING PIPELINE"
     pipeline_source = (
-        "pipeline \"OFFICE365 PROCESSINING PIPELINE\"\nstage 0 match either\nend"
+        "pipeline \"OFFICE365 PROCESSING PIPELINE\"\nstage 0 match either\nrule \"WAZUH CREATE FIELD SYSLOG LEVEL - ALERT\"\nrule \"WAZUH CREATE FIELD SYSLOG LEVEL - INFO\"\nrule \"WAZUH CREATE FIELD SYSLOG LEVEL - NOTICE\"\nrule \"WAZUH CREATE FIELD SYSLOG LEVEL - WARNING\"\nrule \"Office365 Timestamp - UTC\"\nend"
     )
     await create_pipeline_in_graylog(CreatePipeline(title=pipeline_title, description=pipeline_description, source=pipeline_source))
 
@@ -529,6 +531,47 @@ async def create_pipeline_in_graylog(pipeline: CreatePipeline) -> None:
     }
     await send_post_request(endpoint=endpoint, data=data)
 
+# ! PIPELINE CONNECTION ! #
+async def get_pipeline_id(subscription: str) -> str:
+    """
+    Retrieves the pipeline ID for a given subscription.
+
+    Args:
+        subscription (str): The subscription name.
+
+    Returns:
+        str: The pipeline ID.
+
+    Raises:
+        HTTPException: If the pipeline ID cannot be retrieved.
+    """
+    logger.info(f"Getting pipeline ID for subscription {subscription}")
+    pipelines_response = await get_pipelines()
+    if pipelines_response.success:
+        for pipeline in pipelines_response.pipelines:
+            if subscription.lower() in pipeline.description.lower():
+                return [pipeline.id]
+        logger.error(f"Failed to get pipeline ID for subscription {subscription}")
+        raise HTTPException(status_code=500, detail=f"Failed to get pipeline ID for subscription {subscription}")
+    else:
+        logger.error(f"Failed to get pipelines: {pipelines_response.message}")
+        raise HTTPException(status_code=500, detail=f"Failed to get pipelines: {pipelines_response.message}")
+
+async def connect_stream_to_pipeline(stream_and_pipeline: StreamConnectionToPipelineRequest):
+    """
+    Connects a stream to a pipeline.
+
+    Args:
+        stream_and_pipeline (StreamConnectionToPipelineRequest): The request object containing the stream ID and pipeline IDs.
+
+    Returns:
+        StreamConnectionToPipelineResponse: The response object containing the connection details.
+    """
+    logger.info(f"Connecting stream {stream_and_pipeline.stream_id} to pipeline {stream_and_pipeline.pipeline_ids}")
+    response_json = await send_post_request(endpoint="/api/system/pipelines/connections/to_stream", data=stream_and_pipeline.dict())
+    logger.info(f"Response: {response_json}")
+    return StreamConnectionToPipelineResponse(**response_json)
+
 
 
 
@@ -538,18 +581,6 @@ async def create_pipeline_in_graylog(pipeline: CreatePipeline) -> None:
 
 async def provision_office365(customer_code: str, provision_office365_auth_keys: ProvisionOffice365AuthKeys, session: AsyncSession) -> ProvisionOffice365Response:
     logger.info(f"Provisioning Office365 integration for customer {customer_code}.")
-
-    await check_pipeline_rules()
-    await check_pipeline()
-    return None
-
-
-    # Create Index Set
-    index_set_id = (await create_index_set(customer_code=customer_code, session=session)).data.id
-    logger.info(f"Index set: {index_set_id}")
-    # Create event stream
-    await create_event_stream(customer_code, provision_office365_auth_keys, index_set_id, session)
-
 
     # Get Wazuh configuration
     wazuh_config = await get_wazuh_configuration()
@@ -568,5 +599,23 @@ async def provision_office365(customer_code: str, provision_office365_auth_keys:
 
     # Restart Wazuh manager
     await restart_wazuh_manager()
+
+    # Graylog Deployment
+    await check_pipeline_rules()
+    await check_pipeline()
+
+    # Create Index Set
+    index_set_id = (await create_index_set(customer_code=customer_code, session=session)).data.id
+    logger.info(f"Index set: {index_set_id}")
+    # Create event stream
+    stream_id = (await create_event_stream(customer_code, provision_office365_auth_keys, index_set_id, session)).data.stream_id
+    pipeline_id = await get_pipeline_id(subscription="OFFICE365")
+    # Combine stream and pipeline IDs
+    stream_and_pipeline = StreamConnectionToPipelineRequest(stream_id=stream_id, pipeline_ids=pipeline_id)
+    # Connect stream to pipeline
+    logger.info(f"Stream and pipeline: {stream_and_pipeline}")
+    await connect_stream_to_pipeline(stream_and_pipeline)
+    # Start stream
+    await start_stream(stream_id=stream_id)
 
 
