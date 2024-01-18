@@ -34,49 +34,38 @@ Office 365 API requirements
 
 For **Wazuh** to successfully connect to the **Office365 API**, an authentication process is required. To do this, we must provide the ``tenant_id``, ``client_id``, and ``client_secret`` of the application that we authorize in the organization.
 
-#. Register your app
 
-   To authenticate with the Microsoft identity platform endpoint, you need to register an app in your `Microsoft Azure portal app registrations <https://portal.azure.com/#blade/Microsoft_AAD_RegisteredApps/ApplicationsListBlade>`_  section. Once there click on **New registration**:
+# Register your app
 
-   .. thumbnail:: /assets/images/office365/0-azure-app-new-registration.png
-       :title: Register your app
-       :align: center
-       :width: 100%
+To authenticate with the Microsoft identity platform endpoint, you need to register an app in your [Microsoft Azure portal app registrations](https://portal.azure.com/#blade/Microsoft_AAD_RegisteredApps/ApplicationsListBlade) section. Once there click on **New registration**:
 
-   Fill in the name of your app, choose the desired account type and click on the **Register** button:
+![Register your app](/src/assets/images/office365/0-azure-app-new-registration.png)
 
-   .. thumbnail:: /assets/images/office365/1-azure-wazuh-app-register-application.png
-       :title: Register your app
-       :align: center
-       :width: 100%
 
-   The app is now registered, and you can see information about it in its **Overview** section, at this point we can get the ``client`` and ``tenant`` IDs:
+Fill in the name of your app, choose the desired account type and click on the **Register** button:
 
-   .. thumbnail:: /assets/images/office365/2-azure-wazuh-app-overview.png
-       :title: Register your app
-       :align: center
-       :width: 100%
+![Register your app](/src/assets/images/office365/1-azure-wazuh-app-register-application.png)
 
-#. Certificates & secrets
+The app is now registered, and you can see information about it in its **Overview** section, at this point we can get the ``client`` and ``tenant`` IDs:
 
-   You can generate a password to use during the authentication process. Go to **Certificates & secrets** and click on **New client secret**,
-   then the name and the expiration date of the **New client secret** are requested:
+![Register your app](/src/assets/images/office365/2-azure-wazuh-app-overview.png)
 
-   .. thumbnail:: /assets/images/office365/3-azure-wazuh-app-create-password.png
-       :title: Certificates & secrets
-       :align: center
-       :width: 100%
 
-   Copy and save the value section.
+# Certificates & secrets
 
-   .. thumbnail:: /assets/images/office365/3-azure-wazuh-app-create-password-copy-value.png
-       :title: Copy secrets value
-       :align: center
-       :width: 100%
+You can generate a password to use during the authentication process. Go to **Certificates & secrets** and click on **New client secret**,
+then the name and the expiration date of the **New client secret** are requested:
 
-   .. note:: Make sure you write it down because the UI won’t let you copy it afterward.
+![Certificates & secrets](/src/assets/images/office365/3-azure-wazuh-app-create-password.png)
 
-#. API permissions
+
+Copy and save the value section.
+
+![Certificates & secrets](/src/assets/images/office365/3-azure-wazuh-app-create-password-copy-value.png)
+
+Make sure you write it down because the UI won’t let you copy it afterward.
+
+# API permissions
 
    The application needs specific API permissions to be able to request the Office 365 activity events. In this case, you are looking for permissions related to the ``https://manage.office.com`` resource.
 
@@ -88,17 +77,11 @@ For **Wazuh** to successfully connect to the **Office365 API**, an authenticatio
 
    - ``ActivityFeed.ReadDlp``. Read DLP policy events including detected sensitive data.
 
-   .. thumbnail:: /assets/images/office365/4-azure-wazuh-app-configure-permissions.png
-       :title: API permissions
-       :align: center
-       :width: 100%
+![API permissions](/src/assets/images/office365/4-azure-wazuh-app-configure-permissions.png)
 
-   .. note:: Admin consent is required for API permission changes.
+ Admin consent is required for API permission changes.
 
-   .. thumbnail:: /assets/images/office365/4-azure-wazuh-app-configure-permissions-admin-consent.png
-       :title: API permissions admin consent
-       :align: center
-       :width: 100%
+![API permissions](/src/assets/images/office365/4-azure-wazuh-app-configure-permissions-admin-consent.png)
 
 
 Wazuh configuration
