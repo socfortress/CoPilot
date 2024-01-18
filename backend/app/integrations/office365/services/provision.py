@@ -13,6 +13,12 @@ from app.connectors.wazuh_manager.utils.universal import send_get_request
 from app.connectors.wazuh_manager.utils.universal import send_put_request
 
 async def get_wazuh_configuration() -> str:
+    """
+    Retrieves the Wazuh configuration from the manager.
+
+    Returns:
+        str: The Wazuh configuration data.
+    """
     endpoint = "manager/configuration"
     params = {"raw": True}
     response = await send_get_request(endpoint=endpoint, params=params)
