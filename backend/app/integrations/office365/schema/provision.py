@@ -8,6 +8,19 @@ from pydantic import BaseModel
 from pydantic import Extra
 from pydantic import Field, root_validator
 
+from enum import Enum
+
+class PipelineRuleTitles(Enum):
+    WAZUH_INFO = "WAZUH CREATE FIELD SYSLOG LEVEL - INFO"
+    WAZUH_WARNING = "WAZUH CREATE FIELD SYSLOG LEVEL - WARNING"
+    WAZUH_NOTICE = "WAZUH CREATE FIELD SYSLOG LEVEL - NOTICE"
+    WAZUH_ALERT = "WAZUH CREATE FIELD SYSLOG LEVEL - ALERT"
+    OFFICE365_TIMESTAMP = "Office365 Timestamp - UTC"
+
+class CreatePipelineRule(BaseModel):
+    title: str
+    description: str
+    source: str
 
 class ProvisionOffice365Request(BaseModel):
     customer_code: str = Field(

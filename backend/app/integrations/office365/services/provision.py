@@ -4,23 +4,25 @@ from sqlalchemy.ext.asyncio import AsyncSession
 import json
 from fastapi import HTTPException
 from app.customer_provisioning.schema.graylog import StreamCreationResponse
+from app.connectors.graylog.schema.pipelines import PipelineRulesResponse
 
 from app.integrations.office365.schema.provision import ProvisionOffice365Request
 from app.customer_provisioning.schema.graylog import GraylogIndexSetCreationResponse
-from app.integrations.office365.schema.provision import ProvisionOffice365Response, ProvisionOffice365AuthKeys
+from app.integrations.office365.schema.provision import ProvisionOffice365Response, ProvisionOffice365AuthKeys, PipelineRuleTitles, CreatePipelineRule
 from app.integrations.alert_escalation.services.general_alert import create_alert
 from app.integrations.routes import get_customer_integrations_by_customer_code, find_customer_integration
 from app.integrations.schema import CustomerIntegrationsResponse, CustomerIntegrations
 from app.connectors.graylog.services.pipelines import get_pipelines
 from app.connectors.graylog.utils.universal import send_delete_request
 from app.connectors.graylog.utils.universal import send_post_request
-from typing import Dict
+from typing import Dict, List
 from app.customer_provisioning.schema.graylog import Office365EventStream
 from app.connectors.wazuh_manager.utils.universal import restart_service
 from app.connectors.wazuh_manager.utils.universal import send_get_request
 from app.connectors.wazuh_manager.utils.universal import send_put_request
 from app.customer_provisioning.schema.graylog import TimeBasedIndexSet
 from app.customers.routes.customers import get_customer
+from app.connectors.graylog.services.pipelines import get_pipeline_rules
 
 
 ############ ! WAZUH MANAGER ! ############
@@ -348,18 +350,84 @@ async def create_event_stream(customer_code: str, provision_office365_auth_keys:
     return await send_event_stream_creation_request(event_stream_config)
 
 
+# ! PIPELINES ! #
+async def check_pipeline_rules() -> None:
+    """
+    Checks if the pipeline rules exist in Graylog. If they don't, create them.
+    """
+    pipeline_rules = await get_pipeline_rules()
+    non_existing_rules = await pipeline_rules_exists(pipeline_rules)
+    if non_existing_rules:
+        logger.info(f"Creating pipeline rules: {non_existing_rules}")
+        await create_pipeline_rules(non_existing_rules)
+
+async def pipeline_rules_exists(pipeline_rules: PipelineRulesResponse) -> List[str]:
+    """
+    Checks if the pipeline rules exist in Graylog and returns a list of non-existing pipeline rules.
+    """
+    return [
+        rule_title.value
+        for rule_title in PipelineRuleTitles
+        if not any(rule.title == rule_title.value for rule in pipeline_rules.pipeline_rules)
+    ]
+
+async def create_pipeline_rules(non_existing_rules: List[str]) -> None:
+    """
+    Creates the given pipeline rules.
+    """
+    rule_creators = {
+        "Office365 Timestamp - UTC": create_office365_utc_rule,
+    }
+
+    for rule_title in non_existing_rules:
+        logger.info(f"Creating pipeline rule {rule_title}.")
+        await rule_creators[rule_title](rule_title)
+
+async def create_office365_utc_rule(rule_title: str) -> None:
+    """
+    Creates the 'Office365 Timestamp - UTC' pipeline rule.
+    """
+    rule_source = (
+        f"rule \"{rule_title}\"\n"
+        "when\n"
+        "  has_field(\"data_office_365_CreationTime\")\n"
+        "then\n"
+        "  let creation_time = $message.data_office_365_CreationTime;\n"
+        "  set_field(\"timestamp_utc\", creation_time);\n"
+        "end"
+    )
+    await create_pipeline_rule(CreatePipelineRule(title=rule_title, description=rule_title, source=rule_source))
+
+async def create_pipeline_rule(rule: CreatePipelineRule) -> None:
+    """
+    Creates a pipeline rule with the given title.
+    """
+    endpoint = "/api/system/pipelines/rule"
+    data = {
+        "title": rule.title,
+        "description": rule.description,
+        "source": rule.source,
+    }
+    await send_post_request(endpoint=endpoint, data=data)
+
+
 
 ################## ! MAIN FUNCTION ! ##################
 
 async def provision_office365(customer_code: str, provision_office365_auth_keys: ProvisionOffice365AuthKeys, session: AsyncSession) -> ProvisionOffice365Response:
     logger.info(f"Provisioning Office365 integration for customer {customer_code}.")
+
+    await check_pipeline_rules()
+    return None
+
+
     # Create Index Set
     index_set_id = (await create_index_set(customer_code=customer_code, session=session)).data.id
     logger.info(f"Index set: {index_set_id}")
     # Create event stream
     await create_event_stream(customer_code, provision_office365_auth_keys, index_set_id, session)
 
-    return None
+
     # Get Wazuh configuration
     wazuh_config = await get_wazuh_configuration()
 
