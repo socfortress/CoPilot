@@ -15,6 +15,7 @@ const HealthcheckIcon = "ph:heartbeat"
 const CustomersIcon = "carbon:user-multiple"
 const LogsIcon = "carbon:cloud-logging"
 const UsersIcon = "carbon:group-security"
+const IntegrationsIcon = "carbon:ibm-cloud-direct-link-2-dedicated"
 
 export default function getItems(mode: "vertical" | "horizontal", collapsed: boolean): MenuMixedOption[] {
 	return [
@@ -249,6 +250,20 @@ export default function getItems(mode: "vertical" | "horizontal", collapsed: boo
 				),
 			key: "Users",
 			icon: renderIcon(UsersIcon)
+		},
+		{
+			label: () =>
+				h(
+					RouterLink,
+					{
+						to: {
+							name: "Integrations"
+						}
+					},
+					{ default: () => "Integrations" }
+				),
+			key: "Integrations",
+			icon: renderIcon(IntegrationsIcon)
 		}
 	]
 }

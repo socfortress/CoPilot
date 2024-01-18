@@ -300,7 +300,8 @@ onBeforeMount(() => {
 		}
 	}
 
-	&.highlight {
+	&.highlight,
+	&:hover {
 		box-shadow: 0px 0px 0px 1px inset var(--primary-color);
 	}
 }
