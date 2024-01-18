@@ -170,6 +170,15 @@ async def check_if_office365_is_already_provisioned(customer_code: str, wazuh_co
         raise HTTPException(status_code=400, detail=f"Office365 integration already provisioned for customer {customer_code}.")
 
 
+async def restart_wazuh_manager() -> None:
+    """
+    Restarts the Wazuh manager service.
+    """
+    logger.info("Restarting Wazuh manager service.")
+    await send_put_request(endpoint="manager/restart", data=None)
+
+
+
 
 async def provision_office365(customer_code: str, provision_office365_auth_keys: ProvisionOffice365AuthKeys, session: AsyncSession) -> ProvisionOffice365Response:
     logger.info(f"Provisioning Office365 integration for customer {customer_code}.")
@@ -179,19 +188,16 @@ async def provision_office365(customer_code: str, provision_office365_auth_keys:
     # Check if Office365 is already provisioned
     await check_if_office365_is_already_provisioned(customer_code, wazuh_config)
 
-    logger.info(f"Wazuh configuration: {wazuh_config}")
-
     # Create Office365 template
     office365_templated = await office365_template_with_api_type(customer_code, provision_office365_auth_keys)
-
-    logger.info(f"Office365 template: {office365_templated}")
 
     # Append Office365 template to Wazuh configuration
     wazuh_config = await append_office365_template(wazuh_config, office365_templated)
 
-    logger.info(f"New Wazuh configuration: {wazuh_config}")
-
     # Update Wazuh configuration
     await update_wazuh_configuration(wazuh_config, provision_office365_auth_keys)
+
+    # Restart Wazuh manager
+    await restart_wazuh_manager()
 
 
