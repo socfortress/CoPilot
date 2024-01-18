@@ -8,7 +8,7 @@ from app.connectors.graylog.schema.pipelines import PipelineRulesResponse
 
 from app.integrations.office365.schema.provision import ProvisionOffice365Request
 from app.customer_provisioning.schema.graylog import GraylogIndexSetCreationResponse
-from app.integrations.office365.schema.provision import ProvisionOffice365Response, ProvisionOffice365AuthKeys, PipelineRuleTitles, CreatePipelineRule
+from app.integrations.office365.schema.provision import ProvisionOffice365Response, ProvisionOffice365AuthKeys, PipelineRuleTitles, CreatePipelineRule, CreatePipeline, PipelineTitles
 from app.integrations.alert_escalation.services.general_alert import create_alert
 from app.integrations.routes import get_customer_integrations_by_customer_code, find_customer_integration
 from app.integrations.schema import CustomerIntegrationsResponse, CustomerIntegrations
@@ -22,6 +22,7 @@ from app.connectors.wazuh_manager.utils.universal import send_get_request
 from app.connectors.wazuh_manager.utils.universal import send_put_request
 from app.customer_provisioning.schema.graylog import TimeBasedIndexSet
 from app.customers.routes.customers import get_customer
+from app.connectors.graylog.schema.pipelines import GraylogPipelinesResponse
 from app.connectors.graylog.services.pipelines import get_pipeline_rules
 
 
@@ -350,7 +351,9 @@ async def create_event_stream(customer_code: str, provision_office365_auth_keys:
     return await send_event_stream_creation_request(event_stream_config)
 
 
-# ! PIPELINES AND RULES ! #
+############### ! PIPELINES AND RULES ! ################
+
+# ! PIPELINE RULES ! #
 async def check_pipeline_rules() -> None:
     """
     Checks if the pipeline rules exist in Graylog. If they don't, create them.
@@ -470,6 +473,65 @@ async def create_pipeline_rule(rule: CreatePipelineRule) -> None:
     }
     await send_post_request(endpoint=endpoint, data=data)
 
+# ! PIPELINE ! #
+async def check_pipeline() -> None:
+    """
+    Checks if the pipeline exists in Graylog. If it doesn't, create it.
+    """
+    pipelines = await get_pipelines()
+    non_existing_pipelines = await pipeline_exists(pipelines)
+    if non_existing_pipelines:
+        logger.info(f"Creating pipelines: {non_existing_pipelines}")
+        await create_pipeline(non_existing_pipelines)
+
+async def pipeline_exists(pipelines: GraylogPipelinesResponse) -> List[str]:
+    """
+    Checks if the pipeline exists in Graylog and returns a list of non-existing pipelines.
+    """
+    return [
+        pipeline_title.value
+        for pipeline_title in PipelineTitles
+        if not any(pipeline.title == pipeline_title.value for pipeline in pipelines.pipelines)
+    ]
+
+async def create_pipeline(non_existing_pipelines: List[str]) -> None:
+    """
+    Creates the given pipeline.
+    """
+    pipeline_creators = {
+        "Office365 Pipeline": create_office365_pipeline,
+    }
+
+    for pipeline_title in non_existing_pipelines:
+        logger.info(f"Creating pipeline {pipeline_title}.")
+        await pipeline_creators[pipeline_title](pipeline_title)
+
+async def create_office365_pipeline(pipeline_title: str) -> None:
+    """
+    Creates the 'Office365 Pipeline' pipeline.
+    """
+    pipeline_description = "OFFICE365 PROCESSINING PIPELINE"
+    pipeline_source = (
+        "pipeline \"OFFICE365 PROCESSINING PIPELINE\"\nstage 0 match either\nend"
+    )
+    await create_pipeline_in_graylog(CreatePipeline(title=pipeline_title, description=pipeline_description, source=pipeline_source))
+
+
+async def create_pipeline_in_graylog(pipeline: CreatePipeline) -> None:
+    """
+    Creates a pipeline with the given title.
+    """
+    endpoint = "/api/system/pipelines/pipeline"
+    data = {
+        "title": pipeline.title,
+        "description": pipeline.description,
+        "source": pipeline.source,
+    }
+    await send_post_request(endpoint=endpoint, data=data)
+
+
+
+
 
 
 ################## ! MAIN FUNCTION ! ##################
@@ -478,6 +540,7 @@ async def provision_office365(customer_code: str, provision_office365_auth_keys:
     logger.info(f"Provisioning Office365 integration for customer {customer_code}.")
 
     await check_pipeline_rules()
+    await check_pipeline()
     return None
 
 

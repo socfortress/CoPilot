@@ -17,7 +17,15 @@ class PipelineRuleTitles(Enum):
     WAZUH_ALERT = "WAZUH CREATE FIELD SYSLOG LEVEL - ALERT"
     OFFICE365_TIMESTAMP = "Office365 Timestamp - UTC"
 
+class PipelineTitles(Enum):
+    OFFICE365 = "OFFICE365 PROCESSINING PIPELINE"
+
 class CreatePipelineRule(BaseModel):
+    title: str
+    description: str
+    source: str
+
+class CreatePipeline(BaseModel):
     title: str
     description: str
     source: str
