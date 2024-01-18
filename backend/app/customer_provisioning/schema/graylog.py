@@ -131,6 +131,28 @@ class WazuhEventStream(BaseModel):
             },
         }
 
+class Office365EventStream(BaseModel):
+    title: str = Field(..., description="Title of the stream")
+    description: str = Field(..., description="Description of the stream")
+    index_set_id: str = Field(..., description="ID of the associated index set")
+    rules: List[StreamRule] = Field(..., description="List of rules for the stream")
+    matching_type: str = Field(..., description="Matching type for the rules")
+    remove_matches_from_default_stream: bool = Field(..., description="Whether to remove matches from the default stream")
+    content_pack: Optional[str] = Field(None, description="Associated content pack, if any")
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "title": "Office365 EVENTS - Example Company",
+                "description": "Office365 EVENTS - Example Company",
+                "index_set_id": "12345",
+                "rules": [{"field": "agent_labels_customer", "type": 1, "inverted": False, "value": "ExampleCode"}, {"field": "agent_labels_integration", "type": 1, "inverted": False, "value": "Office365"}],
+                "matching_type": "AND",
+                "remove_matches_from_default_stream": True,
+                "content_pack": None,
+            },
+        }
+
 
 class StreamData(BaseModel):
     stream_id: str = Field(..., description="ID of the created stream")

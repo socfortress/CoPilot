@@ -1,16 +1,26 @@
 from loguru import logger
+from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
+import json
 from fastapi import HTTPException
+from app.customer_provisioning.schema.graylog import StreamCreationResponse
 
 from app.integrations.office365.schema.provision import ProvisionOffice365Request
+from app.customer_provisioning.schema.graylog import GraylogIndexSetCreationResponse
 from app.integrations.office365.schema.provision import ProvisionOffice365Response, ProvisionOffice365AuthKeys
 from app.integrations.alert_escalation.services.general_alert import create_alert
 from app.integrations.routes import get_customer_integrations_by_customer_code, find_customer_integration
 from app.integrations.schema import CustomerIntegrationsResponse, CustomerIntegrations
+from app.connectors.graylog.services.pipelines import get_pipelines
+from app.connectors.graylog.utils.universal import send_delete_request
+from app.connectors.graylog.utils.universal import send_post_request
 from typing import Dict
+from app.customer_provisioning.schema.graylog import Office365EventStream
 from app.connectors.wazuh_manager.utils.universal import restart_service
 from app.connectors.wazuh_manager.utils.universal import send_get_request
 from app.connectors.wazuh_manager.utils.universal import send_put_request
+from app.customer_provisioning.schema.graylog import TimeBasedIndexSet
+from app.customers.routes.customers import get_customer
 
 
 ############ ! WAZUH MANAGER ! ############
@@ -188,13 +198,154 @@ async def restart_wazuh_manager() -> None:
 
 ################## ! GRAYLOG ! ##################
 
+async def build_index_set_config(customer_code: str, session: AsyncSession) -> TimeBasedIndexSet:
+    """
+    Build the configuration for a time-based index set.
+
+    Args:
+        request (ProvisionNewCustomer): The request object containing customer information.
+
+    Returns:
+        TimeBasedIndexSet: The configured time-based index set.
+    """
+    return TimeBasedIndexSet(
+        title=f"Office365 - {(await get_customer(customer_code, session)).customer.customer_name}",
+        description=f"Office365 - {customer_code}",
+        index_prefix=f"office365_{customer_code}",
+        rotation_strategy_class="org.graylog2.indexer.rotation.strategies.TimeBasedRotationStrategy",
+        rotation_strategy={
+            "type": "org.graylog2.indexer.rotation.strategies.TimeBasedRotationStrategyConfig",
+            "rotation_period": "P1D",
+            "rotate_empty_index_set": False,
+            "max_rotation_period": None,
+        },
+        retention_strategy_class="org.graylog2.indexer.retention.strategies.DeletionRetentionStrategy",
+        retention_strategy={
+            "type": "org.graylog2.indexer.retention.strategies.DeletionRetentionStrategyConfig",
+            "max_number_of_indices": 30,
+        },
+        creation_date=datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+        index_analyzer="standard",
+        shards=1,
+        replicas=0,
+        index_optimization_max_num_segments=1,
+        index_optimization_disabled=False,
+        writable=True,
+        field_type_refresh_interval=5000,
+    )
+
+# Function to send the POST request and handle the response
+async def send_index_set_creation_request(index_set: TimeBasedIndexSet) -> GraylogIndexSetCreationResponse:
+    """
+    Sends a request to create an index set in Graylog.
+
+    Args:
+        index_set (TimeBasedIndexSet): The index set to be created.
+
+    Returns:
+        GraylogIndexSetCreationResponse: The response from Graylog after creating the index set.
+    """
+    json_index_set = json.dumps(index_set.dict())
+    logger.info(f"json_index_set set: {json_index_set}")
+    response_json = await send_post_request(endpoint="/api/system/indices/index_sets", data=index_set.dict())
+    return GraylogIndexSetCreationResponse(**response_json)
 
 
+# Refactored create_index_set function
+async def create_index_set(customer_code: str, session: AsyncSession) -> GraylogIndexSetCreationResponse:
+    """
+    Creates an index set for a new customer.
+
+    Args:
+        request (ProvisionNewCustomer): The request object containing the customer information.
+
+    Returns:
+        GraylogIndexSetCreationResponse: The response object containing the result of the index set creation.
+    """
+    logger.info(f"Creating index set for customer {customer_code}")
+    index_set_config = await build_index_set_config(customer_code, session)
+    return await send_index_set_creation_request(index_set_config)
 
 
+# Function to extract index set ID
+def extract_index_set_id(response: GraylogIndexSetCreationResponse) -> str:
+    """
+    Extracts the index set ID from the given GraylogIndexSetCreationResponse object.
+
+    Args:
+        response (GraylogIndexSetCreationResponse): The GraylogIndexSetCreationResponse object.
+
+    Returns:
+        str: The index set ID extracted from the response.
+    """
+    return response.data.id
+
+# ! Event STREAMS ! #
+# Function to create event stream configuration
+async def build_event_stream_config(customer_code: str, provision_office365_auth_keys: ProvisionOffice365AuthKeys, index_set_id: str, session: AsyncSession) -> Office365EventStream:
+    """
+    Build the configuration for a Wazuh event stream.
+
+    Args:
+        request (ProvisionNewCustomer): The request object containing customer information.
+        index_set_id (str): The ID of the index set.
+
+    Returns:
+        Office365EventStream: The configured Wazuh event stream.
+    """
+    return Office365EventStream(
+        title=f"Office365 EVENTS - {(await get_customer(customer_code, session)).customer.customer_name}",
+        description=f"Office365 EVENTS - {(await get_customer(customer_code, session)).customer.customer_name}",
+        index_set_id=index_set_id,
+        rules=[
+            {
+                "field": "rule_group1",
+                "type": 1,
+                "inverted": False,
+                "value": "office365",
+            },
+            {
+                "field": "data_office365_OrganizationId",
+                "type": 1,
+                "inverted": False,
+                "value": f"{provision_office365_auth_keys.TENANT_ID}",
+            }
+        ],
+        matching_type="AND",
+        remove_matches_from_default_stream=True,
+        content_pack=None,
+    )
 
 
+async def send_event_stream_creation_request(event_stream: Office365EventStream) -> StreamCreationResponse:
+    """
+    Sends a request to create an event stream.
 
+    Args:
+        event_stream (WazuhEventStream): The event stream to be created.
+
+    Returns:
+        StreamCreationResponse: The response containing the created event stream.
+    """
+    json_event_stream = json.dumps(event_stream.dict())
+    logger.info(f"json_event_stream set: {json_event_stream}")
+    response_json = await send_post_request(endpoint="/api/streams", data=event_stream.dict())
+    return StreamCreationResponse(**response_json)
+
+
+async def create_event_stream(customer_code: str, provision_office365_auth_keys: ProvisionOffice365AuthKeys, index_set_id: str, session: AsyncSession):
+    """
+    Creates an event stream for a customer.
+
+    Args:
+        request (ProvisionNewCustomer): The request object containing customer information.
+        index_set_id (str): The ID of the index set.
+
+    Returns:
+        The result of the event stream creation request.
+    """
+    event_stream_config = await build_event_stream_config(customer_code, provision_office365_auth_keys, index_set_id, session)
+    return await send_event_stream_creation_request(event_stream_config)
 
 
 
@@ -202,6 +353,13 @@ async def restart_wazuh_manager() -> None:
 
 async def provision_office365(customer_code: str, provision_office365_auth_keys: ProvisionOffice365AuthKeys, session: AsyncSession) -> ProvisionOffice365Response:
     logger.info(f"Provisioning Office365 integration for customer {customer_code}.")
+    # Create Index Set
+    index_set_id = (await create_index_set(customer_code=customer_code, session=session)).data.id
+    logger.info(f"Index set: {index_set_id}")
+    # Create event stream
+    await create_event_stream(customer_code, provision_office365_auth_keys, index_set_id, session)
+
+    return None
     # Get Wazuh configuration
     wazuh_config = await get_wazuh_configuration()
 
