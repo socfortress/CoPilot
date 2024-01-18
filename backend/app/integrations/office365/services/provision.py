@@ -12,6 +12,8 @@ from app.connectors.wazuh_manager.utils.universal import restart_service
 from app.connectors.wazuh_manager.utils.universal import send_get_request
 from app.connectors.wazuh_manager.utils.universal import send_put_request
 
+
+############ ! WAZUH MANAGER ! ############
 async def get_wazuh_configuration() -> str:
     """
     Retrieves the Wazuh configuration from the manager.
@@ -184,7 +186,19 @@ async def restart_wazuh_manager() -> None:
     await send_put_request(endpoint="manager/restart", data=None)
 
 
+################## ! GRAYLOG ! ##################
 
+
+
+
+
+
+
+
+
+
+
+################## ! MAIN FUNCTION ! ##################
 
 async def provision_office365(customer_code: str, provision_office365_auth_keys: ProvisionOffice365AuthKeys, session: AsyncSession) -> ProvisionOffice365Response:
     logger.info(f"Provisioning Office365 integration for customer {customer_code}.")
