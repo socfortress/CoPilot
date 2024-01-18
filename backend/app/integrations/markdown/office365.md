@@ -1,9 +1,7 @@
-.. Copyright (C) 2015, Wazuh, Inc.
+Documentation provided by [Wazuh](https://documentation.wazuh.com/current/cloud-security/office365/monitoring-office365-activity.html).
 
-.. meta::
-  :description: Learn how to monitor your organization's Office 365 activity with Wazuh in this section of our documentation.
+Learn how to monitor your organization's Office 365 activity with Wazuh in this section of our documentation.
 
-.. _office365_monitoring_activity:
 
 Monitoring Office 365 Activity
 ==============================
@@ -15,7 +13,6 @@ This Wazuh module allows you to collect all the logs from Office 365 using its A
 
 This operation lists the content currently available for retrieval for the specified content type.
 
-.. code-block:: none
 
     GET https://manage.office.com/api/v1.0/{tenant_id}/activity/feed/subscriptions/content?contentType={content_type}&startTime={start_time}&endTime={end_time}
 
@@ -23,14 +20,13 @@ This operation lists the content currently available for retrieval for the speci
 
 To retrieve a content blob, make a GET request against the corresponding content URI that is included in the list of available content.
 
-.. code-block:: xml
+
 
     GET {content_uri}
 
 Office 365 API description can be found in this `link <https://docs.microsoft.com/en-us/office/office-365-management-api/office-365-management-activity-api-reference>`_.
 
-Office 365 API requirements
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+### Office 365 API requirements
 
 For **Wazuh** to successfully connect to the **Office365 API**, an authentication process is required. To do this, we must provide the ``tenant_id``, ``client_id``, and ``client_secret`` of the application that we authorize in the organization.
 
@@ -84,14 +80,12 @@ Make sure you write it down because the UI won’t let you copy it afterward.
 ![API permissions](/src/assets/images/office365/4-azure-wazuh-app-configure-permissions-admin-consent.png)
 
 
-Wazuh configuration
-^^^^^^^^^^^^^^^^^^^
+### Wazuh configuration
 
 Next, we will see the options we have to configure for the Wazuh integration.
 
 Configure the ``office365`` module either in the Wazuh manager or the Wazuh agent.  To do so, modify the :doc:`ossec.conf </user-manual/reference/ossec-conf/index>` configuration file. Through the following configuration, Wazuh is ready to search for logs created by Office 365 audit-log. In this case, we will only search for the ``Audit.SharePoint`` type events within an interval of ``1m``. Those logs will be only those that were created after the module was started:
 
-.. code-block:: xml
 
     <office365>
         <enabled>yes</enabled>
@@ -113,13 +107,10 @@ To learn more, check the :ref:`office365-module` module reference.
 
 Using the configuration mentioned above, we will see an example of monitoring Office 365 activity.
 
-Generate activity on Office 365
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+### Generate activity on Office 365
 
 For this example, we will start by generating some activity in our Office 365 Organization. In this case, let's modify a ``Communication site`` in ``SharePoint``. If we do that, we can see that Office 365 will generate a new json event, something like this:
 
-.. code-block:: json
-    :class: output
 
     {
         "CreationTime":"2021-06-09T22:10:45",
@@ -149,12 +140,9 @@ For this example, we will start by generating some activity in our Office 365 Or
         "SourceRelativeUrl":"SitePages"
     }
 
-Wazuh Rules
-^^^^^^^^^^^
+### Wazuh Rules
 
 Wazuh provides a series of rules to catch different events on Office365, for this example we will take the rule id ``91537`` which detects a ``Office 365: SharePoint file operation events.`` action.
-
-.. code-block:: xml
 
     <rule id="91537" level="3">
         <if_sid>91532</if_sid>
@@ -165,10 +153,6 @@ Wazuh provides a series of rules to catch different events on Office365, for thi
     </rule>
 
 If Wazuh successfully connects to Office 365 API, the events raised above will trigger these rules and cause an alert like this:
-
-.. code-block:: json
-    :emphasize-lines: 5
-    :class: output
 
     {
         "timestamp":"2021-06-09T22:12:54.301+0000",
@@ -226,4 +210,4 @@ If Wazuh successfully connects to Office 365 API, the events raised above will t
     }
 
 
-For further information, please refer to the `modules <https://documentation.wazuh.com/current/user-manual/wazuh-dashboard/settings.html#modules>`_ section.
+For further information, please refer to the [Modules](https://documentation.wazuh.com/current/user-manual/wazuh-dashboard/settings.html#modules)
