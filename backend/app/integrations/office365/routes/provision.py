@@ -55,7 +55,7 @@ def extract_office365_auth_keys(customer_integration: CustomerIntegrations) -> D
             for auth_key in subscription.integration_auth_keys:
                 office365_auth_keys[auth_key.auth_key_name] = auth_key.auth_value
     if not office365_auth_keys:
-        raise HTTPException(status_code=404, detail="No auth keys found for Office365 integration.")
+        raise HTTPException(status_code=404, detail="No auth keys found for Office365 integration. Please create auth keys for Office365 integration.")
     return office365_auth_keys
 
 
