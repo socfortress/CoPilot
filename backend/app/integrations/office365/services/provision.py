@@ -1,7 +1,14 @@
 from loguru import logger
 from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.customer_provisioning.services.grafana import get_opensearch_version
 import json
+from app.connectors.grafana.utils.universal import create_grafana_client
+from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
+from app.customer_provisioning.schema.grafana import GrafanaDatasource
+from app.utils import get_connector_attribute
+from app.customer_provisioning.schema.grafana import GrafanaDataSourceCreationResponse
+from app.connectors.grafana.services.dashboards import provision_dashboards
 from fastapi import HTTPException
 from app.customer_provisioning.schema.graylog import StreamCreationResponse
 from app.connectors.graylog.schema.pipelines import PipelineRulesResponse
@@ -13,6 +20,8 @@ from app.integrations.alert_escalation.services.general_alert import create_aler
 from app.connectors.graylog.services.pipelines import get_pipelines
 from app.connectors.graylog.utils.universal import send_post_request
 from typing import List
+from app.connectors.grafana.schema.dashboards import Office365Dashboard
+from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
 from app.customer_provisioning.schema.graylog import Office365EventStream
 from app.connectors.wazuh_manager.utils.universal import send_get_request
 from app.connectors.wazuh_manager.utils.universal import send_put_request
@@ -23,7 +32,8 @@ from app.connectors.graylog.services.pipelines import get_pipeline_rules
 from app.connectors.graylog.services.pipelines import create_pipeline_rule, create_pipeline_graylog, get_pipeline_id, connect_stream_to_pipeline
 from app.connectors.graylog.schema.pipelines import CreatePipelineRule
 from app.connectors.graylog.schema.pipelines import CreatePipeline
-
+from app.customers.routes.customers import get_customer_meta
+from app.customer_provisioning.services.grafana import create_grafana_folder
 
 ############ ! WAZUH MANAGER ! ############
 async def get_wazuh_configuration() -> str:
@@ -504,7 +514,57 @@ async def create_office365_pipeline(pipeline_title: str) -> None:
     await create_pipeline_graylog(CreatePipeline(title=pipeline_title, description=pipeline_description, source=pipeline_source))
 
 
+#### ! GRAFANA ! ####
+async def create_grafana_datasource(
+    customer_code: str,
+    session: AsyncSession,
+) -> GrafanaDataSourceCreationResponse:
+    """
+    Creates a Grafana Wazuh datasource for a new customer using the OpenSearch Data Source.
 
+    Args:
+        request (ProvisionNewCustomer): The request object containing customer information.
+        organization_id (int): The ID of the organization to create the datasource for.
+        session (AsyncSession): The database session.
+
+    Returns:
+        GrafanaDataSourceCreationResponse: The response object containing the result of the datasource creation.
+    """
+    logger.info("Creating Grafana datasource")
+    grafana_client = await create_grafana_client("Grafana")
+    # Switch to the newly created organization
+    grafana_client.user.switch_actual_user_organisation((await get_customer_meta(customer_code, session)).customer_meta.customer_meta_grafana_org_id)
+    datasource_payload = GrafanaDatasource(
+        name="O365",
+        type="grafana-opensearch-datasource",
+        typeName="OpenSearch",
+        access="proxy",
+        url=await get_connector_attribute(connector_id=1, column_name="connector_url", session=session),
+        database=f"office365_{customer_code}*",
+        basicAuth=True,
+        basicAuthUser=await get_connector_attribute(connector_id=1, column_name="connector_username", session=session),
+        secureJsonData={
+            "basicAuthPassword": await get_connector_attribute(connector_id=1, column_name="connector_password", session=session),
+        },
+        isDefault=False,
+        jsonData={
+            "database": f"office365_{customer_code}*",
+            "flavor": "opensearch",
+            "includeFrozen": False,
+            "logLevelField": "syslog_level",
+            "logMessageField": "rule_description",
+            "maxConcurrentShardRequests": 5,
+            "pplEnabled": True,
+            "timeField": "timestamp",
+            "tlsSkipVerify": True,
+            "version": await get_opensearch_version(),
+        },
+        readOnly=True,
+    )
+    results = grafana_client.datasource.create_datasource(
+        datasource=datasource_payload.dict(),
+    )
+    return GrafanaDataSourceCreationResponse(**results)
 
 
 
@@ -512,43 +572,55 @@ async def create_office365_pipeline(pipeline_title: str) -> None:
 ################## ! MAIN FUNCTION ! ##################
 
 async def provision_office365(customer_code: str, provision_office365_auth_keys: ProvisionOffice365AuthKeys, session: AsyncSession) -> ProvisionOffice365Response:
-    logger.info(f"Provisioning Office365 integration for customer {customer_code}.")
+    # logger.info(f"Provisioning Office365 integration for customer {customer_code}.")
 
-    # Get Wazuh configuration
-    wazuh_config = await get_wazuh_configuration()
+    # # Get Wazuh configuration
+    # wazuh_config = await get_wazuh_configuration()
 
-    # Check if Office365 is already provisioned
-    await check_if_office365_is_already_provisioned(customer_code, wazuh_config)
+    # # Check if Office365 is already provisioned
+    # await check_if_office365_is_already_provisioned(customer_code, wazuh_config)
 
-    # Create Office365 template
-    office365_templated = await office365_template_with_api_type(customer_code, provision_office365_auth_keys)
+    # # Create Office365 template
+    # office365_templated = await office365_template_with_api_type(customer_code, provision_office365_auth_keys)
 
-    # Append Office365 template to Wazuh configuration
-    wazuh_config = await append_office365_template(wazuh_config, office365_templated)
+    # # Append Office365 template to Wazuh configuration
+    # wazuh_config = await append_office365_template(wazuh_config, office365_templated)
 
-    # Update Wazuh configuration
-    await update_wazuh_configuration(wazuh_config, provision_office365_auth_keys)
+    # # Update Wazuh configuration
+    # await update_wazuh_configuration(wazuh_config, provision_office365_auth_keys)
 
-    # Restart Wazuh manager
-    await restart_wazuh_manager()
+    # # Restart Wazuh manager
+    # await restart_wazuh_manager()
 
-    # Graylog Deployment
-    await check_pipeline_rules()
-    await check_pipeline()
+    # # Graylog Deployment
+    # await check_pipeline_rules()
+    # await check_pipeline()
 
-    # Create Index Set
-    index_set_id = (await create_index_set(customer_code=customer_code, session=session)).data.id
-    logger.info(f"Index set: {index_set_id}")
-    # Create event stream
-    stream_id = (await create_event_stream(customer_code, provision_office365_auth_keys, index_set_id, session)).data.stream_id
-    pipeline_id = await get_pipeline_id(subscription="OFFICE365")
-    # Combine stream and pipeline IDs
-    stream_and_pipeline = StreamConnectionToPipelineRequest(stream_id=stream_id, pipeline_ids=pipeline_id)
-    # Connect stream to pipeline
-    logger.info(f"Stream and pipeline: {stream_and_pipeline}")
-    await connect_stream_to_pipeline(stream_and_pipeline)
-    # Start stream
-    await start_stream(stream_id=stream_id)
+    # # Create Index Set
+    # index_set_id = (await create_index_set(customer_code=customer_code, session=session)).data.id
+    # logger.info(f"Index set: {index_set_id}")
+    # # Create event stream
+    # stream_id = (await create_event_stream(customer_code, provision_office365_auth_keys, index_set_id, session)).data.stream_id
+    # pipeline_id = await get_pipeline_id(subscription="OFFICE365")
+    # # Combine stream and pipeline IDs
+    # stream_and_pipeline = StreamConnectionToPipelineRequest(stream_id=stream_id, pipeline_ids=pipeline_id)
+    # # Connect stream to pipeline
+    # logger.info(f"Stream and pipeline: {stream_and_pipeline}")
+    # await connect_stream_to_pipeline(stream_and_pipeline)
+    # # Start stream
+    # await start_stream(stream_id=stream_id)
+
+    # Grafana Deployment
+    office365_datasource_uid = (await create_grafana_datasource(customer_code=customer_code, session=session)).datasource.uid
+    grafana_o365_folder_id = (await create_grafana_folder(organization_id=(await get_customer_meta(customer_code, session)).customer_meta.customer_meta_grafana_org_id, folder_title="OFFICE 365")).id
+    await provision_dashboards(
+        DashboardProvisionRequest(
+            dashboards=[dashboard.name for dashboard in Office365Dashboard],
+            organizationId=(await get_customer_meta(customer_code, session)).customer_meta.customer_meta_grafana_org_id,
+            folderId=grafana_o365_folder_id,
+            datasourceUid=office365_datasource_uid,
+        )
+    )
 
     return ProvisionOffice365Response(success=True, message=f"Successfully provisioned Office365 integration for customer {customer_code}.")
 
