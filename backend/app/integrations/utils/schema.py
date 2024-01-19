@@ -223,4 +223,50 @@ class EventShipperPayloadResponse(BaseModel):
         description="The Event Shipper response data.",
     )
 
+######### ! SEND TO ALERT CREATION ! #########
+class QueryString(BaseModel):
+    query: str
 
+class Query(BaseModel):
+    query_string: QueryString
+
+
+class Filter(BaseModel):
+    query: Query
+
+
+class KibanaDiscoverTimeDelta(BaseModel):
+    minutes: int
+
+
+class Realert(BaseModel):
+    minutes: int
+
+
+class PraecoAlertConfig(BaseModel):
+    alert: List[str]
+    filter: List[Filter]
+    generate_kibana_discover_url: bool
+    http_post_ignore_ssl_errors: bool
+    http_post_timeout: int
+    http_post_url: List[str]
+    import_config: str = Field(..., alias="import")  # Using alias
+    index: str
+    is_enabled: bool
+    kibana_discover_from_timedelta: KibanaDiscoverTimeDelta
+    kibana_discover_to_timedelta: KibanaDiscoverTimeDelta
+    match_enhancements: List[str]
+    name: str
+    realert: Realert
+    timestamp_field: str
+    timestamp_type: str
+    type: str
+    use_strftime_index: bool
+
+    class Config:
+        allow_population_by_field_name = True
+
+
+class PraecoProvisionAlertResponse(BaseModel):
+    success: bool
+    message: str

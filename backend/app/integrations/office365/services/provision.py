@@ -1,8 +1,13 @@
 from loguru import logger
 from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
+import requests
+import os
+
+from dotenv import load_dotenv
 from app.customer_provisioning.services.grafana import get_opensearch_version
 import json
+from app.integrations.utils.schema import PraecoAlertConfig, PraecoProvisionAlertResponse
 from app.connectors.grafana.utils.universal import create_grafana_client
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
 from app.customer_provisioning.schema.grafana import GrafanaDatasource
@@ -34,6 +39,8 @@ from app.connectors.graylog.schema.pipelines import CreatePipelineRule
 from app.connectors.graylog.schema.pipelines import CreatePipeline
 from app.customers.routes.customers import get_customer_meta
 from app.customer_provisioning.services.grafana import create_grafana_folder
+
+load_dotenv()
 
 ############ ! WAZUH MANAGER ! ############
 async def get_wazuh_configuration() -> str:
@@ -611,17 +618,70 @@ async def provision_office365(customer_code: str, provision_office365_auth_keys:
     # await start_stream(stream_id=stream_id)
 
     # Grafana Deployment
-    office365_datasource_uid = (await create_grafana_datasource(customer_code=customer_code, session=session)).datasource.uid
-    grafana_o365_folder_id = (await create_grafana_folder(organization_id=(await get_customer_meta(customer_code, session)).customer_meta.customer_meta_grafana_org_id, folder_title="OFFICE 365")).id
-    await provision_dashboards(
-        DashboardProvisionRequest(
-            dashboards=[dashboard.name for dashboard in Office365Dashboard],
-            organizationId=(await get_customer_meta(customer_code, session)).customer_meta.customer_meta_grafana_org_id,
-            folderId=grafana_o365_folder_id,
-            datasourceUid=office365_datasource_uid,
-        )
+    # office365_datasource_uid = (await create_grafana_datasource(customer_code=customer_code, session=session)).datasource.uid
+    # grafana_o365_folder_id = (await create_grafana_folder(organization_id=(await get_customer_meta(customer_code, session)).customer_meta.customer_meta_grafana_org_id, folder_title="OFFICE 365")).id
+    # await provision_dashboards(
+    #     DashboardProvisionRequest(
+    #         dashboards=[dashboard.name for dashboard in Office365Dashboard],
+    #         organizationId=(await get_customer_meta(customer_code, session)).customer_meta.customer_meta_grafana_org_id,
+    #         folderId=grafana_o365_folder_id,
+    #         datasourceUid=office365_datasource_uid,
+    #     )
+    # )
+
+    # Create alert in Praeco
+    await provision_alert_in_praeco(
+        PraecoAlertConfig(
+            alert=["post"],
+            filter=[{"query": {"query_string": {"query": "syslog_level:ALERT AND data_office365_Subscription:Audit.Exchange"}}}],
+            generate_kibana_discover_url=False,
+            http_post_ignore_ssl_errors=False,
+            http_post_timeout=60,
+            http_post_url=[f"http://{os.getenv('SERVER_IP')}:5000/api/v1/alerts/office365/exchange"],
+            import_config="BaseRule.config",
+            index="office365_*",
+            is_enabled=True,
+            kibana_discover_from_timedelta={"minutes": 10},
+            kibana_discover_to_timedelta={"minutes": 10},
+            match_enhancements=[],
+            name="Office365 - Exchange",
+            realert={"minutes": 0},
+            timestamp_field="timestamp_utc",
+            timestamp_type="iso",
+            type="any",
+            use_strftime_index=False,
+        ),
+        session=session,
     )
 
     return ProvisionOffice365Response(success=True, message=f"Successfully provisioned Office365 integration for customer {customer_code}.")
+
+
+######### ! Provision in Praeco ! ############
+async def provision_alert_in_praeco(request: PraecoAlertConfig, session: AsyncSession) -> PraecoProvisionAlertResponse:
+    """
+    Provisions the given alert in Praeco. https://github.com/socfortress/Customer-Provisioning-Alert
+
+    Args:
+        request (ProvisionWorkerRequest): The request object containing the necessary information for provisioning.
+        session (AsyncSession): The async session object for making HTTP requests.
+
+    Returns:
+        ProvisionWorkerResponse: The response object indicating the success or failure of the provisioning operation.
+    """
+    logger.info(f"Provisioning Wazuh worker {request}")
+    api_endpoint = await get_connector_attribute(connector_id=15, column_name="connector_url", session=session)
+    # Send the POST request to the Wazuh worker
+    response = requests.post(
+        url=f"{api_endpoint}/provision_alert",
+        json=request.dict(by_alias=True),
+    )
+    logger.info(f"Response: {response.json()}")
+    # Check the response status code
+    if response.status_code != 200:
+        return PraecoProvisionAlertResponse(success=False, message=f"Failed to provision Wazuh worker: {response.text}")
+    # Return the response
+    return PraecoProvisionAlertResponse(success=True, message=f"Wazuh worker provisioned successfully")
+
 
 
