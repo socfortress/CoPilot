@@ -579,55 +579,55 @@ async def create_grafana_datasource(
 ################## ! MAIN FUNCTION ! ##################
 
 async def provision_office365(customer_code: str, provision_office365_auth_keys: ProvisionOffice365AuthKeys, session: AsyncSession) -> ProvisionOffice365Response:
-    # logger.info(f"Provisioning Office365 integration for customer {customer_code}.")
+    logger.info(f"Provisioning Office365 integration for customer {customer_code}.")
 
-    # # Get Wazuh configuration
-    # wazuh_config = await get_wazuh_configuration()
+    # Get Wazuh configuration
+    wazuh_config = await get_wazuh_configuration()
 
-    # # Check if Office365 is already provisioned
-    # await check_if_office365_is_already_provisioned(customer_code, wazuh_config)
+    # Check if Office365 is already provisioned
+    await check_if_office365_is_already_provisioned(customer_code, wazuh_config)
 
-    # # Create Office365 template
-    # office365_templated = await office365_template_with_api_type(customer_code, provision_office365_auth_keys)
+    # Create Office365 template
+    office365_templated = await office365_template_with_api_type(customer_code, provision_office365_auth_keys)
 
-    # # Append Office365 template to Wazuh configuration
-    # wazuh_config = await append_office365_template(wazuh_config, office365_templated)
+    # Append Office365 template to Wazuh configuration
+    wazuh_config = await append_office365_template(wazuh_config, office365_templated)
 
-    # # Update Wazuh configuration
-    # await update_wazuh_configuration(wazuh_config, provision_office365_auth_keys)
+    # Update Wazuh configuration
+    await update_wazuh_configuration(wazuh_config, provision_office365_auth_keys)
 
-    # # Restart Wazuh manager
-    # await restart_wazuh_manager()
+    # Restart Wazuh manager
+    await restart_wazuh_manager()
 
-    # # Graylog Deployment
-    # await check_pipeline_rules()
-    # await check_pipeline()
+    # Graylog Deployment
+    await check_pipeline_rules()
+    await check_pipeline()
 
-    # # Create Index Set
-    # index_set_id = (await create_index_set(customer_code=customer_code, session=session)).data.id
-    # logger.info(f"Index set: {index_set_id}")
-    # # Create event stream
-    # stream_id = (await create_event_stream(customer_code, provision_office365_auth_keys, index_set_id, session)).data.stream_id
-    # pipeline_id = await get_pipeline_id(subscription="OFFICE365")
-    # # Combine stream and pipeline IDs
-    # stream_and_pipeline = StreamConnectionToPipelineRequest(stream_id=stream_id, pipeline_ids=pipeline_id)
-    # # Connect stream to pipeline
-    # logger.info(f"Stream and pipeline: {stream_and_pipeline}")
-    # await connect_stream_to_pipeline(stream_and_pipeline)
-    # # Start stream
-    # await start_stream(stream_id=stream_id)
+    # Create Index Set
+    index_set_id = (await create_index_set(customer_code=customer_code, session=session)).data.id
+    logger.info(f"Index set: {index_set_id}")
+    # Create event stream
+    stream_id = (await create_event_stream(customer_code, provision_office365_auth_keys, index_set_id, session)).data.stream_id
+    pipeline_id = await get_pipeline_id(subscription="OFFICE365")
+    # Combine stream and pipeline IDs
+    stream_and_pipeline = StreamConnectionToPipelineRequest(stream_id=stream_id, pipeline_ids=pipeline_id)
+    # Connect stream to pipeline
+    logger.info(f"Stream and pipeline: {stream_and_pipeline}")
+    await connect_stream_to_pipeline(stream_and_pipeline)
+    # Start stream
+    await start_stream(stream_id=stream_id)
 
     # Grafana Deployment
-    # office365_datasource_uid = (await create_grafana_datasource(customer_code=customer_code, session=session)).datasource.uid
-    # grafana_o365_folder_id = (await create_grafana_folder(organization_id=(await get_customer_meta(customer_code, session)).customer_meta.customer_meta_grafana_org_id, folder_title="OFFICE 365")).id
-    # await provision_dashboards(
-    #     DashboardProvisionRequest(
-    #         dashboards=[dashboard.name for dashboard in Office365Dashboard],
-    #         organizationId=(await get_customer_meta(customer_code, session)).customer_meta.customer_meta_grafana_org_id,
-    #         folderId=grafana_o365_folder_id,
-    #         datasourceUid=office365_datasource_uid,
-    #     )
-    # )
+    office365_datasource_uid = (await create_grafana_datasource(customer_code=customer_code, session=session)).datasource.uid
+    grafana_o365_folder_id = (await create_grafana_folder(organization_id=(await get_customer_meta(customer_code, session)).customer_meta.customer_meta_grafana_org_id, folder_title="OFFICE 365")).id
+    await provision_dashboards(
+        DashboardProvisionRequest(
+            dashboards=[dashboard.name for dashboard in Office365Dashboard],
+            organizationId=(await get_customer_meta(customer_code, session)).customer_meta.customer_meta_grafana_org_id,
+            folderId=grafana_o365_folder_id,
+            datasourceUid=office365_datasource_uid,
+        )
+    )
 
     # Create alert in Praeco
     await provision_alert_in_praeco(
