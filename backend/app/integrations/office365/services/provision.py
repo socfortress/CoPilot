@@ -6,26 +6,23 @@ from fastapi import HTTPException
 from app.customer_provisioning.schema.graylog import StreamCreationResponse
 from app.connectors.graylog.schema.pipelines import PipelineRulesResponse
 from app.customer_provisioning.schema.graylog import StreamConnectionToPipelineRequest
-from app.customer_provisioning.schema.graylog import StreamConnectionToPipelineResponse
 from app.connectors.graylog.services.management import start_stream
-from app.integrations.office365.schema.provision import ProvisionOffice365Request
 from app.customer_provisioning.schema.graylog import GraylogIndexSetCreationResponse
-from app.integrations.office365.schema.provision import ProvisionOffice365Response, ProvisionOffice365AuthKeys, PipelineRuleTitles, CreatePipelineRule, CreatePipeline, PipelineTitles
+from app.integrations.office365.schema.provision import ProvisionOffice365Response, ProvisionOffice365AuthKeys, PipelineRuleTitles, PipelineTitles
 from app.integrations.alert_escalation.services.general_alert import create_alert
-from app.integrations.routes import get_customer_integrations_by_customer_code, find_customer_integration
-from app.integrations.schema import CustomerIntegrationsResponse, CustomerIntegrations
 from app.connectors.graylog.services.pipelines import get_pipelines
-from app.connectors.graylog.utils.universal import send_delete_request
 from app.connectors.graylog.utils.universal import send_post_request
-from typing import Dict, List
+from typing import List
 from app.customer_provisioning.schema.graylog import Office365EventStream
-from app.connectors.wazuh_manager.utils.universal import restart_service
 from app.connectors.wazuh_manager.utils.universal import send_get_request
 from app.connectors.wazuh_manager.utils.universal import send_put_request
 from app.customer_provisioning.schema.graylog import TimeBasedIndexSet
 from app.customers.routes.customers import get_customer
 from app.connectors.graylog.schema.pipelines import GraylogPipelinesResponse
 from app.connectors.graylog.services.pipelines import get_pipeline_rules
+from app.connectors.graylog.services.pipelines import create_pipeline_rule, create_pipeline_graylog, get_pipeline_id, connect_stream_to_pipeline
+from app.connectors.graylog.schema.pipelines import CreatePipelineRule
+from app.connectors.graylog.schema.pipelines import CreatePipeline
 
 
 ############ ! WAZUH MANAGER ! ############
@@ -463,18 +460,6 @@ async def create_wazuh_alert_rule(rule_title: str) -> None:
     )
     await create_pipeline_rule(CreatePipelineRule(title=rule_title, description=rule_title, source=rule_source))
 
-async def create_pipeline_rule(rule: CreatePipelineRule) -> None:
-    """
-    Creates a pipeline rule with the given title.
-    """
-    endpoint = "/api/system/pipelines/rule"
-    data = {
-        "title": rule.title,
-        "description": rule.description,
-        "source": rule.source,
-    }
-    await send_post_request(endpoint=endpoint, data=data)
-
 # ! PIPELINE ! #
 async def check_pipeline() -> None:
     """
@@ -516,61 +501,8 @@ async def create_office365_pipeline(pipeline_title: str) -> None:
     pipeline_source = (
         "pipeline \"OFFICE365 PROCESSING PIPELINE\"\nstage 0 match either\nrule \"WAZUH CREATE FIELD SYSLOG LEVEL - ALERT\"\nrule \"WAZUH CREATE FIELD SYSLOG LEVEL - INFO\"\nrule \"WAZUH CREATE FIELD SYSLOG LEVEL - NOTICE\"\nrule \"WAZUH CREATE FIELD SYSLOG LEVEL - WARNING\"\nrule \"Office365 Timestamp - UTC\"\nend"
     )
-    await create_pipeline_in_graylog(CreatePipeline(title=pipeline_title, description=pipeline_description, source=pipeline_source))
+    await create_pipeline_graylog(CreatePipeline(title=pipeline_title, description=pipeline_description, source=pipeline_source))
 
-
-async def create_pipeline_in_graylog(pipeline: CreatePipeline) -> None:
-    """
-    Creates a pipeline with the given title.
-    """
-    endpoint = "/api/system/pipelines/pipeline"
-    data = {
-        "title": pipeline.title,
-        "description": pipeline.description,
-        "source": pipeline.source,
-    }
-    await send_post_request(endpoint=endpoint, data=data)
-
-# ! PIPELINE CONNECTION ! #
-async def get_pipeline_id(subscription: str) -> str:
-    """
-    Retrieves the pipeline ID for a given subscription.
-
-    Args:
-        subscription (str): The subscription name.
-
-    Returns:
-        str: The pipeline ID.
-
-    Raises:
-        HTTPException: If the pipeline ID cannot be retrieved.
-    """
-    logger.info(f"Getting pipeline ID for subscription {subscription}")
-    pipelines_response = await get_pipelines()
-    if pipelines_response.success:
-        for pipeline in pipelines_response.pipelines:
-            if subscription.lower() in pipeline.description.lower():
-                return [pipeline.id]
-        logger.error(f"Failed to get pipeline ID for subscription {subscription}")
-        raise HTTPException(status_code=500, detail=f"Failed to get pipeline ID for subscription {subscription}")
-    else:
-        logger.error(f"Failed to get pipelines: {pipelines_response.message}")
-        raise HTTPException(status_code=500, detail=f"Failed to get pipelines: {pipelines_response.message}")
-
-async def connect_stream_to_pipeline(stream_and_pipeline: StreamConnectionToPipelineRequest):
-    """
-    Connects a stream to a pipeline.
-
-    Args:
-        stream_and_pipeline (StreamConnectionToPipelineRequest): The request object containing the stream ID and pipeline IDs.
-
-    Returns:
-        StreamConnectionToPipelineResponse: The response object containing the connection details.
-    """
-    logger.info(f"Connecting stream {stream_and_pipeline.stream_id} to pipeline {stream_and_pipeline.pipeline_ids}")
-    response_json = await send_post_request(endpoint="/api/system/pipelines/connections/to_stream", data=stream_and_pipeline.dict())
-    logger.info(f"Response: {response_json}")
-    return StreamConnectionToPipelineResponse(**response_json)
 
 
 
