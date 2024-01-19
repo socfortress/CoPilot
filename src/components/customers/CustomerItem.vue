@@ -123,6 +123,13 @@
 							@submitted="customerMeta = $event"
 						/>
 					</n-tab-pane>
+					<n-tab-pane name="Integrations" tab="Integrations" display-directive="show:lazy">
+						<n-scrollbar style="max-height: 470px" trigger="none">
+							<div class="p-6 pt-4">
+								<CustomerIntegrationsList embedded :customerCode="customer.customer_code" />
+							</div>
+						</n-scrollbar>
+					</n-tab-pane>
 					<template #suffix>
 						<div class="pr-8 hover:text-primary-color cursor-pointer" @click="selectedTabsGroup = 'agents'">
 							Agents
@@ -140,12 +147,16 @@
 					</template>
 					<n-tab-pane name="Agents" tab="Agents" display-directive="show:lazy">
 						<n-scrollbar style="max-height: 470px" trigger="none">
-							<CustomerAgents :customer="customerInfo" v-if="customerInfo" />
+							<div class="p-6 pt-4">
+								<CustomerAgents :customer="customerInfo" v-if="customerInfo" />
+							</div>
 						</n-scrollbar>
 					</n-tab-pane>
 					<n-tab-pane name="Healthcheck Wazuh" tab="Healthcheck Wazuh" display-directive="show:lazy">
 						<n-scrollbar style="max-height: 470px" trigger="none">
-							<CustomerHealthcheckList source="wazuh" :customerCode="customer.customer_code" />
+							<div class="p-6 pt-4">
+								<CustomerHealthcheckList source="wazuh" :customerCode="customer.customer_code" />
+							</div>
 						</n-scrollbar>
 					</n-tab-pane>
 					<n-tab-pane
@@ -154,7 +165,9 @@
 						display-directive="show:lazy"
 					>
 						<n-scrollbar style="max-height: 470px" trigger="none">
-							<CustomerHealthcheckList source="velociraptor" :customerCode="customer.customer_code" />
+							<div class="p-6 pt-4">
+								<CustomerHealthcheckList source="velociraptor" :customerCode="customer.customer_code" />
+							</div>
 						</n-scrollbar>
 					</n-tab-pane>
 				</n-tabs>
@@ -173,6 +186,7 @@ import CustomerInfo from "./CustomerInfo.vue"
 import CustomerProvision from "./CustomerProvision.vue"
 import CustomerAgents from "./CustomerAgents.vue"
 import CustomerHealthcheckList from "./CustomerHealthcheckList.vue"
+import CustomerIntegrationsList from "@/components/integrations/CustomerIntegrationsList.vue"
 import Api from "@/api"
 import { NAvatar, useMessage, NPopover, NModal, NTabs, NTabPane, NSpin, NScrollbar } from "naive-ui"
 import type { Customer, CustomerMeta } from "@/types/customers.d"

@@ -1,5 +1,5 @@
 <template>
-	<div class="integration-item">
+	<div class="integration-item" :class="{ embedded }">
 		<div class="px-4 py-3 flex flex-col gap-2">
 			<div class="header-box flex justify-between items-center">
 				<div class="id">#{{ integration.id }}</div>
@@ -58,8 +58,9 @@ import { VueMarkdownIt } from "@f3ve/vue-markdown-it"
 
 const props = defineProps<{
 	integration: AvailableIntegration
+	embedded?: boolean
 }>()
-const { integration } = toRefs(props)
+const { integration, embedded } = toRefs(props)
 
 const DetailsIcon = "carbon:settings-adjust"
 
@@ -92,6 +93,10 @@ const showDetails = ref(false)
 				font-size: 13px;
 			}
 		}
+	}
+
+	&.embedded {
+		background-color: var(--bg-secondary-color);
 	}
 
 	&:hover {
