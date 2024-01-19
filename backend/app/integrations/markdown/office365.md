@@ -76,7 +76,7 @@ Make sure you write it down because the UI won’t let you copy it afterward.
 Next, we will see the options we have to configure for the Wazuh integration.
 
 Configure the ``office365`` module either in the Wazuh manager or the Wazuh agent.  To do so, modify the :doc:`ossec.conf </user-manual/reference/ossec-conf/index>` configuration file. Through the following configuration, Wazuh is ready to search for logs created by Office 365 audit-log. In this case, we will only search for the ``Audit.SharePoint`` type events within an interval of ``1m``. Those logs will be only those that were created after the module was started:
-
+```html
     <office365>
         <enabled>yes</enabled>
         <interval>1m</interval>
@@ -92,7 +92,7 @@ Configure the ``office365`` module either in the Wazuh manager or the Wazuh agen
             <subscription>Audit.SharePoint</subscription>
         </subscriptions>
     </office365>
-
+```
 To learn more, check the :ref:`office365-module` module reference.
 
 Using the configuration mentioned above, we will see an example of monitoring Office 365 activity.
@@ -100,7 +100,7 @@ Using the configuration mentioned above, we will see an example of monitoring Of
 ### Generate activity on Office 365
 
 For this example, we will start by generating some activity in our Office 365 Organization. In this case, let's modify a ``Communication site`` in ``SharePoint``. If we do that, we can see that Office 365 will generate a new json event, something like this:
-
+```json
     {
         "CreationTime":"2021-06-09T22:10:45",
         "Id":"xxxx-xxxx-xxxx-xxxx-xxxx",
@@ -128,6 +128,7 @@ For this example, we will start by generating some activity in our Office 365 Or
         "SourceFileName":"xxxx.aspx",
         "SourceRelativeUrl":"SitePages"
     }
+```
 
 ### Wazuh Rules
 
