@@ -70,6 +70,7 @@ def get_connectors_list():
         ("Grafana", "3", "username_password", "Connection to Grafana. Make sure to use the an admin role user."),
         ("Wazuh Worker Provisioning", "3", "api_key", "Connection to Wazuh Worker Provisioning. Make sure you have deployed the Wazuh Worker Provisioning Application provided by SOCFortress: https://github.com/socfortress/Customer-Provisioning-Worker"),
         ("Event Shipper", "3", "api_key", "Connection to Graylog GELF Input to receive events from integrations. Make sure you have created a GELF Input in Graylog.", "GELF_INPUT_PORT"),
+        ("Alert Creation Provisioning", "3", "api_key", "Connection to Alert Creation Provisioning. Make sure you have deployed the Alert Creation Provisioning Application provided by SOCFortress: https://github.com/socfortress/Customer-Provisioning-Alert"),
         # ... Add more connectors as needed ...
     ]
 
