@@ -36,10 +36,12 @@
 			:bordered="false"
 			segmented
 		>
-			<!--
-				<div v-html="compiledMarkdown"></div>
-			-->
-			<vue-markdown-it :source="integration.integration_details" class="integration-details" />
+			<vue-markdown-it
+				:source="integration.integration_details"
+				preset="commonmark"
+				:plugins="[markdownItHighlightjs]"
+				class="integration-details scrollbar-styled"
+			/>
 		</n-modal>
 	</div>
 </template>
@@ -47,13 +49,11 @@
 <script setup lang="ts">
 import Icon from "@/components/common/Icon.vue"
 import Badge from "@/components/common/Badge.vue"
-import { computed, ref, toRefs } from "vue"
+import { ref, toRefs } from "vue"
 import { NModal } from "naive-ui"
 import type { AvailableIntegration } from "@/types/integrations"
-
-// TODO: choose one way end remove others from package.json
-// import { marked } from "marked"
-// @ts-ignore
+import markdownItHighlightjs from "markdown-it-highlightjs"
+import "@/assets/scss/hljs.scss"
 import { VueMarkdownIt } from "@f3ve/vue-markdown-it"
 
 const props = defineProps<{
@@ -64,8 +64,6 @@ const { integration } = toRefs(props)
 const DetailsIcon = "carbon:settings-adjust"
 
 const showDetails = ref(false)
-
-// const compiledMarkdown = computed(() => marked(integration.value.integration_details))
 </script>
 
 <style lang="scss" scoped>

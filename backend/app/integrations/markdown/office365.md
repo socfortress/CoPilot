@@ -2,7 +2,6 @@ Documentation provided by [Wazuh](https://documentation.wazuh.com/current/cloud-
 
 Learn how to monitor your organization's Office 365 activity with Wazuh in this section of our documentation.
 
-
 Monitoring Office 365 Activity
 ==============================
 
@@ -13,14 +12,11 @@ This Wazuh module allows you to collect all the logs from Office 365 using its A
 
 This operation lists the content currently available for retrieval for the specified content type.
 
-
     GET https://manage.office.com/api/v1.0/{tenant_id}/activity/feed/subscriptions/content?contentType={content_type}&startTime={start_time}&endTime={end_time}
 
 **Retrieving content:**
 
 To retrieve a content blob, make a GET request against the corresponding content URI that is included in the list of available content.
-
-
 
     GET {content_uri}
 
@@ -30,13 +26,11 @@ Office 365 API description can be found in this `link <https://docs.microsoft.co
 
 For **Wazuh** to successfully connect to the **Office365 API**, an authentication process is required. To do this, we must provide the ``tenant_id``, ``client_id``, and ``client_secret`` of the application that we authorize in the organization.
 
-
 # Register your app
 
 To authenticate with the Microsoft identity platform endpoint, you need to register an app in your [Microsoft Azure portal app registrations](https://portal.azure.com/#blade/Microsoft_AAD_RegisteredApps/ApplicationsListBlade) section. Once there click on **New registration**:
 
 ![Register your app](/src/assets/images/office365/0-azure-app-new-registration.png)
-
 
 Fill in the name of your app, choose the desired account type and click on the **Register** button:
 
@@ -46,14 +40,12 @@ The app is now registered, and you can see information about it in its **Overvie
 
 ![Register your app](/src/assets/images/office365/2-azure-wazuh-app-overview.png)
 
-
 # Certificates & secrets
 
 You can generate a password to use during the authentication process. Go to **Certificates & secrets** and click on **New client secret**,
 then the name and the expiration date of the **New client secret** are requested:
 
 ![Certificates & secrets](/src/assets/images/office365/3-azure-wazuh-app-create-password.png)
-
 
 Copy and save the value section.
 
@@ -69,9 +61,9 @@ Make sure you write it down because the UI won’t let you copy it afterward.
 
    You need to add the following permissions under the **ActivityFeed** group:
 
-   - ``ActivityFeed.Read``. Read activity data for your organization.
+- ``ActivityFeed.Read``. Read activity data for your organization.
 
-   - ``ActivityFeed.ReadDlp``. Read DLP policy events including detected sensitive data.
+- ``ActivityFeed.ReadDlp``. Read DLP policy events including detected sensitive data.
 
 ![API permissions](/src/assets/images/office365/4-azure-wazuh-app-configure-permissions.png)
 
@@ -79,13 +71,11 @@ Make sure you write it down because the UI won’t let you copy it afterward.
 
 ![API permissions](/src/assets/images/office365/4-azure-wazuh-app-configure-permissions-admin-consent.png)
 
-
 ### Wazuh configuration
 
 Next, we will see the options we have to configure for the Wazuh integration.
 
 Configure the ``office365`` module either in the Wazuh manager or the Wazuh agent.  To do so, modify the :doc:`ossec.conf </user-manual/reference/ossec-conf/index>` configuration file. Through the following configuration, Wazuh is ready to search for logs created by Office 365 audit-log. In this case, we will only search for the ``Audit.SharePoint`` type events within an interval of ``1m``. Those logs will be only those that were created after the module was started:
-
 
     <office365>
         <enabled>yes</enabled>
@@ -110,7 +100,6 @@ Using the configuration mentioned above, we will see an example of monitoring Of
 ### Generate activity on Office 365
 
 For this example, we will start by generating some activity in our Office 365 Organization. In this case, let's modify a ``Communication site`` in ``SharePoint``. If we do that, we can see that Office 365 will generate a new json event, something like this:
-
 
     {
         "CreationTime":"2021-06-09T22:10:45",
@@ -144,6 +133,7 @@ For this example, we will start by generating some activity in our Office 365 Or
 
 Wazuh provides a series of rules to catch different events on Office365, for this example we will take the rule id ``91537`` which detects a ``Office 365: SharePoint file operation events.`` action.
 
+```html
     <rule id="91537" level="3">
         <if_sid>91532</if_sid>
         <field name="office365.RecordType" type="osregex">^6$</field>
@@ -151,9 +141,11 @@ Wazuh provides a series of rules to catch different events on Office365, for thi
         <options>no_full_log</options>
         <group>SharePointFileOperation</group>
     </rule>
+```
 
 If Wazuh successfully connects to Office 365 API, the events raised above will trigger these rules and cause an alert like this:
 
+```json
     {
         "timestamp":"2021-06-09T22:12:54.301+0000",
         "rule":{
@@ -208,6 +200,6 @@ If Wazuh successfully connects to Office 365 API, the events raised above will t
         },
         "location":"office365"
     }
-
+```
 
 For further information, please refer to the [Modules](https://documentation.wazuh.com/current/user-manual/wazuh-dashboard/settings.html#modules)
