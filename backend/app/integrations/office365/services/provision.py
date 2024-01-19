@@ -654,6 +654,30 @@ async def provision_office365(customer_code: str, provision_office365_auth_keys:
         session=session,
     )
 
+    await provision_alert_in_praeco(
+        PraecoAlertConfig(
+            alert=["post"],
+            filter=[{"query": {"query_string": {"query": "syslog_level:ALERT AND data_office365_UserId:ThreatIntel"}}}],
+            generate_kibana_discover_url=False,
+            http_post_ignore_ssl_errors=False,
+            http_post_timeout=60,
+            http_post_url=[f"http://{os.getenv('SERVER_IP')}:5000/api/v1/alerts/office365/threat_intel"],
+            import_config="BaseRule.config",
+            index="office365_*",
+            is_enabled=True,
+            kibana_discover_from_timedelta={"minutes": 10},
+            kibana_discover_to_timedelta={"minutes": 10},
+            match_enhancements=[],
+            name="Office365 - Threat Intel",
+            realert={"minutes": 0},
+            timestamp_field="timestamp_utc",
+            timestamp_type="iso",
+            type="any",
+            use_strftime_index=False,
+        ),
+        session=session,
+    )
+
     return ProvisionOffice365Response(success=True, message=f"Successfully provisioned Office365 integration for customer {customer_code}.")
 
 
