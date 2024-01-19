@@ -663,15 +663,15 @@ async def provision_alert_in_praeco(request: PraecoAlertConfig, session: AsyncSe
     Provisions the given alert in Praeco. https://github.com/socfortress/Customer-Provisioning-Alert
 
     Args:
-        request (ProvisionWorkerRequest): The request object containing the necessary information for provisioning.
+        request (PraecoAlertConfig): The request object containing the necessary information for provisioning.
         session (AsyncSession): The async session object for making HTTP requests.
 
     Returns:
-        ProvisionWorkerResponse: The response object indicating the success or failure of the provisioning operation.
+        PraecoProvisionAlertResponse: The response object indicating the success or failure of the provisioning operation.
     """
-    logger.info(f"Provisioning Wazuh worker {request}")
+    logger.info(f"Provisioning to alert creation - Praeco {request}")
     api_endpoint = await get_connector_attribute(connector_id=15, column_name="connector_url", session=session)
-    # Send the POST request to the Wazuh worker
+    # Send the POST request to Praeco
     response = requests.post(
         url=f"{api_endpoint}/provision_alert",
         json=request.dict(by_alias=True),
@@ -679,9 +679,9 @@ async def provision_alert_in_praeco(request: PraecoAlertConfig, session: AsyncSe
     logger.info(f"Response: {response.json()}")
     # Check the response status code
     if response.status_code != 200:
-        return PraecoProvisionAlertResponse(success=False, message=f"Failed to provision Wazuh worker: {response.text}")
+        return PraecoProvisionAlertResponse(success=False, message=f"Failed to provision to Alert Creation App: {response.text}")
     # Return the response
-    return PraecoProvisionAlertResponse(success=True, message=f"Wazuh worker provisioned successfully")
+    return PraecoProvisionAlertResponse(success=True, message="Successfully provisioned to Alert Creation App.")
 
 
 
