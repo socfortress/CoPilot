@@ -68,13 +68,19 @@
 import { NButton } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import { Icon as Iconify } from "@iconify/vue"
-
 import AuthForm from "@/components/AuthForm/index.vue"
-import { ref, computed, onBeforeMount } from "vue"
+import { ref, computed, onBeforeMount, toRefs } from "vue"
 import { useRoute } from "vue-router"
 import { useThemeStore } from "@/stores/theme"
 import { useAuthStore } from "@/stores/auth"
 import type { FormType } from "@/components/AuthForm/index.vue"
+
+type Align = "left" | "center" | "right"
+
+const props = defineProps<{
+	formType?: FormType
+}>()
+const { formType } = toRefs(props)
 
 const AlignLeft = "fluent:textbox-align-bottom-rotate-90-24-regular"
 const AlignCenter = "fluent:textbox-align-middle-rotate-90-24-regular"
@@ -85,12 +91,10 @@ const AlignRightActive = "fluent:textbox-align-top-rotate-90-24-filled"
 const Square = "fluent:square-24-filled"
 const SquareActive = "fluent:checkbox-indeterminate-24-regular"
 
-type Align = "left" | "center" | "right"
-
 const route = useRoute()
 const align = ref<Align>("left")
 const activeColor = ref("")
-const type = ref<FormType | undefined>(undefined)
+const type = ref<FormType | undefined>(formType.value || undefined)
 
 const colors = computed(() => useThemeStore().secondaryColors)
 const primaryColor = computed(() => useThemeStore().primaryColor)

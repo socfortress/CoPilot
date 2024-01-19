@@ -4,6 +4,7 @@ import Login from "@/views/Auth/Login.vue"
 import { UserRole } from "@/types/auth.d"
 import { Layout } from "@/types/theme.d"
 import { authCheck } from "@/utils/auth"
+import type { FormType } from "@/components/AuthForm/index.vue"
 
 const router = createRouter({
 	history: createWebHistory(import.meta.env.BASE_URL),
@@ -152,6 +153,13 @@ const router = createRouter({
 			name: "Login",
 			component: Login,
 			meta: { title: "Login", forceLayout: Layout.Blank, checkAuth: true }
+		},
+		{
+			path: "/register",
+			name: "Register",
+			component: () => import("@/views/Auth/Login.vue"),
+			props: { formType: "signup" as FormType },
+			meta: { title: "Register", forceLayout: Layout.Blank, checkAuth: true }
 		},
 		{
 			path: "/logout",
