@@ -618,4 +618,6 @@ async def provision_office365(customer_code: str, provision_office365_auth_keys:
     # Start stream
     await start_stream(stream_id=stream_id)
 
+    return ProvisionOffice365Response(success=True, message=f"Successfully provisioned Office365 integration for customer {customer_code}.")
+
 
