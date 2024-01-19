@@ -1,5 +1,5 @@
 <template>
-	<div class="flex p-6 pt-4 pb-0 justify-end">
+	<div class="flex mb-6 justify-end">
 		<div>
 			<n-input-group>
 				<n-select
@@ -14,8 +14,8 @@
 		</div>
 	</div>
 	<n-spin :show="loading">
-		<div class="customer-healthcheck-list">
-			<div class="list flex flex-col gap-2 p-6 pt-4" v-if="healthyList.length">
+		<div class="customer-healthcheck-list flex flex-col gap-6">
+			<div class="list flex flex-col gap-2" v-if="healthyList.length">
 				<div class="title healthy flex items-center gap-2">
 					<Icon :name="CheckIcon" :size="16"></Icon>
 					Healthy
@@ -31,7 +31,7 @@
 					class="item-appear item-appear-bottom item-appear-005"
 				/>
 			</div>
-			<div class="list flex flex-col gap-2 p-6 pt-4" v-if="unhealthyList.length">
+			<div class="list flex flex-col gap-2" v-if="unhealthyList.length">
 				<div class="title unhealthy flex items-center gap-2">
 					<Icon :name="AlertIcon" :size="16"></Icon>
 					Unhealthy
