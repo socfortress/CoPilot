@@ -5,8 +5,13 @@ from app.connectors.graylog.schema.pipelines import GraylogPipelinesResponse
 from app.connectors.graylog.schema.pipelines import Pipeline
 from app.connectors.graylog.schema.pipelines import PipelineRule
 from app.connectors.graylog.schema.pipelines import PipelineRulesResponse
-from app.connectors.graylog.utils.universal import send_get_request
+from app.connectors.graylog.schema.pipelines import CreatePipelineRule
+from app.connectors.graylog.schema.pipelines import CreatePipeline
+from app.customer_provisioning.schema.graylog import StreamConnectionToPipelineRequest
+from app.customer_provisioning.schema.graylog import StreamConnectionToPipelineResponse
 
+from app.connectors.graylog.utils.universal import send_get_request
+from app.connectors.graylog.utils.universal import send_post_request
 
 async def get_pipelines() -> GraylogPipelinesResponse:
     """Get pipelines from Graylog.
@@ -78,3 +83,69 @@ async def get_pipeline_rule_by_id(rule_id) -> PipelineRulesResponse:
     except Exception as e:
         logger.error(f"Failed to collect pipeline rules: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to collect pipeline rules: {e}")
+
+
+async def create_pipeline_rule(rule: CreatePipelineRule) -> None:
+    """
+    Creates a pipeline rule with the given title.
+    """
+    endpoint = "/api/system/pipelines/rule"
+    data = {
+        "title": rule.title,
+        "description": rule.description,
+        "source": rule.source,
+    }
+    await send_post_request(endpoint=endpoint, data=data)
+
+async def create_pipeline_graylog(pipeline: CreatePipeline) -> None:
+    """
+    Creates a pipeline with the given title in Graylog.
+    """
+    endpoint = "/api/system/pipelines/pipeline"
+    data = {
+        "title": pipeline.title,
+        "description": pipeline.description,
+        "source": pipeline.source,
+    }
+    await send_post_request(endpoint=endpoint, data=data)
+
+
+async def get_pipeline_id(subscription: str) -> str:
+    """
+    Retrieves the pipeline ID for a given subscription.
+
+    Args:
+        subscription (str): The subscription name.
+
+    Returns:
+        str: The pipeline ID.
+
+    Raises:
+        HTTPException: If the pipeline ID cannot be retrieved.
+    """
+    logger.info(f"Getting pipeline ID for subscription {subscription}")
+    pipelines_response = await get_pipelines()
+    if pipelines_response.success:
+        for pipeline in pipelines_response.pipelines:
+            if subscription.lower() in pipeline.description.lower():
+                return [pipeline.id]
+        logger.error(f"Failed to get pipeline ID for subscription {subscription}")
+        raise HTTPException(status_code=500, detail=f"Failed to get pipeline ID for subscription {subscription}")
+    else:
+        logger.error(f"Failed to get pipelines: {pipelines_response.message}")
+        raise HTTPException(status_code=500, detail=f"Failed to get pipelines: {pipelines_response.message}")
+
+async def connect_stream_to_pipeline(stream_and_pipeline: StreamConnectionToPipelineRequest):
+    """
+    Connects a stream to a pipeline.
+
+    Args:
+        stream_and_pipeline (StreamConnectionToPipelineRequest): The request object containing the stream ID and pipeline IDs.
+
+    Returns:
+        StreamConnectionToPipelineResponse: The response object containing the connection details.
+    """
+    logger.info(f"Connecting stream {stream_and_pipeline.stream_id} to pipeline {stream_and_pipeline.pipeline_ids}")
+    response_json = await send_post_request(endpoint="/api/system/pipelines/connections/to_stream", data=stream_and_pipeline.dict())
+    logger.info(f"Response: {response_json}")
+    return StreamConnectionToPipelineResponse(**response_json)

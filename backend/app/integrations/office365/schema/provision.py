@@ -20,16 +20,6 @@ class PipelineRuleTitles(Enum):
 class PipelineTitles(Enum):
     OFFICE365 = "OFFICE365 PROCESSING PIPELINE"
 
-class CreatePipelineRule(BaseModel):
-    title: str
-    description: str
-    source: str
-
-class CreatePipeline(BaseModel):
-    title: str
-    description: str
-    source: str
-
 class ProvisionOffice365Request(BaseModel):
     customer_code: str = Field(
         ...,
