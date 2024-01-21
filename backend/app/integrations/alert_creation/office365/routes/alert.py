@@ -5,6 +5,7 @@ from app.integrations.alert_creation.office365.schema.exchange import ValidOffic
 from app.integrations.alert_creation.office365.schema.threat_intel import Office365ThreatIntelAlertRequest
 from app.integrations.alert_creation.office365.schema.threat_intel import Office365ThreatIntelAlertResponse
 from app.integrations.alert_creation.office365.services.exchange import create_exchange_alert
+from app.integrations.alert_creation.office365.services.threat_intel import create_threat_intel_alert
 from app.integrations.alert_creation_settings.models.alert_creation_settings import AlertCreationSettings
 from sqlalchemy import select
 #from app.alerts.office365.services.threat_intel import create_threat_intel_alert
@@ -69,6 +70,7 @@ async def create_office365_exchange_alert(
 )
 async def create_office365_threat_intel_alert(
     create_alert_request: Office365ThreatIntelAlertRequest,
+    session: AsyncSession = Depends(get_db),
 ):
     logger.info(f"create_alert_request: {create_alert_request}")
     if create_alert_request.data_office365_Workload not in [
@@ -77,4 +79,5 @@ async def create_office365_threat_intel_alert(
         logger.info(f"Invalid workload: {create_alert_request.data_office365_Workload}")
         raise HTTPException(status_code=400, detail="Invalid workload")
     logger.info(f"Workload is valid: {create_alert_request.data_office365_Workload}")
-    #return create_threat_intel_alert(create_alert_request)
+    await is_office365_organization_id_valid(create_alert_request, session)
+    return await create_threat_intel_alert(alert=create_alert_request, session=session)
