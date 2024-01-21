@@ -578,6 +578,24 @@ async def get_customer_alert_settings(customer_code: str, session: AsyncSession)
         return settings
     return None
 
+async def get_customer_alert_settings_office365(office365_organization_id: str, session: AsyncSession) -> Optional[AlertCreationSettings]:
+    """
+    Retrieve the alert creation settings for a specific customer.
+
+    Args:
+        office365_organization_id (str): The Office365 Organization ID of the customer.
+        session (AsyncSession): The database session.
+
+    Returns:
+        Optional[AlertCreationSettings]: The alert creation settings for the customer, or None if not found.
+    """
+    result = await session.execute(select(AlertCreationSettings).filter(AlertCreationSettings.office365_organization_id == office365_organization_id))
+    settings = result.scalars().first()
+
+    if settings:
+        return settings
+    return None
+
 
 async def get_customer_alert_event_configs(
     customer_code: str,

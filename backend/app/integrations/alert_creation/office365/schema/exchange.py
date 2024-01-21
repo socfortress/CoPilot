@@ -106,6 +106,9 @@ class IrisAsset(BaseModel):
         example=1,
     )
 
+    def to_dict(self):
+        return self.dict(exclude_none=True)
+
 
 class IrisIoc(BaseModel):
     ioc_value: str = Field(
@@ -121,13 +124,10 @@ class IrisIoc(BaseModel):
     ioc_tlp_id: int = Field(1, description="TLP ID of the IoC", example=1)
     ioc_type_id: int = Field(20, description="Type ID of the IoC", example=20)
 
+    def to_dict(self):
+        return self.dict(exclude_none=True)
 
 class IrisAlertContext(BaseModel):
-    customer_id_full: str = Field(
-        ...,
-        description="IRIS ID of the customer, customer name, and iris case index name in the Wazuh-Indexer",
-        example="1, SOCFortress, dfir_iris_00001",
-    )
     customer_iris_id: int = Field(
         ...,
         description="IRIS ID of the customer",
