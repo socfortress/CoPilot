@@ -20,7 +20,7 @@ export default defineConfig({
 		svgLoader(),
 		Components({
 			dirs: ["src/components/cards"],
-			dts: "unplugin.components.d.ts"
+			dts: "src/unplugin.components.d.ts"
 		})
 		// uncomment to enable analyzer after build
 		// analyzer()
