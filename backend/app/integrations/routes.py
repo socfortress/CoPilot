@@ -33,6 +33,7 @@ from app.integrations.models.customer_integration_settings import (
 )
 from app.db.universal_models import Customers
 from app.integrations.schema import AvailableIntegrationsResponse, CustomerIntegrationCreate, CreateIntegrationService, CreateIntegrationAuthKeys, CustomerIntegrationCreateResponse, CustomerIntegrationsResponse, DeleteCustomerIntegration, CustomerIntegrationDeleteResponse, AuthKey, IntegrationWithAuthKeys, UpdateCustomerIntegration
+from app.integrations.alert_creation_settings.models.alert_creation_settings import AlertCreationSettings
 
 integration_settings_router = APIRouter()
 
@@ -238,6 +239,28 @@ def get_subscription_id(customer_integration, integration_name: str, auth_key_na
                     return subscription.id
     return None
 
+async def get_tenant_id(customer_integration: CustomerIntegrationCreate, session: AsyncSession) -> str:
+    """
+    Retrieves the Tenant ID for a given customer integration. This is the Office365 organization ID and
+    is used to create alerts for the customer in DFIR-IRIS.
+    """
+    stmt = select(IntegrationAuthKeys).join(IntegrationSubscription, IntegrationAuthKeys.subscription_id == IntegrationSubscription.id).join(CustomerIntegrations, IntegrationSubscription.customer_id == CustomerIntegrations.id).join(IntegrationService, IntegrationSubscription.integration_service_id == IntegrationService.id).where(CustomerIntegrations.customer_code == customer_integration.customer_code, IntegrationService.service_name == customer_integration.integration_name, IntegrationAuthKeys.auth_key_name == "TENANT_ID")
+
+    result = await session.execute(stmt)
+    tenant_id = result.scalars().first()
+    if tenant_id is None:
+        raise HTTPException(status_code=404, detail=f"Tenant ID for customer {customer_integration.customer_code} not found.")
+    logger.info(f"tenant_id: {tenant_id.auth_value}")
+    return tenant_id.auth_value
+
+async def update_office365_organization_id(customer_code: str, tenant_id: str, session: AsyncSession):
+    """
+    Updates the Office365 organization ID in the alert_creation_settings table.
+    """
+    stmt = update(AlertCreationSettings).where(AlertCreationSettings.customer_code == customer_code).values(office365_organization_id=tenant_id)
+    await session.execute(stmt)
+    await session.commit()
+
 
 
 @integration_settings_router.get(
@@ -342,6 +365,12 @@ async def create_integration(
     integration_service = await create_integration_service(customer_integration_create.integration_name, settings=customer_integration_create.integration_config, session=session)
     customer_integrations = await create_customer_integrations(customer_integration_create.customer_code, customer_integration_create.customer_name, session)
     await create_integration_subscription(customer_integrations, integration_service, integration_auth_keys=customer_integration_create.integration_auth_keys, session=session)
+
+    # Office365 specific integration handling
+    if customer_integration_create.integration_name == "Office365":
+        tenant_id = await get_tenant_id(customer_integration_create, session)
+        await update_office365_organization_id(customer_integration_create.customer_code, tenant_id, session)
+
 
     return CustomerIntegrationCreateResponse(
         message=f"Customer integration {customer_integration_create.customer_code} {customer_integration_create.integration_name} successfully created.",
