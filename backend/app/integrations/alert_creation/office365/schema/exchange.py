@@ -12,6 +12,7 @@ from pydantic import Field
 class ValidOffice365Workloads(Enum):
     THREAT_INTEL_VALUE = "ThreatIntelligence"
     EXCHANGE_VALUE = "Exchange"
+    ACTIVE_DIRECTORY_VALUE = "AzureActiveDirectory"
 
 
 ############### ! REQUEST BODY RECEIVED ! ################
