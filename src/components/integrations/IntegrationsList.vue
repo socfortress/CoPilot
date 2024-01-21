@@ -1,6 +1,6 @@
 <template>
 	<div class="integrations-list">
-		<div class="header mb-4 flex gap-2 justify-between items-center">
+		<div class="header mb-4 flex gap-2 justify-between items-center" v-if="!hideTotals">
 			<div>
 				Total:
 				<strong class="font-mono">{{ totalIntegrations }}</strong>
@@ -13,6 +13,7 @@
 						v-for="integration of integrationsList"
 						:key="integration.id"
 						:integration="integration"
+						:embedded="embedded"
 						class="item-appear item-appear-bottom item-appear-005 mb-2"
 					/>
 				</template>
@@ -30,6 +31,11 @@ import { useMessage, NSpin, NEmpty } from "naive-ui"
 import Api from "@/api"
 import IntegrationItem from "./IntegrationItem.vue"
 import type { AvailableIntegration } from "@/types/integrations"
+
+const { embedded, hideTotals } = defineProps<{
+	embedded?: boolean
+	hideTotals?: boolean
+}>()
 
 const message = useMessage()
 const loadingIntegrations = ref(false)

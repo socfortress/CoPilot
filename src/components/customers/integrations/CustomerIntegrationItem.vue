@@ -12,36 +12,40 @@
 					</Badge>
 				</div>
 			</div>
-			<div class="main-box flex items-center gap-3">
-				<div class="content flex flex-col gap-1 grow">
-					<div class="title">{{ integration.integration_name }}</div>
-					<div class="description">
-						{{ integration.description }}
+			<!--
+				<div class="main-box flex items-center gap-3">
+					<div class="content flex flex-col gap-1 grow">
+						<div class="title">{{ integration.integration_name }}</div>
+						<div class="description">
+							{{ integration.description }}
+						</div>
 					</div>
 				</div>
-			</div>
 
-			<div class="badges-box flex flex-wrap items-center gap-3 mt-2">
-				<Badge v-for="authKey of integration.auth_keys" :key="authKey.auth_key_name">
-					<template #value>{{ authKey.auth_key_name }}</template>
-				</Badge>
-			</div>
+				<div class="badges-box flex flex-wrap items-center gap-3 mt-2">
+					<Badge v-for="authKey of integration.auth_keys" :key="authKey.auth_key_name">
+						<template #value>{{ authKey.auth_key_name }}</template>
+					</Badge>
+				</div>
+			-->
 		</div>
 
 		<n-modal
 			v-model:show="showDetails"
 			preset="card"
 			:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(400px, 90vh)', overflow: 'hidden' }"
-			:title="integration.integration_name"
+			:title="'integration.integration_name'"
 			:bordered="false"
 			segmented
 		>
-			<vue-markdown-it
+			<!--
+				<vue-markdown-it
 				:source="integration.integration_details"
 				preset="commonmark"
 				:plugins="[markdownItHighlightjs]"
 				class="integration-details scrollbar-styled"
-			/>
+				/>
+			-->
 		</n-modal>
 	</div>
 </template>
@@ -51,13 +55,13 @@ import Icon from "@/components/common/Icon.vue"
 import Badge from "@/components/common/Badge.vue"
 import { ref, toRefs } from "vue"
 import { NModal } from "naive-ui"
-import type { AvailableIntegration } from "@/types/integrations"
+import type { CustomerIntegration } from "@/types/integrations"
 import markdownItHighlightjs from "markdown-it-highlightjs"
 import "@/assets/scss/hljs.scss"
 import { VueMarkdownIt } from "@f3ve/vue-markdown-it"
 
 const props = defineProps<{
-	integration: AvailableIntegration
+	integration: CustomerIntegration
 	embedded?: boolean
 }>()
 const { integration, embedded } = toRefs(props)

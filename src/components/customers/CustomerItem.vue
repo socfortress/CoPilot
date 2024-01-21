@@ -104,7 +104,7 @@
 			segmented
 		>
 			<Transition :name="`slide-tabs-${selectedTabsGroup === 'customer' ? 'left' : 'right'}`">
-				<n-tabs type="line" animated :tabs-padding="24" v-if="selectedTabsGroup === 'customer'">
+				<n-tabs type="line" animated :tabs-padding="24" v-if="selectedTabsGroup === 'customer'" class="h-full">
 					<n-tab-pane name="Info" tab="Info" display-directive="show:lazy">
 						<CustomerInfo
 							:customer="customerInfo"
@@ -124,11 +124,7 @@
 						/>
 					</n-tab-pane>
 					<n-tab-pane name="Integrations" tab="Integrations" display-directive="show:lazy">
-						<n-scrollbar style="max-height: 470px" trigger="none">
-							<div class="p-6 pt-4">
-								<CustomerIntegrationsList embedded :customerCode="customer.customer_code" />
-							</div>
-						</n-scrollbar>
+						<CustomerIntegrations :customerCode="customer.customer_code" />
 					</n-tab-pane>
 					<template #suffix>
 						<div class="pr-8 hover:text-primary-color cursor-pointer" @click="selectedTabsGroup = 'agents'">
@@ -147,14 +143,14 @@
 					</template>
 					<n-tab-pane name="Agents" tab="Agents" display-directive="show:lazy">
 						<n-scrollbar style="max-height: 470px" trigger="none">
-							<div class="p-6 pt-4">
+							<div class="p-6 pt-2">
 								<CustomerAgents :customer="customerInfo" v-if="customerInfo" />
 							</div>
 						</n-scrollbar>
 					</n-tab-pane>
 					<n-tab-pane name="Healthcheck Wazuh" tab="Healthcheck Wazuh" display-directive="show:lazy">
 						<n-scrollbar style="max-height: 470px" trigger="none">
-							<div class="p-6 pt-4">
+							<div class="p-6 pt-2">
 								<CustomerHealthcheckList source="wazuh" :customerCode="customer.customer_code" />
 							</div>
 						</n-scrollbar>
@@ -165,7 +161,7 @@
 						display-directive="show:lazy"
 					>
 						<n-scrollbar style="max-height: 470px" trigger="none">
-							<div class="p-6 pt-4">
+							<div class="p-6 pt-2">
 								<CustomerHealthcheckList source="velociraptor" :customerCode="customer.customer_code" />
 							</div>
 						</n-scrollbar>
@@ -183,10 +179,10 @@ import Icon from "@/components/common/Icon.vue"
 import Badge from "@/components/common/Badge.vue"
 import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
 import CustomerInfo from "./CustomerInfo.vue"
-import CustomerProvision from "./CustomerProvision.vue"
 import CustomerAgents from "./CustomerAgents.vue"
-import CustomerHealthcheckList from "./CustomerHealthcheckList.vue"
-import CustomerIntegrationsList from "@/components/integrations/CustomerIntegrationsList.vue"
+import CustomerProvision from "./provision/CustomerProvision.vue"
+import CustomerHealthcheckList from "./healthcheck/CustomerHealthcheckList.vue"
+import CustomerIntegrations from "./integrations/CustomerIntegrations.vue"
 import Api from "@/api"
 import { NAvatar, useMessage, NPopover, NModal, NTabs, NTabPane, NSpin, NScrollbar } from "naive-ui"
 import type { Customer, CustomerMeta } from "@/types/customers.d"

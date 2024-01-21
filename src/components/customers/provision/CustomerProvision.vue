@@ -1,41 +1,43 @@
 <template>
 	<div class="customer-provision">
-		<div v-if="editing">
-			<CustomerProvisionWizard
-				@submitted="submitted"
-				:customerName="customerNameSanitized"
-				:customerCode="customerCode"
-			>
-				<template #additionalActions>
-					<n-button @click="editing = false">Close</n-button>
-				</template>
-			</CustomerProvisionWizard>
-		</div>
-		<template v-else>
-			<div class="flex items-center justify-end gap-4 px-7 pt-2" v-if="customerMeta">
-				<n-button size="small" type="error" ghost @click="handleDelete" :loading="loadingDelete">
-					<template #icon>
-						<Icon :name="DeleteIcon" :size="15"></Icon>
+		<transition name="form-fade" mode="out-in">
+			<div v-if="editing">
+				<CustomerProvisionWizard
+					@submitted="submitted"
+					:customerName="customerNameSanitized"
+					:customerCode="customerCode"
+				>
+					<template #additionalActions>
+						<n-button @click="editing = false">Close</n-button>
 					</template>
-					Decommission
-				</n-button>
+				</CustomerProvisionWizard>
 			</div>
-			<div class="flex items-center justify-between gap-4 px-7 pt-2" v-else>
-				<n-button size="small" @click="editing = true" type="primary">
-					<template #icon>
-						<Icon :name="AddIcon" :size="14"></Icon>
-					</template>
-					Create Provision
-				</n-button>
-			</div>
+			<div v-else>
+				<div class="flex items-center justify-end gap-4 px-7 pt-2" v-if="customerMeta">
+					<n-button size="small" type="error" ghost @click="handleDelete" :loading="loadingDelete">
+						<template #icon>
+							<Icon :name="DeleteIcon" :size="15"></Icon>
+						</template>
+						Decommission
+					</n-button>
+				</div>
+				<div class="flex items-center justify-between gap-4 px-7 pt-2" v-else>
+					<n-button size="small" @click="editing = true" type="primary">
+						<template #icon>
+							<Icon :name="AddIcon" :size="14"></Icon>
+						</template>
+						Create Provision
+					</n-button>
+				</div>
 
-			<div class="grid gap-2 grid-auto-flow-200 p-7 pt-4">
-				<KVCard v-for="(value, key) of customerMeta" :key="key">
-					<template #key>{{ key }}</template>
-					<template #value>{{ value || "-" }}</template>
-				</KVCard>
+				<div class="grid gap-2 grid-auto-flow-200 p-7 pt-4">
+					<KVCard v-for="(value, key) of customerMeta" :key="key">
+						<template #key>{{ key }}</template>
+						<template #value>{{ value || "-" }}</template>
+					</KVCard>
+				</div>
 			</div>
-		</template>
+		</transition>
 	</div>
 </template>
 
@@ -113,3 +115,22 @@ function handleDelete() {
 	})
 }
 </script>
+
+<style lang="scss" scoped>
+.customer-provision {
+	.form-fade-enter-active,
+	.form-fade-leave-active {
+		transition:
+			opacity 0.2s ease-in-out,
+			transform 0.3s ease-in-out;
+	}
+	.form-fade-enter-from {
+		opacity: 0;
+		transform: translateY(10px);
+	}
+	.form-fade-leave-to {
+		opacity: 0;
+		transform: translateY(-10px);
+	}
+}
+</style>
