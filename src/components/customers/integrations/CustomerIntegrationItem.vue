@@ -1,6 +1,6 @@
 <template>
 	<div class="integration-item" :class="{ embedded }">
-		<div class="px-4 py-3 flex flex-col gap-2">
+		<div class="px-4 py-3 flex flex-col gap-3">
 			<div class="header-box flex justify-between items-center">
 				<div class="id">#{{ integration.id }}</div>
 				<div class="actions">
@@ -17,7 +17,13 @@
 					<div class="title">{{ serviceName }}</div>
 				</div>
 				<div class="actions-box">
-					<n-button v-if="!isOffice365" type="success" secondary>
+					<n-button
+						v-if="isOffice365"
+						:loading="loadingOffice365Provision"
+						@click="office365Provision()"
+						type="success"
+						secondary
+					>
 						<template #icon><Icon :name="DeployIcon"></Icon></template>
 						Deploy Integration
 					</n-button>
@@ -47,10 +53,11 @@
 import Icon from "@/components/common/Icon.vue"
 import Badge from "@/components/common/Badge.vue"
 import { computed, ref, toRefs } from "vue"
-import { NModal, NButton } from "naive-ui"
+import { NModal, NButton, useMessage } from "naive-ui"
 import type { CustomerIntegration } from "@/types/integrations"
 import KVCard from "@/components/common/KVCard.vue"
 import _uniqBy from "lodash/uniqBy"
+import Api from "@/api"
 
 const props = defineProps<{
 	integration: CustomerIntegration
@@ -58,15 +65,18 @@ const props = defineProps<{
 }>()
 const { integration, embedded } = toRefs(props)
 
+const emit = defineEmits<{
+	(e: "deployed"): void
+}>()
+
 const DetailsIcon = "carbon:settings-adjust"
 const DeployIcon = "carbon:deploy"
 
+const loadingOffice365Provision = ref(false)
+const message = useMessage()
 const showDetails = ref(false)
-const serviceName = computed(() => {
-	if (!integration.value.integration_subscriptions.length) return ""
-
-	return integration.value.integration_subscriptions[0].integration_service.service_name
-})
+const serviceName = computed(() => integration.value.integration_service_name)
+const customerCode = computed(() => integration.value.customer_code)
 
 const authKeys = computed(() => {
 	const keys: { key: string; value: string }[] = []
@@ -84,6 +94,27 @@ const authKeys = computed(() => {
 })
 
 const isOffice365 = computed(() => serviceName.value === "Office365")
+
+function office365Provision() {
+	loadingOffice365Provision.value = true
+
+	Api.integrations
+		.office365Provision(customerCode.value, serviceName.value)
+		.then(res => {
+			if (res.data.success) {
+				emit("deployed")
+				message.success(res.data?.message || "Customer integration successfully deployed.")
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			loadingOffice365Provision.value = false
+		})
+}
 </script>
 
 <style lang="scss" scoped>

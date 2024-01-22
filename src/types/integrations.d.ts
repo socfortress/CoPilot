@@ -15,6 +15,7 @@ export interface CustomerIntegration {
 	id: number
 	customer_name: string
 	integration_service_id: number
+	integration_service_name: string
 	integration_subscriptions: IntegrationSubscription[]
 }
 
