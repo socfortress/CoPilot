@@ -3,8 +3,13 @@ from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 import requests
 import os
+from sqlalchemy import update, and_
+
 
 from dotenv import load_dotenv
+from app.integrations.models.customer_integration_settings import (
+    CustomerIntegrations,
+)
 from app.customer_provisioning.services.grafana import get_opensearch_version
 import json
 from app.integrations.utils.schema import PraecoAlertConfig, PraecoProvisionAlertResponse
@@ -678,6 +683,8 @@ async def provision_office365(customer_code: str, provision_office365_auth_keys:
         session=session,
     )
 
+    await update_customer_integration_table(customer_code, session)
+
     return ProvisionOffice365Response(success=True, message=f"Successfully provisioned Office365 integration for customer {customer_code}.")
 
 
@@ -706,6 +713,32 @@ async def provision_alert_in_praeco(request: PraecoAlertConfig, session: AsyncSe
         return PraecoProvisionAlertResponse(success=False, message=f"Failed to provision to Alert Creation App: {response.text}")
     # Return the response
     return PraecoProvisionAlertResponse(success=True, message="Successfully provisioned to Alert Creation App.")
+
+
+######### ! Update Database ! ############
+async def update_customer_integration_table(customer_code: str, session: AsyncSession) -> None:
+    """
+    Updates the `customer_integrations` table to set the `deployed` column to True where the `customer_code`
+    matches the given customer code and the `integration_service_name` is "Office365".
+
+    Args:
+        customer_code (str): The customer code.
+        session (AsyncSession): The async session object for making HTTP requests.
+    """
+    await session.execute(
+        update(CustomerIntegrations)
+        .where(
+            and_(
+                CustomerIntegrations.customer_code == customer_code,
+                CustomerIntegrations.integration_service_name == "Office365",
+            )
+        )
+        .values(deployed=True)
+    )
+    await session.commit()
+
+    return None
+
 
 
 
