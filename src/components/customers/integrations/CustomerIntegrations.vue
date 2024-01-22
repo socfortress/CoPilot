@@ -65,7 +65,7 @@ const message = useMessage()
 const showForm = ref(false)
 const loadingIntegrations = ref(false)
 const integrationsList = ref<CustomerIntegration[]>([])
-const disabledIntegrationsIds = computed(() => integrationsList.value.map(o => o.id))
+const disabledIntegrationsIds = computed(() => integrationsList.value.map(o => o.integration_service_id))
 
 function getCustomerIntegrations() {
 	loadingIntegrations.value = true
