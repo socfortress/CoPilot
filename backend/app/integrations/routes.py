@@ -143,7 +143,8 @@ async def create_customer_integrations(customer_code: str, customer_name: str, i
         customer_code=customer_code,
         customer_name=customer_name,
         integration_service_id=integration_service_id,
-        integration_service_name=integration_service_name
+        integration_service_name=integration_service_name,
+        deployed=False,
     )
     session.add(customer_integrations)
     await session.flush()
@@ -314,7 +315,8 @@ def process_customer_integrations(customer_integrations_data):
             customer_name=ci.customer_name,
             integration_subscriptions=ci.integration_subscriptions,
             integration_service_id=first_service_id,
-            integration_service_name=ci.integration_subscriptions[0].integration_service.service_name if ci.integration_subscriptions else None
+            integration_service_name=ci.integration_subscriptions[0].integration_service.service_name if ci.integration_subscriptions else None,
+            deployed=ci.deployed,
         )
         processed_customer_integrations.append(customer_integration_obj)
     return processed_customer_integrations

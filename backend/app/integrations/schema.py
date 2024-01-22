@@ -159,6 +159,11 @@ class CustomerIntegrations(BaseModel):
         description="The integration service name.",
         examples=["Mimecast"],
     )
+    deployed: Optional[bool] = Field(
+        None,
+        description="The deployment status.",
+        examples=[True],
+    )
 
 class CustomerIntegrationsResponse(BaseModel):
     available_integrations: List[CustomerIntegrations]
