@@ -17,16 +17,25 @@
 					<div class="title">{{ serviceName }}</div>
 				</div>
 				<div class="actions-box">
-					<n-button
-						v-if="isOffice365"
-						:loading="loadingOffice365Provision"
-						@click="office365Provision()"
-						type="success"
-						secondary
-					>
-						<template #icon><Icon :name="DeployIcon"></Icon></template>
-						Deploy Integration
-					</n-button>
+					<template v-if="isOffice365">
+						<n-button
+							v-if="!integration.deployed"
+							:loading="loadingOffice365Provision"
+							@click="office365Provision()"
+							type="success"
+							secondary
+						>
+							<template #icon><Icon :name="DeployIcon"></Icon></template>
+							Deploy Integration
+						</n-button>
+
+						<Badge type="active" v-else>
+							<template #iconLeft>
+								<Icon :name="DeployIcon" :size="13"></Icon>
+							</template>
+							<template #value>Deployed</template>
+						</Badge>
+					</template>
 				</div>
 			</div>
 		</div>

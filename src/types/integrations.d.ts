@@ -13,6 +13,7 @@ export interface IntegrationAuthKey {
 export interface CustomerIntegration {
 	customer_code: string
 	id: number
+	deployed: boolean
 	customer_name: string
 	integration_service_id: number
 	integration_service_name: string
