@@ -149,6 +149,11 @@ class CustomerIntegrations(BaseModel):
     id: int
     customer_name: str
     integration_subscriptions: List[IntegrationSubscription]
+    integration_service_id: Optional[int] = Field(
+        None,
+        description="The integration service id.",
+        examples=[1],
+    )
 
 class CustomerIntegrationsResponse(BaseModel):
     available_integrations: List[CustomerIntegrations]

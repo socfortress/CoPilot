@@ -135,13 +135,14 @@ async def create_integration_service(integration_name: str, settings: CreateInte
     await session.flush()
     return integration_service
 
-async def create_customer_integrations(customer_code: str, customer_name: str, session: AsyncSession) -> CustomerIntegrations:
+async def create_customer_integrations(customer_code: str, customer_name: str, integration_service_id: int, session: AsyncSession) -> CustomerIntegrations:
     """
     Create CustomerIntegrations instance.
     """
     customer_integrations = CustomerIntegrations(
         customer_code=customer_code,
         customer_name=customer_name,
+        integration_service_id=integration_service_id
     )
     session.add(customer_integrations)
     await session.flush()
@@ -261,6 +262,50 @@ async def update_office365_organization_id(customer_code: str, tenant_id: str, s
     await session.execute(stmt)
     await session.commit()
 
+async def get_integration_service_id(integration_name: str, session: AsyncSession) -> int:
+    """
+    Retrieves the AvailableIntegrations ID for a given integration name.
+    """
+    stmt = select(AvailableIntegrations).where(AvailableIntegrations.integration_name == integration_name)
+    result = await session.execute(stmt)
+    integration_service = result.scalars().first()
+    if integration_service is None:
+        raise HTTPException(status_code=404, detail=f"Integration service {integration_name} not found.")
+    return integration_service.id
+
+async def fetch_customer_integrations_data(session: AsyncSession):
+    """
+    Fetches customer integrations data from the database.
+    """
+    stmt = (
+        select(CustomerIntegrations)
+        .options(
+            joinedload(CustomerIntegrations.integration_subscriptions)
+            .joinedload(IntegrationSubscription.integration_service),
+            joinedload(CustomerIntegrations.integration_subscriptions)
+            .subqueryload(IntegrationSubscription.integration_auth_keys)
+        )
+    )
+    result = await session.execute(stmt)
+    return result.scalars().unique().all()
+
+def process_customer_integrations(customer_integrations_data):
+    """
+    Processes customer integrations data and returns a list of CustomerIntegrations objects.
+    """
+    processed_customer_integrations = []
+    for ci in customer_integrations_data:
+        first_service_id = ci.integration_subscriptions[0].integration_service_id if ci.integration_subscriptions else None
+        customer_integration_obj = CustomerIntegrations(
+            id=ci.id,
+            customer_code=ci.customer_code,
+            customer_name=ci.customer_name,
+            integration_subscriptions=ci.integration_subscriptions,
+            integration_service_id=first_service_id
+        )
+        processed_customer_integrations.append(customer_integration_obj)
+    return processed_customer_integrations
+
 
 
 @integration_settings_router.get(
@@ -290,25 +335,16 @@ async def get_available_integrations(
     description="Get a list of customer integrations.",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_customer_integrations(
-    session: AsyncSession = Depends(get_db),
-):
+async def get_customer_integrations(session: AsyncSession = Depends(get_db)):
     """
     Endpoint to get a list of customer integrations.
     """
-    stmt = (
-        select(CustomerIntegrations)
-        .options(
-            joinedload(CustomerIntegrations.integration_subscriptions)
-            .joinedload(IntegrationSubscription.integration_service),
-            joinedload(CustomerIntegrations.integration_subscriptions)
-            .subqueryload(IntegrationSubscription.integration_auth_keys)  # Load IntegrationAuthKeys
-        )
-    )
-    result = await session.execute(stmt)
-    customer_integrations = result.scalars().unique().all()
+    customer_integrations_data = await fetch_customer_integrations_data(session)
+    processed_customer_integrations = process_customer_integrations(customer_integrations_data)
+
+    logger.info(f"Processed customer_integrations: {processed_customer_integrations}")
     return CustomerIntegrationsResponse(
-        available_integrations=customer_integrations,
+        available_integrations=processed_customer_integrations,
         message="Customer integrations successfully retrieved.",
         success=True,
     )
@@ -361,9 +397,10 @@ async def create_integration(
     await validate_integration_auth_keys(customer_integration_create.integration_name, customer_integration_create.integration_auth_keys, session)
     await validate_customer_code(customer_integration_create.customer_code, session)
     await check_existing_customer_integration(customer_integration_create.customer_code, customer_integration_create.integration_name, session)
+    integration_service_id = await get_integration_service_id(customer_integration_create.integration_name, session)
 
     integration_service = await create_integration_service(customer_integration_create.integration_name, settings=customer_integration_create.integration_config, session=session)
-    customer_integrations = await create_customer_integrations(customer_integration_create.customer_code, customer_integration_create.customer_name, session)
+    customer_integrations = await create_customer_integrations(customer_integration_create.customer_code, customer_integration_create.customer_name, integration_service_id=integration_service_id, session=session)
     await create_integration_subscription(customer_integrations, integration_service, integration_auth_keys=customer_integration_create.integration_auth_keys, session=session)
 
     # Office365 specific integration handling
