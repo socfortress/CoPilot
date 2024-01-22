@@ -27,6 +27,7 @@
 								v-for="integration of integrationsList"
 								:key="integration.id"
 								:integration="integration"
+								@deployed="refreshList()"
 								embedded
 								class="item-appear item-appear-bottom item-appear-005 mb-2"
 							/>
