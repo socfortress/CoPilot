@@ -14,6 +14,10 @@
 						:key="integration.id"
 						:integration="integration"
 						:embedded="embedded"
+						:selectable="isSelectable(integration)"
+						:disabled="isDisabled(integration)"
+						:checked="selectedIntegration?.id === integration.id"
+						@click="setItem(integration)"
 						class="item-appear item-appear-bottom item-appear-005 mb-2"
 					/>
 				</template>
@@ -32,10 +36,14 @@ import Api from "@/api"
 import IntegrationItem from "./IntegrationItem.vue"
 import type { AvailableIntegration } from "@/types/integrations"
 
-const { embedded, hideTotals } = defineProps<{
+const { embedded, hideTotals, selectable, disabledIdsList } = defineProps<{
 	embedded?: boolean
 	hideTotals?: boolean
+	selectable?: boolean
+	disabledIdsList?: (string | number)[]
 }>()
+
+const selectedIntegration = defineModel<AvailableIntegration | null>("selected", { default: null })
 
 const message = useMessage()
 const loadingIntegrations = ref(false)
@@ -44,6 +52,20 @@ const integrationsList = ref<AvailableIntegration[]>([])
 const totalIntegrations = computed<number>(() => {
 	return integrationsList.value.length || 0
 })
+
+function isDisabled(integration: AvailableIntegration) {
+	return (disabledIdsList || []).includes(integration.id)
+}
+
+function isSelectable(integration: AvailableIntegration) {
+	return selectable && !isDisabled(integration)
+}
+
+function setItem(integration: AvailableIntegration) {
+	if (!isDisabled(integration)) {
+		selectedIntegration.value = selectedIntegration.value?.id === integration.id ? null : integration
+	}
+}
 
 function getAvailableIntegrations() {
 	loadingIntegrations.value = true

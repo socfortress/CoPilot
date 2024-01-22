@@ -2,11 +2,17 @@
 	<div class="customer-integrations">
 		<transition name="form-fade" mode="out-in">
 			<div v-if="showForm">
-				<CustomerIntegrationForm :customerCode="customerCode" @close="showForm = false" />
+				<CustomerIntegrationForm
+					:customerCode="customerCode"
+					:customerName="customerName"
+					:disabledIdsList="disabledIntegrationsIds"
+					@submitted="refreshList()"
+					@close="closeForm()"
+				/>
 			</div>
 			<div v-else>
 				<div class="flex items-center justify-between gap-4 px-7 pt-2">
-					<n-button size="small" @click="showForm = true" type="primary">
+					<n-button size="small" @click="openForm()" type="primary">
 						<template #icon>
 							<Icon :name="AddIcon" :size="14"></Icon>
 						</template>
@@ -40,7 +46,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeMount } from "vue"
+import { ref, onBeforeMount, computed } from "vue"
 import { useMessage, NSpin, NEmpty, NButton } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import Api from "@/api"
@@ -50,6 +56,7 @@ import type { CustomerIntegration } from "@/types/integrations"
 
 const { customerCode } = defineProps<{
 	customerCode: string
+	customerName: string
 }>()
 
 const AddIcon = "carbon:add-alt"
@@ -58,6 +65,7 @@ const message = useMessage()
 const showForm = ref(false)
 const loadingIntegrations = ref(false)
 const integrationsList = ref<CustomerIntegration[]>([])
+const disabledIntegrationsIds = computed(() => integrationsList.value.map(o => o.id))
 
 function getCustomerIntegrations() {
 	loadingIntegrations.value = true
@@ -77,6 +85,19 @@ function getCustomerIntegrations() {
 		.finally(() => {
 			loadingIntegrations.value = false
 		})
+}
+
+function openForm() {
+	showForm.value = true
+}
+
+function closeForm() {
+	showForm.value = false
+}
+
+function refreshList() {
+	closeForm()
+	getCustomerIntegrations()
 }
 
 onBeforeMount(() => {
