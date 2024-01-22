@@ -48,5 +48,12 @@ export default {
 			}
 		}
 		return HttpClient.post<FlaskBaseResponse>(`/integrations/create_integration`, payload)
+	},
+
+	office365Provision(customerCode: string, integrationName: string) {
+		return HttpClient.post<FlaskBaseResponse>(`/office365/provision`, {
+			customer_code: customerCode,
+			integration_name: integrationName
+		})
 	}
 }

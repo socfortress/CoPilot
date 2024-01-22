@@ -12,40 +12,33 @@
 					</Badge>
 				</div>
 			</div>
-			<!--
-				<div class="main-box flex items-center gap-3">
-					<div class="content flex flex-col gap-1 grow">
-						<div class="title">{{ integration.integration_name }}</div>
-						<div class="description">
-							{{ integration.description }}
-						</div>
-					</div>
+			<div class="main-box flex items-center gap-3">
+				<div class="content flex flex-col gap-1 grow">
+					<div class="title">{{ serviceName }}</div>
 				</div>
-
-				<div class="badges-box flex flex-wrap items-center gap-3 mt-2">
-					<Badge v-for="authKey of integration.auth_keys" :key="authKey.auth_key_name">
-						<template #value>{{ authKey.auth_key_name }}</template>
-					</Badge>
+				<div class="actions-box">
+					<n-button v-if="!isOffice365" type="success" secondary>
+						<template #icon><Icon :name="DeployIcon"></Icon></template>
+						Deploy Integration
+					</n-button>
 				</div>
-			-->
+			</div>
 		</div>
 
 		<n-modal
 			v-model:show="showDetails"
 			preset="card"
 			:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(400px, 90vh)', overflow: 'hidden' }"
-			:title="'integration.integration_name'"
+			:title="serviceName"
 			:bordered="false"
 			segmented
 		>
-			<!--
-				<vue-markdown-it
-				:source="integration.integration_details"
-				preset="commonmark"
-				:plugins="[markdownItHighlightjs]"
-				class="integration-details scrollbar-styled"
-				/>
-			-->
+			<div class="grid gap-2 grid-auto-flow-200">
+				<KVCard v-for="ak of authKeys" :key="ak.key">
+					<template #key>{{ ak.key }}</template>
+					<template #value>{{ ak.value || "-" }}</template>
+				</KVCard>
+			</div>
 		</n-modal>
 	</div>
 </template>
@@ -53,12 +46,11 @@
 <script setup lang="ts">
 import Icon from "@/components/common/Icon.vue"
 import Badge from "@/components/common/Badge.vue"
-import { ref, toRefs } from "vue"
-import { NModal } from "naive-ui"
+import { computed, ref, toRefs } from "vue"
+import { NModal, NButton } from "naive-ui"
 import type { CustomerIntegration } from "@/types/integrations"
-import markdownItHighlightjs from "markdown-it-highlightjs"
-import "@/assets/scss/hljs.scss"
-import { VueMarkdownIt } from "@f3ve/vue-markdown-it"
+import KVCard from "@/components/common/KVCard.vue"
+import _uniqBy from "lodash/uniqBy"
 
 const props = defineProps<{
 	integration: CustomerIntegration
@@ -67,8 +59,31 @@ const props = defineProps<{
 const { integration, embedded } = toRefs(props)
 
 const DetailsIcon = "carbon:settings-adjust"
+const DeployIcon = "carbon:deploy"
 
 const showDetails = ref(false)
+const serviceName = computed(() => {
+	if (!integration.value.integration_subscriptions.length) return ""
+
+	return integration.value.integration_subscriptions[0].integration_service.service_name
+})
+
+const authKeys = computed(() => {
+	const keys: { key: string; value: string }[] = []
+
+	for (const subscriptions of integration.value.integration_subscriptions) {
+		for (const ak of subscriptions.integration_auth_keys) {
+			keys.push({
+				key: ak.auth_key_name,
+				value: ak.auth_value
+			})
+		}
+	}
+
+	return _uniqBy(keys, "key")
+})
+
+const isOffice365 = computed(() => serviceName.value === "Office365")
 </script>
 
 <style lang="scss" scoped>
@@ -91,11 +106,6 @@ const showDetails = ref(false)
 	.main-box {
 		.content {
 			word-break: break-word;
-
-			.description {
-				color: var(--fg-secondary-color);
-				font-size: 13px;
-			}
 		}
 	}
 
@@ -105,14 +115,6 @@ const showDetails = ref(false)
 
 	&:hover {
 		box-shadow: 0px 0px 0px 1px inset var(--primary-color);
-	}
-}
-
-.integration-details {
-	:deep() {
-		& > * {
-			margin-bottom: 15px;
-		}
 	}
 }
 </style>
