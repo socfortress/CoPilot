@@ -124,7 +124,10 @@
 						/>
 					</n-tab-pane>
 					<n-tab-pane name="Integrations" tab="Integrations" display-directive="show:lazy">
-						<CustomerIntegrations :customerCode="customer.customer_code" />
+						<CustomerIntegrations
+							:customerCode="customer.customer_code"
+							:customerName="customer.customer_name"
+						/>
 					</n-tab-pane>
 					<template #suffix>
 						<div class="pr-8 hover:text-primary-color cursor-pointer" @click="selectedTabsGroup = 'agents'">
