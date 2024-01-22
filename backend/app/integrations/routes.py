@@ -135,14 +135,15 @@ async def create_integration_service(integration_name: str, settings: CreateInte
     await session.flush()
     return integration_service
 
-async def create_customer_integrations(customer_code: str, customer_name: str, integration_service_id: int, session: AsyncSession) -> CustomerIntegrations:
+async def create_customer_integrations(customer_code: str, customer_name: str, integration_service_id: int, integration_service_name: str, session: AsyncSession) -> CustomerIntegrations:
     """
     Create CustomerIntegrations instance.
     """
     customer_integrations = CustomerIntegrations(
         customer_code=customer_code,
         customer_name=customer_name,
-        integration_service_id=integration_service_id
+        integration_service_id=integration_service_id,
+        integration_service_name=integration_service_name
     )
     session.add(customer_integrations)
     await session.flush()
@@ -273,6 +274,17 @@ async def get_integration_service_id(integration_name: str, session: AsyncSessio
         raise HTTPException(status_code=404, detail=f"Integration service {integration_name} not found.")
     return integration_service.id
 
+async def get_integration_service_name(integration_name: str, session: AsyncSession) -> str:
+    """
+    Retrieves the AvailableIntegrations ID for a given integration name.
+    """
+    stmt = select(AvailableIntegrations).where(AvailableIntegrations.integration_name == integration_name)
+    result = await session.execute(stmt)
+    integration_service = result.scalars().first()
+    if integration_service is None:
+        raise HTTPException(status_code=404, detail=f"Integration service {integration_name} not found.")
+    return integration_service.integration_name
+
 async def fetch_customer_integrations_data(session: AsyncSession):
     """
     Fetches customer integrations data from the database.
@@ -301,7 +313,8 @@ def process_customer_integrations(customer_integrations_data):
             customer_code=ci.customer_code,
             customer_name=ci.customer_name,
             integration_subscriptions=ci.integration_subscriptions,
-            integration_service_id=first_service_id
+            integration_service_id=first_service_id,
+            integration_service_name=ci.integration_subscriptions[0].integration_service.service_name if ci.integration_subscriptions else None
         )
         processed_customer_integrations.append(customer_integration_obj)
     return processed_customer_integrations
@@ -398,9 +411,10 @@ async def create_integration(
     await validate_customer_code(customer_integration_create.customer_code, session)
     await check_existing_customer_integration(customer_integration_create.customer_code, customer_integration_create.integration_name, session)
     integration_service_id = await get_integration_service_id(customer_integration_create.integration_name, session)
+    integration_service_name = await get_integration_service_name(customer_integration_create.integration_name, session)
 
     integration_service = await create_integration_service(customer_integration_create.integration_name, settings=customer_integration_create.integration_config, session=session)
-    customer_integrations = await create_customer_integrations(customer_integration_create.customer_code, customer_integration_create.customer_name, integration_service_id=integration_service_id, session=session)
+    customer_integrations = await create_customer_integrations(customer_integration_create.customer_code, customer_integration_create.customer_name, integration_service_id=integration_service_id, integration_service_name=integration_service_name, session=session)
     await create_integration_subscription(customer_integrations, integration_service, integration_auth_keys=customer_integration_create.integration_auth_keys, session=session)
 
     # Office365 specific integration handling

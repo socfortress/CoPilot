@@ -26,6 +26,7 @@ class CustomerIntegrations(SQLModel, table=True):
     customer_code: str = Field(max_length=50, nullable=False)
     customer_name: str = Field(max_length=255, nullable=False)
     integration_service_id: Optional[int] = Field(default=None, nullable=False)
+    integration_service_name: str = Field(max_length=255, nullable=False)
     # Relationships
     integration_subscriptions: List["IntegrationSubscription"] = Relationship(back_populates="customer_integrations")
 

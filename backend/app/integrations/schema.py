@@ -154,6 +154,11 @@ class CustomerIntegrations(BaseModel):
         description="The integration service id.",
         examples=[1],
     )
+    integration_service_name: Optional[str] = Field(
+        ...,
+        description="The integration service name.",
+        examples=["Mimecast"],
+    )
 
 class CustomerIntegrationsResponse(BaseModel):
     available_integrations: List[CustomerIntegrations]
