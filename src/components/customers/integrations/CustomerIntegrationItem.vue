@@ -23,6 +23,7 @@
 							:loading="loadingOffice365Provision"
 							@click="office365Provision()"
 							type="success"
+							size="small"
 							secondary
 						>
 							<template #icon><Icon :name="DeployIcon"></Icon></template>
@@ -146,6 +147,10 @@ function office365Provision() {
 	.main-box {
 		.content {
 			word-break: break-word;
+		}
+
+		.actions-box {
+			min-height: 30px;
 		}
 	}
 
