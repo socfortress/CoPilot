@@ -86,7 +86,9 @@ async def invoke_mimecast_route(mimecast_request: MimecastRequest, session: Asyn
 
     auth_keys = MimecastAuthKeys(**mimecast_auth_keys)
 
-    return await invoke_mimecast(mimecast_request, auth_keys, session)
+    return await invoke_mimecast(mimecast_request, auth_keys)
+
+
 
 
 

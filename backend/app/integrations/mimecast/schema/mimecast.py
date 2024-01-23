@@ -100,3 +100,8 @@ class MimecastAPIEndpointResponse(BaseModel):
     data: APIEndpointData
     success: bool
     message: str
+
+
+class MimecastScheduledResponse(BaseModel):
+    success: bool
+    message: str

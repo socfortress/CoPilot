@@ -288,7 +288,7 @@ async def delete_log_directory(log_file_path: str):
     except OSError as e:
         raise HTTPException(status_code=400, detail=f"Error: {e.strerror}. Directory: {log_file_path}")
 
-async def invoke_mimecast(mimecast_request: MimecastRequest, auth_keys: MimecastAuthKeys, session: AsyncSession) -> MimecastResponse:
+async def invoke_mimecast(mimecast_request: MimecastRequest, auth_keys: MimecastAuthKeys) -> MimecastResponse:
     """
     Invokes the Mimecast integration.
     """

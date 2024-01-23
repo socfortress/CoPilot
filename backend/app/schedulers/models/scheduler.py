@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional
-
+from pydantic import BaseModel
 from sqlmodel import Field
 from sqlmodel import SQLModel
 
@@ -12,3 +12,9 @@ class JobMetadata(SQLModel, table=True):
     last_success: Optional[datetime] = None
     time_interval: int  # The frequency of the job in minutes
     enabled: bool  # Indicates if the job is active or not
+
+
+class CreateSchedulerRequest(BaseModel):
+    function_name: str
+    job_id: str
+    time_interval: int
