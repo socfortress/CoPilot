@@ -8,6 +8,7 @@ import hashlib
 import hashlib
 import io
 from zipfile import ZipFile
+import shutil
 import hmac
 import requests
 import time
@@ -16,6 +17,8 @@ import aiofiles
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException
+from app.integrations.utils.event_shipper import event_shipper
+from app.integrations.utils.schema import EventShipperPayload
 import uuid
 
 from app.auth.utils import AuthHandler
@@ -210,14 +213,80 @@ async def write_log_file(filename: str, resp_body):
         async with aiofiles.open(filename, "w") as f:
             await f.write(resp_body)
 
-
-async def process_log_file(filename: str, filename2: str, log_file_path: str):
-    file_creation_time = time.ctime(
-        os.path.getctime(os.path.join(log_file_path, filename, filename2)))
+async def process_log_file(filename: str, filename2: str, log_file_path: str, customer_code: str):
+    """
+    Process a log file by reading its contents and shipping events.
+    """
+    log_file_full_path = build_log_file_path(log_file_path, filename, filename2)
+    file_creation_time = get_file_creation_time(log_file_full_path)
     logger.info(f"File creation time: {file_creation_time} and filename: {filename2}")
-    return None
+
+    await read_and_ship_log_file(log_file_full_path, customer_code)
+    await safely_delete_file(log_file_full_path)
 
 
+def build_log_file_path(log_file_path: str, filename: str, filename2: str) -> str:
+    """
+    Constructs the full path for a log file.
+    """
+    return os.path.join(log_file_path, filename, filename2)
+
+
+def get_file_creation_time(file_path: str) -> str:
+    """
+    Returns the creation time of a file.
+    """
+    return time.ctime(os.path.getctime(file_path))
+
+
+async def read_and_ship_log_file(file_path: str, customer_code: str):
+    """
+    Reads a log file line by line, converts each line to JSON, and ships the event.
+    """
+    with open(file_path, 'r', encoding='utf-8') as file:
+        for line in file:
+            log_entry = convert_to_json(line)
+            message = EventShipperPayload(
+                customer_code=customer_code,
+                integration="mimecast",
+                version="1.0",
+                **log_entry,
+            )
+            await event_shipper(message)
+
+
+async def safely_delete_file(file_path: str):
+    """
+    Attempts to delete a file and logs the outcome.
+    """
+    try:
+        os.remove(file_path)
+        logger.info(f"Successfully deleted the file: {file_path}")
+    except OSError as e:
+        logger.error(f"Error: {e.strerror}. File: {file_path}")
+
+
+def convert_to_json(log_line: str) -> dict:
+    """
+    Converts a log line to a JSON object.
+    """
+    log_dict = {}
+    for pair in log_line.split('|'):
+        if '=' in pair:
+            key, value = pair.split('=', 1)
+            log_dict[key.strip()] = value.strip()
+    return log_dict
+
+
+async def delete_log_directory(log_file_path: str):
+    """
+    Deletes the log directory for the given customer.
+    """
+    try:
+        shutil.rmtree(log_file_path)
+        logger.info(f"Successfully deleted the directory: {log_file_path}")
+    except OSError as e:
+        raise HTTPException(status_code=400, detail=f"Error: {e.strerror}. Directory: {log_file_path}")
 
 async def invoke_mimecast(mimecast_request: MimecastRequest, auth_keys: MimecastAuthKeys, session: AsyncSession) -> MimecastResponse:
     """
@@ -235,10 +304,12 @@ async def invoke_mimecast(mimecast_request: MimecastRequest, auth_keys: Mimecast
 
     await process_response(response, checkpoint_filename, log_file_path)
     for filename in os.listdir(log_file_path):
-        # This will give me directories, I need to go down one more level
         if os.path.isdir(os.path.join(log_file_path, filename)):
             for filename2 in os.listdir(os.path.join(log_file_path, filename)):
-                await process_log_file(filename, filename2, log_file_path)
+                await process_log_file(filename, filename2, log_file_path, customer_code=mimecast_request.customer_code)
+            logger.info(f"Log file path: {log_file_path}")
         else:
             await process_log_file(filename, filename2, log_file_path)
-    return None
+
+    await delete_log_directory(log_file_path)
+    return MimecastResponse(success=True, message="Successfully invoked Mimecast integration.")

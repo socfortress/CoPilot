@@ -13,7 +13,7 @@ async def get_gelf_logger():
         logger.error(f"Failed to initialize GelfLogger: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to initialize GelfLogger: {e}")
 
-async def event_shipper_test(message: EventShipperPayload) -> EventShipperPayloadResponse:
+async def event_shipper(message: EventShipperPayload) -> EventShipperPayloadResponse:
     """
     Test the log shipper.
     """
