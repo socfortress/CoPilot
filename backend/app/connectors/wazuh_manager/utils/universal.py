@@ -121,6 +121,16 @@ async def send_get_request(endpoint: str, params: Optional[Dict[str, Any]] = Non
         logger.error("No Wazuh Manager connector found in the database")
         return None
     try:
+        # if params is {"raw": True} then we want to return the raw response
+        if params == {"raw": True}:
+            response = requests.get(
+                f"{attributes['connector_url']}/{endpoint}",
+                headers=wazuh_manager_client,
+                params=params,
+                verify=False,
+            )
+            response.raise_for_status()
+            return {"data": response.text, "success": True, "message": "Successfully retrieved data"}
         response = requests.get(
             f"{attributes['connector_url']}/{endpoint}",
             headers=wazuh_manager_client,
@@ -172,6 +182,7 @@ async def send_put_request(
     data: Optional[Dict[str, Any]],
     params: Optional[Dict[str, str]] = None,
     xml_data: Optional[bool] = False,
+    binary_data: Optional[bool] = False,
     connector_name: str = "Wazuh-Manager",
 ) -> Dict[str, Any]:
     """
@@ -197,7 +208,10 @@ async def send_put_request(
     # Add the `Content-Type` header to the request if the data is XML
     if xml_data:
         wazuh_manager_client["Content-Type"] = "application/xml"
+    if binary_data:
+        wazuh_manager_client["Content-Type"] = "application/octet-stream"
     try:
+        logger.debug(f"Sending PUT request to {endpoint} with data: {data}")
         response = requests.put(
             f"{attributes['connector_url']}/{endpoint}",
             headers=wazuh_manager_client,

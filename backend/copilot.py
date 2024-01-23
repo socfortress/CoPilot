@@ -44,6 +44,8 @@ from app.routers import wazuh_indexer
 from app.routers import wazuh_manager
 from app.routers import log_shipper_test
 from app.routers import integrations
+from app.routers import mimecast
+from app.routers import office365
 from app.schedulers.scheduler import init_scheduler
 
 auth_handler = AuthHandler()
@@ -100,7 +102,8 @@ app.include_router(alert_creation.router)
 app.include_router(alert_creation_settings.router)
 app.include_router(log_shipper_test.router)
 app.include_router(integrations.router)
-
+app.include_router(office365.router)
+app.include_router(mimecast.router)
 
 @app.on_event("startup")
 async def init_db():

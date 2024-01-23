@@ -46,8 +46,21 @@ class WazuhDashboard(Enum):
 
 
 class Office365Dashboard(Enum):
-    DASHBOARD_1 = ("Office365", "dashboard1.json")
-    DASHBOARD_2 = ("Office365", "dashboard2.json")
+    ACTIVE_DIRECTORY = ("Office365", "active_directory.json")
+    APPLICATIONS = ("Office365", "applications.json")
+    COMPLIANCE_CENTER = ("Office365", "compliance_center.json")
+    DEFENDER_FOR_IDENTITIY = ("Office365", "defender_for_identity.json")
+    DLP = ("Office365", "dlp.json")
+    ENDPOINT = ("Office365", "endpoint.json")
+    EXCHANGE = ("Office365", "exchange.json")
+    FORMS = ("Office365", "forms.json")
+    MITRE = ("Office365", "mitre.json")
+    ONEDRIVE = ("Office365", "onedrive.json")
+    POWERBI = ("Office365", "powerbi.json")
+    SHAREPOINT = ("Office365", "sharepoint.json")
+    SUMMARY = ("Office365", "summary.json")
+    TEAMS = ("Office365", "teams.json")
+    THREAT_INTELLIGENCE = ("Office365", "threat_intelligence.json")
 
 
 class DashboardProvisionRequest(BaseModel):

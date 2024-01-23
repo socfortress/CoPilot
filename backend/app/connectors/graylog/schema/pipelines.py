@@ -56,3 +56,15 @@ class GraylogPipelinesResponseWithRuleID(BaseModel):
     message: str
     pipelines: List[PipelineWithRuleID]
     success: bool
+
+
+# Creation of Pipelines
+class CreatePipelineRule(BaseModel):
+    title: str
+    description: str
+    source: str
+
+class CreatePipeline(BaseModel):
+    title: str
+    description: str
+    source: str

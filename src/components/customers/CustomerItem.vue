@@ -104,7 +104,7 @@
 			segmented
 		>
 			<Transition :name="`slide-tabs-${selectedTabsGroup === 'customer' ? 'left' : 'right'}`">
-				<n-tabs type="line" animated :tabs-padding="24" v-if="selectedTabsGroup === 'customer'">
+				<n-tabs type="line" animated :tabs-padding="24" v-if="selectedTabsGroup === 'customer'" class="h-full">
 					<n-tab-pane name="Info" tab="Info" display-directive="show:lazy">
 						<CustomerInfo
 							:customer="customerInfo"
@@ -121,6 +121,12 @@
 							:customerName="customer.customer_name"
 							@delete="customerMeta = null"
 							@submitted="customerMeta = $event"
+						/>
+					</n-tab-pane>
+					<n-tab-pane name="Integrations" tab="Integrations" display-directive="show:lazy">
+						<CustomerIntegrations
+							:customerCode="customer.customer_code"
+							:customerName="customer.customer_name"
 						/>
 					</n-tab-pane>
 					<template #suffix>
@@ -140,12 +146,16 @@
 					</template>
 					<n-tab-pane name="Agents" tab="Agents" display-directive="show:lazy">
 						<n-scrollbar style="max-height: 470px" trigger="none">
-							<CustomerAgents :customer="customerInfo" v-if="customerInfo" />
+							<div class="p-6 pt-2">
+								<CustomerAgents :customer="customerInfo" v-if="customerInfo" />
+							</div>
 						</n-scrollbar>
 					</n-tab-pane>
 					<n-tab-pane name="Healthcheck Wazuh" tab="Healthcheck Wazuh" display-directive="show:lazy">
 						<n-scrollbar style="max-height: 470px" trigger="none">
-							<CustomerHealthcheckList source="wazuh" :customerCode="customer.customer_code" />
+							<div class="p-6 pt-2">
+								<CustomerHealthcheckList source="wazuh" :customerCode="customer.customer_code" />
+							</div>
 						</n-scrollbar>
 					</n-tab-pane>
 					<n-tab-pane
@@ -154,7 +164,9 @@
 						display-directive="show:lazy"
 					>
 						<n-scrollbar style="max-height: 470px" trigger="none">
-							<CustomerHealthcheckList source="velociraptor" :customerCode="customer.customer_code" />
+							<div class="p-6 pt-2">
+								<CustomerHealthcheckList source="velociraptor" :customerCode="customer.customer_code" />
+							</div>
 						</n-scrollbar>
 					</n-tab-pane>
 				</n-tabs>
@@ -170,9 +182,10 @@ import Icon from "@/components/common/Icon.vue"
 import Badge from "@/components/common/Badge.vue"
 import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
 import CustomerInfo from "./CustomerInfo.vue"
-import CustomerProvision from "./CustomerProvision.vue"
 import CustomerAgents from "./CustomerAgents.vue"
-import CustomerHealthcheckList from "./CustomerHealthcheckList.vue"
+import CustomerProvision from "./provision/CustomerProvision.vue"
+import CustomerHealthcheckList from "./healthcheck/CustomerHealthcheckList.vue"
+import CustomerIntegrations from "./integrations/CustomerIntegrations.vue"
 import Api from "@/api"
 import { NAvatar, useMessage, NPopover, NModal, NTabs, NTabPane, NSpin, NScrollbar } from "naive-ui"
 import type { Customer, CustomerMeta } from "@/types/customers.d"
@@ -300,7 +313,8 @@ onBeforeMount(() => {
 		}
 	}
 
-	&.highlight {
+	&.highlight,
+	&:hover {
 		box-shadow: 0px 0px 0px 1px inset var(--primary-color);
 	}
 }

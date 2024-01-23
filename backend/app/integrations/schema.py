@@ -1,24 +1,24 @@
 from pydantic import BaseModel
 from pydantic import Field
 from app.integrations.models.customer_integration_settings import AvailableIntegrations
-from typing import List
+from typing import List, Optional, Union
+from typing import Dict
+from typing import Type
+
+class AuthKey(BaseModel):
+    auth_key_name: str
+
+class IntegrationWithAuthKeys(BaseModel):
+    id: int
+    integration_name: str
+    description: str
+    integration_details: str
+    auth_keys: List[AuthKey]
 
 class AvailableIntegrationsResponse(BaseModel):
-    """
-    The response model for the /integrations/available_integrations endpoint.
-    """
-    available_integrations: list[AvailableIntegrations] = Field(
-        ...,
-        description="The available integrations.",
-    )
-    message: str = Field(
-        ...,
-        description="The message.",
-    )
-    success: bool = Field(
-        ...,
-        description="The success status.",
-    )
+    available_integrations: List[IntegrationWithAuthKeys]
+    message: str
+    success: bool
 
 class CreateIntegrationService(BaseModel):
     auth_type: str = Field(
@@ -37,15 +37,15 @@ class CreateIntegrationService(BaseModel):
         examples=["https://api.mimecast.com"],
     )
 
-class CreateIntegrationMetadata(BaseModel):
-    metadata_key: str = Field(
+class CreateIntegrationAuthKeys(BaseModel):
+    auth_key_name: str = Field(
         ...,
-        description="The metadata key.",
+        description="The auth key.",
         examples=["username"],
     )
-    metadata_value: str = Field(
+    auth_value: str = Field(
         ...,
-        description="The metadata value.",
+        description="The auth value.",
         examples=["test-user"],
     )
 
@@ -69,9 +69,13 @@ class CustomerIntegrationCreate(BaseModel):
         ...,
         description="The integration service.",
     )
-    integration_metadata: CreateIntegrationMetadata = Field(
+    # integration_auth_key: CreateIntegrationAuthKeys = Field(
+    #     ...,
+    #     description="The integration metadata.",
+    # )
+    integration_auth_keys: List[CreateIntegrationAuthKeys] = Field(
         ...,
-        description="The integration metadata.",
+        description="The integration auth keys.",
     )
 
 class CustomerIntegrationCreateResponse(BaseModel):
@@ -122,10 +126,10 @@ class CustomerIntegrationDeleteResponse(BaseModel):
 #     message: str
 #     success: bool
 
-class IntegrationMetadata(BaseModel):
+class IntegrationAuthKeys(BaseModel):
     id: int
-    metadata_value: str
-    metadata_key: str
+    auth_key_name: str
+    auth_value: str
     subscription_id: int
 
 class IntegrationService(BaseModel):
@@ -138,13 +142,28 @@ class IntegrationSubscription(BaseModel):
     customer_id: int
     integration_service_id: int
     integration_service: IntegrationService
-    integration_metadata: List[IntegrationMetadata]  # Changed from IntegrationConfig
+    integration_auth_keys: List[IntegrationAuthKeys]  # Changed from IntegrationConfig
 
 class CustomerIntegrations(BaseModel):
     customer_code: str
     id: int
     customer_name: str
     integration_subscriptions: List[IntegrationSubscription]
+    integration_service_id: Optional[int] = Field(
+        None,
+        description="The integration service id.",
+        examples=[1],
+    )
+    integration_service_name: Optional[str] = Field(
+        ...,
+        description="The integration service name.",
+        examples=["Mimecast"],
+    )
+    deployed: Optional[bool] = Field(
+        None,
+        description="The deployment status.",
+        examples=[True],
+    )
 
 class CustomerIntegrationsResponse(BaseModel):
     available_integrations: List[CustomerIntegrations]
@@ -161,4 +180,15 @@ class DeleteCustomerIntegration(BaseModel):
         ...,
         description="The integration name.",
         examples=["Mimecast"],
+    )
+
+class UpdateCustomerIntegration(BaseModel):
+    integration_name: str = Field(
+        ...,
+        description="The integration name.",
+        examples=["Mimecast"],
+    )
+    integration_auth_keys: List[CreateIntegrationAuthKeys] = Field(
+        ...,
+        description="The integration auth keys.",
     )

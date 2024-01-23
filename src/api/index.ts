@@ -12,6 +12,7 @@ import askSocfortress from "./askSocfortress"
 import customers from "./customers"
 import logs from "./logs"
 import flow from "./flow"
+import integrations from "./integrations"
 
 export default {
 	agents,
@@ -27,5 +28,6 @@ export default {
 	askSocfortress,
 	customers,
 	logs,
-	flow
+	flow,
+	integrations
 }

@@ -36,12 +36,16 @@ import SignUp from "./SignUp.vue"
 import Logo from "@/layouts/common/Logo.vue"
 import { NButton } from "naive-ui"
 import { ref, onBeforeMount, computed } from "vue"
+import { useRouter } from "vue-router"
 
 export type FormType = "signin" | "signup" | "forgotpassword"
 
 const props = defineProps<{
 	type?: FormType
+	useOnlyRouter?: boolean
 }>()
+
+const router = useRouter()
 
 const typeRef = ref<FormType>("signin")
 
@@ -55,14 +59,28 @@ const title = computed<string>(() =>
 )
 
 function gotoSignIn() {
-	typeRef.value = "signin"
+	if (!props.useOnlyRouter) {
+		typeRef.value = "signin"
+	}
+	router.replace({ name: "Login" })
 }
 function gotoSignUp() {
-	typeRef.value = "signup"
+	if (!props.useOnlyRouter) {
+		typeRef.value = "signup"
+	}
+	router.replace({ name: "Register" })
 }
 function gotoForgotPassword() {
-	typeRef.value = "forgotpassword"
+	if (!props.useOnlyRouter) {
+		typeRef.value = "forgotpassword"
+	}
 }
+
+onBeforeMount(() => {
+	if (props.type) {
+		typeRef.value = props.type
+	}
+})
 
 onBeforeMount(() => {
 	if (props.type) {

@@ -1,6 +1,6 @@
 <template>
 	<n-spin :show="loading">
-		<div class="customer-agents flex flex-col gap-2 p-6 pt-4">
+		<div class="customer-agents flex flex-col gap-2">
 			<AgentCard
 				v-for="agent in list"
 				:key="agent.agent_id"
