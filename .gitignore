@@ -46,3 +46,4 @@ site/
 backend/file-store/api.config.yaml
 unplugin.components.d.ts
 package-lock.json
+*.checkpoint

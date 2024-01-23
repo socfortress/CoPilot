@@ -10,6 +10,7 @@ import io
 from zipfile import ZipFile
 import hmac
 import requests
+import time
 import base64
 import aiofiles
 from loguru import logger
@@ -210,6 +211,11 @@ async def write_log_file(filename: str, resp_body):
             await f.write(resp_body)
 
 
+async def process_log_file(filename: str, filename2: str, log_file_path: str):
+    file_creation_time = time.ctime(
+        os.path.getctime(os.path.join(log_file_path, filename, filename2)))
+    logger.info(f"File creation time: {file_creation_time} and filename: {filename2}")
+    return None
 
 
 
@@ -228,4 +234,11 @@ async def invoke_mimecast(mimecast_request: MimecastRequest, auth_keys: Mimecast
     response = await get_mta_siem_logs(checkpoint_filename, mimecast_base_url.data.data[0].region.api, auth_keys)
 
     await process_response(response, checkpoint_filename, log_file_path)
+    for filename in os.listdir(log_file_path):
+        # This will give me directories, I need to go down one more level
+        if os.path.isdir(os.path.join(log_file_path, filename)):
+            for filename2 in os.listdir(os.path.join(log_file_path, filename)):
+                await process_log_file(filename, filename2, log_file_path)
+        else:
+            await process_log_file(filename, filename2, log_file_path)
     return None
