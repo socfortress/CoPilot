@@ -31,7 +31,7 @@ from app.integrations.models.customer_integration_settings import (
 from app.integrations.models.customer_integration_settings import (
     IntegrationAuthKeys, AvailableIntegrations
 )
-from app.db.universal_models import Customers
+from app.db.universal_models import Customers, CustomersMeta
 from app.integrations.schema import AvailableIntegrationsResponse, CustomerIntegrationCreate, CreateIntegrationService, CreateIntegrationAuthKeys, CustomerIntegrationCreateResponse, CustomerIntegrationsResponse, DeleteCustomerIntegration, CustomerIntegrationDeleteResponse, AuthKey, IntegrationWithAuthKeys, UpdateCustomerIntegration
 from app.integrations.alert_creation_settings.models.alert_creation_settings import AlertCreationSettings
 
@@ -108,6 +108,15 @@ async def validate_customer_code(customer_code: str, session: AsyncSession):
     result = await session.execute(stmt)
     if result.scalars().first() is None:
         raise HTTPException(status_code=400, detail=f"Customer {customer_code} does not exist.")
+
+async def validate_customer_meta(customer_code: str, session: AsyncSession):
+    """
+    Validate if the customer code exists in the customers_meta table.
+    """
+    stmt = select(CustomersMeta).where(CustomersMeta.customer_code == customer_code)
+    result = await session.execute(stmt)
+    if result.scalars().first() is None:
+        raise HTTPException(status_code=400, detail=f"Customer {customer_code} meta does not exist. Please provision the customer before creating an integration.")
 
 async def check_existing_customer_integration(customer_code: str, integration_name: str, session: AsyncSession):
     """
@@ -412,6 +421,7 @@ async def create_integration(
     await validate_integration_name(customer_integration_create.integration_name, session)
     await validate_integration_auth_keys(customer_integration_create.integration_name, customer_integration_create.integration_auth_keys, session)
     await validate_customer_code(customer_integration_create.customer_code, session)
+    await validate_customer_meta(customer_integration_create.customer_code, session)
     await check_existing_customer_integration(customer_integration_create.customer_code, customer_integration_create.integration_name, session)
     integration_service_id = await get_integration_service_id(customer_integration_create.integration_name, session)
     integration_service_name = await get_integration_service_name(customer_integration_create.integration_name, session)
