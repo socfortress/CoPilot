@@ -3,7 +3,13 @@
 		<div class="px-4 py-3 flex flex-col gap-3">
 			<div class="header-box flex justify-between items-center">
 				<div class="id">#{{ integration.id }}</div>
-				<div class="actions">
+				<div class="actions flex gap-3">
+					<Badge v-if="integration.deployed" type="active">
+						<template #iconLeft>
+							<Icon :name="DeployIcon" :size="13"></Icon>
+						</template>
+						<template #value>Deployed</template>
+					</Badge>
 					<Badge type="cursor" @click.stop="showDetails = true">
 						<template #iconLeft>
 							<Icon :name="DetailsIcon" :size="14"></Icon>
@@ -16,28 +22,23 @@
 				<div class="content flex flex-col gap-1 grow">
 					<div class="title">{{ serviceName }}</div>
 				</div>
-				<div class="actions-box">
-					<template v-if="isOffice365">
-						<n-button
-							v-if="!integration.deployed"
-							:loading="loadingOffice365Provision"
-							@click="office365Provision()"
-							type="success"
-							size="small"
-							secondary
-						>
-							<template #icon><Icon :name="DeployIcon"></Icon></template>
-							Deploy Integration
-						</n-button>
-
-						<Badge type="active" v-else>
-							<template #iconLeft>
-								<Icon :name="DeployIcon" :size="13"></Icon>
-							</template>
-							<template #value>Deployed</template>
-						</Badge>
-					</template>
-				</div>
+				<CustomerIntegrationActions
+					class="actions-box"
+					:integration="integration"
+					hideDeleteButton
+					@deployed="emit('deployed')"
+					@deleted="emit('deleted')"
+				/>
+			</div>
+			<div class="footer-box flex justify-between items-center gap-4">
+				<CustomerIntegrationActions
+					class="actions-box"
+					:integration="integration"
+					hideDeleteButton
+					@deployed="emit('deployed')"
+					@deleted="emit('deleted')"
+					:size="'small'"
+				/>
 			</div>
 		</div>
 
@@ -63,11 +64,11 @@
 import Icon from "@/components/common/Icon.vue"
 import Badge from "@/components/common/Badge.vue"
 import { computed, ref, toRefs } from "vue"
-import { NModal, NButton, useMessage } from "naive-ui"
+import { NModal } from "naive-ui"
 import type { CustomerIntegration } from "@/types/integrations"
+import CustomerIntegrationActions from "./CustomerIntegrationActions.vue"
 import KVCard from "@/components/common/KVCard.vue"
 import _uniqBy from "lodash/uniqBy"
-import Api from "@/api"
 
 const props = defineProps<{
 	integration: CustomerIntegration
@@ -77,17 +78,14 @@ const { integration, embedded } = toRefs(props)
 
 const emit = defineEmits<{
 	(e: "deployed"): void
+	(e: "deleted"): void
 }>()
 
-const DetailsIcon = "carbon:settings-adjust"
 const DeployIcon = "carbon:deploy"
+const DetailsIcon = "carbon:settings-adjust"
 
-const loadingOffice365Provision = ref(false)
-const message = useMessage()
 const showDetails = ref(false)
 const serviceName = computed(() => integration.value.integration_service_name)
-const customerCode = computed(() => integration.value.customer_code)
-
 const authKeys = computed(() => {
 	const keys: { key: string; value: string }[] = []
 
@@ -102,29 +100,6 @@ const authKeys = computed(() => {
 
 	return _uniqBy(keys, "key")
 })
-
-const isOffice365 = computed(() => serviceName.value === "Office365")
-
-function office365Provision() {
-	loadingOffice365Provision.value = true
-
-	Api.integrations
-		.office365Provision(customerCode.value, serviceName.value)
-		.then(res => {
-			if (res.data.success) {
-				emit("deployed")
-				message.success(res.data?.message || "Customer integration successfully deployed.")
-			} else {
-				message.warning(res.data?.message || "An error occurred. Please try again later.")
-			}
-		})
-		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-		})
-		.finally(() => {
-			loadingOffice365Provision.value = false
-		})
-}
 </script>
 
 <style lang="scss" scoped>
@@ -148,10 +123,12 @@ function office365Provision() {
 		.content {
 			word-break: break-word;
 		}
+	}
 
-		.actions-box {
-			min-height: 30px;
-		}
+	.footer-box {
+		display: none;
+		font-size: 13px;
+		margin-top: 10px;
 	}
 
 	&.embedded {
@@ -160,6 +137,17 @@ function office365Provision() {
 
 	&:hover {
 		box-shadow: 0px 0px 0px 1px inset var(--primary-color);
+	}
+
+	@container (max-width: 450px) {
+		.main-box {
+			.actions-box {
+				display: none;
+			}
+		}
+		.footer-box {
+			display: flex;
+		}
 	}
 }
 </style>

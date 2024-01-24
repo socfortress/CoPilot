@@ -49,6 +49,11 @@ export default {
 		}
 		return HttpClient.post<FlaskBaseResponse>(`/integrations/create_integration`, payload)
 	},
+	deleteIntegration(customerCode: string, integrationName: string) {
+		return HttpClient.delete<FlaskBaseResponse>(`/integrations/delete_integration`, {
+			data: { customer_code: customerCode, integration_name: integrationName }
+		})
+	},
 
 	office365Provision(customerCode: string, integrationName: string) {
 		return HttpClient.post<FlaskBaseResponse>(`/office365/provision`, {
