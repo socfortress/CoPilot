@@ -61,3 +61,4 @@ class UpdateConnector(BaseModel):
     connector_username: Optional[str]
     connector_password: Optional[str]
     connector_api_key: Optional[str]
+    connector_extra_data: Optional[str]
