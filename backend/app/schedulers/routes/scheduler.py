@@ -5,14 +5,17 @@ from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException
+from sqlalchemy.future import select
+from sqlmodel import select
 from app.schedulers.schema.scheduler import JobsResponse
 from app.schedulers.models.scheduler import JobMetadata, CreateSchedulerRequest
+from app.db.db_session import get_db
 
 
 scheduler_router = APIRouter()
 
 @scheduler_router.get(
-    "/",
+    "",
     response_model=JobsResponse,
     description="Get all jobs",
 )
@@ -87,7 +90,7 @@ async def pause_job(job_id: str):
     "/update/{job_id}",
     description="Update a job",
 )
-async def update_job(job_id: str, time_interval: int):
+async def update_job(job_id: str, time_interval: int, session: AsyncSession = Depends(get_db)):
     """
     Provisions Office365 integration for a customer.
 
@@ -104,6 +107,10 @@ async def update_job(job_id: str, time_interval: int):
     for job in jobs:
         if job.id == job_id:
             job.reschedule(trigger="interval", minutes=time_interval)
+            job_metadata = await session.execute(select(JobMetadata).filter_by(job_id=job_id))
+            job_metadata = job_metadata.scalars().first()
+            job_metadata.time_interval = time_interval
+            await session.commit()
             return {"success": True, "message": "Job updated successfully"}
     return {"success": False, "message": "Job not found"}
 
