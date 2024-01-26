@@ -1,15 +1,6 @@
-import it from "./it"
-import en from "./en"
-import es from "./es"
-import fr from "./fr"
-import de from "./de"
-import jp from "./jp"
-
-export default {
-	en,
-	it,
-	fr,
-	de,
-	es,
-	jp
-}
+export * as it from "./it"
+export * as en from "./en"
+export * as es from "./es"
+export * as fr from "./fr"
+export * as de from "./de"
+export * as jp from "./jp"

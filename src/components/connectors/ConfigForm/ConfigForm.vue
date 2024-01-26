@@ -48,7 +48,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, toRefs } from "vue"
+import { computed, onMounted, ref, toRefs, watch } from "vue"
 import { type Connector, type ConnectorForm, ConnectorFormType } from "@/types/connectors.d"
 import CredentialsType from "./FormTypes/CredentialsType.vue"
 import FileType from "./FormTypes/FileType.vue"
@@ -65,6 +65,7 @@ const { connector } = toRefs(props)
 
 const emit = defineEmits<{
 	(e: "close", value: boolean): void
+	(e: "loading", value: boolean): void
 }>()
 
 const message = useMessage()
@@ -79,6 +80,10 @@ const connectorFormType = computed<ConnectorFormType>(() => getConnectorFormType
 const isConnectorConfigured = computed<boolean>(() => connector.value.connector_configured)
 const formRef = ref<FormInst | null>(null)
 const loading = ref<boolean>(false)
+
+watch(loading, val => {
+	emit("loading", val)
+})
 
 function setUpForm() {
 	connectorForm.value = _pick(connector.value, [

@@ -73,7 +73,7 @@ function getCustomers() {
 		})
 }
 
-function scrollToAlert(id: string) {
+function scrollToItem(id: string) {
 	const element = document.getElementById(`customer-${id}`)
 	const scrollContent = document.querySelector("#main > .n-scrollbar > .n-scrollbar-container") as HTMLElement
 
@@ -95,7 +95,7 @@ watch(loadingCustomers, val => {
 		nextTick(() => {
 			setTimeout(() => {
 				if (highlight.value) {
-					scrollToAlert(highlight.value)
+					scrollToItem(highlight.value)
 				}
 			}, 300)
 		})
@@ -106,7 +106,7 @@ watch(highlight, val => {
 	if (val) {
 		nextTick(() => {
 			setTimeout(() => {
-				scrollToAlert(val)
+				scrollToItem(val)
 			})
 		})
 	}

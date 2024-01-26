@@ -82,7 +82,7 @@ const itemsPaginated = computed(() => {
 	})
 })
 
-function scrollToEvent(id: string) {
+function scrollToItem(id: string) {
 	const element = document.getElementById(`event-${id}`)
 	const scrollContent = document.querySelector("#main > .n-scrollbar > .n-scrollbar-container") as HTMLElement
 
@@ -106,7 +106,7 @@ function getData() {
 				nextTick(() => {
 					setTimeout(() => {
 						if (highlight.value) {
-							scrollToEvent(highlight.value)
+							scrollToItem(highlight.value)
 						}
 					}, 300)
 				})
@@ -126,7 +126,7 @@ watch(highlight, val => {
 	if (val) {
 		nextTick(() => {
 			setTimeout(() => {
-				scrollToEvent(val)
+				scrollToItem(val)
 			})
 		})
 	}

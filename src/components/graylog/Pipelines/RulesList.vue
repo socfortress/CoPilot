@@ -27,7 +27,7 @@ const loading = ref(false)
 const rules = ref<PipelineRule[]>([])
 const scrollContent = ref<(ScrollbarInst & { $el: any }) | null>(null)
 
-function scrollToRule(id: string) {
+function scrollToItem(id: string) {
 	const element = document.getElementById(`rule-${id}`)
 	if (element && scrollContent.value) {
 		const wrap: HTMLElement = scrollContent.value.$el.nextSibling || scrollContent.value.$el.nextElementSibling
@@ -48,7 +48,7 @@ function getRules() {
 				nextTick(() => {
 					setTimeout(() => {
 						if (highlight.value) {
-							scrollToRule(highlight.value)
+							scrollToItem(highlight.value)
 						}
 					}, 300)
 				})
@@ -68,7 +68,7 @@ watch(highlight, val => {
 	if (val) {
 		nextTick(() => {
 			setTimeout(() => {
-				scrollToRule(val)
+				scrollToItem(val)
 			})
 		})
 	}

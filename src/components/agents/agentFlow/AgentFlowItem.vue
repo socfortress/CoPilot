@@ -169,7 +169,7 @@ const { flow, embedded } = defineProps<{ flow: FlowResult; embedded?: boolean }>
 const TimeIcon = "carbon:time"
 const InfoIcon = "carbon:information"
 const DisabledIcon = "carbon:subtract"
-const EnabledIcon = "carbon:checkmark"
+const EnabledIcon = "ri:check-line"
 
 const showDetails = ref(false)
 const dFormats = useSettingsStore().dateFormat

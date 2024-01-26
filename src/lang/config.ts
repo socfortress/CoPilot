@@ -1,4 +1,4 @@
-import locales from "."
+import * as locales from "."
 
 export type MessageSchema = typeof locales.en
 export type Locales = keyof typeof locales
