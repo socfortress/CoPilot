@@ -35,6 +35,78 @@ async def get_all_jobs() -> JobsResponse:
         message="Jobs successfully retrieved."
     )
 
+@scheduler_router.post(
+    "/start/{job_id}",
+    description="Start a job",
+)
+async def start_job(job_id: str):
+    """
+    Provisions Office365 integration for a customer.
+
+    Args:
+        provision_office365_request (ProvisionOffice365Request): The request object containing the necessary information for provisioning.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        ProvisionOffice365Response: The response object containing the result of the provisioning.
+    """
+    scheduler = init_scheduler()
+    jobs = scheduler.get_jobs()
+    logger.info(f"jobs: {jobs}")
+    for job in jobs:
+        if job.id == job_id:
+            job.resume()
+            return {"success": True, "message": "Job started successfully"}
+    return {"success": False, "message": "Job not found"}
+
+@scheduler_router.post(
+    "/pause/{job_id}",
+    description="Pause a job",
+)
+async def pause_job(job_id: str):
+    """
+    Provisions Office365 integration for a customer.
+
+    Args:
+        provision_office365_request (ProvisionOffice365Request): The request object containing the necessary information for provisioning.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        ProvisionOffice365Response: The response object containing the result of the provisioning.
+    """
+    scheduler = init_scheduler()
+    jobs = scheduler.get_jobs()
+    logger.info(f"jobs: {jobs}")
+    for job in jobs:
+        if job.id == job_id:
+            job.pause()
+            return {"success": True, "message": "Job paused successfully"}
+    return {"success": False, "message": "Job not found"}
+
+@scheduler_router.put(
+    "/update/{job_id}",
+    description="Update a job",
+)
+async def update_job(job_id: str, time_interval: int):
+    """
+    Provisions Office365 integration for a customer.
+
+    Args:
+        provision_office365_request (ProvisionOffice365Request): The request object containing the necessary information for provisioning.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        ProvisionOffice365Response: The response object containing the result of the provisioning.
+    """
+    scheduler = init_scheduler()
+    jobs = scheduler.get_jobs()
+    logger.info(f"jobs: {jobs}")
+    for job in jobs:
+        if job.id == job_id:
+            job.reschedule(trigger="interval", minutes=time_interval)
+            return {"success": True, "message": "Job updated successfully"}
+    return {"success": False, "message": "Job not found"}
+
 @scheduler_router.delete(
     "/{job_id}",
     description="Delete a job",
