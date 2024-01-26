@@ -19,7 +19,7 @@ scheduler_router = APIRouter()
     response_model=JobsResponse,
     description="Get all jobs",
 )
-async def get_all_jobs() -> JobsResponse:
+async def get_all_jobs(session: AsyncSession = Depends(get_db)) -> JobsResponse:
     """
     Provisions Office365 integration for a customer.
 
@@ -32,6 +32,14 @@ async def get_all_jobs() -> JobsResponse:
     """
     scheduler = init_scheduler()
     jobs = scheduler.get_jobs()
+    test = scheduler.print_jobs()
+    logger.info(f"test: {test}")
+    apscheduler_jobs = []
+    for job in jobs:
+        job_metadata = await session.execute(select(JobMetadata).filter_by(job_id=job.id))
+        job_metadata = job_metadata.scalars().first()
+        apscheduler_jobs.append({"id": job.id, "name": job.name, "time_interval": job_metadata.time_interval, "enabled": job_metadata.enabled})
+    logger.info(f"apscheduler_jobs: {apscheduler_jobs}")
     return JobsResponse(
         jobs=[{"id": job.id, "name": job.name} for job in jobs],
         success=True,
