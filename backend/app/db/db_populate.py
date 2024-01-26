@@ -41,9 +41,11 @@ def load_connector_data(connector_name, connector_type, accepts_key, description
         "connector_supports": os.getenv(f"{env_prefix}_SUPPORTS", "Not specified."),
         "connector_configured": True,
         "connector_verified": bool(os.getenv(f"{env_prefix}_VERIFIED", False)),
+        "connector_accepts_host_only": accepts_key == "host_only",
         "connector_accepts_api_key": accepts_key == "api_key",
         "connector_accepts_username_password": accepts_key == "username_password",
         "connector_accepts_file": accepts_key == "file",
+        "connector_accepts_extra_data": True if extra_data_key else False,
         "connector_extra_data": os.getenv(extra_data_key) if extra_data_key else None,
     }
 
@@ -68,9 +70,9 @@ def get_connectors_list():
         ("SocfortressThreatIntel", "3", "api_key", "Connection to Socfortress Threat Intel. Make sure you have requested an API key."),
         ("Cortex", "3", "api_key", "Connection to Cortex. Make sure you have created an API key."),
         ("Grafana", "3", "username_password", "Connection to Grafana. Make sure to use the an admin role user."),
-        ("Wazuh Worker Provisioning", "3", "api_key", "Connection to Wazuh Worker Provisioning. Make sure you have deployed the Wazuh Worker Provisioning Application provided by SOCFortress: https://github.com/socfortress/Customer-Provisioning-Worker"),
-        ("Event Shipper", "3", "api_key", "Connection to Graylog GELF Input to receive events from integrations. Make sure you have created a GELF Input in Graylog.", "GELF_INPUT_PORT"),
-        ("Alert Creation Provisioning", "3", "api_key", "Connection to Alert Creation Provisioning. Make sure you have deployed the Alert Creation Provisioning Application provided by SOCFortress: https://github.com/socfortress/Customer-Provisioning-Alert"),
+        ("Wazuh Worker Provisioning", "3", "host_only", "Connection to Wazuh Worker Provisioning. Make sure you have deployed the Wazuh Worker Provisioning Application provided by SOCFortress: https://github.com/socfortress/Customer-Provisioning-Worker"),
+        ("Event Shipper", "3", "host_only", "Connection to Graylog GELF Input to receive events from integrations. Make sure you have created a GELF Input in Graylog.", "GELF_INPUT_PORT"),
+        ("Alert Creation Provisioning", "3", "host_only", "Connection to Alert Creation Provisioning. Make sure you have deployed the Alert Creation Provisioning Application provided by SOCFortress: https://github.com/socfortress/Customer-Provisioning-Alert"),
         # ... Add more connectors as needed ...
     ]
 
