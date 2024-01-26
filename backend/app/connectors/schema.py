@@ -28,9 +28,11 @@ class ConnectorResponse(BaseModel):
     connector_supports: Optional[str]
     connector_configured: bool
     connector_verified: bool
+    connector_accepts_host_only: bool
     connector_accepts_api_key: bool
     connector_accepts_username_password: bool
     connector_accepts_file: bool
+    connector_accepts_extra_data: bool
     connector_extra_data: Optional[str]
     history_logs: Optional[List[ConnectorHistoryResponse]]
 

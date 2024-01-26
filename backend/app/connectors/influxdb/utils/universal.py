@@ -71,7 +71,7 @@ async def create_influxdb_client(connector_name: str) -> InfluxDBClientAsync:
         return InfluxDBClientAsync(
             url=attributes["connector_url"],
             token=attributes["connector_api_key"],
-            org="SOCFORTRESS",
+            org= await get_influxdb_organization(),
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to create Elasticsearch client: {e}")
