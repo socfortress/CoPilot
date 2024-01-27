@@ -69,8 +69,6 @@ import {
 	type FormItemRule
 } from "naive-ui"
 import Api from "@/api"
-import _trim from "lodash/trim"
-import _toNumber from "lodash/toNumber"
 import { useAuthStore } from "@/stores/auth"
 import passwordValidator from "password-validator"
 import Icon from "@/components/common/Icon.vue"

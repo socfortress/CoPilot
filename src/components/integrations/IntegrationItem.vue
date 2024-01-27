@@ -58,6 +58,8 @@ import Badge from "@/components/common/Badge.vue"
 import { ref, toRefs } from "vue"
 import { NModal, NRadio } from "naive-ui"
 import type { AvailableIntegration } from "@/types/integrations"
+
+// TODO: use defineAsyncComponent for markdown !!
 import markdownItHighlightjs from "markdown-it-highlightjs"
 import "@/assets/scss/hljs.scss"
 import { VueMarkdownIt } from "@f3ve/vue-markdown-it"

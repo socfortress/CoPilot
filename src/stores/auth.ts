@@ -107,7 +107,7 @@ export const useAuthStore = defineStore("auth", {
 		userRoleName(state): string {
 			return UserRole[(state.user?.role || 0) as number]
 		},
-		userPic(state): string {
+		userPic(): string {
 			let text = this.userName.slice(0, 2).toUpperCase()
 
 			if (this.userName.indexOf(" ") !== -1) {

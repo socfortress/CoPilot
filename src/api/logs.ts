@@ -1,6 +1,5 @@
 import { type FlaskBaseResponse } from "@/types/flask.d"
 import { HttpClient } from "./httpClient"
-import type { Customer } from "@/types/customers.d"
 import type { Log, LogEventType } from "@/types/logs.d"
 
 export type LogsQueryTimeRange = `${number}${"h" | "d" | "w"}`

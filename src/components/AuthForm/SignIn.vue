@@ -55,9 +55,11 @@ interface ModelType {
 	password: string
 }
 
+/*
 const emit = defineEmits<{
 	(e: "goto-forgot-password"): void
 }>()
+*/
 
 const loading = ref(false)
 const router = useRouter()

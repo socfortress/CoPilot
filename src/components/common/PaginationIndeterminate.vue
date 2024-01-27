@@ -39,7 +39,6 @@
 <script setup lang="ts">
 import { computed, toRefs } from "vue"
 import { NSelect, NInputNumber } from "naive-ui"
-import _uniqBy from "lodash/uniqBy"
 import Icon from "@/components/common/Icon.vue"
 import { watch } from "vue"
 

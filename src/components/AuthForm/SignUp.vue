@@ -153,12 +153,11 @@ import {
 	NButton,
 	NSteps,
 	NStep,
-	NAvatar,
 	NSpin,
 	type FormItemRule
 } from "naive-ui"
 import isEmail from "validator/es/lib/isEmail"
-import ImageCropper, { type ImageCropperResult } from "@/components/common/ImageCropper.vue"
+// import ImageCropper, { type ImageCropperResult } from "@/components/common/ImageCropper.vue"
 import passwordValidator from "password-validator"
 import Api from "@/api"
 import type { RegisterPayload } from "@/types/auth.d"
@@ -179,8 +178,8 @@ interface ModelType {
 
 const ArrowRightIcon = "carbon:arrow-right"
 const ArrowLeftIcon = "carbon:arrow-left"
-const ImageIcon = "carbon:image"
-const RemoveImageIcon = "carbon:no-image"
+// const ImageIcon = "carbon:image"
+// const RemoveImageIcon = "carbon:no-image"
 const UserAddIcon = "carbon:user-admin"
 
 const emit = defineEmits<{
@@ -344,9 +343,10 @@ function signUp(e: Event) {
 		}
 	})
 }
-
+/*
 function setCroppedImage(result: ImageCropperResult) {
 	const canvas = result.canvas as HTMLCanvasElement
 	// model.value.propic = canvas.toDataURL()
 }
+*/
 </script>

@@ -17,6 +17,7 @@ const LogsIcon = "carbon:cloud-logging"
 const UsersIcon = "carbon:group-security"
 const IntegrationsIcon = "carbon:ibm-cloud-direct-link-2-dedicated"
 
+/*eslint @typescript-eslint/no-unused-vars: "off"*/
 export default function getItems(mode: "vertical" | "horizontal", collapsed: boolean): MenuMixedOption[] {
 	return [
 		{

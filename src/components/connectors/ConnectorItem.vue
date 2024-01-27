@@ -107,7 +107,6 @@ import Badge from "@/components/common/Badge.vue"
 import { computed, ref, toRefs } from "vue"
 import Api from "@/api"
 import { NAvatar, useMessage, NModal, NSpin, NButton, NCard } from "naive-ui"
-import _toSafeInteger from "lodash/toSafeInteger"
 import type { Connector } from "@/types/connectors"
 import ConfigForm from "./ConfigForm"
 
