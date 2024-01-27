@@ -39,6 +39,8 @@ export interface ConnectorFormOptions {
 	extraData?: boolean
 }
 
+export type ConnectorFormOptionKeys = keyof ConnectorFormOptions
+
 export interface ConnectorForm {
 	connector_url: string
 	connector_username: string

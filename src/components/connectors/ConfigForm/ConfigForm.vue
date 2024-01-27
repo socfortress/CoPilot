@@ -40,13 +40,17 @@
 				/>
 			</div>
 			<div class="connector-form-options">
-				<n-form-item
-					label="Extra data"
-					:required="isOptionRequired('extraData')"
-					v-if="connectorFormOptions.extraData"
+				<n-form
+					:model="connectorForm"
+					:rules="optionsRules"
+					label-width="120px"
+					ref="formOptionsRef"
+					label-placement="top"
 				>
-					<n-input v-model:value="connectorForm.connector_extra_data" type="text" />
-				</n-form-item>
+					<n-form-item label="Extra data" path="connector_extra_data" v-if="connectorFormOptions.extraData">
+						<n-input v-model:value="connectorForm.connector_extra_data" type="text" />
+					</n-form-item>
+				</n-form>
 			</div>
 
 			<div class="connector-footer mt-4">
@@ -68,7 +72,8 @@ import {
 	type Connector,
 	type ConnectorForm,
 	type ConnectorRequestPayload,
-	type ConnectorFormOptions
+	type ConnectorFormOptions,
+	type ConnectorFormOptionKeys
 } from "@/types/connectors.d"
 import CredentialsType from "./FormTypes/CredentialsType.vue"
 import FileType from "./FormTypes/FileType.vue"
@@ -80,12 +85,13 @@ import {
 	NFormItem,
 	NAvatar,
 	NSpin,
+	NForm,
 	NInput,
 	NButton,
 	type FormInst,
-	type FormValidationError
+	type FormValidationError,
+	type FormRules
 } from "naive-ui"
-
 import Api from "@/api"
 
 const props = defineProps<{
@@ -98,7 +104,6 @@ const emit = defineEmits<{
 	(e: "loading", value: boolean): void
 }>()
 
-const message = useMessage()
 const connectorForm = ref<ConnectorForm>({
 	connector_url: "",
 	connector_username: "",
@@ -107,23 +112,33 @@ const connectorForm = ref<ConnectorForm>({
 	connector_extra_data: "",
 	connector_file: null
 })
+
+const optionsRules: FormRules = {
+	connector_extra_data: [{ required: true, trigger: "blur", message: "Please input a valid Extra Data" }]
+}
+
+const message = useMessage()
+const formOptionsRef = ref<FormInst>()
 const connectorFormType = computed<ConnectorFormType>(() => getConnectorFormType(connector.value))
 const connectorFormOptions = computed<ConnectorFormOptions>(() => getConnectorFormOptions(connector.value))
 const isConnectorConfigured = computed<boolean>(() => connector.value.connector_configured)
 const formRef = ref<FormInst | null>(null)
 const loading = ref<boolean>(false)
 
-const OPTIONS_VALIDATION_MAP: { [K in keyof ConnectorFormOptions]: boolean } = {
-	extraData: true
-}
+const formOptionsCheckRequired = computed<boolean>(() => {
+	let checkRequired = false
+	for (const key in connectorFormOptions.value) {
+		const required = connectorFormOptions.value[key as ConnectorFormOptionKeys]
+		if (required === true) {
+			checkRequired = true
+		}
+	}
+	return checkRequired
+})
 
 watch(loading, val => {
 	emit("loading", val)
 })
-
-function isOptionRequired(optionName: keyof ConnectorFormOptions): boolean {
-	return OPTIONS_VALIDATION_MAP[optionName] || false
-}
 
 function setUpForm() {
 	connectorForm.value = _pick(connector.value, [
@@ -165,11 +180,27 @@ function getConnectorFormOptions(connector: Connector): ConnectorFormOptions {
 function saveConnector() {
 	if (!formRef.value) return
 
+	let messageSent = false
+
 	formRef.value.validate((errors?: Array<FormValidationError>) => {
 		if (!errors) {
-			configureConnector()
+			if (formOptionsRef.value && formOptionsCheckRequired.value) {
+				formOptionsRef.value.validate((errors?: Array<FormValidationError>) => {
+					if (!errors) {
+						configureConnector()
+					} else {
+						if (!messageSent) {
+							message.warning("You must fill in the required fields correctly.")
+						}
+						return false
+					}
+				})
+			} else {
+				configureConnector()
+			}
 		} else {
 			message.warning("You must fill in the required fields correctly.")
+			messageSent = true
 			return false
 		}
 	})
