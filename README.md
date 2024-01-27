@@ -18,15 +18,10 @@ SOCFortress CoPilot
 ## Table of contents
 - [Getting Started](#getting-started)
   - [Running Copilot](#runnning-copilot)
-  - [Configuration](#configuration)
-- [Versioning](#versioning)
-- [Showcase](#showcase)
-- [Documentation](#documentation)
-  - [Upgrades](#upgrades)
-  - [API](#api)
+- [Connectors](#connectors)
 - [Help](#help)
-- [Considerations](#considerations)
 - [License](#license)
+- [Sponsoring](#sponsoring)
 
 
 ## Getting started
@@ -38,12 +33,13 @@ Copilot's true power comes from the ability to integrate with your existing secu
 - [Grafana](https://grafana.com/)
 - [InfluxDB](https://www.influxdata.com/)
 
-**Note:** Copilot is currently in beta. We are actively working on adding more integrations and features. If you have any suggestions or feedback, please let us know!
+❗️ **Note:** Copilot is currently in beta. We are actively working on adding more integrations and features. If you have any suggestions or feedback, please let us know!
 
 
 ### Running Copilot
 To ease the installation and upgrades, Copilot is shipped in a single docker container. To run Copilot, you will need to have [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/) installed.
 
+❗ **WARNING:** Copilot is not intended to be exposed to the internet. It is recommended for internal use only.
 
 ``` bash
 #  Clone the CoPilot repository
@@ -61,4 +57,23 @@ docker compose up
 
 Copilot shall be available on the host interface, port 5173, protocol HTTP - ``http://<your_instance_ip>:5173``.
 By default, an ``admin`` account is created. The password is printed in stdout the very first time Copilot is started. It won't be printed anymore after that.
-``WARNING :: post_init :: create_safe_admin :: >>>`` can be searched in the logs of the `copilot` docker to find the password.
+``Admin user password`` can be searched in the logs of the `copilot` docker to find the password. You will use the `plain` password to login to the web interface.
+
+
+🚀 **YouTube Tutorial:** [SOCFortress CoPilot - Getting Started](TODO)
+
+
+## Connectors
+Copilot is designed to be a single pane of glass for your security operations. Think of it as a hub for all your security tools. Copilot Connectors are the glue that binds your security tools to Copilot. We take advantage of the APIs and webhooks provided by your security tools to provide a seamless integration.
+
+
+## Help
+You can reach us on [Discord](https://discord.gg/UN3pNBzaEQ) or by [📧](mailto:info@socfortress.co) if you have any question, issue or idea!
+
+Check out our full video tutorial series on ![YouTube](https://img.shields.io/badge/YouTube-%23FF0000.svg?style=for-the-badge&logo=YouTube&logoColor=white)
+
+## License
+The contents of this repository is available under [AGPL-3.0 license](LICENSE.txt).
+
+## Sponsoring
+If you like this project and want to support it, you can consider becoming a sponsor to help us continue maintaining it and adding new features.
