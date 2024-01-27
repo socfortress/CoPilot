@@ -19,8 +19,6 @@ export interface Connector {
 	connector_username?: string
 	connector_verified: boolean
 	connector_supports: ConnectorSupports | string
-	// TODO: to verify connector_file prop
-	connector_file: string
 	id: number
 	name: string
 	authToken?: null
@@ -30,10 +28,15 @@ export interface Connector {
 }
 
 export enum ConnectorFormType {
+	HOST = "host",
 	TOKEN = "token",
 	FILE = "file",
 	CREDENTIALS = "credentials",
 	UNKNOWN = "unknown"
+}
+
+export interface ConnectorFormOptions {
+	extraData?: boolean
 }
 
 export interface ConnectorForm {
@@ -41,15 +44,20 @@ export interface ConnectorForm {
 	connector_username: string
 	connector_password: string
 	connector_api_key: string
+	connector_extra_data: string
 	connector_file: File | null
 }
 
-export interface ConnectorRequestPayload {
-	connector_url: string
-	connector_username?: string
-	connector_password?: string
-	connector_api_key?: string
-}
+export type ConnectorRequestPayload =
+	| FormData
+	| {
+			connector_url?: string
+			connector_username?: string
+			connector_password?: string
+			connector_api_key?: string
+			connector_extra_data?: string
+			/*eslint no-mixed-spaces-and-tabs: "off"*/
+	  }
 
 export enum ConnectorSupports {
 	NotSpecified = "Not specified."
