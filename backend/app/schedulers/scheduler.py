@@ -192,3 +192,4 @@ async def add_job_metadata(create_scheduler_request: CreateSchedulerRequest):
             job_metadata.time_interval = create_scheduler_request.time_interval
             job_metadata.enabled = True
         session.commit()
+

@@ -46,6 +46,7 @@ from app.routers import log_shipper_test
 from app.routers import integrations
 from app.routers import mimecast
 from app.routers import office365
+from app.routers import scheduler
 from app.schedulers.scheduler import init_scheduler
 
 auth_handler = AuthHandler()
@@ -104,6 +105,7 @@ app.include_router(log_shipper_test.router)
 app.include_router(integrations.router)
 app.include_router(office365.router)
 app.include_router(mimecast.router)
+app.include_router(scheduler.router)
 
 @app.on_event("startup")
 async def init_db():

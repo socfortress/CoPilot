@@ -42,12 +42,7 @@
 			:bordered="false"
 			segmented
 		>
-			<vue-markdown-it
-				:source="integration.integration_details"
-				preset="commonmark"
-				:plugins="[markdownItHighlightjs]"
-				class="integration-details scrollbar-styled"
-			/>
+			<Markdown :source="integration.integration_details" />
 		</n-modal>
 	</div>
 </template>
@@ -55,12 +50,10 @@
 <script setup lang="ts">
 import Icon from "@/components/common/Icon.vue"
 import Badge from "@/components/common/Badge.vue"
-import { ref, toRefs } from "vue"
+import { defineAsyncComponent, ref, toRefs } from "vue"
 import { NModal, NRadio } from "naive-ui"
 import type { AvailableIntegration } from "@/types/integrations"
-import markdownItHighlightjs from "markdown-it-highlightjs"
-import "@/assets/scss/hljs.scss"
-import { VueMarkdownIt } from "@f3ve/vue-markdown-it"
+const Markdown = defineAsyncComponent(() => import("@/components/common/Markdown.vue"))
 
 const props = defineProps<{
 	integration: AvailableIntegration
@@ -123,14 +116,6 @@ const showDetails = ref(false)
 	&:not(.disabled) {
 		&:hover {
 			box-shadow: 0px 0px 0px 1px inset var(--primary-color);
-		}
-	}
-}
-
-.integration-details {
-	:deep() {
-		& > * {
-			margin-bottom: 15px;
 		}
 	}
 }

@@ -32,7 +32,6 @@ import {
 	NCard,
 	NForm,
 	NFormItem,
-	NInput,
 	NButton,
 	NSelect,
 	NRadio,

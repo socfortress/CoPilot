@@ -20,7 +20,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, toRefs } from "vue"
+import { ref, watch } from "vue"
 import { NButton, NDrawer, NDrawerContent } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import CustomerForm from "./CustomerForm.vue"

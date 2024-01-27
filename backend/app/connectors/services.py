@@ -31,7 +31,8 @@ from app.integrations.ask_socfortress.services.ask_socfortress import verify_ask
 
 # from app.db.db_session import engine  # Import the shared engine
 from app.db.db_session import get_session
-from app.utils import verify_wazuh_worker_provisioning_connection
+from app.utils import verify_wazuh_worker_provisioning_connection, verify_alert_creation_provisioning_connection
+from app.integrations.utils.event_shipper import verify_event_shipper_connection
 
 UPLOAD_FOLDER = "file-store"
 UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), UPLOAD_FOLDER)
@@ -119,6 +120,15 @@ class AskSocfortressService(ConnectorServiceInterface):
     async def verify_authentication(self, connector: ConnectorResponse) -> Optional[ConnectorResponse]:
         return await verify_ask_socfortress_connector(connector.connector_name)
 
+# Event Shipper Service
+class EventShipperService(ConnectorServiceInterface):
+    async def verify_authentication(self, connector: ConnectorResponse) -> Optional[ConnectorResponse]:
+        return await verify_event_shipper_connection(connector.connector_name)
+
+# Alert Creation Service
+class AlertCreationService(ConnectorServiceInterface):
+    async def verify_authentication(self, connector: ConnectorResponse) -> Optional[ConnectorResponse]:
+        return await verify_alert_creation_provisioning_connection(connector.connector_name)
 
 # Factory function to create a service instance based on connector name
 def get_connector_service(connector_name: str) -> Type[ConnectorServiceInterface]:
@@ -145,6 +155,8 @@ def get_connector_service(connector_name: str) -> Type[ConnectorServiceInterface
         "Wazuh Worker Provisioning": WazuhWorkerProvisioningService,
         "SocfortressThreatIntel": SocfortressThreatIntelService,
         "AskSocfortress": AskSocfortressService,
+        "Event Shipper": EventShipperService,
+        "Alert Creation Provisioning": AlertCreationService,
     }
     return service_map.get(connector_name, None)
 
@@ -280,6 +292,7 @@ class ConnectorServices:
             connector_record.connector_username = connector.connector_username
             connector_record.connector_password = connector.connector_password
             connector_record.connector_api_key = connector.connector_api_key
+            connector_record.connector_extra_data = connector.connector_extra_data
             connector_record.connector_last_updated = datetime.now()
 
             # Commit the changes to the database

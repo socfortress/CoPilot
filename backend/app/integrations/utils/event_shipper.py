@@ -3,6 +3,10 @@ from app.integrations.utils.schema import EventShipperPayload, EventShipperPaylo
 
 from app.connectors.event_shipper.utils.universal import create_gelf_logger
 from fastapi import HTTPException
+from app.db.db_session import get_db_session
+from app.connectors.utils import get_connector_info_from_db
+from typing import Any, Dict
+import asyncio
 
 
 async def get_gelf_logger():
@@ -27,3 +31,32 @@ async def event_shipper(message: EventShipperPayload) -> EventShipperPayloadResp
 
     return EventShipperPayloadResponse(success=True, message="Successfully sent test message to log shipper.")
 
+async def verify_event_shipper_healtcheck(attributes: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Verifies the connection to Graylog Input via a telnet connection.
+
+    Returns:
+        dict: A dictionary containing 'connectionSuccessful' status.
+    """
+    logger.info(f"Verifying the event shipper connection to {attributes['connector_url']}")
+
+    # MAke a TCP connection to the Graylog Input
+    try:
+        reader, writer = await asyncio.open_connection(attributes["connector_url"], attributes["connector_extra_data"])
+        writer.close()
+        await writer.wait_closed()
+        return {"connectionSuccessful": True, "message": "Event shipper healthcheck successful"}
+    except Exception as e:
+        logger.error(f"Connection to {attributes['connector_url']} failed with error: {e}")
+        return {"connectionSuccessful": False, "message": f"Connection to {attributes['connector_url']} failed"}
+
+async def verify_event_shipper_connection(connector_name: str) -> str:
+    """
+    Returns the status of the connection to Graylog Input.
+    """
+    async with get_db_session() as session:  # This will correctly enter the context manager
+        attributes = await get_connector_info_from_db(connector_name, session)
+    if attributes is None:
+        logger.error("No attributes found for event shipper connector")
+        return None
+    return await verify_event_shipper_healtcheck(attributes)

@@ -1,116 +1,16 @@
-# CoPilot
+<h1 align="center">
 
-SOCFortress CoPilot is developed using python 3.11. It'll likely work in earlier versions, but we're targeting
-3.11 for the extra error reporting featurest that dropped in 3.10 and later.
+<a href="https://www.socfortress.co"><img src="src/assets/images/socfortress_logo.svg" width="300" height="200"></a>
 
-# Development
+SOCFortress CoPilot
 
-SOCFortress CoPilot is developed using python 3.11. It'll likely work in earlier versions, but we're targeting
-3.11 for the extra error reporting featurest that dropped in 3.10 and later.
 
-## Local development of backend
+[![Medium](https://img.shields.io/badge/Medium-12100E?style=for-the-badge&logo=medium&logoColor=white)](https://socfortress.medium.com/)
+[![YouTube](https://img.shields.io/badge/YouTube-%23FF0000.svg?style=for-the-badge&logo=YouTube&logoColor=white)](https://www.youtube.com/@taylorwalton_socfortress/videos)
+[![Discord Shield](https://discordapp.com/api/guilds/871419379999469568/widget.png?style=shield)](https://discord.gg/UN3pNBzaEQ)
 
-Setup the env vars, adjust if required, such as the `UPLOAD_FOLDER` environment variable.
 
-```
-cd backend
-cp .env.example .env
-```
 
-Create and activate python.
+</h1><h4 align="center">
 
-### macOS/Linux
-
-```
-python3.11 -m venv .venv --copies
-source .venv/bin/activate
-```
-
-### Windows
-
-```
-python.exe -m venv .venv --copies
-.venv\Scripts\activate
-```
-
-Installing dependencies
-
-```
-pip install -U pip setuptools wheel
-pip install -r requirements.in
-```
-
-Create a DB and apply any pending DB migrations
-
-```
-FLASK_APP=copilot.py flask db upgrade
-```
-
-If requiring to connect to the
-
-```
-sqlite3 copilot.db < insert_data.sql
-```
-
-Start local dev server
-
-```
-python app.py
-```
-
-## Test local backend
-
-Show configured connectors
-
-```
-curl http://localhost:5000/connectors
-```
-
-## Database changes
-
-If there any changes made to the model first ensure that it is added to the list of imports in
-`backend/app/__init_.py` before the following line
-
-```
-migrate = Migrate(app, db)
-```
-
-This allows alembic and flask migrate to see all the models in use so the migrations can be
-generated correctly.
-
-Once that is done, then you need to run the migrate command (example commment)
-and if any changes were detected, update your local DB instance.
-
-```
-FLASK_APP=copilot.py flask db migrate -m "Add User model."
-FLASK_APP=copilot.py flask db upgrade
-```
-
-Review the generated migration file to make sure the changes to the databse make sense in terms
-of what is needed to upgrade from the previous state, and then to downgrade to remove this migration.
-
-Don't forget to commit the new migration file into git.
-
-See https://flask-migrate.readthedocs.io/en/latest/ for further information
-
-## Running Pytest
-
-To run pytest, ensure pytest is installed:
-
-```
-pip install pytest
-```
-
-Then run pytest:
-
-```
-pytest .\backend\tests\routes\test_connectors.py
-```
-
-# Deployment
-
-## Production Deployment Notes
-
-```
-pip install -r requirements.txt
-```
+[SOCFortress CoPilot](https://www.socfortress.co) focuses on providing a single pane of glass for all your security operations needs. Simplify your open source security stack with a single platform focused on making open source security tools easier to use and more accessible.

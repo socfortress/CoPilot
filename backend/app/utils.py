@@ -662,3 +662,44 @@ async def verify_wazuh_worker_provisioning_connection(connector_name: str) -> st
         logger.error("No Wazuh Worker Provisioning connector found in the database")
         return None
     return await verify_wazuh_worker_provisioning_healtcheck(attributes)
+
+
+################## ! Alert Creation Provisioning App ! ##################
+################## ! https://github.com/socfortress/Customer-Provisioning-Alert ! ##################
+async def verify_alert_creation_provisioning_healtcheck(attributes: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Verifies the connection to Alert Creation Provisioning service.
+
+    Returns:
+        dict: A dictionary containing 'connectionSuccessful' status.
+    """
+    logger.info(f"Verifying the Alert Creation provisioning connection to {attributes['connector_url']}")
+
+    try:
+        wazuh_worker_provisioning_healthcheck = requests.get(
+            f"{attributes['connector_url']}/provision_alert/healthcheck",
+            verify=False,
+        )
+
+        if wazuh_worker_provisioning_healthcheck.status_code == 200:
+            return {"connectionSuccessful": True, "message": "Alert Creation Provisioning healthcheck successful"}
+        else:
+            logger.error(f"Connection to {attributes['connector_url']} failed with error: {wazuh_worker_provisioning_healthcheck.text}")
+
+            return {"connectionSuccessful": False, "message": f"Connection to {attributes['connector_url']} failed"}
+    except Exception as e:
+        logger.error(f"Connection to {attributes['connector_url']} failed with error: {e}")
+
+        return {"connectionSuccessful": False, "message": f"Connection to {attributes['connector_url']} failed with error."}
+
+
+async def verify_alert_creation_provisioning_connection(connector_name: str) -> str:
+    """
+    Returns the status of the connection to Alert Creation Provisioning service.
+    """
+    async with get_db_session() as session:  # This will correctly enter the context manager
+        attributes = await get_connector_info_from_db(connector_name, session)
+    if attributes is None:
+        logger.error("No Alert Creation Provisioning connector found in the database")
+        return None
+    return await verify_alert_creation_provisioning_healtcheck(attributes)

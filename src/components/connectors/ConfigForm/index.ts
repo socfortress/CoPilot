@@ -1,2 +1,1 @@
-import ConfigForm from "./ConfigForm.vue"
-export default ConfigForm
+export { default } from "./ConfigForm.vue"

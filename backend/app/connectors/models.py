@@ -63,9 +63,11 @@ class Connectors(SQLModel, table=True):
     connector_supports: Optional[str] = Field(default=None)
     connector_configured: bool = Field(default=False)
     connector_verified: bool = Field(default=False)
+    connector_accepts_host_only: bool = Field(default=False)
     connector_accepts_api_key: bool = Field(default=False)
     connector_accepts_username_password: bool = Field(default=False)
     connector_accepts_file: bool = Field(default=False)
+    connector_accepts_extra_data: bool = Field(default=False)
     connector_extra_data: Optional[str] = Field(default=None)
 
     # Relationship
