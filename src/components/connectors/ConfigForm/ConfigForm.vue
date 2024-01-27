@@ -33,6 +33,20 @@
 					v-if="connectorFormType === ConnectorFormType.TOKEN"
 					@mounted="formRef = $event"
 				/>
+				<HostType
+					:form="connectorForm"
+					v-if="connectorFormType === ConnectorFormType.HOST"
+					@mounted="formRef = $event"
+				/>
+			</div>
+			<div class="connector-form-options">
+				<n-form-item
+					label="Extra data"
+					:required="isOptionRequired('extraData')"
+					v-if="connectorFormOptions.extraData"
+				>
+					<n-input v-model:value="connectorForm.connector_extra_data" type="text" />
+				</n-form-item>
 			</div>
 
 			<div class="connector-footer mt-4">
@@ -49,12 +63,28 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, toRefs, watch } from "vue"
-import { type Connector, type ConnectorForm, ConnectorFormType } from "@/types/connectors.d"
+import {
+	ConnectorFormType,
+	type Connector,
+	type ConnectorForm,
+	type ConnectorRequestPayload,
+	type ConnectorFormOptions
+} from "@/types/connectors.d"
 import CredentialsType from "./FormTypes/CredentialsType.vue"
 import FileType from "./FormTypes/FileType.vue"
 import TokenType from "./FormTypes/TokenType.vue"
+import HostType from "./FormTypes/HostType.vue"
 import _pick from "lodash/pick"
-import { useMessage, NFormItem, NAvatar, NSpin, NButton, type FormInst, type FormValidationError } from "naive-ui"
+import {
+	useMessage,
+	NFormItem,
+	NAvatar,
+	NSpin,
+	NInput,
+	NButton,
+	type FormInst,
+	type FormValidationError
+} from "naive-ui"
 
 import Api from "@/api"
 
@@ -74,16 +104,26 @@ const connectorForm = ref<ConnectorForm>({
 	connector_username: "",
 	connector_password: "",
 	connector_api_key: "",
+	connector_extra_data: "",
 	connector_file: null
 })
 const connectorFormType = computed<ConnectorFormType>(() => getConnectorFormType(connector.value))
+const connectorFormOptions = computed<ConnectorFormOptions>(() => getConnectorFormOptions(connector.value))
 const isConnectorConfigured = computed<boolean>(() => connector.value.connector_configured)
 const formRef = ref<FormInst | null>(null)
 const loading = ref<boolean>(false)
 
+const OPTIONS_VALIDATION_MAP: { [K in keyof ConnectorFormOptions]: boolean } = {
+	extraData: true
+}
+
 watch(loading, val => {
 	emit("loading", val)
 })
+
+function isOptionRequired(optionName: keyof ConnectorFormOptions): boolean {
+	return OPTIONS_VALIDATION_MAP[optionName] || false
+}
 
 function setUpForm() {
 	connectorForm.value = _pick(connector.value, [
@@ -91,6 +131,7 @@ function setUpForm() {
 		"connector_username",
 		"connector_password",
 		"connector_api_key",
+		"connector_extra_data",
 		"connector_file"
 	]) as unknown as ConnectorForm
 }
@@ -105,7 +146,20 @@ function getConnectorFormType(connector: Connector): ConnectorFormType {
 	if (connector.connector_accepts_username_password) {
 		return ConnectorFormType.CREDENTIALS
 	}
+	if (connector.connector_accepts_host_only) {
+		return ConnectorFormType.HOST
+	}
 	return ConnectorFormType.UNKNOWN
+}
+
+function getConnectorFormOptions(connector: Connector): ConnectorFormOptions {
+	const options: ConnectorFormOptions = {}
+
+	if (connector.connector_accepts_extra_data) {
+		options.extraData = true
+	}
+
+	return options
 }
 
 function saveConnector() {
@@ -136,29 +190,48 @@ function getRequestMethod() {
 function configureConnector() {
 	loading.value = true
 
-	const { connector_url, connector_username, connector_password, connector_api_key, connector_file } =
-		connectorForm.value
+	const {
+		connector_url,
+		connector_username,
+		connector_password,
+		connector_api_key,
+		connector_file,
+		connector_extra_data
+	} = connectorForm.value
 
 	const requestMethod = getRequestMethod()
 
-	let requestPayload: any = { connector_url }
+	let requestPayload: ConnectorRequestPayload = {}
 
+	if (connectorFormType.value === ConnectorFormType.HOST) {
+		requestPayload = {
+			connector_url
+		}
+	}
 	if (connectorFormType.value === ConnectorFormType.TOKEN) {
-		requestPayload = Object.assign(requestPayload, {
+		requestPayload = {
+			connector_url,
 			connector_api_key
-		})
+		}
 	}
 	if (connectorFormType.value === ConnectorFormType.CREDENTIALS) {
-		requestPayload = Object.assign(requestPayload, {
+		requestPayload = {
+			connector_url,
 			connector_username,
 			connector_password
-		})
+		}
 	}
 	if (connectorFormType.value === ConnectorFormType.FILE && connector_file) {
 		const form = new FormData()
 		form.append("file", new Blob([connector_file], { type: connector_file.type }), connector_file.name)
-
 		requestPayload = form
+	}
+	if (connectorFormOptions.value.extraData) {
+		if (requestPayload instanceof FormData) {
+			requestPayload.append("connector_extra_data", connector_extra_data)
+		} else {
+			requestPayload.connector_extra_data = connector_extra_data
+		}
 	}
 
 	requestMethod(connector.value.id, requestPayload)
