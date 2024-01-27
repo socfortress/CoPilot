@@ -16,9 +16,6 @@ from app.integrations.alert_creation.office365.schema.threat_intel import (
 from app.integrations.alert_creation.office365.schema.threat_intel import IrisAsset
 from app.integrations.alert_creation.office365.schema.threat_intel import IrisIoc
 from app.integrations.alert_creation.office365.schema.threat_intel import (
-    Office365ThreatIntelAlertBase,
-)
-from app.integrations.alert_creation.office365.schema.threat_intel import (
     Office365ThreatIntelAlertRequest,
 )
 from app.integrations.alert_creation.office365.schema.threat_intel import (
@@ -27,7 +24,6 @@ from app.integrations.alert_creation.office365.schema.threat_intel import (
 from app.integrations.utils.alerts import send_to_shuffle
 from app.integrations.utils.alerts import validate_ioc_type
 from app.integrations.utils.schema import ShufflePayload
-from app.utils import get_customer_alert_settings
 from app.utils import get_customer_alert_settings_office365
 
 

@@ -1,13 +1,8 @@
-from typing import Dict
 from typing import List
 from typing import Optional
-from typing import Type
-from typing import Union
 
 from pydantic import BaseModel
 from pydantic import Field
-
-from app.integrations.models.customer_integration_settings import AvailableIntegrations
 
 
 class AuthKey(BaseModel):

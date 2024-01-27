@@ -27,7 +27,6 @@ from app.connectors.graylog.services.pipelines import get_pipeline_id
 from app.connectors.graylog.services.pipelines import get_pipeline_rules
 from app.connectors.graylog.services.pipelines import get_pipelines
 from app.connectors.graylog.utils.universal import send_post_request
-from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
 from app.connectors.wazuh_manager.utils.universal import send_get_request
 from app.connectors.wazuh_manager.utils.universal import send_put_request
 from app.customer_provisioning.schema.grafana import GrafanaDatasource
@@ -41,7 +40,6 @@ from app.customer_provisioning.services.grafana import create_grafana_folder
 from app.customer_provisioning.services.grafana import get_opensearch_version
 from app.customers.routes.customers import get_customer
 from app.customers.routes.customers import get_customer_meta
-from app.integrations.alert_escalation.services.general_alert import create_alert
 from app.integrations.models.customer_integration_settings import CustomerIntegrations
 from app.integrations.office365.schema.provision import PipelineRuleTitles
 from app.integrations.office365.schema.provision import PipelineTitles
@@ -551,7 +549,16 @@ async def create_office365_pipeline(pipeline_title: str) -> None:
     Creates the 'OFFICE365 PROCESSING PIPELINE' pipeline.
     """
     pipeline_description = "OFFICE365 PROCESSING PIPELINE"
-    pipeline_source = 'pipeline "OFFICE365 PROCESSING PIPELINE"\nstage 0 match either\nrule "WAZUH CREATE FIELD SYSLOG LEVEL - ALERT"\nrule "WAZUH CREATE FIELD SYSLOG LEVEL - INFO"\nrule "WAZUH CREATE FIELD SYSLOG LEVEL - NOTICE"\nrule "WAZUH CREATE FIELD SYSLOG LEVEL - WARNING"\nrule "Office365 Timestamp - UTC"\nend'
+    pipeline_source = (
+        'pipeline "OFFICE365 PROCESSING PIPELINE"\n'
+        "stage 0 match either\n"
+        'rule "WAZUH CREATE FIELD SYSLOG LEVEL - ALERT"\n'
+        'rule "WAZUH CREATE FIELD SYSLOG LEVEL - INFO"\n'
+        'rule "WAZUH CREATE FIELD SYSLOG LEVEL - NOTICE"\n'
+        'rule "WAZUH CREATE FIELD SYSLOG LEVEL - WARNING"\n'
+        'rule "Office365 Timestamp - UTC"\n'
+        "end"
+    )
     await create_pipeline_graylog(CreatePipeline(title=pipeline_title, description=pipeline_description, source=pipeline_source))
 
 

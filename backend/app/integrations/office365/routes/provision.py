@@ -9,7 +9,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
-from app.integrations.alert_escalation.services.general_alert import create_alert
 from app.integrations.office365.schema.provision import ProvisionOffice365AuthKeys
 from app.integrations.office365.schema.provision import ProvisionOffice365Request
 from app.integrations.office365.schema.provision import ProvisionOffice365Response

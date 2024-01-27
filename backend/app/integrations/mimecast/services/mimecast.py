@@ -13,25 +13,13 @@ from zipfile import ZipFile
 
 import aiofiles
 import requests
-from fastapi import APIRouter
-from fastapi import Depends
 from fastapi import HTTPException
-from fastapi import Security
 from loguru import logger
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.utils import AuthHandler
-from app.db.db_session import get_db
-from app.integrations.alert_escalation.services.general_alert import create_alert
 from app.integrations.mimecast.schema.mimecast import MimecastAPIEndpointResponse
 from app.integrations.mimecast.schema.mimecast import MimecastAuthKeys
 from app.integrations.mimecast.schema.mimecast import MimecastRequest
 from app.integrations.mimecast.schema.mimecast import MimecastResponse
-from app.integrations.routes import find_customer_integration
-from app.integrations.routes import get_customer_integrations_by_customer_code
-from app.integrations.schema import CustomerIntegrations
-from app.integrations.schema import CustomerIntegrationsResponse
-from app.integrations.utils.collection import send_get_request
 from app.integrations.utils.collection import send_post_request
 from app.integrations.utils.event_shipper import event_shipper
 from app.integrations.utils.schema import EventShipperPayload
@@ -119,7 +107,7 @@ async def get_base_url(mimecast_auth_keys: MimecastAuthKeys) -> MimecastAPIEndpo
             headers=headers,
             data=post_body,
         )
-        if response["success"] == True:
+        if response["success"] is True:
             logger.info(f"Successfully retrieved base URL for Mimecast integration. Response: {response}")
             return MimecastAPIEndpointResponse(**response)
         else:

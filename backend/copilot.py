@@ -36,7 +36,6 @@ from app.routers import graylog
 from app.routers import healthcheck
 from app.routers import influxdb
 from app.routers import integrations
-from app.routers import log_shipper_test
 from app.routers import logs
 from app.routers import mimecast
 from app.routers import office365
@@ -102,7 +101,6 @@ app.include_router(threat_intel.router)
 app.include_router(ask_socfortress.router)
 app.include_router(alert_creation.router)
 app.include_router(alert_creation_settings.router)
-app.include_router(log_shipper_test.router)
 app.include_router(integrations.router)
 app.include_router(office365.router)
 app.include_router(mimecast.router)

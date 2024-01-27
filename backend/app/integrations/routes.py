@@ -6,7 +6,6 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Security
 from loguru import logger
-from pydantic import ValidationError
 from sqlalchemy import delete
 from sqlalchemy import update
 from sqlalchemy.exc import NoResultFound

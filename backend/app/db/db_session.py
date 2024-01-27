@@ -1,7 +1,4 @@
 # ! Old Testing without Async
-from contextlib import asynccontextmanager
-from contextlib import contextmanager
-
 from sqlmodel import Session
 from sqlmodel import create_engine
 
@@ -18,7 +15,6 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import sessionmaker
-from sqlmodel import Session
 
 from settings import SQLALCHEMY_DATABASE_URI
 

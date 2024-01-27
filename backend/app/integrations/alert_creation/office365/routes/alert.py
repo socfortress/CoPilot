@@ -34,7 +34,6 @@ from app.integrations.alert_creation.office365.services.threat_intel import (
 from app.integrations.alert_creation_settings.models.alert_creation_settings import (
     AlertCreationSettings,
 )
-from app.utils import get_customer_alert_settings_office365
 
 office365_alerts_router = APIRouter()
 
