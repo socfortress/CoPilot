@@ -53,6 +53,8 @@ cd CoPilot
 # Copy the environment file
 cp .env.example .env
 
+# Make your changes to the .env file
+
 # Run Copilot
 docker compose up
 ```
