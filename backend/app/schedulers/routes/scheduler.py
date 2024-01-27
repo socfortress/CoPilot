@@ -1,18 +1,20 @@
-from app.schedulers.scheduler import init_scheduler
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import HTTPException
 from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import HTTPException
 from sqlalchemy.future import select
 from sqlmodel import select
-from app.schedulers.schema.scheduler import JobsResponse
-from app.schedulers.models.scheduler import JobMetadata, CreateSchedulerRequest
-from app.db.db_session import get_db
 
+from app.db.db_session import get_db
+from app.schedulers.models.scheduler import CreateSchedulerRequest
+from app.schedulers.models.scheduler import JobMetadata
+from app.schedulers.scheduler import init_scheduler
+from app.schedulers.schema.scheduler import JobsResponse
 
 scheduler_router = APIRouter()
+
 
 @scheduler_router.get(
     "",
@@ -38,13 +40,12 @@ async def get_all_jobs(session: AsyncSession = Depends(get_db)) -> JobsResponse:
     for job in jobs:
         job_metadata = await session.execute(select(JobMetadata).filter_by(job_id=job.id))
         job_metadata = job_metadata.scalars().first()
-        apscheduler_jobs.append({"id": job.id, "name": job.name, "time_interval": job_metadata.time_interval, "enabled": job_metadata.enabled})
+        apscheduler_jobs.append(
+            {"id": job.id, "name": job.name, "time_interval": job_metadata.time_interval, "enabled": job_metadata.enabled},
+        )
     logger.info(f"apscheduler_jobs: {apscheduler_jobs}")
-    return JobsResponse(
-        jobs=[{"id": job.id, "name": job.name} for job in jobs],
-        success=True,
-        message="Jobs successfully retrieved."
-    )
+    return JobsResponse(jobs=[{"id": job.id, "name": job.name} for job in jobs], success=True, message="Jobs successfully retrieved.")
+
 
 @scheduler_router.post(
     "/start/{job_id}",
@@ -70,6 +71,7 @@ async def start_job(job_id: str):
             return {"success": True, "message": "Job started successfully"}
     return {"success": False, "message": "Job not found"}
 
+
 @scheduler_router.post(
     "/pause/{job_id}",
     description="Pause a job",
@@ -93,6 +95,7 @@ async def pause_job(job_id: str):
             job.pause()
             return {"success": True, "message": "Job paused successfully"}
     return {"success": False, "message": "Job not found"}
+
 
 @scheduler_router.put(
     "/update/{job_id}",
@@ -121,6 +124,7 @@ async def update_job(job_id: str, time_interval: int, session: AsyncSession = De
             await session.commit()
             return {"success": True, "message": "Job updated successfully"}
     return {"success": False, "message": "Job not found"}
+
 
 @scheduler_router.delete(
     "/{job_id}",

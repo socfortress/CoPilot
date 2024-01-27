@@ -1,23 +1,43 @@
-from app.integrations.alert_creation.office365.schema.exchange import Office365ExchangeAlertRequest
-from app.integrations.alert_creation.office365.schema.exchange import Office365ExchangeAlertResponse
-from app.integrations.alert_creation.office365.schema.exchange import Office365ExchangeAlertBase
-from app.integrations.alert_creation.office365.schema.exchange import ValidOffice365Workloads
-from app.integrations.alert_creation.office365.schema.threat_intel import Office365ThreatIntelAlertRequest
-from app.integrations.alert_creation.office365.schema.threat_intel import Office365ThreatIntelAlertResponse
-from app.integrations.alert_creation.office365.services.exchange import create_exchange_alert
-from app.integrations.alert_creation.office365.services.threat_intel import create_threat_intel_alert
-from app.integrations.alert_creation_settings.models.alert_creation_settings import AlertCreationSettings
-from sqlalchemy import select
-#from app.alerts.office365.services.threat_intel import create_threat_intel_alert
+# from app.alerts.office365.services.threat_intel import create_threat_intel_alert
 from fastapi import APIRouter
-from app.utils import get_customer_alert_settings_office365
+from fastapi import Depends
 from fastapi import HTTPException
 from loguru import logger
-from fastapi import Depends
-from app.db.db_session import get_db
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.db.db_session import get_db
+from app.integrations.alert_creation.office365.schema.exchange import (
+    Office365ExchangeAlertBase,
+)
+from app.integrations.alert_creation.office365.schema.exchange import (
+    Office365ExchangeAlertRequest,
+)
+from app.integrations.alert_creation.office365.schema.exchange import (
+    Office365ExchangeAlertResponse,
+)
+from app.integrations.alert_creation.office365.schema.exchange import (
+    ValidOffice365Workloads,
+)
+from app.integrations.alert_creation.office365.schema.threat_intel import (
+    Office365ThreatIntelAlertRequest,
+)
+from app.integrations.alert_creation.office365.schema.threat_intel import (
+    Office365ThreatIntelAlertResponse,
+)
+from app.integrations.alert_creation.office365.services.exchange import (
+    create_exchange_alert,
+)
+from app.integrations.alert_creation.office365.services.threat_intel import (
+    create_threat_intel_alert,
+)
+from app.integrations.alert_creation_settings.models.alert_creation_settings import (
+    AlertCreationSettings,
+)
+from app.utils import get_customer_alert_settings_office365
+
 office365_alerts_router = APIRouter()
+
 
 async def is_office365_organization_id_valid(create_alert_request: Office365ExchangeAlertBase, session: AsyncSession) -> bool:
     """
@@ -30,17 +50,20 @@ async def is_office365_organization_id_valid(create_alert_request: Office365Exch
     Returns:
         bool: True if the organization ID is valid for the customer, False otherwise.
     """
-    logger.info(f"Checking if organization_id: {create_alert_request.data_office365_OrganizationId} is valid for customer: {create_alert_request.data_office365_OrganizationId}")
+    logger.info(
+        f"Checking if organization_id: {create_alert_request.data_office365_OrganizationId} is valid for customer: {create_alert_request.data_office365_OrganizationId}",
+    )
 
     result = await session.execute(
-        select(AlertCreationSettings).where(AlertCreationSettings.office365_organization_id == create_alert_request.data_office365_OrganizationId),
+        select(AlertCreationSettings).where(
+            AlertCreationSettings.office365_organization_id == create_alert_request.data_office365_OrganizationId,
+        ),
     )
     settings = result.scalars().first()
     if settings is None:
         raise HTTPException(status_code=400, detail="Office365 organization ID is not valid, make sure to provision the customer.")
 
     return True
-
 
 
 @office365_alerts_router.post(
@@ -53,9 +76,7 @@ async def create_office365_exchange_alert(
     session: AsyncSession = Depends(get_db),
 ):
     logger.info(f"create_alert_request: {create_alert_request}")
-    if create_alert_request.data_office365_Workload not in [
-        workload.value for workload in ValidOffice365Workloads
-    ]:
+    if create_alert_request.data_office365_Workload not in [workload.value for workload in ValidOffice365Workloads]:
         logger.info(f"Invalid workload: {create_alert_request.data_office365_Workload}")
         raise HTTPException(status_code=400, detail="Invalid workload")
     logger.info(f"Workload is valid: {create_alert_request.data_office365_Workload}")
@@ -73,9 +94,7 @@ async def create_office365_threat_intel_alert(
     session: AsyncSession = Depends(get_db),
 ):
     logger.info(f"create_alert_request: {create_alert_request}")
-    if create_alert_request.data_office365_Workload not in [
-        workload.value for workload in ValidOffice365Workloads
-    ]:
+    if create_alert_request.data_office365_Workload not in [workload.value for workload in ValidOffice365Workloads]:
         logger.info(f"Invalid workload: {create_alert_request.data_office365_Workload}")
         raise HTTPException(status_code=400, detail="Invalid workload")
     logger.info(f"Workload is valid: {create_alert_request.data_office365_Workload}")

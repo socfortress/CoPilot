@@ -131,6 +131,7 @@ class WazuhEventStream(BaseModel):
             },
         }
 
+
 class Office365EventStream(BaseModel):
     title: str = Field(..., description="Title of the stream")
     description: str = Field(..., description="Description of the stream")
@@ -146,7 +147,10 @@ class Office365EventStream(BaseModel):
                 "title": "Office365 EVENTS - Example Company",
                 "description": "Office365 EVENTS - Example Company",
                 "index_set_id": "12345",
-                "rules": [{"field": "agent_labels_customer", "type": 1, "inverted": False, "value": "ExampleCode"}, {"field": "agent_labels_integration", "type": 1, "inverted": False, "value": "Office365"}],
+                "rules": [
+                    {"field": "agent_labels_customer", "type": 1, "inverted": False, "value": "ExampleCode"},
+                    {"field": "agent_labels_integration", "type": 1, "inverted": False, "value": "Office365"},
+                ],
                 "matching_type": "AND",
                 "remove_matches_from_default_stream": True,
                 "content_pack": None,

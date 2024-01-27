@@ -1,34 +1,41 @@
+import base64
+import datetime
+import hashlib
+import hmac
+import io
+import json
+import os
+import shutil
+import time
+import uuid
+from typing import Dict
+from zipfile import ZipFile
+
+import aiofiles
+import requests
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import HTTPException
 from fastapi import Security
-import datetime
-import os
-import json
-import hashlib
-import hashlib
-import io
-from zipfile import ZipFile
-import shutil
-import hmac
-import requests
-import time
-import base64
-import aiofiles
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import HTTPException
-from app.integrations.utils.event_shipper import event_shipper
-from app.integrations.utils.schema import EventShipperPayload
-import uuid
 
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
-from app.integrations.mimecast.schema.mimecast import MimecastRequest, MimecastResponse, MimecastAuthKeys, MimecastAPIEndpointResponse
 from app.integrations.alert_escalation.services.general_alert import create_alert
-from app.integrations.routes import get_customer_integrations_by_customer_code, find_customer_integration
-from app.integrations.schema import CustomerIntegrationsResponse, CustomerIntegrations
-from typing import Dict
-from app.integrations.utils.collection import send_get_request, send_post_request
+from app.integrations.mimecast.schema.mimecast import MimecastAPIEndpointResponse
+from app.integrations.mimecast.schema.mimecast import MimecastAuthKeys
+from app.integrations.mimecast.schema.mimecast import MimecastRequest
+from app.integrations.mimecast.schema.mimecast import MimecastResponse
+from app.integrations.routes import find_customer_integration
+from app.integrations.routes import get_customer_integrations_by_customer_code
+from app.integrations.schema import CustomerIntegrations
+from app.integrations.schema import CustomerIntegrationsResponse
+from app.integrations.utils.collection import send_get_request
+from app.integrations.utils.collection import send_post_request
+from app.integrations.utils.event_shipper import event_shipper
+from app.integrations.utils.schema import EventShipperPayload
+
 
 async def get_checkpoint_filename(customer_code: str):
     """
@@ -36,7 +43,7 @@ async def get_checkpoint_filename(customer_code: str):
     If the checkpoint file does not exist, it will be created asynchronously.
     """
     # Relative path from the current script to the checkpoint directory
-    checkpoint_directory = os.path.join(os.path.dirname(__file__), '..', 'checkpoint')
+    checkpoint_directory = os.path.join(os.path.dirname(__file__), "..", "checkpoint")
     checkpoint_filename = os.path.join(checkpoint_directory, f"mimecast_{customer_code}.checkpoint")
 
     # Normalize the path to remove relative path components
@@ -53,6 +60,7 @@ async def get_checkpoint_filename(customer_code: str):
 
     return checkpoint_filename
 
+
 async def get_log_file_path(customer_code: str):
     """
     Retrieves the log file path for the Mimecast integration and customer.
@@ -64,7 +72,7 @@ async def get_log_file_path(customer_code: str):
         str: The log file path for the Mimecast integration and customer.
     """
     # Relative path from the current script to the log directory
-    log_directory = os.path.join(os.path.dirname(__file__), '..', 'logs')
+    log_directory = os.path.join(os.path.dirname(__file__), "..", "logs")
     # Normalize the path to remove relative path components
     log_directory = os.path.abspath(log_directory)
 
@@ -84,8 +92,10 @@ async def read_file(filename: str):
     async with aiofiles.open(filename, "r") as f:
         return await f.read()
 
+
 async def get_hdr_date():
     return datetime.datetime.utcnow().strftime("%a, %d %b %Y %H:%M:%S UTC")
+
 
 async def get_base_url(mimecast_auth_keys: MimecastAuthKeys) -> MimecastAPIEndpointResponse:
     """
@@ -109,7 +119,7 @@ async def get_base_url(mimecast_auth_keys: MimecastAuthKeys) -> MimecastAPIEndpo
             headers=headers,
             data=post_body,
         )
-        if response['success'] == True:
+        if response["success"] == True:
             logger.info(f"Successfully retrieved base URL for Mimecast integration. Response: {response}")
             return MimecastAPIEndpointResponse(**response)
         else:
@@ -118,6 +128,7 @@ async def get_base_url(mimecast_auth_keys: MimecastAuthKeys) -> MimecastAPIEndpo
     except Exception as e:
         logger.error(f"Unable to retrieve base URL for Mimecast integration. Exception: {e}")
         raise HTTPException(status_code=400, detail="Unable to retrieve base URL for Mimecast integration.")
+
 
 async def get_mta_siem_logs(checkpoint_filename: str, base_url: str, auth_keys: MimecastAuthKeys):
     """
@@ -129,7 +140,6 @@ async def get_mta_siem_logs(checkpoint_filename: str, base_url: str, auth_keys: 
     post_body["data"][0]["type"] = "MTA"
     post_body["data"][0]["compress"] = True
     post_body["data"][0]["token"] = await read_file(checkpoint_filename)
-
 
     # Create variables required for request headers
     request_id = str(uuid.uuid4())
@@ -165,6 +175,7 @@ async def get_mta_siem_logs(checkpoint_filename: str, base_url: str, auth_keys: 
         logger.error(f"Unable to retrieve MTA SIEM logs from Mimecast integration. Exception: {e}")
         raise HTTPException(status_code=400, detail="Unable to retrieve MTA SIEM logs from Mimecast integration.")
 
+
 async def process_response(response, checkpoint_filename: str, log_file_path: str):
     """
     Processes the response body from the Mimecast integration.
@@ -190,12 +201,14 @@ async def process_response(response, checkpoint_filename: str, log_file_path: st
             await write_log_file(log_filename, resp_body)
             return None
 
+
 async def write_checkpoint_file(filename: str, data: str):
     """
     Writes the given data to the given file.
     """
     async with aiofiles.open(filename, "w") as f:
         await f.write(data)
+
 
 async def write_log_file(filename: str, resp_body):
     """
@@ -212,6 +225,7 @@ async def write_log_file(filename: str, resp_body):
     else:
         async with aiofiles.open(filename, "w") as f:
             await f.write(resp_body)
+
 
 async def process_log_file(filename: str, filename2: str, log_file_path: str, customer_code: str):
     """
@@ -243,7 +257,7 @@ async def read_and_ship_log_file(file_path: str, customer_code: str):
     """
     Reads a log file line by line, converts each line to JSON, and ships the event.
     """
-    with open(file_path, 'r', encoding='utf-8') as file:
+    with open(file_path, "r", encoding="utf-8") as file:
         for line in file:
             log_entry = convert_to_json(line)
             message = EventShipperPayload(
@@ -271,9 +285,9 @@ def convert_to_json(log_line: str) -> dict:
     Converts a log line to a JSON object.
     """
     log_dict = {}
-    for pair in log_line.split('|'):
-        if '=' in pair:
-            key, value = pair.split('=', 1)
+    for pair in log_line.split("|"):
+        if "=" in pair:
+            key, value = pair.split("=", 1)
             log_dict[key.strip()] = value.strip()
     return log_dict
 
@@ -287,6 +301,7 @@ async def delete_log_directory(log_file_path: str):
         logger.info(f"Successfully deleted the directory: {log_file_path}")
     except OSError as e:
         raise HTTPException(status_code=400, detail=f"Error: {e.strerror}. Directory: {log_file_path}")
+
 
 async def invoke_mimecast(mimecast_request: MimecastRequest, auth_keys: MimecastAuthKeys) -> MimecastResponse:
     """

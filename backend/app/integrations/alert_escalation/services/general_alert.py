@@ -47,6 +47,7 @@ async def is_customer_code_valid(customer_code: str, session: AsyncSession) -> b
         select(AlertCreationSettings).where(AlertCreationSettings.customer_code == customer_code),
     )
     settings = result.scalars().first()
+    logger.info(f"Settings: {settings}")
 
     if settings:
         return True

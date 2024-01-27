@@ -27,7 +27,6 @@ class AuthHandler:
     def verify_password(self, plain_password, hashed_password):
         return self.pwd_context.verify(plain_password, hashed_password)
 
-
     # ! TODO: HAVE LOGIC TO HANDLE PASSWORD RESET VIA A TOKEN BUT NOT IMPLEMENTED YET ! #
     def generate_reset_token(self, username: str, expires_delta: timedelta = timedelta(minutes=30)):
         """
@@ -44,7 +43,6 @@ class AuthHandler:
         to_encode = {"exp": datetime.utcnow() + expires_delta, "sub": username}
         encoded_jwt = jwt.encode(to_encode, self.secret, algorithm="HS256")
         return encoded_jwt
-
 
     # ! TODO: HAVE LOGIC TO HANDLE PASSWORD RESET VIA A TOKEN BUT NOT IMPLEMENTED YET ! #
     # def verify_reset_token(self, token: str, username: str):

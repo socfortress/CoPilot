@@ -7,12 +7,17 @@ from loguru import logger
 from app.auth.utils import AuthHandler
 from app.connectors.dfir_iris.schema.alerts import AlertResponse
 from app.connectors.dfir_iris.schema.alerts import AlertsResponse
-from app.connectors.dfir_iris.schema.alerts import BookmarkedAlertsResponse, FilterAlertsRequest, CaseCreationResponse, DeleteAlertResponse, DeleteMultipleAlertsRequest
+from app.connectors.dfir_iris.schema.alerts import BookmarkedAlertsResponse
+from app.connectors.dfir_iris.schema.alerts import CaseCreationResponse
+from app.connectors.dfir_iris.schema.alerts import DeleteAlertResponse
+from app.connectors.dfir_iris.schema.alerts import DeleteMultipleAlertsRequest
+from app.connectors.dfir_iris.schema.alerts import FilterAlertsRequest
 from app.connectors.dfir_iris.services.alerts import bookmark_alert
+from app.connectors.dfir_iris.services.alerts import create_case
+from app.connectors.dfir_iris.services.alerts import delete_alert
 from app.connectors.dfir_iris.services.alerts import get_alert
 from app.connectors.dfir_iris.services.alerts import get_alerts
-from app.connectors.dfir_iris.services.alerts import create_case
-from app.connectors.dfir_iris.services.alerts import get_bookmarked_alerts, delete_alert
+from app.connectors.dfir_iris.services.alerts import get_bookmarked_alerts
 from app.connectors.dfir_iris.utils.universal import check_alert_exists
 
 # App specific imports
@@ -112,13 +117,14 @@ async def get_all_alerts_assigned_to_user(user_id: int) -> AlertsResponse:
         AlertsResponse: The response containing the fetched alerts assigned to the user.
     """
     logger.info(f"Fetching all alerts assigned to user {user_id}")
-    alerts = (await get_alerts(request=FilterAlertsRequest(alert_owner_id=user_id,per_page=1000))).alerts
+    alerts = (await get_alerts(request=FilterAlertsRequest(alert_owner_id=user_id, per_page=1000))).alerts
     alerts_assigned_to_user = []
     for alert in alerts:
         if alert["alert_owner_id"] == user_id:
             alerts_assigned_to_user.append(alert)
 
     return AlertsResponse(success=True, message="Successfully fetched alerts assigned to user", alerts=alerts_assigned_to_user)
+
 
 @dfir_iris_alerts_router.post(
     "/create_case/{alert_id}",
@@ -158,6 +164,7 @@ async def bookmark_alert_route(alert_id: str = Depends(verify_alert_exists)) -> 
     """
     logger.info(f"Bookmarking alert {alert_id}")
     return await bookmark_alert(alert_id, bookmarked=True)
+
 
 @dfir_iris_alerts_router.delete(
     "/bookmark/{alert_id}",
@@ -201,6 +208,7 @@ async def delete_multiple_alerts_route(request: DeleteMultipleAlertsRequest) -> 
         await delete_alert(int(alert_id))
     return DeleteAlertResponse(success=True, message="Successfully deleted alerts.")
 
+
 @dfir_iris_alerts_router.delete(
     "/purge",
     response_model=DeleteAlertResponse,
@@ -219,6 +227,7 @@ async def purge_alerts_route() -> DeleteAlertResponse:
     for alert in alerts:
         await delete_alert(int(alert["alert_id"]))
     return DeleteAlertResponse(success=True, message="Successfully deleted alerts.")
+
 
 @dfir_iris_alerts_router.delete(
     "/{alert_id}",

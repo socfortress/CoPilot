@@ -64,6 +64,7 @@ class CreatePipelineRule(BaseModel):
     description: str
     source: str
 
+
 class CreatePipeline(BaseModel):
     title: str
     description: str

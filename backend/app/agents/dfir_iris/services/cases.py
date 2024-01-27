@@ -1,14 +1,11 @@
-from fastapi import HTTPException
-from loguru import logger
 from typing import List
 
+from fastapi import HTTPException
+from loguru import logger
 
-from app.connectors.dfir_iris.services.cases import get_all_cases
 from app.agents.dfir_iris.schema.cases import AssetCaseIDResponse
-
-from app.connectors.dfir_iris.services.cases import get_all_cases
 from app.connectors.dfir_iris.services.assets import get_case_assets
-
+from app.connectors.dfir_iris.services.cases import get_all_cases
 
 # async def collect_agent_soc_cases(agent_id: int) -> AssetCaseIDResponse:
 #     """
@@ -36,6 +33,7 @@ from app.connectors.dfir_iris.services.assets import get_case_assets
 #     logger.info(f"Found cases: {case_ids}")
 #     cases = AssetCaseID(case_ids=case_ids)
 #     return AssetCaseIDResponse(case_ids=cases, success=True, message="Successfully retrieved cases for agent")
+
 
 async def collect_agent_soc_cases(agent_id: int) -> AssetCaseIDResponse:
     """
@@ -91,4 +89,3 @@ async def is_agent_in_case(case_id: int, agent_id: int) -> bool:
             logger.info(f"Found case with agent: {agent_id} in case: {case_id}")
             return True
     return False
-

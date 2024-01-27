@@ -2,13 +2,16 @@ import os
 
 from dotenv import load_dotenv
 from loguru import logger
+from sqlalchemy import and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import and_
 
 from app.auth.models.users import Role
 from app.connectors.models import Connectors
-from app.integrations.models.customer_integration_settings import AvailableIntegrations, AvailableIntegrationsAuthKeys
+from app.integrations.models.customer_integration_settings import AvailableIntegrations
+from app.integrations.models.customer_integration_settings import (
+    AvailableIntegrationsAuthKeys,
+)
 
 load_dotenv()
 
@@ -70,9 +73,25 @@ def get_connectors_list():
         ("SocfortressThreatIntel", "3", "api_key", "Connection to Socfortress Threat Intel. Make sure you have requested an API key."),
         ("Cortex", "3", "api_key", "Connection to Cortex. Make sure you have created an API key."),
         ("Grafana", "3", "username_password", "Connection to Grafana. Make sure to use the an admin role user."),
-        ("Wazuh Worker Provisioning", "3", "host_only", "Connection to Wazuh Worker Provisioning. Make sure you have deployed the Wazuh Worker Provisioning Application provided by SOCFortress: https://github.com/socfortress/Customer-Provisioning-Worker"),
-        ("Event Shipper", "3", "host_only", "Connection to Graylog GELF Input to receive events from integrations. Make sure you have created a GELF Input in Graylog.", "GELF_INPUT_PORT"),
-        ("Alert Creation Provisioning", "3", "host_only", "Connection to Alert Creation Provisioning. Make sure you have deployed the Alert Creation Provisioning Application provided by SOCFortress: https://github.com/socfortress/Customer-Provisioning-Alert"),
+        (
+            "Wazuh Worker Provisioning",
+            "3",
+            "host_only",
+            "Connection to Wazuh Worker Provisioning. Make sure you have deployed the Wazuh Worker Provisioning Application provided by SOCFortress: https://github.com/socfortress/Customer-Provisioning-Worker",
+        ),
+        (
+            "Event Shipper",
+            "3",
+            "host_only",
+            "Connection to Graylog GELF Input to receive events from integrations. Make sure you have created a GELF Input in Graylog.",
+            "GELF_INPUT_PORT",
+        ),
+        (
+            "Alert Creation Provisioning",
+            "3",
+            "host_only",
+            "Connection to Alert Creation Provisioning. Make sure you have deployed the Alert Creation Provisioning Application provided by SOCFortress: https://github.com/socfortress/Customer-Provisioning-Alert",
+        ),
         # ... Add more connectors as needed ...
     ]
 
@@ -135,6 +154,7 @@ async def add_roles_if_not_exist(session: AsyncSession) -> None:
     await session.commit()  # Commit the transaction
     logger.info("Role check and addition completed.")
 
+
 def load_available_integrations_data(integration_name: str, description: str, integration_details: str):
     """
     Load available integrations data from environment variables.
@@ -153,6 +173,7 @@ def load_available_integrations_data(integration_name: str, description: str, in
         "integration_details": integration_details,
     }
 
+
 def load_markdown_for_integration(integration_name: str) -> str:
     """
     Load markdown content for a given integration from a file.
@@ -163,13 +184,14 @@ def load_markdown_for_integration(integration_name: str) -> str:
     Returns:
         str: The content of the markdown file.
     """
-    #file_path = os.path.join("integrations_markdown", f"{integration_name.lower()}.md")
+    # file_path = os.path.join("integrations_markdown", f"{integration_name.lower()}.md")
     file_path = os.path.join("app", "integrations", "markdown", f"{integration_name.lower()}.md")
     try:
         with open(file_path, "r") as file:
             return file.read()
     except FileNotFoundError:
         return "No deployment intrusctions available."
+
 
 def get_available_integrations_list():
     """
@@ -185,11 +207,8 @@ def get_available_integrations_list():
     ]
 
     return [
-        load_available_integrations_data(
-            integration_name,
-            description,
-            load_markdown_for_integration(integration_name)
-        ) for integration_name, description in available_integrations
+        load_available_integrations_data(integration_name, description, load_markdown_for_integration(integration_name))
+        for integration_name, description in available_integrations
     ]
 
 
@@ -206,7 +225,9 @@ async def add_available_integrations_if_not_exist(session: AsyncSession):
     available_integrations_list = get_available_integrations_list()
 
     for available_integration_data in available_integrations_list:
-        query = select(AvailableIntegrations).where(AvailableIntegrations.integration_name == available_integration_data["integration_name"])
+        query = select(AvailableIntegrations).where(
+            AvailableIntegrations.integration_name == available_integration_data["integration_name"],
+        )
         result = await session.execute(query)
         existing_available_integration = result.scalars().first()
 
@@ -234,6 +255,7 @@ def load_available_integrations_auth_keys(integration_id: int, integration_name:
         "integration_name": integration_name,
         "auth_key_name": auth_key_name,
     }
+
 
 async def get_available_integrations_auth_keys_list(session: AsyncSession):
     """
@@ -283,7 +305,9 @@ async def add_available_integrations_auth_keys_if_not_exist(session: AsyncSessio
     available_integrations_auth_keys_list = await get_available_integrations_auth_keys_list(session=session)
 
     for available_integration_auth_keys_data in available_integrations_auth_keys_list:
-        query = select(AvailableIntegrations).where(AvailableIntegrations.integration_name == available_integration_auth_keys_data["integration_name"])
+        query = select(AvailableIntegrations).where(
+            AvailableIntegrations.integration_name == available_integration_auth_keys_data["integration_name"],
+        )
         result = await session.execute(query)
         existing_integration = result.scalars().first()
 
@@ -292,8 +316,8 @@ async def add_available_integrations_auth_keys_if_not_exist(session: AsyncSessio
             auth_key_query = select(AvailableIntegrationsAuthKeys).where(
                 and_(
                     AvailableIntegrationsAuthKeys.integration_id == existing_integration.id,
-                    AvailableIntegrationsAuthKeys.auth_key_name == available_integration_auth_keys_data["auth_key_name"]
-                )
+                    AvailableIntegrationsAuthKeys.auth_key_name == available_integration_auth_keys_data["auth_key_name"],
+                ),
             )
             auth_key_result = await session.execute(auth_key_query)
             existing_auth_key = auth_key_result.scalars().first()
@@ -301,4 +325,6 @@ async def add_available_integrations_auth_keys_if_not_exist(session: AsyncSessio
             if existing_auth_key is None:
                 new_auth_key = AvailableIntegrationsAuthKeys(**available_integration_auth_keys_data)
                 session.add(new_auth_key)
-                logger.info(f"Added new available integration auth keys: {available_integration_auth_keys_data['auth_key_name']} for {available_integration_auth_keys_data['integration_name']}")
+                logger.info(
+                    f"Added new available integration auth keys: {available_integration_auth_keys_data['auth_key_name']} for {available_integration_auth_keys_data['integration_name']}",
+                )

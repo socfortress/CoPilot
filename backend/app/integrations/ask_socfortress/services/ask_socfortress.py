@@ -1,13 +1,15 @@
-from typing import Optional
-from typing import Dict
 from typing import Any
+from typing import Dict
+from typing import Optional
 
 import httpx
 from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.connectors.utils import get_connector_info_from_db
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
+from app.db.db_session import get_db_session
 from app.integrations.alert_escalation.schema.general_alert import CreateAlertRequest
 from app.integrations.alert_escalation.schema.general_alert import GenericAlertModel
 from app.integrations.alert_escalation.schema.general_alert import GenericSourceModel
@@ -21,8 +23,7 @@ from app.integrations.ask_socfortress.schema.ask_socfortress import (
     AskSocfortressSigmaResponse,
 )
 from app.utils import get_connector_attribute
-from app.db.db_session import get_db_session
-from app.connectors.utils import get_connector_info_from_db
+
 
 async def get_single_alert_details(alert_details: CreateAlertRequest) -> GenericAlertModel:
     """
@@ -91,6 +92,7 @@ async def verify_ask_socfortress_credentials(attributes: Dict[str, Any]) -> Dict
         raise HTTPException(status_code=500, detail="Ask Socfortress credentials not found in the database")
     return attributes
 
+
 async def verify_ask_socfortress_connector(connector_name: str) -> str:
     """
     Verifies the Ask SocFortress connector.
@@ -118,6 +120,7 @@ async def verify_ask_socfortress_connector(connector_name: str) -> str:
     else:
         logger.error("Failed to verify Ask Socfortress connector")
         return {"connectionSuccessful": False, "message": "Failed to verify ASK SOCFortress connector"}
+
 
 async def invoke_ask_socfortress_api(api_key: str, url: str, request: AskSocfortressSigmaRequest) -> dict:
     """

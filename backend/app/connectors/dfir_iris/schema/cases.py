@@ -1,10 +1,10 @@
+from datetime import date
 from datetime import timedelta
 from enum import Enum
 from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Union
-from datetime import date
 
 from pydantic import BaseModel
 from pydantic import Field
@@ -35,14 +35,17 @@ class CaseResponse(BaseModel):
     message: str
     success: bool
 
+
 class PurgeCaseResponse(BaseModel):
     message: str
     success: bool
+
 
 class ModificationHistoryItem(BaseModel):
     action: str
     user: str
     user_id: int
+
 
 class SingleCaseModel(BaseModel):
     case_description: str
@@ -99,10 +102,12 @@ class CasesBreachedResponse(BaseModel):
     message: str
     success: bool
 
+
 class CaseModificationHistoryItem(BaseModel):
     user: str
     user_id: int
     action: str
+
 
 class CaseData(BaseModel):
     owner_id: int
@@ -124,10 +129,12 @@ class CaseData(BaseModel):
     case_uuid: str
     case_customer: int
 
+
 class ClosedCaseResponse(BaseModel):
     success: bool
     case: CaseData
     message: str
+
 
 class ReopenedCaseData(BaseModel):
     owner_id: int
@@ -149,8 +156,8 @@ class ReopenedCaseData(BaseModel):
     case_uuid: str
     case_customer: int
 
+
 class ReopenedCaseResponse(BaseModel):
     success: bool
     case: ReopenedCaseData
     message: str
-

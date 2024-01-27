@@ -1,13 +1,14 @@
+import os
 from datetime import datetime
 
 import requests
 from dotenv import load_dotenv
-import os
+
 from app.db.db_session import get_sync_db_session
-from app.schedulers.models.scheduler import JobMetadata
-from app.schedulers.utils.universal import scheduler_login
 from app.integrations.mimecast.routes.mimecast import invoke_mimecast_route
 from app.integrations.mimecast.schema.mimecast import MimecastRequest
+from app.schedulers.models.scheduler import JobMetadata
+from app.schedulers.utils.universal import scheduler_login
 
 load_dotenv()
 
@@ -47,6 +48,7 @@ def agent_sync():
             # Handle the case where job_metadata does not exist
             print("JobMetadata for 'agent_sync' not found.")
 
+
 async def invoke_mimecast_integration():
     """
     Invokes the Mimecast integration.
@@ -64,9 +66,6 @@ async def invoke_mimecast_integration():
             print("JobMetadata for 'invoke_mimecast_integration' not found.")
     # Invoke the Mimecast integration
     await invoke_mimecast_route(
-        MimecastRequest(
-            customer_code="",
-            integration_name="Mimecast"
-        ),
+        MimecastRequest(customer_code="", integration_name="Mimecast"),
         session,
     )

@@ -128,6 +128,7 @@ class IrisIoc(BaseModel):
     def to_dict(self):
         return self.dict(exclude_none=True)
 
+
 class IrisAlertContext(BaseModel):
     customer_iris_id: int = Field(
         ...,

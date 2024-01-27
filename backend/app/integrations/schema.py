@@ -1,12 +1,18 @@
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Type
+from typing import Union
+
 from pydantic import BaseModel
 from pydantic import Field
+
 from app.integrations.models.customer_integration_settings import AvailableIntegrations
-from typing import List, Optional, Union
-from typing import Dict
-from typing import Type
+
 
 class AuthKey(BaseModel):
     auth_key_name: str
+
 
 class IntegrationWithAuthKeys(BaseModel):
     id: int
@@ -15,10 +21,12 @@ class IntegrationWithAuthKeys(BaseModel):
     integration_details: str
     auth_keys: List[AuthKey]
 
+
 class AvailableIntegrationsResponse(BaseModel):
     available_integrations: List[IntegrationWithAuthKeys]
     message: str
     success: bool
+
 
 class CreateIntegrationService(BaseModel):
     auth_type: str = Field(
@@ -37,6 +45,7 @@ class CreateIntegrationService(BaseModel):
         examples=["https://api.mimecast.com"],
     )
 
+
 class CreateIntegrationAuthKeys(BaseModel):
     auth_key_name: str = Field(
         ...,
@@ -48,6 +57,7 @@ class CreateIntegrationAuthKeys(BaseModel):
         description="The auth value.",
         examples=["test-user"],
     )
+
 
 class CustomerIntegrationCreate(BaseModel):
     customer_code: str = Field(
@@ -78,6 +88,7 @@ class CustomerIntegrationCreate(BaseModel):
         description="The integration auth keys.",
     )
 
+
 class CustomerIntegrationCreateResponse(BaseModel):
     message: str = Field(
         ...,
@@ -88,6 +99,7 @@ class CustomerIntegrationCreateResponse(BaseModel):
         description="The success status.",
     )
 
+
 class CustomerIntegrationDeleteResponse(BaseModel):
     message: str = Field(
         ...,
@@ -97,6 +109,7 @@ class CustomerIntegrationDeleteResponse(BaseModel):
         ...,
         description="The success status.",
     )
+
 
 # class IntegrationConfig(BaseModel):
 #     config_id: int
@@ -126,16 +139,19 @@ class CustomerIntegrationDeleteResponse(BaseModel):
 #     message: str
 #     success: bool
 
+
 class IntegrationAuthKeys(BaseModel):
     id: int
     auth_key_name: str
     auth_value: str
     subscription_id: int
 
+
 class IntegrationService(BaseModel):
     auth_type: str
     service_name: str
     id: int
+
 
 class IntegrationSubscription(BaseModel):
     id: int
@@ -143,6 +159,7 @@ class IntegrationSubscription(BaseModel):
     integration_service_id: int
     integration_service: IntegrationService
     integration_auth_keys: List[IntegrationAuthKeys]  # Changed from IntegrationConfig
+
 
 class CustomerIntegrations(BaseModel):
     customer_code: str
@@ -165,10 +182,12 @@ class CustomerIntegrations(BaseModel):
         examples=[True],
     )
 
+
 class CustomerIntegrationsResponse(BaseModel):
     available_integrations: List[CustomerIntegrations]
     message: str
     success: bool
+
 
 class DeleteCustomerIntegration(BaseModel):
     customer_code: str = Field(
@@ -181,6 +200,7 @@ class DeleteCustomerIntegration(BaseModel):
         description="The integration name.",
         examples=["Mimecast"],
     )
+
 
 class UpdateCustomerIntegration(BaseModel):
     integration_name: str = Field(

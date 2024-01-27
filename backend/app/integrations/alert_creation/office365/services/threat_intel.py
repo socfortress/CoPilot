@@ -1,21 +1,34 @@
 from typing import Optional
 from typing import Set
 
-from app.integrations.alert_creation.general.schema.alert import ValidIocFields
-from app.integrations.alert_creation.office365.schema.threat_intel import IrisAlertContext
-from app.integrations.alert_creation.office365.schema.threat_intel import IrisAlertPayload
-from app.integrations.alert_creation.office365.schema.threat_intel import IrisAsset
-from app.integrations.alert_creation.office365.schema.threat_intel import IrisIoc
-from app.integrations.alert_creation.office365.schema.threat_intel import Office365ThreatIntelAlertBase
-from app.integrations.alert_creation.office365.schema.threat_intel import Office365ThreatIntelAlertResponse, Office365ThreatIntelAlertRequest
-from app.integrations.utils.schema import ShufflePayload
-from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
-from app.connectors.dfir_iris.utils.universal import initialize_client_and_alert
-from app.integrations.utils.alerts import send_to_shuffle
-from app.integrations.utils.alerts import validate_ioc_type
-from app.utils import get_customer_alert_settings, get_customer_alert_settings_office365
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
+from app.connectors.dfir_iris.utils.universal import initialize_client_and_alert
+from app.integrations.alert_creation.general.schema.alert import ValidIocFields
+from app.integrations.alert_creation.office365.schema.threat_intel import (
+    IrisAlertContext,
+)
+from app.integrations.alert_creation.office365.schema.threat_intel import (
+    IrisAlertPayload,
+)
+from app.integrations.alert_creation.office365.schema.threat_intel import IrisAsset
+from app.integrations.alert_creation.office365.schema.threat_intel import IrisIoc
+from app.integrations.alert_creation.office365.schema.threat_intel import (
+    Office365ThreatIntelAlertBase,
+)
+from app.integrations.alert_creation.office365.schema.threat_intel import (
+    Office365ThreatIntelAlertRequest,
+)
+from app.integrations.alert_creation.office365.schema.threat_intel import (
+    Office365ThreatIntelAlertResponse,
+)
+from app.integrations.utils.alerts import send_to_shuffle
+from app.integrations.utils.alerts import validate_ioc_type
+from app.integrations.utils.schema import ShufflePayload
+from app.utils import get_customer_alert_settings
+from app.utils import get_customer_alert_settings_office365
 
 
 def valid_ioc_fields() -> Set[str]:
@@ -41,7 +54,9 @@ async def construct_alert_source_link(alert_details: Office365ThreatIntelAlertRe
     str
         The alert source link.
     """
-    grafana_url = (await get_customer_alert_settings_office365(office365_organization_id=alert_details.data_office365_OrganizationId, session=session)).grafana_url
+    grafana_url = (
+        await get_customer_alert_settings_office365(office365_organization_id=alert_details.data_office365_OrganizationId, session=session)
+    ).grafana_url
 
     return (
         f"{grafana_url}/explore?left=%5B%22now-6h%22,%22now%22,%22O365%22,%7B%22refId%22"
@@ -103,11 +118,22 @@ async def build_alert_context_payload(
     """
     return IrisAlertContext(
         customer_iris_id=(
-            await get_customer_alert_settings_office365(office365_organization_id=alert_details.data_office365_OrganizationId, session=session)
+            await get_customer_alert_settings_office365(
+                office365_organization_id=alert_details.data_office365_OrganizationId,
+                session=session,
+            )
         ).iris_customer_id,
-        customer_name=(await get_customer_alert_settings_office365(office365_organization_id=alert_details.data_office365_OrganizationId, session=session)).customer_name,
+        customer_name=(
+            await get_customer_alert_settings_office365(
+                office365_organization_id=alert_details.data_office365_OrganizationId,
+                session=session,
+            )
+        ).customer_name,
         customer_cases_index=(
-            await get_customer_alert_settings_office365(office365_organization_id=alert_details.data_office365_OrganizationId, session=session)
+            await get_customer_alert_settings_office365(
+                office365_organization_id=alert_details.data_office365_OrganizationId,
+                session=session,
+            )
         ).iris_index,
         alert_id=alert_details.id,
         alert_name=alert_details.rule_description,
@@ -159,7 +185,10 @@ async def build_alert_payload(
             alert_status_id=3,
             alert_severity_id=5,
             alert_customer_id=(
-                await get_customer_alert_settings_office365(office365_organization_id=alert_details.data_office365_OrganizationId, session=session)
+                await get_customer_alert_settings_office365(
+                    office365_organization_id=alert_details.data_office365_OrganizationId,
+                    session=session,
+                )
             ).iris_customer_id,
             alert_source_content=alert_details.to_dict(),
             alert_context=context_payload,
@@ -177,7 +206,10 @@ async def build_alert_payload(
             alert_status_id=3,
             alert_severity_id=5,
             alert_customer_id=(
-                await get_customer_alert_settings_office365(office365_organization_id=alert_details.data_office365_OrganizationId, session=session)
+                await get_customer_alert_settings_office365(
+                    office365_organization_id=alert_details.data_office365_OrganizationId,
+                    session=session,
+                )
             ).iris_customer_id,
             alert_source_content=alert_details.to_dict(),
             alert_context=context_payload,
@@ -230,8 +262,12 @@ async def create_threat_intel_alert(alert: Office365ThreatIntelAlertRequest, ses
     await send_to_shuffle(
         ShufflePayload(
             alert_id=alert_id,
-            customer= (await get_customer_alert_settings_office365(office365_organization_id=alert.data_office365_OrganizationId, session=session)).customer_name,
-            customer_code= (await get_customer_alert_settings_office365(office365_organization_id=alert.data_office365_OrganizationId, session=session)).customer_code,
+            customer=(
+                await get_customer_alert_settings_office365(office365_organization_id=alert.data_office365_OrganizationId, session=session)
+            ).customer_name,
+            customer_code=(
+                await get_customer_alert_settings_office365(office365_organization_id=alert.data_office365_OrganizationId, session=session)
+            ).customer_code,
             alert_source_link=await construct_alert_source_link(alert, session=session),
             rule_description=alert.rule_description,
             hostname=alert.data_office365_UserId,
@@ -240,7 +276,9 @@ async def create_threat_intel_alert(alert: Office365ThreatIntelAlertRequest, ses
     )
     return Office365ThreatIntelAlertResponse(
         alert_id=alert_id,
-        customer=(await get_customer_alert_settings_office365(office365_organization_id=alert.data_office365_OrganizationId, session=session)).customer_name,
+        customer=(
+            await get_customer_alert_settings_office365(office365_organization_id=alert.data_office365_OrganizationId, session=session)
+        ).customer_name,
         alert_source_link=await construct_alert_source_link(alert, session=session),
         success=True,
         message=f"Successfully created alert {alert_id} in IRIS.",

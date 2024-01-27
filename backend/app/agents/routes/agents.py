@@ -8,6 +8,7 @@ from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
+from app.agents.dfir_iris.services.cases import collect_agent_soc_cases
 from app.agents.schema.agents import AgentModifyResponse
 from app.agents.schema.agents import AgentsResponse
 from app.agents.schema.agents import OutdatedVelociraptorAgentsResponse
@@ -20,7 +21,6 @@ from app.agents.velociraptor.services.agents import delete_agent_velociraptor
 from app.agents.wazuh.schema.agents import WazuhAgentVulnerabilitiesResponse
 from app.agents.wazuh.services.agents import delete_agent_wazuh
 from app.agents.wazuh.services.vulnerabilities import collect_agent_vulnerabilities
-from app.agents.dfir_iris.services.cases import collect_agent_soc_cases
 
 # App specific imports
 from app.auth.routes.auth import AuthHandler
@@ -292,9 +292,10 @@ async def get_agent_vulnerabilities(agent_id: str) -> WazuhAgentVulnerabilitiesR
     logger.info(f"Fetching agent {agent_id} vulnerabilities")
     return await collect_agent_vulnerabilities(agent_id)
 
+
 @agents_router.get(
     "/{agent_id}/soc_cases",
-    #response_model=SocCasesResponse,
+    # response_model=SocCasesResponse,
     description="Get SOC cases for agent",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )

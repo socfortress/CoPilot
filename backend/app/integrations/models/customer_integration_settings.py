@@ -1,6 +1,11 @@
-from typing import List, Optional
-from sqlmodel import Field, Relationship, SQLModel
+from typing import List
+from typing import Optional
+
 from sqlalchemy import Text
+from sqlmodel import Field
+from sqlmodel import Relationship
+from sqlmodel import SQLModel
+
 
 class AvailableIntegrations(SQLModel, table=True):
     __tablename__ = "available_integrations"
@@ -11,6 +16,7 @@ class AvailableIntegrations(SQLModel, table=True):
     # Relationships
     auth_keys: List["AvailableIntegrationsAuthKeys"] = Relationship(back_populates="integration")
 
+
 class AvailableIntegrationsAuthKeys(SQLModel, table=True):
     __tablename__ = "available_integrations_auth_keys"
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -19,6 +25,7 @@ class AvailableIntegrationsAuthKeys(SQLModel, table=True):
     auth_key_name: str = Field(max_length=255, nullable=False)
     # Relationships
     integration: "AvailableIntegrations" = Relationship(back_populates="auth_keys")
+
 
 class CustomerIntegrations(SQLModel, table=True):
     __tablename__ = "customer_integrations"
@@ -31,6 +38,7 @@ class CustomerIntegrations(SQLModel, table=True):
     # Relationships
     integration_subscriptions: List["IntegrationSubscription"] = Relationship(back_populates="customer_integrations")
 
+
 class IntegrationService(SQLModel, table=True):
     __tablename__ = "integration_services"
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -39,6 +47,7 @@ class IntegrationService(SQLModel, table=True):
     # Relationships
     integration_subscriptions: List["IntegrationSubscription"] = Relationship(back_populates="integration_service")
     configs: List["IntegrationConfig"] = Relationship(back_populates="integration_service")
+
 
 class IntegrationSubscription(SQLModel, table=True):
     __tablename__ = "integration_subscriptions"
@@ -50,6 +59,7 @@ class IntegrationSubscription(SQLModel, table=True):
     integration_service: "IntegrationService" = Relationship(back_populates="integration_subscriptions")
     integration_auth_keys: List["IntegrationAuthKeys"] = Relationship(back_populates="integration_subscription")  # Moved here
 
+
 class IntegrationConfig(SQLModel, table=True):
     __tablename__ = "integration_configs"
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -59,6 +69,7 @@ class IntegrationConfig(SQLModel, table=True):
     # Relationships
     integration_service: "IntegrationService" = Relationship(back_populates="configs")
 
+
 class IntegrationAuthKeys(SQLModel, table=True):
     __tablename__ = "integration_auth_keys"
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -67,4 +78,3 @@ class IntegrationAuthKeys(SQLModel, table=True):
     auth_value: str = Field(max_length=1024)  # e.g., JSON/encrypted credentials
     # Relationships
     integration_subscription: "IntegrationSubscription" = Relationship(back_populates="integration_auth_keys")  # Adjusted relationship
-

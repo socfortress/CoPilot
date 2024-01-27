@@ -9,10 +9,12 @@ class AssetState(BaseModel):
     object_last_update: str
     object_state: int
 
+
 class AssetIocLink(BaseModel):
     ioc_id: int
     ioc_value: str
     asset_id: int
+
 
 class Asset(BaseModel):
     analysis_status: str

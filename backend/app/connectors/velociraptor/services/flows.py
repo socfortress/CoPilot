@@ -9,8 +9,10 @@ from app.connectors.velociraptor.schema.artifacts import QuarantineBody
 from app.connectors.velociraptor.schema.artifacts import QuarantineResponse
 from app.connectors.velociraptor.schema.artifacts import RunCommandBody
 from app.connectors.velociraptor.schema.artifacts import RunCommandResponse
+from app.connectors.velociraptor.schema.flows import FlowClientSession
+from app.connectors.velociraptor.schema.flows import FlowResponse
+from app.connectors.velociraptor.schema.flows import RetrieveFlowRequest
 from app.connectors.velociraptor.utils.universal import UniversalService
-from app.connectors.velociraptor.schema.flows import FlowResponse, FlowClientSession, RetrieveFlowRequest
 
 
 def create_query(query: str) -> str:
@@ -25,6 +27,7 @@ def create_query(query: str) -> str:
     """
     return query
 
+
 async def get_flows(velociraptor_id: str) -> FlowResponse:
     """
     Get all artifacts from Velociraptor.
@@ -35,8 +38,8 @@ async def get_flows(velociraptor_id: str) -> FlowResponse:
     logger.info("Fetching artifacts from Velociraptor")
     velociraptor_service = await UniversalService.create("Velociraptor")
     query = create_query(
-            f"SELECT * FROM flows(client_id='{velociraptor_id}')",
-        )
+        f"SELECT * FROM flows(client_id='{velociraptor_id}')",
+    )
     all_flows = velociraptor_service.execute_query(query)
     logger.info(f"all_flows: {all_flows}")
     flows = [FlowClientSession(**flow) for flow in all_flows["results"]]
@@ -52,6 +55,7 @@ async def get_flows(velociraptor_id: str) -> FlowResponse:
         logger.error(f"Failed to retrieve flows from Velociraptor: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to retrieve flows from Velociraptor: {e}")
 
+
 async def get_flow(retrieve_flow_request: RetrieveFlowRequest):
     """
     Get all artifacts from Velociraptor.
@@ -62,16 +66,19 @@ async def get_flow(retrieve_flow_request: RetrieveFlowRequest):
     logger.info("Fetching artifacts from Velociraptor")
     velociraptor_service = await UniversalService.create("Velociraptor")
     query = create_query(
-            f"SELECT * FROM flow_results(client_id='{retrieve_flow_request.client_id}', flow_id='{retrieve_flow_request.session_id}')",
-        )
+        f"SELECT * FROM flow_results(client_id='{retrieve_flow_request.client_id}', flow_id='{retrieve_flow_request.session_id}')",
+    )
     flow_results = velociraptor_service.execute_query(query)
     logger.info(f"flow_results: {flow_results}")
     try:
         if flow_results["success"]:
-            return CollectArtifactResponse(success=flow_results["success"], message=flow_results["message"], results=flow_results["results"])
+            return CollectArtifactResponse(
+                success=flow_results["success"],
+                message=flow_results["message"],
+                results=flow_results["results"],
+            )
         else:
             raise HTTPException(status_code=500, detail=f"Failed to retrieve flow results from Velociraptor: {flow_results['message']}")
     except Exception as e:
         logger.error(f"Failed to retrieve flow results from Velociraptor: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to retrieve flow results from Velociraptor: {e}")
-

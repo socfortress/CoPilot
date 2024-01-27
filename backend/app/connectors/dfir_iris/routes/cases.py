@@ -7,17 +7,23 @@ from fastapi import Security
 from loguru import logger
 
 from app.auth.utils import AuthHandler
-from app.connectors.dfir_iris.schema.cases import CaseOlderThanBody, PurgeCaseResponse, ClosedCaseResponse, ReopenedCaseResponse
+from app.connectors.dfir_iris.schema.cases import CaseOlderThanBody
 from app.connectors.dfir_iris.schema.cases import CaseResponse
 from app.connectors.dfir_iris.schema.cases import CasesBreachedResponse
+from app.connectors.dfir_iris.schema.cases import ClosedCaseResponse
+from app.connectors.dfir_iris.schema.cases import PurgeCaseResponse
+from app.connectors.dfir_iris.schema.cases import ReopenedCaseResponse
 from app.connectors.dfir_iris.schema.cases import SingleCaseBody
 from app.connectors.dfir_iris.schema.cases import SingleCaseResponse
 from app.connectors.dfir_iris.schema.cases import TimeUnit
+from app.connectors.dfir_iris.services.cases import close_case
+from app.connectors.dfir_iris.services.cases import delete_single_case
 from app.connectors.dfir_iris.services.cases import get_all_cases
 from app.connectors.dfir_iris.services.cases import get_cases_older_than
 from app.connectors.dfir_iris.services.cases import get_single_case
+from app.connectors.dfir_iris.services.cases import purge_cases
+from app.connectors.dfir_iris.services.cases import reopen_case
 from app.connectors.dfir_iris.utils.universal import check_case_exists
-from app.connectors.dfir_iris.services.cases import purge_cases, delete_single_case, close_case, reopen_case
 
 
 async def verify_case_exists(case_id: int) -> int:
@@ -99,6 +105,7 @@ async def get_cases_older_than_route(case_older_than_body: CaseOlderThanBody = D
     logger.info(f"Fetching all cases older than {case_older_than_body.older_than} ({case_older_than_body.time_unit.value})")
     return await get_cases_older_than(case_older_than_body)
 
+
 @dfir_iris_cases_router.delete(
     "/purge",
     response_model=PurgeCaseResponse,
@@ -114,6 +121,7 @@ async def purge_cases_route() -> PurgeCaseResponse:
     """
     logger.info("Purging all cases")
     return await purge_cases()
+
 
 @dfir_iris_cases_router.delete(
     "/purge/{case_id}",
@@ -156,6 +164,7 @@ async def get_single_case_route(case_id: int = Depends(verify_case_exists)) -> S
     single_case_body = SingleCaseBody(case_id=case_id)
     return await get_single_case(single_case_body.case_id)
 
+
 @dfir_iris_cases_router.put(
     "/close/{case_id}",
     response_model=ClosedCaseResponse,
@@ -175,6 +184,7 @@ async def close_single_case_route(case_id: int = Depends(verify_case_exists)) ->
     logger.info(f"Closing case {case_id}")
     single_case_body = SingleCaseBody(case_id=case_id)
     return await close_case(single_case_body.case_id)
+
 
 @dfir_iris_cases_router.put(
     "/open/{case_id}",

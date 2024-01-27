@@ -1,11 +1,20 @@
-import httpx
-from typing import Any, Dict, Optional
-from loguru import logger
-import time
-import json
-import traceback
 import asyncio
-async def send_get_request(endpoint: str, headers: Optional[Dict[str, Any]] = None, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+import json
+import time
+import traceback
+from typing import Any
+from typing import Dict
+from typing import Optional
+
+import httpx
+from loguru import logger
+
+
+async def send_get_request(
+    endpoint: str,
+    headers: Optional[Dict[str, Any]] = None,
+    params: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
     """Send a GET request to the given endpoint.
 
     Args:
@@ -22,6 +31,7 @@ async def send_get_request(endpoint: str, headers: Optional[Dict[str, Any]] = No
             return {"data": response.json(), "success": True, "message": "Successfully retrieved data"}
         except httpx.HTTPError as e:
             return {"success": False, "message": f"Failed to retrieve data: {e}"}
+
 
 async def send_post_request(endpoint: str, data: Dict[str, Any], headers: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     """
@@ -43,10 +53,10 @@ async def send_post_request(endpoint: str, data: Dict[str, Any], headers: Option
                 logger.error(error_message)
                 return {"success": False, "message": error_message}
 
-            content_type = response.headers.get('Content-Type', '')
+            content_type = response.headers.get("Content-Type", "")
             logger.info(f"Content-Type: {content_type}")
 
-            if 'application/json' in content_type:
+            if "application/json" in content_type:
                 logger.info(f"Successfully retrieved data from {endpoint} with data: {data} and headers: {headers}")
                 return {"data": response.json(), "success": True, "message": "Successfully retrieved data"}
             else:
@@ -57,4 +67,3 @@ async def send_post_request(endpoint: str, data: Dict[str, Any], headers: Option
             error_message = f"Failed to send POST request: {str(e)}"
             logger.error(error_message)
             return {"success": False, "message": error_message}
-

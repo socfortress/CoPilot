@@ -1,1646 +1,1605 @@
 {
-  "annotations": {
-    "list": [
-      {
-        "builtIn": 1,
-        "datasource": {
-          "type": "datasource",
-          "uid": "grafana"
-        },
-        "enable": true,
-        "hide": true,
-        "iconColor": "rgba(0, 211, 255, 1)",
-        "name": "Annotations & Alerts",
-        "target": {
-          "limit": 100,
-          "matchAny": false,
-          "tags": [],
-          "type": "dashboard"
-        },
-        "type": "dashboard"
-      }
-    ]
-  },
-  "editable": false,
-  "fiscalYearStartMonth": 0,
-  "graphTooltip": 0,
-  "id": null,
-  "links": [
-    {
-      "asDropdown": true,
-      "icon": "external link",
-      "includeVars": true,
-      "keepTime": true,
-      "tags": [
-        "O365"
-      ],
-      "targetBlank": true,
-      "title": "",
-      "type": "dashboards"
-    }
-  ],
-  "liveNow": false,
-  "panels": [
-    {
-      "datasource": {
-        "type": "elasticsearch",
-        "uid": "replace_datasource_uid"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "mappings": [
-            {
-              "options": {
-                "match": "null",
-                "result": {
-                  "text": "N/A"
-                }
-              },
-              "type": "special"
-            }
-          ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "red",
-                "value": null
-              }
-            ]
-          },
-          "unit": "locale"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 4,
-        "x": 0,
-        "y": 0
-      },
-      "id": 43,
-      "links": [],
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "horizontal",
-        "reduceOptions": {
-          "calcs": [
-            "sum"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "text": {},
-        "textMode": "auto"
-      },
-      "pluginVersion": "9.2.0",
-      "targets": [
-        {
-          "bucketAggs": [
-            {
-              "field": "timestamp",
-              "id": "2",
-              "settings": {
-                "interval": "auto",
-                "min_doc_count": 0,
-                "trimEdges": 0
-              },
-              "type": "date_histogram"
-            }
-          ],
-          "datasource": {
-            "type": "elasticsearch",
-            "uid": "replace_datasource_uid"
-          },
-          "metrics": [
-            {
-              "field": "select field",
-              "id": "1",
-              "type": "count"
-            }
-          ],
-          "query": "rule_level:>=12 AND data_office365_Operation:$operation",
-          "refId": "A",
-          "timeField": "timestamp"
-        }
-      ],
-      "title": "ALERTS",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "elasticsearch",
-        "uid": "replace_datasource_uid"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            }
-          },
-          "mappings": []
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Count"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "EVENTS"
-              },
-              {
-                "id": "unit",
-                "value": "short"
-              },
-              {
-                "id": "decimals",
-                "value": -1
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 3,
-        "x": 4,
-        "y": 0
-      },
-      "id": 53,
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": false
-        },
-        "pieType": "donut",
-        "reduceOptions": {
-          "calcs": [
-            "sum"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "8.5.1",
-      "targets": [
-        {
-          "bucketAggs": [
-            {
-              "fake": true,
-              "field": "data_office365_Operation",
-              "id": "4",
-              "settings": {
-                "min_doc_count": 1,
-                "order": "desc",
-                "orderBy": "_count",
-                "size": "10"
-              },
-              "type": "terms"
-            },
-            {
-              "field": "data_office365_CreationTime",
-              "id": "5",
-              "settings": {
-                "interval": "auto",
-                "min_doc_count": "0",
-                "timeZone": "utc",
-                "trimEdges": "0"
-              },
-              "type": "date_histogram"
-            }
-          ],
-          "datasource": {
-            "type": "elasticsearch",
-            "uid": "replace_datasource_uid"
-          },
-          "metrics": [
-            {
-              "field": "select field",
-              "id": "1",
-              "type": "count"
-            }
-          ],
-          "query": "data_office365_Operation:$operation AND rule_level:$rule_level",
-          "refId": "A",
-          "timeField": "timestamp"
-        }
-      ],
-      "title": "EVENTS BY OPERATION (Top 10)",
-      "transformations": [],
-      "type": "piechart"
-    },
-    {
-      "datasource": {
-        "type": "elasticsearch",
-        "uid": "replace_datasource_uid"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "displayMode": "auto",
-            "inspect": false
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "red",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Count"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "EVENTS"
-              },
-              {
-                "id": "unit",
-                "value": "short"
-              },
-              {
-                "id": "decimals",
-                "value": -1
-              },
-              {
-                "id": "custom.align"
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "red",
-                      "value": null
-                    }
-                  ]
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "OPERATION"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 209
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 5,
-        "x": 7,
-        "y": 0
-      },
-      "id": 54,
-      "options": {
-        "footer": {
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
-        },
-        "showHeader": true,
-        "sortBy": []
-      },
-      "pluginVersion": "9.2.0",
-      "targets": [
-        {
-          "bucketAggs": [
-            {
-              "fake": true,
-              "field": "data_office365_Operation",
-              "id": "4",
-              "settings": {
-                "min_doc_count": 1,
-                "order": "desc",
-                "orderBy": "_count",
-                "size": "0"
-              },
-              "type": "terms"
-            }
-          ],
-          "datasource": {
-            "type": "elasticsearch",
-            "uid": "replace_datasource_uid"
-          },
-          "metrics": [
-            {
-              "field": "select field",
-              "id": "1",
-              "type": "count"
-            }
-          ],
-          "query": "data_office365_Operation:$operation AND rule_level:$rule_level",
-          "refId": "A",
-          "timeField": "timestamp"
-        }
-      ],
-      "title": "EVENTS BY OPERATION",
-      "transformations": [
-        {
-          "id": "merge",
-          "options": {
-            "reducers": []
-          }
-        },
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {},
-            "indexByName": {},
-            "renameByName": {
-              "Count": "EVENTS",
-              "data_office365_Operation": "OPERATION",
-              "data_office365_Workload": "WORKLOAD"
-            }
-          }
-        }
-      ],
-      "type": "table"
-    },
-    {
-      "datasource": {
-        "type": "elasticsearch",
-        "uid": "replace_datasource_uid"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "mappings": [
-            {
-              "options": {
-                "match": "null",
-                "result": {
-                  "text": "N/A"
-                }
-              },
-              "type": "special"
-            }
-          ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "orange",
-                "value": null
-              }
-            ]
-          },
-          "unit": "locale"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 4,
-        "x": 12,
-        "y": 0
-      },
-      "id": 55,
-      "links": [],
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "horizontal",
-        "reduceOptions": {
-          "calcs": [
-            "sum"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "text": {},
-        "textMode": "auto"
-      },
-      "pluginVersion": "9.2.0",
-      "targets": [
-        {
-          "bucketAggs": [
-            {
-              "field": "timestamp",
-              "id": "2",
-              "settings": {
-                "interval": "auto",
-                "min_doc_count": 0,
-                "trimEdges": 0
-              },
-              "type": "date_histogram"
-            }
-          ],
-          "datasource": {
-            "type": "elasticsearch",
-            "uid": "replace_datasource_uid"
-          },
-          "metrics": [
-            {
-              "field": "select field",
-              "id": "1",
-              "type": "count"
-            }
-          ],
-          "query": "data_office365_Operation:UserSubmission",
-          "refId": "A",
-          "timeField": "timestamp"
-        }
-      ],
-      "title": "PHISHING (USER SUBMISSIONS)",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "elasticsearch",
-        "uid": "replace_datasource_uid"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "displayMode": "auto",
-            "inspect": false
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "red",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Count"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "EVENTS"
-              },
-              {
-                "id": "unit",
-                "value": "short"
-              },
-              {
-                "id": "decimals",
-                "value": -1
-              },
-              {
-                "id": "custom.align"
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "red",
-                      "value": null
-                    }
-                  ]
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "OPERATION"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 263
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "ACCOUNT"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 439
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 8,
-        "x": 16,
-        "y": 0
-      },
-      "id": 57,
-      "options": {
-        "footer": {
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
-        },
-        "showHeader": true,
-        "sortBy": []
-      },
-      "pluginVersion": "9.2.0",
-      "targets": [
-        {
-          "bucketAggs": [
-            {
-              "fake": true,
-              "field": "data_office365_UserId",
-              "id": "4",
-              "settings": {
-                "min_doc_count": 1,
-                "order": "desc",
-                "orderBy": "_count",
-                "size": "0"
-              },
-              "type": "terms"
-            }
-          ],
-          "datasource": {
-            "type": "elasticsearch",
-            "uid": "replace_datasource_uid"
-          },
-          "metrics": [
-            {
-              "field": "select field",
-              "id": "1",
-              "type": "count"
-            }
-          ],
-          "query": "data_office365_Operation:UserSubmission",
-          "refId": "A",
-          "timeField": "timestamp"
-        }
-      ],
-      "title": "PHISHING (REPORTERS)",
-      "transformations": [
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {},
-            "indexByName": {},
-            "renameByName": {
-              "Count": "EVENTS",
-              "data_office365_Operation": "OPERATION",
-              "data_office365_UserId": "ACCOUNT",
-              "data_office365_Workload": "WORKLOAD"
-            }
-          }
-        }
-      ],
-      "type": "table"
-    },
-    {
-      "datasource": {
-        "type": "elasticsearch",
-        "uid": "replace_datasource_uid"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [
-            {
-              "options": {
-                "match": "null",
-                "result": {
-                  "text": "N/A"
-                }
-              },
-              "type": "special"
-            }
-          ],
-          "max": 15,
-          "min": 0,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "#299c46",
-                "value": null
-              },
-              {
-                "color": "rgba(237, 129, 40, 0.89)",
-                "value": 8
-              },
-              {
-                "color": "#d44a3a",
-                "value": 12
-              }
-            ]
-          },
-          "unit": "none"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 4,
-        "x": 0,
-        "y": 7
-      },
-      "id": 16,
-      "links": [],
-      "options": {
-        "orientation": "horizontal",
-        "reduceOptions": {
-          "calcs": [
-            "max"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showThresholdLabels": false,
-        "showThresholdMarkers": true,
-        "text": {}
-      },
-      "pluginVersion": "9.2.0",
-      "targets": [
-        {
-          "bucketAggs": [
-            {
-              "field": "timestamp",
-              "id": "2",
-              "settings": {
-                "interval": "auto",
-                "min_doc_count": 0,
-                "trimEdges": 0
-              },
-              "type": "date_histogram"
-            }
-          ],
-          "datasource": {
-            "type": "elasticsearch",
-            "uid": "replace_datasource_uid"
-          },
-          "metrics": [
-            {
-              "field": "rule_level",
-              "id": "1",
-              "meta": {},
-              "settings": {},
-              "type": "max"
-            }
-          ],
-          "query": "data_office365_Operation:$operation",
-          "refId": "A",
-          "timeField": "timestamp"
-        }
-      ],
-      "title": "MAX SEVERITY (0 - 15)",
-      "type": "gauge"
-    },
-    {
-      "datasource": {
-        "type": "elasticsearch",
-        "uid": "replace_datasource_uid"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "bars",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "normal"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 13,
-        "w": 20,
-        "x": 4,
-        "y": 7
-      },
-      "id": 59,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "table",
-          "placement": "right",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "alias": "",
-          "bucketAggs": [
-            {
-              "field": "data_office365_Operation",
-              "id": "3",
-              "settings": {
-                "min_doc_count": "1",
-                "order": "desc",
-                "orderBy": "_count",
-                "size": "10"
-              },
-              "type": "terms"
-            },
-            {
-              "field": "timestamp",
-              "id": "2",
-              "settings": {
-                "interval": "auto"
-              },
-              "type": "date_histogram"
-            }
-          ],
-          "datasource": {
-            "type": "elasticsearch",
-            "uid": "replace_datasource_uid"
-          },
-          "metrics": [
-            {
-              "id": "1",
-              "type": "count"
-            }
-          ],
-          "query": "data_office365_Operation:$operation AND rule_level:$rule_level",
-          "refId": "A",
-          "timeField": "timestamp"
-        }
-      ],
-      "title": "TOP 10 OPERATIONS - HISTOGRAM",
-      "transparent": true,
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "elasticsearch",
-        "uid": "replace_datasource_uid"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "mappings": [
-            {
-              "options": {
-                "match": "null",
-                "result": {
-                  "text": "N/A"
-                }
-              },
-              "type": "special"
-            }
-          ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "blue",
-                "value": null
-              }
-            ]
-          },
-          "unit": "locale"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 4,
-        "x": 0,
-        "y": 14
-      },
-      "id": 51,
-      "links": [],
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "horizontal",
-        "reduceOptions": {
-          "calcs": [
-            "sum"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "text": {},
-        "textMode": "auto"
-      },
-      "pluginVersion": "9.2.0",
-      "targets": [
-        {
-          "bucketAggs": [
-            {
-              "$$hashKey": "object:331",
-              "field": "timestamp",
-              "id": "2",
-              "settings": {
-                "interval": "auto",
-                "min_doc_count": 0,
-                "trimEdges": 0
-              },
-              "type": "date_histogram"
-            }
-          ],
-          "datasource": {
-            "type": "elasticsearch",
-            "uid": "replace_datasource_uid"
-          },
-          "metrics": [
-            {
-              "$$hashKey": "object:329",
-              "field": "select field",
-              "id": "1",
-              "type": "count"
-            }
-          ],
-          "query": "data_office365_Operation:$operation AND rule_level:$rule_level",
-          "refId": "A",
-          "timeField": "timestamp"
-        }
-      ],
-      "title": "EVENTS (Total)",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "elasticsearch",
-        "uid": "replace_datasource_uid"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "displayMode": "auto",
-            "filterable": true,
-            "inspect": false
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "rule_level"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "RULE LEVEL"
-              },
-              {
-                "id": "unit",
-                "value": "short"
-              },
-              {
-                "id": "decimals",
-                "value": -1
-              },
-              {
-                "id": "custom.displayMode",
-                "value": "color-background"
-              },
-              {
-                "id": "custom.align"
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "#37872D",
-                      "value": null
-                    },
-                    {
-                      "color": "rgba(237, 129, 40, 0.89)",
-                      "value": 7
-                    },
-                    {
-                      "color": "rgba(245, 54, 54, 0.9)",
-                      "value": 12
-                    }
-                  ]
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Date/Time"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 242
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "MITRE TACTIC"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 332
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "MITRE TECHNIQUE"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 312
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "EVENT ID"
-            },
-            "properties": [
-              {
-                "id": "links",
-                "value": [
-                  {
-                    "targetBlank": true,
-                    "title": "VIEW EVENT DETAILS",
-                    "url": "https://grafana.company.local/explore?left=%7B%22datasource%22:%22O365%22,%22queries%22:%5B%7B%22refId%22:%22A%22,%22query%22:%22_id:${__value.text}%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D,%22range%22:%7B%22from%22:%22now-6h%22,%22to%22:%22now%22%7D%7D"
-                  }
-                ]
-              },
-              {
-                "id": "custom.width",
-                "value": 319
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "ACCOUNT"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 343
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "EVENT TIME"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 195
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "FILE SIZE"
-            },
-            "properties": [
-              {
-                "id": "unit",
-                "value": "bytes"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "SENSITIVE INFO"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 154
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "RULE LEVEL"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 157
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 16,
-        "w": 24,
-        "x": 0,
-        "y": 20
-      },
-      "id": 27,
-      "options": {
-        "footer": {
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
-        },
-        "showHeader": true,
-        "sortBy": []
-      },
-      "pluginVersion": "9.2.0",
-      "targets": [
-        {
-          "bucketAggs": [],
-          "datasource": {
-            "type": "elasticsearch",
-            "uid": "replace_datasource_uid"
-          },
-          "metrics": [
-            {
-              "id": "1",
-              "settings": {
-                "size": "250"
-              },
-              "type": "raw_data"
-            }
-          ],
-          "query": "data_office365_Operation:$operation AND rule_level:$rule_level",
-          "refId": "A",
-          "timeField": "timestamp"
-        }
-      ],
-      "title": "EVENTS",
-      "transformations": [
-        {
-          "id": "merge",
-          "options": {
-            "reducers": []
-          }
-        },
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "@metadata_beat": true,
-              "@metadata_type": true,
-              "@metadata_version": true,
-              "IMPHASH": true,
-              "MD5": true,
-              "SHA1": true,
-              "SHA256": true,
-              "_id": false,
-              "_index": true,
-              "_type": true,
-              "agent_ephemeral_id": true,
-              "agent_hostname": true,
-              "agent_id": true,
-              "agent_ip_city_name": true,
-              "agent_ip_country_code": true,
-              "agent_ip_geolocation": true,
-              "agent_name": true,
-              "agent_type": true,
-              "agent_version": true,
-              "beats_type": true,
-              "cluster_name": true,
-              "cluster_node": true,
-              "collector_node_id": true,
-              "data_alert_action": true,
-              "data_alert_category": true,
-              "data_alert_gid": true,
-              "data_alert_rev": true,
-              "data_alert_severity": true,
-              "data_alert_signature": true,
-              "data_alert_signature_id": true,
-              "data_app_proto": true,
-              "data_audit_auid": true,
-              "data_audit_command": true,
-              "data_audit_euid": true,
-              "data_audit_exe": true,
-              "data_audit_gid": true,
-              "data_audit_id": true,
-              "data_audit_pid": true,
-              "data_audit_res": true,
-              "data_audit_session": true,
-              "data_audit_type": true,
-              "data_audit_uid": true,
-              "data_dest_ip": true,
-              "data_dest_port": true,
-              "data_dstuser": true,
-              "data_event_type": true,
-              "data_extra_data": true,
-              "data_file": true,
-              "data_flow_bytes_toclient": true,
-              "data_flow_bytes_toserver": true,
-              "data_flow_id": true,
-              "data_flow_pkts_toclient": true,
-              "data_flow_pkts_toserver": true,
-              "data_flow_start": true,
-              "data_http_http_content_type": true,
-              "data_http_http_port": true,
-              "data_http_length": true,
-              "data_http_status": true,
-              "data_http_url": true,
-              "data_id": true,
-              "data_in_iface": true,
-              "data_metadata_flowbits": true,
-              "data_metadata_flowints_http_anomaly_count": true,
-              "data_metadata_flowints_tcp_retransmission_count": true,
-              "data_office365_AadAppId": true,
-              "data_office365_Actor": true,
-              "data_office365_ActorContextId": true,
-              "data_office365_ActorIpAddress": false,
-              "data_office365_ActorIpAddress_city_name": true,
-              "data_office365_ActorIpAddress_country_code": true,
-              "data_office365_ActorIpAddress_geolocation": true,
-              "data_office365_AdditionalData": true,
-              "data_office365_AlertEntityId": true,
-              "data_office365_AlertId": true,
-              "data_office365_AlertLinks": true,
-              "data_office365_AlertType": true,
-              "data_office365_ApplicationId": true,
-              "data_office365_AzureActiveDirectoryEventType": true,
-              "data_office365_BCLValue": true,
-              "data_office365_Category": true,
-              "data_office365_ClientApplication": true,
-              "data_office365_ClientIP": true,
-              "data_office365_ClientIP_city_name": true,
-              "data_office365_ClientIP_country_code": true,
-              "data_office365_ClientIP_geolocation": true,
-              "data_office365_CmdletVersion": true,
-              "data_office365_Comments": true,
-              "data_office365_CreationTime": false,
-              "data_office365_Data": true,
-              "data_office365_DataType": true,
-              "data_office365_DatabaseType": true,
-              "data_office365_DeliveryMessageInfo_DIEnrichment": true,
-              "data_office365_DeliveryMessageInfo_DeliveryControlSource": true,
-              "data_office365_DeliveryMessageInfo_DeliveryControlType": true,
-              "data_office365_DeliveryMessageInfo_DeliveryReason": true,
-              "data_office365_DeliveryMessageInfo_Destination": true,
-              "data_office365_DeliveryMessageInfo_FinalFilterVerdict": true,
-              "data_office365_DeliveryMessageInfo_FinalFilterVerdictControlSource": true,
-              "data_office365_DeliveryMessageInfo_FinalVerdict": true,
-              "data_office365_DeliveryMessageInfo_FinalVerdictSource": true,
-              "data_office365_DeliveryMessageInfo_Id": true,
-              "data_office365_DeliveryMessageInfo_IsValid": true,
-              "data_office365_DeliveryMessageInfo_PolicyHit": true,
-              "data_office365_DeliveryMessageInfo_PolicyOverride": true,
-              "data_office365_DeliveryMessageInfo_TenantActionPolicyId": true,
-              "data_office365_DeliveryMessageInfo_TenantActionPolicyType": true,
-              "data_office365_DeliveryMessageInfo_Timestamp": true,
-              "data_office365_Description": true,
-              "data_office365_DeviceProperties": true,
-              "data_office365_EffectiveOrganization": true,
-              "data_office365_EntityType": true,
-              "data_office365_ErrorNumber": true,
-              "data_office365_ExchangeLocations": true,
-              "data_office365_ExchangeMetaData_CC": true,
-              "data_office365_ExchangeMetaData_FileSize": false,
-              "data_office365_ExchangeMetaData_From": true,
-              "data_office365_ExchangeMetaData_MessageID": true,
-              "data_office365_ExchangeMetaData_RecipientCount": false,
-              "data_office365_ExchangeMetaData_Sent": true,
-              "data_office365_ExchangeMetaData_Subject": false,
-              "data_office365_ExchangeMetaData_To": true,
-              "data_office365_ExchangeMetaData_UniqueID": true,
-              "data_office365_ExtendedProperties": true,
-              "data_office365_FilteringDate": true,
-              "data_office365_GradingResult_FirstTriagedBy": true,
-              "data_office365_GradingResult_Id": true,
-              "data_office365_GradingResult_LastUpdatedBy": true,
-              "data_office365_GradingResult_Timestamp": true,
-              "data_office365_GradingResult_TriageCategory": true,
-              "data_office365_GradingResult_TriageVerdict": true,
-              "data_office365_Id": true,
-              "data_office365_IncidentId": true,
-              "data_office365_InsightData": true,
-              "data_office365_InsightId": true,
-              "data_office365_InterSystemsId": true,
-              "data_office365_IntraSystemId": true,
-              "data_office365_KesMailId": true,
-              "data_office365_Language": true,
-              "data_office365_LogonError": true,
-              "data_office365_MessageDate": true,
-              "data_office365_ModifiedProperties": true,
-              "data_office365_Name": true,
-              "data_office365_NonPIIParameters": true,
-              "data_office365_ObjectId": true,
-              "data_office365_ObjectType": true,
-              "data_office365_Operation": true,
-              "data_office365_OrganizationId": true,
-              "data_office365_P1Sender": true,
-              "data_office365_P1SenderDomain": true,
-              "data_office365_P2Sender": true,
-              "data_office365_P2SenderDomain": true,
-              "data_office365_Parameters": true,
-              "data_office365_PolicyDetails": true,
-              "data_office365_PolicyId": true,
-              "data_office365_Query": true,
-              "data_office365_Recipients": true,
-              "data_office365_RecordType": true,
-              "data_office365_RelativeUrl": true,
-              "data_office365_RescanResult_Id": true,
-              "data_office365_RescanResult_RescanVerdict": true,
-              "data_office365_RescanResult_Timestamp": true,
-              "data_office365_ResultCount": true,
-              "data_office365_ResultStatus": true,
-              "data_office365_SecurityComplianceCenterEventType": true,
-              "data_office365_SenderIP": true,
-              "data_office365_SenderIP_city_name": true,
-              "data_office365_SenderIP_country_code": true,
-              "data_office365_SenderIP_geolocation": true,
-              "data_office365_Severity": true,
-              "data_office365_SharePointMetaData_FileID": true,
-              "data_office365_SharePointMetaData_FileName": false,
-              "data_office365_SharePointMetaData_FileOwner": true,
-              "data_office365_SharePointMetaData_FilePathUrl": true,
-              "data_office365_SharePointMetaData_FileSize": true,
-              "data_office365_SharePointMetaData_From": true,
-              "data_office365_SharePointMetaData_IsViewableByExternalUsers": true,
-              "data_office365_SharePointMetaData_IsVisibleOnlyToOdbOwner": true,
-              "data_office365_SharePointMetaData_ItemCreationTime": true,
-              "data_office365_SharePointMetaData_ItemLastModifiedTime": true,
-              "data_office365_SharePointMetaData_ItemLastSharedTime": true,
-              "data_office365_SharePointMetaData_SiteCollectionGuid": true,
-              "data_office365_SharePointMetaData_SiteCollectionUrl": true,
-              "data_office365_SharePointMetaData_UniqueID": true,
-              "data_office365_Source": true,
-              "data_office365_StartTime": true,
-              "data_office365_Status": true,
-              "data_office365_Subject": true,
-              "data_office365_SubmissionContent": true,
-              "data_office365_SubmissionContentSubType": true,
-              "data_office365_SubmissionContentType": true,
-              "data_office365_SubmissionId": true,
-              "data_office365_SubmissionState": true,
-              "data_office365_SubmissionType": true,
-              "data_office365_SubmitterDisplayName": true,
-              "data_office365_SubmitterId": true,
-              "data_office365_Target": true,
-              "data_office365_TargetContextId": true,
-              "data_office365_UserId": true,
-              "data_office365_UserKey": true,
-              "data_office365_UserType": true,
-              "data_office365_Version": true,
-              "data_office365_Workload": true,
-              "data_win_system_version": true,
-              "decoder_name": true,
-              "decoder_parent": true,
-              "error": true,
-              "full_log": false,
-              "gl2_accounted_message_size": true,
-              "gl2_message_id": true,
-              "gl2_processing_error": true,
-              "gl2_remote_ip": true,
-              "gl2_remote_port": true,
-              "gl2_source_collector": true,
-              "gl2_source_input": true,
-              "gl2_source_node": true,
-              "highlight": true,
-              "id": true,
-              "input_type": true,
-              "level": true,
-              "location": true,
-              "log_file_path": true,
-              "log_offset": true,
-              "manager_name": true,
-              "message": true,
-              "module": true,
-              "rule_firedtimes": true,
-              "rule_group1": true,
-              "rule_groups": true,
-              "rule_id": true,
-              "rule_mail": true,
-              "rule_mitre_technique": false,
-              "sort": true,
-              "source": true,
-              "src_ip": true,
-              "streams": true,
-              "syslog_level": true,
-              "syslog_tag": true,
-              "syslog_type": true,
-              "time": true,
-              "timestamp": true,
-              "true": true
-            },
-            "indexByName": {
-              "_id": 2,
-              "_index": 8,
-              "_type": 9,
-              "agent_id": 10,
-              "agent_name": 4,
-              "cluster_name": 11,
-              "cluster_node": 12,
-              "data_office365_CreationTime": 0,
-              "data_office365_ExchangeMetaData_CC": 45,
-              "data_office365_ExchangeMetaData_FileSize": 47,
-              "data_office365_ExchangeMetaData_From": 48,
-              "data_office365_ExchangeMetaData_MessageID": 49,
-              "data_office365_ExchangeMetaData_RecipientCount": 51,
-              "data_office365_ExchangeMetaData_Sent": 52,
-              "data_office365_ExchangeMetaData_Subject": 50,
-              "data_office365_ExchangeMetaData_To": 53,
-              "data_office365_ExchangeMetaData_UniqueID": 54,
-              "data_office365_Id": 13,
-              "data_office365_IncidentId": 55,
-              "data_office365_ObjectId": 14,
-              "data_office365_Operation": 20,
-              "data_office365_OrganizationId": 15,
-              "data_office365_RecordType": 16,
-              "data_office365_SensitiveInfoDetectionIsIncluded": 46,
-              "data_office365_UserId": 3,
-              "data_office365_UserKey": 17,
-              "data_office365_UserType": 18,
-              "data_office365_Version": 19,
-              "data_office365_Workload": 44,
-              "decoder_name": 21,
-              "gl2_accounted_message_size": 22,
-              "gl2_message_id": 23,
-              "gl2_processing_error": 24,
-              "gl2_remote_ip": 25,
-              "gl2_remote_port": 26,
-              "gl2_source_input": 27,
-              "gl2_source_node": 28,
-              "highlight": 29,
-              "id": 30,
-              "location": 31,
-              "manager_name": 32,
-              "message": 33,
-              "rule_description": 5,
-              "rule_firedtimes": 34,
-              "rule_group1": 35,
-              "rule_groups": 36,
-              "rule_id": 7,
-              "rule_level": 6,
-              "rule_mail": 37,
-              "sort": 38,
-              "source": 39,
-              "streams": 40,
-              "syslog_level": 41,
-              "syslog_type": 42,
-              "timestamp": 1,
-              "true": 43
-            },
-            "renameByName": {
-              "_id": "EVENT ID",
-              "agent_name": "",
-              "data_office365_ActorIpAddress": "SRC IP",
-              "data_office365_CreationTime": "EVENT TIME",
-              "data_office365_ExchangeMetaData_FileSize": "FILE SIZE",
-              "data_office365_ExchangeMetaData_RecipientCount": "RECIPIENTS",
-              "data_office365_ExchangeMetaData_Sent": "",
-              "data_office365_ExchangeMetaData_Subject": "MAIL SUBJECT",
-              "data_office365_GradingResult_TriageCategory": "",
-              "data_office365_GradingResult_TriageVerdict": "VEREDICT",
-              "data_office365_InsightData": "",
-              "data_office365_ResultStatus": "RESULT",
-              "data_office365_SensitiveInfoDetectionIsIncluded": "SENSITIVE INFO",
-              "data_office365_Severity": "SEVERITY",
-              "data_office365_SharePointMetaData_FileName": "FILE",
-              "data_office365_Subject": "MAIL SUBJECT",
-              "data_office365_SubmissionState": "STATE",
-              "data_office365_SubmissionType": "TYPE",
-              "data_office365_UserId": "ACCOUNT",
-              "rule_description": "DESCRIPTION",
-              "rule_id": "RULE ID",
-              "rule_level": "",
-              "rule_mitre_id": "MITRE ID",
-              "rule_mitre_tactic": "MITRE TACTIC",
-              "rule_mitre_technique": "MITRE TECHNIQUE",
-              "timestamp": "Date/Time"
-            }
-          }
-        }
-      ],
-      "transparent": true,
-      "type": "table"
-    }
-  ],
-  "refresh": false,
-  "schemaVersion": 37,
-  "style": "dark",
-  "tags": [
-    "O365"
-  ],
-  "templating": {
-    "list": [
-      {
-        "datasource": {
-          "type": "elasticsearch",
-          "uid": "replace_datasource_uid"
-        },
-        "filters": [],
-        "hide": 0,
-        "label": "",
-        "name": "Filters",
-        "skipUrlSync": false,
-        "type": "adhoc"
-      },
-      {
-        "current": {
-          "selected": false,
-          "text": "All",
-          "value": "$__all"
-        },
-        "datasource": {
-          "type": "elasticsearch",
-          "uid": "replace_datasource_uid"
-        },
-        "definition": "{ \"find\": \"terms\", \"field\": \"data_office365_Operation\", \"query\": \"data_office365_Workload:SecurityComplianceCenter\"}",
-        "hide": 0,
-        "includeAll": true,
-        "label": "Operation",
-        "multi": false,
-        "name": "operation",
-        "options": [],
-        "query": "{ \"find\": \"terms\", \"field\": \"data_office365_Operation\", \"query\": \"data_office365_Workload:SecurityComplianceCenter\"}",
-        "refresh": 2,
-        "regex": "",
-        "skipUrlSync": false,
-        "sort": 1,
-        "tagValuesQuery": "",
-        "tagsQuery": "",
-        "type": "query",
-        "useTags": false
-      },
-      {
-        "current": {
-          "selected": false,
-          "text": "All",
-          "value": "$__all"
-        },
-        "datasource": {
-          "type": "elasticsearch",
-          "uid": "replace_datasource_uid"
-        },
-        "definition": "{ \"find\": \"terms\", \"field\": \"rule_level\", \"query\": \"\"}",
-        "hide": 0,
-        "includeAll": true,
-        "label": "Rule Level",
-        "multi": false,
-        "name": "rule_level",
-        "options": [],
-        "query": "{ \"find\": \"terms\", \"field\": \"rule_level\", \"query\": \"\"}",
-        "refresh": 2,
-        "regex": "",
-        "skipUrlSync": false,
-        "sort": 0,
-        "type": "query"
-      }
-    ]
-  },
-  "time": {
-    "from": "now-12h",
-    "to": "now"
-  },
-  "timepicker": {
-    "refresh_intervals": [
-      "5s",
-      "10s",
-      "30s",
-      "1m",
-      "5m",
-      "15m",
-      "30m",
-      "1h",
-      "2h",
-      "1d"
-    ],
-    "time_options": [
-      "5m",
-      "15m",
-      "1h",
-      "6h",
-      "12h",
-      "24h",
-      "2d",
-      "7d",
-      "30d"
-    ]
-  },
-  "timezone": "",
-  "title": "O365 - SECURITY COMPLIANCE CENTER",
-  "uid": "itiq7wq7z",
-  "version": 1,
-  "weekStart": ""
+	"annotations": {
+		"list": [
+			{
+				"builtIn": 1,
+				"datasource": {
+					"type": "datasource",
+					"uid": "grafana"
+				},
+				"enable": true,
+				"hide": true,
+				"iconColor": "rgba(0, 211, 255, 1)",
+				"name": "Annotations & Alerts",
+				"target": {
+					"limit": 100,
+					"matchAny": false,
+					"tags": [],
+					"type": "dashboard"
+				},
+				"type": "dashboard"
+			}
+		]
+	},
+	"editable": false,
+	"fiscalYearStartMonth": 0,
+	"graphTooltip": 0,
+	"id": null,
+	"links": [
+		{
+			"asDropdown": true,
+			"icon": "external link",
+			"includeVars": true,
+			"keepTime": true,
+			"tags": ["O365"],
+			"targetBlank": true,
+			"title": "",
+			"type": "dashboards"
+		}
+	],
+	"liveNow": false,
+	"panels": [
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"mappings": [
+						{
+							"options": {
+								"match": "null",
+								"result": {
+									"text": "N/A"
+								}
+							},
+							"type": "special"
+						}
+					],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "red",
+								"value": null
+							}
+						]
+					},
+					"unit": "locale"
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 4,
+				"x": 0,
+				"y": 0
+			},
+			"id": 43,
+			"links": [],
+			"options": {
+				"colorMode": "value",
+				"graphMode": "area",
+				"justifyMode": "auto",
+				"orientation": "horizontal",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"text": {},
+				"textMode": "auto"
+			},
+			"pluginVersion": "9.2.0",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto",
+								"min_doc_count": 0,
+								"trimEdges": 0
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "elasticsearch",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "rule_level:>=12 AND data_office365_Operation:$operation",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "ALERTS",
+			"type": "stat"
+		},
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "palette-classic"
+					},
+					"custom": {
+						"hideFrom": {
+							"legend": false,
+							"tooltip": false,
+							"viz": false
+						}
+					},
+					"mappings": []
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "Count"
+						},
+						"properties": [
+							{
+								"id": "displayName",
+								"value": "EVENTS"
+							},
+							{
+								"id": "unit",
+								"value": "short"
+							},
+							{
+								"id": "decimals",
+								"value": -1
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 3,
+				"x": 4,
+				"y": 0
+			},
+			"id": 53,
+			"options": {
+				"legend": {
+					"displayMode": "list",
+					"placement": "bottom",
+					"showLegend": false
+				},
+				"pieType": "donut",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"tooltip": {
+					"mode": "single",
+					"sort": "none"
+				}
+			},
+			"pluginVersion": "8.5.1",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"fake": true,
+							"field": "data_office365_Operation",
+							"id": "4",
+							"settings": {
+								"min_doc_count": 1,
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "10"
+							},
+							"type": "terms"
+						},
+						{
+							"field": "data_office365_CreationTime",
+							"id": "5",
+							"settings": {
+								"interval": "auto",
+								"min_doc_count": "0",
+								"timeZone": "utc",
+								"trimEdges": "0"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "elasticsearch",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "data_office365_Operation:$operation AND rule_level:$rule_level",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "EVENTS BY OPERATION (Top 10)",
+			"transformations": [],
+			"type": "piechart"
+		},
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"custom": {
+						"align": "auto",
+						"displayMode": "auto",
+						"inspect": false
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "red",
+								"value": null
+							}
+						]
+					}
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "Count"
+						},
+						"properties": [
+							{
+								"id": "displayName",
+								"value": "EVENTS"
+							},
+							{
+								"id": "unit",
+								"value": "short"
+							},
+							{
+								"id": "decimals",
+								"value": -1
+							},
+							{
+								"id": "custom.align"
+							},
+							{
+								"id": "thresholds",
+								"value": {
+									"mode": "absolute",
+									"steps": [
+										{
+											"color": "red",
+											"value": null
+										}
+									]
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "OPERATION"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 209
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 5,
+				"x": 7,
+				"y": 0
+			},
+			"id": 54,
+			"options": {
+				"footer": {
+					"fields": "",
+					"reducer": ["sum"],
+					"show": false
+				},
+				"showHeader": true,
+				"sortBy": []
+			},
+			"pluginVersion": "9.2.0",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"fake": true,
+							"field": "data_office365_Operation",
+							"id": "4",
+							"settings": {
+								"min_doc_count": 1,
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "0"
+							},
+							"type": "terms"
+						}
+					],
+					"datasource": {
+						"type": "elasticsearch",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "data_office365_Operation:$operation AND rule_level:$rule_level",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "EVENTS BY OPERATION",
+			"transformations": [
+				{
+					"id": "merge",
+					"options": {
+						"reducers": []
+					}
+				},
+				{
+					"id": "organize",
+					"options": {
+						"excludeByName": {},
+						"indexByName": {},
+						"renameByName": {
+							"Count": "EVENTS",
+							"data_office365_Operation": "OPERATION",
+							"data_office365_Workload": "WORKLOAD"
+						}
+					}
+				}
+			],
+			"type": "table"
+		},
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"mappings": [
+						{
+							"options": {
+								"match": "null",
+								"result": {
+									"text": "N/A"
+								}
+							},
+							"type": "special"
+						}
+					],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "orange",
+								"value": null
+							}
+						]
+					},
+					"unit": "locale"
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 4,
+				"x": 12,
+				"y": 0
+			},
+			"id": 55,
+			"links": [],
+			"options": {
+				"colorMode": "value",
+				"graphMode": "area",
+				"justifyMode": "auto",
+				"orientation": "horizontal",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"text": {},
+				"textMode": "auto"
+			},
+			"pluginVersion": "9.2.0",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto",
+								"min_doc_count": 0,
+								"trimEdges": 0
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "elasticsearch",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "data_office365_Operation:UserSubmission",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "PHISHING (USER SUBMISSIONS)",
+			"type": "stat"
+		},
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"custom": {
+						"align": "auto",
+						"displayMode": "auto",
+						"inspect": false
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "red",
+								"value": null
+							}
+						]
+					}
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "Count"
+						},
+						"properties": [
+							{
+								"id": "displayName",
+								"value": "EVENTS"
+							},
+							{
+								"id": "unit",
+								"value": "short"
+							},
+							{
+								"id": "decimals",
+								"value": -1
+							},
+							{
+								"id": "custom.align"
+							},
+							{
+								"id": "thresholds",
+								"value": {
+									"mode": "absolute",
+									"steps": [
+										{
+											"color": "red",
+											"value": null
+										}
+									]
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "OPERATION"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 263
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "ACCOUNT"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 439
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 8,
+				"x": 16,
+				"y": 0
+			},
+			"id": 57,
+			"options": {
+				"footer": {
+					"fields": "",
+					"reducer": ["sum"],
+					"show": false
+				},
+				"showHeader": true,
+				"sortBy": []
+			},
+			"pluginVersion": "9.2.0",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"fake": true,
+							"field": "data_office365_UserId",
+							"id": "4",
+							"settings": {
+								"min_doc_count": 1,
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "0"
+							},
+							"type": "terms"
+						}
+					],
+					"datasource": {
+						"type": "elasticsearch",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "data_office365_Operation:UserSubmission",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "PHISHING (REPORTERS)",
+			"transformations": [
+				{
+					"id": "organize",
+					"options": {
+						"excludeByName": {},
+						"indexByName": {},
+						"renameByName": {
+							"Count": "EVENTS",
+							"data_office365_Operation": "OPERATION",
+							"data_office365_UserId": "ACCOUNT",
+							"data_office365_Workload": "WORKLOAD"
+						}
+					}
+				}
+			],
+			"type": "table"
+		},
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"mappings": [
+						{
+							"options": {
+								"match": "null",
+								"result": {
+									"text": "N/A"
+								}
+							},
+							"type": "special"
+						}
+					],
+					"max": 15,
+					"min": 0,
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "#299c46",
+								"value": null
+							},
+							{
+								"color": "rgba(237, 129, 40, 0.89)",
+								"value": 8
+							},
+							{
+								"color": "#d44a3a",
+								"value": 12
+							}
+						]
+					},
+					"unit": "none"
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 4,
+				"x": 0,
+				"y": 7
+			},
+			"id": 16,
+			"links": [],
+			"options": {
+				"orientation": "horizontal",
+				"reduceOptions": {
+					"calcs": ["max"],
+					"fields": "",
+					"values": false
+				},
+				"showThresholdLabels": false,
+				"showThresholdMarkers": true,
+				"text": {}
+			},
+			"pluginVersion": "9.2.0",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto",
+								"min_doc_count": 0,
+								"trimEdges": 0
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "elasticsearch",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"field": "rule_level",
+							"id": "1",
+							"meta": {},
+							"settings": {},
+							"type": "max"
+						}
+					],
+					"query": "data_office365_Operation:$operation",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "MAX SEVERITY (0 - 15)",
+			"type": "gauge"
+		},
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "palette-classic"
+					},
+					"custom": {
+						"axisCenteredZero": false,
+						"axisColorMode": "text",
+						"axisLabel": "",
+						"axisPlacement": "auto",
+						"barAlignment": 0,
+						"drawStyle": "bars",
+						"fillOpacity": 0,
+						"gradientMode": "none",
+						"hideFrom": {
+							"legend": false,
+							"tooltip": false,
+							"viz": false
+						},
+						"lineInterpolation": "linear",
+						"lineWidth": 1,
+						"pointSize": 5,
+						"scaleDistribution": {
+							"type": "linear"
+						},
+						"showPoints": "auto",
+						"spanNulls": false,
+						"stacking": {
+							"group": "A",
+							"mode": "normal"
+						},
+						"thresholdsStyle": {
+							"mode": "off"
+						}
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					}
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 13,
+				"w": 20,
+				"x": 4,
+				"y": 7
+			},
+			"id": 59,
+			"options": {
+				"legend": {
+					"calcs": [],
+					"displayMode": "table",
+					"placement": "right",
+					"showLegend": true
+				},
+				"tooltip": {
+					"mode": "single",
+					"sort": "none"
+				}
+			},
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "data_office365_Operation",
+							"id": "3",
+							"settings": {
+								"min_doc_count": "1",
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "10"
+							},
+							"type": "terms"
+						},
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "elasticsearch",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "data_office365_Operation:$operation AND rule_level:$rule_level",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "TOP 10 OPERATIONS - HISTOGRAM",
+			"transparent": true,
+			"type": "timeseries"
+		},
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"mappings": [
+						{
+							"options": {
+								"match": "null",
+								"result": {
+									"text": "N/A"
+								}
+							},
+							"type": "special"
+						}
+					],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "blue",
+								"value": null
+							}
+						]
+					},
+					"unit": "locale"
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 6,
+				"w": 4,
+				"x": 0,
+				"y": 14
+			},
+			"id": 51,
+			"links": [],
+			"options": {
+				"colorMode": "value",
+				"graphMode": "area",
+				"justifyMode": "auto",
+				"orientation": "horizontal",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"text": {},
+				"textMode": "auto"
+			},
+			"pluginVersion": "9.2.0",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"$$hashKey": "object:331",
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto",
+								"min_doc_count": 0,
+								"trimEdges": 0
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "elasticsearch",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"$$hashKey": "object:329",
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "data_office365_Operation:$operation AND rule_level:$rule_level",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "EVENTS (Total)",
+			"type": "stat"
+		},
+		{
+			"datasource": {
+				"type": "elasticsearch",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"custom": {
+						"align": "auto",
+						"displayMode": "auto",
+						"filterable": true,
+						"inspect": false
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					}
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "rule_level"
+						},
+						"properties": [
+							{
+								"id": "displayName",
+								"value": "RULE LEVEL"
+							},
+							{
+								"id": "unit",
+								"value": "short"
+							},
+							{
+								"id": "decimals",
+								"value": -1
+							},
+							{
+								"id": "custom.displayMode",
+								"value": "color-background"
+							},
+							{
+								"id": "custom.align"
+							},
+							{
+								"id": "thresholds",
+								"value": {
+									"mode": "absolute",
+									"steps": [
+										{
+											"color": "#37872D",
+											"value": null
+										},
+										{
+											"color": "rgba(237, 129, 40, 0.89)",
+											"value": 7
+										},
+										{
+											"color": "rgba(245, 54, 54, 0.9)",
+											"value": 12
+										}
+									]
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "Date/Time"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 242
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "MITRE TACTIC"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 332
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "MITRE TECHNIQUE"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 312
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "EVENT ID"
+						},
+						"properties": [
+							{
+								"id": "links",
+								"value": [
+									{
+										"targetBlank": true,
+										"title": "VIEW EVENT DETAILS",
+										"url": "https://grafana.company.local/explore?left=%7B%22datasource%22:%22O365%22,%22queries%22:%5B%7B%22refId%22:%22A%22,%22query%22:%22_id:${__value.text}%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D,%22range%22:%7B%22from%22:%22now-6h%22,%22to%22:%22now%22%7D%7D"
+									}
+								]
+							},
+							{
+								"id": "custom.width",
+								"value": 319
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "ACCOUNT"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 343
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "EVENT TIME"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 195
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "FILE SIZE"
+						},
+						"properties": [
+							{
+								"id": "unit",
+								"value": "bytes"
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "SENSITIVE INFO"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 154
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "RULE LEVEL"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 157
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 16,
+				"w": 24,
+				"x": 0,
+				"y": 20
+			},
+			"id": 27,
+			"options": {
+				"footer": {
+					"fields": "",
+					"reducer": ["sum"],
+					"show": false
+				},
+				"showHeader": true,
+				"sortBy": []
+			},
+			"pluginVersion": "9.2.0",
+			"targets": [
+				{
+					"bucketAggs": [],
+					"datasource": {
+						"type": "elasticsearch",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"id": "1",
+							"settings": {
+								"size": "250"
+							},
+							"type": "raw_data"
+						}
+					],
+					"query": "data_office365_Operation:$operation AND rule_level:$rule_level",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "EVENTS",
+			"transformations": [
+				{
+					"id": "merge",
+					"options": {
+						"reducers": []
+					}
+				},
+				{
+					"id": "organize",
+					"options": {
+						"excludeByName": {
+							"@metadata_beat": true,
+							"@metadata_type": true,
+							"@metadata_version": true,
+							"IMPHASH": true,
+							"MD5": true,
+							"SHA1": true,
+							"SHA256": true,
+							"_id": false,
+							"_index": true,
+							"_type": true,
+							"agent_ephemeral_id": true,
+							"agent_hostname": true,
+							"agent_id": true,
+							"agent_ip_city_name": true,
+							"agent_ip_country_code": true,
+							"agent_ip_geolocation": true,
+							"agent_name": true,
+							"agent_type": true,
+							"agent_version": true,
+							"beats_type": true,
+							"cluster_name": true,
+							"cluster_node": true,
+							"collector_node_id": true,
+							"data_alert_action": true,
+							"data_alert_category": true,
+							"data_alert_gid": true,
+							"data_alert_rev": true,
+							"data_alert_severity": true,
+							"data_alert_signature": true,
+							"data_alert_signature_id": true,
+							"data_app_proto": true,
+							"data_audit_auid": true,
+							"data_audit_command": true,
+							"data_audit_euid": true,
+							"data_audit_exe": true,
+							"data_audit_gid": true,
+							"data_audit_id": true,
+							"data_audit_pid": true,
+							"data_audit_res": true,
+							"data_audit_session": true,
+							"data_audit_type": true,
+							"data_audit_uid": true,
+							"data_dest_ip": true,
+							"data_dest_port": true,
+							"data_dstuser": true,
+							"data_event_type": true,
+							"data_extra_data": true,
+							"data_file": true,
+							"data_flow_bytes_toclient": true,
+							"data_flow_bytes_toserver": true,
+							"data_flow_id": true,
+							"data_flow_pkts_toclient": true,
+							"data_flow_pkts_toserver": true,
+							"data_flow_start": true,
+							"data_http_http_content_type": true,
+							"data_http_http_port": true,
+							"data_http_length": true,
+							"data_http_status": true,
+							"data_http_url": true,
+							"data_id": true,
+							"data_in_iface": true,
+							"data_metadata_flowbits": true,
+							"data_metadata_flowints_http_anomaly_count": true,
+							"data_metadata_flowints_tcp_retransmission_count": true,
+							"data_office365_AadAppId": true,
+							"data_office365_Actor": true,
+							"data_office365_ActorContextId": true,
+							"data_office365_ActorIpAddress": false,
+							"data_office365_ActorIpAddress_city_name": true,
+							"data_office365_ActorIpAddress_country_code": true,
+							"data_office365_ActorIpAddress_geolocation": true,
+							"data_office365_AdditionalData": true,
+							"data_office365_AlertEntityId": true,
+							"data_office365_AlertId": true,
+							"data_office365_AlertLinks": true,
+							"data_office365_AlertType": true,
+							"data_office365_ApplicationId": true,
+							"data_office365_AzureActiveDirectoryEventType": true,
+							"data_office365_BCLValue": true,
+							"data_office365_Category": true,
+							"data_office365_ClientApplication": true,
+							"data_office365_ClientIP": true,
+							"data_office365_ClientIP_city_name": true,
+							"data_office365_ClientIP_country_code": true,
+							"data_office365_ClientIP_geolocation": true,
+							"data_office365_CmdletVersion": true,
+							"data_office365_Comments": true,
+							"data_office365_CreationTime": false,
+							"data_office365_Data": true,
+							"data_office365_DataType": true,
+							"data_office365_DatabaseType": true,
+							"data_office365_DeliveryMessageInfo_DIEnrichment": true,
+							"data_office365_DeliveryMessageInfo_DeliveryControlSource": true,
+							"data_office365_DeliveryMessageInfo_DeliveryControlType": true,
+							"data_office365_DeliveryMessageInfo_DeliveryReason": true,
+							"data_office365_DeliveryMessageInfo_Destination": true,
+							"data_office365_DeliveryMessageInfo_FinalFilterVerdict": true,
+							"data_office365_DeliveryMessageInfo_FinalFilterVerdictControlSource": true,
+							"data_office365_DeliveryMessageInfo_FinalVerdict": true,
+							"data_office365_DeliveryMessageInfo_FinalVerdictSource": true,
+							"data_office365_DeliveryMessageInfo_Id": true,
+							"data_office365_DeliveryMessageInfo_IsValid": true,
+							"data_office365_DeliveryMessageInfo_PolicyHit": true,
+							"data_office365_DeliveryMessageInfo_PolicyOverride": true,
+							"data_office365_DeliveryMessageInfo_TenantActionPolicyId": true,
+							"data_office365_DeliveryMessageInfo_TenantActionPolicyType": true,
+							"data_office365_DeliveryMessageInfo_Timestamp": true,
+							"data_office365_Description": true,
+							"data_office365_DeviceProperties": true,
+							"data_office365_EffectiveOrganization": true,
+							"data_office365_EntityType": true,
+							"data_office365_ErrorNumber": true,
+							"data_office365_ExchangeLocations": true,
+							"data_office365_ExchangeMetaData_CC": true,
+							"data_office365_ExchangeMetaData_FileSize": false,
+							"data_office365_ExchangeMetaData_From": true,
+							"data_office365_ExchangeMetaData_MessageID": true,
+							"data_office365_ExchangeMetaData_RecipientCount": false,
+							"data_office365_ExchangeMetaData_Sent": true,
+							"data_office365_ExchangeMetaData_Subject": false,
+							"data_office365_ExchangeMetaData_To": true,
+							"data_office365_ExchangeMetaData_UniqueID": true,
+							"data_office365_ExtendedProperties": true,
+							"data_office365_FilteringDate": true,
+							"data_office365_GradingResult_FirstTriagedBy": true,
+							"data_office365_GradingResult_Id": true,
+							"data_office365_GradingResult_LastUpdatedBy": true,
+							"data_office365_GradingResult_Timestamp": true,
+							"data_office365_GradingResult_TriageCategory": true,
+							"data_office365_GradingResult_TriageVerdict": true,
+							"data_office365_Id": true,
+							"data_office365_IncidentId": true,
+							"data_office365_InsightData": true,
+							"data_office365_InsightId": true,
+							"data_office365_InterSystemsId": true,
+							"data_office365_IntraSystemId": true,
+							"data_office365_KesMailId": true,
+							"data_office365_Language": true,
+							"data_office365_LogonError": true,
+							"data_office365_MessageDate": true,
+							"data_office365_ModifiedProperties": true,
+							"data_office365_Name": true,
+							"data_office365_NonPIIParameters": true,
+							"data_office365_ObjectId": true,
+							"data_office365_ObjectType": true,
+							"data_office365_Operation": true,
+							"data_office365_OrganizationId": true,
+							"data_office365_P1Sender": true,
+							"data_office365_P1SenderDomain": true,
+							"data_office365_P2Sender": true,
+							"data_office365_P2SenderDomain": true,
+							"data_office365_Parameters": true,
+							"data_office365_PolicyDetails": true,
+							"data_office365_PolicyId": true,
+							"data_office365_Query": true,
+							"data_office365_Recipients": true,
+							"data_office365_RecordType": true,
+							"data_office365_RelativeUrl": true,
+							"data_office365_RescanResult_Id": true,
+							"data_office365_RescanResult_RescanVerdict": true,
+							"data_office365_RescanResult_Timestamp": true,
+							"data_office365_ResultCount": true,
+							"data_office365_ResultStatus": true,
+							"data_office365_SecurityComplianceCenterEventType": true,
+							"data_office365_SenderIP": true,
+							"data_office365_SenderIP_city_name": true,
+							"data_office365_SenderIP_country_code": true,
+							"data_office365_SenderIP_geolocation": true,
+							"data_office365_Severity": true,
+							"data_office365_SharePointMetaData_FileID": true,
+							"data_office365_SharePointMetaData_FileName": false,
+							"data_office365_SharePointMetaData_FileOwner": true,
+							"data_office365_SharePointMetaData_FilePathUrl": true,
+							"data_office365_SharePointMetaData_FileSize": true,
+							"data_office365_SharePointMetaData_From": true,
+							"data_office365_SharePointMetaData_IsViewableByExternalUsers": true,
+							"data_office365_SharePointMetaData_IsVisibleOnlyToOdbOwner": true,
+							"data_office365_SharePointMetaData_ItemCreationTime": true,
+							"data_office365_SharePointMetaData_ItemLastModifiedTime": true,
+							"data_office365_SharePointMetaData_ItemLastSharedTime": true,
+							"data_office365_SharePointMetaData_SiteCollectionGuid": true,
+							"data_office365_SharePointMetaData_SiteCollectionUrl": true,
+							"data_office365_SharePointMetaData_UniqueID": true,
+							"data_office365_Source": true,
+							"data_office365_StartTime": true,
+							"data_office365_Status": true,
+							"data_office365_Subject": true,
+							"data_office365_SubmissionContent": true,
+							"data_office365_SubmissionContentSubType": true,
+							"data_office365_SubmissionContentType": true,
+							"data_office365_SubmissionId": true,
+							"data_office365_SubmissionState": true,
+							"data_office365_SubmissionType": true,
+							"data_office365_SubmitterDisplayName": true,
+							"data_office365_SubmitterId": true,
+							"data_office365_Target": true,
+							"data_office365_TargetContextId": true,
+							"data_office365_UserId": true,
+							"data_office365_UserKey": true,
+							"data_office365_UserType": true,
+							"data_office365_Version": true,
+							"data_office365_Workload": true,
+							"data_win_system_version": true,
+							"decoder_name": true,
+							"decoder_parent": true,
+							"error": true,
+							"full_log": false,
+							"gl2_accounted_message_size": true,
+							"gl2_message_id": true,
+							"gl2_processing_error": true,
+							"gl2_remote_ip": true,
+							"gl2_remote_port": true,
+							"gl2_source_collector": true,
+							"gl2_source_input": true,
+							"gl2_source_node": true,
+							"highlight": true,
+							"id": true,
+							"input_type": true,
+							"level": true,
+							"location": true,
+							"log_file_path": true,
+							"log_offset": true,
+							"manager_name": true,
+							"message": true,
+							"module": true,
+							"rule_firedtimes": true,
+							"rule_group1": true,
+							"rule_groups": true,
+							"rule_id": true,
+							"rule_mail": true,
+							"rule_mitre_technique": false,
+							"sort": true,
+							"source": true,
+							"src_ip": true,
+							"streams": true,
+							"syslog_level": true,
+							"syslog_tag": true,
+							"syslog_type": true,
+							"time": true,
+							"timestamp": true,
+							"true": true
+						},
+						"indexByName": {
+							"_id": 2,
+							"_index": 8,
+							"_type": 9,
+							"agent_id": 10,
+							"agent_name": 4,
+							"cluster_name": 11,
+							"cluster_node": 12,
+							"data_office365_CreationTime": 0,
+							"data_office365_ExchangeMetaData_CC": 45,
+							"data_office365_ExchangeMetaData_FileSize": 47,
+							"data_office365_ExchangeMetaData_From": 48,
+							"data_office365_ExchangeMetaData_MessageID": 49,
+							"data_office365_ExchangeMetaData_RecipientCount": 51,
+							"data_office365_ExchangeMetaData_Sent": 52,
+							"data_office365_ExchangeMetaData_Subject": 50,
+							"data_office365_ExchangeMetaData_To": 53,
+							"data_office365_ExchangeMetaData_UniqueID": 54,
+							"data_office365_Id": 13,
+							"data_office365_IncidentId": 55,
+							"data_office365_ObjectId": 14,
+							"data_office365_Operation": 20,
+							"data_office365_OrganizationId": 15,
+							"data_office365_RecordType": 16,
+							"data_office365_SensitiveInfoDetectionIsIncluded": 46,
+							"data_office365_UserId": 3,
+							"data_office365_UserKey": 17,
+							"data_office365_UserType": 18,
+							"data_office365_Version": 19,
+							"data_office365_Workload": 44,
+							"decoder_name": 21,
+							"gl2_accounted_message_size": 22,
+							"gl2_message_id": 23,
+							"gl2_processing_error": 24,
+							"gl2_remote_ip": 25,
+							"gl2_remote_port": 26,
+							"gl2_source_input": 27,
+							"gl2_source_node": 28,
+							"highlight": 29,
+							"id": 30,
+							"location": 31,
+							"manager_name": 32,
+							"message": 33,
+							"rule_description": 5,
+							"rule_firedtimes": 34,
+							"rule_group1": 35,
+							"rule_groups": 36,
+							"rule_id": 7,
+							"rule_level": 6,
+							"rule_mail": 37,
+							"sort": 38,
+							"source": 39,
+							"streams": 40,
+							"syslog_level": 41,
+							"syslog_type": 42,
+							"timestamp": 1,
+							"true": 43
+						},
+						"renameByName": {
+							"_id": "EVENT ID",
+							"agent_name": "",
+							"data_office365_ActorIpAddress": "SRC IP",
+							"data_office365_CreationTime": "EVENT TIME",
+							"data_office365_ExchangeMetaData_FileSize": "FILE SIZE",
+							"data_office365_ExchangeMetaData_RecipientCount": "RECIPIENTS",
+							"data_office365_ExchangeMetaData_Sent": "",
+							"data_office365_ExchangeMetaData_Subject": "MAIL SUBJECT",
+							"data_office365_GradingResult_TriageCategory": "",
+							"data_office365_GradingResult_TriageVerdict": "VEREDICT",
+							"data_office365_InsightData": "",
+							"data_office365_ResultStatus": "RESULT",
+							"data_office365_SensitiveInfoDetectionIsIncluded": "SENSITIVE INFO",
+							"data_office365_Severity": "SEVERITY",
+							"data_office365_SharePointMetaData_FileName": "FILE",
+							"data_office365_Subject": "MAIL SUBJECT",
+							"data_office365_SubmissionState": "STATE",
+							"data_office365_SubmissionType": "TYPE",
+							"data_office365_UserId": "ACCOUNT",
+							"rule_description": "DESCRIPTION",
+							"rule_id": "RULE ID",
+							"rule_level": "",
+							"rule_mitre_id": "MITRE ID",
+							"rule_mitre_tactic": "MITRE TACTIC",
+							"rule_mitre_technique": "MITRE TECHNIQUE",
+							"timestamp": "Date/Time"
+						}
+					}
+				}
+			],
+			"transparent": true,
+			"type": "table"
+		}
+	],
+	"refresh": false,
+	"schemaVersion": 37,
+	"style": "dark",
+	"tags": ["O365"],
+	"templating": {
+		"list": [
+			{
+				"datasource": {
+					"type": "elasticsearch",
+					"uid": "replace_datasource_uid"
+				},
+				"filters": [],
+				"hide": 0,
+				"label": "",
+				"name": "Filters",
+				"skipUrlSync": false,
+				"type": "adhoc"
+			},
+			{
+				"current": {
+					"selected": false,
+					"text": "All",
+					"value": "$__all"
+				},
+				"datasource": {
+					"type": "elasticsearch",
+					"uid": "replace_datasource_uid"
+				},
+				"definition": "{ \"find\": \"terms\", \"field\": \"data_office365_Operation\", \"query\": \"data_office365_Workload:SecurityComplianceCenter\"}",
+				"hide": 0,
+				"includeAll": true,
+				"label": "Operation",
+				"multi": false,
+				"name": "operation",
+				"options": [],
+				"query": "{ \"find\": \"terms\", \"field\": \"data_office365_Operation\", \"query\": \"data_office365_Workload:SecurityComplianceCenter\"}",
+				"refresh": 2,
+				"regex": "",
+				"skipUrlSync": false,
+				"sort": 1,
+				"tagValuesQuery": "",
+				"tagsQuery": "",
+				"type": "query",
+				"useTags": false
+			},
+			{
+				"current": {
+					"selected": false,
+					"text": "All",
+					"value": "$__all"
+				},
+				"datasource": {
+					"type": "elasticsearch",
+					"uid": "replace_datasource_uid"
+				},
+				"definition": "{ \"find\": \"terms\", \"field\": \"rule_level\", \"query\": \"\"}",
+				"hide": 0,
+				"includeAll": true,
+				"label": "Rule Level",
+				"multi": false,
+				"name": "rule_level",
+				"options": [],
+				"query": "{ \"find\": \"terms\", \"field\": \"rule_level\", \"query\": \"\"}",
+				"refresh": 2,
+				"regex": "",
+				"skipUrlSync": false,
+				"sort": 0,
+				"type": "query"
+			}
+		]
+	},
+	"time": {
+		"from": "now-12h",
+		"to": "now"
+	},
+	"timepicker": {
+		"refresh_intervals": ["5s", "10s", "30s", "1m", "5m", "15m", "30m", "1h", "2h", "1d"],
+		"time_options": ["5m", "15m", "1h", "6h", "12h", "24h", "2d", "7d", "30d"]
+	},
+	"timezone": "",
+	"title": "O365 - SECURITY COMPLIANCE CENTER",
+	"uid": "itiq7wq7z",
+	"version": 1,
+	"weekStart": ""
 }

@@ -1,12 +1,12 @@
+import re
+from enum import Enum
 from typing import Any
 from typing import Dict
 from typing import List
 from typing import Tuple
 from typing import Union
 
-import re
 import pcre2
-from enum import Enum
 import xmltodict
 from fastapi import HTTPException
 from loguru import logger
@@ -242,26 +242,28 @@ def make_pcre2_compatible(input_string: str) -> str:
 
 
 class RegexSpecialCharacters(Enum):
-    DOT = ('.', '\.')
-    CARET = ('^', '\^')
-    DOLLAR = ('$', '\$')
-    STAR = ('*', '\*')
-    PLUS = ('+', '\+')
-    QUESTION = ('?', '\?')
-    CURLY_OPEN = ('{', '\{')
-    CURLY_CLOSE = ('}', '\}')
-    SQUARE_OPEN = ('[', '\[')
-    SQUARE_CLOSE = (']', '\]')
-    SINGLE_BACKSLASH = ('\\', '\\\\')
-    DOUBLE_BACKSLASH = ('\\\\', '\\\\\\\\')
-    PIPE = ('|', '\|')
-    PAREN_OPEN = ('(', '\(')
-    PAREN_CLOSE = (')', '\)')
-    COLON = (':', '\:')
-    DASH = ('-', '\-')
+    DOT = (".", "\.")
+    CARET = ("^", "\^")
+    DOLLAR = ("$", "\$")
+    STAR = ("*", "\*")
+    PLUS = ("+", "\+")
+    QUESTION = ("?", "\?")
+    CURLY_OPEN = ("{", "\{")
+    CURLY_CLOSE = ("}", "\}")
+    SQUARE_OPEN = ("[", "\[")
+    SQUARE_CLOSE = ("]", "\]")
+    SINGLE_BACKSLASH = ("\\", "\\\\")
+    DOUBLE_BACKSLASH = ("\\\\", "\\\\\\\\")
+    PIPE = ("|", "\|")
+    PAREN_OPEN = ("(", "\(")
+    PAREN_CLOSE = (")", "\)")
+    COLON = (":", "\:")
+    DASH = ("-", "\-")
+
 
 # Create a dictionary for easy lookup
 REGEX_REPLACE_DICT = {char.value[0]: char.value[1] for char in RegexSpecialCharacters}
+
 
 async def replace_special_chars(rule: RuleExclude):
     for char, replacement in REGEX_REPLACE_DICT.items():
@@ -270,6 +272,7 @@ async def replace_special_chars(rule: RuleExclude):
         input_string = pattern.sub(replacement, rule.input_value)
         logger.info(f"Input String: {input_string}")
     return input_string
+
 
 async def exclude_rule(rule: RuleExclude) -> RuleExcludeResponse:
     """

@@ -523,7 +523,6 @@ async def purge_logs_by_time_range(time_range: TimeRangeModel, session: AsyncSes
         raise HTTPException(status_code=404, detail="No logs found")
 
 
-
 ################## ! ALLOWED FILES ! ##################
 def allowed_file(filename):
     """
@@ -578,6 +577,7 @@ async def get_customer_alert_settings(customer_code: str, session: AsyncSession)
         return settings
     return None
 
+
 async def get_customer_alert_settings_office365(office365_organization_id: str, session: AsyncSession) -> Optional[AlertCreationSettings]:
     """
     Retrieve the alert creation settings for a specific customer.
@@ -589,7 +589,9 @@ async def get_customer_alert_settings_office365(office365_organization_id: str, 
     Returns:
         Optional[AlertCreationSettings]: The alert creation settings for the customer, or None if not found.
     """
-    result = await session.execute(select(AlertCreationSettings).filter(AlertCreationSettings.office365_organization_id == office365_organization_id))
+    result = await session.execute(
+        select(AlertCreationSettings).filter(AlertCreationSettings.office365_organization_id == office365_organization_id),
+    )
     settings = result.scalars().first()
 
     if settings:
