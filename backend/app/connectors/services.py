@@ -26,13 +26,18 @@ from app.connectors.sublime.utils.universal import verify_sublime_connection
 from app.connectors.velociraptor.utils.universal import verify_velociraptor_connection
 from app.connectors.wazuh_indexer.utils.universal import verify_wazuh_indexer_connection
 from app.connectors.wazuh_manager.utils.universal import verify_wazuh_manager_connection
-from app.threat_intel.services.socfortress import verifiy_socfortress_threat_intel_connector
-from app.integrations.ask_socfortress.services.ask_socfortress import verify_ask_socfortress_connector
 
 # from app.db.db_session import engine  # Import the shared engine
 from app.db.db_session import get_session
-from app.utils import verify_wazuh_worker_provisioning_connection, verify_alert_creation_provisioning_connection
+from app.integrations.ask_socfortress.services.ask_socfortress import (
+    verify_ask_socfortress_connector,
+)
 from app.integrations.utils.event_shipper import verify_event_shipper_connection
+from app.threat_intel.services.socfortress import (
+    verifiy_socfortress_threat_intel_connector,
+)
+from app.utils import verify_alert_creation_provisioning_connection
+from app.utils import verify_wazuh_worker_provisioning_connection
 
 UPLOAD_FOLDER = "file-store"
 UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), UPLOAD_FOLDER)
@@ -110,25 +115,30 @@ class WazuhWorkerProvisioningService(ConnectorServiceInterface):
     async def verify_authentication(self, connector: ConnectorResponse) -> Optional[ConnectorResponse]:
         return await verify_wazuh_worker_provisioning_connection(connector.connector_name)
 
+
 # SOCFortress Threat Intel Service
 class SocfortressThreatIntelService(ConnectorServiceInterface):
     async def verify_authentication(self, connector: ConnectorResponse) -> Optional[ConnectorResponse]:
         return await verifiy_socfortress_threat_intel_connector(connector.connector_name)
+
 
 # ASK SOCFortress Service
 class AskSocfortressService(ConnectorServiceInterface):
     async def verify_authentication(self, connector: ConnectorResponse) -> Optional[ConnectorResponse]:
         return await verify_ask_socfortress_connector(connector.connector_name)
 
+
 # Event Shipper Service
 class EventShipperService(ConnectorServiceInterface):
     async def verify_authentication(self, connector: ConnectorResponse) -> Optional[ConnectorResponse]:
         return await verify_event_shipper_connection(connector.connector_name)
 
+
 # Alert Creation Service
 class AlertCreationService(ConnectorServiceInterface):
     async def verify_authentication(self, connector: ConnectorResponse) -> Optional[ConnectorResponse]:
         return await verify_alert_creation_provisioning_connection(connector.connector_name)
+
 
 # Factory function to create a service instance based on connector name
 def get_connector_service(connector_name: str) -> Type[ConnectorServiceInterface]:
@@ -237,7 +247,7 @@ class ConnectorServices:
                 # If verify_authentication is an async function, you will need to await it
                 connector_response = await service_instance.verify_authentication(connector_response)
                 # If the connector is verified, update the connector record in the database
-                if connector_response['connectionSuccessful']:
+                if connector_response["connectionSuccessful"]:
                     connector.connector_verified = True
                     connector.connector_last_updated = datetime.now()
                     session.add(connector)
@@ -306,7 +316,6 @@ class ConnectorServices:
             logger.exception(f"Failed to update connector: {e}")
             session.rollback()
             return Exception(f"Failed to update connector: {e}")
-
 
     @staticmethod
     def allowed_file(filename):

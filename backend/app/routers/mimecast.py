@@ -1,7 +1,9 @@
 from fastapi import APIRouter
 
 from app.integrations.mimecast.routes.mimecast import integration_mimecast_router
-from app.integrations.mimecast.routes.provision import integration_mimecast_scheduler_router
+from app.integrations.mimecast.routes.provision import (
+    integration_mimecast_scheduler_router,
+)
 
 # Instantiate the APIRouter
 router = APIRouter()

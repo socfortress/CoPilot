@@ -18,13 +18,15 @@ from app.connectors.velociraptor.schema.artifacts import QuarantineBody
 from app.connectors.velociraptor.schema.artifacts import QuarantineResponse
 from app.connectors.velociraptor.schema.artifacts import RunCommandBody
 from app.connectors.velociraptor.schema.artifacts import RunCommandResponse
+from app.connectors.velociraptor.schema.flows import FlowResponse
+from app.connectors.velociraptor.schema.flows import RetrieveFlowRequest
 from app.connectors.velociraptor.services.artifacts import get_artifacts
 from app.connectors.velociraptor.services.artifacts import quarantine_host
 from app.connectors.velociraptor.services.artifacts import run_artifact_collection
 from app.connectors.velociraptor.services.artifacts import run_remote_command
+from app.connectors.velociraptor.services.flows import get_flow
+from app.connectors.velociraptor.services.flows import get_flows
 from app.db.db_session import get_db
-from app.connectors.velociraptor.schema.flows import FlowResponse, RetrieveFlowRequest
-from app.connectors.velociraptor.services.flows import get_flows, get_flow
 from app.db.universal_models import Agents
 
 velociraptor_flows_router = APIRouter()
@@ -84,6 +86,7 @@ async def get_all_flows_for_hostname(hostname: str, session: AsyncSession = Depe
     velociraptor_id = await get_velociraptor_id(session, hostname)
     logger.info(f"velociraptor_id for hostname {hostname} is {velociraptor_id}")
     return await get_flows(velociraptor_id)
+
 
 @velociraptor_flows_router.post(
     "/retrieve",

@@ -6,9 +6,12 @@ from dfir_iris_client.case import Case
 from fastapi import HTTPException
 from loguru import logger
 
-from app.connectors.dfir_iris.schema.cases import CaseOlderThanBody, PurgeCaseResponse, ClosedCaseResponse, ReopenedCaseResponse
+from app.connectors.dfir_iris.schema.cases import CaseOlderThanBody
 from app.connectors.dfir_iris.schema.cases import CaseResponse
 from app.connectors.dfir_iris.schema.cases import CasesBreachedResponse
+from app.connectors.dfir_iris.schema.cases import ClosedCaseResponse
+from app.connectors.dfir_iris.schema.cases import PurgeCaseResponse
+from app.connectors.dfir_iris.schema.cases import ReopenedCaseResponse
 from app.connectors.dfir_iris.schema.cases import SingleCaseBody
 from app.connectors.dfir_iris.schema.cases import SingleCaseResponse
 from app.connectors.dfir_iris.utils.universal import create_dfir_iris_client
@@ -130,6 +133,7 @@ async def get_single_case(case_id: SingleCaseBody) -> SingleCaseResponse:
     result = await fetch_and_parse_data(dfir_iris_client, case.get_case, case_id)
     return SingleCaseResponse(success=True, message="Successfully fetched single case", case=result["data"])
 
+
 async def close_case(case_id: SingleCaseBody) -> ClosedCaseResponse:
     """
     Closes a single case from DFIR-IRIS based on the provided case ID.
@@ -169,6 +173,7 @@ async def reopen_case(case_id: SingleCaseBody) -> ReopenedCaseResponse:
     result = await fetch_and_parse_data(dfir_iris_client, case.reopen_case, case_id)
     logger.info(f"Successfully opened case: {result}")
     return ReopenedCaseResponse(success=True, case=result["data"], message="Successfully opened case")
+
 
 ############# ! DELETE ACTIONS ! #############
 async def purge_cases() -> PurgeCaseResponse:
@@ -237,6 +242,7 @@ async def purge_case(client, case, case_id) -> PurgeCaseResponse:
         logger.error(error_message)
         raise HTTPException(status_code=500, detail=error_message)
 
+
 async def delete_single_case(case_id: SingleCaseBody) -> PurgeCaseResponse:
     """
     Deletes a single case from DFIR-IRIS based on the provided case ID.
@@ -254,4 +260,3 @@ async def delete_single_case(case_id: SingleCaseBody) -> PurgeCaseResponse:
     case = Case(session=dfir_iris_client)
     result = await fetch_and_parse_data(dfir_iris_client, case.delete_case, case_id)
     return PurgeCaseResponse(success=True, message="Successfully deleted single case")
-

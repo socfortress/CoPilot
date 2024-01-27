@@ -1,12 +1,13 @@
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from loguru import logger
 
 from app.db.db_session import SyncSessionLocal
 from app.db.db_session import sync_engine
-from app.schedulers.models.scheduler import JobMetadata, CreateSchedulerRequest
+from app.schedulers.models.scheduler import CreateSchedulerRequest
+from app.schedulers.models.scheduler import JobMetadata
 from app.schedulers.services.agent_sync import agent_sync
 from app.schedulers.services.invoke_mimecast import invoke_mimecast_integration
-from loguru import logger
 
 # def init_scheduler():
 #     """
@@ -84,6 +85,7 @@ from loguru import logger
 #     else:
 #         raise ValueError(f"Function {function_name} not found")
 
+
 def init_scheduler():
     """
     Initializes and configures the scheduler.
@@ -100,6 +102,7 @@ def init_scheduler():
 
     return scheduler
 
+
 def initialize_job_metadata():
     """
     Initializes job metadata from the database.
@@ -109,7 +112,7 @@ def initialize_job_metadata():
         # Example: Check and add metadata for each known job
         known_jobs = [
             {"job_id": "agent_sync", "time_interval": 60, "function": agent_sync},
-            #{"job_id": "invoke_mimecast_integration", "time_interval": 5, "function": invoke_mimecast_integration}
+            # {"job_id": "invoke_mimecast_integration", "time_interval": 5, "function": invoke_mimecast_integration}
         ]
         for job in known_jobs:
             job_metadata = session.query(JobMetadata).filter_by(job_id=job["job_id"]).one_or_none()
@@ -120,6 +123,7 @@ def initialize_job_metadata():
                 job_metadata.time_interval = job["time_interval"]
                 job_metadata.enabled = True
         session.commit()
+
 
 def schedule_enabled_jobs(scheduler):
     """
@@ -140,6 +144,7 @@ def schedule_enabled_jobs(scheduler):
             except ValueError as e:
                 logger.error(f"Error scheduling job: {e}")
 
+
 def get_function_by_name(function_name: str):
     """
     Returns a function object based on its name.
@@ -150,6 +155,7 @@ def get_function_by_name(function_name: str):
         # Add other function mappings here
     }
     return function_map.get(function_name, lambda: ValueError(f"Function {function_name} not found"))
+
 
 async def add_scheduler_jobs(create_scheduler_request: CreateSchedulerRequest):
     """
@@ -176,6 +182,7 @@ async def add_scheduler_jobs(create_scheduler_request: CreateSchedulerRequest):
     if not scheduler.running:
         scheduler.start()
 
+
 async def add_job_metadata(create_scheduler_request: CreateSchedulerRequest):
     """
     Adds a job to the scheduler.
@@ -186,10 +193,14 @@ async def add_job_metadata(create_scheduler_request: CreateSchedulerRequest):
     with SyncSessionLocal() as session:
         job_metadata = session.query(JobMetadata).filter_by(job_id=create_scheduler_request.job_id).one_or_none()
         if not job_metadata:
-            job_metadata = JobMetadata(job_id=create_scheduler_request.job_id, last_success=None, time_interval=create_scheduler_request.time_interval, enabled=True)
+            job_metadata = JobMetadata(
+                job_id=create_scheduler_request.job_id,
+                last_success=None,
+                time_interval=create_scheduler_request.time_interval,
+                enabled=True,
+            )
             session.add(job_metadata)
         else:
             job_metadata.time_interval = create_scheduler_request.time_interval
             job_metadata.enabled = True
         session.commit()
-

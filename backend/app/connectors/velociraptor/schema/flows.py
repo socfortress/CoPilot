@@ -1,16 +1,23 @@
-from pydantic import BaseModel, Field, root_validator
-from typing import List, Optional
+from typing import List
+from typing import Optional
+
 from fastapi import HTTPException
 from loguru import logger
+from pydantic import BaseModel
+from pydantic import Field
+from pydantic import root_validator
+
 
 class FlowSpecParameter(BaseModel):
     key: str
     value: str
     comment: Optional[str]
 
+
 class FlowSpec(BaseModel):
     artifact: str
     parameters: Optional[List[FlowSpecParameter]] = Field(None, description="The parameters of the artifact.")
+
 
 class FlowRequest(BaseModel):
     creator: str
@@ -34,17 +41,18 @@ class FlowRequest(BaseModel):
 
     @root_validator(pre=True)
     def validate_specs(cls, values):
-        if 'specs' in values and values['specs'] is not None:
+        if "specs" in values and values["specs"] is not None:
             validated_specs = []
-            for spec in values['specs']:
+            for spec in values["specs"]:
                 try:
                     validated_spec = FlowSpec(**spec)
                     validated_specs.append(validated_spec)
                 except Exception as e:
-                    #raise HTTPException(status_code=400, detail=f"Failed to validate spec: {e}")
+                    # raise HTTPException(status_code=400, detail=f"Failed to validate spec: {e}")
                     logger.error(f"Failed to validate spec: {e}")
-            values['specs'] = validated_specs
+            values["specs"] = validated_specs
         return values
+
 
 class FlowQueryStat(BaseModel):
     status: str
@@ -62,6 +70,7 @@ class FlowQueryStat(BaseModel):
     result_rows: int
     query_id: int
     total_queries: int
+
 
 class FlowClientSession(BaseModel):
     client_id: str
@@ -90,10 +99,12 @@ class FlowClientSession(BaseModel):
     dirty: bool
     total_loads: int
 
+
 class FlowResponse(BaseModel):
     results: List[FlowClientSession]
     success: bool
     message: str
+
 
 class RetrieveFlowRequest(BaseModel):
     client_id: str
@@ -101,6 +112,6 @@ class RetrieveFlowRequest(BaseModel):
 
     @root_validator(pre=True)
     def validate_session_id(cls, values):
-        if 'session_id' in values and values['session_id'] == "":
+        if "session_id" in values and values["session_id"] == "":
             raise HTTPException(status_code=400, detail="The session_id cannot be an empty string")
         return values

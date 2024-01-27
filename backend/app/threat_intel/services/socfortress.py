@@ -1,17 +1,18 @@
-import httpx
-from fastapi import HTTPException
-from loguru import logger
 from typing import Any
 from typing import Dict
 from typing import Optional
+
+import httpx
+from fastapi import HTTPException
+from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.connectors.utils import get_connector_info_from_db
+from app.db.db_session import get_db_session
 from app.threat_intel.schema.socfortress import IoCMapping
 from app.threat_intel.schema.socfortress import IoCResponse
 from app.threat_intel.schema.socfortress import SocfortressThreatIntelRequest
-from app.connectors.utils import get_connector_info_from_db
 from app.utils import get_connector_attribute
-from app.db.db_session import get_db_session
 
 
 async def get_socfortress_threat_intel_attributes(column_name: str, session: AsyncSession) -> str:
@@ -36,6 +37,7 @@ async def get_socfortress_threat_intel_attributes(column_name: str, session: Asy
         raise HTTPException(status_code=500, detail="SocFortress Threat Intel attributes not found in the database.")
     return attribute_value
 
+
 async def verify_socfortress_threat_intel_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
     """
     Verifies the SOCFortress Threat Intel credentials.
@@ -55,6 +57,7 @@ async def verify_socfortress_threat_intel_credentials(attributes: Dict[str, Any]
         logger.error("No SOCFortress Threat Intel credentials found in the database")
         raise HTTPException(status_code=500, detail="SOCFortress Threat Intel credentials not found in the database")
     return attributes
+
 
 async def verifiy_socfortress_threat_intel_connector(connector_name: str) -> str:
     """
@@ -77,7 +80,7 @@ async def verifiy_socfortress_threat_intel_connector(connector_name: str) -> str
         return None
     request = SocfortressThreatIntelRequest(ioc_value="evil.socfortress.co", customer_code="00001")
     response = await invoke_socfortress_threat_intel_api(attributes["connector_api_key"], attributes["connector_url"], request)
-    if 'data' in response and response['data'].get('comment') == 'This is a test IoC':
+    if "data" in response and response["data"].get("comment") == "This is a test IoC":
         logger.info("Verified SOCFortress Threat Intel connector")
         return {"connectionSuccessful": True, "message": "Successfully verified SOCFortress Threat Intel connector"}
     else:

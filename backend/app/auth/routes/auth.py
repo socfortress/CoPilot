@@ -5,14 +5,16 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Security
 from fastapi import status
-from starlette.status import HTTP_401_UNAUTHORIZED
 from fastapi.security import OAuth2PasswordRequestForm
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.status import HTTP_401_UNAUTHORIZED
 
+from app.auth.models.users import PasswordReset
+from app.auth.models.users import PasswordResetToken
 from app.auth.models.users import User
 from app.auth.models.users import UserInput
-from app.auth.models.users import UserLogin, PasswordReset, PasswordResetToken
+from app.auth.models.users import UserLogin
 from app.auth.schema.auth import Token
 from app.auth.schema.auth import UserLoginResponse
 from app.auth.schema.auth import UserResponse
@@ -114,7 +116,12 @@ async def login(user: UserLogin):
 
 
 # Get all users
-@auth_router.get("/users", response_model=UserBaseResponse, description="Get all users", dependencies=[Security(AuthHandler().require_any_scope("analyst","admin"))],)
+@auth_router.get(
+    "/users",
+    response_model=UserBaseResponse,
+    description="Get all users",
+    dependencies=[Security(AuthHandler().require_any_scope("analyst", "admin"))],
+)
 async def get_users(session: AsyncSession = Depends(get_db)):
     """
     Retrieve all users from the database.
@@ -131,6 +138,7 @@ async def get_users(session: AsyncSession = Depends(get_db)):
     """
     users = await select_all_users()
     return UserBaseResponse(users=users, message="Users retrieved successfully", success=True)
+
 
 # ! TODO: HAVE LOGIC TO HANDLE PASSWORD RESET VIA A TOKEN BUT NOT IMPLEMENTED YET ! #
 @auth_router.post("/reset-token", status_code=200, description="Request password reset", include_in_schema=False)
@@ -174,8 +182,14 @@ async def request_password_reset(password_reset_request: PasswordResetToken, ses
 #     await session.commit()
 #     return {"message": "Password reset successfully", "success": True}
 
+
 # Reset a user's password via the username, must be an admin
-@auth_router.post("/reset-password", status_code=200, description="Reset user's password via username", dependencies=[Security(AuthHandler().require_any_scope("admin"))],)
+@auth_router.post(
+    "/reset-password",
+    status_code=200,
+    description="Reset user's password via username",
+    dependencies=[Security(AuthHandler().require_any_scope("admin"))],
+)
 async def reset_password_via_username(request: PasswordReset, session: AsyncSession = Depends(get_db)):
     """
     Reset a user's password via the username. Must be an admin.
@@ -198,7 +212,12 @@ async def reset_password_via_username(request: PasswordReset, session: AsyncSess
 
 
 # Reset a users password for themselves. The user must be logged in and the token decoded to get the username
-@auth_router.post("/reset-password/me", status_code=200, description="Reset user's password", dependencies=[Security(AuthHandler().require_any_scope("analyst","admin"))],)
+@auth_router.post(
+    "/reset-password/me",
+    status_code=200,
+    description="Reset user's password",
+    dependencies=[Security(AuthHandler().require_any_scope("analyst", "admin"))],
+)
 async def reset_password_me(request: PasswordReset, token: str = Depends(AuthHandler().security), session: AsyncSession = Depends(get_db)):
     """
     Reset a user's password.

@@ -209,11 +209,13 @@ class EventShipperPayload(BaseModel):
         description="The customer code.",
         examples="socfortress",
     )
+
     class Config:
         extra = Extra.allow
 
     def to_dict(self):
         return self.dict(exclude_none=True)
+
 
 class EventShipperPayloadResponse(BaseModel):
     message: str
@@ -223,9 +225,11 @@ class EventShipperPayloadResponse(BaseModel):
         description="The Event Shipper response data.",
     )
 
+
 ######### ! SEND TO ALERT CREATION ! #########
 class QueryString(BaseModel):
     query: str
+
 
 class Query(BaseModel):
     query_string: QueryString

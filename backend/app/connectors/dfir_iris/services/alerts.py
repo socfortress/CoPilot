@@ -1,11 +1,14 @@
+from fastapi import HTTPException
+from loguru import logger
+
 from app.connectors.dfir_iris.schema.alerts import AlertResponse
 from app.connectors.dfir_iris.schema.alerts import AlertsResponse
-from app.connectors.dfir_iris.schema.alerts import BookmarkedAlertsResponse, FilterAlertsRequest, CaseCreationResponse, DeleteAlertResponse
+from app.connectors.dfir_iris.schema.alerts import BookmarkedAlertsResponse
+from app.connectors.dfir_iris.schema.alerts import CaseCreationResponse
+from app.connectors.dfir_iris.schema.alerts import DeleteAlertResponse
+from app.connectors.dfir_iris.schema.alerts import FilterAlertsRequest
 from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
 from app.connectors.dfir_iris.utils.universal import initialize_client_and_alert
-from loguru import logger
-from fastapi import HTTPException
-
 
 
 async def get_alerts(request: FilterAlertsRequest) -> AlertsResponse:
@@ -28,6 +31,7 @@ async def get_alerts(request: FilterAlertsRequest) -> AlertsResponse:
         logger.error(f"Error fetching alerts: {e}")
         raise HTTPException(status_code=500, detail=f"Error fetching alerts: {e}")
 
+
 def construct_params(request: FilterAlertsRequest) -> dict:
     """
     Constructs the parameters for the alert filtering request.
@@ -39,16 +43,15 @@ def construct_params(request: FilterAlertsRequest) -> dict:
         dict: A dictionary of parameters for the alert filtering request.
     """
     params = {
-        'page': request.page,
-        'per_page': request.per_page,
-        'sort': request.sort,
-        'alert_title': request.alert_title,
+        "page": request.page,
+        "per_page": request.per_page,
+        "sort": request.sort,
+        "alert_title": request.alert_title,
         # Add more parameters here as needed
     }
 
     # Remove parameters that have a value of None
     return {k: v for k, v in params.items() if v is not None}
-
 
 
 async def get_alert(alert_id: str) -> AlertResponse:
@@ -67,6 +70,7 @@ async def get_alert(alert_id: str) -> AlertResponse:
     client, alert = await initialize_client_and_alert("DFIR-IRIS")
     result = await fetch_and_validate_data(client, alert.get_alert, alert_id)
     return AlertResponse(success=True, message="Successfully fetched alert", alert=result["data"])
+
 
 async def create_case(alert_id: str) -> CaseCreationResponse:
     """
@@ -87,6 +91,7 @@ async def create_case(alert_id: str) -> CaseCreationResponse:
     logger.info(f"Successfully created case for alert: {result}")
     return CaseCreationResponse(success=True, message="Successfully created case for alert", case=result["data"])
 
+
 def construct_case_creation_params(alert_details: dict) -> dict:
     """
     Constructs the parameters for the case creation request.
@@ -98,15 +103,16 @@ def construct_case_creation_params(alert_details: dict) -> dict:
         dict: A dictionary of parameters for the case creation request.
     """
     params = {
-        'case_title': alert_details["alert_title"],
-        'case_tags': alert_details["alert_tags"],
-        'escalation_note': 'Case created from CoPilot',
-        'iocs_import_list': [ioc['ioc_uuid'] for ioc in alert_details["iocs"]],
-        'assets_import_list': [asset['asset_uuid'] for asset in alert_details["assets"]],
+        "case_title": alert_details["alert_title"],
+        "case_tags": alert_details["alert_tags"],
+        "escalation_note": "Case created from CoPilot",
+        "iocs_import_list": [ioc["ioc_uuid"] for ioc in alert_details["iocs"]],
+        "assets_import_list": [asset["asset_uuid"] for asset in alert_details["assets"]],
     }
 
     # Replace None values with the string "None"
     return {k: v if v is not None else "None" for k, v in params.items()}
+
 
 async def bookmark_alert(alert_id: str, bookmarked: bool) -> AlertResponse:
     """

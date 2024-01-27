@@ -1,17 +1,18 @@
+import os
+
 import uvicorn
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi import HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
-import os
-from dotenv import load_dotenv
 
 from app.auth.utils import AuthHandler
 from app.db.db_session import async_engine
+from app.db.db_setup import create_available_integrations
 from app.db.db_setup import create_roles
 from app.db.db_setup import create_tables
-from app.db.db_setup import create_available_integrations
 from app.db.db_setup import ensure_admin_user
 from app.db.db_setup import ensure_scheduler_user
 from app.db.db_setup import ensure_scheduler_user_removed
@@ -34,7 +35,12 @@ from app.routers import grafana
 from app.routers import graylog
 from app.routers import healthcheck
 from app.routers import influxdb
+from app.routers import integrations
+from app.routers import log_shipper_test
 from app.routers import logs
+from app.routers import mimecast
+from app.routers import office365
+from app.routers import scheduler
 from app.routers import shuffle
 from app.routers import smtp
 from app.routers import sublime
@@ -42,11 +48,6 @@ from app.routers import threat_intel
 from app.routers import velociraptor
 from app.routers import wazuh_indexer
 from app.routers import wazuh_manager
-from app.routers import log_shipper_test
-from app.routers import integrations
-from app.routers import mimecast
-from app.routers import office365
-from app.routers import scheduler
 from app.schedulers.scheduler import init_scheduler
 
 auth_handler = AuthHandler()
@@ -106,6 +107,7 @@ app.include_router(integrations.router)
 app.include_router(office365.router)
 app.include_router(mimecast.router)
 app.include_router(scheduler.router)
+
 
 @app.on_event("startup")
 async def init_db():

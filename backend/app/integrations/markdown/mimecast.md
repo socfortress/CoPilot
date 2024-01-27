@@ -2,12 +2,13 @@
 
 When developing a script of server application integration you will:
 
-- Use a single user that has the Mimecast administrator permissions to perform the actions required by your use case.
-- Update the Authentication Cache TTL setting in the service user's effective Authentication Profile to "Never Expire."
+-   Use a single user that has the Mimecast administrator permissions to perform the actions required by your use case.
+-   Update the Authentication Cache TTL setting in the service user's effective Authentication Profile to "Never Expire."
 
 This page provides a step-by-step guide to prepare a user for your integration and get the access key and secret key values required to authorize all requests to the API.
 
 ### Step 1: Create a New User
+
 1. Login to the Administration Console.
 2. Navigate to the Administration | Directories | Internal Directories menu item to display a list of internal domains.
 3. Select the internal domain where you would like to create your new user.
@@ -16,6 +17,7 @@ This page provides a step-by-step guide to prepare a user for your integration a
 6. Keep a note of the password set as you will use this to get your Authentication Token in Step 6.
 
 ### Step 2: Add the User to an Administrative Role
+
 1. While logged into the Administration Console, navigate to the Administration | Account | Roles menu item to display the Roles page.
 2. Right-click the Basic Administrator role and select Add users to role.
 3. Browse or search to find the new user created in Step 1.
@@ -23,6 +25,7 @@ This page provides a step-by-step guide to prepare a user for your integration a
 5. Select the Add selected users button to add the user to the role.
 
 ### Step 3: Create a New Group and Add Your New User
+
 1. While logged into the Administration Console, navigate to the Administration | Directories | Profile Groups menu item to display the Profile groups page.
 2. Create a new group by selecting the plus icon on the parent folder where you would like to create the group. This creates a new group with the Name "New Folder"
 3. To rename the group, select the newly created "New Folder" group. Then from the Edit group text box type the name you want to give the folder, for example, Splunk Admin and press the Enter key to apply the change.
@@ -31,6 +34,7 @@ This page provides a step-by-step guide to prepare a user for your integration a
 6. Select Save and Exit to add the new user to the group.
 
 ### Step 4: Create a New Authentication Profile
+
 1. While logged into the Administration Console, navigate to the Administration | Services | Applications menu item to display the Application Settings page.
 2. Select the Authentication Profiles button.
 3. Select the New Authentication Profile button.
@@ -40,6 +44,7 @@ This page provides a step-by-step guide to prepare a user for your integration a
 7. Select Save and Exit to create the profile.
 
 ### Step 5: Create a New Application Setting
+
 1. While logged into the Administration Console, navigate to the Administration | Services | Applications menu item to display the Application Settings page.
 2. Select the New Application Settings button.
 3. Type a Description.
@@ -49,12 +54,15 @@ This page provides a step-by-step guide to prepare a user for your integration a
 7. Select Save and Exit to create and apply the Application Settings to your new group and user.
 
 ### Step 6: Get Your Authentication Token
+
 Now that you have a dedicated user who will receive an Authentication Token that will never expire, the final preparation task is to get the Authentication Token for the user.
 
 #### Get an Authentication Token Using Windows
+
 NOTE: This process has been tested in Powershell version 4 and 5.
 
 Copy paste the following script into a Powershell window:
+
 ```powershell
 $appId = Read-Host -Prompt 'Input your registered application id'
 

@@ -1,17 +1,17 @@
 from fastapi import HTTPException
 from loguru import logger
 
+from app.connectors.graylog.schema.pipelines import CreatePipeline
+from app.connectors.graylog.schema.pipelines import CreatePipelineRule
 from app.connectors.graylog.schema.pipelines import GraylogPipelinesResponse
 from app.connectors.graylog.schema.pipelines import Pipeline
 from app.connectors.graylog.schema.pipelines import PipelineRule
 from app.connectors.graylog.schema.pipelines import PipelineRulesResponse
-from app.connectors.graylog.schema.pipelines import CreatePipelineRule
-from app.connectors.graylog.schema.pipelines import CreatePipeline
+from app.connectors.graylog.utils.universal import send_get_request
+from app.connectors.graylog.utils.universal import send_post_request
 from app.customer_provisioning.schema.graylog import StreamConnectionToPipelineRequest
 from app.customer_provisioning.schema.graylog import StreamConnectionToPipelineResponse
 
-from app.connectors.graylog.utils.universal import send_get_request
-from app.connectors.graylog.utils.universal import send_post_request
 
 async def get_pipelines() -> GraylogPipelinesResponse:
     """Get pipelines from Graylog.
@@ -97,6 +97,7 @@ async def create_pipeline_rule(rule: CreatePipelineRule) -> None:
     }
     await send_post_request(endpoint=endpoint, data=data)
 
+
 async def create_pipeline_graylog(pipeline: CreatePipeline) -> None:
     """
     Creates a pipeline with the given title in Graylog.
@@ -134,6 +135,7 @@ async def get_pipeline_id(subscription: str) -> str:
     else:
         logger.error(f"Failed to get pipelines: {pipelines_response.message}")
         raise HTTPException(status_code=500, detail=f"Failed to get pipelines: {pipelines_response.message}")
+
 
 async def connect_stream_to_pipeline(stream_and_pipeline: StreamConnectionToPipelineRequest):
     """
