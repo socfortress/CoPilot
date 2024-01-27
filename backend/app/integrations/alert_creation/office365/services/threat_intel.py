@@ -119,17 +119,20 @@ async def build_alert_context_payload(
     return IrisAlertContext(
         customer_iris_id=(
             await get_customer_alert_settings_office365(
-                office365_organization_id=alert_details.data_office365_OrganizationId, session=session,
+                office365_organization_id=alert_details.data_office365_OrganizationId,
+                session=session,
             )
         ).iris_customer_id,
         customer_name=(
             await get_customer_alert_settings_office365(
-                office365_organization_id=alert_details.data_office365_OrganizationId, session=session,
+                office365_organization_id=alert_details.data_office365_OrganizationId,
+                session=session,
             )
         ).customer_name,
         customer_cases_index=(
             await get_customer_alert_settings_office365(
-                office365_organization_id=alert_details.data_office365_OrganizationId, session=session,
+                office365_organization_id=alert_details.data_office365_OrganizationId,
+                session=session,
             )
         ).iris_index,
         alert_id=alert_details.id,
@@ -183,7 +186,8 @@ async def build_alert_payload(
             alert_severity_id=5,
             alert_customer_id=(
                 await get_customer_alert_settings_office365(
-                    office365_organization_id=alert_details.data_office365_OrganizationId, session=session,
+                    office365_organization_id=alert_details.data_office365_OrganizationId,
+                    session=session,
                 )
             ).iris_customer_id,
             alert_source_content=alert_details.to_dict(),
@@ -203,7 +207,8 @@ async def build_alert_payload(
             alert_severity_id=5,
             alert_customer_id=(
                 await get_customer_alert_settings_office365(
-                    office365_organization_id=alert_details.data_office365_OrganizationId, session=session,
+                    office365_organization_id=alert_details.data_office365_OrganizationId,
+                    session=session,
                 )
             ).iris_customer_id,
             alert_source_content=alert_details.to_dict(),

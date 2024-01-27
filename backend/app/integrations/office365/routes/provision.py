@@ -62,7 +62,8 @@ def extract_office365_auth_keys(customer_integration: CustomerIntegrations) -> D
                 office365_auth_keys[auth_key.auth_key_name] = auth_key.auth_value
     if not office365_auth_keys:
         raise HTTPException(
-            status_code=404, detail="No auth keys found for Office365 integration. Please create auth keys for Office365 integration.",
+            status_code=404,
+            detail="No auth keys found for Office365 integration. Please create auth keys for Office365 integration.",
         )
     return office365_auth_keys
 
@@ -74,7 +75,8 @@ def extract_office365_auth_keys(customer_integration: CustomerIntegrations) -> D
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def provision_office365_route(
-    provision_office365_request: ProvisionOffice365Request, session: AsyncSession = Depends(get_db),
+    provision_office365_request: ProvisionOffice365Request,
+    session: AsyncSession = Depends(get_db),
 ) -> ProvisionOffice365Response:
     """
     Provisions Office365 integration for a customer.
@@ -89,7 +91,9 @@ async def provision_office365_route(
     customer_integration_response = await get_customer_integration_response(provision_office365_request.customer_code, session)
 
     customer_integration = await find_customer_integration(
-        provision_office365_request.customer_code, provision_office365_request.integration_name, customer_integration_response,
+        provision_office365_request.customer_code,
+        provision_office365_request.integration_name,
+        customer_integration_response,
     )
 
     office365_auth_keys = extract_office365_auth_keys(customer_integration)

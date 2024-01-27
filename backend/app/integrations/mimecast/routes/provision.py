@@ -33,7 +33,9 @@ async def invoke_mimecast_schedule_create(time_interval: int) -> MimecastSchedul
     """
     await add_scheduler_jobs(
         CreateSchedulerRequest(
-            function_name="invoke_mimecast_integration", time_interval=time_interval, job_id="invoke_mimecast_integration",
+            function_name="invoke_mimecast_integration",
+            time_interval=time_interval,
+            job_id="invoke_mimecast_integration",
         ),
     )
     return MimecastScheduledResponse(success=True, message="Mimecast integration scheduled.")

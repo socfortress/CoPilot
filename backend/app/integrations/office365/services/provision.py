@@ -321,7 +321,10 @@ def extract_index_set_id(response: GraylogIndexSetCreationResponse) -> str:
 # ! Event STREAMS ! #
 # Function to create event stream configuration
 async def build_event_stream_config(
-    customer_code: str, provision_office365_auth_keys: ProvisionOffice365AuthKeys, index_set_id: str, session: AsyncSession,
+    customer_code: str,
+    provision_office365_auth_keys: ProvisionOffice365AuthKeys,
+    index_set_id: str,
+    session: AsyncSession,
 ) -> Office365EventStream:
     """
     Build the configuration for a Wazuh event stream.
@@ -374,7 +377,10 @@ async def send_event_stream_creation_request(event_stream: Office365EventStream)
 
 
 async def create_event_stream(
-    customer_code: str, provision_office365_auth_keys: ProvisionOffice365AuthKeys, index_set_id: str, session: AsyncSession,
+    customer_code: str,
+    provision_office365_auth_keys: ProvisionOffice365AuthKeys,
+    index_set_id: str,
+    session: AsyncSession,
 ) -> StreamCreationResponse:
     """
     Creates an event stream for a customer.
@@ -608,7 +614,9 @@ async def create_grafana_datasource(
 
 
 async def provision_office365(
-    customer_code: str, provision_office365_auth_keys: ProvisionOffice365AuthKeys, session: AsyncSession,
+    customer_code: str,
+    provision_office365_auth_keys: ProvisionOffice365AuthKeys,
+    session: AsyncSession,
 ) -> ProvisionOffice365Response:
     logger.info(f"Provisioning Office365 integration for customer {customer_code}.")
 

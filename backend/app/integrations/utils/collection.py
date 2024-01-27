@@ -11,7 +11,9 @@ from loguru import logger
 
 
 async def send_get_request(
-    endpoint: str, headers: Optional[Dict[str, Any]] = None, params: Optional[Dict[str, Any]] = None,
+    endpoint: str,
+    headers: Optional[Dict[str, Any]] = None,
+    params: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """Send a GET request to the given endpoint.
 

@@ -73,7 +73,9 @@ async def get_flow(retrieve_flow_request: RetrieveFlowRequest):
     try:
         if flow_results["success"]:
             return CollectArtifactResponse(
-                success=flow_results["success"], message=flow_results["message"], results=flow_results["results"],
+                success=flow_results["success"],
+                message=flow_results["message"],
+                results=flow_results["results"],
             )
         else:
             raise HTTPException(status_code=500, detail=f"Failed to retrieve flow results from Velociraptor: {flow_results['message']}")

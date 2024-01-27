@@ -63,11 +63,13 @@ def extract_mimecast_auth_keys(customer_integration: CustomerIntegrations) -> Di
                     mimecast_auth_keys[auth_key.auth_key_name] = auth_key.auth_value
         if not mimecast_auth_keys:
             raise HTTPException(
-                status_code=404, detail="No auth keys found for Mimecast integration. Please create auth keys for Mimecast integration.",
+                status_code=404,
+                detail="No auth keys found for Mimecast integration. Please create auth keys for Mimecast integration.",
             )
     except Exception as e:
         raise HTTPException(
-            status_code=404, detail="No auth keys found for Mimecast integration. Please create auth keys for Mimecast integration.",
+            status_code=404,
+            detail="No auth keys found for Mimecast integration. Please create auth keys for Mimecast integration.",
         )
     return mimecast_auth_keys
 
@@ -92,7 +94,9 @@ async def invoke_mimecast_route(mimecast_request: MimecastRequest, session: Asyn
     customer_integration_response = await get_customer_integration_response(mimecast_request.customer_code, session)
 
     customer_integration = await find_customer_integration(
-        mimecast_request.customer_code, mimecast_request.integration_name, customer_integration_response,
+        mimecast_request.customer_code,
+        mimecast_request.integration_name,
+        customer_integration_response,
     )
 
     mimecast_auth_keys = extract_mimecast_auth_keys(customer_integration)
