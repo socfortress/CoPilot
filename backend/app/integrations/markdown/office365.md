@@ -70,33 +70,19 @@ Admin consent is required for API permission changes.
 
 ![API permissions](/src/assets/images/office365/4-azure-wazuh-app-configure-permissions-admin-consent.png)
 
-### Wazuh configuration
+### CoPilot configuration
 
-Next, we will see the options we have to configure for the Wazuh integration.
+Next, we will see how to deploy this module in CoPilot. To do so, we will need to navigate to the `Customers` section and select the customer we want to deploy the module to. Once there, we will click on the `Integrations` tab and then on the `Add integration` button. We will select the `Office365` module and fill in the required fields.
 
-Configure the `office365` module either in the Wazuh manager or the Wazuh agent. To do so, modify the :doc:`ossec.conf </user-manual/reference/ossec-conf/index>` configuration file. Through the following configuration, Wazuh is ready to search for logs created by Office 365 audit-log. In this case, we will only search for the `Audit.SharePoint` type events within an interval of `1m`. Those logs will be only those that were created after the module was started:
+![Copilot Configuration](/src/assets/images/office365/copilot_config_customer_details.PNG)
 
-```html
-<office365>
-	<enabled>yes</enabled>
-	<interval>1m</interval>
-	<curl_max_size>1M</curl_max_size>
-	<only_future_events>yes</only_future_events>
-	<api_auth>
-		<tenant_id>your_tenant_id</tenant_id>
-		<client_id>your_client_id</client_id>
-		<client_secret>your_client_secret</client_secret>
-		<api_type>commercial</api_type>
-	</api_auth>
-	<subscriptions>
-		<subscription>Audit.SharePoint</subscription>
-	</subscriptions>
-</office365>
-```
+![Copilot Configuration](/src/assets/images/office365/copilot_config_customer_integration.PNG)
 
-To learn more, check the :ref:`office365-module` module reference.
+![Copilot Configuration](/src/assets/images/office365/copilot_config_customer_integration_config.PNG)
 
-Using the configuration mentioned above, we will see an example of monitoring Office 365 activity.
+![Copilot Configuration](/src/assets/images/office365/copilot_config_customer_integration_auth.PNG)
+
+Once deployed, Copilot will automatically add the required configuration to the `Wazuh manager`, deploy the required Index, Stream, and Pipeline to `Graylog` and create the required Dashboards within `Grafana`. `Praeco` will also be configured to send `Exchange` and `Threat Intel` Office365 alerts to `DFIR-IRIS`.
 
 ### Generate activity on Office 365
 
