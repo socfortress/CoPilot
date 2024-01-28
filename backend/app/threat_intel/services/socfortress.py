@@ -1,6 +1,5 @@
 from typing import Any
 from typing import Dict
-from typing import Optional
 
 import httpx
 from fastapi import HTTPException

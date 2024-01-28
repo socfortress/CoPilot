@@ -99,7 +99,7 @@ class AuthHandler:
         """
         user = await find_user(username)
         if not user or not self.verify_password(password, user.password):
-            logger.info(f"Password is not verified")
+            logger.info("Password is not verified")
             return False
         return user
 
@@ -169,12 +169,6 @@ class AuthHandler:
             authenticate_value = f'Bearer scope="{security_scopes.scope_str}"'
         else:
             authenticate_value = "Bearer"
-
-        credentials_exception = HTTPException(
-            status_code=401,
-            detail="Could not validate credentials",
-            headers={"WWW-Authenticate": authenticate_value},
-        )
 
         try:
             username, token_scopes = self.decode_token(token)

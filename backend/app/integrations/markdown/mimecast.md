@@ -1,120 +1,86 @@
 # [Mimecast](https://integrations.mimecast.com/documentation/api-overview/authentication-scripts-server-apps/)
 
-When developing a script of server application integration you will:
+# Requirements
 
--   Use a single user that has the Mimecast administrator permissions to perform the actions required by your use case.
--   Update the Authentication Cache TTL setting in the service user's effective Authentication Profile to "Never Expire."
+-   A Mimecast plan with a Targeted Threat Protection (TTP) license. For more information, see Mimecast Plans.
+-   A Mimecast administrator account.
 
-This page provides a step-by-step guide to prepare a user for your integration and get the access key and secret key values required to authorize all requests to the API.
+# Steps
 
-### Step 1: Create a New User
+1. **Create the API application.**
+2. **Configure the API service account user.**
+3. **Configure 2-step authentication with SMS.**
+4. **Create API keys.**
+5. **Provide your Mimecast credentials to CoPilot.**
 
-1. Login to the Administration Console.
-2. Navigate to the Administration | Directories | Internal Directories menu item to display a list of internal domains.
-3. Select the internal domain where you would like to create your new user.
-4. Select the New Address button from the menu bar.
-5. Complete the new address form and select Save and Exit to create the new user.
-6. Keep a note of the password set as you will use this to get your Authentication Token in Step 6.
+## Step 1: Create the API Application
 
-### Step 2: Add the User to an Administrative Role
+1. Sign in to the Mimecast Administration Console.
+2. In the Administration menu, click `Services > API and Platform Integrations`.
+3. On the Available Integrations tab, click `Generate Keys`.
+4. In the Description field, enter a description for this API application.
+5. Click `Next`.
+6. Configure these settings:
+    - Technical Point of Contact — Enter the name of the person who Mimecast should contact if necessary. For example, the active user configuring the API application.
+    - Email — Enter the corresponding email for the point of contact.
+7. Click `Next`.
+8. Verify that your information is correct, and then click the Status toggle to the `Enabled` position.
+9. Click `Add`.
+10. Click the application that you created to open the information panel.
+11. Copy the Application ID and Application Key to a safe, encrypted location to provide to CoPilot later.
 
-1. While logged into the Administration Console, navigate to the Administration | Account | Roles menu item to display the Roles page.
-2. Right-click the Basic Administrator role and select Add users to role.
-3. Browse or search to find the new user created in Step 1.
-4. Select the tick box to the left of the user.
-5. Select the Add selected users button to add the user to the role.
+## Step 2: Configure the API service account user
 
-### Step 3: Create a New Group and Add Your New User
+To prevent permission overrides during the configuration process, create a dedicated service account user. For more information, see Managing API Applications.
 
-1. While logged into the Administration Console, navigate to the Administration | Directories | Profile Groups menu item to display the Profile groups page.
-2. Create a new group by selecting the plus icon on the parent folder where you would like to create the group. This creates a new group with the Name "New Folder"
-3. To rename the group, select the newly created "New Folder" group. Then from the Edit group text box type the name you want to give the folder, for example, Splunk Admin and press the Enter key to apply the change.
-4. With the group selected select the Build drop-down button and select Add Email Addresses.
-5. Type the name of the new user created in Step 1.
-6. Select Save and Exit to add the new user to the group.
+1. Sign in to the Mimecast Administration Console.
+2. Create a service account user:
+    - In the Administration menu, click `Directories > Internal Directories`.
+    - Select the domain the user will be added to.
+    - Enter the email address for the user.
+    - Create and confirm a password.
+    - Click `Save`.
+3. Assign the service account user permissions:
+    - In the Administration menu, click `Account > Roles`.
+    - Click `Basic Administrator`.
+    - Click `Add User to Role`.
+    - Select the email address of the API service user account.
 
-### Step 4: Create a New Authentication Profile
+## Step 3: Configure 2-step authentication with SMS
 
-1. While logged into the Administration Console, navigate to the Administration | Services | Applications menu item to display the Application Settings page.
-2. Select the Authentication Profiles button.
-3. Select the New Authentication Profile button.
-4. Type a Description for the new profile.
-5. Set the Authentication TTL setting to Never Expires. This will make sure that when you create your Authentication Token it will not expire and impact the data collection of the app.
-6. Leave all other settings as their default.
-7. Select Save and Exit to create the profile.
+You must configure 2-step authentication with SMS to create the API keys. After creating the API keys, you can revert to your previous authentication method.
 
-### Step 5: Create a New Application Setting
+1. In a new browser tab, sign in to the Mimecast Administration Console as the service account user created in Configure the API service account user.
+2. Register a phone number for the service account that can be used for 2-step authentication with SMS:
+    - Click the flag icon to select the correct country code.
+    - Enter the phone number.
+    - Click `Next`.
+    - Enter the verification sent to the registered phone number.
+    - Click `Verify`.
+3. Sign out of Mimecast.
+4. Return to the previous browser tab.
 
-1. While logged into the Administration Console, navigate to the Administration | Services | Applications menu item to display the Application Settings page.
-2. Select the New Application Settings button.
-3. Type a Description.
-4. Use the Group Lookup button to select the Group that you created in Step 3.
-5. Use the Authentication Profile Lookup button to select the Authentication Profile created in Step 4.
-6. Leave all other settings as their default.
-7. Select Save and Exit to create and apply the Application Settings to your new group and user.
+## Step 4: Create API keys
 
-### Step 6: Get Your Authentication Token
+> **Notes:**
+>
+> -   You may need to wait a maximum of 30 minutes after creating the API application before creating the API keys.
 
-Now that you have a dedicated user who will receive an Authentication Token that will never expire, the final preparation task is to get the Authentication Token for the user.
+1. In the browser tab that you just returned to, in the Administration menu, click `Services > API and Platform Integrations`.
+2. In the Your Application Integrations tab, select the application that you created in Create the API application.
+3. In the information pane, click `Create Keys`.
+4. In the Email Address field, enter the email address for the service account that you created in Configure the API service account user.
+5. Click `Next`.
+6. In the Type menu, click `Cloud`.
+7. In the Password field, enter the service account password, and then click `Next`.
+8. Follow the prompts to verify the service account, and then click `Next`.
+9. Click the eye next to Access Key and Secret Key to reveal each value.
+10. Copy the Access Key and Secret Key values and save them in a safe, encrypted location to provide to CoPilot later.
+11. Click `Finish`.
 
-#### Get an Authentication Token Using Windows
+## Step 5: Provide your Mimecast credentials to CoPilot
 
-NOTE: This process has been tested in Powershell version 4 and 5.
-
-Copy paste the following script into a Powershell window:
-
-```powershell
-$appId = Read-Host -Prompt 'Input your registered application id'
-
-$creds = Get-Credential
-
-$discoverPostBody = @{"data" = ,@{"emailAddress" = $creds.UserName}}
-
-$discoverPostBodyJson = ConvertTo-Json $discoverPostBody
-
-$discoverRequestId = [GUID]::NewGuid().guid
-
-$discoverRequestHeaders = @{"x-mc-app-id" = $appId; "x-mc-req-id" = $discoverRequestId; "Content-Type" = "application/json"}
-
-$discoveryData = Invoke-RestMethod -Method Post -Headers $discoverRequestHeaders -Body $discoverPostBodyJson -Uri "https://api.mimecast.com/api/login/discover-authentication"
-
-$baseUrl = $discoveryData.data.region.api
-
-$keys = @{}
-
-$uri = $baseUrl + "/api/login/login"
-
-$requestId = [GUID]::NewGuid()
-
-$netCred = $creds.GetNetworkCredential()
-
-$PlainPassword = $netCred.Password
-
-$credsBytes = [System.Text.Encoding]::ASCII.GetBytes($creds.UserName + ":" + $PlainPassword)
-
-$creds64 = [System.Convert]::ToBase64String($credsBytes)
-
-$headers = @{"Authorization" = "Basic-Cloud " + $creds64; "x-mc-app-id" = $appId; "x-mc-req-id" = $requestId; "Content-Type" = "application/json"}
-
-$postBody = @{"data" = ,@{"username" = $creds.UserName}}
-
-$postBodyJson = ConvertTo-Json $postBody
-
-$data = Invoke-RestMethod -Method Post -Headers $headers -Body $postBodyJson -Uri $uri
-
-"Meta: " + $data.meta
-
-"Access key: " + $data.data.accessKey
-
-"Secret key: " + $data.data.secretKey
-
-"Fail: " + $data.fail.errorss
-```
-
-When prompted, enter the Application ID value received when you registered your application.
-
-Enter the email address and password of the user created in Step 1: Create a new user into the Windows credentials box that will launch after you have pasted the script into the Powershell window.
-
-Copy and paste the accessKey and secretKey values printed at the bottom of the Powershell window to use in your application.
-
-IMPORTANT: be sure to copy and paste these values to a text editor and remove any line breaks caused by your Powershell window size before using the values.
+1. In the CoPilot web app, click `Customers > **Select the Customer's details** > Integrations`.
+2. Click `Add Integration`.
+3. Select `Mimecast` from the list of integrations.
+4. Enter the Application ID, Application Key, Access Key, Secret Key, and Email Address that you saved in the previous steps.

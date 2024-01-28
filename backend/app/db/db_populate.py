@@ -77,7 +77,11 @@ def get_connectors_list():
             "Wazuh Worker Provisioning",
             "3",
             "host_only",
-            "Connection to Wazuh Worker Provisioning. Make sure you have deployed the Wazuh Worker Provisioning Application provided by SOCFortress: https://github.com/socfortress/Customer-Provisioning-Worker",
+            (
+                "Connection to Wazuh Worker Provisioning. Make sure you have "
+                "deployed the Wazuh Worker Provisioning Application provided by "
+                "SOCFortress: https://github.com/socfortress/Customer-Provisioning-Worker"
+            ),
         ),
         (
             "Event Shipper",
@@ -90,7 +94,11 @@ def get_connectors_list():
             "Alert Creation Provisioning",
             "3",
             "host_only",
-            "Connection to Alert Creation Provisioning. Make sure you have deployed the Alert Creation Provisioning Application provided by SOCFortress: https://github.com/socfortress/Customer-Provisioning-Alert",
+            (
+                "Connection to Alert Creation Provisioning. Make sure you have "
+                "deployed the Alert Creation Provisioning Application provided by "
+                "SOCFortress: https://github.com/socfortress/Customer-Provisioning-Alert"
+            ),
         ),
         # ... Add more connectors as needed ...
     ]
@@ -326,5 +334,7 @@ async def add_available_integrations_auth_keys_if_not_exist(session: AsyncSessio
                 new_auth_key = AvailableIntegrationsAuthKeys(**available_integration_auth_keys_data)
                 session.add(new_auth_key)
                 logger.info(
-                    f"Added new available integration auth keys: {available_integration_auth_keys_data['auth_key_name']} for {available_integration_auth_keys_data['integration_name']}",
+                    f"Added new available integration auth keys: "
+                    f"{available_integration_auth_keys_data['auth_key_name']} for "
+                    f"{available_integration_auth_keys_data['integration_name']}",
                 )

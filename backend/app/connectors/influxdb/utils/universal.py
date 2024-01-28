@@ -85,5 +85,5 @@ async def get_influxdb_organization() -> str:
     async with get_db_session() as session:  # This will correctly enter the context manager
         attributes = await get_connector_info_from_db("InfluxDB", session)
     if attributes is None:
-        raise HTTPException(status_code=500, detail=f"No InfluxDB connector found in the database")
+        raise HTTPException(status_code=500, detail="No InfluxDB connector found in the database")
     return attributes["connector_extra_data"].split(",")[0]

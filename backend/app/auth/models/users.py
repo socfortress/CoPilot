@@ -6,7 +6,6 @@ from enum import Enum
 from typing import Optional
 
 import bcrypt
-from fastapi import HTTPException
 from pydantic import BaseModel
 from pydantic import EmailStr
 from pydantic import validator

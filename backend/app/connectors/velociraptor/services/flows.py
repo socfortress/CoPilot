@@ -1,14 +1,7 @@
 from fastapi import HTTPException
 from loguru import logger
 
-from app.connectors.velociraptor.schema.artifacts import Artifacts
-from app.connectors.velociraptor.schema.artifacts import ArtifactsResponse
-from app.connectors.velociraptor.schema.artifacts import CollectArtifactBody
 from app.connectors.velociraptor.schema.artifacts import CollectArtifactResponse
-from app.connectors.velociraptor.schema.artifacts import QuarantineBody
-from app.connectors.velociraptor.schema.artifacts import QuarantineResponse
-from app.connectors.velociraptor.schema.artifacts import RunCommandBody
-from app.connectors.velociraptor.schema.artifacts import RunCommandResponse
 from app.connectors.velociraptor.schema.flows import FlowClientSession
 from app.connectors.velociraptor.schema.flows import FlowResponse
 from app.connectors.velociraptor.schema.flows import RetrieveFlowRequest

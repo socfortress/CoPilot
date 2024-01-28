@@ -1,12 +1,9 @@
-import os
 from datetime import datetime
 
-import requests
 from dotenv import load_dotenv
 from loguru import logger
 from sqlalchemy import select
 
-from app.db.db_session import AsyncSession
 from app.db.db_session import get_db_session
 from app.db.db_session import get_sync_db_session
 from app.integrations.mimecast.routes.mimecast import invoke_mimecast_route
@@ -14,7 +11,6 @@ from app.integrations.mimecast.schema.mimecast import MimecastRequest
 from app.integrations.mimecast.schema.mimecast import MimecastResponse
 from app.integrations.models.customer_integration_settings import CustomerIntegrations
 from app.schedulers.models.scheduler import JobMetadata
-from app.schedulers.utils.universal import scheduler_login
 
 load_dotenv()
 

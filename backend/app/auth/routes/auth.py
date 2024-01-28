@@ -8,7 +8,6 @@ from fastapi import status
 from fastapi.security import OAuth2PasswordRequestForm
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
-from starlette.status import HTTP_401_UNAUTHORIZED
 
 from app.auth.models.users import PasswordReset
 from app.auth.models.users import PasswordResetToken

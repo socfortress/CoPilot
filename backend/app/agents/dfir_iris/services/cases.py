@@ -1,38 +1,10 @@
 from typing import List
 
-from fastapi import HTTPException
 from loguru import logger
 
 from app.agents.dfir_iris.schema.cases import AssetCaseIDResponse
 from app.connectors.dfir_iris.services.assets import get_case_assets
 from app.connectors.dfir_iris.services.cases import get_all_cases
-
-# async def collect_agent_soc_cases(agent_id: int) -> AssetCaseIDResponse:
-#     """
-#     Get all cases for the given agent ID.
-
-#     Args:
-#         agent_id (int): The ID of the agent to get cases for.
-
-#     Returns:
-#         CaseResponse: An instance of CaseResponse containing the cases for the given agent ID.
-
-#     Raises:
-#         HTTPException: If the agent does not exist.
-#     """
-#     logger.info(f"Getting cases for agent: {agent_id}")
-#     cases = await get_all_cases()
-#     for case in cases.cases:
-#         logger.info(f"Getting assets for case: {case.case_id}")
-#         assets = await get_case_assets(case.case_id)
-#         case_ids = []
-#         for asset in assets.assets:
-#             if f"agent_id:{agent_id}" in asset.asset_tags:
-#                 logger.info(f"Found case for agent: {agent_id}")
-#                 case_ids.append(case.case_id)
-#     logger.info(f"Found cases: {case_ids}")
-#     cases = AssetCaseID(case_ids=case_ids)
-#     return AssetCaseIDResponse(case_ids=cases, success=True, message="Successfully retrieved cases for agent")
 
 
 async def collect_agent_soc_cases(agent_id: int) -> AssetCaseIDResponse:

@@ -266,9 +266,10 @@ async def check_alert_exists(alert_id: str) -> bool:
     try:
         dfir_iris_client = await create_dfir_iris_client("DFIR-IRIS")
     except Exception as e:
+        logger.error(f"Failed to create DFIR-IRIS client: {e}")
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to create DFIR-IRIS client. Make sure the DFIR-IRIS connector is configured correctly.",
+            detail="Failed to create DFIR-IRIS client. Make sure the DFIR-IRIS connector is configured correctly.",
         )
     try:
         logger.info(f"Checking if alert {alert_id} exists")

@@ -11,7 +11,6 @@ from loguru import logger
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlmodel import select
 from werkzeug.utils import secure_filename
 
 from app.connectors.cortex.utils.universal import verify_cortex_connection
@@ -26,9 +25,6 @@ from app.connectors.sublime.utils.universal import verify_sublime_connection
 from app.connectors.velociraptor.utils.universal import verify_velociraptor_connection
 from app.connectors.wazuh_indexer.utils.universal import verify_wazuh_indexer_connection
 from app.connectors.wazuh_manager.utils.universal import verify_wazuh_manager_connection
-
-# from app.db.db_session import engine  # Import the shared engine
-from app.db.db_session import get_session
 from app.integrations.ask_socfortress.services.ask_socfortress import (
     verify_ask_socfortress_connector,
 )
@@ -340,7 +336,8 @@ class ConnectorServices:
             session (AsyncSession): The async session for interacting with the database.
 
         Returns:
-            Union[ConnectorResponse, bool]: Returns a ConnectorResponse object if the file is saved and the connector record is updated successfully. Otherwise, returns False.
+            Union[ConnectorResponse, bool]: Returns a ConnectorResponse object if the file is saved and the connector record is updated successfully.
+            Otherwise, returns False.
         """
         if file and cls.allowed_file(file.filename):
             filename = secure_filename(file.filename)

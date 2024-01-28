@@ -99,7 +99,7 @@ async def create_grafana_folder(organization_id: int, folder_title: str) -> Graf
     Returns:
         GrafanaFolderCreationResponse: The response object containing the details of the created folder.
     """
-    logger.info(f"Creating Grafana folder")
+    logger.info("Creating Grafana folder")
     grafana_client = await create_grafana_client("Grafana")
     # Switch to the newly created organization
     grafana_client.user.switch_actual_user_organisation(organization_id)
@@ -132,7 +132,7 @@ async def get_opensearch_version() -> str:
         return node_info.version
 
     # If no version is found, raise an exception
-    raise HTTPException(status_code=500, detail=f"Failed to retrieve OpenSearch version.")
+    raise HTTPException(status_code=500, detail="Failed to retrieve OpenSearch version.")
 
 
 ################# ! GRAFANA DECOMISSIONING ! #################
@@ -143,13 +143,14 @@ async def delete_grafana_organization(organization_id: int):
     Args:
         organization_id (int): The ID of the organization to delete.
     """
-    logger.info(f"Deleting Grafana organization")
+    logger.info("Deleting Grafana organization")
     grafana_client = await create_grafana_client("Grafana")
     try:
         organization_deleted = grafana_client.organizations.delete_organization(organization_id=organization_id)
         logger.info(f"Organization deleted: {organization_deleted}")
     except Exception as e:
         # Switch the organization to the default and try again
+        logger.info(f"Failed to delete organization: {e}. Switching to default organization and trying again.")
         grafana_client.user.switch_actual_user_organisation(1)
         organization_deleted = grafana_client.organizations.delete_organization(organization_id=organization_id)
         logger.info(f"Organization deleted: {organization_deleted}")

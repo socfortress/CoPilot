@@ -222,7 +222,7 @@ async def purge_alerts_route() -> DeleteAlertResponse:
     Returns:
         AlertResponse: The response containing the deleted alerts.
     """
-    logger.info(f"Purging all alerts, up to 1000")
+    logger.info("Purging all alerts, up to 1000")
     alerts = (await get_alerts(request=FilterAlertsRequest(per_page=1000))).alerts
     for alert in alerts:
         await delete_alert(int(alert["alert_id"]))

@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from pydantic import Field
 
 
-#! INDEX SETS !#
+# ! INDEX SETS ! #
 class TimeBasedRotationStrategyConfig(BaseModel):
     type: str
     rotation_period: Optional[str] = None
