@@ -156,6 +156,7 @@ async def build_asset_payload(agent_data: AgentsResponse, alert_details) -> Iris
             asset_ip=agent_data.agents[0].ip_address,
             asset_description=agent_data.agents[0].os,
             asset_type_id=await get_asset_type_id(agent_data.agents[0].os),
+            asset_tags=f"agent_id:{agent_data.agents[0].agent_id}",
         )
     return IrisAsset()
 
@@ -354,6 +355,23 @@ async def create_alert(alert: CreateAlertRequest, session: AsyncSession) -> Crea
     )
     client, alert_client = await initialize_client_and_alert("DFIR-IRIS")
     result = await fetch_and_validate_data(client, alert_client.add_alert, iris_alert_payload.to_dict())
+    alert_id = result["data"]["alert_id"]
+    logger.info(f"Successfully created alert {alert_id} in IRIS.")
+    # Update the alert with the asset payload
+    await fetch_and_validate_data(
+        client,
+        alert_client.update_alert,
+        alert_id,
+        {"assets": [dict(IrisAsset(**iris_alert_payload.assets[0].to_dict()))]},
+    )
+    # Updae the alert if the ioc_payload is not None
+    if ioc_payload:
+        await fetch_and_validate_data(
+            client,
+            alert_client.update_alert,
+            alert_id,
+            {"iocs": [dict(IrisIoc(**iris_alert_payload.alert_iocs[0].to_dict()))]},
+        )
     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
     iris_url = await add_alert_to_document(es_client, alert, result["data"]["alert_id"], session=session)
     try:
