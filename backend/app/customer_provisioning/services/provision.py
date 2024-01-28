@@ -198,4 +198,4 @@ async def provision_wazuh_worker(request: ProvisionWorkerRequest, session: Async
     if response.status_code != 200:
         return ProvisionWorkerResponse(success=False, message=f"Failed to provision Wazuh worker: {response.text}")
     # Return the response
-    return ProvisionWorkerResponse(success=True, message=f"Wazuh worker provisioned successfully")
+    return ProvisionWorkerResponse(success=True, message="Wazuh worker provisioned successfully")

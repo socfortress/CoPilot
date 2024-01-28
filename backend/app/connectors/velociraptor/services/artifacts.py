@@ -42,13 +42,25 @@ def get_artifact_key(analyzer_body: CollectArtifactBody) -> str:
     command = getattr(analyzer_body, "command", None)
 
     if action == "quarantine":
-        return f'collect_client(client_id="{analyzer_body.velociraptor_id}", artifacts=["{analyzer_body.artifact_name}"], spec=dict(`{analyzer_body.artifact_name}`=dict()))'
+        return (
+            f'collect_client(client_id="{analyzer_body.velociraptor_id}", '
+            f'artifacts=["{analyzer_body.artifact_name}"], '
+            f"spec=dict(`{analyzer_body.artifact_name}`=dict()))"
+        )
     elif action == "remove_quarantine":
-        return f'collect_client(client_id="{analyzer_body.velociraptor_id}", artifacts=["{analyzer_body.artifact_name}"], spec=dict(`{analyzer_body.artifact_name}`=dict(`RemovePolicy`="Y")))'
+        return (
+            f'collect_client(client_id="{analyzer_body.velociraptor_id}", '
+            f'artifacts=["{analyzer_body.artifact_name}"], '
+            f'spec=dict(`{analyzer_body.artifact_name}`=dict(`RemovePolicy`="Y")))'
+        )
     elif command is not None:
-        return f"collect_client(client_id='{analyzer_body.velociraptor_id}', urgent=true, artifacts=['{analyzer_body.artifact_name}'], env=dict(Command='{analyzer_body.command}'))"
+        return (
+            f"collect_client(client_id='{analyzer_body.velociraptor_id}', "
+            f"urgent=true, artifacts=['{analyzer_body.artifact_name}'], "
+            f"env=dict(Command='{analyzer_body.command}'))"
+        )
     else:
-        return f"collect_client(client_id='{analyzer_body.velociraptor_id}', artifacts=['{analyzer_body.artifact_name}'])"
+        return f"collect_client(client_id='{analyzer_body.velociraptor_id}', " f"artifacts=['{analyzer_body.artifact_name}'])"
 
 
 async def get_artifacts() -> ArtifactsResponse:
@@ -131,8 +143,12 @@ async def run_remote_command(run_command_body: RunCommandBody) -> RunCommandResp
         run_command_body.artifact_name = run_command_body.artifact_name.value
         logger.info(f"Running remote command on {run_command_body}")
         query = create_query(
-            f"SELECT collect_client(client_id='{run_command_body.velociraptor_id}', urgent=true, artifacts=['{run_command_body.artifact_name}'], env=dict(Command='{run_command_body.command}')) "
-            "FROM scope()",
+            (
+                f"SELECT collect_client(client_id='{run_command_body.velociraptor_id}', "
+                f"urgent=true, artifacts=['{run_command_body.artifact_name}'], "
+                f"env=dict(Command='{run_command_body.command}')) "
+                "FROM scope()"
+            ),
         )
         flow = velociraptor_service.execute_query(query)
         logger.info(f"Successfully ran artifact collection on {flow}")
@@ -175,11 +191,21 @@ async def quarantine_host(quarantine_body: QuarantineBody) -> QuarantineResponse
         quarantine_body.action = quarantine_body.action.value
         if quarantine_body.action == "quarantine":
             query = create_query(
-                f'SELECT collect_client(client_id="{quarantine_body.velociraptor_id}", artifacts=["{quarantine_body.artifact_name}"], spec=dict(`{quarantine_body.artifact_name}`=dict())) FROM scope()',
+                (
+                    f'SELECT collect_client(client_id="{quarantine_body.velociraptor_id}", '
+                    f'artifacts=["{quarantine_body.artifact_name}"], '
+                    f"spec=dict(`{quarantine_body.artifact_name}`=dict())) "
+                    "FROM scope()"
+                ),
             )
         else:
             query = create_query(
-                f'SELECT collect_client(client_id="{quarantine_body.velociraptor_id}", artifacts=["{quarantine_body.artifact_name}"], spec=dict(`{quarantine_body.artifact_name}`=dict(`RemovePolicy`="Y"))) FROM scope()',
+                (
+                    f'SELECT collect_client(client_id="{quarantine_body.velociraptor_id}", '
+                    f'artifacts=["{quarantine_body.artifact_name}"], '
+                    f'spec=dict(`{quarantine_body.artifact_name}`=dict(`RemovePolicy`="Y"))) '
+                    "FROM scope()"
+                ),
             )
         flow = velociraptor_service.execute_query(query)
         logger.info(f"Successfully ran artifact collection on {flow}")

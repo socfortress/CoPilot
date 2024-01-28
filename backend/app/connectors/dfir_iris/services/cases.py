@@ -258,5 +258,5 @@ async def delete_single_case(case_id: SingleCaseBody) -> PurgeCaseResponse:
     """
     dfir_iris_client = await create_dfir_iris_client("DFIR-IRIS")
     case = Case(session=dfir_iris_client)
-    result = await fetch_and_parse_data(dfir_iris_client, case.delete_case, case_id)
+    await fetch_and_parse_data(dfir_iris_client, case.delete_case, case_id)
     return PurgeCaseResponse(success=True, message="Successfully deleted single case")

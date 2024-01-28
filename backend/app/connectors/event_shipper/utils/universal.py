@@ -1,10 +1,8 @@
 from typing import Optional
 
 import asyncgelf
-from loguru import logger
 
 from app.connectors.utils import get_connector_info_from_db
-from app.db.db_session import AsyncSessionLocal
 from app.db.db_session import get_db_session
 
 
@@ -14,15 +12,6 @@ class GelfLogger:
         self.port = port
         self.compress = compress
 
-    # async def tcp_handler(self, message):
-    #     handler = asyncgelf.GelfTcp(
-    #         host=self.host,
-    #         port=self.port,
-    #         compress=self.compress,
-    #     )
-
-    #     response = await handler.tcp_handler(message)
-    #     return response
     async def tcp_handler(self, message):
         if not isinstance(message, dict):
             message = message.to_dict()

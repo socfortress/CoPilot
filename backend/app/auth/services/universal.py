@@ -1,4 +1,3 @@
-from fastapi import HTTPException
 from loguru import logger
 
 # ! New with Async

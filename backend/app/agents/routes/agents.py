@@ -25,7 +25,6 @@ from app.agents.wazuh.services.vulnerabilities import collect_agent_vulnerabilit
 # App specific imports
 from app.auth.routes.auth import AuthHandler
 from app.db.db_session import get_db
-from app.db.db_session import get_session
 
 # App specific imports
 # from app.db.db_session import session
@@ -137,7 +136,7 @@ async def get_agent(agent_id: str, db: AsyncSession = Depends(get_db)) -> Agents
         else:
             raise HTTPException(status_code=404, detail=f"Agent with agent_id {agent_id} not found")
     except Exception as e:
-        logger.error(f"Failed to fetch agent: {agent_id}. Does it exist?")
+        logger.error(f"Failed to fetch agent: {agent_id} with error {e}. Does it exist?")
         raise HTTPException(status_code=500, detail=f"Failed to fetch agent: {agent_id}. Does it exist?")
 
 

@@ -32,7 +32,6 @@ velociraptor_artifacts_router = APIRouter()
 
 
 # Get all valid OS prefixes
-from typing import List
 
 
 def get_valid_os_prefixes() -> List[str]:

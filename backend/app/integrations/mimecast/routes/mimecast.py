@@ -9,7 +9,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
-from app.integrations.alert_escalation.services.general_alert import create_alert
 from app.integrations.mimecast.schema.mimecast import MimecastAuthKeys
 from app.integrations.mimecast.schema.mimecast import MimecastRequest
 from app.integrations.mimecast.schema.mimecast import MimecastResponse
@@ -67,6 +66,7 @@ def extract_mimecast_auth_keys(customer_integration: CustomerIntegrations) -> Di
                 detail="No auth keys found for Mimecast integration. Please create auth keys for Mimecast integration.",
             )
     except Exception as e:
+        logger.error(f"Error extracting auth keys for Mimecast integration: {e}")
         raise HTTPException(
             status_code=404,
             detail="No auth keys found for Mimecast integration. Please create auth keys for Mimecast integration.",

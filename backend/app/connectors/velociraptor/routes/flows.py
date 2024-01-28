@@ -1,5 +1,3 @@
-from typing import List
-
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -9,21 +7,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.auth.utils import AuthHandler
-from app.connectors.velociraptor.schema.artifacts import ArtifactsResponse
-from app.connectors.velociraptor.schema.artifacts import CollectArtifactBody
 from app.connectors.velociraptor.schema.artifacts import CollectArtifactResponse
-from app.connectors.velociraptor.schema.artifacts import OSPrefixEnum
-from app.connectors.velociraptor.schema.artifacts import OSPrefixModel
-from app.connectors.velociraptor.schema.artifacts import QuarantineBody
-from app.connectors.velociraptor.schema.artifacts import QuarantineResponse
-from app.connectors.velociraptor.schema.artifacts import RunCommandBody
-from app.connectors.velociraptor.schema.artifacts import RunCommandResponse
 from app.connectors.velociraptor.schema.flows import FlowResponse
 from app.connectors.velociraptor.schema.flows import RetrieveFlowRequest
-from app.connectors.velociraptor.services.artifacts import get_artifacts
-from app.connectors.velociraptor.services.artifacts import quarantine_host
-from app.connectors.velociraptor.services.artifacts import run_artifact_collection
-from app.connectors.velociraptor.services.artifacts import run_remote_command
 from app.connectors.velociraptor.services.flows import get_flow
 from app.connectors.velociraptor.services.flows import get_flows
 from app.db.db_session import get_db

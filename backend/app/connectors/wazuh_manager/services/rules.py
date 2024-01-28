@@ -6,7 +6,7 @@ from typing import List
 from typing import Tuple
 from typing import Union
 
-import pcre2
+# import pcre2
 import xmltodict
 from fastapi import HTTPException
 from loguru import logger

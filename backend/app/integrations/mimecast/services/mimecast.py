@@ -8,7 +8,6 @@ import os
 import shutil
 import time
 import uuid
-from typing import Dict
 from zipfile import ZipFile
 
 import aiofiles

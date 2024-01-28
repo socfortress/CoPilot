@@ -5,7 +5,6 @@ from typing import Optional
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlmodel import select
 
 from app.connectors.models import Connectors
 from app.connectors.schema import ConnectorResponse
