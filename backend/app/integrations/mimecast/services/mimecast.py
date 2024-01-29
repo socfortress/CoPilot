@@ -15,10 +15,14 @@ import requests
 from fastapi import HTTPException
 from loguru import logger
 
+from app.integrations.mimecast.schema.mimecast import DataItem
 from app.integrations.mimecast.schema.mimecast import MimecastAPIEndpointResponse
 from app.integrations.mimecast.schema.mimecast import MimecastAuthKeys
 from app.integrations.mimecast.schema.mimecast import MimecastRequest
-from app.integrations.mimecast.schema.mimecast import MimecastResponse, MimecastTTPURLSRequest, TtpURLResponseBody, RequestBody, DataItem
+from app.integrations.mimecast.schema.mimecast import MimecastResponse
+from app.integrations.mimecast.schema.mimecast import MimecastTTPURLSRequest
+from app.integrations.mimecast.schema.mimecast import RequestBody
+from app.integrations.mimecast.schema.mimecast import TtpURLResponseBody
 from app.integrations.utils.collection import send_post_request
 from app.integrations.utils.event_shipper import event_shipper
 from app.integrations.utils.schema import EventShipperPayload
@@ -322,6 +326,7 @@ async def custom_datetime_format(dt: datetime.datetime) -> str:
     """Format a datetime object to a custom ISO-like string."""
     return dt.strftime("%Y-%m-%dT%H:%M:%S%z").replace("+00:00", "+0000")
 
+
 async def create_ttp_request_body(
     mimecast_request: MimecastTTPURLSRequest,
 ) -> RequestBody:
@@ -342,6 +347,7 @@ async def create_ttp_request_body(
         ],
     )
 
+
 async def invoke_mimecast_api_ttp_urls(
     mimecast_request: MimecastTTPURLSRequest,
 ) -> TtpURLResponseBody:
@@ -360,17 +366,19 @@ async def invoke_mimecast_api_ttp_urls(
     )
     return TtpURLResponseBody(**response.json())
 
+
 async def get_ttp_urls(mimecast_request: MimecastTTPURLSRequest, customer_code: str) -> MimecastResponse:
     logger.info("Mimecast TTP URL request received")
     # Get the BaseURL for the Mimecast integration
-    mimecast_base_url = await get_base_url(MimecastAuthKeys(
-        APP_ID=mimecast_request.ApplicationID,
-        APP_KEY=mimecast_request.ApplicationKey,
-        ACCESS_KEY=mimecast_request.AccessKey,
-        SECRET_KEY=mimecast_request.SecretKey,
-        EMAIL_ADDRESS=mimecast_request.EmailAddress,
-        URI="/api/login/discover-authentication",
-    )
+    mimecast_base_url = await get_base_url(
+        MimecastAuthKeys(
+            APP_ID=mimecast_request.ApplicationID,
+            APP_KEY=mimecast_request.ApplicationKey,
+            ACCESS_KEY=mimecast_request.AccessKey,
+            SECRET_KEY=mimecast_request.SecretKey,
+            EMAIL_ADDRESS=mimecast_request.EmailAddress,
+            URI="/api/login/discover-authentication",
+        ),
     )
     # Add it to the request object
     mimecast_request.BaseURL = mimecast_base_url.data.data[0].region.api

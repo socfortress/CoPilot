@@ -11,8 +11,10 @@ from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
 from app.integrations.mimecast.schema.mimecast import MimecastAuthKeys
 from app.integrations.mimecast.schema.mimecast import MimecastRequest
-from app.integrations.mimecast.schema.mimecast import MimecastResponse, MimecastTTPURLSRequest, MimecastHeaders
-from app.integrations.mimecast.services.mimecast import invoke_mimecast, get_ttp_urls
+from app.integrations.mimecast.schema.mimecast import MimecastResponse
+from app.integrations.mimecast.schema.mimecast import MimecastTTPURLSRequest
+from app.integrations.mimecast.services.mimecast import get_ttp_urls
+from app.integrations.mimecast.services.mimecast import invoke_mimecast
 from app.integrations.routes import find_customer_integration
 from app.integrations.routes import get_customer_integrations_by_customer_code
 from app.integrations.schema import CustomerIntegrations
@@ -105,6 +107,7 @@ async def invoke_mimecast_route(mimecast_request: MimecastRequest, session: Asyn
 
     return await invoke_mimecast(mimecast_request, auth_keys)
 
+
 @integration_mimecast_router.post(
     "/ttp/urls",
     response_model=MimecastResponse,
@@ -113,7 +116,7 @@ async def invoke_mimecast_route(mimecast_request: MimecastRequest, session: Asyn
 )
 async def mimecast_ttp_url_route(mimecast_request: MimecastRequest, session: AsyncSession = Depends(get_db)):
     logger.info("Mimecast TTP URL request received")
-    customer_code=mimecast_request.customer_code
+    customer_code = mimecast_request.customer_code
     customer_integration_response = await get_customer_integration_response(mimecast_request.customer_code, session)
 
     customer_integration = await find_customer_integration(

@@ -6,7 +6,8 @@ from sqlalchemy import select
 
 from app.db.db_session import get_db_session
 from app.db.db_session import get_sync_db_session
-from app.integrations.mimecast.routes.mimecast import invoke_mimecast_route, mimecast_ttp_url_route
+from app.integrations.mimecast.routes.mimecast import invoke_mimecast_route
+from app.integrations.mimecast.routes.mimecast import mimecast_ttp_url_route
 from app.integrations.mimecast.schema.mimecast import MimecastRequest
 from app.integrations.mimecast.schema.mimecast import MimecastResponse
 from app.integrations.models.customer_integration_settings import CustomerIntegrations
@@ -43,6 +44,7 @@ async def invoke_mimecast_integration() -> MimecastResponse:
             # Handle the case where job_metadata does not exist
             print("JobMetadata for 'invoke_mimecast_integration' not found.")
     return MimecastResponse(success=True, message="Mimecast integration invoked.")
+
 
 async def invoke_mimecast_integration_ttp() -> MimecastResponse:
     """

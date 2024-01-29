@@ -6,7 +6,6 @@ from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.utils import AuthHandler
-from app.db.db_session import get_db
 from app.connectors.dfir_iris.schema.alerts import AlertResponse
 from app.connectors.dfir_iris.schema.alerts import AlertsResponse
 from app.connectors.dfir_iris.schema.alerts import BookmarkedAlertsResponse
@@ -21,6 +20,7 @@ from app.connectors.dfir_iris.services.alerts import get_alert
 from app.connectors.dfir_iris.services.alerts import get_alerts
 from app.connectors.dfir_iris.services.alerts import get_bookmarked_alerts
 from app.connectors.dfir_iris.utils.universal import check_alert_exists
+from app.db.db_session import get_db
 
 # App specific imports
 

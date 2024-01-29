@@ -1,12 +1,9 @@
 from fastapi import HTTPException
 from loguru import logger
-
-from app.connectors.dfir_iris.schema.alerts import AlertResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from app.integrations.alert_creation_settings.models.alert_creation_settings import (
-    AlertCreationSettings,
-)
+
+from app.connectors.dfir_iris.schema.alerts import AlertResponse
 from app.connectors.dfir_iris.schema.alerts import AlertsResponse
 from app.connectors.dfir_iris.schema.alerts import BookmarkedAlertsResponse
 from app.connectors.dfir_iris.schema.alerts import CaseCreationResponse
@@ -14,6 +11,9 @@ from app.connectors.dfir_iris.schema.alerts import DeleteAlertResponse
 from app.connectors.dfir_iris.schema.alerts import FilterAlertsRequest
 from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
 from app.connectors.dfir_iris.utils.universal import initialize_client_and_alert
+from app.integrations.alert_creation_settings.models.alert_creation_settings import (
+    AlertCreationSettings,
+)
 
 
 async def get_customer_code(session: AsyncSession, customer_id: int) -> str:
@@ -39,6 +39,7 @@ async def get_customer_code(session: AsyncSession, customer_id: int) -> str:
     except Exception as e:
         logger.error(f"Error retrieving customer code for customer ID {customer_id}: {e}")
         return "Customer Not Found"
+
 
 async def get_alerts(request: FilterAlertsRequest) -> AlertsResponse:
     """

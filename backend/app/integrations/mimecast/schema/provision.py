@@ -1,11 +1,11 @@
-from enum import Enum
 from typing import Any
 from typing import Dict
+from typing import List
+from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import root_validator
-from typing import List, Optional
 
 
 class ProvisionMimecastRequest(BaseModel):
@@ -31,12 +31,14 @@ class ProvisionMimecastResponse(BaseModel):
     success: bool
     message: str
 
+
 # ! STREAMS ! #
 class StreamRule(BaseModel):
     field: str
     type: int
     inverted: bool
     value: str
+
 
 class MimecastEventStream(BaseModel):
     title: str = Field(..., description="Title of the stream")
