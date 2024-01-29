@@ -4,8 +4,9 @@ from typing import List
 
 from dfir_iris_client.case import Case
 from fastapi import HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
 from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 
 from app.connectors.dfir_iris.schema.cases import CaseOlderThanBody
 from app.connectors.dfir_iris.schema.cases import CaseResponse
@@ -20,7 +21,7 @@ from app.connectors.dfir_iris.utils.universal import fetch_and_parse_data
 from app.integrations.alert_creation_settings.models.alert_creation_settings import (
     AlertCreationSettings,
 )
-from sqlalchemy.future import select
+
 
 async def get_client_and_cases() -> Dict:
     """
@@ -35,6 +36,7 @@ async def get_client_and_cases() -> Dict:
     result = await fetch_and_parse_data(dfir_iris_client, case.list_cases)
     return result
 
+
 async def get_customer_code(session: AsyncSession, client_name: str) -> str:
     """
     Retrieves the customer code for a given customer ID.
@@ -48,9 +50,7 @@ async def get_customer_code(session: AsyncSession, client_name: str) -> str:
     """
     try:
         alert_creation_settings = await session.execute(
-            select(AlertCreationSettings).filter(
-                AlertCreationSettings.iris_customer_name == client_name
-            )
+            select(AlertCreationSettings).filter(AlertCreationSettings.iris_customer_name == client_name),
         )
         alert_creation_settings = alert_creation_settings.scalars().first()
         if alert_creation_settings is None:
@@ -59,6 +59,7 @@ async def get_customer_code(session: AsyncSession, client_name: str) -> str:
     except Exception as e:
         logger.error(f"Error retrieving customer code for customer ID {client_name}: {e}")
         return "Customer Not Found"
+
 
 def filter_open_cases(cases: List[Dict]) -> List[Dict]:
     """
