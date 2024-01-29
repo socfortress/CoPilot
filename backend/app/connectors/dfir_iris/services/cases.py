@@ -113,7 +113,6 @@ async def get_all_cases(session: AsyncSession) -> CaseResponse:
         if not result["success"]:
             logger.error(f"Failed to get all cases: {result['message']}")
             raise HTTPException(status_code=500, detail=f"Failed to get all cases: {result['message']}")
-        # For the `customer_id` get the customer code from the database and append it to the case
         for case in result["data"]:
             case["customer_code"] = await get_customer_code(session, case["client_name"])
         return CaseResponse(success=True, message="Successfully fetched all cases", cases=result["data"])
