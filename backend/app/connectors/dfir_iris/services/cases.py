@@ -55,12 +55,6 @@ async def get_customer_code(session: AsyncSession, client_name: str) -> str:
         alert_creation_settings = alert_creation_settings.scalars().first()
         if alert_creation_settings is None:
             return "Customer Not Found"
-        logger.info(
-            f"Alert creation settings for customer ID {client_name}: {alert_creation_settings}"
-        )
-        logger.info(
-            f"Customer code for customer ID {client_name}: {alert_creation_settings.customer_code}"
-        )
         return alert_creation_settings.customer_code
     except Exception as e:
         logger.error(f"Error retrieving customer code for customer ID {client_name}: {e}")
