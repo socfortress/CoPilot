@@ -18,7 +18,7 @@ from loguru import logger
 from app.integrations.mimecast.schema.mimecast import MimecastAPIEndpointResponse
 from app.integrations.mimecast.schema.mimecast import MimecastAuthKeys
 from app.integrations.mimecast.schema.mimecast import MimecastRequest
-from app.integrations.mimecast.schema.mimecast import MimecastResponse
+from app.integrations.mimecast.schema.mimecast import MimecastResponse, MimecastTTPURLSRequest, TtpURLResponseBody, RequestBody, DataItem
 from app.integrations.utils.collection import send_post_request
 from app.integrations.utils.event_shipper import event_shipper
 from app.integrations.utils.schema import EventShipperPayload
@@ -315,3 +315,91 @@ async def invoke_mimecast(mimecast_request: MimecastRequest, auth_keys: Mimecast
 
     await delete_log_directory(log_file_path)
     return MimecastResponse(success=True, message="Successfully invoked Mimecast integration.")
+
+
+# ! TTP URLS ! #
+async def custom_datetime_format(dt: datetime.datetime) -> str:
+    """Format a datetime object to a custom ISO-like string."""
+    return dt.strftime("%Y-%m-%dT%H:%M:%S%z").replace("+00:00", "+0000")
+
+async def create_ttp_request_body(
+    mimecast_request: MimecastTTPURLSRequest,
+) -> RequestBody:
+    """Create a request body for the Mimecast API call."""
+    meta_data = {}
+    if mimecast_request.pagination_token:
+        meta_data["pagination"] = {"pageToken": mimecast_request.pagination_token}
+    return RequestBody(
+        meta=meta_data,
+        data=[
+            DataItem(
+                oldestFirst=False,
+                from_=mimecast_request.lower_bound,
+                route="all",
+                to=mimecast_request.upper_bound,
+                scanResult="all",
+            ),
+        ],
+    )
+
+async def invoke_mimecast_api_ttp_urls(
+    mimecast_request: MimecastTTPURLSRequest,
+) -> TtpURLResponseBody:
+    """Invoke the Mimecast API call to get TTP URLs."""
+    logger.info("Mimecast TTP URL request received")
+    request_body = await create_ttp_request_body(mimecast_request)
+    request_dict = request_body.dict(by_alias=True)
+    logger.info(f"Request: {request_dict}")
+    for item in request_dict["data"]:
+        item["from"] = await custom_datetime_format(item["from"])
+        item["to"] = await custom_datetime_format(item["to"])
+    response = requests.post(
+        url=mimecast_request.BaseURL + "/api/ttp/url/get-logs",
+        headers=mimecast_request.headers.dict(by_alias=True),
+        data=str(request_dict),
+    )
+    return TtpURLResponseBody(**response.json())
+
+async def get_ttp_urls(mimecast_request: MimecastTTPURLSRequest, customer_code: str) -> MimecastResponse:
+    logger.info("Mimecast TTP URL request received")
+    # Get the BaseURL for the Mimecast integration
+    mimecast_base_url = await get_base_url(MimecastAuthKeys(
+        APP_ID=mimecast_request.ApplicationID,
+        APP_KEY=mimecast_request.ApplicationKey,
+        ACCESS_KEY=mimecast_request.AccessKey,
+        SECRET_KEY=mimecast_request.SecretKey,
+        EMAIL_ADDRESS=mimecast_request.EmailAddress,
+        URI="/api/login/discover-authentication",
+    )
+    )
+    # Add it to the request object
+    mimecast_request.BaseURL = mimecast_base_url.data.data[0].region.api
+
+    mimecast_request.pagination_token = None  # Initialize pagination_token to None
+
+    while True:
+        response = await invoke_mimecast_api_ttp_urls(mimecast_request)
+        logger.info(f"Response: {response}")
+
+        for data in response.data[0].clickLogs:
+            message = EventShipperPayload(
+                customer_code=customer_code,
+                integration="mimecast",
+                version="1.0",
+                **data.dict(by_alias=True),
+            )
+            await event_shipper(message)
+
+        # Check if there is a "next" page token in the response
+        next_page_token = response.meta.pagination.next
+
+        if not next_page_token:
+            break  # No more pages, break the loop
+
+        # Update the pagination_token for the next API call
+        mimecast_request.pagination_token = next_page_token
+
+    return MimecastResponse(
+        success=True,
+        message="Mimecast TTP URL request successful",
+    )
