@@ -28,6 +28,7 @@ class CaseModel(BaseModel):
     owner_id: int
     state_id: int
     state_name: str
+    customer_code: str
 
 
 class CaseResponse(BaseModel):

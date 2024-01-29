@@ -5,6 +5,7 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Security
 from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.utils import AuthHandler
 from app.connectors.dfir_iris.schema.cases import CaseOlderThanBody
@@ -24,6 +25,7 @@ from app.connectors.dfir_iris.services.cases import get_single_case
 from app.connectors.dfir_iris.services.cases import purge_cases
 from app.connectors.dfir_iris.services.cases import reopen_case
 from app.connectors.dfir_iris.utils.universal import check_case_exists
+from app.db.db_session import get_db
 
 
 async def verify_case_exists(case_id: int) -> int:
@@ -75,7 +77,7 @@ def get_timedelta(older_than: int, time_unit: TimeUnit) -> CaseOlderThanBody:
     description="Get all cases",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_cases_route() -> CaseResponse:
+async def get_cases_route(session: AsyncSession = Depends(get_db)) -> CaseResponse:
     """
     Get all cases.
 
@@ -83,7 +85,7 @@ async def get_cases_route() -> CaseResponse:
         CaseResponse: The response containing all cases.
     """
     logger.info("Fetching all cases")
-    return await get_all_cases()
+    return await get_all_cases(session=session)
 
 
 @dfir_iris_cases_router.post(

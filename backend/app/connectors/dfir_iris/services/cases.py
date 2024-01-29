@@ -4,6 +4,7 @@ from typing import List
 
 from dfir_iris_client.case import Case
 from fastapi import HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
 from loguru import logger
 
 from app.connectors.dfir_iris.schema.cases import CaseOlderThanBody
@@ -16,7 +17,10 @@ from app.connectors.dfir_iris.schema.cases import SingleCaseBody
 from app.connectors.dfir_iris.schema.cases import SingleCaseResponse
 from app.connectors.dfir_iris.utils.universal import create_dfir_iris_client
 from app.connectors.dfir_iris.utils.universal import fetch_and_parse_data
-
+from app.integrations.alert_creation_settings.models.alert_creation_settings import (
+    AlertCreationSettings,
+)
+from sqlalchemy.future import select
 
 async def get_client_and_cases() -> Dict:
     """
@@ -31,6 +35,36 @@ async def get_client_and_cases() -> Dict:
     result = await fetch_and_parse_data(dfir_iris_client, case.list_cases)
     return result
 
+async def get_customer_code(session: AsyncSession, client_name: str) -> str:
+    """
+    Retrieves the customer code for a given customer ID.
+
+    Args:
+        session (AsyncSession): The database session.
+        customer_id (int): The ID of the customer.
+
+    Returns:
+        The customer code for the given customer ID.
+    """
+    try:
+        alert_creation_settings = await session.execute(
+            select(AlertCreationSettings).filter(
+                AlertCreationSettings.iris_customer_name == client_name
+            )
+        )
+        alert_creation_settings = alert_creation_settings.scalars().first()
+        if alert_creation_settings is None:
+            return "Customer Not Found"
+        logger.info(
+            f"Alert creation settings for customer ID {client_name}: {alert_creation_settings}"
+        )
+        logger.info(
+            f"Customer code for customer ID {client_name}: {alert_creation_settings.customer_code}"
+        )
+        return alert_creation_settings.customer_code
+    except Exception as e:
+        logger.error(f"Error retrieving customer code for customer ID {client_name}: {e}")
+        return "Customer Not Found"
 
 def filter_open_cases(cases: List[Dict]) -> List[Dict]:
     """
@@ -70,7 +104,7 @@ def filter_cases_older_than(cases: List[Dict], older_than: datetime) -> List[Dic
     return filtered_cases
 
 
-async def get_all_cases() -> CaseResponse:
+async def get_all_cases(session: AsyncSession) -> CaseResponse:
     """
     Retrieves all cases from DFIR-IRIS.
 
@@ -85,6 +119,9 @@ async def get_all_cases() -> CaseResponse:
         if not result["success"]:
             logger.error(f"Failed to get all cases: {result['message']}")
             raise HTTPException(status_code=500, detail=f"Failed to get all cases: {result['message']}")
+        # For the `customer_id` get the customer code from the database and append it to the case
+        for case in result["data"]:
+            case["customer_code"] = await get_customer_code(session, case["client_name"])
         return CaseResponse(success=True, message="Successfully fetched all cases", cases=result["data"])
     except Exception as err:
         logger.error(f"Failed to get all cases: {err}")
