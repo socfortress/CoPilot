@@ -10,6 +10,7 @@ export interface SocCase {
 	classification_id: number | null
 	classification: string | null
 	client_name: string
+	customer_code: string
 	opened_by_user_id: number
 	opened_by: string
 	owner_id: number
@@ -42,6 +43,7 @@ export interface SocCaseExt {
 	custom_attributes: string | null
 	customer_id: number
 	customer_name: string
+	customer_code: string
 	initial_date: Date | string
 	modification_history: { [key: string]: ModificationHistory }
 	open_by_user: string

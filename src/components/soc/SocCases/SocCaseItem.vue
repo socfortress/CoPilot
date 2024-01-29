@@ -168,7 +168,22 @@
 							<div class="grid gap-2 grid-auto-flow-200 p-7 pt-4" v-if="properties">
 								<KVCard v-for="(value, key) of properties" :key="key">
 									<template #key>{{ key }}</template>
-									<template #value>{{ value || "-" }}</template>
+									<template #value>
+										<template
+											v-if="key === 'customer_code' && value && value !== 'Customer Not Found'"
+										>
+											<code
+												class="cursor-pointer text-primary-color"
+												@click="gotoCustomer(value)"
+											>
+												#{{ value }}
+												<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
+											</code>
+										</template>
+										<template v-else>
+											{{ value || "-" }}
+										</template>
+									</template>
 								</KVCard>
 							</div>
 						</n-spin>
@@ -181,8 +196,7 @@
 								readonly
 								placeholder="Empty"
 								:autosize="{
-									minRows: 3,
-									maxRows: 10
+									minRows: 3
 								}"
 							/>
 						</div>
@@ -230,8 +244,6 @@
 </template>
 
 <script setup lang="ts">
-// TODO: add customer goto function ??
-
 import Icon from "@/components/common/Icon.vue"
 import KVCard from "@/components/common/KVCard.vue"
 import Badge from "@/components/common/Badge.vue"
@@ -262,6 +274,7 @@ import dayjs from "@/utils/dayjs"
 import { type SocCase, StateName, type SocCaseExt } from "@/types/soc/case.d"
 import _omit from "lodash/omit"
 import _split from "lodash/split"
+import { useRouter } from "vue-router"
 
 const { caseData, caseId, embedded, hideSocCaseAction } = defineProps<{
 	caseData?: SocCase
@@ -283,6 +296,7 @@ const OwnerIcon = "carbon:user-military"
 const StatusIcon = "fluent:status-20-regular"
 const AddIcon = "carbon:add-alt"
 
+const router = useRouter()
 const showSocAlertDetails = ref(false)
 const showDetails = ref(false)
 const loadingDetails = ref(false)
@@ -413,6 +427,10 @@ function getDetails() {
 				loadingDetails.value = false
 			})
 	}
+}
+
+function gotoCustomer(code: string | number) {
+	router.push({ name: "Customers", query: { code } })
 }
 
 watch(showDetails, val => {
