@@ -102,14 +102,15 @@ async def build_event_stream_config(
     session: AsyncSession,
 ) -> MimecastEventStream:
     """
-    Build the configuration for a Wazuh event stream.
+    Builds the configuration for a Mimecast event stream.
 
     Args:
-        request (ProvisionNewCustomer): The request object containing customer information.
-        index_set_id (str): The ID of the index set.
+        customer_code (str): The customer code.
+        index_set_id (str): The index set ID.
+        session (AsyncSession): The async session.
 
     Returns:
-        Office365EventStream: The configured Wazuh event stream.
+        MimecastEventStream: The configured Mimecast event stream.
     """
     return MimecastEventStream(
         title=f"Mimecast EVENTS - {(await get_customer(customer_code, session)).customer.customer_name}",
@@ -140,7 +141,7 @@ async def send_event_stream_creation_request(event_stream: MimecastEventStream) 
     Sends a request to create an event stream.
 
     Args:
-        event_stream (WazuhEventStream): The event stream to be created.
+        event_stream (MimecastEventStream): The event stream to be created.
 
     Returns:
         StreamCreationResponse: The response containing the created event stream.
@@ -174,15 +175,14 @@ async def create_grafana_datasource(
     session: AsyncSession,
 ) -> GrafanaDataSourceCreationResponse:
     """
-    Creates a Grafana Wazuh datasource for a new customer using the OpenSearch Data Source.
+    Creates a Grafana datasource for the specified customer.
 
     Args:
-        request (ProvisionNewCustomer): The request object containing customer information.
-        organization_id (int): The ID of the organization to create the datasource for.
-        session (AsyncSession): The database session.
+        customer_code (str): The customer code.
+        session (AsyncSession): The async session.
 
     Returns:
-        GrafanaDataSourceCreationResponse: The response object containing the result of the datasource creation.
+        GrafanaDataSourceCreationResponse: The response containing the created datasource details.
     """
     logger.info("Creating Grafana datasource")
     grafana_client = await create_grafana_client("Grafana")
@@ -244,8 +244,8 @@ async def provision_mimecast(provision_mimecast_request: ProvisionMimecastReques
     await start_stream(stream_id=stream_id)
 
     # Grafana Deployment
-    office365_datasource_uid = (await create_grafana_datasource(customer_code=provision_mimecast_request.customer_code, session=session)).datasource.uid
-    grafana_o365_folder_id = (
+    mimecast_datasource_uid = (await create_grafana_datasource(customer_code=provision_mimecast_request.customer_code, session=session)).datasource.uid
+    grafana_mimecast_folder_id = (
         await create_grafana_folder(
             organization_id=(await get_customer_meta(provision_mimecast_request.customer_code, session)).customer_meta.customer_meta_grafana_org_id,
             folder_title="MIMECAST",
@@ -255,8 +255,8 @@ async def provision_mimecast(provision_mimecast_request: ProvisionMimecastReques
         DashboardProvisionRequest(
             dashboards=[dashboard.name for dashboard in MimecastDashboard],
             organizationId=(await get_customer_meta(provision_mimecast_request.customer_code, session)).customer_meta.customer_meta_grafana_org_id,
-            folderId=grafana_o365_folder_id,
-            datasourceUid=office365_datasource_uid,
+            folderId=grafana_mimecast_folder_id,
+            datasourceUid=mimecast_datasource_uid,
         ),
     )
 

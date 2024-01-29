@@ -28,29 +28,59 @@ async def provision_mimecast_route(provision_mimecast_request: ProvisionMimecast
     Returns:
         ProvisionOffice365Response: The response object containing the result of the provisioning.
     """
-    return await provision_mimecast(provision_mimecast_request, session)
+    await provision_mimecast(provision_mimecast_request, session)
+    await add_scheduler_jobs(
+        CreateSchedulerRequest(
+            function_name="invoke_mimecast_integration_ttp",
+            time_interval=15,
+            job_id="invoke_mimecast_integration_ttp",
+        ),
+    )
+    return ProvisionMimecastResponse(success=True, message="Mimecast integration provisioned.")
 
 
 
 
 @integration_mimecast_scheduler_router.post(
-    "/invoke/scheduler",
+    "/invoke/scheduler/siem",
     description="Invoke a mimecast integration.",
 )
-async def invoke_mimecast_schedule_create(time_interval: int) -> MimecastScheduledResponse:
+async def invoke_mimecast_siem_schedule_create(time_interval: int) -> MimecastScheduledResponse:
     """
-    Provisions Office365 integration for a customer.
+    Invoke a mimecast integration and schedule it based on the specified time interval.
 
     Args:
-        provision_office365_request (ProvisionOffice365Request): The request object containing the necessary information for provisioning.
-        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+        time_interval (int): The time interval in seconds for scheduling the integration.
 
     Returns:
-        ProvisionOffice365Response: The response object containing the result of the provisioning.
+        MimecastScheduledResponse: The response indicating the success or failure of the scheduling operation.
     """
     await add_scheduler_jobs(
         CreateSchedulerRequest(
             function_name="invoke_mimecast_integration",
+            time_interval=time_interval,
+            job_id="invoke_mimecast_integration",
+        ),
+    )
+    return MimecastScheduledResponse(success=True, message="Mimecast integration scheduled.")
+
+@integration_mimecast_scheduler_router.post(
+    "/invoke/scheduler/ttp",
+    description="Invoke a mimecast integration.",
+)
+async def invoke_mimecast_ttp_schedule_create(time_interval: int) -> MimecastScheduledResponse:
+    """
+    Invoke a Mimecast integration with a specified time interval.
+
+    Args:
+        time_interval (int): The time interval in seconds.
+
+    Returns:
+        MimecastScheduledResponse: The response indicating the success and message of the scheduled integration.
+    """
+    await add_scheduler_jobs(
+        CreateSchedulerRequest(
+            function_name="invoke_mimecast_integration_ttp",
             time_interval=time_interval,
             job_id="invoke_mimecast_integration",
         ),
