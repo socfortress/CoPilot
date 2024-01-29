@@ -44,11 +44,9 @@ function getOptions() {
 		.slice(0, 8)
 		.value()
 
-	// TODO: slice here or after index health ??
-
-	const green = data.filter(i => i.health === IndexHealth.GREEN).length
-	const yellow = data.filter(i => i.health === IndexHealth.YELLOW).length
-	const red = data.filter(i => i.health === IndexHealth.RED).length
+	const green = (indices.value || []).filter(i => i.health === IndexHealth.GREEN).length
+	const yellow = (indices.value || []).filter(i => i.health === IndexHealth.YELLOW).length
+	const red = (indices.value || []).filter(i => i.health === IndexHealth.RED).length
 
 	const sizeData: { value: number; name: string }[] = data.map(i => ({
 		value: i.store_size_value || 0,

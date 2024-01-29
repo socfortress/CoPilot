@@ -348,7 +348,7 @@ const tags = computed<string[]>(() => {
 		return []
 	}
 
-	return _split(extendedInfo.value?.case_tags, ",").map(o => "#" + o)
+	return _split(extendedInfo.value?.case_tags, ",")
 })
 
 const properties = computed(() => {

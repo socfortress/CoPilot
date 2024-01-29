@@ -67,10 +67,9 @@ const message = useMessage()
 const indicesAllocation = ref<IndexAllocation[]>([])
 const loading = ref(true)
 
-// TODO: to decide with Taylor
 function getStatusPercent(percent: string | number | undefined | null) {
-	if (parseFloat(percent?.toString() || "") < 20) return "error"
-	if (parseFloat(percent?.toString() || "") < 40) return "warning"
+	if (parseFloat(percent?.toString() || "") > 90) return "error"
+	if (parseFloat(percent?.toString() || "") > 80) return "warning"
 	return "success"
 }
 

@@ -220,8 +220,6 @@
 </template>
 
 <script setup lang="ts">
-// TODO: add global popover with map for coords property (agent_ip_geolocation) ??
-
 import { computed, defineAsyncComponent, ref, toRefs } from "vue"
 import { NPopover, NModal, NTabs, NTabPane, NInput } from "naive-ui"
 import { useSettingsStore } from "@/stores/settings"

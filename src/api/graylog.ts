@@ -1,6 +1,6 @@
 import { HttpClient } from "./httpClient"
 import type { FlaskBaseResponse } from "@/types/flask.d"
-import type { Message, ThroughputMetric, IndexData } from "@/types/graylog/index.d"
+import type { Message, ThroughputMetric } from "@/types/graylog/index.d"
 import type { Alerts, AlertsQuery } from "@/types/graylog/alerts.d"
 import type { EventDefinition } from "@/types/graylog/event-definition.d"
 import type { Stream } from "@/types/graylog/stream.d"
@@ -73,12 +73,6 @@ export default {
 	},
 	getPipelinesRules() {
 		return HttpClient.get<FlaskBaseResponse & { pipeline_rules: PipelineRule[] }>(`/graylog/pipeline/rules`)
-	},
-
-	// TODO: review --------------------------------------------------------------------
-
-	getIndices() {
-		return HttpClient.get<FlaskBaseResponse & { indices: IndexData }>(`/graylog/indices`)
 	},
 	deleteIndex(indexName: string) {
 		return HttpClient.delete<FlaskBaseResponse>(`/graylog/index`, {

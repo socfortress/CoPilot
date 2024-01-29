@@ -176,8 +176,6 @@
 </template>
 
 <script setup lang="ts">
-// TODO: add mablibre on location popup ??
-
 import Icon from "@/components/common/Icon.vue"
 import Badge from "@/components/common/Badge.vue"
 import { computed, onBeforeMount, ref, toRefs, watch } from "vue"

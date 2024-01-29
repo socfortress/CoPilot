@@ -11,6 +11,7 @@
 		"ms-vscode.remtoe-remote-wsl",
 		"dbaeumer.vscode-eslint",
 		"Vue.volar",
+		"Gruntfuggly.todo-tree",
 		"Vue.vscode-typescript-vue-plugin"
 	]
 }
