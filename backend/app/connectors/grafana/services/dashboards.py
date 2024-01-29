@@ -8,6 +8,7 @@ from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
 from app.connectors.grafana.schema.dashboards import GrafanaDashboard
 from app.connectors.grafana.schema.dashboards import GrafanaDashboardResponse
 from app.connectors.grafana.schema.dashboards import Office365Dashboard
+from app.connectors.grafana.schema.dashboards import MimecastDashboard
 from app.connectors.grafana.schema.dashboards import WazuhDashboard
 from app.connectors.grafana.utils.universal import create_grafana_client
 
@@ -124,7 +125,7 @@ async def provision_dashboards(dashboard_request: DashboardProvisionRequest) -> 
     provisioned_dashboards = []
     errors = []
 
-    valid_dashboards = {item.name: item for item in list(WazuhDashboard) + list(Office365Dashboard)}
+    valid_dashboards = {item.name: item for item in list(WazuhDashboard) + list(Office365Dashboard) + list(MimecastDashboard)}
 
     for dashboard_name in dashboard_request.dashboards:
         dashboard_enum = valid_dashboards[dashboard_name]

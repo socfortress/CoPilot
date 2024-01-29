@@ -61,6 +61,9 @@ class Office365Dashboard(Enum):
     TEAMS = ("Office365", "teams.json")
     THREAT_INTELLIGENCE = ("Office365", "threat_intelligence.json")
 
+class MimecastDashboard(Enum):
+    SUMMARY = ("Mimecast", "summary.json")
+
 
 class DashboardProvisionRequest(BaseModel):
     dashboards: List[str] = Field(..., description="List of dashboard identifiers to provision")
