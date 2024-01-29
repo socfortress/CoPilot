@@ -152,7 +152,7 @@ async def purge_single_case_route(case_id: int = Depends(verify_case_exists)) ->
     description="Get a single case",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_single_case_route(case_id: int = Depends(verify_case_exists)) -> SingleCaseResponse:
+async def get_single_case_route(case_id: int = Depends(verify_case_exists), session: AsyncSession = Depends(get_db)) -> SingleCaseResponse:
     """
     Retrieve a single case by its ID.
 
@@ -164,7 +164,7 @@ async def get_single_case_route(case_id: int = Depends(verify_case_exists)) -> S
     """
     logger.info(f"Fetching case {case_id}")
     single_case_body = SingleCaseBody(case_id=case_id)
-    return await get_single_case(single_case_body.case_id)
+    return await get_single_case(single_case_body.case_id, session=session)
 
 
 @dfir_iris_cases_router.put(

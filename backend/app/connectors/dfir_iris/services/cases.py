@@ -146,7 +146,7 @@ async def get_cases_older_than(case_older_than_body: CaseOlderThanBody) -> Cases
     )
 
 
-async def get_single_case(case_id: SingleCaseBody) -> SingleCaseResponse:
+async def get_single_case(case_id: SingleCaseBody, session: AsyncSession) -> SingleCaseResponse:
     """
     Fetches a single case from DFIR-IRIS based on the provided case ID.
 
@@ -162,6 +162,7 @@ async def get_single_case(case_id: SingleCaseBody) -> SingleCaseResponse:
     dfir_iris_client = await create_dfir_iris_client("DFIR-IRIS")
     case = Case(session=dfir_iris_client)
     result = await fetch_and_parse_data(dfir_iris_client, case.get_case, case_id)
+    result["data"]["customer_code"] = await get_customer_code(session, result["data"]["customer_name"])
     return SingleCaseResponse(success=True, message="Successfully fetched single case", case=result["data"])
 
 

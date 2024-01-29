@@ -75,6 +75,7 @@ class SingleCaseModel(BaseModel):
     state_name: str
     status_id: int
     status_name: str
+    customer_code: str
 
 
 class SingleCaseBody(BaseModel):
