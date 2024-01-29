@@ -3,8 +3,10 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Security
 from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.utils import AuthHandler
+from app.db.db_session import get_db
 from app.connectors.dfir_iris.schema.alerts import AlertResponse
 from app.connectors.dfir_iris.schema.alerts import AlertsResponse
 from app.connectors.dfir_iris.schema.alerts import BookmarkedAlertsResponse
@@ -86,7 +88,7 @@ async def get_alerts_filtered(request: FilterAlertsRequest) -> AlertsResponse:
     description="Get an alert by ID",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_alert_by_id(alert_id: str = Depends(verify_alert_exists)) -> AlertResponse:
+async def get_alert_by_id(alert_id: str = Depends(verify_alert_exists), session: AsyncSession = Depends(get_db)) -> AlertResponse:
     """
     Retrieve an alert by its ID.
 
@@ -97,7 +99,7 @@ async def get_alert_by_id(alert_id: str = Depends(verify_alert_exists)) -> Alert
         AlertResponse: The response containing the alert information.
     """
     logger.info(f"Fetching alert {alert_id}")
-    return await get_alert(alert_id=alert_id)
+    return await get_alert(alert_id=alert_id, session=session)
 
 
 @dfir_iris_alerts_router.get(

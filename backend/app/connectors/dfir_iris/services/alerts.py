@@ -2,6 +2,11 @@ from fastapi import HTTPException
 from loguru import logger
 
 from app.connectors.dfir_iris.schema.alerts import AlertResponse
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from app.integrations.alert_creation_settings.models.alert_creation_settings import (
+    AlertCreationSettings,
+)
 from app.connectors.dfir_iris.schema.alerts import AlertsResponse
 from app.connectors.dfir_iris.schema.alerts import BookmarkedAlertsResponse
 from app.connectors.dfir_iris.schema.alerts import CaseCreationResponse
@@ -10,6 +15,30 @@ from app.connectors.dfir_iris.schema.alerts import FilterAlertsRequest
 from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
 from app.connectors.dfir_iris.utils.universal import initialize_client_and_alert
 
+
+async def get_customer_code(session: AsyncSession, customer_id: int) -> str:
+    """
+    Retrieves the customer code for a given customer ID.
+
+    Args:
+        session (AsyncSession): The database session.
+        customer_id (int): The ID of the customer.
+
+    Returns:
+        The customer code for the given customer ID.
+    """
+    logger.info(f"Retrieving customer code for customer ID {customer_id}")
+    try:
+        alert_creation_settings = await session.execute(
+            select(AlertCreationSettings).filter(AlertCreationSettings.iris_customer_id == customer_id),
+        )
+        alert_creation_settings = alert_creation_settings.scalars().first()
+        if alert_creation_settings is None:
+            return "Customer Not Found"
+        return alert_creation_settings.customer_code
+    except Exception as e:
+        logger.error(f"Error retrieving customer code for customer ID {customer_id}: {e}")
+        return "Customer Not Found"
 
 async def get_alerts(request: FilterAlertsRequest) -> AlertsResponse:
     """
@@ -54,7 +83,7 @@ def construct_params(request: FilterAlertsRequest) -> dict:
     return {k: v for k, v in params.items() if v is not None}
 
 
-async def get_alert(alert_id: str) -> AlertResponse:
+async def get_alert(alert_id: str, session: AsyncSession) -> AlertResponse:
     """
     Retrieves an alert by its ID.
 
@@ -69,6 +98,9 @@ async def get_alert(alert_id: str) -> AlertResponse:
     """
     client, alert = await initialize_client_and_alert("DFIR-IRIS")
     result = await fetch_and_validate_data(client, alert.get_alert, alert_id)
+    # Add the customer code to the alert
+    customer_code = await get_customer_code(session, result["data"]["customer"]["customer_id"])
+    result["data"]["customer"]["customer_code"] = customer_code
     return AlertResponse(success=True, message="Successfully fetched alert", alert=result["data"])
 
 
