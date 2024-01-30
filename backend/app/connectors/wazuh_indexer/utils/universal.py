@@ -23,9 +23,6 @@ async def verify_wazuh_indexer_credentials(attributes: Dict[str, Any]) -> Dict[s
         dict: A dictionary containing 'connectionSuccessful' status and 'authToken' if the connection is successful.
     """
     logger.info(f"Verifying the wazuh-indexer connection to {attributes['connector_url']}")
-    if attributes["connector_url"] == "https://example.com:9200":
-        logger.error("Wazuh Indexer connector not configured")
-        raise HTTPException(status_code=500, detail="Wazuh Indexer connector not configured")
     try:
         es = Elasticsearch(
             [attributes["connector_url"]],
@@ -71,6 +68,8 @@ async def create_wazuh_indexer_client(connector_name: str) -> Elasticsearch:
         attributes = await get_connector_info_from_db(connector_name, session)
     if attributes is None:
         raise HTTPException(status_code=500, detail=f"No {connector_name} connector found in the database")
+    if attributes["connector_url"] == "https://1.1.1.1:9200":
+        raise HTTPException(status_code=500, detail=f"Please update the {connector_name} connector URL")
     try:
         return Elasticsearch(
             [attributes["connector_url"]],
