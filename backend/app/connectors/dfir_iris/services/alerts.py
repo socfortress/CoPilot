@@ -41,7 +41,7 @@ async def get_customer_code(session: AsyncSession, customer_id: int) -> str:
         return "Customer Not Found"
 
 
-async def get_alerts(request: FilterAlertsRequest) -> AlertsResponse:
+async def get_alerts(request: FilterAlertsRequest, session: AsyncSession) -> AlertsResponse:
     """
     Retrieves alerts from the DFIR-IRIS service.
 
@@ -56,6 +56,10 @@ async def get_alerts(request: FilterAlertsRequest) -> AlertsResponse:
         params = construct_params(request)
         result = await fetch_and_validate_data(client, lambda: alert.filter_alerts(**params))
         logger.info(f"Successfully fetched length {len(result['data']['alerts'])} alerts")
+        # Add the customer code to each alert
+        for alert in result["data"]["alerts"]:
+            customer_code = await get_customer_code(session, alert["customer"]["customer_id"])
+            alert["customer"]["customer_code"] = customer_code
         return AlertsResponse(success=True, message="Successfully fetched alerts", alerts=result["data"]["alerts"])
     except Exception as e:
         logger.error(f"Error fetching alerts: {e}")

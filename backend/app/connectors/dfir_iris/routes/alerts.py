@@ -70,7 +70,7 @@ async def get_all_bookmarked_alerts() -> BookmarkedAlertsResponse:
     description="Get alerts from IRIS based on the provided filters",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_alerts_filtered(request: FilterAlertsRequest) -> AlertsResponse:
+async def get_alerts_filtered(request: FilterAlertsRequest, session: AsyncSession = Depends(get_db)) -> AlertsResponse:
     """
     Retrieve alerts from DFIR-IRIS based on the provided filters.
 
@@ -79,7 +79,7 @@ async def get_alerts_filtered(request: FilterAlertsRequest) -> AlertsResponse:
     """
     logger.info("Fetching all alerts")
     logger.info(f"Request: {request}")
-    return await get_alerts(request)
+    return await get_alerts(request, session=session)
 
 
 @dfir_iris_alerts_router.get(
