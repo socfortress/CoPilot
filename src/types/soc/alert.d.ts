@@ -64,6 +64,7 @@ export interface Customer {
 	last_update_date: string
 	client_uuid: string
 	customer_id: number
+	customer_code: string
 }
 
 export interface ModificationHistory {

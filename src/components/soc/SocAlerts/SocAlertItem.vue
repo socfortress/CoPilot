@@ -106,7 +106,25 @@
 								<Icon :name="CustomerIcon" :size="13"></Icon>
 							</template>
 							<template #label>Customer</template>
-							<template #value>{{ alert.customer?.customer_name || "-" }}</template>
+							<template #value>
+								<template
+									v-if="
+										alert.customer?.customer_code &&
+										alert.customer.customer_code !== 'Customer Not Found'
+									"
+								>
+									<code
+										class="cursor-pointer text-primary-color"
+										@click="gotoCustomer(alert.customer.customer_code)"
+									>
+										{{ alert.customer?.customer_name || alert.customer.customer_code || "-" }}
+										<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
+									</code>
+								</template>
+								<template v-else>
+									{{ alert.customer?.customer_name || "-" }}
+								</template>
+							</template>
 						</Badge>
 
 						<SocAssignUser :alert="alert" :users="users" v-slot="{ loading }" @updated="updateAlert">
@@ -194,7 +212,17 @@
 					<div class="grid gap-2 grid-auto-flow-200 p-7 pt-4">
 						<KVCard v-for="(value, key) of alert.customer" :key="key">
 							<template #key>{{ key }}</template>
-							<template #value>{{ value || "-" }}</template>
+							<template #value>
+								<template v-if="key === 'customer_code' && value && value !== 'Customer Not Found'">
+									<code class="cursor-pointer text-primary-color" @click="gotoCustomer(value)">
+										#{{ value }}
+										<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
+									</code>
+								</template>
+								<template v-else>
+									{{ value || "-" }}
+								</template>
+							</template>
 						</KVCard>
 					</div>
 				</n-tab-pane>
@@ -449,6 +477,10 @@ function caseCreated(caseId: string | number) {
 function deleted() {
 	loadingDelete.value = false
 	emit("deleted")
+}
+
+function gotoCustomer(code: any) {
+	router.push({ name: "Customers", query: { code: code.toString() } })
 }
 
 watch(checked, val => {
