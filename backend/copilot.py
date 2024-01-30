@@ -126,7 +126,7 @@ async def init_db():
 
 @app.get("/")
 def hello():
-    return {"message": "We Made It!"}
+    return {"message": "CoPilot - We Made It!"}
 
 
 @app.on_event("shutdown")
