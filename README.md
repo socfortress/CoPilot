@@ -53,7 +53,7 @@ cp .env.example .env
 # Make your changes to the .env file
 
 # Run Copilot
-docker compose up
+docker compose up -d
 ```
 
 Copilot shall be available on the host interface, port 5173, protocol HTTP - `http://<your_instance_ip>:5173`.
@@ -65,6 +65,11 @@ By default, an `admin` account is created. The password is printed in stdout the
 ## Connectors
 
 Copilot is designed to be a single pane of glass for your security operations. Think of it as a hub for all your security tools. Copilot Connectors are the glue that binds your security tools to Copilot. We take advantage of the APIs and webhooks provided by your security tools to provide a seamless integration.
+
+## Related repositories
+
+-   Provision Wazuh Worker Application: [https://github.com/socfortress/Customer-Provisioning-Worker](https://github.com/socfortress/Customer-Provisioning-Worker)
+-   Provision Praeco Alert Application: [https://github.com/socfortress/Customer-Provisioning-Alert](https://github.com/socfortress/Customer-Provisioning-Alert)
 
 ## Help
 
