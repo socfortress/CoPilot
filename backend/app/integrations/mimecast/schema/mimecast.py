@@ -36,19 +36,13 @@ class MimecastRequest(BaseModel):
     integration_name: str = Field(
         "Mimecast",
         description="The integration name.",
-        examples=["Office365"],
+        examples=["Mimecast"],
     )
     time_range: Optional[str] = Field(
         "15m",
         pattern="^[1-9][0-9]*[mhdw]$",
         description="Time range for the query (1m, 1h, 1d, 1w)",
     )
-
-    # # ensure the `integration_name` is always set to "Office365"
-    # @root_validator(pre=True)
-    # def set_integration_name(cls, values: Dict[str, Any]) -> Dict[str, Any]:
-    #     values["integration_name"] = "Office365"
-    #     return values
 
 
 class MimecastResponse(BaseModel):
