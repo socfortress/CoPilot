@@ -60,7 +60,7 @@ Copilot shall be available on the host interface, port 5173, protocol HTTP - `ht
 By default, an `admin` account is created. The password is printed in stdout the very first time Copilot is started. It won't be printed anymore after that.
 `Admin user password` can be searched in the logs of the `copilot` docker to find the password. You will use the `plain` password to login to the web interface.
 
-🚀 **YouTube Tutorial:** [SOCFortress CoPilot - Getting Started](TODO)
+🚀 **YouTube Tutorial:** [SOCFortress CoPilot - Getting Started](https://youtu.be/seITDGXAiJw)
 
 ## Connectors
 
@@ -75,7 +75,7 @@ Copilot is designed to be a single pane of glass for your security operations. T
 
 You can reach us on [Discord](https://discord.gg/UN3pNBzaEQ) or by [📧](mailto:info@socfortress.co) if you have any question, issue or idea!
 
-Check out our full video tutorial series on ![YouTube](https://img.shields.io/badge/YouTube-%23FF0000.svg?style=for-the-badge&logo=YouTube&logoColor=white)
+Check out our full video tutorial series on [![YouTube](https://img.shields.io/badge/YouTube-%23FF0000.svg?style=for-the-badge&logo=YouTube&logoColor=white)](https://www.youtube.com/@taylorwalton_socfortress/playlists)
 
 ## License
 
