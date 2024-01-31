@@ -49,14 +49,16 @@ nano /etc/docker/daemon.json
 ```
 
 ```json
-{"dns": ["YOUR_DNS_SERVER"], "log-driver": "json-file", "log-opts": {"max-size": "10m", "max-file": "3"}}
+{ "dns": ["YOUR_DNS_SERVER"], "log-driver": "json-file", "log-opts": { "max-size": "10m", "max-file": "3" } }
 ```
 
 ```
 systemctl daemon-reload
 systemctl restart docker
 ```
---------------------------------------
+
+---
+
 ```bash
 #  Clone the CoPilot repository
 git clone https://github.com/socfortress/CoPilot
@@ -90,7 +92,7 @@ Copilot is designed to be a single pane of glass for your security operations. T
 
 You can reach us on [Discord](https://discord.gg/UN3pNBzaEQ) or by [📧](mailto:info@socfortress.co) if you have any question, issue or idea!
 
-Check out our full video tutorial series on [![YouTube](https://img.shields.io/badge/YouTube-%23FF0000.svg?style=for-the-badge&logo=YouTube&logoColor=white)](https://www.youtube.com/@taylorwalton_socfortress/playlists)
+Check out our full video tutorial series on [![YouTube](https://img.shields.io/badge/YouTube-%23FF0000.svg?style=for-the-badge&logo=YouTube&logoColor=white)](https://www.youtube.com/watch?v=qQbex2zAhWI&list=PLB6hQ_WpB6U0e5oSLXJMcxmSzz7n3zvD-&ab_channel=TaylorWalton)
 
 ## License
 
