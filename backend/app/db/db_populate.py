@@ -61,18 +61,18 @@ def get_connectors_list():
         list: A list of connector data, where each item contains the connector name, version, and authentication method.
     """
     connectors = [
-        ("Wazuh-Indexer", "4.4.1", "username_password", "Connection to Wazuh-Indexer. Make sure to use the an admin role user."),
+        ("Wazuh-Indexer", "4.4.1", "username_password", "Connection to Wazuh-Indexer."),
         ("Wazuh-Manager", "4.4.1", "username_password", "Connection to Wazuh-Manager. Default is wazuh-wui:wazuh-wui"),
-        ("Graylog", "5.0.7", "username_password", "Connection to Graylog. Make sure to use the an admin role user."),
-        ("Shuffle", "1.1.0", "api_key", "Connection to Shuffle. Make sure to use the an admin role user."),
-        ("DFIR-IRIS", "2.0", "api_key", "Connection to DFIR-IRIS. Make sure to use the an admin role user."),
+        ("Graylog", "5.0.7", "username_password", "Connection to Graylog."),
+        ("Shuffle", "1.1.0", "api_key", "Connection to Shuffle."),
+        ("DFIR-IRIS", "2.0", "api_key", "Connection to DFIR-IRIS."),
         ("Velociraptor", "0.6.8", "file", "Connection to Velociraptor. Make sure you have generated the api file first."),
-        ("Sublime", "3", "api_key", "Connection to Sublime. Make sure to use the an admin role user."),
-        ("InfluxDB", "3", "api_key", "Connection to InfluxDB. Make sure to use the an admin role user.", "INFLUXDB_ORG_AND_BUCKET"),
+        ("Sublime", "3", "api_key", "Connection to Sublime."),
+        ("InfluxDB", "3", "api_key", "Connection to InfluxDB.", "INFLUXDB_ORG_AND_BUCKET"),
         ("AskSocfortress", "3", "api_key", "Connection to AskSocfortress. Make sure you have requested an API key."),
         ("SocfortressThreatIntel", "3", "api_key", "Connection to Socfortress Threat Intel. Make sure you have requested an API key."),
         ("Cortex", "3", "api_key", "Connection to Cortex. Make sure you have created an API key."),
-        ("Grafana", "3", "username_password", "Connection to Grafana. Make sure to use the an admin role user."),
+        ("Grafana", "3", "username_password", "Connection to Grafana."),
         (
             "Wazuh Worker Provisioning",
             "3",
