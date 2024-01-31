@@ -42,6 +42,21 @@ To ease the installation and upgrades, Copilot is shipped in a single docker con
 
 ❗ **WARNING:** Copilot is not intended to be exposed to the internet. It is recommended for internal use only.
 
+🔴 - Helpful docker DNS setting
+
+```
+nano /etc/docker/daemon.json
+```
+
+```json
+{"dns": ["YOUR_DNS_SERVER"], "log-driver": "json-file", "log-opts": {"max-size": "10m", "max-file": "3"}}
+```
+
+```
+systemctl daemon-reload
+systemctl restart docker
+```
+--------------------------------------
 ```bash
 #  Clone the CoPilot repository
 git clone https://github.com/socfortress/CoPilot
