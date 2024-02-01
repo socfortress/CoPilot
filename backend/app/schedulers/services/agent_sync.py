@@ -47,25 +47,3 @@ def agent_sync():
         else:
             # Handle the case where job_metadata does not exist
             print("JobMetadata for 'agent_sync' not found.")
-
-
-async def invoke_mimecast_integration():
-    """
-    Invokes the Mimecast integration.
-    """
-    # Use get_sync_db_session to create and manage a synchronous session
-    with get_sync_db_session() as session:
-        # Synchronous ORM operations
-        job_metadata = session.query(JobMetadata).filter_by(job_id="invoke_mimecast_integration").one_or_none()
-        if job_metadata:
-            job_metadata.last_success = datetime.utcnow()
-            session.add(job_metadata)
-            session.commit()
-        else:
-            # Handle the case where job_metadata does not exist
-            print("JobMetadata for 'invoke_mimecast_integration' not found.")
-    # Invoke the Mimecast integration
-    await invoke_mimecast_route(
-        MimecastRequest(customer_code="", integration_name="Mimecast"),
-        session,
-    )
