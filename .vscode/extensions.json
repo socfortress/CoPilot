@@ -12,6 +12,8 @@
 		"dbaeumer.vscode-eslint",
 		"Vue.volar",
 		"Gruntfuggly.todo-tree",
-		"Vue.vscode-typescript-vue-plugin"
+		"Vue.vscode-typescript-vue-plugin",
+		"usernamehw.errorlens",
+		"streetsidesoftware.code-spell-checker"
 	]
 }
