@@ -311,7 +311,7 @@ async def create_integration_meta_entry(
 async def update_customer_integration_table(customer_code: str, session: AsyncSession) -> None:
     """
     Updates the `customer_integrations` table to set the `deployed` column to True where the `customer_code`
-    matches the given customer code and the `integration_service_name` is "Office365".
+    matches the given customer code and the `integration_service_name` is "Mimecast".
 
     Args:
         customer_code (str): The customer code.
@@ -322,7 +322,7 @@ async def update_customer_integration_table(customer_code: str, session: AsyncSe
         .where(
             and_(
                 CustomerIntegrations.customer_code == customer_code,
-                CustomerIntegrations.integration_service_name == "Office365",
+                CustomerIntegrations.integration_service_name == "Mimecast",
             ),
         )
         .values(deployed=True),
