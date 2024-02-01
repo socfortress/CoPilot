@@ -216,7 +216,7 @@ async def get_customer_and_service_ids(session, customer_code, integration_name)
             .join(IntegrationService, IntegrationSubscription.integration_service_id == IntegrationService.id)
             .where(CustomerIntegrations.customer_code == customer_code, IntegrationService.service_name == integration_name),
         )
-        return result.one()
+        return result.all()
     except NoResultFound:
         raise HTTPException(status_code=404, detail="Customer integration not found")
 
@@ -617,7 +617,14 @@ async def delete_integration(
     customer_code = delete_customer_integration.customer_code
     integration_name = delete_customer_integration.integration_name
 
-    customer_id, integration_service_id = await get_customer_and_service_ids(session, customer_code, integration_name)
+    results = await get_customer_and_service_ids(session, customer_code, integration_name)
+    # Check if results is not empty
+    if results:
+        # Unpack the first tuple in results
+        customer_id, integration_service_id = results[0]
+    else:
+        # Handle the case where results is empty
+        raise HTTPException(status_code=404, detail="Customer integration not found")
 
     subscription_ids = await get_subscription_ids(session, customer_id, integration_service_id)
     if not subscription_ids:
