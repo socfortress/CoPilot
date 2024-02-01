@@ -207,3 +207,25 @@ class UpdateCustomerIntegration(BaseModel):
         ...,
         description="The integration auth keys.",
     )
+
+class CustomerIntegrationsMetaSchema(BaseModel):
+    id: Optional[int] = None
+    customer_code: str
+    integration_name: str
+    graylog_input_id: Optional[str] = None
+    graylog_index_id: str
+    graylog_stream_id: str
+    grafana_org_id: str
+    grafana_dashboard_id: str
+
+    class Config:
+        orm_mode = True
+
+class CustomerIntegrationsMetaResponse(BaseModel):
+    message: str
+    success: bool
+    customer_integrations_meta: Optional[List[CustomerIntegrationsMetaSchema]] = Field(
+        None,
+        description="The customer integrations metadata.",
+    )
+

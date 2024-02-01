@@ -22,6 +22,7 @@ from app.integrations.alert_creation_settings.models.alert_creation_settings imp
 )
 from app.integrations.models.customer_integration_settings import AvailableIntegrations
 from app.integrations.models.customer_integration_settings import CustomerIntegrations
+from app.integrations.models.customer_integration_settings import CustomerIntegrationsMeta
 from app.integrations.models.customer_integration_settings import IntegrationAuthKeys
 from app.integrations.models.customer_integration_settings import IntegrationConfig
 from app.integrations.models.customer_integration_settings import IntegrationService
@@ -39,6 +40,7 @@ from app.integrations.schema import CustomerIntegrationsResponse
 from app.integrations.schema import DeleteCustomerIntegration
 from app.integrations.schema import IntegrationWithAuthKeys
 from app.integrations.schema import UpdateCustomerIntegration
+from app.integrations.schema import CustomerIntegrationsMetaSchema, CustomerIntegrationsMetaResponse
 
 integration_settings_router = APIRouter()
 
@@ -147,6 +149,20 @@ async def check_existing_customer_integration(customer_code: str, integration_na
     if result.scalars().first() is not None:
         raise HTTPException(status_code=400, detail=f"Customer integration {customer_code} {integration_name} already exists.")
 
+async def check_existing_customer_integration_meta(customer_code: str, integration_name: str, session: AsyncSession):
+    """
+    Check if the customer integration meta already exists for the customer code and integration name.
+    """
+    stmt = select(CustomerIntegrationsMeta).where(
+        CustomerIntegrationsMeta.customer_code == customer_code,
+        CustomerIntegrationsMeta.integration_name == integration_name,
+    )
+    result = await session.execute(stmt)
+    if result.scalars().first() is not None:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Customer integration meta {customer_code} {integration_name} already exists.",
+        )
 
 async def create_integration_service(
     integration_name: str,
@@ -420,6 +436,32 @@ async def get_customer_integrations(session: AsyncSession = Depends(get_db)):
         success=True,
     )
 
+@integration_settings_router.get(
+    "/customer_integrations_meta",
+    response_model=CustomerIntegrationsMetaResponse,
+    description="Get a list of customer integrations metadata.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_customer_integrations_meta(session: AsyncSession = Depends(get_db)):
+    """
+    Endpoint to get a list of customer integrations metadata.
+    """
+    try:
+        stmt = select(CustomerIntegrationsMeta)
+        result = await session.execute(stmt)
+        customer_integrations_meta = result.scalars().all()
+    except Exception as e:
+        logger.error(f"Error while fetching customer integrations metadata: {e}")
+        customer_integrations_meta = []
+
+    logger.info(f"customer_integrations_meta: {customer_integrations_meta}")
+    return CustomerIntegrationsMetaResponse(
+        customer_integrations_meta=customer_integrations_meta,
+        message="Customer integrations metadata successfully retrieved.",
+        success=True,
+    )
+
+
 
 @integration_settings_router.get(
     "/customer_integrations/{customer_code}",
@@ -450,6 +492,29 @@ async def get_customer_integrations_by_customer_code(
     return CustomerIntegrationsResponse(
         available_integrations=customer_integrations,
         message="Customer integrations successfully retrieved.",
+        success=True,
+    )
+
+@integration_settings_router.get(
+    "/customer_integrations_meta/{customer_code}",
+    response_model=CustomerIntegrationsMetaResponse,
+    description="Get a list of customer integrations metadata for a specific customer.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_customer_integrations_meta_by_customer_code(
+    customer_code: str,
+    session: AsyncSession = Depends(get_db),
+):
+    """
+    Endpoint to get a list of customer integrations metadata for a specific customer.
+    """
+    stmt = select(CustomerIntegrationsMeta).where(CustomerIntegrationsMeta.customer_code == customer_code)
+    result = await session.execute(stmt)
+    customer_integrations_meta = result.scalars().all()
+    logger.info(f"customer_integrations_meta: {customer_integrations_meta}")
+    return CustomerIntegrationsMetaResponse(
+        customer_integrations_meta=customer_integrations_meta,
+        message="Customer integrations metadata successfully retrieved.",
         success=True,
     )
 
@@ -512,6 +577,43 @@ async def create_integration(
         success=True,
     )
 
+@integration_settings_router.post(
+    "/create_integration_meta",
+    response_model=CustomerIntegrationsMetaResponse,
+    description="Create a new customer integration metadata.",
+    # dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def create_integration_meta(
+    customer_integration_meta: CustomerIntegrationsMetaSchema,
+    session: AsyncSession = Depends(get_db),
+):
+    """
+    Endpoint to create a new customer integration metadata.
+    """
+    await validate_customer_code(customer_integration_meta.customer_code, session)
+    await validate_customer_meta(customer_integration_meta.customer_code, session)
+    await check_existing_customer_integration_meta(
+        customer_integration_meta.customer_code,
+        customer_integration_meta.integration_name,
+        session,
+    )
+    try:
+        new_customer_integration_meta = CustomerIntegrationsMeta(
+            **customer_integration_meta.dict(),
+        )
+        session.add(new_customer_integration_meta)
+        await session.commit()
+        return CustomerIntegrationsMetaResponse(
+            message="Customer integration metadata successfully created.",
+            success=True,
+        )
+    except Exception as e:
+        logger.error(f"Error while creating customer integration metadata: {e}")
+        return CustomerIntegrationsMetaResponse(
+            customer_integrations_meta=None,
+            message="Error while creating customer integration metadata.",
+            success=False,
+        )
 
 @integration_settings_router.put(
     "/update_integration/{customer_code}",
@@ -642,3 +744,35 @@ async def delete_integration(
         message=f"Customer integration {customer_code} {integration_name} successfully deleted.",
         success=True,
     )
+
+@integration_settings_router.delete(
+    "/delete_integration_meta",
+    response_model=CustomerIntegrationsMetaResponse,
+    description="Delete a customer integration metadata.",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def delete_integration_meta(
+    customer_integration_meta: CustomerIntegrationsMetaSchema,
+    session: AsyncSession = Depends(get_db),
+):
+    """
+    Endpoint to delete a customer integration metadata.
+    """
+    try:
+        stmt = delete(CustomerIntegrationsMeta).where(
+            CustomerIntegrationsMeta.customer_code == customer_integration_meta.customer_code,
+            CustomerIntegrationsMeta.integration_name == customer_integration_meta.integration_name,
+        )
+        await session.execute(stmt)
+        await session.commit()
+        return CustomerIntegrationsMetaResponse(
+            message="Customer integration metadata successfully deleted.",
+            success=True,
+        )
+    except Exception as e:
+        logger.error(f"Error while deleting customer integration metadata: {e}")
+        return CustomerIntegrationsMetaResponse(
+            customer_integrations_meta=None,
+            message="Error while deleting customer integration metadata.",
+            success=False,
+        )
