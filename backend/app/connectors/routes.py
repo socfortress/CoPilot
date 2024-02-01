@@ -42,7 +42,6 @@ async def get_connectors(session: AsyncSession = Depends(get_db)) -> ConnectorsL
         HTTPException: An exception with a 404 status code is raised if no connectors are found.
     """
     connectors = await ConnectorServices.fetch_all_connectors(session=session)
-    logger.info(f"Connectors: {connectors}")
     if connectors:
         return {"connectors": connectors, "success": True, "message": "Connectors fetched successfully"}
     else:
