@@ -5,8 +5,6 @@ import requests
 from dotenv import load_dotenv
 
 from app.db.db_session import get_sync_db_session
-from app.integrations.mimecast.routes.mimecast import invoke_mimecast_route
-from app.integrations.mimecast.schema.mimecast import MimecastRequest
 from app.schedulers.models.scheduler import JobMetadata
 from app.schedulers.utils.universal import scheduler_login
 
