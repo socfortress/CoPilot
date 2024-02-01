@@ -1,32 +1,41 @@
-# build with `docker build -t python-backend -f Dockerfile.deb .`
-# run with `docker run -p 5000:5000 -d python-backend`
-# Start with the base Debian 11 image
-FROM debian:11
+# Instructions how to build:
+# 1. Build with `docker build -t python-backend:latest -f Dockerfile.deb .`
+# 2. Run with `docker run -p 5000:5000 -d python-backend`
+# TODO image size is 2GB - reduce size possible?
+# FIXME Add 'USER ' line to the Dockerfile (Trivy)
+# Start with the latest base Debian 11 slim image
+# https://hub.docker.com/_/debian/tags?page=1&name=11
+# Set image to architecture Linux/AMD64 via sha256
+FROM debian:11.8-slim@sha256:d66e51af682be02ff054f86dc0c07366c0a40c6de3d8f1c731de3c633da56847
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-# Update the package lists
-RUN apt-get update
+# Disable interactive mode
+ARG DEBIAN_FRONTEND=noninteractive
 
-# Install necessary dependencies
-RUN apt-get install -y \
+# Update the package lists and install necessary dependencies
+RUN set -ex && apt-get update && apt-get install --no-install-recommends -y \
     apt-transport-https \
     ca-certificates \
     curl \
     gnupg \
-    lsb-release
+    lsb-release \
+    && \
+    rm -rf /var/lib/apt/lists/*
 
 # Add the deadsnakes PPA
 RUN echo "deb http://ppa.launchpad.net/deadsnakes/ppa/ubuntu focal main" | tee /etc/apt/sources.list.d/focal.list
 RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys F23C5A6CF475977595C89F51BA6932366A755776
 
-# Update the package lists
-RUN apt-get update
-
-# Install Python 3.11, pip and venv
-RUN apt-get install -y python3.11 python3-pip python3.11-venv
+# Update the package lists and install Python 3.11, pip and venv
+RUN set -ex && apt-get update && apt-get install --no-install-recommends -y \
+    python3.11 \
+    python3-pip \
+    python3.11-venv \
+    && \
+    rm -rf /var/lib/apt/lists/*
 
 # Create a Python virtual environment and activate it
 RUN python3.11 -m venv /opt/venv
@@ -46,10 +55,15 @@ COPY . .
 
 # Install Node.js and npm
 RUN curl -sL https://deb.nodesource.com/setup_18.x | bash -
-RUN apt-get install -y nodejs
 
 # Install concurrently
-RUN npm install -g concurrently
+# https://www.npmjs.com/package/concurrently
+ARG CONCURRENTLY_VERSION=8.2.2
+RUN set -x && apt-get update && apt-get install --no-install-recommends -y \
+    nodejs \
+    && \
+    npm install -g concurrently@${CONCURRENTLY_VERSION} && \
+    npm cache clean --force
 
 # Install your Vue.js application's dependencies
 WORKDIR /opt/copilot
