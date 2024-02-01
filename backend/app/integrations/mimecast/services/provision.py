@@ -3,7 +3,10 @@ from datetime import datetime
 
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import and_
+from sqlalchemy import update
 
+from app.integrations.models.customer_integration_settings import CustomerIntegrations
 from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
 from app.connectors.grafana.schema.dashboards import MimecastDashboard
 from app.connectors.grafana.services.dashboards import provision_dashboards
@@ -285,6 +288,7 @@ async def provision_mimecast(provision_mimecast_request: ProvisionMimecastReques
         ),
         session,
     )
+    await update_customer_integration_table(provision_mimecast_request.customer_code, session)
 
     return ProvisionMimecastResponse(success=True, message="Mimecast integration provisioned.")
 
@@ -303,3 +307,26 @@ async def create_integration_meta_entry(
     """
     await create_integration_meta(customer_integration_meta, session)
     logger.info(f"Integration meta entry created for customer {customer_integration_meta.customer_code}.")
+
+async def update_customer_integration_table(customer_code: str, session: AsyncSession) -> None:
+    """
+    Updates the `customer_integrations` table to set the `deployed` column to True where the `customer_code`
+    matches the given customer code and the `integration_service_name` is "Office365".
+
+    Args:
+        customer_code (str): The customer code.
+        session (AsyncSession): The async session object for making HTTP requests.
+    """
+    await session.execute(
+        update(CustomerIntegrations)
+        .where(
+            and_(
+                CustomerIntegrations.customer_code == customer_code,
+                CustomerIntegrations.integration_service_name == "Office365",
+            ),
+        )
+        .values(deployed=True),
+    )
+    await session.commit()
+
+    return None
