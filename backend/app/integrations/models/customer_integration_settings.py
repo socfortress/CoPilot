@@ -89,4 +89,4 @@ class CustomerIntegrationsMeta(SQLModel, table=True):
     graylog_index_id: str = Field(max_length=1024, nullable=False)
     graylog_stream_id: str = Field(max_length=1024, nullable=False)
     grafana_org_id: str = Field(max_length=1024, nullable=False)
-    grafana_dashboard_id: str = Field(max_length=1024, nullable=False)
+    grafana_dashboard_folder_id: str = Field(max_length=1024, nullable=False)
