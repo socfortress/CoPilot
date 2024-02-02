@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 from pydantic import Extra
+from enum import Enum
 
 class MonitoringAlertsRequestModel(BaseModel):
     id: Optional[int] = None
@@ -97,3 +98,13 @@ class WazuhAlertModel(BaseModel):
 
     class Config:
         extra = Extra.allow
+
+class SortOrder(Enum):
+    desc = "desc"
+    asc = "asc"
+
+class FilterAlertsRequest(BaseModel):
+    per_page: int = Field(1000, description="The number of alerts to return per page.")
+    page: int = Field(1, description="The page number to return.")
+    sort: SortOrder = Field(SortOrder.desc, description="The sort order for the alerts.")
+    alert_tags: str = Field(..., description="The tags of the alert.")

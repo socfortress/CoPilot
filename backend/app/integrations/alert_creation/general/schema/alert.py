@@ -179,6 +179,13 @@ class IrisIoc(BaseModel):
         return self.dict(exclude_none=True)
 
 
+class IrisTags(BaseModel):
+    rule_id: str = Field(..., description="Rule ID from the alert", example="001")
+
+    def to_dict(self):
+        return self.dict(exclude_none=True)
+
+
 class IrisAlertContext(BaseModel):
     customer_iris_id: int = Field(
         ...,
