@@ -353,6 +353,21 @@ async def create_and_update_alert_in_iris(alert_details: WazuhAlertModel, sessio
         alert_id,
         {"alert_tags": f"{alert_details.rule_id}"},
     )
+    # Update the alert with the asset payload
+    await fetch_and_validate_data(
+        client,
+        alert_client.update_alert,
+        alert_id,
+        {"assets": [dict(IrisAsset(**iris_alert_payload.assets[0].to_dict()))]},
+    )
+    if ioc_payload:
+        await fetch_and_validate_data(
+            client,
+            alert_client.update_alert,
+            alert_id,
+            {"iocs": [dict(IrisIoc(**iris_alert_payload.alert_iocs[0].to_dict()))]},
+        )
+    return alert_id
 
 async def analyze_wazuh_alerts(monitoring_alerts: MonitoringAlerts, customer_meta: CustomersMeta, session: AsyncSession) -> WazuhAnalysisResponse:
     """
@@ -373,7 +388,8 @@ async def analyze_wazuh_alerts(monitoring_alerts: MonitoringAlerts, customer_met
         alert_details = await fetch_alert_details(alert)
         await check_event_exclusion(alert_details, alert_detail_service, session)
         if await check_if_alert_exists_in_iris(alert_details) == []:
-            await create_and_update_alert_in_iris(alert_details, session)
+            alert_id = await create_and_update_alert_in_iris(alert_details, session)
+            logger.info(f"Alert {alert_id} created in IRIS.")
 
     return WazuhAnalysisResponse(
         success=True,
