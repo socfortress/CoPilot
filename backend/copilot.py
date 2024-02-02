@@ -47,6 +47,7 @@ from app.routers import threat_intel
 from app.routers import velociraptor
 from app.routers import wazuh_indexer
 from app.routers import wazuh_manager
+from app.routers import monitoring_alert
 from app.schedulers.scheduler import init_scheduler
 
 auth_handler = AuthHandler()
@@ -105,6 +106,7 @@ app.include_router(integrations.router)
 app.include_router(office365.router)
 app.include_router(mimecast.router)
 app.include_router(scheduler.router)
+app.include_router(monitoring_alert.router)
 
 
 @app.on_event("startup")
