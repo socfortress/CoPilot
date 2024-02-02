@@ -20,6 +20,7 @@ async def invoke_mimecast_integration() -> MimecastResponse:
     """
     Invokes the Mimecast integration.
     """
+    logger.info("Invoking Mimecast integration scheduled job.")
     customer_codes = []
     async with get_db_session() as session:
         stmt = select(CustomerIntegrations).where(CustomerIntegrations.integration_service_name == "Mimecast")
@@ -43,6 +44,7 @@ async def invoke_mimecast_integration() -> MimecastResponse:
         else:
             # Handle the case where job_metadata does not exist
             print("JobMetadata for 'invoke_mimecast_integration' not found.")
+
     return MimecastResponse(success=True, message="Mimecast integration invoked.")
 
 
