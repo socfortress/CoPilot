@@ -61,6 +61,7 @@ async def create_monitoring_alert(
         MonitoringAlertsRequestModel: The created monitoring alert.
     """
     logger.info(f"Creating monitoring alert: {monitoring_alert}")
+    logger.info(f"Found index name {monitoring_alert.event.alert_index}")
 
     customer_meta = await session.execute(select(CustomersMeta).where(CustomersMeta.customer_code == monitoring_alert.event.fields.CUSTOMER_CODE))
     customer_meta = customer_meta.scalars().first()
@@ -70,7 +71,7 @@ async def create_monitoring_alert(
 
     monitoring_alert = MonitoringAlerts(
         alert_id=monitoring_alert.event.fields.ALERT_ID,
-        alert_index=monitoring_alert.event.fields.ALERT_INDEX,
+        alert_index=monitoring_alert.event.alert_index,
         customer_code=monitoring_alert.event.fields.CUSTOMER_CODE,
         alert_source=monitoring_alert.event.fields.ALERT_SOURCE,
     )

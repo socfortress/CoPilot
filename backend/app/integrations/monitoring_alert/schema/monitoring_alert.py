@@ -15,7 +15,6 @@ class GraylogEventFields(BaseModel):
     ALERT_ID: str = Field(..., description="Unique identifier for the alert", example="65f6a260-c1f3-11ee-93bc-86000046278a")
     ALERT_SOURCE: str = Field(..., description="Source of the alert", example="WAZUH")
     CUSTOMER_CODE: str = Field(..., description="Customer code associated with the alert", example="00002")
-    ALERT_INDEX: str = Field(..., description="Index where the alert is stored", example="wazuh_00002")
 
 class GraylogEvent(BaseModel):
     id: str = Field(..., description="Unique identifier for the event", example="01HNNF2YCM5SSV3KDQJSRK0EV0")
@@ -36,6 +35,10 @@ class GraylogEvent(BaseModel):
     alert: bool = Field(..., description="Indicates if the event is an alert", example=True)
     fields: GraylogEventFields = Field(..., description="Custom fields for the event")
     group_by_fields: Dict[str, Any] = Field(..., description="Fields used to group events", example={})
+
+    @property
+    def alert_index(self) -> str:
+        return self.origin_context.split(":")[4]
 
 class GraylogPostRequest(BaseModel):
     event_definition_id: str = Field(..., description="Identifier for the event definition", example="65bd28505e9a2d550cf521e7")
