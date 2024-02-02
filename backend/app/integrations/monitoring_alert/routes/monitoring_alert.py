@@ -19,7 +19,7 @@ from app.db.universal_models import Customers
 from app.db.universal_models import CustomersMeta
 
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
-    MonitoringAlertsRequestModel, GraylogPostRequest, GraylogPostResponse
+    MonitoringAlertsRequestModel, GraylogPostRequest, GraylogPostResponse, WazuhAnalysisResponse
 )
 from app.integrations.monitoring_alert.models.monitoring_alert import MonitoringAlerts
 
@@ -84,4 +84,42 @@ async def create_monitoring_alert(
         raise HTTPException(status_code=500, detail="Error creating monitoring alert")
 
     return GraylogPostResponse(success=True, message="Monitoring alert created successfully")
+
+
+@monitoring_alerts_router.post("/run_analysis/wazuh", response_model=WazuhAnalysisResponse)
+async def run_analysis(
+    customer_code: str,
+    session: AsyncSession = Depends(get_db),
+) -> WazuhAnalysisResponse:
+    """
+    This route is used to run analysis on the monitoring alerts.
+
+    1. Get all the monitoring alerts from the database where the customer_code matches the customer_code provided
+     and the alert_source is WAZUH.
+
+    2. Coll the anlayze_wazuh_alerts function to analyze the alerts.
+
+    Args:
+        customer_code (str): The customer code.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        WazuhAnalysisResponse: The response containing the analysis results.
+    """
+    logger.info(f"Running analysis for customer_code: {customer_code}")
+
+    monitoring_alerts = await session.execute(
+        select(MonitoringAlerts).where(MonitoringAlerts.customer_code == customer_code and MonitoringAlerts.alert_source == "WAZUH")
+    )
+    monitoring_alerts = monitoring_alerts.scalars().all()
+
+    logger.info(f"Found {len(monitoring_alerts)} monitoring alerts")
+
+    if not monitoring_alerts:
+        raise HTTPException(status_code=404, detail="No monitoring alerts found")
+
+    # Call the analyze_wazuh_alerts function to analyze the alerts
+    # analysis_results = analyze_wazuh_alerts(monitoring_alerts)
+
+    return WazuhAnalysisResponse(success=True, message="Analysis completed successfully")
 

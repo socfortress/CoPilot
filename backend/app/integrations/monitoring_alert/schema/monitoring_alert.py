@@ -53,3 +53,7 @@ class GraylogPostRequest(BaseModel):
 class GraylogPostResponse(BaseModel):
     success: bool = Field(..., description="Indicates if the request was successful", example=True)
     message: str = Field(..., description="Message associated with the response", example="Event processed successfully")
+
+class WazuhAnalysisResponse(BaseModel):
+    success: bool = Field(..., description="Indicates if the request was successful", example=True)
+    message: str = Field(..., description="Message associated with the response", example="Analysis completed successfully")
