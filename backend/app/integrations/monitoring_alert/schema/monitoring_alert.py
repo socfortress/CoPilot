@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
+from pydantic import Extra
 
 class MonitoringAlertsRequestModel(BaseModel):
     id: Optional[int] = None
@@ -57,3 +58,42 @@ class GraylogPostResponse(BaseModel):
 class WazuhAnalysisResponse(BaseModel):
     success: bool = Field(..., description="Indicates if the request was successful", example=True)
     message: str = Field(..., description="Message associated with the response", example="Analysis completed successfully")
+
+
+# ! Wazuh Indexer Schema ! #
+class WazuhSourceModel(BaseModel):
+    agent_name: str = Field(..., description="The name of the agent.")
+    agent_id: str = Field(..., description="The id of the agent.")
+    agent_labels_customer: str = Field(..., description="The customer of the agent.")
+    rule_id: str = Field(..., description="The id of the rule.")
+    rule_level: int = Field(..., description="The level of the rule.")
+    rule_description: str = Field(..., description="The description of the rule.")
+    timestamp: str = Field(..., description="The timestamp of the alert.")
+    timestamp_utc: Optional[str] = Field(
+        None,
+        description="The UTC timestamp of the alert.",
+    )
+
+    class Config:
+        extra = Extra.allow
+
+class WazuhAlertModel(BaseModel):
+    _index: str
+    _id: str
+    _version: int
+    _source: WazuhSourceModel
+    asset_type_id: Optional[int] = Field(
+        None,
+        description="The asset type id of the alert which is needed for when we add the asset to IRIS.",
+    )
+    ioc_value: Optional[str] = Field(
+        None,
+        description="The IoC value of the alert which is needed for when we add the IoC to IRIS.",
+    )
+    ioc_type: Optional[str] = Field(
+        None,
+        description="The IoC type of the alert which is needed for when we add the IoC to IRIS.",
+    )
+
+    class Config:
+        extra = Extra.allow

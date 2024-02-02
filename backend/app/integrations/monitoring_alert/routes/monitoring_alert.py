@@ -22,8 +22,30 @@ from app.integrations.monitoring_alert.schema.monitoring_alert import (
     MonitoringAlertsRequestModel, GraylogPostRequest, GraylogPostResponse, WazuhAnalysisResponse
 )
 from app.integrations.monitoring_alert.models.monitoring_alert import MonitoringAlerts
+from app.integrations.monitoring_alert.services.wazuh import analyze_wazuh_alerts
 
 monitoring_alerts_router = APIRouter()
+
+async def get_customer_meta(customer_code: str, session: AsyncSession) -> CustomersMeta:
+    """
+    Get the customer meta for the given customer_code.
+
+    Args:
+        customer_code (str): The customer code.
+        session (AsyncSession): The database session.
+
+    Returns:
+        CustomersMeta: The customer meta.
+    """
+    logger.info(f"Getting customer meta for customer_code: {customer_code}")
+
+    customer_meta = await session.execute(select(CustomersMeta).where(CustomersMeta.customer_code == customer_code))
+    customer_meta = customer_meta.scalars().first()
+
+    if not customer_meta:
+        raise HTTPException(status_code=404, detail="Customer not found")
+
+    return customer_meta
 
 @monitoring_alerts_router.get("/list", response_model=List[MonitoringAlertsRequestModel], dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],)
 async def list_monitoring_alerts(
@@ -97,7 +119,7 @@ async def run_analysis(
     1. Get all the monitoring alerts from the database where the customer_code matches the customer_code provided
      and the alert_source is WAZUH.
 
-    2. Coll the anlayze_wazuh_alerts function to analyze the alerts.
+    2. Call the anlayze_wazuh_alerts function to analyze the alerts.
 
     Args:
         customer_code (str): The customer code.
@@ -107,6 +129,8 @@ async def run_analysis(
         WazuhAnalysisResponse: The response containing the analysis results.
     """
     logger.info(f"Running analysis for customer_code: {customer_code}")
+
+    customer_meta = await get_customer_meta(customer_code, session)
 
     monitoring_alerts = await session.execute(
         select(MonitoringAlerts).where(MonitoringAlerts.customer_code == customer_code and MonitoringAlerts.alert_source == "WAZUH")
@@ -119,7 +143,7 @@ async def run_analysis(
         raise HTTPException(status_code=404, detail="No monitoring alerts found")
 
     # Call the analyze_wazuh_alerts function to analyze the alerts
-    # analysis_results = analyze_wazuh_alerts(monitoring_alerts)
+    analysis_results = await analyze_wazuh_alerts(monitoring_alerts, customer_meta, session)
 
     return WazuhAnalysisResponse(success=True, message="Analysis completed successfully")
 
