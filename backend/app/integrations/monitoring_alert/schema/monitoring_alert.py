@@ -49,3 +49,7 @@ class GraylogPostRequest(BaseModel):
     job_trigger_id: str = Field(..., description="Identifier for the job trigger", example="65bd2b625e9a2d550cf528e4")
     event: GraylogEvent = Field(..., description="Event details")
     backlog: List[str] = Field(..., description="List of backlog items associated with the event", example=[])
+
+class GraylogPostResponse(BaseModel):
+    success: bool = Field(..., description="Indicates if the request was successful", example=True)
+    message: str = Field(..., description="Message associated with the response", example="Event processed successfully")

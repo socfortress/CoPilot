@@ -19,7 +19,7 @@ from app.db.universal_models import Customers
 from app.db.universal_models import CustomersMeta
 
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
-    MonitoringAlertsRequestModel, GraylogPostRequest
+    MonitoringAlertsRequestModel, GraylogPostRequest, GraylogPostResponse
 )
 from app.integrations.monitoring_alert.models.monitoring_alert import MonitoringAlerts
 
@@ -45,11 +45,11 @@ async def list_monitoring_alerts(
 
     return monitoring_alerts
 
-@monitoring_alerts_router.post("/create", response_model=MonitoringAlertsRequestModel)
+@monitoring_alerts_router.post("/create", response_model=GraylogPostResponse)
 async def create_monitoring_alert(
     monitoring_alert: GraylogPostRequest,
     session: AsyncSession = Depends(get_db),
-) -> MonitoringAlertsRequestModel:
+) -> GraylogPostResponse:
     """
     Create a new monitoring alert. This receives the alert from Graylog and stores it in the database.
 
@@ -69,15 +69,19 @@ async def create_monitoring_alert(
     if not customer_meta:
         raise HTTPException(status_code=404, detail="Customer not found")
 
-    monitoring_alert = MonitoringAlerts(
-        alert_id=monitoring_alert.event.fields.ALERT_ID,
-        alert_index=monitoring_alert.event.alert_index,
-        customer_code=monitoring_alert.event.fields.CUSTOMER_CODE,
-        alert_source=monitoring_alert.event.fields.ALERT_SOURCE,
-    )
-    session.add(monitoring_alert)
-    await session.commit()
-    await session.refresh(monitoring_alert)
+    try:
+        monitoring_alert = MonitoringAlerts(
+            alert_id=monitoring_alert.event.fields.ALERT_ID,
+            alert_index=monitoring_alert.event.alert_index,
+            customer_code=monitoring_alert.event.fields.CUSTOMER_CODE,
+            alert_source=monitoring_alert.event.fields.ALERT_SOURCE,
+        )
+        session.add(monitoring_alert)
+        await session.commit()
+        await session.refresh(monitoring_alert)
+    except Exception as e:
+        logger.error(f"Error creating monitoring alert: {e}")
+        raise HTTPException(status_code=500, detail="Error creating monitoring alert")
 
-    return monitoring_alert
+    return GraylogPostResponse(success=True, message="Monitoring alert created successfully")
 
