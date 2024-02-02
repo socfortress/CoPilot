@@ -22,7 +22,9 @@ from app.integrations.alert_creation_settings.models.alert_creation_settings imp
 )
 from app.integrations.models.customer_integration_settings import AvailableIntegrations
 from app.integrations.models.customer_integration_settings import CustomerIntegrations
-from app.integrations.models.customer_integration_settings import CustomerIntegrationsMeta
+from app.integrations.models.customer_integration_settings import (
+    CustomerIntegrationsMeta,
+)
 from app.integrations.models.customer_integration_settings import IntegrationAuthKeys
 from app.integrations.models.customer_integration_settings import IntegrationConfig
 from app.integrations.models.customer_integration_settings import IntegrationService
@@ -36,11 +38,12 @@ from app.integrations.schema import CreateIntegrationService
 from app.integrations.schema import CustomerIntegrationCreate
 from app.integrations.schema import CustomerIntegrationCreateResponse
 from app.integrations.schema import CustomerIntegrationDeleteResponse
+from app.integrations.schema import CustomerIntegrationsMetaResponse
+from app.integrations.schema import CustomerIntegrationsMetaSchema
 from app.integrations.schema import CustomerIntegrationsResponse
 from app.integrations.schema import DeleteCustomerIntegration
 from app.integrations.schema import IntegrationWithAuthKeys
 from app.integrations.schema import UpdateCustomerIntegration
-from app.integrations.schema import CustomerIntegrationsMetaSchema, CustomerIntegrationsMetaResponse
 
 integration_settings_router = APIRouter()
 
@@ -149,6 +152,7 @@ async def check_existing_customer_integration(customer_code: str, integration_na
     if result.scalars().first() is not None:
         raise HTTPException(status_code=400, detail=f"Customer integration {customer_code} {integration_name} already exists.")
 
+
 async def check_existing_customer_integration_meta(customer_code: str, integration_name: str, session: AsyncSession):
     """
     Check if the customer integration meta already exists for the customer code and integration name.
@@ -163,6 +167,7 @@ async def check_existing_customer_integration_meta(customer_code: str, integrati
             status_code=400,
             detail=f"Customer integration meta {customer_code} {integration_name} already exists.",
         )
+
 
 async def create_integration_service(
     integration_name: str,
@@ -436,6 +441,7 @@ async def get_customer_integrations(session: AsyncSession = Depends(get_db)):
         success=True,
     )
 
+
 @integration_settings_router.get(
     "/customer_integrations_meta",
     response_model=CustomerIntegrationsMetaResponse,
@@ -460,7 +466,6 @@ async def get_customer_integrations_meta(session: AsyncSession = Depends(get_db)
         message="Customer integrations metadata successfully retrieved.",
         success=True,
     )
-
 
 
 @integration_settings_router.get(
@@ -494,6 +499,7 @@ async def get_customer_integrations_by_customer_code(
         message="Customer integrations successfully retrieved.",
         success=True,
     )
+
 
 @integration_settings_router.get(
     "/customer_integrations_meta/{customer_code}",
@@ -577,6 +583,7 @@ async def create_integration(
         success=True,
     )
 
+
 @integration_settings_router.post(
     "/create_integration_meta",
     response_model=CustomerIntegrationsMetaResponse,
@@ -614,6 +621,7 @@ async def create_integration_meta(
             message="Error while creating customer integration metadata.",
             success=False,
         )
+
 
 @integration_settings_router.put(
     "/update_integration/{customer_code}",
@@ -744,6 +752,7 @@ async def delete_integration(
         message=f"Customer integration {customer_code} {integration_name} successfully deleted.",
         success=True,
     )
+
 
 @integration_settings_router.delete(
     "/delete_integration_meta",

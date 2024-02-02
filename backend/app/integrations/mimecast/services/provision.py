@@ -2,11 +2,10 @@ import json
 from datetime import datetime
 
 from loguru import logger
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import and_
 from sqlalchemy import update
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.integrations.models.customer_integration_settings import CustomerIntegrations
 from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
 from app.connectors.grafana.schema.dashboards import MimecastDashboard
 from app.connectors.grafana.services.dashboards import provision_dashboards
@@ -25,9 +24,10 @@ from app.customers.routes.customers import get_customer_meta
 from app.integrations.mimecast.schema.provision import MimecastEventStream
 from app.integrations.mimecast.schema.provision import ProvisionMimecastRequest
 from app.integrations.mimecast.schema.provision import ProvisionMimecastResponse
-from app.utils import get_connector_attribute
+from app.integrations.models.customer_integration_settings import CustomerIntegrations
 from app.integrations.routes import create_integration_meta
 from app.integrations.schema import CustomerIntegrationsMetaSchema
+from app.utils import get_connector_attribute
 
 
 ################## ! GRAYLOG ! ##################
@@ -307,6 +307,7 @@ async def create_integration_meta_entry(
     """
     await create_integration_meta(customer_integration_meta, session)
     logger.info(f"Integration meta entry created for customer {customer_integration_meta.customer_code}.")
+
 
 async def update_customer_integration_table(customer_code: str, session: AsyncSession) -> None:
     """

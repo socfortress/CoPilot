@@ -208,6 +208,7 @@ class UpdateCustomerIntegration(BaseModel):
         description="The integration auth keys.",
     )
 
+
 class CustomerIntegrationsMetaSchema(BaseModel):
     id: Optional[int] = None
     customer_code: str
@@ -221,6 +222,7 @@ class CustomerIntegrationsMetaSchema(BaseModel):
     class Config:
         orm_mode = True
 
+
 class CustomerIntegrationsMetaResponse(BaseModel):
     message: str
     success: bool
@@ -228,4 +230,3 @@ class CustomerIntegrationsMetaResponse(BaseModel):
         None,
         description="The customer integrations metadata.",
     )
-

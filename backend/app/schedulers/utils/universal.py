@@ -1,10 +1,12 @@
-import requests
 import os
+
+import requests
 from dotenv import load_dotenv
 
 from app.auth.services.universal import get_scheduler_password
 
 load_dotenv()
+
 
 def scheduler_login():
     """
