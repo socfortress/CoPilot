@@ -13,6 +13,18 @@
 		</n-button>
 
 		<n-button
+			v-if="isMimecast && !integration.deployed"
+			:loading="loadingMimecastProvision"
+			@click="mimecastProvision()"
+			type="success"
+			:size="size"
+			secondary
+		>
+			<template #icon><Icon :name="DeployIcon"></Icon></template>
+			Deploy
+		</n-button>
+
+		<n-button
 			:size="size"
 			type="error"
 			ghost
@@ -55,10 +67,12 @@ const DeleteIcon = "ph:trash"
 const dialog = useDialog()
 const message = useMessage()
 const loadingOffice365Provision = ref(false)
+const loadingMimecastProvision = ref(false)
 const loadingDelete = ref(false)
-const loading = computed(() => loadingOffice365Provision.value || loadingDelete.value)
+const loading = computed(() => loadingMimecastProvision.value || loadingOffice365Provision.value || loadingDelete.value)
 
 const isOffice365 = computed(() => serviceName.value === "Office365")
+const isMimecast = computed(() => serviceName.value === "Mimecast")
 const serviceName = computed(() => integration.integration_service_name)
 const customerCode = computed(() => integration.customer_code)
 
@@ -84,6 +98,27 @@ function office365Provision() {
 		})
 		.finally(() => {
 			loadingOffice365Provision.value = false
+		})
+}
+
+function mimecastProvision() {
+	loadingMimecastProvision.value = true
+
+	Api.integrations
+		.mimecastProvision(customerCode.value, serviceName.value)
+		.then(res => {
+			if (res.data.success) {
+				emit("deployed")
+				message.success(res.data?.message || "Customer integration successfully deployed.")
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			loadingMimecastProvision.value = false
 		})
 }
 

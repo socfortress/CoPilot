@@ -7,6 +7,7 @@ from app.integrations.mimecast.schema.mimecast import MimecastScheduledResponse
 from app.integrations.mimecast.schema.provision import ProvisionMimecastRequest
 from app.integrations.mimecast.schema.provision import ProvisionMimecastResponse
 from app.integrations.mimecast.services.provision import provision_mimecast
+from app.integrations.utils.utils import get_customer_integration_response
 from app.schedulers.models.scheduler import CreateSchedulerRequest
 from app.schedulers.scheduler import add_scheduler_jobs
 
@@ -23,21 +24,30 @@ async def provision_mimecast_route(
     session: AsyncSession = Depends(get_db),
 ) -> ProvisionMimecastResponse:
     """
-    Provisions Office365 integration for a customer.
+    Provisions a mimecast integration.
 
     Args:
-        provision_office365_request (ProvisionOffice365Request): The request object containing the necessary information for provisioning.
+        provision_mimecast_request (ProvisionMimecastRequest): The request object containing the necessary data for provisioning.
         session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
 
     Returns:
-        ProvisionOffice365Response: The response object containing the result of the provisioning.
+        ProvisionMimecastResponse: The response object indicating the success or failure of the provisioning process.
     """
+    # Check if the customer integration settings are available and can be provisioned
+    await get_customer_integration_response(provision_mimecast_request.customer_code, session)
     await provision_mimecast(provision_mimecast_request, session)
     await add_scheduler_jobs(
         CreateSchedulerRequest(
             function_name="invoke_mimecast_integration_ttp",
             time_interval=15,
             job_id="invoke_mimecast_integration_ttp",
+        ),
+    )
+    await add_scheduler_jobs(
+        CreateSchedulerRequest(
+            function_name="invoke_mimecast_integration",
+            time_interval=5,
+            job_id="invoke_mimecast_integration",
         ),
     )
     return ProvisionMimecastResponse(success=True, message="Mimecast integration provisioned.")

@@ -2,6 +2,8 @@ import json
 from datetime import datetime
 
 from loguru import logger
+from sqlalchemy import and_
+from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
@@ -22,6 +24,9 @@ from app.customers.routes.customers import get_customer_meta
 from app.integrations.mimecast.schema.provision import MimecastEventStream
 from app.integrations.mimecast.schema.provision import ProvisionMimecastRequest
 from app.integrations.mimecast.schema.provision import ProvisionMimecastResponse
+from app.integrations.models.customer_integration_settings import CustomerIntegrations
+from app.integrations.routes import create_integration_meta
+from app.integrations.schema import CustomerIntegrationsMetaSchema
 from app.utils import get_connector_attribute
 
 
@@ -269,5 +274,60 @@ async def provision_mimecast(provision_mimecast_request: ProvisionMimecastReques
             datasourceUid=mimecast_datasource_uid,
         ),
     )
+    await create_integration_meta_entry(
+        CustomerIntegrationsMetaSchema(
+            customer_code=provision_mimecast_request.customer_code,
+            integration_name="Mimecast",
+            graylog_input_id=None,
+            graylog_index_id=index_set_id,
+            graylog_stream_id=stream_id,
+            grafana_org_id=(
+                await get_customer_meta(provision_mimecast_request.customer_code, session)
+            ).customer_meta.customer_meta_grafana_org_id,
+            grafana_dashboard_folder_id=grafana_mimecast_folder_id,
+        ),
+        session,
+    )
+    await update_customer_integration_table(provision_mimecast_request.customer_code, session)
 
     return ProvisionMimecastResponse(success=True, message="Mimecast integration provisioned.")
+
+
+############## ! WRITE TO DB ! ##############
+async def create_integration_meta_entry(
+    customer_integration_meta: CustomerIntegrationsMetaSchema,
+    session: AsyncSession,
+) -> None:
+    """
+    Creates an entry for the customer integration meta in the database.
+
+    Args:
+        customer_integration_meta (CustomerIntegrationsMetaSchema): The customer integration meta object.
+        session (AsyncSession): The async session object for database operations.
+    """
+    await create_integration_meta(customer_integration_meta, session)
+    logger.info(f"Integration meta entry created for customer {customer_integration_meta.customer_code}.")
+
+
+async def update_customer_integration_table(customer_code: str, session: AsyncSession) -> None:
+    """
+    Updates the `customer_integrations` table to set the `deployed` column to True where the `customer_code`
+    matches the given customer code and the `integration_service_name` is "Mimecast".
+
+    Args:
+        customer_code (str): The customer code.
+        session (AsyncSession): The async session object for making HTTP requests.
+    """
+    await session.execute(
+        update(CustomerIntegrations)
+        .where(
+            and_(
+                CustomerIntegrations.customer_code == customer_code,
+                CustomerIntegrations.integration_service_name == "Mimecast",
+            ),
+        )
+        .values(deployed=True),
+    )
+    await session.commit()
+
+    return None
