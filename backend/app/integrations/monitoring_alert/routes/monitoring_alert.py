@@ -68,7 +68,12 @@ async def create_monitoring_alert(
     if not customer_meta:
         raise HTTPException(status_code=404, detail="Customer not found")
 
-    monitoring_alert = MonitoringAlerts(**monitoring_alert.dict())
+    monitoring_alert = MonitoringAlerts(
+        alert_id=monitoring_alert.event.fields.ALERT_ID,
+        alert_index=monitoring_alert.event.fields.ALERT_INDEX,
+        customer_code=monitoring_alert.event.fields.CUSTOMER_CODE,
+        alert_source=monitoring_alert.event.fields.ALERT_SOURCE,
+    )
     session.add(monitoring_alert)
     await session.commit()
     await session.refresh(monitoring_alert)
