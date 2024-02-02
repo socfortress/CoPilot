@@ -19,7 +19,7 @@ from app.db.universal_models import Customers
 from app.db.universal_models import CustomersMeta
 
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
-    MonitoringAlertsRequestModel,
+    MonitoringAlertsRequestModel, GraylogPostRequest
 )
 from app.integrations.monitoring_alert.models.monitoring_alert import MonitoringAlerts
 
@@ -47,11 +47,11 @@ async def list_monitoring_alerts(
 
 @monitoring_alerts_router.post("/create", response_model=MonitoringAlertsRequestModel)
 async def create_monitoring_alert(
-    monitoring_alert: MonitoringAlertsRequestModel,
+    monitoring_alert: GraylogPostRequest,
     session: AsyncSession = Depends(get_db),
 ) -> MonitoringAlertsRequestModel:
     """
-    Create a new monitoring alert.
+    Create a new monitoring alert. This receives the alert from Graylog and stores it in the database.
 
     Args:
         monitoring_alert (MonitoringAlertsRequestModel): The monitoring alert details.
@@ -62,7 +62,7 @@ async def create_monitoring_alert(
     """
     logger.info(f"Creating monitoring alert: {monitoring_alert}")
 
-    customer_meta = await session.execute(select(CustomersMeta).where(CustomersMeta.customer_code == monitoring_alert.customer_code))
+    customer_meta = await session.execute(select(CustomersMeta).where(CustomersMeta.customer_code == monitoring_alert.event.fields.CUSTOMER_CODE))
     customer_meta = customer_meta.scalars().first()
 
     if not customer_meta:
