@@ -18,6 +18,7 @@ SOCFortress CoPilot
 
 -   [Getting Started](#getting-started)
     -   [Running Copilot](#runnning-copilot)
+    -   [Upgrading Copilot](#upgrading-copilot)
 -   [Connectors](#connectors)
 -   [Help](#help)
 -   [License](#license)
@@ -78,6 +79,23 @@ By default, an `admin` account is created. The password is printed in stdout the
 `Admin user password` can be searched in the logs of the `copilot` docker to find the password. You will use the `plain` password to login to the web interface.
 
 🚀 **YouTube Tutorial:** [SOCFortress CoPilot - Getting Started](https://youtu.be/seITDGXAiJw)
+
+### Upgrading Copilot
+
+🛠 You will likely want to upgrade often as we are frequently pushing new changes.
+
+To upgrade Copilot, you will need to stop the running container, pull the latest docker image, and start the container again.
+
+```bash
+# Stop the running container. Make sure you are in the CoPilot directory
+docker compose down
+
+# Pull the latest docker image
+docker pull ghcr.io/socfortress/copilot:latest
+
+# Start the container again
+docker compose up -d
+```
 
 ## Connectors
 
