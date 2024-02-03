@@ -191,6 +191,7 @@ def construct_params(request: FilterAlertsRequest) -> dict:
         "per_page": request.per_page,
         "sort": request.sort,
         "alert_tags": request.alert_tags,
+        "alert_status_id": request.alert_status_id,
         # Add more parameters here as needed
     }
 
@@ -328,7 +329,7 @@ async def create_alert_details(alert_details: WazuhAlertModel) -> CreateAlertReq
     )
 
 
-async def create_and_update_alert_in_iris(alert_details: WazuhAlertModel, session: AsyncSession):
+async def create_and_update_alert_in_iris(alert_details: WazuhAlertModel, session: AsyncSession) -> int:
     logger.info(f"Alert does not exist in IRIS. Creating alert.")
     alert_details = await create_alert_details(alert_details)
     agent_details = await get_agent(alert_details.agent_id, session)
@@ -390,6 +391,9 @@ async def analyze_wazuh_alerts(monitoring_alerts: MonitoringAlerts, customer_met
         if await check_if_alert_exists_in_iris(alert_details) == []:
             alert_id = await create_and_update_alert_in_iris(alert_details, session)
             logger.info(f"Alert {alert_id} created in IRIS.")
+        else:
+            for alert in await check_if_alert_exists_in_iris(alert_details):
+                logger.info(f"Alert {alert} already exists in IRIS.")
 
     return WazuhAnalysisResponse(
         success=True,

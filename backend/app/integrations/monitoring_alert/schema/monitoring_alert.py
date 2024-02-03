@@ -108,3 +108,5 @@ class FilterAlertsRequest(BaseModel):
     page: int = Field(1, description="The page number to return.")
     sort: SortOrder = Field(SortOrder.desc, description="The sort order for the alerts.")
     alert_tags: str = Field(..., description="The tags of the alert.")
+    alert_status_id: int = Field(3, description="The status of the alert. Default to assigned.", example=3)
+
