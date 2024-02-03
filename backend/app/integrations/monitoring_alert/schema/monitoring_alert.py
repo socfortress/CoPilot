@@ -8,6 +8,9 @@ from pydantic import BaseModel
 from pydantic import Extra
 from pydantic import Field
 
+from app.integrations.alert_creation.general.schema.alert import IrisAsset
+from app.integrations.alert_creation.general.schema.alert import IrisIoc
+
 
 class MonitoringAlertsRequestModel(BaseModel):
     id: Optional[int] = None
@@ -127,3 +130,93 @@ class FilterAlertsRequest(BaseModel):
     sort: SortOrder = Field(SortOrder.desc, description="The sort order for the alerts.")
     alert_tags: str = Field(..., description="The tags of the alert.")
     alert_status_id: int = Field(3, description="The status of the alert. Default to assigned.", example=3)
+
+
+class WazuhIrisAlertContext(BaseModel):
+    customer_iris_id: int = Field(
+        ...,
+        description="IRIS ID of the customer",
+        example=1,
+    )
+    customer_name: str = Field(
+        ...,
+        description="Name of the customer",
+        example="SOCFortress",
+    )
+    customer_cases_index: str = Field(
+        ...,
+        description="IRIS case index name in the Wazuh-Indexer",
+        example="dfir_iris_00001",
+    )
+    alert_name: str = Field(
+        ...,
+        description="Name of the alert",
+        example="Intrusion Detected",
+    )
+    alert_level: int = Field(..., description="Severity level of the alert", example=3)
+    rule_id: str = Field(
+        ...,
+        description="ID of the rule that triggered the alert",
+        example="2001",
+    )
+    rule_mitre_id: Optional[str] = Field(
+        "n/a",
+        description="MITRE ATT&CK ID of the rule",
+        example="T1234",
+    )
+    rule_mitre_tactic: Optional[str] = Field(
+        "n/a",
+        description="MITRE ATT&CK Tactic",
+        example="Execution",
+    )
+    rule_mitre_technique: Optional[str] = Field(
+        "n/a",
+        description="MITRE ATT&CK Technique",
+        example="Scripting",
+    )
+
+
+class WazuhIrisAlertPayload(BaseModel):
+    alert_title: str = Field(
+        ...,
+        description="Title of the alert",
+        example="Intrusion Detected",
+    )
+    alert_description: str = Field(
+        ...,
+        description="Description of the alert",
+        example="Intrusion Detected by Firewall",
+    )
+    alert_source: str = Field(..., description="Source of the alert", example="Wazuh")
+    assets: List[IrisAsset] = Field(..., description="List of affected assets")
+    alert_status_id: int = Field(..., description="Status ID of the alert", example=3)
+    alert_severity_id: int = Field(
+        ...,
+        description="Severity ID of the alert",
+        example=5,
+    )
+    alert_customer_id: int = Field(
+        ...,
+        description="Customer ID related to the alert",
+        example=1,
+    )
+    alert_source_content: Dict[str, Any] = Field(
+        ...,
+        description="Original content from the alert source",
+    )
+    alert_context: WazuhIrisAlertContext = Field(
+        ...,
+        description="Contextual information about the alert",
+    )
+    alert_iocs: Optional[List[IrisIoc]] = Field(
+        None,
+        description="List of IoCs related to the alert",
+    )
+    alert_source_event_time: str = Field(
+        ...,
+        description="Timestamp of the alert",
+        example="2021-01-01T00:00:00.000Z",
+    )
+
+    def to_dict(self):
+        return self.dict(exclude_none=True)

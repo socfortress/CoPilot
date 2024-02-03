@@ -1,3 +1,4 @@
+import json
 from typing import Optional
 from typing import Set
 
@@ -12,8 +13,6 @@ from app.connectors.dfir_iris.utils.universal import initialize_client_and_alert
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
 from app.db.universal_models import CustomersMeta
 from app.integrations.alert_creation.general.schema.alert import CreateAlertRequest
-from app.integrations.alert_creation.general.schema.alert import IrisAlertContext
-from app.integrations.alert_creation.general.schema.alert import IrisAlertPayload
 from app.integrations.alert_creation.general.schema.alert import IrisAsset
 from app.integrations.alert_creation.general.schema.alert import IrisIoc
 from app.integrations.alert_creation.general.schema.alert import ValidIocFields
@@ -27,6 +26,12 @@ from app.integrations.monitoring_alert.schema.monitoring_alert import (
 from app.integrations.monitoring_alert.schema.monitoring_alert import WazuhAlertModel
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
     WazuhAnalysisResponse,
+)
+from app.integrations.monitoring_alert.schema.monitoring_alert import (
+    WazuhIrisAlertContext,
+)
+from app.integrations.monitoring_alert.schema.monitoring_alert import (
+    WazuhIrisAlertPayload,
 )
 from app.integrations.utils.alerts import get_asset_type_id
 from app.integrations.utils.alerts import validate_ioc_type
@@ -206,7 +211,7 @@ async def build_alert_context_payload(
     alert_details: CreateAlertRequest,
     agent_data: AgentsResponse,
     session: AsyncSession,
-) -> IrisAlertContext:
+) -> WazuhIrisAlertContext:
     """
     Builds the payload for the alert context.
 
@@ -216,9 +221,9 @@ async def build_alert_context_payload(
         session (AsyncSession): The async session.
 
     Returns:
-        IrisAlertContext: The built alert context payload.
+        WazuhIrisAlertContext: The built alert context payload.
     """
-    return IrisAlertContext(
+    return WazuhIrisAlertContext(
         customer_iris_id=(
             await get_customer_alert_settings(customer_code=alert_details.agent_labels_customer, session=session)
         ).iris_customer_id,
@@ -226,14 +231,9 @@ async def build_alert_context_payload(
         customer_cases_index=(
             await get_customer_alert_settings(customer_code=alert_details.agent_labels_customer, session=session)
         ).iris_index,
-        alert_id=alert_details.id,
         alert_name=alert_details.rule_description,
         alert_level=alert_details.rule_level,
         rule_id=alert_details.rule_id,
-        asset_name=alert_details.agent_name,
-        asset_ip=alert_details.agent_ip,
-        asset_type=await get_asset_type_id(agent_data.agents[0].os),
-        process_id=getattr(alert_details, "process_id", "No process id found"),
         rule_mitre_id=getattr(alert_details, "rule_mitre_id", "No rule mitre id found"),
         rule_mitre_tactic=getattr(
             alert_details,
@@ -253,7 +253,7 @@ async def build_alert_payload(
     agent_data,
     ioc_payload: Optional[IrisIoc],
     session: AsyncSession,
-) -> IrisAlertPayload:
+) -> WazuhIrisAlertPayload:
     """
     Builds the payload for an alert based on the provided alert details, agent data, IoC payload, and session.
 
@@ -264,7 +264,7 @@ async def build_alert_payload(
         session (AsyncSession): The session used for database operations.
 
     Returns:
-        IrisAlertPayload: The built alert payload.
+        WazuhIrisAlertPayload: The built alert payload.
     """
     asset_payload = await build_asset_payload(agent_data, alert_details=alert_details, session=session)
     context_payload = await build_alert_context_payload(alert_details=alert_details, agent_data=agent_data, session=session)
@@ -275,9 +275,8 @@ async def build_alert_payload(
     logger.info(f"Alert has context: {context_payload}")
     if ioc_payload:
         logger.info(f"Alert has IoC: {ioc_payload}")
-        return IrisAlertPayload(
+        return WazuhIrisAlertPayload(
             alert_title=alert_details.rule_description,
-            alert_source_link=await construct_alert_source_link(alert_details, session=session),
             alert_description=alert_details.rule_description,
             alert_source="COPILOT WAZUH ANALYSIS",
             assets=[asset_payload],
@@ -293,9 +292,8 @@ async def build_alert_payload(
         )
     else:
         logger.info("Alert does not have IoC")
-        return IrisAlertPayload(
+        return WazuhIrisAlertPayload(
             alert_title=alert_details.rule_description,
-            alert_source_link=await construct_alert_source_link(alert_details, session=session),
             alert_description=alert_details.rule_description,
             alert_source="COPILOT WAZUH ANALYSIS",
             assets=[asset_payload],
@@ -337,6 +335,16 @@ async def create_alert_details(alert_details: WazuhAlertModel) -> CreateAlertReq
 
 
 async def create_and_update_alert_in_iris(alert_details: WazuhAlertModel, session: AsyncSession) -> int:
+    """
+    Creates the alert, then updates the alert with the asset and IoC if available.
+
+    Args:
+        alert_details (WazuhAlertModel): The details of the alert.
+        session (AsyncSession): The async session object.
+
+    Returns:
+        int: The ID of the created alert in IRIS.
+    """
     logger.info("Alert does not exist in IRIS. Creating alert.")
     alert_details = await create_alert_details(alert_details)
     agent_details = await get_agent(alert_details.agent_id, session)
@@ -392,6 +400,23 @@ async def update_alert_with_assets(client, alert_client, iris_alert_id, current_
     )
 
 
+async def remove_duplicate_assets(current_assets):
+    """
+    Removes duplicate assets from the given list of current_assets.
+
+    Args:
+        current_assets (list): A list of dictionaries representing current assets.
+
+    Returns:
+        list: A list of dictionaries with duplicate assets removed.
+    """
+    current_assets = list({d["asset_name"]: d for d in current_assets}.values())
+    current_assets_str = [json.dumps(d, sort_keys=True) for d in current_assets]
+    current_assets_str = list(set(current_assets_str))
+    current_assets = [json.loads(s) for s in current_assets_str]
+    return current_assets
+
+
 async def analyze_wazuh_alerts(
     monitoring_alerts: MonitoringAlerts,
     customer_meta: CustomersMeta,
@@ -430,6 +455,7 @@ async def analyze_wazuh_alerts(
             agent_details = await get_agent(alert_details.agent_id, session)
             asset_payload = await build_asset_payload(agent_data=agent_details, alert_details=alert_details, session=session)
             current_assets.append(dict(IrisAsset(**asset_payload.to_dict())))
+            current_assets = await remove_duplicate_assets(current_assets)
             await update_alert_with_assets(client, alert_client, iris_alert_id, current_assets)
 
     return WazuhAnalysisResponse(
