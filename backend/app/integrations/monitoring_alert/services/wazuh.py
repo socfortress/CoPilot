@@ -1,43 +1,37 @@
+from typing import Optional
+from typing import Set
+
 from fastapi import HTTPException
 from loguru import logger
-from typing import Set, Optional
-from sqlalchemy import delete
-from sqlalchemy import update
-from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-from sqlalchemy.orm import joinedload
 
-from app.auth.utils import AuthHandler
-from app.db.db_session import get_db
-from app.db.universal_models import Customers
-from app.db.universal_models import CustomersMeta
-
-from app.integrations.monitoring_alert.schema.monitoring_alert import (
-    MonitoringAlertsRequestModel, GraylogPostRequest, GraylogPostResponse, WazuhAnalysisResponse, FilterAlertsRequest
-)
-from app.integrations.alert_creation.general.services.alert_multi_exclude import (
-    AlertDetailsService,
-)
 from app.agents.routes.agents import get_agent
 from app.agents.schema.agents import AgentsResponse
 from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
 from app.connectors.dfir_iris.utils.universal import initialize_client_and_alert
+from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
+from app.db.universal_models import CustomersMeta
 from app.integrations.alert_creation.general.schema.alert import CreateAlertRequest
-from app.integrations.alert_creation.general.schema.alert import CreateAlertResponse
 from app.integrations.alert_creation.general.schema.alert import IrisAlertContext
 from app.integrations.alert_creation.general.schema.alert import IrisAlertPayload
 from app.integrations.alert_creation.general.schema.alert import IrisAsset
-from app.integrations.alert_creation.general.schema.alert import IrisIoc, IrisTags
+from app.integrations.alert_creation.general.schema.alert import IrisIoc
 from app.integrations.alert_creation.general.schema.alert import ValidIocFields
-from app.integrations.utils.alerts import get_asset_type_id
-from app.integrations.utils.alerts import send_to_shuffle
-from app.integrations.utils.alerts import validate_ioc_type
-from app.integrations.utils.schema import ShufflePayload
-from app.utils import get_customer_alert_settings
+from app.integrations.alert_creation.general.services.alert_multi_exclude import (
+    AlertDetailsService,
+)
 from app.integrations.monitoring_alert.models.monitoring_alert import MonitoringAlerts
-from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
+from app.integrations.monitoring_alert.schema.monitoring_alert import (
+    FilterAlertsRequest,
+)
 from app.integrations.monitoring_alert.schema.monitoring_alert import WazuhAlertModel
+from app.integrations.monitoring_alert.schema.monitoring_alert import (
+    WazuhAnalysisResponse,
+)
+from app.integrations.utils.alerts import get_asset_type_id
+from app.integrations.utils.alerts import validate_ioc_type
+from app.utils import get_customer_alert_settings
+
 
 def valid_ioc_fields() -> Set[str]:
     """
@@ -48,6 +42,7 @@ def valid_ioc_fields() -> Set[str]:
         The set of valid IoC fields.
     """
     return {field.value for field in ValidIocFields}
+
 
 async def construct_alert_source_link(alert_details: CreateAlertRequest, session: AsyncSession) -> str:
     """
@@ -77,6 +72,7 @@ async def construct_alert_source_link(alert_details: CreateAlertRequest, session
         "%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D"
     )
 
+
 async def build_ioc_payload(alert_details: CreateAlertRequest) -> Optional[IrisIoc]:
     """
     Builds an IoC payload based on the provided alert details.
@@ -99,7 +95,8 @@ async def build_ioc_payload(alert_details: CreateAlertRequest) -> Optional[IrisI
             )
     return None
 
-async def build_asset_payload(agent_data: AgentsResponse) -> IrisAsset:
+
+async def build_asset_payload(agent_data: AgentsResponse, alert_details: CreateAlertRequest, session: AsyncSession) -> IrisAsset:
     """
     Build the payload for an IrisAsset object based on the agent data and alert details.
 
@@ -115,11 +112,12 @@ async def build_asset_payload(agent_data: AgentsResponse) -> IrisAsset:
         return IrisAsset(
             asset_name=agent_data.agents[0].hostname,
             asset_ip=agent_data.agents[0].ip_address,
-            asset_description=agent_data.agents[0].os,
+            asset_description=await construct_alert_source_link(alert_details, session=session),
             asset_type_id=await get_asset_type_id(agent_data.agents[0].os),
             asset_tags=f"agent_id:{agent_data.agents[0].agent_id}",
         )
     return IrisAsset()
+
 
 async def fetch_wazuh_indexer_details(alert_id: str, index: str) -> WazuhAlertModel:
     """
@@ -139,11 +137,13 @@ async def fetch_wazuh_indexer_details(alert_id: str, index: str) -> WazuhAlertMo
 
     return WazuhAlertModel(**response)
 
+
 async def fetch_alert_details(alert: MonitoringAlerts) -> WazuhAlertModel:
     logger.info(f"Analyzing Wazuh alert: {alert.alert_id}")
     alert_details = await fetch_wazuh_indexer_details(alert.alert_id, alert.alert_index)
     logger.info(f"Alert details: {alert_details}")
     return alert_details
+
 
 async def check_event_exclusion(alert_details: WazuhAlertModel, alert_detail_service: AlertDetailsService, session: AsyncSession):
     event_exclude_result = await alert_detail_service.collect_alert_timeline_process_id(
@@ -157,9 +157,10 @@ async def check_event_exclusion(alert_details: WazuhAlertModel, alert_detail_ser
             status_code=400,
             detail="Alert excluded due to multi exclusion as set in the config.ini file.",
         )
-    logger.info(f"Alert is not excluded due to multi exclusion.")
+    logger.info("Alert is not excluded due to multi exclusion.")
 
-async def check_if_alert_exists_in_iris(alert_details: WazuhAlertModel) -> list:
+
+async def check_if_open_alert_exists_in_iris(alert_details: WazuhAlertModel) -> list:
     """
     Check if the alert exists in IRIS.
 
@@ -171,10 +172,12 @@ async def check_if_alert_exists_in_iris(alert_details: WazuhAlertModel) -> list:
         bool: True if the alert exists in IRIS, False otherwise.
     """
     client, alert_client = await initialize_client_and_alert("DFIR-IRIS")
-    request = FilterAlertsRequest(alert_tags=alert_details._source['rule_id'])
+    request = FilterAlertsRequest(alert_tags=alert_details._source["rule_id"])
     params = construct_params(request)
     alert_exists = await fetch_and_validate_data(client, lambda: alert_client.filter_alerts(**params))
-    return alert_exists["data"]["alerts"]
+    logger.info(f"Alert exists: {alert_exists['data']['alerts']}")
+    return alert_exists["data"]["alerts"][0]["alert_id"] if alert_exists["data"]["alerts"] else []
+
 
 def construct_params(request: FilterAlertsRequest) -> dict:
     """
@@ -197,6 +200,7 @@ def construct_params(request: FilterAlertsRequest) -> dict:
 
     # Remove parameters that have a value of None
     return {k: v for k, v in params.items() if v is not None}
+
 
 async def build_alert_context_payload(
     alert_details: CreateAlertRequest,
@@ -243,6 +247,7 @@ async def build_alert_context_payload(
         ),
     )
 
+
 async def build_alert_payload(
     alert_details: CreateAlertRequest,
     agent_data,
@@ -261,7 +266,7 @@ async def build_alert_payload(
     Returns:
         IrisAlertPayload: The built alert payload.
     """
-    asset_payload = await build_asset_payload(agent_data)
+    asset_payload = await build_asset_payload(agent_data, alert_details=alert_details, session=session)
     context_payload = await build_alert_context_payload(alert_details=alert_details, agent_data=agent_data, session=session)
     timefield = (await get_customer_alert_settings(customer_code=alert_details.agent_labels_customer, session=session)).timefield
     # Get the timefield value from the alert_details
@@ -274,7 +279,7 @@ async def build_alert_payload(
             alert_title=alert_details.rule_description,
             alert_source_link=await construct_alert_source_link(alert_details, session=session),
             alert_description=alert_details.rule_description,
-            alert_source="CoPilot",
+            alert_source="COPILOT WAZUH ANALYSIS",
             assets=[asset_payload],
             alert_status_id=3,
             alert_severity_id=5,
@@ -292,7 +297,7 @@ async def build_alert_payload(
             alert_title=alert_details.rule_description,
             alert_source_link=await construct_alert_source_link(alert_details, session=session),
             alert_description=alert_details.rule_description,
-            alert_source="SOCFORTRESS RULE",
+            alert_source="COPILOT WAZUH ANALYSIS",
             assets=[asset_payload],
             alert_status_id=3,
             alert_severity_id=5,
@@ -303,6 +308,7 @@ async def build_alert_payload(
             alert_context=context_payload,
             alert_source_event_time=alert_details.time_field,
         )
+
 
 async def create_alert_details(alert_details: WazuhAlertModel) -> CreateAlertRequest:
     """
@@ -317,20 +323,21 @@ async def create_alert_details(alert_details: WazuhAlertModel) -> CreateAlertReq
     return CreateAlertRequest(
         index=alert_details._index,
         id=alert_details._id,
-        rule_id=alert_details._source['rule_id'],
-        rule_level=alert_details._source['rule_level'],
-        rule_description=alert_details._source['rule_description'],
-        agent_name=alert_details._source['agent_name'],
-        agent_ip=alert_details._source['agent_ip'],
-        agent_id=alert_details._source['agent_id'],
-        agent_labels_customer=alert_details._source['agent_labels_customer'],
-        timestamp=alert_details._source['timestamp'],
-        timestamp_utc=alert_details._source['timestamp_utc'],
+        rule_id=alert_details._source["rule_id"],
+        rule_level=alert_details._source["rule_level"],
+        rule_description=alert_details._source["rule_description"],
+        agent_name=alert_details._source["agent_name"],
+        agent_ip=alert_details._source["agent_ip"],
+        agent_id=alert_details._source["agent_id"],
+        agent_labels_customer=alert_details._source["agent_labels_customer"],
+        timestamp=alert_details._source["timestamp"],
+        timestamp_utc=alert_details._source["timestamp_utc"],
+        process_id=alert_details._source.get("process_id", "No process ID found"),
     )
 
 
 async def create_and_update_alert_in_iris(alert_details: WazuhAlertModel, session: AsyncSession) -> int:
-    logger.info(f"Alert does not exist in IRIS. Creating alert.")
+    logger.info("Alert does not exist in IRIS. Creating alert.")
     alert_details = await create_alert_details(alert_details)
     agent_details = await get_agent(alert_details.agent_id, session)
     ioc_payload = await build_ioc_payload(alert_details)
@@ -370,11 +377,33 @@ async def create_and_update_alert_in_iris(alert_details: WazuhAlertModel, sessio
         )
     return alert_id
 
-async def analyze_wazuh_alerts(monitoring_alerts: MonitoringAlerts, customer_meta: CustomersMeta, session: AsyncSession) -> WazuhAnalysisResponse:
+
+async def get_current_assets(client, alert_client, iris_alert_id):
+    result = await fetch_and_validate_data(client, alert_client.get_alert, iris_alert_id)
+    return result["data"]["assets"]
+
+
+async def update_alert_with_assets(client, alert_client, iris_alert_id, current_assets):
+    await fetch_and_validate_data(
+        client,
+        alert_client.update_alert,
+        iris_alert_id,
+        {"assets": current_assets},
+    )
+
+
+async def analyze_wazuh_alerts(
+    monitoring_alerts: MonitoringAlerts,
+    customer_meta: CustomersMeta,
+    session: AsyncSession,
+) -> WazuhAnalysisResponse:
     """
     Analyze the given Wazuh alerts and create an alert if necessary. Otherwise update the existing alert with the asset.
 
-    1. For each alert, extract the metadata from the Wazuh-Indexer and add it to the alerts list.
+    1. For each alert, extract the metadata from the Wazuh-Indexer.
+    2. Check if the alert exists in IRIS. If it does, update the alert with the asset. If it does not, create the alert in IRIS.
+        The alert will contain the asset and IoC if available.
+    3. Get the current list of assets from the alert to avoid overwriting them.
 
     Args:
         monitoring_alerts (MonitoringAlerts): The monitoring alert details.
@@ -388,12 +417,20 @@ async def analyze_wazuh_alerts(monitoring_alerts: MonitoringAlerts, customer_met
     for alert in monitoring_alerts:
         alert_details = await fetch_alert_details(alert)
         await check_event_exclusion(alert_details, alert_detail_service, session)
-        if await check_if_alert_exists_in_iris(alert_details) == []:
-            alert_id = await create_and_update_alert_in_iris(alert_details, session)
-            logger.info(f"Alert {alert_id} created in IRIS.")
+        iris_alert_id = await check_if_open_alert_exists_in_iris(alert_details)
+        if iris_alert_id == []:
+            logger.info(f"Alert {alert_details._id} does not exist in IRIS. Creating alert.")
+            await create_and_update_alert_in_iris(alert_details, session)
         else:
-            for alert in await check_if_alert_exists_in_iris(alert_details):
-                logger.info(f"Alert {alert} already exists in IRIS.")
+            logger.info(f"Alert {iris_alert_id} exists in IRIS. Updating alert with the asset.")
+            # Fetch the current list of assets from the alert to avoid overwriting them
+            client, alert_client = await initialize_client_and_alert("DFIR-IRIS")
+            current_assets = await get_current_assets(client, alert_client, iris_alert_id)
+            alert_details = await create_alert_details(alert_details)
+            agent_details = await get_agent(alert_details.agent_id, session)
+            asset_payload = await build_asset_payload(agent_data=agent_details, alert_details=alert_details, session=session)
+            current_assets.append(dict(IrisAsset(**asset_payload.to_dict())))
+            await update_alert_with_assets(client, alert_client, iris_alert_id, current_assets)
 
     return WazuhAnalysisResponse(
         success=True,

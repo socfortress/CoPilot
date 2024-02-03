@@ -1,7 +1,13 @@
-from pydantic import BaseModel, Field
-from typing import Optional, List, Dict, Any
-from pydantic import Extra
 from enum import Enum
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+
+from pydantic import BaseModel
+from pydantic import Extra
+from pydantic import Field
+
 
 class MonitoringAlertsRequestModel(BaseModel):
     id: Optional[int] = None
@@ -13,16 +19,22 @@ class MonitoringAlertsRequestModel(BaseModel):
     class Config:
         orm_mode = True
 
+
 class GraylogEventFields(BaseModel):
     ALERT_ID: str = Field(..., description="Unique identifier for the alert", example="65f6a260-c1f3-11ee-93bc-86000046278a")
     ALERT_SOURCE: str = Field(..., description="Source of the alert", example="WAZUH")
     CUSTOMER_CODE: str = Field(..., description="Customer code associated with the alert", example="00002")
 
+
 class GraylogEvent(BaseModel):
     id: str = Field(..., description="Unique identifier for the event", example="01HNNF2YCM5SSV3KDQJSRK0EV0")
     event_definition_type: str = Field(..., description="Type of event definition", example="aggregation-v1")
     event_definition_id: str = Field(..., description="Identifier for the event definition", example="65bd28505e9a2d550cf521e7")
-    origin_context: str = Field(..., description="Context from which the event originated", example="urn:graylog:message:es:wazuh_00002_290:65f6a260-c1f3-11ee-93bc-86000046278a")
+    origin_context: str = Field(
+        ...,
+        description="Context from which the event originated",
+        example="urn:graylog:message:es:wazuh_00002_290:65f6a260-c1f3-11ee-93bc-86000046278a",
+    )
     timestamp: str = Field(..., description="Timestamp when the event occurred", example="2024-02-02T17:49:22.694Z")
     timestamp_processing: str = Field(..., description="Timestamp when the event was processed", example="2024-02-02T17:50:26.708Z")
     timerange_start: Optional[str] = Field(None, description="Start of the timerange for the event", example=None)
@@ -42,6 +54,7 @@ class GraylogEvent(BaseModel):
     def alert_index(self) -> str:
         return self.origin_context.split(":")[4]
 
+
 class GraylogPostRequest(BaseModel):
     event_definition_id: str = Field(..., description="Identifier for the event definition", example="65bd28505e9a2d550cf521e7")
     event_definition_type: str = Field(..., description="Type of the event definition", example="aggregation-v1")
@@ -52,9 +65,11 @@ class GraylogPostRequest(BaseModel):
     event: GraylogEvent = Field(..., description="Event details")
     backlog: List[str] = Field(..., description="List of backlog items associated with the event", example=[])
 
+
 class GraylogPostResponse(BaseModel):
     success: bool = Field(..., description="Indicates if the request was successful", example=True)
     message: str = Field(..., description="Message associated with the response", example="Event processed successfully")
+
 
 class WazuhAnalysisResponse(BaseModel):
     success: bool = Field(..., description="Indicates if the request was successful", example=True)
@@ -78,6 +93,7 @@ class WazuhSourceModel(BaseModel):
     class Config:
         extra = Extra.allow
 
+
 class WazuhAlertModel(BaseModel):
     _index: str
     _id: str
@@ -99,9 +115,11 @@ class WazuhAlertModel(BaseModel):
     class Config:
         extra = Extra.allow
 
+
 class SortOrder(Enum):
     desc = "desc"
     asc = "asc"
+
 
 class FilterAlertsRequest(BaseModel):
     per_page: int = Field(1000, description="The number of alerts to return per page.")
@@ -109,4 +127,3 @@ class FilterAlertsRequest(BaseModel):
     sort: SortOrder = Field(SortOrder.desc, description="The sort order for the alerts.")
     alert_tags: str = Field(..., description="The tags of the alert.")
     alert_status_id: int = Field(3, description="The status of the alert. Default to assigned.", example=3)
-

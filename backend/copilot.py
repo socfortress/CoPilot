@@ -38,6 +38,7 @@ from app.routers import influxdb
 from app.routers import integrations
 from app.routers import logs
 from app.routers import mimecast
+from app.routers import monitoring_alert
 from app.routers import office365
 from app.routers import scheduler
 from app.routers import shuffle
@@ -47,7 +48,6 @@ from app.routers import threat_intel
 from app.routers import velociraptor
 from app.routers import wazuh_indexer
 from app.routers import wazuh_manager
-from app.routers import monitoring_alert
 from app.schedulers.scheduler import init_scheduler
 
 auth_handler = AuthHandler()

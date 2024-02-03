@@ -1,9 +1,6 @@
-from typing import List
 from typing import Optional
 
-from sqlalchemy import Text
 from sqlmodel import Field
-from sqlmodel import Relationship
 from sqlmodel import SQLModel
 
 
