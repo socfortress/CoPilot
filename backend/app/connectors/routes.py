@@ -171,6 +171,7 @@ async def upload_yaml_file(connector_id: int, file: UploadFile = File(...), sess
     try:
         save_file_result = await ConnectorServices.save_file(file, session=session)
         if save_file_result:
+            await ConnectorServices.verify_connector_by_id(connector_id, session=session)
             return {"success": True, "message": "File uploaded successfully"}
         else:
             raise HTTPException(status_code=500, detail="Failed to upload file")
