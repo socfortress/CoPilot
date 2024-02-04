@@ -11,8 +11,8 @@ from app.agents.schema.agents import SyncedAgentsResponse
 from app.agents.velociraptor.schema.agents import VelociraptorAgent
 from app.agents.wazuh.schema.agents import WazuhAgent
 from app.agents.wazuh.schema.agents import WazuhAgentsList
-from app.db.universal_models import Agents
 from app.connectors.models import Connectors
+from app.db.universal_models import Agents
 
 
 async def fetch_wazuh_agents() -> WazuhAgentsList:
@@ -118,6 +118,7 @@ async def get_velociraptor_connector(session):
     result = await session.execute(connector_query)
     return result.scalars().first()
 
+
 async def get_velociraptor_agent(agent_name):
     """
     Retrieves a Velociraptor agent with the specified name.
@@ -133,6 +134,7 @@ async def get_velociraptor_agent(agent_name):
     except Exception as e:
         logger.error(f"Failed to collect Velociraptor Agent for {agent_name}: {e}")
         return None
+
 
 async def process_velociraptor_agent(session, wazuh_agent):
     """
@@ -150,7 +152,9 @@ async def process_velociraptor_agent(session, wazuh_agent):
         if velociraptor_connector.connector_verified:
             velociraptor_agent = await get_velociraptor_agent(wazuh_agent.agent_name)
         else:
-            velociraptor_agent = VelociraptorAgent(client_id="Unknown", client_last_seen="1970-01-01T00:00:00+00:00", client_version="Unknown")
+            velociraptor_agent = VelociraptorAgent(
+                client_id="Unknown", client_last_seen="1970-01-01T00:00:00+00:00", client_version="Unknown",
+            )
         return velociraptor_agent
     except Exception as e:
         logger.error(f"Failed to process agent {wazuh_agent.agent_name}: {e}")
