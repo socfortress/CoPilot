@@ -124,7 +124,11 @@ async def sync_agents(session: AsyncSession) -> SyncedAgentsResponse:
     for wazuh_agent in wazuh_agents_list.agents:
         logger.info(f"Collecting Velociraptor Agent for {wazuh_agent.agent_name}")
 
-        velociraptor_agent = await fetch_velociraptor_agent(wazuh_agent.agent_name)
+        try:
+            velociraptor_agent = await fetch_velociraptor_agent(wazuh_agent.agent_name)
+        except Exception as e:
+            logger.error(f"Failed to collect Velociraptor Agent for {wazuh_agent.agent_name}: {e}")
+            continue
 
         customer_code = extract_customer_code(wazuh_agent.agent_label)
 
