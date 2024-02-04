@@ -153,7 +153,9 @@ async def process_velociraptor_agent(session, wazuh_agent):
             velociraptor_agent = await get_velociraptor_agent(wazuh_agent.agent_name)
         else:
             velociraptor_agent = VelociraptorAgent(
-                client_id="Unknown", client_last_seen="1970-01-01T00:00:00+00:00", client_version="Unknown",
+                client_id="Unknown",
+                client_last_seen="1970-01-01T00:00:00+00:00",
+                client_version="Unknown",
             )
         return velociraptor_agent
     except Exception as e:
