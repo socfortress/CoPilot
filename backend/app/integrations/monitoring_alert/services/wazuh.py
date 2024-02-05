@@ -7,6 +7,8 @@ from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.routes.agents import get_agent
+from app.integrations.alert_escalation.services.general_alert import add_alert_to_document
+from app.integrations.alert_escalation.schema.general_alert import CreateAlertRequest as AddAlertRequest
 from app.agents.schema.agents import AgentsResponse
 from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
 from app.connectors.dfir_iris.utils.universal import initialize_client_and_alert
@@ -448,8 +450,19 @@ async def analyze_wazuh_alerts(
         iris_alert_id = await check_if_open_alert_exists_in_iris(alert_details)
         if iris_alert_id == []:
             logger.info(f"Alert {alert_details._id} does not exist in IRIS. Creating alert.")
-            await create_and_update_alert_in_iris(alert_details, session)
+            iris_alert_id = await create_and_update_alert_in_iris(alert_details, session)
             await remove_alert_id(alert.alert_id, session)
+            es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
+            await add_alert_to_document(
+                es_client=es_client,
+                alert=AddAlertRequest(
+                    alert_id=alert_details._id,
+                    index_name=alert_details._index
+                ),
+                soc_alert_id=iris_alert_id,
+                session=session
+            )
+
         else:
             logger.info(f"Alert {iris_alert_id} exists in IRIS. Updating alert with the asset.")
             # Fetch the current list of assets from the alert to avoid overwriting them
@@ -462,6 +475,16 @@ async def analyze_wazuh_alerts(
             current_assets = await remove_duplicate_assets(current_assets)
             await update_alert_with_assets(client, alert_client, iris_alert_id, current_assets)
             await remove_alert_id(alert.alert_id, session)
+            es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
+            await add_alert_to_document(
+                es_client=es_client,
+                alert=AddAlertRequest(
+                    alert_id=alert_details.id,
+                    index_name=alert_details.index
+                ),
+                soc_alert_id=iris_alert_id,
+                session=session
+            )
 
     return WazuhAnalysisResponse(
         success=True,

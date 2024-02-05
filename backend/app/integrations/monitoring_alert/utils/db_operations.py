@@ -7,7 +7,7 @@ from app.integrations.monitoring_alert.models.monitoring_alert import Monitoring
 
 async def remove_alert_id(alert_id: str, session: AsyncSession) -> None:
     """
-    Remove the alert with the given alert_id.
+    Remove the alert with the given alert_id from the database.
 
     Args:
         alert_id (str): The alert_id.
