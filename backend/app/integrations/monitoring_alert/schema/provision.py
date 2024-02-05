@@ -26,6 +26,29 @@ class ProvisionWazuhMonitoringAlertResponse(BaseModel):
     success: bool
     message: str
 
+########## ! GRAYLOG WHITELIST URL CREATION ! ##########
+class GraylogUrlWhitelistEntryConfig(BaseModel):
+    id: str = Field(
+        ...,
+        description="The ID of the URL whitelist entry.",
+    )
+    title: str = Field(
+        ...,
+        description="The title of the URL whitelist entry.",
+    )
+    type: str = Field(
+        'literal',
+        description="The type of the URL whitelist entry.",
+    )
+    value: str = Field(
+        ...,
+        description="The value of the URL whitelist entry.",
+    )
+
+class GraylogUrlWhitelistEntries(BaseModel):
+    entries: List[GraylogUrlWhitelistEntryConfig]
+    disabled: bool
+
 ########## ! GRAYLOG WEBHOOK CREATION ! ##########
 class GraylogAlertWebhookConfig(BaseModel):
     url: str = Field(
