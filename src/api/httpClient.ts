@@ -6,7 +6,7 @@ import axios, { type AxiosRequestHeaders } from "axios"
 const BASE_URL = import.meta.env.VITE_API_URL
 
 const HttpClient = axios.create({
-	baseURL: BASE_URL
+	baseURL: `${BASE_URL}/api`
 })
 
 let __TOKEN_REFRESHING = false
