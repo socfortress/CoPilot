@@ -49,7 +49,7 @@ async def get_available_monitoring_alerts_route() -> AvailableMonitoringAlertsRe
     """
     Get the available monitoring alerts.
     """
-    alerts = [{"name": alert.name, "value": alert.value} for alert in AvailableMonitoringAlerts]
+    alerts = [{"name": alert.name.replace('_', ' '), "value": alert.value} for alert in AvailableMonitoringAlerts]
     return AvailableMonitoringAlertsResponse(success=True, message="Alerts retrieved successfully", available_monitoring_alerts=alerts)
 
 
