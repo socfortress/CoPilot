@@ -42,5 +42,4 @@ services:
             GRAFANA_PASSWORD: ${GRAFANA_PASSWORD}
             WAZUH_WORKER_PROVISIONING_URL: ${WAZUH_WORKER_PROVISIONING_URL}
         ports:
-            - "5000:5000"
             - "5173:5173"

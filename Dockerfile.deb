@@ -56,7 +56,7 @@ WORKDIR /opt/copilot
 RUN npm install
 
 # Expose ports
-EXPOSE 5000 5173
+EXPOSE 5173
 
 # Run your application
 #CMD ["sh", "-c", "cd backend && python copilot.py & cd /opt/copilot && npm run dev"]
