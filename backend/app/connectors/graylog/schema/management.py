@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import List
 
 
 class DeletedIndexBody(BaseModel):
@@ -44,3 +45,19 @@ class StartStreamBody(BaseModel):
 class StartStreamResponse(BaseModel):
     success: bool
     message: str
+
+
+class UrlWhitelistEntry(BaseModel):
+    id: str
+    type: str
+    title: str
+    value: str
+
+class UrlWhitelistEntries(BaseModel):
+    entries: List[UrlWhitelistEntry]
+    disabled: bool
+
+class UrlWhitelistEntryResponse(BaseModel):
+    success: bool
+    message: str
+    url_whitelist_entries: UrlWhitelistEntries

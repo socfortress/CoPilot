@@ -16,9 +16,9 @@ from app.connectors.graylog.schema.management import StartStreamResponse
 from app.connectors.graylog.schema.management import StopInputBody
 from app.connectors.graylog.schema.management import StopInputResponse
 from app.connectors.graylog.schema.management import StopStreamBody
-from app.connectors.graylog.schema.management import StopStreamResponse
+from app.connectors.graylog.schema.management import StopStreamResponse, UrlWhitelistEntryResponse
 from app.connectors.graylog.services.collector import get_index_names
-from app.connectors.graylog.services.collector import get_input_ids
+from app.connectors.graylog.services.collector import get_input_ids, get_url_whitelist_entries
 from app.connectors.graylog.services.management import delete_index
 from app.connectors.graylog.services.management import start_input
 from app.connectors.graylog.services.management import start_stream
@@ -129,6 +129,23 @@ async def verify_stream_id(stop_stream_body: StopStreamBody) -> StopStreamBody:
             detail=f"Stream ID '{stop_stream_body.stream_id}' is not managed by Graylog or no longer exists.",
         )
     return stop_stream_body
+
+@graylog_management_router.get(
+    "/url_whitelist",
+    response_model=UrlWhitelistEntryResponse,
+    description="Get the URL whitelist entries.",
+    dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
+)
+async def get_url_whitelist() -> UrlWhitelistEntryResponse:
+    """
+    Get the URL whitelist entries.
+
+    Returns:
+    - UrlWhitelistEntryResponse: The response containing the URL whitelist entries.
+    """
+    logger.info("Getting URL whitelist entries")
+
+    return await get_url_whitelist_entries()
 
 
 @graylog_management_router.delete(
