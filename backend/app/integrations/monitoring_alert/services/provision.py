@@ -11,6 +11,7 @@ from app.connectors.graylog.services.collector import get_url_whitelist_entries
 from app.connectors.graylog.schema.management import UrlWhitelistEntryResponse
 from app.integrations.monitoring_alert.schema.provision import GraylogUrlWhitelistEntryConfig
 import os
+from typing import Optional
 from dotenv import load_dotenv
 load_dotenv()
 import uuid
@@ -77,7 +78,7 @@ async def provision_webhook_url_whitelist(whitelist_url_model: GraylogUrlWhiteli
     response = await send_put_request(endpoint="/api/system/urlwhitelist", data=whitelist_url_model.dict())
     if response["success"]:
         return True
-    return False
+    raise HTTPException(status_code=500, detail="Failed to provision URL Whitelist")
 
 
 async def check_if_event_notification_exists(event_notification: str) -> bool:
@@ -99,7 +100,7 @@ async def check_if_event_notification_exists(event_notification: str) -> bool:
         return True
     return False
 
-async def provision_webhook(webhook_model: GraylogAlertWebhookNotificationModel) -> bool:
+async def provision_webhook(webhook_model: GraylogAlertWebhookNotificationModel) -> Optional[str]:
     """
     Provisions a webhook for Graylog alerts.
 
@@ -111,8 +112,9 @@ async def provision_webhook(webhook_model: GraylogAlertWebhookNotificationModel)
     """
     response = await send_post_request(endpoint="/api/events/notifications", data=webhook_model.dict())
     if response["success"]:
-        return True
-    return False
+        logger.info(f"response: {response}")
+        return response["data"]["id"]
+    raise HTTPException(status_code=500, detail="Failed to provision webhook")
 
 async def provision_wazuh_monitoring_alert(session: AsyncSession) -> ProvisionWazuhMonitoringAlertResponse:
     """
@@ -128,7 +130,7 @@ async def provision_wazuh_monitoring_alert(session: AsyncSession) -> ProvisionWa
         if not url_whitelisted:
             logger.info("Provisioning URL Whitelist")
             whitelisted_urls = await build_url_whitelisted_entries(whitelist_url_model=GraylogUrlWhitelistEntryConfig(
-                id=await generate_random_id(),
+                id= await generate_random_id(),
                 value=f"http://{os.getenv('SERVER_IP')}:5000/monitoring_alerts/create",
                 title="SEND TO COPILOT",
                 type='literal',
@@ -138,12 +140,13 @@ async def provision_wazuh_monitoring_alert(session: AsyncSession) -> ProvisionWa
 
 
         logger.info("Provisioning SEND TO COPILOT Webhook")
-        await provision_webhook(GraylogAlertWebhookNotificationModel(
+        notification_id = await provision_webhook(GraylogAlertWebhookNotificationModel(
             title="SEND TO COPILOT",
             description="Send alert to Copilot",
             config={"url": f"http://{os.getenv('SERVER_IP')}:5000/monitoring_alerts/create", "type": "http-notification-v1"},
             )
         )
+        logger.info(f"SEND TO COPILOT Webhook provisioned with id: {notification_id}")
 
 
 
