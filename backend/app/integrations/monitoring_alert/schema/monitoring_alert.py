@@ -22,6 +22,9 @@ class MonitoringAlertsRequestModel(BaseModel):
     class Config:
         orm_mode = True
 
+class MonitoringWazuhAlertsRequestModel(BaseModel):
+    customer_code: str
+
 
 class GraylogEventFields(BaseModel):
     ALERT_ID: str = Field(..., description="Unique identifier for the alert", example="65f6a260-c1f3-11ee-93bc-86000046278a")
