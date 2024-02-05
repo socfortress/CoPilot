@@ -36,6 +36,7 @@ from app.integrations.monitoring_alert.schema.monitoring_alert import (
 from app.integrations.utils.alerts import get_asset_type_id
 from app.integrations.utils.alerts import validate_ioc_type
 from app.utils import get_customer_alert_settings
+from app.integrations.monitoring_alert.utils.db_operations import remove_alert_id
 
 
 def valid_ioc_fields() -> Set[str]:
@@ -446,6 +447,7 @@ async def analyze_wazuh_alerts(
         if iris_alert_id == []:
             logger.info(f"Alert {alert_details._id} does not exist in IRIS. Creating alert.")
             await create_and_update_alert_in_iris(alert_details, session)
+            await remove_alert_id(alert.alert_id, session)
         else:
             logger.info(f"Alert {iris_alert_id} exists in IRIS. Updating alert with the asset.")
             # Fetch the current list of assets from the alert to avoid overwriting them
@@ -457,6 +459,7 @@ async def analyze_wazuh_alerts(
             current_assets.append(dict(IrisAsset(**asset_payload.to_dict())))
             current_assets = await remove_duplicate_assets(current_assets)
             await update_alert_with_assets(client, alert_client, iris_alert_id, current_assets)
+            await remove_alert_id(alert.alert_id, session)
 
     return WazuhAnalysisResponse(
         success=True,
