@@ -52,16 +52,14 @@ async def get_available_monitoring_alerts_route(
     response_model=ProvisionWazuhMonitoringAlertResponse,
     description="Provisions Wazuh monitoring alerts.",
 )
-async def provision_wazuh_monitoring_alert_route(
-    session: AsyncSession = Depends(get_db),
-) -> ProvisionWazuhMonitoringAlertResponse:
+async def provision_wazuh_monitoring_alert_route() -> ProvisionWazuhMonitoringAlertResponse:
     await check_if_event_definition_exists("WAZUH SYSLOG LEVEL ALERT")
-    await provision_wazuh_monitoring_alert(session=session)
-    # await add_scheduler_jobs(
-    #     CreateSchedulerRequest(
-    #         function_name="invoke_wazuh_monitoring_alert",
-    #         time_interval=5,
-    #         job_id="invoke_wazuh_monitoring_alert",
-    #     ),
-    # )
+    await provision_wazuh_monitoring_alert()
+    await add_scheduler_jobs(
+        CreateSchedulerRequest(
+            function_name="invoke_wazuh_monitoring_alert",
+            time_interval=5,
+            job_id="invoke_wazuh_monitoring_alert",
+        ),
+    )
     return ProvisionWazuhMonitoringAlertResponse(success=True, message="Wazuh monitoring alerts provisioned.")

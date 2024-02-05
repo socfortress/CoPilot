@@ -131,7 +131,7 @@ async def provision_alert_definition(alert_definition_model: GraylogAlertProvisi
         return True
     raise HTTPException(status_code=500, detail="Failed to provision alert definition")
 
-async def provision_wazuh_monitoring_alert(session: AsyncSession) -> ProvisionWazuhMonitoringAlertResponse:
+async def provision_wazuh_monitoring_alert() -> ProvisionWazuhMonitoringAlertResponse:
     """
     Provisions Wazuh monitoring alerts.
 
