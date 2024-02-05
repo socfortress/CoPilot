@@ -1,4 +1,4 @@
-from app.integrations.monitoring_alert.schema.provision import ProvisionWazuhMonitoringAlertResponse, GraylogUrlWhitelistEntryConfig, AvailableMonitoringAlertsResponse, GraylogAlertWebhookNotificationModel, GraylogAlertProvisionModel, GraylogUrlWhitelistEntries
+from app.integrations.monitoring_alert.schema.provision import ProvisionWazuhMonitoringAlertResponse, GraylogUrlWhitelistEntryConfig, AvailableMonitoringAlertsResponse, GraylogAlertWebhookNotificationModel, GraylogAlertProvisionModel, GraylogUrlWhitelistEntries, GraylogAlertProvisionNotification, GraylogAlertProvisionNotificationSettings, GraylogAlertProvisionConfig, GraylogAlertProvisionFieldSpecItem, GraylogAlertProvisionProvider
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.connectors.graylog.routes.monitoring import get_all_event_notifications
@@ -116,6 +116,21 @@ async def provision_webhook(webhook_model: GraylogAlertWebhookNotificationModel)
         return response["data"]["id"]
     raise HTTPException(status_code=500, detail="Failed to provision webhook")
 
+async def provision_alert_definition(alert_definition_model: GraylogAlertProvisionModel) -> bool:
+    """
+    Provisions an alert definition for Graylog.
+
+    Args:
+        alert_definition_model (GraylogAlertProvisionModel): The alert definition model.
+
+    Returns:
+        bool: True if the alert definition was provisioned successfully, False otherwise.
+    """
+    response = await send_post_request(endpoint="/api/events/definitions", data=alert_definition_model.dict())
+    if response["success"]:
+        return True
+    raise HTTPException(status_code=500, detail="Failed to provision alert definition")
+
 async def provision_wazuh_monitoring_alert(session: AsyncSession) -> ProvisionWazuhMonitoringAlertResponse:
     """
     Provisions Wazuh monitoring alerts.
@@ -147,6 +162,67 @@ async def provision_wazuh_monitoring_alert(session: AsyncSession) -> ProvisionWa
             )
         )
         logger.info(f"SEND TO COPILOT Webhook provisioned with id: {notification_id}")
+        await provision_alert_definition(GraylogAlertProvisionModel(
+        title="WAZUH SYSLOG LEVEL ALERT",
+        description="Alert on Wazuh syslog level equal to ALERT",
+        priority=2,
+        config=GraylogAlertProvisionConfig(
+            type="aggregation-v1",
+            query="syslog_level:ALERT AND syslog_type:wazuh",
+            query_parameters=[],
+            streams=[],
+            group_by=[],
+            series=[],
+            conditions={
+                "expression": None,
+            },
+            search_within_ms=60000,
+            execute_every_ms=60000,
+        ),
+        field_spec={
+            "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                data_type="string",
+                providers=[
+                    GraylogAlertProvisionProvider(
+                        type="template-v1",
+                        template="${source._id}",
+                        require_values=True,
+                    ),
+                ],
+            ),
+            "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                data_type="string",
+                providers=[
+                    GraylogAlertProvisionProvider(
+                        type="template-v1",
+                        template="${source.agent_labels_customer}",
+                        require_values=True,
+                    ),
+                ],
+            ),
+            "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                data_type="string",
+                providers=[
+                    GraylogAlertProvisionProvider(
+                        type="template-v1",
+                        template="WAZUH",
+                        require_values=True,
+                    ),
+                ],
+            ),
+        },
+        key_spec=[],
+        notification_settings=GraylogAlertProvisionNotificationSettings(
+            grace_period_ms=0,
+            backlog_size=None,
+        ),
+        notifications=[
+            GraylogAlertProvisionNotification(
+                notification_id=notification_id,
+            ),
+        ],
+        alert=True,
+    ))
 
 
 
