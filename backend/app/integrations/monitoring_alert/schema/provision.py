@@ -28,11 +28,26 @@ class ProvisionWazuhMonitoringAlertResponse(BaseModel):
 
 ########## ! GRAYLOG WEBHOOK CREATION ! ##########
 class GraylogAlertWebhookConfig(BaseModel):
-    url: str
-    api_key: str
-    api_secret: Optional[str] = None
-    basic_auth: Optional[str] = None
-    type: str
+    url: str = Field(
+        ...,
+        description="The URL to use for the webhook.",
+    )
+    api_key: Optional[str] = Field(
+        None,
+        description="The API key to use for the webhook.",
+    )
+    api_secret: Optional[str] = Field(
+        None,
+        description="The API secret to use for the webhook.",
+    )
+    basic_auth: Optional[str] = Field(
+        None,
+        description="The basic auth to use for the webhook.",
+    )
+    type: str = Field(
+        ...,
+        description="The type of the webhook.",
+    )
 
 class GraylogAlertWebhookNotificationModel(BaseModel):
     title: str

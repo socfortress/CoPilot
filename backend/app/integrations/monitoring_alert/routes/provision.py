@@ -1,15 +1,37 @@
 from fastapi import APIRouter
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import HTTPException
 
 from app.db.db_session import get_db
 from app.integrations.monitoring_alert.schema.provision import ProvisionWazuhMonitoringAlertResponse, AvailableMonitoringAlerts, AvailableMonitoringAlertsResponse
-from app.integrations.mimecast.services.provision import provision_mimecast
-from app.integrations.utils.utils import get_customer_integration_response
+from app.integrations.monitoring_alert.services.provision import provision_wazuh_monitoring_alert
 from app.schedulers.models.scheduler import CreateSchedulerRequest
 from app.schedulers.scheduler import add_scheduler_jobs
+from app.connectors.graylog.routes.events import get_all_event_definitions
+from app.connectors.graylog.schema.events import GraylogEventDefinitionsResponse
+from loguru import logger
 
 monitoring_alerts_provision_router = APIRouter()
+
+async def check_if_event_definition_exists(event_definition: str) -> bool:
+    """
+    Check if the event definition exists.
+
+    Args:
+        event_definition (str): The event definition to check.
+
+    Returns:
+        bool: True if the event definition exists, False otherwise.
+    """
+    event_definitions_response = await get_all_event_definitions()
+    if not event_definitions_response.success:
+        raise HTTPException(status_code=500, detail="Failed to collect event definitions")
+    event_definitions_response = GraylogEventDefinitionsResponse(**event_definitions_response.dict())
+    logger.info(f"Event definitions collected: {event_definitions_response.event_definitions}")
+    if event_definition in [event_definition.title for event_definition in event_definitions_response.event_definitions]:
+        raise HTTPException(status_code=400, detail=f"Event definition {event_definition} already exists")
+    return False
 
 
 @monitoring_alerts_provision_router.get(
@@ -33,14 +55,13 @@ async def get_available_monitoring_alerts_route(
 async def provision_wazuh_monitoring_alert_route(
     session: AsyncSession = Depends(get_db),
 ) -> ProvisionWazuhMonitoringAlertResponse:
-    # Check if the customer integration settings are available and can be provisioned
-    #await get_customer_integration_response(provision_mimecast_request.customer_code, session)
-    #await provision_mimecast(provision_mimecast_request, session)
-    await add_scheduler_jobs(
-        CreateSchedulerRequest(
-            function_name="invoke_wazuh_monitoring_alert",
-            time_interval=5,
-            job_id="invoke_wazuh_monitoring_alert",
-        ),
-    )
+    await check_if_event_definition_exists("WAZUH SYSLOG LEVEL ALERT")
+    await provision_wazuh_monitoring_alert(session=session)
+    # await add_scheduler_jobs(
+    #     CreateSchedulerRequest(
+    #         function_name="invoke_wazuh_monitoring_alert",
+    #         time_interval=5,
+    #         job_id="invoke_wazuh_monitoring_alert",
+    #     ),
+    # )
     return ProvisionWazuhMonitoringAlertResponse(success=True, message="Wazuh monitoring alerts provisioned.")
