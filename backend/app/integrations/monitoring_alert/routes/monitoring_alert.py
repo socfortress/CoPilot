@@ -118,7 +118,7 @@ async def create_monitoring_alert(
 
 
 @monitoring_alerts_router.post("/run_analysis/wazuh", response_model=WazuhAnalysisResponse)
-async def run_analysis(
+async def run_wazuh_analysis(
     request: MonitoringWazuhAlertsRequestModel,
     session: AsyncSession = Depends(get_db),
 ) -> WazuhAnalysisResponse:
