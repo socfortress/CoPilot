@@ -6,7 +6,7 @@ from app.connectors.graylog.routes.events import get_all_event_definitions
 from app.connectors.graylog.schema.events import GraylogEventDefinitionsResponse
 from app.integrations.monitoring_alert.schema.provision import AvailableMonitoringAlerts
 from app.integrations.monitoring_alert.schema.provision import (
-    AvailableMonitoringAlertsResponse,
+    AvailableMonitoringAlertsResponse, ProvisionWazuhMonitoringAlertRequest
 )
 from app.integrations.monitoring_alert.schema.provision import (
     ProvisionWazuhMonitoringAlertResponse,
@@ -58,9 +58,11 @@ async def get_available_monitoring_alerts_route() -> AvailableMonitoringAlertsRe
     response_model=ProvisionWazuhMonitoringAlertResponse,
     description="Provisions Wazuh monitoring alerts.",
 )
-async def provision_wazuh_monitoring_alert_route() -> ProvisionWazuhMonitoringAlertResponse:
+async def provision_wazuh_monitoring_alert_route(
+    request: ProvisionWazuhMonitoringAlertRequest,
+) -> ProvisionWazuhMonitoringAlertResponse:
     await check_if_event_definition_exists("WAZUH SYSLOG LEVEL ALERT")
-    await provision_wazuh_monitoring_alert()
+    await provision_wazuh_monitoring_alert(request)
     await add_scheduler_jobs(
         CreateSchedulerRequest(
             function_name="invoke_wazuh_monitoring_alert",

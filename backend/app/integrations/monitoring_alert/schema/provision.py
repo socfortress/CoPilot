@@ -28,6 +28,17 @@ class AvailableMonitoringAlertsResponse(BaseModel):
     message: str
     available_monitoring_alerts: List[Dict[str, str]]
 
+class ProvisionWazuhMonitoringAlertRequest(BaseModel):
+    search_within_last: int = Field(
+        ...,
+        description="The time in seconds to search within for the alert.",
+    )
+    execute_every: int = Field(
+        ...,
+        description="The time in seconds to execute the alert search.",
+    )
+
+
 
 class ProvisionWazuhMonitoringAlertResponse(BaseModel):
     success: bool

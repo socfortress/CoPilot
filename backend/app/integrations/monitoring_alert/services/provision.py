@@ -15,7 +15,7 @@ from app.integrations.monitoring_alert.schema.provision import (
     GraylogAlertProvisionConfig,
 )
 from app.integrations.monitoring_alert.schema.provision import (
-    GraylogAlertProvisionFieldSpecItem,
+    GraylogAlertProvisionFieldSpecItem, ProvisionWazuhMonitoringAlertRequest
 )
 from app.integrations.monitoring_alert.schema.provision import (
     GraylogAlertProvisionModel,
@@ -45,6 +45,18 @@ from app.integrations.monitoring_alert.schema.provision import (
 load_dotenv()
 import uuid
 
+
+async def convert_seconds_to_milliseconds(seconds: int) -> int:
+    """
+    Convert seconds to milliseconds.
+
+    Args:
+        seconds (int): The seconds to convert.
+
+    Returns:
+        int: The milliseconds.
+    """
+    return seconds * 1000
 
 async def generate_random_id() -> str:
     """
@@ -169,7 +181,7 @@ async def provision_alert_definition(alert_definition_model: GraylogAlertProvisi
     raise HTTPException(status_code=500, detail="Failed to provision alert definition")
 
 
-async def provision_wazuh_monitoring_alert() -> ProvisionWazuhMonitoringAlertResponse:
+async def provision_wazuh_monitoring_alert(request: ProvisionWazuhMonitoringAlertRequest) -> ProvisionWazuhMonitoringAlertResponse:
     """
     Provisions Wazuh monitoring alerts.
 
@@ -217,8 +229,8 @@ async def provision_wazuh_monitoring_alert() -> ProvisionWazuhMonitoringAlertRes
                     conditions={
                         "expression": None,
                     },
-                    search_within_ms=60000,
-                    execute_every_ms=60000,
+                    search_within_ms=await convert_seconds_to_milliseconds(request.search_within_last),
+                    execute_every_ms=await convert_seconds_to_milliseconds(request.execute_every),
                 ),
                 field_spec={
                     "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
