@@ -11,8 +11,8 @@ from app.connectors.graylog.schema.collector import GraylogIndicesResponse
 from app.connectors.graylog.schema.collector import GraylogInputsResponse
 from app.connectors.graylog.schema.collector import RunningInput
 from app.connectors.graylog.schema.collector import RunningInputsResponse
-from app.connectors.graylog.utils.universal import send_get_request
 from app.connectors.graylog.schema.management import UrlWhitelistEntryResponse
+from app.connectors.graylog.utils.universal import send_get_request
 
 
 async def get_indices_full() -> GraylogIndicesResponse:
@@ -169,6 +169,7 @@ async def get_input_ids() -> List[str]:
         return [input.id for input in inputs_collected]
     else:
         return []
+
 
 async def get_url_whitelist_entries() -> UrlWhitelistEntryResponse:
     """

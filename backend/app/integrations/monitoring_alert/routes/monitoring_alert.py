@@ -20,7 +20,10 @@ from app.integrations.monitoring_alert.schema.monitoring_alert import (
     MonitoringAlertsRequestModel,
 )
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
-    WazuhAnalysisResponse, MonitoringWazuhAlertsRequestModel
+    MonitoringWazuhAlertsRequestModel,
+)
+from app.integrations.monitoring_alert.schema.monitoring_alert import (
+    WazuhAnalysisResponse,
 )
 from app.integrations.monitoring_alert.services.wazuh import analyze_wazuh_alerts
 
@@ -142,7 +145,9 @@ async def run_wazuh_analysis(
     customer_meta = await get_customer_meta(request.customer_code, session)
 
     monitoring_alerts = await session.execute(
-        select(MonitoringAlerts).where(MonitoringAlerts.customer_code == request.customer_code and MonitoringAlerts.alert_source == "WAZUH"),
+        select(MonitoringAlerts).where(
+            MonitoringAlerts.customer_code == request.customer_code and MonitoringAlerts.alert_source == "WAZUH",
+        ),
     )
     monitoring_alerts = monitoring_alerts.scalars().all()
 

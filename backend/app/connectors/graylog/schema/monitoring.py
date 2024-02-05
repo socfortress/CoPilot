@@ -52,12 +52,15 @@ class GraylogMetricsResponse(BaseModel):
     message: str
     success: bool
 
+
 #### ! Graylog Event Notifications ! ####
 class GraylogEventNotificationsBasicAuth(BaseModel):
     is_set: bool
 
+
 class GraylogEventNotificationsApiSecret(BaseModel):
     is_set: bool
+
 
 class GraylogEventNotificationsConfig(BaseModel):
     type: str
@@ -66,11 +69,13 @@ class GraylogEventNotificationsConfig(BaseModel):
     api_secret: GraylogEventNotificationsApiSecret
     url: str
 
+
 class GraylogEventNotificationsNotification(BaseModel):
     id: str
     title: str
     description: str
     config: GraylogEventNotificationsConfig
+
 
 class GraylogEventNotifications(BaseModel):
     total: int
@@ -80,6 +85,7 @@ class GraylogEventNotifications(BaseModel):
     notifications: List[GraylogEventNotificationsNotification]
     query: str
     grand_total: int
+
 
 class GraylogEventNotificationsResponse(BaseModel):
     event_notifications: GraylogEventNotifications

@@ -6,11 +6,14 @@ from sqlalchemy import select
 
 from app.db.db_session import get_db_session
 from app.db.db_session import get_sync_db_session
+from app.db.universal_models import CustomersMeta
 from app.integrations.monitoring_alert.routes.monitoring_alert import run_wazuh_analysis
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
-    WazuhAnalysisResponse, MonitoringWazuhAlertsRequestModel
+    MonitoringWazuhAlertsRequestModel,
 )
-from app.db.universal_models import CustomersMeta
+from app.integrations.monitoring_alert.schema.monitoring_alert import (
+    WazuhAnalysisResponse,
+)
 from app.schedulers.models.scheduler import JobMetadata
 
 load_dotenv()

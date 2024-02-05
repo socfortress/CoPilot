@@ -1,13 +1,13 @@
 from fastapi import HTTPException
 from loguru import logger
 
+from app.connectors.graylog.schema.monitoring import GraylogEventNotificationsResponse
 from app.connectors.graylog.schema.monitoring import GraylogMessages
 from app.connectors.graylog.schema.monitoring import GraylogMessagesResponse
 from app.connectors.graylog.schema.monitoring import GraylogMetricsResponse
 from app.connectors.graylog.schema.monitoring import GraylogThroughputMetrics
 from app.connectors.graylog.schema.monitoring import GraylogThroughputMetricsCollection
 from app.connectors.graylog.schema.monitoring import GraylogUncommittedJournalEntries
-from app.connectors.graylog.schema.monitoring import GraylogEventNotificationsResponse
 from app.connectors.graylog.utils.universal import send_get_request
 
 
@@ -143,6 +143,7 @@ async def get_metrics() -> GraylogMetricsResponse:
         success=False,
         message="Failed to collect metrics",
     )
+
 
 async def get_event_notifications() -> GraylogEventNotificationsResponse:
     """

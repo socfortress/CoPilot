@@ -33,10 +33,10 @@ from app.integrations.monitoring_alert.schema.monitoring_alert import (
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
     WazuhIrisAlertPayload,
 )
+from app.integrations.monitoring_alert.utils.db_operations import remove_alert_id
 from app.integrations.utils.alerts import get_asset_type_id
 from app.integrations.utils.alerts import validate_ioc_type
 from app.utils import get_customer_alert_settings
-from app.integrations.monitoring_alert.utils.db_operations import remove_alert_id
 
 
 def valid_ioc_fields() -> Set[str]:

@@ -1,20 +1,50 @@
-from app.integrations.monitoring_alert.schema.provision import ProvisionWazuhMonitoringAlertResponse, GraylogUrlWhitelistEntryConfig, AvailableMonitoringAlertsResponse, GraylogAlertWebhookNotificationModel, GraylogAlertProvisionModel, GraylogUrlWhitelistEntries, GraylogAlertProvisionNotification, GraylogAlertProvisionNotificationSettings, GraylogAlertProvisionConfig, GraylogAlertProvisionFieldSpecItem, GraylogAlertProvisionProvider
-from fastapi import HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.connectors.graylog.routes.monitoring import get_all_event_notifications
-from app.connectors.graylog.services.collector import get_url_whitelist_entries
-from app.connectors.graylog.schema.management import UrlWhitelistEntryResponse
-from app.connectors.graylog.schema.monitoring import GraylogEventNotificationsResponse
-from loguru import logger
-from app.connectors.graylog.utils.universal import send_post_request, send_put_request
-from app.connectors.graylog.services.collector import get_url_whitelist_entries
-from app.connectors.graylog.schema.management import UrlWhitelistEntryResponse
-from app.integrations.monitoring_alert.schema.provision import GraylogUrlWhitelistEntryConfig
 import os
 from typing import Optional
+
 from dotenv import load_dotenv
+from fastapi import HTTPException
+from loguru import logger
+
+from app.connectors.graylog.routes.monitoring import get_all_event_notifications
+from app.connectors.graylog.schema.management import UrlWhitelistEntryResponse
+from app.connectors.graylog.schema.monitoring import GraylogEventNotificationsResponse
+from app.connectors.graylog.services.collector import get_url_whitelist_entries
+from app.connectors.graylog.utils.universal import send_post_request
+from app.connectors.graylog.utils.universal import send_put_request
+from app.integrations.monitoring_alert.schema.provision import (
+    GraylogAlertProvisionConfig,
+)
+from app.integrations.monitoring_alert.schema.provision import (
+    GraylogAlertProvisionFieldSpecItem,
+)
+from app.integrations.monitoring_alert.schema.provision import (
+    GraylogAlertProvisionModel,
+)
+from app.integrations.monitoring_alert.schema.provision import (
+    GraylogAlertProvisionNotification,
+)
+from app.integrations.monitoring_alert.schema.provision import (
+    GraylogAlertProvisionNotificationSettings,
+)
+from app.integrations.monitoring_alert.schema.provision import (
+    GraylogAlertProvisionProvider,
+)
+from app.integrations.monitoring_alert.schema.provision import (
+    GraylogAlertWebhookNotificationModel,
+)
+from app.integrations.monitoring_alert.schema.provision import (
+    GraylogUrlWhitelistEntries,
+)
+from app.integrations.monitoring_alert.schema.provision import (
+    GraylogUrlWhitelistEntryConfig,
+)
+from app.integrations.monitoring_alert.schema.provision import (
+    ProvisionWazuhMonitoringAlertResponse,
+)
+
 load_dotenv()
 import uuid
+
 
 async def generate_random_id() -> str:
     """
@@ -24,6 +54,7 @@ async def generate_random_id() -> str:
         str: The random id.
     """
     return str(uuid.uuid4())
+
 
 async def check_if_url_whitelist_entry_exists(url: str) -> bool:
     """
@@ -45,6 +76,7 @@ async def check_if_url_whitelist_entry_exists(url: str) -> bool:
         return True
     return False
 
+
 async def build_url_whitelisted_entries(whitelist_url_model: GraylogUrlWhitelistEntryConfig) -> GraylogUrlWhitelistEntries:
     """
     Builds the URL Whitelisted Entries model.
@@ -63,6 +95,7 @@ async def build_url_whitelisted_entries(whitelist_url_model: GraylogUrlWhitelist
         entries=url_whitelist_entries,
         disabled=False,
     )
+
 
 async def provision_webhook_url_whitelist(whitelist_url_model: GraylogUrlWhitelistEntries) -> bool:
     """
@@ -96,9 +129,12 @@ async def check_if_event_notification_exists(event_notification: str) -> bool:
         raise HTTPException(status_code=500, detail="Failed to collect event notifications")
     event_notifications_response = GraylogEventNotificationsResponse(**event_notifications_response.dict())
     logger.info(f"Event notifications collected: {event_notifications_response.event_notifications}")
-    if event_notification in [event_notification.title for event_notification in event_notifications_response.event_notifications.notifications]:
+    if event_notification in [
+        event_notification.title for event_notification in event_notifications_response.event_notifications.notifications
+    ]:
         return True
     return False
+
 
 async def provision_webhook(webhook_model: GraylogAlertWebhookNotificationModel) -> Optional[str]:
     """
@@ -116,6 +152,7 @@ async def provision_webhook(webhook_model: GraylogAlertWebhookNotificationModel)
         return response["data"]["id"]
     raise HTTPException(status_code=500, detail="Failed to provision webhook")
 
+
 async def provision_alert_definition(alert_definition_model: GraylogAlertProvisionModel) -> bool:
     """
     Provisions an alert definition for Graylog.
@@ -131,6 +168,7 @@ async def provision_alert_definition(alert_definition_model: GraylogAlertProvisi
         return True
     raise HTTPException(status_code=500, detail="Failed to provision alert definition")
 
+
 async def provision_wazuh_monitoring_alert() -> ProvisionWazuhMonitoringAlertResponse:
     """
     Provisions Wazuh monitoring alerts.
@@ -144,86 +182,88 @@ async def provision_wazuh_monitoring_alert() -> ProvisionWazuhMonitoringAlertRes
         url_whitelisted = await check_if_url_whitelist_entry_exists(f"http://{os.getenv('SERVER_IP')}:5000/monitoring_alerts/create")
         if not url_whitelisted:
             logger.info("Provisioning URL Whitelist")
-            whitelisted_urls = await build_url_whitelisted_entries(whitelist_url_model=GraylogUrlWhitelistEntryConfig(
-                id= await generate_random_id(),
-                value=f"http://{os.getenv('SERVER_IP')}:5000/monitoring_alerts/create",
-                title="SEND TO COPILOT",
-                type='literal',
-            ))
+            whitelisted_urls = await build_url_whitelisted_entries(
+                whitelist_url_model=GraylogUrlWhitelistEntryConfig(
+                    id=await generate_random_id(),
+                    value=f"http://{os.getenv('SERVER_IP')}:5000/monitoring_alerts/create",
+                    title="SEND TO COPILOT",
+                    type="literal",
+                ),
+            )
             logger.info(f"Provisioning URL Whitelist: {whitelisted_urls.dict()}")
             await provision_webhook_url_whitelist(whitelisted_urls)
 
-
         logger.info("Provisioning SEND TO COPILOT Webhook")
-        notification_id = await provision_webhook(GraylogAlertWebhookNotificationModel(
-            title="SEND TO COPILOT",
-            description="Send alert to Copilot",
-            config={"url": f"http://{os.getenv('SERVER_IP')}:5000/monitoring_alerts/create", "type": "http-notification-v1"},
-            )
+        notification_id = await provision_webhook(
+            GraylogAlertWebhookNotificationModel(
+                title="SEND TO COPILOT",
+                description="Send alert to Copilot",
+                config={"url": f"http://{os.getenv('SERVER_IP')}:5000/monitoring_alerts/create", "type": "http-notification-v1"},
+            ),
         )
         logger.info(f"SEND TO COPILOT Webhook provisioned with id: {notification_id}")
-        await provision_alert_definition(GraylogAlertProvisionModel(
-        title="WAZUH SYSLOG LEVEL ALERT",
-        description="Alert on Wazuh syslog level equal to ALERT",
-        priority=2,
-        config=GraylogAlertProvisionConfig(
-            type="aggregation-v1",
-            query="syslog_level:ALERT AND syslog_type:wazuh",
-            query_parameters=[],
-            streams=[],
-            group_by=[],
-            series=[],
-            conditions={
-                "expression": None,
-            },
-            search_within_ms=60000,
-            execute_every_ms=60000,
-        ),
-        field_spec={
-            "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
-                data_type="string",
-                providers=[
-                    GraylogAlertProvisionProvider(
-                        type="template-v1",
-                        template="${source._id}",
-                        require_values=True,
+        await provision_alert_definition(
+            GraylogAlertProvisionModel(
+                title="WAZUH SYSLOG LEVEL ALERT",
+                description="Alert on Wazuh syslog level equal to ALERT",
+                priority=2,
+                config=GraylogAlertProvisionConfig(
+                    type="aggregation-v1",
+                    query="syslog_level:ALERT AND syslog_type:wazuh",
+                    query_parameters=[],
+                    streams=[],
+                    group_by=[],
+                    series=[],
+                    conditions={
+                        "expression": None,
+                    },
+                    search_within_ms=60000,
+                    execute_every_ms=60000,
+                ),
+                field_spec={
+                    "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                        data_type="string",
+                        providers=[
+                            GraylogAlertProvisionProvider(
+                                type="template-v1",
+                                template="${source._id}",
+                                require_values=True,
+                            ),
+                        ],
+                    ),
+                    "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                        data_type="string",
+                        providers=[
+                            GraylogAlertProvisionProvider(
+                                type="template-v1",
+                                template="${source.agent_labels_customer}",
+                                require_values=True,
+                            ),
+                        ],
+                    ),
+                    "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                        data_type="string",
+                        providers=[
+                            GraylogAlertProvisionProvider(
+                                type="template-v1",
+                                template="WAZUH",
+                                require_values=True,
+                            ),
+                        ],
+                    ),
+                },
+                key_spec=[],
+                notification_settings=GraylogAlertProvisionNotificationSettings(
+                    grace_period_ms=0,
+                    backlog_size=None,
+                ),
+                notifications=[
+                    GraylogAlertProvisionNotification(
+                        notification_id=notification_id,
                     ),
                 ],
+                alert=True,
             ),
-            "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
-                data_type="string",
-                providers=[
-                    GraylogAlertProvisionProvider(
-                        type="template-v1",
-                        template="${source.agent_labels_customer}",
-                        require_values=True,
-                    ),
-                ],
-            ),
-            "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
-                data_type="string",
-                providers=[
-                    GraylogAlertProvisionProvider(
-                        type="template-v1",
-                        template="WAZUH",
-                        require_values=True,
-                    ),
-                ],
-            ),
-        },
-        key_spec=[],
-        notification_settings=GraylogAlertProvisionNotificationSettings(
-            grace_period_ms=0,
-            backlog_size=None,
-        ),
-        notifications=[
-            GraylogAlertProvisionNotification(
-                notification_id=notification_id,
-            ),
-        ],
-        alert=True,
-    ))
-
-
+        )
 
     return ProvisionWazuhMonitoringAlertResponse(success=True, message="Wazuh monitoring alerts provisioned successfully")

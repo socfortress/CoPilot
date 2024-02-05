@@ -3,11 +3,12 @@ from fastapi import Security
 from loguru import logger
 
 from app.auth.utils import AuthHandler
+from app.connectors.graylog.schema.monitoring import GraylogEventNotificationsResponse
 from app.connectors.graylog.schema.monitoring import GraylogMessagesResponse
-from app.connectors.graylog.schema.monitoring import GraylogMetricsResponse, GraylogEventNotificationsResponse
+from app.connectors.graylog.schema.monitoring import GraylogMetricsResponse
+from app.connectors.graylog.services.monitoring import get_event_notifications
 from app.connectors.graylog.services.monitoring import get_messages
 from app.connectors.graylog.services.monitoring import get_metrics
-from app.connectors.graylog.services.monitoring import get_event_notifications
 
 # App specific imports
 
@@ -51,6 +52,7 @@ async def get_all_metrics() -> GraylogMetricsResponse:
     """
     logger.info("Fetching all graylog metrics")
     return await get_metrics()
+
 
 @graylog_monitoring_router.get(
     "/event_notifications",

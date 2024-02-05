@@ -1,22 +1,29 @@
-from pydantic import BaseModel, Field
 from enum import Enum
-from typing import List, Dict, Optional
+from typing import Dict
+from typing import List
+from typing import Optional
+
+from pydantic import BaseModel
+from pydantic import Field
+
 
 class AvailableMonitoringAlerts(str, Enum):
     """
     The available monitoring alerts.
     """
+
     WAZUH = (
-    "This alert monitors the SYSLOG_LEVEL field in the Wazuh logs. When the level is ALERT, "
-    "it triggers an alert that is created within DFIR-IRIS. Ensure that you have a pipeline "
-    "rule that sets the SYSLOG_LEVEL field to ALERT when the Wazuh rule level is greater than 11."
-)
+        "This alert monitors the SYSLOG_LEVEL field in the Wazuh logs. When the level is ALERT, "
+        "it triggers an alert that is created within DFIR-IRIS. Ensure that you have a pipeline "
+        "rule that sets the SYSLOG_LEVEL field to ALERT when the Wazuh rule level is greater than 11."
+    )
 
 
 class AvailableMonitoringAlertsResponse(BaseModel):
     """
     The available monitoring alerts response.
     """
+
     success: bool
     message: str
     available_monitoring_alerts: List[Dict[str, str]]
@@ -25,6 +32,7 @@ class AvailableMonitoringAlertsResponse(BaseModel):
 class ProvisionWazuhMonitoringAlertResponse(BaseModel):
     success: bool
     message: str
+
 
 ########## ! GRAYLOG WHITELIST URL CREATION ! ##########
 class GraylogUrlWhitelistEntryConfig(BaseModel):
@@ -37,7 +45,7 @@ class GraylogUrlWhitelistEntryConfig(BaseModel):
         description="The title of the URL whitelist entry.",
     )
     type: str = Field(
-        'literal',
+        "literal",
         description="The type of the URL whitelist entry.",
     )
     value: str = Field(
@@ -45,9 +53,11 @@ class GraylogUrlWhitelistEntryConfig(BaseModel):
         description="The value of the URL whitelist entry.",
     )
 
+
 class GraylogUrlWhitelistEntries(BaseModel):
     entries: List[GraylogUrlWhitelistEntryConfig]
     disabled: bool
+
 
 ########## ! GRAYLOG WEBHOOK CREATION ! ##########
 class GraylogAlertWebhookConfig(BaseModel):
@@ -72,22 +82,24 @@ class GraylogAlertWebhookConfig(BaseModel):
         description="The type of the webhook.",
     )
 
+
 class GraylogAlertWebhookNotificationModel(BaseModel):
     title: str
     description: str
     config: GraylogAlertWebhookConfig
 
 
-
 ########## ! GRAYLOG EVENT CREATION ! ##########
 class GraylogAlertProvisionProvider(BaseModel):
     template: str
-    type: str = Field(..., alias='type')
+    type: str = Field(..., alias="type")
     require_values: bool
+
 
 class GraylogAlertProvisionFieldSpecItem(BaseModel):
     data_type: str
     providers: List[GraylogAlertProvisionProvider]
+
 
 class GraylogAlertProvisionConfig(BaseModel):
     query: str
@@ -98,14 +110,17 @@ class GraylogAlertProvisionConfig(BaseModel):
     group_by: List
     series: List
     conditions: Dict
-    type: str = Field(..., alias='type')
+    type: str = Field(..., alias="type")
+
 
 class GraylogAlertProvisionNotificationSettings(BaseModel):
     grace_period_ms: int
     backlog_size: Optional[int] = None
 
+
 class GraylogAlertProvisionNotification(BaseModel):
     notification_id: str
+
 
 class GraylogAlertProvisionModel(BaseModel):
     title: str

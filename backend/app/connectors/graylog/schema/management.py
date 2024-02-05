@@ -1,5 +1,6 @@
-from pydantic import BaseModel
 from typing import List
+
+from pydantic import BaseModel
 
 
 class DeletedIndexBody(BaseModel):
@@ -53,9 +54,11 @@ class UrlWhitelistEntry(BaseModel):
     title: str
     value: str
 
+
 class UrlWhitelistEntries(BaseModel):
     entries: List[UrlWhitelistEntry]
     disabled: bool
+
 
 class UrlWhitelistEntryResponse(BaseModel):
     success: bool

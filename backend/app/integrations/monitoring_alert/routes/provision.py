@@ -1,18 +1,24 @@
 from fastapi import APIRouter
-from fastapi import Depends
-from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException
-
-from app.db.db_session import get_db
-from app.integrations.monitoring_alert.schema.provision import ProvisionWazuhMonitoringAlertResponse, AvailableMonitoringAlerts, AvailableMonitoringAlertsResponse
-from app.integrations.monitoring_alert.services.provision import provision_wazuh_monitoring_alert
-from app.schedulers.models.scheduler import CreateSchedulerRequest
-from app.schedulers.scheduler import add_scheduler_jobs
-from app.connectors.graylog.routes.events import get_all_event_definitions
-from app.connectors.graylog.schema.events import GraylogEventDefinitionsResponse
 from loguru import logger
 
+from app.connectors.graylog.routes.events import get_all_event_definitions
+from app.connectors.graylog.schema.events import GraylogEventDefinitionsResponse
+from app.integrations.monitoring_alert.schema.provision import AvailableMonitoringAlerts
+from app.integrations.monitoring_alert.schema.provision import (
+    AvailableMonitoringAlertsResponse,
+)
+from app.integrations.monitoring_alert.schema.provision import (
+    ProvisionWazuhMonitoringAlertResponse,
+)
+from app.integrations.monitoring_alert.services.provision import (
+    provision_wazuh_monitoring_alert,
+)
+from app.schedulers.models.scheduler import CreateSchedulerRequest
+from app.schedulers.scheduler import add_scheduler_jobs
+
 monitoring_alerts_provision_router = APIRouter()
+
 
 async def check_if_event_definition_exists(event_definition: str) -> bool:
     """
@@ -39,13 +45,13 @@ async def check_if_event_definition_exists(event_definition: str) -> bool:
     response_model=AvailableMonitoringAlertsResponse,
     description="Get the available monitoring alerts.",
 )
-async def get_available_monitoring_alerts_route(
-) -> AvailableMonitoringAlertsResponse:
+async def get_available_monitoring_alerts_route() -> AvailableMonitoringAlertsResponse:
     """
     Get the available monitoring alerts.
     """
     alerts = [{"name": alert.name, "value": alert.value} for alert in AvailableMonitoringAlerts]
     return AvailableMonitoringAlertsResponse(success=True, message="Alerts retrieved successfully", available_monitoring_alerts=alerts)
+
 
 @monitoring_alerts_provision_router.post(
     "/wazuh/provision",
