@@ -35,8 +35,6 @@ async def provision_webhook(webhook_model: GraylogAlertWebhookNotificationModel)
     Returns:
         bool: True if the webhook was provisioned successfully, False otherwise.
     """
-    data = webhook_model.dict()
-    logger.info(f"Provisioning Webhook: {data}")
     response = await send_post_request(endpoint="/api/events/notifications", data=webhook_model.dict())
     if response["success"]:
         return True
