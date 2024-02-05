@@ -91,6 +91,10 @@ class WazuhSourceModel(BaseModel):
     rule_level: int = Field(..., description="The level of the rule.")
     rule_description: str = Field(..., description="The description of the rule.")
     timestamp: str = Field(..., description="The timestamp of the alert.")
+    process_id: Optional[str] = Field(
+        "n/a",
+        description="The process id of the alert.",
+    )
     timestamp_utc: Optional[str] = Field(
         None,
         description="The UTC timestamp of the alert.",

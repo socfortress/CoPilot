@@ -152,9 +152,11 @@ async def fetch_alert_details(alert: MonitoringAlerts) -> WazuhAlertModel:
 
 
 async def check_event_exclusion(alert_details: WazuhAlertModel, alert_detail_service: AlertDetailsService, session: AsyncSession):
+    logger.info("Checking if alert is excluded due to multi exclusion.")
+    logger.info(f"Alert details: {alert_details}")
     event_exclude_result = await alert_detail_service.collect_alert_timeline_process_id(
         agent_name=alert_details._source["agent_name"],
-        process_id=getattr(alert_details._source, "process_id", "n/a"),
+        process_id=alert_details._source.get("process_id", "n/a"),
         index=alert_details._index,
         session=session,
     )
