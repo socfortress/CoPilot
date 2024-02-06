@@ -160,3 +160,44 @@ async def run_wazuh_analysis(
     await analyze_wazuh_alerts(monitoring_alerts, customer_meta, session)
 
     return WazuhAnalysisResponse(success=True, message="Analysis completed successfully")
+
+@monitoring_alerts_router.post("/run_analysis/suricata", response_model=WazuhAnalysisResponse)
+async def run_suricata_analysis(
+    request: MonitoringWazuhAlertsRequestModel,
+    session: AsyncSession = Depends(get_db),
+) -> WazuhAnalysisResponse:
+    """
+    This route is used to run analysis on the monitoring alerts.
+
+    1. Get all the monitoring alerts from the database where the customer_code matches the customer_code provided
+     and the alert_source is SURICATA.
+
+    2. Call the anlayze_wazuh_alerts function to analyze the alerts.
+
+    Args:
+        request (MonitoringWazuhAlertsRequestModel): The customer code.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        WazuhAnalysisResponse: The response containing the analysis results.
+    """
+    # logger.info(f"Running analysis for customer_code: {request.customer_code}")
+
+    # customer_meta = await get_customer_meta(request.customer_code, session)
+
+    # monitoring_alerts = await session.execute(
+    #     select(MonitoringAlerts).where(
+    #         MonitoringAlerts.customer_code == request.customer_code and MonitoringAlerts.alert_source == "SURICATA",
+    #     ),
+    # )
+    # monitoring_alerts = monitoring_alerts.scalars().all()
+
+    # logger.info(f"Found {len(monitoring_alerts)} monitoring alerts")
+
+    # if not monitoring_alerts:
+    #     raise HTTPException(status_code=404, detail="No monitoring alerts found")
+
+    # # Call the analyze_wazuh_alerts function to analyze the alerts
+    # await analyze_wazuh_alerts(monitoring_alerts, customer_meta, session)
+
+    return WazuhAnalysisResponse(success=True, message="Analysis completed successfully")

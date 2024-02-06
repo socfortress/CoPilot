@@ -17,6 +17,9 @@ from app.integrations.monitoring_alert.schema.provision import (
 from app.integrations.monitoring_alert.services.provision import (
     provision_wazuh_monitoring_alert,
 )
+from app.integrations.monitoring_alert.services.provision import (
+    provision_suricata_monitoring_alert,
+)
 from app.schedulers.models.scheduler import CreateSchedulerRequest
 from app.schedulers.scheduler import add_scheduler_jobs
 
@@ -36,15 +39,21 @@ async def invoke_provision_wazuh_monitoring_alert(request: ProvisionMonitoringAl
     )
 
 
-# ! Comment out for now ! #
-# async def provision_other_alert(request):
-# # Provision the other alert
-# pass
+async def invoke_provision_suricata_monitoring_alert(request: ProvisionMonitoringAlertRequest):
+    # Provision the Suricata monitoring alert
+    await provision_suricata_monitoring_alert(request)
+    await add_scheduler_jobs(
+        CreateSchedulerRequest(
+            function_name="invoke_suricata_monitoring_alert",
+            time_interval=5,
+            job_id="invoke_suricata_monitoring_alert",
+        ),
+    )
 
 # Create a dictionary that maps alert names to provision functions
 PROVISION_FUNCTIONS = {
     "WAZUH_SYSLOG_LEVEL_ALERT": invoke_provision_wazuh_monitoring_alert,
-    # "OTHER_ALERT": provision_other_alert,
+    "SURICATA_ALERT": invoke_provision_suricata_monitoring_alert,
     # Add more alert names and functions as needed
 }
 
