@@ -10,7 +10,7 @@ from app.connectors.graylog.schema.management import UrlWhitelistEntryResponse
 from app.connectors.graylog.schema.monitoring import GraylogEventNotificationsResponse
 from app.connectors.graylog.services.collector import get_url_whitelist_entries
 from app.connectors.graylog.utils.universal import send_post_request
-from app.connectors.graylog.utils.universal import send_put_request
+from app.connectors.graylog.utils.universal import send_put_request, send_get_request
 from app.integrations.monitoring_alert.schema.provision import (
     GraylogAlertProvisionConfig,
 )
@@ -91,6 +91,26 @@ async def check_if_url_whitelist_entry_exists(url: str) -> bool:
         logger.info(f"Url whitelist entry {url} already exists")
         return True
     return False
+
+async def get_notification_id(notification_title: str) -> Optional[str]:
+    """
+    Get the notification id.
+
+    Args:
+        notification_title (str): The notification title.
+
+    Returns:
+        Optional[str]: The notification id if it exists, None otherwise.
+    """
+    event_notifications_response = await get_all_event_notifications()
+    if not event_notifications_response.success:
+        raise HTTPException(status_code=500, detail="Failed to collect event notifications")
+    event_notifications_response = GraylogEventNotificationsResponse(**event_notifications_response.dict())
+    logger.info(f"Event notifications collected: {event_notifications_response.event_notifications}")
+    for event_notification in event_notifications_response.event_notifications.notifications:
+        if event_notification.title == notification_title:
+            return event_notification.id
+    return None
 
 
 async def build_url_whitelisted_entries(whitelist_url_model: GraylogUrlWhitelistEntryConfig) -> GraylogUrlWhitelistEntries:
@@ -319,6 +339,7 @@ async def provision_suricata_monitoring_alert(request: ProvisionMonitoringAlertR
             ),
         )
         logger.info(f"SEND TO COPILOT Webhook provisioned with id: {notification_id}")
+    notification_id = await get_notification_id("SEND TO COPILOT")
     await provision_alert_definition(
         GraylogAlertProvisionModel(
             title="SURICATA ALERT SEVERITY 1",
