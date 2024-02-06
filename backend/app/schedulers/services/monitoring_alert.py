@@ -42,13 +42,13 @@ async def invoke_wazuh_monitoring_alert() -> WazuhAnalysisResponse:
     await session.close()
     with get_sync_db_session() as session:
         # Synchronous ORM operations
-        job_metadata = session.query(JobMetadata).filter_by(job_id="invoke_wazuh_monitoring_alerts").one_or_none()
+        job_metadata = session.query(JobMetadata).filter_by(job_id="invoke_wazuh_monitoring_alert").one_or_none()
         if job_metadata:
             job_metadata.last_success = datetime.utcnow()
             session.add(job_metadata)
             session.commit()
         else:
             # Handle the case where job_metadata does not exist
-            logger.error("JobMetadata for 'invoke_wazuh_monitoring_alerts' not found.")
+            logger.error("JobMetadata for 'invoke_wazuh_monitoring_alert' not found.")
 
     return WazuhAnalysisResponse(success=True, message="Wazuh monitoring alerts invoked.")
