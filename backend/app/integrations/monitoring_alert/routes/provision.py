@@ -6,7 +6,7 @@ from app.connectors.graylog.routes.events import get_all_event_definitions
 from app.connectors.graylog.schema.events import GraylogEventDefinitionsResponse
 from app.integrations.monitoring_alert.schema.provision import AvailableMonitoringAlerts
 from app.integrations.monitoring_alert.schema.provision import (
-    AvailableMonitoringAlertsResponse, ProvisionWazuhMonitoringAlertRequest
+    AvailableMonitoringAlertsResponse, ProvisionMonitoringAlertRequest
 )
 from app.integrations.monitoring_alert.schema.provision import (
     ProvisionWazuhMonitoringAlertResponse,
@@ -19,6 +19,29 @@ from app.schedulers.scheduler import add_scheduler_jobs
 
 monitoring_alerts_provision_router = APIRouter()
 
+# Define your provision functions
+async def invoke_provision_wazuh_monitoring_alert(request: ProvisionMonitoringAlertRequest):
+    # Provision the Wazuh monitoring alert
+    await provision_wazuh_monitoring_alert(request)
+    await add_scheduler_jobs(
+        CreateSchedulerRequest(
+            function_name="invoke_wazuh_monitoring_alert",
+            time_interval=5,
+            job_id="invoke_wazuh_monitoring_alert",
+        ),
+    )
+
+# ! Comment out for now ! #
+#async def provision_other_alert(request):
+    # # Provision the other alert
+    # pass
+
+# Create a dictionary that maps alert names to provision functions
+PROVISION_FUNCTIONS = {
+    "WAZUH_SYSLOG_LEVEL_ALERT": invoke_provision_wazuh_monitoring_alert,
+    #"OTHER_ALERT": provision_other_alert,
+    # Add more alert names and functions as needed
+}
 
 async def check_if_event_definition_exists(event_definition: str) -> bool:
     """
@@ -54,20 +77,22 @@ async def get_available_monitoring_alerts_route() -> AvailableMonitoringAlertsRe
 
 
 @monitoring_alerts_provision_router.post(
-    "/wazuh/provision",
+    "/provision",
     response_model=ProvisionWazuhMonitoringAlertResponse,
-    description="Provisions Wazuh monitoring alerts.",
+    description="Provisions monitoring alerts.",
 )
-async def provision_wazuh_monitoring_alert_route(
-    request: ProvisionWazuhMonitoringAlertRequest,
+async def provision_monitoring_alert_route(
+    request: ProvisionMonitoringAlertRequest,
 ) -> ProvisionWazuhMonitoringAlertResponse:
-    await check_if_event_definition_exists("WAZUH SYSLOG LEVEL ALERT")
-    await provision_wazuh_monitoring_alert(request)
-    await add_scheduler_jobs(
-        CreateSchedulerRequest(
-            function_name="invoke_wazuh_monitoring_alert",
-            time_interval=5,
-            job_id="invoke_wazuh_monitoring_alert",
-        ),
-    )
+    await check_if_event_definition_exists(request.alert_name.replace('_', ' '))
+
+    # Look up the provision function based on request.alert_name
+    provision_function = PROVISION_FUNCTIONS.get(request.alert_name)
+
+    if provision_function is None:
+        raise HTTPException(status_code=400, detail=f"No provision function found for alert name {request.alert_name}")
+
+    # Invoke the provision function
+    await provision_function(request)
+
     return ProvisionWazuhMonitoringAlertResponse(success=True, message="Wazuh monitoring alerts provisioned.")

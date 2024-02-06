@@ -4,6 +4,7 @@ from typing import Optional
 from dotenv import load_dotenv
 from fastapi import HTTPException
 from loguru import logger
+import json
 
 from app.connectors.graylog.routes.monitoring import get_all_event_notifications
 from app.connectors.graylog.schema.management import UrlWhitelistEntryResponse
@@ -15,7 +16,7 @@ from app.integrations.monitoring_alert.schema.provision import (
     GraylogAlertProvisionConfig,
 )
 from app.integrations.monitoring_alert.schema.provision import (
-    GraylogAlertProvisionFieldSpecItem, ProvisionWazuhMonitoringAlertRequest
+    GraylogAlertProvisionFieldSpecItem, ProvisionMonitoringAlertRequest
 )
 from app.integrations.monitoring_alert.schema.provision import (
     GraylogAlertProvisionModel,
@@ -121,6 +122,7 @@ async def provision_webhook_url_whitelist(whitelist_url_model: GraylogUrlWhiteli
     """
     logger.info(f"Provisioning URL Whitelist: {whitelist_url_model.dict()}")
     response = await send_put_request(endpoint="/api/system/urlwhitelist", data=whitelist_url_model.dict())
+    logger.info(f"URL Whitelist provisioned: {response}")
     if response["success"]:
         return True
     raise HTTPException(status_code=500, detail="Failed to provision URL Whitelist")
@@ -181,7 +183,7 @@ async def provision_alert_definition(alert_definition_model: GraylogAlertProvisi
     raise HTTPException(status_code=500, detail="Failed to provision alert definition")
 
 
-async def provision_wazuh_monitoring_alert(request: ProvisionWazuhMonitoringAlertRequest) -> ProvisionWazuhMonitoringAlertResponse:
+async def provision_wazuh_monitoring_alert(request: ProvisionMonitoringAlertRequest) -> ProvisionWazuhMonitoringAlertResponse:
     """
     Provisions Wazuh monitoring alerts.
 
@@ -189,6 +191,7 @@ async def provision_wazuh_monitoring_alert(request: ProvisionWazuhMonitoringAler
         ProvisionWazuhMonitoringAlertResponse: The response indicating the success of provisioning the monitoring alerts.
     """
     #
+    logger.info(f"Invoking provision_wazuh_monitoring_alert with request: {request.dict()}")
     notification_exists = await check_if_event_notification_exists("SEND TO COPILOT")
     if not notification_exists:
         url_whitelisted = await check_if_url_whitelist_entry_exists(f"http://{os.getenv('SERVER_IP')}:5000/monitoring_alerts/create")
@@ -202,7 +205,6 @@ async def provision_wazuh_monitoring_alert(request: ProvisionWazuhMonitoringAler
                     type="literal",
                 ),
             )
-            logger.info(f"Provisioning URL Whitelist: {whitelisted_urls.dict()}")
             await provision_webhook_url_whitelist(whitelisted_urls)
 
         logger.info("Provisioning SEND TO COPILOT Webhook")
