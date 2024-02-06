@@ -31,7 +31,7 @@ from app.integrations.monitoring_alert.schema.monitoring_alert import (
 )
 from app.integrations.monitoring_alert.schema.monitoring_alert import WazuhAlertModel
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
-    WazuhAnalysisResponse,
+    SuricataAlertBase,
 )
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
     WazuhIrisAlertContext,
@@ -150,7 +150,7 @@ async def fetch_wazuh_indexer_details(alert_id: str, index: str) -> WazuhAlertMo
     return WazuhAlertModel(**response)
 
 
-async def fetch_alert_details(alert: MonitoringAlerts) -> WazuhAlertModel:
+async def fetch_alert_details(alert: MonitoringAlerts) -> SuricataAlertBase:
     logger.info(f"Analyzing Wazuh alert: {alert.alert_id}")
     alert_details = await fetch_wazuh_indexer_details(alert.alert_id, alert.alert_index)
     logger.info(f"Alert details: {alert_details}")
@@ -174,7 +174,7 @@ async def check_event_exclusion(alert_details: WazuhAlertModel, alert_detail_ser
     logger.info("Alert is not excluded due to multi exclusion.")
 
 
-async def check_if_open_alert_exists_in_iris(alert_details: WazuhAlertModel) -> list:
+async def check_if_open_alert_exists_in_iris(alert_details: SuricataAlertBase) -> list:
     """
     Check if the alert exists in IRIS.
 
@@ -343,7 +343,7 @@ async def create_alert_details(alert_details: WazuhAlertModel) -> CreateAlertReq
     )
 
 
-async def create_and_update_alert_in_iris(alert_details: WazuhAlertModel, session: AsyncSession) -> int:
+async def create_and_update_alert_in_iris(alert_details: SuricataAlertBase, session: AsyncSession) -> int:
     """
     Creates the alert, then updates the alert with the asset and IoC if available.
 
@@ -447,10 +447,8 @@ async def analyze_suricata_alerts(
         WazuhAnalysisResponse: The analysis response.
     """
     logger.info(f"Analyzing Suricata alerts with customer_meta: {customer_meta}")
-    alert_detail_service = await AlertDetailsService.create()
     for alert in monitoring_alerts:
         alert_details = await fetch_alert_details(alert)
-        await check_event_exclusion(alert_details, alert_detail_service, session)
         iris_alert_id = await check_if_open_alert_exists_in_iris(alert_details)
         if iris_alert_id == []:
             logger.info(f"Alert {alert_details._id} does not exist in IRIS. Creating alert.")

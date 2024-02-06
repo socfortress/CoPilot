@@ -230,14 +230,8 @@ class WazuhIrisAlertPayload(BaseModel):
         return self.dict(exclude_none=True)
 
 
-# ! SURICATA ALERTS SCHEMA ! #
-class SuricataAlertBase(BaseModel):
-    id: str = Field(..., description="Unique identifier for the alert", alias="_id")
-    index: str = Field(
-        ...,
-        description="Index of the alert in the database",
-        alias="_index",
-    )
+########### ! SURICATA ALERTS SCHEMA ! ###########
+class SuricataSourceModel(BaseModel):
     alert_signature: str = Field(..., description="Signature of the alert")
     alert_severity: int = Field(..., description="Severity level of the alert")
     alert_signature_id: int = Field(..., description="Signature ID of the alert")
@@ -254,16 +248,6 @@ class SuricataAlertBase(BaseModel):
         "timestamp",
         description="The timefield of the alert to be used when creating the IRIS alert.",
     )
-
-    class Config:
-        allow_population_by_field_name = True
-        extra = Extra.allow
-
-    def to_dict(self):
-        return self.dict(exclude_none=True)
-
-
-class SuricataAlertRequest(SuricataAlertBase):
     date: Optional[float] = Field(
         None,
         description="Date of the alert in Unix timestamp",
@@ -273,7 +257,6 @@ class SuricataAlertRequest(SuricataAlertBase):
         description="Metadata tag for the alert",
     )
     alert_gid: Optional[int] = Field(None, description="Alert group ID")
-    # ... (continue adding all other optional fields in the same manner)
 
     class Config:
         allow_population_by_field_name = True
@@ -283,18 +266,30 @@ class SuricataAlertRequest(SuricataAlertBase):
         return self.dict(exclude_none=True)
 
 
-class SuricataAlertResponse(BaseModel):
-    success: bool
-    message: str
-    alert_id: int = Field(..., description="The alert id as created in IRIS.")
-    customer: str = Field(..., description="The customer name.")
-    alert_source_link: str = Field(
-        ...,
-        description="The link to the alert within Grafana.",
+class SuricataAlertModel(BaseModel):
+    _index: str
+    _id: str
+    _version: int
+    _source: SuricataSourceModel
+    asset_type_id: Optional[int] = Field(
+        None,
+        description="The asset type id of the alert which is needed for when we add the asset to IRIS.",
+    )
+    ioc_value: Optional[str] = Field(
+        None,
+        description="The IoC value of the alert which is needed for when we add the IoC to IRIS.",
+    )
+    ioc_type: Optional[str] = Field(
+        None,
+        description="The IoC type of the alert which is needed for when we add the IoC to IRIS.",
     )
 
+    class Config:
+        extra = Extra.allow
 
-########### ! Create Alerts Schemas ! ###########
+
+
+########### ! Create Suricata Alerts In IRIS Schemas ! ###########
 class SuricataIrisAsset(BaseModel):
     asset_name: Optional[str] = Field(
         "Asset Does Not Apply to Suricata Alerts",
