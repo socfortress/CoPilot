@@ -228,3 +228,207 @@ class WazuhIrisAlertPayload(BaseModel):
 
     def to_dict(self):
         return self.dict(exclude_none=True)
+
+
+# ! SURICATA ALERTS SCHEMA ! #
+class SuricataAlertBase(BaseModel):
+    id: str = Field(..., description="Unique identifier for the alert", alias="_id")
+    index: str = Field(
+        ...,
+        description="Index of the alert in the database",
+        alias="_index",
+    )
+    alert_signature: str = Field(..., description="Signature of the alert")
+    alert_severity: int = Field(..., description="Severity level of the alert")
+    alert_signature_id: int = Field(..., description="Signature ID of the alert")
+    src_ip: str = Field(..., description="Source IP address")
+    dest_ip: str = Field(..., description="Destination IP address")
+    app_proto: str = Field(..., description="Application protocol")
+    agent_labels_customer: str = Field(..., description="Customer of the agent")
+    timestamp: str = Field(..., description="The timestamp of the alert.")
+    timestamp_utc: Optional[str] = Field(
+        ...,
+        description="The UTC timestamp of the alert.",
+    )
+    time_field: Optional[str] = Field(
+        "timestamp",
+        description="The timefield of the alert to be used when creating the IRIS alert.",
+    )
+
+    class Config:
+        allow_population_by_field_name = True
+        extra = Extra.allow
+
+    def to_dict(self):
+        return self.dict(exclude_none=True)
+
+
+class SuricataAlertRequest(SuricataAlertBase):
+    date: Optional[float] = Field(
+        None,
+        description="Date of the alert in Unix timestamp",
+    )
+    alert_metadata_tag: Optional[str] = Field(
+        None,
+        description="Metadata tag for the alert",
+    )
+    alert_gid: Optional[int] = Field(None, description="Alert group ID")
+    # ... (continue adding all other optional fields in the same manner)
+
+    class Config:
+        allow_population_by_field_name = True
+        extra = Extra.allow
+
+    def to_dict(self):
+        return self.dict(exclude_none=True)
+
+
+class SuricataAlertResponse(BaseModel):
+    success: bool
+    message: str
+    alert_id: int = Field(..., description="The alert id as created in IRIS.")
+    customer: str = Field(..., description="The customer name.")
+    alert_source_link: str = Field(
+        ...,
+        description="The link to the alert within Grafana.",
+    )
+
+
+########### ! Create Alerts Schemas ! ###########
+class SuricataIrisAsset(BaseModel):
+    asset_name: Optional[str] = Field(
+        "Asset Does Not Apply to Suricata Alerts",
+        description="Name of the asset",
+        example="Server01",
+    )
+    asset_ip: Optional[str] = Field(
+        "Asset Does Not Apply to Suricata Alerts",
+        description="IP address of the asset",
+        example="192.168.1.1",
+    )
+    asset_description: Optional[str] = Field(
+        "Asset Does Not Apply to Suricata Alerts",
+        description="Description of the asset",
+        example="Windows Server",
+    )
+    asset_type_id: Optional[int] = Field(
+        9,
+        description="Type ID of the asset",
+        example=1,
+    )
+
+
+class SuricataIrisIoc(BaseModel):
+    ioc_value: str = Field(
+        ...,
+        description="Value of the IoC",
+        example="www.google.com",
+    )
+    ioc_description: str = Field(
+        ...,
+        description="Description of the IoC",
+        example="Google",
+    )
+    ioc_tlp_id: int = Field(1, description="TLP ID of the IoC", example=1)
+    ioc_type_id: int = Field(20, description="Type ID of the IoC", example=20)
+
+
+class SuricataIrisAlertContext(BaseModel):
+    customer_id_full: str = Field(
+        ...,
+        description="IRIS ID of the customer, customer name, and iris case index name in the Wazuh-Indexer",
+        example="1, SOCFortress, dfir_iris_00001",
+    )
+    customer_iris_id: int = Field(
+        ...,
+        description="IRIS ID of the customer",
+        example=1,
+    )
+    customer_name: str = Field(
+        ...,
+        description="Name of the customer",
+        example="SOCFortress",
+    )
+    customer_cases_index: str = Field(
+        ...,
+        description="IRIS case index name in the Wazuh-Indexer",
+        example="dfir_iris_00001",
+    )
+    alert_id: str = Field(..., description="ID of the alert", example="123")
+    alert_name: str = Field(
+        ...,
+        description="Name of the alert",
+        example="Intrusion Detected",
+    )
+    alert_level: int = Field(..., description="Severity level of the alert", example=3)
+    rule_id: int = Field(
+        ...,
+        description="ID of the Suricata rule that triggered the alert",
+        example="2001",
+    )
+    src_ip: str = Field(
+        ...,
+        description="Source IP address of the alert",
+        example="1.1.1.1",
+    )
+    dest_ip: str = Field(
+        ...,
+        description="Destination IP address of the alert",
+        example="8.8.8.8",
+    )
+    app_proto: str = Field(
+        ...,
+        description="Application protocol of the alert",
+        example="TCP",
+    )
+
+
+class SuricataIrisAlertPayload(BaseModel):
+    alert_title: str = Field(
+        ...,
+        description="Title of the alert",
+        example="Intrusion Detected",
+    )
+    alert_description: str = Field(
+        ...,
+        description="Description of the alert",
+        example="Intrusion Detected by Firewall",
+    )
+    alert_source: str = Field(..., description="Source of the alert", example="Wazuh")
+    assets: List[SuricataIrisAsset] = Field(..., description="List of affected assets")
+    alert_source_link: str = Field(
+        ...,
+        description="Link to the alert within Grafana",
+        example="https://grafana.com",
+    )
+    alert_status_id: int = Field(..., description="Status ID of the alert", example=3)
+    alert_severity_id: int = Field(
+        ...,
+        description="Severity ID of the alert",
+        example=5,
+    )
+    alert_customer_id: int = Field(
+        ...,
+        description="Customer ID related to the alert",
+        example=1,
+    )
+    alert_source_content: Dict[str, Any] = Field(
+        ...,
+        description="Original content from the alert source",
+    )
+    alert_context: SuricataIrisAlertContext = Field(
+        ...,
+        description="Contextual information about the alert",
+    )
+    alert_iocs: Optional[List[IrisIoc]] = Field(
+        None,
+        description="List of IoCs related to the alert",
+    )
+    alert_source_event_time: str = Field(
+        ...,
+        description="Timestamp of the alert",
+        example="2021-01-01T00:00:00.000Z",
+    )
+
+    def to_dict(self):
+        return self.dict(exclude_none=True)
