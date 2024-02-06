@@ -23,6 +23,10 @@ class MonitoringAlertsRequestModel(BaseModel):
         orm_mode = True
 
 
+class MonitoringWazuhAlertsRequestModel(BaseModel):
+    customer_code: str
+
+
 class GraylogEventFields(BaseModel):
     ALERT_ID: str = Field(..., description="Unique identifier for the alert", example="65f6a260-c1f3-11ee-93bc-86000046278a")
     ALERT_SOURCE: str = Field(..., description="Source of the alert", example="WAZUH")
@@ -88,6 +92,10 @@ class WazuhSourceModel(BaseModel):
     rule_level: int = Field(..., description="The level of the rule.")
     rule_description: str = Field(..., description="The description of the rule.")
     timestamp: str = Field(..., description="The timestamp of the alert.")
+    process_id: Optional[str] = Field(
+        "n/a",
+        description="The process id of the alert.",
+    )
     timestamp_utc: Optional[str] = Field(
         None,
         description="The UTC timestamp of the alert.",

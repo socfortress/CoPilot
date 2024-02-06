@@ -13,6 +13,7 @@ import customers from "./customers"
 import logs from "./logs"
 import flow from "./flow"
 import integrations from "./integrations"
+import monitoringAlerts from "./monitoringAlerts"
 
 export default {
 	agents,
@@ -29,5 +30,6 @@ export default {
 	customers,
 	logs,
 	flow,
-	integrations
+	integrations,
+	monitoringAlerts
 }

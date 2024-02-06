@@ -55,6 +55,10 @@ import Icon from "@/components/common/Icon.vue"
 import type { EventDefinition } from "@/types/graylog/event-definition.d"
 import type { SelectMixedOption } from "naive-ui/es/select/src/interface"
 
+const emit = defineEmits<{
+	(e: "loaded", value: EventDefinition[]): void
+}>()
+
 const props = defineProps<{ highlight: string | null | undefined }>()
 const { highlight } = toRefs(props)
 
@@ -102,6 +106,7 @@ function getData() {
 			if (res.data.success) {
 				events.value = res.data.event_definitions || []
 				total.value = events.value.length || 0
+				emit("loaded", events.value)
 
 				nextTick(() => {
 					setTimeout(() => {

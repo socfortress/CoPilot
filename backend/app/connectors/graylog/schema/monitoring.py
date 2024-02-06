@@ -51,3 +51,43 @@ class GraylogMetricsResponse(BaseModel):
     uncommitted_journal_entries: int
     message: str
     success: bool
+
+
+#### ! Graylog Event Notifications ! ####
+class GraylogEventNotificationsBasicAuth(BaseModel):
+    is_set: bool
+
+
+class GraylogEventNotificationsApiSecret(BaseModel):
+    is_set: bool
+
+
+class GraylogEventNotificationsConfig(BaseModel):
+    type: str
+    basic_auth: GraylogEventNotificationsBasicAuth
+    api_key: str
+    api_secret: GraylogEventNotificationsApiSecret
+    url: str
+
+
+class GraylogEventNotificationsNotification(BaseModel):
+    id: str
+    title: str
+    description: str
+    config: GraylogEventNotificationsConfig
+
+
+class GraylogEventNotifications(BaseModel):
+    total: int
+    page: int
+    per_page: int
+    count: int
+    notifications: List[GraylogEventNotificationsNotification]
+    query: str
+    grand_total: int
+
+
+class GraylogEventNotificationsResponse(BaseModel):
+    event_notifications: GraylogEventNotifications
+    message: str
+    success: bool

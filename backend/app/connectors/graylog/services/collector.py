@@ -11,6 +11,7 @@ from app.connectors.graylog.schema.collector import GraylogIndicesResponse
 from app.connectors.graylog.schema.collector import GraylogInputsResponse
 from app.connectors.graylog.schema.collector import RunningInput
 from app.connectors.graylog.schema.collector import RunningInputsResponse
+from app.connectors.graylog.schema.management import UrlWhitelistEntryResponse
 from app.connectors.graylog.utils.universal import send_get_request
 
 
@@ -168,3 +169,27 @@ async def get_input_ids() -> List[str]:
         return [input.id for input in inputs_collected]
     else:
         return []
+
+
+async def get_url_whitelist_entries() -> UrlWhitelistEntryResponse:
+    """
+    Retrieves the URL whitelist entries from Graylog.
+
+    Returns:
+        UrlWhitelistEntryResponse: The response object containing the URL whitelist entries.
+    """
+    logger.info("Getting URL whitelist entries from Graylog")
+    response = await send_get_request(endpoint="/api/system/urlwhitelist")
+    logger.info(f"URL whitelist entries response: {response}")
+    if response["success"]:
+        try:
+            url_whitelist_entries = response["data"]
+        except KeyError:
+            raise HTTPException(status_code=500, detail="Failed to collect URL whitelist entries")
+        return UrlWhitelistEntryResponse(
+            url_whitelist_entries=url_whitelist_entries,
+            success=True,
+            message="URL whitelist entries collected successfully",
+        )
+    else:
+        return UrlWhitelistEntryResponse(url_whitelist_entries=[], success=False, message="Failed to collect URL whitelist entries")

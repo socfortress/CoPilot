@@ -89,15 +89,11 @@ class Context(BaseModel):
     streams: Dict[str, Stream]
 
 
-class Fields(BaseModel):
-    test: str
-
-
 class Event(BaseModel):
     alert: bool
     event_definition_id: str
     event_definition_type: str
-    fields: Fields
+    fields: Dict[str, str]
     group_by_fields: Dict[str, str]
     id: str
     key: Optional[str]

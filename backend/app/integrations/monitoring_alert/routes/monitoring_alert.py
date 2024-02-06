@@ -20,6 +20,9 @@ from app.integrations.monitoring_alert.schema.monitoring_alert import (
     MonitoringAlertsRequestModel,
 )
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
+    MonitoringWazuhAlertsRequestModel,
+)
+from app.integrations.monitoring_alert.schema.monitoring_alert import (
     WazuhAnalysisResponse,
 )
 from app.integrations.monitoring_alert.services.wazuh import analyze_wazuh_alerts
@@ -118,8 +121,8 @@ async def create_monitoring_alert(
 
 
 @monitoring_alerts_router.post("/run_analysis/wazuh", response_model=WazuhAnalysisResponse)
-async def run_analysis(
-    customer_code: str,
+async def run_wazuh_analysis(
+    request: MonitoringWazuhAlertsRequestModel,
     session: AsyncSession = Depends(get_db),
 ) -> WazuhAnalysisResponse:
     """
@@ -131,18 +134,20 @@ async def run_analysis(
     2. Call the anlayze_wazuh_alerts function to analyze the alerts.
 
     Args:
-        customer_code (str): The customer code.
+        request (MonitoringWazuhAlertsRequestModel): The customer code.
         session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
 
     Returns:
         WazuhAnalysisResponse: The response containing the analysis results.
     """
-    logger.info(f"Running analysis for customer_code: {customer_code}")
+    logger.info(f"Running analysis for customer_code: {request.customer_code}")
 
-    customer_meta = await get_customer_meta(customer_code, session)
+    customer_meta = await get_customer_meta(request.customer_code, session)
 
     monitoring_alerts = await session.execute(
-        select(MonitoringAlerts).where(MonitoringAlerts.customer_code == customer_code and MonitoringAlerts.alert_source == "WAZUH"),
+        select(MonitoringAlerts).where(
+            MonitoringAlerts.customer_code == request.customer_code and MonitoringAlerts.alert_source == "WAZUH",
+        ),
     )
     monitoring_alerts = monitoring_alerts.scalars().all()
 

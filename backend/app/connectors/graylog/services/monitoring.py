@@ -1,6 +1,7 @@
 from fastapi import HTTPException
 from loguru import logger
 
+from app.connectors.graylog.schema.monitoring import GraylogEventNotificationsResponse
 from app.connectors.graylog.schema.monitoring import GraylogMessages
 from app.connectors.graylog.schema.monitoring import GraylogMessagesResponse
 from app.connectors.graylog.schema.monitoring import GraylogMetricsResponse
@@ -142,3 +143,27 @@ async def get_metrics() -> GraylogMetricsResponse:
         success=False,
         message="Failed to collect metrics",
     )
+
+
+async def get_event_notifications() -> GraylogEventNotificationsResponse:
+    """
+    Retrieves event notifications from Graylog.
+
+    Returns:
+        GraylogEventNotificationsResponse: The response object containing the collected event notifications.
+    """
+    logger.info("Getting event notifications from Graylog")
+    event_notifications_collected = await send_get_request(endpoint="/api/events/notifications")
+    try:
+        if event_notifications_collected["success"]:
+            return GraylogEventNotificationsResponse(
+                event_notifications=event_notifications_collected["data"],
+                success=True,
+                message="Event notifications collected successfully",
+            )
+    except KeyError as e:
+        raise HTTPException(status_code=500, detail=f"Failed to collect event notifications key: {e}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to collect event notifications: {e}")
+
+    return GraylogEventNotificationsResponse(event_notifications=[], success=False, message="Failed to collect event notifications")

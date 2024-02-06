@@ -19,6 +19,12 @@ from app.integrations.alert_creation.general.schema.alert import ValidIocFields
 from app.integrations.alert_creation.general.services.alert_multi_exclude import (
     AlertDetailsService,
 )
+from app.integrations.alert_escalation.schema.general_alert import (
+    CreateAlertRequest as AddAlertRequest,
+)
+from app.integrations.alert_escalation.services.general_alert import (
+    add_alert_to_document,
+)
 from app.integrations.monitoring_alert.models.monitoring_alert import MonitoringAlerts
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
     FilterAlertsRequest,
@@ -33,6 +39,7 @@ from app.integrations.monitoring_alert.schema.monitoring_alert import (
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
     WazuhIrisAlertPayload,
 )
+from app.integrations.monitoring_alert.utils.db_operations import remove_alert_id
 from app.integrations.utils.alerts import get_asset_type_id
 from app.integrations.utils.alerts import validate_ioc_type
 from app.utils import get_customer_alert_settings
@@ -151,9 +158,11 @@ async def fetch_alert_details(alert: MonitoringAlerts) -> WazuhAlertModel:
 
 
 async def check_event_exclusion(alert_details: WazuhAlertModel, alert_detail_service: AlertDetailsService, session: AsyncSession):
+    logger.info("Checking if alert is excluded due to multi exclusion.")
+    logger.info(f"Alert details: {alert_details}")
     event_exclude_result = await alert_detail_service.collect_alert_timeline_process_id(
         agent_name=alert_details._source["agent_name"],
-        process_id=getattr(alert_details._source, "process_id", "n/a"),
+        process_id=alert_details._source.get("process_id", "n/a"),
         index=alert_details._index,
         session=session,
     )
@@ -445,7 +454,16 @@ async def analyze_wazuh_alerts(
         iris_alert_id = await check_if_open_alert_exists_in_iris(alert_details)
         if iris_alert_id == []:
             logger.info(f"Alert {alert_details._id} does not exist in IRIS. Creating alert.")
-            await create_and_update_alert_in_iris(alert_details, session)
+            iris_alert_id = await create_and_update_alert_in_iris(alert_details, session)
+            await remove_alert_id(alert.alert_id, session)
+            es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
+            await add_alert_to_document(
+                es_client=es_client,
+                alert=AddAlertRequest(alert_id=alert_details._id, index_name=alert_details._index),
+                soc_alert_id=iris_alert_id,
+                session=session,
+            )
+
         else:
             logger.info(f"Alert {iris_alert_id} exists in IRIS. Updating alert with the asset.")
             # Fetch the current list of assets from the alert to avoid overwriting them
@@ -457,6 +475,14 @@ async def analyze_wazuh_alerts(
             current_assets.append(dict(IrisAsset(**asset_payload.to_dict())))
             current_assets = await remove_duplicate_assets(current_assets)
             await update_alert_with_assets(client, alert_client, iris_alert_id, current_assets)
+            await remove_alert_id(alert.alert_id, session)
+            es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
+            await add_alert_to_document(
+                es_client=es_client,
+                alert=AddAlertRequest(alert_id=alert_details.id, index_name=alert_details.index),
+                soc_alert_id=iris_alert_id,
+                session=session,
+            )
 
     return WazuhAnalysisResponse(
         success=True,
