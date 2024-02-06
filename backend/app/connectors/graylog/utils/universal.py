@@ -224,11 +224,14 @@ async def send_put_request(endpoint: str, data: Optional[Dict[str, Any]] = None,
             json=data,
             verify=False,
         )
-        if response.status_code != 200:
+        logger.info(f"Response from PUT request: {response.status_code} {response.text}")
+        if response.status_code not in [200, 204]:
             raise HTTPException(
                 status_code=404,
-                detail=f"Failed to send PUT request to {endpoint} with error: {response.json()['message']}",
+                detail=f"Failed to send PUT request to {endpoint} with error: {response.json().get('message', '')}",
             )
+        if response.status_code == 204:
+            return {"data": None, "success": True, "message": "Successfully sent PUT request, no content returned"}
         return {"data": response.json(), "success": True, "message": "Successfully retrieved data"}
     except HTTPException as e:
         raise e
