@@ -19,7 +19,7 @@ class AvailableMonitoringAlerts(str, Enum):
         "it triggers an alert that is created within DFIR-IRIS. Ensure that you have a pipeline "
         "rule that sets the SYSLOG_LEVEL field to ALERT when the Wazuh rule level is greater than 11."
     )
-    SURICATA_ALERT = (
+    SURICATA_ALERT_SEVERITY_1 = (
         "This alert monitors the Suricata logs. When an the alert_severity field is 1, it triggers "
         "an alert that is created within DFIR-IRIS. Ensure that you have a pipeline rule that sets "
     )

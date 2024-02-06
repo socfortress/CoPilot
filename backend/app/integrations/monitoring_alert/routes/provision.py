@@ -53,7 +53,7 @@ async def invoke_provision_suricata_monitoring_alert(request: ProvisionMonitorin
 # Create a dictionary that maps alert names to provision functions
 PROVISION_FUNCTIONS = {
     "WAZUH_SYSLOG_LEVEL_ALERT": invoke_provision_wazuh_monitoring_alert,
-    "SURICATA_ALERT": invoke_provision_suricata_monitoring_alert,
+    "SURICATA_ALERT_SEVERITY_1": invoke_provision_suricata_monitoring_alert,
     # Add more alert names and functions as needed
 }
 
