@@ -45,6 +45,7 @@ class ProvisionMonitoringAlertRequest(BaseModel):
 
     @validator('alert_name')
     def validate_alert_name(cls, v):
+        v = v.replace(' ', '_').upper()
         if v not in AvailableMonitoringAlerts.__members__:
             raise HTTPException(status_code=400, detail=f"Invalid alert name: {v}. Must be one of: {', '.join(AvailableMonitoringAlerts.__members__)}")
         return v
