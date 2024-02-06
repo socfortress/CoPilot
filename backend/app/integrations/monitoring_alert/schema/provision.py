@@ -2,10 +2,11 @@ from enum import Enum
 from typing import Dict
 from typing import List
 from typing import Optional
-from fastapi import HTTPException
 
+from fastapi import HTTPException
 from pydantic import BaseModel
-from pydantic import Field, validator
+from pydantic import Field
+from pydantic import validator
 
 
 class AvailableMonitoringAlerts(str, Enum):
@@ -29,6 +30,7 @@ class AvailableMonitoringAlertsResponse(BaseModel):
     message: str
     available_monitoring_alerts: List[Dict[str, str]]
 
+
 class ProvisionMonitoringAlertRequest(BaseModel):
     search_within_last: int = Field(
         ...,
@@ -39,23 +41,25 @@ class ProvisionMonitoringAlertRequest(BaseModel):
         description="The time in seconds to execute the alert search.",
     )
     alert_name: str = Field(
-        'WAZUH_SYSLOG_LEVEL_ALERT',
+        "WAZUH_SYSLOG_LEVEL_ALERT",
         description="The name of the alert to provision.",
     )
 
-    @validator('alert_name')
+    @validator("alert_name")
     def validate_alert_name(cls, v):
-        v = v.replace(' ', '_').upper()
+        v = v.replace(" ", "_").upper()
         if v not in AvailableMonitoringAlerts.__members__:
-            raise HTTPException(status_code=400, detail=f"Invalid alert name: {v}. Must be one of: {', '.join(AvailableMonitoringAlerts.__members__)}")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid alert name: {v}. Must be one of: {', '.join(AvailableMonitoringAlerts.__members__)}",
+            )
         return v
 
-    @validator('search_within_last', 'execute_every')
+    @validator("search_within_last", "execute_every")
     def validate_non_zero(cls, v):
         if v == 0:
             raise HTTPException(status_code=400, detail=f"Invalid value: {v}. Must be greater than 0.")
         return v
-
 
 
 class ProvisionWazuhMonitoringAlertResponse(BaseModel):

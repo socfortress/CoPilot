@@ -4,7 +4,6 @@ from typing import Optional
 from dotenv import load_dotenv
 from fastapi import HTTPException
 from loguru import logger
-import json
 
 from app.connectors.graylog.routes.monitoring import get_all_event_notifications
 from app.connectors.graylog.schema.management import UrlWhitelistEntryResponse
@@ -16,7 +15,7 @@ from app.integrations.monitoring_alert.schema.provision import (
     GraylogAlertProvisionConfig,
 )
 from app.integrations.monitoring_alert.schema.provision import (
-    GraylogAlertProvisionFieldSpecItem, ProvisionMonitoringAlertRequest
+    GraylogAlertProvisionFieldSpecItem,
 )
 from app.integrations.monitoring_alert.schema.provision import (
     GraylogAlertProvisionModel,
@@ -40,6 +39,9 @@ from app.integrations.monitoring_alert.schema.provision import (
     GraylogUrlWhitelistEntryConfig,
 )
 from app.integrations.monitoring_alert.schema.provision import (
+    ProvisionMonitoringAlertRequest,
+)
+from app.integrations.monitoring_alert.schema.provision import (
     ProvisionWazuhMonitoringAlertResponse,
 )
 
@@ -58,6 +60,7 @@ async def convert_seconds_to_milliseconds(seconds: int) -> int:
         int: The milliseconds.
     """
     return seconds * 1000
+
 
 async def generate_random_id() -> str:
     """

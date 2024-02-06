@@ -6,7 +6,10 @@ from app.connectors.graylog.routes.events import get_all_event_definitions
 from app.connectors.graylog.schema.events import GraylogEventDefinitionsResponse
 from app.integrations.monitoring_alert.schema.provision import AvailableMonitoringAlerts
 from app.integrations.monitoring_alert.schema.provision import (
-    AvailableMonitoringAlertsResponse, ProvisionMonitoringAlertRequest
+    AvailableMonitoringAlertsResponse,
+)
+from app.integrations.monitoring_alert.schema.provision import (
+    ProvisionMonitoringAlertRequest,
 )
 from app.integrations.monitoring_alert.schema.provision import (
     ProvisionWazuhMonitoringAlertResponse,
@@ -18,6 +21,7 @@ from app.schedulers.models.scheduler import CreateSchedulerRequest
 from app.schedulers.scheduler import add_scheduler_jobs
 
 monitoring_alerts_provision_router = APIRouter()
+
 
 # Define your provision functions
 async def invoke_provision_wazuh_monitoring_alert(request: ProvisionMonitoringAlertRequest):
@@ -31,17 +35,19 @@ async def invoke_provision_wazuh_monitoring_alert(request: ProvisionMonitoringAl
         ),
     )
 
+
 # ! Comment out for now ! #
-#async def provision_other_alert(request):
-    # # Provision the other alert
-    # pass
+# async def provision_other_alert(request):
+# # Provision the other alert
+# pass
 
 # Create a dictionary that maps alert names to provision functions
 PROVISION_FUNCTIONS = {
     "WAZUH_SYSLOG_LEVEL_ALERT": invoke_provision_wazuh_monitoring_alert,
-    #"OTHER_ALERT": provision_other_alert,
+    # "OTHER_ALERT": provision_other_alert,
     # Add more alert names and functions as needed
 }
+
 
 async def check_if_event_definition_exists(event_definition: str) -> bool:
     """
@@ -72,7 +78,7 @@ async def get_available_monitoring_alerts_route() -> AvailableMonitoringAlertsRe
     """
     Get the available monitoring alerts.
     """
-    alerts = [{"name": alert.name.replace('_', ' '), "value": alert.value} for alert in AvailableMonitoringAlerts]
+    alerts = [{"name": alert.name.replace("_", " "), "value": alert.value} for alert in AvailableMonitoringAlerts]
     return AvailableMonitoringAlertsResponse(success=True, message="Alerts retrieved successfully", available_monitoring_alerts=alerts)
 
 
@@ -84,7 +90,7 @@ async def get_available_monitoring_alerts_route() -> AvailableMonitoringAlertsRe
 async def provision_monitoring_alert_route(
     request: ProvisionMonitoringAlertRequest,
 ) -> ProvisionWazuhMonitoringAlertResponse:
-    await check_if_event_definition_exists(request.alert_name.replace('_', ' '))
+    await check_if_event_definition_exists(request.alert_name.replace("_", " "))
 
     # Look up the provision function based on request.alert_name
     provision_function = PROVISION_FUNCTIONS.get(request.alert_name)

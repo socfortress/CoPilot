@@ -7,8 +7,6 @@ from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.routes.agents import get_agent
-from app.integrations.alert_escalation.services.general_alert import add_alert_to_document
-from app.integrations.alert_escalation.schema.general_alert import CreateAlertRequest as AddAlertRequest
 from app.agents.schema.agents import AgentsResponse
 from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
 from app.connectors.dfir_iris.utils.universal import initialize_client_and_alert
@@ -20,6 +18,12 @@ from app.integrations.alert_creation.general.schema.alert import IrisIoc
 from app.integrations.alert_creation.general.schema.alert import ValidIocFields
 from app.integrations.alert_creation.general.services.alert_multi_exclude import (
     AlertDetailsService,
+)
+from app.integrations.alert_escalation.schema.general_alert import (
+    CreateAlertRequest as AddAlertRequest,
+)
+from app.integrations.alert_escalation.services.general_alert import (
+    add_alert_to_document,
 )
 from app.integrations.monitoring_alert.models.monitoring_alert import MonitoringAlerts
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
@@ -455,12 +459,9 @@ async def analyze_wazuh_alerts(
             es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
             await add_alert_to_document(
                 es_client=es_client,
-                alert=AddAlertRequest(
-                    alert_id=alert_details._id,
-                    index_name=alert_details._index
-                ),
+                alert=AddAlertRequest(alert_id=alert_details._id, index_name=alert_details._index),
                 soc_alert_id=iris_alert_id,
-                session=session
+                session=session,
             )
 
         else:
@@ -478,12 +479,9 @@ async def analyze_wazuh_alerts(
             es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
             await add_alert_to_document(
                 es_client=es_client,
-                alert=AddAlertRequest(
-                    alert_id=alert_details.id,
-                    index_name=alert_details.index
-                ),
+                alert=AddAlertRequest(alert_id=alert_details.id, index_name=alert_details.index),
                 soc_alert_id=iris_alert_id,
-                session=session
+                session=session,
             )
 
     return WazuhAnalysisResponse(
