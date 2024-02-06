@@ -41,6 +41,7 @@
 						v-for="alert of itemsPaginated"
 						:key="alert.name"
 						:alert="alert"
+						:is-enabled="isEnabled(alert)"
 						class="mb-2"
 						@provisioned="getData()"
 					/>
@@ -95,9 +96,15 @@ const total = computed<number>(() => {
 	return alerts.value.length || 0
 })
 
-// TODO: to complete
 const enabledTotal = computed<number>(() => {
-	return alerts.value.length || 0
+	return enabledList.value.length || 0
+})
+
+const enabledList = computed<AvailableMonitoringAlert[]>(() => {
+	return alerts.value.filter(alert => {
+		const eventIndex = events.value.findIndex(event => event.title === alert.name)
+		return eventIndex !== -1
+	})
 })
 
 const itemsPaginated = computed(() => {
@@ -106,6 +113,10 @@ const itemsPaginated = computed(() => {
 
 	return alerts.value.slice(from, to)
 })
+
+function isEnabled(alert: AvailableMonitoringAlert): boolean {
+	return enabledList.value.findIndex(o => o.name === alert.name) !== -1
+}
 
 function getData() {
 	loadingAlerts.value = true
