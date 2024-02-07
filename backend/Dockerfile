@@ -42,7 +42,7 @@ COPY requirements.txt ./
 RUN /opt/venv/bin/pip install --no-cache-dir -r requirements.txt
 
 # Copy your application into the Docker image
-WORKDIR /opt/copilot
+WORKDIR /opt/copilot/backend
 COPY . .
 
 # Expose ports
@@ -50,4 +50,7 @@ EXPOSE 5000
 
 # Run your application
 #CMD ["sh", "-c", "cd backend && python copilot.py"]
-CMD ["sh", "-c", "cd /opt/copilot/backend && /opt/venv/bin/python copilot.py"]
+# List the current directory
+#CMD ["ls", "-l"]
+#CMD ["sh", "-c", "/opt/venv/bin/python copilot.py"]
+CMD ["sh", "-c", "ls -la && /opt/venv/bin/python copilot.py"]

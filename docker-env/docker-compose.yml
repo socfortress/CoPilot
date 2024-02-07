@@ -1,15 +1,51 @@
 version: "2"
 
 services:
-    #    copilot-backend:
-    #        container_name: copilot-backend
-    #        image: copilot/copilot-backend:develop
-    #        volumes:
-    #            - ./copilot-backend-data/logs:/opt/logs
+    copilot-backend:
+        container_name: copilot-backend
+        image: ghcr.io/socfortress/copilot-backend:latest
+        volumes:
+            - ./copilot-backend-data/logs:/opt/logs
+        environment:
+            SERVER_IP: ${SERVER_IP}
+            VITE_API_URL: ${VITE_API_URL}
+            VITE_TOKEN_DEBOUNCE_TIME: ${VITE_TOKEN_DEBOUNCE_TIME}
+            VITE_UNCOMMITTED_JOURNAL_ENTRIES_THRESHOLD: ${VITE_UNCOMMITTED_JOURNAL_ENTRIES_THRESHOLD}
+            VITE_HEALTHCHECKS_INTERVAL: ${VITE_HEALTHCHECKS_INTERVAL}
+            WAZUH_INDEXER_URL: ${WAZUH_INDEXER_URL}
+            WAZUH_INDEXER_USERNAME: ${WAZUH_INDEXER_USERNAME}
+            WAZUH_INDEXER_PASSWORD: ${WAZUH_INDEXER_PASSWORD}
+            WAZUH_MANAGER_URL: ${WAZUH_MANAGER_URL}
+            WAZUH_MANAGER_USERNAME: ${WAZUH_MANAGER_USERNAME}
+            WAZUH_MANAGER_PASSWORD: ${WAZUH_MANAGER_PASSWORD}
+            GRAYLOG_URL: ${GRAYLOG_URL}
+            GRAYLOG_USERNAME: ${GRAYLOG_USERNAME}
+            GRAYLOG_PASSWORD: ${GRAYLOG_PASSWORD}
+            SHUFFLE_URL: ${SHUFFLE_URL}
+            SHUFFLER_API_KEY: ${SHUFFLER_API_KEY}
+            DFIR_IRIS_URL: ${DFIR_IRIS_URL}
+            DFIR_IRIS_API_KEY: ${DFIR_IRIS_API_KEY}
+            VELOCIRAPTOR_URL: ${VELOCIRAPTOR_URL}
+            VELOCIRAPTOR_API_KEY_PATH: ${VELOCIRAPTOR_API_KEY_PATH}
+            SUBLIME_URL: ${SUBLIME_URL}
+            SUBLIME_API_KEY: ${SUBLIME_API_KEY}
+            INFLUXDB_URL: ${INFLUXDB_URL}
+            INFLUXDB_API_KEY: ${INFLUXDB_API_KEY}
+            INFLUXDB_ORG_AND_BUCKET: ${INFLUXDB_ORG_AND_BUCKET}
+            ASKSOCFORTRESS_URL: ${ASKSOCFORTRESS_URL}
+            ASKSOCFORTRESS_API_KEY: ${ASKSOCFORTRESS_API_KEY}
+            SOCFORTRESSTHREATINTEL_URL: ${SOCFORTRESSTHREATINTEL_URL}
+            SOCFORTRESSTHREATINTEL_API_KEY: ${SOCFORTRESSTHREATINTEL_API_KEY}
+            CORTEX_URL: ${CORTEX_URL}
+            CORTEX_API_KEY: ${CORTEX_API_KEY}
+            GRAFANA_URL: ${GRAFANA_URL}
+            GRAFANA_USERNAME: ${GRAFANA_USERNAME}
+            GRAFANA_PASSWORD: ${GRAFANA_PASSWORD}
+            WAZUH_WORKER_PROVISIONING_URL: ${WAZUH_WORKER_PROVISIONING_URL}
 
     copilot-frontend:
         container_name: copilot-frontend
-        image: copilot/copilot-frontend:develop
+        image: ghcr.io/socfortress/copilot-frontend:latest
 
     copilot-nginx:
         image: nginx
@@ -20,7 +56,7 @@ services:
             - ./nginx/nginx.conf:/etc/nginx/nginx.conf
         restart: always
         depends_on:
-            #    - copilot-backend
+            - copilot-backend
             - copilot-frontend
 
 networks:
