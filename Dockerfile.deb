@@ -1,6 +1,7 @@
 # build with `docker build -t python-backend -f Dockerfile.deb .`
 # run with `docker run -p 5000:5000 -d python-backend`
 # Start with the base Debian 11 image
+# looking to split into 2 containers, one for the backend and one for the frontend
 FROM debian:11
 
 # Set environment variables
