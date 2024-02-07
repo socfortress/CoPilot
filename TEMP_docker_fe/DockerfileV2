@@ -1,0 +1,29 @@
+# Use a node.js base image
+FROM node:14 as builder
+
+# Set the working directory
+WORKDIR /app
+
+# Copy project files into the working directory
+COPY . .
+
+# Install project dependencies
+RUN npm install
+
+# Run the Vue.js project build
+RUN npm run build
+
+# Use an Nginx base image for the next stage
+FROM nginx:1.21
+
+# Copy the built files from the node stage to Nginx's default directory
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Copy custom Nginx configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Expose port 80 for HTTP traffic
+EXPOSE 80
+
+# Command to start Nginx
+CMD ["nginx", "-g", "daemon off;"]
