@@ -93,6 +93,27 @@ async def check_if_url_whitelist_entry_exists(url: str) -> bool:
     return False
 
 
+async def get_notification_id(notification_title: str) -> Optional[str]:
+    """
+    Get the notification id.
+
+    Args:
+        notification_title (str): The notification title.
+
+    Returns:
+        Optional[str]: The notification id if it exists, None otherwise.
+    """
+    event_notifications_response = await get_all_event_notifications()
+    if not event_notifications_response.success:
+        raise HTTPException(status_code=500, detail="Failed to collect event notifications")
+    event_notifications_response = GraylogEventNotificationsResponse(**event_notifications_response.dict())
+    logger.info(f"Event notifications collected: {event_notifications_response.event_notifications}")
+    for event_notification in event_notifications_response.event_notifications.notifications:
+        if event_notification.title == notification_title:
+            return event_notification.id
+    return None
+
+
 async def build_url_whitelisted_entries(whitelist_url_model: GraylogUrlWhitelistEntryConfig) -> GraylogUrlWhitelistEntries:
     """
     Builds the URL Whitelisted Entries model.
@@ -284,3 +305,104 @@ async def provision_wazuh_monitoring_alert(request: ProvisionMonitoringAlertRequ
         )
 
     return ProvisionWazuhMonitoringAlertResponse(success=True, message="Wazuh monitoring alerts provisioned successfully")
+
+
+async def provision_suricata_monitoring_alert(request: ProvisionMonitoringAlertRequest) -> ProvisionWazuhMonitoringAlertResponse:
+    """
+    Provisions Suricata monitoring alerts.
+
+    Returns:
+        ProvisionWazuhMonitoringAlertResponse: The response indicating the success of provisioning the monitoring alerts.
+    """
+    #
+    logger.info(f"Invoking provision_suricata_monitoring_alert with request: {request.dict()}")
+    notification_exists = await check_if_event_notification_exists("SEND TO COPILOT")
+    if not notification_exists:
+        url_whitelisted = await check_if_url_whitelist_entry_exists(f"http://{os.getenv('SERVER_IP')}:5000/monitoring_alert/create")
+        if not url_whitelisted:
+            logger.info("Provisioning URL Whitelist")
+            whitelisted_urls = await build_url_whitelisted_entries(
+                whitelist_url_model=GraylogUrlWhitelistEntryConfig(
+                    id=await generate_random_id(),
+                    value=f"http://{os.getenv('SERVER_IP')}:5000/monitoring_alert/create",
+                    title="SEND TO COPILOT",
+                    type="literal",
+                ),
+            )
+            await provision_webhook_url_whitelist(whitelisted_urls)
+
+        logger.info("Provisioning SEND TO COPILOT Webhook")
+        notification_id = await provision_webhook(
+            GraylogAlertWebhookNotificationModel(
+                title="SEND TO COPILOT",
+                description="Send alert to Copilot",
+                config={"url": f"http://{os.getenv('SERVER_IP')}:5000/monitoring_alert/create", "type": "http-notification-v1"},
+            ),
+        )
+        logger.info(f"SEND TO COPILOT Webhook provisioned with id: {notification_id}")
+    notification_id = await get_notification_id("SEND TO COPILOT")
+    await provision_alert_definition(
+        GraylogAlertProvisionModel(
+            title="SURICATA ALERT SEVERITY 1",
+            description="Alert on Suricata alerts",
+            priority=2,
+            config=GraylogAlertProvisionConfig(
+                type="aggregation-v1",
+                query="alert_severity:1 AND syslog_type:suricata",
+                query_parameters=[],
+                streams=[],
+                group_by=[],
+                series=[],
+                conditions={
+                    "expression": None,
+                },
+                search_within_ms=await convert_seconds_to_milliseconds(request.search_within_last),
+                execute_every_ms=await convert_seconds_to_milliseconds(request.execute_every),
+            ),
+            field_spec={
+                "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(
+                            type="template-v1",
+                            template="${source._id}",
+                            require_values=True,
+                        ),
+                    ],
+                ),
+                "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(
+                            type="template-v1",
+                            template="${source.agent_labels_customer}",
+                            require_values=True,
+                        ),
+                    ],
+                ),
+                "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(
+                            type="template-v1",
+                            template="SURICATA",
+                            require_values=True,
+                        ),
+                    ],
+                ),
+            },
+            key_spec=[],
+            notification_settings=GraylogAlertProvisionNotificationSettings(
+                grace_period_ms=0,
+                backlog_size=None,
+            ),
+            notifications=[
+                GraylogAlertProvisionNotification(
+                    notification_id=notification_id,
+                ),
+            ],
+            alert=True,
+        ),
+    )
+
+    return ProvisionWazuhMonitoringAlertResponse(success=True, message="Suricata monitoring alerts provisioned successfully")
