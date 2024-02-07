@@ -13,7 +13,7 @@ SOCFortress CoPilot
 
 [SOCFortress CoPilot](https://www.socfortress.co) focuses on providing a single pane of glass for all your security operations needs. Simplify your open source security stack with a single platform focused on making open source security tools easier to use and more accessible.
 
-![demo_timeline](src/assets/images/copilot_gif.gif)
+![demo_timeline](frontend/src/assets/images/copilot_gif.gif)
 
 ## Table of contents
 
