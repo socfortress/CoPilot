@@ -3,6 +3,7 @@ import os
 import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI
+from fastapi import APIRouter
 from fastapi import HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -77,36 +78,41 @@ app.add_exception_handler(HTTPException, custom_http_exception_handler)
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
 app.add_exception_handler(ValueError, value_error_handler)
 
+# Step 1: Create an APIRouter with a prefix of `/api`
+api_router = APIRouter(prefix="/api")
 
 ################## ! INCLUDE ROUTES ! ##################
-app.include_router(connectors.router)
-app.include_router(wazuh_indexer.router)
-app.include_router(auth.router)
-app.include_router(wazuh_manager.router)
-app.include_router(agents.router)
-app.include_router(graylog.router)
-app.include_router(dfir_iris.router)
-app.include_router(cortex.router)
-app.include_router(velociraptor.router)
-app.include_router(shuffle.router)
-app.include_router(sublime.router)
-app.include_router(customers.router)
-app.include_router(healthcheck.router)
-app.include_router(smtp.router)
-app.include_router(dnstwist.router)
-app.include_router(logs.router)
-app.include_router(influxdb.router)
-app.include_router(grafana.router)
-app.include_router(customer_provisioning.router)
-app.include_router(threat_intel.router)
-app.include_router(ask_socfortress.router)
-app.include_router(alert_creation.router)
-app.include_router(alert_creation_settings.router)
-app.include_router(integrations.router)
-app.include_router(office365.router)
-app.include_router(mimecast.router)
-app.include_router(scheduler.router)
-app.include_router(monitoring_alert.router)
+api_router.include_router(connectors.router)
+api_router.include_router(wazuh_indexer.router)
+api_router.include_router(auth.router)
+api_router.include_router(wazuh_manager.router)
+api_router.include_router(agents.router)
+api_router.include_router(graylog.router)
+api_router.include_router(dfir_iris.router)
+api_router.include_router(cortex.router)
+api_router.include_router(velociraptor.router)
+api_router.include_router(shuffle.router)
+api_router.include_router(sublime.router)
+api_router.include_router(customers.router)
+api_router.include_router(healthcheck.router)
+api_router.include_router(smtp.router)
+api_router.include_router(dnstwist.router)
+api_router.include_router(logs.router)
+api_router.include_router(influxdb.router)
+api_router.include_router(grafana.router)
+api_router.include_router(customer_provisioning.router)
+api_router.include_router(threat_intel.router)
+api_router.include_router(ask_socfortress.router)
+api_router.include_router(alert_creation.router)
+api_router.include_router(alert_creation_settings.router)
+api_router.include_router(integrations.router)
+api_router.include_router(office365.router)
+api_router.include_router(mimecast.router)
+api_router.include_router(scheduler.router)
+api_router.include_router(monitoring_alert.router)
+
+# Include the APIRouter in the FastAPI app
+app.include_router(api_router)
 
 
 @app.on_event("startup")
