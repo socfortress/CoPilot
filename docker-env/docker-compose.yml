@@ -4,8 +4,8 @@ services:
     copilot-backend:
         container_name: copilot-backend
         image: ghcr.io/socfortress/copilot-backend:latest
-        ports:
-            - 5000:5000
+        # ports:
+        #     - 5000:5000
         volumes:
             - ./copilot-backend-data/logs:/opt/logs
         environment:
