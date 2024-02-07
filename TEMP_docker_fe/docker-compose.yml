@@ -1,0 +1,11 @@
+version: "3.3"
+services:
+    pinx-vue:
+        build:
+            context: .
+        container_name: pinx-vue
+        restart: unless-stopped
+        ports:
+            - 3000:3000
+        environment:
+            NODE_ENV: production

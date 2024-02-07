@@ -1,0 +1,31 @@
+version: "2"
+
+services:
+    copilot-backend:
+        container_name: copilot-backend
+        image: copilot/copilot-backend:develop
+        volumes:
+            - ./copilot-backend-data/logs:/opt/logs
+        depends_on:
+            - copilot-mongo
+
+    copilot-frontend:
+        container_name: copilot-frontend
+        image: copilot/copilot-frontend:develop
+
+    copilot-nginx:
+        image: nginx
+        container_name: copilot-nginx
+        ports:
+            - 80:80
+            - 443:443
+        volumes:
+            - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+        restart: always
+        depends_on:
+            - copilot-backend
+            - copilot-forntend
+
+networks:
+    default:
+        driver: bridge
