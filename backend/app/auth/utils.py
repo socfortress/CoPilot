@@ -15,7 +15,7 @@ from app.auth.services.universal import get_role
 
 class AuthHandler:
     security = OAuth2PasswordBearer(
-        tokenUrl="auth/token",
+        tokenUrl="api/auth/token",
         scopes={"admin": "Admin users", "analyst": "SOC Analysts", "scheduler": "Scheduler for automated tasks"},
     )
     pwd_context = CryptContext(schemes=["bcrypt"])

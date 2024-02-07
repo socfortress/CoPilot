@@ -149,4 +149,5 @@ async def shutdown_scheduler():
 
 
 if __name__ == "__main__":
+    logger.info(f"Starting server at {server_ip}:5000")
     uvicorn.run(app, host=server_ip, port=5000)

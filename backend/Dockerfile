@@ -49,8 +49,4 @@ COPY . .
 EXPOSE 5000
 
 # Run your application
-#CMD ["sh", "-c", "cd backend && python copilot.py"]
-# List the current directory
-#CMD ["ls", "-l"]
-#CMD ["sh", "-c", "/opt/venv/bin/python copilot.py"]
 CMD ["sh", "-c", "ls -la && /opt/venv/bin/python copilot.py"]
