@@ -47,7 +47,7 @@ echo "Copilot Docker"
 echo "Version: ${version}"
 
 prepareNvm
-# build_backend
+build_backend
 build_frontend
 
 
