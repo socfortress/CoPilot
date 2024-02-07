@@ -24,7 +24,7 @@ services:
         restart: always
         depends_on:
             - copilot-backend
-            - copilot-forntend
+            - copilot-frontend
 
 networks:
     default:
