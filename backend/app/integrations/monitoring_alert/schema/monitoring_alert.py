@@ -329,26 +329,7 @@ class SuricataIrisIoc(BaseModel):
 
 
 class SuricataIrisAlertContext(BaseModel):
-    customer_id_full: str = Field(
-        ...,
-        description="IRIS ID of the customer, customer name, and iris case index name in the Wazuh-Indexer",
-        example="1, SOCFortress, dfir_iris_00001",
-    )
-    customer_iris_id: int = Field(
-        ...,
-        description="IRIS ID of the customer",
-        example=1,
-    )
-    customer_name: str = Field(
-        ...,
-        description="Name of the customer",
-        example="SOCFortress",
-    )
-    customer_cases_index: str = Field(
-        ...,
-        description="IRIS case index name in the Wazuh-Indexer",
-        example="dfir_iris_00001",
-    )
+    _source: SuricataSourceModel
     alert_id: str = Field(..., description="ID of the alert", example="123")
     alert_name: str = Field(
         ...,

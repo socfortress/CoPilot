@@ -22,6 +22,8 @@ from app.integrations.monitoring_alert.services.provision import (
 )
 from app.schedulers.models.scheduler import CreateSchedulerRequest
 from app.schedulers.scheduler import add_scheduler_jobs
+from app.integrations.utils.event_shipper import event_shipper
+from app.integrations.utils.schema import EventShipperPayload
 
 monitoring_alerts_provision_router = APIRouter()
 
@@ -111,3 +113,23 @@ async def provision_monitoring_alert_route(
     await provision_function(request)
 
     return ProvisionWazuhMonitoringAlertResponse(success=True, message="Wazuh monitoring alerts provisioned.")
+
+@monitoring_alerts_provision_router.post(
+    "/provision/testing",
+    response_model=ProvisionWazuhMonitoringAlertResponse,
+    description="Used for testing purposes. To test, upload a JSON document.",
+)
+async def provision_monitoring_alert_testing_route(
+    request: dict,
+) -> ProvisionWazuhMonitoringAlertResponse:
+    """
+    Used for testing purposes.
+    """
+    message = EventShipperPayload(
+        customer_code="replace_me",
+        integration="testing",
+        version="1.0",
+        **request,
+    )
+    await event_shipper(message)
+    return ProvisionWazuhMonitoringAlertResponse(success=True, message="Event sent to log shipper successfully.")
