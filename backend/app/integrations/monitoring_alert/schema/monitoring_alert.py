@@ -288,7 +288,6 @@ class SuricataAlertModel(BaseModel):
         extra = Extra.allow
 
 
-
 ########### ! Create Suricata Alerts In IRIS Schemas ! ###########
 class SuricataIrisAsset(BaseModel):
     asset_name: Optional[str] = Field(

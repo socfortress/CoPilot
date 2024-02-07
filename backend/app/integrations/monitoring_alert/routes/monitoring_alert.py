@@ -25,8 +25,8 @@ from app.integrations.monitoring_alert.schema.monitoring_alert import (
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
     WazuhAnalysisResponse,
 )
-from app.integrations.monitoring_alert.services.wazuh import analyze_wazuh_alerts
 from app.integrations.monitoring_alert.services.suricata import analyze_suricata_alerts
+from app.integrations.monitoring_alert.services.wazuh import analyze_wazuh_alerts
 
 monitoring_alerts_router = APIRouter()
 
@@ -146,8 +146,8 @@ async def run_wazuh_analysis(
     customer_meta = await get_customer_meta(request.customer_code, session)
 
     monitoring_alerts = await session.execute(
-    select(MonitoringAlerts).where(
-        (MonitoringAlerts.customer_code == request.customer_code) & (MonitoringAlerts.alert_source == "WAZUH"),
+        select(MonitoringAlerts).where(
+            (MonitoringAlerts.customer_code == request.customer_code) & (MonitoringAlerts.alert_source == "WAZUH"),
         ),
     )
     monitoring_alerts = monitoring_alerts.scalars().all()
@@ -161,6 +161,7 @@ async def run_wazuh_analysis(
     await analyze_wazuh_alerts(monitoring_alerts, customer_meta, session)
 
     return WazuhAnalysisResponse(success=True, message="Analysis completed successfully")
+
 
 @monitoring_alerts_router.post("/run_analysis/suricata", response_model=WazuhAnalysisResponse)
 async def run_suricata_analysis(
@@ -187,8 +188,8 @@ async def run_suricata_analysis(
     customer_meta = await get_customer_meta(request.customer_code, session)
 
     monitoring_alerts = await session.execute(
-    select(MonitoringAlerts).where(
-        (MonitoringAlerts.customer_code == request.customer_code) & (MonitoringAlerts.alert_source == "SURICATA"),
+        select(MonitoringAlerts).where(
+            (MonitoringAlerts.customer_code == request.customer_code) & (MonitoringAlerts.alert_source == "SURICATA"),
         ),
     )
     monitoring_alerts = monitoring_alerts.scalars().all()

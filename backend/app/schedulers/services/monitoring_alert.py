@@ -7,7 +7,10 @@ from sqlalchemy import select
 from app.db.db_session import get_db_session
 from app.db.db_session import get_sync_db_session
 from app.db.universal_models import CustomersMeta
-from app.integrations.monitoring_alert.routes.monitoring_alert import run_wazuh_analysis, run_suricata_analysis
+from app.integrations.monitoring_alert.routes.monitoring_alert import (
+    run_suricata_analysis,
+)
+from app.integrations.monitoring_alert.routes.monitoring_alert import run_wazuh_analysis
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
     MonitoringWazuhAlertsRequestModel,
 )
@@ -52,6 +55,7 @@ async def invoke_wazuh_monitoring_alert() -> WazuhAnalysisResponse:
             logger.error("JobMetadata for 'invoke_wazuh_monitoring_alert' not found.")
 
     return WazuhAnalysisResponse(success=True, message="Wazuh monitoring alerts invoked.")
+
 
 async def invoke_suricata_monitoring_alert() -> WazuhAnalysisResponse:
     """

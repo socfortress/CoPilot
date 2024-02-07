@@ -9,7 +9,8 @@ from app.schedulers.models.scheduler import JobMetadata
 from app.schedulers.services.agent_sync import agent_sync
 from app.schedulers.services.invoke_mimecast import invoke_mimecast_integration
 from app.schedulers.services.invoke_mimecast import invoke_mimecast_integration_ttp
-from app.schedulers.services.monitoring_alert import invoke_wazuh_monitoring_alert, invoke_suricata_monitoring_alert
+from app.schedulers.services.monitoring_alert import invoke_suricata_monitoring_alert
+from app.schedulers.services.monitoring_alert import invoke_wazuh_monitoring_alert
 
 
 def init_scheduler():

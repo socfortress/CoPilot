@@ -31,6 +31,10 @@ from app.integrations.monitoring_alert.schema.monitoring_alert import (
 )
 from app.integrations.monitoring_alert.schema.monitoring_alert import SuricataAlertModel
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
+    SuricataIrisAlertContext,
+)
+from app.integrations.monitoring_alert.schema.monitoring_alert import SuricataIrisAsset
+from app.integrations.monitoring_alert.schema.monitoring_alert import (
     WazuhAnalysisResponse,
 )
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
@@ -39,7 +43,6 @@ from app.integrations.monitoring_alert.schema.monitoring_alert import (
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
     WazuhIrisAlertPayload,
 )
-from app.integrations.monitoring_alert.schema.monitoring_alert import SuricataIrisAsset, SuricataIrisAlertContext
 from app.integrations.monitoring_alert.utils.db_operations import remove_alert_id
 from app.integrations.utils.alerts import get_asset_type_id
 from app.integrations.utils.alerts import validate_ioc_type

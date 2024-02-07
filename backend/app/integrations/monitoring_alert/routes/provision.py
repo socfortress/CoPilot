@@ -15,15 +15,15 @@ from app.integrations.monitoring_alert.schema.provision import (
     ProvisionWazuhMonitoringAlertResponse,
 )
 from app.integrations.monitoring_alert.services.provision import (
-    provision_wazuh_monitoring_alert,
-)
-from app.integrations.monitoring_alert.services.provision import (
     provision_suricata_monitoring_alert,
 )
-from app.schedulers.models.scheduler import CreateSchedulerRequest
-from app.schedulers.scheduler import add_scheduler_jobs
+from app.integrations.monitoring_alert.services.provision import (
+    provision_wazuh_monitoring_alert,
+)
 from app.integrations.utils.event_shipper import event_shipper
 from app.integrations.utils.schema import EventShipperPayload
+from app.schedulers.models.scheduler import CreateSchedulerRequest
+from app.schedulers.scheduler import add_scheduler_jobs
 
 monitoring_alerts_provision_router = APIRouter()
 
@@ -51,6 +51,7 @@ async def invoke_provision_suricata_monitoring_alert(request: ProvisionMonitorin
             job_id="invoke_suricata_monitoring_alert",
         ),
     )
+
 
 # Create a dictionary that maps alert names to provision functions
 PROVISION_FUNCTIONS = {
@@ -113,6 +114,7 @@ async def provision_monitoring_alert_route(
     await provision_function(request)
 
     return ProvisionWazuhMonitoringAlertResponse(success=True, message="Wazuh monitoring alerts provisioned.")
+
 
 @monitoring_alerts_provision_router.post(
     "/provision/testing",

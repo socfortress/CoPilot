@@ -10,7 +10,7 @@ from app.connectors.graylog.schema.management import UrlWhitelistEntryResponse
 from app.connectors.graylog.schema.monitoring import GraylogEventNotificationsResponse
 from app.connectors.graylog.services.collector import get_url_whitelist_entries
 from app.connectors.graylog.utils.universal import send_post_request
-from app.connectors.graylog.utils.universal import send_put_request, send_get_request
+from app.connectors.graylog.utils.universal import send_put_request
 from app.integrations.monitoring_alert.schema.provision import (
     GraylogAlertProvisionConfig,
 )
@@ -91,6 +91,7 @@ async def check_if_url_whitelist_entry_exists(url: str) -> bool:
         logger.info(f"Url whitelist entry {url} already exists")
         return True
     return False
+
 
 async def get_notification_id(notification_title: str) -> Optional[str]:
     """
