@@ -1,20 +1,23 @@
+from app.connectors.grafana.utils.universal import create_grafana_client
+from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
+from app.customer_provisioning.schema.grafana import (
+    GrafanaDatasource,
+    GrafanaDataSourceCreationResponse,
+    GrafanaFolderCreationResponse,
+    GrafanaOrganizationCreation,
+    NodesVersionResponse,
+)
+from app.customer_provisioning.schema.provision import ProvisionNewCustomer
+from app.utils import get_connector_attribute
 from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.connectors.grafana.utils.universal import create_grafana_client
-from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
-from app.customer_provisioning.schema.grafana import GrafanaDatasource
-from app.customer_provisioning.schema.grafana import GrafanaDataSourceCreationResponse
-from app.customer_provisioning.schema.grafana import GrafanaFolderCreationResponse
-from app.customer_provisioning.schema.grafana import GrafanaOrganizationCreation
-from app.customer_provisioning.schema.grafana import NodesVersionResponse
-from app.customer_provisioning.schema.provision import ProvisionNewCustomer
-from app.utils import get_connector_attribute
-
 
 ################# ! GRAFANA PROVISIONING ! #################
-async def create_grafana_organization(request: ProvisionNewCustomer) -> GrafanaOrganizationCreation:
+async def create_grafana_organization(
+    request: ProvisionNewCustomer,
+) -> GrafanaOrganizationCreation:
     """
     Creates a Grafana organization for a customer.
 
@@ -60,12 +63,18 @@ async def create_grafana_datasource(
         type="grafana-opensearch-datasource",
         typeName="OpenSearch",
         access="proxy",
-        url=await get_connector_attribute(connector_id=1, column_name="connector_url", session=session),
+        url=await get_connector_attribute(
+            connector_id=1, column_name="connector_url", session=session,
+        ),
         database=f"{request.customer_index_name}*",
         basicAuth=True,
-        basicAuthUser=await get_connector_attribute(connector_id=1, column_name="connector_username", session=session),
+        basicAuthUser=await get_connector_attribute(
+            connector_id=1, column_name="connector_username", session=session,
+        ),
         secureJsonData={
-            "basicAuthPassword": await get_connector_attribute(connector_id=1, column_name="connector_password", session=session),
+            "basicAuthPassword": await get_connector_attribute(
+                connector_id=1, column_name="connector_password", session=session,
+            ),
         },
         isDefault=False,
         jsonData={
@@ -88,7 +97,9 @@ async def create_grafana_datasource(
     return GrafanaDataSourceCreationResponse(**results)
 
 
-async def create_grafana_folder(organization_id: int, folder_title: str) -> GrafanaFolderCreationResponse:
+async def create_grafana_folder(
+    organization_id: int, folder_title: str,
+) -> GrafanaFolderCreationResponse:
     """
     Creates a Grafana folder in the specified organization.
 
@@ -124,7 +135,9 @@ async def get_opensearch_version() -> str:
     opensearch_client = await create_wazuh_indexer_client("Wazuh-Indexer")
 
     # Retrieve version information
-    version_response = opensearch_client.nodes.info(node_id="_local", filter_path=["nodes.*.version"])
+    version_response = opensearch_client.nodes.info(
+        node_id="_local", filter_path=["nodes.*.version"],
+    )
 
     # Parse the response to get the first version found
     nodes_version_response = NodesVersionResponse(**version_response)
@@ -132,7 +145,9 @@ async def get_opensearch_version() -> str:
         return node_info.version
 
     # If no version is found, raise an exception
-    raise HTTPException(status_code=500, detail="Failed to retrieve OpenSearch version.")
+    raise HTTPException(
+        status_code=500, detail="Failed to retrieve OpenSearch version.",
+    )
 
 
 ################# ! GRAFANA DECOMISSIONING ! #################
@@ -146,13 +161,19 @@ async def delete_grafana_organization(organization_id: int):
     logger.info("Deleting Grafana organization")
     grafana_client = await create_grafana_client("Grafana")
     try:
-        organization_deleted = grafana_client.organizations.delete_organization(organization_id=organization_id)
+        organization_deleted = grafana_client.organizations.delete_organization(
+            organization_id=organization_id,
+        )
         logger.info(f"Organization deleted: {organization_deleted}")
     except Exception as e:
         # Switch the organization to the default and try again
-        logger.info(f"Failed to delete organization: {e}. Switching to default organization and trying again.")
+        logger.info(
+            f"Failed to delete organization: {e}. Switching to default organization and trying again.",
+        )
         grafana_client.user.switch_actual_user_organisation(1)
-        organization_deleted = grafana_client.organizations.delete_organization(organization_id=organization_id)
+        organization_deleted = grafana_client.organizations.delete_organization(
+            organization_id=organization_id,
+        )
         logger.info(f"Organization deleted: {organization_deleted}")
         return organization_deleted
     return organization_deleted

@@ -1,20 +1,21 @@
 from typing import Union
 
-from fastapi import APIRouter
-from fastapi import HTTPException
-from fastapi import Security
-
 from app.auth.utils import AuthHandler
-from app.connectors.wazuh_indexer.schema.monitoring import ClusterHealthResponse
-from app.connectors.wazuh_indexer.schema.monitoring import IndicesStatsResponse
-from app.connectors.wazuh_indexer.schema.monitoring import NodeAllocationResponse
-from app.connectors.wazuh_indexer.schema.monitoring import ShardsResponse
+from app.connectors.wazuh_indexer.schema.monitoring import (
+    ClusterHealthResponse,
+    IndicesStatsResponse,
+    NodeAllocationResponse,
+    ShardsResponse,
+)
 
 # from app.connectors.wazuh_indexer.schema import WazuhIndexerResponse, WazuhIndexerListResponse
-from app.connectors.wazuh_indexer.services.monitoring import cluster_healthcheck
-from app.connectors.wazuh_indexer.services.monitoring import indices_stats
-from app.connectors.wazuh_indexer.services.monitoring import node_allocation
-from app.connectors.wazuh_indexer.services.monitoring import shards
+from app.connectors.wazuh_indexer.services.monitoring import (
+    cluster_healthcheck,
+    indices_stats,
+    node_allocation,
+    shards,
+)
+from fastapi import APIRouter, HTTPException, Security
 
 wazuh_indexer_router = APIRouter()
 
@@ -66,7 +67,9 @@ async def get_node_allocation() -> Union[NodeAllocationResponse, HTTPException]:
     if node_allocation_response is not None:
         return node_allocation_response
     else:
-        raise HTTPException(status_code=500, detail="Failed to retrieve node allocation.")
+        raise HTTPException(
+            status_code=500, detail="Failed to retrieve node allocation.",
+        )
 
 
 @wazuh_indexer_router.get(

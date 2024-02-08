@@ -1,32 +1,33 @@
-from datetime import datetime
-from datetime import timedelta
-from typing import Any
-from typing import Dict
-from typing import Iterable
-from typing import Tuple
+from datetime import datetime, timedelta
+from typing import Any, Dict, Iterable, Tuple
 
+from app.connectors.utils import get_connector_info_from_db
+from app.connectors.wazuh_indexer.schema.indices import IndexConfigModel, Indices
+from app.db.db_session import get_db_session
 from elasticsearch7 import Elasticsearch
 from fastapi import HTTPException
 from loguru import logger
 
-from app.connectors.utils import get_connector_info_from_db
-from app.connectors.wazuh_indexer.schema.indices import IndexConfigModel
-from app.connectors.wazuh_indexer.schema.indices import Indices
-from app.db.db_session import get_db_session
 
-
-async def verify_wazuh_indexer_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
+async def verify_wazuh_indexer_credentials(
+    attributes: Dict[str, Any],
+) -> Dict[str, Any]:
     """
     Verifies the connection to Wazuh Indexer service.
 
     Returns:
         dict: A dictionary containing 'connectionSuccessful' status and 'authToken' if the connection is successful.
     """
-    logger.info(f"Verifying the wazuh-indexer connection to {attributes['connector_url']}")
+    logger.info(
+        f"Verifying the wazuh-indexer connection to {attributes['connector_url']}",
+    )
     try:
         es = Elasticsearch(
             [attributes["connector_url"]],
-            http_auth=(attributes["connector_username"], attributes["connector_password"]),
+            http_auth=(
+                attributes["connector_username"],
+                attributes["connector_password"],
+            ),
             verify_certs=False,
             timeout=15,
             max_retries=10,
@@ -34,10 +35,18 @@ async def verify_wazuh_indexer_credentials(attributes: Dict[str, Any]) -> Dict[s
         )
         es.cluster.health()
         logger.debug("Wazuh Indexer connection successful")
-        return {"connectionSuccessful": True, "message": "Wazuh Indexer connection successful"}
+        return {
+            "connectionSuccessful": True,
+            "message": "Wazuh Indexer connection successful",
+        }
     except Exception as e:
-        logger.error(f"Connection to {attributes['connector_url']} failed with error: {e}")
-        return {"connectionSuccessful": False, "message": f"Connection to {attributes['connector_url']} failed with error: {e}"}
+        logger.error(
+            f"Connection to {attributes['connector_url']} failed with error: {e}",
+        )
+        return {
+            "connectionSuccessful": False,
+            "message": f"Connection to {attributes['connector_url']} failed with error: {e}",
+        }
 
 
 async def verify_wazuh_indexer_connection(connector_name: str) -> str:
@@ -49,7 +58,9 @@ async def verify_wazuh_indexer_connection(connector_name: str) -> str:
     """
     async with get_db_session() as session:  # This will correctly enter the context manager
         attributes = await get_connector_info_from_db(connector_name, session)
-    logger.info(f"Verifying the wazuh-indexer connection to {attributes['connector_url']}")
+    logger.info(
+        f"Verifying the wazuh-indexer connection to {attributes['connector_url']}",
+    )
     if attributes is None:
         logger.error("No Wazuh Indexer connector found in the database")
         return None
@@ -67,20 +78,30 @@ async def create_wazuh_indexer_client(connector_name: str) -> Elasticsearch:
     async with get_db_session() as session:  # This will correctly enter the context manager
         attributes = await get_connector_info_from_db(connector_name, session)
     if attributes is None:
-        raise HTTPException(status_code=500, detail=f"No {connector_name} connector found in the database")
+        raise HTTPException(
+            status_code=500,
+            detail=f"No {connector_name} connector found in the database",
+        )
     if attributes["connector_url"] == "https://1.1.1.1:9200":
-        raise HTTPException(status_code=500, detail=f"Please update the {connector_name} connector URL")
+        raise HTTPException(
+            status_code=500, detail=f"Please update the {connector_name} connector URL",
+        )
     try:
         return Elasticsearch(
             [attributes["connector_url"]],
-            http_auth=(attributes["connector_username"], attributes["connector_password"]),
+            http_auth=(
+                attributes["connector_username"],
+                attributes["connector_password"],
+            ),
             verify_certs=False,
             timeout=15,
             max_retries=10,
             retry_on_timeout=False,
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to create Elasticsearch client: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to create Elasticsearch client: {e}",
+        )
 
 
 async def format_node_allocation(node_allocation):
@@ -166,8 +187,14 @@ async def collect_indices() -> Indices:
         indices_list = list(indices_dict.keys())
         # Check if the index is valid
         index_config = IndexConfigModel()
-        indices_list = [index for index in indices_list if index_config.is_valid_index(index)]
-        return Indices(indices_list=indices_list, success=True, message="Indices collected successfully")
+        indices_list = [
+            index for index in indices_list if index_config.is_valid_index(index)
+        ]
+        return Indices(
+            indices_list=indices_list,
+            success=True,
+            message="Indices collected successfully",
+        )
     except Exception as e:
         logger.error(f"Failed to collect indices: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to collect indices: {e}")
@@ -192,10 +219,14 @@ class AlertsQueryBuilder:
         elif timerange.endswith("w"):
             delta = timedelta(weeks=int(timerange[:-1]))
         else:
-            raise ValueError("Invalid timerange format. Expected a string like '24h', '1d', '1w', etc.")
+            raise ValueError(
+                "Invalid timerange format. Expected a string like '24h', '1d', '1w', etc.",
+            )
 
         start = datetime.utcnow() - delta
-        return start.isoformat() + "Z"  # Elasticsearch expects the time in ISO format with a Z at the end
+        return (
+            start.isoformat() + "Z"
+        )  # Elasticsearch expects the time in ISO format with a Z at the end
 
     def __init__(self):
         self.query = {
@@ -219,7 +250,9 @@ class AlertsQueryBuilder:
             self: The updated instance of the class.
         """
         start = self._get_time_range_start(timerange)
-        self.query["query"]["bool"]["must"].append({"range": {timestamp_field: {"gte": start, "lte": "now"}}})
+        self.query["query"]["bool"]["must"].append(
+            {"range": {timestamp_field: {"gte": start, "lte": "now"}}},
+        )
         return self
 
     def add_matches(self, matches: Iterable[Tuple[str, str]]):
@@ -310,10 +343,14 @@ class LogsQueryBuilder:
         elif timerange.endswith("w"):
             delta = timedelta(weeks=int(timerange[:-1]))
         else:
-            raise ValueError("Invalid timerange format. Expected a string like '24h', '1d', '1w', '1m', etc.")
+            raise ValueError(
+                "Invalid timerange format. Expected a string like '24h', '1d', '1w', '1m', etc.",
+            )
 
         start = datetime.utcnow() - delta
-        return start.isoformat() + "Z"  # Elasticsearch expects the time in ISO format with a Z at the end
+        return (
+            start.isoformat() + "Z"
+        )  # Elasticsearch expects the time in ISO format with a Z at the end
 
     def __init__(self):
         self.query = {
@@ -337,7 +374,9 @@ class LogsQueryBuilder:
             self: The updated instance of the class.
         """
         start = self._get_time_range_start(timerange)
-        self.query["query"]["bool"]["must"].append({"range": {timestamp_field: {"gte": start, "lte": "now"}}})
+        self.query["query"]["bool"]["must"].append(
+            {"range": {timestamp_field: {"gte": start, "lte": "now"}}},
+        )
         return self
 
     def add_matches(self, matches: Iterable[Tuple[str, str]]):

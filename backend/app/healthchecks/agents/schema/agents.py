@@ -1,12 +1,7 @@
 from datetime import datetime
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Optional
+from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel
-from pydantic import Field
-from pydantic import validator
+from pydantic import BaseModel, Field, validator
 
 
 class AgentModel(BaseModel):
@@ -29,9 +24,15 @@ class AgentModel(BaseModel):
 
 
 class ExtendedAgentModel(AgentModel):
-    unhealthy_wazuh_agent: Optional[bool] = Field(None, description="Whether the agent is unhealthy in Wazuh")
-    unhealthy_velociraptor_agent: Optional[bool] = Field(None, description="Whether the agent is unhealthy in Velociraptor")
-    unhealthy_recent_logs_collected: Optional[bool] = Field(None, description="Whether the agent has not collected logs recently")
+    unhealthy_wazuh_agent: Optional[bool] = Field(
+        None, description="Whether the agent is unhealthy in Wazuh",
+    )
+    unhealthy_velociraptor_agent: Optional[bool] = Field(
+        None, description="Whether the agent is unhealthy in Velociraptor",
+    )
+    unhealthy_recent_logs_collected: Optional[bool] = Field(
+        None, description="Whether the agent has not collected logs recently",
+    )
 
 
 class AgentHealthCheckResponse(BaseModel):
@@ -46,9 +47,18 @@ class AgentHealthCheckResponse(BaseModel):
 
 
 class TimeCriteriaModel(BaseModel):
-    minutes: int = Field(60, description="Number of minutes within which the agent should have been last seen to be considered healthy.")
-    hours: int = Field(0, description="Number of hours within which the agent should have been last seen to be considered healthy.")
-    days: int = Field(0, description="Number of days within which the agent should have been last seen to be considered healthy.")
+    minutes: int = Field(
+        60,
+        description="Number of minutes within which the agent should have been last seen to be considered healthy.",
+    )
+    hours: int = Field(
+        0,
+        description="Number of hours within which the agent should have been last seen to be considered healthy.",
+    )
+    days: int = Field(
+        0,
+        description="Number of days within which the agent should have been last seen to be considered healthy.",
+    )
 
 
 ########## Logs Schemas ##########
@@ -57,7 +67,9 @@ class TimeCriteriaModel(BaseModel):
 class Log(BaseModel):
     index_name: str
     total_logs: int
-    logs: Optional[List[Dict[str, Any]]] = Field([], description="The logs returned from the search.")
+    logs: Optional[List[Dict[str, Any]]] = Field(
+        [], description="The logs returned from the search.",
+    )
 
 
 class LogsSearchBody(BaseModel):
@@ -65,16 +77,22 @@ class LogsSearchBody(BaseModel):
     timerange: str = Field("24h", description="The time range to search logs in.")
     log_field: str = Field("syslog_level", description="The field to search logs in.")
     log_value: str = Field("INFO", description="The value to search logs for.")
-    timestamp_field: str = Field("timestamp_utc", description="The timestamp field to search logs in.")
+    timestamp_field: str = Field(
+        "timestamp_utc", description="The timestamp field to search logs in.",
+    )
 
     @validator("timerange")
     def validate_timerange(cls, value):
         if value[-1] not in ("h", "d", "w", "m"):
-            raise ValueError("Invalid timerange format. The string should end with either 'h', 'd', 'w', or 'm'.")
+            raise ValueError(
+                "Invalid timerange format. The string should end with either 'h', 'd', 'w', or 'm'.",
+            )
 
         # Optionally, you can check that the prefix is a number
         if not value[:-1].isdigit():
-            raise ValueError("Invalid timerange format. The string should start with a number.")
+            raise ValueError(
+                "Invalid timerange format. The string should start with a number.",
+            )
 
         return value
 
@@ -92,11 +110,15 @@ class CollectLogsResponse(BaseModel):
 
 
 class HostLogsSearchBody(LogsSearchBody):
-    agent_name: str = Field(..., description="The name of the agent to search logs for.")
+    agent_name: str = Field(
+        ..., description="The name of the agent to search logs for.",
+    )
 
 
 class HostLogsSearchResponse(BaseModel):
-    logs_summary: Optional[List[Log]] = Field([], description="The logs summary returned from the search.")
+    logs_summary: Optional[List[Log]] = Field(
+        [], description="The logs summary returned from the search.",
+    )
     healthy: bool = Field(False, description="Whether the host is healthy or not.")
     success: bool
     message: str

@@ -1,16 +1,19 @@
+from app.auth.services.universal import (
+    create_admin_user,
+    create_scheduler_user,
+    remove_scheduler_user,
+)
+from app.db.db_populate import (
+    add_available_integrations_auth_keys_if_not_exist,
+    add_available_integrations_if_not_exist,
+    add_connectors_if_not_exist,
+    add_roles_if_not_exist,
+)
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 # ! New with Async
 from sqlmodel import SQLModel
-
-from app.auth.services.universal import create_admin_user
-from app.auth.services.universal import create_scheduler_user
-from app.auth.services.universal import remove_scheduler_user
-from app.db.db_populate import add_available_integrations_auth_keys_if_not_exist
-from app.db.db_populate import add_available_integrations_if_not_exist
-from app.db.db_populate import add_connectors_if_not_exist
-from app.db.db_populate import add_roles_if_not_exist
 
 
 async def create_tables(async_engine):
@@ -44,7 +47,9 @@ async def create_roles(async_engine):
         None
     """
     logger.info("Creating roles")
-    async with AsyncSession(async_engine) as session:  # Create an AsyncSession, not just a connection
+    async with AsyncSession(
+        async_engine,
+    ) as session:  # Create an AsyncSession, not just a connection
         async with session.begin():  # Start a transaction
             await add_roles_if_not_exist(session)
 
@@ -60,7 +65,9 @@ async def create_available_integrations(async_engine):
         None
     """
     logger.info("Creating available integrations")
-    async with AsyncSession(async_engine) as session:  # Create an AsyncSession, not just a connection
+    async with AsyncSession(
+        async_engine,
+    ) as session:  # Create an AsyncSession, not just a connection
         async with session.begin():  # Start a transaction
             await add_available_integrations_if_not_exist(session)
             await add_available_integrations_auth_keys_if_not_exist(session)

@@ -1,17 +1,18 @@
-from typing import Any
-from typing import Dict
-from typing import List
+from typing import Any, Dict, List
 
+from app.connectors.dfir_iris.schema.notes import (
+    NoteCreationBody,
+    NoteCreationResponse,
+    NoteDetails,
+    NoteDetailsResponse,
+    NotesResponse,
+)
+from app.connectors.dfir_iris.utils.universal import (
+    fetch_and_validate_data,
+    initialize_client_and_case,
+)
 from dfir_iris_client.case import Case
 from loguru import logger
-
-from app.connectors.dfir_iris.schema.notes import NoteCreationBody
-from app.connectors.dfir_iris.schema.notes import NoteCreationResponse
-from app.connectors.dfir_iris.schema.notes import NoteDetails
-from app.connectors.dfir_iris.schema.notes import NoteDetailsResponse
-from app.connectors.dfir_iris.schema.notes import NotesResponse
-from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
-from app.connectors.dfir_iris.utils.universal import initialize_client_and_case
 
 
 async def process_notes(notes: List[Dict], case_id: int) -> List[Dict]:
@@ -46,9 +47,15 @@ async def get_case_notes(case_id: int, search_term: str) -> NotesResponse:
         NotesResponse: An object containing the success status, message, and retrieved notes.
     """
     client, case = await initialize_client_and_case("DFIR-IRIS")
-    result = await fetch_and_validate_data(client, case.search_notes, search_term, case_id)
+    result = await fetch_and_validate_data(
+        client, case.search_notes, search_term, case_id,
+    )
     processed_notes = await process_notes(result["data"], case_id)
-    return NotesResponse(success=True, message="Successfully fetched notes for case", notes=processed_notes)
+    return NotesResponse(
+        success=True,
+        message="Successfully fetched notes for case",
+        notes=processed_notes,
+    )
 
 
 async def get_case_note_details(note_id: int, case_id: int) -> NoteDetailsResponse:
@@ -68,10 +75,16 @@ async def get_case_note_details(note_id: int, case_id: int) -> NoteDetailsRespon
     client, case = await initialize_client_and_case("DFIR-IRIS")
     result = await fetch_and_validate_data(client, case.get_note, note_id, case_id)
     note_details = NoteDetails(**result["data"])
-    return NoteDetailsResponse(success=True, message="Successfully fetched note details", note_details=note_details)
+    return NoteDetailsResponse(
+        success=True,
+        message="Successfully fetched note details",
+        note_details=note_details,
+    )
 
 
-async def perform_note_creation(client: Any, case: Case, note_creation_body: NoteCreationBody, case_id: int) -> Dict:
+async def perform_note_creation(
+    client: Any, case: Case, note_creation_body: NoteCreationBody, case_id: int,
+) -> Dict:
     """
     Performs the creation of a note in a case.
 
@@ -84,7 +97,9 @@ async def perform_note_creation(client: Any, case: Case, note_creation_body: Not
     Returns:
         Dict: The response data containing the created note information.
     """
-    result = await fetch_and_validate_data(client, case.add_notes_group, note_creation_body.note_title, case_id)
+    result = await fetch_and_validate_data(
+        client, case.add_notes_group, note_creation_body.note_title, case_id,
+    )
     note_id = result["data"]["group_id"]
     custom_attributes = {}
     return await fetch_and_validate_data(
@@ -98,7 +113,9 @@ async def perform_note_creation(client: Any, case: Case, note_creation_body: Not
     )
 
 
-async def create_case_note(case_id: int, note_creation_body: NoteCreationBody) -> NoteCreationResponse:
+async def create_case_note(
+    case_id: int, note_creation_body: NoteCreationBody,
+) -> NoteCreationResponse:
     """
     Creates a note for a specific case.
 
@@ -111,4 +128,6 @@ async def create_case_note(case_id: int, note_creation_body: NoteCreationBody) -
     """
     client, case = await initialize_client_and_case("DFIR-IRIS")
     result = await perform_note_creation(client, case, note_creation_body, case_id)
-    return NoteCreationResponse(success=True, message="Successfully created note", note=result["data"])
+    return NoteCreationResponse(
+        success=True, message="Successfully created note", note=result["data"],
+    )

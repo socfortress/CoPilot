@@ -1,25 +1,24 @@
 import re
 from enum import Enum
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Tuple
-from typing import Union
+from typing import Any, Dict, List, Tuple, Union
 
 # import pcre2
 import xmltodict
+from app.connectors.wazuh_manager.schema.rules import (
+    RuleDisable,
+    RuleDisableResponse,
+    RuleEnable,
+    RuleEnableResponse,
+    RuleExclude,
+    RuleExcludeResponse,
+)
+from app.connectors.wazuh_manager.utils.universal import (
+    restart_service,
+    send_get_request,
+    send_put_request,
+)
 from fastapi import HTTPException
 from loguru import logger
-
-from app.connectors.wazuh_manager.schema.rules import RuleDisable
-from app.connectors.wazuh_manager.schema.rules import RuleDisableResponse
-from app.connectors.wazuh_manager.schema.rules import RuleEnable
-from app.connectors.wazuh_manager.schema.rules import RuleEnableResponse
-from app.connectors.wazuh_manager.schema.rules import RuleExclude
-from app.connectors.wazuh_manager.schema.rules import RuleExcludeResponse
-from app.connectors.wazuh_manager.utils.universal import restart_service
-from app.connectors.wazuh_manager.utils.universal import send_get_request
-from app.connectors.wazuh_manager.utils.universal import send_put_request
 
 
 async def fetch_filename(rule_id: str) -> str:
@@ -39,7 +38,10 @@ async def fetch_filename(rule_id: str) -> str:
     params = {"rule_ids": rule_id}
     filename_data = await send_get_request(endpoint=endpoint, params=params)
     if filename_data["data"]["data"]["total_affected_items"] == 0:
-        raise HTTPException(status_code=404, detail=f"Rule {rule_id} not found. Make sure the rule ID is correct within the Wazuh Manager.")
+        raise HTTPException(
+            status_code=404,
+            detail=f"Rule {rule_id} not found. Make sure the rule ID is correct within the Wazuh Manager.",
+        )
     return filename_data["data"]["data"]["affected_items"][0]["filename"]
 
 
@@ -66,7 +68,9 @@ async def fetch_file_content(filename: str) -> str:
     return file_content_data["data"]["data"]["affected_items"][0]["group"]
 
 
-async def set_rule_level(file_content: Any, rule_id: str, new_level: str) -> Tuple[str, Any]:
+async def set_rule_level(
+    file_content: Any, rule_id: str, new_level: str,
+) -> Tuple[str, Any]:
     """
     Sets the level of a rule identified by its ID in the given file content.
 
@@ -97,7 +101,9 @@ async def set_rule_level(file_content: Any, rule_id: str, new_level: str) -> Tup
     return previous_level, file_content
 
 
-async def convert_to_xml(updated_file_content: Union[Dict[str, str], List[Dict[str, str]]]) -> str:
+async def convert_to_xml(
+    updated_file_content: Union[Dict[str, str], List[Dict[str, str]]],
+) -> str:
     """
     Converts the updated file content to XML format.
 
@@ -115,7 +121,9 @@ async def convert_to_xml(updated_file_content: Union[Dict[str, str], List[Dict[s
         for group in updated_file_content:
             xml_dict = {"group": group}
             xml_content = xmltodict.unparse(xml_dict, pretty=True)
-            xml_content = xml_content.replace('<?xml version="1.0" encoding="utf-8"?>', "")
+            xml_content = xml_content.replace(
+                '<?xml version="1.0" encoding="utf-8"?>', "",
+            )
             xml_content_list.append(xml_content)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to convert to XML: {e}")
@@ -145,7 +153,9 @@ async def upload_updated_rule(filename: str, xml_content: str):
     )
     logger.info(response)
     if response["data"]["data"]["total_affected_items"] == 0:
-        raise HTTPException(status_code=500, detail="Failed to upload updated rule to Wazuh Manager.")
+        raise HTTPException(
+            status_code=500, detail="Failed to upload updated rule to Wazuh Manager.",
+        )
     return response
 
 
@@ -163,7 +173,9 @@ async def process_rule(rule, rule_action_func, ResponseModel):
         An instance of ResponseModel with the previous level, success status, and a message.
     """
     filename, file_content = await fetch_filename_and_content(rule.rule_id)
-    previous_level, updated_file_content = await rule_action_func(file_content, rule.rule_id)
+    previous_level, updated_file_content = await rule_action_func(
+        file_content, rule.rule_id,
+    )
     xml_content = await convert_to_xml(updated_file_content)
     await upload_updated_rule(filename, xml_content)
     await restart_service()

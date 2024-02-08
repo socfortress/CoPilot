@@ -1,18 +1,15 @@
 from typing import Optional
 
-from fastapi import APIRouter
-from fastapi import Depends
-from fastapi import HTTPException
-from fastapi import Security
-from loguru import logger
-
 from app.auth.utils import AuthHandler
-from app.connectors.dfir_iris.schema.notes import NoteCreationBody
-from app.connectors.dfir_iris.schema.notes import NoteCreationResponse
-from app.connectors.dfir_iris.schema.notes import NotesResponse
-from app.connectors.dfir_iris.services.notes import create_case_note
-from app.connectors.dfir_iris.services.notes import get_case_notes
+from app.connectors.dfir_iris.schema.notes import (
+    NoteCreationBody,
+    NoteCreationResponse,
+    NotesResponse,
+)
+from app.connectors.dfir_iris.services.notes import create_case_note, get_case_notes
 from app.connectors.dfir_iris.utils.universal import check_case_exists
+from fastapi import APIRouter, Depends, HTTPException, Security
+from loguru import logger
 
 
 async def verify_case_exists(case_id: int) -> int:
@@ -42,7 +39,9 @@ dfir_iris_notes_router = APIRouter()
     description="Get all notes for a case",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_case_notes_route(case_id: int = Depends(verify_case_exists), search_term: Optional[str] = "%") -> NotesResponse:
+async def get_case_notes_route(
+    case_id: int = Depends(verify_case_exists), search_term: Optional[str] = "%",
+) -> NotesResponse:
     """
     Retrieve all notes for a specific case.
 
@@ -63,7 +62,9 @@ async def get_case_notes_route(case_id: int = Depends(verify_case_exists), searc
     description="Create a note for a case",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def create_case_note_route(case_id: int, note_creation_body: NoteCreationBody) -> NoteCreationResponse:
+async def create_case_note_route(
+    case_id: int, note_creation_body: NoteCreationBody,
+) -> NoteCreationResponse:
     """
     Create a note for a case.
 

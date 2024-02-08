@@ -26,6 +26,3 @@ echo "Version: ${version}"
 
 build_backend
 build_frontend
-
-
-

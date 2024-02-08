@@ -1,12 +1,10 @@
-from typing import Any
-from typing import Dict
-
-from fastapi import HTTPException
-from influxdb_client.client.influxdb_client_async import InfluxDBClientAsync
-from loguru import logger
+from typing import Any, Dict
 
 from app.connectors.utils import get_connector_info_from_db
 from app.db.db_session import get_db_session
+from fastapi import HTTPException
+from influxdb_client.client.influxdb_client_async import InfluxDBClientAsync
+from loguru import logger
 
 
 async def verify_influxdb_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
@@ -27,13 +25,24 @@ async def verify_influxdb_credentials(attributes: Dict[str, Any]) -> Dict[str, A
         logger.info(f"Response from InfluxDB: {ping}")
         if ping:
             logger.info(f"Connection to {attributes['connector_url']} successful")
-            return {"connectionSuccessful": True, "message": "InfluxDB connection successful"}
+            return {
+                "connectionSuccessful": True,
+                "message": "InfluxDB connection successful",
+            }
         else:
             logger.error(f"Connection to {attributes['connector_url']} failed")
-            return {"connectionSuccessful": False, "message": f"Connection to {attributes['connector_url']} failed"}
+            return {
+                "connectionSuccessful": False,
+                "message": f"Connection to {attributes['connector_url']} failed",
+            }
     except Exception as e:
-        logger.error(f"Connection to {attributes['connector_url']} failed with error: {e}")
-        return {"connectionSuccessful": False, "message": f"Connection to {attributes['connector_url']} failed with error: {e}"}
+        logger.error(
+            f"Connection to {attributes['connector_url']} failed with error: {e}",
+        )
+        return {
+            "connectionSuccessful": False,
+            "message": f"Connection to {attributes['connector_url']} failed with error: {e}",
+        }
     finally:
         # Make sure to close the client session
         await influxdb_client.close()
@@ -66,7 +75,10 @@ async def create_influxdb_client(connector_name: str) -> InfluxDBClientAsync:
     async with get_db_session() as session:  # This will correctly enter the context manager
         attributes = await get_connector_info_from_db(connector_name, session)
     if attributes is None:
-        raise HTTPException(status_code=500, detail=f"No {connector_name} connector found in the database")
+        raise HTTPException(
+            status_code=500,
+            detail=f"No {connector_name} connector found in the database",
+        )
     try:
         return InfluxDBClientAsync(
             url=attributes["connector_url"],
@@ -74,7 +86,9 @@ async def create_influxdb_client(connector_name: str) -> InfluxDBClientAsync:
             org=await get_influxdb_organization(),
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to create Elasticsearch client: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to create Elasticsearch client: {e}",
+        )
 
 
 async def get_influxdb_organization() -> str:
@@ -85,5 +99,7 @@ async def get_influxdb_organization() -> str:
     async with get_db_session() as session:  # This will correctly enter the context manager
         attributes = await get_connector_info_from_db("InfluxDB", session)
     if attributes is None:
-        raise HTTPException(status_code=500, detail="No InfluxDB connector found in the database")
+        raise HTTPException(
+            status_code=500, detail="No InfluxDB connector found in the database",
+        )
     return attributes["connector_extra_data"].split(",")[0]

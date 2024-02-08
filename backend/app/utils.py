@@ -1,44 +1,26 @@
-from datetime import datetime
-from datetime import timedelta
+from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Union
+from typing import Any, Dict, List, Optional, Union
 
 import requests
-from fastapi import APIRouter
-from fastapi import Depends
-from fastapi import HTTPException
-from fastapi import Request
-from fastapi import Security
-from fastapi.exceptions import RequestValidationError
-from loguru import logger
-from pydantic import BaseModel
-from pydantic import Field
-from pydantic import validator
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-from sqlalchemy.orm import joinedload
-
 from app.auth.services.universal import find_user
 from app.auth.utils import AuthHandler
 from app.connectors.utils import get_connector_info_from_db
 from app.db.all_models import Connectors
-from app.db.db_session import get_db
-from app.db.db_session import get_db_session
-from app.db.db_session import get_session
+from app.db.db_session import get_db, get_db_session, get_session
 from app.db.universal_models import LogEntry
 from app.integrations.alert_creation_settings.models.alert_creation_settings import (
     AlertCreationEventConfig,
-)
-from app.integrations.alert_creation_settings.models.alert_creation_settings import (
     AlertCreationSettings,
-)
-from app.integrations.alert_creation_settings.models.alert_creation_settings import (
     EventOrder,
 )
+from fastapi import APIRouter, Depends, HTTPException, Request, Security
+from fastapi.exceptions import RequestValidationError
+from loguru import logger
+from pydantic import BaseModel, Field, validator
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from sqlalchemy.orm import joinedload
 
 
 ################## ! 422 VALIDATION ERROR TYPES FOR PYDANTIC VALUE ERROR RESPONSE ! ##################
@@ -109,7 +91,9 @@ class LogEntryModel(BaseModel):
     method: str = Field(..., example="GET", description="Method")
     status_code: int = Field(..., example=200, description="Status code")
     message: str = Field(..., example="Route accessed", description="Message")
-    additional_info: Optional[str] = Field(None, example="Additional details here", description="Additional info")
+    additional_info: Optional[str] = Field(
+        None, example="Additional details here", description="Additional info",
+    )
 
 
 class LogRetrieveModel(LogEntryModel):
@@ -129,7 +113,9 @@ class EventType(str, Enum):
 
 
 class TimeRangeModel(BaseModel):
-    time_range: Union[str, int] = Field("1d", description="Time range to fetch logs for, e.g., 1, 1h, 1d, 1w")
+    time_range: Union[str, int] = Field(
+        "1d", description="Time range to fetch logs for, e.g., 1, 1h, 1d, 1w",
+    )
 
     @validator("time_range")
     def validate_time_range(cls, value):
@@ -150,7 +136,13 @@ class TimeRangeModel(BaseModel):
             if isinstance(value, int):
                 if value < 1 or value > 7:
                     raise RequestValidationError(
-                        [{"loc": ("time_range",), "msg": "The integer part should be between 1 and 7.", "type": "value_error.time_range"}],
+                        [
+                            {
+                                "loc": ("time_range",),
+                                "msg": "The integer part should be between 1 and 7.",
+                                "type": "value_error.time_range",
+                            },
+                        ],
                     )
                 return f"{value}d"  # convert integer to day representation
 
@@ -171,12 +163,24 @@ class TimeRangeModel(BaseModel):
 
                 if int_part <= 0:
                     raise RequestValidationError(
-                        [{"loc": ("time_range",), "msg": "The integer part should be greater than 0.", "type": "value_error.time_range"}],
+                        [
+                            {
+                                "loc": ("time_range",),
+                                "msg": "The integer part should be greater than 0.",
+                                "type": "value_error.time_range",
+                            },
+                        ],
                     )
 
                 if unit == "w" and int_part > 1:
                     raise RequestValidationError(
-                        [{"loc": ("time_range",), "msg": "The maximum allowed time range is 1 week.", "type": "value_error.time_range"}],
+                        [
+                            {
+                                "loc": ("time_range",),
+                                "msg": "The maximum allowed time range is 1 week.",
+                                "type": "value_error.time_range",
+                            },
+                        ],
                     )
                 return value
 
@@ -222,7 +226,9 @@ class Logger:
         auth_header = request.headers.get("Authorization")
         if auth_header:
             try:
-                token = auth_header.split(" ")[1]  # Better split by space and take the second part
+                token = auth_header.split(" ")[
+                    1
+                ]  # Better split by space and take the second part
             except IndexError:
                 raise HTTPException(status_code=401, detail="Invalid token")
             username, _ = self.auth_handler.decode_token(token)
@@ -267,7 +273,13 @@ class Logger:
         )
         await self.insert_log_entry(log_entry_model)
 
-    async def log_error(self, user_id, request: Request, exception: Exception, additional_info: Optional[str] = None):
+    async def log_error(
+        self,
+        user_id,
+        request: Request,
+        exception: Exception,
+        additional_info: Optional[str] = None,
+    ):
         """
         Logs an error event with the provided information.
 
@@ -288,7 +300,9 @@ class Logger:
         )
         await self.insert_log_entry(log_entry_model)
 
-    async def log_and_raise_http_error(self, user_id, request: Request, exception: Exception):
+    async def log_and_raise_http_error(
+        self, user_id, request: Request, exception: Exception,
+    ):
         """
         Logs the error, including the user ID, request details, and the exception,
         and raises an HTTPException with a status code of 500 (Internal Server Error).
@@ -342,9 +356,13 @@ async def get_logs(session: AsyncSession = Depends(get_db)) -> LogsResponse:
     auth_handler_instance = AuthHandler()  # Initialize your AuthHandler
     logger_instance = Logger(session, auth_handler_instance)
 
-    logs = await logger_instance.fetch_all_logs()  # Assuming fetch_all_logs is an async function
+    logs = (
+        await logger_instance.fetch_all_logs()
+    )  # Assuming fetch_all_logs is an async function
     if logs:
-        return LogsResponse(logs=logs, success=True, message="Logs fetched successfully")
+        return LogsResponse(
+            logs=logs, success=True, message="Logs fetched successfully",
+        )
     else:
         raise HTTPException(status_code=404, detail="No logs found")
 
@@ -355,7 +373,9 @@ async def get_logs(session: AsyncSession = Depends(get_db)) -> LogsResponse:
     description="Fetch logs by user ID",
     dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
 )
-async def get_logs_by_user_id(user_id: int, session: AsyncSession = Depends(get_db)) -> LogsResponse:
+async def get_logs_by_user_id(
+    user_id: int, session: AsyncSession = Depends(get_db),
+) -> LogsResponse:
     """
     Fetch all logs from the database where the user_id matches the provided user_id.
 
@@ -375,7 +395,9 @@ async def get_logs_by_user_id(user_id: int, session: AsyncSession = Depends(get_
     logs = result.scalars().all()
 
     if not logs:
-        raise HTTPException(status_code=404, detail=f"No logs found for user ID: {user_id}")
+        raise HTTPException(
+            status_code=404, detail=f"No logs found for user ID: {user_id}",
+        )
 
     return LogsResponse(logs=logs, success=True, message="Logs fetched successfully")
 
@@ -386,7 +408,9 @@ async def get_logs_by_user_id(user_id: int, session: AsyncSession = Depends(get_
     description="Fetch logs by time range",
     dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
 )
-async def get_logs_by_time_range(time_range: TimeRangeModel, session: AsyncSession = Depends(get_db)) -> LogsResponse:
+async def get_logs_by_time_range(
+    time_range: TimeRangeModel, session: AsyncSession = Depends(get_db),
+) -> LogsResponse:
     """
     Fetch all logs from the database where the timestamp is within the provided time range.
 
@@ -406,13 +430,22 @@ async def get_logs_by_time_range(time_range: TimeRangeModel, session: AsyncSessi
     logs = result.scalars().all()
 
     if logs:
-        logs = [log for log in logs if log.timestamp >= datetime.now() - timedelta(days=int(time_range.time_range[:-1]))]
+        logs = [
+            log
+            for log in logs
+            if log.timestamp
+            >= datetime.now() - timedelta(days=int(time_range.time_range[:-1]))
+        ]
         if logs != []:
-            return LogsResponse(logs=logs, success=True, message="Logs fetched successfully")
+            return LogsResponse(
+                logs=logs, success=True, message="Logs fetched successfully",
+            )
         else:
             raise HTTPException(
                 status_code=404,
-                detail=f"No logs found for time range: {time_range.time_range}".format(time_range=time_range.time_range),
+                detail=f"No logs found for time range: {time_range.time_range}".format(
+                    time_range=time_range.time_range,
+                ),
             )
     else:
         raise HTTPException(status_code=404, detail="No logs found")
@@ -443,11 +476,15 @@ async def get_logs_by_event_type(
     Raises:
         HTTPException: An exception with a 404 status code is raised if no logs are found.
     """
-    result = await session.execute(select(LogEntry).filter(LogEntry.event_type == event_type))
+    result = await session.execute(
+        select(LogEntry).filter(LogEntry.event_type == event_type),
+    )
     logs = result.scalars().all()
 
     if not logs:
-        raise HTTPException(status_code=404, detail=f"No logs found for event type: {event_type}")
+        raise HTTPException(
+            status_code=404, detail=f"No logs found for event type: {event_type}",
+        )
 
     return LogsResponse(logs=logs, success=True, message="Logs fetched successfully")
 
@@ -458,7 +495,9 @@ async def get_logs_by_event_type(
     description="Purge all logs",
     dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
 )
-async def purge_logs(session: AsyncSession = Depends(get_db)) -> LogsResponse:  # Update this line to use the new model
+async def purge_logs(
+    session: AsyncSession = Depends(get_db),
+) -> LogsResponse:  # Update this line to use the new model
     """
     Purge all logs from the database.
 
@@ -488,7 +527,9 @@ async def purge_logs(session: AsyncSession = Depends(get_db)) -> LogsResponse:  
     description="Purge logs by time range",
     dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
 )
-async def purge_logs_by_time_range(time_range: TimeRangeModel, session: AsyncSession = Depends(get_db)) -> LogsResponse:
+async def purge_logs_by_time_range(
+    time_range: TimeRangeModel, session: AsyncSession = Depends(get_db),
+) -> LogsResponse:
     """
     Purge all logs from the database where the timestamp is within the provided time range.
 
@@ -508,16 +549,25 @@ async def purge_logs_by_time_range(time_range: TimeRangeModel, session: AsyncSes
     logs = result.scalars().all()
 
     if logs:
-        logs = [log for log in logs if log.timestamp >= datetime.now() - timedelta(days=int(time_range.time_range[:-1]))]
+        logs = [
+            log
+            for log in logs
+            if log.timestamp
+            >= datetime.now() - timedelta(days=int(time_range.time_range[:-1]))
+        ]
         if logs != []:
             for log in logs:
                 await session.delete(log)
             await session.commit()
-            return LogsResponse(logs=[], success=True, message="Logs purged successfully")
+            return LogsResponse(
+                logs=[], success=True, message="Logs purged successfully",
+            )
         else:
             raise HTTPException(
                 status_code=404,
-                detail=f"No logs found for time range: {time_range.time_range}".format(time_range=time_range.time_range),
+                detail=f"No logs found for time range: {time_range.time_range}".format(
+                    time_range=time_range.time_range,
+                ),
             )
     else:
         raise HTTPException(status_code=404, detail="No logs found")
@@ -539,7 +589,9 @@ def allowed_file(filename):
 
 
 ################## ! DATABASE UTILS ! ##################
-async def get_connector_attribute(connector_id: int, column_name: str, session: AsyncSession = Depends(get_session)) -> Optional[Any]:
+async def get_connector_attribute(
+    connector_id: int, column_name: str, session: AsyncSession = Depends(get_session),
+) -> Optional[Any]:
     """
     Retrieve the value of a specific column from a connector.
 
@@ -551,7 +603,9 @@ async def get_connector_attribute(connector_id: int, column_name: str, session: 
     Returns:
         Optional[Any]: The value of the column, or None if the connector or column does not exist.
     """
-    result = await session.execute(select(Connectors).filter(Connectors.id == connector_id))
+    result = await session.execute(
+        select(Connectors).filter(Connectors.id == connector_id),
+    )
     connector = result.scalars().first()
 
     if connector:
@@ -559,7 +613,9 @@ async def get_connector_attribute(connector_id: int, column_name: str, session: 
     return None
 
 
-async def get_customer_alert_settings(customer_code: str, session: AsyncSession) -> Optional[AlertCreationSettings]:
+async def get_customer_alert_settings(
+    customer_code: str, session: AsyncSession,
+) -> Optional[AlertCreationSettings]:
     """
     Retrieve the alert creation settings for a specific customer.
 
@@ -570,7 +626,11 @@ async def get_customer_alert_settings(customer_code: str, session: AsyncSession)
     Returns:
         Optional[AlertCreationSettings]: The alert creation settings for the customer, or None if not found.
     """
-    result = await session.execute(select(AlertCreationSettings).filter(AlertCreationSettings.customer_code == customer_code))
+    result = await session.execute(
+        select(AlertCreationSettings).filter(
+            AlertCreationSettings.customer_code == customer_code,
+        ),
+    )
     settings = result.scalars().first()
 
     if settings:
@@ -578,7 +638,9 @@ async def get_customer_alert_settings(customer_code: str, session: AsyncSession)
     return None
 
 
-async def get_customer_alert_settings_office365(office365_organization_id: str, session: AsyncSession) -> Optional[AlertCreationSettings]:
+async def get_customer_alert_settings_office365(
+    office365_organization_id: str, session: AsyncSession,
+) -> Optional[AlertCreationSettings]:
     """
     Retrieve the alert creation settings for a specific customer.
 
@@ -590,7 +652,9 @@ async def get_customer_alert_settings_office365(office365_organization_id: str, 
         Optional[AlertCreationSettings]: The alert creation settings for the customer, or None if not found.
     """
     result = await session.execute(
-        select(AlertCreationSettings).filter(AlertCreationSettings.office365_organization_id == office365_organization_id),
+        select(AlertCreationSettings).filter(
+            AlertCreationSettings.office365_organization_id == office365_organization_id,
+        ),
     )
     settings = result.scalars().first()
 
@@ -615,7 +679,11 @@ async def get_customer_alert_event_configs(
     """
     result = await session.execute(
         select(AlertCreationSettings)
-        .options(joinedload(AlertCreationSettings.event_orders).joinedload(EventOrder.event_configs))
+        .options(
+            joinedload(AlertCreationSettings.event_orders).joinedload(
+                EventOrder.event_configs,
+            ),
+        )
         .where(AlertCreationSettings.customer_code == customer_code),
     )
     settings = result.scalars().first()
@@ -627,14 +695,18 @@ async def get_customer_alert_event_configs(
 
 ################## ! Wazuh Worker Provisioning App ! ##################
 ################## ! https://github.com/socfortress/Customer-Provisioning-Worker ! ##################
-async def verify_wazuh_worker_provisioning_healtcheck(attributes: Dict[str, Any]) -> Dict[str, Any]:
+async def verify_wazuh_worker_provisioning_healtcheck(
+    attributes: Dict[str, Any],
+) -> Dict[str, Any]:
     """
     Verifies the connection to Wazuh Worker Provisioning service.
 
     Returns:
         dict: A dictionary containing 'connectionSuccessful' status.
     """
-    logger.info(f"Verifying the wazuh-worker provisioning connection to {attributes['connector_url']}")
+    logger.info(
+        f"Verifying the wazuh-worker provisioning connection to {attributes['connector_url']}",
+    )
 
     try:
         wazuh_worker_provisioning_healthcheck = requests.get(
@@ -643,15 +715,28 @@ async def verify_wazuh_worker_provisioning_healtcheck(attributes: Dict[str, Any]
         )
 
         if wazuh_worker_provisioning_healthcheck.status_code == 200:
-            return {"connectionSuccessful": True, "message": "Wazuh Worker Provisioning healthcheck successful"}
+            return {
+                "connectionSuccessful": True,
+                "message": "Wazuh Worker Provisioning healthcheck successful",
+            }
         else:
-            logger.error(f"Connection to {attributes['connector_url']} failed with error: {wazuh_worker_provisioning_healthcheck.text}")
+            logger.error(
+                f"Connection to {attributes['connector_url']} failed with error: {wazuh_worker_provisioning_healthcheck.text}",
+            )
 
-            return {"connectionSuccessful": False, "message": f"Connection to {attributes['connector_url']} failed"}
+            return {
+                "connectionSuccessful": False,
+                "message": f"Connection to {attributes['connector_url']} failed",
+            }
     except Exception as e:
-        logger.error(f"Connection to {attributes['connector_url']} failed with error: {e}")
+        logger.error(
+            f"Connection to {attributes['connector_url']} failed with error: {e}",
+        )
 
-        return {"connectionSuccessful": False, "message": f"Connection to {attributes['connector_url']} failed with error."}
+        return {
+            "connectionSuccessful": False,
+            "message": f"Connection to {attributes['connector_url']} failed with error.",
+        }
 
 
 async def verify_wazuh_worker_provisioning_connection(connector_name: str) -> str:
@@ -668,14 +753,18 @@ async def verify_wazuh_worker_provisioning_connection(connector_name: str) -> st
 
 ################## ! Alert Creation Provisioning App ! ##################
 ################## ! https://github.com/socfortress/Customer-Provisioning-Alert ! ##################
-async def verify_alert_creation_provisioning_healtcheck(attributes: Dict[str, Any]) -> Dict[str, Any]:
+async def verify_alert_creation_provisioning_healtcheck(
+    attributes: Dict[str, Any],
+) -> Dict[str, Any]:
     """
     Verifies the connection to Alert Creation Provisioning service.
 
     Returns:
         dict: A dictionary containing 'connectionSuccessful' status.
     """
-    logger.info(f"Verifying the Alert Creation provisioning connection to {attributes['connector_url']}")
+    logger.info(
+        f"Verifying the Alert Creation provisioning connection to {attributes['connector_url']}",
+    )
 
     try:
         wazuh_worker_provisioning_healthcheck = requests.get(
@@ -684,15 +773,28 @@ async def verify_alert_creation_provisioning_healtcheck(attributes: Dict[str, An
         )
 
         if wazuh_worker_provisioning_healthcheck.status_code == 200:
-            return {"connectionSuccessful": True, "message": "Alert Creation Provisioning healthcheck successful"}
+            return {
+                "connectionSuccessful": True,
+                "message": "Alert Creation Provisioning healthcheck successful",
+            }
         else:
-            logger.error(f"Connection to {attributes['connector_url']} failed with error: {wazuh_worker_provisioning_healthcheck.text}")
+            logger.error(
+                f"Connection to {attributes['connector_url']} failed with error: {wazuh_worker_provisioning_healthcheck.text}",
+            )
 
-            return {"connectionSuccessful": False, "message": f"Connection to {attributes['connector_url']} failed"}
+            return {
+                "connectionSuccessful": False,
+                "message": f"Connection to {attributes['connector_url']} failed",
+            }
     except Exception as e:
-        logger.error(f"Connection to {attributes['connector_url']} failed with error: {e}")
+        logger.error(
+            f"Connection to {attributes['connector_url']} failed with error: {e}",
+        )
 
-        return {"connectionSuccessful": False, "message": f"Connection to {attributes['connector_url']} failed with error."}
+        return {
+            "connectionSuccessful": False,
+            "message": f"Connection to {attributes['connector_url']} failed with error.",
+        }
 
 
 async def verify_alert_creation_provisioning_connection(connector_name: str) -> str:

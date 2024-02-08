@@ -6,12 +6,8 @@ from enum import Enum
 from typing import Optional
 
 import bcrypt
-from pydantic import BaseModel
-from pydantic import EmailStr
-from pydantic import validator
-from sqlmodel import Field
-from sqlmodel import Relationship
-from sqlmodel import SQLModel
+from pydantic import BaseModel, EmailStr, validator
+from sqlmodel import Field, Relationship, SQLModel
 
 
 class Role(SQLModel, table=True):
@@ -50,7 +46,11 @@ class UserInput(SQLModel):
         description="Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character",
     )
     email: EmailStr
-    role_id: RoleEnum = Field(RoleEnum.analyst, description="Role ID 1: admin, 2: analyst", foreign_key="role.id")
+    role_id: RoleEnum = Field(
+        RoleEnum.analyst,
+        description="Role ID 1: admin, 2: analyst",
+        foreign_key="role.id",
+    )
 
 
 class UserLogin(SQLModel):
@@ -84,7 +84,9 @@ class SMTPInput(SQLModel):
 
 
 class Password(BaseModel):
-    length: int = Field(default=12, ge=8, le=128, description="The length of the password")
+    length: int = Field(
+        default=12, ge=8, le=128, description="The length of the password",
+    )
     hashed: str  # Holds the hashed password
     plain: str  # Holds the plain password
 
@@ -106,11 +108,18 @@ class Password(BaseModel):
         punctuation = string.punctuation
 
         # Ensure the password has at least one lowercase, one uppercase, one digit, and one symbol
-        password_chars = [random.choice(lowercase), random.choice(uppercase), random.choice(digits), random.choice(punctuation)]
+        password_chars = [
+            random.choice(lowercase),
+            random.choice(uppercase),
+            random.choice(digits),
+            random.choice(punctuation),
+        ]
 
         # Fill the rest of the password length with a random mix of characters
         if length > 4:
-            password_chars += random.choices(lowercase + uppercase + digits + punctuation, k=length - 4)
+            password_chars += random.choices(
+                lowercase + uppercase + digits + punctuation, k=length - 4,
+            )
 
         # Shuffle the resulting password list to avoid predictable patterns
         random.shuffle(password_chars)
@@ -122,7 +131,9 @@ class Password(BaseModel):
         hashed_password = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
 
         # Return the Password object with both the plain and hashed password
-        return cls(length=length, hashed=hashed_password.decode("utf-8"), plain=password)
+        return cls(
+            length=length, hashed=hashed_password.decode("utf-8"), plain=password,
+        )
 
 
 # ! PASSWORD RESET TOKEN GENERATION NOT USING FOR NOW! #

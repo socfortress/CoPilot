@@ -1,36 +1,47 @@
 import requests
-from fastapi import HTTPException
-from loguru import logger
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
 from app.connectors.grafana.services.dashboards import provision_dashboards
 from app.connectors.graylog.services.management import start_stream
 from app.customer_provisioning.schema.graylog import StreamConnectionToPipelineRequest
-from app.customer_provisioning.schema.provision import CustomerProvisionMeta
-from app.customer_provisioning.schema.provision import CustomerProvisionResponse
-from app.customer_provisioning.schema.provision import ProvisionNewCustomer
-from app.customer_provisioning.schema.wazuh_worker import ProvisionWorkerRequest
-from app.customer_provisioning.schema.wazuh_worker import ProvisionWorkerResponse
+from app.customer_provisioning.schema.provision import (
+    CustomerProvisionMeta,
+    CustomerProvisionResponse,
+    ProvisionNewCustomer,
+)
+from app.customer_provisioning.schema.wazuh_worker import (
+    ProvisionWorkerRequest,
+    ProvisionWorkerResponse,
+)
 from app.customer_provisioning.services.dfir_iris import create_customer
-from app.customer_provisioning.services.grafana import create_grafana_datasource
-from app.customer_provisioning.services.grafana import create_grafana_folder
-from app.customer_provisioning.services.grafana import create_grafana_organization
-from app.customer_provisioning.services.graylog import connect_stream_to_pipeline
-from app.customer_provisioning.services.graylog import create_event_stream
-from app.customer_provisioning.services.graylog import create_index_set
-from app.customer_provisioning.services.graylog import get_pipeline_id
-from app.customer_provisioning.services.wazuh_manager import apply_group_configurations
-from app.customer_provisioning.services.wazuh_manager import create_wazuh_groups
+from app.customer_provisioning.services.grafana import (
+    create_grafana_datasource,
+    create_grafana_folder,
+    create_grafana_organization,
+)
+from app.customer_provisioning.services.graylog import (
+    connect_stream_to_pipeline,
+    create_event_stream,
+    create_index_set,
+    get_pipeline_id,
+)
+from app.customer_provisioning.services.wazuh_manager import (
+    apply_group_configurations,
+    create_wazuh_groups,
+)
 from app.db.universal_models import CustomersMeta
 from app.integrations.alert_creation_settings.models.alert_creation_settings import (
     AlertCreationSettings,
 )
 from app.utils import get_connector_attribute
+from fastapi import HTTPException
+from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 # ! MAIN FUNCTION ! #
-async def provision_wazuh_customer(request: ProvisionNewCustomer, session: AsyncSession) -> CustomerProvisionResponse:
+async def provision_wazuh_customer(
+    request: ProvisionNewCustomer, session: AsyncSession,
+) -> CustomerProvisionResponse:
     """
     This function is the main function for provisioning a new customer for their Wazuh instance.
     It will call all the other functions to provision the customer.
@@ -49,7 +60,9 @@ async def provision_wazuh_customer(request: ProvisionNewCustomer, session: Async
     # Initialize an empty dictionary to store the meta data
     provision_meta_data = {}
     provision_meta_data["index_set_id"] = (await create_index_set(request)).data.id
-    provision_meta_data["stream_id"] = (await create_event_stream(request, provision_meta_data["index_set_id"])).data.stream_id
+    provision_meta_data["stream_id"] = (
+        await create_event_stream(request, provision_meta_data["index_set_id"])
+    ).data.stream_id
     provision_meta_data["pipeline_ids"] = await get_pipeline_id(subscription="Wazuh")
     stream_and_pipeline = StreamConnectionToPipelineRequest(
         stream_id=provision_meta_data["stream_id"],
@@ -57,15 +70,27 @@ async def provision_wazuh_customer(request: ProvisionNewCustomer, session: Async
     )
     await connect_stream_to_pipeline(stream_and_pipeline)
     if await start_stream(stream_id=provision_meta_data["stream_id"]) is False:
-        raise HTTPException(status_code=500, detail=f"Failed to start stream {provision_meta_data['stream_id']}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to start stream {provision_meta_data['stream_id']}",
+        )
     await create_wazuh_groups(request)
     await apply_group_configurations(request)
-    provision_meta_data["grafana_organization_id"] = (await create_grafana_organization(request)).orgId
+    provision_meta_data["grafana_organization_id"] = (
+        await create_grafana_organization(request)
+    ).orgId
     provision_meta_data["wazuh_datasource_uid"] = (
-        await create_grafana_datasource(request=request, organization_id=provision_meta_data["grafana_organization_id"], session=session)
+        await create_grafana_datasource(
+            request=request,
+            organization_id=provision_meta_data["grafana_organization_id"],
+            session=session,
+        )
     ).datasource.uid
     provision_meta_data["grafana_edr_folder_id"] = (
-        await create_grafana_folder(organization_id=provision_meta_data["grafana_organization_id"], folder_title="EDR")
+        await create_grafana_folder(
+            organization_id=provision_meta_data["grafana_organization_id"],
+            folder_title="EDR",
+        )
     ).id
     await provision_dashboards(
         DashboardProvisionRequest(
@@ -76,11 +101,17 @@ async def provision_wazuh_customer(request: ProvisionNewCustomer, session: Async
         ),
     )
 
-    provision_meta_data["iris_customer_id"] = (await create_customer(request.customer_name)).data.customer_id
+    provision_meta_data["iris_customer_id"] = (
+        await create_customer(request.customer_name)
+    ).data.customer_id
 
     customer_provision_meta = CustomerProvisionMeta(**provision_meta_data)
-    customer_meta = await update_customer_meta_table(request, customer_provision_meta, session)
-    await update_customer_alert_settings_table(request, customer_provision_meta, session)
+    customer_meta = await update_customer_meta_table(
+        request, customer_provision_meta, session,
+    )
+    await update_customer_alert_settings_table(
+        request, customer_provision_meta, session,
+    )
 
     provision_worker = await provision_wazuh_worker(
         ProvisionWorkerRequest(
@@ -113,7 +144,11 @@ async def provision_wazuh_customer(request: ProvisionNewCustomer, session: Async
 
 
 ######### ! Update CustomerMeta Table ! ############
-async def update_customer_meta_table(request: ProvisionNewCustomer, customer_meta: CustomerProvisionMeta, session: AsyncSession):
+async def update_customer_meta_table(
+    request: ProvisionNewCustomer,
+    customer_meta: CustomerProvisionMeta,
+    session: AsyncSession,
+):
     """
     Update the customer meta table with the provided information.
 
@@ -146,7 +181,11 @@ async def update_customer_meta_table(request: ProvisionNewCustomer, customer_met
 
 
 ######### ! Update Customer Alert Settings Table ! ############
-async def update_customer_alert_settings_table(request: ProvisionNewCustomer, customer_meta: CustomerProvisionMeta, session: AsyncSession):
+async def update_customer_alert_settings_table(
+    request: ProvisionNewCustomer,
+    customer_meta: CustomerProvisionMeta,
+    session: AsyncSession,
+):
     """
     Update the customer alert settings table with the provided information.
 
@@ -158,7 +197,9 @@ async def update_customer_alert_settings_table(request: ProvisionNewCustomer, cu
     Returns:
         AlertCreationSettings: The updated customer meta object.
     """
-    logger.info(f"Updating customer alert settings table for customer {request.customer_name}")
+    logger.info(
+        f"Updating customer alert settings table for customer {request.customer_name}",
+    )
     customer_alert_settings = AlertCreationSettings(
         customer_code=request.customer_code,
         customer_name=request.customer_name,
@@ -176,7 +217,9 @@ async def update_customer_alert_settings_table(request: ProvisionNewCustomer, cu
 
 
 ######### ! Provision Wazuh Worker ! ############
-async def provision_wazuh_worker(request: ProvisionWorkerRequest, session: AsyncSession) -> ProvisionWorkerResponse:
+async def provision_wazuh_worker(
+    request: ProvisionWorkerRequest, session: AsyncSession,
+) -> ProvisionWorkerResponse:
     """
     Provisions a Wazuh worker. https://github.com/socfortress/Customer-Provisioning-Worker
 
@@ -188,7 +231,9 @@ async def provision_wazuh_worker(request: ProvisionWorkerRequest, session: Async
         ProvisionWorkerResponse: The response object indicating the success or failure of the provisioning operation.
     """
     logger.info(f"Provisioning Wazuh worker {request}")
-    api_endpoint = await get_connector_attribute(connector_id=13, column_name="connector_url", session=session)
+    api_endpoint = await get_connector_attribute(
+        connector_id=13, column_name="connector_url", session=session,
+    )
     # Send the POST request to the Wazuh worker
     response = requests.post(
         url=f"{api_endpoint}/provision_worker",
@@ -196,6 +241,10 @@ async def provision_wazuh_worker(request: ProvisionWorkerRequest, session: Async
     )
     # Check the response status code
     if response.status_code != 200:
-        return ProvisionWorkerResponse(success=False, message=f"Failed to provision Wazuh worker: {response.text}")
+        return ProvisionWorkerResponse(
+            success=False, message=f"Failed to provision Wazuh worker: {response.text}",
+        )
     # Return the response
-    return ProvisionWorkerResponse(success=True, message="Wazuh worker provisioned successfully")
+    return ProvisionWorkerResponse(
+        success=True, message="Wazuh worker provisioned successfully",
+    )

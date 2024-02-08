@@ -1,26 +1,32 @@
 import datetime
-from typing import List
-from typing import Optional
+from typing import List, Optional
 
-from pydantic import BaseModel
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 
 class FlaggedRule(BaseModel):
     id: str = Field(..., description="Unique identifier for the flagged rule")
     name: str = Field(..., description="Name of the flagged rule")
-    severity: Optional[str] = Field(None, description="Severity level of the flagged rule")
-    tags: List[str] = Field(..., description="List of tags associated with the flagged rule")
+    severity: Optional[str] = Field(
+        None, description="Severity level of the flagged rule",
+    )
+    tags: List[str] = Field(
+        ..., description="List of tags associated with the flagged rule",
+    )
 
 
 class Mailbox(BaseModel):
-    external_id: Optional[str] = Field(None, description="External identifier for the mailbox")
+    external_id: Optional[str] = Field(
+        None, description="External identifier for the mailbox",
+    )
     id: str = Field(..., description="Unique identifier for the mailbox")
 
 
 class Message(BaseModel):
     canonical_id: str = Field(..., description="Canonical identifier for the message")
-    external_id: Optional[str] = Field(None, description="External identifier for the mailbox")
+    external_id: Optional[str] = Field(
+        None, description="External identifier for the mailbox",
+    )
     id: str = Field(..., description="Unique identifier for the message")
     mailbox: Mailbox = Field(..., description="Mailbox details")
     message_source_id: str = Field(..., description="Source identifier for the message")
@@ -35,12 +41,16 @@ class TriggeredAction(BaseModel):
 class Data(BaseModel):
     flagged_rules: List[FlaggedRule] = Field(..., description="List of flagged rules")
     message: Message = Field(..., description="Message details")
-    triggered_actions: List[TriggeredAction] = Field(..., description="List of triggered actions")
+    triggered_actions: List[TriggeredAction] = Field(
+        ..., description="List of triggered actions",
+    )
 
 
 class AlertRequestBody(BaseModel):
     api_version: str = Field(..., description="API version", alias="api_version")
-    created_at: str = Field(..., description="Creation timestamp in ISO 8601 format", alias="created_at")
+    created_at: str = Field(
+        ..., description="Creation timestamp in ISO 8601 format", alias="created_at",
+    )
     data: Data = Field(..., description="Nested data object")
     id: str = Field(..., description="Unique identifier for the request body")
     type: str = Field(..., description="Type of event, e.g., message.flagged")
@@ -48,14 +58,18 @@ class AlertRequestBody(BaseModel):
 
 class AlertResponseBody(BaseModel):
     success: bool = Field(..., description="Success status of the request")
-    message: str = Field(..., description="Message describing the result of the request")
+    message: str = Field(
+        ..., description="Message describing the result of the request",
+    )
 
 
 ### SQLModel Schema
 class FlaggedRuleSchema(BaseModel):
     rule_id: str
     name: str
-    severity: Optional[str] = Field(None, description="Severity level of the flagged rule")
+    severity: Optional[str] = Field(
+        None, description="Severity level of the flagged rule",
+    )
     tags: str
 
     class Config:
@@ -63,7 +77,9 @@ class FlaggedRuleSchema(BaseModel):
 
 
 class MailboxSchema(BaseModel):
-    external_id: Optional[str] = Field(None, description="External identifier for the mailbox")
+    external_id: Optional[str] = Field(
+        None, description="External identifier for the mailbox",
+    )
     mailbox_id: str
 
     class Config:

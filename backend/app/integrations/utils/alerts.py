@@ -1,18 +1,15 @@
 import ipaddress
 import re
 from abc import ABC
-from typing import Dict
-from typing import Optional
-from typing import Union
+from typing import Dict, Optional, Union
 
 import httpx
 import regex
+from app.integrations.utils.schema import ShufflePayload
+from app.utils import get_customer_alert_settings
 from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.integrations.utils.schema import ShufflePayload
-from app.utils import get_customer_alert_settings
 
 
 #################### ! DFIR IRIS ASSET VALIDATOR ! ####################
@@ -334,7 +331,11 @@ async def send_to_shuffle(payload: ShufflePayload, session: AsyncSession) -> boo
     try:
         async with httpx.AsyncClient(verify=False) as client:
             response = await client.post(
-                (await get_customer_alert_settings(customer_code=payload.customer_code, session=session)).shuffle_endpoint,
+                (
+                    await get_customer_alert_settings(
+                        customer_code=payload.customer_code, session=session,
+                    )
+                ).shuffle_endpoint,
                 json=payload.to_dict(),
             )
 

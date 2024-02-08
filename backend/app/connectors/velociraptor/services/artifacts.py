@@ -1,15 +1,16 @@
+from app.connectors.velociraptor.schema.artifacts import (
+    Artifacts,
+    ArtifactsResponse,
+    CollectArtifactBody,
+    CollectArtifactResponse,
+    QuarantineBody,
+    QuarantineResponse,
+    RunCommandBody,
+    RunCommandResponse,
+)
+from app.connectors.velociraptor.utils.universal import UniversalService
 from fastapi import HTTPException
 from loguru import logger
-
-from app.connectors.velociraptor.schema.artifacts import Artifacts
-from app.connectors.velociraptor.schema.artifacts import ArtifactsResponse
-from app.connectors.velociraptor.schema.artifacts import CollectArtifactBody
-from app.connectors.velociraptor.schema.artifacts import CollectArtifactResponse
-from app.connectors.velociraptor.schema.artifacts import QuarantineBody
-from app.connectors.velociraptor.schema.artifacts import QuarantineResponse
-from app.connectors.velociraptor.schema.artifacts import RunCommandBody
-from app.connectors.velociraptor.schema.artifacts import RunCommandResponse
-from app.connectors.velociraptor.utils.universal import UniversalService
 
 
 def create_query(query: str) -> str:
@@ -60,7 +61,10 @@ def get_artifact_key(analyzer_body: CollectArtifactBody) -> str:
             f"env=dict(Command='{analyzer_body.command}'))"
         )
     else:
-        return f"collect_client(client_id='{analyzer_body.velociraptor_id}', " f"artifacts=['{analyzer_body.artifact_name}'])"
+        return (
+            f"collect_client(client_id='{analyzer_body.velociraptor_id}', "
+            f"artifacts=['{analyzer_body.artifact_name}'])"
+        )
 
 
 async def get_artifacts() -> ArtifactsResponse:
@@ -77,15 +81,24 @@ async def get_artifacts() -> ArtifactsResponse:
     try:
         if all_artifacts["success"]:
             artifacts = [Artifacts(**artifact) for artifact in all_artifacts["results"]]
-            return ArtifactsResponse(success=True, message="All artifacts retrieved", artifacts=artifacts)
+            return ArtifactsResponse(
+                success=True, message="All artifacts retrieved", artifacts=artifacts,
+            )
         else:
-            raise HTTPException(status_code=500, detail=f"Failed to get all artifacts: {all_artifacts['message']}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to get all artifacts: {all_artifacts['message']}",
+            )
     except Exception as err:
         logger.error(f"Failed to get all artifacts: {err}")
-        raise HTTPException(status_code=500, detail=f"Failed to get all artifacts: {err}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get all artifacts: {err}",
+        )
 
 
-async def run_artifact_collection(collect_artifact_body: CollectArtifactBody) -> CollectArtifactResponse:
+async def run_artifact_collection(
+    collect_artifact_body: CollectArtifactBody,
+) -> CollectArtifactResponse:
     """
     Run an artifact collection on a client.
 
@@ -119,13 +132,26 @@ async def run_artifact_collection(collect_artifact_body: CollectArtifactBody) ->
 
         logger.info(f"Successfully read collection results on {results}")
 
-        return CollectArtifactResponse(success=results["success"], message=results["message"], results=results["results"])
-    except HTTPException as he:  # Catch HTTPException separately to propagate the original message
-        logger.error(f"HTTPException while running artifact collection on {collect_artifact_body}: {he.detail}")
+        return CollectArtifactResponse(
+            success=results["success"],
+            message=results["message"],
+            results=results["results"],
+        )
+    except (
+        HTTPException
+    ) as he:  # Catch HTTPException separately to propagate the original message
+        logger.error(
+            f"HTTPException while running artifact collection on {collect_artifact_body}: {he.detail}",
+        )
         raise he
     except Exception as err:
-        logger.error(f"Failed to run artifact collection on {collect_artifact_body}: {err}")
-        raise HTTPException(status_code=500, detail=f"Failed to run artifact collection on {collect_artifact_body}: {err}")
+        logger.error(
+            f"Failed to run artifact collection on {collect_artifact_body}: {err}",
+        )
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to run artifact collection on {collect_artifact_body}: {err}",
+        )
 
 
 async def run_remote_command(run_command_body: RunCommandBody) -> RunCommandResponse:
@@ -169,10 +195,17 @@ async def run_remote_command(run_command_body: RunCommandBody) -> RunCommandResp
 
         logger.info(f"Successfully read collection results on {results}")
 
-        return RunCommandResponse(success=results["success"], message=results["message"], results=results["results"])
+        return RunCommandResponse(
+            success=results["success"],
+            message=results["message"],
+            results=results["results"],
+        )
     except Exception as err:
         logger.error(f"Failed to run artifact collection on {run_command_body}: {err}")
-        raise HTTPException(status_code=500, detail=f"Failed to run artifact collection on {run_command_body}: {err}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to run artifact collection on {run_command_body}: {err}",
+        )
 
 
 async def quarantine_host(quarantine_body: QuarantineBody) -> QuarantineResponse:
@@ -226,7 +259,14 @@ async def quarantine_host(quarantine_body: QuarantineBody) -> QuarantineResponse
 
         logger.info(f"Successfully read collection results on {results}")
 
-        return QuarantineResponse(success=results["success"], message=results["message"], results=results["results"])
+        return QuarantineResponse(
+            success=results["success"],
+            message=results["message"],
+            results=results["results"],
+        )
     except Exception as err:
         logger.error(f"Failed to run artifact collection on {quarantine_body}: {err}")
-        raise HTTPException(status_code=500, detail=f"Failed to run artifact collection on {quarantine_body}: {err}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to run artifact collection on {quarantine_body}: {err}",
+        )

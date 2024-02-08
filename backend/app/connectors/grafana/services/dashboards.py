@@ -1,16 +1,17 @@
 import json
 from pathlib import Path
 
+from app.connectors.grafana.schema.dashboards import (
+    DashboardProvisionRequest,
+    GrafanaDashboard,
+    GrafanaDashboardResponse,
+    MimecastDashboard,
+    Office365Dashboard,
+    WazuhDashboard,
+)
+from app.connectors.grafana.utils.universal import create_grafana_client
 from fastapi import HTTPException
 from loguru import logger
-
-from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
-from app.connectors.grafana.schema.dashboards import GrafanaDashboard
-from app.connectors.grafana.schema.dashboards import GrafanaDashboardResponse
-from app.connectors.grafana.schema.dashboards import MimecastDashboard
-from app.connectors.grafana.schema.dashboards import Office365Dashboard
-from app.connectors.grafana.schema.dashboards import WazuhDashboard
-from app.connectors.grafana.utils.universal import create_grafana_client
 
 
 def get_dashboard_path(dashboard_info: tuple) -> Path:
@@ -25,7 +26,9 @@ def get_dashboard_path(dashboard_info: tuple) -> Path:
     """
     folder_name, file_name = dashboard_info
     current_file = Path(__file__)  # Path to the current file
-    base_dir = current_file.parent.parent  # Move up two levels to the 'grafana' directory
+    base_dir = (
+        current_file.parent.parent
+    )  # Move up two levels to the 'grafana' directory
     return base_dir / "dashboards" / folder_name / file_name
 
 
@@ -62,7 +65,9 @@ def load_dashboard_json(dashboard_info: tuple, datasource_uid: str) -> dict:
         raise HTTPException(status_code=500, detail="Error decoding JSON from file")
 
 
-def replace_uid_value(obj, new_value, key_to_replace="uid", old_value="replace_datasource_uid"):
+def replace_uid_value(
+    obj, new_value, key_to_replace="uid", old_value="replace_datasource_uid",
+):
     """
     Recursively replaces the value of a specified key in a nested dictionary or list.
 
@@ -83,7 +88,9 @@ def replace_uid_value(obj, new_value, key_to_replace="uid", old_value="replace_d
             replace_uid_value(item, new_value, key_to_replace, old_value)
 
 
-async def update_dashboard(dashboard_json: dict, organization_id: int, folder_id: int) -> dict:
+async def update_dashboard(
+    dashboard_json: dict, organization_id: int, folder_id: int,
+) -> dict:
     """
     Update a dashboard in Grafana.
 
@@ -98,20 +105,30 @@ async def update_dashboard(dashboard_json: dict, organization_id: int, folder_id
     Raises:
         HTTPException: If there is an error updating the dashboard.
     """
-    logger.info(f"Updating dashboards for organization {organization_id} and folder {folder_id}")
+    logger.info(
+        f"Updating dashboards for organization {organization_id} and folder {folder_id}",
+    )
     try:
         grafana_client = await create_grafana_client("Grafana")
         # Switch to the newly created organization
         grafana_client.user.switch_actual_user_organisation(organization_id)
-        logger.info(f"Updating dashboards for organization {organization_id} and folder {folder_id}")
-        dashboard_update_payload = {"dashboard": dashboard_json, "folderId": folder_id, "overwrite": True}
+        logger.info(
+            f"Updating dashboards for organization {organization_id} and folder {folder_id}",
+        )
+        dashboard_update_payload = {
+            "dashboard": dashboard_json,
+            "folderId": folder_id,
+            "overwrite": True,
+        }
         return grafana_client.dashboard.update_dashboard(dashboard_update_payload)
     except Exception as e:
         logger.error(f"Error updating dashboard: {e}")
         raise HTTPException(status_code=500, detail=f"Error updating dashboard: {e}")
 
 
-async def provision_dashboards(dashboard_request: DashboardProvisionRequest) -> GrafanaDashboardResponse:
+async def provision_dashboards(
+    dashboard_request: DashboardProvisionRequest,
+) -> GrafanaDashboardResponse:
     """
     Provisions dashboards in Grafana.
 
@@ -125,12 +142,19 @@ async def provision_dashboards(dashboard_request: DashboardProvisionRequest) -> 
     provisioned_dashboards = []
     errors = []
 
-    valid_dashboards = {item.name: item for item in list(WazuhDashboard) + list(Office365Dashboard) + list(MimecastDashboard)}
+    valid_dashboards = {
+        item.name: item
+        for item in list(WazuhDashboard)
+        + list(Office365Dashboard)
+        + list(MimecastDashboard)
+    }
 
     for dashboard_name in dashboard_request.dashboards:
         dashboard_enum = valid_dashboards[dashboard_name]
         try:
-            dashboard_json = load_dashboard_json(dashboard_enum.value, datasource_uid=dashboard_request.datasourceUid)
+            dashboard_json = load_dashboard_json(
+                dashboard_enum.value, datasource_uid=dashboard_request.datasourceUid,
+            )
             updated_dashboard = await update_dashboard(
                 dashboard_json=dashboard_json,
                 organization_id=dashboard_request.organizationId,
@@ -139,8 +163,16 @@ async def provision_dashboards(dashboard_request: DashboardProvisionRequest) -> 
             provisioned_dashboards.append(GrafanaDashboard(**updated_dashboard))
         except HTTPException as e:
             errors.append(f"Failed to update dashboard {dashboard_name}: {e.detail}")
-            raise HTTPException(status_code=500, detail=f"Error updating dashboard: {e}")
+            raise HTTPException(
+                status_code=500, detail=f"Error updating dashboard: {e}",
+            )
 
     success = len(errors) == 0
-    message = "All dashboards provisioned successfully" if success else "Some dashboards failed to provision"
-    return GrafanaDashboardResponse(provisioned_dashboards=provisioned_dashboards, success=success, message=message)
+    message = (
+        "All dashboards provisioned successfully"
+        if success
+        else "Some dashboards failed to provision"
+    )
+    return GrafanaDashboardResponse(
+        provisioned_dashboards=provisioned_dashboards, success=success, message=message,
+    )

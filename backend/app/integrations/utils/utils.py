@@ -1,15 +1,15 @@
 from typing import Dict
 
+from app.integrations.routes import get_customer_integrations_by_customer_code
+from app.integrations.schema import CustomerIntegrations, CustomerIntegrationsResponse
 from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.integrations.routes import get_customer_integrations_by_customer_code
-from app.integrations.schema import CustomerIntegrations
-from app.integrations.schema import CustomerIntegrationsResponse
 
-
-async def get_customer_integration_response(customer_code: str, session: AsyncSession) -> CustomerIntegrationsResponse:
+async def get_customer_integration_response(
+    customer_code: str, session: AsyncSession,
+) -> CustomerIntegrationsResponse:
     """
     Retrieves the integration response for a customer.
 
@@ -23,13 +23,19 @@ async def get_customer_integration_response(customer_code: str, session: AsyncSe
     Raises:
         HTTPException: If the customer integration settings are not found.
     """
-    customer_integration_response = await get_customer_integrations_by_customer_code(customer_code, session)
+    customer_integration_response = await get_customer_integrations_by_customer_code(
+        customer_code, session,
+    )
     if customer_integration_response.available_integrations == []:
-        raise HTTPException(status_code=404, detail="Customer integration settings not found.")
+        raise HTTPException(
+            status_code=404, detail="Customer integration settings not found.",
+        )
     return customer_integration_response
 
 
-def extract_mimecast_auth_keys(customer_integration: CustomerIntegrations) -> Dict[str, str]:
+def extract_mimecast_auth_keys(
+    customer_integration: CustomerIntegrations,
+) -> Dict[str, str]:
     """
     Extracts the authentication keys for Office365 integration from the given customer integration.
 

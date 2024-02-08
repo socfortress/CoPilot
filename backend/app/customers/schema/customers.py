@@ -1,9 +1,7 @@
 from datetime import datetime
-from typing import List
-from typing import Optional
+from typing import List, Optional
 
-from pydantic import BaseModel
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 
 class CustomerRequestBody(BaseModel):
@@ -12,7 +10,9 @@ class CustomerRequestBody(BaseModel):
     contact_last_name: str = Field(..., description="Last name of the contact person")
     contact_first_name: str = Field(..., description="First name of the contact person")
 
-    parent_customer_code: Optional[str] = Field(None, description="Code for the parent customer")
+    parent_customer_code: Optional[str] = Field(
+        None, description="Code for the parent customer",
+    )
     phone: Optional[str] = Field(None, description="Phone number")
     address_line1: Optional[str] = Field(None, description="First line of the address")
     address_line2: Optional[str] = Field(None, description="Second line of the address")
@@ -58,14 +58,30 @@ class CustomersResponse(BaseModel):
 
 ############# Customer Meta
 class CustomerMetaRequestBody(BaseModel):
-    customer_meta_graylog_index: str = Field(..., description="Graylog index for the customer")
-    customer_meta_graylog_stream: str = Field(..., description="Graylog stream for the customer")
-    customer_meta_grafana_org_id: str = Field(..., description="Grafana organization for the customer")
-    customer_meta_wazuh_group: str = Field(..., description="Wazuh group for the customer")
-    customer_meta_index_retention: str = Field(..., description="Index retention for the customer")
-    customer_meta_wazuh_registration_port: str = Field(..., description="Wazuh registration port for the customer")
-    customer_meta_wazuh_log_ingestion_port: str = Field(..., description="Wazuh log ingestion port for the customer")
-    customer_meta_wazuh_auth_password: str = Field(..., description="Wazuh auth password for the customer")
+    customer_meta_graylog_index: str = Field(
+        ..., description="Graylog index for the customer",
+    )
+    customer_meta_graylog_stream: str = Field(
+        ..., description="Graylog stream for the customer",
+    )
+    customer_meta_grafana_org_id: str = Field(
+        ..., description="Grafana organization for the customer",
+    )
+    customer_meta_wazuh_group: str = Field(
+        ..., description="Wazuh group for the customer",
+    )
+    customer_meta_index_retention: str = Field(
+        ..., description="Index retention for the customer",
+    )
+    customer_meta_wazuh_registration_port: str = Field(
+        ..., description="Wazuh registration port for the customer",
+    )
+    customer_meta_wazuh_log_ingestion_port: str = Field(
+        ..., description="Wazuh log ingestion port for the customer",
+    )
+    customer_meta_wazuh_auth_password: str = Field(
+        ..., description="Wazuh auth password for the customer",
+    )
 
     class Config:
         orm_mode = True

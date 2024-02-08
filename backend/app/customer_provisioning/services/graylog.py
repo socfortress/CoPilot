@@ -1,19 +1,22 @@
 import json
 from datetime import datetime
 
+from app.connectors.graylog.services.pipelines import get_pipelines
+from app.connectors.graylog.utils.universal import (
+    send_delete_request,
+    send_post_request,
+)
+from app.customer_provisioning.schema.graylog import (
+    GraylogIndexSetCreationResponse,
+    StreamConnectionToPipelineRequest,
+    StreamConnectionToPipelineResponse,
+    StreamCreationResponse,
+    TimeBasedIndexSet,
+    WazuhEventStream,
+)
+from app.customer_provisioning.schema.provision import ProvisionNewCustomer
 from fastapi import HTTPException
 from loguru import logger
-
-from app.connectors.graylog.services.pipelines import get_pipelines
-from app.connectors.graylog.utils.universal import send_delete_request
-from app.connectors.graylog.utils.universal import send_post_request
-from app.customer_provisioning.schema.graylog import GraylogIndexSetCreationResponse
-from app.customer_provisioning.schema.graylog import StreamConnectionToPipelineRequest
-from app.customer_provisioning.schema.graylog import StreamConnectionToPipelineResponse
-from app.customer_provisioning.schema.graylog import StreamCreationResponse
-from app.customer_provisioning.schema.graylog import TimeBasedIndexSet
-from app.customer_provisioning.schema.graylog import WazuhEventStream
-from app.customer_provisioning.schema.provision import ProvisionNewCustomer
 
 
 ######### ! GRAYLOG PROVISIONING ! ############
@@ -56,7 +59,9 @@ def build_index_set_config(request: ProvisionNewCustomer) -> TimeBasedIndexSet:
 
 
 # Function to send the POST request and handle the response
-async def send_index_set_creation_request(index_set: TimeBasedIndexSet) -> GraylogIndexSetCreationResponse:
+async def send_index_set_creation_request(
+    index_set: TimeBasedIndexSet,
+) -> GraylogIndexSetCreationResponse:
     """
     Sends a request to create an index set in Graylog.
 
@@ -68,12 +73,16 @@ async def send_index_set_creation_request(index_set: TimeBasedIndexSet) -> Grayl
     """
     json_index_set = json.dumps(index_set.dict())
     logger.info(f"json_index_set set: {json_index_set}")
-    response_json = await send_post_request(endpoint="/api/system/indices/index_sets", data=index_set.dict())
+    response_json = await send_post_request(
+        endpoint="/api/system/indices/index_sets", data=index_set.dict(),
+    )
     return GraylogIndexSetCreationResponse(**response_json)
 
 
 # Refactored create_index_set function
-async def create_index_set(request: ProvisionNewCustomer) -> GraylogIndexSetCreationResponse:
+async def create_index_set(
+    request: ProvisionNewCustomer,
+) -> GraylogIndexSetCreationResponse:
     """
     Creates an index set for a new customer.
 
@@ -104,7 +113,9 @@ def extract_index_set_id(response: GraylogIndexSetCreationResponse) -> str:
 
 # ! Event STREAMS ! #
 # Function to create event stream configuration
-def build_event_stream_config(request: ProvisionNewCustomer, index_set_id: str) -> WazuhEventStream:
+def build_event_stream_config(
+    request: ProvisionNewCustomer, index_set_id: str,
+) -> WazuhEventStream:
     """
     Build the configuration for a Wazuh event stream.
 
@@ -133,7 +144,9 @@ def build_event_stream_config(request: ProvisionNewCustomer, index_set_id: str) 
     )
 
 
-async def send_event_stream_creation_request(event_stream: WazuhEventStream) -> StreamCreationResponse:
+async def send_event_stream_creation_request(
+    event_stream: WazuhEventStream,
+) -> StreamCreationResponse:
     """
     Sends a request to create an event stream.
 
@@ -145,7 +158,9 @@ async def send_event_stream_creation_request(event_stream: WazuhEventStream) -> 
     """
     json_event_stream = json.dumps(event_stream.dict())
     logger.info(f"json_event_stream set: {json_event_stream}")
-    response_json = await send_post_request(endpoint="/api/streams", data=event_stream.dict())
+    response_json = await send_post_request(
+        endpoint="/api/streams", data=event_stream.dict(),
+    )
     return StreamCreationResponse(**response_json)
 
 
@@ -187,13 +202,21 @@ async def get_pipeline_id(subscription: str) -> str:
             if subscription.lower() in pipeline.description.lower():
                 return [pipeline.id]
         logger.error(f"Failed to get pipeline ID for subscription {subscription}")
-        raise HTTPException(status_code=500, detail=f"Failed to get pipeline ID for subscription {subscription}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get pipeline ID for subscription {subscription}",
+        )
     else:
         logger.error(f"Failed to get pipelines: {pipelines_response.message}")
-        raise HTTPException(status_code=500, detail=f"Failed to get pipelines: {pipelines_response.message}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get pipelines: {pipelines_response.message}",
+        )
 
 
-async def connect_stream_to_pipeline(stream_and_pipeline: StreamConnectionToPipelineRequest):
+async def connect_stream_to_pipeline(
+    stream_and_pipeline: StreamConnectionToPipelineRequest,
+):
     """
     Connects a stream to a pipeline.
 
@@ -203,8 +226,13 @@ async def connect_stream_to_pipeline(stream_and_pipeline: StreamConnectionToPipe
     Returns:
         StreamConnectionToPipelineResponse: The response object containing the connection details.
     """
-    logger.info(f"Connecting stream {stream_and_pipeline.stream_id} to pipeline {stream_and_pipeline.pipeline_ids}")
-    response_json = await send_post_request(endpoint="/api/system/pipelines/connections/to_stream", data=stream_and_pipeline.dict())
+    logger.info(
+        f"Connecting stream {stream_and_pipeline.stream_id} to pipeline {stream_and_pipeline.pipeline_ids}",
+    )
+    response_json = await send_post_request(
+        endpoint="/api/system/pipelines/connections/to_stream",
+        data=stream_and_pipeline.dict(),
+    )
     logger.info(f"Response: {response_json}")
     return StreamConnectionToPipelineResponse(**response_json)
 
@@ -236,5 +264,7 @@ async def delete_index_set(index_set_id: str):
         The result of the index set deletion request.
     """
     logger.info(f"Deleting index set {index_set_id}")
-    response = await send_delete_request(endpoint=f"/api/system/indices/index_sets/{index_set_id}")
+    response = await send_delete_request(
+        endpoint=f"/api/system/indices/index_sets/{index_set_id}",
+    )
     return response

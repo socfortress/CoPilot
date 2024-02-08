@@ -1,9 +1,7 @@
 from enum import Enum
 from typing import List
 
-from pydantic import BaseModel
-from pydantic import Field
-from pydantic import validator
+from pydantic import BaseModel, Field, validator
 
 
 class GrafanaDashboard(BaseModel):
@@ -67,14 +65,22 @@ class MimecastDashboard(Enum):
 
 
 class DashboardProvisionRequest(BaseModel):
-    dashboards: List[str] = Field(..., description="List of dashboard identifiers to provision")
-    organizationId: int = Field(0, description="Organization ID to provision dashboards to")
+    dashboards: List[str] = Field(
+        ..., description="List of dashboard identifiers to provision",
+    )
+    organizationId: int = Field(
+        0, description="Organization ID to provision dashboards to",
+    )
     folderId: int = Field(0, description="Folder ID to provision dashboards to")
-    datasourceUid: str = Field("uid-to-be-replaced", description="Datasource UID to use for dashboards")
+    datasourceUid: str = Field(
+        "uid-to-be-replaced", description="Datasource UID to use for dashboards",
+    )
 
     @validator("dashboards", each_item=True)
     def check_dashboard_exists(cls, e):
-        valid_dashboards = {item.name: item for item in list(WazuhDashboard) + list(Office365Dashboard)}
+        valid_dashboards = {
+            item.name: item for item in list(WazuhDashboard) + list(Office365Dashboard)
+        }
         if e not in valid_dashboards:
             raise ValueError(f'Dashboard identifier "{e}" is not recognized.')
         return e

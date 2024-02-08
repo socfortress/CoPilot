@@ -1,18 +1,15 @@
 from typing import List
 
+import app.agents.velociraptor.services.agents as velociraptor_services
+import app.agents.wazuh.services.agents as wazuh_services
+from app.agents.schema.agents import SyncedAgent, SyncedAgentsResponse
+from app.agents.velociraptor.schema.agents import VelociraptorAgent
+from app.agents.wazuh.schema.agents import WazuhAgent, WazuhAgentsList
+from app.connectors.models import Connectors
+from app.db.universal_models import Agents
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-
-import app.agents.velociraptor.services.agents as velociraptor_services
-import app.agents.wazuh.services.agents as wazuh_services
-from app.agents.schema.agents import SyncedAgent
-from app.agents.schema.agents import SyncedAgentsResponse
-from app.agents.velociraptor.schema.agents import VelociraptorAgent
-from app.agents.wazuh.schema.agents import WazuhAgent
-from app.agents.wazuh.schema.agents import WazuhAgentsList
-from app.connectors.models import Connectors
-from app.db.universal_models import Agents
 
 
 async def fetch_wazuh_agents() -> WazuhAgentsList:
@@ -47,7 +44,12 @@ async def fetch_velociraptor_agent(agent_name: str) -> VelociraptorAgent:
     return await velociraptor_services.collect_velociraptor_agent(agent_name)
 
 
-async def add_agent_to_db(session: AsyncSession, agent: WazuhAgent, client: VelociraptorAgent, customer_code: str):
+async def add_agent_to_db(
+    session: AsyncSession,
+    agent: WazuhAgent,
+    client: VelociraptorAgent,
+    customer_code: str,
+):
     """Add new agent to database.
 
     Args:
@@ -114,7 +116,9 @@ async def get_velociraptor_connector(session):
     Returns:
         The first result of the query as a scalar value.
     """
-    connector_query = select(Connectors).filter(Connectors.connector_name == "Velociraptor")
+    connector_query = select(Connectors).filter(
+        Connectors.connector_name == "Velociraptor",
+    )
     result = await session.execute(connector_query)
     return result.scalars().first()
 
@@ -187,24 +191,36 @@ async def sync_agents(session: AsyncSession) -> SyncedAgentsResponse:
         try:
             velociraptor_agent = await process_velociraptor_agent(session, wazuh_agent)
         except Exception as e:
-            logger.error(f"Failed to collect Velociraptor Agent for {wazuh_agent.agent_name}: {e}")
+            logger.error(
+                f"Failed to collect Velociraptor Agent for {wazuh_agent.agent_name}: {e}",
+            )
             continue
 
         customer_code = extract_customer_code(wazuh_agent.agent_label)
 
         # Asynchronously fetch the existing agent
-        existing_agent_query = select(Agents).filter(Agents.hostname == wazuh_agent.agent_name)
+        existing_agent_query = select(Agents).filter(
+            Agents.hostname == wazuh_agent.agent_name,
+        )
         result = await session.execute(existing_agent_query)
         existing_agent = result.scalars().first()
 
         if existing_agent:
-            await update_agent_in_db(session, existing_agent, wazuh_agent, velociraptor_agent, customer_code)
+            await update_agent_in_db(
+                session, existing_agent, wazuh_agent, velociraptor_agent, customer_code,
+            )
         else:
-            await add_agent_to_db(session, wazuh_agent, velociraptor_agent, customer_code)
+            await add_agent_to_db(
+                session, wazuh_agent, velociraptor_agent, customer_code,
+            )
 
         # Combine the wazuh agent and velociraptor agent into one object
         synced_agent = SyncedAgent(**wazuh_agent.dict(), **velociraptor_agent.dict())
         agents_added_list.append(synced_agent)
 
     logger.info(f"Agents Added List: {agents_added_list}")
-    return SyncedAgentsResponse(success=True, message="Agents synced successfully", agents_added=agents_added_list)
+    return SyncedAgentsResponse(
+        success=True,
+        message="Agents synced successfully",
+        agents_added=agents_added_list,
+    )

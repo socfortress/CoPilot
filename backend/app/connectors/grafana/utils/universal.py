@@ -1,16 +1,16 @@
-from typing import Any
-from typing import Dict
-
-from fastapi import HTTPException
-from grafana_client import GrafanaApi
-from loguru import logger
+from typing import Any, Dict
 
 from app.connectors.grafana.schema.organization import GrafanaCreateOrganizationResponse
 from app.connectors.utils import get_connector_info_from_db
 from app.db.db_session import get_db_session
+from fastapi import HTTPException
+from grafana_client import GrafanaApi
+from loguru import logger
 
 
-async def construct_grafana_url(connector_url: str, username: str, password: str) -> str:
+async def construct_grafana_url(
+    connector_url: str, username: str, password: str,
+) -> str:
     """
     Constructs a Grafana URL with embedded credentials.
 
@@ -55,14 +55,22 @@ async def verify_grafana_credentials(attributes: Dict[str, Any]) -> Dict[str, An
 
         create_org = GrafanaCreateOrganizationResponse(**create_org)
 
-        remove_org = grafana_client.organizations.delete_organization(organization_id=create_org.orgId)
+        remove_org = grafana_client.organizations.delete_organization(
+            organization_id=create_org.orgId,
+        )
         logger.info(f"Remove organization: {remove_org}")
 
         logger.info(f"Connection to {grafana_url} successful")
-        return {"connectionSuccessful": True, "message": "Grafana connection successful"}
+        return {
+            "connectionSuccessful": True,
+            "message": "Grafana connection successful",
+        }
     except Exception as e:
         logger.error(f"Connection to {grafana_url} failed with error: {e}")
-        return {"connectionSuccessful": False, "message": f"Connection to {grafana_url} failed with error: {e}"}
+        return {
+            "connectionSuccessful": False,
+            "message": f"Connection to {grafana_url} failed with error: {e}",
+        }
 
 
 async def verify_grafana_connection(connector_name: str) -> str:
@@ -98,7 +106,10 @@ async def create_grafana_client(connector_name: str) -> GrafanaApi:
     async with get_db_session() as session:  # This will correctly enter the context manager
         attributes = await get_connector_info_from_db(connector_name, session)
     if attributes is None:
-        raise HTTPException(status_code=500, detail=f"No {connector_name} connector found in the database")
+        raise HTTPException(
+            status_code=500,
+            detail=f"No {connector_name} connector found in the database",
+        )
     try:
         grafana_url = await construct_grafana_url(
             attributes["connector_url"],
@@ -107,4 +118,6 @@ async def create_grafana_client(connector_name: str) -> GrafanaApi:
         )
         return GrafanaApi.from_url(grafana_url)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to create Grafana client: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to create Grafana client: {e}",
+        )

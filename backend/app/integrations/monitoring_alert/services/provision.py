@@ -1,49 +1,27 @@
 import os
 from typing import Optional
 
-from dotenv import load_dotenv
-from fastapi import HTTPException
-from loguru import logger
-
 from app.connectors.graylog.routes.monitoring import get_all_event_notifications
 from app.connectors.graylog.schema.management import UrlWhitelistEntryResponse
 from app.connectors.graylog.schema.monitoring import GraylogEventNotificationsResponse
 from app.connectors.graylog.services.collector import get_url_whitelist_entries
-from app.connectors.graylog.utils.universal import send_post_request
-from app.connectors.graylog.utils.universal import send_put_request
+from app.connectors.graylog.utils.universal import send_post_request, send_put_request
 from app.integrations.monitoring_alert.schema.provision import (
     GraylogAlertProvisionConfig,
-)
-from app.integrations.monitoring_alert.schema.provision import (
     GraylogAlertProvisionFieldSpecItem,
-)
-from app.integrations.monitoring_alert.schema.provision import (
     GraylogAlertProvisionModel,
-)
-from app.integrations.monitoring_alert.schema.provision import (
     GraylogAlertProvisionNotification,
-)
-from app.integrations.monitoring_alert.schema.provision import (
     GraylogAlertProvisionNotificationSettings,
-)
-from app.integrations.monitoring_alert.schema.provision import (
     GraylogAlertProvisionProvider,
-)
-from app.integrations.monitoring_alert.schema.provision import (
     GraylogAlertWebhookNotificationModel,
-)
-from app.integrations.monitoring_alert.schema.provision import (
     GraylogUrlWhitelistEntries,
-)
-from app.integrations.monitoring_alert.schema.provision import (
     GraylogUrlWhitelistEntryConfig,
-)
-from app.integrations.monitoring_alert.schema.provision import (
     ProvisionMonitoringAlertRequest,
-)
-from app.integrations.monitoring_alert.schema.provision import (
     ProvisionWazuhMonitoringAlertResponse,
 )
+from dotenv import load_dotenv
+from fastapi import HTTPException
+from loguru import logger
 
 load_dotenv()
 import uuid
@@ -84,10 +62,19 @@ async def check_if_url_whitelist_entry_exists(url: str) -> bool:
     """
     url_whitelist_entries_response = await get_url_whitelist_entries()
     if not url_whitelist_entries_response.success:
-        raise HTTPException(status_code=500, detail="Failed to collect url whitelist entries")
-    url_whitelist_entries_response = UrlWhitelistEntryResponse(**url_whitelist_entries_response.dict())
-    logger.info(f"Url whitelist entries collected: {url_whitelist_entries_response.url_whitelist_entries}")
-    if url in [url_whitelist_entry.value for url_whitelist_entry in url_whitelist_entries_response.url_whitelist_entries.entries]:
+        raise HTTPException(
+            status_code=500, detail="Failed to collect url whitelist entries",
+        )
+    url_whitelist_entries_response = UrlWhitelistEntryResponse(
+        **url_whitelist_entries_response.dict(),
+    )
+    logger.info(
+        f"Url whitelist entries collected: {url_whitelist_entries_response.url_whitelist_entries}",
+    )
+    if url in [
+        url_whitelist_entry.value
+        for url_whitelist_entry in url_whitelist_entries_response.url_whitelist_entries.entries
+    ]:
         logger.info(f"Url whitelist entry {url} already exists")
         return True
     return False
@@ -105,16 +92,26 @@ async def get_notification_id(notification_title: str) -> Optional[str]:
     """
     event_notifications_response = await get_all_event_notifications()
     if not event_notifications_response.success:
-        raise HTTPException(status_code=500, detail="Failed to collect event notifications")
-    event_notifications_response = GraylogEventNotificationsResponse(**event_notifications_response.dict())
-    logger.info(f"Event notifications collected: {event_notifications_response.event_notifications}")
-    for event_notification in event_notifications_response.event_notifications.notifications:
+        raise HTTPException(
+            status_code=500, detail="Failed to collect event notifications",
+        )
+    event_notifications_response = GraylogEventNotificationsResponse(
+        **event_notifications_response.dict(),
+    )
+    logger.info(
+        f"Event notifications collected: {event_notifications_response.event_notifications}",
+    )
+    for (
+        event_notification
+    ) in event_notifications_response.event_notifications.notifications:
         if event_notification.title == notification_title:
             return event_notification.id
     return None
 
 
-async def build_url_whitelisted_entries(whitelist_url_model: GraylogUrlWhitelistEntryConfig) -> GraylogUrlWhitelistEntries:
+async def build_url_whitelisted_entries(
+    whitelist_url_model: GraylogUrlWhitelistEntryConfig,
+) -> GraylogUrlWhitelistEntries:
     """
     Builds the URL Whitelisted Entries model.
 
@@ -123,8 +120,12 @@ async def build_url_whitelisted_entries(whitelist_url_model: GraylogUrlWhitelist
     """
     url_whitelist_entries_response = await get_url_whitelist_entries()
     if not url_whitelist_entries_response.success:
-        raise HTTPException(status_code=500, detail="Failed to collect url whitelist entries")
-    url_whitelist_entries_response = UrlWhitelistEntryResponse(**url_whitelist_entries_response.dict())
+        raise HTTPException(
+            status_code=500, detail="Failed to collect url whitelist entries",
+        )
+    url_whitelist_entries_response = UrlWhitelistEntryResponse(
+        **url_whitelist_entries_response.dict(),
+    )
     logger.info(f"Url whitelist entries collected: {url_whitelist_entries_response}")
     url_whitelist_entries = url_whitelist_entries_response.url_whitelist_entries.entries
     url_whitelist_entries.append(whitelist_url_model)
@@ -134,7 +135,9 @@ async def build_url_whitelisted_entries(whitelist_url_model: GraylogUrlWhitelist
     )
 
 
-async def provision_webhook_url_whitelist(whitelist_url_model: GraylogUrlWhitelistEntries) -> bool:
+async def provision_webhook_url_whitelist(
+    whitelist_url_model: GraylogUrlWhitelistEntries,
+) -> bool:
     """
     Provisions a webhook URL for Graylog.
 
@@ -145,7 +148,9 @@ async def provision_webhook_url_whitelist(whitelist_url_model: GraylogUrlWhiteli
         bool: True if the webhook URL was provisioned successfully, False otherwise.
     """
     logger.info(f"Provisioning URL Whitelist: {whitelist_url_model.dict()}")
-    response = await send_put_request(endpoint="/api/system/urlwhitelist", data=whitelist_url_model.dict())
+    response = await send_put_request(
+        endpoint="/api/system/urlwhitelist", data=whitelist_url_model.dict(),
+    )
     logger.info(f"URL Whitelist provisioned: {response}")
     if response["success"]:
         return True
@@ -164,17 +169,26 @@ async def check_if_event_notification_exists(event_notification: str) -> bool:
     """
     event_notifications_response = await get_all_event_notifications()
     if not event_notifications_response.success:
-        raise HTTPException(status_code=500, detail="Failed to collect event notifications")
-    event_notifications_response = GraylogEventNotificationsResponse(**event_notifications_response.dict())
-    logger.info(f"Event notifications collected: {event_notifications_response.event_notifications}")
+        raise HTTPException(
+            status_code=500, detail="Failed to collect event notifications",
+        )
+    event_notifications_response = GraylogEventNotificationsResponse(
+        **event_notifications_response.dict(),
+    )
+    logger.info(
+        f"Event notifications collected: {event_notifications_response.event_notifications}",
+    )
     if event_notification in [
-        event_notification.title for event_notification in event_notifications_response.event_notifications.notifications
+        event_notification.title
+        for event_notification in event_notifications_response.event_notifications.notifications
     ]:
         return True
     return False
 
 
-async def provision_webhook(webhook_model: GraylogAlertWebhookNotificationModel) -> Optional[str]:
+async def provision_webhook(
+    webhook_model: GraylogAlertWebhookNotificationModel,
+) -> Optional[str]:
     """
     Provisions a webhook for Graylog alerts.
 
@@ -184,14 +198,18 @@ async def provision_webhook(webhook_model: GraylogAlertWebhookNotificationModel)
     Returns:
         bool: True if the webhook was provisioned successfully, False otherwise.
     """
-    response = await send_post_request(endpoint="/api/events/notifications", data=webhook_model.dict())
+    response = await send_post_request(
+        endpoint="/api/events/notifications", data=webhook_model.dict(),
+    )
     if response["success"]:
         logger.info(f"response: {response}")
         return response["data"]["id"]
     raise HTTPException(status_code=500, detail="Failed to provision webhook")
 
 
-async def provision_alert_definition(alert_definition_model: GraylogAlertProvisionModel) -> bool:
+async def provision_alert_definition(
+    alert_definition_model: GraylogAlertProvisionModel,
+) -> bool:
     """
     Provisions an alert definition for Graylog.
 
@@ -201,13 +219,17 @@ async def provision_alert_definition(alert_definition_model: GraylogAlertProvisi
     Returns:
         bool: True if the alert definition was provisioned successfully, False otherwise.
     """
-    response = await send_post_request(endpoint="/api/events/definitions", data=alert_definition_model.dict())
+    response = await send_post_request(
+        endpoint="/api/events/definitions", data=alert_definition_model.dict(),
+    )
     if response["success"]:
         return True
     raise HTTPException(status_code=500, detail="Failed to provision alert definition")
 
 
-async def provision_wazuh_monitoring_alert(request: ProvisionMonitoringAlertRequest) -> ProvisionWazuhMonitoringAlertResponse:
+async def provision_wazuh_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+) -> ProvisionWazuhMonitoringAlertResponse:
     """
     Provisions Wazuh monitoring alerts.
 
@@ -215,10 +237,14 @@ async def provision_wazuh_monitoring_alert(request: ProvisionMonitoringAlertRequ
         ProvisionWazuhMonitoringAlertResponse: The response indicating the success of provisioning the monitoring alerts.
     """
     #
-    logger.info(f"Invoking provision_wazuh_monitoring_alert with request: {request.dict()}")
+    logger.info(
+        f"Invoking provision_wazuh_monitoring_alert with request: {request.dict()}",
+    )
     notification_exists = await check_if_event_notification_exists("SEND TO COPILOT")
     if not notification_exists:
-        url_whitelisted = await check_if_url_whitelist_entry_exists(f"http://{os.getenv('SERVER_IP')}:5000/monitoring_alert/create")
+        url_whitelisted = await check_if_url_whitelist_entry_exists(
+            f"http://{os.getenv('SERVER_IP')}:5000/monitoring_alert/create",
+        )
         if not url_whitelisted:
             logger.info("Provisioning URL Whitelist")
             whitelisted_urls = await build_url_whitelisted_entries(
@@ -236,7 +262,10 @@ async def provision_wazuh_monitoring_alert(request: ProvisionMonitoringAlertRequ
             GraylogAlertWebhookNotificationModel(
                 title="SEND TO COPILOT",
                 description="Send alert to Copilot",
-                config={"url": f"http://{os.getenv('SERVER_IP')}:5000/monitoring_alert/create", "type": "http-notification-v1"},
+                config={
+                    "url": f"http://{os.getenv('SERVER_IP')}:5000/monitoring_alert/create",
+                    "type": "http-notification-v1",
+                },
             ),
         )
         logger.info(f"SEND TO COPILOT Webhook provisioned with id: {notification_id}")
@@ -255,8 +284,12 @@ async def provision_wazuh_monitoring_alert(request: ProvisionMonitoringAlertRequ
                     conditions={
                         "expression": None,
                     },
-                    search_within_ms=await convert_seconds_to_milliseconds(request.search_within_last),
-                    execute_every_ms=await convert_seconds_to_milliseconds(request.execute_every),
+                    search_within_ms=await convert_seconds_to_milliseconds(
+                        request.search_within_last,
+                    ),
+                    execute_every_ms=await convert_seconds_to_milliseconds(
+                        request.execute_every,
+                    ),
                 ),
                 field_spec={
                     "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
@@ -304,10 +337,14 @@ async def provision_wazuh_monitoring_alert(request: ProvisionMonitoringAlertRequ
             ),
         )
 
-    return ProvisionWazuhMonitoringAlertResponse(success=True, message="Wazuh monitoring alerts provisioned successfully")
+    return ProvisionWazuhMonitoringAlertResponse(
+        success=True, message="Wazuh monitoring alerts provisioned successfully",
+    )
 
 
-async def provision_suricata_monitoring_alert(request: ProvisionMonitoringAlertRequest) -> ProvisionWazuhMonitoringAlertResponse:
+async def provision_suricata_monitoring_alert(
+    request: ProvisionMonitoringAlertRequest,
+) -> ProvisionWazuhMonitoringAlertResponse:
     """
     Provisions Suricata monitoring alerts.
 
@@ -315,10 +352,14 @@ async def provision_suricata_monitoring_alert(request: ProvisionMonitoringAlertR
         ProvisionWazuhMonitoringAlertResponse: The response indicating the success of provisioning the monitoring alerts.
     """
     #
-    logger.info(f"Invoking provision_suricata_monitoring_alert with request: {request.dict()}")
+    logger.info(
+        f"Invoking provision_suricata_monitoring_alert with request: {request.dict()}",
+    )
     notification_exists = await check_if_event_notification_exists("SEND TO COPILOT")
     if not notification_exists:
-        url_whitelisted = await check_if_url_whitelist_entry_exists(f"http://{os.getenv('SERVER_IP')}:5000/monitoring_alert/create")
+        url_whitelisted = await check_if_url_whitelist_entry_exists(
+            f"http://{os.getenv('SERVER_IP')}:5000/monitoring_alert/create",
+        )
         if not url_whitelisted:
             logger.info("Provisioning URL Whitelist")
             whitelisted_urls = await build_url_whitelisted_entries(
@@ -336,7 +377,10 @@ async def provision_suricata_monitoring_alert(request: ProvisionMonitoringAlertR
             GraylogAlertWebhookNotificationModel(
                 title="SEND TO COPILOT",
                 description="Send alert to Copilot",
-                config={"url": f"http://{os.getenv('SERVER_IP')}:5000/monitoring_alert/create", "type": "http-notification-v1"},
+                config={
+                    "url": f"http://{os.getenv('SERVER_IP')}:5000/monitoring_alert/create",
+                    "type": "http-notification-v1",
+                },
             ),
         )
         logger.info(f"SEND TO COPILOT Webhook provisioned with id: {notification_id}")
@@ -356,8 +400,12 @@ async def provision_suricata_monitoring_alert(request: ProvisionMonitoringAlertR
                 conditions={
                     "expression": None,
                 },
-                search_within_ms=await convert_seconds_to_milliseconds(request.search_within_last),
-                execute_every_ms=await convert_seconds_to_milliseconds(request.execute_every),
+                search_within_ms=await convert_seconds_to_milliseconds(
+                    request.search_within_last,
+                ),
+                execute_every_ms=await convert_seconds_to_milliseconds(
+                    request.execute_every,
+                ),
             ),
             field_spec={
                 "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
@@ -405,4 +453,6 @@ async def provision_suricata_monitoring_alert(request: ProvisionMonitoringAlertR
         ),
     )
 
-    return ProvisionWazuhMonitoringAlertResponse(success=True, message="Suricata monitoring alerts provisioned successfully")
+    return ProvisionWazuhMonitoringAlertResponse(
+        success=True, message="Suricata monitoring alerts provisioned successfully",
+    )

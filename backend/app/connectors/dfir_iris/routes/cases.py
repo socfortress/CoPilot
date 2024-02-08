@@ -1,31 +1,31 @@
 from datetime import timedelta
 
-from fastapi import APIRouter
-from fastapi import Depends
-from fastapi import HTTPException
-from fastapi import Security
-from loguru import logger
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.auth.utils import AuthHandler
-from app.connectors.dfir_iris.schema.cases import CaseOlderThanBody
-from app.connectors.dfir_iris.schema.cases import CaseResponse
-from app.connectors.dfir_iris.schema.cases import CasesBreachedResponse
-from app.connectors.dfir_iris.schema.cases import ClosedCaseResponse
-from app.connectors.dfir_iris.schema.cases import PurgeCaseResponse
-from app.connectors.dfir_iris.schema.cases import ReopenedCaseResponse
-from app.connectors.dfir_iris.schema.cases import SingleCaseBody
-from app.connectors.dfir_iris.schema.cases import SingleCaseResponse
-from app.connectors.dfir_iris.schema.cases import TimeUnit
-from app.connectors.dfir_iris.services.cases import close_case
-from app.connectors.dfir_iris.services.cases import delete_single_case
-from app.connectors.dfir_iris.services.cases import get_all_cases
-from app.connectors.dfir_iris.services.cases import get_cases_older_than
-from app.connectors.dfir_iris.services.cases import get_single_case
-from app.connectors.dfir_iris.services.cases import purge_cases
-from app.connectors.dfir_iris.services.cases import reopen_case
+from app.connectors.dfir_iris.schema.cases import (
+    CaseOlderThanBody,
+    CaseResponse,
+    CasesBreachedResponse,
+    ClosedCaseResponse,
+    PurgeCaseResponse,
+    ReopenedCaseResponse,
+    SingleCaseBody,
+    SingleCaseResponse,
+    TimeUnit,
+)
+from app.connectors.dfir_iris.services.cases import (
+    close_case,
+    delete_single_case,
+    get_all_cases,
+    get_cases_older_than,
+    get_single_case,
+    purge_cases,
+    reopen_case,
+)
 from app.connectors.dfir_iris.utils.universal import check_case_exists
 from app.db.db_session import get_db
+from fastapi import APIRouter, Depends, HTTPException, Security
+from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def verify_case_exists(case_id: int) -> int:
@@ -94,7 +94,9 @@ async def get_cases_route(session: AsyncSession = Depends(get_db)) -> CaseRespon
     description="Get all cases older than a specified date",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_cases_older_than_route(case_older_than_body: CaseOlderThanBody = Depends(get_timedelta)) -> CaseResponse:
+async def get_cases_older_than_route(
+    case_older_than_body: CaseOlderThanBody = Depends(get_timedelta),
+) -> CaseResponse:
     """
     Fetches all cases older than a specified date.
 
@@ -104,7 +106,9 @@ async def get_cases_older_than_route(case_older_than_body: CaseOlderThanBody = D
     Returns:
         CaseResponse: The response containing the cases older than the specified date.
     """
-    logger.info(f"Fetching all cases older than {case_older_than_body.older_than} ({case_older_than_body.time_unit.value})")
+    logger.info(
+        f"Fetching all cases older than {case_older_than_body.older_than} ({case_older_than_body.time_unit.value})",
+    )
     return await get_cases_older_than(case_older_than_body)
 
 
@@ -131,7 +135,9 @@ async def purge_cases_route() -> PurgeCaseResponse:
     description="Purge a single case",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def purge_single_case_route(case_id: int = Depends(verify_case_exists)) -> PurgeCaseResponse:
+async def purge_single_case_route(
+    case_id: int = Depends(verify_case_exists),
+) -> PurgeCaseResponse:
     """
     Purge a single case by its ID.
 
@@ -152,7 +158,9 @@ async def purge_single_case_route(case_id: int = Depends(verify_case_exists)) ->
     description="Get a single case",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_single_case_route(case_id: int = Depends(verify_case_exists), session: AsyncSession = Depends(get_db)) -> SingleCaseResponse:
+async def get_single_case_route(
+    case_id: int = Depends(verify_case_exists), session: AsyncSession = Depends(get_db),
+) -> SingleCaseResponse:
     """
     Retrieve a single case by its ID.
 
@@ -173,7 +181,9 @@ async def get_single_case_route(case_id: int = Depends(verify_case_exists), sess
     description="Close a single case",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def close_single_case_route(case_id: int = Depends(verify_case_exists)) -> ClosedCaseResponse:
+async def close_single_case_route(
+    case_id: int = Depends(verify_case_exists),
+) -> ClosedCaseResponse:
     """
     Close a single case by its ID.
 
@@ -194,7 +204,9 @@ async def close_single_case_route(case_id: int = Depends(verify_case_exists)) ->
     description="Open a single case",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def reopen_single_case_route(case_id: int = Depends(verify_case_exists)) -> ReopenedCaseResponse:
+async def reopen_single_case_route(
+    case_id: int = Depends(verify_case_exists),
+) -> ReopenedCaseResponse:
     """
     Open a single case by its ID.
 

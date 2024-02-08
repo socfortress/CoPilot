@@ -1,14 +1,15 @@
+from app.connectors.graylog.schema.monitoring import (
+    GraylogEventNotificationsResponse,
+    GraylogMessages,
+    GraylogMessagesResponse,
+    GraylogMetricsResponse,
+    GraylogThroughputMetrics,
+    GraylogThroughputMetricsCollection,
+    GraylogUncommittedJournalEntries,
+)
+from app.connectors.graylog.utils.universal import send_get_request
 from fastapi import HTTPException
 from loguru import logger
-
-from app.connectors.graylog.schema.monitoring import GraylogEventNotificationsResponse
-from app.connectors.graylog.schema.monitoring import GraylogMessages
-from app.connectors.graylog.schema.monitoring import GraylogMessagesResponse
-from app.connectors.graylog.schema.monitoring import GraylogMetricsResponse
-from app.connectors.graylog.schema.monitoring import GraylogThroughputMetrics
-from app.connectors.graylog.schema.monitoring import GraylogThroughputMetricsCollection
-from app.connectors.graylog.schema.monitoring import GraylogUncommittedJournalEntries
-from app.connectors.graylog.utils.universal import send_get_request
 
 
 async def get_messages(page_number: int) -> GraylogMessagesResponse:
@@ -25,7 +26,9 @@ async def get_messages(page_number: int) -> GraylogMessagesResponse:
     """
     logger.info("Getting messages from Graylog")
     params = {"page": page_number}
-    messages_collected = await send_get_request(endpoint="/api/system/messages", params=params)
+    messages_collected = await send_get_request(
+        endpoint="/api/system/messages", params=params,
+    )
     try:
         if messages_collected["success"]:
             graylog_messages_list = []
@@ -46,11 +49,15 @@ async def get_messages(page_number: int) -> GraylogMessagesResponse:
 
     except KeyError as e:
         logger.error(f"Failed to collect messages key: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to collect messages key: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to collect messages key: {e}",
+        )
     except Exception as e:
         logger.error(f"Failed to collect messages: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to collect messages: {e}")
-    return GraylogMessagesResponse(graylog_messages=[], success=False, message="Failed to collect messages")
+    return GraylogMessagesResponse(
+        graylog_messages=[], success=False, message="Failed to collect messages",
+    )
 
 
 async def fetch_metrics_from_graylog() -> dict:
@@ -98,7 +105,10 @@ def filter_and_create_throughput_metrics(merged_metrics: dict) -> list:
     Returns:
         list: A list of GraylogThroughputMetrics objects.
     """
-    model_fields = [field_info.alias for field_info in GraylogThroughputMetricsCollection.__fields__.values()]
+    model_fields = [
+        field_info.alias
+        for field_info in GraylogThroughputMetricsCollection.__fields__.values()
+    ]
     throughput_metrics_list = [
         GraylogThroughputMetrics(metric=metric_name, value=metric_data.get("value", 0))
         for metric_name, metric_data in merged_metrics.items()
@@ -118,12 +128,19 @@ async def get_metrics() -> GraylogMetricsResponse:
     throughput_metrics_collected = await fetch_metrics_from_graylog()
     uncommitted_journal_entries_collected = await fetch_uncommitted_journal_entries()
     try:
-        if throughput_metrics_collected["success"] and uncommitted_journal_entries_collected["success"]:
+        if (
+            throughput_metrics_collected["success"]
+            and uncommitted_journal_entries_collected["success"]
+        ):
             merged_metrics = merge_metrics_data(throughput_metrics_collected)
-            throughput_metrics_list = filter_and_create_throughput_metrics(merged_metrics)
+            throughput_metrics_list = filter_and_create_throughput_metrics(
+                merged_metrics,
+            )
 
             uncommitted_journal_entries = GraylogUncommittedJournalEntries(
-                uncommitted_journal_entries=uncommitted_journal_entries_collected["data"]["uncommitted_journal_entries"],
+                uncommitted_journal_entries=uncommitted_journal_entries_collected[
+                    "data"
+                ]["uncommitted_journal_entries"],
             )
 
             return GraylogMetricsResponse(
@@ -133,7 +150,9 @@ async def get_metrics() -> GraylogMetricsResponse:
                 message="Metrics collected successfully",
             )
     except KeyError as e:
-        raise HTTPException(status_code=500, detail=f"Failed to collect metrics key: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to collect metrics key: {e}",
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to collect metrics: {e}")
 
@@ -153,7 +172,9 @@ async def get_event_notifications() -> GraylogEventNotificationsResponse:
         GraylogEventNotificationsResponse: The response object containing the collected event notifications.
     """
     logger.info("Getting event notifications from Graylog")
-    event_notifications_collected = await send_get_request(endpoint="/api/events/notifications")
+    event_notifications_collected = await send_get_request(
+        endpoint="/api/events/notifications",
+    )
     try:
         if event_notifications_collected["success"]:
             return GraylogEventNotificationsResponse(
@@ -162,8 +183,16 @@ async def get_event_notifications() -> GraylogEventNotificationsResponse:
                 message="Event notifications collected successfully",
             )
     except KeyError as e:
-        raise HTTPException(status_code=500, detail=f"Failed to collect event notifications key: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to collect event notifications key: {e}",
+        )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to collect event notifications: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to collect event notifications: {e}",
+        )
 
-    return GraylogEventNotificationsResponse(event_notifications=[], success=False, message="Failed to collect event notifications")
+    return GraylogEventNotificationsResponse(
+        event_notifications=[],
+        success=False,
+        message="Failed to collect event notifications",
+    )

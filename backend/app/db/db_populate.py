@@ -1,22 +1,23 @@
 import os
 
+from app.auth.models.users import Role
+from app.connectors.models import Connectors
+from app.integrations.models.customer_integration_settings import (
+    AvailableIntegrations,
+    AvailableIntegrationsAuthKeys,
+)
 from dotenv import load_dotenv
 from loguru import logger
 from sqlalchemy import and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from app.auth.models.users import Role
-from app.connectors.models import Connectors
-from app.integrations.models.customer_integration_settings import AvailableIntegrations
-from app.integrations.models.customer_integration_settings import (
-    AvailableIntegrationsAuthKeys,
-)
-
 load_dotenv()
 
 
-def load_connector_data(connector_name, connector_type, accepts_key, description, extra_data_key=None):
+def load_connector_data(
+    connector_name, connector_type, accepts_key, description, extra_data_key=None,
+):
     """
     Load connector data from environment variables.
 
@@ -32,7 +33,9 @@ def load_connector_data(connector_name, connector_type, accepts_key, description
     """
     env_prefix = connector_name.upper().replace("-", "_").replace(" ", "_")
     url = os.getenv(f"{env_prefix}_URL")
-    logger.info(f"Loading connector data for {connector_name} from environment variables with URL: {url}")
+    logger.info(
+        f"Loading connector data for {connector_name} from environment variables with URL: {url}",
+    )
     return {
         "connector_name": connector_name,
         "connector_type": connector_type,
@@ -62,16 +65,47 @@ def get_connectors_list():
     """
     connectors = [
         ("Wazuh-Indexer", "4.4.1", "username_password", "Connection to Wazuh-Indexer."),
-        ("Wazuh-Manager", "4.4.1", "username_password", "Connection to Wazuh-Manager. Default is wazuh-wui:wazuh-wui"),
+        (
+            "Wazuh-Manager",
+            "4.4.1",
+            "username_password",
+            "Connection to Wazuh-Manager. Default is wazuh-wui:wazuh-wui",
+        ),
         ("Graylog", "5.0.7", "username_password", "Connection to Graylog."),
         ("Shuffle", "1.1.0", "api_key", "Connection to Shuffle."),
         ("DFIR-IRIS", "2.0", "api_key", "Connection to DFIR-IRIS."),
-        ("Velociraptor", "0.6.8", "file", "Connection to Velociraptor. Make sure you have generated the api file first."),
+        (
+            "Velociraptor",
+            "0.6.8",
+            "file",
+            "Connection to Velociraptor. Make sure you have generated the api file first.",
+        ),
         ("Sublime", "3", "api_key", "Connection to Sublime."),
-        ("InfluxDB", "3", "api_key", "Connection to InfluxDB.", "INFLUXDB_ORG_AND_BUCKET"),
-        ("AskSocfortress", "3", "api_key", "Connection to AskSocfortress. Make sure you have requested an API key."),
-        ("SocfortressThreatIntel", "3", "api_key", "Connection to Socfortress Threat Intel. Make sure you have requested an API key."),
-        ("Cortex", "3", "api_key", "Connection to Cortex. Make sure you have created an API key."),
+        (
+            "InfluxDB",
+            "3",
+            "api_key",
+            "Connection to InfluxDB.",
+            "INFLUXDB_ORG_AND_BUCKET",
+        ),
+        (
+            "AskSocfortress",
+            "3",
+            "api_key",
+            "Connection to AskSocfortress. Make sure you have requested an API key.",
+        ),
+        (
+            "SocfortressThreatIntel",
+            "3",
+            "api_key",
+            "Connection to Socfortress Threat Intel. Make sure you have requested an API key.",
+        ),
+        (
+            "Cortex",
+            "3",
+            "api_key",
+            "Connection to Cortex. Make sure you have created an API key.",
+        ),
         ("Grafana", "3", "username_password", "Connection to Grafana."),
         (
             "Wazuh Worker Provisioning",
@@ -119,7 +153,9 @@ async def add_connectors_if_not_exist(session: AsyncSession):
     connector_list = get_connectors_list()
 
     for connector_data in connector_list:
-        query = select(Connectors).where(Connectors.connector_name == connector_data["connector_name"])
+        query = select(Connectors).where(
+            Connectors.connector_name == connector_data["connector_name"],
+        )
         result = await session.execute(query)
         existing_connector = result.scalars().first()
 
@@ -163,7 +199,9 @@ async def add_roles_if_not_exist(session: AsyncSession) -> None:
     logger.info("Role check and addition completed.")
 
 
-def load_available_integrations_data(integration_name: str, description: str, integration_details: str):
+def load_available_integrations_data(
+    integration_name: str, description: str, integration_details: str,
+):
     """
     Load available integrations data from environment variables.
 
@@ -193,7 +231,9 @@ def load_markdown_for_integration(integration_name: str) -> str:
         str: The content of the markdown file.
     """
     # file_path = os.path.join("integrations_markdown", f"{integration_name.lower()}.md")
-    file_path = os.path.join("app", "integrations", "markdown", f"{integration_name.lower()}.md")
+    file_path = os.path.join(
+        "app", "integrations", "markdown", f"{integration_name.lower()}.md",
+    )
     try:
         with open(file_path, "r") as file:
             return file.read()
@@ -215,7 +255,11 @@ def get_available_integrations_list():
     ]
 
     return [
-        load_available_integrations_data(integration_name, description, load_markdown_for_integration(integration_name))
+        load_available_integrations_data(
+            integration_name,
+            description,
+            load_markdown_for_integration(integration_name),
+        )
         for integration_name, description in available_integrations
     ]
 
@@ -234,18 +278,25 @@ async def add_available_integrations_if_not_exist(session: AsyncSession):
 
     for available_integration_data in available_integrations_list:
         query = select(AvailableIntegrations).where(
-            AvailableIntegrations.integration_name == available_integration_data["integration_name"],
+            AvailableIntegrations.integration_name
+            == available_integration_data["integration_name"],
         )
         result = await session.execute(query)
         existing_available_integration = result.scalars().first()
 
         if existing_available_integration is None:
-            new_available_integration = AvailableIntegrations(**available_integration_data)
+            new_available_integration = AvailableIntegrations(
+                **available_integration_data,
+            )
             session.add(new_available_integration)
-            logger.info(f"Added new available integration: {available_integration_data['integration_name']}")
+            logger.info(
+                f"Added new available integration: {available_integration_data['integration_name']}",
+            )
 
 
-def load_available_integrations_auth_keys(integration_id: int, integration_name: str, auth_key_name: str):
+def load_available_integrations_auth_keys(
+    integration_id: int, integration_name: str, auth_key_name: str,
+):
     """
     Load available integrations auth keys from environment variables.
 
@@ -257,7 +308,9 @@ def load_available_integrations_auth_keys(integration_id: int, integration_name:
     Returns:
         dict: A dictionary containing the auth key data.
     """
-    logger.info(f"Loading available integrations auth keys data for {integration_name}.")
+    logger.info(
+        f"Loading available integrations auth keys data for {integration_name}.",
+    )
     return {
         "integration_id": integration_id,
         "integration_name": integration_name,
@@ -290,12 +343,18 @@ async def get_available_integrations_auth_keys_list(session: AsyncSession):
     ]
 
     for integration_name, auth_key_name in available_integrations:
-        query = select(AvailableIntegrations.id).where(AvailableIntegrations.integration_name == integration_name)
+        query = select(AvailableIntegrations.id).where(
+            AvailableIntegrations.integration_name == integration_name,
+        )
         result = await session.execute(query)
         integration_id = result.scalars().first()
 
         if integration_id:
-            available_integrations_auth_keys.append(load_available_integrations_auth_keys(integration_id, integration_name, auth_key_name))
+            available_integrations_auth_keys.append(
+                load_available_integrations_auth_keys(
+                    integration_id, integration_name, auth_key_name,
+                ),
+            )
 
     return available_integrations_auth_keys
 
@@ -310,28 +369,37 @@ async def add_available_integrations_auth_keys_if_not_exist(session: AsyncSessio
     Returns:
         None
     """
-    available_integrations_auth_keys_list = await get_available_integrations_auth_keys_list(session=session)
+    available_integrations_auth_keys_list = (
+        await get_available_integrations_auth_keys_list(session=session)
+    )
 
     for available_integration_auth_keys_data in available_integrations_auth_keys_list:
         query = select(AvailableIntegrations).where(
-            AvailableIntegrations.integration_name == available_integration_auth_keys_data["integration_name"],
+            AvailableIntegrations.integration_name
+            == available_integration_auth_keys_data["integration_name"],
         )
         result = await session.execute(query)
         existing_integration = result.scalars().first()
 
         if existing_integration:
-            available_integration_auth_keys_data["integration_id"] = existing_integration.id
+            available_integration_auth_keys_data[
+                "integration_id"
+            ] = existing_integration.id
             auth_key_query = select(AvailableIntegrationsAuthKeys).where(
                 and_(
-                    AvailableIntegrationsAuthKeys.integration_id == existing_integration.id,
-                    AvailableIntegrationsAuthKeys.auth_key_name == available_integration_auth_keys_data["auth_key_name"],
+                    AvailableIntegrationsAuthKeys.integration_id
+                    == existing_integration.id,
+                    AvailableIntegrationsAuthKeys.auth_key_name
+                    == available_integration_auth_keys_data["auth_key_name"],
                 ),
             )
             auth_key_result = await session.execute(auth_key_query)
             existing_auth_key = auth_key_result.scalars().first()
 
             if existing_auth_key is None:
-                new_auth_key = AvailableIntegrationsAuthKeys(**available_integration_auth_keys_data)
+                new_auth_key = AvailableIntegrationsAuthKeys(
+                    **available_integration_auth_keys_data,
+                )
                 session.add(new_auth_key)
                 logger.info(
                     f"Added new available integration auth keys: "

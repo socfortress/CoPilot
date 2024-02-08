@@ -1,14 +1,12 @@
 import time
-from typing import Any
-from typing import Dict
-
-from cortex4py.api import Api
-from fastapi import HTTPException
-from loguru import logger
+from typing import Any, Dict
 
 from app.connectors.cortex.schema.analyzers import AnalyzerJobData
 from app.connectors.utils import get_connector_info_from_db
 from app.db.db_session import get_db_session
+from cortex4py.api import Api
+from fastapi import HTTPException
+from loguru import logger
 
 
 async def verify_cortex_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
@@ -21,18 +19,35 @@ async def verify_cortex_credentials(attributes: Dict[str, Any]) -> Dict[str, Any
     logger.info(f"Verifying the Cortex connection to {attributes['connector_url']}")
 
     try:
-        api = Api(attributes["connector_url"], attributes["connector_api_key"], verify_cert=False)
+        api = Api(
+            attributes["connector_url"],
+            attributes["connector_api_key"],
+            verify_cert=False,
+        )
         # Get Cortex Status
         status = api.status
         if status:
             logger.debug("Cortex connection successful")
-            return {"connectionSuccessful": True, "message": "Cortex connection successful"}
+            return {
+                "connectionSuccessful": True,
+                "message": "Cortex connection successful",
+            }
         else:
-            logger.error(f"Connection to {attributes['connector_url']} failed with error.")
-            return {"connectionSuccessful": False, "message": f"Connection to {attributes['connector_url']} failed with error."}
+            logger.error(
+                f"Connection to {attributes['connector_url']} failed with error.",
+            )
+            return {
+                "connectionSuccessful": False,
+                "message": f"Connection to {attributes['connector_url']} failed with error.",
+            }
     except Exception as e:
-        logger.error(f"Connection to {attributes['connector_url']} failed with error: {e}")
-        return {"connectionSuccessful": False, "message": f"Connection to {attributes['connector_url']} failed with error: {e}"}
+        logger.error(
+            f"Connection to {attributes['connector_url']} failed with error: {e}",
+        )
+        return {
+            "connectionSuccessful": False,
+            "message": f"Connection to {attributes['connector_url']} failed with error: {e}",
+        }
 
 
 async def verify_cortex_connection(connector_name: str) -> str:
@@ -62,10 +77,14 @@ async def create_cortex_client(connector_name: str) -> Api:
     if attributes is None:
         logger.error("No Wazuh Indexer connector found in the database")
         return None
-    return Api(attributes["connector_url"], attributes["connector_api_key"], verify_cert=False)
+    return Api(
+        attributes["connector_url"], attributes["connector_api_key"], verify_cert=False,
+    )
 
 
-async def run_and_wait_for_analyzer(analyzer_name: str, job_data: AnalyzerJobData) -> Dict[str, Any]:
+async def run_and_wait_for_analyzer(
+    analyzer_name: str, job_data: AnalyzerJobData,
+) -> Dict[str, Any]:
     """
     Runs an analyzer by name and waits for the job to complete.
 
@@ -83,7 +102,9 @@ async def run_and_wait_for_analyzer(analyzer_name: str, job_data: AnalyzerJobDat
         job = api.analyzers.run_by_name(analyzer_name, job_data.dict(), force=1)
         return await monitor_analyzer_job(api, job)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error running analyzer {analyzer_name}: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Error running analyzer {analyzer_name}: {e}",
+        )
 
 
 async def monitor_analyzer_job(api: Api, job: Any) -> Dict[str, Any]:
@@ -138,4 +159,8 @@ async def retrieve_final_report(api: Api, job_id: str) -> Dict[str, Any]:
     """
     report = api.jobs.get_report(job_id).report
     final_report = report["full"]
-    return {"success": True, "message": "Analyzer ran successfully", "report": final_report}
+    return {
+        "success": True,
+        "message": "Analyzer ran successfully",
+        "report": final_report,
+    }

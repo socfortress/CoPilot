@@ -1,13 +1,10 @@
-from typing import Any
-from typing import Dict
-from typing import Optional
+from typing import Any, Dict, Optional
 
 import requests
-from fastapi import HTTPException
-from loguru import logger
-
 from app.connectors.utils import get_connector_info_from_db
 from app.db.db_session import get_db_session
+from fastapi import HTTPException
+from loguru import logger
 
 
 async def verify_shuffle_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
@@ -33,7 +30,10 @@ async def verify_shuffle_credentials(attributes: Dict[str, Any]) -> Dict[str, An
             logger.info(
                 f"Connection to {attributes['connector_url']} successful",
             )
-            return {"connectionSuccessful": True, "message": "Shuffle connection successful"}
+            return {
+                "connectionSuccessful": True,
+                "message": "Shuffle connection successful",
+            }
         else:
             logger.error(
                 f"Connection to {attributes['connector_url']} failed with error: {shuffle_apps.text}",
@@ -46,7 +46,10 @@ async def verify_shuffle_credentials(attributes: Dict[str, Any]) -> Dict[str, An
         logger.error(
             f"Connection to {attributes['connector_url']} failed with error: {e}",
         )
-        return {"connectionSuccessful": False, "message": f"Connection to {attributes['connector_url']} failed with error: {e}"}
+        return {
+            "connectionSuccessful": False,
+            "message": f"Connection to {attributes['connector_url']} failed with error: {e}",
+        }
 
 
 async def verify_shuffle_connection(connector_name: str) -> str:
@@ -62,7 +65,11 @@ async def verify_shuffle_connection(connector_name: str) -> str:
     return await verify_shuffle_credentials(attributes)
 
 
-async def send_get_request(endpoint: str, params: Optional[Dict[str, Any]] = None, connector_name: str = "Shuffle") -> Dict[str, Any]:
+async def send_get_request(
+    endpoint: str,
+    params: Optional[Dict[str, Any]] = None,
+    connector_name: str = "Shuffle",
+) -> Dict[str, Any]:
     """
     Sends a GET request to the Shuffle service.
 
@@ -90,14 +97,26 @@ async def send_get_request(endpoint: str, params: Optional[Dict[str, Any]] = Non
             params=params,
             verify=False,
         )
-        return {"data": response.json(), "success": True, "message": "Successfully retrieved data"}
+        return {
+            "data": response.json(),
+            "success": True,
+            "message": "Successfully retrieved data",
+        }
     except Exception as e:
         logger.error(f"Failed to send GET request to {endpoint} with error: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to send GET request to {endpoint} with error: {e}")
-        return {"success": False, "message": f"Failed to send GET request to {endpoint} with error: {e}"}
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to send GET request to {endpoint} with error: {e}",
+        )
+        return {
+            "success": False,
+            "message": f"Failed to send GET request to {endpoint} with error: {e}",
+        }
 
 
-def send_post_request(endpoint: str, data: Dict[str, Any] = None, connector_name: str = "Shuffle") -> Dict[str, Any]:
+def send_post_request(
+    endpoint: str, data: Dict[str, Any] = None, connector_name: str = "Shuffle",
+) -> Dict[str, Any]:
     """
     Sends a POST request to the Shuffle service.
 
@@ -113,7 +132,10 @@ def send_post_request(endpoint: str, data: Dict[str, Any] = None, connector_name
     attributes = get_connector_info_from_db(connector_name)
     if attributes is None:
         logger.error("No Shuffle connector found in the database")
-        return {"success": False, "message": "No Shuffle connector found in the database"}
+        return {
+            "success": False,
+            "message": "No Shuffle connector found in the database",
+        }
 
     try:
         HEADERS = {
@@ -131,21 +153,37 @@ def send_post_request(endpoint: str, data: Dict[str, Any] = None, connector_name
         )
 
         if response.status_code == 204:
-            return {"data": None, "success": True, "message": "Successfully completed request with no content"}
+            return {
+                "data": None,
+                "success": True,
+                "message": "Successfully completed request with no content",
+            }
         else:
             return {
                 "data": response.json(),
                 "success": False if response.status_code >= 400 else True,
-                "message": "Successfully retrieved data" if response.status_code < 400 else "Failed to retrieve data",
+                "message": "Successfully retrieved data"
+                if response.status_code < 400
+                else "Failed to retrieve data",
             }
     except Exception as e:
         logger.debug(f"Response: {response}")
         logger.error(f"Failed to send POST request to {endpoint} with error: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to send POST request to {endpoint} with error: {e}")
-        return {"success": False, "message": f"Failed to send POST request to {endpoint} with error: {e}"}
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to send POST request to {endpoint} with error: {e}",
+        )
+        return {
+            "success": False,
+            "message": f"Failed to send POST request to {endpoint} with error: {e}",
+        }
 
 
-def send_delete_request(endpoint: str, params: Optional[Dict[str, Any]] = None, connector_name: str = "Shuffle") -> Dict[str, Any]:
+def send_delete_request(
+    endpoint: str,
+    params: Optional[Dict[str, Any]] = None,
+    connector_name: str = "Shuffle",
+) -> Dict[str, Any]:
     """
     Sends a DELETE request to the Shuffle service.
 
@@ -176,14 +214,28 @@ def send_delete_request(endpoint: str, params: Optional[Dict[str, Any]] = None, 
             params=params,
             verify=False,
         )
-        return {"data": response.json(), "success": True, "message": "Successfully retrieved data"}
+        return {
+            "data": response.json(),
+            "success": True,
+            "message": "Successfully retrieved data",
+        }
     except Exception as e:
         logger.error(f"Failed to send DELETE request to {endpoint} with error: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to send DELETE request to {endpoint} with error: {e}")
-        return {"success": False, "message": f"Failed to send DELETE request to {endpoint} with error: {e}"}
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to send DELETE request to {endpoint} with error: {e}",
+        )
+        return {
+            "success": False,
+            "message": f"Failed to send DELETE request to {endpoint} with error: {e}",
+        }
 
 
-def send_put_request(endpoint: str, data: Optional[Dict[str, Any]] = None, connector_name: str = "Shuffle") -> Dict[str, Any]:
+def send_put_request(
+    endpoint: str,
+    data: Optional[Dict[str, Any]] = None,
+    connector_name: str = "Shuffle",
+) -> Dict[str, Any]:
     """
     Sends a PUT request to the Shuffle service.
 
@@ -214,7 +266,14 @@ def send_put_request(endpoint: str, data: Optional[Dict[str, Any]] = None, conne
             json=data,
             verify=False,
         )
-        return {"data": response.json(), "success": True, "message": "Successfully retrieved data"}
+        return {
+            "data": response.json(),
+            "success": True,
+            "message": "Successfully retrieved data",
+        }
     except Exception as e:
         logger.error(f"Failed to send PUT request to {endpoint} with error: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to send PUT request to {endpoint} with error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to send PUT request to {endpoint} with error: {e}",
+        )

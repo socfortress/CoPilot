@@ -1,11 +1,7 @@
 from enum import Enum
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Optional
+from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 
 class Artifacts(BaseModel):
@@ -76,23 +72,31 @@ class BaseBody(BaseModel):
 
 
 class CollectArtifactBody(BaseBody):
-    artifact_name: Optional[str] = Field(None, description="Name of the artifact for collection or command running")
+    artifact_name: Optional[str] = Field(
+        None, description="Name of the artifact for collection or command running",
+    )
 
 
 class RunCommandBody(BaseBody):
     command: Optional[str] = Field(None, description="Command to run")
-    artifact_name: CommandArtifactsEnum = Field(None, description="Name of the artifact for command running")
+    artifact_name: CommandArtifactsEnum = Field(
+        None, description="Name of the artifact for command running",
+    )
 
 
 class QuarantineBody(BaseBody):
     action: ActionEnum = Field(..., description="Action to perform")
-    artifact_name: QuarantineArtifactsEnum = Field(None, description="Name of the artifact for quarantine or removal of quarantine")
+    artifact_name: QuarantineArtifactsEnum = Field(
+        None, description="Name of the artifact for quarantine or removal of quarantine",
+    )
 
 
 class BaseResponse(BaseModel):
     message: str = Field(...)
     success: bool = Field(...)  # Changed from str to bool based on your sample data
-    results: Optional[List[Dict[str, Any]]] = Field(None, description="Results of the operation")
+    results: Optional[List[Dict[str, Any]]] = Field(
+        None, description="Results of the operation",
+    )
 
 
 class CollectArtifactResponse(BaseResponse):

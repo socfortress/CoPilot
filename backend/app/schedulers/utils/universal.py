@@ -1,9 +1,8 @@
 import os
 
 import requests
-from dotenv import load_dotenv
-
 from app.auth.services.universal import get_scheduler_password
+from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -22,8 +21,16 @@ def scheduler_login():
     # Get an auth token
     token_response = requests.post(
         f"http://{os.getenv('SERVER_IP')}:5000/auth/token",
-        headers={"accept": "application/json", "Content-Type": "application/x-www-form-urlencoded"},
-        data={"grant_type": "", "username": "scheduler", "password": password, "scope": ""},
+        headers={
+            "accept": "application/json",
+            "Content-Type": "application/x-www-form-urlencoded",
+        },
+        data={
+            "grant_type": "",
+            "username": "scheduler",
+            "password": password,
+            "scope": "",
+        },
     )
 
     # Check if the token was successfully retrieved

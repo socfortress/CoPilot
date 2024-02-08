@@ -1,22 +1,21 @@
-from datetime import datetime
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 import jwt
-from fastapi import Depends
-from fastapi import HTTPException
-from fastapi.security import OAuth2PasswordBearer
-from fastapi.security import SecurityScopes
+from app.auth.services.universal import find_user, get_role
+from fastapi import Depends, HTTPException
+from fastapi.security import OAuth2PasswordBearer, SecurityScopes
 from loguru import logger
 from passlib.context import CryptContext
-
-from app.auth.services.universal import find_user
-from app.auth.services.universal import get_role
 
 
 class AuthHandler:
     security = OAuth2PasswordBearer(
         tokenUrl="api/auth/token",
-        scopes={"admin": "Admin users", "analyst": "SOC Analysts", "scheduler": "Scheduler for automated tasks"},
+        scopes={
+            "admin": "Admin users",
+            "analyst": "SOC Analysts",
+            "scheduler": "Scheduler for automated tasks",
+        },
     )
     pwd_context = CryptContext(schemes=["bcrypt"])
     secret = "bL4unrkoxtFs1MT6A7Ns2yMLkduyuqrkTxDV9CjlbNc="
@@ -28,7 +27,9 @@ class AuthHandler:
         return self.pwd_context.verify(plain_password, hashed_password)
 
     # ! TODO: HAVE LOGIC TO HANDLE PASSWORD RESET VIA A TOKEN BUT NOT IMPLEMENTED YET ! #
-    def generate_reset_token(self, username: str, expires_delta: timedelta = timedelta(minutes=30)):
+    def generate_reset_token(
+        self, username: str, expires_delta: timedelta = timedelta(minutes=30),
+    ):
         """
         Generates a password reset token.
 
@@ -78,7 +79,9 @@ class AuthHandler:
             if payload["sub"] == user.username:
                 return payload["sub"]
             else:
-                raise HTTPException(status_code=401, detail="Invalid token. Username does not match.")
+                raise HTTPException(
+                    status_code=401, detail="Invalid token. Username does not match.",
+                )
         except jwt.ExpiredSignatureError:
             raise HTTPException(status_code=401, detail="Token expired")
         except jwt.InvalidTokenError:
@@ -108,7 +111,9 @@ class AuthHandler:
             return False
 
     # ! New with Async
-    async def encode_token(self, username: str, access_token_expires: timedelta = timedelta(hours=24)):
+    async def encode_token(
+        self, username: str, access_token_expires: timedelta = timedelta(hours=24),
+    ):
         """
         Encodes a JWT token with the given username and expiration time.
 
@@ -151,7 +156,9 @@ class AuthHandler:
         except jwt.InvalidTokenError:
             return "Invalid token", []
 
-    async def get_current_user(self, security_scopes: SecurityScopes, token: str = Depends(security)):
+    async def get_current_user(
+        self, security_scopes: SecurityScopes, token: str = Depends(security),
+    ):
         """
         Retrieves the current user based on the provided security scopes and token.
 

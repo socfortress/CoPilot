@@ -1,26 +1,26 @@
-from fastapi import APIRouter
-from fastapi import Depends
-from fastapi import HTTPException
-from fastapi import Security
-from loguru import logger
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.auth.utils import AuthHandler
-from app.connectors.dfir_iris.schema.alerts import AlertResponse
-from app.connectors.dfir_iris.schema.alerts import AlertsResponse
-from app.connectors.dfir_iris.schema.alerts import BookmarkedAlertsResponse
-from app.connectors.dfir_iris.schema.alerts import CaseCreationResponse
-from app.connectors.dfir_iris.schema.alerts import DeleteAlertResponse
-from app.connectors.dfir_iris.schema.alerts import DeleteMultipleAlertsRequest
-from app.connectors.dfir_iris.schema.alerts import FilterAlertsRequest
-from app.connectors.dfir_iris.services.alerts import bookmark_alert
-from app.connectors.dfir_iris.services.alerts import create_case
-from app.connectors.dfir_iris.services.alerts import delete_alert
-from app.connectors.dfir_iris.services.alerts import get_alert
-from app.connectors.dfir_iris.services.alerts import get_alerts
-from app.connectors.dfir_iris.services.alerts import get_bookmarked_alerts
+from app.connectors.dfir_iris.schema.alerts import (
+    AlertResponse,
+    AlertsResponse,
+    BookmarkedAlertsResponse,
+    CaseCreationResponse,
+    DeleteAlertResponse,
+    DeleteMultipleAlertsRequest,
+    FilterAlertsRequest,
+)
+from app.connectors.dfir_iris.services.alerts import (
+    bookmark_alert,
+    create_case,
+    delete_alert,
+    get_alert,
+    get_alerts,
+    get_bookmarked_alerts,
+)
 from app.connectors.dfir_iris.utils.universal import check_alert_exists
 from app.db.db_session import get_db
+from fastapi import APIRouter, Depends, HTTPException, Security
+from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
 
 # App specific imports
 
@@ -70,7 +70,9 @@ async def get_all_bookmarked_alerts() -> BookmarkedAlertsResponse:
     description="Get alerts from IRIS based on the provided filters",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_alerts_filtered(request: FilterAlertsRequest, session: AsyncSession = Depends(get_db)) -> AlertsResponse:
+async def get_alerts_filtered(
+    request: FilterAlertsRequest, session: AsyncSession = Depends(get_db),
+) -> AlertsResponse:
     """
     Retrieve alerts from DFIR-IRIS based on the provided filters.
 
@@ -88,7 +90,10 @@ async def get_alerts_filtered(request: FilterAlertsRequest, session: AsyncSessio
     description="Get an alert by ID",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_alert_by_id(alert_id: str = Depends(verify_alert_exists), session: AsyncSession = Depends(get_db)) -> AlertResponse:
+async def get_alert_by_id(
+    alert_id: str = Depends(verify_alert_exists),
+    session: AsyncSession = Depends(get_db),
+) -> AlertResponse:
     """
     Retrieve an alert by its ID.
 
@@ -119,13 +124,21 @@ async def get_all_alerts_assigned_to_user(user_id: int) -> AlertsResponse:
         AlertsResponse: The response containing the fetched alerts assigned to the user.
     """
     logger.info(f"Fetching all alerts assigned to user {user_id}")
-    alerts = (await get_alerts(request=FilterAlertsRequest(alert_owner_id=user_id, per_page=1000))).alerts
+    alerts = (
+        await get_alerts(
+            request=FilterAlertsRequest(alert_owner_id=user_id, per_page=1000),
+        )
+    ).alerts
     alerts_assigned_to_user = []
     for alert in alerts:
         if alert["alert_owner_id"] == user_id:
             alerts_assigned_to_user.append(alert)
 
-    return AlertsResponse(success=True, message="Successfully fetched alerts assigned to user", alerts=alerts_assigned_to_user)
+    return AlertsResponse(
+        success=True,
+        message="Successfully fetched alerts assigned to user",
+        alerts=alerts_assigned_to_user,
+    )
 
 
 @dfir_iris_alerts_router.post(
@@ -134,7 +147,9 @@ async def get_all_alerts_assigned_to_user(user_id: int) -> AlertsResponse:
     description="Assign an alert to a user",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def create_case_from_alert(alert_id: str = Depends(verify_alert_exists)) -> CaseCreationResponse:
+async def create_case_from_alert(
+    alert_id: str = Depends(verify_alert_exists),
+) -> CaseCreationResponse:
     """
     Create a case from an alert.
 
@@ -154,7 +169,9 @@ async def create_case_from_alert(alert_id: str = Depends(verify_alert_exists)) -
     description="Bookmark an alert",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def bookmark_alert_route(alert_id: str = Depends(verify_alert_exists)) -> AlertResponse:
+async def bookmark_alert_route(
+    alert_id: str = Depends(verify_alert_exists),
+) -> AlertResponse:
     """
     Bookmark an alert.
 
@@ -174,7 +191,9 @@ async def bookmark_alert_route(alert_id: str = Depends(verify_alert_exists)) -> 
     description="Unbookmark an alert",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def unbookmark_alert_route(alert_id: str = Depends(verify_alert_exists)) -> AlertResponse:
+async def unbookmark_alert_route(
+    alert_id: str = Depends(verify_alert_exists),
+) -> AlertResponse:
     """
     Unbookmark an alert.
 
@@ -194,7 +213,9 @@ async def unbookmark_alert_route(alert_id: str = Depends(verify_alert_exists)) -
     description="Delete multiple alerts",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def delete_multiple_alerts_route(request: DeleteMultipleAlertsRequest) -> DeleteAlertResponse:
+async def delete_multiple_alerts_route(
+    request: DeleteMultipleAlertsRequest,
+) -> DeleteAlertResponse:
     """
     Delete multiple alerts.
 
@@ -237,7 +258,9 @@ async def purge_alerts_route() -> DeleteAlertResponse:
     description="Delete an alert",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def delete_alert_route(alert_id: str = Depends(verify_alert_exists)) -> DeleteAlertResponse:
+async def delete_alert_route(
+    alert_id: str = Depends(verify_alert_exists),
+) -> DeleteAlertResponse:
     """
     Delete an alert.
 

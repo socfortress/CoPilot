@@ -1,18 +1,8 @@
 import os
 from datetime import datetime
-from typing import List
-from typing import Optional
-from typing import Type
-from typing import Union
+from typing import List, Optional, Type, Union
 
 import aiofiles
-from fastapi import UploadFile
-from loguru import logger
-from pydantic import BaseModel
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-from werkzeug.utils import secure_filename
-
 from app.connectors.cortex.utils.universal import verify_cortex_connection
 from app.connectors.dfir_iris.utils.universal import verify_dfir_iris_connection
 from app.connectors.grafana.utils.universal import verify_grafana_connection
@@ -32,108 +22,157 @@ from app.integrations.utils.event_shipper import verify_event_shipper_connection
 from app.threat_intel.services.socfortress import (
     verifiy_socfortress_threat_intel_connector,
 )
-from app.utils import verify_alert_creation_provisioning_connection
-from app.utils import verify_wazuh_worker_provisioning_connection
+from app.utils import (
+    verify_alert_creation_provisioning_connection,
+    verify_wazuh_worker_provisioning_connection,
+)
+from fastapi import UploadFile
+from loguru import logger
+from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from werkzeug.utils import secure_filename
 
 UPLOAD_FOLDER = "file-store"
-UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), UPLOAD_FOLDER)
+UPLOAD_FOLDER = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+    UPLOAD_FOLDER,
+)
 ALLOWED_EXTENSIONS = set(["yaml"])  # replace with your allowed file extensions
 
 
 # Create an interface for connector services
 class ConnectorServiceInterface(BaseModel):
-    async def verify_authentication(self, connector: ConnectorResponse) -> Optional[ConnectorResponse]:
+    async def verify_authentication(
+        self, connector: ConnectorResponse,
+    ) -> Optional[ConnectorResponse]:
         raise NotImplementedError
 
 
 # Wazuh Manager Service
 class WazuhManagerService(ConnectorServiceInterface):
-    async def verify_authentication(self, connector: ConnectorResponse) -> Optional[ConnectorResponse]:
+    async def verify_authentication(
+        self, connector: ConnectorResponse,
+    ) -> Optional[ConnectorResponse]:
         return await verify_wazuh_manager_connection(connector.connector_name)
 
 
 # Wazuh Indexer Service
 class WazuhIndexerService(ConnectorServiceInterface):
-    async def verify_authentication(self, connector: ConnectorResponse) -> Optional[ConnectorResponse]:
+    async def verify_authentication(
+        self, connector: ConnectorResponse,
+    ) -> Optional[ConnectorResponse]:
         return await verify_wazuh_indexer_connection(connector.connector_name)
 
 
 # Velociraptor Service
 class VelociraptorService(ConnectorServiceInterface):
-    async def verify_authentication(self, connector: ConnectorResponse) -> Optional[ConnectorResponse]:
+    async def verify_authentication(
+        self, connector: ConnectorResponse,
+    ) -> Optional[ConnectorResponse]:
         return await verify_velociraptor_connection(connector.connector_name)
 
 
 # Graylog Service
 class GraylogService(ConnectorServiceInterface):
-    async def verify_authentication(self, connector: ConnectorResponse) -> Optional[ConnectorResponse]:
+    async def verify_authentication(
+        self, connector: ConnectorResponse,
+    ) -> Optional[ConnectorResponse]:
         return await verify_graylog_connection(connector.connector_name)
 
 
 # DFIR-IRIS Service
 class DfirIrisService(ConnectorServiceInterface):
-    async def verify_authentication(self, connector: ConnectorResponse) -> Optional[ConnectorResponse]:
+    async def verify_authentication(
+        self, connector: ConnectorResponse,
+    ) -> Optional[ConnectorResponse]:
         return await verify_dfir_iris_connection(connector.connector_name)
 
 
 # Cortex Service
 class CortexService(ConnectorServiceInterface):
-    async def verify_authentication(self, connector: ConnectorResponse) -> Optional[ConnectorResponse]:
+    async def verify_authentication(
+        self, connector: ConnectorResponse,
+    ) -> Optional[ConnectorResponse]:
         return await verify_cortex_connection(connector.connector_name)
 
 
 # Shuffle Service
 class ShuffleService(ConnectorServiceInterface):
-    async def verify_authentication(self, connector: ConnectorResponse) -> Optional[ConnectorResponse]:
+    async def verify_authentication(
+        self, connector: ConnectorResponse,
+    ) -> Optional[ConnectorResponse]:
         return await verify_shuffle_connection(connector.connector_name)
 
 
 # Sublime Service
 class SublimeService(ConnectorServiceInterface):
-    async def verify_authentication(self, connector: ConnectorResponse) -> Optional[ConnectorResponse]:
+    async def verify_authentication(
+        self, connector: ConnectorResponse,
+    ) -> Optional[ConnectorResponse]:
         return await verify_sublime_connection(connector.connector_name)
 
 
 # InfluxDB Service
 class InfluxDBService(ConnectorServiceInterface):
-    async def verify_authentication(self, connector: ConnectorResponse) -> Optional[ConnectorResponse]:
+    async def verify_authentication(
+        self, connector: ConnectorResponse,
+    ) -> Optional[ConnectorResponse]:
         return await verify_influxdb_connection(connector.connector_name)
 
 
 # Grafana Service
 class GrafanaService(ConnectorServiceInterface):
-    async def verify_authentication(self, connector: ConnectorResponse) -> Optional[ConnectorResponse]:
+    async def verify_authentication(
+        self, connector: ConnectorResponse,
+    ) -> Optional[ConnectorResponse]:
         return await verify_grafana_connection(connector.connector_name)
 
 
 # Wazuh Worker Provisioning Service
 class WazuhWorkerProvisioningService(ConnectorServiceInterface):
-    async def verify_authentication(self, connector: ConnectorResponse) -> Optional[ConnectorResponse]:
-        return await verify_wazuh_worker_provisioning_connection(connector.connector_name)
+    async def verify_authentication(
+        self, connector: ConnectorResponse,
+    ) -> Optional[ConnectorResponse]:
+        return await verify_wazuh_worker_provisioning_connection(
+            connector.connector_name,
+        )
 
 
 # SOCFortress Threat Intel Service
 class SocfortressThreatIntelService(ConnectorServiceInterface):
-    async def verify_authentication(self, connector: ConnectorResponse) -> Optional[ConnectorResponse]:
-        return await verifiy_socfortress_threat_intel_connector(connector.connector_name)
+    async def verify_authentication(
+        self, connector: ConnectorResponse,
+    ) -> Optional[ConnectorResponse]:
+        return await verifiy_socfortress_threat_intel_connector(
+            connector.connector_name,
+        )
 
 
 # ASK SOCFortress Service
 class AskSocfortressService(ConnectorServiceInterface):
-    async def verify_authentication(self, connector: ConnectorResponse) -> Optional[ConnectorResponse]:
+    async def verify_authentication(
+        self, connector: ConnectorResponse,
+    ) -> Optional[ConnectorResponse]:
         return await verify_ask_socfortress_connector(connector.connector_name)
 
 
 # Event Shipper Service
 class EventShipperService(ConnectorServiceInterface):
-    async def verify_authentication(self, connector: ConnectorResponse) -> Optional[ConnectorResponse]:
+    async def verify_authentication(
+        self, connector: ConnectorResponse,
+    ) -> Optional[ConnectorResponse]:
         return await verify_event_shipper_connection(connector.connector_name)
 
 
 # Alert Creation Service
 class AlertCreationService(ConnectorServiceInterface):
-    async def verify_authentication(self, connector: ConnectorResponse) -> Optional[ConnectorResponse]:
-        return await verify_alert_creation_provisioning_connection(connector.connector_name)
+    async def verify_authentication(
+        self, connector: ConnectorResponse,
+    ) -> Optional[ConnectorResponse]:
+        return await verify_alert_creation_provisioning_connection(
+            connector.connector_name,
+        )
 
 
 # Factory function to create a service instance based on connector name
@@ -173,7 +212,9 @@ class ConnectorServices:
     """
 
     @classmethod
-    async def fetch_all_connectors(cls, session: AsyncSession) -> List[ConnectorResponse]:
+    async def fetch_all_connectors(
+        cls, session: AsyncSession,
+    ) -> List[ConnectorResponse]:
         """
         Fetches all connectors from the database.
 
@@ -192,7 +233,9 @@ class ConnectorServices:
         return [ConnectorResponse.from_orm(connector) for connector in connectors]
 
     @classmethod
-    async def fetch_connector_by_id(cls, connector_id: int, session: AsyncSession) -> Optional[ConnectorResponse]:
+    async def fetch_connector_by_id(
+        cls, connector_id: int, session: AsyncSession,
+    ) -> Optional[ConnectorResponse]:
         """
         Fetches a connector by its ID from the database.
 
@@ -203,14 +246,18 @@ class ConnectorServices:
         Returns:
             Optional[ConnectorResponse]: The fetched connector, or None if not found.
         """
-        result = await session.execute(select(Connectors).where(Connectors.id == connector_id))
+        result = await session.execute(
+            select(Connectors).where(Connectors.id == connector_id),
+        )
         connector = result.scalar_one_or_none()
         if connector:
             return ConnectorResponse.from_orm(connector)
         return None
 
     @classmethod
-    async def verify_connector_by_id(cls, connector_id: int, session: AsyncSession) -> Optional[ConnectorResponse]:
+    async def verify_connector_by_id(
+        cls, connector_id: int, session: AsyncSession,
+    ) -> Optional[ConnectorResponse]:
         """
         Verify a connector by making an API call to it asynchronously.
 
@@ -241,7 +288,9 @@ class ConnectorServices:
             if ServiceClass is not None:
                 service_instance = ServiceClass()
                 # If verify_authentication is an async function, you will need to await it
-                connector_response = await service_instance.verify_authentication(connector_response)
+                connector_response = await service_instance.verify_authentication(
+                    connector_response,
+                )
                 # If the connector is verified, update the connector record in the database
                 if connector_response["connectionSuccessful"]:
                     connector.connector_verified = True
@@ -256,7 +305,9 @@ class ConnectorServices:
                     await session.commit()
 
             else:
-                logger.error(f"Connector type {connector_response.connector_name} is not supported")
+                logger.error(
+                    f"Connector type {connector_response.connector_name} is not supported",
+                )
                 return None
 
             return connector_response
@@ -324,10 +375,14 @@ class ConnectorServices:
         Returns:
             bool: True if the file is allowed, False otherwise.
         """
-        return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+        return (
+            "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+        )
 
     @classmethod
-    async def save_file(cls, file: UploadFile, session: AsyncSession) -> Union[ConnectorResponse, bool]:
+    async def save_file(
+        cls, file: UploadFile, session: AsyncSession,
+    ) -> Union[ConnectorResponse, bool]:
         """
         Saves the uploaded file to a specified location and updates the connector record in the database.
 
@@ -345,7 +400,9 @@ class ConnectorServices:
 
             # Save the file asynchronously
             async with aiofiles.open(file_path, "wb") as buffer:
-                await buffer.write(await file.read())  # Assuming file doesn't need to be read in chunks
+                await buffer.write(
+                    await file.read(),
+                )  # Assuming file doesn't need to be read in chunks
 
             # Update connector using async session and ORM
             query = select(Connectors).where(Connectors.id == 6)

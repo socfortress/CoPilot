@@ -1,18 +1,18 @@
-from typing import List
-from typing import Tuple
+from typing import List, Tuple
 
-from fastapi import HTTPException
-from loguru import logger
-
-from app.connectors.graylog.schema.collector import ConfiguredInput
-from app.connectors.graylog.schema.collector import ConfiguredInputsResponse
-from app.connectors.graylog.schema.collector import GraylogIndexItem
-from app.connectors.graylog.schema.collector import GraylogIndicesResponse
-from app.connectors.graylog.schema.collector import GraylogInputsResponse
-from app.connectors.graylog.schema.collector import RunningInput
-from app.connectors.graylog.schema.collector import RunningInputsResponse
+from app.connectors.graylog.schema.collector import (
+    ConfiguredInput,
+    ConfiguredInputsResponse,
+    GraylogIndexItem,
+    GraylogIndicesResponse,
+    GraylogInputsResponse,
+    RunningInput,
+    RunningInputsResponse,
+)
 from app.connectors.graylog.schema.management import UrlWhitelistEntryResponse
 from app.connectors.graylog.utils.universal import send_get_request
+from fastapi import HTTPException
+from loguru import logger
 
 
 async def get_indices_full() -> GraylogIndicesResponse:
@@ -33,11 +33,18 @@ async def get_indices_full() -> GraylogIndicesResponse:
             raise HTTPException(status_code=500, detail="Failed to collect indices key")
 
         # Convert the dictionary to a list of GraylogIndexItem
-        indices_list = [GraylogIndexItem(index_name=name, index_info=info) for name, info in indices_data.items()]
+        indices_list = [
+            GraylogIndexItem(index_name=name, index_info=info)
+            for name, info in indices_data.items()
+        ]
 
-        return GraylogIndicesResponse(indices=indices_list, success=True, message="Indices collected successfully")
+        return GraylogIndicesResponse(
+            indices=indices_list, success=True, message="Indices collected successfully",
+        )
     else:
-        return GraylogIndicesResponse(indices=[], success=False, message="Failed to collect indices")
+        return GraylogIndicesResponse(
+            indices=[], success=False, message="Failed to collect indices",
+        )
 
 
 async def fetch_configured_inputs() -> Tuple[bool, List[ConfiguredInput]]:
@@ -51,7 +58,10 @@ async def fetch_configured_inputs() -> Tuple[bool, List[ConfiguredInput]]:
     success = configured_inputs_collected.get("success", False)
 
     if success:
-        return True, [ConfiguredInput(**input_data) for input_data in configured_inputs_collected["data"]["inputs"]]
+        return True, [
+            ConfiguredInput(**input_data)
+            for input_data in configured_inputs_collected["data"]["inputs"]
+        ]
     else:
         logger.error("Failed to fetch configured inputs")
         return False, []
@@ -64,11 +74,16 @@ async def fetch_running_inputs() -> Tuple[bool, List[RunningInput]]:
     Returns:
         A tuple containing a boolean indicating the success of the request and a list of RunningInput objects.
     """
-    running_inputs_collected = await send_get_request(endpoint="/api/system/inputstates")
+    running_inputs_collected = await send_get_request(
+        endpoint="/api/system/inputstates",
+    )
     success = running_inputs_collected.get("success", False)
 
     if success:
-        return True, [RunningInput(**input_data) for input_data in running_inputs_collected["data"]["states"]]
+        return True, [
+            RunningInput(**input_data)
+            for input_data in running_inputs_collected["data"]["states"]
+        ]
     else:
         logger.error("Failed to fetch running inputs")
         return False, []
@@ -104,7 +119,12 @@ async def get_inputs() -> GraylogInputsResponse:
         )
     else:
         logger.error("Failed to fetch one or both types of inputs")
-        return GraylogInputsResponse(configured_inputs=[], running_inputs=[], success=False, message="Failed to collect inputs")
+        return GraylogInputsResponse(
+            configured_inputs=[],
+            running_inputs=[],
+            success=False,
+            message="Failed to collect inputs",
+        )
 
 
 async def get_inputs_running() -> RunningInputsResponse:
@@ -116,7 +136,11 @@ async def get_inputs_running() -> RunningInputsResponse:
     logger.info("Getting running inputs from Graylog")
     run_success, running_inputs_list = await fetch_running_inputs()
     if run_success:
-        return RunningInputsResponse(running_inputs=running_inputs_list, success=True, message="Successfully retrieved running inputs")
+        return RunningInputsResponse(
+            running_inputs=running_inputs_list,
+            success=True,
+            message="Successfully retrieved running inputs",
+        )
 
 
 async def get_inputs_configured() -> ConfiguredInputsResponse:
@@ -185,11 +209,17 @@ async def get_url_whitelist_entries() -> UrlWhitelistEntryResponse:
         try:
             url_whitelist_entries = response["data"]
         except KeyError:
-            raise HTTPException(status_code=500, detail="Failed to collect URL whitelist entries")
+            raise HTTPException(
+                status_code=500, detail="Failed to collect URL whitelist entries",
+            )
         return UrlWhitelistEntryResponse(
             url_whitelist_entries=url_whitelist_entries,
             success=True,
             message="URL whitelist entries collected successfully",
         )
     else:
-        return UrlWhitelistEntryResponse(url_whitelist_entries=[], success=False, message="Failed to collect URL whitelist entries")
+        return UrlWhitelistEntryResponse(
+            url_whitelist_entries=[],
+            success=False,
+            message="Failed to collect URL whitelist entries",
+        )

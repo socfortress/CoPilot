@@ -1,7 +1,6 @@
 from typing import List
 
-from pydantic import BaseModel
-from pydantic import EmailStr
+from pydantic import BaseModel, EmailStr
 
 
 class UserBase(BaseModel):

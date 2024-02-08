@@ -1,17 +1,16 @@
 import datetime
-from typing import List
-from typing import Optional
+from typing import List, Optional
 
-from sqlmodel import Field
-from sqlmodel import Relationship
-from sqlmodel import SQLModel
+from sqlmodel import Field, Relationship, SQLModel
 
 
 class FlaggedRule(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     rule_id: str
     name: str
-    severity: Optional[str] = Field(None, description="Severity level of the flagged rule")
+    severity: Optional[str] = Field(
+        None, description="Severity level of the flagged rule",
+    )
     tags: str
     sublime_alert_id: int = Field(foreign_key="sublimealerts.id")
 
@@ -21,7 +20,9 @@ class FlaggedRule(SQLModel, table=True):
 
 class Mailbox(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    external_id: Optional[str] = Field(None, description="External identifier for the mailbox")
+    external_id: Optional[str] = Field(
+        None, description="External identifier for the mailbox",
+    )
     mailbox_id: str
     sublime_alert_id: int = Field(foreign_key="sublimealerts.id")
 
@@ -74,6 +75,8 @@ class SublimeAlerts(SQLModel, table=True):
 
     flagged_rules: List[FlaggedRule] = Relationship(back_populates="sublime_alert")
     mailbox: List[Mailbox] = Relationship(back_populates="sublime_alert")
-    triggered_actions: List[TriggeredAction] = Relationship(back_populates="sublime_alert")
+    triggered_actions: List[TriggeredAction] = Relationship(
+        back_populates="sublime_alert",
+    )
     sender: List[Sender] = Relationship(back_populates="sublime_alert")
     recipients: List[Recipient] = Relationship(back_populates="sublime_alert")

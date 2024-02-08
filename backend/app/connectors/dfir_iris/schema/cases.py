@@ -1,13 +1,8 @@
-from datetime import date
-from datetime import timedelta
+from datetime import date, timedelta
 from enum import Enum
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Union
+from typing import Dict, List, Optional, Union
 
-from pydantic import BaseModel
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 
 class CaseModel(BaseModel):

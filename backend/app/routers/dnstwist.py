@@ -1,6 +1,5 @@
-from fastapi import APIRouter
-
 from app.integrations.dnstwist.routes.analyze import dnstwist_router
+from fastapi import APIRouter
 
 # Instantiate the APIRouter
 router = APIRouter()

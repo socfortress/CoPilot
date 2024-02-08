@@ -2,11 +2,10 @@ import os
 from datetime import datetime
 
 import requests
-from dotenv import load_dotenv
-
 from app.db.db_session import get_sync_db_session
 from app.schedulers.models.scheduler import JobMetadata
 from app.schedulers.utils.universal import scheduler_login
+from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -27,7 +26,9 @@ def agent_sync():
     # Check if the token was successfully retrieved
     if headers:
         # Your actual task
-        response = requests.post(f"http://{os.getenv('SERVER_IP')}:5000/agents/sync", headers=headers)
+        response = requests.post(
+            f"http://{os.getenv('SERVER_IP')}:5000/agents/sync", headers=headers,
+        )
 
         # Process the response here if needed
         print(response.json())
@@ -37,7 +38,9 @@ def agent_sync():
     # Use get_sync_db_session to create and manage a synchronous session
     with get_sync_db_session() as session:
         # Synchronous ORM operations
-        job_metadata = session.query(JobMetadata).filter_by(job_id="agent_sync").one_or_none()
+        job_metadata = (
+            session.query(JobMetadata).filter_by(job_id="agent_sync").one_or_none()
+        )
         if job_metadata:
             job_metadata.last_success = datetime.utcnow()
             session.add(job_metadata)

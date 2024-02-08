@@ -1,9 +1,6 @@
-from typing import List
-from typing import Optional
-from typing import Union
+from typing import List, Optional, Union
 
-from pydantic import BaseModel
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 
 class ClusterHealth(BaseModel):

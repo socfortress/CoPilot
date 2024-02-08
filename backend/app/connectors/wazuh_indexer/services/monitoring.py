@@ -1,20 +1,22 @@
-from typing import Dict
-from typing import Union
+from typing import Dict, Union
 
+from app.connectors.wazuh_indexer.schema.monitoring import (
+    ClusterHealth,
+    ClusterHealthResponse,
+    IndicesStats,
+    IndicesStatsResponse,
+    NodeAllocation,
+    NodeAllocationResponse,
+    Shards,
+    ShardsResponse,
+)
+from app.connectors.wazuh_indexer.utils.universal import (
+    create_wazuh_indexer_client,
+    format_indices_stats,
+    format_node_allocation,
+    format_shards,
+)
 from loguru import logger
-
-from app.connectors.wazuh_indexer.schema.monitoring import ClusterHealth
-from app.connectors.wazuh_indexer.schema.monitoring import ClusterHealthResponse
-from app.connectors.wazuh_indexer.schema.monitoring import IndicesStats
-from app.connectors.wazuh_indexer.schema.monitoring import IndicesStatsResponse
-from app.connectors.wazuh_indexer.schema.monitoring import NodeAllocation
-from app.connectors.wazuh_indexer.schema.monitoring import NodeAllocationResponse
-from app.connectors.wazuh_indexer.schema.monitoring import Shards
-from app.connectors.wazuh_indexer.schema.monitoring import ShardsResponse
-from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
-from app.connectors.wazuh_indexer.utils.universal import format_indices_stats
-from app.connectors.wazuh_indexer.utils.universal import format_node_allocation
-from app.connectors.wazuh_indexer.utils.universal import format_shards
 
 
 async def cluster_healthcheck() -> Union[ClusterHealthResponse, Dict[str, str]]:
@@ -58,9 +60,13 @@ async def node_allocation() -> Union[NodeAllocationResponse, Dict[str, bool]]:
         raw_node_allocation_data = es_client.cat.allocation(format="json")
         logger.info(raw_node_allocation_data)
 
-        formatted_node_allocation_data = await format_node_allocation(raw_node_allocation_data)
+        formatted_node_allocation_data = await format_node_allocation(
+            raw_node_allocation_data,
+        )
 
-        node_allocation_models = [NodeAllocation(**node) for node in formatted_node_allocation_data]
+        node_allocation_models = [
+            NodeAllocation(**node) for node in formatted_node_allocation_data
+        ]
 
         return NodeAllocationResponse(
             node_allocation=node_allocation_models,
@@ -87,9 +93,13 @@ async def indices_stats() -> Union[IndicesStatsResponse, Dict[str, str]]:
     try:
         raw_indices_stats_data = es_client.cat.indices(format="json")
 
-        formatted_indices_stats_data = await format_indices_stats(raw_indices_stats_data)
+        formatted_indices_stats_data = await format_indices_stats(
+            raw_indices_stats_data,
+        )
 
-        indices_stats_models = [IndicesStats(**index) for index in formatted_indices_stats_data]
+        indices_stats_models = [
+            IndicesStats(**index) for index in formatted_indices_stats_data
+        ]
 
         return IndicesStatsResponse(
             indices_stats=indices_stats_models,
@@ -120,7 +130,11 @@ async def shards() -> Union[ShardsResponse, Dict[str, str]]:
 
         shard_models = [Shards(**shard) for shard in formatted_shards_data]
 
-        return ShardsResponse(shards=shard_models, success=True, message="Successfully collected Wazuh Indexer shards")
+        return ShardsResponse(
+            shards=shard_models,
+            success=True,
+            message="Successfully collected Wazuh Indexer shards",
+        )
     except Exception as e:
         logger.error(f"Shards check failed with error: {e}")
         e = f"Shards check failed with error: {e}"

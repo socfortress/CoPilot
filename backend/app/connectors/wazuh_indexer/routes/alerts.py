@@ -1,28 +1,28 @@
 from typing import List
 
-from fastapi import APIRouter
-from fastapi import Depends
-from fastapi import HTTPException
-from fastapi import Security
-from loguru import logger
-
 from app.auth.utils import AuthHandler
-from app.connectors.wazuh_indexer.schema.alerts import AlertsByHostResponse
-from app.connectors.wazuh_indexer.schema.alerts import AlertsByRulePerHostResponse
-from app.connectors.wazuh_indexer.schema.alerts import AlertsByRuleResponse
-from app.connectors.wazuh_indexer.schema.alerts import AlertsSearchBody
-from app.connectors.wazuh_indexer.schema.alerts import AlertsSearchResponse
-from app.connectors.wazuh_indexer.schema.alerts import HostAlertsSearchBody
-from app.connectors.wazuh_indexer.schema.alerts import HostAlertsSearchResponse
-from app.connectors.wazuh_indexer.schema.alerts import IndexAlertsSearchBody
-from app.connectors.wazuh_indexer.schema.alerts import IndexAlertsSearchResponse
-from app.connectors.wazuh_indexer.services.alerts import get_alerts
-from app.connectors.wazuh_indexer.services.alerts import get_alerts_by_host
-from app.connectors.wazuh_indexer.services.alerts import get_alerts_by_rule
-from app.connectors.wazuh_indexer.services.alerts import get_alerts_by_rule_per_host
-from app.connectors.wazuh_indexer.services.alerts import get_host_alerts
-from app.connectors.wazuh_indexer.services.alerts import get_index_alerts
+from app.connectors.wazuh_indexer.schema.alerts import (
+    AlertsByHostResponse,
+    AlertsByRulePerHostResponse,
+    AlertsByRuleResponse,
+    AlertsSearchBody,
+    AlertsSearchResponse,
+    HostAlertsSearchBody,
+    HostAlertsSearchResponse,
+    IndexAlertsSearchBody,
+    IndexAlertsSearchResponse,
+)
+from app.connectors.wazuh_indexer.services.alerts import (
+    get_alerts,
+    get_alerts_by_host,
+    get_alerts_by_rule,
+    get_alerts_by_rule_per_host,
+    get_host_alerts,
+    get_index_alerts,
+)
 from app.connectors.wazuh_indexer.utils.universal import collect_indices
+from fastapi import APIRouter, Depends, HTTPException, Security
+from loguru import logger
 
 # App specific imports
 
@@ -41,7 +41,9 @@ async def get_index_names() -> List[str]:
     return indices.indices_list
 
 
-async def verify_index_name(index_alerts_search_body: IndexAlertsSearchBody) -> IndexAlertsSearchBody:
+async def verify_index_name(
+    index_alerts_search_body: IndexAlertsSearchBody,
+) -> IndexAlertsSearchBody:
     """
     Verifies if the given index name is managed by Wazuh Indexer or still exists.
 
@@ -92,7 +94,9 @@ async def get_all_alerts(alerts_search_body: AlertsSearchBody) -> AlertsSearchRe
     description="Get all alerts for a host",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_all_alerts_for_host(host_alerts_search_body: HostAlertsSearchBody) -> HostAlertsSearchResponse:
+async def get_all_alerts_for_host(
+    host_alerts_search_body: HostAlertsSearchBody,
+) -> HostAlertsSearchResponse:
     """
     Get all alerts for a specific host.
 
@@ -134,7 +138,9 @@ async def get_all_alerts_for_index(
     description="Get number of all alerts for all hosts",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_all_alerts_by_host(alerts_search_body: AlertsSearchBody) -> AlertsByHostResponse:
+async def get_all_alerts_by_host(
+    alerts_search_body: AlertsSearchBody,
+) -> AlertsByHostResponse:
     """
     Fetches the number of all alerts for all hosts.
 
@@ -154,7 +160,9 @@ async def get_all_alerts_by_host(alerts_search_body: AlertsSearchBody) -> Alerts
     description="Get number of all alerts for all rules",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_all_alerts_by_rule(alerts_search_body: AlertsSearchBody) -> AlertsByRuleResponse:
+async def get_all_alerts_by_rule(
+    alerts_search_body: AlertsSearchBody,
+) -> AlertsByRuleResponse:
     """
     Fetches the number of all alerts for all rules.
 
@@ -174,7 +182,9 @@ async def get_all_alerts_by_rule(alerts_search_body: AlertsSearchBody) -> Alerts
     description="Get number of all alerts for all rules per host",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_all_alerts_by_rule_per_host(alerts_search_body: AlertsSearchBody) -> AlertsByRulePerHostResponse:
+async def get_all_alerts_by_rule_per_host(
+    alerts_search_body: AlertsSearchBody,
+) -> AlertsByRulePerHostResponse:
     """
     Get number of all alerts for all rules per host
 

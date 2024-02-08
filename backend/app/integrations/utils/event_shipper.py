@@ -1,15 +1,15 @@
 import asyncio
-from typing import Any
-from typing import Dict
-
-from fastapi import HTTPException
-from loguru import logger
+from typing import Any, Dict
 
 from app.connectors.event_shipper.utils.universal import create_gelf_logger
 from app.connectors.utils import get_connector_info_from_db
 from app.db.db_session import get_db_session
-from app.integrations.utils.schema import EventShipperPayload
-from app.integrations.utils.schema import EventShipperPayloadResponse
+from app.integrations.utils.schema import (
+    EventShipperPayload,
+    EventShipperPayloadResponse,
+)
+from fastapi import HTTPException
+from loguru import logger
 
 
 async def get_gelf_logger():
@@ -18,7 +18,9 @@ async def get_gelf_logger():
         return gelf_logger
     except Exception as e:
         logger.error(f"Failed to initialize GelfLogger: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to initialize GelfLogger: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to initialize GelfLogger: {e}",
+        )
 
 
 async def event_shipper(message: EventShipperPayload) -> EventShipperPayloadResponse:
@@ -31,9 +33,13 @@ async def event_shipper(message: EventShipperPayload) -> EventShipperPayloadResp
         await gelf_logger.tcp_handler(message=message)
     except Exception as e:
         logger.error(f"Failed to send test message to log shipper: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to send test message to log shipper: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to send test message to log shipper: {e}",
+        )
 
-    return EventShipperPayloadResponse(success=True, message="Successfully sent test message to log shipper.")
+    return EventShipperPayloadResponse(
+        success=True, message="Successfully sent test message to log shipper.",
+    )
 
 
 async def verify_event_shipper_healtcheck(attributes: Dict[str, Any]) -> Dict[str, Any]:
@@ -43,17 +49,29 @@ async def verify_event_shipper_healtcheck(attributes: Dict[str, Any]) -> Dict[st
     Returns:
         dict: A dictionary containing 'connectionSuccessful' status.
     """
-    logger.info(f"Verifying the event shipper connection to {attributes['connector_url']}")
+    logger.info(
+        f"Verifying the event shipper connection to {attributes['connector_url']}",
+    )
 
     # MAke a TCP connection to the Graylog Input
     try:
-        reader, writer = await asyncio.open_connection(attributes["connector_url"], attributes["connector_extra_data"])
+        reader, writer = await asyncio.open_connection(
+            attributes["connector_url"], attributes["connector_extra_data"],
+        )
         writer.close()
         await writer.wait_closed()
-        return {"connectionSuccessful": True, "message": "Event shipper healthcheck successful"}
+        return {
+            "connectionSuccessful": True,
+            "message": "Event shipper healthcheck successful",
+        }
     except Exception as e:
-        logger.error(f"Connection to {attributes['connector_url']} failed with error: {e}")
-        return {"connectionSuccessful": False, "message": f"Connection to {attributes['connector_url']} failed"}
+        logger.error(
+            f"Connection to {attributes['connector_url']} failed with error: {e}",
+        )
+        return {
+            "connectionSuccessful": False,
+            "message": f"Connection to {attributes['connector_url']} failed",
+        }
 
 
 async def verify_event_shipper_connection(connector_name: str) -> str:

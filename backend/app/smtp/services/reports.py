@@ -6,8 +6,7 @@ from email.mime.text import MIMEText
 from typing import List
 
 from app.services.smtp.create_report import create_alerts_report_pdf
-from app.services.smtp.universal import EmailTemplate
-from app.services.smtp.universal import UniversalEmailCredentials
+from app.services.smtp.universal import EmailTemplate, UniversalEmailCredentials
 
 # ! SEND REPORT
 
@@ -77,7 +76,9 @@ class EmailReportSender:
                 part = MIMEBase("application", "octet-stream")
                 part.set_payload(attachment_file.read())
                 encoders.encode_base64(part)
-                part.add_header("Content-Disposition", f"attachment; filename= {filename}")
+                part.add_header(
+                    "Content-Disposition", f"attachment; filename= {filename}",
+                )
                 msg.attach(part)
         return msg
 
@@ -107,7 +108,9 @@ class EmailReportSender:
             return {"message": credentials["error"], "success": False}
 
         # Send the email
-        with smtplib.SMTP(credentials["smtp_server"], credentials["smtp_port"]) as server:
+        with smtplib.SMTP(
+            credentials["smtp_server"], credentials["smtp_port"],
+        ) as server:
             server.starttls()
             server.login(credentials["email"], credentials["password"])
             text = msg.as_string()

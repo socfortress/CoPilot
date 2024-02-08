@@ -1,15 +1,15 @@
-from fastapi import APIRouter
-from fastapi import Depends
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.db.db_session import get_db
 from app.integrations.mimecast.schema.mimecast import MimecastScheduledResponse
-from app.integrations.mimecast.schema.provision import ProvisionMimecastRequest
-from app.integrations.mimecast.schema.provision import ProvisionMimecastResponse
+from app.integrations.mimecast.schema.provision import (
+    ProvisionMimecastRequest,
+    ProvisionMimecastResponse,
+)
 from app.integrations.mimecast.services.provision import provision_mimecast
 from app.integrations.utils.utils import get_customer_integration_response
 from app.schedulers.models.scheduler import CreateSchedulerRequest
 from app.schedulers.scheduler import add_scheduler_jobs
+from fastapi import APIRouter, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
 
 integration_mimecast_scheduler_router = APIRouter()
 
@@ -34,7 +34,9 @@ async def provision_mimecast_route(
         ProvisionMimecastResponse: The response object indicating the success or failure of the provisioning process.
     """
     # Check if the customer integration settings are available and can be provisioned
-    await get_customer_integration_response(provision_mimecast_request.customer_code, session)
+    await get_customer_integration_response(
+        provision_mimecast_request.customer_code, session,
+    )
     await provision_mimecast(provision_mimecast_request, session)
     await add_scheduler_jobs(
         CreateSchedulerRequest(
@@ -50,14 +52,18 @@ async def provision_mimecast_route(
             job_id="invoke_mimecast_integration",
         ),
     )
-    return ProvisionMimecastResponse(success=True, message="Mimecast integration provisioned.")
+    return ProvisionMimecastResponse(
+        success=True, message="Mimecast integration provisioned.",
+    )
 
 
 @integration_mimecast_scheduler_router.post(
     "/invoke/scheduler/siem",
     description="Invoke a mimecast integration.",
 )
-async def invoke_mimecast_siem_schedule_create(time_interval: int) -> MimecastScheduledResponse:
+async def invoke_mimecast_siem_schedule_create(
+    time_interval: int,
+) -> MimecastScheduledResponse:
     """
     Invoke a mimecast integration and schedule it based on the specified time interval.
 
@@ -74,14 +80,18 @@ async def invoke_mimecast_siem_schedule_create(time_interval: int) -> MimecastSc
             job_id="invoke_mimecast_integration",
         ),
     )
-    return MimecastScheduledResponse(success=True, message="Mimecast integration scheduled.")
+    return MimecastScheduledResponse(
+        success=True, message="Mimecast integration scheduled.",
+    )
 
 
 @integration_mimecast_scheduler_router.post(
     "/invoke/scheduler/ttp",
     description="Invoke a mimecast integration.",
 )
-async def invoke_mimecast_ttp_schedule_create(time_interval: int) -> MimecastScheduledResponse:
+async def invoke_mimecast_ttp_schedule_create(
+    time_interval: int,
+) -> MimecastScheduledResponse:
     """
     Invoke a Mimecast integration with a specified time interval.
 
@@ -98,4 +108,6 @@ async def invoke_mimecast_ttp_schedule_create(time_interval: int) -> MimecastSch
             job_id="invoke_mimecast_integration",
         ),
     )
-    return MimecastScheduledResponse(success=True, message="Mimecast integration scheduled.")
+    return MimecastScheduledResponse(
+        success=True, message="Mimecast integration scheduled.",
+    )

@@ -1,8 +1,6 @@
-from typing import List
-from typing import Optional
+from typing import List, Optional
 
-from pydantic import BaseModel
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 
 # ! INDEX SETS ! #
@@ -87,7 +85,9 @@ class GraylogIndexSetData(BaseModel):
     retention_strategy: RetentionStrategyConfig
     creation_date: str = Field(..., alias="creation_date")
     index_analyzer: str = Field(..., alias="index_analyzer")
-    index_optimization_max_num_segments: int = Field(..., alias="index_optimization_max_num_segments")
+    index_optimization_max_num_segments: int = Field(
+        ..., alias="index_optimization_max_num_segments",
+    )
     index_optimization_disabled: bool = Field(..., alias="index_optimization_disabled")
     field_type_refresh_interval: int = Field(..., alias="field_type_refresh_interval")
     index_template_type: Optional[str] = Field(None, alias="index_template_type")
@@ -115,8 +115,12 @@ class WazuhEventStream(BaseModel):
     index_set_id: str = Field(..., description="ID of the associated index set")
     rules: List[StreamRule] = Field(..., description="List of rules for the stream")
     matching_type: str = Field(..., description="Matching type for the rules")
-    remove_matches_from_default_stream: bool = Field(..., description="Whether to remove matches from the default stream")
-    content_pack: Optional[str] = Field(None, description="Associated content pack, if any")
+    remove_matches_from_default_stream: bool = Field(
+        ..., description="Whether to remove matches from the default stream",
+    )
+    content_pack: Optional[str] = Field(
+        None, description="Associated content pack, if any",
+    )
 
     class Config:
         schema_extra = {
@@ -124,7 +128,14 @@ class WazuhEventStream(BaseModel):
                 "title": "WAZUH EVENTS CUSTOMERS - Example Company",
                 "description": "WAZUH EVENTS CUSTOMERS - Example Company",
                 "index_set_id": "12345",
-                "rules": [{"field": "agent_labels_customer", "type": 1, "inverted": False, "value": "ExampleCode"}],
+                "rules": [
+                    {
+                        "field": "agent_labels_customer",
+                        "type": 1,
+                        "inverted": False,
+                        "value": "ExampleCode",
+                    },
+                ],
                 "matching_type": "AND",
                 "remove_matches_from_default_stream": True,
                 "content_pack": None,
@@ -138,8 +149,12 @@ class Office365EventStream(BaseModel):
     index_set_id: str = Field(..., description="ID of the associated index set")
     rules: List[StreamRule] = Field(..., description="List of rules for the stream")
     matching_type: str = Field(..., description="Matching type for the rules")
-    remove_matches_from_default_stream: bool = Field(..., description="Whether to remove matches from the default stream")
-    content_pack: Optional[str] = Field(None, description="Associated content pack, if any")
+    remove_matches_from_default_stream: bool = Field(
+        ..., description="Whether to remove matches from the default stream",
+    )
+    content_pack: Optional[str] = Field(
+        None, description="Associated content pack, if any",
+    )
 
     class Config:
         schema_extra = {
@@ -148,8 +163,18 @@ class Office365EventStream(BaseModel):
                 "description": "Office365 EVENTS - Example Company",
                 "index_set_id": "12345",
                 "rules": [
-                    {"field": "agent_labels_customer", "type": 1, "inverted": False, "value": "ExampleCode"},
-                    {"field": "agent_labels_integration", "type": 1, "inverted": False, "value": "Office365"},
+                    {
+                        "field": "agent_labels_customer",
+                        "type": 1,
+                        "inverted": False,
+                        "value": "ExampleCode",
+                    },
+                    {
+                        "field": "agent_labels_integration",
+                        "type": 1,
+                        "inverted": False,
+                        "value": "Office365",
+                    },
                 ],
                 "matching_type": "AND",
                 "remove_matches_from_default_stream": True,
@@ -165,20 +190,28 @@ class StreamData(BaseModel):
 class StreamCreationResponse(BaseModel):
     data: StreamData
     success: bool = Field(..., description="Indicates if the request was successful")
-    message: str = Field(..., description="A message detailing the outcome of the request")
+    message: str = Field(
+        ..., description="A message detailing the outcome of the request",
+    )
 
 
 class StreamAndPipelineData(BaseModel):
     stream_id: str = Field(..., description="ID of the stream")
-    pipeline_ids: List[str] = Field(..., description="List of pipeline IDs connected to the stream")
+    pipeline_ids: List[str] = Field(
+        ..., description="List of pipeline IDs connected to the stream",
+    )
 
 
 class StreamConnectionToPipelineRequest(BaseModel):
     stream_id: str = Field(..., description="ID of the stream to connect")
-    pipeline_ids: List[str] = Field(..., description="List of pipeline IDs to connect to the stream")
+    pipeline_ids: List[str] = Field(
+        ..., description="List of pipeline IDs to connect to the stream",
+    )
 
 
 class StreamConnectionToPipelineResponse(BaseModel):
     data: StreamAndPipelineData
     success: bool = Field(..., description="Indicates if the request was successful")
-    message: str = Field(..., description="A message detailing the outcome of the request")
+    message: str = Field(
+        ..., description="A message detailing the outcome of the request",
+    )

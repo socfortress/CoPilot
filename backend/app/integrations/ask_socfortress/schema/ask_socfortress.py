@@ -1,9 +1,10 @@
-from pydantic import BaseModel
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 
 class AskSocfortressRequest(BaseModel):
-    index_name: str = Field(..., description="The name of the index to search alerts for.")
+    index_name: str = Field(
+        ..., description="The name of the index to search alerts for.",
+    )
     alert_id: str = Field(..., description="The alert id.")
 
 

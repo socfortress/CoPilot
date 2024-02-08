@@ -1,9 +1,6 @@
-from typing import Dict
-from typing import List
-from typing import Optional
+from typing import Dict, List, Optional
 
-from pydantic import BaseModel
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 
 class CustomAttributes(BaseModel):
@@ -44,7 +41,10 @@ class NotesResponse(BaseModel):
 
 class NotesQueryParams(BaseModel):
     case_id: int
-    search_term: Optional[str] = Field("%", description="Search term to filter notes by. Defaults to wildcard search (%).")
+    search_term: Optional[str] = Field(
+        "%",
+        description="Search term to filter notes by. Defaults to wildcard search (%).",
+    )
 
 
 class NoteCreationBody(BaseModel):

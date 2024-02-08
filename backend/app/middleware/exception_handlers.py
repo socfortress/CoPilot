@@ -1,15 +1,10 @@
-from fastapi import HTTPException
-from fastapi import Request
+from app.auth.utils import AuthHandler
+from app.db.db_session import async_engine  # Make sure to import the async engine
+from app.utils import ErrorType, Logger, ValidationErrorItem, ValidationErrorResponse
+from fastapi import HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.auth.utils import AuthHandler
-from app.db.db_session import async_engine  # Make sure to import the async engine
-from app.utils import ErrorType
-from app.utils import Logger
-from app.utils import ValidationErrorItem
-from app.utils import ValidationErrorResponse
 
 
 # Utility function to get user_id from request

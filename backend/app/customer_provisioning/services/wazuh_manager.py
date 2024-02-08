@@ -1,8 +1,6 @@
 from pathlib import Path
 from typing import List
 
-from loguru import logger
-
 from app.connectors.wazuh_manager.utils.universal import (
     send_delete_request as send_wazuh_delete_request,
 )
@@ -17,6 +15,7 @@ from app.connectors.wazuh_manager.utils.universal import (
 )
 from app.customer_provisioning.schema.provision import ProvisionNewCustomer
 from app.customer_provisioning.schema.wazuh_manager import WazuhAgentsTemplatePaths
+from loguru import logger
 
 
 ######### ! WAZUH MANAGER PROVISIONING ! ############
@@ -63,9 +62,15 @@ async def create_wazuh_groups(request: ProvisionNewCustomer):
     Returns:
         None
     """
-    logger.info(f"Creating Wazuh groups for customer {request.customer_name} with code {request.customer_code}")
+    logger.info(
+        f"Creating Wazuh groups for customer {request.customer_name} with code {request.customer_code}",
+    )
 
-    wazuh_groups = ["Linux", "Windows", "Mac"]  # This list can be moved to a config file or a global variable
+    wazuh_groups = [
+        "Linux",
+        "Windows",
+        "Mac",
+    ]  # This list can be moved to a config file or a global variable
 
     for group in wazuh_groups:
         group_code = generate_group_code(group, request.customer_code)
@@ -116,7 +121,9 @@ async def configure_wazuh_group(group_code, template_path):
     group_config = config_template.replace("REPLACE", group_code.split("_")[-1])
 
     # Make the API request to update the group configuration
-    return await send_wazuh_put_request(endpoint=f"groups/{group_code}/configuration", data=group_config, xml_data=True)
+    return await send_wazuh_put_request(
+        endpoint=f"groups/{group_code}/configuration", data=group_config, xml_data=True,
+    )
 
 
 # Function to apply configurations for all groups
@@ -134,7 +141,9 @@ async def apply_group_configurations(request: ProvisionNewCustomer):
         Exception: If there is an error configuring a group.
 
     """
-    logger.info(f"Applying configurations for Wazuh groups for customer {request.customer_name} with code {request.customer_code}")
+    logger.info(
+        f"Applying configurations for Wazuh groups for customer {request.customer_name} with code {request.customer_code}",
+    )
 
     group_templates = {
         "Linux": WazuhAgentsTemplatePaths.LINUX_AGENT,
@@ -166,7 +175,9 @@ async def get_agent_ids(group_code: str) -> List[str]:
 
     """
     try:
-        response = await send_wazuh_get_request(endpoint="agents", params={"group": group_code})
+        response = await send_wazuh_get_request(
+            endpoint="agents", params={"group": group_code},
+        )
         logger.info(f"Response for {group_code}: {response}")
 
         # Extracting agents from the nested response

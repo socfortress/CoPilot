@@ -1,23 +1,23 @@
-from typing import Any
-from typing import Dict
-from typing import Optional
+from typing import Any, Dict, Optional
 
 import requests
+from app.connectors.utils import get_connector_info_from_db
+from app.db.db_session import AsyncSessionLocal, get_db_session
 from loguru import logger
 
-from app.connectors.utils import get_connector_info_from_db
-from app.db.db_session import AsyncSessionLocal
-from app.db.db_session import get_db_session
 
-
-async def verify_wazuh_manager_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
+async def verify_wazuh_manager_credentials(
+    attributes: Dict[str, Any],
+) -> Dict[str, Any]:
     """
     Verifies the connection to Wazuh manager service.
 
     Returns:
         dict: A dictionary containing 'connectionSuccessful' status and 'authToken' if the connection is successful.
     """
-    logger.info(f"Verifying the wazuh-manager connection to {attributes['connector_url']}")
+    logger.info(
+        f"Verifying the wazuh-manager connection to {attributes['connector_url']}",
+    )
 
     try:
         wazuh_auth_token = requests.get(
@@ -31,15 +31,28 @@ async def verify_wazuh_manager_credentials(attributes: Dict[str, Any]) -> Dict[s
 
         if wazuh_auth_token.status_code == 200:
             logger.debug("Wazuh Authentication Token successful")
-            return {"connectionSuccessful": True, "message": "Wazuh Manager authentication successful"}
+            return {
+                "connectionSuccessful": True,
+                "message": "Wazuh Manager authentication successful",
+            }
         else:
-            logger.error(f"Connection to {attributes['connector_url']} failed with error: {wazuh_auth_token.text}")
+            logger.error(
+                f"Connection to {attributes['connector_url']} failed with error: {wazuh_auth_token.text}",
+            )
 
-            return {"connectionSuccessful": False, "message": f"Connection to {attributes['connector_url']} failed"}
+            return {
+                "connectionSuccessful": False,
+                "message": f"Connection to {attributes['connector_url']} failed",
+            }
     except Exception as e:
-        logger.error(f"Connection to {attributes['connector_url']} failed with error: {e}")
+        logger.error(
+            f"Connection to {attributes['connector_url']} failed with error: {e}",
+        )
 
-        return {"connectionSuccessful": False, "message": f"Connection to {attributes['connector_url']} failed with error."}
+        return {
+            "connectionSuccessful": False,
+            "message": f"Connection to {attributes['connector_url']} failed with error.",
+        }
 
 
 async def verify_wazuh_manager_connection(connector_name: str) -> str:
@@ -72,7 +85,9 @@ async def create_wazuh_manager_client(connector_name: str) -> str:
     if attributes is None:
         logger.error("No Wazuh Manager connector found in the database")
         return None
-    logger.info(f"Verifying the wazuh-manager connection to {attributes['connector_url']}")
+    logger.info(
+        f"Verifying the wazuh-manager connection to {attributes['connector_url']}",
+    )
     try:
         wazuh_auth_token = requests.get(
             f"{attributes['connector_url']}/security/user/authenticate",
@@ -90,16 +105,24 @@ async def create_wazuh_manager_client(connector_name: str) -> str:
 
             return {"Authorization": f"Bearer {wazuh_auth_token}"}
         else:
-            logger.error(f"Connection to {attributes['connector_url']} failed with error: {wazuh_auth_token.text}")
+            logger.error(
+                f"Connection to {attributes['connector_url']} failed with error: {wazuh_auth_token.text}",
+            )
 
             return None
     except Exception as e:
-        logger.error(f"Connection to {attributes['connector_url']} failed with error: {e}")
+        logger.error(
+            f"Connection to {attributes['connector_url']} failed with error: {e}",
+        )
 
         return None
 
 
-async def send_get_request(endpoint: str, params: Optional[Dict[str, Any]] = None, connector_name: str = "Wazuh-Manager") -> Dict[str, Any]:
+async def send_get_request(
+    endpoint: str,
+    params: Optional[Dict[str, Any]] = None,
+    connector_name: str = "Wazuh-Manager",
+) -> Dict[str, Any]:
     """
     Sends a GET request to the Wazuh Manager service.
 
@@ -130,7 +153,11 @@ async def send_get_request(endpoint: str, params: Optional[Dict[str, Any]] = Non
                 verify=False,
             )
             response.raise_for_status()
-            return {"data": response.text, "success": True, "message": "Successfully retrieved data"}
+            return {
+                "data": response.text,
+                "success": True,
+                "message": "Successfully retrieved data",
+            }
         response = requests.get(
             f"{attributes['connector_url']}/{endpoint}",
             headers=wazuh_manager_client,
@@ -138,13 +165,22 @@ async def send_get_request(endpoint: str, params: Optional[Dict[str, Any]] = Non
             verify=False,
         )
         response.raise_for_status()
-        return {"data": response.json(), "success": True, "message": "Successfully retrieved data"}
+        return {
+            "data": response.json(),
+            "success": True,
+            "message": "Successfully retrieved data",
+        }
     except Exception as e:
         logger.error(f"Failed to send GET request to {endpoint} with error: {e}")
-        return {"success": False, "message": f"Failed to send GET request to {endpoint} with error: {e}"}
+        return {
+            "success": False,
+            "message": f"Failed to send GET request to {endpoint} with error: {e}",
+        }
 
 
-async def send_post_request(endpoint: str, data: Dict[str, Any], connector_name: str = "Wazuh-Manager") -> Dict[str, Any]:
+async def send_post_request(
+    endpoint: str, data: Dict[str, Any], connector_name: str = "Wazuh-Manager",
+) -> Dict[str, Any]:
     """
     Sends a POST request to the Wazuh Manager service.
 
@@ -171,10 +207,17 @@ async def send_post_request(endpoint: str, data: Dict[str, Any], connector_name:
             verify=False,
         )
         response.raise_for_status()
-        return {"data": response.json(), "success": True, "message": "Successfully retrieved data"}
+        return {
+            "data": response.json(),
+            "success": True,
+            "message": "Successfully retrieved data",
+        }
     except Exception as e:
         logger.error(f"Failed to send POST request to {endpoint} with error: {e}")
-        return {"success": False, "message": f"Failed to send POST request to {endpoint} with error: {e}"}
+        return {
+            "success": False,
+            "message": f"Failed to send POST request to {endpoint} with error: {e}",
+        }
 
 
 async def send_put_request(
@@ -220,10 +263,17 @@ async def send_put_request(
             verify=False,
         )
         response.raise_for_status()
-        return {"data": response.json(), "success": True, "message": "Successfully retrieved data"}
+        return {
+            "data": response.json(),
+            "success": True,
+            "message": "Successfully retrieved data",
+        }
     except Exception as e:
         logger.error(f"Failed to send PUT request to {endpoint} with error: {e}")
-        return {"success": False, "message": f"Failed to send PUT request to {endpoint} with error: {e}"}
+        return {
+            "success": False,
+            "message": f"Failed to send PUT request to {endpoint} with error: {e}",
+        }
 
 
 async def send_delete_request(
@@ -257,10 +307,17 @@ async def send_delete_request(
             verify=False,
         )
         response.raise_for_status()
-        return {"data": response.json(), "success": True, "message": "Successfully deleted data"}
+        return {
+            "data": response.json(),
+            "success": True,
+            "message": "Successfully deleted data",
+        }
     except Exception as e:
         logger.error(f"Failed to send DELETE request to {endpoint} with error: {e}")
-        return {"success": False, "message": f"Failed to send DELETE request to {endpoint} with error: {e}"}
+        return {
+            "success": False,
+            "message": f"Failed to send DELETE request to {endpoint} with error: {e}",
+        }
 
 
 async def restart_service(connector_name: str = "Wazuh-Manager") -> Dict[str, Any]:
@@ -284,7 +341,14 @@ async def restart_service(connector_name: str = "Wazuh-Manager") -> Dict[str, An
             verify=False,
         )
         response.raise_for_status()
-        return {"data": response.json(), "success": True, "message": "Successfully restarted service"}
+        return {
+            "data": response.json(),
+            "success": True,
+            "message": "Successfully restarted service",
+        }
     except Exception as e:
         logger.error(f"Failed to restart Wazuh Manager service with error: {e}")
-        return {"success": False, "message": f"Failed to restart Wazuh Manager service with error: {e}"}
+        return {
+            "success": False,
+            "message": f"Failed to restart Wazuh Manager service with error: {e}",
+        }

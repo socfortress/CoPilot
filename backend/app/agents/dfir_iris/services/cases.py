@@ -1,10 +1,9 @@
 from typing import List
 
-from loguru import logger
-
 from app.agents.dfir_iris.schema.cases import AssetCaseIDResponse
 from app.connectors.dfir_iris.services.assets import get_case_assets
 from app.connectors.dfir_iris.services.cases import get_all_cases
+from loguru import logger
 
 
 async def collect_agent_soc_cases(agent_id: int) -> AssetCaseIDResponse:
@@ -22,7 +21,11 @@ async def collect_agent_soc_cases(agent_id: int) -> AssetCaseIDResponse:
     case_ids = await filter_cases_by_agent_id(all_cases, agent_id)
 
     logger.info(f"Found cases: {case_ids}")
-    return AssetCaseIDResponse(case_ids=case_ids, success=True, message="Successfully retrieved cases for agent")
+    return AssetCaseIDResponse(
+        case_ids=case_ids,
+        success=True,
+        message="Successfully retrieved cases for agent",
+    )
 
 
 async def filter_cases_by_agent_id(cases, agent_id: int) -> List[int]:
