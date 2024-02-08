@@ -1,6 +1,6 @@
-server.key
+#server.key
 server.csr
-server.crt
+#server.crt
 
 # Logs
 logs
