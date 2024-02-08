@@ -209,14 +209,14 @@ async def bookmark_alert(alert_id: str, bookmarked: bool) -> AlertResponse:
     )
 
 
-async def get_bookmarked_alerts() -> BookmarkedAlertsResponse:
+async def get_bookmarked_alerts(session: AsyncSession) -> BookmarkedAlertsResponse:
     """
     Retrieves the bookmarked alerts from the system.
 
     Returns:
         BookmarkedAlertsResponse: The response object containing the bookmarked alerts.
     """
-    alerts = await get_alerts(request=FilterAlertsRequest(per_page=10000))
+    alerts = await get_alerts(request=FilterAlertsRequest(per_page=10000), session=session)
     alerts = alerts.alerts
     bookmarked_alerts = []
     for alert in alerts:

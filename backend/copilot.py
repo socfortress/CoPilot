@@ -61,8 +61,11 @@ server_ip = os.getenv("SERVER_IP", "localhost")
 
 app = FastAPI(description="CoPilot API", version="0.1.0", title="CoPilot API")
 
+# Create an APIRouter with a prefix of `/api`
+api_router = APIRouter(prefix="/api")
 
-# Allow all origins, methods and headers
+
+#Allow all origins, methods and headers
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -81,8 +84,6 @@ app.add_exception_handler(HTTPException, custom_http_exception_handler)
 app.add_exception_handler(RequestValidationError, validation_exception_handler)
 app.add_exception_handler(ValueError, value_error_handler)
 
-# Step 1: Create an APIRouter with a prefix of `/api`
-api_router = APIRouter(prefix="/api")
 
 ################## ! INCLUDE ROUTES ! ##################
 api_router.include_router(connectors.router)
@@ -152,5 +153,4 @@ async def shutdown_scheduler():
 
 
 if __name__ == "__main__":
-    logger.info(f"Starting server at {server_ip}:5000")
     uvicorn.run(app, host=server_ip, port=5000)

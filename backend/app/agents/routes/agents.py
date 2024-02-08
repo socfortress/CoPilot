@@ -347,7 +347,7 @@ async def get_agent_vulnerabilities(agent_id: str) -> WazuhAgentVulnerabilitiesR
     description="Get SOC cases for agent",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_agent_soc_cases(agent_id: str):
+async def get_agent_soc_cases(agent_id: str, session: AsyncSession = Depends(get_db)):
     """
     Fetches the SOC cases of a specific agent.
 
@@ -358,7 +358,7 @@ async def get_agent_soc_cases(agent_id: str):
         SocCasesResponse: The response containing the agent SOC cases.
     """
     logger.info(f"Fetching agent {agent_id} SOC cases")
-    return await collect_agent_soc_cases(agent_id)
+    return await collect_agent_soc_cases(agent_id, session)
 
 
 @agents_router.get(
