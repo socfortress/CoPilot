@@ -1,3 +1,7 @@
+server.key
+server.csr
+server.crt
+
 # Logs
 logs
 !frontend/src/components/logs
