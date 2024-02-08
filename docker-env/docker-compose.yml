@@ -4,16 +4,20 @@ services:
     copilot-backend:
         container_name: copilot-backend
         image: ghcr.io/socfortress/copilot-backend:latest
-        # ports:
-        #     - 5000:5000
+        ports:
+            - 5000:5000
         volumes:
             - ./copilot-backend-data/logs:/opt/logs
+            # Mount the copilot.db file to persist the database
+            - ../backend/data:/opt/copilot/backend/data
+        env_file: ../backend/.env
         environment:
-            SERVER_IP: 0.0.0.0
-            VITE_API_URL: ${VITE_API_URL}
-            VITE_TOKEN_DEBOUNCE_TIME: ${VITE_TOKEN_DEBOUNCE_TIME}
-            VITE_UNCOMMITTED_JOURNAL_ENTRIES_THRESHOLD: ${VITE_UNCOMMITTED_JOURNAL_ENTRIES_THRESHOLD}
-            VITE_HEALTHCHECKS_INTERVAL: ${VITE_HEALTHCHECKS_INTERVAL}
+            HELLOMESSAGE: ${HELLOMESSAGE}
+            SERVER_IP: ${SERVER_IP}
+            # VITE_API_URL: ${VITE_API_URL}
+            # VITE_TOKEN_DEBOUNCE_TIME: ${VITE_TOKEN_DEBOUNCE_TIME}
+            # VITE_UNCOMMITTED_JOURNAL_ENTRIES_THRESHOLD: ${VITE_UNCOMMITTED_JOURNAL_ENTRIES_THRESHOLD}
+            # VITE_HEALTHCHECKS_INTERVAL: ${VITE_HEALTHCHECKS_INTERVAL}
             WAZUH_INDEXER_URL: ${WAZUH_INDEXER_URL}
             WAZUH_INDEXER_USERNAME: ${WAZUH_INDEXER_USERNAME}
             WAZUH_INDEXER_PASSWORD: ${WAZUH_INDEXER_PASSWORD}
@@ -48,6 +52,12 @@ services:
     copilot-frontend:
         container_name: copilot-frontend
         image: ghcr.io/socfortress/copilot-frontend:latest
+        env_file: ../frontend/.env
+        environment:
+            VITE_API_URL: http://localhost:80/api
+            VITE_TOKEN_DEBOUNCE_TIME: ${VITE_TOKEN_DEBOUNCE_TIME}
+            VITE_UNCOMMITTED_JOURNAL_ENTRIES_THRESHOLD: ${VITE_UNCOMMITTED_JOURNAL_ENTRIES_THRESHOLD}
+            VITE_HEALTHCHECKS_INTERVAL: ${VITE_HEALTHCHECKS_INTERVAL}
 
     copilot-nginx:
         image: nginx

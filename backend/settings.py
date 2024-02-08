@@ -12,7 +12,9 @@ from loguru import logger
 
 env = Env()
 env.read_env(Path(__file__).parent.parent / ".env")
+#env.read_env(Path(__file__).parent.parent.parent / "docker-env" / ".env")
 logger.info(f"Loading environment from {Path(__file__).parent.parent / '.env'}")
+#logger.info(f"Loading environment from {Path(__file__).parent.parent.parent / 'docker-env' / '.env'}")
 
 
 basedir = Path().absolute()

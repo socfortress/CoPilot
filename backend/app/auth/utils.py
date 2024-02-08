@@ -98,10 +98,14 @@ class AuthHandler:
                               otherwise False.
         """
         user = await find_user(username)
-        if not user or not self.verify_password(password, user.password):
-            logger.info("Password is not verified")
+        try:
+            if not user or not self.verify_password(password, user.password):
+                logger.info("Password is not verified")
+                return False
+            return user
+        except Exception as e:
+            logger.error(f"Error: {e}")
             return False
-        return user
 
     # ! New with Async
     async def encode_token(self, username: str, access_token_expires: timedelta = timedelta(hours=24)):

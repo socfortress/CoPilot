@@ -41,6 +41,7 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
         dict: A dictionary containing the access token and token type.
     """
     # user = auth_handler.authenticate_user(form_data.username, form_data.password)
+
     user = await auth_handler.authenticate_user(form_data.username, form_data.password)
     if not user:
         raise HTTPException(
@@ -50,6 +51,7 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
         )
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = await auth_handler.encode_token(user.username, access_token_expires)
+    logger.info(f"Access token: {access_token}")
     return {"access_token": access_token, "token_type": "bearer"}
 
 

@@ -35,10 +35,14 @@ async def find_user(name: str):
     Returns:
         User: The user object if found, None otherwise.
     """
-    async with AsyncSession(async_engine) as session:
-        statement = select(User).where(User.username == name)
-        result = await session.execute(statement)
-        return result.scalars().first()
+    try:
+        async with AsyncSession(async_engine) as session:
+            statement = select(User).where(User.username == name)
+            result = await session.execute(statement)
+            return result.scalars().first()
+    except Exception as e:
+        logger.error(f"Error: {e}")
+        return None
 
 
 async def get_role(name: str):

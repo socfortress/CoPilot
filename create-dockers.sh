@@ -36,8 +36,6 @@ function build_frontend() {
   echo ""
   echo "Build frontend (version=${version})"
   cd $currDir/frontend
-  npm i
-  npm run build-only
   docker build . -t copilot/copilot-frontend:${version}
 }
 
@@ -46,7 +44,7 @@ function build_frontend() {
 echo "Copilot Docker"
 echo "Version: ${version}"
 
-prepareNvm
+#prepareNvm
 build_backend
 build_frontend
 
