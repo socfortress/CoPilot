@@ -11,7 +11,8 @@ class CustomerRequestBody(BaseModel):
     contact_first_name: str = Field(..., description="First name of the contact person")
 
     parent_customer_code: Optional[str] = Field(
-        None, description="Code for the parent customer",
+        None,
+        description="Code for the parent customer",
     )
     phone: Optional[str] = Field(None, description="Phone number")
     address_line1: Optional[str] = Field(None, description="First line of the address")
@@ -59,28 +60,36 @@ class CustomersResponse(BaseModel):
 ############# Customer Meta
 class CustomerMetaRequestBody(BaseModel):
     customer_meta_graylog_index: str = Field(
-        ..., description="Graylog index for the customer",
+        ...,
+        description="Graylog index for the customer",
     )
     customer_meta_graylog_stream: str = Field(
-        ..., description="Graylog stream for the customer",
+        ...,
+        description="Graylog stream for the customer",
     )
     customer_meta_grafana_org_id: str = Field(
-        ..., description="Grafana organization for the customer",
+        ...,
+        description="Grafana organization for the customer",
     )
     customer_meta_wazuh_group: str = Field(
-        ..., description="Wazuh group for the customer",
+        ...,
+        description="Wazuh group for the customer",
     )
     customer_meta_index_retention: str = Field(
-        ..., description="Index retention for the customer",
+        ...,
+        description="Index retention for the customer",
     )
     customer_meta_wazuh_registration_port: str = Field(
-        ..., description="Wazuh registration port for the customer",
+        ...,
+        description="Wazuh registration port for the customer",
     )
     customer_meta_wazuh_log_ingestion_port: str = Field(
-        ..., description="Wazuh log ingestion port for the customer",
+        ...,
+        description="Wazuh log ingestion port for the customer",
     )
     customer_meta_wazuh_auth_password: str = Field(
-        ..., description="Wazuh auth password for the customer",
+        ...,
+        description="Wazuh auth password for the customer",
     )
 
     class Config:

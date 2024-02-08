@@ -42,10 +42,12 @@ class MimecastEventStream(BaseModel):
     rules: List[StreamRule] = Field(..., description="List of rules for the stream")
     matching_type: str = Field(..., description="Matching type for the rules")
     remove_matches_from_default_stream: bool = Field(
-        ..., description="Whether to remove matches from the default stream",
+        ...,
+        description="Whether to remove matches from the default stream",
     )
     content_pack: Optional[str] = Field(
-        None, description="Associated content pack, if any",
+        None,
+        description="Associated content pack, if any",
     )
 
     class Config:

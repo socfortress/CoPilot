@@ -59,7 +59,8 @@ class ProvisionMonitoringAlertRequest(BaseModel):
     def validate_non_zero(cls, v):
         if v == 0:
             raise HTTPException(
-                status_code=400, detail=f"Invalid value: {v}. Must be greater than 0.",
+                status_code=400,
+                detail=f"Invalid value: {v}. Must be greater than 0.",
             )
         return v
 

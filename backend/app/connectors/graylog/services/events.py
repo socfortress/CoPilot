@@ -30,7 +30,8 @@ async def get_event_definitions() -> GraylogEventDefinitionsResponse:
             ]
         except KeyError:
             raise HTTPException(
-                status_code=500, detail="Failed to collect event definitions key",
+                status_code=500,
+                detail="Failed to collect event definitions key",
             )
 
         # Convert the dictionary to a list of GraylogIndexItem
@@ -67,7 +68,8 @@ async def get_alerts(alert_query: AlertQuery) -> GraylogAlertsResponse:
     """
     logger.info("Getting alerts from Graylog")
     response = await send_post_request(
-        endpoint="/api/events/search", data=alert_query.dict(),
+        endpoint="/api/events/search",
+        data=alert_query.dict(),
     )
 
     if response["success"]:
@@ -92,12 +94,16 @@ async def get_alerts(alert_query: AlertQuery) -> GraylogAlertsResponse:
 
         # Build the final GraylogAlertsResponse
         final_response = GraylogAlertsResponse(
-            alerts=alerts, message="Successfully collected alerts", success=True,
+            alerts=alerts,
+            message="Successfully collected alerts",
+            success=True,
         )
 
         logger.info(f"Events collected: {event_objects}")
         return final_response
     else:
         return GraylogAlertsResponse(
-            alerts=Alerts(events=[]), success=False, message="Failed to collect alerts",
+            alerts=Alerts(events=[]),
+            success=False,
+            message="Failed to collect alerts",
         )

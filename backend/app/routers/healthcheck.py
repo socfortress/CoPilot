@@ -6,5 +6,7 @@ router = APIRouter()
 
 # Include the Healthcheck related routes
 router.include_router(
-    healtcheck_agents_router, prefix="/healthcheck", tags=["healthcheck agents"],
+    healtcheck_agents_router,
+    prefix="/healthcheck",
+    tags=["healthcheck agents"],
 )

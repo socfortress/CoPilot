@@ -107,7 +107,9 @@ async def get_agents(db: AsyncSession = Depends(get_db)) -> AgentsResponse:
         result = await db.execute(select(Agents))
         agents = result.scalars().all()
         return AgentsResponse(
-            agents=agents, success=True, message="Agents fetched successfully",
+            agents=agents,
+            success=True,
+            message="Agents fetched successfully",
         )
     except Exception as e:
         logger.error(f"Failed to fetch agents: {e}")
@@ -121,7 +123,8 @@ async def get_agents(db: AsyncSession = Depends(get_db)) -> AgentsResponse:
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_agent(
-    agent_id: str, db: AsyncSession = Depends(get_db),
+    agent_id: str,
+    db: AsyncSession = Depends(get_db),
 ) -> AgentsResponse:
     """
     Retrieve an agent by agent_id.
@@ -142,18 +145,22 @@ async def get_agent(
         agent = result.scalars().first()
         if agent:
             return AgentsResponse(
-                agents=[agent], success=True, message="Agent fetched successfully",
+                agents=[agent],
+                success=True,
+                message="Agent fetched successfully",
             )
         else:
             raise HTTPException(
-                status_code=404, detail=f"Agent with agent_id {agent_id} not found",
+                status_code=404,
+                detail=f"Agent with agent_id {agent_id} not found",
             )
     except Exception as e:
         logger.error(
             f"Failed to fetch agent: {agent_id} with error {e}. Does it exist?",
         )
         raise HTTPException(
-            status_code=500, detail=f"Failed to fetch agent: {agent_id}. Does it exist?",
+            status_code=500,
+            detail=f"Failed to fetch agent: {agent_id}. Does it exist?",
         )
 
 
@@ -164,7 +171,8 @@ async def get_agent(
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_agent_by_hostname(
-    hostname: str, db: AsyncSession = Depends(get_db),
+    hostname: str,
+    db: AsyncSession = Depends(get_db),
 ) -> AgentsResponse:
     """
     Retrieve an agent by its hostname.
@@ -185,11 +193,14 @@ async def get_agent_by_hostname(
         agent = result.scalars().first()
         if agent:
             return AgentsResponse(
-                agents=[agent], success=True, message="Agent fetched successfully",
+                agents=[agent],
+                success=True,
+                message="Agent fetched successfully",
             )
         else:
             raise HTTPException(
-                status_code=404, detail=f"Agent with hostname {hostname} not found",
+                status_code=404,
+                detail=f"Agent with hostname {hostname} not found",
             )
     except Exception as e:
         logger.error(f"Failed to fetch agent: {e}")
@@ -206,7 +217,8 @@ async def get_agent_by_hostname(
     ],
 )
 async def sync_all_agents(
-    backgroud_tasks: BackgroundTasks, session: AsyncSession = Depends(get_db),
+    backgroud_tasks: BackgroundTasks,
+    session: AsyncSession = Depends(get_db),
 ) -> SyncedAgentsResponse:
     """
     Sync all agents from Wazuh Manager.
@@ -225,7 +237,8 @@ async def sync_all_agents(
     logger.info("Syncing agents from Wazuh Manager")
     backgroud_tasks.add_task(sync_agents, session)
     return SyncedAgentsResponse(
-        success=True, message="Agents synced started successfully",
+        success=True,
+        message="Agents synced started successfully",
     )
 
 
@@ -236,7 +249,8 @@ async def sync_all_agents(
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def mark_agent_as_critical(
-    agent_id: str, session: AsyncSession = Depends(get_db),
+    agent_id: str,
+    session: AsyncSession = Depends(get_db),
 ) -> AgentModifyResponse:
     """
     Marks the specified agent as critical.
@@ -258,19 +272,22 @@ async def mark_agent_as_critical(
 
         if not agent:
             raise HTTPException(
-                status_code=404, detail=f"Agent with agent_id {agent_id} not found",
+                status_code=404,
+                detail=f"Agent with agent_id {agent_id} not found",
             )
 
         agent.critical_asset = True
         await session.commit()
 
         return AgentModifyResponse(
-            success=True, message=f"Agent {agent_id} marked as critical: {True}",
+            success=True,
+            message=f"Agent {agent_id} marked as critical: {True}",
         )
     except Exception as e:
         session.rollback()  # Roll back the session in case of error
         raise HTTPException(
-            status_code=500, detail=f"Failed to mark agent as critical: {str(e)}",
+            status_code=500,
+            detail=f"Failed to mark agent as critical: {str(e)}",
         )
 
 
@@ -281,7 +298,8 @@ async def mark_agent_as_critical(
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def mark_agent_as_not_critical(
-    agent_id: str, session: AsyncSession = Depends(get_db),
+    agent_id: str,
+    session: AsyncSession = Depends(get_db),
 ) -> AgentModifyResponse:
     """
     Marks the specified agent as not critical.
@@ -305,19 +323,22 @@ async def mark_agent_as_not_critical(
 
         if not agent:
             raise HTTPException(
-                status_code=404, detail=f"Agent with agent_id {agent_id} not found",
+                status_code=404,
+                detail=f"Agent with agent_id {agent_id} not found",
             )
 
         agent.critical_asset = False
         await session.commit()
 
         return AgentModifyResponse(
-            success=True, message=f"Agent {agent_id} marked as not critical",
+            success=True,
+            message=f"Agent {agent_id} marked as not critical",
         )
     except Exception as e:
         await session.rollback()  # Roll back the session in case of error
         raise HTTPException(
-            status_code=500, detail=f"Failed to mark agent as not critical: {str(e)}",
+            status_code=500,
+            detail=f"Failed to mark agent as not critical: {str(e)}",
         )
 
 
@@ -412,7 +433,8 @@ async def get_outdated_velociraptor_agents(
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def delete_agent(
-    agent_id: str, session: AsyncSession = Depends(get_db),
+    agent_id: str,
+    session: AsyncSession = Depends(get_db),
 ) -> AgentModifyResponse:
     """
     Delete an agent.
@@ -432,7 +454,8 @@ async def delete_agent(
         await delete_agent_velociraptor(client_id)
     await delete_agent_from_database(db=session, agent_id=agent_id)
     return AgentModifyResponse(
-        success=True, message=f"Agent {agent_id} deleted successfully",
+        success=True,
+        message=f"Agent {agent_id} deleted successfully",
     )
 
 

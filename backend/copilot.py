@@ -65,7 +65,7 @@ app = FastAPI(description="CoPilot API", version="0.1.0", title="CoPilot API")
 api_router = APIRouter(prefix="/api")
 
 
-#Allow all origins, methods and headers
+# Allow all origins, methods and headers
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

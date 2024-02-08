@@ -93,7 +93,8 @@ def get_function_by_name(function_name: str):
         # Add other function mappings here
     }
     return function_map.get(
-        function_name, lambda: ValueError(f"Function {function_name} not found"),
+        function_name,
+        lambda: ValueError(f"Function {function_name} not found"),
     )
 
 

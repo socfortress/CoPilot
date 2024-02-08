@@ -6,5 +6,7 @@ router = APIRouter()
 
 # Include the Wazuh Manager related routes
 router.include_router(
-    wazuh_manager_rules_router, prefix="/wazuh_manager", tags=["wazuh-manager"],
+    wazuh_manager_rules_router,
+    prefix="/wazuh_manager",
+    tags=["wazuh-manager"],
 )

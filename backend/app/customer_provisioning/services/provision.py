@@ -40,7 +40,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 # ! MAIN FUNCTION ! #
 async def provision_wazuh_customer(
-    request: ProvisionNewCustomer, session: AsyncSession,
+    request: ProvisionNewCustomer,
+    session: AsyncSession,
 ) -> CustomerProvisionResponse:
     """
     This function is the main function for provisioning a new customer for their Wazuh instance.
@@ -107,10 +108,14 @@ async def provision_wazuh_customer(
 
     customer_provision_meta = CustomerProvisionMeta(**provision_meta_data)
     customer_meta = await update_customer_meta_table(
-        request, customer_provision_meta, session,
+        request,
+        customer_provision_meta,
+        session,
     )
     await update_customer_alert_settings_table(
-        request, customer_provision_meta, session,
+        request,
+        customer_provision_meta,
+        session,
     )
 
     provision_worker = await provision_wazuh_worker(
@@ -218,7 +223,8 @@ async def update_customer_alert_settings_table(
 
 ######### ! Provision Wazuh Worker ! ############
 async def provision_wazuh_worker(
-    request: ProvisionWorkerRequest, session: AsyncSession,
+    request: ProvisionWorkerRequest,
+    session: AsyncSession,
 ) -> ProvisionWorkerResponse:
     """
     Provisions a Wazuh worker. https://github.com/socfortress/Customer-Provisioning-Worker
@@ -232,7 +238,9 @@ async def provision_wazuh_worker(
     """
     logger.info(f"Provisioning Wazuh worker {request}")
     api_endpoint = await get_connector_attribute(
-        connector_id=13, column_name="connector_url", session=session,
+        connector_id=13,
+        column_name="connector_url",
+        session=session,
     )
     # Send the POST request to the Wazuh worker
     response = requests.post(
@@ -242,9 +250,11 @@ async def provision_wazuh_worker(
     # Check the response status code
     if response.status_code != 200:
         return ProvisionWorkerResponse(
-            success=False, message=f"Failed to provision Wazuh worker: {response.text}",
+            success=False,
+            message=f"Failed to provision Wazuh worker: {response.text}",
         )
     # Return the response
     return ProvisionWorkerResponse(
-        success=True, message="Wazuh worker provisioned successfully",
+        success=True,
+        message="Wazuh worker provisioned successfully",
     )

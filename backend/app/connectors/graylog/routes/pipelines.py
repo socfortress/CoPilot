@@ -42,7 +42,8 @@ def create_rule_title_to_id_dict(pipeline_rules: List[PipelineRule]) -> Dict[str
 
 
 def transform_stages_with_rule_ids(
-    stages: List[Stage], rule_title_to_id: Dict[str, str],
+    stages: List[Stage],
+    rule_title_to_id: Dict[str, str],
 ) -> List[StageWithRuleID]:
     """
     Transforms a list of stages by adding corresponding rule IDs based on a dictionary mapping rule titles to IDs.
@@ -65,7 +66,8 @@ def transform_stages_with_rule_ids(
 
 
 def transform_pipeline_with_rule_ids(
-    pipeline: Pipeline, rule_title_to_id: Dict[str, str],
+    pipeline: Pipeline,
+    rule_title_to_id: Dict[str, str],
 ) -> PipelineWithRuleID:
     """
     Transforms a pipeline by replacing rule titles with rule IDs.

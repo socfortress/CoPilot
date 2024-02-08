@@ -25,13 +25,16 @@ class AgentModel(BaseModel):
 
 class ExtendedAgentModel(AgentModel):
     unhealthy_wazuh_agent: Optional[bool] = Field(
-        None, description="Whether the agent is unhealthy in Wazuh",
+        None,
+        description="Whether the agent is unhealthy in Wazuh",
     )
     unhealthy_velociraptor_agent: Optional[bool] = Field(
-        None, description="Whether the agent is unhealthy in Velociraptor",
+        None,
+        description="Whether the agent is unhealthy in Velociraptor",
     )
     unhealthy_recent_logs_collected: Optional[bool] = Field(
-        None, description="Whether the agent has not collected logs recently",
+        None,
+        description="Whether the agent has not collected logs recently",
     )
 
 
@@ -68,7 +71,8 @@ class Log(BaseModel):
     index_name: str
     total_logs: int
     logs: Optional[List[Dict[str, Any]]] = Field(
-        [], description="The logs returned from the search.",
+        [],
+        description="The logs returned from the search.",
     )
 
 
@@ -78,7 +82,8 @@ class LogsSearchBody(BaseModel):
     log_field: str = Field("syslog_level", description="The field to search logs in.")
     log_value: str = Field("INFO", description="The value to search logs for.")
     timestamp_field: str = Field(
-        "timestamp_utc", description="The timestamp field to search logs in.",
+        "timestamp_utc",
+        description="The timestamp field to search logs in.",
     )
 
     @validator("timerange")
@@ -111,13 +116,15 @@ class CollectLogsResponse(BaseModel):
 
 class HostLogsSearchBody(LogsSearchBody):
     agent_name: str = Field(
-        ..., description="The name of the agent to search logs for.",
+        ...,
+        description="The name of the agent to search logs for.",
     )
 
 
 class HostLogsSearchResponse(BaseModel):
     logs_summary: Optional[List[Log]] = Field(
-        [], description="The logs summary returned from the search.",
+        [],
+        description="The logs summary returned from the search.",
     )
     healthy: bool = Field(False, description="Whether the host is healthy or not.")
     success: bool

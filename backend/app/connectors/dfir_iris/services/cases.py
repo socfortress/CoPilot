@@ -122,14 +122,18 @@ async def get_all_cases(session: AsyncSession) -> CaseResponse:
         if not result["success"]:
             logger.error(f"Failed to get all cases: {result['message']}")
             raise HTTPException(
-                status_code=500, detail=f"Failed to get all cases: {result['message']}",
+                status_code=500,
+                detail=f"Failed to get all cases: {result['message']}",
             )
         for case in result["data"]:
             case["customer_code"] = await get_customer_code(
-                session, case["client_name"],
+                session,
+                case["client_name"],
             )
         return CaseResponse(
-            success=True, message="Successfully fetched all cases", cases=result["data"],
+            success=True,
+            message="Successfully fetched all cases",
+            cases=result["data"],
         )
     except Exception as err:
         logger.error(f"Failed to get all cases: {err}")
@@ -152,12 +156,14 @@ async def get_cases_older_than(
     if not result["success"]:
         logger.error(f"Failed to get all cases: {result['message']}")
         return HTTPException(
-            status_code=500, detail=f"Failed to get all cases: {result['message']}",
+            status_code=500,
+            detail=f"Failed to get all cases: {result['message']}",
         )
 
     open_cases = filter_open_cases(result["data"])
     breached_cases = filter_cases_older_than(
-        open_cases, case_older_than_body.older_than,
+        open_cases,
+        case_older_than_body.older_than,
     )
     return CasesBreachedResponse(
         success=True,
@@ -167,7 +173,8 @@ async def get_cases_older_than(
 
 
 async def get_single_case(
-    case_id: SingleCaseBody, session: AsyncSession,
+    case_id: SingleCaseBody,
+    session: AsyncSession,
 ) -> SingleCaseResponse:
     """
     Fetches a single case from DFIR-IRIS based on the provided case ID.
@@ -185,10 +192,13 @@ async def get_single_case(
     case = Case(session=dfir_iris_client)
     result = await fetch_and_parse_data(dfir_iris_client, case.get_case, case_id)
     result["data"]["customer_code"] = await get_customer_code(
-        session, result["data"]["customer_name"],
+        session,
+        result["data"]["customer_name"],
     )
     return SingleCaseResponse(
-        success=True, message="Successfully fetched single case", case=result["data"],
+        success=True,
+        message="Successfully fetched single case",
+        case=result["data"],
     )
 
 
@@ -210,7 +220,9 @@ async def close_case(case_id: SingleCaseBody) -> ClosedCaseResponse:
     case = Case(session=dfir_iris_client)
     result = await fetch_and_parse_data(dfir_iris_client, case.close_case, case_id)
     return ClosedCaseResponse(
-        success=True, case=result["data"], message="Successfully closed case",
+        success=True,
+        case=result["data"],
+        message="Successfully closed case",
     )
 
 
@@ -233,7 +245,9 @@ async def reopen_case(case_id: SingleCaseBody) -> ReopenedCaseResponse:
     result = await fetch_and_parse_data(dfir_iris_client, case.reopen_case, case_id)
     logger.info(f"Successfully opened case: {result}")
     return ReopenedCaseResponse(
-        success=True, case=result["data"], message="Successfully opened case",
+        success=True,
+        case=result["data"],
+        message="Successfully opened case",
     )
 
 
@@ -299,7 +313,8 @@ async def purge_case(client, case, case_id) -> PurgeCaseResponse:
         logger.info(f"Purging case: {case_id}")
         await fetch_and_parse_data(client, case.delete_case, case_id)
         return PurgeCaseResponse(
-            success=True, message=f"Successfully purged case {case_id}",
+            success=True,
+            message=f"Successfully purged case {case_id}",
         )
     except Exception as err:
         error_message = f"Failed to purge case {case_id}: {err}"

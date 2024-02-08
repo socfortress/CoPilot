@@ -27,7 +27,8 @@ async def get_messages(page_number: int) -> GraylogMessagesResponse:
     logger.info("Getting messages from Graylog")
     params = {"page": page_number}
     messages_collected = await send_get_request(
-        endpoint="/api/system/messages", params=params,
+        endpoint="/api/system/messages",
+        params=params,
     )
     try:
         if messages_collected["success"]:
@@ -50,13 +51,16 @@ async def get_messages(page_number: int) -> GraylogMessagesResponse:
     except KeyError as e:
         logger.error(f"Failed to collect messages key: {e}")
         raise HTTPException(
-            status_code=500, detail=f"Failed to collect messages key: {e}",
+            status_code=500,
+            detail=f"Failed to collect messages key: {e}",
         )
     except Exception as e:
         logger.error(f"Failed to collect messages: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to collect messages: {e}")
     return GraylogMessagesResponse(
-        graylog_messages=[], success=False, message="Failed to collect messages",
+        graylog_messages=[],
+        success=False,
+        message="Failed to collect messages",
     )
 
 
@@ -151,7 +155,8 @@ async def get_metrics() -> GraylogMetricsResponse:
             )
     except KeyError as e:
         raise HTTPException(
-            status_code=500, detail=f"Failed to collect metrics key: {e}",
+            status_code=500,
+            detail=f"Failed to collect metrics key: {e}",
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to collect metrics: {e}")
@@ -184,11 +189,13 @@ async def get_event_notifications() -> GraylogEventNotificationsResponse:
             )
     except KeyError as e:
         raise HTTPException(
-            status_code=500, detail=f"Failed to collect event notifications key: {e}",
+            status_code=500,
+            detail=f"Failed to collect event notifications key: {e}",
         )
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Failed to collect event notifications: {e}",
+            status_code=500,
+            detail=f"Failed to collect event notifications: {e}",
         )
 
     return GraylogEventNotificationsResponse(

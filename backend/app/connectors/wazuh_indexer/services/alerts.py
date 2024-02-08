@@ -26,7 +26,8 @@ from loguru import logger
 
 
 async def collect_and_aggregate_alerts(
-    field_names: List[str], search_body: AlertsSearchBody,
+    field_names: List[str],
+    search_body: AlertsSearchBody,
 ) -> Dict[str, int]:
     """
     Collects and aggregates alerts based on the specified field names and search body.
@@ -75,7 +76,9 @@ async def collect_and_aggregate_alerts(
 
 
 async def collect_alerts_generic(
-    index_name: str, body: AlertsSearchBody, is_host_specific: bool = False,
+    index_name: str,
+    body: AlertsSearchBody,
+    is_host_specific: bool = False,
 ) -> CollectAlertsResponse:
     """
     Collects alerts from the specified index based on the provided search criteria.
@@ -96,7 +99,8 @@ async def collect_alerts_generic(
     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
     query_builder = AlertsQueryBuilder()
     query_builder.add_time_range(
-        timerange=body.timerange, timestamp_field=body.timestamp_field,
+        timerange=body.timerange,
+        timestamp_field=body.timestamp_field,
     )
     query_builder.add_matches(matches=[(body.alert_field, body.alert_value)])
     query_builder.add_sort(body.timestamp_field)
@@ -112,12 +116,15 @@ async def collect_alerts_generic(
         alerts_list = [alert for alert in alerts["hits"]["hits"]]
         logger.info(f"Alerts collected: {alerts_list}")
         return CollectAlertsResponse(
-            alerts=alerts_list, success=True, message="Alerts collected successfully",
+            alerts=alerts_list,
+            success=True,
+            message="Alerts collected successfully",
         )
     except Exception as e:
         logger.warning(f"An error occurred while collecting alerts: {e}")
         raise HTTPException(
-            status_code=500, detail=f"An error occurred while collecting alerts: {e}",
+            status_code=500,
+            detail=f"An error occurred while collecting alerts: {e}",
         )
 
 
@@ -149,7 +156,9 @@ async def get_alerts_generic(
     for index_name in index_list:
         try:
             alerts = await collect_alerts_generic(
-                index_name, body=search_body, is_host_specific=is_host_specific,
+                index_name,
+                body=search_body,
+                is_host_specific=is_host_specific,
             )
             if alerts.success and len(alerts.alerts) > 0:
                 alerts_summary.append(
@@ -249,7 +258,8 @@ async def get_alerts_by_host(search_body: AlertsSearchBody) -> AlertsByHostRespo
     aggregated_by_host = await collect_and_aggregate_alerts(["agent_name"], search_body)
     alerts_by_host_list: List[AlertsByHost] = [
         AlertsByHost(
-            agent_name=host[0], number_of_alerts=count,
+            agent_name=host[0],
+            number_of_alerts=count,
         )  # host[0] because host is now a tuple
         for host, count in aggregated_by_host.items()
     ]
@@ -272,11 +282,13 @@ async def get_alerts_by_rule(search_body: AlertsSearchBody) -> AlertsByRuleRespo
 
     """
     aggregated_by_rule = await collect_and_aggregate_alerts(
-        ["rule_description"], search_body,
+        ["rule_description"],
+        search_body,
     )
     alerts_by_rule_list: List[AlertsByRule] = [
         AlertsByRule(
-            rule=rule[0], number_of_alerts=count,
+            rule=rule[0],
+            number_of_alerts=count,
         )  # rule[0] because rule is now a tuple
         for rule, count in aggregated_by_rule.items()
     ]
@@ -301,7 +313,8 @@ async def get_alerts_by_rule_per_host(
 
     """
     aggregated_by_rule_per_host = await collect_and_aggregate_alerts(
-        ["agent_name", "rule_description"], search_body,
+        ["agent_name", "rule_description"],
+        search_body,
     )
     alerts_by_rule_per_host_list: List[AlertsByRulePerHost] = [
         AlertsByRulePerHost(agent_name=agent_name, rule=rule, number_of_alerts=count)

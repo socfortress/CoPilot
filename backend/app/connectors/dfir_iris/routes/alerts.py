@@ -18,7 +18,7 @@ from app.connectors.dfir_iris.services.alerts import (
 )
 from app.connectors.dfir_iris.utils.universal import check_alert_exists
 from app.db.db_session import get_db
-from fastapi import APIRouter, Depends, HTTPException, Security, Response
+from fastapi import APIRouter, Depends, HTTPException, Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -53,7 +53,9 @@ dfir_iris_alerts_router = APIRouter()
     description="Get all bookmarked alerts",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_all_bookmarked_alerts(session: AsyncSession = Depends(get_db),) -> BookmarkedAlertsResponse:
+async def get_all_bookmarked_alerts(
+    session: AsyncSession = Depends(get_db),
+) -> BookmarkedAlertsResponse:
     """
     Fetches all bookmarked alerts.
 
@@ -71,7 +73,8 @@ async def get_all_bookmarked_alerts(session: AsyncSession = Depends(get_db),) ->
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_alerts_filtered(
-    request: FilterAlertsRequest, session: AsyncSession = Depends(get_db),
+    request: FilterAlertsRequest,
+    session: AsyncSession = Depends(get_db),
 ) -> AlertsResponse:
     """
     Retrieve alerts from DFIR-IRIS based on the provided filters.

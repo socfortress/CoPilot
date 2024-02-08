@@ -19,7 +19,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def decomission_wazuh_customer(
-    customer_meta: CustomersMeta, session: AsyncSession,
+    customer_meta: CustomersMeta,
+    session: AsyncSession,
 ) -> DecommissionCustomerResponse:
     """
     Decommissions a Wazuh customer by performing the following steps:
@@ -89,7 +90,8 @@ async def decomission_wazuh_customer(
 
 ######### ! Decommission Wazuh Worker ! ############
 async def decommission_wazuh_worker(
-    request: DecommissionWorkerRequest, session: AsyncSession,
+    request: DecommissionWorkerRequest,
+    session: AsyncSession,
 ) -> DecommissionWorkerResponse:
     """
     Decomissions a Wazuh worker. https://github.com/socfortress/Customer-Provisioning-Worker
@@ -103,7 +105,9 @@ async def decommission_wazuh_worker(
     """
     logger.info(f"Decommissioning Wazuh worker {request}")
     api_endpoint = await get_connector_attribute(
-        connector_id=13, column_name="connector_url", session=session,
+        connector_id=13,
+        column_name="connector_url",
+        session=session,
     )
     # Send the POST request to the Wazuh worker
     response = requests.post(
@@ -113,9 +117,11 @@ async def decommission_wazuh_worker(
     # Check the response status code
     if response.status_code != 200:
         return DecommissionWorkerResponse(
-            success=False, message=f"Failed to provision Wazuh worker: {response.text}",
+            success=False,
+            message=f"Failed to provision Wazuh worker: {response.text}",
         )
     # Return the response
     return DecommissionWorkerResponse(
-        success=True, message="Wazuh worker provisioned successfully",
+        success=True,
+        message="Wazuh worker provisioned successfully",
     )

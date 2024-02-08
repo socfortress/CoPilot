@@ -17,7 +17,8 @@ def delete_agent_db(agent_id: str):
     agent = session.query(Agents).filter(Agents.agent_id == agent_id).first()
     if not agent:
         raise HTTPException(
-            status_code=404, detail=f"Agent with agent_id {agent_id} not found",
+            status_code=404,
+            detail=f"Agent with agent_id {agent_id} not found",
         )
     session.delete(agent)
     session.commit()
@@ -42,5 +43,6 @@ def delete_agent_wazuh(agent_id: str):
         return {"success": True, "message": f"Agent {agent_id} deleted from Wazuh"}
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Failed to delete agent {agent_id} from Wazuh: {e}",
+            status_code=500,
+            detail=f"Failed to delete agent {agent_id} from Wazuh: {e}",
         )

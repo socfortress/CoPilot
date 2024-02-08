@@ -33,7 +33,9 @@ async def send_get_request(
 
 
 async def send_post_request(
-    endpoint: str, data: Dict[str, Any], headers: Optional[Dict[str, Any]] = None,
+    endpoint: str,
+    data: Dict[str, Any],
+    headers: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """
     Send a POST request to the given endpoint.

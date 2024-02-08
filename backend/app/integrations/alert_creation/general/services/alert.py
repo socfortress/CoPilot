@@ -42,7 +42,8 @@ def valid_ioc_fields() -> Set[str]:
 
 
 async def construct_alert_source_link(
-    alert_details: CreateAlertRequest, session: AsyncSession,
+    alert_details: CreateAlertRequest,
+    session: AsyncSession,
 ) -> str:
     """
     Construct the alert source link for the alert details.
@@ -68,7 +69,8 @@ async def construct_alert_source_link(
 
     grafana_url = (
         await get_customer_alert_settings(
-            customer_code=alert_details.agent_labels_customer, session=session,
+            customer_code=alert_details.agent_labels_customer,
+            session=session,
         )
     ).grafana_url
 
@@ -146,17 +148,20 @@ async def build_alert_context_payload(
     return IrisAlertContext(
         customer_iris_id=(
             await get_customer_alert_settings(
-                customer_code=alert_details.agent_labels_customer, session=session,
+                customer_code=alert_details.agent_labels_customer,
+                session=session,
             )
         ).iris_customer_id,
         customer_name=(
             await get_customer_alert_settings(
-                customer_code=alert_details.agent_labels_customer, session=session,
+                customer_code=alert_details.agent_labels_customer,
+                session=session,
             )
         ).customer_name,
         customer_cases_index=(
             await get_customer_alert_settings(
-                customer_code=alert_details.agent_labels_customer, session=session,
+                customer_code=alert_details.agent_labels_customer,
+                session=session,
             )
         ).iris_index,
         alert_id=alert_details.id,
@@ -201,11 +206,14 @@ async def build_alert_payload(
     """
     asset_payload = await build_asset_payload(agent_data, alert_details)
     context_payload = await build_alert_context_payload(
-        alert_details=alert_details, agent_data=agent_data, session=session,
+        alert_details=alert_details,
+        agent_data=agent_data,
+        session=session,
     )
     timefield = (
         await get_customer_alert_settings(
-            customer_code=alert_details.agent_labels_customer, session=session,
+            customer_code=alert_details.agent_labels_customer,
+            session=session,
         )
     ).timefield
     # Get the timefield value from the alert_details
@@ -217,7 +225,8 @@ async def build_alert_payload(
         return IrisAlertPayload(
             alert_title=alert_details.rule_description,
             alert_source_link=await construct_alert_source_link(
-                alert_details, session=session,
+                alert_details,
+                session=session,
             ),
             alert_description=alert_details.rule_description,
             alert_source="CoPilot",
@@ -226,7 +235,8 @@ async def build_alert_payload(
             alert_severity_id=5,
             alert_customer_id=(
                 await get_customer_alert_settings(
-                    customer_code=alert_details.agent_labels_customer, session=session,
+                    customer_code=alert_details.agent_labels_customer,
+                    session=session,
                 )
             ).iris_customer_id,
             alert_source_content=alert_details.to_dict(),
@@ -239,7 +249,8 @@ async def build_alert_payload(
         return IrisAlertPayload(
             alert_title=alert_details.rule_description,
             alert_source_link=await construct_alert_source_link(
-                alert_details, session=session,
+                alert_details,
+                session=session,
             ),
             alert_description=alert_details.rule_description,
             alert_source="SOCFORTRESS RULE",
@@ -248,7 +259,8 @@ async def build_alert_payload(
             alert_severity_id=5,
             alert_customer_id=(
                 await get_customer_alert_settings(
-                    customer_code=alert_details.agent_labels_customer, session=session,
+                    customer_code=alert_details.agent_labels_customer,
+                    session=session,
                 )
             ).iris_customer_id,
             alert_source_content=alert_details.to_dict(),
@@ -258,7 +270,8 @@ async def build_alert_payload(
 
 
 async def create_alert(
-    alert: CreateAlertRequest, session: AsyncSession,
+    alert: CreateAlertRequest,
+    session: AsyncSession,
 ) -> CreateAlertResponse:
     """
     Creates an alert in IRIS.
@@ -317,7 +330,8 @@ async def create_alert(
         )
     customer_name = (
         await get_customer_alert_settings(
-            customer_code=alert.agent_labels_customer, session=session,
+            customer_code=alert.agent_labels_customer,
+            session=session,
         )
     ).customer_name
     await send_to_shuffle(
@@ -335,7 +349,8 @@ async def create_alert(
         alert_id=alert_id,
         customer=(
             await get_customer_alert_settings(
-                customer_code=alert.agent_labels_customer, session=session,
+                customer_code=alert.agent_labels_customer,
+                session=session,
             )
         ).customer_name,
         alert_source_link=await construct_alert_source_link(alert, session=session),

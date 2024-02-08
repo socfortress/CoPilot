@@ -19,7 +19,8 @@ integration_general_alerts_router = APIRouter()
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def create_alert_route(
-    create_alert_request: CreateAlertRequest, session: AsyncSession = Depends(get_db),
+    create_alert_request: CreateAlertRequest,
+    session: AsyncSession = Depends(get_db),
 ) -> CreateAlertResponse:
     """
     Create an alert in IRIS. Manually create an alert in IRIS from Copilot WebUI.

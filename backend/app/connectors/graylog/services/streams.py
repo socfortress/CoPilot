@@ -31,12 +31,16 @@ async def get_streams() -> GraylogStreamsResponse:
             )
         else:
             return GraylogStreamsResponse(
-                streams=[], success=False, message="Failed to collect streams", total=0,
+                streams=[],
+                success=False,
+                message="Failed to collect streams",
+                total=0,
             )
     except KeyError as e:
         logger.error(f"Failed to collect streams key: {e}")
         raise HTTPException(
-            status_code=500, detail=f"Failed to collect streams key: {e}",
+            status_code=500,
+            detail=f"Failed to collect streams key: {e}",
         )
     except Exception as e:
         logger.error(f"Failed to collect streams: {e}")
@@ -65,7 +69,8 @@ async def get_stream_ids() -> List[str]:
     except KeyError as e:
         logger.error(f"Failed to collect streams key: {e}")
         raise HTTPException(
-            status_code=500, detail=f"Failed to collect streams key: {e}",
+            status_code=500,
+            detail=f"Failed to collect streams key: {e}",
         )
     except Exception as e:
         logger.error(f"Failed to collect streams: {e}")

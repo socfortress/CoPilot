@@ -113,12 +113,14 @@ async def create_monitoring_alert(
         raise HTTPException(status_code=500, detail="Error creating monitoring alert")
 
     return GraylogPostResponse(
-        success=True, message="Monitoring alert created successfully",
+        success=True,
+        message="Monitoring alert created successfully",
     )
 
 
 @monitoring_alerts_router.post(
-    "/run_analysis/wazuh", response_model=WazuhAnalysisResponse,
+    "/run_analysis/wazuh",
+    response_model=WazuhAnalysisResponse,
 )
 async def run_wazuh_analysis(
     request: MonitoringWazuhAlertsRequestModel,
@@ -160,12 +162,14 @@ async def run_wazuh_analysis(
     await analyze_wazuh_alerts(monitoring_alerts, customer_meta, session)
 
     return WazuhAnalysisResponse(
-        success=True, message="Analysis completed successfully",
+        success=True,
+        message="Analysis completed successfully",
     )
 
 
 @monitoring_alerts_router.post(
-    "/run_analysis/suricata", response_model=WazuhAnalysisResponse,
+    "/run_analysis/suricata",
+    response_model=WazuhAnalysisResponse,
 )
 async def run_suricata_analysis(
     request: MonitoringWazuhAlertsRequestModel,
@@ -207,5 +211,6 @@ async def run_suricata_analysis(
     await analyze_suricata_alerts(monitoring_alerts, customer_meta, session)
 
     return WazuhAnalysisResponse(
-        success=True, message="Analysis completed successfully",
+        success=True,
+        message="Analysis completed successfully",
     )

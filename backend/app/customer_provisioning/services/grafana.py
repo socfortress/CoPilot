@@ -64,16 +64,22 @@ async def create_grafana_datasource(
         typeName="OpenSearch",
         access="proxy",
         url=await get_connector_attribute(
-            connector_id=1, column_name="connector_url", session=session,
+            connector_id=1,
+            column_name="connector_url",
+            session=session,
         ),
         database=f"{request.customer_index_name}*",
         basicAuth=True,
         basicAuthUser=await get_connector_attribute(
-            connector_id=1, column_name="connector_username", session=session,
+            connector_id=1,
+            column_name="connector_username",
+            session=session,
         ),
         secureJsonData={
             "basicAuthPassword": await get_connector_attribute(
-                connector_id=1, column_name="connector_password", session=session,
+                connector_id=1,
+                column_name="connector_password",
+                session=session,
             ),
         },
         isDefault=False,
@@ -98,7 +104,8 @@ async def create_grafana_datasource(
 
 
 async def create_grafana_folder(
-    organization_id: int, folder_title: str,
+    organization_id: int,
+    folder_title: str,
 ) -> GrafanaFolderCreationResponse:
     """
     Creates a Grafana folder in the specified organization.
@@ -136,7 +143,8 @@ async def get_opensearch_version() -> str:
 
     # Retrieve version information
     version_response = opensearch_client.nodes.info(
-        node_id="_local", filter_path=["nodes.*.version"],
+        node_id="_local",
+        filter_path=["nodes.*.version"],
     )
 
     # Parse the response to get the first version found
@@ -146,7 +154,8 @@ async def get_opensearch_version() -> str:
 
     # If no version is found, raise an exception
     raise HTTPException(
-        status_code=500, detail="Failed to retrieve OpenSearch version.",
+        status_code=500,
+        detail="Failed to retrieve OpenSearch version.",
     )
 
 

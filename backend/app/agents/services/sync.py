@@ -207,11 +207,18 @@ async def sync_agents(session: AsyncSession) -> SyncedAgentsResponse:
 
         if existing_agent:
             await update_agent_in_db(
-                session, existing_agent, wazuh_agent, velociraptor_agent, customer_code,
+                session,
+                existing_agent,
+                wazuh_agent,
+                velociraptor_agent,
+                customer_code,
             )
         else:
             await add_agent_to_db(
-                session, wazuh_agent, velociraptor_agent, customer_code,
+                session,
+                wazuh_agent,
+                velociraptor_agent,
+                customer_code,
             )
 
         # Combine the wazuh agent and velociraptor agent into one object

@@ -49,7 +49,10 @@ async def register(user_id: int, smtp: SMTPInput):
 
 
 @smtp_configure_router.get(
-    "/{user_id}", response_model=SMTP, status_code=200, description="Get SMTP for user",
+    "/{user_id}",
+    response_model=SMTP,
+    status_code=200,
+    description="Get SMTP for user",
 )
 async def get_smtp(user_id: int):
     """

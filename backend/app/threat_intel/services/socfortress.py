@@ -15,7 +15,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def get_socfortress_threat_intel_attributes(
-    column_name: str, session: AsyncSession,
+    column_name: str,
+    session: AsyncSession,
 ) -> str:
     """
     Gets the SocFortress Threat Intel attribute from the database.
@@ -32,7 +33,9 @@ async def get_socfortress_threat_intel_attributes(
 
     """
     attribute_value = await get_connector_attribute(
-        connector_id=10, column_name=column_name, session=session,
+        connector_id=10,
+        column_name=column_name,
+        session=session,
     )
     # Close the session
     await session.close()
@@ -90,10 +93,13 @@ async def verifiy_socfortress_threat_intel_connector(connector_name: str) -> str
         logger.error("No SOCFortress Threat Intel connector found in the database")
         return None
     request = SocfortressThreatIntelRequest(
-        ioc_value="evil.socfortress.co", customer_code="00001",
+        ioc_value="evil.socfortress.co",
+        customer_code="00001",
     )
     response = await invoke_socfortress_threat_intel_api(
-        attributes["connector_api_key"], attributes["connector_url"], request,
+        attributes["connector_api_key"],
+        attributes["connector_url"],
+        request,
     )
     if "data" in response and response["data"].get("comment") == "This is a test IoC":
         logger.info("Verified SOCFortress Threat Intel connector")
@@ -110,7 +116,9 @@ async def verifiy_socfortress_threat_intel_connector(connector_name: str) -> str
 
 
 async def invoke_socfortress_threat_intel_api(
-    api_key: str, url: str, request: SocfortressThreatIntelRequest,
+    api_key: str,
+    url: str,
+    request: SocfortressThreatIntelRequest,
 ) -> dict:
     """
     Invokes the Socfortress Threat Intel API with the provided API key, URL, and request parameters.
@@ -135,7 +143,8 @@ async def invoke_socfortress_threat_intel_api(
 
 
 async def get_ioc_response(
-    request: SocfortressThreatIntelRequest, session: AsyncSession,
+    request: SocfortressThreatIntelRequest,
+    session: AsyncSession,
 ) -> IoCResponse:
     """
     Retrieves IoC response from Socfortress Threat Intel API.
@@ -148,7 +157,8 @@ async def get_ioc_response(
         IoCResponse: The response object containing the IoC data and success status.
     """
     api_key = await get_socfortress_threat_intel_attributes(
-        "connector_api_key", session,
+        "connector_api_key",
+        session,
     )
     url = await get_socfortress_threat_intel_attributes("connector_url", session)
     response_data = await invoke_socfortress_threat_intel_api(api_key, url, request)
@@ -162,7 +172,8 @@ async def get_ioc_response(
 
 
 async def socfortress_threat_intel_lookup(
-    request: SocfortressThreatIntelRequest, session: AsyncSession,
+    request: SocfortressThreatIntelRequest,
+    session: AsyncSession,
 ) -> IoCResponse:
     """
     Performs a threat intelligence lookup using the Socfortress service.

@@ -36,7 +36,8 @@ async def get_velociraptor_id(session: AsyncSession, hostname: str) -> str:
 
     if not agent:
         raise HTTPException(
-            status_code=404, detail=f"Agent with hostname {hostname} not found",
+            status_code=404,
+            detail=f"Agent with hostname {hostname} not found",
         )
 
     if agent.velociraptor_id == "n/a":
@@ -56,7 +57,8 @@ async def get_velociraptor_id(session: AsyncSession, hostname: str) -> str:
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_all_flows_for_hostname(
-    hostname: str, session: AsyncSession = Depends(get_db),
+    hostname: str,
+    session: AsyncSession = Depends(get_db),
 ) -> FlowResponse:
     """
     Retrieve ran flows for a specific host.

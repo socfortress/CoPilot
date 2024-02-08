@@ -14,10 +14,12 @@ sublime_alerts_router = APIRouter()
 
 
 @sublime_alerts_router.post(
-    "/alert", description="Receive alert from Sublime and store it in the database",
+    "/alert",
+    description="Receive alert from Sublime and store it in the database",
 )
 async def receive_sublime_alert(
-    alert_request_body: AlertRequestBody, session: AsyncSession = Depends(get_db),
+    alert_request_body: AlertRequestBody,
+    session: AsyncSession = Depends(get_db),
 ) -> AlertResponseBody:
     """
     Endpoint to store alert in the `sublimealerts` table.

@@ -14,7 +14,8 @@ class FlowSpecParameter(BaseModel):
 class FlowSpec(BaseModel):
     artifact: str
     parameters: Optional[List[FlowSpecParameter]] = Field(
-        None, description="The parameters of the artifact.",
+        None,
+        description="The parameters of the artifact.",
     )
 
 
@@ -26,7 +27,8 @@ class FlowRequest(BaseModel):
     urgent: bool
     artifacts: List[str]
     specs: Optional[List[FlowSpec]] = Field(
-        None, description="The specs of the artifacts.",
+        None,
+        description="The specs of the artifacts.",
     )
     cpu_limit: int
     iops_limit: int
@@ -115,6 +117,7 @@ class RetrieveFlowRequest(BaseModel):
     def validate_session_id(cls, values):
         if "session_id" in values and values["session_id"] == "":
             raise HTTPException(
-                status_code=400, detail="The session_id cannot be an empty string",
+                status_code=400,
+                detail="The session_id cannot be an empty string",
             )
         return values

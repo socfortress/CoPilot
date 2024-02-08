@@ -64,7 +64,8 @@ def verify_os_prefix_exists(os_prefix: str) -> str:
 
     if os_prefix_lower not in valid_os_prefixes:
         raise HTTPException(
-            status_code=400, detail=f"OS prefix {os_prefix} does not exist.",
+            status_code=400,
+            detail=f"OS prefix {os_prefix} does not exist.",
         )
 
     return OSPrefixEnum[
@@ -110,7 +111,8 @@ async def get_velociraptor_id(session: AsyncSession, hostname: str) -> str:
 
     if not agent:
         raise HTTPException(
-            status_code=404, detail=f"Agent with hostname {hostname} not found",
+            status_code=404,
+            detail=f"Agent with hostname {hostname} not found",
         )
 
     if agent.velociraptor_id == "n/a":
@@ -238,7 +240,8 @@ async def get_all_artifacts_for_os_prefix(
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_all_artifacts_for_hostname(
-    hostname: str, session: AsyncSession = Depends(get_db),
+    hostname: str,
+    session: AsyncSession = Depends(get_db),
 ) -> ArtifactsResponse:
     """
     Retrieve all artifacts for a specific host's OS prefix.
@@ -260,7 +263,8 @@ async def get_all_artifacts_for_hostname(
 
     if not agent:
         raise HTTPException(
-            status_code=404, detail=f"Agent with hostname {hostname} not found",
+            status_code=404,
+            detail=f"Agent with hostname {hostname} not found",
         )
 
     os_prefix = get_os_prefix_from_os_name(os_name=agent.os.lower())
@@ -302,7 +306,8 @@ async def collect_artifact(
     """
     logger.info(f"Received request to collect artifact {collect_artifact_body}")
     result = await get_all_artifacts_for_hostname(
-        collect_artifact_body.hostname, session,
+        collect_artifact_body.hostname,
+        session,
     )
     artifact_names = [artifact.name for artifact in result.artifacts]
 
@@ -313,7 +318,8 @@ async def collect_artifact(
         )
 
     collect_artifact_body.velociraptor_id = await get_velociraptor_id(
-        session, collect_artifact_body.hostname,
+        session,
+        collect_artifact_body.hostname,
     )
 
     # Assuming run_artifact_collection is an async function and takes a session as a parameter
@@ -327,7 +333,8 @@ async def collect_artifact(
     dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
 )
 async def run_command(
-    run_command_body: RunCommandBody, session: AsyncSession = Depends(get_db),
+    run_command_body: RunCommandBody,
+    session: AsyncSession = Depends(get_db),
 ) -> RunCommandResponse:
     """
     Run a remote command.
@@ -349,7 +356,8 @@ async def run_command(
         )
     # Add the velociraptor_id to the run_command_body object
     run_command_body.velociraptor_id = await get_velociraptor_id(
-        session, run_command_body.hostname,
+        session,
+        run_command_body.hostname,
     )
     # Run the command
     return await run_remote_command(run_command_body)
@@ -362,7 +370,8 @@ async def run_command(
     dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
 )
 async def quarantine(
-    quarantine_body: QuarantineBody, session: AsyncSession = Depends(get_db),
+    quarantine_body: QuarantineBody,
+    session: AsyncSession = Depends(get_db),
 ) -> QuarantineResponse:
     """
     Quarantine a host.
@@ -385,7 +394,8 @@ async def quarantine(
     # Add the velociraptor_id to the run_command_body object
     # Add the velociraptor_id to the quarantine_body object
     quarantine_body.velociraptor_id = await get_velociraptor_id(
-        session, quarantine_body.hostname,
+        session,
+        quarantine_body.hostname,
     )
     # Quarantine the host
     quarantine_response = await quarantine_host(quarantine_body)

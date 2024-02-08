@@ -39,11 +39,15 @@ async def get_indices_full() -> GraylogIndicesResponse:
         ]
 
         return GraylogIndicesResponse(
-            indices=indices_list, success=True, message="Indices collected successfully",
+            indices=indices_list,
+            success=True,
+            message="Indices collected successfully",
         )
     else:
         return GraylogIndicesResponse(
-            indices=[], success=False, message="Failed to collect indices",
+            indices=[],
+            success=False,
+            message="Failed to collect indices",
         )
 
 
@@ -210,7 +214,8 @@ async def get_url_whitelist_entries() -> UrlWhitelistEntryResponse:
             url_whitelist_entries = response["data"]
         except KeyError:
             raise HTTPException(
-                status_code=500, detail="Failed to collect URL whitelist entries",
+                status_code=500,
+                detail="Failed to collect URL whitelist entries",
             )
         return UrlWhitelistEntryResponse(
             url_whitelist_entries=url_whitelist_entries,

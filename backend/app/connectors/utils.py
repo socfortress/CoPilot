@@ -9,7 +9,8 @@ from sqlalchemy.future import select
 
 # ! New with Async
 async def get_connector_info_from_db(
-    connector_name: str, db: AsyncSession,
+    connector_name: str,
+    db: AsyncSession,
 ) -> Optional[Dict[str, Any]]:
     """
     Fetches connector information from the database based on the given connector name.

@@ -48,7 +48,10 @@ async def get_case_notes(case_id: int, search_term: str) -> NotesResponse:
     """
     client, case = await initialize_client_and_case("DFIR-IRIS")
     result = await fetch_and_validate_data(
-        client, case.search_notes, search_term, case_id,
+        client,
+        case.search_notes,
+        search_term,
+        case_id,
     )
     processed_notes = await process_notes(result["data"], case_id)
     return NotesResponse(
@@ -83,7 +86,10 @@ async def get_case_note_details(note_id: int, case_id: int) -> NoteDetailsRespon
 
 
 async def perform_note_creation(
-    client: Any, case: Case, note_creation_body: NoteCreationBody, case_id: int,
+    client: Any,
+    case: Case,
+    note_creation_body: NoteCreationBody,
+    case_id: int,
 ) -> Dict:
     """
     Performs the creation of a note in a case.
@@ -98,7 +104,10 @@ async def perform_note_creation(
         Dict: The response data containing the created note information.
     """
     result = await fetch_and_validate_data(
-        client, case.add_notes_group, note_creation_body.note_title, case_id,
+        client,
+        case.add_notes_group,
+        note_creation_body.note_title,
+        case_id,
     )
     note_id = result["data"]["group_id"]
     custom_attributes = {}
@@ -114,7 +123,8 @@ async def perform_note_creation(
 
 
 async def create_case_note(
-    case_id: int, note_creation_body: NoteCreationBody,
+    case_id: int,
+    note_creation_body: NoteCreationBody,
 ) -> NoteCreationResponse:
     """
     Creates a note for a specific case.
@@ -129,5 +139,7 @@ async def create_case_note(
     client, case = await initialize_client_and_case("DFIR-IRIS")
     result = await perform_note_creation(client, case, note_creation_body, case_id)
     return NoteCreationResponse(
-        success=True, message="Successfully created note", note=result["data"],
+        success=True,
+        message="Successfully created note",
+        note=result["data"],
     )

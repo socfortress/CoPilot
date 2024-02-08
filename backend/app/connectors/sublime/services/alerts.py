@@ -46,7 +46,8 @@ def create_sublime_alert(alert_request_body: AlertRequestBody) -> SublimeAlerts:
 
 
 def create_flagged_rules(
-    alert_request_body: AlertRequestBody, sublime_alert_id: int,
+    alert_request_body: AlertRequestBody,
+    sublime_alert_id: int,
 ) -> List[FlaggedRule]:
     """
     Create a list of flagged rules based on the given alert request body and sublime alert ID.
@@ -75,7 +76,8 @@ def create_flagged_rules(
 
 
 def create_mailbox(
-    alert_request_body: AlertRequestBody, sublime_alert_id: int,
+    alert_request_body: AlertRequestBody,
+    sublime_alert_id: int,
 ) -> Mailbox:
     """
     Create a mailbox object based on the provided alert request body and sublime alert ID.
@@ -95,7 +97,8 @@ def create_mailbox(
 
 
 def create_triggered_actions(
-    alert_request_body: AlertRequestBody, sublime_alert_id: int,
+    alert_request_body: AlertRequestBody,
+    sublime_alert_id: int,
 ) -> List[TriggeredAction]:
     """
     Create a list of TriggeredAction objects based on the provided alert request body and sublime alert ID.
@@ -121,7 +124,8 @@ def create_triggered_actions(
 
 
 async def store_sublime_alert(
-    session: AsyncSession, alert_request_body: AlertRequestBody,
+    session: AsyncSession,
+    alert_request_body: AlertRequestBody,
 ) -> AlertResponseBody:
     """
     Stores a Sublime alert in the database.
@@ -141,7 +145,8 @@ async def store_sublime_alert(
         flagged_rules = create_flagged_rules(alert_request_body, sublime_alert.id)
         mailbox = create_mailbox(alert_request_body, sublime_alert.id)
         triggered_actions = create_triggered_actions(
-            alert_request_body, sublime_alert.id,
+            alert_request_body,
+            sublime_alert.id,
         )
         sender = await create_sender(alert_request_body, sublime_alert.id)
         recipient = await create_recipient(alert_request_body, sublime_alert.id)
@@ -173,7 +178,8 @@ async def store_sublime_alert(
 
 
 async def create_sender(
-    alert_request_body: AlertRequestBody, sublime_alert_id: int,
+    alert_request_body: AlertRequestBody,
+    sublime_alert_id: int,
 ) -> Sender:
     """
     Create a Sender object based on the given alert request body and sublime alert ID.
@@ -193,7 +199,8 @@ async def create_sender(
 
 
 async def create_recipient(
-    alert_request_body: AlertRequestBody, sublime_alert_id: int,
+    alert_request_body: AlertRequestBody,
+    sublime_alert_id: int,
 ) -> Recipient:
     """
     Create a recipient for the given alert request body and sublime alert ID.
@@ -298,5 +305,6 @@ async def collect_alerts(session: AsyncSession) -> List[SublimeAlertsResponse]:
     except Exception as e:
         logger.error(f"Failed to get all Sublime Alerts with error: {e}")
         raise HTTPException(
-            status_code=500, detail=f"Failed to get all Sublime Alerts with error: {e}",
+            status_code=500,
+            detail=f"Failed to get all Sublime Alerts with error: {e}",
         )

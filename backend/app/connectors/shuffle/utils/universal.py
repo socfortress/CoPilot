@@ -115,7 +115,9 @@ async def send_get_request(
 
 
 def send_post_request(
-    endpoint: str, data: Dict[str, Any] = None, connector_name: str = "Shuffle",
+    endpoint: str,
+    data: Dict[str, Any] = None,
+    connector_name: str = "Shuffle",
 ) -> Dict[str, Any]:
     """
     Sends a POST request to the Shuffle service.

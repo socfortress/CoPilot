@@ -93,12 +93,15 @@ async def create_dfir_iris_client(connector_name: str) -> ClientSession:
     except Exception as e:
         logger.error(f"Error creating session with DFIR-IRIS: {e}")
         raise HTTPException(
-            status_code=500, detail=f"Error creating session with DFIR-IRIS: {e}",
+            status_code=500,
+            detail=f"Error creating session with DFIR-IRIS: {e}",
         )
 
 
 async def fetch_and_parse_data(
-    session: ClientSession, action: Callable, *args,
+    session: ClientSession,
+    action: Callable,
+    *args,
 ) -> Dict[str, Union[bool, Optional[Dict]]]:
     """
     Fetches and parses data from DFIR-IRIS using a specified action.
@@ -121,7 +124,8 @@ async def fetch_and_parse_data(
     except Exception as err:
         logger.error(f"Failed to execute {action.__name__}: {err}")
         raise HTTPException(
-            status_code=500, detail=f"Failed to execute {action.__name__}: {err}",
+            status_code=500,
+            detail=f"Failed to execute {action.__name__}: {err}",
         )
 
 

@@ -21,7 +21,8 @@ from loguru import logger
 
 
 def is_wazuh_agent_unhealthy(
-    agent: AgentModel, time_criteria: TimeCriteriaModel,
+    agent: AgentModel,
+    time_criteria: TimeCriteriaModel,
 ) -> ExtendedAgentModel:
     """
     Checks if a Wazuh agent is unhealthy based on the last seen time and time criteria.
@@ -53,7 +54,8 @@ def is_wazuh_agent_unhealthy(
 
 
 def is_velociraptor_agent_unhealthy(
-    agent: AgentModel, time_criteria: TimeCriteriaModel,
+    agent: AgentModel,
+    time_criteria: TimeCriteriaModel,
 ) -> ExtendedAgentModel:
     """
     Checks if a velociraptor agent is unhealthy based on the last seen time and time criteria.
@@ -85,7 +87,8 @@ def is_velociraptor_agent_unhealthy(
 
 
 async def wazuh_agents_healthcheck(
-    agents: list, time_criteria: TimeCriteriaModel,
+    agents: list,
+    time_criteria: TimeCriteriaModel,
 ) -> AgentHealthCheckResponse:
     """
     Perform a health check on Wazuh agents.
@@ -120,7 +123,8 @@ async def wazuh_agents_healthcheck(
 
 
 async def wazuh_agent_healthcheck(
-    agent: AgentModel, time_criteria: TimeCriteriaModel,
+    agent: AgentModel,
+    time_criteria: TimeCriteriaModel,
 ) -> AgentHealthCheckResponse:
     """
     Performs a health check on a Wazuh agent.
@@ -150,7 +154,8 @@ async def wazuh_agent_healthcheck(
 
 
 async def velociraptor_agents_healthcheck(
-    agents: list, time_criteria: TimeCriteriaModel,
+    agents: list,
+    time_criteria: TimeCriteriaModel,
 ) -> AgentHealthCheckResponse:
     """
     Perform health check on Velociraptor agents.
@@ -186,7 +191,8 @@ async def velociraptor_agents_healthcheck(
 
 
 async def velociraptor_agent_healthcheck(
-    agent: AgentModel, time_criteria: TimeCriteriaModel,
+    agent: AgentModel,
+    time_criteria: TimeCriteriaModel,
 ) -> AgentHealthCheckResponse:
     """
     Perform a health check on a Velociraptor agent.
@@ -278,7 +284,9 @@ async def get_logs_generic(
     for index_name in index_list:
         try:
             logs = await collect_logs_generic(
-                index_name, body=search_body, is_host_specific=is_host_specific,
+                index_name,
+                body=search_body,
+                is_host_specific=is_host_specific,
             )
             if logs.success and len(logs.logs) > 0:
                 logs_summary.append(
@@ -307,7 +315,9 @@ async def get_logs_generic(
 
 
 async def collect_logs_generic(
-    index_name: str, body: LogsSearchBody, is_host_specific: bool = False,
+    index_name: str,
+    body: LogsSearchBody,
+    is_host_specific: bool = False,
 ) -> CollectLogsResponse:
     """
     Collects logs from Elasticsearch based on the specified parameters.
@@ -323,7 +333,8 @@ async def collect_logs_generic(
     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
     query_builder = LogsQueryBuilder()
     query_builder.add_time_range(
-        timerange=body.timerange, timestamp_field=body.timestamp_field,
+        timerange=body.timerange,
+        timestamp_field=body.timestamp_field,
     )
     query_builder.add_matches(matches=[(body.log_field, body.log_value)])
     query_builder.add_sort(body.timestamp_field)
@@ -339,10 +350,14 @@ async def collect_logs_generic(
         logs_list = [log for log in logs["hits"]["hits"]]
         logger.info(f"logs collected: {logs_list}")
         return CollectLogsResponse(
-            logs=logs_list, success=True, message="logs collected successfully",
+            logs=logs_list,
+            success=True,
+            message="logs collected successfully",
         )
     except Exception as e:
         logger.debug(f"Failed to collect logs: {e}")
         return CollectLogsResponse(
-            logs=[], success=False, message=f"Failed to collect logs: {e}",
+            logs=[],
+            success=False,
+            message=f"Failed to collect logs: {e}",
         )

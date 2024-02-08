@@ -16,7 +16,11 @@ load_dotenv()
 
 
 def load_connector_data(
-    connector_name, connector_type, accepts_key, description, extra_data_key=None,
+    connector_name,
+    connector_type,
+    accepts_key,
+    description,
+    extra_data_key=None,
 ):
     """
     Load connector data from environment variables.
@@ -200,7 +204,9 @@ async def add_roles_if_not_exist(session: AsyncSession) -> None:
 
 
 def load_available_integrations_data(
-    integration_name: str, description: str, integration_details: str,
+    integration_name: str,
+    description: str,
+    integration_details: str,
 ):
     """
     Load available integrations data from environment variables.
@@ -232,7 +238,10 @@ def load_markdown_for_integration(integration_name: str) -> str:
     """
     # file_path = os.path.join("integrations_markdown", f"{integration_name.lower()}.md")
     file_path = os.path.join(
-        "app", "integrations", "markdown", f"{integration_name.lower()}.md",
+        "app",
+        "integrations",
+        "markdown",
+        f"{integration_name.lower()}.md",
     )
     try:
         with open(file_path, "r") as file:
@@ -295,7 +304,9 @@ async def add_available_integrations_if_not_exist(session: AsyncSession):
 
 
 def load_available_integrations_auth_keys(
-    integration_id: int, integration_name: str, auth_key_name: str,
+    integration_id: int,
+    integration_name: str,
+    auth_key_name: str,
 ):
     """
     Load available integrations auth keys from environment variables.
@@ -352,7 +363,9 @@ async def get_available_integrations_auth_keys_list(session: AsyncSession):
         if integration_id:
             available_integrations_auth_keys.append(
                 load_available_integrations_auth_keys(
-                    integration_id, integration_name, auth_key_name,
+                    integration_id,
+                    integration_name,
+                    auth_key_name,
                 ),
             )
 

@@ -40,7 +40,8 @@ async def create_customer(customer_name: str) -> CreateCustomerResponse:
     exists = await check_customer_exists(customer_name)
     if exists:
         raise HTTPException(
-            status_code=400, detail=f"Customer {customer_name} already exists",
+            status_code=400,
+            detail=f"Customer {customer_name} already exists",
         )
     client, admin = await initialize_client_and_admin("DFIR-IRIS")
     result = await fetch_and_validate_data(client, admin.add_customer, customer_name)

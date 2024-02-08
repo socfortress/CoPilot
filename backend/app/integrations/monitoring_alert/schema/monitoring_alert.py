@@ -28,7 +28,9 @@ class GraylogEventFields(BaseModel):
     )
     ALERT_SOURCE: str = Field(..., description="Source of the alert", example="WAZUH")
     CUSTOMER_CODE: str = Field(
-        ..., description="Customer code associated with the alert", example="00002",
+        ...,
+        description="Customer code associated with the alert",
+        example="00002",
     )
 
 
@@ -39,7 +41,9 @@ class GraylogEvent(BaseModel):
         example="01HNNF2YCM5SSV3KDQJSRK0EV0",
     )
     event_definition_type: str = Field(
-        ..., description="Type of event definition", example="aggregation-v1",
+        ...,
+        description="Type of event definition",
+        example="aggregation-v1",
     )
     event_definition_id: str = Field(
         ...,
@@ -62,13 +66,19 @@ class GraylogEvent(BaseModel):
         example="2024-02-02T17:50:26.708Z",
     )
     timerange_start: Optional[str] = Field(
-        None, description="Start of the timerange for the event", example=None,
+        None,
+        description="Start of the timerange for the event",
+        example=None,
     )
     timerange_end: Optional[str] = Field(
-        None, description="End of the timerange for the event", example=None,
+        None,
+        description="End of the timerange for the event",
+        example=None,
     )
     streams: List[str] = Field(
-        ..., description="List of streams associated with the event", example=[],
+        ...,
+        description="List of streams associated with the event",
+        example=[],
     )
     source_streams: List[str] = Field(
         ...,
@@ -82,16 +92,22 @@ class GraylogEvent(BaseModel):
     )
     source: str = Field(..., description="Source of the event", example="ASHGRL02")
     key_tuple: List[str] = Field(
-        ..., description="Tuple keys associated with the event", example=[],
+        ...,
+        description="Tuple keys associated with the event",
+        example=[],
     )
     key: str = Field(..., description="Key associated with the event", example="")
     priority: int = Field(..., description="Priority of the event", example=2)
     alert: bool = Field(
-        ..., description="Indicates if the event is an alert", example=True,
+        ...,
+        description="Indicates if the event is an alert",
+        example=True,
     )
     fields: GraylogEventFields = Field(..., description="Custom fields for the event")
     group_by_fields: Dict[str, Any] = Field(
-        ..., description="Fields used to group events", example={},
+        ...,
+        description="Fields used to group events",
+        example={},
     )
 
     @property
@@ -106,7 +122,9 @@ class GraylogPostRequest(BaseModel):
         example="65bd28505e9a2d550cf521e7",
     )
     event_definition_type: str = Field(
-        ..., description="Type of the event definition", example="aggregation-v1",
+        ...,
+        description="Type of the event definition",
+        example="aggregation-v1",
     )
     event_definition_title: str = Field(
         ...,
@@ -114,7 +132,9 @@ class GraylogPostRequest(BaseModel):
         example="COPILOT TESTING WAZUH",
     )
     event_definition_description: Optional[str] = Field(
-        None, description="Description of the event definition", example="",
+        None,
+        description="Description of the event definition",
+        example="",
     )
     job_definition_id: str = Field(
         ...,
@@ -128,13 +148,17 @@ class GraylogPostRequest(BaseModel):
     )
     event: GraylogEvent = Field(..., description="Event details")
     backlog: List[str] = Field(
-        ..., description="List of backlog items associated with the event", example=[],
+        ...,
+        description="List of backlog items associated with the event",
+        example=[],
     )
 
 
 class GraylogPostResponse(BaseModel):
     success: bool = Field(
-        ..., description="Indicates if the request was successful", example=True,
+        ...,
+        description="Indicates if the request was successful",
+        example=True,
     )
     message: str = Field(
         ...,
@@ -145,7 +169,9 @@ class GraylogPostResponse(BaseModel):
 
 class WazuhAnalysisResponse(BaseModel):
     success: bool = Field(
-        ..., description="Indicates if the request was successful", example=True,
+        ...,
+        description="Indicates if the request was successful",
+        example=True,
     )
     message: str = Field(
         ...,
@@ -207,11 +233,14 @@ class FilterAlertsRequest(BaseModel):
     per_page: int = Field(1000, description="The number of alerts to return per page.")
     page: int = Field(1, description="The page number to return.")
     sort: SortOrder = Field(
-        SortOrder.desc, description="The sort order for the alerts.",
+        SortOrder.desc,
+        description="The sort order for the alerts.",
     )
     alert_tags: str = Field(..., description="The tags of the alert.")
     alert_status_id: int = Field(
-        3, description="The status of the alert. Default to assigned.", example=3,
+        3,
+        description="The status of the alert. Default to assigned.",
+        example=3,
     )
 
 

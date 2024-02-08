@@ -28,7 +28,9 @@ class AuthHandler:
 
     # ! TODO: HAVE LOGIC TO HANDLE PASSWORD RESET VIA A TOKEN BUT NOT IMPLEMENTED YET ! #
     def generate_reset_token(
-        self, username: str, expires_delta: timedelta = timedelta(minutes=30),
+        self,
+        username: str,
+        expires_delta: timedelta = timedelta(minutes=30),
     ):
         """
         Generates a password reset token.
@@ -80,7 +82,8 @@ class AuthHandler:
                 return payload["sub"]
             else:
                 raise HTTPException(
-                    status_code=401, detail="Invalid token. Username does not match.",
+                    status_code=401,
+                    detail="Invalid token. Username does not match.",
                 )
         except jwt.ExpiredSignatureError:
             raise HTTPException(status_code=401, detail="Token expired")
@@ -112,7 +115,9 @@ class AuthHandler:
 
     # ! New with Async
     async def encode_token(
-        self, username: str, access_token_expires: timedelta = timedelta(hours=24),
+        self,
+        username: str,
+        access_token_expires: timedelta = timedelta(hours=24),
     ):
         """
         Encodes a JWT token with the given username and expiration time.
@@ -157,7 +162,9 @@ class AuthHandler:
             return "Invalid token", []
 
     async def get_current_user(
-        self, security_scopes: SecurityScopes, token: str = Depends(security),
+        self,
+        security_scopes: SecurityScopes,
+        token: str = Depends(security),
     ):
         """
         Retrieves the current user based on the provided security scopes and token.

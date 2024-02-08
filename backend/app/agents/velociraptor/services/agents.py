@@ -39,7 +39,9 @@ async def collect_velociraptor_agent(agent_name: str) -> VelociraptorAgent:
     except (KeyError, IndexError, TypeError) as e:
         logger.error(f"Failed to get client ID for {agent_name}. Error: {e}")
         return VelociraptorAgent(
-            client_id="Unknown", client_last_seen="Unknown", client_version="Unknown",
+            client_id="Unknown",
+            client_last_seen="Unknown",
+            client_version="Unknown",
         )
 
     try:
@@ -116,7 +118,8 @@ def check_flow_success(flow: dict, client_id: str) -> dict:
     else:
         logger.error(f"Failed to delete velociraptor client {client_id}")
         return handle_exception(
-            e="Failed to delete velociraptor client", client_id=client_id,
+            e="Failed to delete velociraptor client",
+            client_id=client_id,
         )
 
 
@@ -142,7 +145,8 @@ def check_client_in_results(results: dict, client_id: str) -> dict:
         if result["client_id"] == client_id:
             logger.error(f"Failed to delete velociraptor client {client_id}")
             return handle_exception(
-                e="Failed to delete velociraptor client", client_id=client_id,
+                e="Failed to delete velociraptor client",
+                client_id=client_id,
             )
 
 
@@ -231,7 +235,9 @@ async def ensure_client_deleted(client_id: str) -> dict:
         )
 
         results = universal_service.read_collection_results(
-            client_id=client_id, flow_id=flow_id, artifact="Server.Information.Clients",
+            client_id=client_id,
+            flow_id=flow_id,
+            artifact="Server.Information.Clients",
         )
         return check_client_in_results(results, client_id)
     except Exception as e:

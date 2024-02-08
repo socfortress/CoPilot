@@ -6,5 +6,7 @@ router = APIRouter()
 
 # Include the Cortex related routes
 router.include_router(
-    cortex_analyzer_router, prefix="/analyzers", tags=["cortex-analyzers"],
+    cortex_analyzer_router,
+    prefix="/analyzers",
+    tags=["cortex-analyzers"],
 )

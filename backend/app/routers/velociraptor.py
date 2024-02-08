@@ -7,8 +7,12 @@ router = APIRouter()
 
 # Include the Velociraptor related routes
 router.include_router(
-    velociraptor_artifacts_router, prefix="/artifacts", tags=["velociraptor-artifacts"],
+    velociraptor_artifacts_router,
+    prefix="/artifacts",
+    tags=["velociraptor-artifacts"],
 )
 router.include_router(
-    velociraptor_flows_router, prefix="/flows", tags=["velociraptor-flows"],
+    velociraptor_flows_router,
+    prefix="/flows",
+    tags=["velociraptor-flows"],
 )

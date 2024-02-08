@@ -9,7 +9,8 @@ class FlaggedRule(SQLModel, table=True):
     rule_id: str
     name: str
     severity: Optional[str] = Field(
-        None, description="Severity level of the flagged rule",
+        None,
+        description="Severity level of the flagged rule",
     )
     tags: str
     sublime_alert_id: int = Field(foreign_key="sublimealerts.id")
@@ -21,7 +22,8 @@ class FlaggedRule(SQLModel, table=True):
 class Mailbox(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     external_id: Optional[str] = Field(
-        None, description="External identifier for the mailbox",
+        None,
+        description="External identifier for the mailbox",
     )
     mailbox_id: str
     sublime_alert_id: int = Field(foreign_key="sublimealerts.id")

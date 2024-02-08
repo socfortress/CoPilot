@@ -27,7 +27,8 @@ def agent_sync():
     if headers:
         # Your actual task
         response = requests.post(
-            f"http://{os.getenv('SERVER_IP')}:5000/agents/sync", headers=headers,
+            f"http://{os.getenv('SERVER_IP')}:5000/agents/sync",
+            headers=headers,
         )
 
         # Process the response here if needed

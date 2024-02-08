@@ -122,7 +122,9 @@ async def configure_wazuh_group(group_code, template_path):
 
     # Make the API request to update the group configuration
     return await send_wazuh_put_request(
-        endpoint=f"groups/{group_code}/configuration", data=group_config, xml_data=True,
+        endpoint=f"groups/{group_code}/configuration",
+        data=group_config,
+        xml_data=True,
     )
 
 
@@ -176,7 +178,8 @@ async def get_agent_ids(group_code: str) -> List[str]:
     """
     try:
         response = await send_wazuh_get_request(
-            endpoint="agents", params={"group": group_code},
+            endpoint="agents",
+            params={"group": group_code},
         )
         logger.info(f"Response for {group_code}: {response}")
 

@@ -115,7 +115,8 @@ async def disable_wazuh_rule(
     dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
 )
 async def enable_wazuh_rule(
-    rule: RuleEnable, session: AsyncSession = Depends(get_db),
+    rule: RuleEnable,
+    session: AsyncSession = Depends(get_db),
 ) -> RuleEnableResponse:
     """
     Enable a Wazuh rule.

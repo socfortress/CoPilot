@@ -74,7 +74,8 @@ async def send_index_set_creation_request(
     json_index_set = json.dumps(index_set.dict())
     logger.info(f"json_index_set set: {json_index_set}")
     response_json = await send_post_request(
-        endpoint="/api/system/indices/index_sets", data=index_set.dict(),
+        endpoint="/api/system/indices/index_sets",
+        data=index_set.dict(),
     )
     return GraylogIndexSetCreationResponse(**response_json)
 
@@ -114,7 +115,8 @@ def extract_index_set_id(response: GraylogIndexSetCreationResponse) -> str:
 # ! Event STREAMS ! #
 # Function to create event stream configuration
 def build_event_stream_config(
-    request: ProvisionNewCustomer, index_set_id: str,
+    request: ProvisionNewCustomer,
+    index_set_id: str,
 ) -> WazuhEventStream:
     """
     Build the configuration for a Wazuh event stream.
@@ -159,7 +161,8 @@ async def send_event_stream_creation_request(
     json_event_stream = json.dumps(event_stream.dict())
     logger.info(f"json_event_stream set: {json_event_stream}")
     response_json = await send_post_request(
-        endpoint="/api/streams", data=event_stream.dict(),
+        endpoint="/api/streams",
+        data=event_stream.dict(),
     )
     return StreamCreationResponse(**response_json)
 

@@ -66,7 +66,10 @@ def load_dashboard_json(dashboard_info: tuple, datasource_uid: str) -> dict:
 
 
 def replace_uid_value(
-    obj, new_value, key_to_replace="uid", old_value="replace_datasource_uid",
+    obj,
+    new_value,
+    key_to_replace="uid",
+    old_value="replace_datasource_uid",
 ):
     """
     Recursively replaces the value of a specified key in a nested dictionary or list.
@@ -89,7 +92,9 @@ def replace_uid_value(
 
 
 async def update_dashboard(
-    dashboard_json: dict, organization_id: int, folder_id: int,
+    dashboard_json: dict,
+    organization_id: int,
+    folder_id: int,
 ) -> dict:
     """
     Update a dashboard in Grafana.
@@ -153,7 +158,8 @@ async def provision_dashboards(
         dashboard_enum = valid_dashboards[dashboard_name]
         try:
             dashboard_json = load_dashboard_json(
-                dashboard_enum.value, datasource_uid=dashboard_request.datasourceUid,
+                dashboard_enum.value,
+                datasource_uid=dashboard_request.datasourceUid,
             )
             updated_dashboard = await update_dashboard(
                 dashboard_json=dashboard_json,
@@ -164,7 +170,8 @@ async def provision_dashboards(
         except HTTPException as e:
             errors.append(f"Failed to update dashboard {dashboard_name}: {e.detail}")
             raise HTTPException(
-                status_code=500, detail=f"Error updating dashboard: {e}",
+                status_code=500,
+                detail=f"Error updating dashboard: {e}",
             )
 
     success = len(errors) == 0
@@ -174,5 +181,7 @@ async def provision_dashboards(
         else "Some dashboards failed to provision"
     )
     return GrafanaDashboardResponse(
-        provisioned_dashboards=provisioned_dashboards, success=success, message=message,
+        provisioned_dashboards=provisioned_dashboards,
+        success=success,
+        message=message,
     )

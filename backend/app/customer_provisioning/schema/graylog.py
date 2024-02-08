@@ -86,7 +86,8 @@ class GraylogIndexSetData(BaseModel):
     creation_date: str = Field(..., alias="creation_date")
     index_analyzer: str = Field(..., alias="index_analyzer")
     index_optimization_max_num_segments: int = Field(
-        ..., alias="index_optimization_max_num_segments",
+        ...,
+        alias="index_optimization_max_num_segments",
     )
     index_optimization_disabled: bool = Field(..., alias="index_optimization_disabled")
     field_type_refresh_interval: int = Field(..., alias="field_type_refresh_interval")
@@ -116,10 +117,12 @@ class WazuhEventStream(BaseModel):
     rules: List[StreamRule] = Field(..., description="List of rules for the stream")
     matching_type: str = Field(..., description="Matching type for the rules")
     remove_matches_from_default_stream: bool = Field(
-        ..., description="Whether to remove matches from the default stream",
+        ...,
+        description="Whether to remove matches from the default stream",
     )
     content_pack: Optional[str] = Field(
-        None, description="Associated content pack, if any",
+        None,
+        description="Associated content pack, if any",
     )
 
     class Config:
@@ -150,10 +153,12 @@ class Office365EventStream(BaseModel):
     rules: List[StreamRule] = Field(..., description="List of rules for the stream")
     matching_type: str = Field(..., description="Matching type for the rules")
     remove_matches_from_default_stream: bool = Field(
-        ..., description="Whether to remove matches from the default stream",
+        ...,
+        description="Whether to remove matches from the default stream",
     )
     content_pack: Optional[str] = Field(
-        None, description="Associated content pack, if any",
+        None,
+        description="Associated content pack, if any",
     )
 
     class Config:
@@ -191,21 +196,24 @@ class StreamCreationResponse(BaseModel):
     data: StreamData
     success: bool = Field(..., description="Indicates if the request was successful")
     message: str = Field(
-        ..., description="A message detailing the outcome of the request",
+        ...,
+        description="A message detailing the outcome of the request",
     )
 
 
 class StreamAndPipelineData(BaseModel):
     stream_id: str = Field(..., description="ID of the stream")
     pipeline_ids: List[str] = Field(
-        ..., description="List of pipeline IDs connected to the stream",
+        ...,
+        description="List of pipeline IDs connected to the stream",
     )
 
 
 class StreamConnectionToPipelineRequest(BaseModel):
     stream_id: str = Field(..., description="ID of the stream to connect")
     pipeline_ids: List[str] = Field(
-        ..., description="List of pipeline IDs to connect to the stream",
+        ...,
+        description="List of pipeline IDs to connect to the stream",
     )
 
 
@@ -213,5 +221,6 @@ class StreamConnectionToPipelineResponse(BaseModel):
     data: StreamAndPipelineData
     success: bool = Field(..., description="Indicates if the request was successful")
     message: str = Field(
-        ..., description="A message detailing the outcome of the request",
+        ...,
+        description="A message detailing the outcome of the request",
     )

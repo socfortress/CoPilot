@@ -35,7 +35,8 @@ def get_available_dashboards():
         return wazuh_dashboards + office365_dashboards
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Error getting available dashboards: {e}",
+            status_code=500,
+            detail=f"Error getting available dashboards: {e}",
         )
 
 
@@ -53,12 +54,14 @@ def get_available_subscriptions():
         return [subscription.value for subscription in CustomerSubsctipion]
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Error getting available subscriptions: {e}",
+            status_code=500,
+            detail=f"Error getting available subscriptions: {e}",
         )
 
 
 async def check_customer_exists(
-    customer_code: str, session: AsyncSession = Depends(get_db),
+    customer_code: str,
+    session: AsyncSession = Depends(get_db),
 ) -> Customers:
     """
     Check if a customer exists in the database.
@@ -215,7 +218,8 @@ async def get_subscriptions_route():
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_customer_meta(
-    customer_code: str, session: AsyncSession = Depends(get_db),
+    customer_code: str,
+    session: AsyncSession = Depends(get_db),
 ):
     """
     Retrieve customer meta data for a given customer code.

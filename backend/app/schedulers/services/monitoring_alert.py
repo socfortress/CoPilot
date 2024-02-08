@@ -55,7 +55,8 @@ async def invoke_wazuh_monitoring_alert() -> WazuhAnalysisResponse:
             logger.error("JobMetadata for 'invoke_wazuh_monitoring_alert' not found.")
 
     return WazuhAnalysisResponse(
-        success=True, message="Wazuh monitoring alerts invoked.",
+        success=True,
+        message="Wazuh monitoring alerts invoked.",
     )
 
 
@@ -98,5 +99,6 @@ async def invoke_suricata_monitoring_alert() -> WazuhAnalysisResponse:
             )
 
     return WazuhAnalysisResponse(
-        success=True, message="Suricata monitoring alerts invoked.",
+        success=True,
+        message="Suricata monitoring alerts invoked.",
     )

@@ -82,7 +82,9 @@ async def get_artifacts() -> ArtifactsResponse:
         if all_artifacts["success"]:
             artifacts = [Artifacts(**artifact) for artifact in all_artifacts["results"]]
             return ArtifactsResponse(
-                success=True, message="All artifacts retrieved", artifacts=artifacts,
+                success=True,
+                message="All artifacts retrieved",
+                artifacts=artifacts,
             )
         else:
             raise HTTPException(
@@ -92,7 +94,8 @@ async def get_artifacts() -> ArtifactsResponse:
     except Exception as err:
         logger.error(f"Failed to get all artifacts: {err}")
         raise HTTPException(
-            status_code=500, detail=f"Failed to get all artifacts: {err}",
+            status_code=500,
+            detail=f"Failed to get all artifacts: {err}",
         )
 
 

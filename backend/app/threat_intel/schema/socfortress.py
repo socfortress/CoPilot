@@ -6,14 +6,16 @@ from pydantic import BaseModel, Field
 class SocfortressThreatIntelRequest(BaseModel):
     ioc_value: str
     customer_code: Optional[str] = Field(
-        "socfortress_copilot", description="The customer code for the customer",
+        "socfortress_copilot",
+        description="The customer code for the customer",
     )
 
 
 class IoCMapping(BaseModel):
     comment: Optional[str] = Field(None, description="Comment about the IOCs")
     ioc_source: str = Field(
-        "SOCFortress Threat Intel", description="Identifier for the source of the IOC",
+        "SOCFortress Threat Intel",
+        description="Identifier for the source of the IOC",
     )
     report_url: Optional[str] = Field(None, description="URL for the related report")
     score: Optional[int] = Field(

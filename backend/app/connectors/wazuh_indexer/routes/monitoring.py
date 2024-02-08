@@ -68,7 +68,8 @@ async def get_node_allocation() -> Union[NodeAllocationResponse, HTTPException]:
         return node_allocation_response
     else:
         raise HTTPException(
-            status_code=500, detail="Failed to retrieve node allocation.",
+            status_code=500,
+            detail="Failed to retrieve node allocation.",
         )
 
 

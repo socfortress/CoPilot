@@ -78,12 +78,15 @@ async def create_cortex_client(connector_name: str) -> Api:
         logger.error("No Wazuh Indexer connector found in the database")
         return None
     return Api(
-        attributes["connector_url"], attributes["connector_api_key"], verify_cert=False,
+        attributes["connector_url"],
+        attributes["connector_api_key"],
+        verify_cert=False,
     )
 
 
 async def run_and_wait_for_analyzer(
-    analyzer_name: str, job_data: AnalyzerJobData,
+    analyzer_name: str,
+    job_data: AnalyzerJobData,
 ) -> Dict[str, Any]:
     """
     Runs an analyzer by name and waits for the job to complete.
@@ -103,7 +106,8 @@ async def run_and_wait_for_analyzer(
         return await monitor_analyzer_job(api, job)
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Error running analyzer {analyzer_name}: {e}",
+            status_code=500,
+            detail=f"Error running analyzer {analyzer_name}: {e}",
         )
 
 

@@ -31,7 +31,8 @@ async def invoke_mimecast_integration() -> MimecastResponse:
         for customer_code in customer_codes:
             await invoke_mimecast_route(
                 MimecastRequest(
-                    customer_code=customer_code, integration_name="Mimecast",
+                    customer_code=customer_code,
+                    integration_name="Mimecast",
                 ),
                 session,
             )
@@ -70,7 +71,8 @@ async def invoke_mimecast_integration_ttp() -> MimecastResponse:
         for customer_code in customer_codes:
             await mimecast_ttp_url_route(
                 MimecastRequest(
-                    customer_code=customer_code, integration_name="Mimecast",
+                    customer_code=customer_code,
+                    integration_name="Mimecast",
                 ),
                 session,
             )

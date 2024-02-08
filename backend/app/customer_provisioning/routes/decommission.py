@@ -15,7 +15,8 @@ customer_decommissioning_router = APIRouter()
 
 
 async def check_customermeta_exists(
-    customer_code: str, session: AsyncSession = Depends(get_db),
+    customer_code: str,
+    session: AsyncSession = Depends(get_db),
 ) -> CustomersMeta:
     """
     Check if a customer exists in the database.

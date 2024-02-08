@@ -69,7 +69,8 @@ async def handle_exception(e, user_id, request, logger_instance):
         e.status_code if isinstance(e, HTTPException) else INTERNAL_SERVER_ERROR
     )
     return JSONResponse(
-        status_code=status_code, content={"message": str(e), "success": False},
+        status_code=status_code,
+        content={"message": str(e), "success": False},
     )
 
 
@@ -94,7 +95,10 @@ async def log_requests(request: Request, call_next):
         try:
             if not is_excluded_path(request.url.path):
                 response, user_id = await process_request(
-                    request, call_next, session, logger_instance,
+                    request,
+                    call_next,
+                    session,
+                    logger_instance,
                 )
             else:
                 response = await call_next(request)

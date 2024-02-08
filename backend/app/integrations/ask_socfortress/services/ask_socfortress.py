@@ -51,12 +51,14 @@ async def get_single_alert_details(
     except Exception as e:
         logger.debug(f"Failed to collect alert details: {e}")
         raise HTTPException(
-            status_code=400, detail=f"Failed to collect alert details: {e}",
+            status_code=400,
+            detail=f"Failed to collect alert details: {e}",
         )
 
 
 async def get_ask_socfortress_attributes(
-    column_name: str, session: AsyncSession,
+    column_name: str,
+    session: AsyncSession,
 ) -> str:
     """
     Gets the Ask SocFortress attribute from the database.
@@ -73,7 +75,9 @@ async def get_ask_socfortress_attributes(
 
     """
     attribute_value = await get_connector_attribute(
-        connector_id=9, column_name=column_name, session=session,
+        connector_id=9,
+        column_name=column_name,
+        session=session,
     )
     # Close the session
     await session.close()
@@ -134,7 +138,9 @@ async def verify_ask_socfortress_connector(connector_name: str) -> str:
         sigma_rule_name="Process Explorer Driver Creation By Non-Sysinternals Binary",
     )
     response = await invoke_ask_socfortress_api(
-        attributes["connector_api_key"], attributes["connector_url"], request,
+        attributes["connector_api_key"],
+        attributes["connector_url"],
+        request,
     )
     if response["message"] != "Forbidden":
         logger.info("Ask Socfortress connector verified successfully")
@@ -151,7 +157,9 @@ async def verify_ask_socfortress_connector(connector_name: str) -> str:
 
 
 async def invoke_ask_socfortress_api(
-    api_key: str, url: str, request: AskSocfortressSigmaRequest,
+    api_key: str,
+    url: str,
+    request: AskSocfortressSigmaRequest,
 ) -> dict:
     """
     Invokes the Socfortress Threat Intel API with the provided API key, URL, and request parameters.
@@ -179,7 +187,8 @@ async def invoke_ask_socfortress_api(
 
 
 async def get_ask_socfortress_response(
-    request: AskSocfortressSigmaRequest, session: AsyncSession,
+    request: AskSocfortressSigmaRequest,
+    session: AsyncSession,
 ) -> AskSocfortressSigmaResponse:
     """
     Retrieves IoC response from Socfortress Threat Intel API.
@@ -203,7 +212,10 @@ async def get_ask_socfortress_response(
 
 
 async def add_alert_to_document(
-    es_client, alert: CreateAlertRequest, result: str, session: AsyncSession,
+    es_client,
+    alert: CreateAlertRequest,
+    result: str,
+    session: AsyncSession,
 ) -> Optional[str]:
     """
     Update the alert document in Elasticsearch with the provided SOC alert ID URL.
@@ -235,7 +247,8 @@ async def add_alert_to_document(
         # Attempt to remove read-only block
         try:
             es_client.indices.put_settings(
-                index=alert.index_name, body={"index.blocks.write": None},
+                index=alert.index_name,
+                body={"index.blocks.write": None},
             )
             logger.info(
                 f"Removed read-only block from index {alert.index_name}. Retrying update.",
@@ -253,7 +266,8 @@ async def add_alert_to_document(
 
             # Reenable the write block
             es_client.indices.put_settings(
-                index=alert.index_name, body={"index.blocks.write": True},
+                index=alert.index_name,
+                body={"index.blocks.write": True},
             )
             return True
         except Exception as e2:
@@ -264,7 +278,8 @@ async def add_alert_to_document(
 
 
 async def ask_socfortress_lookup(
-    alert: AskSocfortressRequest, session: AsyncSession,
+    alert: AskSocfortressRequest,
+    session: AsyncSession,
 ) -> AskSocfortressSigmaResponse:
     """
     Performs a Ask SOCFortress lookup using the Socfortress service.
@@ -284,7 +299,8 @@ async def ask_socfortress_lookup(
         sigma_rule_name=alert_details._source.data_name,
     )
     ask_socfortress_response = await get_ask_socfortress_response(
-        sigma_rule_name, session,
+        sigma_rule_name,
+        session,
     )
     result = ask_socfortress_response.message
     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")

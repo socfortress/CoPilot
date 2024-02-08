@@ -24,7 +24,8 @@ def remove_large_images_from_actions(workflows: List) -> List:
         if "actions" in workflow:
             for action in workflow["actions"]:
                 action.pop(
-                    "large_image", None,
+                    "large_image",
+                    None,
                 )  # Use pop to avoid KeyError if 'large_image' does not exist
     return workflows
 
@@ -42,7 +43,9 @@ async def get_workflows() -> WorkflowsResponse:
         response = await send_get_request("/api/v1/workflows")
         if response is None:
             return WorkflowsResponse(
-                success=False, message="Failed to get workflows", workflows=[],
+                success=False,
+                message="Failed to get workflows",
+                workflows=[],
             )
 
         workflows = response.get("data")
@@ -57,7 +60,8 @@ async def get_workflows() -> WorkflowsResponse:
     except Exception as e:
         logger.error(f"Failed to get workflows with error: {e}")
         raise HTTPException(
-            status_code=500, detail=f"Failed to get workflows with error: {e}",
+            status_code=500,
+            detail=f"Failed to get workflows with error: {e}",
         )
 
 
@@ -92,5 +96,6 @@ async def get_workflow_executions(
     except Exception as e:
         logger.error(f"Failed to get workflow executions with error: {e}")
         raise HTTPException(
-            status_code=500, detail=f"Failed to get workflow executions with error: {e}",
+            status_code=500,
+            detail=f"Failed to get workflow executions with error: {e}",
         )

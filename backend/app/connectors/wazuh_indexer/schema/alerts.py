@@ -8,7 +8,8 @@ class Alert(BaseModel):
     index_name: str
     total_alerts: int
     alerts: Optional[List[Dict[str, Any]]] = Field(
-        [], description="The alerts returned from the search.",
+        [],
+        description="The alerts returned from the search.",
     )
 
 
@@ -16,11 +17,13 @@ class AlertsSearchBody(BaseModel):
     size: int = Field(10, description="The number of alerts to return.")
     timerange: str = Field("24h", description="The time range to search alerts in.")
     alert_field: str = Field(
-        "syslog_level", description="The field to search alerts in.",
+        "syslog_level",
+        description="The field to search alerts in.",
     )
     alert_value: str = Field("ALERT", description="The value to search alerts for.")
     timestamp_field: str = Field(
-        "timestamp_utc", description="The timestamp field to search alerts in.",
+        "timestamp_utc",
+        description="The timestamp field to search alerts in.",
     )
 
     @validator("timerange")
@@ -53,7 +56,8 @@ class CollectAlertsResponse(BaseModel):
 
 class HostAlertsSearchBody(AlertsSearchBody):
     agent_name: str = Field(
-        ..., description="The name of the agent to search alerts for.",
+        ...,
+        description="The name of the agent to search alerts for.",
     )
 
 
@@ -65,7 +69,8 @@ class HostAlertsSearchResponse(BaseModel):
 
 class IndexAlertsSearchBody(AlertsSearchBody):
     index_name: str = Field(
-        ..., description="The name of the index to search alerts for.",
+        ...,
+        description="The name of the index to search alerts for.",
     )
 
 

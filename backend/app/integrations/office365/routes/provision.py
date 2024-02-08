@@ -20,7 +20,8 @@ integration_office365_router = APIRouter()
 
 
 async def get_customer_integration_response(
-    customer_code: str, session: AsyncSession,
+    customer_code: str,
+    session: AsyncSession,
 ) -> CustomerIntegrationsResponse:
     """
     Retrieves the integration response for a customer.
@@ -36,11 +37,13 @@ async def get_customer_integration_response(
         HTTPException: If the customer integration settings are not found.
     """
     customer_integration_response = await get_customer_integrations_by_customer_code(
-        customer_code, session,
+        customer_code,
+        session,
     )
     if customer_integration_response.available_integrations == []:
         raise HTTPException(
-            status_code=404, detail="Customer integration settings not found.",
+            status_code=404,
+            detail="Customer integration settings not found.",
         )
     return customer_integration_response
 
@@ -94,7 +97,8 @@ async def provision_office365_route(
         ProvisionOffice365Response: The response object containing the result of the provisioning.
     """
     customer_integration_response = await get_customer_integration_response(
-        provision_office365_request.customer_code, session,
+        provision_office365_request.customer_code,
+        session,
     )
 
     customer_integration = await find_customer_integration(
@@ -108,5 +112,7 @@ async def provision_office365_route(
     auth_keys = ProvisionOffice365AuthKeys(**office365_auth_keys)
 
     return await provision_office365(
-        provision_office365_request.customer_code, auth_keys, session,
+        provision_office365_request.customer_code,
+        auth_keys,
+        session,
     )

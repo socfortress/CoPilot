@@ -37,7 +37,8 @@ async def get_checkpoint_filename(customer_code: str):
     # Relative path from the current script to the checkpoint directory
     checkpoint_directory = os.path.join(os.path.dirname(__file__), "..", "checkpoint")
     checkpoint_filename = os.path.join(
-        checkpoint_directory, f"mimecast_{customer_code}.checkpoint",
+        checkpoint_directory,
+        f"mimecast_{customer_code}.checkpoint",
     )
 
     # Normalize the path to remove relative path components
@@ -139,7 +140,9 @@ async def get_base_url(
 
 
 async def get_mta_siem_logs(
-    checkpoint_filename: str, base_url: str, auth_keys: MimecastAuthKeys,
+    checkpoint_filename: str,
+    base_url: str,
+    auth_keys: MimecastAuthKeys,
 ):
     """
     Retrieves the MTA SIEM logs from the Mimecast integration.
@@ -212,7 +215,8 @@ async def process_response(response, checkpoint_filename: str, log_file_path: st
 
             # Save mc-siem-token page token to check point directory
             await write_checkpoint_file(
-                checkpoint_filename, resp_headers["mc-siem-token"],
+                checkpoint_filename,
+                resp_headers["mc-siem-token"],
             )
             log_filename = os.path.join(log_file_path, file_name)
             await write_log_file(log_filename, resp_body)
@@ -245,7 +249,10 @@ async def write_log_file(filename: str, resp_body):
 
 
 async def process_log_file(
-    filename: str, filename2: str, log_file_path: str, customer_code: str,
+    filename: str,
+    filename2: str,
+    log_file_path: str,
+    customer_code: str,
 ):
     """
     Process a log file by reading its contents and shipping events.
@@ -320,12 +327,14 @@ async def delete_log_directory(log_file_path: str):
         logger.info(f"Successfully deleted the directory: {log_file_path}")
     except OSError as e:
         raise HTTPException(
-            status_code=400, detail=f"Error: {e.strerror}. Directory: {log_file_path}",
+            status_code=400,
+            detail=f"Error: {e.strerror}. Directory: {log_file_path}",
         )
 
 
 async def invoke_mimecast(
-    mimecast_request: MimecastRequest, auth_keys: MimecastAuthKeys,
+    mimecast_request: MimecastRequest,
+    auth_keys: MimecastAuthKeys,
 ) -> MimecastResponse:
     """
     Invokes the Mimecast integration.
@@ -344,7 +353,9 @@ async def invoke_mimecast(
     checkpoint_filename = await get_checkpoint_filename(mimecast_request.customer_code)
     log_file_path = await get_log_file_path(mimecast_request.customer_code)
     response = await get_mta_siem_logs(
-        checkpoint_filename, mimecast_base_url.data.data[0].region.api, auth_keys,
+        checkpoint_filename,
+        mimecast_base_url.data.data[0].region.api,
+        auth_keys,
     )
 
     await process_response(response, checkpoint_filename, log_file_path)
@@ -363,7 +374,8 @@ async def invoke_mimecast(
 
     await delete_log_directory(log_file_path)
     return MimecastResponse(
-        success=True, message="Successfully invoked Mimecast integration.",
+        success=True,
+        message="Successfully invoked Mimecast integration.",
     )
 
 
@@ -414,7 +426,8 @@ async def invoke_mimecast_api_ttp_urls(
 
 
 async def get_ttp_urls(
-    mimecast_request: MimecastTTPURLSRequest, customer_code: str,
+    mimecast_request: MimecastTTPURLSRequest,
+    customer_code: str,
 ) -> MimecastResponse:
     logger.info("Mimecast TTP URL request received")
     # Get the BaseURL for the Mimecast integration

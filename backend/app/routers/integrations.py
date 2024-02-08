@@ -6,5 +6,7 @@ router = APIRouter()
 
 # Include the Inntegration Settings related routes
 router.include_router(
-    integration_settings_router, prefix="/integrations", tags=["Integration Settings"],
+    integration_settings_router,
+    prefix="/integrations",
+    tags=["Integration Settings"],
 )

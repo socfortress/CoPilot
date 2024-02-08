@@ -17,7 +17,9 @@ async def get_users() -> UsersResponse:
     client, user = await initialize_client_and_user("DFIR-IRIS")
     result = await fetch_and_validate_data(client, user.list_users)
     return UsersResponse(
-        success=True, message="Successfully fetched users", users=result["data"],
+        success=True,
+        message="Successfully fetched users",
+        users=result["data"],
     )
 
 
@@ -34,7 +36,10 @@ async def assign_user_to_alert(alert_id: str, user_id: int) -> AlertResponse:
     """
     client, alert = await initialize_client_and_alert("DFIR-IRIS")
     result = await fetch_and_validate_data(
-        client, alert.update_alert, alert_id, {"alert_owner_id": user_id},
+        client,
+        alert.update_alert,
+        alert_id,
+        {"alert_owner_id": user_id},
     )
     return AlertResponse(
         success=True,
@@ -56,7 +61,10 @@ async def delete_user_from_alert(alert_id: str, user_id: int) -> AlertResponse:
     """
     client, alert = await initialize_client_and_alert("DFIR-IRIS")
     result = await fetch_and_validate_data(
-        client, alert.update_alert, alert_id, {"alert_owner_id": None},
+        client,
+        alert.update_alert,
+        alert_id,
+        {"alert_owner_id": None},
     )
     return AlertResponse(
         success=True,

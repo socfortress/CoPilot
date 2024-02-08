@@ -62,7 +62,8 @@ async def refresh_token(current_user: User = Depends(auth_handler.get_current_us
     """
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = await auth_handler.encode_token(
-        current_user.username, access_token_expires,
+        current_user.username,
+        access_token_expires,
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
@@ -150,7 +151,9 @@ async def get_users(session: AsyncSession = Depends(get_db)):
     """
     users = await select_all_users()
     return UserBaseResponse(
-        users=users, message="Users retrieved successfully", success=True,
+        users=users,
+        message="Users retrieved successfully",
+        success=True,
     )
 
 
@@ -162,7 +165,8 @@ async def get_users(session: AsyncSession = Depends(get_db)):
     include_in_schema=False,
 )
 async def request_password_reset(
-    password_reset_request: PasswordResetToken, session: AsyncSession = Depends(get_db),
+    password_reset_request: PasswordResetToken,
+    session: AsyncSession = Depends(get_db),
 ):
     """
     Request a password reset.
@@ -212,7 +216,8 @@ async def request_password_reset(
     dependencies=[Security(AuthHandler().require_any_scope("admin"))],
 )
 async def reset_password_via_username(
-    request: PasswordReset, session: AsyncSession = Depends(get_db),
+    request: PasswordReset,
+    session: AsyncSession = Depends(get_db),
 ):
     """
     Reset a user's password via the username. Must be an admin.

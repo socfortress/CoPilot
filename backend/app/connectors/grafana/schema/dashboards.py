@@ -66,14 +66,17 @@ class MimecastDashboard(Enum):
 
 class DashboardProvisionRequest(BaseModel):
     dashboards: List[str] = Field(
-        ..., description="List of dashboard identifiers to provision",
+        ...,
+        description="List of dashboard identifiers to provision",
     )
     organizationId: int = Field(
-        0, description="Organization ID to provision dashboards to",
+        0,
+        description="Organization ID to provision dashboards to",
     )
     folderId: int = Field(0, description="Folder ID to provision dashboards to")
     datasourceUid: str = Field(
-        "uid-to-be-replaced", description="Datasource UID to use for dashboards",
+        "uid-to-be-replaced",
+        description="Datasource UID to use for dashboards",
     )
 
     @validator("dashboards", each_item=True)

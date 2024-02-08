@@ -3,7 +3,8 @@ from settings import SQLALCHEMY_DATABASE_URI
 from sqlmodel import Session, create_engine
 
 engine = create_engine(
-    SQLALCHEMY_DATABASE_URI, connect_args={"check_same_thread": False},
+    SQLALCHEMY_DATABASE_URI,
+    connect_args={"check_same_thread": False},
 )
 session = "placeholder"
 
@@ -18,15 +19,20 @@ from sqlalchemy.orm import sessionmaker
 # create async engine for SQLite using aiosqlite
 async_engine = create_async_engine(SQLALCHEMY_DATABASE_URI, echo=False)
 sync_engine = create_engine(
-    SQLALCHEMY_DATABASE_URI.replace("+aiosqlite", ""), echo=False,
+    SQLALCHEMY_DATABASE_URI.replace("+aiosqlite", ""),
+    echo=False,
 )
 
 # create a configured "AsyncSession" class
 AsyncSessionLocal = sessionmaker(
-    bind=async_engine, class_=AsyncSession, expire_on_commit=False,
+    bind=async_engine,
+    class_=AsyncSession,
+    expire_on_commit=False,
 )
 SyncSessionLocal = sessionmaker(
-    bind=sync_engine, class_=Session, expire_on_commit=False,
+    bind=sync_engine,
+    class_=Session,
+    expire_on_commit=False,
 )
 
 

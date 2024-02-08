@@ -19,7 +19,8 @@ async def get_gelf_logger():
     except Exception as e:
         logger.error(f"Failed to initialize GelfLogger: {e}")
         raise HTTPException(
-            status_code=500, detail=f"Failed to initialize GelfLogger: {e}",
+            status_code=500,
+            detail=f"Failed to initialize GelfLogger: {e}",
         )
 
 
@@ -34,11 +35,13 @@ async def event_shipper(message: EventShipperPayload) -> EventShipperPayloadResp
     except Exception as e:
         logger.error(f"Failed to send test message to log shipper: {e}")
         raise HTTPException(
-            status_code=500, detail=f"Failed to send test message to log shipper: {e}",
+            status_code=500,
+            detail=f"Failed to send test message to log shipper: {e}",
         )
 
     return EventShipperPayloadResponse(
-        success=True, message="Successfully sent test message to log shipper.",
+        success=True,
+        message="Successfully sent test message to log shipper.",
     )
 
 
@@ -56,7 +59,8 @@ async def verify_event_shipper_healtcheck(attributes: Dict[str, Any]) -> Dict[st
     # MAke a TCP connection to the Graylog Input
     try:
         reader, writer = await asyncio.open_connection(
-            attributes["connector_url"], attributes["connector_extra_data"],
+            attributes["connector_url"],
+            attributes["connector_extra_data"],
         )
         writer.close()
         await writer.wait_closed()

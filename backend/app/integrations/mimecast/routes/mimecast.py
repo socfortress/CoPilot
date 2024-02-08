@@ -26,7 +26,8 @@ integration_mimecast_router = APIRouter()
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def invoke_mimecast_route(
-    mimecast_request: MimecastRequest, session: AsyncSession = Depends(get_db),
+    mimecast_request: MimecastRequest,
+    session: AsyncSession = Depends(get_db),
 ) -> MimecastResponse:
     """
     Invoke a mimecast integration.
@@ -46,7 +47,8 @@ async def invoke_mimecast_route(
     - MimecastResponse: The response model containing the result of the mimecast integration invocation.
     """
     customer_integration_response = await get_customer_integration_response(
-        mimecast_request.customer_code, session,
+        mimecast_request.customer_code,
+        session,
     )
 
     customer_integration = await find_customer_integration(
@@ -69,12 +71,14 @@ async def invoke_mimecast_route(
     "Link to docs: https://integrations.mimecast.com/documentation/endpoint-reference/logs-and-statistics/get-ttp-url-logs/ ",
 )
 async def mimecast_ttp_url_route(
-    mimecast_request: MimecastRequest, session: AsyncSession = Depends(get_db),
+    mimecast_request: MimecastRequest,
+    session: AsyncSession = Depends(get_db),
 ):
     logger.info("Mimecast TTP URL request received")
     customer_code = mimecast_request.customer_code
     customer_integration_response = await get_customer_integration_response(
-        mimecast_request.customer_code, session,
+        mimecast_request.customer_code,
+        session,
     )
 
     customer_integration = await find_customer_integration(

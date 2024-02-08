@@ -56,10 +56,12 @@ def process_agent_vulnerabilities(
     """
     try:
         vulnerabilities = agent_vulnerabilities.get("data", {}).get(
-            "affected_items", [],
+            "affected_items",
+            [],
         )
         return [WazuhAgentVulnerabilities(**vuln) for vuln in vulnerabilities]
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Failed to process agent vulnerabilities: {e}",
+            status_code=500,
+            detail=f"Failed to process agent vulnerabilities: {e}",
         )

@@ -69,7 +69,9 @@ async def fetch_file_content(filename: str) -> str:
 
 
 async def set_rule_level(
-    file_content: Any, rule_id: str, new_level: str,
+    file_content: Any,
+    rule_id: str,
+    new_level: str,
 ) -> Tuple[str, Any]:
     """
     Sets the level of a rule identified by its ID in the given file content.
@@ -122,7 +124,8 @@ async def convert_to_xml(
             xml_dict = {"group": group}
             xml_content = xmltodict.unparse(xml_dict, pretty=True)
             xml_content = xml_content.replace(
-                '<?xml version="1.0" encoding="utf-8"?>', "",
+                '<?xml version="1.0" encoding="utf-8"?>',
+                "",
             )
             xml_content_list.append(xml_content)
     except Exception as e:
@@ -154,7 +157,8 @@ async def upload_updated_rule(filename: str, xml_content: str):
     logger.info(response)
     if response["data"]["data"]["total_affected_items"] == 0:
         raise HTTPException(
-            status_code=500, detail="Failed to upload updated rule to Wazuh Manager.",
+            status_code=500,
+            detail="Failed to upload updated rule to Wazuh Manager.",
         )
     return response
 
@@ -174,7 +178,8 @@ async def process_rule(rule, rule_action_func, ResponseModel):
     """
     filename, file_content = await fetch_filename_and_content(rule.rule_id)
     previous_level, updated_file_content = await rule_action_func(
-        file_content, rule.rule_id,
+        file_content,
+        rule.rule_id,
     )
     xml_content = await convert_to_xml(updated_file_content)
     await upload_updated_rule(filename, xml_content)

@@ -159,7 +159,8 @@ async def purge_single_case_route(
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_single_case_route(
-    case_id: int = Depends(verify_case_exists), session: AsyncSession = Depends(get_db),
+    case_id: int = Depends(verify_case_exists),
+    session: AsyncSession = Depends(get_db),
 ) -> SingleCaseResponse:
     """
     Retrieve a single case by its ID.

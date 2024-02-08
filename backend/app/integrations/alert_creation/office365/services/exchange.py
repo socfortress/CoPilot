@@ -32,7 +32,8 @@ def valid_ioc_fields() -> Set[str]:
 
 
 async def construct_alert_source_link(
-    alert_details: Office365ExchangeAlertRequest, session: AsyncSession,
+    alert_details: Office365ExchangeAlertRequest,
+    session: AsyncSession,
 ) -> str:
     """
     Construct the alert source link for the alert details.
@@ -167,7 +168,8 @@ async def build_alert_payload(
     """
     asset_payload = await build_asset_payload(alert_details)
     context_payload = await build_alert_context_payload(
-        alert_details=alert_details, session=session,
+        alert_details=alert_details,
+        session=session,
     )
     timefield = "timestamp_utc"
     # Get the timefield value from the alert_details
@@ -179,7 +181,8 @@ async def build_alert_payload(
         return IrisAlertPayload(
             alert_title=alert_details.data_office365_Operation,
             alert_source_link=await construct_alert_source_link(
-                alert_details, session=session,
+                alert_details,
+                session=session,
             ),
             alert_description=alert_details.rule_description,
             alert_source="Office365 Exchange Rule",
@@ -202,7 +205,8 @@ async def build_alert_payload(
         return IrisAlertPayload(
             alert_title=alert_details.data_office365_Operation,
             alert_source_link=await construct_alert_source_link(
-                alert_details, session=session,
+                alert_details,
+                session=session,
             ),
             alert_description=alert_details.rule_description,
             alert_source="Office365 Exchange Rule",
@@ -222,7 +226,8 @@ async def build_alert_payload(
 
 
 async def create_exchange_alert(
-    alert: Office365ExchangeAlertRequest, session: AsyncSession,
+    alert: Office365ExchangeAlertRequest,
+    session: AsyncSession,
 ) -> Office365ExchangeAlertResponse:
     """
     Creates an Office365 Exchange alert in IRIS.

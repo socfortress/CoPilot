@@ -52,7 +52,8 @@ def valid_ioc_fields() -> Set[str]:
 
 
 async def construct_alert_source_link(
-    alert_details: CreateAlertRequest, session: AsyncSession,
+    alert_details: CreateAlertRequest,
+    session: AsyncSession,
 ) -> str:
     """
     Construct the alert source link for the alert details.
@@ -78,7 +79,8 @@ async def construct_alert_source_link(
 
     grafana_url = (
         await get_customer_alert_settings(
-            customer_code=alert_details.agent_labels_customer, session=session,
+            customer_code=alert_details.agent_labels_customer,
+            session=session,
         )
     ).grafana_url
 
@@ -115,7 +117,9 @@ async def build_ioc_payload(alert_details: CreateAlertRequest) -> Optional[IrisI
 
 
 async def build_asset_payload(
-    agent_data: AgentsResponse, alert_details: CreateAlertRequest, session: AsyncSession,
+    agent_data: AgentsResponse,
+    alert_details: CreateAlertRequest,
+    session: AsyncSession,
 ) -> IrisAsset:
     """
     Build the payload for an IrisAsset object based on the agent data and alert details.
@@ -133,7 +137,8 @@ async def build_asset_payload(
             asset_name=agent_data.agents[0].hostname,
             asset_ip=agent_data.agents[0].ip_address,
             asset_description=await construct_alert_source_link(
-                alert_details, session=session,
+                alert_details,
+                session=session,
             ),
             asset_type_id=await get_asset_type_id(agent_data.agents[0].os),
             asset_tags=f"agent_id:{agent_data.agents[0].agent_id}",
@@ -205,7 +210,8 @@ async def check_if_open_alert_exists_in_iris(alert_details: WazuhAlertModel) -> 
     request = FilterAlertsRequest(alert_tags=alert_details._source["rule_id"])
     params = construct_params(request)
     alert_exists = await fetch_and_validate_data(
-        client, lambda: alert_client.filter_alerts(**params),
+        client,
+        lambda: alert_client.filter_alerts(**params),
     )
     logger.info(f"Alert exists: {alert_exists['data']['alerts']}")
     return (
@@ -257,17 +263,20 @@ async def build_alert_context_payload(
     return WazuhIrisAlertContext(
         customer_iris_id=(
             await get_customer_alert_settings(
-                customer_code=alert_details.agent_labels_customer, session=session,
+                customer_code=alert_details.agent_labels_customer,
+                session=session,
             )
         ).iris_customer_id,
         customer_name=(
             await get_customer_alert_settings(
-                customer_code=alert_details.agent_labels_customer, session=session,
+                customer_code=alert_details.agent_labels_customer,
+                session=session,
             )
         ).customer_name,
         customer_cases_index=(
             await get_customer_alert_settings(
-                customer_code=alert_details.agent_labels_customer, session=session,
+                customer_code=alert_details.agent_labels_customer,
+                session=session,
             )
         ).iris_index,
         alert_name=alert_details.rule_description,
@@ -306,14 +315,19 @@ async def build_alert_payload(
         WazuhIrisAlertPayload: The built alert payload.
     """
     asset_payload = await build_asset_payload(
-        agent_data, alert_details=alert_details, session=session,
+        agent_data,
+        alert_details=alert_details,
+        session=session,
     )
     context_payload = await build_alert_context_payload(
-        alert_details=alert_details, agent_data=agent_data, session=session,
+        alert_details=alert_details,
+        agent_data=agent_data,
+        session=session,
     )
     timefield = (
         await get_customer_alert_settings(
-            customer_code=alert_details.agent_labels_customer, session=session,
+            customer_code=alert_details.agent_labels_customer,
+            session=session,
         )
     ).timefield
     # Get the timefield value from the alert_details
@@ -331,7 +345,8 @@ async def build_alert_payload(
             alert_severity_id=5,
             alert_customer_id=(
                 await get_customer_alert_settings(
-                    customer_code=alert_details.agent_labels_customer, session=session,
+                    customer_code=alert_details.agent_labels_customer,
+                    session=session,
                 )
             ).iris_customer_id,
             alert_source_content=alert_details.to_dict(),
@@ -350,7 +365,8 @@ async def build_alert_payload(
             alert_severity_id=5,
             alert_customer_id=(
                 await get_customer_alert_settings(
-                    customer_code=alert_details.agent_labels_customer, session=session,
+                    customer_code=alert_details.agent_labels_customer,
+                    session=session,
                 )
             ).iris_customer_id,
             alert_source_content=alert_details.to_dict(),
@@ -386,7 +402,8 @@ async def create_alert_details(alert_details: WazuhAlertModel) -> CreateAlertReq
 
 
 async def create_and_update_alert_in_iris(
-    alert_details: WazuhAlertModel, session: AsyncSession,
+    alert_details: WazuhAlertModel,
+    session: AsyncSession,
 ) -> int:
     """
     Creates the alert, then updates the alert with the asset and IoC if available.
@@ -441,7 +458,9 @@ async def create_and_update_alert_in_iris(
 
 async def get_current_assets(client, alert_client, iris_alert_id):
     result = await fetch_and_validate_data(
-        client, alert_client.get_alert, iris_alert_id,
+        client,
+        alert_client.get_alert,
+        iris_alert_id,
     )
     return result["data"]["assets"]
 
@@ -503,14 +522,16 @@ async def analyze_wazuh_alerts(
                 f"Alert {alert_details._id} does not exist in IRIS. Creating alert.",
             )
             iris_alert_id = await create_and_update_alert_in_iris(
-                alert_details, session,
+                alert_details,
+                session,
             )
             await remove_alert_id(alert.alert_id, session)
             es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
             await add_alert_to_document(
                 es_client=es_client,
                 alert=AddAlertRequest(
-                    alert_id=alert_details._id, index_name=alert_details._index,
+                    alert_id=alert_details._id,
+                    index_name=alert_details._index,
                 ),
                 soc_alert_id=iris_alert_id,
                 session=session,
@@ -523,24 +544,32 @@ async def analyze_wazuh_alerts(
             # Fetch the current list of assets from the alert to avoid overwriting them
             client, alert_client = await initialize_client_and_alert("DFIR-IRIS")
             current_assets = await get_current_assets(
-                client, alert_client, iris_alert_id,
+                client,
+                alert_client,
+                iris_alert_id,
             )
             alert_details = await create_alert_details(alert_details)
             agent_details = await get_agent(alert_details.agent_id, session)
             asset_payload = await build_asset_payload(
-                agent_data=agent_details, alert_details=alert_details, session=session,
+                agent_data=agent_details,
+                alert_details=alert_details,
+                session=session,
             )
             current_assets.append(dict(IrisAsset(**asset_payload.to_dict())))
             current_assets = await remove_duplicate_assets(current_assets)
             await update_alert_with_assets(
-                client, alert_client, iris_alert_id, current_assets,
+                client,
+                alert_client,
+                iris_alert_id,
+                current_assets,
             )
             await remove_alert_id(alert.alert_id, session)
             es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
             await add_alert_to_document(
                 es_client=es_client,
                 alert=AddAlertRequest(
-                    alert_id=alert_details.id, index_name=alert_details.index,
+                    alert_id=alert_details.id,
+                    index_name=alert_details.index,
                 ),
                 soc_alert_id=iris_alert_id,
                 session=session,

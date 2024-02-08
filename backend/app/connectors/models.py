@@ -69,7 +69,8 @@ class Connectors(SQLModel, table=True):
 
     # Relationship
     history_logs: List[ConnectorHistory] = Relationship(
-        back_populates="connector", sa_relationship_kwargs={"lazy": "selectin"},
+        back_populates="connector",
+        sa_relationship_kwargs={"lazy": "selectin"},
     )
 
 

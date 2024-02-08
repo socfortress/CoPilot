@@ -89,7 +89,9 @@ async def get_all_jobs(session: AsyncSession = Depends(get_db)) -> JobsResponse:
         )
     logger.info(f"apscheduler_jobs: {apscheduler_jobs}")
     return JobsResponse(
-        jobs=apscheduler_jobs, success=True, message="Jobs successfully retrieved.",
+        jobs=apscheduler_jobs,
+        success=True,
+        message="Jobs successfully retrieved.",
     )
 
 
@@ -141,7 +143,9 @@ async def pause_job(job_id: str):
 
 @scheduler_router.put("/update/{job_id}", description="Update a job")
 async def update_job(
-    job_id: str, time_interval: int, session: AsyncSession = Depends(get_db),
+    job_id: str,
+    time_interval: int,
+    session: AsyncSession = Depends(get_db),
 ):
     """
     Update a job with the specified job_id and time_interval.
@@ -165,7 +169,10 @@ async def update_job(
     if job:
         job.reschedule(trigger="interval", minutes=time_interval)
         await manage_job_metadata(
-            session, job_id, "update", time_interval=time_interval,
+            session,
+            job_id,
+            "update",
+            time_interval=time_interval,
         )
         logger.info(f"Job {job_id} updated successfully")
         return {"success": True, "message": "Job updated successfully"}

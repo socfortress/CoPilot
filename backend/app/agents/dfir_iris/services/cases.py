@@ -7,7 +7,10 @@ from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-async def collect_agent_soc_cases(agent_id: int, session: AsyncSession) -> AssetCaseIDResponse:
+async def collect_agent_soc_cases(
+    agent_id: int,
+    session: AsyncSession,
+) -> AssetCaseIDResponse:
     """
     Get all cases for the given agent ID.
 

@@ -70,7 +70,8 @@ def valid_ioc_fields() -> Set[str]:
 
 
 async def construct_alert_source_link(
-    alert_details: GenericAlertModel, session: AsyncSession,
+    alert_details: GenericAlertModel,
+    session: AsyncSession,
 ) -> str:
     """
     Construct the alert source link for the alert details.
@@ -94,7 +95,8 @@ async def construct_alert_source_link(
 
     grafana_url = (
         await get_customer_alert_settings(
-            customer_code=alert_details._source.agent_labels_customer, session=session,
+            customer_code=alert_details._source.agent_labels_customer,
+            session=session,
         )
     ).grafana_url
 
@@ -138,7 +140,8 @@ async def get_single_alert_details(
     except Exception as e:
         logger.debug(f"Failed to collect alert details: {e}")
         raise HTTPException(
-            status_code=400, detail=f"Failed to collect alert details: {e}",
+            status_code=400,
+            detail=f"Failed to collect alert details: {e}",
         )
 
 
@@ -231,10 +234,14 @@ async def build_alert_context_payload(
         asset_type=await get_asset_type_id(agent_data.agents[0].os),
         process_id=getattr(alert_details._source, "process_id", "No process id found"),
         rule_mitre_id=getattr(
-            alert_details._source, "rule_mitre_id", "No rule mitre id found",
+            alert_details._source,
+            "rule_mitre_id",
+            "No rule mitre id found",
         ),
         rule_mitre_tactic=getattr(
-            alert_details._source, "rule_mitre_tactic", "No rule mitre tactic found",
+            alert_details._source,
+            "rule_mitre_tactic",
+            "No rule mitre tactic found",
         ),
         rule_mitre_technique=getattr(
             alert_details._source,
@@ -267,11 +274,14 @@ async def build_alert_payload(
     """
     asset_payload = await build_asset_payload(agent_data, alert_details)
     context_payload = await build_alert_context_payload(
-        alert_details=alert_details, agent_data=agent_data, session=session,
+        alert_details=alert_details,
+        agent_data=agent_data,
+        session=session,
     )
     timefield = (
         await get_customer_alert_settings(
-            customer_code=alert_details._source.agent_labels_customer, session=session,
+            customer_code=alert_details._source.agent_labels_customer,
+            session=session,
         )
     ).timefield
     # Get the timefield value from the alert_details
@@ -284,7 +294,8 @@ async def build_alert_payload(
             return IrisAlertPayload(
                 alert_title=alert_details._source.rule_description,
                 alert_source_link=await construct_alert_source_link(
-                    alert_details, session=session,
+                    alert_details,
+                    session=session,
                 ),
                 alert_description=alert_details._source.rule_description,
                 alert_source="CoPilot",
@@ -307,7 +318,8 @@ async def build_alert_payload(
             return IrisAlertPayload(
                 alert_title=alert_details._source.rule_description,
                 alert_source_link=await construct_alert_source_link(
-                    alert_details, session=session,
+                    alert_details,
+                    session=session,
                 ),
                 alert_description=alert_details._source.rule_description,
                 alert_source="CoPilot",
@@ -327,7 +339,8 @@ async def build_alert_payload(
     except Exception as e:
         logger.error(f"Failed to build alert payload: {e}")
         raise HTTPException(
-            status_code=500, detail=f"Failed to build alert payload: {e}",
+            status_code=500,
+            detail=f"Failed to build alert payload: {e}",
         )
 
 
@@ -347,7 +360,10 @@ async def construct_soc_alert_url(root_url: str, soc_alert_id: int) -> str:
 
 
 async def add_alert_to_document(
-    es_client, alert: CreateAlertRequest, soc_alert_id: int, session: AsyncSession,
+    es_client,
+    alert: CreateAlertRequest,
+    soc_alert_id: int,
+    session: AsyncSession,
 ) -> Optional[str]:
     """
     Update the alert document in Elasticsearch with the provided SOC alert ID URL.
@@ -364,7 +380,8 @@ async def add_alert_to_document(
     try:
         connector_info = await get_connector_info_from_db("DFIR-IRIS", session)
         full_url = await construct_soc_alert_url(
-            connector_info["connector_url"], soc_alert_id,
+            connector_info["connector_url"],
+            soc_alert_id,
         )
         es_client.update(
             index=alert.index_name,
@@ -382,7 +399,8 @@ async def add_alert_to_document(
         # Attempt to remove read-only block
         try:
             es_client.indices.put_settings(
-                index=alert.index_name, body={"index.blocks.write": None},
+                index=alert.index_name,
+                body={"index.blocks.write": None},
             )
             logger.info(
                 f"Removed read-only block from index {alert.index_name}. Retrying update.",
@@ -400,7 +418,8 @@ async def add_alert_to_document(
 
             # Reenable the write block
             es_client.indices.put_settings(
-                index=alert.index_name, body={"index.blocks.write": True},
+                index=alert.index_name,
+                body={"index.blocks.write": True},
             )
             return full_url
         except Exception as e2:
@@ -411,7 +430,8 @@ async def add_alert_to_document(
 
 
 async def create_alert(
-    alert: CreateAlertRequest, session: AsyncSession,
+    alert: CreateAlertRequest,
+    session: AsyncSession,
 ) -> CreateAlertResponse:
     """
     Creates an alert in IRIS.
@@ -431,7 +451,8 @@ async def create_alert(
     logger.info(f"Alert details: {alert_details}")
     if (
         await is_customer_code_valid(
-            customer_code=alert_details._source.agent_labels_customer, session=session,
+            customer_code=alert_details._source.agent_labels_customer,
+            session=session,
         )
         is False
     ):
@@ -452,7 +473,9 @@ async def create_alert(
     )
     client, alert_client = await initialize_client_and_alert("DFIR-IRIS")
     result = await fetch_and_validate_data(
-        client, alert_client.add_alert, iris_alert_payload.to_dict(),
+        client,
+        alert_client.add_alert,
+        iris_alert_payload.to_dict(),
     )
     alert_id = result["data"]["alert_id"]
     logger.info(f"Successfully created alert {alert_id} in IRIS.")
@@ -473,7 +496,10 @@ async def create_alert(
         )
     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
     iris_url = await add_alert_to_document(
-        es_client, alert, result["data"]["alert_id"], session=session,
+        es_client,
+        alert,
+        result["data"]["alert_id"],
+        session=session,
     )
     try:
         alert_id = result["data"]["alert_id"]

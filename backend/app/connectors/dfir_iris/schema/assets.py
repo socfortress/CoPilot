@@ -19,7 +19,8 @@ class Asset(BaseModel):
     analysis_status_id: int
     asset_compromise_status_id: Optional[int]
     asset_description: Optional[str] = Field(
-        None, description="The description of the asset.",
+        None,
+        description="The description of the asset.",
     )
     asset_domain: Optional[str]
     asset_icon_compromised: str

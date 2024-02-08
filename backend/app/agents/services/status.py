@@ -54,7 +54,8 @@ async def get_outdated_agents_wazuh(
         if wazuh_manager is None:
             logger.error("Wazuh Manager with agent_id '000' not found.")
             raise HTTPException(
-                status_code=404, detail="Wazuh Manager with agent_id '000' not found.",
+                status_code=404,
+                detail="Wazuh Manager with agent_id '000' not found.",
             )
 
         outdated_agents_result = await session.execute(
@@ -72,7 +73,8 @@ async def get_outdated_agents_wazuh(
         )
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Failed to fetch outdated Wazuh agents: {e}",
+            status_code=500,
+            detail=f"Failed to fetch outdated Wazuh agents: {e}",
         )
 
 
@@ -111,5 +113,6 @@ async def get_outdated_agents_velociraptor(
         )
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Failed to fetch outdated Velociraptor agents: {e}",
+            status_code=500,
+            detail=f"Failed to fetch outdated Velociraptor agents: {e}",
         )

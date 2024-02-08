@@ -13,10 +13,14 @@ router = APIRouter()
 
 # Include the DFIR Iris related routes
 router.include_router(
-    dfir_iris_alerts_router, prefix="/soc/alerts", tags=["soc-alerts"],
+    dfir_iris_alerts_router,
+    prefix="/soc/alerts",
+    tags=["soc-alerts"],
 )
 router.include_router(
-    dfir_iris_assets_router, prefix="/soc/assets", tags=["soc-assets"],
+    dfir_iris_assets_router,
+    prefix="/soc/assets",
+    tags=["soc-assets"],
 )
 router.include_router(dfir_iris_cases_router, prefix="/soc/cases", tags=["soc-cases"])
 router.include_router(dfir_iris_notes_router, prefix="/soc/notes", tags=["soc-notes"])

@@ -120,7 +120,9 @@ async def send_get_request(
 
 
 async def send_post_request(
-    endpoint: str, data: Dict[str, Any] = None, connector_name: str = "Graylog",
+    endpoint: str,
+    data: Dict[str, Any] = None,
+    connector_name: str = "Graylog",
 ) -> Dict[str, Any]:
     """
     Sends a POST request to the Graylog service.

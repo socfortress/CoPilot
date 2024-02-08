@@ -5,10 +5,14 @@ from pydantic import BaseModel, Field
 
 class DecommissionedData(BaseModel):
     agents_deleted: List[str] = Field(
-        ..., example=["agent1", "agent2"], description="List of agents deleted",
+        ...,
+        example=["agent1", "agent2"],
+        description="List of agents deleted",
     )
     groups_deleted: List[str] = Field(
-        ..., example=["group1", "group2"], description="List of groups deleted",
+        ...,
+        example=["group1", "group2"],
+        description="List of groups deleted",
     )
     stream_deleted: str = Field(..., example="stream1", description="Stream deleted")
     index_deleted: str = Field(..., example="index1", description="Index deleted")
@@ -26,5 +30,6 @@ class DecommissionCustomerResponse(BaseModel):
         description="Whether the customer was decommissioned successfully or not",
     )
     decomissioned_data: DecommissionedData = Field(
-        ..., description="Data from the decomissioning process",
+        ...,
+        description="Data from the decomissioning process",
     )

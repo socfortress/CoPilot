@@ -85,7 +85,10 @@ class SMTPInput(SQLModel):
 
 class Password(BaseModel):
     length: int = Field(
-        default=12, ge=8, le=128, description="The length of the password",
+        default=12,
+        ge=8,
+        le=128,
+        description="The length of the password",
     )
     hashed: str  # Holds the hashed password
     plain: str  # Holds the plain password
@@ -118,7 +121,8 @@ class Password(BaseModel):
         # Fill the rest of the password length with a random mix of characters
         if length > 4:
             password_chars += random.choices(
-                lowercase + uppercase + digits + punctuation, k=length - 4,
+                lowercase + uppercase + digits + punctuation,
+                k=length - 4,
             )
 
         # Shuffle the resulting password list to avoid predictable patterns
@@ -132,7 +136,9 @@ class Password(BaseModel):
 
         # Return the Password object with both the plain and hashed password
         return cls(
-            length=length, hashed=hashed_password.decode("utf-8"), plain=password,
+            length=length,
+            hashed=hashed_password.decode("utf-8"),
+            plain=password,
         )
 
 

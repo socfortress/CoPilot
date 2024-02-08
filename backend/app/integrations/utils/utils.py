@@ -8,7 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def get_customer_integration_response(
-    customer_code: str, session: AsyncSession,
+    customer_code: str,
+    session: AsyncSession,
 ) -> CustomerIntegrationsResponse:
     """
     Retrieves the integration response for a customer.
@@ -24,11 +25,13 @@ async def get_customer_integration_response(
         HTTPException: If the customer integration settings are not found.
     """
     customer_integration_response = await get_customer_integrations_by_customer_code(
-        customer_code, session,
+        customer_code,
+        session,
     )
     if customer_integration_response.available_integrations == []:
         raise HTTPException(
-            status_code=404, detail="Customer integration settings not found.",
+            status_code=404,
+            detail="Customer integration settings not found.",
         )
     return customer_integration_response
 

@@ -40,7 +40,8 @@ async def delete_index(index_name: DeletedIndexBody) -> DeletedIndexResponse:
         )
     else:
         return DeletedIndexResponse(
-            success=True, message=f"Successfully deleted index {index_name}",
+            success=True,
+            message=f"Successfully deleted index {index_name}",
         )
 
 
@@ -57,11 +58,13 @@ async def stop_input(input_id: StopInputBody) -> StopInputResponse:
     response = await send_delete_request(endpoint=f"/api/system/inputstates/{input_id}")
     if response["success"]:
         return StopInputResponse(
-            success=True, message=f"Successfully stopped input {input_id}",
+            success=True,
+            message=f"Successfully stopped input {input_id}",
         )
     else:
         return StopInputResponse(
-            success=False, message=f"Failed to stop input {input_id}",
+            success=False,
+            message=f"Failed to stop input {input_id}",
         )
 
 
@@ -78,11 +81,13 @@ async def start_input(input_id: StartInputBody) -> StartInputResponse:
     response = await send_put_request(endpoint=f"/api/system/inputstates/{input_id}")
     if response["success"]:
         return StartInputResponse(
-            success=True, message=f"Successfully started input {input_id}",
+            success=True,
+            message=f"Successfully started input {input_id}",
         )
     else:
         return StartInputResponse(
-            success=False, message=f"Failed to start input {input_id}",
+            success=False,
+            message=f"Failed to start input {input_id}",
         )
 
 
@@ -100,11 +105,13 @@ async def stop_stream(stream_id: StopStreamBody) -> StopStreamResponse:
     logger.info(f"Response: {response}")
     if response["success"]:
         return StopStreamResponse(
-            success=True, message=f"Successfully stopped stream {stream_id}",
+            success=True,
+            message=f"Successfully stopped stream {stream_id}",
         )
     else:
         return StopStreamResponse(
-            success=False, message=f"Failed to stop stream {stream_id}",
+            success=False,
+            message=f"Failed to stop stream {stream_id}",
         )
 
 
@@ -121,9 +128,11 @@ async def start_stream(stream_id: StartStreamBody) -> StartStreamResponse:
     response = await send_post_request(endpoint=f"/api/streams/{stream_id}/resume")
     if response["success"]:
         return StartStreamResponse(
-            success=True, message=f"Successfully started stream {stream_id}",
+            success=True,
+            message=f"Successfully started stream {stream_id}",
         )
     else:
         return StartStreamResponse(
-            success=False, message=f"Failed to start stream {stream_id}",
+            success=False,
+            message=f"Failed to start stream {stream_id}",
         )

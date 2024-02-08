@@ -156,7 +156,9 @@ class AlertDetailsService:
         }
 
     async def process_events(
-        self, events: list, event_configs: List[AlertCreationEventConfig],
+        self,
+        events: list,
+        event_configs: List[AlertCreationEventConfig],
     ):
         """
         Process the events and check for exclusions.
@@ -245,7 +247,8 @@ class AlertDetailsService:
 
             # Get all order keys from the 'Order' section in config.ini
             order_keys = await get_customer_alert_event_configs(
-                customer_code=events[0]["agent_labels_customer"], session=session,
+                customer_code=events[0]["agent_labels_customer"],
+                session=session,
             )
             logger.info(f"Order keys: {order_keys}")
 

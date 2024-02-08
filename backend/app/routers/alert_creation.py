@@ -9,8 +9,12 @@ router = APIRouter()
 
 # Include the Ask SocFortress related routes
 router.include_router(
-    general_alerts_router, prefix="/api/v1/alerts/general", tags=["Alert Creation"],
+    general_alerts_router,
+    prefix="/api/v1/alerts/general",
+    tags=["Alert Creation"],
 )
 router.include_router(
-    office365_alerts_router, prefix="/api/v1/alerts/office365", tags=["Alert Creation"],
+    office365_alerts_router,
+    prefix="/api/v1/alerts/office365",
+    tags=["Alert Creation"],
 )

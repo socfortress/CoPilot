@@ -16,7 +16,8 @@ general_alerts_router = APIRouter()
 
 
 async def is_rule_id_valid(
-    create_alert_request: CreateAlertRequest, session: AsyncSession,
+    create_alert_request: CreateAlertRequest,
+    session: AsyncSession,
 ) -> bool:
     """
     Checks if the given rule ID is valid for the specified customer.
@@ -49,7 +50,8 @@ async def is_rule_id_valid(
 
 
 async def is_customer_code_valid(
-    create_alert_request: CreateAlertRequest, session: AsyncSession,
+    create_alert_request: CreateAlertRequest,
+    session: AsyncSession,
 ) -> bool:
     """
     Checks if the customer code provided in the create_alert_request is valid.

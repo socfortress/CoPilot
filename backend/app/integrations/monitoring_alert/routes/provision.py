@@ -70,7 +70,8 @@ async def check_if_event_definition_exists(event_definition: str) -> bool:
     event_definitions_response = await get_all_event_definitions()
     if not event_definitions_response.success:
         raise HTTPException(
-            status_code=500, detail="Failed to collect event definitions",
+            status_code=500,
+            detail="Failed to collect event definitions",
         )
     event_definitions_response = GraylogEventDefinitionsResponse(
         **event_definitions_response.dict(),
@@ -132,7 +133,8 @@ async def provision_monitoring_alert_route(
     await provision_function(request)
 
     return ProvisionWazuhMonitoringAlertResponse(
-        success=True, message="Wazuh monitoring alerts provisioned.",
+        success=True,
+        message="Wazuh monitoring alerts provisioned.",
     )
 
 
@@ -155,5 +157,6 @@ async def provision_monitoring_alert_testing_route(
     )
     await event_shipper(message)
     return ProvisionWazuhMonitoringAlertResponse(
-        success=True, message="Event sent to log shipper successfully.",
+        success=True,
+        message="Event sent to log shipper successfully.",
     )

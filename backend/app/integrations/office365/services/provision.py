@@ -82,7 +82,8 @@ async def get_wazuh_configuration() -> str:
 
 
 async def office365_template_with_api_type(
-    customer_code: str, provision_office365_auth_keys: ProvisionOffice365AuthKeys,
+    customer_code: str,
+    provision_office365_auth_keys: ProvisionOffice365AuthKeys,
 ) -> str:
     """
     Returns a configured Office365 template for Wazuh.
@@ -127,7 +128,8 @@ async def office365_template_with_api_type(
 
 
 async def office365_template(
-    customer_code: str, provision_office365_auth_keys: ProvisionOffice365AuthKeys,
+    customer_code: str,
+    provision_office365_auth_keys: ProvisionOffice365AuthKeys,
 ) -> str:
     """
     Returns a configured Office365 template for Wazuh.
@@ -186,7 +188,8 @@ async def append_office365_template(wazuh_config: str, office365_template: str) 
 
 
 async def update_wazuh_configuration(
-    wazuh_config: str, provision_office365_auth_keys: ProvisionOffice365AuthKeys,
+    wazuh_config: str,
+    provision_office365_auth_keys: ProvisionOffice365AuthKeys,
 ) -> None:
     """
     Updates the Wazuh configuration. If it fails, remove the <api_type> tag and retry.
@@ -201,7 +204,9 @@ async def update_wazuh_configuration(
     try:
         # First attempt to update configuration
         response = await send_put_request(
-            endpoint=endpoint, data=data, binary_data=True,
+            endpoint=endpoint,
+            data=data,
+            binary_data=True,
         )
         if response.get("success") and response["data"].get("error") == 0:
             logger.info("Wazuh configuration updated successfully.")
@@ -221,7 +226,9 @@ async def update_wazuh_configuration(
 
     try:
         response = await send_put_request(
-            endpoint=endpoint, data=data, binary_data=True,
+            endpoint=endpoint,
+            data=data,
+            binary_data=True,
         )
         if response.get("success") and response["data"].get("error") == 0:
             logger.info(
@@ -239,12 +246,14 @@ async def update_wazuh_configuration(
             f"Exception occurred during retry of Wazuh configuration update: {e}",
         )
         raise HTTPException(
-            status_code=500, detail="Failed to update Wazuh configuration.",
+            status_code=500,
+            detail="Failed to update Wazuh configuration.",
         )
 
 
 async def check_if_office365_is_already_provisioned(
-    customer_code: str, wazuh_config: str,
+    customer_code: str,
+    wazuh_config: str,
 ) -> bool:
     """
     If the string "Office365 Integration For {customer_code}" is found in the Wazuh configuration, return True.
@@ -275,7 +284,8 @@ async def restart_wazuh_manager() -> None:
 
 
 async def build_index_set_config(
-    customer_code: str, session: AsyncSession,
+    customer_code: str,
+    session: AsyncSession,
 ) -> TimeBasedIndexSet:
     """
     Build the configuration for a time-based index set.
@@ -329,14 +339,16 @@ async def send_index_set_creation_request(
     json_index_set = json.dumps(index_set.dict())
     logger.info(f"json_index_set set: {json_index_set}")
     response_json = await send_post_request(
-        endpoint="/api/system/indices/index_sets", data=index_set.dict(),
+        endpoint="/api/system/indices/index_sets",
+        data=index_set.dict(),
     )
     return GraylogIndexSetCreationResponse(**response_json)
 
 
 # Refactored create_index_set function
 async def create_index_set(
-    customer_code: str, session: AsyncSession,
+    customer_code: str,
+    session: AsyncSession,
 ) -> GraylogIndexSetCreationResponse:
     """
     Creates an index set for a new customer.
@@ -423,7 +435,8 @@ async def send_event_stream_creation_request(
     json_event_stream = json.dumps(event_stream.dict())
     logger.info(f"json_event_stream set: {json_event_stream}")
     response_json = await send_post_request(
-        endpoint="/api/streams", data=event_stream.dict(),
+        endpoint="/api/streams",
+        data=event_stream.dict(),
     )
     return StreamCreationResponse(**response_json)
 
@@ -445,7 +458,10 @@ async def create_event_stream(
         The result of the event stream creation request.
     """
     event_stream_config = await build_event_stream_config(
-        customer_code, provision_office365_auth_keys, index_set_id, session,
+        customer_code,
+        provision_office365_auth_keys,
+        index_set_id,
+        session,
     )
     return await send_event_stream_creation_request(event_stream_config)
 
@@ -509,7 +525,11 @@ async def create_office365_utc_rule(rule_title: str) -> None:
         "end"
     )
     await create_pipeline_rule(
-        CreatePipelineRule(title=rule_title, description=rule_title, source=rule_source),
+        CreatePipelineRule(
+            title=rule_title,
+            description=rule_title,
+            source=rule_source,
+        ),
     )
 
 
@@ -526,7 +546,11 @@ async def create_wazuh_info_rule(rule_title: str) -> None:
         "end"
     )
     await create_pipeline_rule(
-        CreatePipelineRule(title=rule_title, description=rule_title, source=rule_source),
+        CreatePipelineRule(
+            title=rule_title,
+            description=rule_title,
+            source=rule_source,
+        ),
     )
 
 
@@ -543,7 +567,11 @@ async def create_wazuh_warning_rule(rule_title: str) -> None:
         "end"
     )
     await create_pipeline_rule(
-        CreatePipelineRule(title=rule_title, description=rule_title, source=rule_source),
+        CreatePipelineRule(
+            title=rule_title,
+            description=rule_title,
+            source=rule_source,
+        ),
     )
 
 
@@ -560,7 +588,11 @@ async def create_wazuh_notice_rule(rule_title: str) -> None:
         "end"
     )
     await create_pipeline_rule(
-        CreatePipelineRule(title=rule_title, description=rule_title, source=rule_source),
+        CreatePipelineRule(
+            title=rule_title,
+            description=rule_title,
+            source=rule_source,
+        ),
     )
 
 
@@ -577,7 +609,11 @@ async def create_wazuh_alert_rule(rule_title: str) -> None:
         "end"
     )
     await create_pipeline_rule(
-        CreatePipelineRule(title=rule_title, description=rule_title, source=rule_source),
+        CreatePipelineRule(
+            title=rule_title,
+            description=rule_title,
+            source=rule_source,
+        ),
     )
 
 
@@ -673,16 +709,22 @@ async def create_grafana_datasource(
         typeName="OpenSearch",
         access="proxy",
         url=await get_connector_attribute(
-            connector_id=1, column_name="connector_url", session=session,
+            connector_id=1,
+            column_name="connector_url",
+            session=session,
         ),
         database=f"office365_{customer_code}*",
         basicAuth=True,
         basicAuthUser=await get_connector_attribute(
-            connector_id=1, column_name="connector_username", session=session,
+            connector_id=1,
+            column_name="connector_username",
+            session=session,
         ),
         secureJsonData={
             "basicAuthPassword": await get_connector_attribute(
-                connector_id=1, column_name="connector_password", session=session,
+                connector_id=1,
+                column_name="connector_password",
+                session=session,
             ),
         },
         isDefault=False,
@@ -724,7 +766,8 @@ async def provision_office365(
 
     # Create Office365 template
     office365_templated = await office365_template_with_api_type(
-        customer_code, provision_office365_auth_keys,
+        customer_code,
+        provision_office365_auth_keys,
     )
 
     # Append Office365 template to Wazuh configuration
@@ -748,13 +791,17 @@ async def provision_office365(
     # Create event stream
     stream_id = (
         await create_event_stream(
-            customer_code, provision_office365_auth_keys, index_set_id, session,
+            customer_code,
+            provision_office365_auth_keys,
+            index_set_id,
+            session,
         )
     ).data.stream_id
     pipeline_id = await get_pipeline_id(subscription="OFFICE365")
     # Combine stream and pipeline IDs
     stream_and_pipeline = StreamConnectionToPipelineRequest(
-        stream_id=stream_id, pipeline_ids=pipeline_id,
+        stream_id=stream_id,
+        pipeline_ids=pipeline_id,
     )
     # Connect stream to pipeline
     logger.info(f"Stream and pipeline: {stream_and_pipeline}")
@@ -864,7 +911,8 @@ async def provision_office365(
 
 ######### ! Provision in Praeco ! ############
 async def provision_alert_in_praeco(
-    request: PraecoAlertConfig, session: AsyncSession,
+    request: PraecoAlertConfig,
+    session: AsyncSession,
 ) -> PraecoProvisionAlertResponse:
     """
     Provisions the given alert in Praeco. https://github.com/socfortress/Customer-Provisioning-Alert
@@ -878,7 +926,9 @@ async def provision_alert_in_praeco(
     """
     logger.info(f"Provisioning to alert creation - Praeco {request}")
     api_endpoint = await get_connector_attribute(
-        connector_id=15, column_name="connector_url", session=session,
+        connector_id=15,
+        column_name="connector_url",
+        session=session,
     )
     # Send the POST request to Praeco
     response = requests.post(
@@ -894,13 +944,15 @@ async def provision_alert_in_praeco(
         )
     # Return the response
     return PraecoProvisionAlertResponse(
-        success=True, message="Successfully provisioned to Alert Creation App.",
+        success=True,
+        message="Successfully provisioned to Alert Creation App.",
     )
 
 
 ######### ! Update Database ! ############
 async def update_customer_integration_table(
-    customer_code: str, session: AsyncSession,
+    customer_code: str,
+    session: AsyncSession,
 ) -> None:
     """
     Updates the `customer_integrations` table to set the `deployed` column to True where the `customer_code`

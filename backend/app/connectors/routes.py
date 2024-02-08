@@ -58,7 +58,8 @@ async def get_connectors(
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_connector(
-    connector_id: int, session: AsyncSession = Depends(get_db),
+    connector_id: int,
+    session: AsyncSession = Depends(get_db),
 ) -> Union[ConnectorResponse, HTTPException]:
     """
     Fetch a specific connector by its ID.
@@ -75,7 +76,8 @@ async def get_connector(
         HTTPException: An exception with a 404 status code is raised if the connector is not found.
     """
     connector = await ConnectorServices.fetch_connector_by_id(
-        connector_id, session=session,
+        connector_id,
+        session=session,
     )
     if connector is not None:
         return {
@@ -117,7 +119,8 @@ async def verify_connector(
         HTTPException: An exception with a 404 status code is raised if the connector is not found.
     """
     connector = await ConnectorServices.verify_connector_by_id(
-        connector_id, session=session,
+        connector_id,
+        session=session,
     )
     if connector is None:
         raise HTTPException(
@@ -161,7 +164,9 @@ async def update_connector(
         HTTPException: An exception with a 404 status code is raised if the connector is not found.
     """
     updated_connector = await ConnectorServices.update_connector_by_id(
-        connector_id, connector, session=session,
+        connector_id,
+        connector,
+        session=session,
     )
     if updated_connector is not None:
         await ConnectorServices.verify_connector_by_id(connector_id, session=session)
@@ -216,7 +221,8 @@ async def upload_yaml_file(
         save_file_result = await ConnectorServices.save_file(file, session=session)
         if save_file_result:
             await ConnectorServices.verify_connector_by_id(
-                connector_id, session=session,
+                connector_id,
+                session=session,
             )
             return {"success": True, "message": "File uploaded successfully"}
         else:

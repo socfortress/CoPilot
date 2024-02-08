@@ -89,7 +89,9 @@ async def validate_integration_name(integration_name: str, session: AsyncSession
 
 
 async def validate_integration_auth_keys(
-    integration_name: str, integration_auth_keys: List[AuthKey], session: AsyncSession,
+    integration_name: str,
+    integration_auth_keys: List[AuthKey],
+    session: AsyncSession,
 ):
     """
     Validate if the integration auth keys are valid.
@@ -109,7 +111,9 @@ async def validate_integration_auth_keys(
 
 
 async def validate_integration_auth_key_update(
-    integration_name: str, integration_auth_key: List[AuthKey], session: AsyncSession,
+    integration_name: str,
+    integration_auth_key: List[AuthKey],
+    session: AsyncSession,
 ):
     """
     Validate if the integration auth key is valid.
@@ -136,7 +140,8 @@ async def validate_customer_code(customer_code: str, session: AsyncSession):
     result = await session.execute(stmt)
     if result.scalars().first() is None:
         raise HTTPException(
-            status_code=400, detail=f"Customer {customer_code} does not exist.",
+            status_code=400,
+            detail=f"Customer {customer_code} does not exist.",
         )
 
 
@@ -154,7 +159,9 @@ async def validate_customer_meta(customer_code: str, session: AsyncSession):
 
 
 async def check_existing_customer_integration(
-    customer_code: str, integration_name: str, session: AsyncSession,
+    customer_code: str,
+    integration_name: str,
+    session: AsyncSession,
 ):
     """
     Check if the customer integration already exists.
@@ -178,7 +185,9 @@ async def check_existing_customer_integration(
 
 
 async def check_existing_customer_integration_meta(
-    customer_code: str, integration_name: str, session: AsyncSession,
+    customer_code: str,
+    integration_name: str,
+    session: AsyncSession,
 ):
     """
     Check if the customer integration meta already exists for the customer code and integration name.
@@ -208,7 +217,8 @@ async def create_integration_service(
         auth_type=settings.auth_type,
         configs=[
             IntegrationConfig(
-                config_key=settings.config_key, config_value=settings.config_value,
+                config_key=settings.config_key,
+                config_value=settings.config_value,
             ),
         ],
     )
@@ -255,7 +265,8 @@ async def create_integration_subscription(
             integration_service=integration_service,
             integration_auth_keys=[
                 IntegrationAuthKeys(
-                    auth_key_name=auth_key.auth_key_name, auth_value=auth_key.auth_value,
+                    auth_key_name=auth_key.auth_key_name,
+                    auth_value=auth_key.auth_value,
                 ),
             ],
         )
@@ -358,7 +369,9 @@ async def find_customer_integration(
 
 
 def get_subscription_id(
-    customer_integration, integration_name: str, auth_key_name: str,
+    customer_integration,
+    integration_name: str,
+    auth_key_name: str,
 ) -> Optional[int]:
     for subscription in customer_integration.integration_subscriptions:
         if subscription.integration_service.service_name == integration_name:
@@ -369,7 +382,8 @@ def get_subscription_id(
 
 
 async def get_tenant_id(
-    customer_integration: CustomerIntegrationCreate, session: AsyncSession,
+    customer_integration: CustomerIntegrationCreate,
+    session: AsyncSession,
 ) -> str:
     """
     Retrieves the Tenant ID for a given customer integration. This is the Office365 organization ID and
@@ -408,7 +422,9 @@ async def get_tenant_id(
 
 
 async def update_office365_organization_id(
-    customer_code: str, tenant_id: str, session: AsyncSession,
+    customer_code: str,
+    tenant_id: str,
+    session: AsyncSession,
 ):
     """
     Updates the Office365 organization ID in the alert_creation_settings table.
@@ -423,7 +439,8 @@ async def update_office365_organization_id(
 
 
 async def get_integration_service_id(
-    integration_name: str, session: AsyncSession,
+    integration_name: str,
+    session: AsyncSession,
 ) -> int:
     """
     Retrieves the AvailableIntegrations ID for a given integration name.
@@ -435,13 +452,15 @@ async def get_integration_service_id(
     integration_service = result.scalars().first()
     if integration_service is None:
         raise HTTPException(
-            status_code=404, detail=f"Integration service {integration_name} not found.",
+            status_code=404,
+            detail=f"Integration service {integration_name} not found.",
         )
     return integration_service.id
 
 
 async def get_integration_service_name(
-    integration_name: str, session: AsyncSession,
+    integration_name: str,
+    session: AsyncSession,
 ) -> str:
     """
     Retrieves the AvailableIntegrations ID for a given integration name.
@@ -453,7 +472,8 @@ async def get_integration_service_name(
     integration_service = result.scalars().first()
     if integration_service is None:
         raise HTTPException(
-            status_code=404, detail=f"Integration service {integration_name} not found.",
+            status_code=404,
+            detail=f"Integration service {integration_name} not found.",
         )
     return integration_service.integration_name
 
@@ -646,7 +666,8 @@ async def create_integration(
     Endpoint to create a new customer integration.
     """
     await validate_integration_name(
-        customer_integration_create.integration_name, session,
+        customer_integration_create.integration_name,
+        session,
     )
     await validate_integration_auth_keys(
         customer_integration_create.integration_name,
@@ -661,10 +682,12 @@ async def create_integration(
         session,
     )
     integration_service_id = await get_integration_service_id(
-        customer_integration_create.integration_name, session,
+        customer_integration_create.integration_name,
+        session,
     )
     integration_service_name = await get_integration_service_name(
-        customer_integration_create.integration_name, session,
+        customer_integration_create.integration_name,
+        session,
     )
 
     integration_service = await create_integration_service(
@@ -690,7 +713,9 @@ async def create_integration(
     if customer_integration_create.integration_name == "Office365":
         tenant_id = await get_tenant_id(customer_integration_create, session)
         await update_office365_organization_id(
-            customer_integration_create.customer_code, tenant_id, session,
+            customer_integration_create.customer_code,
+            tenant_id,
+            session,
         )
 
     return CustomerIntegrationCreateResponse(
@@ -750,10 +775,12 @@ async def update_integration(
     session: AsyncSession = Depends(get_db),
 ):
     await validate_integration_name(
-        customer_integration_update.integration_name, session,
+        customer_integration_update.integration_name,
+        session,
     )
     customer_integration_response = await get_customer_integrations_by_customer_code(
-        customer_code, session,
+        customer_code,
+        session,
     )
 
     if not customer_integration_response:
@@ -857,7 +884,9 @@ async def delete_integration(
     integration_name = delete_customer_integration.integration_name
 
     results = await get_customer_and_service_ids(
-        session, customer_code, integration_name,
+        session,
+        customer_code,
+        integration_name,
     )
     # Check if results is not empty
     if results:
@@ -868,11 +897,14 @@ async def delete_integration(
         raise HTTPException(status_code=404, detail="Customer integration not found")
 
     subscription_ids = await get_subscription_ids(
-        session, customer_id, integration_service_id,
+        session,
+        customer_id,
+        integration_service_id,
     )
     if not subscription_ids:
         raise HTTPException(
-            status_code=404, detail="No subscriptions found for customer integration",
+            status_code=404,
+            detail="No subscriptions found for customer integration",
         )
 
     await delete_metadata(session, subscription_ids)

@@ -14,7 +14,9 @@ class CustomerSubsctipion(Enum):
 
 class ProvisionNewCustomer(BaseModel):
     customer_name: str = Field(
-        ..., example="SOC Fortress", description="Name of the customer",
+        ...,
+        example="SOC Fortress",
+        description="Name of the customer",
     )
     customer_code: str = Field(
         ...,
@@ -32,7 +34,9 @@ class ProvisionNewCustomer(BaseModel):
         description="Name of the customer's Grafana organization",
     )
     hot_data_retention: int = Field(
-        ..., example=30, description="Number of days to retain hot data",
+        ...,
+        example=30,
+        description="Number of days to retain hot data",
     )
     index_replicas: int = Field(
         ...,
@@ -55,7 +59,8 @@ class ProvisionNewCustomer(BaseModel):
     )
     wazuh_auth_password: str = Field(..., description="Password for the Wazuh API user")
     wazuh_registration_port: str = Field(
-        ..., description="Port for the Wazuh registration service",
+        ...,
+        description="Port for the Wazuh registration service",
     )
     wazuh_logs_port: str = Field(..., description="Port for the Wazuh logs service")
     wazuh_api_port: str = Field(..., description="Port for the Wazuh API service")
@@ -94,38 +99,46 @@ class CustomerProvisionResponse(BaseModel):
         description="Whether the customer provisioning process was successful or not",
     )
     customer_meta: CustomersMeta = Field(
-        ..., description="Customer meta data for the newly provisioned customer",
+        ...,
+        description="Customer meta data for the newly provisioned customer",
     )
     wazuh_worker_provisioned: Optional[bool] = Field(
-        None, description="Whether the Wazuh worker was provisioned successfully",
+        None,
+        description="Whether the Wazuh worker was provisioned successfully",
     )
 
 
 class GetDashboardsResponse(BaseModel):
     available_dashboards: List[str] = Field(
-        ..., description="List of dashboards available for provisioning",
+        ...,
+        description="List of dashboards available for provisioning",
     )
     message: str = Field(
-        ..., description="Message indicating the status of the request",
+        ...,
+        description="Message indicating the status of the request",
     )
     success: bool = Field(..., description="Whether the request was successful or not")
 
 
 class GetSubscriptionsResponse(BaseModel):
     available_subscriptions: List[str] = Field(
-        ..., description="List of subscriptions available for provisioning",
+        ...,
+        description="List of subscriptions available for provisioning",
     )
     message: str = Field(
-        ..., description="Message indicating the status of the request",
+        ...,
+        description="Message indicating the status of the request",
     )
     success: bool = Field(..., description="Whether the request was successful or not")
 
 
 class CustomersMetaResponse(BaseModel):
     message: str = Field(
-        ..., description="Message indicating the status of the request",
+        ...,
+        description="Message indicating the status of the request",
     )
     success: bool = Field(..., description="Whether the request was successful or not")
     customer_meta: CustomersMeta = Field(
-        ..., description="Customer meta data for the newly provisioned customer",
+        ...,
+        description="Customer meta data for the newly provisioned customer",
     )

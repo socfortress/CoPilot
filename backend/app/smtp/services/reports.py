@@ -77,7 +77,8 @@ class EmailReportSender:
                 part.set_payload(attachment_file.read())
                 encoders.encode_base64(part)
                 part.add_header(
-                    "Content-Disposition", f"attachment; filename= {filename}",
+                    "Content-Disposition",
+                    f"attachment; filename= {filename}",
                 )
                 msg.attach(part)
         return msg
@@ -109,7 +110,8 @@ class EmailReportSender:
 
         # Send the email
         with smtplib.SMTP(
-            credentials["smtp_server"], credentials["smtp_port"],
+            credentials["smtp_server"],
+            credentials["smtp_port"],
         ) as server:
             server.starttls()
             server.login(credentials["email"], credentials["password"])

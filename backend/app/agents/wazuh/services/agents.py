@@ -17,7 +17,8 @@ async def collect_wazuh_agents() -> WazuhAgentsList:
     """
     logger.info("Collecting all agents from Wazuh Manager")
     agents_collected = await send_get_request(
-        endpoint="/agents", params={"limit": 1000},
+        endpoint="/agents",
+        params={"limit": 1000},
     )
 
     if agents_collected.get("success") is False:

@@ -20,7 +20,9 @@ def analyze_domain(domain: DomainRequestBody) -> DomainAnalysisResponse:
     logger.info("Analyzing domain for registered domains.")
     data = dnstwist.run(domain=domain, registered=True, format="json")
     return DomainAnalysisResponse(
-        data=data, message="Domain analysis completed.", success=True,
+        data=data,
+        message="Domain analysis completed.",
+        success=True,
     )
 
 
@@ -43,5 +45,7 @@ def analyze_domain_phishing(domain: DomainRequestBody) -> DomainAnalysisResponse
         lsh=True,
     )
     return DomainAnalysisResponse(
-        data=data, message="Domain analysis completed.", success=True,
+        data=data,
+        message="Domain analysis completed.",
+        success=True,
     )

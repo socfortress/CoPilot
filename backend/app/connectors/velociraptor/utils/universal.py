@@ -191,7 +191,8 @@ class UniversalService:
             else:
                 logger.error(f"Failed to execute query: {e}")
                 raise HTTPException(
-                    status_code=500, detail=f"Failed to execute query: {e.details()}",
+                    status_code=500,
+                    detail=f"Failed to execute query: {e.details()}",
                 )
         except Exception as e:
             logger.error(f"Failed to execute query: {e}")
@@ -307,7 +308,8 @@ class UniversalService:
             return self.execute_query(vql)["results"][0]["version"]["version"]
         except IndexError as e:
             raise HTTPException(
-                status_code=500, detail=f"Failed to get server version: {e}",
+                status_code=500,
+                detail=f"Failed to get server version: {e}",
             )
 
     async def _is_offline(self, last_seen_at: float):

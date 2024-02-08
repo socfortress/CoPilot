@@ -39,7 +39,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 ################## ! GRAYLOG ! ##################
 async def build_index_set_config(
-    customer_code: str, session: AsyncSession,
+    customer_code: str,
+    session: AsyncSession,
 ) -> TimeBasedIndexSet:
     """
     Build the configuration for a time-based index set.
@@ -93,13 +94,15 @@ async def send_index_set_creation_request(
     json_index_set = json.dumps(index_set.dict())
     logger.info(f"json_index_set set: {json_index_set}")
     response_json = await send_post_request(
-        endpoint="/api/system/indices/index_sets", data=index_set.dict(),
+        endpoint="/api/system/indices/index_sets",
+        data=index_set.dict(),
     )
     return GraylogIndexSetCreationResponse(**response_json)
 
 
 async def create_index_set(
-    customer_code: str, session: AsyncSession,
+    customer_code: str,
+    session: AsyncSession,
 ) -> GraylogIndexSetCreationResponse:
     """
     Creates an index set for a new customer.
@@ -172,7 +175,8 @@ async def send_event_stream_creation_request(
     json_event_stream = json.dumps(event_stream.dict())
     logger.info(f"json_event_stream set: {json_event_stream}")
     response_json = await send_post_request(
-        endpoint="/api/streams", data=event_stream.dict(),
+        endpoint="/api/streams",
+        data=event_stream.dict(),
     )
     return StreamCreationResponse(**response_json)
 
@@ -193,7 +197,9 @@ async def create_event_stream(
         The result of the event stream creation request.
     """
     event_stream_config = await build_event_stream_config(
-        customer_code, index_set_id, session,
+        customer_code,
+        index_set_id,
+        session,
     )
     return await send_event_stream_creation_request(event_stream_config)
 
@@ -227,16 +233,22 @@ async def create_grafana_datasource(
         typeName="OpenSearch",
         access="proxy",
         url=await get_connector_attribute(
-            connector_id=1, column_name="connector_url", session=session,
+            connector_id=1,
+            column_name="connector_url",
+            session=session,
         ),
         database=f"mimecast_{customer_code}*",
         basicAuth=True,
         basicAuthUser=await get_connector_attribute(
-            connector_id=1, column_name="connector_username", session=session,
+            connector_id=1,
+            column_name="connector_username",
+            session=session,
         ),
         secureJsonData={
             "basicAuthPassword": await get_connector_attribute(
-                connector_id=1, column_name="connector_password", session=session,
+                connector_id=1,
+                column_name="connector_password",
+                session=session,
             ),
         },
         isDefault=False,
@@ -261,7 +273,8 @@ async def create_grafana_datasource(
 
 
 async def provision_mimecast(
-    provision_mimecast_request: ProvisionMimecastRequest, session: AsyncSession,
+    provision_mimecast_request: ProvisionMimecastRequest,
+    session: AsyncSession,
 ) -> ProvisionMimecastResponse:
     """
     Provisions Mimecast integration for a customer.
@@ -280,14 +293,17 @@ async def provision_mimecast(
     # Create Index Set
     index_set_id = (
         await create_index_set(
-            customer_code=provision_mimecast_request.customer_code, session=session,
+            customer_code=provision_mimecast_request.customer_code,
+            session=session,
         )
     ).data.id
     logger.info(f"Index set: {index_set_id}")
     # Create event stream
     stream_id = (
         await create_event_stream(
-            provision_mimecast_request.customer_code, index_set_id, session,
+            provision_mimecast_request.customer_code,
+            index_set_id,
+            session,
         )
     ).data.stream_id
     # Start stream
@@ -296,14 +312,16 @@ async def provision_mimecast(
     # Grafana Deployment
     mimecast_datasource_uid = (
         await create_grafana_datasource(
-            customer_code=provision_mimecast_request.customer_code, session=session,
+            customer_code=provision_mimecast_request.customer_code,
+            session=session,
         )
     ).datasource.uid
     grafana_mimecast_folder_id = (
         await create_grafana_folder(
             organization_id=(
                 await get_customer_meta(
-                    provision_mimecast_request.customer_code, session,
+                    provision_mimecast_request.customer_code,
+                    session,
                 )
             ).customer_meta.customer_meta_grafana_org_id,
             folder_title="MIMECAST",
@@ -314,7 +332,8 @@ async def provision_mimecast(
             dashboards=[dashboard.name for dashboard in MimecastDashboard],
             organizationId=(
                 await get_customer_meta(
-                    provision_mimecast_request.customer_code, session,
+                    provision_mimecast_request.customer_code,
+                    session,
                 )
             ).customer_meta.customer_meta_grafana_org_id,
             folderId=grafana_mimecast_folder_id,
@@ -330,7 +349,8 @@ async def provision_mimecast(
             graylog_stream_id=stream_id,
             grafana_org_id=(
                 await get_customer_meta(
-                    provision_mimecast_request.customer_code, session,
+                    provision_mimecast_request.customer_code,
+                    session,
                 )
             ).customer_meta.customer_meta_grafana_org_id,
             grafana_dashboard_folder_id=grafana_mimecast_folder_id,
@@ -338,11 +358,13 @@ async def provision_mimecast(
         session,
     )
     await update_customer_integration_table(
-        provision_mimecast_request.customer_code, session,
+        provision_mimecast_request.customer_code,
+        session,
     )
 
     return ProvisionMimecastResponse(
-        success=True, message="Mimecast integration provisioned.",
+        success=True,
+        message="Mimecast integration provisioned.",
     )
 
 
@@ -365,7 +387,8 @@ async def create_integration_meta_entry(
 
 
 async def update_customer_integration_table(
-    customer_code: str, session: AsyncSession,
+    customer_code: str,
+    session: AsyncSession,
 ) -> None:
     """
     Updates the `customer_integrations` table to set the `deployed` column to True where the `customer_code`

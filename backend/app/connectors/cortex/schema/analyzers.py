@@ -21,10 +21,12 @@ class AnalyzersResponse(BaseModel):
 class RunAnalyzerBody(BaseModel):
     analyzer_name: str = Field(..., description="Name of the analyzer to be run.")
     analyzer_data: str = Field(
-        ..., description="The Indicator of Compromise (IoC) to be analyzed.",
+        ...,
+        description="The Indicator of Compromise (IoC) to be analyzed.",
     )
     data_type: Optional[str] = Field(
-        default=None, description="Data type determined after validation",
+        default=None,
+        description="Data type determined after validation",
     )
 
     @validator("analyzer_data", pre=True, always=True)
@@ -71,12 +73,15 @@ class RunAnalyzerResponse(BaseModel):
 
 class AnalyzerJobData(BaseModel):
     data: str = Field(
-        ..., description="The Indicator of Compromise (IoC) to be analyzed.",
+        ...,
+        description="The Indicator of Compromise (IoC) to be analyzed.",
     )
     dataType: str = Field(
-        ..., description="The type of the IoC (e.g., 'IP', 'hash', 'domain').",
+        ...,
+        description="The type of the IoC (e.g., 'IP', 'hash', 'domain').",
     )
     tlp: int = Field(1, description="Traffic Light Protocol (TLP) level.")
     message: str = Field(
-        "custom message sent to analyzer", description="Custom message.",
+        "custom message sent to analyzer",
+        description="Custom message.",
     )

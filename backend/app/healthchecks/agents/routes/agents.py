@@ -109,7 +109,8 @@ async def get_wazuh_agent_healthcheck_by_agent_id(
 
     if not agent:
         raise HTTPException(
-            status_code=404, detail=f"Agent with agent_id {agent_id} not found",
+            status_code=404,
+            detail=f"Agent with agent_id {agent_id} not found",
         )
     return await wazuh_agent_healthcheck(agent, time_criteria)
 
@@ -197,7 +198,8 @@ async def get_velociraptor_agent_healthcheck_by_agent_id(
     agent = result.scalars().first()
     if not agent:
         raise HTTPException(
-            status_code=404, detail=f"Agent with agent_id {agent_id} not found",
+            status_code=404,
+            detail=f"Agent with agent_id {agent_id} not found",
         )
     return await velociraptor_agent_healthcheck(agent, time_criteria)
 
@@ -211,7 +213,8 @@ async def get_velociraptor_agent_healthcheck_by_agent_id(
     ],
 )
 async def get_host_logs(
-    body: HostLogsSearchBody, session: AsyncSession = Depends(get_db),
+    body: HostLogsSearchBody,
+    session: AsyncSession = Depends(get_db),
 ) -> HostLogsSearchResponse:
     """
     Get host logs for a specific agent.
@@ -236,6 +239,7 @@ async def get_host_logs(
 
     if not agent:
         raise HTTPException(
-            status_code=404, detail=f"Agent with hostname {body.agent_name} not found",
+            status_code=404,
+            detail=f"Agent with hostname {body.agent_name} not found",
         )
     return await host_logs(body)

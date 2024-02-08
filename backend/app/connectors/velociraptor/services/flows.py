@@ -43,7 +43,9 @@ async def get_flows(velociraptor_id: str) -> FlowResponse:
             flows = [FlowClientSession(**flow) for flow in all_flows["results"]]
             logger.info(f"flows: {flows}")
             return FlowResponse(
-                success=True, message="All flows retrieved.", results=flows,
+                success=True,
+                message="All flows retrieved.",
+                results=flows,
             )
         else:
             raise HTTPException(
@@ -53,7 +55,8 @@ async def get_flows(velociraptor_id: str) -> FlowResponse:
     except Exception as e:
         logger.error(f"Failed to retrieve flows from Velociraptor: {e}")
         raise HTTPException(
-            status_code=500, detail=f"Failed to retrieve flows from Velociraptor: {e}",
+            status_code=500,
+            detail=f"Failed to retrieve flows from Velociraptor: {e}",
         )
 
 

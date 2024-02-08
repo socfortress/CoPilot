@@ -7,7 +7,8 @@ from pydantic import BaseModel, Field
 # ! Organization ! #
 class GrafanaOrganizationCreation(BaseModel):
     message: str = Field(
-        ..., description="Message detailing the outcome of the request",
+        ...,
+        description="Message detailing the outcome of the request",
     )
     orgId: int = Field(..., description="ID of the created organization")
 
@@ -78,7 +79,8 @@ class DataSourceCreationDatasource(BaseModel):
     isDefault: bool = Field(..., alias="isDefault")
     jsonData: DataSourceCreationJsonData
     secureJsonFields: DataSourceCreationSecureJsonFields = Field(
-        ..., alias="secureJsonFields",
+        ...,
+        alias="secureJsonFields",
     )
     version: int
     readOnly: bool = Field(..., alias="readOnly")

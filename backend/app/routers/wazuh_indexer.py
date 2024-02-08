@@ -7,8 +7,12 @@ router = APIRouter()
 
 # Include the Wazuh Indexer related routes
 router.include_router(
-    wazuh_indexer_alerts_router, prefix="/alerts", tags=["wazuh-indexer-alerts"],
+    wazuh_indexer_alerts_router,
+    prefix="/alerts",
+    tags=["wazuh-indexer-alerts"],
 )
 router.include_router(
-    wazuh_indexer_router, prefix="/wazuh_indexer", tags=["wazuh-indexer-monitoring"],
+    wazuh_indexer_router,
+    prefix="/wazuh_indexer",
+    tags=["wazuh-indexer-monitoring"],
 )

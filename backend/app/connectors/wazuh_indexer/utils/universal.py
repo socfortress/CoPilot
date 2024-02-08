@@ -84,7 +84,8 @@ async def create_wazuh_indexer_client(connector_name: str) -> Elasticsearch:
         )
     if attributes["connector_url"] == "https://1.1.1.1:9200":
         raise HTTPException(
-            status_code=500, detail=f"Please update the {connector_name} connector URL",
+            status_code=500,
+            detail=f"Please update the {connector_name} connector URL",
         )
     try:
         return Elasticsearch(
@@ -100,7 +101,8 @@ async def create_wazuh_indexer_client(connector_name: str) -> Elasticsearch:
         )
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Failed to create Elasticsearch client: {e}",
+            status_code=500,
+            detail=f"Failed to create Elasticsearch client: {e}",
         )
 
 

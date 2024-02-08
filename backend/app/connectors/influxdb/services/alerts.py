@@ -72,7 +72,8 @@ async def get_alerts() -> InfluxDBAlertsResponse:
         query = construct_query()
         query_api = client.query_api()
         result = await query_api.query(
-            org=await get_influxdb_organization(), query=query,
+            org=await get_influxdb_organization(),
+            query=query,
         )
 
         alerts = await process_alert_records(result)

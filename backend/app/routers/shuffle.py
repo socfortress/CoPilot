@@ -6,5 +6,7 @@ router = APIRouter()
 
 # Include the Shuffle related routes
 router.include_router(
-    shuffle_workflows_router, prefix="/workflows", tags=["shuffle-workflows"],
+    shuffle_workflows_router,
+    prefix="/workflows",
+    tags=["shuffle-workflows"],
 )

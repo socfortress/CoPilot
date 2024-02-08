@@ -333,7 +333,8 @@ async def send_to_shuffle(payload: ShufflePayload, session: AsyncSession) -> boo
             response = await client.post(
                 (
                     await get_customer_alert_settings(
-                        customer_code=payload.customer_code, session=session,
+                        customer_code=payload.customer_code,
+                        session=session,
                     )
                 ).shuffle_endpoint,
                 json=payload.to_dict(),

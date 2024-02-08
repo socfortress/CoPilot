@@ -35,7 +35,8 @@ async def provision_mimecast_route(
     """
     # Check if the customer integration settings are available and can be provisioned
     await get_customer_integration_response(
-        provision_mimecast_request.customer_code, session,
+        provision_mimecast_request.customer_code,
+        session,
     )
     await provision_mimecast(provision_mimecast_request, session)
     await add_scheduler_jobs(
@@ -53,7 +54,8 @@ async def provision_mimecast_route(
         ),
     )
     return ProvisionMimecastResponse(
-        success=True, message="Mimecast integration provisioned.",
+        success=True,
+        message="Mimecast integration provisioned.",
     )
 
 
@@ -81,7 +83,8 @@ async def invoke_mimecast_siem_schedule_create(
         ),
     )
     return MimecastScheduledResponse(
-        success=True, message="Mimecast integration scheduled.",
+        success=True,
+        message="Mimecast integration scheduled.",
     )
 
 
@@ -109,5 +112,6 @@ async def invoke_mimecast_ttp_schedule_create(
         ),
     )
     return MimecastScheduledResponse(
-        success=True, message="Mimecast integration scheduled.",
+        success=True,
+        message="Mimecast integration scheduled.",
     )

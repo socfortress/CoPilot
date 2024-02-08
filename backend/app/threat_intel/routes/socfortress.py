@@ -29,13 +29,16 @@ async def ensure_api_key_exists(session: AsyncSession = Depends(get_db)) -> bool
         bool: True if the API key exists, otherwise raises HTTPException.
     """
     api_key = await get_connector_attribute(
-        connector_id=10, column_name="connector_api_key", session=session,
+        connector_id=10,
+        column_name="connector_api_key",
+        session=session,
     )
     # Close the session
     await session.close()
     if not api_key:
         raise HTTPException(
-            status_code=500, detail="SocFortress API key not found in the database.",
+            status_code=500,
+            detail="SocFortress API key not found in the database.",
         )
     return True
 

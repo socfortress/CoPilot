@@ -28,7 +28,8 @@ office365_alerts_router = APIRouter()
 
 
 async def is_office365_organization_id_valid(
-    create_alert_request: Office365ExchangeAlertBase, session: AsyncSession,
+    create_alert_request: Office365ExchangeAlertBase,
+    session: AsyncSession,
 ) -> bool:
     """
     Checks if the given organization ID is valid for the specified customer.

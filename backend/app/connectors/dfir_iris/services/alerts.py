@@ -49,7 +49,8 @@ async def get_customer_code(session: AsyncSession, customer_id: int) -> str:
 
 
 async def get_alerts(
-    request: FilterAlertsRequest, session: AsyncSession,
+    request: FilterAlertsRequest,
+    session: AsyncSession,
 ) -> AlertsResponse:
     """
     Retrieves alerts from the DFIR-IRIS service.
@@ -64,7 +65,8 @@ async def get_alerts(
         client, alert = await initialize_client_and_alert("DFIR-IRIS")
         params = construct_params(request)
         result = await fetch_and_validate_data(
-            client, lambda: alert.filter_alerts(**params),
+            client,
+            lambda: alert.filter_alerts(**params),
         )
         logger.info(
             f"Successfully fetched length {len(result['data']['alerts'])} alerts",
@@ -72,7 +74,8 @@ async def get_alerts(
         # Add the customer code to each alert
         for alert in result["data"]["alerts"]:
             customer_code = await get_customer_code(
-                session, alert["customer"]["customer_id"],
+                session,
+                alert["customer"]["customer_id"],
             )
             alert["customer"]["customer_code"] = customer_code
         return AlertsResponse(
@@ -124,11 +127,14 @@ async def get_alert(alert_id: str, session: AsyncSession) -> AlertResponse:
     result = await fetch_and_validate_data(client, alert.get_alert, alert_id)
     # Add the customer code to the alert
     customer_code = await get_customer_code(
-        session, result["data"]["customer"]["customer_id"],
+        session,
+        result["data"]["customer"]["customer_id"],
     )
     result["data"]["customer"]["customer_code"] = customer_code
     return AlertResponse(
-        success=True, message="Successfully fetched alert", alert=result["data"],
+        success=True,
+        message="Successfully fetched alert",
+        alert=result["data"],
     )
 
 
@@ -148,11 +154,14 @@ async def create_case(alert_id: str) -> CaseCreationResponse:
     params = construct_case_creation_params(alert_details["data"])
     logger.info(f"Creating case with params {params}")
     result = await fetch_and_validate_data(
-        client, lambda: alert.escalate_alert(int(alert_id), **params),
+        client,
+        lambda: alert.escalate_alert(int(alert_id), **params),
     )
     logger.info(f"Successfully created case for alert: {result}")
     return CaseCreationResponse(
-        success=True, message="Successfully created case for alert", case=result["data"],
+        success=True,
+        message="Successfully created case for alert",
+        case=result["data"],
     )
 
 
@@ -194,13 +203,21 @@ async def bookmark_alert(alert_id: str, bookmarked: bool) -> AlertResponse:
     client, alert = await initialize_client_and_alert("DFIR-IRIS")
     if bookmarked:
         result = await fetch_and_validate_data(
-            client, alert.update_alert, alert_id, {"alert_tags": "bookmarked"},
+            client,
+            alert.update_alert,
+            alert_id,
+            {"alert_tags": "bookmarked"},
         )
         return AlertResponse(
-            success=True, message="Successfully bookmarked alert", alert=result["data"],
+            success=True,
+            message="Successfully bookmarked alert",
+            alert=result["data"],
         )
     result = await fetch_and_validate_data(
-        client, alert.update_alert, alert_id, {"alert_tags": ""},
+        client,
+        alert.update_alert,
+        alert_id,
+        {"alert_tags": ""},
     )
     return AlertResponse(
         success=True,
@@ -216,7 +233,10 @@ async def get_bookmarked_alerts(session: AsyncSession) -> BookmarkedAlertsRespon
     Returns:
         BookmarkedAlertsResponse: The response object containing the bookmarked alerts.
     """
-    alerts = await get_alerts(request=FilterAlertsRequest(per_page=10000), session=session)
+    alerts = await get_alerts(
+        request=FilterAlertsRequest(per_page=10000),
+        session=session,
+    )
     alerts = alerts.alerts
     bookmarked_alerts = []
     for alert in alerts:
@@ -243,5 +263,7 @@ async def delete_alert(alert_id: int) -> DeleteAlertResponse:
     client, alert = await initialize_client_and_alert("DFIR-IRIS")
     result = await fetch_and_validate_data(client, alert.delete_alert, alert_id)
     return DeleteAlertResponse(
-        success=True, message="Successfully deleted alert", alert=result["data"],
+        success=True,
+        message="Successfully deleted alert",
+        alert=result["data"],
     )

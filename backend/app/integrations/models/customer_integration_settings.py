@@ -59,7 +59,8 @@ class IntegrationSubscription(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     customer_id: int = Field(default=None, foreign_key="customer_integrations.id")
     integration_service_id: int = Field(
-        default=None, foreign_key="integration_services.id",
+        default=None,
+        foreign_key="integration_services.id",
     )
     # Relationships
     customer_integrations: "CustomerIntegrations" = Relationship(
@@ -77,7 +78,8 @@ class IntegrationConfig(SQLModel, table=True):
     __tablename__ = "integration_configs"
     id: Optional[int] = Field(default=None, primary_key=True)
     integration_service_id: int = Field(
-        default=None, foreign_key="integration_services.id",
+        default=None,
+        foreign_key="integration_services.id",
     )
     config_key: str = Field(max_length=255)  # e.g., 'endpoint', 'port', etc.
     config_value: str = Field(max_length=1024)  # e.g., 'https://api.service.com/v1'
@@ -89,7 +91,8 @@ class IntegrationAuthKeys(SQLModel, table=True):
     __tablename__ = "integration_auth_keys"
     id: Optional[int] = Field(default=None, primary_key=True)
     subscription_id: int = Field(
-        default=None, foreign_key="integration_subscriptions.id",
+        default=None,
+        foreign_key="integration_subscriptions.id",
     )
     auth_key_name: str = Field(max_length=255)  # e.g., 'credentials', 'rate_limit'
     auth_value: str = Field(max_length=1024)  # e.g., JSON/encrypted credentials

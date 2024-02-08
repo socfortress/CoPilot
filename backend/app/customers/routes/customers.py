@@ -48,7 +48,8 @@ def verify_admin(user):
 
 
 async def verify_unique_customer_code(
-    session: AsyncSession, customer: CustomerRequestBody,
+    session: AsyncSession,
+    customer: CustomerRequestBody,
 ):
     """
     Verifies if the given customer code is unique in the database.
@@ -65,7 +66,8 @@ async def verify_unique_customer_code(
     existing_customer = result.scalars().first()
     if existing_customer:
         raise HTTPException(
-            status_code=400, detail="Customer with this customer_code already exists",
+            status_code=400,
+            detail="Customer with this customer_code already exists",
         )
 
 
@@ -76,7 +78,8 @@ async def verify_unique_customer_code(
     dependencies=[Security(AuthHandler().require_any_scope("admin"))],
 )
 async def create_customer(
-    customer: CustomerRequestBody, session: AsyncSession = Depends(get_db),
+    customer: CustomerRequestBody,
+    session: AsyncSession = Depends(get_db),
 ) -> CustomerResponse:
     """
     Create a new customer.
@@ -97,7 +100,9 @@ async def create_customer(
     session.add(new_customer)
     await session.commit()  # Use await to perform the commit operation asynchronously
     return CustomerResponse(
-        customer=customer, success=True, message="Customer created successfully",
+        customer=customer,
+        success=True,
+        message="Customer created successfully",
     )
 
 
@@ -126,7 +131,9 @@ async def get_customers(session: AsyncSession = Depends(get_db)) -> CustomersRes
     # Parse the customer ORM objects into schema objects
     customers_list = [CustomerRequestBody.from_orm(customer) for customer in customers]
     return CustomersResponse(
-        customers=customers_list, success=True, message="Customers fetched successfully",
+        customers=customers_list,
+        success=True,
+        message="Customers fetched successfully",
     )
 
 
@@ -137,7 +144,8 @@ async def get_customers(session: AsyncSession = Depends(get_db)) -> CustomersRes
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_customer(
-    customer_code: str, session: AsyncSession = Depends(get_db),
+    customer_code: str,
+    session: AsyncSession = Depends(get_db),
 ) -> CustomerResponse:
     """
     Get customer by customer_code.
@@ -169,7 +177,9 @@ async def get_customer(
     # Convert ORM object to Pydantic model
     customer_data = CustomerRequestBody.from_orm(customer)
     return CustomerResponse(
-        customer=customer_data, success=True, message="Customer fetched successfully",
+        customer=customer_data,
+        success=True,
+        message="Customer fetched successfully",
     )
 
 
@@ -233,7 +243,8 @@ async def update_customer(
     dependencies=[Security(AuthHandler().require_any_scope("admin"))],
 )
 async def delete_customer(
-    customer_code: str, session: AsyncSession = Depends(get_db),
+    customer_code: str,
+    session: AsyncSession = Depends(get_db),
 ) -> CustomerResponse:
     """
     Delete a customer by customer_code.
@@ -340,7 +351,8 @@ async def add_customer_meta(
     deprecated=True,
 )
 async def get_customer_meta(
-    customer_code: str, session: AsyncSession = Depends(get_db),
+    customer_code: str,
+    session: AsyncSession = Depends(get_db),
 ) -> CustomerMetaResponse:
     """
     Retrieve customer meta data by customer_code.
@@ -438,7 +450,8 @@ async def update_customer_meta(
     deprecated=True,
 )
 async def delete_customer_meta(
-    customer_code: str, session: AsyncSession = Depends(get_db),
+    customer_code: str,
+    session: AsyncSession = Depends(get_db),
 ) -> CustomerMetaResponse:
     """
     Delete customer meta by customer_code.
@@ -489,7 +502,8 @@ async def delete_customer_meta(
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_customer_full(
-    customer_code: str, session: AsyncSession = Depends(get_db),
+    customer_code: str,
+    session: AsyncSession = Depends(get_db),
 ) -> CustomerFullResponse:
     """
     Retrieve the customer and customer meta information based on the customer code.
@@ -545,7 +559,8 @@ async def get_customer_full(
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_agents(
-    customer_code: str, session: AsyncSession = Depends(get_db),
+    customer_code: str,
+    session: AsyncSession = Depends(get_db),
 ) -> AgentsResponse:
     """
     Fetches agents for the given customer_code.
@@ -579,7 +594,9 @@ async def get_agents(
     # Convert ORM objects to Pydantic models
     agents_list = [AgentModel.from_orm(agent) for agent in agents]
     return AgentsResponse(
-        agents=agents_list, success=True, message="Agents fetched successfully",
+        agents=agents_list,
+        success=True,
+        message="Agents fetched successfully",
     )
 
 

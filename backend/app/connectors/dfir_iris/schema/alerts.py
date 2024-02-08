@@ -6,7 +6,8 @@ from pydantic import BaseModel, Field
 
 class AlertsResponse(BaseModel):
     alerts: Optional[List[Dict[str, Any]]] = Field(
-        [], description="The alerts returned from the search.",
+        [],
+        description="The alerts returned from the search.",
     )
     message: str
     success: bool
@@ -14,7 +15,8 @@ class AlertsResponse(BaseModel):
 
 class AlertResponse(BaseModel):
     alert: Optional[Dict[str, Any]] = Field(
-        {}, description="The alert returned from the search.",
+        {},
+        description="The alert returned from the search.",
     )
     message: str
     success: bool
@@ -22,7 +24,8 @@ class AlertResponse(BaseModel):
 
 class BookmarkedAlertsResponse(BaseModel):
     bookmarked_alerts: Optional[List[Dict[str, Any]]] = Field(
-        [], description="The alerts returned from the search.",
+        [],
+        description="The alerts returned from the search.",
     )
     message: str
     success: bool
@@ -46,11 +49,13 @@ class FilterAlertsRequest(BaseModel):
     per_page: int = Field(1000, description="The number of alerts to return per page.")
     page: int = Field(1, description="The page number to return.")
     sort: SortOrder = Field(
-        SortOrder.desc, description="The sort order for the alerts.",
+        SortOrder.desc,
+        description="The sort order for the alerts.",
     )
     alert_title: Optional[str] = Field(None, description="The title of the alert.")
     alert_owner_id: Optional[int] = Field(
-        None, description="The ID of the alert owner.",
+        None,
+        description="The ID of the alert owner.",
     )
 
 

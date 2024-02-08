@@ -11,7 +11,9 @@ router = APIRouter()
 
 # Include the Monitoring Alert related routes
 router.include_router(
-    monitoring_alerts_router, prefix="/monitoring_alert", tags=["monitoring_alert"],
+    monitoring_alerts_router,
+    prefix="/monitoring_alert",
+    tags=["monitoring_alert"],
 )
 router.include_router(
     monitoring_alerts_provision_router,

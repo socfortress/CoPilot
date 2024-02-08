@@ -44,7 +44,8 @@ ALLOWED_EXTENSIONS = set(["yaml"])  # replace with your allowed file extensions
 # Create an interface for connector services
 class ConnectorServiceInterface(BaseModel):
     async def verify_authentication(
-        self, connector: ConnectorResponse,
+        self,
+        connector: ConnectorResponse,
     ) -> Optional[ConnectorResponse]:
         raise NotImplementedError
 
@@ -52,7 +53,8 @@ class ConnectorServiceInterface(BaseModel):
 # Wazuh Manager Service
 class WazuhManagerService(ConnectorServiceInterface):
     async def verify_authentication(
-        self, connector: ConnectorResponse,
+        self,
+        connector: ConnectorResponse,
     ) -> Optional[ConnectorResponse]:
         return await verify_wazuh_manager_connection(connector.connector_name)
 
@@ -60,7 +62,8 @@ class WazuhManagerService(ConnectorServiceInterface):
 # Wazuh Indexer Service
 class WazuhIndexerService(ConnectorServiceInterface):
     async def verify_authentication(
-        self, connector: ConnectorResponse,
+        self,
+        connector: ConnectorResponse,
     ) -> Optional[ConnectorResponse]:
         return await verify_wazuh_indexer_connection(connector.connector_name)
 
@@ -68,7 +71,8 @@ class WazuhIndexerService(ConnectorServiceInterface):
 # Velociraptor Service
 class VelociraptorService(ConnectorServiceInterface):
     async def verify_authentication(
-        self, connector: ConnectorResponse,
+        self,
+        connector: ConnectorResponse,
     ) -> Optional[ConnectorResponse]:
         return await verify_velociraptor_connection(connector.connector_name)
 
@@ -76,7 +80,8 @@ class VelociraptorService(ConnectorServiceInterface):
 # Graylog Service
 class GraylogService(ConnectorServiceInterface):
     async def verify_authentication(
-        self, connector: ConnectorResponse,
+        self,
+        connector: ConnectorResponse,
     ) -> Optional[ConnectorResponse]:
         return await verify_graylog_connection(connector.connector_name)
 
@@ -84,7 +89,8 @@ class GraylogService(ConnectorServiceInterface):
 # DFIR-IRIS Service
 class DfirIrisService(ConnectorServiceInterface):
     async def verify_authentication(
-        self, connector: ConnectorResponse,
+        self,
+        connector: ConnectorResponse,
     ) -> Optional[ConnectorResponse]:
         return await verify_dfir_iris_connection(connector.connector_name)
 
@@ -92,7 +98,8 @@ class DfirIrisService(ConnectorServiceInterface):
 # Cortex Service
 class CortexService(ConnectorServiceInterface):
     async def verify_authentication(
-        self, connector: ConnectorResponse,
+        self,
+        connector: ConnectorResponse,
     ) -> Optional[ConnectorResponse]:
         return await verify_cortex_connection(connector.connector_name)
 
@@ -100,7 +107,8 @@ class CortexService(ConnectorServiceInterface):
 # Shuffle Service
 class ShuffleService(ConnectorServiceInterface):
     async def verify_authentication(
-        self, connector: ConnectorResponse,
+        self,
+        connector: ConnectorResponse,
     ) -> Optional[ConnectorResponse]:
         return await verify_shuffle_connection(connector.connector_name)
 
@@ -108,7 +116,8 @@ class ShuffleService(ConnectorServiceInterface):
 # Sublime Service
 class SublimeService(ConnectorServiceInterface):
     async def verify_authentication(
-        self, connector: ConnectorResponse,
+        self,
+        connector: ConnectorResponse,
     ) -> Optional[ConnectorResponse]:
         return await verify_sublime_connection(connector.connector_name)
 
@@ -116,7 +125,8 @@ class SublimeService(ConnectorServiceInterface):
 # InfluxDB Service
 class InfluxDBService(ConnectorServiceInterface):
     async def verify_authentication(
-        self, connector: ConnectorResponse,
+        self,
+        connector: ConnectorResponse,
     ) -> Optional[ConnectorResponse]:
         return await verify_influxdb_connection(connector.connector_name)
 
@@ -124,7 +134,8 @@ class InfluxDBService(ConnectorServiceInterface):
 # Grafana Service
 class GrafanaService(ConnectorServiceInterface):
     async def verify_authentication(
-        self, connector: ConnectorResponse,
+        self,
+        connector: ConnectorResponse,
     ) -> Optional[ConnectorResponse]:
         return await verify_grafana_connection(connector.connector_name)
 
@@ -132,7 +143,8 @@ class GrafanaService(ConnectorServiceInterface):
 # Wazuh Worker Provisioning Service
 class WazuhWorkerProvisioningService(ConnectorServiceInterface):
     async def verify_authentication(
-        self, connector: ConnectorResponse,
+        self,
+        connector: ConnectorResponse,
     ) -> Optional[ConnectorResponse]:
         return await verify_wazuh_worker_provisioning_connection(
             connector.connector_name,
@@ -142,7 +154,8 @@ class WazuhWorkerProvisioningService(ConnectorServiceInterface):
 # SOCFortress Threat Intel Service
 class SocfortressThreatIntelService(ConnectorServiceInterface):
     async def verify_authentication(
-        self, connector: ConnectorResponse,
+        self,
+        connector: ConnectorResponse,
     ) -> Optional[ConnectorResponse]:
         return await verifiy_socfortress_threat_intel_connector(
             connector.connector_name,
@@ -152,7 +165,8 @@ class SocfortressThreatIntelService(ConnectorServiceInterface):
 # ASK SOCFortress Service
 class AskSocfortressService(ConnectorServiceInterface):
     async def verify_authentication(
-        self, connector: ConnectorResponse,
+        self,
+        connector: ConnectorResponse,
     ) -> Optional[ConnectorResponse]:
         return await verify_ask_socfortress_connector(connector.connector_name)
 
@@ -160,7 +174,8 @@ class AskSocfortressService(ConnectorServiceInterface):
 # Event Shipper Service
 class EventShipperService(ConnectorServiceInterface):
     async def verify_authentication(
-        self, connector: ConnectorResponse,
+        self,
+        connector: ConnectorResponse,
     ) -> Optional[ConnectorResponse]:
         return await verify_event_shipper_connection(connector.connector_name)
 
@@ -168,7 +183,8 @@ class EventShipperService(ConnectorServiceInterface):
 # Alert Creation Service
 class AlertCreationService(ConnectorServiceInterface):
     async def verify_authentication(
-        self, connector: ConnectorResponse,
+        self,
+        connector: ConnectorResponse,
     ) -> Optional[ConnectorResponse]:
         return await verify_alert_creation_provisioning_connection(
             connector.connector_name,
@@ -213,7 +229,8 @@ class ConnectorServices:
 
     @classmethod
     async def fetch_all_connectors(
-        cls, session: AsyncSession,
+        cls,
+        session: AsyncSession,
     ) -> List[ConnectorResponse]:
         """
         Fetches all connectors from the database.
@@ -234,7 +251,9 @@ class ConnectorServices:
 
     @classmethod
     async def fetch_connector_by_id(
-        cls, connector_id: int, session: AsyncSession,
+        cls,
+        connector_id: int,
+        session: AsyncSession,
     ) -> Optional[ConnectorResponse]:
         """
         Fetches a connector by its ID from the database.
@@ -256,7 +275,9 @@ class ConnectorServices:
 
     @classmethod
     async def verify_connector_by_id(
-        cls, connector_id: int, session: AsyncSession,
+        cls,
+        connector_id: int,
+        session: AsyncSession,
     ) -> Optional[ConnectorResponse]:
         """
         Verify a connector by making an API call to it asynchronously.
@@ -381,7 +402,9 @@ class ConnectorServices:
 
     @classmethod
     async def save_file(
-        cls, file: UploadFile, session: AsyncSession,
+        cls,
+        file: UploadFile,
+        session: AsyncSession,
     ) -> Union[ConnectorResponse, bool]:
         """
         Saves the uploaded file to a specified location and updates the connector record in the database.

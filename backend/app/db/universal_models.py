@@ -139,7 +139,8 @@ class Agents(SQLModel, table=True):
             or wazuh_agent.agent_last_seen == "1970-01-01T00:00:00+00:00"
         ):
             wazuh_last_seen_value = datetime.strptime(
-                "1970-01-01T00:00:00+00:00", "%Y-%m-%dT%H:%M:%S%z",
+                "1970-01-01T00:00:00+00:00",
+                "%Y-%m-%dT%H:%M:%S%z",
             )  # default datetime value
         else:
             wazuh_last_seen_value = wazuh_agent.agent_last_seen_as_datetime

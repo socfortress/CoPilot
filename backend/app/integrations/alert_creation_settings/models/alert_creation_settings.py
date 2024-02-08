@@ -7,7 +7,8 @@ class Condition(SQLModel, table=True):
     __tablename__ = "custom_alert_creation_condition"
     id: int = Field(default=None, primary_key=True)
     event_order_id: int = Field(
-        default=None, foreign_key="custom_alert_creation_event_order.id",
+        default=None,
+        foreign_key="custom_alert_creation_event_order.id",
     )
     field_name: str = Field(max_length=1024)
     field_value: str = Field(max_length=1024)
@@ -18,7 +19,8 @@ class EventOrder(SQLModel, table=True):
     __tablename__ = "custom_alert_creation_event_order"
     id: int = Field(default=None, primary_key=True)
     alert_creation_settings_id: int = Field(
-        default=None, foreign_key="custom_alert_creation_settings.id",
+        default=None,
+        foreign_key="custom_alert_creation_settings.id",
     )
     order_label: str = Field(max_length=255)
     conditions: List["Condition"] = Relationship(back_populates="event_order")
@@ -60,7 +62,8 @@ class AlertCreationEventConfig(SQLModel, table=True):
     __tablename__ = "custom_alert_creation_event_config"
     id: Optional[int] = Field(default=None, primary_key=True)
     event_order_id: Optional[int] = Field(
-        default=None, foreign_key="custom_alert_creation_event_order.id",
+        default=None,
+        foreign_key="custom_alert_creation_event_order.id",
     )
     event_id: str = Field(max_length=255)
     field: str = Field(max_length=1024)

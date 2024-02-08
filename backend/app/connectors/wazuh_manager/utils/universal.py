@@ -179,7 +179,9 @@ async def send_get_request(
 
 
 async def send_post_request(
-    endpoint: str, data: Dict[str, Any], connector_name: str = "Wazuh-Manager",
+    endpoint: str,
+    data: Dict[str, Any],
+    connector_name: str = "Wazuh-Manager",
 ) -> Dict[str, Any]:
     """
     Sends a POST request to the Wazuh Manager service.

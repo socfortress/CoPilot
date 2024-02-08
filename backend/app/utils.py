@@ -92,7 +92,9 @@ class LogEntryModel(BaseModel):
     status_code: int = Field(..., example=200, description="Status code")
     message: str = Field(..., example="Route accessed", description="Message")
     additional_info: Optional[str] = Field(
-        None, example="Additional details here", description="Additional info",
+        None,
+        example="Additional details here",
+        description="Additional info",
     )
 
 
@@ -114,7 +116,8 @@ class EventType(str, Enum):
 
 class TimeRangeModel(BaseModel):
     time_range: Union[str, int] = Field(
-        "1d", description="Time range to fetch logs for, e.g., 1, 1h, 1d, 1w",
+        "1d",
+        description="Time range to fetch logs for, e.g., 1, 1h, 1d, 1w",
     )
 
     @validator("time_range")
@@ -301,7 +304,10 @@ class Logger:
         await self.insert_log_entry(log_entry_model)
 
     async def log_and_raise_http_error(
-        self, user_id, request: Request, exception: Exception,
+        self,
+        user_id,
+        request: Request,
+        exception: Exception,
     ):
         """
         Logs the error, including the user ID, request details, and the exception,
@@ -361,7 +367,9 @@ async def get_logs(session: AsyncSession = Depends(get_db)) -> LogsResponse:
     )  # Assuming fetch_all_logs is an async function
     if logs:
         return LogsResponse(
-            logs=logs, success=True, message="Logs fetched successfully",
+            logs=logs,
+            success=True,
+            message="Logs fetched successfully",
         )
     else:
         raise HTTPException(status_code=404, detail="No logs found")
@@ -374,7 +382,8 @@ async def get_logs(session: AsyncSession = Depends(get_db)) -> LogsResponse:
     dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
 )
 async def get_logs_by_user_id(
-    user_id: int, session: AsyncSession = Depends(get_db),
+    user_id: int,
+    session: AsyncSession = Depends(get_db),
 ) -> LogsResponse:
     """
     Fetch all logs from the database where the user_id matches the provided user_id.
@@ -396,7 +405,8 @@ async def get_logs_by_user_id(
 
     if not logs:
         raise HTTPException(
-            status_code=404, detail=f"No logs found for user ID: {user_id}",
+            status_code=404,
+            detail=f"No logs found for user ID: {user_id}",
         )
 
     return LogsResponse(logs=logs, success=True, message="Logs fetched successfully")
@@ -409,7 +419,8 @@ async def get_logs_by_user_id(
     dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
 )
 async def get_logs_by_time_range(
-    time_range: TimeRangeModel, session: AsyncSession = Depends(get_db),
+    time_range: TimeRangeModel,
+    session: AsyncSession = Depends(get_db),
 ) -> LogsResponse:
     """
     Fetch all logs from the database where the timestamp is within the provided time range.
@@ -438,7 +449,9 @@ async def get_logs_by_time_range(
         ]
         if logs != []:
             return LogsResponse(
-                logs=logs, success=True, message="Logs fetched successfully",
+                logs=logs,
+                success=True,
+                message="Logs fetched successfully",
             )
         else:
             raise HTTPException(
@@ -483,7 +496,8 @@ async def get_logs_by_event_type(
 
     if not logs:
         raise HTTPException(
-            status_code=404, detail=f"No logs found for event type: {event_type}",
+            status_code=404,
+            detail=f"No logs found for event type: {event_type}",
         )
 
     return LogsResponse(logs=logs, success=True, message="Logs fetched successfully")
@@ -528,7 +542,8 @@ async def purge_logs(
     dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
 )
 async def purge_logs_by_time_range(
-    time_range: TimeRangeModel, session: AsyncSession = Depends(get_db),
+    time_range: TimeRangeModel,
+    session: AsyncSession = Depends(get_db),
 ) -> LogsResponse:
     """
     Purge all logs from the database where the timestamp is within the provided time range.
@@ -560,7 +575,9 @@ async def purge_logs_by_time_range(
                 await session.delete(log)
             await session.commit()
             return LogsResponse(
-                logs=[], success=True, message="Logs purged successfully",
+                logs=[],
+                success=True,
+                message="Logs purged successfully",
             )
         else:
             raise HTTPException(
@@ -590,7 +607,9 @@ def allowed_file(filename):
 
 ################## ! DATABASE UTILS ! ##################
 async def get_connector_attribute(
-    connector_id: int, column_name: str, session: AsyncSession = Depends(get_session),
+    connector_id: int,
+    column_name: str,
+    session: AsyncSession = Depends(get_session),
 ) -> Optional[Any]:
     """
     Retrieve the value of a specific column from a connector.
@@ -614,7 +633,8 @@ async def get_connector_attribute(
 
 
 async def get_customer_alert_settings(
-    customer_code: str, session: AsyncSession,
+    customer_code: str,
+    session: AsyncSession,
 ) -> Optional[AlertCreationSettings]:
     """
     Retrieve the alert creation settings for a specific customer.
@@ -639,7 +659,8 @@ async def get_customer_alert_settings(
 
 
 async def get_customer_alert_settings_office365(
-    office365_organization_id: str, session: AsyncSession,
+    office365_organization_id: str,
+    session: AsyncSession,
 ) -> Optional[AlertCreationSettings]:
     """
     Retrieve the alert creation settings for a specific customer.
@@ -653,7 +674,8 @@ async def get_customer_alert_settings_office365(
     """
     result = await session.execute(
         select(AlertCreationSettings).filter(
-            AlertCreationSettings.office365_organization_id == office365_organization_id,
+            AlertCreationSettings.office365_organization_id
+            == office365_organization_id,
         ),
     )
     settings = result.scalars().first()

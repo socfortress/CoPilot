@@ -25,7 +25,8 @@ DEBUG = env.bool("FLASK_DEBUG", default=False)
 SECRET_KEY = env.str("SECRET_KEY", "not-a-secret")
 # SQLALCHEMY_DATABASE_URI = env.str("SQLALCHEMY_DATABASE_URI", f"sqlite:///{db_path}")
 SQLALCHEMY_DATABASE_URI = env.str(
-    "SQLALCHEMY_DATABASE_URI", f"sqlite+aiosqlite:///{db_path}",
+    "SQLALCHEMY_DATABASE_URI",
+    f"sqlite+aiosqlite:///{db_path}",
 )
 SQLALCHEMY_TRACK_MODIFICATIONS = env.bool(
     "SQLALCHEMY_TRACK_MODIFICATIONS",

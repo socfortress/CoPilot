@@ -79,7 +79,9 @@ def create_pie_chart(alerts: dict, title: str, output_filename: str) -> None:
     plt.figure(figsize=(10, 6))
     plt.pie(num_alerts, labels=entities, autopct="%1.1f%%")
     plt.legend(
-        entities, loc="lower right", bbox_to_anchor=(1.0, 1.0),
+        entities,
+        loc="lower right",
+        bbox_to_anchor=(1.0, 1.0),
     )  # Add this line to include a legend
     plt.title(title)
     plt.tight_layout()
@@ -139,5 +141,7 @@ def create_alerts_report_pdf() -> None:
     create_pie_chart(alerts_by_rules, "Number of Alerts by Rule", "alerts_by_rule.png")
 
     create_pdf(
-        "Test", ["alerts_by_host.png", "alerts_by_rule.png"], "alerts_report.pdf",
+        "Test",
+        ["alerts_by_host.png", "alerts_by_rule.png"],
+        "alerts_report.pdf",
     )

@@ -9,7 +9,9 @@ from loguru import logger
 
 
 async def construct_grafana_url(
-    connector_url: str, username: str, password: str,
+    connector_url: str,
+    username: str,
+    password: str,
 ) -> str:
     """
     Constructs a Grafana URL with embedded credentials.
@@ -119,5 +121,6 @@ async def create_grafana_client(connector_name: str) -> GrafanaApi:
         return GrafanaApi.from_url(grafana_url)
     except Exception as e:
         raise HTTPException(
-            status_code=500, detail=f"Failed to create Grafana client: {e}",
+            status_code=500,
+            detail=f"Failed to create Grafana client: {e}",
         )

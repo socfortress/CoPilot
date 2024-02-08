@@ -40,7 +40,8 @@ dfir_iris_notes_router = APIRouter()
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def get_case_notes_route(
-    case_id: int = Depends(verify_case_exists), search_term: Optional[str] = "%",
+    case_id: int = Depends(verify_case_exists),
+    search_term: Optional[str] = "%",
 ) -> NotesResponse:
     """
     Retrieve all notes for a specific case.
@@ -63,7 +64,8 @@ async def get_case_notes_route(
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def create_case_note_route(
-    case_id: int, note_creation_body: NoteCreationBody,
+    case_id: int,
+    note_creation_body: NoteCreationBody,
 ) -> NoteCreationResponse:
     """
     Create a note for a case.

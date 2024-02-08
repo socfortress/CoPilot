@@ -159,7 +159,8 @@ class MimecastTTPURLSRequest(BaseModel):
         description="The email address of the Mimecast administrator.",
     )
     BaseURL: Optional[str] = Field(
-        None, description="The base URL for the Mimecast API.",
+        None,
+        description="The base URL for the Mimecast API.",
     )
     time_range: Optional[str] = Field(
         "15m",
