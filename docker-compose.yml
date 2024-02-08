@@ -46,7 +46,7 @@ services:
 
     copilot-frontend:
         container_name: copilot-frontend
-        image: ghcr.io/socfortress/copilot-frontend:latest
+        image: socfortress/copilot-frontend:latest
 
     copilot-nginx:
         image: nginx
