@@ -29,26 +29,26 @@ For **Wazuh** to successfully connect to the **Office365 API**, an authenticatio
 
 To authenticate with the Microsoft identity platform endpoint, you need to register an app in your [Microsoft Azure portal app registrations](https://portal.azure.com/#blade/Microsoft_AAD_RegisteredApps/ApplicationsListBlade) section. Once there click on **New registration**:
 
-![Register your app](/src/assets/images/office365/0-azure-app-new-registration.png)
+![Register your app](/images/office365/0-azure-app-new-registration.png)
 
 Fill in the name of your app, choose the desired account type and click on the **Register** button:
 
-![Register your app](/src/assets/images/office365/1-azure-wazuh-app-register-application.png)
+![Register your app](/images/office365/1-azure-wazuh-app-register-application.png)
 
 The app is now registered, and you can see information about it in its **Overview** section, at this point we can get the `client` and `tenant` IDs:
 
-![Register your app](/src/assets/images/office365/2-azure-wazuh-app-overview.png)
+![Register your app](/images/office365/2-azure-wazuh-app-overview.png)
 
 # Certificates & secrets
 
 You can generate a password to use during the authentication process. Go to **Certificates & secrets** and click on **New client secret**,
 then the name and the expiration date of the **New client secret** are requested:
 
-![Certificates & secrets](/src/assets/images/office365/3-azure-wazuh-app-create-password.png)
+![Certificates & secrets](/images/office365/3-azure-wazuh-app-create-password.png)
 
 Copy and save the value section.
 
-![Certificates & secrets](/src/assets/images/office365/3-azure-wazuh-app-create-password-copy-value.png)
+![Certificates & secrets](/images/office365/3-azure-wazuh-app-create-password-copy-value.png)
 
 Make sure you write it down because the UI won’t let you copy it afterward.
 
@@ -64,23 +64,23 @@ You need to add the following permissions under the **ActivityFeed** group:
 
 -   `ActivityFeed.ReadDlp`. Read DLP policy events including detected sensitive data.
 
-![API permissions](/src/assets/images/office365/4-azure-wazuh-app-configure-permissions.png)
+![API permissions](/images/office365/4-azure-wazuh-app-configure-permissions.png)
 
 Admin consent is required for API permission changes.
 
-![API permissions](/src/assets/images/office365/4-azure-wazuh-app-configure-permissions-admin-consent.png)
+![API permissions](/images/office365/4-azure-wazuh-app-configure-permissions-admin-consent.png)
 
 ### CoPilot configuration
 
 Next, we will see how to deploy this module in CoPilot. To do so, we will need to navigate to the `Customers` section and select the customer we want to deploy the module to. Once there, we will click on the `Integrations` tab and then on the `Add integration` button. We will select the `Office365` module and fill in the required fields.
 
-![Copilot Configuration](/src/assets/images/office365/copilot_config_customer_details.PNG)
+![Copilot Configuration](/images/office365/copilot_config_customer_details.PNG)
 
-![Copilot Configuration](/src/assets/images/office365/copilot_config_customer_integration.PNG)
+![Copilot Configuration](/images/office365/copilot_config_customer_integration.PNG)
 
-![Copilot Configuration](/src/assets/images/office365/copilot_config_customer_integration_config.PNG)
+![Copilot Configuration](/images/office365/copilot_config_customer_integration_config.PNG)
 
-![Copilot Configuration](/src/assets/images/office365/copilot_config_customer_integration_auth.PNG)
+![Copilot Configuration](/images/office365/copilot_config_customer_integration_auth.PNG)
 
 Once deployed, Copilot will automatically add the required configuration to the `Wazuh manager`, deploy the required Index, Stream, and Pipeline to `Graylog` and create the required Dashboards within `Grafana`. `Praeco` will also be configured to send `Exchange` and `Threat Intel` Office365 alerts to `DFIR-IRIS`.
 
