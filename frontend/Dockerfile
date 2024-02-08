@@ -15,10 +15,8 @@ RUN npm run build-only
 
 FROM nginx:1.24.0-alpine
 
-# ADD docker/nginx.conf /etc/nginx/nginx.conf
-# ADD dist /usr/share/nginx/html
 # Copy custom Nginx configuration
-COPY docker/nginx.conf /etc/nginx/nginx.conf
+COPY nginx.conf /etc/nginx/nginx.conf
 
 # Copy built static files from the builder stage
 COPY --from=builder dist /usr/share/nginx/html
