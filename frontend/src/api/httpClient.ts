@@ -17,7 +17,9 @@ HttpClient.interceptors.request.use(
 		const store = useAuthStore()
 
 		if (!config.headers) config.headers = {} as AxiosRequestHeaders
-		config.headers.Authorization = `Bearer ${store.userToken}`
+		if (store.userToken) {
+			config.headers.Authorization = `Bearer ${store.userToken}`
+		}
 
 		if (isJwtExpiring(store.userToken, 60 * 60) && !__TOKEN_REFRESHING && isDebounceTimeOver(__TOKEN_LAST_CHECK)) {
 			__TOKEN_REFRESHING = true
