@@ -21,6 +21,6 @@ COPY nginx.conf /etc/nginx/nginx.conf
 # Copy built static files from the builder stage
 COPY --from=builder dist /usr/share/nginx/html
 
-EXPOSE 80
+EXPOSE 2000
 
 CMD ["nginx", "-g", "daemon off;"]
