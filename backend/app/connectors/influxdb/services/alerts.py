@@ -1,12 +1,12 @@
 from typing import List
 
-from app.connectors.influxdb.schema.alerts import InfluxDBAlert, InfluxDBAlertsResponse
-from app.connectors.influxdb.utils.universal import (
-    create_influxdb_client,
-    get_influxdb_organization,
-)
 from fastapi import HTTPException
 from loguru import logger
+
+from app.connectors.influxdb.schema.alerts import InfluxDBAlert
+from app.connectors.influxdb.schema.alerts import InfluxDBAlertsResponse
+from app.connectors.influxdb.utils.universal import create_influxdb_client
+from app.connectors.influxdb.utils.universal import get_influxdb_organization
 
 # Constants
 BUCKET_NAME = "_monitoring"
@@ -46,9 +46,7 @@ async def process_alert_records(result) -> List[InfluxDBAlert]:
     for table in result:
         for record in table.records:
             alert = InfluxDBAlert(
-                time=record.values.get("time").isoformat()
-                if record.values.get("time")
-                else None,
+                time=record.values.get("time").isoformat() if record.values.get("time") else None,
                 message=record.values.get("message"),
                 checkID=record.values.get("checkID"),
                 checkName=record.values.get("checkName"),

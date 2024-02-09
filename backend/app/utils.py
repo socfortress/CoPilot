@@ -1,26 +1,44 @@
-from datetime import datetime, timedelta
+from datetime import datetime
+from datetime import timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Union
 
 import requests
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import Request
+from fastapi import Security
+from fastapi.exceptions import RequestValidationError
+from loguru import logger
+from pydantic import BaseModel
+from pydantic import Field
+from pydantic import validator
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from sqlalchemy.orm import joinedload
+
 from app.auth.services.universal import find_user
 from app.auth.utils import AuthHandler
 from app.connectors.utils import get_connector_info_from_db
 from app.db.all_models import Connectors
-from app.db.db_session import get_db, get_db_session, get_session
+from app.db.db_session import get_db
+from app.db.db_session import get_db_session
+from app.db.db_session import get_session
 from app.db.universal_models import LogEntry
 from app.integrations.alert_creation_settings.models.alert_creation_settings import (
     AlertCreationEventConfig,
+)
+from app.integrations.alert_creation_settings.models.alert_creation_settings import (
     AlertCreationSettings,
+)
+from app.integrations.alert_creation_settings.models.alert_creation_settings import (
     EventOrder,
 )
-from fastapi import APIRouter, Depends, HTTPException, Request, Security
-from fastapi.exceptions import RequestValidationError
-from loguru import logger
-from pydantic import BaseModel, Field, validator
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-from sqlalchemy.orm import joinedload
 
 
 ################## ! 422 VALIDATION ERROR TYPES FOR PYDANTIC VALUE ERROR RESPONSE ! ##################
@@ -229,9 +247,7 @@ class Logger:
         auth_header = request.headers.get("Authorization")
         if auth_header:
             try:
-                token = auth_header.split(" ")[
-                    1
-                ]  # Better split by space and take the second part
+                token = auth_header.split(" ")[1]  # Better split by space and take the second part
             except IndexError:
                 raise HTTPException(status_code=401, detail="Invalid token")
             username, _ = self.auth_handler.decode_token(token)
@@ -362,9 +378,7 @@ async def get_logs(session: AsyncSession = Depends(get_db)) -> LogsResponse:
     auth_handler_instance = AuthHandler()  # Initialize your AuthHandler
     logger_instance = Logger(session, auth_handler_instance)
 
-    logs = (
-        await logger_instance.fetch_all_logs()
-    )  # Assuming fetch_all_logs is an async function
+    logs = await logger_instance.fetch_all_logs()  # Assuming fetch_all_logs is an async function
     if logs:
         return LogsResponse(
             logs=logs,
@@ -441,12 +455,7 @@ async def get_logs_by_time_range(
     logs = result.scalars().all()
 
     if logs:
-        logs = [
-            log
-            for log in logs
-            if log.timestamp
-            >= datetime.now() - timedelta(days=int(time_range.time_range[:-1]))
-        ]
+        logs = [log for log in logs if log.timestamp >= datetime.now() - timedelta(days=int(time_range.time_range[:-1]))]
         if logs != []:
             return LogsResponse(
                 logs=logs,
@@ -564,12 +573,7 @@ async def purge_logs_by_time_range(
     logs = result.scalars().all()
 
     if logs:
-        logs = [
-            log
-            for log in logs
-            if log.timestamp
-            >= datetime.now() - timedelta(days=int(time_range.time_range[:-1]))
-        ]
+        logs = [log for log in logs if log.timestamp >= datetime.now() - timedelta(days=int(time_range.time_range[:-1]))]
         if logs != []:
             for log in logs:
                 await session.delete(log)
@@ -674,8 +678,7 @@ async def get_customer_alert_settings_office365(
     """
     result = await session.execute(
         select(AlertCreationSettings).filter(
-            AlertCreationSettings.office365_organization_id
-            == office365_organization_id,
+            AlertCreationSettings.office365_organization_id == office365_organization_id,
         ),
     )
     settings = result.scalars().first()

@@ -1,17 +1,16 @@
-from app.db.db_session import SyncSessionLocal, sync_engine
-from app.schedulers.models.scheduler import CreateSchedulerRequest, JobMetadata
-from app.schedulers.services.agent_sync import agent_sync
-from app.schedulers.services.invoke_mimecast import (
-    invoke_mimecast_integration,
-    invoke_mimecast_integration_ttp,
-)
-from app.schedulers.services.monitoring_alert import (
-    invoke_suricata_monitoring_alert,
-    invoke_wazuh_monitoring_alert,
-)
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from loguru import logger
+
+from app.db.db_session import SyncSessionLocal
+from app.db.db_session import sync_engine
+from app.schedulers.models.scheduler import CreateSchedulerRequest
+from app.schedulers.models.scheduler import JobMetadata
+from app.schedulers.services.agent_sync import agent_sync
+from app.schedulers.services.invoke_mimecast import invoke_mimecast_integration
+from app.schedulers.services.invoke_mimecast import invoke_mimecast_integration_ttp
+from app.schedulers.services.monitoring_alert import invoke_suricata_monitoring_alert
+from app.schedulers.services.monitoring_alert import invoke_wazuh_monitoring_alert
 
 
 def init_scheduler():
@@ -43,9 +42,7 @@ def initialize_job_metadata():
             # {"job_id": "invoke_mimecast_integration", "time_interval": 5, "function": invoke_mimecast_integration}
         ]
         for job in known_jobs:
-            job_metadata = (
-                session.query(JobMetadata).filter_by(job_id=job["job_id"]).one_or_none()
-            )
+            job_metadata = session.query(JobMetadata).filter_by(job_id=job["job_id"]).one_or_none()
             if not job_metadata:
                 job_metadata = JobMetadata(
                     job_id=job["job_id"],
@@ -132,11 +129,7 @@ async def add_job_metadata(create_scheduler_request: CreateSchedulerRequest):
         create_scheduler_request (CreateSchedulerRequest): The request object containing the job details.
     """
     with SyncSessionLocal() as session:
-        job_metadata = (
-            session.query(JobMetadata)
-            .filter_by(job_id=create_scheduler_request.job_id)
-            .one_or_none()
-        )
+        job_metadata = session.query(JobMetadata).filter_by(job_id=create_scheduler_request.job_id).one_or_none()
         if not job_metadata:
             job_metadata = JobMetadata(
                 job_id=create_scheduler_request.job_id,

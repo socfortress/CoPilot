@@ -1,10 +1,11 @@
+from fastapi import APIRouter
+
 from app.integrations.monitoring_alert.routes.monitoring_alert import (
     monitoring_alerts_router,
 )
 from app.integrations.monitoring_alert.routes.provision import (
     monitoring_alerts_provision_router,
 )
-from fastapi import APIRouter
 
 # Instantiate the APIRouter
 router = APIRouter()

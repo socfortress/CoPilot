@@ -1,11 +1,13 @@
+from fastapi import APIRouter
+from fastapi import Depends
+from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+
 from app.db.db_session import get_db
 from app.schedulers.models.scheduler import JobMetadata
 from app.schedulers.scheduler import init_scheduler
 from app.schedulers.schema.scheduler import JobsResponse
-from fastapi import APIRouter, Depends
-from loguru import logger
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
 
 scheduler_router = APIRouter()
 

@@ -1,6 +1,8 @@
 from pathlib import Path
 from typing import List
 
+from loguru import logger
+
 from app.connectors.wazuh_manager.utils.universal import (
     send_delete_request as send_wazuh_delete_request,
 )
@@ -15,7 +17,6 @@ from app.connectors.wazuh_manager.utils.universal import (
 )
 from app.customer_provisioning.schema.provision import ProvisionNewCustomer
 from app.customer_provisioning.schema.wazuh_manager import WazuhAgentsTemplatePaths
-from loguru import logger
 
 
 ######### ! WAZUH MANAGER PROVISIONING ! ############

@@ -4,65 +4,50 @@ from datetime import datetime
 from typing import List
 
 import requests
-from app.connectors.grafana.schema.dashboards import (
-    DashboardProvisionRequest,
-    Office365Dashboard,
-)
-from app.connectors.grafana.services.dashboards import provision_dashboards
-from app.connectors.grafana.utils.universal import create_grafana_client
-from app.connectors.graylog.schema.pipelines import (
-    CreatePipeline,
-    CreatePipelineRule,
-    GraylogPipelinesResponse,
-    PipelineRulesResponse,
-)
-from app.connectors.graylog.services.management import start_stream
-from app.connectors.graylog.services.pipelines import (
-    connect_stream_to_pipeline,
-    create_pipeline_graylog,
-    create_pipeline_rule,
-    get_pipeline_id,
-    get_pipeline_rules,
-    get_pipelines,
-)
-from app.connectors.graylog.utils.universal import send_post_request
-from app.connectors.wazuh_manager.utils.universal import (
-    send_get_request,
-    send_put_request,
-)
-from app.customer_provisioning.schema.grafana import (
-    GrafanaDatasource,
-    GrafanaDataSourceCreationResponse,
-)
-from app.customer_provisioning.schema.graylog import (
-    GraylogIndexSetCreationResponse,
-    Office365EventStream,
-    StreamConnectionToPipelineRequest,
-    StreamCreationResponse,
-    TimeBasedIndexSet,
-)
-from app.customer_provisioning.services.grafana import (
-    create_grafana_folder,
-    get_opensearch_version,
-)
-from app.customers.routes.customers import get_customer, get_customer_meta
-from app.integrations.models.customer_integration_settings import CustomerIntegrations
-from app.integrations.office365.schema.provision import (
-    PipelineRuleTitles,
-    PipelineTitles,
-    ProvisionOffice365AuthKeys,
-    ProvisionOffice365Response,
-)
-from app.integrations.utils.schema import (
-    PraecoAlertConfig,
-    PraecoProvisionAlertResponse,
-)
-from app.utils import get_connector_attribute
 from dotenv import load_dotenv
 from fastapi import HTTPException
 from loguru import logger
-from sqlalchemy import and_, update
+from sqlalchemy import and_
+from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
+from app.connectors.grafana.schema.dashboards import Office365Dashboard
+from app.connectors.grafana.services.dashboards import provision_dashboards
+from app.connectors.grafana.utils.universal import create_grafana_client
+from app.connectors.graylog.schema.pipelines import CreatePipeline
+from app.connectors.graylog.schema.pipelines import CreatePipelineRule
+from app.connectors.graylog.schema.pipelines import GraylogPipelinesResponse
+from app.connectors.graylog.schema.pipelines import PipelineRulesResponse
+from app.connectors.graylog.services.management import start_stream
+from app.connectors.graylog.services.pipelines import connect_stream_to_pipeline
+from app.connectors.graylog.services.pipelines import create_pipeline_graylog
+from app.connectors.graylog.services.pipelines import create_pipeline_rule
+from app.connectors.graylog.services.pipelines import get_pipeline_id
+from app.connectors.graylog.services.pipelines import get_pipeline_rules
+from app.connectors.graylog.services.pipelines import get_pipelines
+from app.connectors.graylog.utils.universal import send_post_request
+from app.connectors.wazuh_manager.utils.universal import send_get_request
+from app.connectors.wazuh_manager.utils.universal import send_put_request
+from app.customer_provisioning.schema.grafana import GrafanaDatasource
+from app.customer_provisioning.schema.grafana import GrafanaDataSourceCreationResponse
+from app.customer_provisioning.schema.graylog import GraylogIndexSetCreationResponse
+from app.customer_provisioning.schema.graylog import Office365EventStream
+from app.customer_provisioning.schema.graylog import StreamConnectionToPipelineRequest
+from app.customer_provisioning.schema.graylog import StreamCreationResponse
+from app.customer_provisioning.schema.graylog import TimeBasedIndexSet
+from app.customer_provisioning.services.grafana import create_grafana_folder
+from app.customer_provisioning.services.grafana import get_opensearch_version
+from app.customers.routes.customers import get_customer
+from app.customers.routes.customers import get_customer_meta
+from app.integrations.models.customer_integration_settings import CustomerIntegrations
+from app.integrations.office365.schema.provision import PipelineRuleTitles
+from app.integrations.office365.schema.provision import PipelineTitles
+from app.integrations.office365.schema.provision import ProvisionOffice365AuthKeys
+from app.integrations.office365.schema.provision import ProvisionOffice365Response
+from app.integrations.utils.schema import PraecoAlertConfig
+from app.integrations.utils.schema import PraecoProvisionAlertResponse
+from app.utils import get_connector_attribute
 
 load_dotenv()
 
@@ -488,9 +473,7 @@ async def pipeline_rules_exists(pipeline_rules: PipelineRulesResponse) -> List[s
     return [
         rule_title.value
         for rule_title in PipelineRuleTitles
-        if not any(
-            rule.title == rule_title.value for rule in pipeline_rules.pipeline_rules
-        )
+        if not any(rule.title == rule_title.value for rule in pipeline_rules.pipeline_rules)
     ]
 
 
@@ -601,12 +584,7 @@ async def create_wazuh_alert_rule(rule_title: str) -> None:
     Creates the 'WAZUH CREATE FIELD SYSLOG LEVEL - ALERT' pipeline rule.
     """
     rule_source = (
-        f'rule "{rule_title}"\n'
-        "when\n"
-        "  to_long($message.rule_level) > 11\n"
-        "then\n"
-        '  set_field("syslog_level", "ALERT");\n'
-        "end"
+        f'rule "{rule_title}"\n' "when\n" "  to_long($message.rule_level) > 11\n" "then\n" '  set_field("syslog_level", "ALERT");\n' "end"
     )
     await create_pipeline_rule(
         CreatePipelineRule(
@@ -636,9 +614,7 @@ async def pipeline_exists(pipelines: GraylogPipelinesResponse) -> List[str]:
     return [
         pipeline_title.value
         for pipeline_title in PipelineTitles
-        if not any(
-            pipeline.title == pipeline_title.value for pipeline in pipelines.pipelines
-        )
+        if not any(pipeline.title == pipeline_title.value for pipeline in pipelines.pipelines)
     ]
 
 
@@ -699,9 +675,7 @@ async def create_grafana_datasource(
     grafana_client = await create_grafana_client("Grafana")
     # Switch to the newly created organization
     grafana_client.user.switch_actual_user_organisation(
-        (
-            await get_customer_meta(customer_code, session)
-        ).customer_meta.customer_meta_grafana_org_id,
+        (await get_customer_meta(customer_code, session)).customer_meta.customer_meta_grafana_org_id,
     )
     datasource_payload = GrafanaDatasource(
         name="O365",
@@ -784,9 +758,7 @@ async def provision_office365(
     await check_pipeline()
 
     # Create Index Set
-    index_set_id = (
-        await create_index_set(customer_code=customer_code, session=session)
-    ).data.id
+    index_set_id = (await create_index_set(customer_code=customer_code, session=session)).data.id
     logger.info(f"Index set: {index_set_id}")
     # Create event stream
     stream_id = (
@@ -810,23 +782,17 @@ async def provision_office365(
     await start_stream(stream_id=stream_id)
 
     # Grafana Deployment
-    office365_datasource_uid = (
-        await create_grafana_datasource(customer_code=customer_code, session=session)
-    ).datasource.uid
+    office365_datasource_uid = (await create_grafana_datasource(customer_code=customer_code, session=session)).datasource.uid
     grafana_o365_folder_id = (
         await create_grafana_folder(
-            organization_id=(
-                await get_customer_meta(customer_code, session)
-            ).customer_meta.customer_meta_grafana_org_id,
+            organization_id=(await get_customer_meta(customer_code, session)).customer_meta.customer_meta_grafana_org_id,
             folder_title="OFFICE 365",
         )
     ).id
     await provision_dashboards(
         DashboardProvisionRequest(
             dashboards=[dashboard.name for dashboard in Office365Dashboard],
-            organizationId=(
-                await get_customer_meta(customer_code, session)
-            ).customer_meta.customer_meta_grafana_org_id,
+            organizationId=(await get_customer_meta(customer_code, session)).customer_meta.customer_meta_grafana_org_id,
             folderId=grafana_o365_folder_id,
             datasourceUid=office365_datasource_uid,
         ),

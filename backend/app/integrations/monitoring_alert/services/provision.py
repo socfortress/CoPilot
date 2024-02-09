@@ -1,27 +1,49 @@
 import os
 from typing import Optional
 
+from dotenv import load_dotenv
+from fastapi import HTTPException
+from loguru import logger
+
 from app.connectors.graylog.routes.monitoring import get_all_event_notifications
 from app.connectors.graylog.schema.management import UrlWhitelistEntryResponse
 from app.connectors.graylog.schema.monitoring import GraylogEventNotificationsResponse
 from app.connectors.graylog.services.collector import get_url_whitelist_entries
-from app.connectors.graylog.utils.universal import send_post_request, send_put_request
+from app.connectors.graylog.utils.universal import send_post_request
+from app.connectors.graylog.utils.universal import send_put_request
 from app.integrations.monitoring_alert.schema.provision import (
     GraylogAlertProvisionConfig,
+)
+from app.integrations.monitoring_alert.schema.provision import (
     GraylogAlertProvisionFieldSpecItem,
+)
+from app.integrations.monitoring_alert.schema.provision import (
     GraylogAlertProvisionModel,
+)
+from app.integrations.monitoring_alert.schema.provision import (
     GraylogAlertProvisionNotification,
+)
+from app.integrations.monitoring_alert.schema.provision import (
     GraylogAlertProvisionNotificationSettings,
+)
+from app.integrations.monitoring_alert.schema.provision import (
     GraylogAlertProvisionProvider,
+)
+from app.integrations.monitoring_alert.schema.provision import (
     GraylogAlertWebhookNotificationModel,
+)
+from app.integrations.monitoring_alert.schema.provision import (
     GraylogUrlWhitelistEntries,
+)
+from app.integrations.monitoring_alert.schema.provision import (
     GraylogUrlWhitelistEntryConfig,
+)
+from app.integrations.monitoring_alert.schema.provision import (
     ProvisionMonitoringAlertRequest,
+)
+from app.integrations.monitoring_alert.schema.provision import (
     ProvisionWazuhMonitoringAlertResponse,
 )
-from dotenv import load_dotenv
-from fastapi import HTTPException
-from loguru import logger
 
 load_dotenv()
 import uuid
@@ -72,10 +94,7 @@ async def check_if_url_whitelist_entry_exists(url: str) -> bool:
     logger.info(
         f"Url whitelist entries collected: {url_whitelist_entries_response.url_whitelist_entries}",
     )
-    if url in [
-        url_whitelist_entry.value
-        for url_whitelist_entry in url_whitelist_entries_response.url_whitelist_entries.entries
-    ]:
+    if url in [url_whitelist_entry.value for url_whitelist_entry in url_whitelist_entries_response.url_whitelist_entries.entries]:
         logger.info(f"Url whitelist entry {url} already exists")
         return True
     return False
@@ -103,9 +122,7 @@ async def get_notification_id(notification_title: str) -> Optional[str]:
     logger.info(
         f"Event notifications collected: {event_notifications_response.event_notifications}",
     )
-    for (
-        event_notification
-    ) in event_notifications_response.event_notifications.notifications:
+    for event_notification in event_notifications_response.event_notifications.notifications:
         if event_notification.title == notification_title:
             return event_notification.id
     return None
@@ -184,8 +201,7 @@ async def check_if_event_notification_exists(event_notification: str) -> bool:
         f"Event notifications collected: {event_notifications_response.event_notifications}",
     )
     if event_notification in [
-        event_notification.title
-        for event_notification in event_notifications_response.event_notifications.notifications
+        event_notification.title for event_notification in event_notifications_response.event_notifications.notifications
     ]:
         return True
     return False

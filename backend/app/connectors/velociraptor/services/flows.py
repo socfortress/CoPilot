@@ -1,12 +1,11 @@
-from app.connectors.velociraptor.schema.artifacts import CollectArtifactResponse
-from app.connectors.velociraptor.schema.flows import (
-    FlowClientSession,
-    FlowResponse,
-    RetrieveFlowRequest,
-)
-from app.connectors.velociraptor.utils.universal import UniversalService
 from fastapi import HTTPException
 from loguru import logger
+
+from app.connectors.velociraptor.schema.artifacts import CollectArtifactResponse
+from app.connectors.velociraptor.schema.flows import FlowClientSession
+from app.connectors.velociraptor.schema.flows import FlowResponse
+from app.connectors.velociraptor.schema.flows import RetrieveFlowRequest
+from app.connectors.velociraptor.utils.universal import UniversalService
 
 
 def create_query(query: str) -> str:

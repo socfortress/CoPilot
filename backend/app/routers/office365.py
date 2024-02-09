@@ -1,5 +1,6 @@
-from app.integrations.office365.routes.provision import integration_office365_router
 from fastapi import APIRouter
+
+from app.integrations.office365.routes.provision import integration_office365_router
 
 # Instantiate the APIRouter
 router = APIRouter()

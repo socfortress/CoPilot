@@ -1,40 +1,33 @@
 import json
 from datetime import datetime
 
-from app.connectors.grafana.schema.dashboards import (
-    DashboardProvisionRequest,
-    MimecastDashboard,
-)
+from loguru import logger
+from sqlalchemy import and_
+from sqlalchemy import update
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
+from app.connectors.grafana.schema.dashboards import MimecastDashboard
 from app.connectors.grafana.services.dashboards import provision_dashboards
 from app.connectors.grafana.utils.universal import create_grafana_client
 from app.connectors.graylog.services.management import start_stream
 from app.connectors.graylog.utils.universal import send_post_request
-from app.customer_provisioning.schema.grafana import (
-    GrafanaDatasource,
-    GrafanaDataSourceCreationResponse,
-)
-from app.customer_provisioning.schema.graylog import (
-    GraylogIndexSetCreationResponse,
-    StreamCreationResponse,
-    TimeBasedIndexSet,
-)
-from app.customer_provisioning.services.grafana import (
-    create_grafana_folder,
-    get_opensearch_version,
-)
-from app.customers.routes.customers import get_customer, get_customer_meta
-from app.integrations.mimecast.schema.provision import (
-    MimecastEventStream,
-    ProvisionMimecastRequest,
-    ProvisionMimecastResponse,
-)
+from app.customer_provisioning.schema.grafana import GrafanaDatasource
+from app.customer_provisioning.schema.grafana import GrafanaDataSourceCreationResponse
+from app.customer_provisioning.schema.graylog import GraylogIndexSetCreationResponse
+from app.customer_provisioning.schema.graylog import StreamCreationResponse
+from app.customer_provisioning.schema.graylog import TimeBasedIndexSet
+from app.customer_provisioning.services.grafana import create_grafana_folder
+from app.customer_provisioning.services.grafana import get_opensearch_version
+from app.customers.routes.customers import get_customer
+from app.customers.routes.customers import get_customer_meta
+from app.integrations.mimecast.schema.provision import MimecastEventStream
+from app.integrations.mimecast.schema.provision import ProvisionMimecastRequest
+from app.integrations.mimecast.schema.provision import ProvisionMimecastResponse
 from app.integrations.models.customer_integration_settings import CustomerIntegrations
 from app.integrations.routes import create_integration_meta
 from app.integrations.schema import CustomerIntegrationsMetaSchema
 from app.utils import get_connector_attribute
-from loguru import logger
-from sqlalchemy import and_, update
-from sqlalchemy.ext.asyncio import AsyncSession
 
 
 ################## ! GRAYLOG ! ##################
@@ -223,9 +216,7 @@ async def create_grafana_datasource(
     grafana_client = await create_grafana_client("Grafana")
     # Switch to the newly created organization
     grafana_client.user.switch_actual_user_organisation(
-        (
-            await get_customer_meta(customer_code, session)
-        ).customer_meta.customer_meta_grafana_org_id,
+        (await get_customer_meta(customer_code, session)).customer_meta.customer_meta_grafana_org_id,
     )
     datasource_payload = GrafanaDatasource(
         name="MIMECAST",

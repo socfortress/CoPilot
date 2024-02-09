@@ -1,4 +1,7 @@
-from typing import Dict, List, Optional, Union
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Union
 
 from pydantic import BaseModel
 

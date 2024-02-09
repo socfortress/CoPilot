@@ -1,23 +1,24 @@
-from app.auth.utils import AuthHandler
-from app.db.db_session import get_db
-from app.db.universal_models import Agents
-from app.healthchecks.agents.schema.agents import (
-    AgentHealthCheckResponse,
-    HostLogsSearchBody,
-    HostLogsSearchResponse,
-    TimeCriteriaModel,
-)
-from app.healthchecks.agents.services.agents import (
-    host_logs,
-    velociraptor_agent_healthcheck,
-    velociraptor_agents_healthcheck,
-    wazuh_agent_healthcheck,
-    wazuh_agents_healthcheck,
-)
-from fastapi import APIRouter, Depends, HTTPException, Query, Security
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import Query
+from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+
+from app.auth.utils import AuthHandler
+from app.db.db_session import get_db
+from app.db.universal_models import Agents
+from app.healthchecks.agents.schema.agents import AgentHealthCheckResponse
+from app.healthchecks.agents.schema.agents import HostLogsSearchBody
+from app.healthchecks.agents.schema.agents import HostLogsSearchResponse
+from app.healthchecks.agents.schema.agents import TimeCriteriaModel
+from app.healthchecks.agents.services.agents import host_logs
+from app.healthchecks.agents.services.agents import velociraptor_agent_healthcheck
+from app.healthchecks.agents.services.agents import velociraptor_agents_healthcheck
+from app.healthchecks.agents.services.agents import wazuh_agent_healthcheck
+from app.healthchecks.agents.services.agents import wazuh_agents_healthcheck
 
 healtcheck_agents_router = APIRouter()
 

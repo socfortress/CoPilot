@@ -1,5 +1,6 @@
-from app.agents.routes.agents import agents_router
 from fastapi import APIRouter
+
+from app.agents.routes.agents import agents_router
 
 # Instantiate the APIRouter
 router = APIRouter()

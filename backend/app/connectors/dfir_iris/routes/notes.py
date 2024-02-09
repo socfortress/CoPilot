@@ -1,15 +1,18 @@
 from typing import Optional
 
-from app.auth.utils import AuthHandler
-from app.connectors.dfir_iris.schema.notes import (
-    NoteCreationBody,
-    NoteCreationResponse,
-    NotesResponse,
-)
-from app.connectors.dfir_iris.services.notes import create_case_note, get_case_notes
-from app.connectors.dfir_iris.utils.universal import check_case_exists
-from fastapi import APIRouter, Depends, HTTPException, Security
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import Security
 from loguru import logger
+
+from app.auth.utils import AuthHandler
+from app.connectors.dfir_iris.schema.notes import NoteCreationBody
+from app.connectors.dfir_iris.schema.notes import NoteCreationResponse
+from app.connectors.dfir_iris.schema.notes import NotesResponse
+from app.connectors.dfir_iris.services.notes import create_case_note
+from app.connectors.dfir_iris.services.notes import get_case_notes
+from app.connectors.dfir_iris.utils.universal import check_case_exists
 
 
 async def verify_case_exists(case_id: int) -> int:

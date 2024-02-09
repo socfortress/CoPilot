@@ -1,6 +1,7 @@
 from typing import Optional
 
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field
+from sqlmodel import SQLModel
 
 
 class MonitoringAlerts(SQLModel, table=True):

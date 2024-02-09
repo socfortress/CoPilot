@@ -1,5 +1,6 @@
-from app.threat_intel.routes.socfortress import threat_intel_socfortress_router
 from fastapi import APIRouter
+
+from app.threat_intel.routes.socfortress import threat_intel_socfortress_router
 
 # Instantiate the APIRouter
 router = APIRouter()

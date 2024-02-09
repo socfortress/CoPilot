@@ -1,21 +1,27 @@
 from datetime import timedelta
 
-from app.auth.models.users import (
-    PasswordReset,
-    PasswordResetToken,
-    User,
-    UserInput,
-    UserLogin,
-)
-from app.auth.schema.auth import Token, UserLoginResponse, UserResponse
-from app.auth.schema.user import UserBaseResponse
-from app.auth.services.universal import find_user, select_all_users
-from app.auth.utils import AuthHandler
-from app.db.db_session import get_db
-from fastapi import APIRouter, Depends, HTTPException, Security, status
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import Security
+from fastapi import status
 from fastapi.security import OAuth2PasswordRequestForm
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.auth.models.users import PasswordReset
+from app.auth.models.users import PasswordResetToken
+from app.auth.models.users import User
+from app.auth.models.users import UserInput
+from app.auth.models.users import UserLogin
+from app.auth.schema.auth import Token
+from app.auth.schema.auth import UserLoginResponse
+from app.auth.schema.auth import UserResponse
+from app.auth.schema.user import UserBaseResponse
+from app.auth.services.universal import find_user
+from app.auth.services.universal import select_all_users
+from app.auth.utils import AuthHandler
+from app.db.db_session import get_db
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 1440
 

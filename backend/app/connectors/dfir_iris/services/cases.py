@@ -1,28 +1,26 @@
 from datetime import datetime
-from typing import Dict, List
+from typing import Dict
+from typing import List
 
-from app.connectors.dfir_iris.schema.cases import (
-    CaseOlderThanBody,
-    CaseResponse,
-    CasesBreachedResponse,
-    ClosedCaseResponse,
-    PurgeCaseResponse,
-    ReopenedCaseResponse,
-    SingleCaseBody,
-    SingleCaseResponse,
-)
-from app.connectors.dfir_iris.utils.universal import (
-    create_dfir_iris_client,
-    fetch_and_parse_data,
-)
-from app.integrations.alert_creation_settings.models.alert_creation_settings import (
-    AlertCreationSettings,
-)
 from dfir_iris_client.case import Case
 from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+
+from app.connectors.dfir_iris.schema.cases import CaseOlderThanBody
+from app.connectors.dfir_iris.schema.cases import CaseResponse
+from app.connectors.dfir_iris.schema.cases import CasesBreachedResponse
+from app.connectors.dfir_iris.schema.cases import ClosedCaseResponse
+from app.connectors.dfir_iris.schema.cases import PurgeCaseResponse
+from app.connectors.dfir_iris.schema.cases import ReopenedCaseResponse
+from app.connectors.dfir_iris.schema.cases import SingleCaseBody
+from app.connectors.dfir_iris.schema.cases import SingleCaseResponse
+from app.connectors.dfir_iris.utils.universal import create_dfir_iris_client
+from app.connectors.dfir_iris.utils.universal import fetch_and_parse_data
+from app.integrations.alert_creation_settings.models.alert_creation_settings import (
+    AlertCreationSettings,
+)
 
 
 async def get_client_and_cases() -> Dict:

@@ -1,15 +1,14 @@
-from app.connectors.graylog.schema.monitoring import (
-    GraylogEventNotificationsResponse,
-    GraylogMessages,
-    GraylogMessagesResponse,
-    GraylogMetricsResponse,
-    GraylogThroughputMetrics,
-    GraylogThroughputMetricsCollection,
-    GraylogUncommittedJournalEntries,
-)
-from app.connectors.graylog.utils.universal import send_get_request
 from fastapi import HTTPException
 from loguru import logger
+
+from app.connectors.graylog.schema.monitoring import GraylogEventNotificationsResponse
+from app.connectors.graylog.schema.monitoring import GraylogMessages
+from app.connectors.graylog.schema.monitoring import GraylogMessagesResponse
+from app.connectors.graylog.schema.monitoring import GraylogMetricsResponse
+from app.connectors.graylog.schema.monitoring import GraylogThroughputMetrics
+from app.connectors.graylog.schema.monitoring import GraylogThroughputMetricsCollection
+from app.connectors.graylog.schema.monitoring import GraylogUncommittedJournalEntries
+from app.connectors.graylog.utils.universal import send_get_request
 
 
 async def get_messages(page_number: int) -> GraylogMessagesResponse:
@@ -109,10 +108,7 @@ def filter_and_create_throughput_metrics(merged_metrics: dict) -> list:
     Returns:
         list: A list of GraylogThroughputMetrics objects.
     """
-    model_fields = [
-        field_info.alias
-        for field_info in GraylogThroughputMetricsCollection.__fields__.values()
-    ]
+    model_fields = [field_info.alias for field_info in GraylogThroughputMetricsCollection.__fields__.values()]
     throughput_metrics_list = [
         GraylogThroughputMetrics(metric=metric_name, value=metric_data.get("value", 0))
         for metric_name, metric_data in merged_metrics.items()
@@ -132,19 +128,14 @@ async def get_metrics() -> GraylogMetricsResponse:
     throughput_metrics_collected = await fetch_metrics_from_graylog()
     uncommitted_journal_entries_collected = await fetch_uncommitted_journal_entries()
     try:
-        if (
-            throughput_metrics_collected["success"]
-            and uncommitted_journal_entries_collected["success"]
-        ):
+        if throughput_metrics_collected["success"] and uncommitted_journal_entries_collected["success"]:
             merged_metrics = merge_metrics_data(throughput_metrics_collected)
             throughput_metrics_list = filter_and_create_throughput_metrics(
                 merged_metrics,
             )
 
             uncommitted_journal_entries = GraylogUncommittedJournalEntries(
-                uncommitted_journal_entries=uncommitted_journal_entries_collected[
-                    "data"
-                ]["uncommitted_journal_entries"],
+                uncommitted_journal_entries=uncommitted_journal_entries_collected["data"]["uncommitted_journal_entries"],
             )
 
             return GraylogMetricsResponse(

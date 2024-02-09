@@ -1,6 +1,11 @@
-from typing import Any, Dict, List, Optional
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
 
-from pydantic import BaseModel, Field, root_validator
+from pydantic import BaseModel
+from pydantic import Field
+from pydantic import root_validator
 
 
 class ProvisionMimecastRequest(BaseModel):

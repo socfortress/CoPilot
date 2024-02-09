@@ -1,8 +1,9 @@
 import os
 
 import requests
-from app.auth.services.universal import get_scheduler_password
 from dotenv import load_dotenv
+
+from app.auth.services.universal import get_scheduler_password
 
 load_dotenv()
 

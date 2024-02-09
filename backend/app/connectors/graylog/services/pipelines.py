@@ -1,18 +1,16 @@
-from app.connectors.graylog.schema.pipelines import (
-    CreatePipeline,
-    CreatePipelineRule,
-    GraylogPipelinesResponse,
-    Pipeline,
-    PipelineRule,
-    PipelineRulesResponse,
-)
-from app.connectors.graylog.utils.universal import send_get_request, send_post_request
-from app.customer_provisioning.schema.graylog import (
-    StreamConnectionToPipelineRequest,
-    StreamConnectionToPipelineResponse,
-)
 from fastapi import HTTPException
 from loguru import logger
+
+from app.connectors.graylog.schema.pipelines import CreatePipeline
+from app.connectors.graylog.schema.pipelines import CreatePipelineRule
+from app.connectors.graylog.schema.pipelines import GraylogPipelinesResponse
+from app.connectors.graylog.schema.pipelines import Pipeline
+from app.connectors.graylog.schema.pipelines import PipelineRule
+from app.connectors.graylog.schema.pipelines import PipelineRulesResponse
+from app.connectors.graylog.utils.universal import send_get_request
+from app.connectors.graylog.utils.universal import send_post_request
+from app.customer_provisioning.schema.graylog import StreamConnectionToPipelineRequest
+from app.customer_provisioning.schema.graylog import StreamConnectionToPipelineResponse
 
 
 async def get_pipelines() -> GraylogPipelinesResponse:
@@ -30,10 +28,7 @@ async def get_pipelines() -> GraylogPipelinesResponse:
     )
     try:
         if pipelines_collected["success"]:
-            pipelines_list = [
-                Pipeline(**pipeline_data)
-                for pipeline_data in pipelines_collected["data"]
-            ]
+            pipelines_list = [Pipeline(**pipeline_data) for pipeline_data in pipelines_collected["data"]]
             return GraylogPipelinesResponse(
                 pipelines=pipelines_list,
                 success=True,
@@ -63,10 +58,7 @@ async def get_pipeline_rules() -> PipelineRulesResponse:
     )
     try:
         if pipeline_rules_collected["success"]:
-            pipeline_rules_list = [
-                PipelineRule(**pipeline_rule_data)
-                for pipeline_rule_data in pipeline_rules_collected["data"]
-            ]
+            pipeline_rules_list = [PipelineRule(**pipeline_rule_data) for pipeline_rule_data in pipeline_rules_collected["data"]]
             return PipelineRulesResponse(
                 pipeline_rules=pipeline_rules_list,
                 success=True,

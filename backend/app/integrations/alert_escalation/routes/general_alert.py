@@ -1,13 +1,14 @@
-from app.auth.utils import AuthHandler
-from app.db.db_session import get_db
-from app.integrations.alert_escalation.schema.general_alert import (
-    CreateAlertRequest,
-    CreateAlertResponse,
-)
-from app.integrations.alert_escalation.services.general_alert import create_alert
-from fastapi import APIRouter, Depends, Security
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.auth.utils import AuthHandler
+from app.db.db_session import get_db
+from app.integrations.alert_escalation.schema.general_alert import CreateAlertRequest
+from app.integrations.alert_escalation.schema.general_alert import CreateAlertResponse
+from app.integrations.alert_escalation.services.general_alert import create_alert
 
 integration_general_alerts_router = APIRouter()
 

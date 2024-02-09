@@ -1,3 +1,5 @@
+from fastapi import APIRouter
+
 from app.connectors.dfir_iris.routes.alerts import dfir_iris_alerts_router
 from app.connectors.dfir_iris.routes.assets import dfir_iris_assets_router
 from app.connectors.dfir_iris.routes.cases import dfir_iris_cases_router
@@ -6,7 +8,6 @@ from app.connectors.dfir_iris.routes.users import dfir_iris_users_router
 from app.integrations.alert_escalation.routes.general_alert import (
     integration_general_alerts_router,
 )
-from fastapi import APIRouter
 
 # Instantiate the APIRouter
 router = APIRouter()

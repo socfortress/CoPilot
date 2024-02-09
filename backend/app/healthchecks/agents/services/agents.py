@@ -1,23 +1,22 @@
-from datetime import datetime, timedelta
-from typing import Optional, Type
+from datetime import datetime
+from datetime import timedelta
+from typing import Optional
+from typing import Type
 
-from app.connectors.wazuh_indexer.utils.universal import (
-    LogsQueryBuilder,
-    collect_indices,
-    create_wazuh_indexer_client,
-)
-from app.healthchecks.agents.schema.agents import (
-    AgentHealthCheckResponse,
-    AgentModel,
-    CollectLogsResponse,
-    ExtendedAgentModel,
-    HostLogsSearchBody,
-    HostLogsSearchResponse,
-    LogsSearchBody,
-    TimeCriteriaModel,
-)
 from fastapi import HTTPException
 from loguru import logger
+
+from app.connectors.wazuh_indexer.utils.universal import LogsQueryBuilder
+from app.connectors.wazuh_indexer.utils.universal import collect_indices
+from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
+from app.healthchecks.agents.schema.agents import AgentHealthCheckResponse
+from app.healthchecks.agents.schema.agents import AgentModel
+from app.healthchecks.agents.schema.agents import CollectLogsResponse
+from app.healthchecks.agents.schema.agents import ExtendedAgentModel
+from app.healthchecks.agents.schema.agents import HostLogsSearchBody
+from app.healthchecks.agents.schema.agents import HostLogsSearchResponse
+from app.healthchecks.agents.schema.agents import LogsSearchBody
+from app.healthchecks.agents.schema.agents import TimeCriteriaModel
 
 
 def is_wazuh_agent_unhealthy(
@@ -44,9 +43,7 @@ def is_wazuh_agent_unhealthy(
         return ExtendedAgentModel(**agent.dict(), unhealthy_wazuh_agent=True)
 
     # Calculate the total time delta based on the criteria
-    total_minutes = (
-        time_criteria.minutes + time_criteria.hours * 60 + time_criteria.days * 24 * 60
-    )
+    total_minutes = time_criteria.minutes + time_criteria.hours * 60 + time_criteria.days * 24 * 60
     time_delta = timedelta(minutes=total_minutes)
 
     is_unhealthy = (current_time - wazuh_last_seen) > time_delta
@@ -77,9 +74,7 @@ def is_velociraptor_agent_unhealthy(
         return ExtendedAgentModel(**agent.dict(), unhealthy_velociraptor_agent=True)
 
     # Calculate the total time delta based on the criteria
-    total_minutes = (
-        time_criteria.minutes + time_criteria.hours * 60 + time_criteria.days * 24 * 60
-    )
+    total_minutes = time_criteria.minutes + time_criteria.hours * 60 + time_criteria.days * 24 * 60
     time_delta = timedelta(minutes=total_minutes)
 
     is_unhealthy = (current_time - velociraptor_last_seen) > time_delta
@@ -277,9 +272,7 @@ async def get_logs_generic(
     )
     logs_summary = []
     indices = await collect_indices()
-    index_list = (
-        [index_name] if index_name else indices.indices_list
-    )  # Use the provided index_name or get all indices
+    index_list = [index_name] if index_name else indices.indices_list  # Use the provided index_name or get all indices
 
     for index_name in index_list:
         try:

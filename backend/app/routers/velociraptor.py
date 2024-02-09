@@ -1,6 +1,7 @@
+from fastapi import APIRouter
+
 from app.connectors.velociraptor.routes.artifacts import velociraptor_artifacts_router
 from app.connectors.velociraptor.routes.flows import velociraptor_flows_router
-from fastapi import APIRouter
 
 # Instantiate the APIRouter
 router = APIRouter()

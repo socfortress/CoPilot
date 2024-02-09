@@ -1,12 +1,13 @@
-from app.auth.utils import AuthHandler
-from app.connectors.graylog.schema.events import (
-    AlertQuery,
-    GraylogAlertsResponse,
-    GraylogEventDefinitionsResponse,
-)
-from app.connectors.graylog.services.events import get_alerts, get_event_definitions
-from fastapi import APIRouter, Security
+from fastapi import APIRouter
+from fastapi import Security
 from loguru import logger
+
+from app.auth.utils import AuthHandler
+from app.connectors.graylog.schema.events import AlertQuery
+from app.connectors.graylog.schema.events import GraylogAlertsResponse
+from app.connectors.graylog.schema.events import GraylogEventDefinitionsResponse
+from app.connectors.graylog.services.events import get_alerts
+from app.connectors.graylog.services.events import get_event_definitions
 
 # App specific imports
 

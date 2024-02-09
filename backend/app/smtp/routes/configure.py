@@ -1,10 +1,13 @@
-from app.auth.models.users import SMTP, SMTPInput
+from fastapi import APIRouter
+from fastapi import HTTPException
+from loguru import logger
+
+from app.auth.models.users import SMTP
+from app.auth.models.users import SMTPInput
 from app.auth.services.universal import select_all_users
 from app.auth.utils import AuthHandler
 from app.db.db_session import session
 from app.smtp.schema.configure import SMTPResponse
-from fastapi import APIRouter, HTTPException
-from loguru import logger
 
 smtp_configure_router = APIRouter()
 auth_handler = AuthHandler()

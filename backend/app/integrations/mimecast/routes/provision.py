@@ -1,15 +1,15 @@
+from fastapi import APIRouter
+from fastapi import Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.db.db_session import get_db
 from app.integrations.mimecast.schema.mimecast import MimecastScheduledResponse
-from app.integrations.mimecast.schema.provision import (
-    ProvisionMimecastRequest,
-    ProvisionMimecastResponse,
-)
+from app.integrations.mimecast.schema.provision import ProvisionMimecastRequest
+from app.integrations.mimecast.schema.provision import ProvisionMimecastResponse
 from app.integrations.mimecast.services.provision import provision_mimecast
 from app.integrations.utils.utils import get_customer_integration_response
 from app.schedulers.models.scheduler import CreateSchedulerRequest
 from app.schedulers.scheduler import add_scheduler_jobs
-from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
 
 integration_mimecast_scheduler_router = APIRouter()
 

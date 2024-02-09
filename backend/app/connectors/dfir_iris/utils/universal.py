@@ -1,17 +1,24 @@
-from typing import Any, Callable, Dict, Optional, Tuple, Union
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import Optional
+from typing import Tuple
+from typing import Union
 
 import requests
-from app.connectors.utils import get_connector_info_from_db
-from app.db.db_session import get_db_session
 from dfir_iris_client.admin import AdminHelper
 from dfir_iris_client.alert import Alert
 from dfir_iris_client.case import Case
 from dfir_iris_client.customer import Customer
-from dfir_iris_client.helper.utils import assert_api_resp, get_data_from_resp
+from dfir_iris_client.helper.utils import assert_api_resp
+from dfir_iris_client.helper.utils import get_data_from_resp
 from dfir_iris_client.session import ClientSession
 from dfir_iris_client.users import User
 from fastapi import HTTPException
 from loguru import logger
+
+from app.connectors.utils import get_connector_info_from_db
+from app.db.db_session import get_db_session
 
 
 async def verify_dfir_iris_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:

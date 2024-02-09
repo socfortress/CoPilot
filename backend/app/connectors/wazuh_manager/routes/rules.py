@@ -1,24 +1,27 @@
 # App specific imports
-from app.auth.routes.auth import AuthHandler
-from app.connectors.wazuh_manager.models.rules import DisabledRule
-from app.connectors.wazuh_manager.schema.rules import (
-    AllDisabledRuleResponse,
-    RuleDisable,
-    RuleDisableResponse,
-    RuleEnable,
-    RuleEnableResponse,
-)
-
-# from app.connectors.wazuh_manager.schema.rules import RuleExclude
-# from app.connectors.wazuh_manager.schema.rules import RuleExcludeResponse
-from app.connectors.wazuh_manager.services.rules import disable_rule, enable_rule
-
-# from app.connectors.wazuh_manager.services.rules import exclude_rule
-from app.db.db_session import get_db
-from fastapi import APIRouter, Depends, HTTPException, Security
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+
+from app.auth.routes.auth import AuthHandler
+from app.connectors.wazuh_manager.models.rules import DisabledRule
+from app.connectors.wazuh_manager.schema.rules import AllDisabledRuleResponse
+from app.connectors.wazuh_manager.schema.rules import RuleDisable
+from app.connectors.wazuh_manager.schema.rules import RuleDisableResponse
+from app.connectors.wazuh_manager.schema.rules import RuleEnable
+from app.connectors.wazuh_manager.schema.rules import RuleEnableResponse
+
+# from app.connectors.wazuh_manager.schema.rules import RuleExclude
+# from app.connectors.wazuh_manager.schema.rules import RuleExcludeResponse
+from app.connectors.wazuh_manager.services.rules import disable_rule
+from app.connectors.wazuh_manager.services.rules import enable_rule
+
+# from app.connectors.wazuh_manager.services.rules import exclude_rule
+from app.db.db_session import get_db
 
 # from app.connectors.wazuh_manager.schema.rules import RuleExclude
 # from app.connectors.wazuh_manager.schema.rules import RuleExcludeResponse

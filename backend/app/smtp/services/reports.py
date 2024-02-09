@@ -6,7 +6,8 @@ from email.mime.text import MIMEText
 from typing import List
 
 from app.services.smtp.create_report import create_alerts_report_pdf
-from app.services.smtp.universal import EmailTemplate, UniversalEmailCredentials
+from app.services.smtp.universal import EmailTemplate
+from app.services.smtp.universal import UniversalEmailCredentials
 
 # ! SEND REPORT
 

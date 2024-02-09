@@ -1,14 +1,16 @@
-from app.auth.utils import AuthHandler
-from app.connectors.sublime.schema.alerts import (
-    AlertRequestBody,
-    AlertResponseBody,
-    SublimeAlertsResponse,
-)
-from app.connectors.sublime.services.alerts import collect_alerts, store_sublime_alert
-from app.db.db_session import get_db
-from fastapi import APIRouter, Depends, Security
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.auth.utils import AuthHandler
+from app.connectors.sublime.schema.alerts import AlertRequestBody
+from app.connectors.sublime.schema.alerts import AlertResponseBody
+from app.connectors.sublime.schema.alerts import SublimeAlertsResponse
+from app.connectors.sublime.services.alerts import collect_alerts
+from app.connectors.sublime.services.alerts import store_sublime_alert
+from app.db.db_session import get_db
 
 sublime_alerts_router = APIRouter()
 

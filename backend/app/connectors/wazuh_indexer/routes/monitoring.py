@@ -1,21 +1,20 @@
 from typing import Union
 
+from fastapi import APIRouter
+from fastapi import HTTPException
+from fastapi import Security
+
 from app.auth.utils import AuthHandler
-from app.connectors.wazuh_indexer.schema.monitoring import (
-    ClusterHealthResponse,
-    IndicesStatsResponse,
-    NodeAllocationResponse,
-    ShardsResponse,
-)
+from app.connectors.wazuh_indexer.schema.monitoring import ClusterHealthResponse
+from app.connectors.wazuh_indexer.schema.monitoring import IndicesStatsResponse
+from app.connectors.wazuh_indexer.schema.monitoring import NodeAllocationResponse
+from app.connectors.wazuh_indexer.schema.monitoring import ShardsResponse
 
 # from app.connectors.wazuh_indexer.schema import WazuhIndexerResponse, WazuhIndexerListResponse
-from app.connectors.wazuh_indexer.services.monitoring import (
-    cluster_healthcheck,
-    indices_stats,
-    node_allocation,
-    shards,
-)
-from fastapi import APIRouter, HTTPException, Security
+from app.connectors.wazuh_indexer.services.monitoring import cluster_healthcheck
+from app.connectors.wazuh_indexer.services.monitoring import indices_stats
+from app.connectors.wazuh_indexer.services.monitoring import node_allocation
+from app.connectors.wazuh_indexer.services.monitoring import shards
 
 wazuh_indexer_router = APIRouter()
 

@@ -1,8 +1,9 @@
+from fastapi import APIRouter
+
 from app.integrations.alert_creation.general.routes.alert import general_alerts_router
 from app.integrations.alert_creation.office365.routes.alert import (
     office365_alerts_router,
 )
-from fastapi import APIRouter
 
 # Instantiate the APIRouter
 router = APIRouter()

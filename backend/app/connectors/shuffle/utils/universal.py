@@ -1,10 +1,13 @@
-from typing import Any, Dict, Optional
+from typing import Any
+from typing import Dict
+from typing import Optional
 
 import requests
-from app.connectors.utils import get_connector_info_from_db
-from app.db.db_session import get_db_session
 from fastapi import HTTPException
 from loguru import logger
+
+from app.connectors.utils import get_connector_info_from_db
+from app.db.db_session import get_db_session
 
 
 async def verify_shuffle_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
@@ -164,9 +167,7 @@ def send_post_request(
             return {
                 "data": response.json(),
                 "success": False if response.status_code >= 400 else True,
-                "message": "Successfully retrieved data"
-                if response.status_code < 400
-                else "Failed to retrieve data",
+                "message": "Successfully retrieved data" if response.status_code < 400 else "Failed to retrieve data",
             }
     except Exception as e:
         logger.debug(f"Response: {response}")

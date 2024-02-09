@@ -1,11 +1,12 @@
 import regex
-from app.integrations.dnstwist.schema.analyze import (
-    DomainAnalysisResponse,
-    DomainRequestBody,
-)
-from app.integrations.dnstwist.services.analyze import analyze_domain
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
 from loguru import logger
+
+from app.integrations.dnstwist.schema.analyze import DomainAnalysisResponse
+from app.integrations.dnstwist.schema.analyze import DomainRequestBody
+from app.integrations.dnstwist.services.analyze import analyze_domain
 
 dnstwist_router = APIRouter()
 

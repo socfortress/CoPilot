@@ -1,24 +1,39 @@
 from typing import List
 
-from app.db.db_session import get_db
-from app.integrations.alert_creation_settings.models.alert_creation_settings import (
-    AlertCreationEventConfig,
-    AlertCreationSettings,
-    EventOrder,
-)
-from app.integrations.alert_creation_settings.schema.alert_creation_settings import (
-    AlertCreationEventConfigResponse,
-    AlertCreationSettingsCreate,
-    AlertCreationSettingsResponse,
-    EventOrderCreate,
-    EventOrderResponse,
-)
-from app.utils import get_customer_alert_event_configs
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
+
+from app.db.db_session import get_db
+from app.integrations.alert_creation_settings.models.alert_creation_settings import (
+    AlertCreationEventConfig,
+)
+from app.integrations.alert_creation_settings.models.alert_creation_settings import (
+    AlertCreationSettings,
+)
+from app.integrations.alert_creation_settings.models.alert_creation_settings import (
+    EventOrder,
+)
+from app.integrations.alert_creation_settings.schema.alert_creation_settings import (
+    AlertCreationEventConfigResponse,
+)
+from app.integrations.alert_creation_settings.schema.alert_creation_settings import (
+    AlertCreationSettingsCreate,
+)
+from app.integrations.alert_creation_settings.schema.alert_creation_settings import (
+    AlertCreationSettingsResponse,
+)
+from app.integrations.alert_creation_settings.schema.alert_creation_settings import (
+    EventOrderCreate,
+)
+from app.integrations.alert_creation_settings.schema.alert_creation_settings import (
+    EventOrderResponse,
+)
+from app.utils import get_customer_alert_event_configs
 
 alert_creation_settings_router = APIRouter()
 
@@ -79,8 +94,7 @@ async def create_alert_creation_settings(
 
     result = await session.execute(
         select(AlertCreationSettings).where(
-            AlertCreationSettings.customer_code
-            == alert_creation_settings.customer_code,
+            AlertCreationSettings.customer_code == alert_creation_settings.customer_code,
         ),
     )
     settings = result.scalars().first()
@@ -215,9 +229,7 @@ async def add_event_order(
 
     # Query the EventOrder instance again to ensure event_configs are loaded
     result = await session.execute(
-        select(EventOrder)
-        .options(joinedload(EventOrder.event_configs))
-        .where(EventOrder.id == event_order_db.id),
+        select(EventOrder).options(joinedload(EventOrder.event_configs)).where(EventOrder.id == event_order_db.id),
     )
     event_order_db = result.scalars().first()
 
@@ -266,11 +278,7 @@ async def update_event_orders(
     for event_order in event_orders:
         # Check if an EventOrder with the given order_label already exists
         existing_order = next(
-            (
-                order
-                for order in settings.event_orders
-                if order.order_label == event_order.order_label
-            ),
+            (order for order in settings.event_orders if order.order_label == event_order.order_label),
             None,
         )
 

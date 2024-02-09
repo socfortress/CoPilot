@@ -1,7 +1,8 @@
-from app.integrations.monitoring_alert.models.monitoring_alert import MonitoringAlerts
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+
+from app.integrations.monitoring_alert.models.monitoring_alert import MonitoringAlerts
 
 
 async def remove_alert_id(alert_id: str, session: AsyncSession) -> None:

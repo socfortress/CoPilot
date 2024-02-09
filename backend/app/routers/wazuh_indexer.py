@@ -1,6 +1,7 @@
+from fastapi import APIRouter
+
 from app.connectors.wazuh_indexer.routes.alerts import wazuh_indexer_alerts_router
 from app.connectors.wazuh_indexer.routes.monitoring import wazuh_indexer_router
-from fastapi import APIRouter
 
 # Instantiate the APIRouter
 router = APIRouter()

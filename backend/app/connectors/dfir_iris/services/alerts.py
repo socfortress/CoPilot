@@ -1,22 +1,19 @@
-from app.connectors.dfir_iris.schema.alerts import (
-    AlertResponse,
-    AlertsResponse,
-    BookmarkedAlertsResponse,
-    CaseCreationResponse,
-    DeleteAlertResponse,
-    FilterAlertsRequest,
-)
-from app.connectors.dfir_iris.utils.universal import (
-    fetch_and_validate_data,
-    initialize_client_and_alert,
-)
-from app.integrations.alert_creation_settings.models.alert_creation_settings import (
-    AlertCreationSettings,
-)
 from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+
+from app.connectors.dfir_iris.schema.alerts import AlertResponse
+from app.connectors.dfir_iris.schema.alerts import AlertsResponse
+from app.connectors.dfir_iris.schema.alerts import BookmarkedAlertsResponse
+from app.connectors.dfir_iris.schema.alerts import CaseCreationResponse
+from app.connectors.dfir_iris.schema.alerts import DeleteAlertResponse
+from app.connectors.dfir_iris.schema.alerts import FilterAlertsRequest
+from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
+from app.connectors.dfir_iris.utils.universal import initialize_client_and_alert
+from app.integrations.alert_creation_settings.models.alert_creation_settings import (
+    AlertCreationSettings,
+)
 
 
 async def get_customer_code(session: AsyncSession, customer_id: int) -> str:
@@ -180,9 +177,7 @@ def construct_case_creation_params(alert_details: dict) -> dict:
         "case_tags": alert_details["alert_tags"],
         "escalation_note": "Case created from CoPilot",
         "iocs_import_list": [ioc["ioc_uuid"] for ioc in alert_details["iocs"]],
-        "assets_import_list": [
-            asset["asset_uuid"] for asset in alert_details["assets"]
-        ],
+        "assets_import_list": [asset["asset_uuid"] for asset in alert_details["assets"]],
     }
 
     # Replace None values with the string "None"

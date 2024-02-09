@@ -1,18 +1,18 @@
-from typing import List, Tuple
+from typing import List
+from typing import Tuple
 
-from app.connectors.graylog.schema.collector import (
-    ConfiguredInput,
-    ConfiguredInputsResponse,
-    GraylogIndexItem,
-    GraylogIndicesResponse,
-    GraylogInputsResponse,
-    RunningInput,
-    RunningInputsResponse,
-)
-from app.connectors.graylog.schema.management import UrlWhitelistEntryResponse
-from app.connectors.graylog.utils.universal import send_get_request
 from fastapi import HTTPException
 from loguru import logger
+
+from app.connectors.graylog.schema.collector import ConfiguredInput
+from app.connectors.graylog.schema.collector import ConfiguredInputsResponse
+from app.connectors.graylog.schema.collector import GraylogIndexItem
+from app.connectors.graylog.schema.collector import GraylogIndicesResponse
+from app.connectors.graylog.schema.collector import GraylogInputsResponse
+from app.connectors.graylog.schema.collector import RunningInput
+from app.connectors.graylog.schema.collector import RunningInputsResponse
+from app.connectors.graylog.schema.management import UrlWhitelistEntryResponse
+from app.connectors.graylog.utils.universal import send_get_request
 
 
 async def get_indices_full() -> GraylogIndicesResponse:
@@ -33,10 +33,7 @@ async def get_indices_full() -> GraylogIndicesResponse:
             raise HTTPException(status_code=500, detail="Failed to collect indices key")
 
         # Convert the dictionary to a list of GraylogIndexItem
-        indices_list = [
-            GraylogIndexItem(index_name=name, index_info=info)
-            for name, info in indices_data.items()
-        ]
+        indices_list = [GraylogIndexItem(index_name=name, index_info=info) for name, info in indices_data.items()]
 
         return GraylogIndicesResponse(
             indices=indices_list,
@@ -62,10 +59,7 @@ async def fetch_configured_inputs() -> Tuple[bool, List[ConfiguredInput]]:
     success = configured_inputs_collected.get("success", False)
 
     if success:
-        return True, [
-            ConfiguredInput(**input_data)
-            for input_data in configured_inputs_collected["data"]["inputs"]
-        ]
+        return True, [ConfiguredInput(**input_data) for input_data in configured_inputs_collected["data"]["inputs"]]
     else:
         logger.error("Failed to fetch configured inputs")
         return False, []
@@ -84,10 +78,7 @@ async def fetch_running_inputs() -> Tuple[bool, List[RunningInput]]:
     success = running_inputs_collected.get("success", False)
 
     if success:
-        return True, [
-            RunningInput(**input_data)
-            for input_data in running_inputs_collected["data"]["states"]
-        ]
+        return True, [RunningInput(**input_data) for input_data in running_inputs_collected["data"]["states"]]
     else:
         logger.error("Failed to fetch running inputs")
         return False, []

@@ -1,23 +1,30 @@
-from typing import Optional, Set
+from typing import Optional
+from typing import Set
 
-from app.connectors.dfir_iris.utils.universal import (
-    fetch_and_validate_data,
-    initialize_client_and_alert,
-)
+from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
+from app.connectors.dfir_iris.utils.universal import initialize_client_and_alert
 from app.integrations.alert_creation.general.schema.alert import ValidIocFields
 from app.integrations.alert_creation.office365.schema.threat_intel import (
     IrisAlertContext,
+)
+from app.integrations.alert_creation.office365.schema.threat_intel import (
     IrisAlertPayload,
-    IrisAsset,
-    IrisIoc,
+)
+from app.integrations.alert_creation.office365.schema.threat_intel import IrisAsset
+from app.integrations.alert_creation.office365.schema.threat_intel import IrisIoc
+from app.integrations.alert_creation.office365.schema.threat_intel import (
     Office365ThreatIntelAlertRequest,
+)
+from app.integrations.alert_creation.office365.schema.threat_intel import (
     Office365ThreatIntelAlertResponse,
 )
-from app.integrations.utils.alerts import send_to_shuffle, validate_ioc_type
+from app.integrations.utils.alerts import send_to_shuffle
+from app.integrations.utils.alerts import validate_ioc_type
 from app.integrations.utils.schema import ShufflePayload
 from app.utils import get_customer_alert_settings_office365
-from loguru import logger
-from sqlalchemy.ext.asyncio import AsyncSession
 
 
 def valid_ioc_fields() -> Set[str]:

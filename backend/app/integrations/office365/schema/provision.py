@@ -1,7 +1,10 @@
 from enum import Enum
-from typing import Any, Dict
+from typing import Any
+from typing import Dict
 
-from pydantic import BaseModel, Field, root_validator
+from pydantic import BaseModel
+from pydantic import Field
+from pydantic import root_validator
 
 
 class PipelineRuleTitles(Enum):

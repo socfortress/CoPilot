@@ -1,11 +1,11 @@
-from app.connectors.dfir_iris.schema.admin import CreateCustomerResponse, ListCustomers
-from app.connectors.dfir_iris.utils.universal import (
-    fetch_and_validate_data,
-    initialize_client_and_admin,
-    initialize_client_and_customer,
-)
 from fastapi import HTTPException
 from loguru import logger
+
+from app.connectors.dfir_iris.schema.admin import CreateCustomerResponse
+from app.connectors.dfir_iris.schema.admin import ListCustomers
+from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
+from app.connectors.dfir_iris.utils.universal import initialize_client_and_admin
+from app.connectors.dfir_iris.utils.universal import initialize_client_and_customer
 
 
 async def check_customer_exists(customer_name: str) -> bool:

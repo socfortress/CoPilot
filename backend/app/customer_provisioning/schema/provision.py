@@ -1,10 +1,14 @@
 import re
 from enum import Enum
-from typing import List, Optional
+from typing import List
+from typing import Optional
+
+from pydantic import BaseModel
+from pydantic import Field
+from pydantic import validator
 
 from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
 from app.db.universal_models import CustomersMeta
-from pydantic import BaseModel, Field, validator
 
 
 class CustomerSubsctipion(Enum):

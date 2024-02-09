@@ -1,20 +1,23 @@
 from typing import Union
 
-from app.auth.utils import AuthHandler
-from app.connectors.schema import (
-    ConnectorListResponse,
-    ConnectorResponse,
-    ConnectorsListResponse,
-    UpdateConnector,
-    VerifyConnectorResponse,
-)
-from app.connectors.services import ConnectorServices
-from app.db.db_session import get_db
-
 ## Auth Things
-from fastapi import APIRouter, Depends, File, HTTPException, Security, UploadFile
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import File
+from fastapi import HTTPException
+from fastapi import Security
+from fastapi import UploadFile
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.auth.utils import AuthHandler
+from app.connectors.schema import ConnectorListResponse
+from app.connectors.schema import ConnectorResponse
+from app.connectors.schema import ConnectorsListResponse
+from app.connectors.schema import UpdateConnector
+from app.connectors.schema import VerifyConnectorResponse
+from app.connectors.services import ConnectorServices
+from app.db.db_session import get_db
 
 connector_router = APIRouter()
 

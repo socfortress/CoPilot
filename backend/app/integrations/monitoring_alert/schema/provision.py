@@ -1,8 +1,12 @@
 from enum import Enum
-from typing import Dict, List, Optional
+from typing import Dict
+from typing import List
+from typing import Optional
 
 from fastapi import HTTPException
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel
+from pydantic import Field
+from pydantic import validator
 
 
 class AvailableMonitoringAlerts(str, Enum):

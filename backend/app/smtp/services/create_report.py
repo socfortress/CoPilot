@@ -8,7 +8,10 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import inch
 
 # from reportlab.pdfgen import canvas
-from reportlab.platypus import Image, Paragraph, SimpleDocTemplate, Spacer
+from reportlab.platypus import Image
+from reportlab.platypus import Paragraph
+from reportlab.platypus import SimpleDocTemplate
+from reportlab.platypus import Spacer
 
 matplotlib.use(
     "Agg",
@@ -16,6 +19,7 @@ matplotlib.use(
 # for scripts and web servers. This should resolve the main thread is not
 # in main loop issue as it bypasses the need for tkinter.
 import matplotlib.pyplot as plt
+
 from app.services.wazuh_indexer.alerts import AlertsService
 
 # ! TODO: Just a template

@@ -1,10 +1,13 @@
-from typing import Any, Dict, Optional
+from typing import Any
+from typing import Dict
+from typing import Optional
 
-from app.connectors.models import Connectors
-from app.connectors.schema import ConnectorResponse
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+
+from app.connectors.models import Connectors
+from app.connectors.schema import ConnectorResponse
 
 
 # ! New with Async

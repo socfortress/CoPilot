@@ -1,18 +1,17 @@
-from typing import Any, Dict, List
+from typing import Any
+from typing import Dict
+from typing import List
 
-from app.connectors.dfir_iris.schema.notes import (
-    NoteCreationBody,
-    NoteCreationResponse,
-    NoteDetails,
-    NoteDetailsResponse,
-    NotesResponse,
-)
-from app.connectors.dfir_iris.utils.universal import (
-    fetch_and_validate_data,
-    initialize_client_and_case,
-)
 from dfir_iris_client.case import Case
 from loguru import logger
+
+from app.connectors.dfir_iris.schema.notes import NoteCreationBody
+from app.connectors.dfir_iris.schema.notes import NoteCreationResponse
+from app.connectors.dfir_iris.schema.notes import NoteDetails
+from app.connectors.dfir_iris.schema.notes import NoteDetailsResponse
+from app.connectors.dfir_iris.schema.notes import NotesResponse
+from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
+from app.connectors.dfir_iris.utils.universal import initialize_client_and_case
 
 
 async def process_notes(notes: List[Dict], case_id: int) -> List[Dict]:

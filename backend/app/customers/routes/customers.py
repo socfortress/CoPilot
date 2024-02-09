@@ -1,31 +1,32 @@
-from app.auth.utils import AuthHandler
-
-# App specific imports
-from app.customers.schema.customers import (
-    AgentModel,
-    AgentsResponse,
-    CustomerFullResponse,
-    CustomerMetaRequestBody,
-    CustomerMetaResponse,
-    CustomerRequestBody,
-    CustomerResponse,
-    CustomersResponse,
-)
-from app.db.db_session import get_db
-from app.db.universal_models import Agents, Customers, CustomersMeta
-from app.healthchecks.agents.schema.agents import (
-    AgentHealthCheckResponse,
-    TimeCriteriaModel,
-)
-from app.healthchecks.agents.services.agents import (
-    velociraptor_agents_healthcheck,
-    wazuh_agents_healthcheck,
-)
-from fastapi import APIRouter, Depends, HTTPException, Query, Security
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import Query
+from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from starlette.status import HTTP_401_UNAUTHORIZED
+
+from app.auth.utils import AuthHandler
+
+# App specific imports
+from app.customers.schema.customers import AgentModel
+from app.customers.schema.customers import AgentsResponse
+from app.customers.schema.customers import CustomerFullResponse
+from app.customers.schema.customers import CustomerMetaRequestBody
+from app.customers.schema.customers import CustomerMetaResponse
+from app.customers.schema.customers import CustomerRequestBody
+from app.customers.schema.customers import CustomerResponse
+from app.customers.schema.customers import CustomersResponse
+from app.db.db_session import get_db
+from app.db.universal_models import Agents
+from app.db.universal_models import Customers
+from app.db.universal_models import CustomersMeta
+from app.healthchecks.agents.schema.agents import AgentHealthCheckResponse
+from app.healthchecks.agents.schema.agents import TimeCriteriaModel
+from app.healthchecks.agents.services.agents import velociraptor_agents_healthcheck
+from app.healthchecks.agents.services.agents import wazuh_agents_healthcheck
 
 customers_router = APIRouter()
 

@@ -1,28 +1,28 @@
-from typing import Dict, List, Optional, Type
+from typing import Dict
+from typing import List
+from typing import Optional
+from typing import Type
 
-from app.connectors.wazuh_indexer.schema.alerts import (
-    AlertsByHost,
-    AlertsByHostResponse,
-    AlertsByRule,
-    AlertsByRulePerHost,
-    AlertsByRulePerHostResponse,
-    AlertsByRuleResponse,
-    AlertsSearchBody,
-    AlertsSearchResponse,
-    CollectAlertsResponse,
-    HostAlertsSearchBody,
-    HostAlertsSearchResponse,
-    IndexAlertsSearchBody,
-    IndexAlertsSearchResponse,
-    SkippableWazuhIndexerClientErrors,
-)
-from app.connectors.wazuh_indexer.utils.universal import (
-    AlertsQueryBuilder,
-    collect_indices,
-    create_wazuh_indexer_client,
-)
 from fastapi import HTTPException
 from loguru import logger
+
+from app.connectors.wazuh_indexer.schema.alerts import AlertsByHost
+from app.connectors.wazuh_indexer.schema.alerts import AlertsByHostResponse
+from app.connectors.wazuh_indexer.schema.alerts import AlertsByRule
+from app.connectors.wazuh_indexer.schema.alerts import AlertsByRulePerHost
+from app.connectors.wazuh_indexer.schema.alerts import AlertsByRulePerHostResponse
+from app.connectors.wazuh_indexer.schema.alerts import AlertsByRuleResponse
+from app.connectors.wazuh_indexer.schema.alerts import AlertsSearchBody
+from app.connectors.wazuh_indexer.schema.alerts import AlertsSearchResponse
+from app.connectors.wazuh_indexer.schema.alerts import CollectAlertsResponse
+from app.connectors.wazuh_indexer.schema.alerts import HostAlertsSearchBody
+from app.connectors.wazuh_indexer.schema.alerts import HostAlertsSearchResponse
+from app.connectors.wazuh_indexer.schema.alerts import IndexAlertsSearchBody
+from app.connectors.wazuh_indexer.schema.alerts import IndexAlertsSearchResponse
+from app.connectors.wazuh_indexer.schema.alerts import SkippableWazuhIndexerClientErrors
+from app.connectors.wazuh_indexer.utils.universal import AlertsQueryBuilder
+from app.connectors.wazuh_indexer.utils.universal import collect_indices
+from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
 
 
 async def collect_and_aggregate_alerts(
@@ -48,17 +48,11 @@ async def collect_and_aggregate_alerts(
             alerts_response = await collect_alerts_generic(index_name, body=search_body)
             if alerts_response.success:
                 for alert in alerts_response.alerts:
-                    composite_key = tuple(
-                        alert["_source"][field] for field in field_names
-                    )
-                    aggregated_alerts_dict[composite_key] = (
-                        aggregated_alerts_dict.get(composite_key, 0) + 1
-                    )
+                    composite_key = tuple(alert["_source"][field] for field in field_names)
+                    aggregated_alerts_dict[composite_key] = aggregated_alerts_dict.get(composite_key, 0) + 1
         except HTTPException as e:
             detail_str = str(e.detail)  # Convert to string to make sure it's comparable
-            if any(
-                err.value in detail_str for err in SkippableWazuhIndexerClientErrors
-            ):
+            if any(err.value in detail_str for err in SkippableWazuhIndexerClientErrors):
                 logger.warning(
                     f"Skipping index {index_name} due to specific error: {e.detail}",
                 )
@@ -149,9 +143,7 @@ async def get_alerts_generic(
     )
     alerts_summary = []
     indices = await collect_indices()
-    index_list = (
-        [index_name] if index_name else indices.indices_list
-    )  # Use the provided index_name or get all indices
+    index_list = [index_name] if index_name else indices.indices_list  # Use the provided index_name or get all indices
 
     for index_name in index_list:
         try:
@@ -170,9 +162,7 @@ async def get_alerts_generic(
                 )
         except HTTPException as e:
             detail_str = str(e.detail)  # Convert to string to make sure it's comparable
-            if any(
-                err.value in detail_str for err in SkippableWazuhIndexerClientErrors
-            ):
+            if any(err.value in detail_str for err in SkippableWazuhIndexerClientErrors):
                 logger.warning(
                     f"Skipping index {index_name} due to specific error: {e.detail}",
                 )

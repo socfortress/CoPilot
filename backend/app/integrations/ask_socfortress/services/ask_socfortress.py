@@ -1,23 +1,28 @@
-from typing import Any, Dict, Optional
+from typing import Any
+from typing import Dict
+from typing import Optional
 
 import httpx
-from app.connectors.utils import get_connector_info_from_db
-from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
-from app.db.db_session import get_db_session
-from app.integrations.alert_escalation.schema.general_alert import (
-    CreateAlertRequest,
-    GenericAlertModel,
-    GenericSourceModel,
-)
-from app.integrations.ask_socfortress.schema.ask_socfortress import (
-    AskSocfortressRequest,
-    AskSocfortressSigmaRequest,
-    AskSocfortressSigmaResponse,
-)
-from app.utils import get_connector_attribute
 from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.connectors.utils import get_connector_info_from_db
+from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
+from app.db.db_session import get_db_session
+from app.integrations.alert_escalation.schema.general_alert import CreateAlertRequest
+from app.integrations.alert_escalation.schema.general_alert import GenericAlertModel
+from app.integrations.alert_escalation.schema.general_alert import GenericSourceModel
+from app.integrations.ask_socfortress.schema.ask_socfortress import (
+    AskSocfortressRequest,
+)
+from app.integrations.ask_socfortress.schema.ask_socfortress import (
+    AskSocfortressSigmaRequest,
+)
+from app.integrations.ask_socfortress.schema.ask_socfortress import (
+    AskSocfortressSigmaResponse,
+)
+from app.utils import get_connector_attribute
 
 
 async def get_single_alert_details(

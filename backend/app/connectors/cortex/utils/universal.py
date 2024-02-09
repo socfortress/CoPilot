@@ -1,12 +1,14 @@
 import time
-from typing import Any, Dict
+from typing import Any
+from typing import Dict
+
+from cortex4py.api import Api
+from fastapi import HTTPException
+from loguru import logger
 
 from app.connectors.cortex.schema.analyzers import AnalyzerJobData
 from app.connectors.utils import get_connector_info_from_db
 from app.db.db_session import get_db_session
-from cortex4py.api import Api
-from fastapi import HTTPException
-from loguru import logger
 
 
 async def verify_cortex_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:

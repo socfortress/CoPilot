@@ -1,22 +1,19 @@
 import json
 from datetime import datetime
 
-from app.connectors.graylog.services.pipelines import get_pipelines
-from app.connectors.graylog.utils.universal import (
-    send_delete_request,
-    send_post_request,
-)
-from app.customer_provisioning.schema.graylog import (
-    GraylogIndexSetCreationResponse,
-    StreamConnectionToPipelineRequest,
-    StreamConnectionToPipelineResponse,
-    StreamCreationResponse,
-    TimeBasedIndexSet,
-    WazuhEventStream,
-)
-from app.customer_provisioning.schema.provision import ProvisionNewCustomer
 from fastapi import HTTPException
 from loguru import logger
+
+from app.connectors.graylog.services.pipelines import get_pipelines
+from app.connectors.graylog.utils.universal import send_delete_request
+from app.connectors.graylog.utils.universal import send_post_request
+from app.customer_provisioning.schema.graylog import GraylogIndexSetCreationResponse
+from app.customer_provisioning.schema.graylog import StreamConnectionToPipelineRequest
+from app.customer_provisioning.schema.graylog import StreamConnectionToPipelineResponse
+from app.customer_provisioning.schema.graylog import StreamCreationResponse
+from app.customer_provisioning.schema.graylog import TimeBasedIndexSet
+from app.customer_provisioning.schema.graylog import WazuhEventStream
+from app.customer_provisioning.schema.provision import ProvisionNewCustomer
 
 
 ######### ! GRAYLOG PROVISIONING ! ############

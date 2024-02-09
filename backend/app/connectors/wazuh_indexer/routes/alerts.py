@@ -1,28 +1,28 @@
 from typing import List
 
-from app.auth.utils import AuthHandler
-from app.connectors.wazuh_indexer.schema.alerts import (
-    AlertsByHostResponse,
-    AlertsByRulePerHostResponse,
-    AlertsByRuleResponse,
-    AlertsSearchBody,
-    AlertsSearchResponse,
-    HostAlertsSearchBody,
-    HostAlertsSearchResponse,
-    IndexAlertsSearchBody,
-    IndexAlertsSearchResponse,
-)
-from app.connectors.wazuh_indexer.services.alerts import (
-    get_alerts,
-    get_alerts_by_host,
-    get_alerts_by_rule,
-    get_alerts_by_rule_per_host,
-    get_host_alerts,
-    get_index_alerts,
-)
-from app.connectors.wazuh_indexer.utils.universal import collect_indices
-from fastapi import APIRouter, Depends, HTTPException, Security
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import Security
 from loguru import logger
+
+from app.auth.utils import AuthHandler
+from app.connectors.wazuh_indexer.schema.alerts import AlertsByHostResponse
+from app.connectors.wazuh_indexer.schema.alerts import AlertsByRulePerHostResponse
+from app.connectors.wazuh_indexer.schema.alerts import AlertsByRuleResponse
+from app.connectors.wazuh_indexer.schema.alerts import AlertsSearchBody
+from app.connectors.wazuh_indexer.schema.alerts import AlertsSearchResponse
+from app.connectors.wazuh_indexer.schema.alerts import HostAlertsSearchBody
+from app.connectors.wazuh_indexer.schema.alerts import HostAlertsSearchResponse
+from app.connectors.wazuh_indexer.schema.alerts import IndexAlertsSearchBody
+from app.connectors.wazuh_indexer.schema.alerts import IndexAlertsSearchResponse
+from app.connectors.wazuh_indexer.services.alerts import get_alerts
+from app.connectors.wazuh_indexer.services.alerts import get_alerts_by_host
+from app.connectors.wazuh_indexer.services.alerts import get_alerts_by_rule
+from app.connectors.wazuh_indexer.services.alerts import get_alerts_by_rule_per_host
+from app.connectors.wazuh_indexer.services.alerts import get_host_alerts
+from app.connectors.wazuh_indexer.services.alerts import get_index_alerts
+from app.connectors.wazuh_indexer.utils.universal import collect_indices
 
 # App specific imports
 
