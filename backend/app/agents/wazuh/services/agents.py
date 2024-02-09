@@ -6,6 +6,7 @@ from app.agents.wazuh.schema.agents import WazuhAgent
 from app.agents.wazuh.schema.agents import WazuhAgentsList
 from app.connectors.wazuh_manager.utils.universal import send_delete_request
 from app.connectors.wazuh_manager.utils.universal import send_get_request
+import asyncio
 
 
 async def collect_wazuh_agents() -> WazuhAgentsList:
@@ -24,7 +25,13 @@ async def collect_wazuh_agents() -> WazuhAgentsList:
 
     # If the number of agents is less than total_affected_items, make another request with the limit being total_affected_items
     if len(agents_collected.get("data", {}).get("data", {}).get("affected_items", [])) < total_affected_items:
-        logger.info(f"Total affected items: {total_affected_items}. We only collected {len(agents_collected.get('data', {}).get('data', {}).get('affected_items', []))} agents. Making another request to collect all agents.")
+        logger.info(
+            f"Total items: {total_affected_items}.\n"
+            f"Collected {len(agents_collected.get('data', {}).get('data', {}).get('affected_items', []))} agents.\n"
+            "Making another request."
+        )
+        # sleep for 2 seconds before making another request
+        await asyncio.sleep(2)
         agents_collected = await send_get_request(
             endpoint="/agents",
             params={"limit": total_affected_items},
