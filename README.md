@@ -78,7 +78,7 @@ bash build-dockers.sh
 docker compose up -d
 ```
 
-Copilot shall be available on the host interface, port 5173, protocol HTTP - `http://<your_instance_ip>:5173`.
+Copilot shall be available on the host interface, port 443, protocol HTTPS - `https://<your_instance_ip>`.
 By default, an `admin` account is created. The password is printed in stdout the very first time Copilot is started. It won't be printed anymore after that.
 `Admin user password` can be searched in the logs of the `copilot` docker to find the password. You will use the `plain` password to login to the web interface.
 
