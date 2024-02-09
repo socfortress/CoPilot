@@ -44,6 +44,8 @@ RUN /opt/venv/bin/pip install --no-cache-dir -r requirements.txt
 # Copy your application into the Docker image
 WORKDIR /opt/copilot/backend
 COPY . .
+# Create file-store folder
+RUN mkdir file-store
 
 # Expose ports
 EXPOSE 5000
