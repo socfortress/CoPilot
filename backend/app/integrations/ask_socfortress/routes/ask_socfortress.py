@@ -1,16 +1,22 @@
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import Security
+from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
 from app.integrations.ask_socfortress.schema.ask_socfortress import (
     AskSocfortressRequest,
+)
+from app.integrations.ask_socfortress.schema.ask_socfortress import (
     AskSocfortressSigmaResponse,
 )
 from app.integrations.ask_socfortress.services.ask_socfortress import (
     ask_socfortress_lookup,
 )
 from app.utils import get_connector_attribute
-from fastapi import APIRouter, Depends, HTTPException, Security
-from loguru import logger
-from sqlalchemy.ext.asyncio import AsyncSession
 
 # App specific imports
 

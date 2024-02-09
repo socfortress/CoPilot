@@ -1,14 +1,17 @@
 from typing import List
 
-from app.auth.utils import AuthHandler
-from app.connectors.cortex.schema.analyzers import (
-    AnalyzersResponse,
-    RunAnalyzerBody,
-    RunAnalyzerResponse,
-)
-from app.connectors.cortex.services.analyzers import get_analyzers, run_analyzer
-from fastapi import APIRouter, Depends, HTTPException, Security
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import Security
 from loguru import logger
+
+from app.auth.utils import AuthHandler
+from app.connectors.cortex.schema.analyzers import AnalyzersResponse
+from app.connectors.cortex.schema.analyzers import RunAnalyzerBody
+from app.connectors.cortex.schema.analyzers import RunAnalyzerResponse
+from app.connectors.cortex.services.analyzers import get_analyzers
+from app.connectors.cortex.services.analyzers import run_analyzer
 
 # App specific imports
 

@@ -1,9 +1,8 @@
 import dnstwist
-from app.integrations.dnstwist.schema.analyze import (
-    DomainAnalysisResponse,
-    DomainRequestBody,
-)
 from loguru import logger
+
+from app.integrations.dnstwist.schema.analyze import DomainAnalysisResponse
+from app.integrations.dnstwist.schema.analyze import DomainRequestBody
 
 
 def analyze_domain(domain: DomainRequestBody) -> DomainAnalysisResponse:

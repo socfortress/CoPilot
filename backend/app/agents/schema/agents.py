@@ -1,9 +1,11 @@
 from typing import List
 
+from pydantic import BaseModel
+from pydantic import Field
+
 from app.agents.velociraptor.schema.agents import VelociraptorAgent
 from app.agents.wazuh.schema.agents import WazuhAgent
 from app.db.universal_models import Agents
-from pydantic import BaseModel, Field
 
 
 class AgentsResponse(BaseModel):

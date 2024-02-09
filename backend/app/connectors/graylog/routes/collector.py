@@ -1,18 +1,16 @@
-from app.auth.utils import AuthHandler
-from app.connectors.graylog.schema.collector import (
-    ConfiguredInputsResponse,
-    GraylogIndicesResponse,
-    GraylogInputsResponse,
-    RunningInputsResponse,
-)
-from app.connectors.graylog.services.collector import (
-    get_indices_full,
-    get_inputs,
-    get_inputs_configured,
-    get_inputs_running,
-)
-from fastapi import APIRouter, Security
+from fastapi import APIRouter
+from fastapi import Security
 from loguru import logger
+
+from app.auth.utils import AuthHandler
+from app.connectors.graylog.schema.collector import ConfiguredInputsResponse
+from app.connectors.graylog.schema.collector import GraylogIndicesResponse
+from app.connectors.graylog.schema.collector import GraylogInputsResponse
+from app.connectors.graylog.schema.collector import RunningInputsResponse
+from app.connectors.graylog.services.collector import get_indices_full
+from app.connectors.graylog.services.collector import get_inputs
+from app.connectors.graylog.services.collector import get_inputs_configured
+from app.connectors.graylog.services.collector import get_inputs_running
 
 # App specific imports
 

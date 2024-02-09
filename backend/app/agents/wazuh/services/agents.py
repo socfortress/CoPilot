@@ -1,11 +1,11 @@
-from app.agents.schema.agents import AgentModifyResponse
-from app.agents.wazuh.schema.agents import WazuhAgent, WazuhAgentsList
-from app.connectors.wazuh_manager.utils.universal import (
-    send_delete_request,
-    send_get_request,
-)
 from fastapi import HTTPException
 from loguru import logger
+
+from app.agents.schema.agents import AgentModifyResponse
+from app.agents.wazuh.schema.agents import WazuhAgent
+from app.agents.wazuh.schema.agents import WazuhAgentsList
+from app.connectors.wazuh_manager.utils.universal import send_delete_request
+from app.connectors.wazuh_manager.utils.universal import send_get_request
 
 
 async def collect_wazuh_agents() -> WazuhAgentsList:
@@ -29,11 +29,7 @@ async def collect_wazuh_agents() -> WazuhAgentsList:
     try:
         if agents_collected.get("success"):
             wazuh_agents_list = []
-            for agent in (
-                agents_collected.get("data", {})
-                .get("data", {})
-                .get("affected_items", [])
-            ):
+            for agent in agents_collected.get("data", {}).get("data", {}).get("affected_items", []):
                 os_name = agent.get("os", {}).get("name", "Unknown")
                 last_keep_alive = agent.get("lastKeepAlive", "Unknown")
                 agent_group_list = agent.get("group", [])

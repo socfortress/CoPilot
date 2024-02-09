@@ -1,16 +1,15 @@
 from typing import List
 
-from app.agents.schema.agents import (
-    OutdatedVelociraptorAgentsResponse,
-    OutdatedWazuhAgentsResponse,
-)
-from app.connectors.velociraptor.utils.universal import UniversalService
-from app.db.db_session import session
-from app.db.universal_models import Agents
 from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+
+from app.agents.schema.agents import OutdatedVelociraptorAgentsResponse
+from app.agents.schema.agents import OutdatedWazuhAgentsResponse
+from app.connectors.velociraptor.utils.universal import UniversalService
+from app.db.db_session import session
+from app.db.universal_models import Agents
 
 
 def get_agent(agent_id: str) -> List[Agents]:
@@ -100,11 +99,7 @@ async def get_outdated_agents_velociraptor(
         )
         agents_result = await session.execute(select(Agents))
         agents = agents_result.scalars().all()
-        outdated_velociraptor_agents = [
-            agent
-            for agent in agents
-            if agent.velociraptor_agent_version != server_version
-        ]
+        outdated_velociraptor_agents = [agent for agent in agents if agent.velociraptor_agent_version != server_version]
 
         return OutdatedVelociraptorAgentsResponse(
             message="Outdated Velociraptor agents fetched successfully.",

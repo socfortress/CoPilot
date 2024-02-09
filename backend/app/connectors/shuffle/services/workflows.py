@@ -1,13 +1,12 @@
 from typing import List
 
-from app.connectors.shuffle.schema.workflows import (
-    WorkflowExecutionBodyModel,
-    WorkflowExecutionStatusResponseModel,
-    WorkflowsResponse,
-)
-from app.connectors.shuffle.utils.universal import send_get_request
 from fastapi import HTTPException
 from loguru import logger
+
+from app.connectors.shuffle.schema.workflows import WorkflowExecutionBodyModel
+from app.connectors.shuffle.schema.workflows import WorkflowExecutionStatusResponseModel
+from app.connectors.shuffle.schema.workflows import WorkflowsResponse
+from app.connectors.shuffle.utils.universal import send_get_request
 
 
 def remove_large_images_from_actions(workflows: List) -> List:

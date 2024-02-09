@@ -1,20 +1,25 @@
-from app.auth.utils import AuthHandler
-from app.connectors.grafana.schema.dashboards import Office365Dashboard, WazuhDashboard
-from app.customer_provisioning.schema.provision import (
-    CustomerProvisionResponse,
-    CustomersMetaResponse,
-    CustomerSubsctipion,
-    GetDashboardsResponse,
-    GetSubscriptionsResponse,
-    ProvisionNewCustomer,
-)
-from app.customer_provisioning.services.provision import provision_wazuh_customer
-from app.db.db_session import get_db
-from app.db.universal_models import Customers, CustomersMeta
-from fastapi import APIRouter, Body, Depends, HTTPException, Security
+from fastapi import APIRouter
+from fastapi import Body
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+
+from app.auth.utils import AuthHandler
+from app.connectors.grafana.schema.dashboards import Office365Dashboard
+from app.connectors.grafana.schema.dashboards import WazuhDashboard
+from app.customer_provisioning.schema.provision import CustomerProvisionResponse
+from app.customer_provisioning.schema.provision import CustomersMetaResponse
+from app.customer_provisioning.schema.provision import CustomerSubsctipion
+from app.customer_provisioning.schema.provision import GetDashboardsResponse
+from app.customer_provisioning.schema.provision import GetSubscriptionsResponse
+from app.customer_provisioning.schema.provision import ProvisionNewCustomer
+from app.customer_provisioning.services.provision import provision_wazuh_customer
+from app.db.db_session import get_db
+from app.db.universal_models import Customers
+from app.db.universal_models import CustomersMeta
 
 customer_provisioning_router = APIRouter()
 

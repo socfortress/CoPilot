@@ -1,11 +1,16 @@
-from datetime import datetime, timedelta
+from datetime import datetime
+from datetime import timedelta
 
 import jwt
-from app.auth.services.universal import find_user, get_role
-from fastapi import Depends, HTTPException
-from fastapi.security import OAuth2PasswordBearer, SecurityScopes
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import SecurityScopes
 from loguru import logger
 from passlib.context import CryptContext
+
+from app.auth.services.universal import find_user
+from app.auth.services.universal import get_role
 
 
 class AuthHandler:

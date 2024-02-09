@@ -1,15 +1,21 @@
+from fastapi import APIRouter
+from fastapi import BackgroundTasks
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import Security
+from loguru import logger
+from sqlalchemy import delete
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+
 from app.agents.dfir_iris.services.cases import collect_agent_soc_cases
-from app.agents.schema.agents import (
-    AgentModifyResponse,
-    AgentsResponse,
-    OutdatedVelociraptorAgentsResponse,
-    OutdatedWazuhAgentsResponse,
-    SyncedAgentsResponse,
-)
-from app.agents.services.status import (
-    get_outdated_agents_velociraptor,
-    get_outdated_agents_wazuh,
-)
+from app.agents.schema.agents import AgentModifyResponse
+from app.agents.schema.agents import AgentsResponse
+from app.agents.schema.agents import OutdatedVelociraptorAgentsResponse
+from app.agents.schema.agents import OutdatedWazuhAgentsResponse
+from app.agents.schema.agents import SyncedAgentsResponse
+from app.agents.services.status import get_outdated_agents_velociraptor
+from app.agents.services.status import get_outdated_agents_wazuh
 from app.agents.services.sync import sync_agents
 from app.agents.velociraptor.services.agents import delete_agent_velociraptor
 from app.agents.wazuh.schema.agents import WazuhAgentVulnerabilitiesResponse
@@ -23,11 +29,6 @@ from app.db.db_session import get_db
 # App specific imports
 # from app.db.db_session import session
 from app.db.universal_models import Agents
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Security
-from loguru import logger
-from sqlalchemy import delete
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
 
 agents_router = APIRouter()
 

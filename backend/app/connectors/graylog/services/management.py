@@ -1,22 +1,19 @@
-from app.connectors.graylog.schema.management import (
-    DeletedIndexBody,
-    DeletedIndexResponse,
-    StartInputBody,
-    StartInputResponse,
-    StartStreamBody,
-    StartStreamResponse,
-    StopInputBody,
-    StopInputResponse,
-    StopStreamBody,
-    StopStreamResponse,
-)
-from app.connectors.graylog.services.collector import get_index_names
-from app.connectors.graylog.utils.universal import (
-    send_delete_request,
-    send_post_request,
-    send_put_request,
-)
 from loguru import logger
+
+from app.connectors.graylog.schema.management import DeletedIndexBody
+from app.connectors.graylog.schema.management import DeletedIndexResponse
+from app.connectors.graylog.schema.management import StartInputBody
+from app.connectors.graylog.schema.management import StartInputResponse
+from app.connectors.graylog.schema.management import StartStreamBody
+from app.connectors.graylog.schema.management import StartStreamResponse
+from app.connectors.graylog.schema.management import StopInputBody
+from app.connectors.graylog.schema.management import StopInputResponse
+from app.connectors.graylog.schema.management import StopStreamBody
+from app.connectors.graylog.schema.management import StopStreamResponse
+from app.connectors.graylog.services.collector import get_index_names
+from app.connectors.graylog.utils.universal import send_delete_request
+from app.connectors.graylog.utils.universal import send_post_request
+from app.connectors.graylog.utils.universal import send_put_request
 
 
 async def delete_index(index_name: DeletedIndexBody) -> DeletedIndexResponse:

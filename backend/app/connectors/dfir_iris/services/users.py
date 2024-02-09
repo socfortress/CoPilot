@@ -1,10 +1,8 @@
 from app.connectors.dfir_iris.schema.alerts import AlertResponse
 from app.connectors.dfir_iris.schema.users import UsersResponse
-from app.connectors.dfir_iris.utils.universal import (
-    fetch_and_validate_data,
-    initialize_client_and_alert,
-    initialize_client_and_user,
-)
+from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
+from app.connectors.dfir_iris.utils.universal import initialize_client_and_alert
+from app.connectors.dfir_iris.utils.universal import initialize_client_and_user
 
 
 async def get_users() -> UsersResponse:

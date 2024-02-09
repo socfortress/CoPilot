@@ -1,14 +1,16 @@
-from app.auth.utils import AuthHandler
-from app.db.db_session import get_db
-from app.threat_intel.schema.socfortress import (
-    IoCResponse,
-    SocfortressThreatIntelRequest,
-)
-from app.threat_intel.services.socfortress import socfortress_threat_intel_lookup
-from app.utils import get_connector_attribute
-from fastapi import APIRouter, Depends, HTTPException, Security
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.auth.utils import AuthHandler
+from app.db.db_session import get_db
+from app.threat_intel.schema.socfortress import IoCResponse
+from app.threat_intel.schema.socfortress import SocfortressThreatIntelRequest
+from app.threat_intel.services.socfortress import socfortress_threat_intel_lookup
+from app.utils import get_connector_attribute
 
 # App specific imports
 

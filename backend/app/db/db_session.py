@@ -1,6 +1,8 @@
 # ! Old Testing without Async
+from sqlmodel import Session
+from sqlmodel import create_engine
+
 from settings import SQLALCHEMY_DATABASE_URI
-from sqlmodel import Session, create_engine
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URI,
@@ -8,13 +10,16 @@ engine = create_engine(
 )
 session = "placeholder"
 
-from contextlib import asynccontextmanager, contextmanager
+from contextlib import asynccontextmanager
+from contextlib import contextmanager
 
 from loguru import logger
-from settings import SQLALCHEMY_DATABASE_URI
 from sqlalchemy import create_engine
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import sessionmaker
+
+from settings import SQLALCHEMY_DATABASE_URI
 
 # create async engine for SQLite using aiosqlite
 async_engine = create_async_engine(SQLALCHEMY_DATABASE_URI, echo=False)

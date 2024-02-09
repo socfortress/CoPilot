@@ -1,8 +1,11 @@
 import uuid
 from datetime import datetime
-from typing import Dict, List, Optional
+from typing import Dict
+from typing import List
+from typing import Optional
 
-from pydantic import UUID4, BaseModel
+from pydantic import UUID4
+from pydantic import BaseModel
 
 
 class CreateCustomerData(BaseModel):

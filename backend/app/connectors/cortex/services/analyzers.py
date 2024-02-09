@@ -1,18 +1,19 @@
-from typing import Dict, List, Union
+from typing import Dict
+from typing import List
+from typing import Union
 
-from app.connectors.cortex.schema.analyzers import (
-    AnalyzerJobData,
-    AnalyzersResponse,
-    RunAnalyzerBody,
-    RunAnalyzerResponse,
-)
-from app.connectors.cortex.utils.universal import (  # Importing create_cortex_client; Importing from universal.py
-    create_cortex_client,
-    run_and_wait_for_analyzer,
-)
 from cortex4py.api import Api
 from fastapi import HTTPException
 from loguru import logger
+
+from app.connectors.cortex.schema.analyzers import AnalyzerJobData
+from app.connectors.cortex.schema.analyzers import AnalyzersResponse
+from app.connectors.cortex.schema.analyzers import RunAnalyzerBody
+from app.connectors.cortex.schema.analyzers import RunAnalyzerResponse
+from app.connectors.cortex.utils.universal import (
+    create_cortex_client,  # Importing create_cortex_client; Importing from universal.py
+)
+from app.connectors.cortex.utils.universal import run_and_wait_for_analyzer
 
 
 async def fetch_analyzers(api: Api) -> List[Dict]:

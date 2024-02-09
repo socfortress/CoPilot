@@ -1,19 +1,16 @@
-from app.auth.services.universal import (
-    create_admin_user,
-    create_scheduler_user,
-    remove_scheduler_user,
-)
-from app.db.db_populate import (
-    add_available_integrations_auth_keys_if_not_exist,
-    add_available_integrations_if_not_exist,
-    add_connectors_if_not_exist,
-    add_roles_if_not_exist,
-)
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 # ! New with Async
 from sqlmodel import SQLModel
+
+from app.auth.services.universal import create_admin_user
+from app.auth.services.universal import create_scheduler_user
+from app.auth.services.universal import remove_scheduler_user
+from app.db.db_populate import add_available_integrations_auth_keys_if_not_exist
+from app.db.db_populate import add_available_integrations_if_not_exist
+from app.db.db_populate import add_connectors_if_not_exist
+from app.db.db_populate import add_roles_if_not_exist
 
 
 async def create_tables(async_engine):

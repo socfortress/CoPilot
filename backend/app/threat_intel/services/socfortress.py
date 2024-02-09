@@ -1,17 +1,17 @@
-from typing import Any, Dict
+from typing import Any
+from typing import Dict
 
 import httpx
-from app.connectors.utils import get_connector_info_from_db
-from app.db.db_session import get_db_session
-from app.threat_intel.schema.socfortress import (
-    IoCMapping,
-    IoCResponse,
-    SocfortressThreatIntelRequest,
-)
-from app.utils import get_connector_attribute
 from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.connectors.utils import get_connector_info_from_db
+from app.db.db_session import get_db_session
+from app.threat_intel.schema.socfortress import IoCMapping
+from app.threat_intel.schema.socfortress import IoCResponse
+from app.threat_intel.schema.socfortress import SocfortressThreatIntelRequest
+from app.utils import get_connector_attribute
 
 
 async def get_socfortress_threat_intel_attributes(

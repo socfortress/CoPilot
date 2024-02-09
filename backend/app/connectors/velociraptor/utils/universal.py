@@ -1,14 +1,18 @@
 import json
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any
+from typing import Dict
 
 import grpc
 import pyvelociraptor
-from app.connectors.utils import get_connector_info_from_db
-from app.db.db_session import AsyncSessionLocal, get_db_session
 from fastapi import HTTPException
 from loguru import logger
-from pyvelociraptor import api_pb2, api_pb2_grpc
+from pyvelociraptor import api_pb2
+from pyvelociraptor import api_pb2_grpc
+
+from app.connectors.utils import get_connector_info_from_db
+from app.db.db_session import AsyncSessionLocal
+from app.db.db_session import get_db_session
 
 
 async def verify_velociraptor_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
@@ -244,12 +248,8 @@ class UniversalService:
         """
         # Formulate queries
         try:
-            vql_client_id = (
-                f"select client_id,os_info from clients(search='host:{client_name}')"
-            )
-            vql_last_seen_at = (
-                f"select last_seen_at from clients(search='host:{client_name}')"
-            )
+            vql_client_id = f"select client_id,os_info from clients(search='host:{client_name}')"
+            vql_last_seen_at = f"select last_seen_at from clients(search='host:{client_name}')"
 
             # Get the last seen timestamp
             logger.info(f"Getting last seen at timestamp for {client_name}")
@@ -322,6 +322,4 @@ class UniversalService:
         Returns:
             bool: True if the client is offline, False otherwise.
         """
-        return (
-            datetime.now() - datetime.fromtimestamp(last_seen_at / 1000000)
-        ).total_seconds() > 30
+        return (datetime.now() - datetime.fromtimestamp(last_seen_at / 1000000)).total_seconds() > 30

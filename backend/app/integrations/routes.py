@@ -1,42 +1,49 @@
-from typing import List, Optional
+from typing import List
+from typing import Optional
 
-from app.auth.utils import AuthHandler
-from app.db.db_session import get_db
-from app.db.universal_models import Customers, CustomersMeta
-from app.integrations.alert_creation_settings.models.alert_creation_settings import (
-    AlertCreationSettings,
-)
-from app.integrations.models.customer_integration_settings import (
-    AvailableIntegrations,
-    CustomerIntegrations,
-    CustomerIntegrationsMeta,
-    IntegrationAuthKeys,
-    IntegrationConfig,
-    IntegrationService,
-    IntegrationSubscription,
-)
-from app.integrations.schema import (
-    AuthKey,
-    AvailableIntegrationsResponse,
-    CreateIntegrationAuthKeys,
-    CreateIntegrationService,
-    CustomerIntegrationCreate,
-    CustomerIntegrationCreateResponse,
-    CustomerIntegrationDeleteResponse,
-    CustomerIntegrationsMetaResponse,
-    CustomerIntegrationsMetaSchema,
-    CustomerIntegrationsResponse,
-    DeleteCustomerIntegration,
-    IntegrationWithAuthKeys,
-    UpdateCustomerIntegration,
-)
-from fastapi import APIRouter, Depends, HTTPException, Security
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import Security
 from loguru import logger
-from sqlalchemy import delete, update
+from sqlalchemy import delete
+from sqlalchemy import update
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
+
+from app.auth.utils import AuthHandler
+from app.db.db_session import get_db
+from app.db.universal_models import Customers
+from app.db.universal_models import CustomersMeta
+from app.integrations.alert_creation_settings.models.alert_creation_settings import (
+    AlertCreationSettings,
+)
+from app.integrations.models.customer_integration_settings import AvailableIntegrations
+from app.integrations.models.customer_integration_settings import CustomerIntegrations
+from app.integrations.models.customer_integration_settings import (
+    CustomerIntegrationsMeta,
+)
+from app.integrations.models.customer_integration_settings import IntegrationAuthKeys
+from app.integrations.models.customer_integration_settings import IntegrationConfig
+from app.integrations.models.customer_integration_settings import IntegrationService
+from app.integrations.models.customer_integration_settings import (
+    IntegrationSubscription,
+)
+from app.integrations.schema import AuthKey
+from app.integrations.schema import AvailableIntegrationsResponse
+from app.integrations.schema import CreateIntegrationAuthKeys
+from app.integrations.schema import CreateIntegrationService
+from app.integrations.schema import CustomerIntegrationCreate
+from app.integrations.schema import CustomerIntegrationCreateResponse
+from app.integrations.schema import CustomerIntegrationDeleteResponse
+from app.integrations.schema import CustomerIntegrationsMetaResponse
+from app.integrations.schema import CustomerIntegrationsMetaSchema
+from app.integrations.schema import CustomerIntegrationsResponse
+from app.integrations.schema import DeleteCustomerIntegration
+from app.integrations.schema import IntegrationWithAuthKeys
+from app.integrations.schema import UpdateCustomerIntegration
 
 integration_settings_router = APIRouter()
 
@@ -61,9 +68,7 @@ async def fetch_available_integrations(session: AsyncSession):
 
     integrations_with_auth_keys = []
     for integration in unique_integrations:
-        auth_keys = [
-            AuthKey(auth_key_name=key.auth_key_name) for key in integration.auth_keys
-        ]
+        auth_keys = [AuthKey(auth_key_name=key.auth_key_name) for key in integration.auth_keys]
         integration_data = IntegrationWithAuthKeys(
             id=integration.id,
             integration_name=integration.integration_name,
@@ -97,9 +102,7 @@ async def validate_integration_auth_keys(
     Validate if the integration auth keys are valid.
     """
     available_integrations = await fetch_available_integrations(session)
-    integration = [
-        ai for ai in available_integrations if ai.integration_name == integration_name
-    ][0]
+    integration = [ai for ai in available_integrations if ai.integration_name == integration_name][0]
     available_auth_keys = [ak.auth_key_name for ak in integration.auth_keys]
     # loop through the `available_auth_keys` and check if the `integration_auth_keys` contains the `auth_key_name`
     for auth_key in available_auth_keys:
@@ -120,9 +123,7 @@ async def validate_integration_auth_key_update(
     """
     logger.info(f"integration_auth_key: {integration_auth_key}")
     available_integrations = await fetch_available_integrations(session)
-    integration = [
-        ai for ai in available_integrations if ai.integration_name == integration_name
-    ][0]
+    integration = [ai for ai in available_integrations if ai.integration_name == integration_name][0]
     available_auth_keys = [ak.auth_key_name for ak in integration.auth_keys]
     for auth_key in integration_auth_key:
         if auth_key.auth_key_name not in available_auth_keys:
@@ -500,20 +501,14 @@ def process_customer_integrations(customer_integrations_data):
     """
     processed_customer_integrations = []
     for ci in customer_integrations_data:
-        first_service_id = (
-            ci.integration_subscriptions[0].integration_service_id
-            if ci.integration_subscriptions
-            else None
-        )
+        first_service_id = ci.integration_subscriptions[0].integration_service_id if ci.integration_subscriptions else None
         customer_integration_obj = CustomerIntegrations(
             id=ci.id,
             customer_code=ci.customer_code,
             customer_name=ci.customer_name,
             integration_subscriptions=ci.integration_subscriptions,
             integration_service_id=first_service_id,
-            integration_service_name=ci.integration_subscriptions[
-                0
-            ].integration_service.service_name
+            integration_service_name=ci.integration_subscriptions[0].integration_service.service_name
             if ci.integration_subscriptions
             else None,
             deployed=ci.deployed,
@@ -936,10 +931,8 @@ async def delete_integration_meta(
     """
     try:
         stmt = delete(CustomerIntegrationsMeta).where(
-            CustomerIntegrationsMeta.customer_code
-            == customer_integration_meta.customer_code,
-            CustomerIntegrationsMeta.integration_name
-            == customer_integration_meta.integration_name,
+            CustomerIntegrationsMeta.customer_code == customer_integration_meta.customer_code,
+            CustomerIntegrationsMeta.integration_name == customer_integration_meta.integration_name,
         )
         await session.execute(stmt)
         await session.commit()

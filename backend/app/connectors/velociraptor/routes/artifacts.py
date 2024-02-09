@@ -1,29 +1,29 @@
 from typing import List
 
-from app.auth.utils import AuthHandler
-from app.connectors.velociraptor.schema.artifacts import (
-    ArtifactsResponse,
-    CollectArtifactBody,
-    CollectArtifactResponse,
-    OSPrefixEnum,
-    OSPrefixModel,
-    QuarantineBody,
-    QuarantineResponse,
-    RunCommandBody,
-    RunCommandResponse,
-)
-from app.connectors.velociraptor.services.artifacts import (
-    get_artifacts,
-    quarantine_host,
-    run_artifact_collection,
-    run_remote_command,
-)
-from app.db.db_session import get_db
-from app.db.universal_models import Agents
-from fastapi import APIRouter, Depends, HTTPException, Security
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+
+from app.auth.utils import AuthHandler
+from app.connectors.velociraptor.schema.artifacts import ArtifactsResponse
+from app.connectors.velociraptor.schema.artifacts import CollectArtifactBody
+from app.connectors.velociraptor.schema.artifacts import CollectArtifactResponse
+from app.connectors.velociraptor.schema.artifacts import OSPrefixEnum
+from app.connectors.velociraptor.schema.artifacts import OSPrefixModel
+from app.connectors.velociraptor.schema.artifacts import QuarantineBody
+from app.connectors.velociraptor.schema.artifacts import QuarantineResponse
+from app.connectors.velociraptor.schema.artifacts import RunCommandBody
+from app.connectors.velociraptor.schema.artifacts import RunCommandResponse
+from app.connectors.velociraptor.services.artifacts import get_artifacts
+from app.connectors.velociraptor.services.artifacts import quarantine_host
+from app.connectors.velociraptor.services.artifacts import run_artifact_collection
+from app.connectors.velociraptor.services.artifacts import run_remote_command
+from app.db.db_session import get_db
+from app.db.universal_models import Agents
 
 # App specific imports
 
@@ -68,9 +68,7 @@ def verify_os_prefix_exists(os_prefix: str) -> str:
             detail=f"OS prefix {os_prefix} does not exist.",
         )
 
-    return OSPrefixEnum[
-        os_prefix_upper
-    ].value  # Use the uppercase version for Enum matching
+    return OSPrefixEnum[os_prefix_upper].value  # Use the uppercase version for Enum matching
 
 
 def get_os_prefix_from_os_name(os_name: str) -> str:
@@ -223,9 +221,7 @@ async def get_all_artifacts_for_os_prefix(
     # Get all the artifacts names that begin with the OS prefix
     artifacts = await get_artifacts()
     artifacts = artifacts.artifacts
-    artifacts_for_os_prefix = [
-        artifact for artifact in artifacts if artifact.name.startswith(os_prefix)
-    ]
+    artifacts_for_os_prefix = [artifact for artifact in artifacts if artifact.name.startswith(os_prefix)]
     return ArtifactsResponse(
         success=True,
         message=f"All artifacts for OS prefix {os_prefix} retrieved",

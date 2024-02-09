@@ -1,12 +1,18 @@
-from datetime import datetime, timedelta
-from typing import Any, Dict, Iterable, Tuple
+from datetime import datetime
+from datetime import timedelta
+from typing import Any
+from typing import Dict
+from typing import Iterable
+from typing import Tuple
 
-from app.connectors.utils import get_connector_info_from_db
-from app.connectors.wazuh_indexer.schema.indices import IndexConfigModel, Indices
-from app.db.db_session import get_db_session
 from elasticsearch7 import Elasticsearch
 from fastapi import HTTPException
 from loguru import logger
+
+from app.connectors.utils import get_connector_info_from_db
+from app.connectors.wazuh_indexer.schema.indices import IndexConfigModel
+from app.connectors.wazuh_indexer.schema.indices import Indices
+from app.db.db_session import get_db_session
 
 
 async def verify_wazuh_indexer_credentials(
@@ -189,9 +195,7 @@ async def collect_indices() -> Indices:
         indices_list = list(indices_dict.keys())
         # Check if the index is valid
         index_config = IndexConfigModel()
-        indices_list = [
-            index for index in indices_list if index_config.is_valid_index(index)
-        ]
+        indices_list = [index for index in indices_list if index_config.is_valid_index(index)]
         return Indices(
             indices_list=indices_list,
             success=True,
@@ -226,9 +230,7 @@ class AlertsQueryBuilder:
             )
 
         start = datetime.utcnow() - delta
-        return (
-            start.isoformat() + "Z"
-        )  # Elasticsearch expects the time in ISO format with a Z at the end
+        return start.isoformat() + "Z"  # Elasticsearch expects the time in ISO format with a Z at the end
 
     def __init__(self):
         self.query = {
@@ -350,9 +352,7 @@ class LogsQueryBuilder:
             )
 
         start = datetime.utcnow() - delta
-        return (
-            start.isoformat() + "Z"
-        )  # Elasticsearch expects the time in ISO format with a Z at the end
+        return start.isoformat() + "Z"  # Elasticsearch expects the time in ISO format with a Z at the end
 
     def __init__(self):
         self.query = {

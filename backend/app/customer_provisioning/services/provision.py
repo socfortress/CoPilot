@@ -1,41 +1,32 @@
 import requests
+from fastapi import HTTPException
+from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
 from app.connectors.grafana.services.dashboards import provision_dashboards
 from app.connectors.graylog.services.management import start_stream
 from app.customer_provisioning.schema.graylog import StreamConnectionToPipelineRequest
-from app.customer_provisioning.schema.provision import (
-    CustomerProvisionMeta,
-    CustomerProvisionResponse,
-    ProvisionNewCustomer,
-)
-from app.customer_provisioning.schema.wazuh_worker import (
-    ProvisionWorkerRequest,
-    ProvisionWorkerResponse,
-)
+from app.customer_provisioning.schema.provision import CustomerProvisionMeta
+from app.customer_provisioning.schema.provision import CustomerProvisionResponse
+from app.customer_provisioning.schema.provision import ProvisionNewCustomer
+from app.customer_provisioning.schema.wazuh_worker import ProvisionWorkerRequest
+from app.customer_provisioning.schema.wazuh_worker import ProvisionWorkerResponse
 from app.customer_provisioning.services.dfir_iris import create_customer
-from app.customer_provisioning.services.grafana import (
-    create_grafana_datasource,
-    create_grafana_folder,
-    create_grafana_organization,
-)
-from app.customer_provisioning.services.graylog import (
-    connect_stream_to_pipeline,
-    create_event_stream,
-    create_index_set,
-    get_pipeline_id,
-)
-from app.customer_provisioning.services.wazuh_manager import (
-    apply_group_configurations,
-    create_wazuh_groups,
-)
+from app.customer_provisioning.services.grafana import create_grafana_datasource
+from app.customer_provisioning.services.grafana import create_grafana_folder
+from app.customer_provisioning.services.grafana import create_grafana_organization
+from app.customer_provisioning.services.graylog import connect_stream_to_pipeline
+from app.customer_provisioning.services.graylog import create_event_stream
+from app.customer_provisioning.services.graylog import create_index_set
+from app.customer_provisioning.services.graylog import get_pipeline_id
+from app.customer_provisioning.services.wazuh_manager import apply_group_configurations
+from app.customer_provisioning.services.wazuh_manager import create_wazuh_groups
 from app.db.universal_models import CustomersMeta
 from app.integrations.alert_creation_settings.models.alert_creation_settings import (
     AlertCreationSettings,
 )
 from app.utils import get_connector_attribute
-from fastapi import HTTPException
-from loguru import logger
-from sqlalchemy.ext.asyncio import AsyncSession
 
 
 # ! MAIN FUNCTION ! #
@@ -61,9 +52,7 @@ async def provision_wazuh_customer(
     # Initialize an empty dictionary to store the meta data
     provision_meta_data = {}
     provision_meta_data["index_set_id"] = (await create_index_set(request)).data.id
-    provision_meta_data["stream_id"] = (
-        await create_event_stream(request, provision_meta_data["index_set_id"])
-    ).data.stream_id
+    provision_meta_data["stream_id"] = (await create_event_stream(request, provision_meta_data["index_set_id"])).data.stream_id
     provision_meta_data["pipeline_ids"] = await get_pipeline_id(subscription="Wazuh")
     stream_and_pipeline = StreamConnectionToPipelineRequest(
         stream_id=provision_meta_data["stream_id"],
@@ -77,9 +66,7 @@ async def provision_wazuh_customer(
         )
     await create_wazuh_groups(request)
     await apply_group_configurations(request)
-    provision_meta_data["grafana_organization_id"] = (
-        await create_grafana_organization(request)
-    ).orgId
+    provision_meta_data["grafana_organization_id"] = (await create_grafana_organization(request)).orgId
     provision_meta_data["wazuh_datasource_uid"] = (
         await create_grafana_datasource(
             request=request,
@@ -102,9 +89,7 @@ async def provision_wazuh_customer(
         ),
     )
 
-    provision_meta_data["iris_customer_id"] = (
-        await create_customer(request.customer_name)
-    ).data.customer_id
+    provision_meta_data["iris_customer_id"] = (await create_customer(request.customer_name)).data.customer_id
 
     customer_provision_meta = CustomerProvisionMeta(**provision_meta_data)
     customer_meta = await update_customer_meta_table(

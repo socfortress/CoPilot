@@ -6,8 +6,12 @@ from enum import Enum
 from typing import Optional
 
 import bcrypt
-from pydantic import BaseModel, EmailStr, validator
-from sqlmodel import Field, Relationship, SQLModel
+from pydantic import BaseModel
+from pydantic import EmailStr
+from pydantic import validator
+from sqlmodel import Field
+from sqlmodel import Relationship
+from sqlmodel import SQLModel
 
 
 class Role(SQLModel, table=True):

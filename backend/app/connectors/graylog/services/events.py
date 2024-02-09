@@ -1,16 +1,16 @@
-from app.connectors.graylog.schema.events import (
-    AlertEvent,
-    AlertQuery,
-    Alerts,
-    Context,
-    EventDefinition,
-    GraylogAlertsResponse,
-    GraylogEventDefinitionsResponse,
-    Parameters,
-)
-from app.connectors.graylog.utils.universal import send_get_request, send_post_request
 from fastapi import HTTPException
 from loguru import logger
+
+from app.connectors.graylog.schema.events import AlertEvent
+from app.connectors.graylog.schema.events import AlertQuery
+from app.connectors.graylog.schema.events import Alerts
+from app.connectors.graylog.schema.events import Context
+from app.connectors.graylog.schema.events import EventDefinition
+from app.connectors.graylog.schema.events import GraylogAlertsResponse
+from app.connectors.graylog.schema.events import GraylogEventDefinitionsResponse
+from app.connectors.graylog.schema.events import Parameters
+from app.connectors.graylog.utils.universal import send_get_request
+from app.connectors.graylog.utils.universal import send_post_request
 
 
 async def get_event_definitions() -> GraylogEventDefinitionsResponse:
@@ -25,9 +25,7 @@ async def get_event_definitions() -> GraylogEventDefinitionsResponse:
     )
     if event_definitions_collected["success"]:
         try:
-            event_definitions_data = event_definitions_collected["data"][
-                "event_definitions"
-            ]
+            event_definitions_data = event_definitions_collected["data"]["event_definitions"]
         except KeyError:
             raise HTTPException(
                 status_code=500,
@@ -35,10 +33,7 @@ async def get_event_definitions() -> GraylogEventDefinitionsResponse:
             )
 
         # Convert the dictionary to a list of GraylogIndexItem
-        event_definitions_list = [
-            EventDefinition(**event_definition_data)
-            for event_definition_data in event_definitions_data
-        ]
+        event_definitions_list = [EventDefinition(**event_definition_data) for event_definition_data in event_definitions_data]
 
         return GraylogEventDefinitionsResponse(
             event_definitions=event_definitions_list,
@@ -78,9 +73,7 @@ async def get_alerts(alert_query: AlertQuery) -> GraylogAlertsResponse:
         except KeyError:
             raise HTTPException(status_code=500, detail="Failed to collect data key")
         # Convert raw event data to Event objects
-        event_objects = [
-            AlertEvent(**event_data) for event_data in raw_alerts_data["events"]
-        ]
+        event_objects = [AlertEvent(**event_data) for event_data in raw_alerts_data["events"]]
 
         # Build the Alerts object
         alerts = Alerts(

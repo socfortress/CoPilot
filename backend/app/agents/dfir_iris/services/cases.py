@@ -1,10 +1,11 @@
 from typing import List
 
+from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.agents.dfir_iris.schema.cases import AssetCaseIDResponse
 from app.connectors.dfir_iris.services.assets import get_case_assets
 from app.connectors.dfir_iris.services.cases import get_all_cases
-from loguru import logger
-from sqlalchemy.ext.asyncio import AsyncSession
 
 
 async def collect_agent_soc_cases(

@@ -12,21 +12,20 @@ from zipfile import ZipFile
 
 import aiofiles
 import requests
-from app.integrations.mimecast.schema.mimecast import (
-    DataItem,
-    MimecastAPIEndpointResponse,
-    MimecastAuthKeys,
-    MimecastRequest,
-    MimecastResponse,
-    MimecastTTPURLSRequest,
-    RequestBody,
-    TtpURLResponseBody,
-)
+from fastapi import HTTPException
+from loguru import logger
+
+from app.integrations.mimecast.schema.mimecast import DataItem
+from app.integrations.mimecast.schema.mimecast import MimecastAPIEndpointResponse
+from app.integrations.mimecast.schema.mimecast import MimecastAuthKeys
+from app.integrations.mimecast.schema.mimecast import MimecastRequest
+from app.integrations.mimecast.schema.mimecast import MimecastResponse
+from app.integrations.mimecast.schema.mimecast import MimecastTTPURLSRequest
+from app.integrations.mimecast.schema.mimecast import RequestBody
+from app.integrations.mimecast.schema.mimecast import TtpURLResponseBody
 from app.integrations.utils.collection import send_post_request
 from app.integrations.utils.event_shipper import event_shipper
 from app.integrations.utils.schema import EventShipperPayload
-from fastapi import HTTPException
-from loguru import logger
 
 
 async def get_checkpoint_filename(customer_code: str):

@@ -1,16 +1,15 @@
-from app.connectors.velociraptor.schema.artifacts import (
-    Artifacts,
-    ArtifactsResponse,
-    CollectArtifactBody,
-    CollectArtifactResponse,
-    QuarantineBody,
-    QuarantineResponse,
-    RunCommandBody,
-    RunCommandResponse,
-)
-from app.connectors.velociraptor.utils.universal import UniversalService
 from fastapi import HTTPException
 from loguru import logger
+
+from app.connectors.velociraptor.schema.artifacts import Artifacts
+from app.connectors.velociraptor.schema.artifacts import ArtifactsResponse
+from app.connectors.velociraptor.schema.artifacts import CollectArtifactBody
+from app.connectors.velociraptor.schema.artifacts import CollectArtifactResponse
+from app.connectors.velociraptor.schema.artifacts import QuarantineBody
+from app.connectors.velociraptor.schema.artifacts import QuarantineResponse
+from app.connectors.velociraptor.schema.artifacts import RunCommandBody
+from app.connectors.velociraptor.schema.artifacts import RunCommandResponse
+from app.connectors.velociraptor.utils.universal import UniversalService
 
 
 def create_query(query: str) -> str:
@@ -61,10 +60,7 @@ def get_artifact_key(analyzer_body: CollectArtifactBody) -> str:
             f"env=dict(Command='{analyzer_body.command}'))"
         )
     else:
-        return (
-            f"collect_client(client_id='{analyzer_body.velociraptor_id}', "
-            f"artifacts=['{analyzer_body.artifact_name}'])"
-        )
+        return f"collect_client(client_id='{analyzer_body.velociraptor_id}', " f"artifacts=['{analyzer_body.artifact_name}'])"
 
 
 async def get_artifacts() -> ArtifactsResponse:
@@ -140,9 +136,7 @@ async def run_artifact_collection(
             message=results["message"],
             results=results["results"],
         )
-    except (
-        HTTPException
-    ) as he:  # Catch HTTPException separately to propagate the original message
+    except HTTPException as he:  # Catch HTTPException separately to propagate the original message
         logger.error(
             f"HTTPException while running artifact collection on {collect_artifact_body}: {he.detail}",
         )

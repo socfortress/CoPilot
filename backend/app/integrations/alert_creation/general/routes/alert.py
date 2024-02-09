@@ -1,16 +1,17 @@
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+
 from app.db.db_session import get_db
-from app.integrations.alert_creation.general.schema.alert import (
-    CreateAlertRequest,
-    CreateAlertResponse,
-)
+from app.integrations.alert_creation.general.schema.alert import CreateAlertRequest
+from app.integrations.alert_creation.general.schema.alert import CreateAlertResponse
 from app.integrations.alert_creation.general.services.alert import create_alert
 from app.integrations.alert_creation_settings.models.alert_creation_settings import (
     AlertCreationSettings,
 )
-from fastapi import APIRouter, Depends, HTTPException
-from loguru import logger
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
 
 general_alerts_router = APIRouter()
 
@@ -35,15 +36,12 @@ async def is_rule_id_valid(
 
     result = await session.execute(
         select(AlertCreationSettings).where(
-            AlertCreationSettings.customer_code
-            == create_alert_request.agent_labels_customer,
+            AlertCreationSettings.customer_code == create_alert_request.agent_labels_customer,
         ),
     )
     settings = result.scalars().first()
 
-    if settings and str(create_alert_request.rule_id) in (
-        settings.excluded_wazuh_rules or ""
-    ).split(","):
+    if settings and str(create_alert_request.rule_id) in (settings.excluded_wazuh_rules or "").split(","):
         return False
 
     return True
@@ -69,8 +67,7 @@ async def is_customer_code_valid(
 
     result = await session.execute(
         select(AlertCreationSettings).where(
-            AlertCreationSettings.customer_code
-            == create_alert_request.agent_labels_customer,
+            AlertCreationSettings.customer_code == create_alert_request.agent_labels_customer,
         ),
     )
     settings = result.scalars().first()

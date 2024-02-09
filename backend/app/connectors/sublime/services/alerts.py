@@ -1,26 +1,23 @@
 import json
 from typing import List
 
-from app.connectors.sublime.models.alerts import (
-    FlaggedRule,
-    Mailbox,
-    Recipient,
-    Sender,
-    SublimeAlerts,
-    TriggeredAction,
-)
-from app.connectors.sublime.schema.alerts import (
-    AlertRequestBody,
-    AlertResponseBody,
-    SublimeAlertsResponse,
-    SublimeAlertsSchema,
-)
-from app.connectors.sublime.utils.universal import send_get_request
 from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
+
+from app.connectors.sublime.models.alerts import FlaggedRule
+from app.connectors.sublime.models.alerts import Mailbox
+from app.connectors.sublime.models.alerts import Recipient
+from app.connectors.sublime.models.alerts import Sender
+from app.connectors.sublime.models.alerts import SublimeAlerts
+from app.connectors.sublime.models.alerts import TriggeredAction
+from app.connectors.sublime.schema.alerts import AlertRequestBody
+from app.connectors.sublime.schema.alerts import AlertResponseBody
+from app.connectors.sublime.schema.alerts import SublimeAlertsResponse
+from app.connectors.sublime.schema.alerts import SublimeAlertsSchema
+from app.connectors.sublime.utils.universal import send_get_request
 
 
 def create_sublime_alert(alert_request_body: AlertRequestBody) -> SublimeAlerts:

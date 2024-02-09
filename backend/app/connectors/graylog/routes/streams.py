@@ -1,8 +1,10 @@
+from fastapi import APIRouter
+from fastapi import Security
+from loguru import logger
+
 from app.auth.utils import AuthHandler
 from app.connectors.graylog.schema.streams import GraylogStreamsResponse
 from app.connectors.graylog.services.streams import get_streams
-from fastapi import APIRouter, Security
-from loguru import logger
 
 # App specific imports
 

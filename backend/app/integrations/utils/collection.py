@@ -1,5 +1,7 @@
 import asyncio
-from typing import Any, Dict, Optional
+from typing import Any
+from typing import Dict
+from typing import Optional
 
 import httpx
 from loguru import logger

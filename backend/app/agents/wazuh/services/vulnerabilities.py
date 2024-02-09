@@ -1,12 +1,11 @@
 from typing import List
 
-from app.agents.wazuh.schema.agents import (
-    WazuhAgentVulnerabilities,
-    WazuhAgentVulnerabilitiesResponse,
-)
-from app.connectors.wazuh_manager.utils.universal import send_get_request
 from fastapi import HTTPException
 from loguru import logger
+
+from app.agents.wazuh.schema.agents import WazuhAgentVulnerabilities
+from app.agents.wazuh.schema.agents import WazuhAgentVulnerabilitiesResponse
+from app.connectors.wazuh_manager.utils.universal import send_get_request
 
 
 async def collect_agent_vulnerabilities(agent_id: str):

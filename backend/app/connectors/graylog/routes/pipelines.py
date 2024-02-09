@@ -1,23 +1,22 @@
-from typing import Dict, List
+from typing import Dict
+from typing import List
+
+from fastapi import APIRouter
+from fastapi import Security
+from loguru import logger
 
 from app.auth.utils import AuthHandler
-from app.connectors.graylog.schema.pipelines import (
-    GraylogPipelinesResponse,
-    GraylogPipelinesResponseWithRuleID,
-    Pipeline,
-    PipelineRule,
-    PipelineRulesResponse,
-    PipelineWithRuleID,
-    Stage,
-    StageWithRuleID,
-)
-from app.connectors.graylog.services.pipelines import (
-    get_pipeline_rule_by_id,
-    get_pipeline_rules,
-    get_pipelines,
-)
-from fastapi import APIRouter, Security
-from loguru import logger
+from app.connectors.graylog.schema.pipelines import GraylogPipelinesResponse
+from app.connectors.graylog.schema.pipelines import GraylogPipelinesResponseWithRuleID
+from app.connectors.graylog.schema.pipelines import Pipeline
+from app.connectors.graylog.schema.pipelines import PipelineRule
+from app.connectors.graylog.schema.pipelines import PipelineRulesResponse
+from app.connectors.graylog.schema.pipelines import PipelineWithRuleID
+from app.connectors.graylog.schema.pipelines import Stage
+from app.connectors.graylog.schema.pipelines import StageWithRuleID
+from app.connectors.graylog.services.pipelines import get_pipeline_rule_by_id
+from app.connectors.graylog.services.pipelines import get_pipeline_rules
+from app.connectors.graylog.services.pipelines import get_pipelines
 
 # App specific imports
 
@@ -57,9 +56,7 @@ def transform_stages_with_rule_ids(
     """
     new_stages = []
     for stage in stages:
-        rule_ids = [
-            rule_title_to_id.get(rule_title, None) for rule_title in stage.rules
-        ]
+        rule_ids = [rule_title_to_id.get(rule_title, None) for rule_title in stage.rules]
         new_stage = StageWithRuleID(**stage.dict(), rule_ids=rule_ids)
         new_stages.append(new_stage)
     return new_stages
@@ -123,10 +120,7 @@ async def get_all_pipelines_with_rule_ids() -> GraylogPipelinesResponseWithRuleI
         pipeline_rules_response.pipeline_rules,
     )
 
-    new_pipelines = [
-        transform_pipeline_with_rule_ids(pipeline, rule_title_to_id)
-        for pipeline in pipelines_response.pipelines
-    ]
+    new_pipelines = [transform_pipeline_with_rule_ids(pipeline, rule_title_to_id) for pipeline in pipelines_response.pipelines]
 
     return GraylogPipelinesResponseWithRuleID(
         pipelines=new_pipelines,

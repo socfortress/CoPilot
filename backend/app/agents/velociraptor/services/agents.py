@@ -1,10 +1,11 @@
 from datetime import datetime
 
+from fastapi import HTTPException
+from loguru import logger
+
 from app.agents.schema.agents import AgentModifyResponse
 from app.agents.velociraptor.schema.agents import VelociraptorAgent
 from app.connectors.velociraptor.utils.universal import UniversalService
-from fastapi import HTTPException
-from loguru import logger
 
 
 def create_query(query: str) -> str:
@@ -45,9 +46,7 @@ async def collect_velociraptor_agent(agent_name: str) -> VelociraptorAgent:
         )
 
     try:
-        vql_last_seen_at = (
-            f"select last_seen_at from clients(search='host:{agent_name}')"
-        )
+        vql_last_seen_at = f"select last_seen_at from clients(search='host:{agent_name}')"
         last_seen_at = await velociraptor_service._get_last_seen_timestamp(
             vql_last_seen_at,
         )

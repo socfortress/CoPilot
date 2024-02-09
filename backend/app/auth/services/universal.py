@@ -1,10 +1,13 @@
-from app.auth.models.users import Password, Role, User
-from app.db.db_session import async_engine
 from loguru import logger
 
 # ! New with Async
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
+
+from app.auth.models.users import Password
+from app.auth.models.users import Role
+from app.auth.models.users import User
+from app.db.db_session import async_engine
 
 passwords_in_memory = {}
 

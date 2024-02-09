@@ -1,22 +1,32 @@
 from typing import List
 
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import Security
+from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
 from app.db.universal_models import CustomersMeta
 from app.integrations.monitoring_alert.models.monitoring_alert import MonitoringAlerts
+from app.integrations.monitoring_alert.schema.monitoring_alert import GraylogPostRequest
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
-    GraylogPostRequest,
     GraylogPostResponse,
+)
+from app.integrations.monitoring_alert.schema.monitoring_alert import (
     MonitoringAlertsRequestModel,
+)
+from app.integrations.monitoring_alert.schema.monitoring_alert import (
     MonitoringWazuhAlertsRequestModel,
+)
+from app.integrations.monitoring_alert.schema.monitoring_alert import (
     WazuhAnalysisResponse,
 )
 from app.integrations.monitoring_alert.services.suricata import analyze_suricata_alerts
 from app.integrations.monitoring_alert.services.wazuh import analyze_wazuh_alerts
-from fastapi import APIRouter, Depends, HTTPException, Security
-from loguru import logger
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
 
 monitoring_alerts_router = APIRouter()
 
@@ -147,8 +157,7 @@ async def run_wazuh_analysis(
 
     monitoring_alerts = await session.execute(
         select(MonitoringAlerts).where(
-            (MonitoringAlerts.customer_code == request.customer_code)
-            & (MonitoringAlerts.alert_source == "WAZUH"),
+            (MonitoringAlerts.customer_code == request.customer_code) & (MonitoringAlerts.alert_source == "WAZUH"),
         ),
     )
     monitoring_alerts = monitoring_alerts.scalars().all()
@@ -196,8 +205,7 @@ async def run_suricata_analysis(
 
     monitoring_alerts = await session.execute(
         select(MonitoringAlerts).where(
-            (MonitoringAlerts.customer_code == request.customer_code)
-            & (MonitoringAlerts.alert_source == "SURICATA"),
+            (MonitoringAlerts.customer_code == request.customer_code) & (MonitoringAlerts.alert_source == "SURICATA"),
         ),
     )
     monitoring_alerts = monitoring_alerts.scalars().all()

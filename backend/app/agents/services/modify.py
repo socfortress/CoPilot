@@ -1,7 +1,8 @@
+from fastapi import HTTPException
+
 import app.agents.wazuh.services.agents as wazuh_services
 from app.db.db_session import session
 from app.db.universal_models import Agents
-from fastapi import HTTPException
 
 
 def delete_agent_db(agent_id: str):

@@ -1,15 +1,15 @@
 import asyncio
-from typing import Any, Dict
+from typing import Any
+from typing import Dict
+
+from fastapi import HTTPException
+from loguru import logger
 
 from app.connectors.event_shipper.utils.universal import create_gelf_logger
 from app.connectors.utils import get_connector_info_from_db
 from app.db.db_session import get_db_session
-from app.integrations.utils.schema import (
-    EventShipperPayload,
-    EventShipperPayloadResponse,
-)
-from fastapi import HTTPException
-from loguru import logger
+from app.integrations.utils.schema import EventShipperPayload
+from app.integrations.utils.schema import EventShipperPayloadResponse
 
 
 async def get_gelf_logger():

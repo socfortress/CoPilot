@@ -1,17 +1,16 @@
-from app.connectors.grafana.utils.universal import create_grafana_client
-from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
-from app.customer_provisioning.schema.grafana import (
-    GrafanaDatasource,
-    GrafanaDataSourceCreationResponse,
-    GrafanaFolderCreationResponse,
-    GrafanaOrganizationCreation,
-    NodesVersionResponse,
-)
-from app.customer_provisioning.schema.provision import ProvisionNewCustomer
-from app.utils import get_connector_attribute
 from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.connectors.grafana.utils.universal import create_grafana_client
+from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
+from app.customer_provisioning.schema.grafana import GrafanaDatasource
+from app.customer_provisioning.schema.grafana import GrafanaDataSourceCreationResponse
+from app.customer_provisioning.schema.grafana import GrafanaFolderCreationResponse
+from app.customer_provisioning.schema.grafana import GrafanaOrganizationCreation
+from app.customer_provisioning.schema.grafana import NodesVersionResponse
+from app.customer_provisioning.schema.provision import ProvisionNewCustomer
+from app.utils import get_connector_attribute
 
 
 ################# ! GRAFANA PROVISIONING ! #################

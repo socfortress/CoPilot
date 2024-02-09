@@ -1,24 +1,25 @@
 import re
 from enum import Enum
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Tuple
+from typing import Union
 
 # import pcre2
 import xmltodict
-from app.connectors.wazuh_manager.schema.rules import (
-    RuleDisable,
-    RuleDisableResponse,
-    RuleEnable,
-    RuleEnableResponse,
-    RuleExclude,
-    RuleExcludeResponse,
-)
-from app.connectors.wazuh_manager.utils.universal import (
-    restart_service,
-    send_get_request,
-    send_put_request,
-)
 from fastapi import HTTPException
 from loguru import logger
+
+from app.connectors.wazuh_manager.schema.rules import RuleDisable
+from app.connectors.wazuh_manager.schema.rules import RuleDisableResponse
+from app.connectors.wazuh_manager.schema.rules import RuleEnable
+from app.connectors.wazuh_manager.schema.rules import RuleEnableResponse
+from app.connectors.wazuh_manager.schema.rules import RuleExclude
+from app.connectors.wazuh_manager.schema.rules import RuleExcludeResponse
+from app.connectors.wazuh_manager.utils.universal import restart_service
+from app.connectors.wazuh_manager.utils.universal import send_get_request
+from app.connectors.wazuh_manager.utils.universal import send_put_request
 
 
 async def fetch_filename(rule_id: str) -> str:

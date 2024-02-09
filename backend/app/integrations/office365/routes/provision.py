@@ -1,20 +1,21 @@
 from typing import Dict
 
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import Security
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
-from app.integrations.office365.schema.provision import (
-    ProvisionOffice365AuthKeys,
-    ProvisionOffice365Request,
-    ProvisionOffice365Response,
-)
+from app.integrations.office365.schema.provision import ProvisionOffice365AuthKeys
+from app.integrations.office365.schema.provision import ProvisionOffice365Request
+from app.integrations.office365.schema.provision import ProvisionOffice365Response
 from app.integrations.office365.services.provision import provision_office365
-from app.integrations.routes import (
-    find_customer_integration,
-    get_customer_integrations_by_customer_code,
-)
-from app.integrations.schema import CustomerIntegrations, CustomerIntegrationsResponse
-from fastapi import APIRouter, Depends, HTTPException, Security
-from sqlalchemy.ext.asyncio import AsyncSession
+from app.integrations.routes import find_customer_integration
+from app.integrations.routes import get_customer_integrations_by_customer_code
+from app.integrations.schema import CustomerIntegrations
+from app.integrations.schema import CustomerIntegrationsResponse
 
 integration_office365_router = APIRouter()
 

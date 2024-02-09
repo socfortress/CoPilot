@@ -1,17 +1,18 @@
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import Security
+from loguru import logger
+
 from app.auth.utils import AuthHandler
 from app.connectors.dfir_iris.schema.alerts import AlertResponse
-from app.connectors.dfir_iris.schema.users import User, UsersResponse
-from app.connectors.dfir_iris.services.users import (
-    assign_user_to_alert,
-    delete_user_from_alert,
-    get_users,
-)
-from app.connectors.dfir_iris.utils.universal import (
-    check_alert_exists,
-    check_user_exists,
-)
-from fastapi import APIRouter, Depends, HTTPException, Security
-from loguru import logger
+from app.connectors.dfir_iris.schema.users import User
+from app.connectors.dfir_iris.schema.users import UsersResponse
+from app.connectors.dfir_iris.services.users import assign_user_to_alert
+from app.connectors.dfir_iris.services.users import delete_user_from_alert
+from app.connectors.dfir_iris.services.users import get_users
+from app.connectors.dfir_iris.utils.universal import check_alert_exists
+from app.connectors.dfir_iris.utils.universal import check_user_exists
 
 
 def verify_user_exists(user_id: int) -> int:

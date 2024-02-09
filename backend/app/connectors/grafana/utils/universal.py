@@ -1,11 +1,13 @@
-from typing import Any, Dict
+from typing import Any
+from typing import Dict
+
+from fastapi import HTTPException
+from grafana_client import GrafanaApi
+from loguru import logger
 
 from app.connectors.grafana.schema.organization import GrafanaCreateOrganizationResponse
 from app.connectors.utils import get_connector_info_from_db
 from app.db.db_session import get_db_session
-from fastapi import HTTPException
-from grafana_client import GrafanaApi
-from loguru import logger
 
 
 async def construct_grafana_url(

@@ -1,17 +1,16 @@
 import json
 from pathlib import Path
 
-from app.connectors.grafana.schema.dashboards import (
-    DashboardProvisionRequest,
-    GrafanaDashboard,
-    GrafanaDashboardResponse,
-    MimecastDashboard,
-    Office365Dashboard,
-    WazuhDashboard,
-)
-from app.connectors.grafana.utils.universal import create_grafana_client
 from fastapi import HTTPException
 from loguru import logger
+
+from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
+from app.connectors.grafana.schema.dashboards import GrafanaDashboard
+from app.connectors.grafana.schema.dashboards import GrafanaDashboardResponse
+from app.connectors.grafana.schema.dashboards import MimecastDashboard
+from app.connectors.grafana.schema.dashboards import Office365Dashboard
+from app.connectors.grafana.schema.dashboards import WazuhDashboard
+from app.connectors.grafana.utils.universal import create_grafana_client
 
 
 def get_dashboard_path(dashboard_info: tuple) -> Path:
@@ -26,9 +25,7 @@ def get_dashboard_path(dashboard_info: tuple) -> Path:
     """
     folder_name, file_name = dashboard_info
     current_file = Path(__file__)  # Path to the current file
-    base_dir = (
-        current_file.parent.parent
-    )  # Move up two levels to the 'grafana' directory
+    base_dir = current_file.parent.parent  # Move up two levels to the 'grafana' directory
     return base_dir / "dashboards" / folder_name / file_name
 
 
@@ -147,12 +144,7 @@ async def provision_dashboards(
     provisioned_dashboards = []
     errors = []
 
-    valid_dashboards = {
-        item.name: item
-        for item in list(WazuhDashboard)
-        + list(Office365Dashboard)
-        + list(MimecastDashboard)
-    }
+    valid_dashboards = {item.name: item for item in list(WazuhDashboard) + list(Office365Dashboard) + list(MimecastDashboard)}
 
     for dashboard_name in dashboard_request.dashboards:
         dashboard_enum = valid_dashboards[dashboard_name]
@@ -175,11 +167,7 @@ async def provision_dashboards(
             )
 
     success = len(errors) == 0
-    message = (
-        "All dashboards provisioned successfully"
-        if success
-        else "Some dashboards failed to provision"
-    )
+    message = "All dashboards provisioned successfully" if success else "Some dashboards failed to provision"
     return GrafanaDashboardResponse(
         provisioned_dashboards=provisioned_dashboards,
         success=success,

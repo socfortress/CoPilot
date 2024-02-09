@@ -1,9 +1,13 @@
-from typing import Any, Dict, Optional
+from typing import Any
+from typing import Dict
+from typing import Optional
 
 import requests
-from app.connectors.utils import get_connector_info_from_db
-from app.db.db_session import AsyncSessionLocal, get_db_session
 from loguru import logger
+
+from app.connectors.utils import get_connector_info_from_db
+from app.db.db_session import AsyncSessionLocal
+from app.db.db_session import get_db_session
 
 
 async def verify_wazuh_manager_credentials(

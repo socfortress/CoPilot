@@ -1,10 +1,12 @@
-from typing import Any, Dict
+from typing import Any
+from typing import Dict
 
-from app.connectors.utils import get_connector_info_from_db
-from app.db.db_session import get_db_session
 from fastapi import HTTPException
 from influxdb_client.client.influxdb_client_async import InfluxDBClientAsync
 from loguru import logger
+
+from app.connectors.utils import get_connector_info_from_db
+from app.db.db_session import get_db_session
 
 
 async def verify_influxdb_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:

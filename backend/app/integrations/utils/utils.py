@@ -1,10 +1,12 @@
 from typing import Dict
 
-from app.integrations.routes import get_customer_integrations_by_customer_code
-from app.integrations.schema import CustomerIntegrations, CustomerIntegrationsResponse
 from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.integrations.routes import get_customer_integrations_by_customer_code
+from app.integrations.schema import CustomerIntegrations
+from app.integrations.schema import CustomerIntegrationsResponse
 
 
 async def get_customer_integration_response(

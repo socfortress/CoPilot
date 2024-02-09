@@ -1,5 +1,6 @@
-from app.integrations.routes import integration_settings_router
 from fastapi import APIRouter
+
+from app.integrations.routes import integration_settings_router
 
 # Instantiate the APIRouter
 router = APIRouter()

@@ -1,7 +1,10 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import List
+from typing import Optional
 
-from sqlmodel import Field, Relationship, SQLModel
+from sqlmodel import Field
+from sqlmodel import Relationship
+from sqlmodel import SQLModel
 
 
 class ConnectorHistory(SQLModel, table=True):

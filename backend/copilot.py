@@ -1,58 +1,55 @@
 import os
 
 import uvicorn
-from app.auth.utils import AuthHandler
-from app.db.db_session import async_engine
-from app.db.db_setup import (
-    create_available_integrations,
-    create_roles,
-    create_tables,
-    ensure_admin_user,
-    ensure_scheduler_user,
-    ensure_scheduler_user_removed,
-)
-from app.middleware.exception_handlers import (
-    custom_http_exception_handler,
-    validation_exception_handler,
-    value_error_handler,
-)
-from app.middleware.logger import log_requests
-from app.routers import (
-    agents,
-    alert_creation,
-    alert_creation_settings,
-    ask_socfortress,
-    auth,
-    connectors,
-    cortex,
-    customer_provisioning,
-    customers,
-    dfir_iris,
-    dnstwist,
-    grafana,
-    graylog,
-    healthcheck,
-    influxdb,
-    integrations,
-    logs,
-    mimecast,
-    monitoring_alert,
-    office365,
-    scheduler,
-    shuffle,
-    smtp,
-    sublime,
-    threat_intel,
-    velociraptor,
-    wazuh_indexer,
-    wazuh_manager,
-)
-from app.schedulers.scheduler import init_scheduler
 from dotenv import load_dotenv
-from fastapi import APIRouter, FastAPI, HTTPException
+from fastapi import APIRouter
+from fastapi import FastAPI
+from fastapi import HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
+
+from app.auth.utils import AuthHandler
+from app.db.db_session import async_engine
+from app.db.db_setup import create_available_integrations
+from app.db.db_setup import create_roles
+from app.db.db_setup import create_tables
+from app.db.db_setup import ensure_admin_user
+from app.db.db_setup import ensure_scheduler_user
+from app.db.db_setup import ensure_scheduler_user_removed
+from app.middleware.exception_handlers import custom_http_exception_handler
+from app.middleware.exception_handlers import validation_exception_handler
+from app.middleware.exception_handlers import value_error_handler
+from app.middleware.logger import log_requests
+from app.routers import agents
+from app.routers import alert_creation
+from app.routers import alert_creation_settings
+from app.routers import ask_socfortress
+from app.routers import auth
+from app.routers import connectors
+from app.routers import cortex
+from app.routers import customer_provisioning
+from app.routers import customers
+from app.routers import dfir_iris
+from app.routers import dnstwist
+from app.routers import grafana
+from app.routers import graylog
+from app.routers import healthcheck
+from app.routers import influxdb
+from app.routers import integrations
+from app.routers import logs
+from app.routers import mimecast
+from app.routers import monitoring_alert
+from app.routers import office365
+from app.routers import scheduler
+from app.routers import shuffle
+from app.routers import smtp
+from app.routers import sublime
+from app.routers import threat_intel
+from app.routers import velociraptor
+from app.routers import wazuh_indexer
+from app.routers import wazuh_manager
+from app.schedulers.scheduler import init_scheduler
 
 auth_handler = AuthHandler()
 # Get the `SERVER_IP` from the `.env` file

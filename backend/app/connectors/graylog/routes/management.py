@@ -1,34 +1,32 @@
 from typing import List
 
-from app.auth.utils import AuthHandler
-from app.connectors.graylog.schema.management import (
-    DeletedIndexBody,
-    DeletedIndexResponse,
-    StartInputBody,
-    StartInputResponse,
-    StartStreamBody,
-    StartStreamResponse,
-    StopInputBody,
-    StopInputResponse,
-    StopStreamBody,
-    StopStreamResponse,
-    UrlWhitelistEntryResponse,
-)
-from app.connectors.graylog.services.collector import (
-    get_index_names,
-    get_input_ids,
-    get_url_whitelist_entries,
-)
-from app.connectors.graylog.services.management import (
-    delete_index,
-    start_input,
-    start_stream,
-    stop_input,
-    stop_stream,
-)
-from app.connectors.graylog.services.streams import get_stream_ids
-from fastapi import APIRouter, Depends, HTTPException, Security
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import Security
 from loguru import logger
+
+from app.auth.utils import AuthHandler
+from app.connectors.graylog.schema.management import DeletedIndexBody
+from app.connectors.graylog.schema.management import DeletedIndexResponse
+from app.connectors.graylog.schema.management import StartInputBody
+from app.connectors.graylog.schema.management import StartInputResponse
+from app.connectors.graylog.schema.management import StartStreamBody
+from app.connectors.graylog.schema.management import StartStreamResponse
+from app.connectors.graylog.schema.management import StopInputBody
+from app.connectors.graylog.schema.management import StopInputResponse
+from app.connectors.graylog.schema.management import StopStreamBody
+from app.connectors.graylog.schema.management import StopStreamResponse
+from app.connectors.graylog.schema.management import UrlWhitelistEntryResponse
+from app.connectors.graylog.services.collector import get_index_names
+from app.connectors.graylog.services.collector import get_input_ids
+from app.connectors.graylog.services.collector import get_url_whitelist_entries
+from app.connectors.graylog.services.management import delete_index
+from app.connectors.graylog.services.management import start_input
+from app.connectors.graylog.services.management import start_stream
+from app.connectors.graylog.services.management import stop_input
+from app.connectors.graylog.services.management import stop_stream
+from app.connectors.graylog.services.streams import get_stream_ids
 
 graylog_management_router = APIRouter()
 

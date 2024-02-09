@@ -1,15 +1,14 @@
-from app.auth.utils import AuthHandler
-from app.connectors.shuffle.schema.workflows import (
-    WorkflowExecutionBodyModel,
-    WorkflowExecutionResponseModel,
-    WorkflowsResponse,
-)
-from app.connectors.shuffle.services.workflows import (
-    get_workflow_executions,
-    get_workflows,
-)
-from fastapi import APIRouter, HTTPException, Security
+from fastapi import APIRouter
+from fastapi import HTTPException
+from fastapi import Security
 from loguru import logger
+
+from app.auth.utils import AuthHandler
+from app.connectors.shuffle.schema.workflows import WorkflowExecutionBodyModel
+from app.connectors.shuffle.schema.workflows import WorkflowExecutionResponseModel
+from app.connectors.shuffle.schema.workflows import WorkflowsResponse
+from app.connectors.shuffle.services.workflows import get_workflow_executions
+from app.connectors.shuffle.services.workflows import get_workflows
 
 shuffle_workflows_router = APIRouter()
 

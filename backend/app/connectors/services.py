@@ -1,8 +1,18 @@
 import os
 from datetime import datetime
-from typing import List, Optional, Type, Union
+from typing import List
+from typing import Optional
+from typing import Type
+from typing import Union
 
 import aiofiles
+from fastapi import UploadFile
+from loguru import logger
+from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from werkzeug.utils import secure_filename
+
 from app.connectors.cortex.utils.universal import verify_cortex_connection
 from app.connectors.dfir_iris.utils.universal import verify_dfir_iris_connection
 from app.connectors.grafana.utils.universal import verify_grafana_connection
@@ -22,16 +32,8 @@ from app.integrations.utils.event_shipper import verify_event_shipper_connection
 from app.threat_intel.services.socfortress import (
     verifiy_socfortress_threat_intel_connector,
 )
-from app.utils import (
-    verify_alert_creation_provisioning_connection,
-    verify_wazuh_worker_provisioning_connection,
-)
-from fastapi import UploadFile
-from loguru import logger
-from pydantic import BaseModel
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-from werkzeug.utils import secure_filename
+from app.utils import verify_alert_creation_provisioning_connection
+from app.utils import verify_wazuh_worker_provisioning_connection
 
 UPLOAD_FOLDER = "file-store"
 UPLOAD_FOLDER = os.path.join(
@@ -396,9 +398,7 @@ class ConnectorServices:
         Returns:
             bool: True if the file is allowed, False otherwise.
         """
-        return (
-            "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
-        )
+        return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
     @classmethod
     async def save_file(

@@ -1,33 +1,29 @@
-from typing import Optional, Set
+from typing import Optional
+from typing import Set
 
-from app.agents.routes.agents import get_agent
-from app.agents.schema.agents import AgentsResponse
-from app.connectors.dfir_iris.utils.universal import (
-    fetch_and_validate_data,
-    initialize_client_and_alert,
-)
-from app.integrations.alert_creation.general.schema.alert import (
-    CreateAlertRequest,
-    CreateAlertResponse,
-    IrisAlertContext,
-    IrisAlertPayload,
-    IrisAsset,
-    IrisIoc,
-    ValidIocFields,
-)
-from app.integrations.alert_creation.general.services.alert_multi_exclude import (
-    AlertDetailsService,
-)
-from app.integrations.utils.alerts import (
-    get_asset_type_id,
-    send_to_shuffle,
-    validate_ioc_type,
-)
-from app.integrations.utils.schema import ShufflePayload
-from app.utils import get_customer_alert_settings
 from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.agents.routes.agents import get_agent
+from app.agents.schema.agents import AgentsResponse
+from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
+from app.connectors.dfir_iris.utils.universal import initialize_client_and_alert
+from app.integrations.alert_creation.general.schema.alert import CreateAlertRequest
+from app.integrations.alert_creation.general.schema.alert import CreateAlertResponse
+from app.integrations.alert_creation.general.schema.alert import IrisAlertContext
+from app.integrations.alert_creation.general.schema.alert import IrisAlertPayload
+from app.integrations.alert_creation.general.schema.alert import IrisAsset
+from app.integrations.alert_creation.general.schema.alert import IrisIoc
+from app.integrations.alert_creation.general.schema.alert import ValidIocFields
+from app.integrations.alert_creation.general.services.alert_multi_exclude import (
+    AlertDetailsService,
+)
+from app.integrations.utils.alerts import get_asset_type_id
+from app.integrations.utils.alerts import send_to_shuffle
+from app.integrations.utils.alerts import validate_ioc_type
+from app.integrations.utils.schema import ShufflePayload
+from app.utils import get_customer_alert_settings
 
 
 def valid_ioc_fields() -> Set[str]:
@@ -57,13 +53,8 @@ async def construct_alert_source_link(
         The alert source link.
     """
     # Check if the alert has a process id and that it is not "No process ID found"
-    if (
-        hasattr(alert_details, "process_id")
-        and alert_details.process_id != "No process ID found"
-    ):
-        query_string = (
-            f"%22query%22:%22process_id:%5C%22{alert_details.process_id}%5C%22%20AND%20"
-        )
+    if hasattr(alert_details, "process_id") and alert_details.process_id != "No process ID found":
+        query_string = f"%22query%22:%22process_id:%5C%22{alert_details.process_id}%5C%22%20AND%20"
     else:
         query_string = f"%22query%22:%22_id:%5C%22{alert_details.id}%5C%22%20AND%20"
 

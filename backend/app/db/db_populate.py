@@ -1,16 +1,17 @@
 import os
 
-from app.auth.models.users import Role
-from app.connectors.models import Connectors
-from app.integrations.models.customer_integration_settings import (
-    AvailableIntegrations,
-    AvailableIntegrationsAuthKeys,
-)
 from dotenv import load_dotenv
 from loguru import logger
 from sqlalchemy import and_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+
+from app.auth.models.users import Role
+from app.connectors.models import Connectors
+from app.integrations.models.customer_integration_settings import AvailableIntegrations
+from app.integrations.models.customer_integration_settings import (
+    AvailableIntegrationsAuthKeys,
+)
 
 load_dotenv()
 
@@ -287,8 +288,7 @@ async def add_available_integrations_if_not_exist(session: AsyncSession):
 
     for available_integration_data in available_integrations_list:
         query = select(AvailableIntegrations).where(
-            AvailableIntegrations.integration_name
-            == available_integration_data["integration_name"],
+            AvailableIntegrations.integration_name == available_integration_data["integration_name"],
         )
         result = await session.execute(query)
         existing_available_integration = result.scalars().first()
@@ -382,28 +382,21 @@ async def add_available_integrations_auth_keys_if_not_exist(session: AsyncSessio
     Returns:
         None
     """
-    available_integrations_auth_keys_list = (
-        await get_available_integrations_auth_keys_list(session=session)
-    )
+    available_integrations_auth_keys_list = await get_available_integrations_auth_keys_list(session=session)
 
     for available_integration_auth_keys_data in available_integrations_auth_keys_list:
         query = select(AvailableIntegrations).where(
-            AvailableIntegrations.integration_name
-            == available_integration_auth_keys_data["integration_name"],
+            AvailableIntegrations.integration_name == available_integration_auth_keys_data["integration_name"],
         )
         result = await session.execute(query)
         existing_integration = result.scalars().first()
 
         if existing_integration:
-            available_integration_auth_keys_data[
-                "integration_id"
-            ] = existing_integration.id
+            available_integration_auth_keys_data["integration_id"] = existing_integration.id
             auth_key_query = select(AvailableIntegrationsAuthKeys).where(
                 and_(
-                    AvailableIntegrationsAuthKeys.integration_id
-                    == existing_integration.id,
-                    AvailableIntegrationsAuthKeys.auth_key_name
-                    == available_integration_auth_keys_data["auth_key_name"],
+                    AvailableIntegrationsAuthKeys.integration_id == existing_integration.id,
+                    AvailableIntegrationsAuthKeys.auth_key_name == available_integration_auth_keys_data["auth_key_name"],
                 ),
             )
             auth_key_result = await session.execute(auth_key_query)
