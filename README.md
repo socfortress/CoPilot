@@ -94,8 +94,14 @@ To upgrade Copilot, you will need to stop the running container, pull the latest
 # Stop the running container. Make sure you are in the CoPilot directory
 docker compose down
 
-# Pull the latest docker image
-docker pull ghcr.io/socfortress/copilot:latest
+# Pull the latest code from the repository
+git pull
+
+# Build the copilot-frontend image
+bash build-dockers.sh
+
+# Pull the latest copilot-backend image
+docker pull ghcr.io/socfortress/copilot-backend:latest
 
 # Start the container again
 docker compose up -d
