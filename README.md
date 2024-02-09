@@ -71,6 +71,9 @@ cp .env.example .env
 
 # Make your changes to the .env file
 
+# Build the copilot-frontend image
+bash build-dockers.sh
+
 # Run Copilot
 docker compose up -d
 ```
