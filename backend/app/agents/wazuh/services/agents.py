@@ -1,3 +1,5 @@
+import asyncio
+
 from fastapi import HTTPException
 from loguru import logger
 
@@ -18,8 +20,23 @@ async def collect_wazuh_agents() -> WazuhAgentsList:
     logger.info("Collecting all agents from Wazuh Manager")
     agents_collected = await send_get_request(
         endpoint="/agents",
-        params={"limit": 1000},
+        params={"limit": 500},
     )
+    total_affected_items = agents_collected.get("data", {}).get("data", {}).get("total_affected_items", 0)
+
+    # If the number of agents is less than total_affected_items, make another request with the limit being total_affected_items
+    if len(agents_collected.get("data", {}).get("data", {}).get("affected_items", [])) < total_affected_items:
+        logger.info(
+            f"Total items: {total_affected_items}.\n"
+            f"Collected {len(agents_collected.get('data', {}).get('data', {}).get('affected_items', []))} agents.\n"
+            "Making another request.",
+        )
+        # sleep for 2 seconds before making another request
+        await asyncio.sleep(2)
+        agents_collected = await send_get_request(
+            endpoint="/agents",
+            params={"limit": total_affected_items},
+        )
 
     if agents_collected.get("success") is False:
         raise HTTPException(
