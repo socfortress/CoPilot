@@ -59,8 +59,8 @@ auth_handler = AuthHandler()
 load_dotenv()
 server_ip = os.getenv("SERVER_IP", "localhost")
 # Not needed for now
-#ssl_keyfile = os.path.join(os.path.dirname(__file__), "../nginx/server.key")
-#ssl_certfile = os.path.join(os.path.dirname(__file__), "../nginx/server.crt")
+# ssl_keyfile = os.path.join(os.path.dirname(__file__), "../nginx/server.key")
+# ssl_certfile = os.path.join(os.path.dirname(__file__), "../nginx/server.crt")
 
 app = FastAPI(description="CoPilot API", version="0.1.0", title="CoPilot API")
 
@@ -137,7 +137,6 @@ async def init_db():
     logger.info("Starting scheduler")
     if not scheduler.running:
         scheduler.start()
-
 
 
 @app.get("/")
