@@ -1,12 +1,11 @@
 import regex
-from fastapi import APIRouter
-from fastapi import Depends
-from fastapi import HTTPException
-from loguru import logger
-
-from app.integrations.dnstwist.schema.analyze import DomainAnalysisResponse
-from app.integrations.dnstwist.schema.analyze import DomainRequestBody
+from app.integrations.dnstwist.schema.analyze import (
+    DomainAnalysisResponse,
+    DomainRequestBody,
+)
 from app.integrations.dnstwist.services.analyze import analyze_domain
+from fastapi import APIRouter, Depends, HTTPException
+from loguru import logger
 
 dnstwist_router = APIRouter()
 
@@ -30,7 +29,12 @@ def is_domain(domain: str) -> DomainRequestBody:
     return DomainRequestBody(domain=domain)
 
 
-@dnstwist_router.post("/analyze", response_model=DomainAnalysisResponse, status_code=200, description="Analyze domain with DNS Twist")
+@dnstwist_router.post(
+    "/analyze",
+    response_model=DomainAnalysisResponse,
+    status_code=200,
+    description="Analyze domain with DNS Twist",
+)
 async def analyze(body: DomainRequestBody = Depends(is_domain)):
     """
     Analyzes a domain using DNS Twist.

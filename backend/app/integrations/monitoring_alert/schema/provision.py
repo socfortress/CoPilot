@@ -1,12 +1,8 @@
 from enum import Enum
-from typing import Dict
-from typing import List
-from typing import Optional
+from typing import Dict, List, Optional
 
 from fastapi import HTTPException
-from pydantic import BaseModel
-from pydantic import Field
-from pydantic import validator
+from pydantic import BaseModel, Field, validator
 
 
 class AvailableMonitoringAlerts(str, Enum):
@@ -62,7 +58,10 @@ class ProvisionMonitoringAlertRequest(BaseModel):
     @validator("search_within_last", "execute_every")
     def validate_non_zero(cls, v):
         if v == 0:
-            raise HTTPException(status_code=400, detail=f"Invalid value: {v}. Must be greater than 0.")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid value: {v}. Must be greater than 0.",
+            )
         return v
 
 

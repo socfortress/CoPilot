@@ -2,17 +2,11 @@ import base64
 import hashlib
 import hmac
 import uuid
-from datetime import datetime
-from datetime import timedelta
+from datetime import datetime, timedelta
 from enum import Enum
-from typing import Dict
-from typing import List
-from typing import Optional
+from typing import Dict, List, Optional
 
-from pydantic import BaseModel
-from pydantic import Field
-from pydantic import HttpUrl
-from pydantic import root_validator
+from pydantic import BaseModel, Field, HttpUrl, root_validator
 
 
 class PipelineRuleTitles(Enum):
@@ -147,7 +141,9 @@ class MimecastHeaders(BaseModel):
     )
 
     class Config:
-        allow_population_by_field_name = True  # This allows field population by both alias and field name
+        allow_population_by_field_name = (
+            True  # This allows field population by both alias and field name
+        )
 
 
 class MimecastTTPURLSRequest(BaseModel):
@@ -162,7 +158,10 @@ class MimecastTTPURLSRequest(BaseModel):
         ...,
         description="The email address of the Mimecast administrator.",
     )
-    BaseURL: Optional[str] = Field(None, description="The base URL for the Mimecast API.")
+    BaseURL: Optional[str] = Field(
+        None,
+        description="The base URL for the Mimecast API.",
+    )
     time_range: Optional[str] = Field(
         "15m",
         pattern="^[1-9][0-9]*[mhdw]$",
@@ -200,7 +199,9 @@ class MimecastTTPURLSRequest(BaseModel):
             elif unit == "w":
                 lower_bound = now - timedelta(weeks=amount)
 
-            values["lower_bound"] = lower_bound.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
+            values["lower_bound"] = (
+                lower_bound.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
+            )
             values["upper_bound"] = now.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
         return values
 
@@ -227,7 +228,9 @@ class MimecastTTPURLSRequest(BaseModel):
             "Content-Type": "application/json",
         }
 
-        self.headers = MimecastHeaders(**headers_dict)  # Create a new instance of MimecastHeaders and assign
+        self.headers = MimecastHeaders(
+            **headers_dict,
+        )  # Create a new instance of MimecastHeaders and assign
 
         return headers_dict
 
@@ -245,7 +248,9 @@ class DataItem(BaseModel):
     scanResult: str = Field(..., description="Scan result.")
 
     class Config:
-        allow_population_by_field_name = True  # This allows field population by both alias and field name
+        allow_population_by_field_name = (
+            True  # This allows field population by both alias and field name
+        )
 
 
 class RequestBody(BaseModel):

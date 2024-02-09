@@ -12,20 +12,21 @@ from zipfile import ZipFile
 
 import aiofiles
 import requests
-from fastapi import HTTPException
-from loguru import logger
-
-from app.integrations.mimecast.schema.mimecast import DataItem
-from app.integrations.mimecast.schema.mimecast import MimecastAPIEndpointResponse
-from app.integrations.mimecast.schema.mimecast import MimecastAuthKeys
-from app.integrations.mimecast.schema.mimecast import MimecastRequest
-from app.integrations.mimecast.schema.mimecast import MimecastResponse
-from app.integrations.mimecast.schema.mimecast import MimecastTTPURLSRequest
-from app.integrations.mimecast.schema.mimecast import RequestBody
-from app.integrations.mimecast.schema.mimecast import TtpURLResponseBody
+from app.integrations.mimecast.schema.mimecast import (
+    DataItem,
+    MimecastAPIEndpointResponse,
+    MimecastAuthKeys,
+    MimecastRequest,
+    MimecastResponse,
+    MimecastTTPURLSRequest,
+    RequestBody,
+    TtpURLResponseBody,
+)
 from app.integrations.utils.collection import send_post_request
 from app.integrations.utils.event_shipper import event_shipper
 from app.integrations.utils.schema import EventShipperPayload
+from fastapi import HTTPException
+from loguru import logger
 
 
 async def get_checkpoint_filename(customer_code: str):
@@ -35,7 +36,10 @@ async def get_checkpoint_filename(customer_code: str):
     """
     # Relative path from the current script to the checkpoint directory
     checkpoint_directory = os.path.join(os.path.dirname(__file__), "..", "checkpoint")
-    checkpoint_filename = os.path.join(checkpoint_directory, f"mimecast_{customer_code}.checkpoint")
+    checkpoint_filename = os.path.join(
+        checkpoint_directory,
+        f"mimecast_{customer_code}.checkpoint",
+    )
 
     # Normalize the path to remove relative path components
     checkpoint_filename = os.path.normpath(checkpoint_filename)
@@ -88,7 +92,9 @@ async def get_hdr_date():
     return datetime.datetime.utcnow().strftime("%a, %d %b %Y %H:%M:%S UTC")
 
 
-async def get_base_url(mimecast_auth_keys: MimecastAuthKeys) -> MimecastAPIEndpointResponse:
+async def get_base_url(
+    mimecast_auth_keys: MimecastAuthKeys,
+) -> MimecastAPIEndpointResponse:
     """
     Retrieves the base URL for the Mimecast integration.
     """
@@ -111,17 +117,33 @@ async def get_base_url(mimecast_auth_keys: MimecastAuthKeys) -> MimecastAPIEndpo
             data=post_body,
         )
         if response["success"] is True:
-            logger.info(f"Successfully retrieved base URL for Mimecast integration. Response: {response}")
+            logger.info(
+                f"Successfully retrieved base URL for Mimecast integration. Response: {response}",
+            )
             return MimecastAPIEndpointResponse(**response)
         else:
-            logger.error(f"Unable to retrieve base URL for Mimecast integration. Response: {response}")
-            raise HTTPException(status_code=400, detail="Unable to retrieve base URL for Mimecast integration.")
+            logger.error(
+                f"Unable to retrieve base URL for Mimecast integration. Response: {response}",
+            )
+            raise HTTPException(
+                status_code=400,
+                detail="Unable to retrieve base URL for Mimecast integration.",
+            )
     except Exception as e:
-        logger.error(f"Unable to retrieve base URL for Mimecast integration. Exception: {e}")
-        raise HTTPException(status_code=400, detail="Unable to retrieve base URL for Mimecast integration.")
+        logger.error(
+            f"Unable to retrieve base URL for Mimecast integration. Exception: {e}",
+        )
+        raise HTTPException(
+            status_code=400,
+            detail="Unable to retrieve base URL for Mimecast integration.",
+        )
 
 
-async def get_mta_siem_logs(checkpoint_filename: str, base_url: str, auth_keys: MimecastAuthKeys):
+async def get_mta_siem_logs(
+    checkpoint_filename: str,
+    base_url: str,
+    auth_keys: MimecastAuthKeys,
+):
     """
     Retrieves the MTA SIEM logs from the Mimecast integration.
     """
@@ -163,8 +185,13 @@ async def get_mta_siem_logs(checkpoint_filename: str, base_url: str, auth_keys: 
         )
         return response.content, response.headers
     except Exception as e:
-        logger.error(f"Unable to retrieve MTA SIEM logs from Mimecast integration. Exception: {e}")
-        raise HTTPException(status_code=400, detail="Unable to retrieve MTA SIEM logs from Mimecast integration.")
+        logger.error(
+            f"Unable to retrieve MTA SIEM logs from Mimecast integration. Exception: {e}",
+        )
+        raise HTTPException(
+            status_code=400,
+            detail="Unable to retrieve MTA SIEM logs from Mimecast integration.",
+        )
 
 
 async def process_response(response, checkpoint_filename: str, log_file_path: str):
@@ -187,7 +214,10 @@ async def process_response(response, checkpoint_filename: str, log_file_path: st
             file_name = file_name[1][:-1]
 
             # Save mc-siem-token page token to check point directory
-            await write_checkpoint_file(checkpoint_filename, resp_headers["mc-siem-token"])
+            await write_checkpoint_file(
+                checkpoint_filename,
+                resp_headers["mc-siem-token"],
+            )
             log_filename = os.path.join(log_file_path, file_name)
             await write_log_file(log_filename, resp_body)
             return None
@@ -218,7 +248,12 @@ async def write_log_file(filename: str, resp_body):
             await f.write(resp_body)
 
 
-async def process_log_file(filename: str, filename2: str, log_file_path: str, customer_code: str):
+async def process_log_file(
+    filename: str,
+    filename2: str,
+    log_file_path: str,
+    customer_code: str,
+):
     """
     Process a log file by reading its contents and shipping events.
     """
@@ -291,10 +326,16 @@ async def delete_log_directory(log_file_path: str):
         shutil.rmtree(log_file_path)
         logger.info(f"Successfully deleted the directory: {log_file_path}")
     except OSError as e:
-        raise HTTPException(status_code=400, detail=f"Error: {e.strerror}. Directory: {log_file_path}")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Error: {e.strerror}. Directory: {log_file_path}",
+        )
 
 
-async def invoke_mimecast(mimecast_request: MimecastRequest, auth_keys: MimecastAuthKeys) -> MimecastResponse:
+async def invoke_mimecast(
+    mimecast_request: MimecastRequest,
+    auth_keys: MimecastAuthKeys,
+) -> MimecastResponse:
     """
     Invokes the Mimecast integration.
     """
@@ -302,23 +343,40 @@ async def invoke_mimecast(mimecast_request: MimecastRequest, auth_keys: Mimecast
     try:
         logger.info(f"mimecast_base_url: {mimecast_base_url.data.data[0].region.api}")
     except Exception as e:
-        logger.error(f"Unable to retrieve base URL for Mimecast integration. Exception: {e}")
-        raise HTTPException(status_code=400, detail="Unable to retrieve base URL for Mimecast integration.")
+        logger.error(
+            f"Unable to retrieve base URL for Mimecast integration. Exception: {e}",
+        )
+        raise HTTPException(
+            status_code=400,
+            detail="Unable to retrieve base URL for Mimecast integration.",
+        )
     checkpoint_filename = await get_checkpoint_filename(mimecast_request.customer_code)
     log_file_path = await get_log_file_path(mimecast_request.customer_code)
-    response = await get_mta_siem_logs(checkpoint_filename, mimecast_base_url.data.data[0].region.api, auth_keys)
+    response = await get_mta_siem_logs(
+        checkpoint_filename,
+        mimecast_base_url.data.data[0].region.api,
+        auth_keys,
+    )
 
     await process_response(response, checkpoint_filename, log_file_path)
     for filename in os.listdir(log_file_path):
         if os.path.isdir(os.path.join(log_file_path, filename)):
             for filename2 in os.listdir(os.path.join(log_file_path, filename)):
-                await process_log_file(filename, filename2, log_file_path, customer_code=mimecast_request.customer_code)
+                await process_log_file(
+                    filename,
+                    filename2,
+                    log_file_path,
+                    customer_code=mimecast_request.customer_code,
+                )
             logger.info(f"Log file path: {log_file_path}")
         else:
             await process_log_file(filename, filename2, log_file_path)
 
     await delete_log_directory(log_file_path)
-    return MimecastResponse(success=True, message="Successfully invoked Mimecast integration.")
+    return MimecastResponse(
+        success=True,
+        message="Successfully invoked Mimecast integration.",
+    )
 
 
 # ! TTP URLS ! #
@@ -367,7 +425,10 @@ async def invoke_mimecast_api_ttp_urls(
     return TtpURLResponseBody(**response.json())
 
 
-async def get_ttp_urls(mimecast_request: MimecastTTPURLSRequest, customer_code: str) -> MimecastResponse:
+async def get_ttp_urls(
+    mimecast_request: MimecastTTPURLSRequest,
+    customer_code: str,
+) -> MimecastResponse:
     logger.info("Mimecast TTP URL request received")
     # Get the BaseURL for the Mimecast integration
     mimecast_base_url = await get_base_url(

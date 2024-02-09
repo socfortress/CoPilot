@@ -1,16 +1,12 @@
-from fastapi import APIRouter
-from fastapi import Depends
-from fastapi import HTTPException
-from fastapi import Security
-from loguru import logger
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-
 from app.auth.utils import AuthHandler
 from app.customer_provisioning.schema.decommission import DecommissionCustomerResponse
 from app.customer_provisioning.services.decommission import decomission_wazuh_customer
 from app.db.db_session import get_db
 from app.db.universal_models import CustomersMeta
+from fastapi import APIRouter, Depends, HTTPException, Security
+from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 
 # App specific imports
 
@@ -18,7 +14,10 @@ from app.db.universal_models import CustomersMeta
 customer_decommissioning_router = APIRouter()
 
 
-async def check_customermeta_exists(customer_code: str, session: AsyncSession = Depends(get_db)) -> CustomersMeta:
+async def check_customermeta_exists(
+    customer_code: str,
+    session: AsyncSession = Depends(get_db),
+) -> CustomersMeta:
     """
     Check if a customer exists in the database.
 
@@ -33,11 +32,16 @@ async def check_customermeta_exists(customer_code: str, session: AsyncSession = 
         HTTPException: If the customer is not found.
     """
     logger.info(f"Checking if customer {customer_code} exists")
-    result = await session.execute(select(CustomersMeta).filter(CustomersMeta.customer_code == customer_code))
+    result = await session.execute(
+        select(CustomersMeta).filter(CustomersMeta.customer_code == customer_code),
+    )
     customer_meta = result.scalars().first()
 
     if not customer_meta:
-        raise HTTPException(status_code=404, detail=f"Customer: {customer_code} not found. Please create the customer first.")
+        raise HTTPException(
+            status_code=404,
+            detail=f"Customer: {customer_code} not found. Please create the customer first.",
+        )
 
     return customer_meta
 

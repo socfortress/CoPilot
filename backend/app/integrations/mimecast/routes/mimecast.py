@@ -1,20 +1,20 @@
-from fastapi import APIRouter
-from fastapi import Depends
-from fastapi import Security
-from loguru import logger
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
-from app.integrations.mimecast.schema.mimecast import MimecastAuthKeys
-from app.integrations.mimecast.schema.mimecast import MimecastRequest
-from app.integrations.mimecast.schema.mimecast import MimecastResponse
-from app.integrations.mimecast.schema.mimecast import MimecastTTPURLSRequest
-from app.integrations.mimecast.services.mimecast import get_ttp_urls
-from app.integrations.mimecast.services.mimecast import invoke_mimecast
+from app.integrations.mimecast.schema.mimecast import (
+    MimecastAuthKeys,
+    MimecastRequest,
+    MimecastResponse,
+    MimecastTTPURLSRequest,
+)
+from app.integrations.mimecast.services.mimecast import get_ttp_urls, invoke_mimecast
 from app.integrations.routes import find_customer_integration
-from app.integrations.utils.utils import extract_mimecast_auth_keys
-from app.integrations.utils.utils import get_customer_integration_response
+from app.integrations.utils.utils import (
+    extract_mimecast_auth_keys,
+    get_customer_integration_response,
+)
+from fastapi import APIRouter, Depends, Security
+from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
 
 integration_mimecast_router = APIRouter()
 
@@ -25,7 +25,10 @@ integration_mimecast_router = APIRouter()
     description="Invoke a mimecast integration.",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def invoke_mimecast_route(mimecast_request: MimecastRequest, session: AsyncSession = Depends(get_db)) -> MimecastResponse:
+async def invoke_mimecast_route(
+    mimecast_request: MimecastRequest,
+    session: AsyncSession = Depends(get_db),
+) -> MimecastResponse:
     """
     Invoke a mimecast integration.
 
@@ -43,7 +46,10 @@ async def invoke_mimecast_route(mimecast_request: MimecastRequest, session: Asyn
     Returns:
     - MimecastResponse: The response model containing the result of the mimecast integration invocation.
     """
-    customer_integration_response = await get_customer_integration_response(mimecast_request.customer_code, session)
+    customer_integration_response = await get_customer_integration_response(
+        mimecast_request.customer_code,
+        session,
+    )
 
     customer_integration = await find_customer_integration(
         mimecast_request.customer_code,
@@ -64,10 +70,16 @@ async def invoke_mimecast_route(mimecast_request: MimecastRequest, session: Asyn
     description="Pull down Mimecast TTP URLs for a given time range. "
     "Link to docs: https://integrations.mimecast.com/documentation/endpoint-reference/logs-and-statistics/get-ttp-url-logs/ ",
 )
-async def mimecast_ttp_url_route(mimecast_request: MimecastRequest, session: AsyncSession = Depends(get_db)):
+async def mimecast_ttp_url_route(
+    mimecast_request: MimecastRequest,
+    session: AsyncSession = Depends(get_db),
+):
     logger.info("Mimecast TTP URL request received")
     customer_code = mimecast_request.customer_code
-    customer_integration_response = await get_customer_integration_response(mimecast_request.customer_code, session)
+    customer_integration_response = await get_customer_integration_response(
+        mimecast_request.customer_code,
+        session,
+    )
 
     customer_integration = await find_customer_integration(
         mimecast_request.customer_code,

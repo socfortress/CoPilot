@@ -1,11 +1,12 @@
 from typing import List
 
+from app.agents.wazuh.schema.agents import (
+    WazuhAgentVulnerabilities,
+    WazuhAgentVulnerabilitiesResponse,
+)
+from app.connectors.wazuh_manager.utils.universal import send_get_request
 from fastapi import HTTPException
 from loguru import logger
-
-from app.agents.wazuh.schema.agents import WazuhAgentVulnerabilities
-from app.agents.wazuh.schema.agents import WazuhAgentVulnerabilitiesResponse
-from app.connectors.wazuh_manager.utils.universal import send_get_request
 
 
 async def collect_agent_vulnerabilities(agent_id: str):
@@ -22,11 +23,15 @@ async def collect_agent_vulnerabilities(agent_id: str):
         HTTPException: If there is an error collecting the vulnerabilities.
     """
     logger.info(f"Collecting agent {agent_id} vulnerabilities from Wazuh Manager")
-    agent_vulnerabilities = await send_get_request(endpoint=f"/vulnerability/{agent_id}")
+    agent_vulnerabilities = await send_get_request(
+        endpoint=f"/vulnerability/{agent_id}",
+    )
     if agent_vulnerabilities["success"] is False:
         raise HTTPException(status_code=500, detail=agent_vulnerabilities["message"])
 
-    processed_vulnerabilities = process_agent_vulnerabilities(agent_vulnerabilities["data"])
+    processed_vulnerabilities = process_agent_vulnerabilities(
+        agent_vulnerabilities["data"],
+    )
     return WazuhAgentVulnerabilitiesResponse(
         vulnerabilities=processed_vulnerabilities,
         success=True,
@@ -34,7 +39,9 @@ async def collect_agent_vulnerabilities(agent_id: str):
     )
 
 
-def process_agent_vulnerabilities(agent_vulnerabilities: dict) -> List[WazuhAgentVulnerabilities]:
+def process_agent_vulnerabilities(
+    agent_vulnerabilities: dict,
+) -> List[WazuhAgentVulnerabilities]:
     """
     Process agent vulnerabilities and return a list of WazuhAgentVulnerabilities objects.
 
@@ -48,7 +55,13 @@ def process_agent_vulnerabilities(agent_vulnerabilities: dict) -> List[WazuhAgen
         HTTPException: If there is an error processing the agent vulnerabilities.
     """
     try:
-        vulnerabilities = agent_vulnerabilities.get("data", {}).get("affected_items", [])
+        vulnerabilities = agent_vulnerabilities.get("data", {}).get(
+            "affected_items",
+            [],
+        )
         return [WazuhAgentVulnerabilities(**vuln) for vuln in vulnerabilities]
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to process agent vulnerabilities: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to process agent vulnerabilities: {e}",
+        )

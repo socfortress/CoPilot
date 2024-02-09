@@ -1,17 +1,13 @@
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Tuple
-
-from elasticsearch7 import NotFoundError
-from loguru import logger
-from sqlalchemy.ext.asyncio import AsyncSession
+from typing import Any, Dict, List, Tuple
 
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
 from app.integrations.alert_creation_settings.models.alert_creation_settings import (
     AlertCreationEventConfig,
 )
 from app.utils import get_customer_alert_event_configs
+from elasticsearch7 import NotFoundError
+from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class AlertDetailsService:
@@ -69,7 +65,9 @@ class AlertDetailsService:
             result = self.es.search(index="_all", body=query)
 
             # Extract (index, id) pairs from the result
-            index_id_pairs = [(hit["_index"], hit["_id"]) for hit in result["hits"]["hits"]]
+            index_id_pairs = [
+                (hit["_index"], hit["_id"]) for hit in result["hits"]["hits"]
+            ]
             logger.info(
                 f"Found {len(index_id_pairs)} alerts with syslog_level of 'ALERT' within the last 1 hour.",
             )
@@ -157,7 +155,11 @@ class AlertDetailsService:
             "query": {"bool": {"must": must_terms}},
         }
 
-    async def process_events(self, events: list, event_configs: List[AlertCreationEventConfig]):
+    async def process_events(
+        self,
+        events: list,
+        event_configs: List[AlertCreationEventConfig],
+    ):
         """
         Process the events and check for exclusions.
         For every event in the `config.ini` file there is a field and value to check for.
@@ -179,7 +181,10 @@ class AlertDetailsService:
         for index, event in enumerate(events):
             event_id = event_order[0 if not first_match_found else 1]
             logger.info(f"Checking for event_id: {event_id}")
-            event_config = next((config for config in event_configs if config.event_id == event_id), None)
+            event_config = next(
+                (config for config in event_configs if config.event_id == event_id),
+                None,
+            )
             if event_config is None:
                 continue
 
@@ -232,14 +237,19 @@ class AlertDetailsService:
             logger.info(f"Total alert timeline hits: {total_hits}")
 
             # Build and sort the list of events
-            events = [event["_source"] for event in alert_timeline_events["hits"]["hits"]]
+            events = [
+                event["_source"] for event in alert_timeline_events["hits"]["hits"]
+            ]
             events.sort(key=lambda x: x["timestamp_utc"])
 
             # return self.process_events(events)
             logger.info(f"Events: {events}")
 
             # Get all order keys from the 'Order' section in config.ini
-            order_keys = await get_customer_alert_event_configs(customer_code=events[0]["agent_labels_customer"], session=session)
+            order_keys = await get_customer_alert_event_configs(
+                customer_code=events[0]["agent_labels_customer"],
+                session=session,
+            )
             logger.info(f"Order keys: {order_keys}")
 
             # Process events for each order key

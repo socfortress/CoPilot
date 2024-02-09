@@ -1,27 +1,21 @@
 from datetime import timedelta
 
-from fastapi import APIRouter
-from fastapi import Depends
-from fastapi import HTTPException
-from fastapi import Security
-from fastapi import status
+from app.auth.models.users import (
+    PasswordReset,
+    PasswordResetToken,
+    User,
+    UserInput,
+    UserLogin,
+)
+from app.auth.schema.auth import Token, UserLoginResponse, UserResponse
+from app.auth.schema.user import UserBaseResponse
+from app.auth.services.universal import find_user, select_all_users
+from app.auth.utils import AuthHandler
+from app.db.db_session import get_db
+from fastapi import APIRouter, Depends, HTTPException, Security, status
 from fastapi.security import OAuth2PasswordRequestForm
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.auth.models.users import PasswordReset
-from app.auth.models.users import PasswordResetToken
-from app.auth.models.users import User
-from app.auth.models.users import UserInput
-from app.auth.models.users import UserLogin
-from app.auth.schema.auth import Token
-from app.auth.schema.auth import UserLoginResponse
-from app.auth.schema.auth import UserResponse
-from app.auth.schema.user import UserBaseResponse
-from app.auth.services.universal import find_user
-from app.auth.services.universal import select_all_users
-from app.auth.utils import AuthHandler
-from app.db.db_session import get_db
 
 ACCESS_TOKEN_EXPIRE_MINUTES = 1440
 
@@ -41,6 +35,7 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
         dict: A dictionary containing the access token and token type.
     """
     # user = auth_handler.authenticate_user(form_data.username, form_data.password)
+
     user = await auth_handler.authenticate_user(form_data.username, form_data.password)
     if not user:
         raise HTTPException(
@@ -50,6 +45,7 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
         )
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = await auth_handler.encode_token(user.username, access_token_expires)
+    logger.info(f"Access token: {access_token}")
     return {"access_token": access_token, "token_type": "bearer"}
 
 
@@ -65,11 +61,19 @@ async def refresh_token(current_user: User = Depends(auth_handler.get_current_us
     - dict: A dictionary containing the refreshed access token and token type.
     """
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = await auth_handler.encode_token(current_user.username, access_token_expires)
+    access_token = await auth_handler.encode_token(
+        current_user.username,
+        access_token_expires,
+    )
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@auth_router.post("/register", response_model=UserResponse, status_code=201, description="Register new user")
+@auth_router.post(
+    "/register",
+    response_model=UserResponse,
+    status_code=201,
+    description="Register new user",
+)
 async def register(user: UserInput, session: AsyncSession = Depends(get_db)):
     """
     Register a new user.
@@ -85,14 +89,24 @@ async def register(user: UserInput, session: AsyncSession = Depends(get_db)):
     if any(x.username == user.username for x in users):
         raise HTTPException(status_code=400, detail="Username is taken")
     hashed_pwd = auth_handler.get_password_hash(user.password)
-    u = User(username=user.username, password=hashed_pwd, email=user.email, role_id=user.role_id)
+    u = User(
+        username=user.username,
+        password=hashed_pwd,
+        email=user.email,
+        role_id=user.role_id,
+    )
     logger.info(f"User: {u}")
     session.add(u)
     await session.commit()
     return {"message": "User created successfully", "success": True}
 
 
-@auth_router.post("/login", response_model=UserLoginResponse, description="Login user", deprecated=True)
+@auth_router.post(
+    "/login",
+    response_model=UserLoginResponse,
+    description="Login user",
+    deprecated=True,
+)
 async def login(user: UserLogin):
     """
     Logs in a user.
@@ -136,12 +150,24 @@ async def get_users(session: AsyncSession = Depends(get_db)):
 
     """
     users = await select_all_users()
-    return UserBaseResponse(users=users, message="Users retrieved successfully", success=True)
+    return UserBaseResponse(
+        users=users,
+        message="Users retrieved successfully",
+        success=True,
+    )
 
 
 # ! TODO: HAVE LOGIC TO HANDLE PASSWORD RESET VIA A TOKEN BUT NOT IMPLEMENTED YET ! #
-@auth_router.post("/reset-token", status_code=200, description="Request password reset", include_in_schema=False)
-async def request_password_reset(password_reset_request: PasswordResetToken, session: AsyncSession = Depends(get_db)):
+@auth_router.post(
+    "/reset-token",
+    status_code=200,
+    description="Request password reset",
+    include_in_schema=False,
+)
+async def request_password_reset(
+    password_reset_request: PasswordResetToken,
+    session: AsyncSession = Depends(get_db),
+):
     """
     Request a password reset.
 
@@ -189,7 +215,10 @@ async def request_password_reset(password_reset_request: PasswordResetToken, ses
     description="Reset user's password via username",
     dependencies=[Security(AuthHandler().require_any_scope("admin"))],
 )
-async def reset_password_via_username(request: PasswordReset, session: AsyncSession = Depends(get_db)):
+async def reset_password_via_username(
+    request: PasswordReset,
+    session: AsyncSession = Depends(get_db),
+):
     """
     Reset a user's password via the username. Must be an admin.
 
@@ -217,7 +246,11 @@ async def reset_password_via_username(request: PasswordReset, session: AsyncSess
     description="Reset user's password",
     dependencies=[Security(AuthHandler().require_any_scope("analyst", "admin"))],
 )
-async def reset_password_me(request: PasswordReset, token: str = Depends(AuthHandler().security), session: AsyncSession = Depends(get_db)):
+async def reset_password_me(
+    request: PasswordReset,
+    token: str = Depends(AuthHandler().security),
+    session: AsyncSession = Depends(get_db),
+):
     """
     Reset a user's password.
 

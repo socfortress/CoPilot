@@ -1,18 +1,14 @@
 import json
 from datetime import datetime
-from typing import Any
-from typing import Dict
+from typing import Any, Dict
 
 import grpc
 import pyvelociraptor
+from app.connectors.utils import get_connector_info_from_db
+from app.db.db_session import AsyncSessionLocal, get_db_session
 from fastapi import HTTPException
 from loguru import logger
-from pyvelociraptor import api_pb2
-from pyvelociraptor import api_pb2_grpc
-
-from app.connectors.utils import get_connector_info_from_db
-from app.db.db_session import AsyncSessionLocal
-from app.db.db_session import get_db_session
+from pyvelociraptor import api_pb2, api_pb2_grpc
 
 
 async def verify_velociraptor_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
@@ -60,20 +56,31 @@ async def verify_velociraptor_credentials(attributes: Dict[str, Any]) -> Dict[st
                 for response in stub.Query(client_request):
                     if response.Response:
                         r = r + json.loads(response.Response)
-                return {"connectionSuccessful": True, "message": "Connection to Velociraptor successful"}
+                return {
+                    "connectionSuccessful": True,
+                    "message": "Connection to Velociraptor successful",
+                }
         except Exception as e:
             logger.error(f"Failed to verify connection to Velociraptor: {e}")
-            return {"connectionSuccessful": False, "message": f"Failed to verify connection to Velociraptor: {e}"}
+            return {
+                "connectionSuccessful": False,
+                "message": f"Failed to verify connection to Velociraptor: {e}",
+            }
     except Exception as e:
         logger.error(f"Failed to get connector_api_key from the database: {e}")
-        return {"connectionSuccessful": False, "message": f"Failed to get connector_api_key from the database: {e}"}
+        return {
+            "connectionSuccessful": False,
+            "message": f"Failed to get connector_api_key from the database: {e}",
+        }
 
 
 async def verify_velociraptor_connection(connector_name: str) -> str:
     """
     Verifies the connection to Velociraptor service.
     """
-    logger.info(f"Verifying the Velociraptor connection for connector: {connector_name}")
+    logger.info(
+        f"Verifying the Velociraptor connection for connector: {connector_name}",
+    )
     async with get_db_session() as session:  # This will correctly enter the context manager
         attributes = await get_connector_info_from_db(connector_name, session)
     if attributes is None:
@@ -183,7 +190,10 @@ class UniversalService:
                 )
             else:
                 logger.error(f"Failed to execute query: {e}")
-                raise HTTPException(status_code=500, detail=f"Failed to execute query: {e.details()}")
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Failed to execute query: {e.details()}",
+                )
         except Exception as e:
             logger.error(f"Failed to execute query: {e}")
             raise HTTPException(status_code=500, detail=f"Failed to execute query: {e}")
@@ -234,8 +244,12 @@ class UniversalService:
         """
         # Formulate queries
         try:
-            vql_client_id = f"select client_id,os_info from clients(search='host:{client_name}')"
-            vql_last_seen_at = f"select last_seen_at from clients(search='host:{client_name}')"
+            vql_client_id = (
+                f"select client_id,os_info from clients(search='host:{client_name}')"
+            )
+            vql_last_seen_at = (
+                f"select last_seen_at from clients(search='host:{client_name}')"
+            )
 
             # Get the last seen timestamp
             logger.info(f"Getting last seen at timestamp for {client_name}")
@@ -293,7 +307,10 @@ class UniversalService:
         try:
             return self.execute_query(vql)["results"][0]["version"]["version"]
         except IndexError as e:
-            raise HTTPException(status_code=500, detail=f"Failed to get server version: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to get server version: {e}",
+            )
 
     async def _is_offline(self, last_seen_at: float):
         """
@@ -305,4 +322,6 @@ class UniversalService:
         Returns:
             bool: True if the client is offline, False otherwise.
         """
-        return (datetime.now() - datetime.fromtimestamp(last_seen_at / 1000000)).total_seconds() > 30
+        return (
+            datetime.now() - datetime.fromtimestamp(last_seen_at / 1000000)
+        ).total_seconds() > 30

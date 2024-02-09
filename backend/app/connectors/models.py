@@ -1,10 +1,7 @@
 from datetime import datetime
-from typing import List
-from typing import Optional
+from typing import List, Optional
 
-from sqlmodel import Field
-from sqlmodel import Relationship
-from sqlmodel import SQLModel
+from sqlmodel import Field, Relationship, SQLModel
 
 
 class ConnectorHistory(SQLModel, table=True):
@@ -71,7 +68,10 @@ class Connectors(SQLModel, table=True):
     connector_extra_data: Optional[str] = Field(default=None)
 
     # Relationship
-    history_logs: List[ConnectorHistory] = Relationship(back_populates="connector", sa_relationship_kwargs={"lazy": "selectin"})
+    history_logs: List[ConnectorHistory] = Relationship(
+        back_populates="connector",
+        sa_relationship_kwargs={"lazy": "selectin"},
+    )
 
 
 # Example usage

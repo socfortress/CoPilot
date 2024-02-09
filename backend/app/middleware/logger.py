@@ -1,11 +1,9 @@
-from fastapi import HTTPException
-from fastapi import Request
-from fastapi.responses import JSONResponse
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.auth.utils import AuthHandler
 from app.db.db_session import async_engine
 from app.utils import Logger
+from fastapi import HTTPException, Request
+from fastapi.responses import JSONResponse
+from sqlalchemy.ext.asyncio import AsyncSession
 
 EXCLUDED_PATHS = ["/auth/token", "/auth/register"]
 INTERNAL_SERVER_ERROR = 500
@@ -56,12 +54,24 @@ async def handle_exception(e, user_id, request, logger_instance):
         JSONResponse: The response containing the error message.
     """
     try:
-        user_id = await logger_instance.get_user_id_from_request(request) if user_id is None else user_id
+        user_id = (
+            await logger_instance.get_user_id_from_request(request)
+            if user_id is None
+            else user_id
+        )
     except HTTPException as http_exc:
-        return JSONResponse(status_code=http_exc.status_code, content={"message": str(http_exc), "success": False})
+        return JSONResponse(
+            status_code=http_exc.status_code,
+            content={"message": str(http_exc), "success": False},
+        )
     await logger_instance.log_error(user_id, request, e)
-    status_code = e.status_code if isinstance(e, HTTPException) else INTERNAL_SERVER_ERROR
-    return JSONResponse(status_code=status_code, content={"message": str(e), "success": False})
+    status_code = (
+        e.status_code if isinstance(e, HTTPException) else INTERNAL_SERVER_ERROR
+    )
+    return JSONResponse(
+        status_code=status_code,
+        content={"message": str(e), "success": False},
+    )
 
 
 async def log_requests(request: Request, call_next):
@@ -84,7 +94,12 @@ async def log_requests(request: Request, call_next):
 
         try:
             if not is_excluded_path(request.url.path):
-                response, user_id = await process_request(request, call_next, session, logger_instance)
+                response, user_id = await process_request(
+                    request,
+                    call_next,
+                    session,
+                    logger_instance,
+                )
             else:
                 response = await call_next(request)
         except Exception as e:

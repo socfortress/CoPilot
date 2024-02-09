@@ -1,13 +1,15 @@
 from datetime import datetime
 from typing import Dict
 
-from pydantic import BaseModel
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 
 # ! Organization ! #
 class GrafanaOrganizationCreation(BaseModel):
-    message: str = Field(..., description="Message detailing the outcome of the request")
+    message: str = Field(
+        ...,
+        description="Message detailing the outcome of the request",
+    )
     orgId: int = Field(..., description="ID of the created organization")
 
 
@@ -76,7 +78,10 @@ class DataSourceCreationDatasource(BaseModel):
     withCredentials: bool = Field(..., alias="withCredentials")
     isDefault: bool = Field(..., alias="isDefault")
     jsonData: DataSourceCreationJsonData
-    secureJsonFields: DataSourceCreationSecureJsonFields = Field(..., alias="secureJsonFields")
+    secureJsonFields: DataSourceCreationSecureJsonFields = Field(
+        ...,
+        alias="secureJsonFields",
+    )
     version: int
     readOnly: bool = Field(..., alias="readOnly")
 

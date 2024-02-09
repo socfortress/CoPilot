@@ -7,7 +7,7 @@
 					object-fit="contain"
 					round
 					:size="60"
-					:src="`/src/assets/images/${
+					:src="`/images/connectors/${
 						connector ? connector.connector_name.toLowerCase() + '.svg' : 'default-logo.svg'
 					}`"
 					:alt="`${connector.connector_name} Logo`"

@@ -1,6 +1,5 @@
-from fastapi import APIRouter
-
 from app.customers.routes.customers import customers_router
+from fastapi import APIRouter
 
 # Instantiate the APIRouter
 router = APIRouter()

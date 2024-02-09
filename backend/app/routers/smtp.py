@@ -1,7 +1,6 @@
-from fastapi import APIRouter
-
 from app.smtp.routes.configure import smtp_configure_router
 from app.smtp.routes.reports import smtp_reports_router
+from fastapi import APIRouter
 
 # Instantiate the APIRouter
 router = APIRouter()

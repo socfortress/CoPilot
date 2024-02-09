@@ -1,32 +1,22 @@
 from typing import List
 
-from fastapi import APIRouter
-from fastapi import Depends
-from fastapi import HTTPException
-from fastapi import Security
-from loguru import logger
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
 from app.db.universal_models import CustomersMeta
 from app.integrations.monitoring_alert.models.monitoring_alert import MonitoringAlerts
-from app.integrations.monitoring_alert.schema.monitoring_alert import GraylogPostRequest
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
+    GraylogPostRequest,
     GraylogPostResponse,
-)
-from app.integrations.monitoring_alert.schema.monitoring_alert import (
     MonitoringAlertsRequestModel,
-)
-from app.integrations.monitoring_alert.schema.monitoring_alert import (
     MonitoringWazuhAlertsRequestModel,
-)
-from app.integrations.monitoring_alert.schema.monitoring_alert import (
     WazuhAnalysisResponse,
 )
 from app.integrations.monitoring_alert.services.suricata import analyze_suricata_alerts
 from app.integrations.monitoring_alert.services.wazuh import analyze_wazuh_alerts
+from fastapi import APIRouter, Depends, HTTPException, Security
+from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 
 monitoring_alerts_router = APIRouter()
 
@@ -44,7 +34,9 @@ async def get_customer_meta(customer_code: str, session: AsyncSession) -> Custom
     """
     logger.info(f"Getting customer meta for customer_code: {customer_code}")
 
-    customer_meta = await session.execute(select(CustomersMeta).where(CustomersMeta.customer_code == customer_code))
+    customer_meta = await session.execute(
+        select(CustomersMeta).where(CustomersMeta.customer_code == customer_code),
+    )
     customer_meta = customer_meta.scalars().first()
 
     if not customer_meta:
@@ -97,7 +89,9 @@ async def create_monitoring_alert(
     logger.info(f"Found index name {monitoring_alert.event.alert_index}")
 
     customer_meta = await session.execute(
-        select(CustomersMeta).where(CustomersMeta.customer_code == monitoring_alert.event.fields.CUSTOMER_CODE),
+        select(CustomersMeta).where(
+            CustomersMeta.customer_code == monitoring_alert.event.fields.CUSTOMER_CODE,
+        ),
     )
     customer_meta = customer_meta.scalars().first()
 
@@ -118,10 +112,16 @@ async def create_monitoring_alert(
         logger.error(f"Error creating monitoring alert: {e}")
         raise HTTPException(status_code=500, detail="Error creating monitoring alert")
 
-    return GraylogPostResponse(success=True, message="Monitoring alert created successfully")
+    return GraylogPostResponse(
+        success=True,
+        message="Monitoring alert created successfully",
+    )
 
 
-@monitoring_alerts_router.post("/run_analysis/wazuh", response_model=WazuhAnalysisResponse)
+@monitoring_alerts_router.post(
+    "/run_analysis/wazuh",
+    response_model=WazuhAnalysisResponse,
+)
 async def run_wazuh_analysis(
     request: MonitoringWazuhAlertsRequestModel,
     session: AsyncSession = Depends(get_db),
@@ -147,7 +147,8 @@ async def run_wazuh_analysis(
 
     monitoring_alerts = await session.execute(
         select(MonitoringAlerts).where(
-            (MonitoringAlerts.customer_code == request.customer_code) & (MonitoringAlerts.alert_source == "WAZUH"),
+            (MonitoringAlerts.customer_code == request.customer_code)
+            & (MonitoringAlerts.alert_source == "WAZUH"),
         ),
     )
     monitoring_alerts = monitoring_alerts.scalars().all()
@@ -160,10 +161,16 @@ async def run_wazuh_analysis(
     # Call the analyze_wazuh_alerts function to analyze the alerts
     await analyze_wazuh_alerts(monitoring_alerts, customer_meta, session)
 
-    return WazuhAnalysisResponse(success=True, message="Analysis completed successfully")
+    return WazuhAnalysisResponse(
+        success=True,
+        message="Analysis completed successfully",
+    )
 
 
-@monitoring_alerts_router.post("/run_analysis/suricata", response_model=WazuhAnalysisResponse)
+@monitoring_alerts_router.post(
+    "/run_analysis/suricata",
+    response_model=WazuhAnalysisResponse,
+)
 async def run_suricata_analysis(
     request: MonitoringWazuhAlertsRequestModel,
     session: AsyncSession = Depends(get_db),
@@ -189,7 +196,8 @@ async def run_suricata_analysis(
 
     monitoring_alerts = await session.execute(
         select(MonitoringAlerts).where(
-            (MonitoringAlerts.customer_code == request.customer_code) & (MonitoringAlerts.alert_source == "SURICATA"),
+            (MonitoringAlerts.customer_code == request.customer_code)
+            & (MonitoringAlerts.alert_source == "SURICATA"),
         ),
     )
     monitoring_alerts = monitoring_alerts.scalars().all()
@@ -202,4 +210,7 @@ async def run_suricata_analysis(
     # Call the analyze_wazuh_alerts function to analyze the alerts
     await analyze_suricata_alerts(monitoring_alerts, customer_meta, session)
 
-    return WazuhAnalysisResponse(success=True, message="Analysis completed successfully")
+    return WazuhAnalysisResponse(
+        success=True,
+        message="Analysis completed successfully",
+    )

@@ -1,13 +1,16 @@
 from typing import List
 
-from loguru import logger
-
 from app.agents.dfir_iris.schema.cases import AssetCaseIDResponse
 from app.connectors.dfir_iris.services.assets import get_case_assets
 from app.connectors.dfir_iris.services.cases import get_all_cases
+from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
-async def collect_agent_soc_cases(agent_id: int) -> AssetCaseIDResponse:
+async def collect_agent_soc_cases(
+    agent_id: int,
+    session: AsyncSession,
+) -> AssetCaseIDResponse:
     """
     Get all cases for the given agent ID.
 
@@ -18,11 +21,15 @@ async def collect_agent_soc_cases(agent_id: int) -> AssetCaseIDResponse:
         AssetCaseIDResponse: An instance of AssetCaseIDResponse containing the cases for the given agent ID.
     """
     logger.info(f"Getting cases for agent: {agent_id}")
-    all_cases = await get_all_cases()
+    all_cases = await get_all_cases(session=session)
     case_ids = await filter_cases_by_agent_id(all_cases, agent_id)
 
     logger.info(f"Found cases: {case_ids}")
-    return AssetCaseIDResponse(case_ids=case_ids, success=True, message="Successfully retrieved cases for agent")
+    return AssetCaseIDResponse(
+        case_ids=case_ids,
+        success=True,
+        message="Successfully retrieved cases for agent",
+    )
 
 
 async def filter_cases_by_agent_id(cases, agent_id: int) -> List[int]:

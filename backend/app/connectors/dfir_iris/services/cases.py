@@ -1,26 +1,28 @@
 from datetime import datetime
-from typing import Dict
-from typing import List
+from typing import Dict, List
 
+from app.connectors.dfir_iris.schema.cases import (
+    CaseOlderThanBody,
+    CaseResponse,
+    CasesBreachedResponse,
+    ClosedCaseResponse,
+    PurgeCaseResponse,
+    ReopenedCaseResponse,
+    SingleCaseBody,
+    SingleCaseResponse,
+)
+from app.connectors.dfir_iris.utils.universal import (
+    create_dfir_iris_client,
+    fetch_and_parse_data,
+)
+from app.integrations.alert_creation_settings.models.alert_creation_settings import (
+    AlertCreationSettings,
+)
 from dfir_iris_client.case import Case
 from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-
-from app.connectors.dfir_iris.schema.cases import CaseOlderThanBody
-from app.connectors.dfir_iris.schema.cases import CaseResponse
-from app.connectors.dfir_iris.schema.cases import CasesBreachedResponse
-from app.connectors.dfir_iris.schema.cases import ClosedCaseResponse
-from app.connectors.dfir_iris.schema.cases import PurgeCaseResponse
-from app.connectors.dfir_iris.schema.cases import ReopenedCaseResponse
-from app.connectors.dfir_iris.schema.cases import SingleCaseBody
-from app.connectors.dfir_iris.schema.cases import SingleCaseResponse
-from app.connectors.dfir_iris.utils.universal import create_dfir_iris_client
-from app.connectors.dfir_iris.utils.universal import fetch_and_parse_data
-from app.integrations.alert_creation_settings.models.alert_creation_settings import (
-    AlertCreationSettings,
-)
 
 
 async def get_client_and_cases() -> Dict:
@@ -50,14 +52,18 @@ async def get_customer_code(session: AsyncSession, client_name: str) -> str:
     """
     try:
         alert_creation_settings = await session.execute(
-            select(AlertCreationSettings).filter(AlertCreationSettings.iris_customer_name == client_name),
+            select(AlertCreationSettings).filter(
+                AlertCreationSettings.iris_customer_name == client_name,
+            ),
         )
         alert_creation_settings = alert_creation_settings.scalars().first()
         if alert_creation_settings is None:
             return "Customer Not Found"
         return alert_creation_settings.customer_code
     except Exception as e:
-        logger.error(f"Error retrieving customer code for customer ID {client_name}: {e}")
+        logger.error(
+            f"Error retrieving customer code for customer ID {client_name}: {e}",
+        )
         return "Customer Not Found"
 
 
@@ -94,7 +100,9 @@ def filter_cases_older_than(cases: List[Dict], older_than: datetime) -> List[Dic
             else case["case_open_date"]
         )
         if case_open_date < current_time - older_than:
-            case["case_open_date"] = case_open_date.strftime("%m/%d/%Y")  # Convert back to string to match the model
+            case["case_open_date"] = case_open_date.strftime(
+                "%m/%d/%Y",
+            )  # Convert back to string to match the model
             filtered_cases.append(case)
     return filtered_cases
 
@@ -113,16 +121,28 @@ async def get_all_cases(session: AsyncSession) -> CaseResponse:
     try:
         if not result["success"]:
             logger.error(f"Failed to get all cases: {result['message']}")
-            raise HTTPException(status_code=500, detail=f"Failed to get all cases: {result['message']}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to get all cases: {result['message']}",
+            )
         for case in result["data"]:
-            case["customer_code"] = await get_customer_code(session, case["client_name"])
-        return CaseResponse(success=True, message="Successfully fetched all cases", cases=result["data"])
+            case["customer_code"] = await get_customer_code(
+                session,
+                case["client_name"],
+            )
+        return CaseResponse(
+            success=True,
+            message="Successfully fetched all cases",
+            cases=result["data"],
+        )
     except Exception as err:
         logger.error(f"Failed to get all cases: {err}")
         raise HTTPException(status_code=500, detail=f"Failed to get all cases: {err}")
 
 
-async def get_cases_older_than(case_older_than_body: CaseOlderThanBody) -> CasesBreachedResponse:
+async def get_cases_older_than(
+    case_older_than_body: CaseOlderThanBody,
+) -> CasesBreachedResponse:
     """
     Retrieves cases that are older than a specified duration.
 
@@ -135,10 +155,16 @@ async def get_cases_older_than(case_older_than_body: CaseOlderThanBody) -> Cases
     result = await get_client_and_cases()
     if not result["success"]:
         logger.error(f"Failed to get all cases: {result['message']}")
-        return HTTPException(status_code=500, detail=f"Failed to get all cases: {result['message']}")
+        return HTTPException(
+            status_code=500,
+            detail=f"Failed to get all cases: {result['message']}",
+        )
 
     open_cases = filter_open_cases(result["data"])
-    breached_cases = filter_cases_older_than(open_cases, case_older_than_body.older_than)
+    breached_cases = filter_cases_older_than(
+        open_cases,
+        case_older_than_body.older_than,
+    )
     return CasesBreachedResponse(
         success=True,
         message=f"Successfully fetched all cases older than {case_older_than_body.older_than}",
@@ -146,7 +172,10 @@ async def get_cases_older_than(case_older_than_body: CaseOlderThanBody) -> Cases
     )
 
 
-async def get_single_case(case_id: SingleCaseBody, session: AsyncSession) -> SingleCaseResponse:
+async def get_single_case(
+    case_id: SingleCaseBody,
+    session: AsyncSession,
+) -> SingleCaseResponse:
     """
     Fetches a single case from DFIR-IRIS based on the provided case ID.
 
@@ -162,8 +191,15 @@ async def get_single_case(case_id: SingleCaseBody, session: AsyncSession) -> Sin
     dfir_iris_client = await create_dfir_iris_client("DFIR-IRIS")
     case = Case(session=dfir_iris_client)
     result = await fetch_and_parse_data(dfir_iris_client, case.get_case, case_id)
-    result["data"]["customer_code"] = await get_customer_code(session, result["data"]["customer_name"])
-    return SingleCaseResponse(success=True, message="Successfully fetched single case", case=result["data"])
+    result["data"]["customer_code"] = await get_customer_code(
+        session,
+        result["data"]["customer_name"],
+    )
+    return SingleCaseResponse(
+        success=True,
+        message="Successfully fetched single case",
+        case=result["data"],
+    )
 
 
 async def close_case(case_id: SingleCaseBody) -> ClosedCaseResponse:
@@ -183,7 +219,11 @@ async def close_case(case_id: SingleCaseBody) -> ClosedCaseResponse:
     dfir_iris_client = await create_dfir_iris_client("DFIR-IRIS")
     case = Case(session=dfir_iris_client)
     result = await fetch_and_parse_data(dfir_iris_client, case.close_case, case_id)
-    return ClosedCaseResponse(success=True, case=result["data"], message="Successfully closed case")
+    return ClosedCaseResponse(
+        success=True,
+        case=result["data"],
+        message="Successfully closed case",
+    )
 
 
 async def reopen_case(case_id: SingleCaseBody) -> ReopenedCaseResponse:
@@ -204,7 +244,11 @@ async def reopen_case(case_id: SingleCaseBody) -> ReopenedCaseResponse:
     case = Case(session=dfir_iris_client)
     result = await fetch_and_parse_data(dfir_iris_client, case.reopen_case, case_id)
     logger.info(f"Successfully opened case: {result}")
-    return ReopenedCaseResponse(success=True, case=result["data"], message="Successfully opened case")
+    return ReopenedCaseResponse(
+        success=True,
+        case=result["data"],
+        message="Successfully opened case",
+    )
 
 
 ############# ! DELETE ACTIONS ! #############
@@ -268,7 +312,10 @@ async def purge_case(client, case, case_id) -> PurgeCaseResponse:
     try:
         logger.info(f"Purging case: {case_id}")
         await fetch_and_parse_data(client, case.delete_case, case_id)
-        return PurgeCaseResponse(success=True, message=f"Successfully purged case {case_id}")
+        return PurgeCaseResponse(
+            success=True,
+            message=f"Successfully purged case {case_id}",
+        )
     except Exception as err:
         error_message = f"Failed to purge case {case_id}: {err}"
         logger.error(error_message)

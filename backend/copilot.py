@@ -1,61 +1,71 @@
 import os
 
 import uvicorn
+from app.auth.utils import AuthHandler
+from app.db.db_session import async_engine
+from app.db.db_setup import (
+    create_available_integrations,
+    create_roles,
+    create_tables,
+    ensure_admin_user,
+    ensure_scheduler_user,
+    ensure_scheduler_user_removed,
+)
+from app.middleware.exception_handlers import (
+    custom_http_exception_handler,
+    validation_exception_handler,
+    value_error_handler,
+)
+from app.middleware.logger import log_requests
+from app.routers import (
+    agents,
+    alert_creation,
+    alert_creation_settings,
+    ask_socfortress,
+    auth,
+    connectors,
+    cortex,
+    customer_provisioning,
+    customers,
+    dfir_iris,
+    dnstwist,
+    grafana,
+    graylog,
+    healthcheck,
+    influxdb,
+    integrations,
+    logs,
+    mimecast,
+    monitoring_alert,
+    office365,
+    scheduler,
+    shuffle,
+    smtp,
+    sublime,
+    threat_intel,
+    velociraptor,
+    wazuh_indexer,
+    wazuh_manager,
+)
+from app.schedulers.scheduler import init_scheduler
 from dotenv import load_dotenv
-from fastapi import FastAPI
-from fastapi import HTTPException
+from fastapi import APIRouter, FastAPI, HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
-
-from app.auth.utils import AuthHandler
-from app.db.db_session import async_engine
-from app.db.db_setup import create_available_integrations
-from app.db.db_setup import create_roles
-from app.db.db_setup import create_tables
-from app.db.db_setup import ensure_admin_user
-from app.db.db_setup import ensure_scheduler_user
-from app.db.db_setup import ensure_scheduler_user_removed
-from app.middleware.exception_handlers import custom_http_exception_handler
-from app.middleware.exception_handlers import validation_exception_handler
-from app.middleware.exception_handlers import value_error_handler
-from app.middleware.logger import log_requests
-from app.routers import agents
-from app.routers import alert_creation
-from app.routers import alert_creation_settings
-from app.routers import ask_socfortress
-from app.routers import auth
-from app.routers import connectors
-from app.routers import cortex
-from app.routers import customer_provisioning
-from app.routers import customers
-from app.routers import dfir_iris
-from app.routers import dnstwist
-from app.routers import grafana
-from app.routers import graylog
-from app.routers import healthcheck
-from app.routers import influxdb
-from app.routers import integrations
-from app.routers import logs
-from app.routers import mimecast
-from app.routers import monitoring_alert
-from app.routers import office365
-from app.routers import scheduler
-from app.routers import shuffle
-from app.routers import smtp
-from app.routers import sublime
-from app.routers import threat_intel
-from app.routers import velociraptor
-from app.routers import wazuh_indexer
-from app.routers import wazuh_manager
-from app.schedulers.scheduler import init_scheduler
 
 auth_handler = AuthHandler()
 # Get the `SERVER_IP` from the `.env` file
 load_dotenv()
 server_ip = os.getenv("SERVER_IP", "localhost")
+# Not needed for now
+#ssl_keyfile = os.path.join(os.path.dirname(__file__), "../nginx/server.key")
+#ssl_certfile = os.path.join(os.path.dirname(__file__), "../nginx/server.crt")
 
 app = FastAPI(description="CoPilot API", version="0.1.0", title="CoPilot API")
+
+# Create an APIRouter with a prefix of `/api`
+api_router = APIRouter(prefix="/api")
 
 
 # Allow all origins, methods and headers
@@ -79,34 +89,37 @@ app.add_exception_handler(ValueError, value_error_handler)
 
 
 ################## ! INCLUDE ROUTES ! ##################
-app.include_router(connectors.router)
-app.include_router(wazuh_indexer.router)
-app.include_router(auth.router)
-app.include_router(wazuh_manager.router)
-app.include_router(agents.router)
-app.include_router(graylog.router)
-app.include_router(dfir_iris.router)
-app.include_router(cortex.router)
-app.include_router(velociraptor.router)
-app.include_router(shuffle.router)
-app.include_router(sublime.router)
-app.include_router(customers.router)
-app.include_router(healthcheck.router)
-app.include_router(smtp.router)
-app.include_router(dnstwist.router)
-app.include_router(logs.router)
-app.include_router(influxdb.router)
-app.include_router(grafana.router)
-app.include_router(customer_provisioning.router)
-app.include_router(threat_intel.router)
-app.include_router(ask_socfortress.router)
-app.include_router(alert_creation.router)
-app.include_router(alert_creation_settings.router)
-app.include_router(integrations.router)
-app.include_router(office365.router)
-app.include_router(mimecast.router)
-app.include_router(scheduler.router)
-app.include_router(monitoring_alert.router)
+api_router.include_router(connectors.router)
+api_router.include_router(wazuh_indexer.router)
+api_router.include_router(auth.router)
+api_router.include_router(wazuh_manager.router)
+api_router.include_router(agents.router)
+api_router.include_router(graylog.router)
+api_router.include_router(dfir_iris.router)
+api_router.include_router(cortex.router)
+api_router.include_router(velociraptor.router)
+api_router.include_router(shuffle.router)
+api_router.include_router(sublime.router)
+api_router.include_router(customers.router)
+api_router.include_router(healthcheck.router)
+api_router.include_router(smtp.router)
+api_router.include_router(dnstwist.router)
+api_router.include_router(logs.router)
+api_router.include_router(influxdb.router)
+api_router.include_router(grafana.router)
+api_router.include_router(customer_provisioning.router)
+api_router.include_router(threat_intel.router)
+api_router.include_router(ask_socfortress.router)
+api_router.include_router(alert_creation.router)
+api_router.include_router(alert_creation_settings.router)
+api_router.include_router(integrations.router)
+api_router.include_router(office365.router)
+api_router.include_router(mimecast.router)
+api_router.include_router(scheduler.router)
+api_router.include_router(monitoring_alert.router)
+
+# Include the APIRouter in the FastAPI app
+app.include_router(api_router)
 
 
 @app.on_event("startup")
@@ -124,6 +137,7 @@ async def init_db():
     logger.info("Starting scheduler")
     if not scheduler.running:
         scheduler.start()
+
 
 
 @app.get("/")

@@ -1,23 +1,20 @@
 from typing import Union
 
-## Auth Things
-from fastapi import APIRouter
-from fastapi import Depends
-from fastapi import File
-from fastapi import HTTPException
-from fastapi import Security
-from fastapi import UploadFile
-from loguru import logger
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.auth.utils import AuthHandler
-from app.connectors.schema import ConnectorListResponse
-from app.connectors.schema import ConnectorResponse
-from app.connectors.schema import ConnectorsListResponse
-from app.connectors.schema import UpdateConnector
-from app.connectors.schema import VerifyConnectorResponse
+from app.connectors.schema import (
+    ConnectorListResponse,
+    ConnectorResponse,
+    ConnectorsListResponse,
+    UpdateConnector,
+    VerifyConnectorResponse,
+)
 from app.connectors.services import ConnectorServices
 from app.db.db_session import get_db
+
+## Auth Things
+from fastapi import APIRouter, Depends, File, HTTPException, Security, UploadFile
+from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
 
 connector_router = APIRouter()
 
@@ -28,7 +25,9 @@ connector_router = APIRouter()
     description="Fetch all available connectors",
     dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
 )
-async def get_connectors(session: AsyncSession = Depends(get_db)) -> ConnectorsListResponse:
+async def get_connectors(
+    session: AsyncSession = Depends(get_db),
+) -> ConnectorsListResponse:
     """
     Fetch all available connectors from the database.
 
@@ -43,7 +42,11 @@ async def get_connectors(session: AsyncSession = Depends(get_db)) -> ConnectorsL
     """
     connectors = await ConnectorServices.fetch_all_connectors(session=session)
     if connectors:
-        return {"connectors": connectors, "success": True, "message": "Connectors fetched successfully"}
+        return {
+            "connectors": connectors,
+            "success": True,
+            "message": "Connectors fetched successfully",
+        }
     else:
         raise HTTPException(status_code=404, detail="No connectors found")
 
@@ -54,7 +57,10 @@ async def get_connectors(session: AsyncSession = Depends(get_db)) -> ConnectorsL
     description="Fetch a specific connector",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_connector(connector_id: int, session: AsyncSession = Depends(get_db)) -> Union[ConnectorResponse, HTTPException]:
+async def get_connector(
+    connector_id: int,
+    session: AsyncSession = Depends(get_db),
+) -> Union[ConnectorResponse, HTTPException]:
     """
     Fetch a specific connector by its ID.
 
@@ -69,11 +75,23 @@ async def get_connector(connector_id: int, session: AsyncSession = Depends(get_d
     Raises:
         HTTPException: An exception with a 404 status code is raised if the connector is not found.
     """
-    connector = await ConnectorServices.fetch_connector_by_id(connector_id, session=session)
+    connector = await ConnectorServices.fetch_connector_by_id(
+        connector_id,
+        session=session,
+    )
     if connector is not None:
-        return {"connector": connector, "success": True, "message": "Connector fetched successfully"}
+        return {
+            "connector": connector,
+            "success": True,
+            "message": "Connector fetched successfully",
+        }
     else:
-        raise HTTPException(status_code=404, detail=f"No connector found for ID: {connector_id}".format(connector_id=connector_id))
+        raise HTTPException(
+            status_code=404,
+            detail=f"No connector found for ID: {connector_id}".format(
+                connector_id=connector_id,
+            ),
+        )
 
 
 @connector_router.post(
@@ -100,11 +118,22 @@ async def verify_connector(
     Raises:
         HTTPException: An exception with a 404 status code is raised if the connector is not found.
     """
-    connector = await ConnectorServices.verify_connector_by_id(connector_id, session=session)
+    connector = await ConnectorServices.verify_connector_by_id(
+        connector_id,
+        session=session,
+    )
     if connector is None:
-        raise HTTPException(status_code=404, detail=f"No connector found for ID: {connector_id}".format(connector_id=connector_id))
+        raise HTTPException(
+            status_code=404,
+            detail=f"No connector found for ID: {connector_id}".format(
+                connector_id=connector_id,
+            ),
+        )
     if connector["connectionSuccessful"] is False:
-        raise HTTPException(status_code=500, detail=f"Failed to verify connector: {connector['message']}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to verify connector: {connector['message']}",
+        )
     return connector
 
 
@@ -134,12 +163,25 @@ async def update_connector(
     Raises:
         HTTPException: An exception with a 404 status code is raised if the connector is not found.
     """
-    updated_connector = await ConnectorServices.update_connector_by_id(connector_id, connector, session=session)
+    updated_connector = await ConnectorServices.update_connector_by_id(
+        connector_id,
+        connector,
+        session=session,
+    )
     if updated_connector is not None:
         await ConnectorServices.verify_connector_by_id(connector_id, session=session)
-        return {"connector": updated_connector, "success": True, "message": "Connector updated successfully"}
+        return {
+            "connector": updated_connector,
+            "success": True,
+            "message": "Connector updated successfully",
+        }
     else:
-        raise HTTPException(status_code=404, detail=f"No connector found for ID: {connector_id}".format(connector_id=connector_id))
+        raise HTTPException(
+            status_code=404,
+            detail=f"No connector found for ID: {connector_id}".format(
+                connector_id=connector_id,
+            ),
+        )
 
 
 @connector_router.post(
@@ -147,7 +189,11 @@ async def update_connector(
     description="Upload a YAML file for a specific connector",
     dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
 )
-async def upload_yaml_file(connector_id: int, file: UploadFile = File(...), session: AsyncSession = Depends(get_db)) -> dict:
+async def upload_yaml_file(
+    connector_id: int,
+    file: UploadFile = File(...),
+    session: AsyncSession = Depends(get_db),
+) -> dict:
     """
     Upload a YAML file for a specific connector ID.
 
@@ -165,13 +211,19 @@ async def upload_yaml_file(connector_id: int, file: UploadFile = File(...), sess
         HTTPException: An exception with a 400 status code is raised if the file format is incorrect or connector ID is not 6.
     """
     if connector_id != 6:
-        raise HTTPException(status_code=400, detail="Only the Velociraptor connector is allowed for YAML file uploads.")
+        raise HTTPException(
+            status_code=400,
+            detail="Only the Velociraptor connector is allowed for YAML file uploads.",
+        )
     if not file.filename.endswith(".yaml"):
         raise HTTPException(status_code=400, detail="Only .yaml files are allowed.")
     try:
         save_file_result = await ConnectorServices.save_file(file, session=session)
         if save_file_result:
-            await ConnectorServices.verify_connector_by_id(connector_id, session=session)
+            await ConnectorServices.verify_connector_by_id(
+                connector_id,
+                session=session,
+            )
             return {"success": True, "message": "File uploaded successfully"}
         else:
             raise HTTPException(status_code=500, detail="Failed to upload file")

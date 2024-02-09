@@ -1,18 +1,17 @@
-from fastapi import APIRouter
-from fastapi import Depends
-from fastapi import HTTPException
-from fastapi import Security
-from loguru import logger
-
 from app.auth.utils import AuthHandler
 from app.connectors.dfir_iris.schema.alerts import AlertResponse
-from app.connectors.dfir_iris.schema.users import User
-from app.connectors.dfir_iris.schema.users import UsersResponse
-from app.connectors.dfir_iris.services.users import assign_user_to_alert
-from app.connectors.dfir_iris.services.users import delete_user_from_alert
-from app.connectors.dfir_iris.services.users import get_users
-from app.connectors.dfir_iris.utils.universal import check_alert_exists
-from app.connectors.dfir_iris.utils.universal import check_user_exists
+from app.connectors.dfir_iris.schema.users import User, UsersResponse
+from app.connectors.dfir_iris.services.users import (
+    assign_user_to_alert,
+    delete_user_from_alert,
+    get_users,
+)
+from app.connectors.dfir_iris.utils.universal import (
+    check_alert_exists,
+    check_user_exists,
+)
+from fastapi import APIRouter, Depends, HTTPException, Security
+from loguru import logger
 
 
 def verify_user_exists(user_id: int) -> int:
@@ -77,7 +76,10 @@ async def get_all_users() -> UsersResponse:
     description="Assign a user to an alert",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def assign_user_to_alert_route(alert_id: str = Depends(verify_alert_exists), user_id: int = Depends(verify_user_exists)) -> User:
+async def assign_user_to_alert_route(
+    alert_id: str = Depends(verify_alert_exists),
+    user_id: int = Depends(verify_user_exists),
+) -> User:
     """
     Assigns a user to an alert.
 
@@ -101,7 +103,10 @@ async def assign_user_to_alert_route(alert_id: str = Depends(verify_alert_exists
     description="Delete a user from an alert",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def delete_user_from_alert_route(alert_id: str = Depends(verify_alert_exists), user_id: int = Depends(verify_user_exists)) -> User:
+async def delete_user_from_alert_route(
+    alert_id: str = Depends(verify_alert_exists),
+    user_id: int = Depends(verify_user_exists),
+) -> User:
     """
     Delete a user from an alert.
 

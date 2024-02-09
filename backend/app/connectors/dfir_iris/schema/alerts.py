@@ -1,27 +1,32 @@
 from enum import Enum
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Optional
+from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 
 class AlertsResponse(BaseModel):
-    alerts: Optional[List[Dict[str, Any]]] = Field([], description="The alerts returned from the search.")
+    alerts: Optional[List[Dict[str, Any]]] = Field(
+        [],
+        description="The alerts returned from the search.",
+    )
     message: str
     success: bool
 
 
 class AlertResponse(BaseModel):
-    alert: Optional[Dict[str, Any]] = Field({}, description="The alert returned from the search.")
+    alert: Optional[Dict[str, Any]] = Field(
+        {},
+        description="The alert returned from the search.",
+    )
     message: str
     success: bool
 
 
 class BookmarkedAlertsResponse(BaseModel):
-    bookmarked_alerts: Optional[List[Dict[str, Any]]] = Field([], description="The alerts returned from the search.")
+    bookmarked_alerts: Optional[List[Dict[str, Any]]] = Field(
+        [],
+        description="The alerts returned from the search.",
+    )
     message: str
     success: bool
 
@@ -43,9 +48,15 @@ class SortOrder(Enum):
 class FilterAlertsRequest(BaseModel):
     per_page: int = Field(1000, description="The number of alerts to return per page.")
     page: int = Field(1, description="The page number to return.")
-    sort: SortOrder = Field(SortOrder.desc, description="The sort order for the alerts.")
+    sort: SortOrder = Field(
+        SortOrder.desc,
+        description="The sort order for the alerts.",
+    )
     alert_title: Optional[str] = Field(None, description="The title of the alert.")
-    alert_owner_id: Optional[int] = Field(None, description="The ID of the alert owner.")
+    alert_owner_id: Optional[int] = Field(
+        None,
+        description="The ID of the alert owner.",
+    )
 
 
 class CaseModificationHistory(BaseModel):

@@ -1,6 +1,5 @@
-from fastapi import APIRouter
-
 from app.schedulers.routes.scheduler import scheduler_router
+from fastapi import APIRouter
 
 # Instantiate the APIRouter
 router = APIRouter()

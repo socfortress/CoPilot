@@ -1,9 +1,6 @@
-from typing import List
-from typing import Optional
+from typing import List, Optional
 
-from pydantic import BaseModel
-from pydantic import Extra
-from pydantic import Field
+from pydantic import BaseModel, Extra, Field
 
 
 class WazuhOSInfo(BaseModel):

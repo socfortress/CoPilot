@@ -1,24 +1,17 @@
-from typing import Any
-from typing import Callable
-from typing import Dict
-from typing import Optional
-from typing import Tuple
-from typing import Union
+from typing import Any, Callable, Dict, Optional, Tuple, Union
 
 import requests
+from app.connectors.utils import get_connector_info_from_db
+from app.db.db_session import get_db_session
 from dfir_iris_client.admin import AdminHelper
 from dfir_iris_client.alert import Alert
 from dfir_iris_client.case import Case
 from dfir_iris_client.customer import Customer
-from dfir_iris_client.helper.utils import assert_api_resp
-from dfir_iris_client.helper.utils import get_data_from_resp
+from dfir_iris_client.helper.utils import assert_api_resp, get_data_from_resp
 from dfir_iris_client.session import ClientSession
 from dfir_iris_client.users import User
 from fastapi import HTTPException
 from loguru import logger
-
-from app.connectors.utils import get_connector_info_from_db
-from app.db.db_session import get_db_session
 
 
 async def verify_dfir_iris_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
@@ -45,10 +38,18 @@ async def verify_dfir_iris_credentials(attributes: Dict[str, Any]) -> Dict[str, 
                 f"Connection to {attributes['connector_url']} successful",
             )
         logger.debug("DFIR-IRIS connection successful")
-        return {"connectionSuccessful": True, "message": "DFIR-IRIS connection successful"}
+        return {
+            "connectionSuccessful": True,
+            "message": "DFIR-IRIS connection successful",
+        }
     except Exception as e:
-        logger.error(f"Connection to {attributes['connector_url']} failed with error: {e}")
-        return {"connectionSuccessful": False, "message": f"Connection to {attributes['connector_url']} failed with error: {e}"}
+        logger.error(
+            f"Connection to {attributes['connector_url']} failed with error: {e}",
+        )
+        return {
+            "connectionSuccessful": False,
+            "message": f"Connection to {attributes['connector_url']} failed with error: {e}",
+        }
 
 
 async def verify_dfir_iris_connection(connector_name: str) -> str:
@@ -91,10 +92,17 @@ async def create_dfir_iris_client(connector_name: str) -> ClientSession:
         )
     except Exception as e:
         logger.error(f"Error creating session with DFIR-IRIS: {e}")
-        raise HTTPException(status_code=500, detail=f"Error creating session with DFIR-IRIS: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error creating session with DFIR-IRIS: {e}",
+        )
 
 
-async def fetch_and_parse_data(session: ClientSession, action: Callable, *args) -> Dict[str, Union[bool, Optional[Dict]]]:
+async def fetch_and_parse_data(
+    session: ClientSession,
+    action: Callable,
+    *args,
+) -> Dict[str, Union[bool, Optional[Dict]]]:
     """
     Fetches and parses data from DFIR-IRIS using a specified action.
 
@@ -115,7 +123,10 @@ async def fetch_and_parse_data(session: ClientSession, action: Callable, *args) 
         return {"success": True, "data": data}
     except Exception as err:
         logger.error(f"Failed to execute {action.__name__}: {err}")
-        raise HTTPException(status_code=500, detail=f"Failed to execute {action.__name__}: {err}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to execute {action.__name__}: {err}",
+        )
 
 
 async def initialize_client_and_case(service_name: str) -> Tuple[Any, Case]:

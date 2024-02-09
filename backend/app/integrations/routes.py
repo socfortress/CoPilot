@@ -1,49 +1,42 @@
-from typing import List
-from typing import Optional
+from typing import List, Optional
 
-from fastapi import APIRouter
-from fastapi import Depends
-from fastapi import HTTPException
-from fastapi import Security
+from app.auth.utils import AuthHandler
+from app.db.db_session import get_db
+from app.db.universal_models import Customers, CustomersMeta
+from app.integrations.alert_creation_settings.models.alert_creation_settings import (
+    AlertCreationSettings,
+)
+from app.integrations.models.customer_integration_settings import (
+    AvailableIntegrations,
+    CustomerIntegrations,
+    CustomerIntegrationsMeta,
+    IntegrationAuthKeys,
+    IntegrationConfig,
+    IntegrationService,
+    IntegrationSubscription,
+)
+from app.integrations.schema import (
+    AuthKey,
+    AvailableIntegrationsResponse,
+    CreateIntegrationAuthKeys,
+    CreateIntegrationService,
+    CustomerIntegrationCreate,
+    CustomerIntegrationCreateResponse,
+    CustomerIntegrationDeleteResponse,
+    CustomerIntegrationsMetaResponse,
+    CustomerIntegrationsMetaSchema,
+    CustomerIntegrationsResponse,
+    DeleteCustomerIntegration,
+    IntegrationWithAuthKeys,
+    UpdateCustomerIntegration,
+)
+from fastapi import APIRouter, Depends, HTTPException, Security
 from loguru import logger
-from sqlalchemy import delete
-from sqlalchemy import update
+from sqlalchemy import delete, update
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload
-
-from app.auth.utils import AuthHandler
-from app.db.db_session import get_db
-from app.db.universal_models import Customers
-from app.db.universal_models import CustomersMeta
-from app.integrations.alert_creation_settings.models.alert_creation_settings import (
-    AlertCreationSettings,
-)
-from app.integrations.models.customer_integration_settings import AvailableIntegrations
-from app.integrations.models.customer_integration_settings import CustomerIntegrations
-from app.integrations.models.customer_integration_settings import (
-    CustomerIntegrationsMeta,
-)
-from app.integrations.models.customer_integration_settings import IntegrationAuthKeys
-from app.integrations.models.customer_integration_settings import IntegrationConfig
-from app.integrations.models.customer_integration_settings import IntegrationService
-from app.integrations.models.customer_integration_settings import (
-    IntegrationSubscription,
-)
-from app.integrations.schema import AuthKey
-from app.integrations.schema import AvailableIntegrationsResponse
-from app.integrations.schema import CreateIntegrationAuthKeys
-from app.integrations.schema import CreateIntegrationService
-from app.integrations.schema import CustomerIntegrationCreate
-from app.integrations.schema import CustomerIntegrationCreateResponse
-from app.integrations.schema import CustomerIntegrationDeleteResponse
-from app.integrations.schema import CustomerIntegrationsMetaResponse
-from app.integrations.schema import CustomerIntegrationsMetaSchema
-from app.integrations.schema import CustomerIntegrationsResponse
-from app.integrations.schema import DeleteCustomerIntegration
-from app.integrations.schema import IntegrationWithAuthKeys
-from app.integrations.schema import UpdateCustomerIntegration
 
 integration_settings_router = APIRouter()
 
@@ -58,7 +51,9 @@ async def fetch_available_integrations(session: AsyncSession):
     Returns:
         List[IntegrationWithAuthKeys]: A list of available integrations with their auth keys.
     """
-    stmt = select(AvailableIntegrations).options(joinedload(AvailableIntegrations.auth_keys))
+    stmt = select(AvailableIntegrations).options(
+        joinedload(AvailableIntegrations.auth_keys),
+    )
     result = await session.execute(stmt)
 
     # Use unique() to avoid duplicates caused by joined eager loading
@@ -66,7 +61,9 @@ async def fetch_available_integrations(session: AsyncSession):
 
     integrations_with_auth_keys = []
     for integration in unique_integrations:
-        auth_keys = [AuthKey(auth_key_name=key.auth_key_name) for key in integration.auth_keys]
+        auth_keys = [
+            AuthKey(auth_key_name=key.auth_key_name) for key in integration.auth_keys
+        ]
         integration_data = IntegrationWithAuthKeys(
             id=integration.id,
             integration_name=integration.integration_name,
@@ -85,33 +82,54 @@ async def validate_integration_name(integration_name: str, session: AsyncSession
     """
     available_integrations = await fetch_available_integrations(session)
     if integration_name not in [ai.integration_name for ai in available_integrations]:
-        raise HTTPException(status_code=400, detail=f"Integration {integration_name} is not a valid integration.")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Integration {integration_name} is not a valid integration.",
+        )
 
 
-async def validate_integration_auth_keys(integration_name: str, integration_auth_keys: List[AuthKey], session: AsyncSession):
+async def validate_integration_auth_keys(
+    integration_name: str,
+    integration_auth_keys: List[AuthKey],
+    session: AsyncSession,
+):
     """
     Validate if the integration auth keys are valid.
     """
     available_integrations = await fetch_available_integrations(session)
-    integration = [ai for ai in available_integrations if ai.integration_name == integration_name][0]
+    integration = [
+        ai for ai in available_integrations if ai.integration_name == integration_name
+    ][0]
     available_auth_keys = [ak.auth_key_name for ak in integration.auth_keys]
     # loop through the `available_auth_keys` and check if the `integration_auth_keys` contains the `auth_key_name`
     for auth_key in available_auth_keys:
         if auth_key not in [iak.auth_key_name for iak in integration_auth_keys]:
-            raise HTTPException(status_code=400, detail=f"Integration auth key {auth_key} does not exist.")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Integration auth key {auth_key} does not exist.",
+            )
 
 
-async def validate_integration_auth_key_update(integration_name: str, integration_auth_key: List[AuthKey], session: AsyncSession):
+async def validate_integration_auth_key_update(
+    integration_name: str,
+    integration_auth_key: List[AuthKey],
+    session: AsyncSession,
+):
     """
     Validate if the integration auth key is valid.
     """
     logger.info(f"integration_auth_key: {integration_auth_key}")
     available_integrations = await fetch_available_integrations(session)
-    integration = [ai for ai in available_integrations if ai.integration_name == integration_name][0]
+    integration = [
+        ai for ai in available_integrations if ai.integration_name == integration_name
+    ][0]
     available_auth_keys = [ak.auth_key_name for ak in integration.auth_keys]
     for auth_key in integration_auth_key:
         if auth_key.auth_key_name not in available_auth_keys:
-            raise HTTPException(status_code=400, detail=f"Integration auth key {auth_key.auth_key_name} does not exist.")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Integration auth key {auth_key.auth_key_name} does not exist.",
+            )
 
 
 async def validate_customer_code(customer_code: str, session: AsyncSession):
@@ -121,7 +139,10 @@ async def validate_customer_code(customer_code: str, session: AsyncSession):
     stmt = select(Customers).where(Customers.customer_code == customer_code)
     result = await session.execute(stmt)
     if result.scalars().first() is None:
-        raise HTTPException(status_code=400, detail=f"Customer {customer_code} does not exist.")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Customer {customer_code} does not exist.",
+        )
 
 
 async def validate_customer_meta(customer_code: str, session: AsyncSession):
@@ -137,7 +158,11 @@ async def validate_customer_meta(customer_code: str, session: AsyncSession):
         )
 
 
-async def check_existing_customer_integration(customer_code: str, integration_name: str, session: AsyncSession):
+async def check_existing_customer_integration(
+    customer_code: str,
+    integration_name: str,
+    session: AsyncSession,
+):
     """
     Check if the customer integration already exists.
     """
@@ -146,14 +171,24 @@ async def check_existing_customer_integration(customer_code: str, integration_na
         select(CustomerIntegrations)
         .join(CustomerIntegrations.integration_subscriptions)
         .join(IntegrationSubscription.integration_service)
-        .where(CustomerIntegrations.customer_code == customer_code, IntegrationService.service_name == integration_name)
+        .where(
+            CustomerIntegrations.customer_code == customer_code,
+            IntegrationService.service_name == integration_name,
+        )
     )
     result = await session.execute(stmt)
     if result.scalars().first() is not None:
-        raise HTTPException(status_code=400, detail=f"Customer integration {customer_code} {integration_name} already exists.")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Customer integration {customer_code} {integration_name} already exists.",
+        )
 
 
-async def check_existing_customer_integration_meta(customer_code: str, integration_name: str, session: AsyncSession):
+async def check_existing_customer_integration_meta(
+    customer_code: str,
+    integration_name: str,
+    session: AsyncSession,
+):
     """
     Check if the customer integration meta already exists for the customer code and integration name.
     """
@@ -180,7 +215,12 @@ async def create_integration_service(
     integration_service = IntegrationService(
         service_name=integration_name,
         auth_type=settings.auth_type,
-        configs=[IntegrationConfig(config_key=settings.config_key, config_value=settings.config_value)],
+        configs=[
+            IntegrationConfig(
+                config_key=settings.config_key,
+                config_value=settings.config_value,
+            ),
+        ],
     )
     session.add(integration_service)
     await session.flush()
@@ -223,7 +263,12 @@ async def create_integration_subscription(
         new_integration_subscription = IntegrationSubscription(
             customer_integrations=customer_integrations,
             integration_service=integration_service,
-            integration_auth_keys=[IntegrationAuthKeys(auth_key_name=auth_key.auth_key_name, auth_value=auth_key.auth_value)],
+            integration_auth_keys=[
+                IntegrationAuthKeys(
+                    auth_key_name=auth_key.auth_key_name,
+                    auth_value=auth_key.auth_value,
+                ),
+            ],
         )
         session.add(new_integration_subscription)
         await session.commit()
@@ -233,9 +278,18 @@ async def get_customer_and_service_ids(session, customer_code, integration_name)
     try:
         result = await session.execute(
             select(CustomerIntegrations.id, IntegrationService.id)
-            .join(IntegrationSubscription, CustomerIntegrations.id == IntegrationSubscription.customer_id)
-            .join(IntegrationService, IntegrationSubscription.integration_service_id == IntegrationService.id)
-            .where(CustomerIntegrations.customer_code == customer_code, IntegrationService.service_name == integration_name),
+            .join(
+                IntegrationSubscription,
+                CustomerIntegrations.id == IntegrationSubscription.customer_id,
+            )
+            .join(
+                IntegrationService,
+                IntegrationSubscription.integration_service_id == IntegrationService.id,
+            )
+            .where(
+                CustomerIntegrations.customer_code == customer_code,
+                IntegrationService.service_name == integration_name,
+            ),
         )
         return result.all()
     except NoResultFound:
@@ -265,23 +319,41 @@ async def get_subscription_ids(session, customer_id, integration_service_id):
 
 
 async def delete_metadata(session, subscription_ids):
-    await session.execute(delete(IntegrationAuthKeys).where(IntegrationAuthKeys.subscription_id.in_(subscription_ids)))
+    await session.execute(
+        delete(IntegrationAuthKeys).where(
+            IntegrationAuthKeys.subscription_id.in_(subscription_ids),
+        ),
+    )
 
 
 async def delete_subscriptions(session, subscription_ids):
-    await session.execute(delete(IntegrationSubscription).where(IntegrationSubscription.id.in_(subscription_ids)))
+    await session.execute(
+        delete(IntegrationSubscription).where(
+            IntegrationSubscription.id.in_(subscription_ids),
+        ),
+    )
 
 
 async def delete_configs(session, integration_service_id):
-    await session.execute(delete(IntegrationConfig).where(IntegrationConfig.integration_service_id == integration_service_id))
+    await session.execute(
+        delete(IntegrationConfig).where(
+            IntegrationConfig.integration_service_id == integration_service_id,
+        ),
+    )
 
 
 async def delete_integration_service(session, integration_service_id):
-    await session.execute(delete(IntegrationService).where(IntegrationService.id == integration_service_id))
+    await session.execute(
+        delete(IntegrationService).where(
+            IntegrationService.id == integration_service_id,
+        ),
+    )
 
 
 async def delete_customer_integration_record(session, customer_id):
-    await session.execute(delete(CustomerIntegrations).where(CustomerIntegrations.id == customer_id))
+    await session.execute(
+        delete(CustomerIntegrations).where(CustomerIntegrations.id == customer_id),
+    )
 
 
 async def find_customer_integration(
@@ -296,7 +368,11 @@ async def find_customer_integration(
     return None
 
 
-def get_subscription_id(customer_integration, integration_name: str, auth_key_name: str) -> Optional[int]:
+def get_subscription_id(
+    customer_integration,
+    integration_name: str,
+    auth_key_name: str,
+) -> Optional[int]:
     for subscription in customer_integration.integration_subscriptions:
         if subscription.integration_service.service_name == integration_name:
             for auth_key in subscription.integration_auth_keys:
@@ -305,16 +381,28 @@ def get_subscription_id(customer_integration, integration_name: str, auth_key_na
     return None
 
 
-async def get_tenant_id(customer_integration: CustomerIntegrationCreate, session: AsyncSession) -> str:
+async def get_tenant_id(
+    customer_integration: CustomerIntegrationCreate,
+    session: AsyncSession,
+) -> str:
     """
     Retrieves the Tenant ID for a given customer integration. This is the Office365 organization ID and
     is used to create alerts for the customer in DFIR-IRIS.
     """
     stmt = (
         select(IntegrationAuthKeys)
-        .join(IntegrationSubscription, IntegrationAuthKeys.subscription_id == IntegrationSubscription.id)
-        .join(CustomerIntegrations, IntegrationSubscription.customer_id == CustomerIntegrations.id)
-        .join(IntegrationService, IntegrationSubscription.integration_service_id == IntegrationService.id)
+        .join(
+            IntegrationSubscription,
+            IntegrationAuthKeys.subscription_id == IntegrationSubscription.id,
+        )
+        .join(
+            CustomerIntegrations,
+            IntegrationSubscription.customer_id == CustomerIntegrations.id,
+        )
+        .join(
+            IntegrationService,
+            IntegrationSubscription.integration_service_id == IntegrationService.id,
+        )
         .where(
             CustomerIntegrations.customer_code == customer_integration.customer_code,
             IntegrationService.service_name == customer_integration.integration_name,
@@ -325,12 +413,19 @@ async def get_tenant_id(customer_integration: CustomerIntegrationCreate, session
     result = await session.execute(stmt)
     tenant_id = result.scalars().first()
     if tenant_id is None:
-        raise HTTPException(status_code=404, detail=f"Tenant ID for customer {customer_integration.customer_code} not found.")
+        raise HTTPException(
+            status_code=404,
+            detail=f"Tenant ID for customer {customer_integration.customer_code} not found.",
+        )
     logger.info(f"tenant_id: {tenant_id.auth_value}")
     return tenant_id.auth_value
 
 
-async def update_office365_organization_id(customer_code: str, tenant_id: str, session: AsyncSession):
+async def update_office365_organization_id(
+    customer_code: str,
+    tenant_id: str,
+    session: AsyncSession,
+):
     """
     Updates the Office365 organization ID in the alert_creation_settings table.
     """
@@ -343,27 +438,43 @@ async def update_office365_organization_id(customer_code: str, tenant_id: str, s
     await session.commit()
 
 
-async def get_integration_service_id(integration_name: str, session: AsyncSession) -> int:
+async def get_integration_service_id(
+    integration_name: str,
+    session: AsyncSession,
+) -> int:
     """
     Retrieves the AvailableIntegrations ID for a given integration name.
     """
-    stmt = select(AvailableIntegrations).where(AvailableIntegrations.integration_name == integration_name)
+    stmt = select(AvailableIntegrations).where(
+        AvailableIntegrations.integration_name == integration_name,
+    )
     result = await session.execute(stmt)
     integration_service = result.scalars().first()
     if integration_service is None:
-        raise HTTPException(status_code=404, detail=f"Integration service {integration_name} not found.")
+        raise HTTPException(
+            status_code=404,
+            detail=f"Integration service {integration_name} not found.",
+        )
     return integration_service.id
 
 
-async def get_integration_service_name(integration_name: str, session: AsyncSession) -> str:
+async def get_integration_service_name(
+    integration_name: str,
+    session: AsyncSession,
+) -> str:
     """
     Retrieves the AvailableIntegrations ID for a given integration name.
     """
-    stmt = select(AvailableIntegrations).where(AvailableIntegrations.integration_name == integration_name)
+    stmt = select(AvailableIntegrations).where(
+        AvailableIntegrations.integration_name == integration_name,
+    )
     result = await session.execute(stmt)
     integration_service = result.scalars().first()
     if integration_service is None:
-        raise HTTPException(status_code=404, detail=f"Integration service {integration_name} not found.")
+        raise HTTPException(
+            status_code=404,
+            detail=f"Integration service {integration_name} not found.",
+        )
     return integration_service.integration_name
 
 
@@ -372,8 +483,12 @@ async def fetch_customer_integrations_data(session: AsyncSession):
     Fetches customer integrations data from the database.
     """
     stmt = select(CustomerIntegrations).options(
-        joinedload(CustomerIntegrations.integration_subscriptions).joinedload(IntegrationSubscription.integration_service),
-        joinedload(CustomerIntegrations.integration_subscriptions).subqueryload(IntegrationSubscription.integration_auth_keys),
+        joinedload(CustomerIntegrations.integration_subscriptions).joinedload(
+            IntegrationSubscription.integration_service,
+        ),
+        joinedload(CustomerIntegrations.integration_subscriptions).subqueryload(
+            IntegrationSubscription.integration_auth_keys,
+        ),
     )
     result = await session.execute(stmt)
     return result.scalars().unique().all()
@@ -385,14 +500,20 @@ def process_customer_integrations(customer_integrations_data):
     """
     processed_customer_integrations = []
     for ci in customer_integrations_data:
-        first_service_id = ci.integration_subscriptions[0].integration_service_id if ci.integration_subscriptions else None
+        first_service_id = (
+            ci.integration_subscriptions[0].integration_service_id
+            if ci.integration_subscriptions
+            else None
+        )
         customer_integration_obj = CustomerIntegrations(
             id=ci.id,
             customer_code=ci.customer_code,
             customer_name=ci.customer_name,
             integration_subscriptions=ci.integration_subscriptions,
             integration_service_id=first_service_id,
-            integration_service_name=ci.integration_subscriptions[0].integration_service.service_name
+            integration_service_name=ci.integration_subscriptions[
+                0
+            ].integration_service.service_name
             if ci.integration_subscriptions
             else None,
             deployed=ci.deployed,
@@ -432,7 +553,9 @@ async def get_customer_integrations(session: AsyncSession = Depends(get_db)):
     Endpoint to get a list of customer integrations.
     """
     customer_integrations_data = await fetch_customer_integrations_data(session)
-    processed_customer_integrations = process_customer_integrations(customer_integrations_data)
+    processed_customer_integrations = process_customer_integrations(
+        customer_integrations_data,
+    )
 
     logger.info(f"Processed customer_integrations: {processed_customer_integrations}")
     return CustomerIntegrationsResponse(
@@ -484,7 +607,9 @@ async def get_customer_integrations_by_customer_code(
     stmt = (
         select(CustomerIntegrations)
         .options(
-            joinedload(CustomerIntegrations.integration_subscriptions).joinedload(IntegrationSubscription.integration_service),
+            joinedload(CustomerIntegrations.integration_subscriptions).joinedload(
+                IntegrationSubscription.integration_service,
+            ),
             joinedload(CustomerIntegrations.integration_subscriptions).subqueryload(
                 IntegrationSubscription.integration_auth_keys,
             ),  # Load IntegrationAuthKeys
@@ -514,7 +639,9 @@ async def get_customer_integrations_meta_by_customer_code(
     """
     Endpoint to get a list of customer integrations metadata for a specific customer.
     """
-    stmt = select(CustomerIntegrationsMeta).where(CustomerIntegrationsMeta.customer_code == customer_code)
+    stmt = select(CustomerIntegrationsMeta).where(
+        CustomerIntegrationsMeta.customer_code == customer_code,
+    )
     result = await session.execute(stmt)
     customer_integrations_meta = result.scalars().all()
     logger.info(f"customer_integrations_meta: {customer_integrations_meta}")
@@ -538,7 +665,10 @@ async def create_integration(
     """
     Endpoint to create a new customer integration.
     """
-    await validate_integration_name(customer_integration_create.integration_name, session)
+    await validate_integration_name(
+        customer_integration_create.integration_name,
+        session,
+    )
     await validate_integration_auth_keys(
         customer_integration_create.integration_name,
         customer_integration_create.integration_auth_keys,
@@ -551,8 +681,14 @@ async def create_integration(
         customer_integration_create.integration_name,
         session,
     )
-    integration_service_id = await get_integration_service_id(customer_integration_create.integration_name, session)
-    integration_service_name = await get_integration_service_name(customer_integration_create.integration_name, session)
+    integration_service_id = await get_integration_service_id(
+        customer_integration_create.integration_name,
+        session,
+    )
+    integration_service_name = await get_integration_service_name(
+        customer_integration_create.integration_name,
+        session,
+    )
 
     integration_service = await create_integration_service(
         customer_integration_create.integration_name,
@@ -576,7 +712,11 @@ async def create_integration(
     # Office365 specific integration handling
     if customer_integration_create.integration_name == "Office365":
         tenant_id = await get_tenant_id(customer_integration_create, session)
-        await update_office365_organization_id(customer_integration_create.customer_code, tenant_id, session)
+        await update_office365_organization_id(
+            customer_integration_create.customer_code,
+            tenant_id,
+            session,
+        )
 
     return CustomerIntegrationCreateResponse(
         message=f"Customer integration {customer_integration_create.customer_code} {customer_integration_create.integration_name} successfully created.",
@@ -634,8 +774,14 @@ async def update_integration(
     customer_integration_update: UpdateCustomerIntegration,
     session: AsyncSession = Depends(get_db),
 ):
-    await validate_integration_name(customer_integration_update.integration_name, session)
-    customer_integration_response = await get_customer_integrations_by_customer_code(customer_code, session)
+    await validate_integration_name(
+        customer_integration_update.integration_name,
+        session,
+    )
+    customer_integration_response = await get_customer_integrations_by_customer_code(
+        customer_code,
+        session,
+    )
 
     if not customer_integration_response:
         raise HTTPException(status_code=404, detail="Customer integrations not found")
@@ -647,7 +793,10 @@ async def update_integration(
     )
 
     if not customer_integration:
-        raise HTTPException(status_code=404, detail="Customer integration with specified service name not found.")
+        raise HTTPException(
+            status_code=404,
+            detail="Customer integration with specified service name not found.",
+        )
 
     await validate_integration_auth_key_update(
         customer_integration_update.integration_name,
@@ -670,7 +819,9 @@ async def update_integration(
     await session.execute(
         update(IntegrationAuthKeys)
         .where(IntegrationAuthKeys.subscription_id == subscription_id)
-        .values(auth_value=customer_integration_update.integration_auth_keys[0].auth_value),
+        .values(
+            auth_value=customer_integration_update.integration_auth_keys[0].auth_value,
+        ),
     )
 
     await session.commit()
@@ -695,12 +846,17 @@ async def update_available_integrations(
     Endpoint to update an available integration.
     """
     for integration in available_integrations:
-        stmt = select(AvailableIntegrations).where(AvailableIntegrations.integration_name == integration.integration_name)
+        stmt = select(AvailableIntegrations).where(
+            AvailableIntegrations.integration_name == integration.integration_name,
+        )
         result = await session.execute(stmt)
         existing_integration = result.scalars().first()
 
         if existing_integration is None:
-            raise HTTPException(status_code=404, detail=f"Integration {integration.integration_name} not found.")
+            raise HTTPException(
+                status_code=404,
+                detail=f"Integration {integration.integration_name} not found.",
+            )
 
         existing_integration.description = integration.description
         existing_integration.integration_details = integration.integration_details
@@ -727,7 +883,11 @@ async def delete_integration(
     customer_code = delete_customer_integration.customer_code
     integration_name = delete_customer_integration.integration_name
 
-    results = await get_customer_and_service_ids(session, customer_code, integration_name)
+    results = await get_customer_and_service_ids(
+        session,
+        customer_code,
+        integration_name,
+    )
     # Check if results is not empty
     if results:
         # Unpack the first tuple in results
@@ -736,9 +896,16 @@ async def delete_integration(
         # Handle the case where results is empty
         raise HTTPException(status_code=404, detail="Customer integration not found")
 
-    subscription_ids = await get_subscription_ids(session, customer_id, integration_service_id)
+    subscription_ids = await get_subscription_ids(
+        session,
+        customer_id,
+        integration_service_id,
+    )
     if not subscription_ids:
-        raise HTTPException(status_code=404, detail="No subscriptions found for customer integration")
+        raise HTTPException(
+            status_code=404,
+            detail="No subscriptions found for customer integration",
+        )
 
     await delete_metadata(session, subscription_ids)
     await delete_subscriptions(session, subscription_ids)
@@ -769,8 +936,10 @@ async def delete_integration_meta(
     """
     try:
         stmt = delete(CustomerIntegrationsMeta).where(
-            CustomerIntegrationsMeta.customer_code == customer_integration_meta.customer_code,
-            CustomerIntegrationsMeta.integration_name == customer_integration_meta.integration_name,
+            CustomerIntegrationsMeta.customer_code
+            == customer_integration_meta.customer_code,
+            CustomerIntegrationsMeta.integration_name
+            == customer_integration_meta.integration_name,
         )
         await session.execute(stmt)
         await session.commit()

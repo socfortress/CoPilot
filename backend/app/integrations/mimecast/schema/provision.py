@@ -1,11 +1,6 @@
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Optional
+from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel
-from pydantic import Field
-from pydantic import root_validator
+from pydantic import BaseModel, Field, root_validator
 
 
 class ProvisionMimecastRequest(BaseModel):
@@ -46,8 +41,14 @@ class MimecastEventStream(BaseModel):
     index_set_id: str = Field(..., description="ID of the associated index set")
     rules: List[StreamRule] = Field(..., description="List of rules for the stream")
     matching_type: str = Field(..., description="Matching type for the rules")
-    remove_matches_from_default_stream: bool = Field(..., description="Whether to remove matches from the default stream")
-    content_pack: Optional[str] = Field(None, description="Associated content pack, if any")
+    remove_matches_from_default_stream: bool = Field(
+        ...,
+        description="Whether to remove matches from the default stream",
+    )
+    content_pack: Optional[str] = Field(
+        None,
+        description="Associated content pack, if any",
+    )
 
     class Config:
         schema_extra = {
@@ -56,8 +57,18 @@ class MimecastEventStream(BaseModel):
                 "description": "Mimecast EVENTS - Example Company",
                 "index_set_id": "12345",
                 "rules": [
-                    {"field": "agent_labels_customer", "type": 1, "inverted": False, "value": "ExampleCode"},
-                    {"field": "agent_labels_integration", "type": 1, "inverted": False, "value": "Office365"},
+                    {
+                        "field": "agent_labels_customer",
+                        "type": 1,
+                        "inverted": False,
+                        "value": "ExampleCode",
+                    },
+                    {
+                        "field": "agent_labels_integration",
+                        "type": 1,
+                        "inverted": False,
+                        "value": "Office365",
+                    },
                 ],
                 "matching_type": "AND",
                 "remove_matches_from_default_stream": True,

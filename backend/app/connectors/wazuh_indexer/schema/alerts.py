@@ -1,35 +1,43 @@
 from enum import Enum
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Optional
+from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel
-from pydantic import Field
-from pydantic import validator
+from pydantic import BaseModel, Field, validator
 
 
 class Alert(BaseModel):
     index_name: str
     total_alerts: int
-    alerts: Optional[List[Dict[str, Any]]] = Field([], description="The alerts returned from the search.")
+    alerts: Optional[List[Dict[str, Any]]] = Field(
+        [],
+        description="The alerts returned from the search.",
+    )
 
 
 class AlertsSearchBody(BaseModel):
     size: int = Field(10, description="The number of alerts to return.")
     timerange: str = Field("24h", description="The time range to search alerts in.")
-    alert_field: str = Field("syslog_level", description="The field to search alerts in.")
+    alert_field: str = Field(
+        "syslog_level",
+        description="The field to search alerts in.",
+    )
     alert_value: str = Field("ALERT", description="The value to search alerts for.")
-    timestamp_field: str = Field("timestamp_utc", description="The timestamp field to search alerts in.")
+    timestamp_field: str = Field(
+        "timestamp_utc",
+        description="The timestamp field to search alerts in.",
+    )
 
     @validator("timerange")
     def validate_timerange(cls, value):
         if value[-1] not in ("h", "d", "w"):
-            raise ValueError("Invalid timerange format. The string should end with either 'h', 'd', 'w'.")
+            raise ValueError(
+                "Invalid timerange format. The string should end with either 'h', 'd', 'w'.",
+            )
 
         # Optionally, you can check that the prefix is a number
         if not value[:-1].isdigit():
-            raise ValueError("Invalid timerange format. The string should start with a number.")
+            raise ValueError(
+                "Invalid timerange format. The string should start with a number.",
+            )
 
         return value
 
@@ -47,7 +55,10 @@ class CollectAlertsResponse(BaseModel):
 
 
 class HostAlertsSearchBody(AlertsSearchBody):
-    agent_name: str = Field(..., description="The name of the agent to search alerts for.")
+    agent_name: str = Field(
+        ...,
+        description="The name of the agent to search alerts for.",
+    )
 
 
 class HostAlertsSearchResponse(BaseModel):
@@ -57,7 +68,10 @@ class HostAlertsSearchResponse(BaseModel):
 
 
 class IndexAlertsSearchBody(AlertsSearchBody):
-    index_name: str = Field(..., description="The name of the index to search alerts for.")
+    index_name: str = Field(
+        ...,
+        description="The name of the index to search alerts for.",
+    )
 
 
 class IndexAlertsSearchResponse(BaseModel):
@@ -102,6 +116,8 @@ class AlertsByRulePerHostResponse(BaseModel):
 
 ############# ! PASSABLE MESSAGES FROM ES CLIENT ! #############
 class SkippableWazuhIndexerClientErrors(Enum):
-    NO_MAPPING_FOR_TIMESTAMP = "No mapping found for [timestamp_utc] in order to sort on"
+    NO_MAPPING_FOR_TIMESTAMP = (
+        "No mapping found for [timestamp_utc] in order to sort on"
+    )
     # Add other error messages here, for example:
     # ANOTHER_ERROR = "Another specific error message"

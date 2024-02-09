@@ -16,5 +16,7 @@ def parse_date(date_string: str) -> datetime:
     try:
         return datetime.strptime(date_string, "%Y-%m-%dT%H:%M:%S+00:00")
     except ValueError:
-        logger.info(f"Invalid format for date: {date_string}. Using the epoch time as default.")
+        logger.info(
+            f"Invalid format for date: {date_string}. Using the epoch time as default.",
+        )
         return datetime.strptime("1970-01-01T00:00:00+00:00", "%Y-%m-%dT%H:%M:%S+00:00")

@@ -1,17 +1,17 @@
-from typing import Any
-from typing import Dict
-from typing import Optional
+from typing import Any, Dict, Optional
 
+from app.connectors.models import Connectors
+from app.connectors.schema import ConnectorResponse
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from app.connectors.models import Connectors
-from app.connectors.schema import ConnectorResponse
-
 
 # ! New with Async
-async def get_connector_info_from_db(connector_name: str, db: AsyncSession) -> Optional[Dict[str, Any]]:
+async def get_connector_info_from_db(
+    connector_name: str,
+    db: AsyncSession,
+) -> Optional[Dict[str, Any]]:
     """
     Fetches connector information from the database based on the given connector name.
 

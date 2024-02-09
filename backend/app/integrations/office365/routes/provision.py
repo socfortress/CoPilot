@@ -1,26 +1,28 @@
 from typing import Dict
 
-from fastapi import APIRouter
-from fastapi import Depends
-from fastapi import HTTPException
-from fastapi import Security
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
-from app.integrations.office365.schema.provision import ProvisionOffice365AuthKeys
-from app.integrations.office365.schema.provision import ProvisionOffice365Request
-from app.integrations.office365.schema.provision import ProvisionOffice365Response
+from app.integrations.office365.schema.provision import (
+    ProvisionOffice365AuthKeys,
+    ProvisionOffice365Request,
+    ProvisionOffice365Response,
+)
 from app.integrations.office365.services.provision import provision_office365
-from app.integrations.routes import find_customer_integration
-from app.integrations.routes import get_customer_integrations_by_customer_code
-from app.integrations.schema import CustomerIntegrations
-from app.integrations.schema import CustomerIntegrationsResponse
+from app.integrations.routes import (
+    find_customer_integration,
+    get_customer_integrations_by_customer_code,
+)
+from app.integrations.schema import CustomerIntegrations, CustomerIntegrationsResponse
+from fastapi import APIRouter, Depends, HTTPException, Security
+from sqlalchemy.ext.asyncio import AsyncSession
 
 integration_office365_router = APIRouter()
 
 
-async def get_customer_integration_response(customer_code: str, session: AsyncSession) -> CustomerIntegrationsResponse:
+async def get_customer_integration_response(
+    customer_code: str,
+    session: AsyncSession,
+) -> CustomerIntegrationsResponse:
     """
     Retrieves the integration response for a customer.
 
@@ -34,13 +36,21 @@ async def get_customer_integration_response(customer_code: str, session: AsyncSe
     Raises:
         HTTPException: If the customer integration settings are not found.
     """
-    customer_integration_response = await get_customer_integrations_by_customer_code(customer_code, session)
+    customer_integration_response = await get_customer_integrations_by_customer_code(
+        customer_code,
+        session,
+    )
     if customer_integration_response.available_integrations == []:
-        raise HTTPException(status_code=404, detail="Customer integration settings not found.")
+        raise HTTPException(
+            status_code=404,
+            detail="Customer integration settings not found.",
+        )
     return customer_integration_response
 
 
-def extract_office365_auth_keys(customer_integration: CustomerIntegrations) -> Dict[str, str]:
+def extract_office365_auth_keys(
+    customer_integration: CustomerIntegrations,
+) -> Dict[str, str]:
     """
     Extracts the authentication keys for Office365 integration from the given customer integration.
 
@@ -86,7 +96,10 @@ async def provision_office365_route(
     Returns:
         ProvisionOffice365Response: The response object containing the result of the provisioning.
     """
-    customer_integration_response = await get_customer_integration_response(provision_office365_request.customer_code, session)
+    customer_integration_response = await get_customer_integration_response(
+        provision_office365_request.customer_code,
+        session,
+    )
 
     customer_integration = await find_customer_integration(
         provision_office365_request.customer_code,
@@ -98,4 +111,8 @@ async def provision_office365_route(
 
     auth_keys = ProvisionOffice365AuthKeys(**office365_auth_keys)
 
-    return await provision_office365(provision_office365_request.customer_code, auth_keys, session)
+    return await provision_office365(
+        provision_office365_request.customer_code,
+        auth_keys,
+        session,
+    )

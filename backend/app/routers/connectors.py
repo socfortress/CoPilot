@@ -1,6 +1,5 @@
-from fastapi import APIRouter
-
 from app.connectors.routes import connector_router
+from fastapi import APIRouter
 
 router = APIRouter()
 

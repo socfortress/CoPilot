@@ -1,7 +1,4 @@
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Union
+from typing import Dict, List, Optional, Union
 
 from pydantic import BaseModel
 
@@ -68,8 +65,14 @@ class AlertQuery(BaseModel):
     query: Optional[str] = ""
     page: int = 1
     per_page: int = 100
-    filter: Optional[Dict[str, Union[str, List[str]]]] = {"alerts": "only", "event_definitions": []}
-    timerange: Optional[Dict[str, Union[int, str]]] = {"range": 86400, "type": "relative"}
+    filter: Optional[Dict[str, Union[str, List[str]]]] = {
+        "alerts": "only",
+        "event_definitions": [],
+    }
+    timerange: Optional[Dict[str, Union[int, str]]] = {
+        "range": 86400,
+        "type": "relative",
+    }
 
 
 class SimplifiedEventDefinition(BaseModel):

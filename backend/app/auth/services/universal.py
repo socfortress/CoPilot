@@ -1,13 +1,10 @@
+from app.auth.models.users import Password, Role, User
+from app.db.db_session import async_engine
 from loguru import logger
 
 # ! New with Async
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
-
-from app.auth.models.users import Password
-from app.auth.models.users import Role
-from app.auth.models.users import User
-from app.db.db_session import async_engine
 
 passwords_in_memory = {}
 
@@ -35,10 +32,14 @@ async def find_user(name: str):
     Returns:
         User: The user object if found, None otherwise.
     """
-    async with AsyncSession(async_engine) as session:
-        statement = select(User).where(User.username == name)
-        result = await session.execute(statement)
-        return result.scalars().first()
+    try:
+        async with AsyncSession(async_engine) as session:
+            statement = select(User).where(User.username == name)
+            result = await session.execute(statement)
+            return result.scalars().first()
+    except Exception as e:
+        logger.error(f"Error: {e}")
+        return None
 
 
 async def get_role(name: str):
@@ -103,7 +104,9 @@ async def create_admin_user(session: AsyncSession):
     Returns:
     - None
     """
-    if not await check_admin_user_exists(session):  # The check function needs to be passed the session as well
+    if not await check_admin_user_exists(
+        session,
+    ):  # The check function needs to be passed the session as well
         # Create the admin user
         password_model = Password.generate(length=12)
         admin_user = User(
@@ -133,7 +136,9 @@ async def create_scheduler_user(session: AsyncSession):
     Returns:
     - None
     """
-    if not await check_scheduler_user_exists(session):  # The check function needs to be passed the session as well
+    if not await check_scheduler_user_exists(
+        session,
+    ):  # The check function needs to be passed the session as well
         # Create the scheduler user
         password_model = Password.generate(length=12)
         scheduler_user = User(

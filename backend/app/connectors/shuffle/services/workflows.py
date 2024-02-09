@@ -1,12 +1,13 @@
 from typing import List
 
+from app.connectors.shuffle.schema.workflows import (
+    WorkflowExecutionBodyModel,
+    WorkflowExecutionStatusResponseModel,
+    WorkflowsResponse,
+)
+from app.connectors.shuffle.utils.universal import send_get_request
 from fastapi import HTTPException
 from loguru import logger
-
-from app.connectors.shuffle.schema.workflows import WorkflowExecutionBodyModel
-from app.connectors.shuffle.schema.workflows import WorkflowExecutionStatusResponseModel
-from app.connectors.shuffle.schema.workflows import WorkflowsResponse
-from app.connectors.shuffle.utils.universal import send_get_request
 
 
 def remove_large_images_from_actions(workflows: List) -> List:
@@ -22,7 +23,10 @@ def remove_large_images_from_actions(workflows: List) -> List:
     for workflow in workflows:
         if "actions" in workflow:
             for action in workflow["actions"]:
-                action.pop("large_image", None)  # Use pop to avoid KeyError if 'large_image' does not exist
+                action.pop(
+                    "large_image",
+                    None,
+                )  # Use pop to avoid KeyError if 'large_image' does not exist
     return workflows
 
 
@@ -38,19 +42,32 @@ async def get_workflows() -> WorkflowsResponse:
     try:
         response = await send_get_request("/api/v1/workflows")
         if response is None:
-            return WorkflowsResponse(success=False, message="Failed to get workflows", workflows=[])
+            return WorkflowsResponse(
+                success=False,
+                message="Failed to get workflows",
+                workflows=[],
+            )
 
         workflows = response.get("data")
         workflows_without_large_images = remove_large_images_from_actions(workflows)
 
-        return WorkflowsResponse(success=True, message="Successfully fetched workflows", workflows=workflows_without_large_images)
+        return WorkflowsResponse(
+            success=True,
+            message="Successfully fetched workflows",
+            workflows=workflows_without_large_images,
+        )
 
     except Exception as e:
         logger.error(f"Failed to get workflows with error: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get workflows with error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get workflows with error: {e}",
+        )
 
 
-async def get_workflow_executions(exection_body: WorkflowExecutionBodyModel) -> WorkflowExecutionStatusResponseModel:
+async def get_workflow_executions(
+    exection_body: WorkflowExecutionBodyModel,
+) -> WorkflowExecutionStatusResponseModel:
     """
     Returns a list of workflow executions.
 
@@ -64,7 +81,9 @@ async def get_workflow_executions(exection_body: WorkflowExecutionBodyModel) -> 
     - HTTPException: If there is an error while getting the workflow executions.
     """
     logger.info("Getting workflow executions")
-    response = await send_get_request(f"/api/v1/workflows/{exection_body.workflow_id}/executions")
+    response = await send_get_request(
+        f"/api/v1/workflows/{exection_body.workflow_id}/executions",
+    )
     try:
         executions = response["data"]
         if executions:
@@ -76,4 +95,7 @@ async def get_workflow_executions(exection_body: WorkflowExecutionBodyModel) -> 
         return WorkflowExecutionStatusResponseModel(last_run=status)
     except Exception as e:
         logger.error(f"Failed to get workflow executions with error: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get workflow executions with error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get workflow executions with error: {e}",
+        )

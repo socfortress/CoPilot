@@ -1,6 +1,5 @@
-from fastapi import APIRouter
-
 from app.connectors.sublime.routes.alerts import sublime_alerts_router
+from fastapi import APIRouter
 
 # Instantiate the APIRouter
 router = APIRouter()

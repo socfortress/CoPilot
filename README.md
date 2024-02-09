@@ -1,6 +1,6 @@
 <h1 align="center">
 
-<a href="https://www.socfortress.co"><img src="src/assets/images/socfortress_logo.svg" width="300" height="200"></a>
+<a href="https://www.socfortress.co"><img src="frontend/src/assets/images/socfortress_logo.svg" width="300" height="200"></a>
 
 SOCFortress CoPilot
 
@@ -13,7 +13,7 @@ SOCFortress CoPilot
 
 [SOCFortress CoPilot](https://www.socfortress.co) focuses on providing a single pane of glass for all your security operations needs. Simplify your open source security stack with a single platform focused on making open source security tools easier to use and more accessible.
 
-![demo_timeline](src/assets/images/copilot_gif.gif)
+![demo_timeline](frontend/src/assets/images/copilot_gif.gif)
 
 ## Table of contents
 
@@ -71,11 +71,14 @@ cp .env.example .env
 
 # Make your changes to the .env file
 
+# Build the copilot-frontend image
+bash build-dockers.sh
+
 # Run Copilot
 docker compose up -d
 ```
 
-Copilot shall be available on the host interface, port 5173, protocol HTTP - `http://<your_instance_ip>:5173`.
+Copilot shall be available on the host interface, port 443, protocol HTTPS - `https://<your_instance_ip>`.
 By default, an `admin` account is created. The password is printed in stdout the very first time Copilot is started. It won't be printed anymore after that.
 `Admin user password` can be searched in the logs of the `copilot` docker to find the password. You will use the `plain` password to login to the web interface.
 

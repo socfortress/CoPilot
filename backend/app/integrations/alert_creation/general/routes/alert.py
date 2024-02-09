@@ -1,22 +1,24 @@
-from fastapi import APIRouter
-from fastapi import Depends
-from fastapi import HTTPException
-from loguru import logger
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-
 from app.db.db_session import get_db
-from app.integrations.alert_creation.general.schema.alert import CreateAlertRequest
-from app.integrations.alert_creation.general.schema.alert import CreateAlertResponse
+from app.integrations.alert_creation.general.schema.alert import (
+    CreateAlertRequest,
+    CreateAlertResponse,
+)
 from app.integrations.alert_creation.general.services.alert import create_alert
 from app.integrations.alert_creation_settings.models.alert_creation_settings import (
     AlertCreationSettings,
 )
+from fastapi import APIRouter, Depends, HTTPException
+from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 
 general_alerts_router = APIRouter()
 
 
-async def is_rule_id_valid(create_alert_request: CreateAlertRequest, session: AsyncSession) -> bool:
+async def is_rule_id_valid(
+    create_alert_request: CreateAlertRequest,
+    session: AsyncSession,
+) -> bool:
     """
     Checks if the given rule ID is valid for the specified customer.
 
@@ -27,20 +29,30 @@ async def is_rule_id_valid(create_alert_request: CreateAlertRequest, session: As
     Returns:
         bool: True if the rule ID is valid for the customer, False otherwise.
     """
-    logger.info(f"Checking if rule_id: {create_alert_request.rule_id} is valid for customer: {create_alert_request.agent_labels_customer}")
+    logger.info(
+        f"Checking if rule_id: {create_alert_request.rule_id} is valid for customer: {create_alert_request.agent_labels_customer}",
+    )
 
     result = await session.execute(
-        select(AlertCreationSettings).where(AlertCreationSettings.customer_code == create_alert_request.agent_labels_customer),
+        select(AlertCreationSettings).where(
+            AlertCreationSettings.customer_code
+            == create_alert_request.agent_labels_customer,
+        ),
     )
     settings = result.scalars().first()
 
-    if settings and str(create_alert_request.rule_id) in (settings.excluded_wazuh_rules or "").split(","):
+    if settings and str(create_alert_request.rule_id) in (
+        settings.excluded_wazuh_rules or ""
+    ).split(","):
         return False
 
     return True
 
 
-async def is_customer_code_valid(create_alert_request: CreateAlertRequest, session: AsyncSession) -> bool:
+async def is_customer_code_valid(
+    create_alert_request: CreateAlertRequest,
+    session: AsyncSession,
+) -> bool:
     """
     Checks if the customer code provided in the create_alert_request is valid.
 
@@ -51,10 +63,15 @@ async def is_customer_code_valid(create_alert_request: CreateAlertRequest, sessi
     Returns:
         bool: True if the customer code is valid, False otherwise.
     """
-    logger.info(f"Checking if customer_code: {create_alert_request.agent_labels_customer} is valid.")
+    logger.info(
+        f"Checking if customer_code: {create_alert_request.agent_labels_customer} is valid.",
+    )
 
     result = await session.execute(
-        select(AlertCreationSettings).where(AlertCreationSettings.customer_code == create_alert_request.agent_labels_customer),
+        select(AlertCreationSettings).where(
+            AlertCreationSettings.customer_code
+            == create_alert_request.agent_labels_customer,
+        ),
     )
     settings = result.scalars().first()
 
@@ -89,7 +106,9 @@ async def create_general_alert(
     logger.info(f"create_alert_request: {create_alert_request.dict()}")
 
     if await is_customer_code_valid(create_alert_request, session) is False:
-        logger.info(f"Invalid customer_code: {create_alert_request.agent_labels_customer}")
+        logger.info(
+            f"Invalid customer_code: {create_alert_request.agent_labels_customer}",
+        )
         raise HTTPException(status_code=200, detail="Invalid customer_code.")
 
     if await is_rule_id_valid(create_alert_request, session) is False:

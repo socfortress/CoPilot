@@ -1,12 +1,9 @@
-from typing import Any
-from typing import Dict
-from typing import Optional
+from typing import Any, Dict, Optional
 
 import requests
-from loguru import logger
-
 from app.connectors.utils import get_connector_info_from_db
 from app.db.db_session import get_db_session
+from loguru import logger
 
 
 async def verify_sublime_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
@@ -37,7 +34,10 @@ async def verify_sublime_credentials(attributes: Dict[str, Any]) -> Dict[str, An
             logger.info(
                 f"Connection to {attributes['connector_url']} successful",
             )
-            return {"connectionSuccessful": True, "message": "Sublime connection successful"}
+            return {
+                "connectionSuccessful": True,
+                "message": "Sublime connection successful",
+            }
         else:
             logger.error(
                 f"Connection to {attributes['connector_url']} failed with error: {sublime.text}",
@@ -50,7 +50,10 @@ async def verify_sublime_credentials(attributes: Dict[str, Any]) -> Dict[str, An
         logger.error(
             f"Connection to {attributes['connector_url']} failed with error: {e}",
         )
-        return {"connectionSuccessful": False, "message": f"Connection to {attributes['connector_url']} failed with error: {e}"}
+        return {
+            "connectionSuccessful": False,
+            "message": f"Connection to {attributes['connector_url']} failed with error: {e}",
+        }
 
 
 async def verify_sublime_connection(connector_name: str) -> str:
@@ -66,7 +69,11 @@ async def verify_sublime_connection(connector_name: str) -> str:
     return await verify_sublime_credentials(attributes)
 
 
-async def send_get_request(endpoint: str, params: Optional[Dict[str, Any]] = None, connector_name: str = "Sublime") -> Dict[str, Any]:
+async def send_get_request(
+    endpoint: str,
+    params: Optional[Dict[str, Any]] = None,
+    connector_name: str = "Sublime",
+) -> Dict[str, Any]:
     """
     Sends a GET request to the Sublime service.
 
@@ -95,7 +102,14 @@ async def send_get_request(endpoint: str, params: Optional[Dict[str, Any]] = Non
             params=params,
             verify=False,
         )
-        return {"data": response.json(), "success": True, "message": "Successfully retrieved data"}
+        return {
+            "data": response.json(),
+            "success": True,
+            "message": "Successfully retrieved data",
+        }
     except Exception as e:
         logger.error(f"Failed to send GET request to {endpoint} with error: {e}")
-        return {"success": False, "message": f"Failed to send GET request to {endpoint} with error: {e}"}
+        return {
+            "success": False,
+            "message": f"Failed to send GET request to {endpoint} with error: {e}",
+        }

@@ -8,10 +8,7 @@ from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import inch
 
 # from reportlab.pdfgen import canvas
-from reportlab.platypus import Image
-from reportlab.platypus import Paragraph
-from reportlab.platypus import SimpleDocTemplate
-from reportlab.platypus import Spacer
+from reportlab.platypus import Image, Paragraph, SimpleDocTemplate, Spacer
 
 matplotlib.use(
     "Agg",
@@ -19,7 +16,6 @@ matplotlib.use(
 # for scripts and web servers. This should resolve the main thread is not
 # in main loop issue as it bypasses the need for tkinter.
 import matplotlib.pyplot as plt
-
 from app.services.wazuh_indexer.alerts import AlertsService
 
 # ! TODO: Just a template
@@ -82,7 +78,11 @@ def create_pie_chart(alerts: dict, title: str, output_filename: str) -> None:
 
     plt.figure(figsize=(10, 6))
     plt.pie(num_alerts, labels=entities, autopct="%1.1f%%")
-    plt.legend(entities, loc="lower right", bbox_to_anchor=(1.0, 1.0))  # Add this line to include a legend
+    plt.legend(
+        entities,
+        loc="lower right",
+        bbox_to_anchor=(1.0, 1.0),
+    )  # Add this line to include a legend
     plt.title(title)
     plt.tight_layout()
     plt.savefig(output_filename)
@@ -140,4 +140,8 @@ def create_alerts_report_pdf() -> None:
     alerts_by_rules = fetch_alert_data(service, service.collect_alerts_by_rule)
     create_pie_chart(alerts_by_rules, "Number of Alerts by Rule", "alerts_by_rule.png")
 
-    create_pdf("Test", ["alerts_by_host.png", "alerts_by_rule.png"], "alerts_report.pdf")
+    create_pdf(
+        "Test",
+        ["alerts_by_host.png", "alerts_by_rule.png"],
+        "alerts_report.pdf",
+    )

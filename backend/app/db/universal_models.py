@@ -1,9 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from sqlmodel import Field
-from sqlmodel import Relationship
-from sqlmodel import SQLModel
+from sqlmodel import Field, Relationship, SQLModel
 
 
 class Customers(SQLModel, table=True):
@@ -73,12 +71,22 @@ class CustomersMeta(SQLModel, table=True):
         self.customer_meta_grafana_org_id = customer_meta.customer_meta_grafana_org_id
         self.customer_meta_wazuh_group = customer_meta.customer_meta_wazuh_group
         self.customer_meta_index_retention = customer_meta.customer_meta_index_retention
-        self.customer_meta_wazuh_registration_port = customer_meta.customer_meta_wazuh_registration_port
-        self.customer_meta_wazuh_log_ingestion_port = customer_meta.customer_meta_wazuh_log_ingestion_port
+        self.customer_meta_wazuh_registration_port = (
+            customer_meta.customer_meta_wazuh_registration_port
+        )
+        self.customer_meta_wazuh_log_ingestion_port = (
+            customer_meta.customer_meta_wazuh_log_ingestion_port
+        )
         self.customer_meta_wazuh_api_port = customer_meta.customer_meta_wazuh_api_port
-        self.customer_meta_wazuh_auth_password = customer_meta.customer_meta_wazuh_auth_password
-        self.customer_meta_iris_customer_id = customer_meta.customer_meta_iris_customer_id
-        self.customer_meta_office365_organization_id = customer_meta.customer_meta_office365_organization_id
+        self.customer_meta_wazuh_auth_password = (
+            customer_meta.customer_meta_wazuh_auth_password
+        )
+        self.customer_meta_iris_customer_id = (
+            customer_meta.customer_meta_iris_customer_id
+        )
+        self.customer_meta_office365_organization_id = (
+            customer_meta.customer_meta_office365_organization_id
+        )
 
 
 class Agents(SQLModel, table=True):
@@ -103,7 +111,9 @@ class Agents(SQLModel, table=True):
     def create_from_model(cls, wazuh_agent, velociraptor_agent, customer_code):
         # Check if agent_last_seen is 'Unknown' and set wazuh_last_seen accordingly
         if wazuh_agent.agent_last_seen == "Unknown":
-            wazuh_last_seen_value = "1970-01-01T00:00:00+00:00"  # default datetime value
+            wazuh_last_seen_value = (
+                "1970-01-01T00:00:00+00:00"  # default datetime value
+            )
         else:
             wazuh_last_seen_value = wazuh_agent.agent_last_seen_as_datetime
 
@@ -115,15 +125,23 @@ class Agents(SQLModel, table=True):
             label=wazuh_agent.agent_label,
             wazuh_last_seen=wazuh_last_seen_value,
             wazuh_agent_version=wazuh_agent.wazuh_agent_version,
-            velociraptor_id=velociraptor_agent.client_id if velociraptor_agent.client_id else "n/a",
+            velociraptor_id=velociraptor_agent.client_id
+            if velociraptor_agent.client_id
+            else "n/a",
             velociraptor_last_seen=velociraptor_agent.client_last_seen_as_datetime,
             velociraptor_agent_version=velociraptor_agent.client_version,
             customer_code=customer_code,
         )
 
     def update_from_model(self, wazuh_agent, velociraptor_agent, customer_code):
-        if wazuh_agent.agent_last_seen == "Unknown" or wazuh_agent.agent_last_seen == "1970-01-01T00:00:00+00:00":
-            wazuh_last_seen_value = datetime.strptime("1970-01-01T00:00:00+00:00", "%Y-%m-%dT%H:%M:%S%z")  # default datetime value
+        if (
+            wazuh_agent.agent_last_seen == "Unknown"
+            or wazuh_agent.agent_last_seen == "1970-01-01T00:00:00+00:00"
+        ):
+            wazuh_last_seen_value = datetime.strptime(
+                "1970-01-01T00:00:00+00:00",
+                "%Y-%m-%dT%H:%M:%S%z",
+            )  # default datetime value
         else:
             wazuh_last_seen_value = wazuh_agent.agent_last_seen_as_datetime
 
@@ -134,7 +152,9 @@ class Agents(SQLModel, table=True):
         self.label = wazuh_agent.agent_label
         self.wazuh_last_seen = wazuh_last_seen_value
         self.wazuh_agent_version = wazuh_agent.wazuh_agent_version
-        self.velociraptor_id = velociraptor_agent.client_id if velociraptor_agent.client_id else "n/a"
+        self.velociraptor_id = (
+            velociraptor_agent.client_id if velociraptor_agent.client_id else "n/a"
+        )
         self.velociraptor_last_seen = velociraptor_agent.client_last_seen_as_datetime
         self.velociraptor_agent_version = velociraptor_agent.client_version
         self.customer_code = customer_code

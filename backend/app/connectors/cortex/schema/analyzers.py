@@ -1,16 +1,12 @@
 import ipaddress
 import re
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
-from pydantic import BaseModel
-from pydantic import Field
-from pydantic import validator
+from pydantic import BaseModel, Field, validator
 
-HASH_REGEX = re.compile(r"[a-fA-F\d]{32}|[a-fA-F\d]{64}")  # Update this regex to match your specific hash format
+HASH_REGEX = re.compile(
+    r"[a-fA-F\d]{32}|[a-fA-F\d]{64}",
+)  # Update this regex to match your specific hash format
 DOMAIN_REGEX = re.compile(
     r"^(?:[a-z0-9](?:[a-z0-9\-]{0,61}[a-z0-9])?\.)+[a-z]{2,6}$",
 )  # Update this regex to match your specific domain format
@@ -24,8 +20,14 @@ class AnalyzersResponse(BaseModel):
 
 class RunAnalyzerBody(BaseModel):
     analyzer_name: str = Field(..., description="Name of the analyzer to be run.")
-    analyzer_data: str = Field(..., description="The Indicator of Compromise (IoC) to be analyzed.")
-    data_type: Optional[str] = Field(default=None, description="Data type determined after validation")
+    analyzer_data: str = Field(
+        ...,
+        description="The Indicator of Compromise (IoC) to be analyzed.",
+    )
+    data_type: Optional[str] = Field(
+        default=None,
+        description="Data type determined after validation",
+    )
 
     @validator("analyzer_data", pre=True, always=True)
     def validate_and_set_data_type(cls, value: str, values: dict) -> str:
@@ -70,7 +72,16 @@ class RunAnalyzerResponse(BaseModel):
 
 
 class AnalyzerJobData(BaseModel):
-    data: str = Field(..., description="The Indicator of Compromise (IoC) to be analyzed.")
-    dataType: str = Field(..., description="The type of the IoC (e.g., 'IP', 'hash', 'domain').")
+    data: str = Field(
+        ...,
+        description="The Indicator of Compromise (IoC) to be analyzed.",
+    )
+    dataType: str = Field(
+        ...,
+        description="The type of the IoC (e.g., 'IP', 'hash', 'domain').",
+    )
     tlp: int = Field(1, description="Traffic Light Protocol (TLP) level.")
-    message: str = Field("custom message sent to analyzer", description="Custom message.")
+    message: str = Field(
+        "custom message sent to analyzer",
+        description="Custom message.",
+    )

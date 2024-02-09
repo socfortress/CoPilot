@@ -1,25 +1,20 @@
-from fastapi import APIRouter
-from fastapi import Body
-from fastapi import Depends
-from fastapi import HTTPException
-from fastapi import Security
+from app.auth.utils import AuthHandler
+from app.connectors.grafana.schema.dashboards import Office365Dashboard, WazuhDashboard
+from app.customer_provisioning.schema.provision import (
+    CustomerProvisionResponse,
+    CustomersMetaResponse,
+    CustomerSubsctipion,
+    GetDashboardsResponse,
+    GetSubscriptionsResponse,
+    ProvisionNewCustomer,
+)
+from app.customer_provisioning.services.provision import provision_wazuh_customer
+from app.db.db_session import get_db
+from app.db.universal_models import Customers, CustomersMeta
+from fastapi import APIRouter, Body, Depends, HTTPException, Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-
-from app.auth.utils import AuthHandler
-from app.connectors.grafana.schema.dashboards import Office365Dashboard
-from app.connectors.grafana.schema.dashboards import WazuhDashboard
-from app.customer_provisioning.schema.provision import CustomerProvisionResponse
-from app.customer_provisioning.schema.provision import CustomersMetaResponse
-from app.customer_provisioning.schema.provision import CustomerSubsctipion
-from app.customer_provisioning.schema.provision import GetDashboardsResponse
-from app.customer_provisioning.schema.provision import GetSubscriptionsResponse
-from app.customer_provisioning.schema.provision import ProvisionNewCustomer
-from app.customer_provisioning.services.provision import provision_wazuh_customer
-from app.db.db_session import get_db
-from app.db.universal_models import Customers
-from app.db.universal_models import CustomersMeta
 
 customer_provisioning_router = APIRouter()
 
@@ -39,7 +34,10 @@ def get_available_dashboards():
         office365_dashboards = [dashboard.name for dashboard in Office365Dashboard]
         return wazuh_dashboards + office365_dashboards
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error getting available dashboards: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error getting available dashboards: {e}",
+        )
 
 
 def get_available_subscriptions():
@@ -55,10 +53,16 @@ def get_available_subscriptions():
     try:
         return [subscription.value for subscription in CustomerSubsctipion]
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error getting available subscriptions: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error getting available subscriptions: {e}",
+        )
 
 
-async def check_customer_exists(customer_code: str, session: AsyncSession = Depends(get_db)) -> Customers:
+async def check_customer_exists(
+    customer_code: str,
+    session: AsyncSession = Depends(get_db),
+) -> Customers:
     """
     Check if a customer exists in the database.
 
@@ -73,11 +77,16 @@ async def check_customer_exists(customer_code: str, session: AsyncSession = Depe
         HTTPException: If the customer is not found in the database.
     """
     logger.info(f"Checking if customer {customer_code} exists")
-    result = await session.execute(select(Customers).filter(Customers.customer_code == customer_code))
+    result = await session.execute(
+        select(Customers).filter(Customers.customer_code == customer_code),
+    )
     customer = result.scalars().first()
 
     if not customer:
-        raise HTTPException(status_code=404, detail=f"Customer: {customer_code} not found. Please create the customer first.")
+        raise HTTPException(
+            status_code=404,
+            detail=f"Customer: {customer_code} not found. Please create the customer first.",
+        )
 
     return customer
 
@@ -93,7 +102,11 @@ async def check_unique_ports(request: ProvisionNewCustomer, session: AsyncSessio
     Raises:
         HTTPException: If the ports are not unique.
     """
-    ports = {"registration": request.wazuh_registration_port, "logs": request.wazuh_logs_port, "api": request.wazuh_api_port}
+    ports = {
+        "registration": request.wazuh_registration_port,
+        "logs": request.wazuh_logs_port,
+        "api": request.wazuh_api_port,
+    }
 
     for port_type, port_value in ports.items():
         customer_meta = await get_customer_meta_by_port(port_value, session)
@@ -168,7 +181,11 @@ async def get_dashboards_route():
     """
     logger.info("Getting list of dashboards")
     available_dashboards = get_available_dashboards()
-    return GetDashboardsResponse(available_dashboards=available_dashboards, success=True, message="Dashboards retrieved successfully")
+    return GetDashboardsResponse(
+        available_dashboards=available_dashboards,
+        success=True,
+        message="Dashboards retrieved successfully",
+    )
 
 
 @customer_provisioning_router.get(
@@ -200,7 +217,10 @@ async def get_subscriptions_route():
     description="Get Customer Meta",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_customer_meta(customer_code: str, session: AsyncSession = Depends(get_db)):
+async def get_customer_meta(
+    customer_code: str,
+    session: AsyncSession = Depends(get_db),
+):
     """
     Retrieve customer meta data for a given customer code.
 
@@ -215,7 +235,9 @@ async def get_customer_meta(customer_code: str, session: AsyncSession = Depends(
         CustomersMetaResponse: The response containing the customer meta data.
     """
     logger.info(f"Getting customer meta for customer {customer_code}")
-    result = await session.execute(select(CustomersMeta).filter(CustomersMeta.customer_code == customer_code))
+    result = await session.execute(
+        select(CustomersMeta).filter(CustomersMeta.customer_code == customer_code),
+    )
     customer_meta = result.scalars().first()
 
     if not customer_meta:
@@ -224,4 +246,8 @@ async def get_customer_meta(customer_code: str, session: AsyncSession = Depends(
             detail=f"Customer meta not found for customer: {customer_code}. Please provision the customer first.",
         )
 
-    return CustomersMetaResponse(message="Customer meta retrieved successfully", success=True, customer_meta=customer_meta)
+    return CustomersMetaResponse(
+        message="Customer meta retrieved successfully",
+        success=True,
+        customer_meta=customer_meta,
+    )

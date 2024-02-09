@@ -1,16 +1,18 @@
+from app.connectors.graylog.schema.pipelines import (
+    CreatePipeline,
+    CreatePipelineRule,
+    GraylogPipelinesResponse,
+    Pipeline,
+    PipelineRule,
+    PipelineRulesResponse,
+)
+from app.connectors.graylog.utils.universal import send_get_request, send_post_request
+from app.customer_provisioning.schema.graylog import (
+    StreamConnectionToPipelineRequest,
+    StreamConnectionToPipelineResponse,
+)
 from fastapi import HTTPException
 from loguru import logger
-
-from app.connectors.graylog.schema.pipelines import CreatePipeline
-from app.connectors.graylog.schema.pipelines import CreatePipelineRule
-from app.connectors.graylog.schema.pipelines import GraylogPipelinesResponse
-from app.connectors.graylog.schema.pipelines import Pipeline
-from app.connectors.graylog.schema.pipelines import PipelineRule
-from app.connectors.graylog.schema.pipelines import PipelineRulesResponse
-from app.connectors.graylog.utils.universal import send_get_request
-from app.connectors.graylog.utils.universal import send_post_request
-from app.customer_provisioning.schema.graylog import StreamConnectionToPipelineRequest
-from app.customer_provisioning.schema.graylog import StreamConnectionToPipelineResponse
 
 
 async def get_pipelines() -> GraylogPipelinesResponse:
@@ -23,14 +25,26 @@ async def get_pipelines() -> GraylogPipelinesResponse:
         HTTPException: If there is an error collecting the pipelines.
     """
     logger.info("Getting pipelines from Graylog")
-    pipelines_collected = await send_get_request(endpoint="/api/system/pipelines/pipeline")
+    pipelines_collected = await send_get_request(
+        endpoint="/api/system/pipelines/pipeline",
+    )
     try:
         if pipelines_collected["success"]:
-            pipelines_list = [Pipeline(**pipeline_data) for pipeline_data in pipelines_collected["data"]]
-            return GraylogPipelinesResponse(pipelines=pipelines_list, success=True, message="Pipelines collected successfully")
+            pipelines_list = [
+                Pipeline(**pipeline_data)
+                for pipeline_data in pipelines_collected["data"]
+            ]
+            return GraylogPipelinesResponse(
+                pipelines=pipelines_list,
+                success=True,
+                message="Pipelines collected successfully",
+            )
     except KeyError as e:
         logger.error(f"Failed to collect pipelines key: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to collect pipelines key: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to collect pipelines key: {e}",
+        )
     except Exception as e:
         logger.error(f"Failed to collect pipelines: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to collect pipelines: {e}")
@@ -44,17 +58,32 @@ async def get_pipeline_rules() -> PipelineRulesResponse:
         PipelineRulesResponse: The response object containing the pipeline rules.
     """
     logger.info("Getting pipeline rules from Graylog")
-    pipeline_rules_collected = await send_get_request(endpoint="/api/system/pipelines/rule")
+    pipeline_rules_collected = await send_get_request(
+        endpoint="/api/system/pipelines/rule",
+    )
     try:
         if pipeline_rules_collected["success"]:
-            pipeline_rules_list = [PipelineRule(**pipeline_rule_data) for pipeline_rule_data in pipeline_rules_collected["data"]]
-            return PipelineRulesResponse(pipeline_rules=pipeline_rules_list, success=True, message="Pipeline rules collected successfully")
+            pipeline_rules_list = [
+                PipelineRule(**pipeline_rule_data)
+                for pipeline_rule_data in pipeline_rules_collected["data"]
+            ]
+            return PipelineRulesResponse(
+                pipeline_rules=pipeline_rules_list,
+                success=True,
+                message="Pipeline rules collected successfully",
+            )
     except KeyError as e:
         logger.error(f"Failed to collect pipeline rules key: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to collect pipeline rules key: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to collect pipeline rules key: {e}",
+        )
     except Exception as e:
         logger.error(f"Failed to collect pipeline rules: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to collect pipeline rules: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to collect pipeline rules: {e}",
+        )
 
 
 async def get_pipeline_rule_by_id(rule_id) -> PipelineRulesResponse:
@@ -71,18 +100,30 @@ async def get_pipeline_rule_by_id(rule_id) -> PipelineRulesResponse:
         HTTPException: If there is an error collecting the pipeline rules.
     """
     logger.info(f"Getting pipeline rules from Graylog for pipeline {rule_id}")
-    pipeline_rules_collected = await send_get_request(endpoint=f"/api/system/pipelines/rule/{rule_id}")
+    pipeline_rules_collected = await send_get_request(
+        endpoint=f"/api/system/pipelines/rule/{rule_id}",
+    )
     logger.info(pipeline_rules_collected)
     try:
         if pipeline_rules_collected["success"]:
             pipeline_rule = PipelineRule(**pipeline_rules_collected["data"])
-            return PipelineRulesResponse(pipeline_rules=[pipeline_rule], success=True, message="Pipeline rules collected successfully")
+            return PipelineRulesResponse(
+                pipeline_rules=[pipeline_rule],
+                success=True,
+                message="Pipeline rules collected successfully",
+            )
     except KeyError as e:
         logger.error(f"Failed to collect pipeline rules key: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to collect pipeline rules key: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to collect pipeline rules key: {e}",
+        )
     except Exception as e:
         logger.error(f"Failed to collect pipeline rules: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to collect pipeline rules: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to collect pipeline rules: {e}",
+        )
 
 
 async def create_pipeline_rule(rule: CreatePipelineRule) -> None:
@@ -131,13 +172,21 @@ async def get_pipeline_id(subscription: str) -> str:
             if subscription.lower() in pipeline.description.lower():
                 return [pipeline.id]
         logger.error(f"Failed to get pipeline ID for subscription {subscription}")
-        raise HTTPException(status_code=500, detail=f"Failed to get pipeline ID for subscription {subscription}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get pipeline ID for subscription {subscription}",
+        )
     else:
         logger.error(f"Failed to get pipelines: {pipelines_response.message}")
-        raise HTTPException(status_code=500, detail=f"Failed to get pipelines: {pipelines_response.message}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to get pipelines: {pipelines_response.message}",
+        )
 
 
-async def connect_stream_to_pipeline(stream_and_pipeline: StreamConnectionToPipelineRequest):
+async def connect_stream_to_pipeline(
+    stream_and_pipeline: StreamConnectionToPipelineRequest,
+):
     """
     Connects a stream to a pipeline.
 
@@ -147,7 +196,12 @@ async def connect_stream_to_pipeline(stream_and_pipeline: StreamConnectionToPipe
     Returns:
         StreamConnectionToPipelineResponse: The response object containing the connection details.
     """
-    logger.info(f"Connecting stream {stream_and_pipeline.stream_id} to pipeline {stream_and_pipeline.pipeline_ids}")
-    response_json = await send_post_request(endpoint="/api/system/pipelines/connections/to_stream", data=stream_and_pipeline.dict())
+    logger.info(
+        f"Connecting stream {stream_and_pipeline.stream_id} to pipeline {stream_and_pipeline.pipeline_ids}",
+    )
+    response_json = await send_post_request(
+        endpoint="/api/system/pipelines/connections/to_stream",
+        data=stream_and_pipeline.dict(),
+    )
     logger.info(f"Response: {response_json}")
     return StreamConnectionToPipelineResponse(**response_json)

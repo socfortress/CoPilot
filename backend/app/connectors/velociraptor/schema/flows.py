@@ -1,11 +1,8 @@
-from typing import List
-from typing import Optional
+from typing import List, Optional
 
 from fastapi import HTTPException
 from loguru import logger
-from pydantic import BaseModel
-from pydantic import Field
-from pydantic import root_validator
+from pydantic import BaseModel, Field, root_validator
 
 
 class FlowSpecParameter(BaseModel):
@@ -16,7 +13,10 @@ class FlowSpecParameter(BaseModel):
 
 class FlowSpec(BaseModel):
     artifact: str
-    parameters: Optional[List[FlowSpecParameter]] = Field(None, description="The parameters of the artifact.")
+    parameters: Optional[List[FlowSpecParameter]] = Field(
+        None,
+        description="The parameters of the artifact.",
+    )
 
 
 class FlowRequest(BaseModel):
@@ -26,7 +26,10 @@ class FlowRequest(BaseModel):
     flow_id: str
     urgent: bool
     artifacts: List[str]
-    specs: Optional[List[FlowSpec]] = Field(None, description="The specs of the artifacts.")
+    specs: Optional[List[FlowSpec]] = Field(
+        None,
+        description="The specs of the artifacts.",
+    )
     cpu_limit: int
     iops_limit: int
     progress_timeout: int
@@ -113,5 +116,8 @@ class RetrieveFlowRequest(BaseModel):
     @root_validator(pre=True)
     def validate_session_id(cls, values):
         if "session_id" in values and values["session_id"] == "":
-            raise HTTPException(status_code=400, detail="The session_id cannot be an empty string")
+            raise HTTPException(
+                status_code=400,
+                detail="The session_id cannot be an empty string",
+            )
         return values

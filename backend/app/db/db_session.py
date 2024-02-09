@@ -1,30 +1,39 @@
 # ! Old Testing without Async
-from sqlmodel import Session
-from sqlmodel import create_engine
-
 from settings import SQLALCHEMY_DATABASE_URI
+from sqlmodel import Session, create_engine
 
-engine = create_engine(SQLALCHEMY_DATABASE_URI, connect_args={"check_same_thread": False})
+engine = create_engine(
+    SQLALCHEMY_DATABASE_URI,
+    connect_args={"check_same_thread": False},
+)
 session = "placeholder"
 
-from contextlib import asynccontextmanager
-from contextlib import contextmanager
+from contextlib import asynccontextmanager, contextmanager
 
 from loguru import logger
-from sqlalchemy import create_engine
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.ext.asyncio import create_async_engine
-from sqlalchemy.orm import sessionmaker
-
 from settings import SQLALCHEMY_DATABASE_URI
+from sqlalchemy import create_engine
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.orm import sessionmaker
 
 # create async engine for SQLite using aiosqlite
 async_engine = create_async_engine(SQLALCHEMY_DATABASE_URI, echo=False)
-sync_engine = create_engine(SQLALCHEMY_DATABASE_URI.replace("+aiosqlite", ""), echo=False)
+sync_engine = create_engine(
+    SQLALCHEMY_DATABASE_URI.replace("+aiosqlite", ""),
+    echo=False,
+)
 
 # create a configured "AsyncSession" class
-AsyncSessionLocal = sessionmaker(bind=async_engine, class_=AsyncSession, expire_on_commit=False)
-SyncSessionLocal = sessionmaker(bind=sync_engine, class_=Session, expire_on_commit=False)
+AsyncSessionLocal = sessionmaker(
+    bind=async_engine,
+    class_=AsyncSession,
+    expire_on_commit=False,
+)
+SyncSessionLocal = sessionmaker(
+    bind=sync_engine,
+    class_=Session,
+    expire_on_commit=False,
+)
 
 
 @asynccontextmanager

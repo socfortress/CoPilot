@@ -1,27 +1,24 @@
-from fastapi import APIRouter
-from fastapi import Depends
-from fastapi import HTTPException
-from fastapi import Security
-from loguru import logger
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-
 # App specific imports
 from app.auth.routes.auth import AuthHandler
 from app.connectors.wazuh_manager.models.rules import DisabledRule
-from app.connectors.wazuh_manager.schema.rules import AllDisabledRuleResponse
-from app.connectors.wazuh_manager.schema.rules import RuleDisable
-from app.connectors.wazuh_manager.schema.rules import RuleDisableResponse
-from app.connectors.wazuh_manager.schema.rules import RuleEnable
-from app.connectors.wazuh_manager.schema.rules import RuleEnableResponse
+from app.connectors.wazuh_manager.schema.rules import (
+    AllDisabledRuleResponse,
+    RuleDisable,
+    RuleDisableResponse,
+    RuleEnable,
+    RuleEnableResponse,
+)
 
 # from app.connectors.wazuh_manager.schema.rules import RuleExclude
 # from app.connectors.wazuh_manager.schema.rules import RuleExcludeResponse
-from app.connectors.wazuh_manager.services.rules import disable_rule
-from app.connectors.wazuh_manager.services.rules import enable_rule
+from app.connectors.wazuh_manager.services.rules import disable_rule, enable_rule
 
 # from app.connectors.wazuh_manager.services.rules import exclude_rule
 from app.db.db_session import get_db
+from fastapi import APIRouter, Depends, HTTPException, Security
+from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 
 # from app.connectors.wazuh_manager.schema.rules import RuleExclude
 # from app.connectors.wazuh_manager.schema.rules import RuleExcludeResponse
@@ -40,7 +37,9 @@ auth_handler = AuthHandler()
     description="Get all disabled rules",
     dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
 )
-async def get_disabled_rules(session: AsyncSession = Depends(get_db)) -> AllDisabledRuleResponse:
+async def get_disabled_rules(
+    session: AsyncSession = Depends(get_db),
+) -> AllDisabledRuleResponse:
     """
     Retrieve all disabled rules from the database.
 
@@ -52,7 +51,11 @@ async def get_disabled_rules(session: AsyncSession = Depends(get_db)) -> AllDisa
     """
     result = await session.execute(select(DisabledRule))
     disabled_rules = result.scalars().all()
-    return AllDisabledRuleResponse(disabled_rules=disabled_rules, success=True, message="Successfully fetched all disabled rules")
+    return AllDisabledRuleResponse(
+        disabled_rules=disabled_rules,
+        success=True,
+        message="Successfully fetched all disabled rules",
+    )
 
 
 @wazuh_manager_rules_router.post(
@@ -81,7 +84,9 @@ async def disable_wazuh_rule(
         HTTPException: If the rule is already disabled or if the rule cannot be disabled.
     """
     # Asynchronously check if the rule is already disabled
-    result = await session.execute(select(DisabledRule).where(DisabledRule.rule_id == rule.rule_id))
+    result = await session.execute(
+        select(DisabledRule).where(DisabledRule.rule_id == rule.rule_id),
+    )
     if result.scalars().first():
         raise HTTPException(status_code=500, detail="Rule is already disabled")
 
@@ -109,7 +114,10 @@ async def disable_wazuh_rule(
     description="Enable a Wazuh Rule",
     dependencies=[Security(AuthHandler().get_current_user, scopes=["admin"])],
 )
-async def enable_wazuh_rule(rule: RuleEnable, session: AsyncSession = Depends(get_db)) -> RuleEnableResponse:
+async def enable_wazuh_rule(
+    rule: RuleEnable,
+    session: AsyncSession = Depends(get_db),
+) -> RuleEnableResponse:
     """
     Enable a Wazuh rule.
 
@@ -125,7 +133,9 @@ async def enable_wazuh_rule(rule: RuleEnable, session: AsyncSession = Depends(ge
     """
     # Asynchronously fetch the disabled rule
     logger.info(f"rule: {rule}")
-    result = await session.execute(select(DisabledRule).where(DisabledRule.rule_id == rule.rule_id))
+    result = await session.execute(
+        select(DisabledRule).where(DisabledRule.rule_id == rule.rule_id),
+    )
     disabled_rule = result.scalars().first()
 
     if not disabled_rule:

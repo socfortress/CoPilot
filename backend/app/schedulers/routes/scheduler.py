@@ -1,13 +1,11 @@
-from fastapi import APIRouter
-from fastapi import Depends
-from loguru import logger
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
-
 from app.db.db_session import get_db
 from app.schedulers.models.scheduler import JobMetadata
 from app.schedulers.scheduler import init_scheduler
 from app.schedulers.schema.scheduler import JobsResponse
+from fastapi import APIRouter, Depends
+from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 
 scheduler_router = APIRouter()
 
@@ -77,13 +75,24 @@ async def get_all_jobs(session: AsyncSession = Depends(get_db)) -> JobsResponse:
     jobs = scheduler.get_jobs()
     apscheduler_jobs = []
     for job in jobs:
-        job_metadata = await session.execute(select(JobMetadata).filter_by(job_id=job.id))
+        job_metadata = await session.execute(
+            select(JobMetadata).filter_by(job_id=job.id),
+        )
         job_metadata = job_metadata.scalars().first()
         apscheduler_jobs.append(
-            {"id": job.id, "name": job.name, "time_interval": job_metadata.time_interval, "enabled": job_metadata.enabled},
+            {
+                "id": job.id,
+                "name": job.name,
+                "time_interval": job_metadata.time_interval,
+                "enabled": job_metadata.enabled,
+            },
         )
     logger.info(f"apscheduler_jobs: {apscheduler_jobs}")
-    return JobsResponse(jobs=apscheduler_jobs, success=True, message="Jobs successfully retrieved.")
+    return JobsResponse(
+        jobs=apscheduler_jobs,
+        success=True,
+        message="Jobs successfully retrieved.",
+    )
 
 
 @scheduler_router.post("/start/{job_id}", description="Start a job")
@@ -133,7 +142,11 @@ async def pause_job(job_id: str):
 
 
 @scheduler_router.put("/update/{job_id}", description="Update a job")
-async def update_job(job_id: str, time_interval: int, session: AsyncSession = Depends(get_db)):
+async def update_job(
+    job_id: str,
+    time_interval: int,
+    session: AsyncSession = Depends(get_db),
+):
     """
     Update a job with the specified job_id and time_interval.
 
@@ -155,7 +168,12 @@ async def update_job(job_id: str, time_interval: int, session: AsyncSession = De
     job = await find_job_by_id(scheduler, job_id)
     if job:
         job.reschedule(trigger="interval", minutes=time_interval)
-        await manage_job_metadata(session, job_id, "update", time_interval=time_interval)
+        await manage_job_metadata(
+            session,
+            job_id,
+            "update",
+            time_interval=time_interval,
+        )
         logger.info(f"Job {job_id} updated successfully")
         return {"success": True, "message": "Job updated successfully"}
     logger.error(f"Job {job_id} not found for updating")

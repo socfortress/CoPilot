@@ -1,8 +1,6 @@
-from typing import List
-from typing import Optional
+from typing import List, Optional
 
-from pydantic import BaseModel
-from pydantic import Field
+from pydantic import BaseModel, Field
 
 
 class GraylogMessages(BaseModel):
@@ -29,13 +27,27 @@ class GraylogThroughputMetrics(BaseModel):
 
 
 class GraylogThroughputMetricsCollection(BaseModel):
-    graylog2_buffers_input_usage: Optional[str] = Field(alias="org.graylog2.buffers.input.usage")
-    graylog2_buffers_output_usage: Optional[str] = Field(alias="org.graylog2.buffers.output.usage")
-    graylog2_buffers_process_usage: Optional[str] = Field(alias="org.graylog2.buffers.process.usage")
-    graylog2_throughput_input_1_sec_rate: Optional[str] = Field(alias="org.graylog2.throughput.input.1-sec-rate")
-    graylog2_throughput_output_1_sec_rate: Optional[str] = Field(alias="org.graylog2.throughput.output.1-sec-rate")
-    graylog2_throughput_output: Optional[str] = Field(alias="org.graylog2.throughput.output")
-    graylog2_throughput_input: Optional[str] = Field(alias="org.graylog2.throughput.input")
+    graylog2_buffers_input_usage: Optional[str] = Field(
+        alias="org.graylog2.buffers.input.usage",
+    )
+    graylog2_buffers_output_usage: Optional[str] = Field(
+        alias="org.graylog2.buffers.output.usage",
+    )
+    graylog2_buffers_process_usage: Optional[str] = Field(
+        alias="org.graylog2.buffers.process.usage",
+    )
+    graylog2_throughput_input_1_sec_rate: Optional[str] = Field(
+        alias="org.graylog2.throughput.input.1-sec-rate",
+    )
+    graylog2_throughput_output_1_sec_rate: Optional[str] = Field(
+        alias="org.graylog2.throughput.output.1-sec-rate",
+    )
+    graylog2_throughput_output: Optional[str] = Field(
+        alias="org.graylog2.throughput.output",
+    )
+    graylog2_throughput_input: Optional[str] = Field(
+        alias="org.graylog2.throughput.input",
+    )
 
 
 class GraylogThroughputMetricsList(BaseModel):

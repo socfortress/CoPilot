@@ -1,20 +1,23 @@
-from typing import Any
-from typing import Dict
+from typing import Any, Dict
 
 import httpx
+from app.connectors.utils import get_connector_info_from_db
+from app.db.db_session import get_db_session
+from app.threat_intel.schema.socfortress import (
+    IoCMapping,
+    IoCResponse,
+    SocfortressThreatIntelRequest,
+)
+from app.utils import get_connector_attribute
 from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.connectors.utils import get_connector_info_from_db
-from app.db.db_session import get_db_session
-from app.threat_intel.schema.socfortress import IoCMapping
-from app.threat_intel.schema.socfortress import IoCResponse
-from app.threat_intel.schema.socfortress import SocfortressThreatIntelRequest
-from app.utils import get_connector_attribute
 
-
-async def get_socfortress_threat_intel_attributes(column_name: str, session: AsyncSession) -> str:
+async def get_socfortress_threat_intel_attributes(
+    column_name: str,
+    session: AsyncSession,
+) -> str:
     """
     Gets the SocFortress Threat Intel attribute from the database.
 
@@ -29,15 +32,24 @@ async def get_socfortress_threat_intel_attributes(column_name: str, session: Asy
         str: The SocFortress Threat Intel Attribute.
 
     """
-    attribute_value = await get_connector_attribute(connector_id=10, column_name=column_name, session=session)
+    attribute_value = await get_connector_attribute(
+        connector_id=10,
+        column_name=column_name,
+        session=session,
+    )
     # Close the session
     await session.close()
     if not attribute_value:
-        raise HTTPException(status_code=500, detail="SocFortress Threat Intel attributes not found in the database.")
+        raise HTTPException(
+            status_code=500,
+            detail="SocFortress Threat Intel attributes not found in the database.",
+        )
     return attribute_value
 
 
-async def verify_socfortress_threat_intel_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
+async def verify_socfortress_threat_intel_credentials(
+    attributes: Dict[str, Any],
+) -> Dict[str, Any]:
     """
     Verifies the SOCFortress Threat Intel credentials.
 
@@ -54,7 +66,10 @@ async def verify_socfortress_threat_intel_credentials(attributes: Dict[str, Any]
     url = attributes.get("connector_url", None)
     if api_key is None or url is None:
         logger.error("No SOCFortress Threat Intel credentials found in the database")
-        raise HTTPException(status_code=500, detail="SOCFortress Threat Intel credentials not found in the database")
+        raise HTTPException(
+            status_code=500,
+            detail="SOCFortress Threat Intel credentials not found in the database",
+        )
     return attributes
 
 
@@ -77,17 +92,34 @@ async def verifiy_socfortress_threat_intel_connector(connector_name: str) -> str
     if attributes is None:
         logger.error("No SOCFortress Threat Intel connector found in the database")
         return None
-    request = SocfortressThreatIntelRequest(ioc_value="evil.socfortress.co", customer_code="00001")
-    response = await invoke_socfortress_threat_intel_api(attributes["connector_api_key"], attributes["connector_url"], request)
+    request = SocfortressThreatIntelRequest(
+        ioc_value="evil.socfortress.co",
+        customer_code="00001",
+    )
+    response = await invoke_socfortress_threat_intel_api(
+        attributes["connector_api_key"],
+        attributes["connector_url"],
+        request,
+    )
     if "data" in response and response["data"].get("comment") == "This is a test IoC":
         logger.info("Verified SOCFortress Threat Intel connector")
-        return {"connectionSuccessful": True, "message": "Successfully verified SOCFortress Threat Intel connector"}
+        return {
+            "connectionSuccessful": True,
+            "message": "Successfully verified SOCFortress Threat Intel connector",
+        }
     else:
         logger.error("Failed to verify SOCFortress Threat Intel connector")
-        return {"connectionSuccessful": False, "message": "Failed to verify SOCFortress Threat Intel connector"}
+        return {
+            "connectionSuccessful": False,
+            "message": "Failed to verify SOCFortress Threat Intel connector",
+        }
 
 
-async def invoke_socfortress_threat_intel_api(api_key: str, url: str, request: SocfortressThreatIntelRequest) -> dict:
+async def invoke_socfortress_threat_intel_api(
+    api_key: str,
+    url: str,
+    request: SocfortressThreatIntelRequest,
+) -> dict:
     """
     Invokes the Socfortress Threat Intel API with the provided API key, URL, and request parameters.
 
@@ -110,7 +142,10 @@ async def invoke_socfortress_threat_intel_api(api_key: str, url: str, request: S
         return response.json()
 
 
-async def get_ioc_response(request: SocfortressThreatIntelRequest, session: AsyncSession) -> IoCResponse:
+async def get_ioc_response(
+    request: SocfortressThreatIntelRequest,
+    session: AsyncSession,
+) -> IoCResponse:
     """
     Retrieves IoC response from Socfortress Threat Intel API.
 
@@ -121,7 +156,10 @@ async def get_ioc_response(request: SocfortressThreatIntelRequest, session: Asyn
     Returns:
         IoCResponse: The response object containing the IoC data and success status.
     """
-    api_key = await get_socfortress_threat_intel_attributes("connector_api_key", session)
+    api_key = await get_socfortress_threat_intel_attributes(
+        "connector_api_key",
+        session,
+    )
     url = await get_socfortress_threat_intel_attributes("connector_url", session)
     response_data = await invoke_socfortress_threat_intel_api(api_key, url, request)
 
@@ -133,7 +171,10 @@ async def get_ioc_response(request: SocfortressThreatIntelRequest, session: Asyn
     return IoCResponse(data=IoCMapping(**data), success=success, message=message)
 
 
-async def socfortress_threat_intel_lookup(request: SocfortressThreatIntelRequest, session: AsyncSession) -> IoCResponse:
+async def socfortress_threat_intel_lookup(
+    request: SocfortressThreatIntelRequest,
+    session: AsyncSession,
+) -> IoCResponse:
     """
     Performs a threat intelligence lookup using the Socfortress service.
 

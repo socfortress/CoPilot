@@ -1,14 +1,15 @@
-from fastapi import APIRouter
-from fastapi import HTTPException
-from fastapi import Security
-from loguru import logger
-
 from app.auth.utils import AuthHandler
-from app.connectors.shuffle.schema.workflows import WorkflowExecutionBodyModel
-from app.connectors.shuffle.schema.workflows import WorkflowExecutionResponseModel
-from app.connectors.shuffle.schema.workflows import WorkflowsResponse
-from app.connectors.shuffle.services.workflows import get_workflow_executions
-from app.connectors.shuffle.services.workflows import get_workflows
+from app.connectors.shuffle.schema.workflows import (
+    WorkflowExecutionBodyModel,
+    WorkflowExecutionResponseModel,
+    WorkflowsResponse,
+)
+from app.connectors.shuffle.services.workflows import (
+    get_workflow_executions,
+    get_workflows,
+)
+from fastapi import APIRouter, HTTPException, Security
+from loguru import logger
 
 shuffle_workflows_router = APIRouter()
 
@@ -64,9 +65,15 @@ async def get_all_workflow_executions() -> WorkflowExecutionResponseModel:
                 {
                     "workflow_id": workflow["id"],
                     "workflow_name": workflow["name"],
-                    "status": await get_workflow_executions(WorkflowExecutionBodyModel(workflow_id=workflow["id"])),
+                    "status": await get_workflow_executions(
+                        WorkflowExecutionBodyModel(workflow_id=workflow["id"]),
+                    ),
                 },
             )
-        return WorkflowExecutionResponseModel(success=True, message="Successfully fetched workflow executions", workflows=workflow_details)
+        return WorkflowExecutionResponseModel(
+            success=True,
+            message="Successfully fetched workflow executions",
+            workflows=workflow_details,
+        )
     else:
         raise HTTPException(status_code=404, detail="No workflows found")

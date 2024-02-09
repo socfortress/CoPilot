@@ -1,13 +1,9 @@
-from fastapi import APIRouter
-from fastapi import Depends
-from fastapi import HTTPException
-from fastapi import Security
-from loguru import logger
-
 from app.auth.utils import AuthHandler
 from app.connectors.dfir_iris.schema.assets import AssetResponse
 from app.connectors.dfir_iris.services.assets import get_case_assets
 from app.connectors.dfir_iris.utils.universal import check_case_exists
+from fastapi import APIRouter, Depends, HTTPException, Security
+from loguru import logger
 
 # App specific imports
 
@@ -39,7 +35,9 @@ dfir_iris_assets_router = APIRouter()
     description="Get all assets for a case",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_case_assets_route(case_id: int = Depends(verify_case_exists)) -> AssetResponse:
+async def get_case_assets_route(
+    case_id: int = Depends(verify_case_exists),
+) -> AssetResponse:
     """
     Retrieve all assets for a given case.
 

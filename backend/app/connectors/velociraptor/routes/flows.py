@@ -1,19 +1,13 @@
-from fastapi import APIRouter
-from fastapi import Depends
-from fastapi import HTTPException
-from fastapi import Security
+from app.auth.utils import AuthHandler
+from app.connectors.velociraptor.schema.artifacts import CollectArtifactResponse
+from app.connectors.velociraptor.schema.flows import FlowResponse, RetrieveFlowRequest
+from app.connectors.velociraptor.services.flows import get_flow, get_flows
+from app.db.db_session import get_db
+from app.db.universal_models import Agents
+from fastapi import APIRouter, Depends, HTTPException, Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-
-from app.auth.utils import AuthHandler
-from app.connectors.velociraptor.schema.artifacts import CollectArtifactResponse
-from app.connectors.velociraptor.schema.flows import FlowResponse
-from app.connectors.velociraptor.schema.flows import RetrieveFlowRequest
-from app.connectors.velociraptor.services.flows import get_flow
-from app.connectors.velociraptor.services.flows import get_flows
-from app.db.db_session import get_db
-from app.db.universal_models import Agents
 
 velociraptor_flows_router = APIRouter()
 
@@ -41,10 +35,16 @@ async def get_velociraptor_id(session: AsyncSession, hostname: str) -> str:
     agent = result.scalars().first()
 
     if not agent:
-        raise HTTPException(status_code=404, detail=f"Agent with hostname {hostname} not found")
+        raise HTTPException(
+            status_code=404,
+            detail=f"Agent with hostname {hostname} not found",
+        )
 
     if agent.velociraptor_id == "n/a":
-        raise HTTPException(status_code=404, detail=f"Velociraptor ID for hostname {hostname} is not available")
+        raise HTTPException(
+            status_code=404,
+            detail=f"Velociraptor ID for hostname {hostname} is not available",
+        )
 
     logger.info(f"velociraptor_id for hostname {hostname} is {agent.velociraptor_id}")
     return agent.velociraptor_id
@@ -56,7 +56,10 @@ async def get_velociraptor_id(session: AsyncSession, hostname: str) -> str:
     description="Get all artifacts for a specific host's OS prefix",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_all_flows_for_hostname(hostname: str, session: AsyncSession = Depends(get_db)) -> FlowResponse:
+async def get_all_flows_for_hostname(
+    hostname: str,
+    session: AsyncSession = Depends(get_db),
+) -> FlowResponse:
     """
     Retrieve ran flows for a specific host.
 
@@ -80,7 +83,9 @@ async def get_all_flows_for_hostname(hostname: str, session: AsyncSession = Depe
     description="Retrieve a flow based on the flow_id",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def retrieve_flow(retrieve_flow_request: RetrieveFlowRequest) -> CollectArtifactResponse:
+async def retrieve_flow(
+    retrieve_flow_request: RetrieveFlowRequest,
+) -> CollectArtifactResponse:
     """
     Retrieve ran flows for a specific host.
 

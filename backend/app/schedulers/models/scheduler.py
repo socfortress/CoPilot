@@ -2,8 +2,7 @@ from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel
-from sqlmodel import Field
-from sqlmodel import SQLModel
+from sqlmodel import Field, SQLModel
 
 
 class JobMetadata(SQLModel, table=True):

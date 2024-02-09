@@ -1,6 +1,7 @@
 # build with `docker build -t python-backend -f Dockerfile.deb .`
 # run with `docker run -p 5000:5000 -d python-backend`
 # Start with the base Debian 11 image
+# looking to split into 2 containers, one for the backend and one for the frontend
 FROM debian:11
 
 # Set environment variables
@@ -37,27 +38,15 @@ RUN /opt/venv/bin/pip install setuptools
 
 # Install your application's dependencies
 WORKDIR /opt/copilot/backend
-COPY backend/requirements.txt ./
+COPY requirements.txt ./
 RUN /opt/venv/bin/pip install --no-cache-dir -r requirements.txt
 
 # Copy your application into the Docker image
-WORKDIR /opt/copilot
+WORKDIR /opt/copilot/backend
 COPY . .
 
-# Install Node.js and npm
-RUN curl -sL https://deb.nodesource.com/setup_18.x | bash -
-RUN apt-get install -y nodejs
-
-# Install concurrently
-RUN npm install -g concurrently
-
-# Install your Vue.js application's dependencies
-WORKDIR /opt/copilot
-RUN npm install
-
 # Expose ports
-EXPOSE 5000 5173
+EXPOSE 5000
 
 # Run your application
-#CMD ["sh", "-c", "cd backend && python copilot.py & cd /opt/copilot && npm run dev"]
-CMD ["sh", "-c", "cd /opt/copilot && npm run start"]
+CMD ["sh", "-c", "ls -la && /opt/venv/bin/python copilot.py"]

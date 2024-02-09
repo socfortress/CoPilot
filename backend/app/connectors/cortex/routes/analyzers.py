@@ -1,17 +1,14 @@
 from typing import List
 
-from fastapi import APIRouter
-from fastapi import Depends
-from fastapi import HTTPException
-from fastapi import Security
-from loguru import logger
-
 from app.auth.utils import AuthHandler
-from app.connectors.cortex.schema.analyzers import AnalyzersResponse
-from app.connectors.cortex.schema.analyzers import RunAnalyzerBody
-from app.connectors.cortex.schema.analyzers import RunAnalyzerResponse
-from app.connectors.cortex.services.analyzers import get_analyzers
-from app.connectors.cortex.services.analyzers import run_analyzer
+from app.connectors.cortex.schema.analyzers import (
+    AnalyzersResponse,
+    RunAnalyzerBody,
+    RunAnalyzerResponse,
+)
+from app.connectors.cortex.services.analyzers import get_analyzers, run_analyzer
+from fastapi import APIRouter, Depends, HTTPException, Security
+from loguru import logger
 
 # App specific imports
 
@@ -45,7 +42,10 @@ async def verify_analyzer_exists(run_analyzer_body: RunAnalyzerBody) -> RunAnaly
     """
     available_analyzers = await get_available_analyzers()
     if run_analyzer_body.analyzer_name not in available_analyzers:
-        raise HTTPException(status_code=400, detail=f"Analyzer {run_analyzer_body.analyzer_name} does not exist.")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Analyzer {run_analyzer_body.analyzer_name} does not exist.",
+        )
     return run_analyzer_body
 
 
@@ -72,7 +72,9 @@ async def get_all_analyzers() -> AnalyzersResponse:
     description="Run an analyzer",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def run_analyzer_route(run_analyzer_body: RunAnalyzerBody = Depends(verify_analyzer_exists)) -> RunAnalyzerResponse:
+async def run_analyzer_route(
+    run_analyzer_body: RunAnalyzerBody = Depends(verify_analyzer_exists),
+) -> RunAnalyzerResponse:
     """
     Run an analyzer.
 
@@ -82,9 +84,13 @@ async def run_analyzer_route(run_analyzer_body: RunAnalyzerBody = Depends(verify
     Returns:
         RunAnalyzerResponse: The response containing the result of running the analyzer.
     """
-    is_valid, data_type = RunAnalyzerBody.is_valid_datatype(run_analyzer_body.analyzer_data)
+    is_valid, data_type = RunAnalyzerBody.is_valid_datatype(
+        run_analyzer_body.analyzer_data,
+    )
     if not is_valid:
         raise HTTPException(status_code=400, detail=f"Invalid data type: {data_type}")
 
-    logger.info(f"Running analyzer {run_analyzer_body.analyzer_name} with data {run_analyzer_body.analyzer_data} of type {data_type}")
+    logger.info(
+        f"Running analyzer {run_analyzer_body.analyzer_name} with data {run_analyzer_body.analyzer_data} of type {data_type}",
+    )
     return await run_analyzer(run_analyzer_body, data_type)
