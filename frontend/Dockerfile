@@ -13,7 +13,7 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 # Copy project files into the working directory
-COPY . .
+COPY --chown=node . .
 
 # Run the Vue.js project build
 RUN npm run build-only
