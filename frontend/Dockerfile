@@ -8,7 +8,7 @@ USER node
 WORKDIR /app
 
 # Copy project files into the working directory
-COPY build .
+COPY . .
 
 # Install project dependencies
 RUN npm ci
