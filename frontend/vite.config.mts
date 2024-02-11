@@ -42,7 +42,6 @@ export default defineConfig({
             '/api': {
                 target: 'http://copilot-backend:5000',
                 changeOrigin: true,
-                rewrite: (path) => path.replace(/^\/api/, ''),
             }
         }
     }
