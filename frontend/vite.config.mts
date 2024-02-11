@@ -34,10 +34,10 @@ export default defineConfig({
 		include: ["fast-deep-equal"]
 	},
     server: {
-        https: {
+        https: (fs.existsSync('/certs/key.pem') && fs.existsSync('/certs/cert.pem')) ? {
             key: fs.readFileSync('/certs/key.pem'),
             cert: fs.readFileSync('/certs/cert.pem'),
-        },
+        } : false,
         proxy: {
             '/api': {
                 target: 'http://copilot-backend:5000',
