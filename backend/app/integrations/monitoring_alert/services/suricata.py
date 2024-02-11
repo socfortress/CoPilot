@@ -61,7 +61,7 @@ def valid_ioc_fields() -> Set[str]:
 
 
 async def construct_alert_source_link(
-    alert_details: CreateAlertRequest,
+    alert_details: SuricataIrisAlertContext,
     session: AsyncSession,
 ) -> str:
     """
@@ -75,12 +75,11 @@ async def construct_alert_source_link(
     str
         The alert source link.
     """
-    # Check if the alert has a process id and that it is not "No process ID found"
-    if hasattr(alert_details, "process_id") and alert_details.process_id != "No process ID found":
-        query_string = f"%22query%22:%22process_id:%5C%22{alert_details.process_id}%5C%22%20AND%20"
-    else:
-        query_string = f"%22query%22:%22_id:%5C%22{alert_details.id}%5C%22%20AND%20"
-
+    logger.info(f"Constructing alert source link for alert: {alert_details}")
+    query_string = f"%22query%22:%22alert_signature_id:%5C%22{alert_details.alert_id}%5C%22%20AND%20"
+    # ! TODO: REMOVE ONCE TESTING IS COMPLETE
+    if alert_details.agent_labels_customer == "WCPS":
+        alert_details.agent_labels_customer = "00002"
     grafana_url = (
         await get_customer_alert_settings(
             customer_code=alert_details.agent_labels_customer,
@@ -89,9 +88,9 @@ async def construct_alert_source_link(
     ).grafana_url
 
     return (
-        f"{grafana_url}/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,"
+        f"{grafana_url}/explore?left=%5B%22now-6h%22,%22now%22,%22SURICATA%22,%7B%22refId%22:%22A%22,"
         f"{query_string}"
-        f"agent_name:%5C%22{alert_details.agent_name}%5C%22%22,"
+        f"src_ip:%5C%22{alert_details.src_ip}%5C%22%22,"
         "%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,"
         "%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D"
     )
@@ -121,10 +120,9 @@ async def build_ioc_payload(alert_details: CreateAlertRequest) -> Optional[IrisI
 
 
 async def build_asset_payload(
-    agent_data: AgentsResponse,
-    alert_details: CreateAlertRequest,
+    alert_details: SuricataIrisAlertContext,
     session: AsyncSession,
-) -> IrisAsset:
+) -> SuricataIrisAsset:
     """
     Build the payload for an IrisAsset object based on the agent data and alert details.
 
@@ -136,18 +134,18 @@ async def build_asset_payload(
         IrisAsset: The constructed IrisAsset object.
     """
     # Get the agent_id based on the hostname from the Agents table
-    if agent_data.success:
-        return IrisAsset(
-            asset_name=agent_data.agents[0].hostname,
-            asset_ip=agent_data.agents[0].ip_address,
+    logger.info(f"Building asset payload for alert: {alert_details}")
+    if alert_details is not None:
+        return SuricataIrisAsset(
+            asset_name=alert_details.src_ip,
+            assest_ip=alert_details.src_ip,
             asset_description=await construct_alert_source_link(
                 alert_details,
                 session=session,
             ),
-            asset_type_id=await get_asset_type_id(agent_data.agents[0].os),
-            asset_tags=f"agent_id:{agent_data.agents[0].agent_id}",
+            asset_type_id=9,
         )
-    return IrisAsset()
+    return SuricataIrisAsset()
 
 
 async def fetch_wazuh_indexer_details(alert_id: str, index: str) -> SuricataAlertModel:
@@ -247,10 +245,9 @@ def construct_params(request: FilterAlertsRequest) -> dict:
 
 
 async def build_alert_context_payload(
-    alert_details: CreateAlertRequest,
-    agent_data: AgentsResponse,
+    alert_details: SuricataIrisAlertContext,
     session: AsyncSession,
-) -> WazuhIrisAlertContext:
+) -> SuricataIrisAlertContext:
     """
     Builds the payload for the alert context.
 
@@ -262,7 +259,7 @@ async def build_alert_context_payload(
     Returns:
         WazuhIrisAlertContext: The built alert context payload.
     """
-    return WazuhIrisAlertContext(
+    return SuricataIrisAlertContext(
         customer_iris_id=(
             await get_customer_alert_settings(
                 customer_code=alert_details.agent_labels_customer,
@@ -299,8 +296,7 @@ async def build_alert_context_payload(
 
 
 async def build_alert_payload(
-    alert_details: CreateAlertRequest,
-    agent_data,
+    alert_details: SuricataIrisAlertContext,
     ioc_payload: Optional[IrisIoc],
     session: AsyncSession,
 ) -> WazuhIrisAlertPayload:
@@ -308,7 +304,7 @@ async def build_alert_payload(
     Builds the payload for an alert based on the provided alert details, agent data, IoC payload, and session.
 
     Args:
-        alert_details (CreateAlertRequest): The details of the alert.
+        alert_details (SuricataAlertModel): The details of the alert.
         agent_data: The agent data associated with the alert.
         ioc_payload (Optional[IrisIoc]): The IoC payload associated with the alert.
         session (AsyncSession): The session used for database operations.
@@ -317,13 +313,13 @@ async def build_alert_payload(
         WazuhIrisAlertPayload: The built alert payload.
     """
     asset_payload = await build_asset_payload(
-        agent_data,
         alert_details=alert_details,
         session=session,
     )
+    logger.info(f"Asset payload: {asset_payload}")
+
     context_payload = await build_alert_context_payload(
         alert_details=alert_details,
-        agent_data=agent_data,
         session=session,
     )
     timefield = (
@@ -403,6 +399,7 @@ async def create_alert_details(
             "app_proto",
             "No application protocol found",
         ),
+        agent_labels_customer=alert_details._source["agent_labels_customer"],
     )
 
 
@@ -427,16 +424,10 @@ async def create_and_update_alert_in_iris(
     # ! TODO: REVIST THIS TOMORROW
     iris_alert_payload = await build_alert_payload(
         alert_details=alert_details,
-        # ! I DONT NEED TO BUILD THE AGENT DATA CAUSE I GET THIS FROM THE FUNCTION
-        agent_data=SuricataIrisAsset(
-            asset_name=alert_details.src_ip,
-            asset_ip=alert_details.src_ip,
-            asset_description="Source IP of the alert",
-            asset_type_id=9,
-        ),
         ioc_payload=ioc_payload,
         session=session,
     )
+    return None
     client, alert_client = await initialize_client_and_alert("DFIR-IRIS")
     result = await fetch_and_validate_data(
         client,

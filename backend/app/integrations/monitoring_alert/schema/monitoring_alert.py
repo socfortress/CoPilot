@@ -249,6 +249,11 @@ class FilterAlertsRequest(BaseModel):
         description="The status of the alert. Default to assigned.",
         example=3,
     )
+    alert_customer_id: int = Field(
+        ...,
+        description="The customer id of the alert.",
+        example=1,
+    )
 
 
 class WazuhIrisAlertContext(BaseModel):
@@ -466,6 +471,11 @@ class SuricataIrisAlertContext(BaseModel):
         ...,
         description="Application protocol of the alert",
         example="TCP",
+    )
+    agent_labels_customer: str = Field(
+        ...,
+        description="Customer of the endpoint",
+        example="SOCFortress",
     )
 
 
