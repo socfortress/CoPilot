@@ -4,9 +4,9 @@ services:
     copilot-backend:
       image: ghcr.io/socfortress/copilot-backend:latest
       volumes:
-          - ./docker-env/copilot-backend-data/logs:/opt/logs
+          - ./data/copilot-backend-data/logs:/opt/logs
           # Mount the copilot.db file to persist the database
-          - ./backend/data:/opt/copilot/backend/data
+          - ./data/data:/opt/copilot/backend/data
 
     copilot-frontend:
       image: ghcr.io/socfortress/copilot-frontend:latest

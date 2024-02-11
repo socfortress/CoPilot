@@ -68,7 +68,7 @@ wget https://raw.githubusercontent.com/socfortress/CoPilot/v0.0.2/docker-compose
 # Edit the docker-compose.yml file to set the server name and/or the services you want to use
 
 # Create the path for storing your data
-mkdir docker-env
+mkdir data
 
 # Run Copilot
 docker compose up -d
