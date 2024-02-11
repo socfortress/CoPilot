@@ -7,11 +7,13 @@ USER node
 # Set the working directory
 WORKDIR /app
 
-# Copy project files into the working directory
-COPY . .
-
+# Copy the package.json and package-lock.json files into the working directory
+COPY package.json package-lock.json ./
 # Install project dependencies
 RUN npm ci
+
+# Copy project files into the working directory
+COPY . .
 
 # Run the Vue.js project build
 RUN npm run build-only
