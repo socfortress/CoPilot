@@ -259,8 +259,8 @@ class AlertsQueryBuilder:
                 timestamp_field: {
                     "gte": start,
                     "lte": "now",
-                }
-            }
+                },
+            },
         }
         if timestamp_field == "timestamp":
             range_query["range"][timestamp_field]["format"] = "strict_date_optional_time"

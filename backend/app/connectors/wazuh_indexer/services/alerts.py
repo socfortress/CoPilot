@@ -3,9 +3,9 @@ from typing import List
 from typing import Optional
 from typing import Type
 
+from elasticsearch7.exceptions import RequestError
 from fastapi import HTTPException
 from loguru import logger
-from elasticsearch7.exceptions import RequestError
 
 from app.connectors.wazuh_indexer.schema.alerts import AlertsByHost
 from app.connectors.wazuh_indexer.schema.alerts import AlertsByHostResponse
@@ -110,9 +110,9 @@ async def collect_alerts_generic(
         alerts = es_client.search(index=index_name, body=query, size=body.size)
     except RequestError as e:
         logger.warning(f"An error occurred while collecting alerts: {e}")
-        if 'No mapping found for [timestamp_utc] in order to sort on' in str(e):
-            logger.warning(f"Retrying with timestamp field set to 'timestamp'")
-            body.timestamp_field = 'timestamp'
+        if "No mapping found for [timestamp_utc] in order to sort on" in str(e):
+            logger.warning("Retrying with timestamp field set to 'timestamp'")
+            body.timestamp_field = "timestamp"
             return await collect_alerts_generic(index_name, body, is_host_specific)
         else:
             logger.warning(f"An error occurred while collecting alerts: {e}")
