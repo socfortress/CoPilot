@@ -254,9 +254,17 @@ class AlertsQueryBuilder:
             self: The updated instance of the class.
         """
         start = self._get_time_range_start(timerange)
-        self.query["query"]["bool"]["must"].append(
-            {"range": {timestamp_field: {"gte": start, "lte": "now"}}},
-        )
+        range_query = {
+            "range": {
+                timestamp_field: {
+                    "gte": start,
+                    "lte": "now",
+                },
+            },
+        }
+        if timestamp_field == "timestamp":
+            range_query["range"][timestamp_field]["format"] = "strict_date_optional_time"
+        self.query["query"]["bool"]["must"].append(range_query)
         return self
 
     def add_matches(self, matches: Iterable[Tuple[str, str]]):

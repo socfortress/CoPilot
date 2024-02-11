@@ -3,6 +3,7 @@ from typing import List
 from typing import Optional
 from typing import Type
 
+from elasticsearch7.exceptions import RequestError
 from fastapi import HTTPException
 from loguru import logger
 
@@ -92,34 +93,42 @@ async def collect_alerts_generic(
     """
     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
     query_builder = AlertsQueryBuilder()
-    query_builder.add_time_range(
-        timerange=body.timerange,
-        timestamp_field=body.timestamp_field,
-    )
-    query_builder.add_matches(matches=[(body.alert_field, body.alert_value)])
-    query_builder.add_sort(body.timestamp_field)
-
-    if is_host_specific:
-        query_builder.add_match_phrase(matches=[("agent_name", body.agent_name)])
-
-    query = query_builder.build()
 
     try:
+        query_builder.add_time_range(
+            timerange=body.timerange,
+            timestamp_field=body.timestamp_field,
+        )
+        query_builder.add_matches(matches=[(body.alert_field, body.alert_value)])
+        query_builder.add_sort(body.timestamp_field)
+
+        if is_host_specific:
+            query_builder.add_match_phrase(matches=[("agent_name", body.agent_name)])
+
+        query = query_builder.build()
+
         alerts = es_client.search(index=index_name, body=query, size=body.size)
-        logger.info(f"Alerts collected: {alerts}")
-        alerts_list = [alert for alert in alerts["hits"]["hits"]]
-        logger.info(f"Alerts collected: {alerts_list}")
-        return CollectAlertsResponse(
-            alerts=alerts_list,
-            success=True,
-            message="Alerts collected successfully",
-        )
-    except Exception as e:
+    except RequestError as e:
         logger.warning(f"An error occurred while collecting alerts: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"An error occurred while collecting alerts: {e}",
-        )
+        if "No mapping found for [timestamp_utc] in order to sort on" in str(e):
+            logger.warning("Retrying with timestamp field set to 'timestamp'")
+            body.timestamp_field = "timestamp"
+            return await collect_alerts_generic(index_name, body, is_host_specific)
+        else:
+            logger.warning(f"An error occurred while collecting alerts: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"An error occurred while collecting alerts: {e}",
+            )
+
+    logger.info(f"Alerts collected: {alerts}")
+    alerts_list = [alert for alert in alerts["hits"]["hits"]]
+    logger.info(f"Alerts collected: {alerts_list}")
+    return CollectAlertsResponse(
+        alerts=alerts_list,
+        success=True,
+        message="Alerts collected successfully",
+    )
 
 
 async def get_alerts_generic(
