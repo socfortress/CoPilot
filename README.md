@@ -63,16 +63,12 @@ systemctl restart docker
 
 ```bash
 #  Clone the CoPilot repository
-git clone https://github.com/socfortress/CoPilot
-cd CoPilot
+wget https://raw.githubusercontent.com/socfortress/CoPilot/v0.0.2/docker-compose.yml
 
-# Copy the environment file
-cp .env.example .env
+# Edit the docker-compose.yml file to set the server name and/or the services you want to use
 
-# Make your changes to the .env file
-
-# Build the copilot-frontend image
-bash build-dockers.sh
+# Create the path for storing your data
+mkdir docker-env
 
 # Run Copilot
 docker compose up -d
@@ -84,6 +80,35 @@ By default, an `admin` account is created. The password is printed in stdout the
 
 🚀 **YouTube Tutorial:** [SOCFortress CoPilot - Getting Started](https://youtu.be/hu1X9MCW7j0)
 
+#### SSL
+By default Copilot uses a self-signed certificate valid for 365 days from install. You can replace the certificate and
+key files with your own.  These files should be mounted in the `copilot-frontend` container and you can set the path to
+your certificate and key files in the `docker-compose.yml` file using the `TLS_CERT_PATH` and `TLS_KEY_PATH`
+respectively.
+
+For Example
+```bash
+# Generate a certificate e.g.
+openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365
+```
+
+Then update the `docker-compose.yml` file to mount the certificate and key files and set the `TLS_CERT_PATH` and `TLS_KEY_PATH` environment variables.
+```yaml
+    copilot-frontend:
+      image: ghcr.io/socfortress/copilot-frontend:latest
+      volumes:
+        - PATH_TO_YOUR_CERTS:/etc/letsencrypt
+      environment:
+        - SERVER_HOST=${SERVER_HOST:-localhost} # Set the domain name of your server
+        - TLS_CERT_PATH=/etc/letsencrypt/live/${SERVER_HOST}/fullchain.pem # Set the path to your certificate
+        - TLS_KEY_PATH=/etc/letsencrypt/live/${SERVER_HOST}/privkey.pem # Set the path to your key
+      ports:
+        - "80:80"
+        - "443:443"
+```
+
+```yaml
+
 ### Upgrading Copilot
 
 🛠 You will likely want to upgrade often as we are frequently pushing new changes.
@@ -92,16 +117,7 @@ To upgrade Copilot, you will need to stop the running container, pull the latest
 
 ```bash
 # Stop the running container. Make sure you are in the CoPilot directory
-docker compose down
-
-# Pull the latest code from the repository
-git pull
-
-# Build the copilot-frontend image
-bash build-dockers.sh
-
-# Pull the latest copilot-backend image
-docker pull ghcr.io/socfortress/copilot-backend:latest
+docker compose pull
 
 # Start the container again
 docker compose up -d
