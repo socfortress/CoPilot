@@ -4,6 +4,7 @@ import vue from "@vitejs/plugin-vue"
 import vueJsx from "@vitejs/plugin-vue-jsx"
 import svgLoader from "vite-svg-loader"
 import Components from "unplugin-vue-components/vite"
+import fs from 'fs';
 // import { analyzer } from "vite-bundle-analyzer"
 
 // https://vitejs.dev/config/
@@ -31,5 +32,18 @@ export default defineConfig({
 	},
 	optimizeDeps: {
 		include: ["fast-deep-equal"]
-	}
+	},
+    server: {
+        https: {
+            key: fs.readFileSync('/certs/key.pem'),
+            cert: fs.readFileSync('/certs/cert.pem'),
+        },
+        proxy: {
+            '/api': {
+                target: 'http://copilot-backend:5000',
+                changeOrigin: true,
+                rewrite: (path) => path.replace(/^\/api/, ''),
+            }
+        }
+    }
 })
