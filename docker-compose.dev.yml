@@ -1,0 +1,28 @@
+version: "2"
+
+services:
+    copilot-backend:
+      build:
+        context: backend
+        dockerfile: Dockerfile
+      volumes:
+          - ./docker-env/copilot-backend-data/logs:/opt/logs
+          # Mount the copilot.db file to persist the database
+          - ./backend/data:/opt/copilot/backend/data
+
+    copilot-frontend:
+      build:
+        context: frontend
+        dockerfile: Dockerfile
+        target: dev
+      volumes:
+        - ./frontend:/app
+      environment:
+          - SERVER_HOST=${SERVER_HOST:-localhost} # Set the domain name of your server
+      ports:
+        - "80:80"
+        - "5173:5173"
+
+networks:
+    default:
+        driver: bridge
