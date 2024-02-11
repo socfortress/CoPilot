@@ -15,19 +15,19 @@ from app.integrations.monitoring_alert.schema.monitoring_alert import (
     MonitoringWazuhAlertsRequestModel,
 )
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
-    WazuhAnalysisResponse,
+    AlertAnalysisResponse,
 )
 from app.schedulers.models.scheduler import JobMetadata
 
 load_dotenv()
 
 
-async def invoke_wazuh_monitoring_alert() -> WazuhAnalysisResponse:
+async def invoke_wazuh_monitoring_alert() -> AlertAnalysisResponse:
     """
     Invokes the Wazuh monitoring alerts scheduled job.
 
     Returns:
-        WazuhAnalysisResponse: The response indicating the success of invoking the monitoring alerts.
+        AlertAnalysisResponse: The response indicating the success of invoking the monitoring alerts.
     """
     logger.info("Invoking Wazuh monitoring alerts scheduled job.")
     customer_codes = []
@@ -54,13 +54,13 @@ async def invoke_wazuh_monitoring_alert() -> WazuhAnalysisResponse:
             # Handle the case where job_metadata does not exist
             logger.error("JobMetadata for 'invoke_wazuh_monitoring_alert' not found.")
 
-    return WazuhAnalysisResponse(
+    return AlertAnalysisResponse(
         success=True,
         message="Wazuh monitoring alerts invoked.",
     )
 
 
-async def invoke_suricata_monitoring_alert() -> WazuhAnalysisResponse:
+async def invoke_suricata_monitoring_alert() -> AlertAnalysisResponse:
     """
     Invokes the Suricata monitoring alerts scheduled job.
 
@@ -94,7 +94,7 @@ async def invoke_suricata_monitoring_alert() -> WazuhAnalysisResponse:
                 "JobMetadata for 'invoke_suricata_monitoring_alert' not found.",
             )
 
-    return WazuhAnalysisResponse(
+    return AlertAnalysisResponse(
         success=True,
         message="Suricata monitoring alerts invoked.",
     )

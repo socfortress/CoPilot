@@ -23,7 +23,7 @@ from app.integrations.monitoring_alert.schema.monitoring_alert import (
     MonitoringWazuhAlertsRequestModel,
 )
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
-    WazuhAnalysisResponse,
+    AlertAnalysisResponse,
 )
 from app.integrations.monitoring_alert.services.suricata import analyze_suricata_alerts
 from app.integrations.monitoring_alert.services.wazuh import analyze_wazuh_alerts
@@ -130,12 +130,12 @@ async def create_monitoring_alert(
 
 @monitoring_alerts_router.post(
     "/run_analysis/wazuh",
-    response_model=WazuhAnalysisResponse,
+    response_model=AlertAnalysisResponse,
 )
 async def run_wazuh_analysis(
     request: MonitoringWazuhAlertsRequestModel,
     session: AsyncSession = Depends(get_db),
-) -> WazuhAnalysisResponse:
+) -> AlertAnalysisResponse:
     """
     This route is used to run analysis on the monitoring alerts.
 
@@ -170,7 +170,7 @@ async def run_wazuh_analysis(
     # Call the analyze_wazuh_alerts function to analyze the alerts
     await analyze_wazuh_alerts(monitoring_alerts, customer_meta, session)
 
-    return WazuhAnalysisResponse(
+    return AlertAnalysisResponse(
         success=True,
         message="Analysis completed successfully",
     )
@@ -178,12 +178,12 @@ async def run_wazuh_analysis(
 
 @monitoring_alerts_router.post(
     "/run_analysis/suricata",
-    response_model=WazuhAnalysisResponse,
+    response_model=AlertAnalysisResponse,
 )
 async def run_suricata_analysis(
     request: MonitoringWazuhAlertsRequestModel,
     session: AsyncSession = Depends(get_db),
-) -> WazuhAnalysisResponse:
+) -> AlertAnalysisResponse:
     """
     This route is used to run analysis on the monitoring alerts.
 
@@ -218,7 +218,7 @@ async def run_suricata_analysis(
     # Call the analyze_wazuh_alerts function to analyze the alerts
     await analyze_suricata_alerts(monitoring_alerts, customer_meta, session)
 
-    return WazuhAnalysisResponse(
+    return AlertAnalysisResponse(
         success=True,
         message="Analysis completed successfully",
     )

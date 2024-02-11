@@ -6,14 +6,11 @@ from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.agents.routes.agents import get_agent
-from app.agents.schema.agents import AgentsResponse
 from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
 from app.connectors.dfir_iris.utils.universal import initialize_client_and_alert
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
 from app.db.universal_models import CustomersMeta
 from app.integrations.alert_creation.general.schema.alert import CreateAlertRequest
-from app.integrations.alert_creation.general.schema.alert import IrisAsset
 from app.integrations.alert_creation.general.schema.alert import IrisIoc
 from app.integrations.alert_creation.general.schema.alert import ValidIocFields
 from app.integrations.alert_creation.general.services.alert_multi_exclude import (
@@ -35,16 +32,12 @@ from app.integrations.monitoring_alert.schema.monitoring_alert import (
 )
 from app.integrations.monitoring_alert.schema.monitoring_alert import SuricataIrisAsset
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
-    WazuhAnalysisResponse,
+    AlertAnalysisResponse,
 )
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
-    WazuhIrisAlertContext,
-)
-from app.integrations.monitoring_alert.schema.monitoring_alert import (
-    WazuhIrisAlertPayload,
+    SuricataIrisAlertPayload,
 )
 from app.integrations.monitoring_alert.utils.db_operations import remove_alert_id
-from app.integrations.utils.alerts import get_asset_type_id
 from app.integrations.utils.alerts import validate_ioc_type
 from app.utils import get_customer_alert_settings
 
@@ -138,19 +131,19 @@ async def build_asset_payload(
     if alert_details is not None:
         return SuricataIrisAsset(
             asset_name=alert_details.src_ip,
-            assest_ip=alert_details.src_ip,
+            asset_ip=alert_details.src_ip,
             asset_description=await construct_alert_source_link(
                 alert_details,
                 session=session,
             ),
-            asset_type_id=9,
+            asset_type_id=2,
         )
     return SuricataIrisAsset()
 
 
 async def fetch_wazuh_indexer_details(alert_id: str, index: str) -> SuricataAlertModel:
     """
-    Fetch the Wazuh alert details from the Wazuh-Indexer.
+    Fetch the Suricata alert details from the Wazuh-Indexer.
 
     Args:
         alert_id (str): The alert ID.
@@ -160,7 +153,7 @@ async def fetch_wazuh_indexer_details(alert_id: str, index: str) -> SuricataAler
         CollectAlertsResponse: The response from the Wazuh-Indexer.
     """
     logger.info(
-        f"Fetching Wazuh alert details for alert_id: {alert_id} and index: {index}",
+        f"Fetching Suricata alert details for alert_id: {alert_id} and index: {index}",
     )
 
     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
@@ -170,7 +163,7 @@ async def fetch_wazuh_indexer_details(alert_id: str, index: str) -> SuricataAler
 
 
 async def fetch_alert_details(alert: MonitoringAlerts) -> SuricataAlertModel:
-    logger.info(f"Analyzing Wazuh alert: {alert.alert_id}")
+    logger.info(f"Analyzing Suricata alert: {alert.alert_id}")
     alert_details = await fetch_wazuh_indexer_details(alert.alert_id, alert.alert_index)
     logger.info(f"Alert details: {alert_details}")
     return alert_details
@@ -197,7 +190,7 @@ async def check_event_exclusion(
     logger.info("Alert is not excluded due to multi exclusion.")
 
 
-async def check_if_open_alert_exists_in_iris(alert_details: SuricataAlertModel) -> list:
+async def check_if_open_alert_exists_in_iris(alert_details: SuricataAlertModel, session: AsyncSession) -> list:
     """
     Check if the alert exists in IRIS.
 
@@ -209,8 +202,16 @@ async def check_if_open_alert_exists_in_iris(alert_details: SuricataAlertModel) 
         bool: True if the alert exists in IRIS, False otherwise.
     """
     client, alert_client = await initialize_client_and_alert("DFIR-IRIS")
+    customer_iris_id=(
+            await get_customer_alert_settings(
+                #customer_code=alert_details._source["agent_labels_customer"],
+                customer_code="00002",
+                session=session,
+            )
+        ).iris_customer_id
     request = FilterAlertsRequest(
         alert_tags=alert_details._source["alert_signature_id"],
+        alert_customer_id=customer_iris_id,
     )
     params = construct_params(request)
     alert_exists = await fetch_and_validate_data(
@@ -237,6 +238,7 @@ def construct_params(request: FilterAlertsRequest) -> dict:
         "sort": request.sort,
         "alert_tags": request.alert_tags,
         "alert_status_id": request.alert_status_id,
+        "alert_customer_id": request.alert_customer_id,
         # Add more parameters here as needed
     }
 
@@ -257,7 +259,7 @@ async def build_alert_context_payload(
         session (AsyncSession): The async session.
 
     Returns:
-        WazuhIrisAlertContext: The built alert context payload.
+        SuricataIrisAlertContext: The built alert context payload.
     """
     return SuricataIrisAlertContext(
         customer_iris_id=(
@@ -278,20 +280,14 @@ async def build_alert_context_payload(
                 session=session,
             )
         ).iris_index,
-        alert_name=alert_details.rule_description,
-        alert_level=alert_details.rule_level,
+        alert_id=alert_details.alert_id,
+        alert_name=alert_details.alert_name,
+        alert_level=alert_details.alert_level,
         rule_id=alert_details.rule_id,
-        rule_mitre_id=getattr(alert_details, "rule_mitre_id", "No rule mitre id found"),
-        rule_mitre_tactic=getattr(
-            alert_details,
-            "rule_mitre_tactic",
-            "No rule mitre tactic found",
-        ),
-        rule_mitre_technique=getattr(
-            alert_details,
-            "rule_mitre_technique",
-            "No rule mitre technique found",
-        ),
+        src_ip=alert_details.src_ip,
+        dest_ip=alert_details.dest_ip,
+        app_proto=alert_details.app_proto,
+        agent_labels_customer=alert_details.agent_labels_customer,
     )
 
 
@@ -299,7 +295,7 @@ async def build_alert_payload(
     alert_details: SuricataIrisAlertContext,
     ioc_payload: Optional[IrisIoc],
     session: AsyncSession,
-) -> WazuhIrisAlertPayload:
+) -> SuricataIrisAlertPayload:
     """
     Builds the payload for an alert based on the provided alert details, agent data, IoC payload, and session.
 
@@ -310,7 +306,7 @@ async def build_alert_payload(
         session (AsyncSession): The session used for database operations.
 
     Returns:
-        WazuhIrisAlertPayload: The built alert payload.
+        SuricataIrisAlertPayload: The built alert payload.
     """
     asset_payload = await build_asset_payload(
         alert_details=alert_details,
@@ -322,22 +318,15 @@ async def build_alert_payload(
         alert_details=alert_details,
         session=session,
     )
-    timefield = (
-        await get_customer_alert_settings(
-            customer_code=alert_details.agent_labels_customer,
-            session=session,
-        )
-    ).timefield
-    # Get the timefield value from the alert_details
-    if hasattr(alert_details, timefield):
-        alert_details.time_field = getattr(alert_details, timefield)
+
     logger.info(f"Alert has context: {context_payload}")
+
     if ioc_payload:
         logger.info(f"Alert has IoC: {ioc_payload}")
-        return WazuhIrisAlertPayload(
-            alert_title=alert_details.rule_description,
-            alert_description=alert_details.rule_description,
-            alert_source="COPILOT WAZUH ANALYSIS",
+        return SuricataIrisAlertPayload(
+            alert_title=alert_details.alert_name,
+            alert_description=alert_details.alert_name,
+            alert_source="COPILOT SURICATA ANALYSIS",
             assets=[asset_payload],
             alert_status_id=3,
             alert_severity_id=5,
@@ -354,10 +343,10 @@ async def build_alert_payload(
         )
     else:
         logger.info("Alert does not have IoC")
-        return WazuhIrisAlertPayload(
-            alert_title=alert_details.rule_description,
-            alert_description=alert_details.rule_description,
-            alert_source="COPILOT WAZUH ANALYSIS",
+        return SuricataIrisAlertPayload(
+            alert_title=alert_details.alert_name,
+            alert_description=alert_details.alert_name,
+            alert_source="COPILOT SURICATA ANALYSIS",
             assets=[asset_payload],
             alert_status_id=3,
             alert_severity_id=5,
@@ -377,13 +366,13 @@ async def create_alert_details(
     alert_details: SuricataAlertModel,
 ) -> SuricataIrisAlertContext:
     """
-    Create an alert details object from the Wazuh alert details.
+    Create an alert details object from the Suricata alert details.
 
     Args:
-        alert_details (SuricataAlertModel): The Wazuh alert details.
+        alert_details (SuricataAlertModel): The Suricata alert details.
 
     Returns:
-        CreateAlertRequest: The alert details object.
+        SuricataIrisAlertContext: The alert details object.
     """
     logger.info(f"Creating alert details for alert: {alert_details}")
     return SuricataIrisAlertContext(
@@ -400,6 +389,7 @@ async def create_alert_details(
             "No application protocol found",
         ),
         agent_labels_customer=alert_details._source["agent_labels_customer"],
+        time_field=alert_details._source.get("timestamp_utc", alert_details._source.get("timestamp")),
     )
 
 
@@ -427,7 +417,8 @@ async def create_and_update_alert_in_iris(
         ioc_payload=ioc_payload,
         session=session,
     )
-    return None
+    logger.info(f"Alert payload: {iris_alert_payload}")
+
     client, alert_client = await initialize_client_and_alert("DFIR-IRIS")
     result = await fetch_and_validate_data(
         client,
@@ -436,18 +427,19 @@ async def create_and_update_alert_in_iris(
     )
     alert_id = result["data"]["alert_id"]
     logger.info(f"Successfully created alert {alert_id} in IRIS.")
+
     await fetch_and_validate_data(
         client,
         alert_client.update_alert,
         alert_id,
-        {"alert_tags": f"{alert_details._source.alert_signature_id}"},
+        {"alert_tags": f"{alert_details.alert_id}"},
     )
     # Update the alert with the asset payload
     await fetch_and_validate_data(
         client,
         alert_client.update_alert,
         alert_id,
-        {"assets": [dict(IrisAsset(**iris_alert_payload.assets[0].to_dict()))]},
+        {"assets": [dict(SuricataIrisAsset(**iris_alert_payload.assets[0].to_dict()))]},
     )
     if ioc_payload:
         await fetch_and_validate_data(
@@ -498,9 +490,9 @@ async def analyze_suricata_alerts(
     monitoring_alerts: MonitoringAlerts,
     customer_meta: CustomersMeta,
     session: AsyncSession,
-) -> WazuhAnalysisResponse:
+) -> AlertAnalysisResponse:
     """
-    Analyze the given Wazuh alerts and create an alert if necessary. Otherwise update the existing alert with the asset.
+    Analyze the given Suricata alerts and create an alert if necessary. Otherwise update the existing alert with the asset.
 
     1. For each alert, extract the metadata from the Wazuh-Indexer.
     2. Check if the alert exists in IRIS. If it does, update the alert with the asset. If it does not, create the alert in IRIS.
@@ -512,12 +504,12 @@ async def analyze_suricata_alerts(
         session (AsyncSession): The database session.
 
     Returns:
-        WazuhAnalysisResponse: The analysis response.
+        AlertAnalysisResponse: The analysis response.
     """
-    logger.info(f"Analyzing Wazuh alerts with customer_meta: {customer_meta}")
+    logger.info(f"Analyzing Suricata alerts with customer_meta: {customer_meta}")
     for alert in monitoring_alerts:
         alert_details = await fetch_alert_details(alert)
-        iris_alert_id = await check_if_open_alert_exists_in_iris(alert_details)
+        iris_alert_id = await check_if_open_alert_exists_in_iris(alert_details, session=session)
         if iris_alert_id == []:
             logger.info(
                 f"Alert {alert_details._id} does not exist in IRIS. Creating alert.",
@@ -526,7 +518,7 @@ async def analyze_suricata_alerts(
                 alert_details,
                 session,
             )
-            return None
+            logger.info(f"Alert {iris_alert_id} created in IRIS.")
             await remove_alert_id(alert.alert_id, session)
             es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
             await add_alert_to_document(
@@ -543,6 +535,7 @@ async def analyze_suricata_alerts(
             logger.info(
                 f"Alert {iris_alert_id} exists in IRIS. Updating alert with the asset.",
             )
+
             # Fetch the current list of assets from the alert to avoid overwriting them
             client, alert_client = await initialize_client_and_alert("DFIR-IRIS")
             current_assets = await get_current_assets(
@@ -551,13 +544,11 @@ async def analyze_suricata_alerts(
                 iris_alert_id,
             )
             alert_details = await create_alert_details(alert_details)
-            agent_details = await get_agent(alert_details.agent_id, session)
             asset_payload = await build_asset_payload(
-                agent_data=agent_details,
                 alert_details=alert_details,
                 session=session,
             )
-            current_assets.append(dict(IrisAsset(**asset_payload.to_dict())))
+            current_assets.append(dict(SuricataIrisAsset(**asset_payload.to_dict())))
             current_assets = await remove_duplicate_assets(current_assets)
             await update_alert_with_assets(
                 client,
@@ -570,14 +561,14 @@ async def analyze_suricata_alerts(
             await add_alert_to_document(
                 es_client=es_client,
                 alert=AddAlertRequest(
-                    alert_id=alert_details.id,
-                    index_name=alert_details.index,
+                    alert_id=alert.alert_id,
+                    index_name=alert.alert_index,
                 ),
                 soc_alert_id=iris_alert_id,
                 session=session,
             )
 
-    return WazuhAnalysisResponse(
+    return AlertAnalysisResponse(
         success=True,
-        message="Wazuh alerts analyzed successfully",
+        message="Suricata alerts analyzed successfully",
     )

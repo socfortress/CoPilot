@@ -31,7 +31,7 @@ from app.integrations.monitoring_alert.schema.monitoring_alert import (
 )
 from app.integrations.monitoring_alert.schema.monitoring_alert import WazuhAlertModel
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
-    WazuhAnalysisResponse,
+    AlertAnalysisResponse,
 )
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
     WazuhIrisAlertContext,
@@ -499,7 +499,7 @@ async def analyze_wazuh_alerts(
     monitoring_alerts: MonitoringAlerts,
     customer_meta: CustomersMeta,
     session: AsyncSession,
-) -> WazuhAnalysisResponse:
+) -> AlertAnalysisResponse:
     """
     Analyze the given Wazuh alerts and create an alert if necessary. Otherwise update the existing alert with the asset.
 
@@ -579,7 +579,7 @@ async def analyze_wazuh_alerts(
                 session=session,
             )
 
-    return WazuhAnalysisResponse(
+    return AlertAnalysisResponse(
         success=True,
         message="Wazuh alerts analyzed successfully",
     )

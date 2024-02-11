@@ -174,7 +174,7 @@ class GraylogPostResponse(BaseModel):
     )
 
 
-class WazuhAnalysisResponse(BaseModel):
+class AlertAnalysisResponse(BaseModel):
     success: bool = Field(
         ...,
         description="Indicates if the request was successful",
@@ -427,6 +427,9 @@ class SuricataIrisAsset(BaseModel):
         example=1,
     )
 
+    def to_dict(self):
+        return self.dict(exclude_none=True)
+
 
 class SuricataIrisIoc(BaseModel):
     ioc_value: str = Field(
@@ -477,6 +480,25 @@ class SuricataIrisAlertContext(BaseModel):
         description="Customer of the endpoint",
         example="SOCFortress",
     )
+    customer_iris_id: Optional[int] = Field(
+        None,
+        description="IRIS ID of the customer",
+    )
+    customer_name: Optional[str] = Field(
+        None,
+        description="Name of the customer",
+    )
+    customer_cases_index: Optional[str] = Field(
+        None,
+        description="IRIS case index name in the Wazuh-Indexer",
+    )
+    time_field: Optional[str] = Field(
+        "timestamp_utc",
+        description="The timefield of the alert to be used when creating the IRIS alert.",
+    )
+
+    def to_dict(self):
+        return self.dict(exclude_none=True)
 
 
 class SuricataIrisAlertPayload(BaseModel):
@@ -490,13 +512,8 @@ class SuricataIrisAlertPayload(BaseModel):
         description="Description of the alert",
         example="Intrusion Detected by Firewall",
     )
-    alert_source: str = Field(..., description="Source of the alert", example="Wazuh")
+    alert_source: str = Field(..., description="Source of the alert", example="Suricata")
     assets: List[SuricataIrisAsset] = Field(..., description="List of affected assets")
-    alert_source_link: str = Field(
-        ...,
-        description="Link to the alert within Grafana",
-        example="https://grafana.com",
-    )
     alert_status_id: int = Field(..., description="Status ID of the alert", example=3)
     alert_severity_id: int = Field(
         ...,
