@@ -238,6 +238,9 @@ def load_markdown_for_integration(integration_name: str) -> str:
         str: The content of the markdown file.
     """
     # file_path = os.path.join("integrations_markdown", f"{integration_name.lower()}.md")
+    # if space in the integration name, replace it with underscore
+    if " " in integration_name:
+        integration_name = integration_name.replace(" ", "_")
     file_path = os.path.join(
         "app",
         "integrations",
@@ -261,6 +264,7 @@ def get_available_integrations_list():
     available_integrations = [
         ("Office365", "Integrate Office365 with SOCFortress."),
         ("Mimecast", "Integrate Mimecast with SOCFortress."),
+        ("SAP SIEM", "Integrate SAP SIEM with SOCFortress."),
         # ... Add more available integrations as needed ...
     ]
 
@@ -350,6 +354,10 @@ async def get_available_integrations_auth_keys_list(session: AsyncSession):
         ("Mimecast", "EMAIL_ADDRESS"),
         ("Mimecast", "ACCESS_KEY"),
         ("Mimecast", "SECRET_KEY"),
+        ("SAP SIEM", "API_KEY"),
+        ("SAP SIEM", "SECRET_KEY"),
+        ("SAP SIEM", "USER_KEY"),
+        ("SAP SIEM", "API_DOMAIN"),
         # ... Add more available integrations auth keys as needed ...
     ]
 
