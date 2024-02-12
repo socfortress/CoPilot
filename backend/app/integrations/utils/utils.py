@@ -71,3 +71,37 @@ def extract_mimecast_auth_keys(
             detail="No auth keys found for Mimecast integration. Please create auth keys for Mimecast integration.",
         )
     return mimecast_auth_keys
+
+def extract_sap_siem_auth_keys(
+    customer_integration: CustomerIntegrations,
+) -> Dict[str, str]:
+    """
+    Extracts the authentication keys for SAP SIEM integration from the given customer integration.
+
+    Args:
+        customer_integration (CustomerIntegrations): The customer integration object.
+
+    Returns:
+        Dict[str, str]: A dictionary containing the authentication keys for SAP SIEM integration.
+
+    Raises:
+        HTTPException: If no authentication keys are found for SAP SIEM integration.
+    """
+    sap_siem_auth_keys = {}
+    try:
+        for subscription in customer_integration.integration_subscriptions:
+            if subscription.integration_service.service_name == "SAP SIEM":
+                for auth_key in subscription.integration_auth_keys:
+                    sap_siem_auth_keys[auth_key.auth_key_name] = auth_key.auth_value
+        if not sap_siem_auth_keys:
+            raise HTTPException(
+                status_code=404,
+                detail="No auth keys found for SAP SIEM integration. Please create auth keys for SAP SIEM integration.",
+            )
+    except Exception as e:
+        logger.error(f"Error extracting auth keys for SAP SIEM integration: {e}")
+        raise HTTPException(
+            status_code=404,
+            detail="No auth keys found for SAP SIEM integration. Please create auth keys for SAP SIEM integration.",
+        )
+    return sap_siem_auth_keys

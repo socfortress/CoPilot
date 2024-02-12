@@ -49,6 +49,7 @@ from app.routers import threat_intel
 from app.routers import velociraptor
 from app.routers import wazuh_indexer
 from app.routers import wazuh_manager
+from app.routers import sap_siem
 from app.schedulers.scheduler import init_scheduler
 
 auth_handler = AuthHandler()
@@ -114,6 +115,7 @@ api_router.include_router(office365.router)
 api_router.include_router(mimecast.router)
 api_router.include_router(scheduler.router)
 api_router.include_router(monitoring_alert.router)
+api_router.include_router(sap_siem.router)
 
 # Include the APIRouter in the FastAPI app
 app.include_router(api_router)
