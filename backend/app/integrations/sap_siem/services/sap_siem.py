@@ -7,6 +7,7 @@ from app.integrations.sap_siem.schema.sap_siem import InvokeSapSiemRequest
 from app.integrations.sap_siem.schema.sap_siem import InvokeSAPSiemResponse, SapSiemAuthKeys, CollectSapSiemRequest, SapSiemResponseBody
 from app.integrations.utils.event_shipper import event_shipper
 from app.integrations.utils.schema import EventShipperPayload
+from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
 
 def build_request_payload(sap_siem_request: CollectSapSiemRequest) -> dict:
     return {
@@ -46,6 +47,12 @@ async def send_to_event_shipper(message: EventShipperPayload) -> None:
         message (EventShipperPayload): The message to send to the event shipper.
     """
     await event_shipper(message)
+
+
+async def find_suscpicious_logins(sap_siem_request: CollectSapSiemRequest) -> SapSiemResponseBody:
+    es_client = create_wazuh_indexer_client("Wazuh-Indexer")
+
+
 
 async def collect_sap_siem(sap_siem_request: CollectSapSiemRequest) -> InvokeSAPSiemResponse:
     """

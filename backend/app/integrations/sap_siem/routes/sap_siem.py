@@ -38,16 +38,38 @@ async def sap_siem_route(sap_siem_request: InvokeSapSiemRequest, session: AsyncS
 
     sap_siem_auth_keys = extract_auth_keys(customer_integration, service_name="SAP SIEM")
 
+    logger.info(f"SAP SIEM Auth Keys: {sap_siem_auth_keys}")
+
     auth_keys = SapSiemAuthKeys(**sap_siem_auth_keys)
-    collect_sap_siem_request = CollectSapSiemRequest(
-        apiKey=auth_keys.API_KEY,
-        secretKey=auth_keys.SECRET_KEY,
-        userKey=auth_keys.USER_KEY,
-        apiDomain=auth_keys.API_DOMAIN,
-        threshold=sap_siem_request.threshold,
-        lower_bound=sap_siem_request.lower_bound,
-        upper_bound=sap_siem_request.upper_bound,
-        customer_code=sap_siem_request.customer_code,
-    )
-    logger.info(f"Collect SAP SIEM Request: {collect_sap_siem_request}")
-    return await collect_sap_siem(sap_siem_request=collect_sap_siem_request)
+    # if multiple apiKey values are present, make a loop to iterate through them
+    # and collect the data for each apiKey
+    if ',' in auth_keys.API_KEY:
+        api_keys = auth_keys.API_KEY.split(',')
+        for key in api_keys:
+            collect_sap_siem_request = CollectSapSiemRequest(
+                apiKey=key,
+                secretKey=auth_keys.SECRET_KEY,
+                userKey=auth_keys.USER_KEY,
+                apiDomain=auth_keys.API_DOMAIN,
+                threshold=sap_siem_request.threshold,
+                lower_bound=sap_siem_request.lower_bound,
+                upper_bound=sap_siem_request.upper_bound,
+                customer_code=sap_siem_request.customer_code,
+            )
+            logger.info(f"Collect SAP SIEM Request: {collect_sap_siem_request}")
+            await collect_sap_siem(sap_siem_request=collect_sap_siem_request)
+    else:
+        collect_sap_siem_request = CollectSapSiemRequest(
+            apiKey=auth_keys.API_KEY,
+            secretKey=auth_keys.SECRET_KEY,
+            userKey=auth_keys.USER_KEY,
+            apiDomain=auth_keys.API_DOMAIN,
+            threshold=sap_siem_request.threshold,
+            lower_bound=sap_siem_request.lower_bound,
+            upper_bound=sap_siem_request.upper_bound,
+            customer_code=sap_siem_request.customer_code,
+        )
+        logger.info(f"Collect SAP SIEM Request: {collect_sap_siem_request}")
+        await collect_sap_siem(sap_siem_request=collect_sap_siem_request)
+
+    return InvokeSAPSiemResponse(success=True, message="SAP SIEM Events collected successfully.")
