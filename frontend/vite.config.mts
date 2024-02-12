@@ -39,7 +39,7 @@ export default defineConfig({
 				? {
 						key: fs.readFileSync("/certs/key.pem"),
 						cert: fs.readFileSync("/certs/cert.pem")
-				  }
+				}
 				: false,
 		proxy: {
 			"/api": {
