@@ -27,12 +27,12 @@ from app.integrations.alert_escalation.services.general_alert import (
 )
 from app.integrations.monitoring_alert.models.monitoring_alert import MonitoringAlerts
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
+    AlertAnalysisResponse,
+)
+from app.integrations.monitoring_alert.schema.monitoring_alert import (
     FilterAlertsRequest,
 )
 from app.integrations.monitoring_alert.schema.monitoring_alert import WazuhAlertModel
-from app.integrations.monitoring_alert.schema.monitoring_alert import (
-    WazuhAnalysisResponse,
-)
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
     WazuhIrisAlertContext,
 )
@@ -195,7 +195,7 @@ async def check_event_exclusion(
     logger.info("Alert is not excluded due to multi exclusion.")
 
 
-async def check_if_open_alert_exists_in_iris(alert_details: WazuhAlertModel) -> list:
+async def check_if_open_alert_exists_in_iris(alert_details: WazuhAlertModel, session: AsyncSession) -> list:
     """
     Check if the alert exists in IRIS.
 
@@ -207,7 +207,13 @@ async def check_if_open_alert_exists_in_iris(alert_details: WazuhAlertModel) -> 
         bool: True if the alert exists in IRIS, False otherwise.
     """
     client, alert_client = await initialize_client_and_alert("DFIR-IRIS")
-    request = FilterAlertsRequest(alert_tags=alert_details._source["rule_id"])
+    customer_iris_id = (
+        await get_customer_alert_settings(
+            customer_code=alert_details._source["agent_labels_customer"],
+            session=session,
+        )
+    ).iris_customer_id
+    request = FilterAlertsRequest(alert_tags=alert_details._source["rule_id"], alert_customer_id=customer_iris_id)
     params = construct_params(request)
     alert_exists = await fetch_and_validate_data(
         client,
@@ -233,6 +239,7 @@ def construct_params(request: FilterAlertsRequest) -> dict:
         "sort": request.sort,
         "alert_tags": request.alert_tags,
         "alert_status_id": request.alert_status_id,
+        "alert_customer_id": request.alert_customer_id,
         # Add more parameters here as needed
     }
 
@@ -491,7 +498,7 @@ async def analyze_wazuh_alerts(
     monitoring_alerts: MonitoringAlerts,
     customer_meta: CustomersMeta,
     session: AsyncSession,
-) -> WazuhAnalysisResponse:
+) -> AlertAnalysisResponse:
     """
     Analyze the given Wazuh alerts and create an alert if necessary. Otherwise update the existing alert with the asset.
 
@@ -512,7 +519,7 @@ async def analyze_wazuh_alerts(
     for alert in monitoring_alerts:
         alert_details = await fetch_alert_details(alert)
         await check_event_exclusion(alert_details, alert_detail_service, session)
-        iris_alert_id = await check_if_open_alert_exists_in_iris(alert_details)
+        iris_alert_id = await check_if_open_alert_exists_in_iris(alert_details, session=session)
         if iris_alert_id == []:
             logger.info(
                 f"Alert {alert_details._id} does not exist in IRIS. Creating alert.",
@@ -571,7 +578,7 @@ async def analyze_wazuh_alerts(
                 session=session,
             )
 
-    return WazuhAnalysisResponse(
+    return AlertAnalysisResponse(
         success=True,
         message="Wazuh alerts analyzed successfully",
     )

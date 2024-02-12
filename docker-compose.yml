@@ -2,19 +2,19 @@ version: "2"
 
 services:
     copilot-backend:
-      image: ghcr.io/socfortress/copilot-backend:latest
-      volumes:
-          - ./data/copilot-backend-data/logs:/opt/logs
-          # Mount the copilot.db file to persist the database
-          - ./data/data:/opt/copilot/backend/data
+        image: ghcr.io/socfortress/copilot-backend:latest
+        volumes:
+            - ./data/copilot-backend-data/logs:/opt/logs
+            # Mount the copilot.db file to persist the database
+            - ./data/data:/opt/copilot/backend/data
 
     copilot-frontend:
-      image: ghcr.io/socfortress/copilot-frontend:latest
-      environment:
-        - SERVER_HOST=${SERVER_HOST:-localhost} # Set the domain name of your server
-      ports:
-        - "80:80"
-        - "443:443"
+        image: ghcr.io/socfortress/copilot-frontend:latest
+        environment:
+            - SERVER_HOST=${SERVER_HOST:-localhost} # Set the domain name of your server
+        ports:
+            - "80:80"
+            - "443:443"
 
 networks:
     default:

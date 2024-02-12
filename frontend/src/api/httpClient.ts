@@ -4,7 +4,7 @@ import axios, { type AxiosRequestHeaders } from "axios"
 // import { useGlobalActions } from "@/composables/useGlobalActions"
 
 const HttpClient = axios.create({
-	baseURL: '/api'
+	baseURL: "/api"
 })
 
 let __TOKEN_REFRESHING = false
