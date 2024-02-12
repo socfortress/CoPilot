@@ -13,7 +13,7 @@ from app.integrations.mimecast.schema.mimecast import MimecastTTPURLSRequest
 from app.integrations.mimecast.services.mimecast import get_ttp_urls
 from app.integrations.mimecast.services.mimecast import invoke_mimecast
 from app.integrations.routes import find_customer_integration
-from app.integrations.utils.utils import extract_mimecast_auth_keys
+from app.integrations.utils.utils import extract_auth_keys
 from app.integrations.utils.utils import get_customer_integration_response
 
 integration_mimecast_router = APIRouter()
@@ -57,7 +57,7 @@ async def invoke_mimecast_route(
         customer_integration_response,
     )
 
-    mimecast_auth_keys = extract_mimecast_auth_keys(customer_integration)
+    mimecast_auth_keys = extract_auth_keys(customer_integration, service_name="Mimecast")
 
     auth_keys = MimecastAuthKeys(**mimecast_auth_keys)
 
@@ -87,7 +87,7 @@ async def mimecast_ttp_url_route(
         customer_integration_response,
     )
 
-    mimecast_auth_keys = extract_mimecast_auth_keys(customer_integration)
+    mimecast_auth_keys = extract_auth_keys(customer_integration, service_name="Mimecast")
 
     auth_keys = MimecastAuthKeys(**mimecast_auth_keys)
 

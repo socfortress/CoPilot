@@ -10,7 +10,7 @@ from app.integrations.sap_siem.schema.sap_siem import InvokeSapSiemRequest
 from app.integrations.sap_siem.schema.sap_siem import InvokeSAPSiemResponse, SapSiemAuthKeys
 #from app.integrations.sap_siem.services.sap_siem import collect_sap_siem
 from app.integrations.routes import find_customer_integration
-from app.integrations.utils.utils import extract_sap_siem_auth_keys
+from app.integrations.utils.utils import extract_auth_keys
 from app.integrations.utils.utils import get_customer_integration_response
 
 integration_sap_siem_router = APIRouter()
@@ -35,7 +35,7 @@ async def sap_siem_route(sap_siem_request: InvokeSapSiemRequest, session: AsyncS
         customer_integration_response,
     )
 
-    sap_siem_auth_keys = extract_sap_siem_auth_keys(customer_integration)
+    sap_siem_auth_keys = extract_auth_keys(customer_integration, service_name="SAP SIEM")
 
     auth_keys = SapSiemAuthKeys(**sap_siem_auth_keys)
     logger.info(f"Auth Keys: {auth_keys}")
