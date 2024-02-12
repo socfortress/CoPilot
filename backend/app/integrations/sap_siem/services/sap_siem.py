@@ -142,7 +142,8 @@ async def check_for_suspicious_login(hit, last_invalid_login, suspicious_logins,
 async def find_suscpicious_logins(sap_siem_request: CollectSapSiemRequest) -> List[SuspiciousLogin]:
     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
     results = es_client.search(
-        index="integrations_22",
+        #! TODO: change to sap_siem index when ready for deploy
+        index="integrations_*",
         body={
             "size": 100,
             "query": {
