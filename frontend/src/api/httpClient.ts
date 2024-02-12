@@ -3,10 +3,8 @@ import { isDebounceTimeOver, isJwtExpiring } from "@/utils/auth"
 import axios, { type AxiosRequestHeaders } from "axios"
 // import { useGlobalActions } from "@/composables/useGlobalActions"
 
-const BASE_URL = import.meta.env.VITE_API_URL
-
 const HttpClient = axios.create({
-	baseURL: BASE_URL
+	baseURL: '/api'
 })
 
 let __TOKEN_REFRESHING = false
