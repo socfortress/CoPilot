@@ -272,3 +272,58 @@ class ErrCode(Enum):
     IP_BLOCKED = "403051"  # IP is blocked
     ACCOUNT_TEMPORARILY_LOCKED = "403120"  # Account temporarily locked
     OK = "0"  # Successful login
+
+
+################# ! IRIS CASE CREATION SCHEMA ! #################
+class IrisCasePayload(BaseModel):
+    case_name: str = Field(..., description="The name of the case.")
+    case_description: str = Field(..., description="The description of the case.")
+    case_customer: int = Field(1, description="The customer of the case.")
+    case_classification: int = Field(
+        1,
+        description="The classification of the case.",
+    )
+    soc_id: str = Field("1", description="The SOC ID of the case.")
+    custom_attributes: Optional[Dict] = Field(
+        None,
+        description="The custom attributes of the case.",
+    )
+    create_customer: bool = Field(
+        False,
+        description="The create customer flag of the case.",
+    )
+
+    def to_dict(self):
+        return self.dict(exclude_none=True)
+
+
+class ModificationHistoryEntry(BaseModel):
+    user: str
+    user_id: int
+    action: str
+
+
+class CaseData(BaseModel):
+    case_id: int
+    open_date: str
+    modification_history: Dict[str, ModificationHistoryEntry]
+    close_date: Optional[str]
+    case_description: str
+    classification_id: int
+    case_soc_id: str
+    case_name: str
+    custom_attributes: Optional[Dict[str, str]]
+    case_uuid: str
+    review_status_id: Optional[int]
+    state_id: int
+    case_customer: int
+    reviewer_id: Optional[int]
+    user_id: int
+    owner_id: int
+    closing_note: Optional[str]
+    status_id: int
+
+
+class CaseResponse(BaseModel):
+    success: bool
+    data: CaseData

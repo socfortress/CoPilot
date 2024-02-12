@@ -5,9 +5,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 from datetime import datetime
 
-from app.integrations.sap_siem.schema.sap_siem import InvokeSapSiemRequest, ErrCode, SuspiciousLogin
+from app.integrations.sap_siem.schema.sap_siem import InvokeSapSiemRequest, ErrCode, SuspiciousLogin, CaseResponse, IrisCasePayload
 from app.integrations.sap_siem.schema.sap_siem import InvokeSAPSiemResponse, SapSiemAuthKeys, CollectSapSiemRequest, SapSiemResponseBody, SapSiemWazuhIndexerResponse
 from app.integrations.utils.event_shipper import event_shipper
+from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
+from app.connectors.dfir_iris.utils.universal import initialize_client_and_case
 from app.integrations.utils.schema import EventShipperPayload
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
 
@@ -175,7 +177,86 @@ async def find_suscpicious_logins(sap_siem_request: CollectSapSiemRequest) -> Li
         await check_for_suspicious_login(hit, last_invalid_login, suspicious_logins, threshold=sap_siem_request.threshold)
     return suspicious_logins
 
+async def collect_user_activity(suspicious_logins: SuspiciousLogin) -> SapSiemWazuhIndexerResponse:
+    """
+    Collect the IP addresses of the suspicious logins and query the database for all activity from those IP addresses.
 
+    :param suspicious_logins: A list of suspicious logins
+
+    :return: List of the user Activity collected from the sap_siem table
+    """
+    es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
+    results = es_client.search(
+        index="integrations_*",
+        body={
+            "size": 100,
+            "query": {
+                "bool": {
+                    "must": [
+                        {
+                            "term": {
+                                "ip": suspicious_logins.ip
+                            }
+                        }
+                    ]
+                }
+            },
+        }
+    )
+    return SapSiemWazuhIndexerResponse(**results)
+
+
+async def handle_common_suspicious_login_tasks(
+    suspicious_login,
+    unique_instances,
+    case_ids,
+    create_case_fn,
+):
+    logger.info(f"Handling common suspicious login tasks: {suspicious_login}")
+    case = await create_case_fn(suspicious_login)
+    case = create_case_fn(suspicious_login)
+    case_ids.append(case.data.case_id)
+    user_activity = await collect_user_activity(suspicious_login)
+    logger.info(f"User Activity: {user_activity}")
+    #await handle_user_activity(user_activity, unique_instances, case.data.case_id)
+    #await mark_as_checked(suspicious_login)
+
+async def handle_suspicious_login(suspicious_login, unique_instances, case_ids):
+    logger.info(f"Handling suspicious login: {suspicious_login}")
+    await handle_common_suspicious_login_tasks(
+        suspicious_login,
+        unique_instances,
+        case_ids,
+        create_iris_case,
+    )
+    #await update_case_created_flag(suspicious_login)
+
+
+async def create_iris_case(suspicious_login: SuspiciousLogin) -> CaseResponse:
+    """
+    Create a case in IRIS for the suspicious activity.
+
+    :param user_activity: A list of suspicious activity from the sap_siem table
+
+    :return: None
+    """
+    logger.info(f"Creating IRIS case for suspicious activity: {suspicious_login}")
+    payload = IrisCasePayload(
+        case_name=f"Log Source: {suspicious_login.logSource} Potential SAP SIEM Unauthorized Access: {suspicious_login.loginID} from {suspicious_login.ip}",
+        case_description=f"Log Source: {suspicious_login.logSource}\n\nIP Address: {suspicious_login.ip}\n\nCountry: {suspicious_login.country}\n\nTimestamp: {suspicious_login.event_timestamp}",
+        case_customer=1,
+        case_classification=18,
+        soc_id="1",
+        create_customer=False,
+    )
+    client, case_client = await initialize_client_and_case('DFIR-IRIS')
+    result = await fetch_and_validate_data(
+        client,
+        case_client.add_case,
+        **payload.dict(),
+    )
+
+    return CaseResponse(**result)
 
 async def collect_sap_siem(sap_siem_request: CollectSapSiemRequest) -> InvokeSAPSiemResponse:
     """
@@ -209,6 +290,11 @@ async def collect_sap_siem(sap_siem_request: CollectSapSiemRequest) -> InvokeSAP
 
     suspicious_logins = await find_suscpicious_logins(sap_siem_request)
     logger.info(f"Suspicious Logins: {suspicious_logins}")
+
+    unique_instaces = set()
+    case_ids = []
+    for suspicious_login in suspicious_logins:
+        await handle_suspicious_login(suspicious_login, unique_instaces, case_ids)
 
     return InvokeSAPSiemResponse(
         success=True,

@@ -109,6 +109,7 @@ async def fetch_and_parse_data(
     session: ClientSession,
     action: Callable,
     *args,
+    **kwargs: Optional[Any],
 ) -> Dict[str, Union[bool, Optional[Dict]]]:
     """
     Fetches and parses data from DFIR-IRIS using a specified action.
@@ -122,8 +123,8 @@ async def fetch_and_parse_data(
         dict: A dictionary containing the success status and either the fetched data or None if the operation was unsuccessful.
     """
     try:
-        logger.info(f"Executing {action.__name__}... on args: {args}")
-        status = action(*args)
+        logger.info(f"Executing {action.__name__}... on args: {args} and kwargs: {kwargs}")
+        status = action(*args, **kwargs)
         assert_api_resp(status, soft_fail=False)
         data = get_data_from_resp(status)
         logger.info(f"Successfully executed {action.__name__}")
@@ -223,7 +224,7 @@ def handle_error(error_message: str, status_code: int = 500):
     raise HTTPException(status_code=status_code, detail=error_message)
 
 
-async def fetch_and_validate_data(client: Any, func: Callable, *args: Any) -> Dict:
+async def fetch_and_validate_data(client: Any, func: Callable, *args: Any, **kwargs: Optional[Any]) -> Dict:
     """
     Fetches and validates data using the provided client, function, and arguments.
 
@@ -238,7 +239,7 @@ async def fetch_and_validate_data(client: Any, func: Callable, *args: Any) -> Di
     Raises:
         Exception: If the data fetching fails.
     """
-    result = await fetch_and_parse_data(client, func, *args)
+    result = await fetch_and_parse_data(client, func, *args, **kwargs)
     if not result["success"]:
         handle_error(f"Failed to fetch data: {result['message']}")
     return result
