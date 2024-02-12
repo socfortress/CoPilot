@@ -81,33 +81,36 @@ By default, an `admin` account is created. The password is printed in stdout the
 🚀 **YouTube Tutorial:** [SOCFortress CoPilot - Getting Started](https://youtu.be/hu1X9MCW7j0)
 
 #### SSL
+
 By default Copilot uses a self-signed certificate valid for 365 days from install. You can replace the certificate and
-key files with your own.  These files should be mounted in the `copilot-frontend` container and you can set the path to
+key files with your own. These files should be mounted in the `copilot-frontend` container and you can set the path to
 your certificate and key files in the `docker-compose.yml` file using the `TLS_CERT_PATH` and `TLS_KEY_PATH`
 respectively.
 
 For Example
+
 ```bash
 # Generate a certificate e.g.
 openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365
 ```
 
 Then update the `docker-compose.yml` file to mount the certificate and key files and set the `TLS_CERT_PATH` and `TLS_KEY_PATH` environment variables.
+
 ```yaml
-    copilot-frontend:
-      image: ghcr.io/socfortress/copilot-frontend:latest
-      volumes:
+copilot-frontend:
+    image: ghcr.io/socfortress/copilot-frontend:latest
+    volumes:
         - PATH_TO_YOUR_CERTS:/etc/letsencrypt
-      environment:
+    environment:
         - SERVER_HOST=${SERVER_HOST:-localhost} # Set the domain name of your server
         - TLS_CERT_PATH=/etc/letsencrypt/live/${SERVER_HOST}/fullchain.pem # Set the path to your certificate
         - TLS_KEY_PATH=/etc/letsencrypt/live/${SERVER_HOST}/privkey.pem # Set the path to your key
-      ports:
+    ports:
         - "80:80"
         - "443:443"
 ```
 
-```yaml
+````yaml
 
 ### Upgrading Copilot
 
@@ -121,7 +124,7 @@ docker compose pull
 
 # Start the container again
 docker compose up -d
-```
+````
 
 ## Connectors
 

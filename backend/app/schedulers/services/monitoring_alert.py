@@ -12,10 +12,10 @@ from app.integrations.monitoring_alert.routes.monitoring_alert import (
 )
 from app.integrations.monitoring_alert.routes.monitoring_alert import run_wazuh_analysis
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
-    MonitoringWazuhAlertsRequestModel,
+    AlertAnalysisResponse,
 )
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
-    AlertAnalysisResponse,
+    MonitoringWazuhAlertsRequestModel,
 )
 from app.schedulers.models.scheduler import JobMetadata
 

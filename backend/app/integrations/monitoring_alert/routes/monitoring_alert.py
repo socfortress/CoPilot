@@ -12,6 +12,9 @@ from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
 from app.db.universal_models import CustomersMeta
 from app.integrations.monitoring_alert.models.monitoring_alert import MonitoringAlerts
+from app.integrations.monitoring_alert.schema.monitoring_alert import (
+    AlertAnalysisResponse,
+)
 from app.integrations.monitoring_alert.schema.monitoring_alert import GraylogPostRequest
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
     GraylogPostResponse,
@@ -21,9 +24,6 @@ from app.integrations.monitoring_alert.schema.monitoring_alert import (
 )
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
     MonitoringWazuhAlertsRequestModel,
-)
-from app.integrations.monitoring_alert.schema.monitoring_alert import (
-    AlertAnalysisResponse,
 )
 from app.integrations.monitoring_alert.services.suricata import analyze_suricata_alerts
 from app.integrations.monitoring_alert.services.wazuh import analyze_wazuh_alerts

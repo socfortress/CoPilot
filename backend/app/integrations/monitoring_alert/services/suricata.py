@@ -24,19 +24,19 @@ from app.integrations.alert_escalation.services.general_alert import (
 )
 from app.integrations.monitoring_alert.models.monitoring_alert import MonitoringAlerts
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
+    AlertAnalysisResponse,
+)
+from app.integrations.monitoring_alert.schema.monitoring_alert import (
     FilterAlertsRequest,
 )
 from app.integrations.monitoring_alert.schema.monitoring_alert import SuricataAlertModel
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
     SuricataIrisAlertContext,
 )
-from app.integrations.monitoring_alert.schema.monitoring_alert import SuricataIrisAsset
-from app.integrations.monitoring_alert.schema.monitoring_alert import (
-    AlertAnalysisResponse,
-)
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
     SuricataIrisAlertPayload,
 )
+from app.integrations.monitoring_alert.schema.monitoring_alert import SuricataIrisAsset
 from app.integrations.monitoring_alert.utils.db_operations import remove_alert_id
 from app.integrations.utils.alerts import validate_ioc_type
 from app.utils import get_customer_alert_settings
@@ -202,13 +202,13 @@ async def check_if_open_alert_exists_in_iris(alert_details: SuricataAlertModel, 
         bool: True if the alert exists in IRIS, False otherwise.
     """
     client, alert_client = await initialize_client_and_alert("DFIR-IRIS")
-    customer_iris_id=(
-            await get_customer_alert_settings(
-                #customer_code=alert_details._source["agent_labels_customer"],
-                customer_code="00002",
-                session=session,
-            )
-        ).iris_customer_id
+    customer_iris_id = (
+        await get_customer_alert_settings(
+            # customer_code=alert_details._source["agent_labels_customer"],
+            customer_code="00002",
+            session=session,
+        )
+    ).iris_customer_id
     request = FilterAlertsRequest(
         alert_tags=alert_details._source["alert_signature_id"],
         alert_customer_id=customer_iris_id,

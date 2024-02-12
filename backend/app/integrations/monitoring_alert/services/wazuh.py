@@ -27,12 +27,12 @@ from app.integrations.alert_escalation.services.general_alert import (
 )
 from app.integrations.monitoring_alert.models.monitoring_alert import MonitoringAlerts
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
+    AlertAnalysisResponse,
+)
+from app.integrations.monitoring_alert.schema.monitoring_alert import (
     FilterAlertsRequest,
 )
 from app.integrations.monitoring_alert.schema.monitoring_alert import WazuhAlertModel
-from app.integrations.monitoring_alert.schema.monitoring_alert import (
-    AlertAnalysisResponse,
-)
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
     WazuhIrisAlertContext,
 )
@@ -207,14 +207,13 @@ async def check_if_open_alert_exists_in_iris(alert_details: WazuhAlertModel, ses
         bool: True if the alert exists in IRIS, False otherwise.
     """
     client, alert_client = await initialize_client_and_alert("DFIR-IRIS")
-    customer_iris_id=(
-            await get_customer_alert_settings(
-                customer_code=alert_details._source["agent_labels_customer"],
-                session=session,
-            )
-        ).iris_customer_id
-    request = FilterAlertsRequest(alert_tags=alert_details._source["rule_id"],
-                                  alert_customer_id=customer_iris_id)
+    customer_iris_id = (
+        await get_customer_alert_settings(
+            customer_code=alert_details._source["agent_labels_customer"],
+            session=session,
+        )
+    ).iris_customer_id
+    request = FilterAlertsRequest(alert_tags=alert_details._source["rule_id"], alert_customer_id=customer_iris_id)
     params = construct_params(request)
     alert_exists = await fetch_and_validate_data(
         client,
