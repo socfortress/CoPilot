@@ -3,6 +3,7 @@ from loguru import logger
 import requests
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
+from datetime import datetime
 
 from app.integrations.sap_siem.schema.sap_siem import InvokeSapSiemRequest, ErrCode, SuspiciousLogin
 from app.integrations.sap_siem.schema.sap_siem import InvokeSAPSiemResponse, SapSiemAuthKeys, CollectSapSiemRequest, SapSiemResponseBody, SapSiemWazuhIndexerResponse
@@ -49,22 +50,81 @@ async def send_to_event_shipper(message: EventShipperPayload) -> None:
     """
     await event_shipper(message)
 
+# async def check_for_suspicious_login(hit, last_invalid_login, suspicious_logins, threshold):
+#     logSource = hit.source.logSource
+#     loginID = hit.source.params_loginID
+#     errCode = hit.source.errCode
+#     country = hit.source.httpReq_country
+#     ip = hit.source.ip
+#     timestamp = hit.source.timestamp
+#     logger.info(f"Checking loginID: {loginID} with errCode: {errCode} and IP: {ip}")
+
+#     if ip not in last_invalid_login:
+#         last_invalid_login[ip] = {"count": 0, "timestamp": None}
+
+#     if errCode in [e.value for e in ErrCode]:
+#         logger.info(f"Found invalid login: {loginID} with IP: {ip} and errCode: {errCode}")
+#         last_invalid_login[ip]["count"] += 1
+#         last_invalid_login[ip]["timestamp"] = timestamp
+
+#     if errCode == ErrCode.OK.value and last_invalid_login[ip]["count"] >= threshold:
+#         logger.info(f"Found suspicious login: {loginID} with IP: {ip} and errCode: {errCode}")
+#         suspicious_login = SuspiciousLogin(
+#             logSource=logSource,
+#             loginID=loginID,
+#             country=country,
+#             ip=ip,
+#             timestamp=timestamp,
+#             errMessage=str(errCode),
+#         )
+#         suspicious_logins.append(suspicious_login)
+#         del last_invalid_login[ip]
+# async def check_for_suspicious_login(hit, last_invalid_login, suspicious_logins, threshold):
+#     logSource = hit.source.logSource
+#     loginID = hit.source.params_loginID
+#     errCode = hit.source.errCode
+#     country = hit.source.httpReq_country
+#     ip = hit.source.ip
+#     timestamp = hit.source.timestamp
+#     logger.info(f"Checking loginID: {loginID} with errCode: {errCode} and IP: {ip}")
+
+#     if ip not in last_invalid_login:
+#         last_invalid_login[ip] = {"last_errCode": None, "timestamp": None}
+
+#     if errCode in [e.value for e in ErrCode] and errCode != ErrCode.OK.value:
+#         logger.info(f"Found invalid login: {loginID} with IP: {ip} and errCode: {errCode}")
+#         last_invalid_login[ip]["last_errCode"] = errCode
+#         last_invalid_login[ip]["timestamp"] = timestamp
+
+#     if errCode == ErrCode.OK.value and last_invalid_login[ip]["last_errCode"] in [e.value for e in ErrCode] and last_invalid_login[ip]["last_errCode"] != ErrCode.OK.value:
+#         logger.info(f"Found suspicious login: {loginID} with IP: {ip} and errCode: {errCode}")
+#         suspicious_login = SuspiciousLogin(
+#             logSource=logSource,
+#             loginID=loginID,
+#             country=country,
+#             ip=ip,
+#             timestamp=timestamp,
+#             errMessage=str(errCode),
+#         )
+#         suspicious_logins.append(suspicious_login)
+#         last_invalid_login[ip]["last_errCode"] = None
+
 async def check_for_suspicious_login(hit, last_invalid_login, suspicious_logins, threshold):
     logSource = hit.source.logSource
     loginID = hit.source.params_loginID
     errCode = hit.source.errCode
     country = hit.source.httpReq_country
     ip = hit.source.ip
-    timestamp = hit.source.timestamp
+    event_timestamp = hit.source.event_timestamp
     logger.info(f"Checking loginID: {loginID} with errCode: {errCode} and IP: {ip}")
 
     if ip not in last_invalid_login:
-        last_invalid_login[ip] = {"count": 0, "timestamp": None}
+        last_invalid_login[ip] = {"count": 0, "event_timestamp": None}
 
-    if errCode in [e.value for e in ErrCode]:
+    if errCode in [e.value for e in ErrCode] and errCode != ErrCode.OK.value:
         logger.info(f"Found invalid login: {loginID} with IP: {ip} and errCode: {errCode}")
         last_invalid_login[ip]["count"] += 1
-        last_invalid_login[ip]["timestamp"] = timestamp
+        last_invalid_login[ip]["event_timestamp"] = event_timestamp
 
     if errCode == ErrCode.OK.value and last_invalid_login[ip]["count"] >= threshold:
         logger.info(f"Found suspicious login: {loginID} with IP: {ip} and errCode: {errCode}")
@@ -73,16 +133,16 @@ async def check_for_suspicious_login(hit, last_invalid_login, suspicious_logins,
             loginID=loginID,
             country=country,
             ip=ip,
-            timestamp=timestamp,
+            event_timestamp=event_timestamp,
             errMessage=str(errCode),
         )
         suspicious_logins.append(suspicious_login)
-        del last_invalid_login[ip]
+        last_invalid_login[ip] = {"count": 0, "event_timestamp": None}
 
 async def find_suscpicious_logins(sap_siem_request: CollectSapSiemRequest) -> List[SuspiciousLogin]:
     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
     results = es_client.search(
-        index="integrations_20",
+        index="integrations_22",
         body={
             "size": 100,
             "query": {
@@ -96,10 +156,10 @@ async def find_suscpicious_logins(sap_siem_request: CollectSapSiemRequest) -> Li
                 ]
                 }
             },
-            "_source": ["logSource", "params_loginID", "errCode", "httpReq_country", "ip", "timestamp"],
+            "_source": ["logSource", "params_loginID", "errCode", "httpReq_country", "ip", "event_timestamp"],
             "sort": [
                 {
-                "timestamp": {
+                "event_timestamp": {
                     "order": "asc"
                 }
                 }
@@ -111,7 +171,7 @@ async def find_suscpicious_logins(sap_siem_request: CollectSapSiemRequest) -> Li
     last_invalid_login = {}
     for hit in results.hits.hits:
         logger.info(f"Hit: {hit}")
-        await check_for_suspicious_login(hit, last_invalid_login, suspicious_logins, sap_siem_request.threshold)
+        await check_for_suspicious_login(hit, last_invalid_login, suspicious_logins, threshold=sap_siem_request.threshold)
     return suspicious_logins
 
 
@@ -135,6 +195,8 @@ async def collect_sap_siem(sap_siem_request: CollectSapSiemRequest) -> InvokeSAP
     # results = await make_request(sap_siem_request)
 
     # for result in results.results:
+    #     # write the `timestamp` field as `event_timestamp`
+    #     result.event_timestamp = result.timestamp
     #     await send_to_event_shipper(
     #         EventShipperPayload(
     #             customer_code=sap_siem_request.customer_code,

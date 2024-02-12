@@ -196,6 +196,15 @@ class Result(BaseModel):
         None,
         description="Risk score associated with the request",
     )
+    event_timestamp: Optional[datetime] = Field(
+        None,
+        description="Timestamp of the event",
+    )
+    case_created: Optional[str] = Field(
+        "False",
+        description="Whether a case has been created for the event",
+    )
+
 
 
 class SapSiemResponseBody(BaseModel):
@@ -216,7 +225,7 @@ class SapSiemSource(BaseModel):
     errCode: str = Field(..., description="The error code")
     ip: str = Field(..., description="The IP address of the user")
     httpReq_country: str = Field(..., description="The country from which the HTTP request originated")
-    timestamp: str = Field(..., description="The timestamp of the event")
+    event_timestamp: str = Field(..., description="The timestamp of the event")
 
 class SapSiemHit(BaseModel):
     index: str = Field(..., description="The index of the hit", alias="_index")
@@ -247,11 +256,11 @@ class SapSiemWazuhIndexerResponse(BaseModel):
     hits: SapSiemHits = Field(..., description="The hits data")
 
 class SuspiciousLogin(BaseModel):
-    logSource: str
+    logSource: Optional[str] = Field(None)
     loginID: str
     country: Optional[str]
     ip: str
-    timestamp: str
+    event_timestamp: str
     errMessage: str
 
 class ErrCode(Enum):
