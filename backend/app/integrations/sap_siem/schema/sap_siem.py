@@ -207,3 +207,59 @@ class SapSiemResponseBody(BaseModel):
     callId: str = Field(..., description="Unique identifier for the overall call")
     time: str = Field(..., description="Time of the response")
     objectsCount: int = Field(..., description="Count of objects in results")
+
+#### ! WAZUH INDEXER RESULTS ! ####
+
+class SapSiemSource(BaseModel):
+    logSource: Optional[str] = Field(None, description="The source of the log")
+    params_loginID: str = Field(..., description="The login ID of the user")
+    errCode: str = Field(..., description="The error code")
+    ip: str = Field(..., description="The IP address of the user")
+    httpReq_country: str = Field(..., description="The country from which the HTTP request originated")
+    timestamp: str = Field(..., description="The timestamp of the event")
+
+class SapSiemHit(BaseModel):
+    index: str = Field(..., description="The index of the hit", alias="_index")
+    id: str = Field(..., description="The ID of the hit", alias="_id")
+    score: Optional[float] = Field(None, description="The score of the hit", alias="_score")
+    source: SapSiemSource = Field(..., description="The source data of the hit", alias="_source")
+    sort: List[int] = Field(..., description="The sort order of the hit")
+
+class SapSiemTotal(BaseModel):
+    value: int = Field(..., description="The total number of hits")
+    relation: str = Field(..., description="The relation of the total hits")
+
+class SapSiemHits(BaseModel):
+    total: SapSiemTotal = Field(..., description="The total hits data")
+    max_score: Optional[float] = Field(None, description="The maximum score among the hits")
+    hits: List[SapSiemHit] = Field(..., description="The list of hits")
+
+class SapSiemShards(BaseModel):
+    total: int = Field(..., description="The total number of shards")
+    successful: int = Field(..., description="The number of successful shards")
+    skipped: int = Field(..., description="The number of skipped shards")
+    failed: int = Field(..., description="The number of failed shards")
+
+class SapSiemWazuhIndexerResponse(BaseModel):
+    took: int = Field(..., description="The time it took to execute the request")
+    timed_out: bool = Field(..., description="Whether the request timed out")
+    shards: SapSiemShards = Field(..., description="The shards data", alias="_shards")
+    hits: SapSiemHits = Field(..., description="The hits data")
+
+class SuspiciousLogin(BaseModel):
+    logSource: str
+    loginID: str
+    country: Optional[str]
+    ip: str
+    timestamp: str
+    errMessage: str
+
+class ErrCode(Enum):
+    """
+    Error codes for SAP SIEM
+    """
+
+    INVALID_LOGIN_ID = "403042"  # Invalid LoginID
+    IP_BLOCKED = "403051"  # IP is blocked
+    ACCOUNT_TEMPORARILY_LOCKED = "403120"  # Account temporarily locked
+    OK = "0"  # Successful login
