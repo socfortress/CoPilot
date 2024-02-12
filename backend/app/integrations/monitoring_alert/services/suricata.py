@@ -411,7 +411,6 @@ async def create_and_update_alert_in_iris(
     alert_details = await create_alert_details(alert_details)
     ioc_payload = await build_ioc_payload(alert_details)
     logger.info(f"Alert details: {alert_details}")
-    # ! TODO: REVIST THIS TOMORROW
     iris_alert_payload = await build_alert_payload(
         alert_details=alert_details,
         ioc_payload=ioc_payload,
