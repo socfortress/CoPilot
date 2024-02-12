@@ -9,6 +9,7 @@ services:
             - ./data/copilot-backend-data/logs:/opt/logs
             # Mount the copilot.db file to persist the database
             - ./data/data:/opt/copilot/backend/data
+        env_file: .env
 
     copilot-frontend:
         build:
