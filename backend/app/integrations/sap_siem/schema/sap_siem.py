@@ -27,6 +27,10 @@ class InvokeSapSiemRequest(BaseModel):
         description="The integration name.",
         examples=["SAP SIEM"],
     )
+    threshold: Optional[int] = Field(
+        1,
+        description="Number of 'Invalid LoginID' before the first 'OK'",
+    )
     time_range: Optional[str] = Field(
         "15m",
         pattern="^[1-9][0-9]*[mhdw]$",
@@ -87,3 +91,119 @@ class SapSiemAuthKeys(BaseModel):
         description="YOUR API DOMAIN",
         examples=["audit.eu1.gigya.com"],
     )
+
+class CollectSapSiemRequest(BaseModel):
+    customer_code: str = Field(
+        ...,
+        description="The customer code.",
+        examples=["00002"],
+    )
+    apiKey: str = Field(..., description="API key for authorization")
+    secretKey: str = Field(..., description="Secret key for authorization")
+    userKey: str = Field(..., description="User key for identification")
+    apiDomain: str = Field(..., description="API domain")
+    threshold: Optional[int] = Field(
+        1,
+        description="Number of 'Invalid LoginID' before the first 'OK'",
+    )
+    lower_bound: str = None
+    upper_bound: str = None
+
+
+
+######### ! SAP API RESPONSE ! #########
+class HttpReq(BaseModel):
+    SDK: str = Field(
+        ...,
+        description="Software Development Kit used for the HTTP request",
+    )
+    country: str = Field(..., description="Country code")
+
+
+class Params(BaseModel):
+    clientContext: Optional[str] = Field(None, description="Client context information")
+    include: Optional[str] = Field(None, description="Data to include in the response")
+    password: str = Field(..., description="Password for the user")
+    loginID: str = Field(..., description="Login ID of the user")
+    apiKey: str = Field(..., description="API key for authorization")
+    format: Optional[str] = Field(None, description="Response format")
+    secret: Optional[str] = Field(None, description="Secret key for authorization")
+    userKey: Optional[str] = Field(None, description="User key for identification")
+
+
+class UserAgent(BaseModel):
+    os: str = Field(..., description="Operating system of the user")
+    browser: str = Field(..., description="Browser used by the user")
+    raw: Optional[str] = Field(None, description="Raw user agent string")
+    version: str = Field(..., description="Browser version")
+    platform: str = Field(..., description="Platform type (desktop/mobile)")
+
+
+class UserKeyDetails(BaseModel):
+    name: Optional[str] = Field(None, description="Name of the user")
+    emailDomain: Optional[str] = Field(None, description="Email domain of the user")
+
+
+class Restrictions(BaseModel):
+    ipWhitelistRestricted: bool = Field(
+        ...,
+        description="Is IP whitelisting restricted",
+    )
+    ipWhitelistRestrictionEnforced: bool = Field(
+        ...,
+        description="Is IP whitelist restriction enforced",
+    )
+    ipBlacklistRestricted: bool = Field(
+        ...,
+        description="Is IP blacklisting restricted",
+    )
+    ipBlacklistRestrictionEnforced: bool = Field(
+        ...,
+        description="Is IP blacklist restriction enforced",
+    )
+
+
+class Result(BaseModel):
+    callID: str = Field(..., description="Unique identifier for the call")
+    authType: Optional[str] = Field(None, description="Type of authentication used")
+    timestamp: str = Field(
+        ...,
+        alias="@timestamp",
+        description="Timestamp of the event",
+    )
+    errCode: str = Field(..., description="Error code")
+    errDetails: Optional[str] = Field(None, description="Detailed error message")
+    errMessage: str = Field(..., description="Error message")
+    endpoint: str = Field(..., description="API endpoint hit")
+    userKey: Optional[str] = Field(None, description="User key for identification")
+    httpReq: HttpReq = Field(..., description="HTTP request details")
+    ip: str = Field(..., description="IP address of the user")
+    serverIP: str = Field(..., description="Server IP address")
+    params: Params = Field(..., description="Parameters passed in the request")
+    uid: Optional[str] = Field(
+        "No uid found",
+        description="Unique identifier for the user",
+    )
+    apikey: str = Field(..., description="API key used for the request")
+    userAgent: UserAgent = Field(..., description="User agent details")
+    userKeyDetails: Optional[UserKeyDetails] = Field(
+        None,
+        description="Details related to user key",
+    )
+    XffFirstIp: str = Field(..., description="First IP in the X-Forwarded-For header")
+    restrictions: Restrictions = Field(..., description="IP restrictions")
+    riskScore: Optional[str] = Field(
+        None,
+        description="Risk score associated with the request",
+    )
+
+
+class SapSiemResponseBody(BaseModel):
+    results: List[Result] = Field(..., description="List of result objects")
+    totalCount: int = Field(..., description="Total count of results")
+    statusCode: int = Field(..., description="Status code of the response")
+    errorCode: int = Field(..., description="Error code of the response")
+    statusReason: str = Field(..., description="Status reason of the response")
+    callId: str = Field(..., description="Unique identifier for the overall call")
+    time: str = Field(..., description="Time of the response")
+    objectsCount: int = Field(..., description="Count of objects in results")
