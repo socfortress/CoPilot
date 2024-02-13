@@ -228,6 +228,7 @@ class SapSiemSource(BaseModel):
     event_timestamp: str = Field(..., description="The timestamp of the event")
     errMessage: Optional[str] = Field(None, description="The error message")
     customer_code: str = Field(..., description="The customer code")
+    errDetails: Optional[str] = Field(None, description="Detailed error message")
 
 class SapSiemHit(BaseModel):
     index: str = Field(..., description="The index of the hit", alias="_index")
@@ -265,6 +266,9 @@ class SuspiciousLogin(BaseModel):
     ip: str
     event_timestamp: str
     errMessage: str
+    index: Optional[str] = Field(None, description="The index of the hit", alias="_index")
+    id: Optional[str] = Field(None, description="The ID of the hit", alias="_id")
+    errDetails: Optional[str] = Field(None, description="Detailed error message")
 
 class ErrCode(Enum):
     """

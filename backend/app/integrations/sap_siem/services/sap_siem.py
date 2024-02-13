@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 from datetime import datetime
 
-from app.integrations.sap_siem.schema.sap_siem import InvokeSapSiemRequest, ErrCode, SuspiciousLogin, CaseResponse, IrisCasePayload, AddAssetModel
+from app.integrations.sap_siem.schema.sap_siem import InvokeSapSiemRequest, ErrCode, SuspiciousLogin, CaseResponse, IrisCasePayload, AddAssetModel, SapSiemHit
 from app.integrations.sap_siem.schema.sap_siem import InvokeSAPSiemResponse, SapSiemAuthKeys, CollectSapSiemRequest, SapSiemResponseBody, SapSiemWazuhIndexerResponse
 from app.integrations.utils.event_shipper import event_shipper
 from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
@@ -64,7 +64,9 @@ async def check_for_suspicious_login(hit, last_invalid_login, suspicious_logins,
     ip = hit.source.ip
     event_timestamp = hit.source.event_timestamp
     customer_code = hit.source.customer_code
-    logger.info(f"Checking loginID: {loginID} with errCode: {errCode} and IP: {ip}")
+    index = hit.index
+    id = hit.id
+    logger.info(f"Checking loginID: {loginID} with errCode: {errCode} and IP: {ip} and index: {index} and id: {id}")
 
     if ip not in last_invalid_login:
         last_invalid_login[ip] = {"count": 0, "event_timestamp": None}
@@ -77,6 +79,8 @@ async def check_for_suspicious_login(hit, last_invalid_login, suspicious_logins,
     if errCode == ErrCode.OK.value and last_invalid_login[ip]["count"] >= threshold:
         logger.info(f"Found suspicious login: {loginID} with IP: {ip} and errCode: {errCode}")
         suspicious_login = SuspiciousLogin(
+            _index=index,
+            _id=id,
             customer_code=customer_code,
             logSource=logSource,
             loginID=loginID,
@@ -84,6 +88,7 @@ async def check_for_suspicious_login(hit, last_invalid_login, suspicious_logins,
             ip=ip,
             event_timestamp=event_timestamp,
             errMessage=str(errCode),
+            errDetails=hit.source.errDetails,
         )
         suspicious_logins.append(suspicious_login)
         last_invalid_login[ip] = {"count": 0, "event_timestamp": None}
@@ -157,7 +162,7 @@ def create_asset_payload(asset: SuspiciousLogin):
         return AddAssetModel(
             name=asset.loginID,
             ip=asset.ip,
-            description=f"Country: {asset.country}\n\nMessage: {asset.errMessage}\n\nTimestamp: {asset.event_timestamp}",
+            description=f"Country: {asset.country}\n\nMessage: {asset.errDetails}\n\nTimestamp: {asset.event_timestamp}",
             asset_type=1,
             compromise_status=1,
             analysis_status=2,
@@ -165,7 +170,7 @@ def create_asset_payload(asset: SuspiciousLogin):
     return AddAssetModel(
         name=asset.loginID,
         ip=asset.ip,
-        description=f"Country: {asset.country}\n\nMessage: {asset.errMessage}\n\nTimestamp: {asset.event_timestamp}",
+        description=f"Country: {asset.country}\n\nMessage: {asset.errDetails}\n\nTimestamp: {asset.event_timestamp}",
         asset_type=1,
         analysis_status=2,
     )
@@ -198,6 +203,7 @@ async def handle_user_activity(user_activity: SapSiemWazuhIndexerResponse, uniqu
             "errMessage": hit.source.errMessage,
             "event_timestamp": hit.source.event_timestamp,
             "customer_code": hit.source.customer_code,
+            "errDetails": hit.source.errDetails,
         }
         current_activity_frozenset = frozenset(current_activity.items())
         if current_activity_frozenset not in unique_instances:
@@ -237,7 +243,66 @@ async def handle_suspicious_login(suspicious_login, unique_instances, case_ids, 
         session
     )
     logger.info(f"Marking suspicious login as checked: {suspicious_login}")
-    #await update_case_created_flag(suspicious_login)
+    await update_case_created_flag(
+        id=suspicious_login.id,
+        index=suspicious_login.index,
+    )
+
+async def update_case_created_flag(id: str, index: str):
+    """
+    Update the case_created flag in the Elasticsearch document to True.
+
+    :param suspicious_login: The suspicious login to update
+
+    :return: None
+    """
+    es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
+    try:
+        es_client.update(
+            index=index,
+            id=id,
+            body={
+                "doc": {
+                    "case_created": "True",
+                }
+            }
+        )
+        logger.info(f"Updated case_created flag for suspicious login: {id}")
+    except Exception as e:
+        logger.error(
+            f"Failed to update case created flag {e}",
+        )
+        # Attempt to remove read-only block
+        try:
+            es_client.indices.put_settings(
+                index=index,
+                body={"index.blocks.write": None},
+            )
+            logger.info(
+                f"Removed read-only block from index {index}. Retrying update.",
+            )
+
+            # Retry the update operation
+            es_client.update(
+                index=index,
+                id=id,
+                body={"doc": {"case_created": "True"}},
+            )
+            logger.info(
+                f"Added case_created flag to index {index} for suspicious login: {id}",
+            )
+
+            # Reenable the write block
+            es_client.indices.put_settings(
+                index=index,
+                body={"index.blocks.write": True},
+            )
+        except Exception as e2:
+            logger.error(
+                f"Failed to remove read-only block from index {index}: {e2}",
+            )
+            return False
+
 
 
 async def create_iris_case(suspicious_login: SuspiciousLogin, session: AsyncSession) -> CaseResponse:
