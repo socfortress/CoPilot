@@ -48,7 +48,9 @@ async def get_next_batch_of_results(es_client, scroll_id):
 async def process_hits(hits, ip_to_login_ids, suspicious_activity):
     for hit in hits:
         if hit.source.errMessage == "OK":
-            ip_to_login_ids[hit.source.ip].add(hit.source.params_loginID)
+            # Convert loginID to lowercase before comparing
+            login_id = hit.source.params_loginID.lower()
+            ip_to_login_ids[hit.source.ip].add(login_id)
 
             suspicious_login = SuspiciousLogin(
                 _index=hit.index,
