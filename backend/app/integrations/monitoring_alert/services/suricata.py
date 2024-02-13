@@ -70,9 +70,6 @@ async def construct_alert_source_link(
     """
     logger.info(f"Constructing alert source link for alert: {alert_details}")
     query_string = f"%22query%22:%22alert_signature_id:%5C%22{alert_details.alert_id}%5C%22%20AND%20"
-    # ! TODO: REMOVE ONCE TESTING IS COMPLETE
-    if alert_details.agent_labels_customer == "WCPS":
-        alert_details.agent_labels_customer = "00002"
     grafana_url = (
         await get_customer_alert_settings(
             customer_code=alert_details.agent_labels_customer,
