@@ -5,13 +5,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 from datetime import datetime
 
-from app.integrations.sap_siem.schema.sap_siem import InvokeSapSiemRequest, ErrCode, SuspiciousLogin, CaseResponse, IrisCasePayload
+from app.integrations.sap_siem.schema.sap_siem import InvokeSapSiemRequest, ErrCode, SuspiciousLogin, CaseResponse, IrisCasePayload, AddAssetModel
 from app.integrations.sap_siem.schema.sap_siem import InvokeSAPSiemResponse, SapSiemAuthKeys, CollectSapSiemRequest, SapSiemResponseBody, SapSiemWazuhIndexerResponse
 from app.integrations.utils.event_shipper import event_shipper
 from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
 from app.connectors.dfir_iris.utils.universal import initialize_client_and_case
 from app.integrations.utils.schema import EventShipperPayload
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
+
+# global set to keep track of checked IPs
+checked_ips = set()
 
 def build_request_payload(sap_siem_request: CollectSapSiemRequest) -> dict:
     return {
@@ -205,6 +208,63 @@ async def collect_user_activity(suspicious_logins: SuspiciousLogin) -> SapSiemWa
     )
     return SapSiemWazuhIndexerResponse(**results)
 
+def create_asset_payload(asset: SuspiciousLogin):
+    if asset.errMessage == "OK":
+        return AddAssetModel(
+            name=asset.loginID,
+            ip=asset.ip,
+            description=f"Country: {asset.country}\n\nMessage: {asset.errMessage}\n\nTimestamp: {asset.event_timestamp}",
+            asset_type=1,
+            compromise_status=1,
+            analysis_status=2,
+        )
+    return AddAssetModel(
+        name=asset.loginID,
+        ip=asset.ip,
+        description=f"Country: {asset.country}\n\nMessage: {asset.errMessage}\n\nTimestamp: {asset.event_timestamp}",
+        asset_type=1,
+        analysis_status=2,
+    )
+
+async def update_case_with_asset(case_id: str, asset_payload):
+    """
+    Update the case with the asset information.
+
+    :param case_id: The ID of the case to update
+    :param asset_payload: The payload to update the case with
+
+    :return: None
+    """
+    logger.info(f"Updating IRIS case {case_id} with asset: {asset_payload}")
+    client, case_client = await initialize_client_and_case('DFIR-IRIS')
+    return await fetch_and_validate_data(
+        client,
+        case_client.add_asset,
+        cid=case_id,
+        **asset_payload.to_dict(),
+    )
+
+
+async def handle_user_activity(user_activity: SapSiemWazuhIndexerResponse, unique_instances, case_id):
+    for hit in user_activity.hits.hits:
+        current_activity = {
+            "loginID": hit.source.params_loginID,
+            "ip": hit.source.ip,
+            "country": hit.source.httpReq_country,
+            "errMessage": hit.source.errMessage,
+            "event_timestamp": hit.source.event_timestamp,
+        }
+        current_activity_frozenset = frozenset(current_activity.items())
+        if current_activity_frozenset not in unique_instances:
+            logger.info(f"Adding user activity to IRIS case: {current_activity}")
+            current_asset = SuspiciousLogin(**current_activity)
+            asset_payload = create_asset_payload(asset=current_asset)
+            logger.info(f"Asset Payload: {asset_payload}")
+            await update_case_with_asset(case_id, asset_payload)
+            unique_instances.add(current_activity_frozenset)
+
+async def mark_as_checked(suspicious_login):
+    checked_ips.add((suspicious_login.loginID, suspicious_login.ip))
 
 async def handle_common_suspicious_login_tasks(
     suspicious_login,
@@ -214,12 +274,12 @@ async def handle_common_suspicious_login_tasks(
 ):
     logger.info(f"Handling common suspicious login tasks: {suspicious_login}")
     case = await create_case_fn(suspicious_login)
-    case = create_case_fn(suspicious_login)
+    logger.info(f"Case: {case}")
     case_ids.append(case.data.case_id)
     user_activity = await collect_user_activity(suspicious_login)
     logger.info(f"User Activity: {user_activity}")
-    #await handle_user_activity(user_activity, unique_instances, case.data.case_id)
-    #await mark_as_checked(suspicious_login)
+    await handle_user_activity(user_activity, unique_instances, case.data.case_id)
+    await mark_as_checked(suspicious_login)
 
 async def handle_suspicious_login(suspicious_login, unique_instances, case_ids):
     logger.info(f"Handling suspicious login: {suspicious_login}")
@@ -229,6 +289,7 @@ async def handle_suspicious_login(suspicious_login, unique_instances, case_ids):
         case_ids,
         create_iris_case,
     )
+    logger.info(f"Marking suspicious login as checked: {suspicious_login}")
     #await update_case_created_flag(suspicious_login)
 
 
@@ -296,6 +357,9 @@ async def collect_sap_siem(sap_siem_request: CollectSapSiemRequest) -> InvokeSAP
     for suspicious_login in suspicious_logins:
         await handle_suspicious_login(suspicious_login, unique_instaces, case_ids)
 
+
+    # Clear the global set
+    checked_ips.clear()
     return InvokeSAPSiemResponse(
         success=True,
         message="SAP SIEM Events collected successfully",

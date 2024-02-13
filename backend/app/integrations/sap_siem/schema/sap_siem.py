@@ -226,13 +226,14 @@ class SapSiemSource(BaseModel):
     ip: str = Field(..., description="The IP address of the user")
     httpReq_country: str = Field(..., description="The country from which the HTTP request originated")
     event_timestamp: str = Field(..., description="The timestamp of the event")
+    errMessage: Optional[str] = Field(None, description="The error message")
 
 class SapSiemHit(BaseModel):
     index: str = Field(..., description="The index of the hit", alias="_index")
     id: str = Field(..., description="The ID of the hit", alias="_id")
     score: Optional[float] = Field(None, description="The score of the hit", alias="_score")
     source: SapSiemSource = Field(..., description="The source data of the hit", alias="_source")
-    sort: List[int] = Field(..., description="The sort order of the hit")
+    sort: Optional[List[int]] = Field(None, description="The sort order of the hit")
 
 class SapSiemTotal(BaseModel):
     value: int = Field(..., description="The total number of hits")
@@ -327,3 +328,41 @@ class CaseData(BaseModel):
 class CaseResponse(BaseModel):
     success: bool
     data: CaseData
+
+
+################# ! IRIS ASSET ADD SCHEMA ! #################
+class AddAssetModel(BaseModel):
+    name: str
+    asset_type: int
+    analysis_status: int = Field(
+        None,
+        description="The analysis status ID of the asset.",
+    )
+    compromise_status: int = Field(
+        None,
+        description="The asset compromise status ID of the asset.",
+    )
+    asset_tags: Optional[List[str]] = Field(
+        None,
+        description="The asset tags of the asset.",
+    )
+    description: Optional[str] = Field(
+        None,
+        description="The asset description of the asset.",
+    )
+    asset_domain: Optional[str] = Field(
+        None,
+        description="The asset domain of the asset.",
+    )
+    ip: Optional[str] = Field(None, description="The asset IP of the asset.")
+    ioc_links: Optional[List[int]] = Field(
+        None,
+        description="The IoC links of the asset.",
+    )
+    custom_attributes: Optional[Dict[str, str]] = Field(
+        None,
+        description="The custom attributes of the asset.",
+    )
+
+    def to_dict(self):
+        return self.dict(exclude_none=True)
