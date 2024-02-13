@@ -356,12 +356,15 @@ async def sap_siem_multiple_logins_same_ip(threshold: int, session: AsyncSession
                 case_ids,
                 session=session,
             )
-            logger.info(f"Made it past commit")
         else:
-            logger.error("Session is None")
+            raise HTTPException(
+                status_code=500,
+                detail="Failed to create IRIS case",
+            )
     await session.commit()
 
-
+    # Clear the global set
+    checked_ips.clear()
 
 
     return InvokeSAPSiemResponse(
