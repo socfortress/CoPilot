@@ -119,6 +119,7 @@ async def handle_user_activity(user_activity: SapSiemWazuhIndexerResponse, uniqu
             asset_payload = create_asset_payload(asset=current_asset)
             logger.info(f"Asset Payload: {asset_payload}")
             await update_case_with_asset(case_id, asset_payload)
+            await update_event_analyzed_multiple_logins_flag(hit.id, hit.index)
             unique_instances.add(current_activity_frozenset)
 
 def create_asset_payload(asset: SuspiciousLogin):
@@ -176,6 +177,7 @@ async def create_iris_case_multiple(suspicious_login: SuspiciousLogin, session: 
         case_client.add_case,
         **payload.to_dict(),
     )
+    await update_event_analyzed_multiple_logins_flag(suspicious_login.id, suspicious_login.index)
 
     return CaseResponse(**result)
 
