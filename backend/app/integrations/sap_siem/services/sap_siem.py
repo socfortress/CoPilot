@@ -12,6 +12,7 @@ from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
 from app.connectors.dfir_iris.utils.universal import initialize_client_and_case
 from app.integrations.utils.schema import EventShipperPayload
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
+from app.utils import get_customer_alert_settings
 
 # global set to keep track of checked IPs
 checked_ips = set()
@@ -55,65 +56,6 @@ async def send_to_event_shipper(message: EventShipperPayload) -> None:
     """
     await event_shipper(message)
 
-# async def check_for_suspicious_login(hit, last_invalid_login, suspicious_logins, threshold):
-#     logSource = hit.source.logSource
-#     loginID = hit.source.params_loginID
-#     errCode = hit.source.errCode
-#     country = hit.source.httpReq_country
-#     ip = hit.source.ip
-#     timestamp = hit.source.timestamp
-#     logger.info(f"Checking loginID: {loginID} with errCode: {errCode} and IP: {ip}")
-
-#     if ip not in last_invalid_login:
-#         last_invalid_login[ip] = {"count": 0, "timestamp": None}
-
-#     if errCode in [e.value for e in ErrCode]:
-#         logger.info(f"Found invalid login: {loginID} with IP: {ip} and errCode: {errCode}")
-#         last_invalid_login[ip]["count"] += 1
-#         last_invalid_login[ip]["timestamp"] = timestamp
-
-#     if errCode == ErrCode.OK.value and last_invalid_login[ip]["count"] >= threshold:
-#         logger.info(f"Found suspicious login: {loginID} with IP: {ip} and errCode: {errCode}")
-#         suspicious_login = SuspiciousLogin(
-#             logSource=logSource,
-#             loginID=loginID,
-#             country=country,
-#             ip=ip,
-#             timestamp=timestamp,
-#             errMessage=str(errCode),
-#         )
-#         suspicious_logins.append(suspicious_login)
-#         del last_invalid_login[ip]
-# async def check_for_suspicious_login(hit, last_invalid_login, suspicious_logins, threshold):
-#     logSource = hit.source.logSource
-#     loginID = hit.source.params_loginID
-#     errCode = hit.source.errCode
-#     country = hit.source.httpReq_country
-#     ip = hit.source.ip
-#     timestamp = hit.source.timestamp
-#     logger.info(f"Checking loginID: {loginID} with errCode: {errCode} and IP: {ip}")
-
-#     if ip not in last_invalid_login:
-#         last_invalid_login[ip] = {"last_errCode": None, "timestamp": None}
-
-#     if errCode in [e.value for e in ErrCode] and errCode != ErrCode.OK.value:
-#         logger.info(f"Found invalid login: {loginID} with IP: {ip} and errCode: {errCode}")
-#         last_invalid_login[ip]["last_errCode"] = errCode
-#         last_invalid_login[ip]["timestamp"] = timestamp
-
-#     if errCode == ErrCode.OK.value and last_invalid_login[ip]["last_errCode"] in [e.value for e in ErrCode] and last_invalid_login[ip]["last_errCode"] != ErrCode.OK.value:
-#         logger.info(f"Found suspicious login: {loginID} with IP: {ip} and errCode: {errCode}")
-#         suspicious_login = SuspiciousLogin(
-#             logSource=logSource,
-#             loginID=loginID,
-#             country=country,
-#             ip=ip,
-#             timestamp=timestamp,
-#             errMessage=str(errCode),
-#         )
-#         suspicious_logins.append(suspicious_login)
-#         last_invalid_login[ip]["last_errCode"] = None
-
 async def check_for_suspicious_login(hit, last_invalid_login, suspicious_logins, threshold):
     logSource = hit.source.logSource
     loginID = hit.source.params_loginID
@@ -121,6 +63,7 @@ async def check_for_suspicious_login(hit, last_invalid_login, suspicious_logins,
     country = hit.source.httpReq_country
     ip = hit.source.ip
     event_timestamp = hit.source.event_timestamp
+    customer_code = hit.source.customer_code
     logger.info(f"Checking loginID: {loginID} with errCode: {errCode} and IP: {ip}")
 
     if ip not in last_invalid_login:
@@ -134,6 +77,7 @@ async def check_for_suspicious_login(hit, last_invalid_login, suspicious_logins,
     if errCode == ErrCode.OK.value and last_invalid_login[ip]["count"] >= threshold:
         logger.info(f"Found suspicious login: {loginID} with IP: {ip} and errCode: {errCode}")
         suspicious_login = SuspiciousLogin(
+            customer_code=customer_code,
             logSource=logSource,
             loginID=loginID,
             country=country,
@@ -162,7 +106,7 @@ async def find_suscpicious_logins(sap_siem_request: CollectSapSiemRequest) -> Li
                 ]
                 }
             },
-            "_source": ["logSource", "params_loginID", "errCode", "httpReq_country", "ip", "event_timestamp"],
+            "_source": ["logSource", "params_loginID", "errCode", "httpReq_country", "ip", "event_timestamp", "customer_code"],
             "sort": [
                 {
                 "event_timestamp": {
@@ -253,6 +197,7 @@ async def handle_user_activity(user_activity: SapSiemWazuhIndexerResponse, uniqu
             "country": hit.source.httpReq_country,
             "errMessage": hit.source.errMessage,
             "event_timestamp": hit.source.event_timestamp,
+            "customer_code": hit.source.customer_code,
         }
         current_activity_frozenset = frozenset(current_activity.items())
         if current_activity_frozenset not in unique_instances:
@@ -271,9 +216,10 @@ async def handle_common_suspicious_login_tasks(
     unique_instances,
     case_ids,
     create_case_fn,
+    session: AsyncSession,
 ):
     logger.info(f"Handling common suspicious login tasks: {suspicious_login}")
-    case = await create_case_fn(suspicious_login)
+    case = await create_case_fn(suspicious_login, session=session)
     logger.info(f"Case: {case}")
     case_ids.append(case.data.case_id)
     user_activity = await collect_user_activity(suspicious_login)
@@ -281,19 +227,20 @@ async def handle_common_suspicious_login_tasks(
     await handle_user_activity(user_activity, unique_instances, case.data.case_id)
     await mark_as_checked(suspicious_login)
 
-async def handle_suspicious_login(suspicious_login, unique_instances, case_ids):
+async def handle_suspicious_login(suspicious_login, unique_instances, case_ids, session: AsyncSession):
     logger.info(f"Handling suspicious login: {suspicious_login}")
     await handle_common_suspicious_login_tasks(
         suspicious_login,
         unique_instances,
         case_ids,
         create_iris_case,
+        session
     )
     logger.info(f"Marking suspicious login as checked: {suspicious_login}")
     #await update_case_created_flag(suspicious_login)
 
 
-async def create_iris_case(suspicious_login: SuspiciousLogin) -> CaseResponse:
+async def create_iris_case(suspicious_login: SuspiciousLogin, session: AsyncSession) -> CaseResponse:
     """
     Create a case in IRIS for the suspicious activity.
 
@@ -305,7 +252,7 @@ async def create_iris_case(suspicious_login: SuspiciousLogin) -> CaseResponse:
     payload = IrisCasePayload(
         case_name=f"Log Source: {suspicious_login.logSource} Potential SAP SIEM Unauthorized Access: {suspicious_login.loginID} from {suspicious_login.ip}",
         case_description=f"Log Source: {suspicious_login.logSource}\n\nIP Address: {suspicious_login.ip}\n\nCountry: {suspicious_login.country}\n\nTimestamp: {suspicious_login.event_timestamp}",
-        case_customer=1,
+        case_customer= (await get_customer_alert_settings(suspicious_login.customer_code, session=session)).iris_customer_id,
         case_classification=18,
         soc_id="1",
         create_customer=False,
@@ -319,7 +266,7 @@ async def create_iris_case(suspicious_login: SuspiciousLogin) -> CaseResponse:
 
     return CaseResponse(**result)
 
-async def collect_sap_siem(sap_siem_request: CollectSapSiemRequest) -> InvokeSAPSiemResponse:
+async def collect_sap_siem(sap_siem_request: CollectSapSiemRequest, session: AsyncSession) -> InvokeSAPSiemResponse:
     """
     Collects SAP SIEM events.
 
@@ -355,7 +302,7 @@ async def collect_sap_siem(sap_siem_request: CollectSapSiemRequest) -> InvokeSAP
     unique_instaces = set()
     case_ids = []
     for suspicious_login in suspicious_logins:
-        await handle_suspicious_login(suspicious_login, unique_instaces, case_ids)
+        await handle_suspicious_login(suspicious_login, unique_instaces, case_ids, session=session)
 
 
     # Clear the global set

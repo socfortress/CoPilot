@@ -227,6 +227,7 @@ class SapSiemSource(BaseModel):
     httpReq_country: str = Field(..., description="The country from which the HTTP request originated")
     event_timestamp: str = Field(..., description="The timestamp of the event")
     errMessage: Optional[str] = Field(None, description="The error message")
+    customer_code: str = Field(..., description="The customer code")
 
 class SapSiemHit(BaseModel):
     index: str = Field(..., description="The index of the hit", alias="_index")
@@ -257,6 +258,7 @@ class SapSiemWazuhIndexerResponse(BaseModel):
     hits: SapSiemHits = Field(..., description="The hits data")
 
 class SuspiciousLogin(BaseModel):
+    customer_code: str
     logSource: Optional[str] = Field(None)
     loginID: str
     country: Optional[str]

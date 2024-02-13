@@ -57,7 +57,7 @@ async def sap_siem_route(sap_siem_request: InvokeSapSiemRequest, session: AsyncS
                 customer_code=sap_siem_request.customer_code,
             )
             logger.info(f"Collect SAP SIEM Request: {collect_sap_siem_request}")
-            await collect_sap_siem(sap_siem_request=collect_sap_siem_request)
+            await collect_sap_siem(sap_siem_request=collect_sap_siem_request, session=session)
     else:
         collect_sap_siem_request = CollectSapSiemRequest(
             apiKey=auth_keys.API_KEY,
@@ -70,6 +70,6 @@ async def sap_siem_route(sap_siem_request: InvokeSapSiemRequest, session: AsyncS
             customer_code=sap_siem_request.customer_code,
         )
         logger.info(f"Collect SAP SIEM Request: {collect_sap_siem_request}")
-        await collect_sap_siem(sap_siem_request=collect_sap_siem_request)
+        await collect_sap_siem(sap_siem_request=collect_sap_siem_request, session=session)
 
     return InvokeSAPSiemResponse(success=True, message="SAP SIEM Events collected successfully.")
