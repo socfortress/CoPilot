@@ -8,7 +8,7 @@ from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
 from app.integrations.sap_siem.schema.sap_siem import InvokeSapSiemRequest
 from app.integrations.sap_siem.schema.sap_siem import InvokeSAPSiemResponse, SapSiemAuthKeys, CollectSapSiemRequest
-from app.integrations.sap_siem.services.sap_siem import collect_sap_siem
+from app.integrations.sap_siem.services.collect import collect_sap_siem
 from app.integrations.routes import find_customer_integration
 from app.integrations.utils.utils import extract_auth_keys
 from app.integrations.utils.utils import get_customer_integration_response
@@ -21,10 +21,8 @@ integration_sap_siem_router = APIRouter()
     response_model=InvokeSAPSiemResponse,
     description="Pull down SAP SIEM Events.",
 )
-async def sap_siem_route(sap_siem_request: InvokeSapSiemRequest, session: AsyncSession = Depends(get_db)):
+async def collect_sap_siem_route(sap_siem_request: InvokeSapSiemRequest, session: AsyncSession = Depends(get_db)):
     """Pull down SAP SIEM Events."""
-    logger.info("Pulling down SAP SIEM Events")
-    logger.info(f"SAP SIEM Request: {sap_siem_request}")
     customer_integration_response = await get_customer_integration_response(
         sap_siem_request.customer_code,
         session,
@@ -56,8 +54,7 @@ async def sap_siem_route(sap_siem_request: InvokeSapSiemRequest, session: AsyncS
                 upper_bound=sap_siem_request.upper_bound,
                 customer_code=sap_siem_request.customer_code,
             )
-            logger.info(f"Collect SAP SIEM Request: {collect_sap_siem_request}")
-            await collect_sap_siem(sap_siem_request=collect_sap_siem_request, session=session)
+            await collect_sap_siem(sap_siem_request=collect_sap_siem_request)
     else:
         collect_sap_siem_request = CollectSapSiemRequest(
             apiKey=auth_keys.API_KEY,
@@ -69,7 +66,6 @@ async def sap_siem_route(sap_siem_request: InvokeSapSiemRequest, session: AsyncS
             upper_bound=sap_siem_request.upper_bound,
             customer_code=sap_siem_request.customer_code,
         )
-        logger.info(f"Collect SAP SIEM Request: {collect_sap_siem_request}")
-        await collect_sap_siem(sap_siem_request=collect_sap_siem_request, session=session)
+        await collect_sap_siem(sap_siem_request=collect_sap_siem_request)
 
     return InvokeSAPSiemResponse(success=True, message="SAP SIEM Events collected successfully.")

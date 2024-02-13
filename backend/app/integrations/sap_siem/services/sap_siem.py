@@ -7,54 +7,14 @@ from datetime import datetime
 
 from app.integrations.sap_siem.schema.sap_siem import InvokeSapSiemRequest, ErrCode, SuspiciousLogin, CaseResponse, IrisCasePayload, AddAssetModel, SapSiemHit
 from app.integrations.sap_siem.schema.sap_siem import InvokeSAPSiemResponse, SapSiemAuthKeys, CollectSapSiemRequest, SapSiemResponseBody, SapSiemWazuhIndexerResponse
-from app.integrations.utils.event_shipper import event_shipper
 from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
 from app.connectors.dfir_iris.utils.universal import initialize_client_and_case
-from app.integrations.utils.schema import EventShipperPayload
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
 from app.utils import get_customer_alert_settings
 
 # global set to keep track of checked IPs
 checked_ips = set()
 
-def build_request_payload(sap_siem_request: CollectSapSiemRequest) -> dict:
-    return {
-        "apiKey": sap_siem_request.apiKey,
-        "secret": sap_siem_request.secretKey,
-        "userKey": sap_siem_request.userKey,
-        "query": f"SELECT * FROM auditLog WHERE endpoint = 'accounts.login' and @timestamp >= '{sap_siem_request.lower_bound}' "
-        f"and @timestamp < '{sap_siem_request.upper_bound}'",
-    }
-
-async def make_request(sap_siem_request: CollectSapSiemRequest) -> SapSiemResponseBody:
-    """
-    Makes a request to the SAP SIEM integration.
-
-    Args:
-        sap_siem_request (CollectSapSiemRequest): The request payload containing the necessary information for the SAP SIEM integration.
-
-    Returns:
-        SapSiemResponseBody: The response model containing the result of the SAP SIEM integration invocation.
-
-    Raises:
-        HTTPException: If the SAP SIEM integration fails.
-    """
-    logger.info("Making request to SAP SIEM")
-    form_data = build_request_payload(sap_siem_request)
-    response = requests.post(
-        f"https://{sap_siem_request.apiDomain}/audit.search",
-        data=form_data,
-    )
-    return SapSiemResponseBody(**response.json())
-
-async def send_to_event_shipper(message: EventShipperPayload) -> None:
-    """
-    Sends the message to the event shipper.
-
-    Args:
-        message (EventShipperPayload): The message to send to the event shipper.
-    """
-    await event_shipper(message)
 
 async def check_for_suspicious_login(hit, last_invalid_login, suspicious_logins, threshold):
     logSource = hit.source.logSource
@@ -93,13 +53,13 @@ async def check_for_suspicious_login(hit, last_invalid_login, suspicious_logins,
         suspicious_logins.append(suspicious_login)
         last_invalid_login[ip] = {"count": 0, "event_timestamp": None}
 
-async def find_suscpicious_logins(sap_siem_request: CollectSapSiemRequest) -> List[SuspiciousLogin]:
+async def find_suscpicious_logins(threshold: int) -> List[SuspiciousLogin]:
     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
     results = es_client.search(
         #! TODO: change to sap_siem index when ready for deploy
         index="integrations_*",
         body={
-            "size": 100,
+            "size": 10000,
             "query": {
                 "bool": {
                 "must": [
@@ -126,7 +86,7 @@ async def find_suscpicious_logins(sap_siem_request: CollectSapSiemRequest) -> Li
     last_invalid_login = {}
     for hit in results.hits.hits:
         logger.info(f"Hit: {hit}")
-        await check_for_suspicious_login(hit, last_invalid_login, suspicious_logins, threshold=sap_siem_request.threshold)
+        await check_for_suspicious_login(hit, last_invalid_login, suspicious_logins, threshold=threshold)
     return suspicious_logins
 
 async def collect_user_activity(suspicious_logins: SuspiciousLogin) -> SapSiemWazuhIndexerResponse:
@@ -141,7 +101,7 @@ async def collect_user_activity(suspicious_logins: SuspiciousLogin) -> SapSiemWa
     results = es_client.search(
         index="integrations_*",
         body={
-            "size": 100,
+            "size": 10000,
             "query": {
                 "bool": {
                     "must": [
@@ -331,7 +291,7 @@ async def create_iris_case(suspicious_login: SuspiciousLogin, session: AsyncSess
 
     return CaseResponse(**result)
 
-async def collect_sap_siem(sap_siem_request: CollectSapSiemRequest, session: AsyncSession) -> InvokeSAPSiemResponse:
+async def sap_siem_suspicious_logins(threshold: int, session: AsyncSession) -> InvokeSAPSiemResponse:
     """
     Collects SAP SIEM events.
 
@@ -344,24 +304,9 @@ async def collect_sap_siem(sap_siem_request: CollectSapSiemRequest, session: Asy
     Raises:
         HTTPException: If the SAP SIEM integration fails.
     """
-    logger.info("Collecting SAP SIEM Events")
-    logger.info(f"SAP SIEM Request: {sap_siem_request}")
+    logger.info("Checking for suspicious logins")
 
-    # results = await make_request(sap_siem_request)
-
-    # for result in results.results:
-    #     # write the `timestamp` field as `event_timestamp`
-    #     result.event_timestamp = result.timestamp
-    #     await send_to_event_shipper(
-    #         EventShipperPayload(
-    #             customer_code=sap_siem_request.customer_code,
-    #             integration="sap_siem",
-    #             version="1.0",
-    #             **result.dict(),
-    #         ),
-    #     )
-
-    suspicious_logins = await find_suscpicious_logins(sap_siem_request)
+    suspicious_logins = await find_suscpicious_logins(threshold=threshold)
     logger.info(f"Suspicious Logins: {suspicious_logins}")
 
     unique_instaces = set()
