@@ -253,6 +253,7 @@ class SapSiemShards(BaseModel):
     failed: int = Field(..., description="The number of failed shards")
 
 class SapSiemWazuhIndexerResponse(BaseModel):
+    scroll_id: Optional[str] = Field(None, description="The scroll ID", alias="_scroll_id")
     took: int = Field(..., description="The time it took to execute the request")
     timed_out: bool = Field(..., description="Whether the request timed out")
     shards: SapSiemShards = Field(..., description="The shards data", alias="_shards")

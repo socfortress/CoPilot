@@ -36,7 +36,11 @@ async def check_for_suspicious_login(hit, last_invalid_login, suspicious_logins,
         last_invalid_login[ip]["count"] += 1
         last_invalid_login[ip]["event_timestamp"] = event_timestamp
 
+
+    logger.info(f"Checking if last_invalid_login[ip]['count'] >= threshold: {last_invalid_login[ip]['count']} >= {threshold}")
+    logger.info(f"Hit: {hit}")
     if errCode == ErrCode.OK.value and last_invalid_login[ip]["count"] >= threshold:
+        logger.info(f"Found suspicious login.")
         logger.info(f"Found suspicious login: {loginID} with IP: {ip} and errCode: {errCode}")
         suspicious_login = SuspiciousLogin(
             _index=index,
@@ -55,43 +59,68 @@ async def check_for_suspicious_login(hit, last_invalid_login, suspicious_logins,
 
 async def find_suscpicious_logins(threshold: int) -> List[SuspiciousLogin]:
     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
-    results = es_client.search(
-        #! TODO: change to sap_siem index when ready for deploy
-        index="integrations_*",
-        body={
-            "size": 10000,
-            "query": {
-                "bool": {
-                "must": [
-                    {
-                    "term": {
-                        "case_created": "False"
-                    }
-                    }
-                ]
-                }
-            },
-            "_source": ["logSource", "params_loginID", "errCode", "httpReq_country", "ip", "event_timestamp", "customer_code"],
-            "sort": [
-                {
-                "event_timestamp": {
-                    "order": "asc"
-                }
-                }
-            ]
-        }
-    )
-    results = SapSiemWazuhIndexerResponse(**results)
+    scroll_id = None
     suspicious_logins = []
     last_invalid_login = {}
-    for hit in results.hits.hits:
-        logger.info(f"Hit: {hit}")
-        await check_for_suspicious_login(hit, last_invalid_login, suspicious_logins, threshold=threshold)
+
+    while True:
+        if scroll_id is None:
+            # Initial search
+            results = es_client.search(
+                #! TODO: change to sap_siem index when ready for deploy
+                index="integrations_*",
+                body={
+                    "size": 10,
+                    "query": {
+                        "bool": {
+                            "must": [
+                                {
+                                    "term": {
+                                        "case_created": "False"
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "_source": ["logSource", "params_loginID", "errCode", "httpReq_country", "ip", "event_timestamp", "customer_code"],
+                    "sort": [
+                        {
+                            "event_timestamp": {
+                                "order": "asc"
+                            }
+                        }
+                    ]
+                },
+                scroll='1m'  # Keep the search context open for 1 minute
+            )
+        else:
+            # Get the next batch of results
+            results = es_client.scroll(scroll_id=scroll_id, scroll='1m')
+
+        # If there are no more results, break the loop
+        if not results["hits"]["hits"]:
+            logger.info("No more results")
+            break
+        else:
+            logger.info(f"Results: {results}")
+
+        results = SapSiemWazuhIndexerResponse(**results)
+        for hit in results.hits.hits:
+            logger.info(f"Hit: {hit}")
+            await check_for_suspicious_login(hit, last_invalid_login, suspicious_logins, threshold=threshold)
+
+        # Update the scroll ID
+        scroll_id = results.scroll_id
+
+    # Clear the scroll when you're done to free up resources
+    es_client.clear_scroll(scroll_id=scroll_id)
+
     return suspicious_logins
 
 async def collect_user_activity(suspicious_logins: SuspiciousLogin) -> SapSiemWazuhIndexerResponse:
     """
     Collect the IP addresses of the suspicious logins and query the database for all activity from those IP addresses.
+    Collects a max of 1000 records.
 
     :param suspicious_logins: A list of suspicious logins
 
@@ -101,7 +130,7 @@ async def collect_user_activity(suspicious_logins: SuspiciousLogin) -> SapSiemWa
     results = es_client.search(
         index="integrations_*",
         body={
-            "size": 10000,
+            "size": 1000,
             "query": {
                 "bool": {
                     "must": [
@@ -116,6 +145,7 @@ async def collect_user_activity(suspicious_logins: SuspiciousLogin) -> SapSiemWa
         }
     )
     return SapSiemWazuhIndexerResponse(**results)
+
 
 def create_asset_payload(asset: SuspiciousLogin):
     if asset.errMessage == "OK":
