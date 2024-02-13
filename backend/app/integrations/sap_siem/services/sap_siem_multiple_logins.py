@@ -41,8 +41,62 @@ async def handle_suspicious_login_multiple(suspicious_login, unique_instances, c
         create_iris_case_multiple,
         session,
     )
+    await update_event_analyzed_multiple_logins_flag(suspicious_login.id, suspicious_login.index)
 
+async def update_event_analyzed_multiple_logins_flag(id: str, index: str):
+    """
+    Update the event_analyzed_multiple_logins flag in the Elasticsearch document to True.
 
+    :param suspicious_login: The suspicious login to update
+
+    :return: None
+    """
+    es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
+    try:
+        es_client.update(
+            index=index,
+            id=id,
+            body={
+                "doc": {
+                    "event_analyzed_multiple_logins": "True",
+                }
+            }
+        )
+        logger.info(f"Updated event_analyzed_multiple_logins flag for suspicious login: {id}")
+    except Exception as e:
+        logger.error(
+            f"Failed to update case created flag {e}",
+        )
+        # Attempt to remove read-only block
+        try:
+            es_client.indices.put_settings(
+                index=index,
+                body={"index.blocks.write": None},
+            )
+            logger.info(
+                f"Removed read-only block from index {index}. Retrying update.",
+            )
+
+            # Retry the update operation
+            es_client.update(
+                index=index,
+                id=id,
+                body={"doc": {"event_analyzed_multiple_logins": "True"}},
+            )
+            logger.info(
+                f"Added event_analyzed_multiple_logins flag to index {index} for suspicious login: {id}",
+            )
+
+            # Reenable the write block
+            es_client.indices.put_settings(
+                index=index,
+                body={"index.blocks.write": True},
+            )
+        except Exception as e2:
+            logger.error(
+                f"Failed to remove read-only block from index {index}: {e2}",
+            )
+            return False
 
 async def mark_as_checked(suspicious_login):
     checked_ips.add((suspicious_login.loginID, suspicious_login.ip))
