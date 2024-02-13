@@ -208,6 +208,10 @@ class Result(BaseModel):
         "False",
         description="Whether the event has been analyzed",
     )
+    event_analyzed_multiple_logins: Optional[str] = Field(
+        "False",
+        description="Whether the event has been analyzed for multiple logins",
+    )
 
 
 
