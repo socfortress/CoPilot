@@ -78,6 +78,11 @@ async def find_suscpicious_logins(threshold: int) -> List[SuspiciousLogin]:
                                     "term": {
                                         "case_created": "False"
                                     }
+                                },
+                                {
+                                    "term": {
+                                        "event_analyzed": "False"
+                                    }
                                 }
                             ]
                         }
@@ -108,6 +113,7 @@ async def find_suscpicious_logins(threshold: int) -> List[SuspiciousLogin]:
         for hit in results.hits.hits:
             logger.info(f"Hit: {hit}")
             await check_for_suspicious_login(hit, last_invalid_login, suspicious_logins, threshold=threshold)
+            await update_event_analyzed_flag(hit.id, hit.index)
 
         # Update the scroll ID
         scroll_id = results.scroll_id
@@ -293,6 +299,60 @@ async def update_case_created_flag(id: str, index: str):
             )
             return False
 
+async def update_event_analyzed_flag(id: str, index: str):
+    """
+    Update the event_analyzed flag in the Elasticsearch document to True.
+
+    :param suspicious_login: The suspicious login to update
+
+    :return: None
+    """
+    es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
+    try:
+        es_client.update(
+            index=index,
+            id=id,
+            body={
+                "doc": {
+                    "event_analyzed": "True",
+                }
+            }
+        )
+        logger.info(f"Updated event_analyzed flag for suspicious login: {id}")
+    except Exception as e:
+        logger.error(
+            f"Failed to update event analyzed flag {e}",
+        )
+        # Attempt to remove read-only block
+        try:
+            es_client.indices.put_settings(
+                index=index,
+                body={"index.blocks.write": None},
+            )
+            logger.info(
+                f"Removed read-only block from index {index}. Retrying update.",
+            )
+
+            # Retry the update operation
+            es_client.update(
+                index=index,
+                id=id,
+                body={"doc": {"event_analyzed": "True"}},
+            )
+            logger.info(
+                f"Added event_analyzed flag to index {index} for suspicious login: {id}",
+            )
+
+            # Reenable the write block
+            es_client.indices.put_settings(
+                index=index,
+                body={"index.blocks.write": True},
+            )
+        except Exception as e2:
+            logger.error(
+                f"Failed to remove read-only block from index {index}: {e2}",
+            )
+            return False
 
 
 async def create_iris_case(suspicious_login: SuspiciousLogin, session: AsyncSession) -> CaseResponse:

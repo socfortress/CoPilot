@@ -204,6 +204,10 @@ class Result(BaseModel):
         "False",
         description="Whether a case has been created for the event",
     )
+    event_analyzed: Optional[str] = Field(
+        "False",
+        description="Whether the event has been analyzed",
+    )
 
 
 
