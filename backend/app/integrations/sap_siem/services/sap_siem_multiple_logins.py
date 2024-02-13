@@ -3,8 +3,10 @@ from collections import defaultdict
 from loguru import logger
 import requests
 from sqlalchemy.ext.asyncio import AsyncSession
+from typing import Set
 from typing import List
 from datetime import datetime
+from sqlalchemy.future import select
 
 from app.integrations.sap_siem.schema.sap_siem import InvokeSapSiemRequest, ErrCode, SuspiciousLogin, CaseResponse, IrisCasePayload, AddAssetModel, SapSiemHit
 from app.integrations.sap_siem.schema.sap_siem import InvokeSAPSiemResponse, SapSiemAuthKeys, CollectSapSiemRequest, SapSiemResponseBody, SapSiemWazuhIndexerResponse
@@ -12,9 +14,11 @@ from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
 from app.connectors.dfir_iris.utils.universal import initialize_client_and_case
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
 from app.utils import get_customer_alert_settings
+from app.integrations.sap_siem.models.sap_siem import SapSiemMultipleLogins
 
+# Global set to keep track of IPs that have already been checked
+checked_ips = set()
 
-####### ! NEW CODE ! #######
 async def get_initial_search_results(es_client):
     return es_client.search(
         index="integrations_*",
@@ -26,6 +30,11 @@ async def get_initial_search_results(es_client):
                         {
                             "term": {
                                 "errMessage": "OK"
+                            }
+                        },
+                        {
+                            "term": {
+                                "event_analyzed_multiple_logins": "False"
                             }
                         }
                     ]
@@ -98,26 +107,34 @@ async def check_multiple_successful_logins_by_ip(threshold: int) -> List[Suspici
 
     return [login for sublist in suspicious_activity.values() for login in sublist]
 
+
+async def get_suspicious_ips(threshold: int) -> List[SuspiciousLogin]:
+    return await check_multiple_successful_logins_by_ip(threshold=threshold)
+
+async def get_existing_case(session: AsyncSession, ip: str) -> SapSiemMultipleLogins:
+    result = await session.execute(select(SapSiemMultipleLogins).where(SapSiemMultipleLogins.ip == ip))
+    return result.scalar_one_or_none() if result is not None else None
+
+def update_existing_case(existing_case: SapSiemMultipleLogins, new_login_ids: Set[str]) -> None:
+    existing_loginIDs = set(existing_case.associated_loginIDs.split(','))
+    if not new_login_ids.issubset(existing_loginIDs):
+        updated_login_ids = existing_loginIDs.union(new_login_ids)
+        existing_case.associated_loginIDs = ','.join(updated_login_ids)
+        existing_case.last_case_created_timestamp = datetime.now()
+
+def create_new_case(ip: str, new_login_ids: Set[str]) -> SapSiemMultipleLogins:
+    return SapSiemMultipleLogins(
+        ip=ip,
+        last_case_created_timestamp=datetime.now(),
+        associated_loginIDs=','.join(new_login_ids),
+    )
+
 async def sap_siem_multiple_logins_same_ip(threshold: int, session: AsyncSession) -> InvokeSAPSiemResponse:
-    """
-    Collects SAP SIEM events.
-
-    Args:
-        sap_siem_request (CollectSapSiemRequest): The request payload containing the necessary information for the SAP SIEM integration.
-
-    Returns:
-        InvokeSAPSiemResponse: The response model containing the result of the SAP SIEM integration invocation.
-
-    Raises:
-        HTTPException: If the SAP SIEM integration fails.
-    """
     logger.info("Finding same IP with multiple users")
 
-    suspicious_ips = await check_multiple_successful_logins_by_ip(threshold=threshold)
+    suspicious_ips = await get_suspicious_ips(threshold)
     logger.info(f"Suspicious IPs: {suspicious_ips}")
 
-    unique_instances = set()
-    case_ids = []
     # Dictionary to aggregate suspicious logins by IP
     aggregated_logins_by_ip = defaultdict(list)
 
@@ -125,9 +142,20 @@ async def sap_siem_multiple_logins_same_ip(threshold: int, session: AsyncSession
         aggregated_logins_by_ip[suspicious_login.ip].append(suspicious_login)
 
     for ip, associated_logins in aggregated_logins_by_ip.items():
-        logger.info(f"Handling suspicious logins for IP: {ip}")
-        new_login_ids = {login.loginID for login in associated_logins}
-        logger.info(f"New login IDs: {new_login_ids}")
+        logger.info(f"IP: {ip}, Associated Logins: {associated_logins}")
+        if session is not None:
+            existing_case = await get_existing_case(session, ip)
+
+            new_login_ids = {login.loginID for login in associated_logins}
+            if existing_case:
+                update_existing_case(existing_case, new_login_ids)
+            else:
+                new_case = create_new_case(ip, new_login_ids)
+                session.add(new_case)
+
+            await session.commit()
+        else:
+            logger.error("Session is None")
 
 
 
