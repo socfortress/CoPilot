@@ -86,6 +86,7 @@ async def create_influxdb_client(connector_name: str) -> InfluxDBClientAsync:
             url=attributes["connector_url"],
             token=attributes["connector_api_key"],
             org=await get_influxdb_organization(),
+            verify_ssl=False,
         )
     except Exception as e:
         raise HTTPException(
