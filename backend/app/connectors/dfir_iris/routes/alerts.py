@@ -241,7 +241,9 @@ async def delete_multiple_alerts_route(
     description="Delete all alerts",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def purge_alerts_route(session: AsyncSession = Depends(get_db),) -> DeleteAlertResponse:
+async def purge_alerts_route(
+    session: AsyncSession = Depends(get_db),
+) -> DeleteAlertResponse:
     """
     Delete all alerts.
 

@@ -108,7 +108,7 @@ copilot-frontend:
     ports:
         - "80:80"
         - "443:443"
-````
+```
 
 ### Upgrading Copilot
 
@@ -122,7 +122,7 @@ docker compose pull
 
 # Start the container again
 docker compose up -d
-````
+```
 
 ## Connectors
 
