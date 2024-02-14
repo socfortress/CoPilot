@@ -3,6 +3,7 @@ from fastapi import Depends
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from typing import Optional
 
 from app.db.db_session import get_db
 from app.schedulers.models.scheduler import JobMetadata
@@ -147,6 +148,7 @@ async def pause_job(job_id: str):
 async def update_job(
     job_id: str,
     time_interval: int,
+    extra_data: Optional[str] = None,
     session: AsyncSession = Depends(get_db),
 ):
     """
@@ -175,6 +177,7 @@ async def update_job(
             job_id,
             "update",
             time_interval=time_interval,
+            extra_data=extra_data,
         )
         logger.info(f"Job {job_id} updated successfully")
         return {"success": True, "message": "Job updated successfully"}
