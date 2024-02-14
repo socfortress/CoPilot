@@ -21,6 +21,7 @@ async def verify_influxdb_credentials(attributes: Dict[str, Any]) -> Dict[str, A
         url=attributes["connector_url"],
         token=attributes["connector_api_key"],
         org=await get_influxdb_organization(),
+        verify_ssl=False,
     )
     try:
         ping = await influxdb_client.ping()
