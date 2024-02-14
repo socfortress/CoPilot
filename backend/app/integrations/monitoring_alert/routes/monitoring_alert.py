@@ -4,6 +4,7 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Security
+from typing import Optional
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -235,7 +236,7 @@ async def run_suricata_analysis(
     response_model=AlertAnalysisResponse,
 )
 async def run_sap_siem_suspicious_logins_analysis(
-    threshold: int,
+    threshold: Optional[int] = 3,
     session: AsyncSession = Depends(get_db),
 ) -> AlertAnalysisResponse:
     """
@@ -269,7 +270,7 @@ async def run_sap_siem_suspicious_logins_analysis(
     response_model=AlertAnalysisResponse,
 )
 async def run_sap_siem_multiple_logins_same_ip_analysis(
-    threshold: int,
+    threshold: Optional[int] = 1,
     session: AsyncSession = Depends(get_db),
 ) -> AlertAnalysisResponse:
     """
