@@ -241,7 +241,9 @@ async def delete_multiple_alerts_route(
     description="Delete all alerts",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def purge_alerts_route() -> DeleteAlertResponse:
+async def purge_alerts_route(
+    session: AsyncSession = Depends(get_db),
+) -> DeleteAlertResponse:
     """
     Delete all alerts.
 
@@ -249,7 +251,7 @@ async def purge_alerts_route() -> DeleteAlertResponse:
         AlertResponse: The response containing the deleted alerts.
     """
     logger.info("Purging all alerts, up to 1000")
-    alerts = (await get_alerts(request=FilterAlertsRequest(per_page=1000))).alerts
+    alerts = (await get_alerts(request=FilterAlertsRequest(per_page=1000), session=session)).alerts
     for alert in alerts:
         await delete_alert(int(alert["alert_id"]))
     return DeleteAlertResponse(success=True, message="Successfully deleted alerts.")
