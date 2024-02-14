@@ -26,6 +26,19 @@ async def handle_common_suspicious_login_tasks(
     create_case_fn,
     session: AsyncSession,
 ):
+    """
+    Handles common tasks for suspicious logins.
+
+    Args:
+        suspicious_login: The suspicious login object.
+        unique_instances: List of unique instances.
+        case_ids: List of case IDs.
+        create_case_fn: Function to create a case.
+        session: The async session.
+
+    Returns:
+        None
+    """
     case = await create_case_fn(suspicious_login, session)
     case_ids.append(case.data.case_id)
     user_activity = await collect_user_activity(suspicious_login)
@@ -34,6 +47,18 @@ async def handle_common_suspicious_login_tasks(
 
 
 async def handle_suspicious_login_multiple(suspicious_login, unique_instances, case_ids, session: AsyncSession):
+    """
+    Handles suspicious login events with multiple logins.
+
+    Args:
+        suspicious_login: The suspicious login event.
+        unique_instances: List of unique instances of the suspicious login event.
+        case_ids: List of case IDs associated with the suspicious login event.
+        session: The database session.
+
+    Returns:
+        None
+    """
     await handle_common_suspicious_login_tasks(
         suspicious_login,
         unique_instances,
@@ -99,9 +124,36 @@ async def update_event_analyzed_multiple_logins_flag(id: str, index: str):
             return False
 
 async def mark_as_checked(suspicious_login):
+    """
+    Marks a suspicious login as checked by adding it to the set of checked IPs.
+
+    Args:
+        suspicious_login (Login): The suspicious login object to mark as checked.
+
+    Returns:
+        None
+    """
     checked_ips.add((suspicious_login.loginID, suspicious_login.ip))
 
 async def handle_user_activity(user_activity: SapSiemWazuhIndexerResponse, unique_instances, case_id):
+    """
+    Handles user activity by processing each hit in the user_activity and performing the following steps:
+    1. Extracts relevant information from the hit.
+    2. Checks if the current activity is already present in the unique_instances set.
+    3. If not present, adds the user activity to the IRIS case.
+    4. Creates an asset payload using the current activity.
+    5. Updates the case with the asset payload.
+    6. Updates the event analyzed multiple logins flag for the hit.
+    7. Adds the current activity to the unique_instances set.
+
+    Parameters:
+    - user_activity (SapSiemWazuhIndexerResponse): The user activity to be processed.
+    - unique_instances (set): A set containing unique instances of user activity.
+    - case_id (str): The ID of the IRIS case.
+
+    Returns:
+    None
+    """
     for hit in user_activity.hits.hits:
         current_activity = {
             "loginID": hit.source.params_loginID,
@@ -123,6 +175,16 @@ async def handle_user_activity(user_activity: SapSiemWazuhIndexerResponse, uniqu
             unique_instances.add(current_activity_frozenset)
 
 def create_asset_payload(asset: SuspiciousLogin):
+    """
+    Create a payload for adding an asset based on a SuspiciousLogin object.
+
+    Args:
+        asset (SuspiciousLogin): The SuspiciousLogin object containing the asset details.
+
+    Returns:
+        AddAssetModel: The payload for adding the asset.
+
+    """
     if asset.errMessage == "OK":
         return AddAssetModel(
             name=asset.loginID,
@@ -160,7 +222,14 @@ async def update_case_with_asset(case_id: str, asset_payload):
 
 async def create_iris_case_multiple(suspicious_login: SuspiciousLogin, session: AsyncSession) -> CaseResponse:
     """
-    Create a case in IRIS for same IP with multiple users.
+    Creates an IRIS case for multiple logins with the same IP address.
+
+    Args:
+        suspicious_login (SuspiciousLogin): The suspicious login information.
+        session (AsyncSession): The async session for database operations.
+
+    Returns:
+        CaseResponse: The response containing the created case information.
     """
     logger.info(f"Creating IRIS case same IP with multiple users: {suspicious_login}")
     payload = IrisCasePayload(
@@ -211,6 +280,15 @@ async def collect_user_activity(suspicious_logins: SuspiciousLogin) -> SapSiemWa
     return SapSiemWazuhIndexerResponse(**results)
 
 async def get_initial_search_results(es_client):
+    """
+    Retrieves the initial search results from Elasticsearch.
+
+    Args:
+        es_client (Elasticsearch): The Elasticsearch client.
+
+    Returns:
+        dict: The search results.
+    """
     return es_client.search(
         index="integrations_*",
         body={
@@ -243,9 +321,30 @@ async def get_initial_search_results(es_client):
     )
 
 async def get_next_batch_of_results(es_client, scroll_id):
+    """
+    Retrieves the next batch of results using the provided Elasticsearch client and scroll ID.
+
+    Args:
+        es_client (Elasticsearch): The Elasticsearch client.
+        scroll_id (str): The scroll ID to retrieve the next batch of results.
+
+    Returns:
+        dict: The next batch of results.
+    """
     return es_client.scroll(scroll_id=scroll_id, scroll='1m')
 
 async def process_hits(hits, ip_to_login_ids, suspicious_activity):
+    """
+    Process the hits received from SAP SIEM and update the IP to login IDs mapping and suspicious activity.
+
+    Args:
+        hits (list): List of hits received from SAP SIEM.
+        ip_to_login_ids (dict): Dictionary mapping IP addresses to login IDs.
+        suspicious_activity (dict): Dictionary mapping IP addresses to a list of suspicious login objects.
+
+    Returns:
+        None
+    """
     for hit in hits:
         if hit.source.errMessage == "OK":
             # Convert loginID to lowercase before comparing
@@ -268,6 +367,15 @@ async def process_hits(hits, ip_to_login_ids, suspicious_activity):
             suspicious_activity[hit.source.ip].append(suspicious_login)
 
 async def check_multiple_successful_logins_by_ip(threshold: int) -> List[SuspiciousLogin]:
+    """
+    Checks for multiple successful logins by IP address.
+
+    Args:
+        threshold (int): The minimum number of logins required to be considered suspicious.
+
+    Returns:
+        List[SuspiciousLogin]: A list of suspicious login objects.
+    """
     ip_to_login_ids = defaultdict(set)
     suspicious_activity = defaultdict(list)
 
@@ -300,13 +408,42 @@ async def check_multiple_successful_logins_by_ip(threshold: int) -> List[Suspici
 
 
 async def get_suspicious_ips(threshold: int) -> List[SuspiciousLogin]:
+    """
+    Retrieves a list of suspicious login attempts based on the specified threshold.
+
+    Args:
+        threshold (int): The number of successful logins from the same IP address that is considered suspicious.
+
+    Returns:
+        List[SuspiciousLogin]: A list of SuspiciousLogin objects representing the suspicious login attempts.
+    """
     return await check_multiple_successful_logins_by_ip(threshold=threshold)
 
 async def get_existing_database_record(session: AsyncSession, ip: str) -> SapSiemMultipleLogins:
+    """
+    Retrieves an existing database record for the given IP address.
+
+    Args:
+        session (AsyncSession): The async session object for database operations.
+        ip (str): The IP address to search for.
+
+    Returns:
+        SapSiemMultipleLogins: The database record matching the IP address, or None if not found.
+    """
     result = await session.execute(select(SapSiemMultipleLogins).where(SapSiemMultipleLogins.ip == ip))
     return result.scalar_one_or_none() if result is not None else None
 
 def update_existing_database_record(existing_case: SapSiemMultipleLogins, new_login_ids: Set[str]) -> None:
+    """
+    Update the existing database record for a SapSiemMultipleLogins case with new login IDs.
+
+    Args:
+        existing_case (SapSiemMultipleLogins): The existing database record to be updated.
+        new_login_ids (Set[str]): The new login IDs to be added to the existing record.
+
+    Returns:
+        None
+    """
     existing_loginIDs = set(existing_case.associated_loginIDs.split(','))
     if not new_login_ids.issubset(existing_loginIDs):
         updated_login_ids = existing_loginIDs.union(new_login_ids)
@@ -314,6 +451,16 @@ def update_existing_database_record(existing_case: SapSiemMultipleLogins, new_lo
         existing_case.last_case_created_timestamp = datetime.now()
 
 def create_new_database_record(ip: str, new_login_ids: Set[str]) -> SapSiemMultipleLogins:
+    """
+    Creates a new database record for SAP SIEM multiple logins.
+
+    Args:
+        ip (str): The IP address associated with the multiple logins.
+        new_login_ids (Set[str]): The set of new login IDs.
+
+    Returns:
+        SapSiemMultipleLogins: The newly created database record.
+    """
     return SapSiemMultipleLogins(
         ip=ip,
         last_case_created_timestamp=datetime.now(),
@@ -321,6 +468,16 @@ def create_new_database_record(ip: str, new_login_ids: Set[str]) -> SapSiemMulti
     )
 
 async def sap_siem_multiple_logins_same_ip(threshold: int, session: AsyncSession) -> InvokeSAPSiemResponse:
+    """
+    Finds same IP with multiple users and handles suspicious logins.
+
+    Args:
+        threshold (int): The threshold value for determining suspicious logins.
+        session (AsyncSession): The database session.
+
+    Returns:
+        InvokeSAPSiemResponse: The response indicating the success of the operation.
+    """
     logger.info("Finding same IP with multiple users")
 
     suspicious_ips = await get_suspicious_ips(threshold)
@@ -369,5 +526,5 @@ async def sap_siem_multiple_logins_same_ip(threshold: int, session: AsyncSession
 
     return InvokeSAPSiemResponse(
         success=True,
-        message="SAP SIEM Events collected successfully",
+        message="SAP SIEM multiple logins invoked.",
     )
