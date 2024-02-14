@@ -48,7 +48,7 @@ async def verify_grafana_credentials(attributes: Dict[str, Any]) -> Dict[str, An
 
     grafana_url = await construct_grafana_url(connector_url, username, password)
 
-    grafana_client = GrafanaApi.from_url(grafana_url)
+    grafana_client = GrafanaApi.from_url(grafana_url, verify=False)
     try:
         create_org = grafana_client.organization.create_organization(
             organization={
@@ -120,7 +120,7 @@ async def create_grafana_client(connector_name: str) -> GrafanaApi:
             attributes["connector_username"],
             attributes["connector_password"],
         )
-        return GrafanaApi.from_url(grafana_url)
+        return GrafanaApi.from_url(grafana_url, verify=False)
     except Exception as e:
         raise HTTPException(
             status_code=500,
