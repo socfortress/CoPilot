@@ -394,7 +394,9 @@ async def check_multiple_successful_logins_by_ip(threshold: int) -> List[Suspici
 
         scroll_id = results.scroll_id
 
-    es_client.clear_scroll(scroll_id=scroll_id)
+    # Clear the scroll when you're done to free up resources
+    if scroll_id is not None:
+        es_client.clear_scroll(scroll_id=scroll_id)
 
     suspicious_activity = {ip: results for ip, results in suspicious_activity.items() if len(ip_to_login_ids[ip]) > threshold}
 

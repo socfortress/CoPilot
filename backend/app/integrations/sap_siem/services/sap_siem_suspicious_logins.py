@@ -100,7 +100,8 @@ async def find_suscpicious_logins(threshold: int) -> List[SuspiciousLogin]:
         scroll_id = results.scroll_id
 
     # Clear the scroll when you're done to free up resources
-    es_client.clear_scroll(scroll_id=scroll_id)
+    if scroll_id is not None:
+        es_client.clear_scroll(scroll_id=scroll_id)
 
     return suspicious_logins
 
