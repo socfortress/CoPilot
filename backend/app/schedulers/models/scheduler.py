@@ -12,6 +12,7 @@ class JobMetadata(SQLModel, table=True):
     job_id: str = Field(index=True)  # Corresponds to the APScheduler job ID
     last_success: Optional[datetime] = None
     time_interval: int  # The frequency of the job in minutes
+    extra_data: Optional[str] = None  # Extra data for the job
     enabled: bool  # Indicates if the job is active or not
 
 

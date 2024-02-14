@@ -17,6 +17,7 @@ from app.db.db_setup import create_tables
 from app.db.db_setup import ensure_admin_user
 from app.db.db_setup import ensure_scheduler_user
 from app.db.db_setup import ensure_scheduler_user_removed
+from app.db.db_setup import update_tables
 from app.middleware.exception_handlers import custom_http_exception_handler
 from app.middleware.exception_handlers import validation_exception_handler
 from app.middleware.exception_handlers import value_error_handler
@@ -41,6 +42,7 @@ from app.routers import logs
 from app.routers import mimecast
 from app.routers import monitoring_alert
 from app.routers import office365
+from app.routers import sap_siem
 from app.routers import scheduler
 from app.routers import shuffle
 from app.routers import smtp
@@ -114,6 +116,7 @@ api_router.include_router(office365.router)
 api_router.include_router(mimecast.router)
 api_router.include_router(scheduler.router)
 api_router.include_router(monitoring_alert.router)
+api_router.include_router(sap_siem.router)
 
 # Include the APIRouter in the FastAPI app
 app.include_router(api_router)
@@ -123,6 +126,7 @@ app.include_router(api_router)
 async def init_db():
     # create_tables(engine)
     await create_tables(async_engine)
+    await update_tables(async_engine)
     await create_roles(async_engine)
     await create_available_integrations(async_engine)
     await ensure_admin_user(async_engine)

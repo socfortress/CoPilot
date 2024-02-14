@@ -613,7 +613,6 @@ async def get_customer_integrations_by_customer_code(
     )
     result = await session.execute(stmt)
     customer_integrations = result.scalars().unique().all()
-    logger.info(f"customer_integrations: {customer_integrations}")
     return CustomerIntegrationsResponse(
         available_integrations=customer_integrations,
         message="Customer integrations successfully retrieved.",

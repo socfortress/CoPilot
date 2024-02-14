@@ -1,0 +1,2129 @@
+{
+	"annotations": {
+		"list": [
+			{
+				"builtIn": 1,
+				"datasource": {
+					"type": "datasource",
+					"uid": "grafana"
+				},
+				"enable": true,
+				"hide": true,
+				"iconColor": "rgba(0, 211, 255, 1)",
+				"name": "Annotations & Alerts",
+				"target": {
+					"limit": 100,
+					"matchAny": false,
+					"tags": [],
+					"type": "dashboard"
+				},
+				"type": "dashboard"
+			}
+		]
+	},
+	"editable": false,
+	"fiscalYearStartMonth": 0,
+	"graphTooltip": 0,
+	"id": null,
+	"links": [
+		{
+			"asDropdown": true,
+			"icon": "external link",
+			"includeVars": true,
+			"keepTime": true,
+			"tags": ["SAP"],
+			"targetBlank": true,
+			"title": "",
+			"type": "dashboards"
+		}
+	],
+	"liveNow": false,
+	"panels": [
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"mappings": [
+						{
+							"options": {
+								"match": "null",
+								"result": {
+									"text": "N/A"
+								}
+							},
+							"type": "special"
+						}
+					],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "super-light-red",
+								"value": null
+							}
+						]
+					},
+					"unit": "locale"
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 4,
+				"x": 0,
+				"y": 0
+			},
+			"id": 43,
+			"links": [],
+			"options": {
+				"colorMode": "value",
+				"graphMode": "area",
+				"justifyMode": "auto",
+				"orientation": "horizontal",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"text": {},
+				"textMode": "auto",
+				"wideLayout": true
+			},
+			"pluginVersion": "10.2.3",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"field": "event_timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto",
+								"min_doc_count": 0,
+								"trimEdges": 0
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "_exists_:errCode AND logSource:$log_source",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "AUTH ERRORS",
+			"type": "stat"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "palette-classic"
+					},
+					"custom": {
+						"hideFrom": {
+							"legend": false,
+							"tooltip": false,
+							"viz": false
+						}
+					},
+					"mappings": []
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 4,
+				"x": 4,
+				"y": 0
+			},
+			"id": 53,
+			"options": {
+				"legend": {
+					"displayMode": "table",
+					"placement": "right",
+					"showLegend": false
+				},
+				"pieType": "donut",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": true
+				},
+				"tooltip": {
+					"mode": "single",
+					"sort": "none"
+				}
+			},
+			"pluginVersion": "8.5.1",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"fake": true,
+							"field": "errDetails",
+							"id": "4",
+							"settings": {
+								"min_doc_count": 1,
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "10"
+							},
+							"type": "terms"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "_exists_:errCode AND logSource:$log_source",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "EVENTS BY ERROR (Top 10)",
+			"transformations": [],
+			"type": "piechart"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"custom": {
+						"align": "auto",
+						"cellOptions": {
+							"type": "auto"
+						},
+						"inspect": false
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "red",
+								"value": null
+							}
+						]
+					}
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "Count"
+						},
+						"properties": [
+							{
+								"id": "displayName",
+								"value": "EVENTS"
+							},
+							{
+								"id": "unit",
+								"value": "short"
+							},
+							{
+								"id": "decimals",
+								"value": -1
+							},
+							{
+								"id": "custom.align"
+							},
+							{
+								"id": "thresholds",
+								"value": {
+									"mode": "absolute",
+									"steps": [
+										{
+											"color": "red",
+											"value": null
+										}
+									]
+								}
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 6,
+				"x": 8,
+				"y": 0
+			},
+			"id": 54,
+			"options": {
+				"cellHeight": "sm",
+				"footer": {
+					"countRows": false,
+					"fields": "",
+					"reducer": ["sum"],
+					"show": false
+				},
+				"showHeader": true
+			},
+			"pluginVersion": "10.2.3",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"fake": true,
+							"field": "errDetails",
+							"id": "4",
+							"settings": {
+								"min_doc_count": 1,
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "0"
+							},
+							"type": "terms"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "logSource:$log_source",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "EVENTS BY ERROR (Top 10)",
+			"transformations": [
+				{
+					"id": "merge",
+					"options": {
+						"reducers": []
+					}
+				},
+				{
+					"id": "organize",
+					"options": {
+						"excludeByName": {},
+						"indexByName": {},
+						"renameByName": {
+							"Count": "EVENTS",
+							"data_errDetails": "ERROR",
+							"data_office_365_Operation": "OPERATION"
+						}
+					}
+				}
+			],
+			"type": "table"
+		},
+		{
+			"circleMaxSize": 30,
+			"circleMinSize": 2,
+			"colors": ["rgba(245, 54, 54, 0.9)", "rgba(237, 129, 40, 0.89)", "rgba(50, 172, 45, 0.97)"],
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"decimals": 0,
+			"esMetric": "Count",
+			"gridPos": {
+				"h": 7,
+				"w": 10,
+				"x": 14,
+				"y": 0
+			},
+			"hideEmpty": false,
+			"hideZero": false,
+			"id": 67,
+			"initialZoom": 1,
+			"locationData": "countries",
+			"mapCenter": "(0Â°, 0Â°)",
+			"mapCenterLatitude": 0,
+			"mapCenterLongitude": 0,
+			"maxDataPoints": 1,
+			"mouseWheelZoom": false,
+			"showLegend": true,
+			"stickyLabels": false,
+			"tableQueryOptions": {
+				"geohashField": "geohash",
+				"latitudeField": "latitude",
+				"longitudeField": "longitude",
+				"metricField": "metric",
+				"queryType": "geohash"
+			},
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"fake": true,
+							"field": "ip_country_code",
+							"id": "3",
+							"settings": {
+								"min_doc_count": 1,
+								"order": "desc",
+								"orderBy": "_term",
+								"size": "0"
+							},
+							"type": "terms"
+						},
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto",
+								"min_doc_count": 0,
+								"trimEdges": 0
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "NOT errCode:0 AND logSource:$log_source",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"thresholds": "0,10",
+			"title": "FAILED AUTH EVENTS BY COUNTRY",
+			"type": "grafana-worldmap-panel",
+			"unitPlural": "",
+			"unitSingle": "",
+			"valueName": "total"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"mappings": [
+						{
+							"options": {
+								"match": "null",
+								"result": {
+									"text": "N/A"
+								}
+							},
+							"type": "special"
+						}
+					],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "blue",
+								"value": null
+							}
+						]
+					},
+					"unit": "locale"
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 4,
+				"x": 0,
+				"y": 7
+			},
+			"id": 61,
+			"links": [],
+			"options": {
+				"colorMode": "value",
+				"graphMode": "none",
+				"justifyMode": "auto",
+				"orientation": "horizontal",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"text": {},
+				"textMode": "auto",
+				"wideLayout": true
+			},
+			"pluginVersion": "10.2.3",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto",
+								"min_doc_count": 0,
+								"trimEdges": 0
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "logSource:$log_source",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "TOTAL EVENTS",
+			"type": "stat"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "palette-classic"
+					},
+					"custom": {
+						"axisBorderShow": false,
+						"axisCenteredZero": false,
+						"axisColorMode": "text",
+						"axisLabel": "",
+						"axisPlacement": "auto",
+						"barAlignment": 0,
+						"drawStyle": "bars",
+						"fillOpacity": 0,
+						"gradientMode": "none",
+						"hideFrom": {
+							"legend": false,
+							"tooltip": false,
+							"viz": false
+						},
+						"insertNulls": false,
+						"lineInterpolation": "linear",
+						"lineWidth": 1,
+						"pointSize": 5,
+						"scaleDistribution": {
+							"type": "linear"
+						},
+						"showPoints": "auto",
+						"spanNulls": false,
+						"stacking": {
+							"group": "A",
+							"mode": "normal"
+						},
+						"thresholdsStyle": {
+							"mode": "off"
+						}
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					}
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 13,
+				"w": 20,
+				"x": 4,
+				"y": 7
+			},
+			"id": 66,
+			"options": {
+				"legend": {
+					"calcs": [],
+					"displayMode": "table",
+					"placement": "right",
+					"showLegend": true
+				},
+				"tooltip": {
+					"mode": "single",
+					"sort": "none"
+				}
+			},
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "params_loginID",
+							"id": "3",
+							"settings": {
+								"min_doc_count": "1",
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "10"
+							},
+							"type": "terms"
+						},
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "logSource:$log_source",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "TOP 10 USERS - HISTOGRAM",
+			"transparent": true,
+			"type": "timeseries"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"mappings": [
+						{
+							"options": {
+								"match": "null",
+								"result": {
+									"text": "N/A"
+								}
+							},
+							"type": "special"
+						}
+					],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "blue",
+								"value": null
+							}
+						]
+					},
+					"unit": "locale"
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 6,
+				"w": 4,
+				"x": 0,
+				"y": 14
+			},
+			"id": 18,
+			"links": [],
+			"options": {
+				"colorMode": "value",
+				"graphMode": "none",
+				"justifyMode": "auto",
+				"orientation": "horizontal",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"text": {},
+				"textMode": "auto",
+				"wideLayout": true
+			},
+			"pluginVersion": "10.2.3",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"$$hashKey": "object:331",
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "365d",
+								"min_doc_count": 0,
+								"trimEdges": 0
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"field": "params_loginID",
+							"id": "1",
+							"type": "cardinality"
+						}
+					],
+					"query": "logSource:$log_source",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "SAP - TOTAL ACCOUNTS",
+			"type": "stat"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					}
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 12,
+				"w": 9,
+				"x": 0,
+				"y": 20
+			},
+			"id": 57,
+			"options": {
+				"displayMode": "gradient",
+				"maxVizHeight": 300,
+				"minVizHeight": 10,
+				"minVizWidth": 0,
+				"namePlacement": "auto",
+				"orientation": "horizontal",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"showUnfilled": true,
+				"sizing": "auto",
+				"valueMode": "color"
+			},
+			"pluginVersion": "10.2.3",
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "userAgent_raw",
+							"id": "2",
+							"settings": {
+								"min_doc_count": "1",
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "15"
+							},
+							"type": "terms"
+						},
+						{
+							"field": "timestamp",
+							"id": "3",
+							"settings": {
+								"interval": "auto",
+								"min_doc_count": "1",
+								"timeZone": "utc",
+								"trimEdges": "0"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "logSource:$log_source",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "USER AGENTS",
+			"type": "bargauge"
+		},
+		{
+			"circleMaxSize": 30,
+			"circleMinSize": 2,
+			"colors": ["rgba(245, 54, 54, 0.9)", "rgba(237, 129, 40, 0.89)", "rgba(50, 172, 45, 0.97)"],
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"decimals": 0,
+			"esMetric": "Count",
+			"gridPos": {
+				"h": 12,
+				"w": 7,
+				"x": 9,
+				"y": 20
+			},
+			"hideEmpty": false,
+			"hideZero": false,
+			"id": 50,
+			"initialZoom": 1,
+			"locationData": "countries",
+			"mapCenter": "(0Â°, 0Â°)",
+			"mapCenterLatitude": 0,
+			"mapCenterLongitude": 0,
+			"maxDataPoints": 1,
+			"mouseWheelZoom": false,
+			"showLegend": true,
+			"stickyLabels": false,
+			"tableQueryOptions": {
+				"geohashField": "geohash",
+				"latitudeField": "latitude",
+				"longitudeField": "longitude",
+				"metricField": "metric",
+				"queryType": "geohash"
+			},
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"fake": true,
+							"field": "ip_country_code",
+							"id": "3",
+							"settings": {
+								"min_doc_count": 1,
+								"order": "desc",
+								"orderBy": "_term",
+								"size": "0"
+							},
+							"type": "terms"
+						},
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto",
+								"min_doc_count": 0,
+								"trimEdges": 0
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "logSource:$log_source",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"thresholds": "0,10",
+			"title": "ALL AUTH EVENTS BY COUNTRY",
+			"type": "grafana-worldmap-panel",
+			"unitPlural": "",
+			"unitSingle": "",
+			"valueName": "total"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"custom": {
+						"align": "auto",
+						"cellOptions": {
+							"type": "auto"
+						},
+						"inspect": false
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "orange",
+								"value": null
+							}
+						]
+					}
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "Count"
+						},
+						"properties": [
+							{
+								"id": "displayName",
+								"value": "EVENTS"
+							},
+							{
+								"id": "unit",
+								"value": "short"
+							},
+							{
+								"id": "decimals",
+								"value": -1
+							},
+							{
+								"id": "custom.align"
+							},
+							{
+								"id": "custom.cellOptions",
+								"value": {
+									"type": "color-text"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "AD ACCOUNT"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 219
+							},
+							{
+								"id": "custom.cellOptions",
+								"value": {
+									"type": "color-text"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "data_office_365_LogonError"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 326
+							},
+							{
+								"id": "custom.cellOptions",
+								"value": {
+									"type": "color-text"
+								}
+							},
+							{
+								"id": "links",
+								"value": [
+									{
+										"targetBlank": true,
+										"title": "MICROSOFT LOGON ERROR",
+										"url": "https://docs.microsoft.com/en-us/azure/active-directory/develop/reference-aadsts-error-codes"
+									}
+								]
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "data_office_365_ActorIpAddress_country_code"
+						},
+						"properties": [
+							{
+								"id": "custom.cellOptions",
+								"value": {
+									"type": "color-text"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "COUNTRY"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 86
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "ERROR"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 399
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 12,
+				"w": 8,
+				"x": 16,
+				"y": 20
+			},
+			"id": 58,
+			"options": {
+				"cellHeight": "sm",
+				"footer": {
+					"countRows": false,
+					"fields": "",
+					"reducer": ["sum"],
+					"show": false
+				},
+				"showHeader": true,
+				"sortBy": []
+			},
+			"pluginVersion": "10.2.3",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"fake": true,
+							"field": "params_loginID",
+							"id": "4",
+							"settings": {
+								"min_doc_count": 1,
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "0"
+							},
+							"type": "terms"
+						},
+						{
+							"field": "errDetails",
+							"id": "5",
+							"settings": {
+								"min_doc_count": "1",
+								"order": "desc",
+								"orderBy": "_term",
+								"size": "10"
+							},
+							"type": "terms"
+						},
+						{
+							"field": "ip_country_code",
+							"id": "6",
+							"settings": {
+								"min_doc_count": "1",
+								"order": "desc",
+								"orderBy": "_term",
+								"size": "10"
+							},
+							"type": "terms"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "_exists_:errCode AND logSource:$log_source",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "FAILED AUTHS BY ACCOUNT AND ERROR",
+			"transformations": [
+				{
+					"id": "merge",
+					"options": {
+						"reducers": []
+					}
+				},
+				{
+					"id": "organize",
+					"options": {
+						"excludeByName": {},
+						"indexByName": {
+							"Count": 3,
+							"data_errDetails": 2,
+							"data_ip_country_code": 1,
+							"data_userKeyDetails_name": 0
+						},
+						"renameByName": {
+							"Count": "EVENTS",
+							"data_errDetails": "ERROR",
+							"data_ip_country_code": "COUNTRY",
+							"data_office_365_ActorIpAddress_country_code": "COUNTRY",
+							"data_office_365_LogonError": "ERROR",
+							"data_office_365_Operation": "WORKLOAD",
+							"data_office_365_UserId": "AD ACCOUNT",
+							"data_userKeyDetails_name": "ACCT"
+						}
+					}
+				}
+			],
+			"type": "table"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"custom": {
+						"align": "auto",
+						"cellOptions": {
+							"type": "auto"
+						},
+						"filterable": true,
+						"inspect": false
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					}
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "rule_level"
+						},
+						"properties": [
+							{
+								"id": "displayName",
+								"value": "RULE LEVEL"
+							},
+							{
+								"id": "unit",
+								"value": "short"
+							},
+							{
+								"id": "decimals",
+								"value": -1
+							},
+							{
+								"id": "custom.cellOptions",
+								"value": {
+									"mode": "gradient",
+									"type": "color-background"
+								}
+							},
+							{
+								"id": "custom.align"
+							},
+							{
+								"id": "thresholds",
+								"value": {
+									"mode": "absolute",
+									"steps": [
+										{
+											"color": "#37872D",
+											"value": null
+										},
+										{
+											"color": "red",
+											"value": 7
+										},
+										{
+											"color": "rgba(245, 54, 54, 0.9)",
+											"value": 12
+										}
+									]
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "Date/Time"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 242
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "MITRE TACTIC"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 332
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "IP ADDRESS"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 163
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "MITRE TECHNIQUE"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 312
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "EVENT ID"
+						},
+						"properties": [
+							{
+								"id": "links",
+								"value": [
+									{
+										"targetBlank": true,
+										"title": "VIEW EVENT DETAILS",
+										"url": "https://grafana.detacon.cloud/explore?left=%7B%22datasource%22:%22SAP_SIEM%22,%22queries%22:%5B%7B%22refId%22:%22A%22,%22query%22:%22_id:${__value.text}%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D,%22range%22:%7B%22from%22:%22now-6h%22,%22to%22:%22now%22%7D%7D"
+									}
+								]
+							},
+							{
+								"id": "custom.width",
+								"value": 336
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "RESULT"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 118
+							},
+							{
+								"id": "mappings",
+								"value": [
+									{
+										"options": {
+											"8": {
+												"color": "red",
+												"index": 2
+											},
+											"Failed": {
+												"color": "orange",
+												"index": 1
+											},
+											"Success": {
+												"color": "green",
+												"index": 0
+											}
+										},
+										"type": "value"
+									}
+								]
+							},
+							{
+								"id": "custom.cellOptions",
+								"value": {
+									"type": "color-text"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "SRC IP"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 265
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "ACCOUNT"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 343
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "EVENT TIME"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 195
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 16,
+				"w": 24,
+				"x": 0,
+				"y": 32
+			},
+			"id": 27,
+			"options": {
+				"cellHeight": "sm",
+				"footer": {
+					"countRows": false,
+					"enablePagination": true,
+					"fields": "",
+					"reducer": ["sum"],
+					"show": false
+				},
+				"showHeader": true,
+				"sortBy": [
+					{
+						"desc": true,
+						"displayName": "RULE LEVEL"
+					}
+				]
+			},
+			"pluginVersion": "10.2.3",
+			"targets": [
+				{
+					"bucketAggs": [],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"id": "1",
+							"settings": {
+								"size": "250"
+							},
+							"type": "raw_data"
+						}
+					],
+					"query": "logSource:$log_source",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "EVENTS",
+			"transformations": [
+				{
+					"id": "organize",
+					"options": {
+						"excludeByName": {
+							"@metadata_beat": true,
+							"@metadata_type": true,
+							"@metadata_version": true,
+							"IMPHASH": true,
+							"MD5": true,
+							"SHA1": true,
+							"SHA256": true,
+							"_id": false,
+							"_index": true,
+							"_type": true,
+							"agent_ephemeral_id": true,
+							"agent_hostname": true,
+							"agent_id": true,
+							"agent_ip": true,
+							"agent_ip_city_name": true,
+							"agent_ip_country_code": true,
+							"agent_ip_geolocation": true,
+							"agent_labels_customer": true,
+							"agent_name": true,
+							"agent_type": true,
+							"agent_version": true,
+							"beats_type": true,
+							"cluster_name": true,
+							"cluster_node": true,
+							"collector_node_id": true,
+							"data_XffFirstIp": true,
+							"data_XffFirstIp_city_name": true,
+							"data_XffFirstIp_country_code": true,
+							"data_XffFirstIp_geolocation": true,
+							"data_alert_action": true,
+							"data_alert_category": true,
+							"data_alert_gid": true,
+							"data_alert_rev": true,
+							"data_alert_severity": true,
+							"data_alert_signature": true,
+							"data_alert_signature_id": true,
+							"data_apikey": true,
+							"data_app_proto": true,
+							"data_audit_auid": true,
+							"data_audit_command": true,
+							"data_audit_euid": true,
+							"data_audit_exe": true,
+							"data_audit_gid": true,
+							"data_audit_id": true,
+							"data_audit_pid": true,
+							"data_audit_res": true,
+							"data_audit_session": true,
+							"data_audit_type": true,
+							"data_audit_uid": true,
+							"data_callID": true,
+							"data_dest_ip": true,
+							"data_dest_port": true,
+							"data_dstuser": true,
+							"data_endpoint": true,
+							"data_errCode": true,
+							"data_event_type": true,
+							"data_extra_data": true,
+							"data_file": true,
+							"data_flow_bytes_toclient": true,
+							"data_flow_bytes_toserver": true,
+							"data_flow_id": true,
+							"data_flow_pkts_toclient": true,
+							"data_flow_pkts_toserver": true,
+							"data_flow_start": true,
+							"data_httpReq_SDK": true,
+							"data_httpReq_country": true,
+							"data_http_http_content_type": true,
+							"data_http_http_port": true,
+							"data_http_length": true,
+							"data_http_status": true,
+							"data_http_url": true,
+							"data_id": true,
+							"data_in_iface": true,
+							"data_integration": true,
+							"data_ip_city_name": true,
+							"data_ip_geolocation": true,
+							"data_label": true,
+							"data_metadata_flowbits": true,
+							"data_metadata_flowints_http_anomaly_count": true,
+							"data_metadata_flowints_tcp_retransmission_count": true,
+							"data_office_365_Actor": true,
+							"data_office_365_ActorContextId": true,
+							"data_office_365_ActorIpAddress": false,
+							"data_office_365_ActorIpAddress_city_name": true,
+							"data_office_365_ActorIpAddress_country_code": true,
+							"data_office_365_ActorIpAddress_geolocation": true,
+							"data_office_365_ApplicationId": true,
+							"data_office_365_AzureActiveDirectoryEventType": true,
+							"data_office_365_ClientIP": true,
+							"data_office_365_ClientIP_city_name": true,
+							"data_office_365_ClientIP_country_code": true,
+							"data_office_365_ClientIP_geolocation": true,
+							"data_office_365_CreationTime": false,
+							"data_office_365_DeviceProperties": true,
+							"data_office_365_ErrorNumber": true,
+							"data_office_365_ExtendedProperties": true,
+							"data_office_365_Id": true,
+							"data_office_365_InterSystemsId": true,
+							"data_office_365_IntraSystemId": true,
+							"data_office_365_LogonError": true,
+							"data_office_365_ModifiedProperties": true,
+							"data_office_365_ObjectId": true,
+							"data_office_365_Operation": true,
+							"data_office_365_OrganizationId": true,
+							"data_office_365_RecordType": true,
+							"data_office_365_ResultStatus": false,
+							"data_office_365_Target": true,
+							"data_office_365_TargetContextId": true,
+							"data_office_365_UserId": false,
+							"data_office_365_UserKey": true,
+							"data_office_365_UserType": true,
+							"data_office_365_Version": true,
+							"data_office_365_Workload": true,
+							"data_osquery_action": true,
+							"data_osquery_calendarTime": true,
+							"data_osquery_columns_address": true,
+							"data_osquery_columns_address_city_name": true,
+							"data_osquery_columns_address_country_code": true,
+							"data_osquery_columns_address_geolocation": true,
+							"data_osquery_columns_cmdline": true,
+							"data_osquery_columns_cwd": true,
+							"data_osquery_columns_description": true,
+							"data_osquery_columns_directory": true,
+							"data_osquery_columns_disk_bytes_read": true,
+							"data_osquery_columns_disk_bytes_written": true,
+							"data_osquery_columns_egid": true,
+							"data_osquery_columns_euid": true,
+							"data_osquery_columns_family": true,
+							"data_osquery_columns_fd": true,
+							"data_osquery_columns_gid": true,
+							"data_osquery_columns_gid_signed": true,
+							"data_osquery_columns_host": true,
+							"data_osquery_columns_interface": true,
+							"data_osquery_columns_local_address": true,
+							"data_osquery_columns_local_address_city_name": true,
+							"data_osquery_columns_local_address_country_code": true,
+							"data_osquery_columns_local_address_geolocation": true,
+							"data_osquery_columns_local_port": true,
+							"data_osquery_columns_mac": true,
+							"data_osquery_columns_name": true,
+							"data_osquery_columns_net_namespace": true,
+							"data_osquery_columns_nice": true,
+							"data_osquery_columns_on_disk": true,
+							"data_osquery_columns_parent": true,
+							"data_osquery_columns_path": true,
+							"data_osquery_columns_pgroup": true,
+							"data_osquery_columns_pid": true,
+							"data_osquery_columns_port": true,
+							"data_osquery_columns_protocol": true,
+							"data_osquery_columns_remote_address": true,
+							"data_osquery_columns_remote_address_city_name": true,
+							"data_osquery_columns_remote_address_country_code": true,
+							"data_osquery_columns_remote_address_geolocation": true,
+							"data_osquery_columns_remote_port": true,
+							"data_osquery_columns_resident_size": true,
+							"data_osquery_columns_root": true,
+							"data_osquery_columns_sgid": true,
+							"data_osquery_columns_shell": true,
+							"data_osquery_columns_socket": true,
+							"data_osquery_columns_start_time": true,
+							"data_osquery_columns_state": true,
+							"data_osquery_columns_suid": true,
+							"data_osquery_columns_system_time": true,
+							"data_osquery_columns_threads": true,
+							"data_osquery_columns_time_utc": true,
+							"data_osquery_columns_total_size": true,
+							"data_osquery_columns_tty": true,
+							"data_osquery_columns_type": true,
+							"data_osquery_columns_uid": true,
+							"data_osquery_columns_uid_signed": true,
+							"data_osquery_columns_user": true,
+							"data_osquery_columns_user_time": true,
+							"data_osquery_columns_username": true,
+							"data_osquery_columns_wired_size": true,
+							"data_osquery_counter": true,
+							"data_osquery_decorations_host_uuid": true,
+							"data_osquery_decorations_hostname": true,
+							"data_osquery_epoch": true,
+							"data_osquery_hostIdentifier": true,
+							"data_osquery_name": true,
+							"data_osquery_numerics": true,
+							"data_osquery_unixTime": true,
+							"data_params_apiKey": true,
+							"data_params_include": true,
+							"data_params_loginID": true,
+							"data_params_password": true,
+							"data_params_secret": true,
+							"data_params_userKey": true,
+							"data_proto": true,
+							"data_response": true,
+							"data_restrictions_ipBlacklistRestricted": true,
+							"data_restrictions_ipBlacklistRestrictionEnforced": true,
+							"data_restrictions_ipWhitelistRestricted": true,
+							"data_restrictions_ipWhitelistRestrictionEnforced": true,
+							"data_sca_check_command": true,
+							"data_sca_check_compliance_cis": true,
+							"data_sca_check_compliance_cis_csc": true,
+							"data_sca_check_compliance_gdpr_IV": true,
+							"data_sca_check_compliance_gpg_13": true,
+							"data_sca_check_compliance_hipaa": true,
+							"data_sca_check_compliance_nist_800_53": true,
+							"data_sca_check_compliance_pci_dss": true,
+							"data_sca_check_compliance_tsc": true,
+							"data_sca_check_description": true,
+							"data_sca_check_id": true,
+							"data_sca_check_previous_result": true,
+							"data_sca_check_rationale": true,
+							"data_sca_check_remediation": true,
+							"data_sca_check_result": true,
+							"data_sca_check_title": true,
+							"data_sca_description": true,
+							"data_sca_failed": true,
+							"data_sca_file": true,
+							"data_sca_invalid": true,
+							"data_sca_passed": true,
+							"data_sca_policy": true,
+							"data_sca_policy_id": true,
+							"data_sca_scan_id": true,
+							"data_sca_score": true,
+							"data_sca_total_checks": true,
+							"data_sca_type": true,
+							"data_script": true,
+							"data_serverIP_city_name": true,
+							"data_serverIP_country_code": false,
+							"data_serverIP_geolocation": true,
+							"data_src_ip": true,
+							"data_src_ip_city_name": true,
+							"data_src_ip_country_code": true,
+							"data_src_ip_geolocation": true,
+							"data_src_port": true,
+							"data_srcip": true,
+							"data_srcip_city_name": true,
+							"data_srcip_country_code": true,
+							"data_srcip_geolocation": true,
+							"data_srcuser": true,
+							"data_status_code": true,
+							"data_timestamp": true,
+							"data_title": true,
+							"data_tls_session_resumed": true,
+							"data_tls_version": true,
+							"data_tx_id": true,
+							"data_type": true,
+							"data_uid": true,
+							"data_userAgent_platform": true,
+							"data_userAgent_raw": true,
+							"data_userAgent_version": true,
+							"data_userKey": true,
+							"data_userKeyDetails_name": true,
+							"data_win_eventXML_binaryData": true,
+							"data_win_eventXML_binaryDataSize": true,
+							"data_win_eventXML_param1": true,
+							"data_win_eventdata_authenticationPackageName": true,
+							"data_win_eventdata_callTrace": true,
+							"data_win_eventdata_commandLine": true,
+							"data_win_eventdata_company": true,
+							"data_win_eventdata_creationUtcTime": true,
+							"data_win_eventdata_currentDirectory": true,
+							"data_win_eventdata_description": true,
+							"data_win_eventdata_destinationHostname": true,
+							"data_win_eventdata_destinationIp": true,
+							"data_win_eventdata_destinationIp_city_name": true,
+							"data_win_eventdata_destinationIp_country_code": true,
+							"data_win_eventdata_destinationIp_geolocation": true,
+							"data_win_eventdata_destinationIsIpv6": true,
+							"data_win_eventdata_destinationPort": true,
+							"data_win_eventdata_destinationPortName": true,
+							"data_win_eventdata_details": true,
+							"data_win_eventdata_elevatedToken": true,
+							"data_win_eventdata_eventType": true,
+							"data_win_eventdata_fileVersion": true,
+							"data_win_eventdata_fileVersion_city_name": true,
+							"data_win_eventdata_fileVersion_country_code": true,
+							"data_win_eventdata_fileVersion_geolocation": true,
+							"data_win_eventdata_grantedAccess": true,
+							"data_win_eventdata_hashes": true,
+							"data_win_eventdata_image": true,
+							"data_win_eventdata_imageLoaded": true,
+							"data_win_eventdata_impersonationLevel": true,
+							"data_win_eventdata_initiated": true,
+							"data_win_eventdata_integrityLevel": true,
+							"data_win_eventdata_ipAddress": true,
+							"data_win_eventdata_ipPort": true,
+							"data_win_eventdata_keyLength": true,
+							"data_win_eventdata_logonGuid": true,
+							"data_win_eventdata_logonId": true,
+							"data_win_eventdata_logonProcessName": true,
+							"data_win_eventdata_logonType": true,
+							"data_win_eventdata_originalFileName": true,
+							"data_win_eventdata_param1": true,
+							"data_win_eventdata_param2": true,
+							"data_win_eventdata_param3": true,
+							"data_win_eventdata_param4": true,
+							"data_win_eventdata_parentCommandLine": true,
+							"data_win_eventdata_parentImage": true,
+							"data_win_eventdata_parentProcessGuid": true,
+							"data_win_eventdata_parentProcessId": true,
+							"data_win_eventdata_processGuid": true,
+							"data_win_eventdata_processId": true,
+							"data_win_eventdata_processName": true,
+							"data_win_eventdata_product": true,
+							"data_win_eventdata_protocol": true,
+							"data_win_eventdata_queryName": true,
+							"data_win_eventdata_queryResults": true,
+							"data_win_eventdata_queryStatus": true,
+							"data_win_eventdata_ruleName": true,
+							"data_win_eventdata_serviceName": true,
+							"data_win_eventdata_serviceSid": true,
+							"data_win_eventdata_signature": true,
+							"data_win_eventdata_signatureStatus": true,
+							"data_win_eventdata_signed": true,
+							"data_win_eventdata_sourceHostname": true,
+							"data_win_eventdata_sourceImage": true,
+							"data_win_eventdata_sourceIp": true,
+							"data_win_eventdata_sourceIp_city_name": true,
+							"data_win_eventdata_sourceIp_country_code": true,
+							"data_win_eventdata_sourceIp_geolocation": true,
+							"data_win_eventdata_sourceIsIpv6": true,
+							"data_win_eventdata_sourcePort": true,
+							"data_win_eventdata_sourceProcessGUID": true,
+							"data_win_eventdata_sourceProcessId": true,
+							"data_win_eventdata_sourceThreadId": true,
+							"data_win_eventdata_status": true,
+							"data_win_eventdata_subjectDomainName": true,
+							"data_win_eventdata_subjectLogonId": true,
+							"data_win_eventdata_subjectUserName": true,
+							"data_win_eventdata_subjectUserSid": true,
+							"data_win_eventdata_targetDomainName": true,
+							"data_win_eventdata_targetFilename": true,
+							"data_win_eventdata_targetImage": true,
+							"data_win_eventdata_targetLinkedLogonId": true,
+							"data_win_eventdata_targetLogonId": true,
+							"data_win_eventdata_targetObject": true,
+							"data_win_eventdata_targetProcessGUID": true,
+							"data_win_eventdata_targetProcessId": true,
+							"data_win_eventdata_targetUserName": true,
+							"data_win_eventdata_targetUserSid": true,
+							"data_win_eventdata_terminalSessionId": true,
+							"data_win_eventdata_ticketEncryptionType": true,
+							"data_win_eventdata_ticketOptions": true,
+							"data_win_eventdata_user": true,
+							"data_win_eventdata_utcTime": true,
+							"data_win_eventdata_virtualAccount": true,
+							"data_win_system_channel": true,
+							"data_win_system_computer": true,
+							"data_win_system_eventID": true,
+							"data_win_system_eventRecordID": true,
+							"data_win_system_eventSourceName": true,
+							"data_win_system_keywords": true,
+							"data_win_system_level": true,
+							"data_win_system_message": true,
+							"data_win_system_opcode": true,
+							"data_win_system_processID": true,
+							"data_win_system_providerGuid": true,
+							"data_win_system_providerName": true,
+							"data_win_system_severityValue": true,
+							"data_win_system_systemTime": true,
+							"data_win_system_task": true,
+							"data_win_system_threadID": true,
+							"data_win_system_version": true,
+							"decoder_name": true,
+							"decoder_parent": true,
+							"dns_query": true,
+							"dns_query_threat_indicated": true,
+							"dst_ip": true,
+							"dst_ip_city_name": true,
+							"dst_ip_country_code": true,
+							"dst_ip_geolocation": true,
+							"dst_ip_threat_indicated": true,
+							"dst_port": true,
+							"ecs_version": true,
+							"error": true,
+							"event_hash": true,
+							"file_path": true,
+							"firewall_rule_name": true,
+							"full_log": false,
+							"gl2_accounted_message_size": true,
+							"gl2_message_id": true,
+							"gl2_processing_error": true,
+							"gl2_remote_ip": true,
+							"gl2_remote_port": true,
+							"gl2_source_collector": true,
+							"gl2_source_input": true,
+							"gl2_source_node": true,
+							"hash_md5": true,
+							"hash_sha1": true,
+							"hash_sha256": true,
+							"highlight": true,
+							"host_architecture": true,
+							"host_containerized": true,
+							"host_hostname": true,
+							"host_id": true,
+							"host_ip": true,
+							"host_mac": true,
+							"host_name": true,
+							"host_os_codename": true,
+							"host_os_kernel": true,
+							"host_os_name": true,
+							"host_os_platform": true,
+							"host_os_version": true,
+							"hostname": true,
+							"id": true,
+							"input_type": true,
+							"level": true,
+							"location": true,
+							"log_file_path": true,
+							"log_offset": true,
+							"manager_name": true,
+							"message": true,
+							"module": true,
+							"msg_timestamp": true,
+							"parent_process_cmd_line": true,
+							"parent_process_id": true,
+							"parent_process_image": true,
+							"pid": true,
+							"predecoder_hostname": true,
+							"predecoder_program_name": true,
+							"predecoder_timestamp": true,
+							"previous_log": true,
+							"previous_output": true,
+							"process_cmd_line": true,
+							"process_id": true,
+							"process_image": true,
+							"process_name": true,
+							"protocol": true,
+							"rule_cis": true,
+							"rule_cis_csc": true,
+							"rule_firedtimes": true,
+							"rule_gdpr": true,
+							"rule_gdpr_IV": true,
+							"rule_gpg13": true,
+							"rule_gpg_13": true,
+							"rule_group1": true,
+							"rule_groups": true,
+							"rule_hipaa": true,
+							"rule_id": true,
+							"rule_info": true,
+							"rule_mail": true,
+							"rule_mitre_id": true,
+							"rule_mitre_tactic": false,
+							"rule_nist_800_53": true,
+							"rule_pci_dss": true,
+							"rule_tsc": true,
+							"scanid": true,
+							"service": true,
+							"software_package": true,
+							"software_vendor": true,
+							"sort": true,
+							"source": true,
+							"src_ip": true,
+							"src_ip_city_name": true,
+							"src_ip_country_code": true,
+							"src_ip_geolocation": true,
+							"src_port": true,
+							"streams": true,
+							"syscheck_attrs_after": true,
+							"syscheck_audit_effective_user_id": true,
+							"syscheck_audit_effective_user_name": true,
+							"syscheck_audit_group_id": true,
+							"syscheck_audit_group_name": true,
+							"syscheck_audit_login_user_id": true,
+							"syscheck_audit_login_user_name": true,
+							"syscheck_audit_process_cwd": true,
+							"syscheck_audit_process_id": true,
+							"syscheck_audit_process_name": true,
+							"syscheck_audit_process_parent_cwd": true,
+							"syscheck_audit_process_parent_name": true,
+							"syscheck_audit_process_ppid": true,
+							"syscheck_audit_user_id": true,
+							"syscheck_audit_user_name": true,
+							"syscheck_changed_attributes": true,
+							"syscheck_event": true,
+							"syscheck_gid_after": true,
+							"syscheck_gname_after": true,
+							"syscheck_hard_links": true,
+							"syscheck_inode_after": true,
+							"syscheck_inode_before": true,
+							"syscheck_md5_after": true,
+							"syscheck_md5_before": true,
+							"syscheck_mode": true,
+							"syscheck_mtime_after": true,
+							"syscheck_mtime_before": true,
+							"syscheck_path": true,
+							"syscheck_perm_after": true,
+							"syscheck_perm_before": true,
+							"syscheck_sha1_after": true,
+							"syscheck_sha1_before": true,
+							"syscheck_sha256_after": true,
+							"syscheck_sha256_before": true,
+							"syscheck_size_after": true,
+							"syscheck_size_before": true,
+							"syscheck_uid_after": true,
+							"syscheck_uname_after": true,
+							"syscheck_win_perm_after": true,
+							"syscheck_win_perm_after_0_allowed": true,
+							"syscheck_win_perm_after_0_name": true,
+							"syscheck_win_perm_after_1_allowed": true,
+							"syscheck_win_perm_after_1_name": true,
+							"syscheck_win_perm_after_2_allowed": true,
+							"syscheck_win_perm_after_2_name": true,
+							"syscheck_win_perm_after_3_allowed": true,
+							"syscheck_win_perm_after_3_name": true,
+							"syslog_customer": true,
+							"syslog_level": true,
+							"syslog_tag": true,
+							"syslog_type": true,
+							"sysmon_event_description": true,
+							"threat_ids": true,
+							"threat_indicated": true,
+							"threat_names": true,
+							"time": true,
+							"timestamp": false,
+							"timestamp_utc": true,
+							"true": true,
+							"user_name": true,
+							"win_registry_key": true,
+							"win_system_eventID": true,
+							"windows_auth_package": true,
+							"windows_domain": true,
+							"windows_event_id": true,
+							"windows_event_severity": true,
+							"windows_logon_type": true
+						},
+						"indexByName": {
+							"_id": 2,
+							"_index": 10,
+							"_type": 11,
+							"agent_id": 12,
+							"agent_name": 5,
+							"cluster_name": 13,
+							"cluster_node": 14,
+							"data_office_365_Actor": 15,
+							"data_office_365_ActorContextId": 16,
+							"data_office_365_ActorIpAddress": 4,
+							"data_office_365_ActorIpAddress_city_name": 17,
+							"data_office_365_ActorIpAddress_country_code": 18,
+							"data_office_365_ActorIpAddress_geolocation": 19,
+							"data_office_365_ApplicationId": 20,
+							"data_office_365_AzureActiveDirectoryEventType": 21,
+							"data_office_365_ClientIP": 22,
+							"data_office_365_ClientIP_city_name": 23,
+							"data_office_365_ClientIP_country_code": 24,
+							"data_office_365_ClientIP_geolocation": 25,
+							"data_office_365_CreationTime": 0,
+							"data_office_365_DeviceProperties": 26,
+							"data_office_365_ErrorNumber": 27,
+							"data_office_365_ExtendedProperties": 28,
+							"data_office_365_Id": 29,
+							"data_office_365_InterSystemsId": 30,
+							"data_office_365_IntraSystemId": 31,
+							"data_office_365_LogonError": 32,
+							"data_office_365_ModifiedProperties": 33,
+							"data_office_365_ObjectId": 34,
+							"data_office_365_Operation": 42,
+							"data_office_365_OrganizationId": 35,
+							"data_office_365_RecordType": 36,
+							"data_office_365_ResultStatus": 6,
+							"data_office_365_Target": 37,
+							"data_office_365_TargetContextId": 38,
+							"data_office_365_UserId": 3,
+							"data_office_365_UserKey": 39,
+							"data_office_365_UserType": 40,
+							"data_office_365_Version": 41,
+							"data_office_365_Workload": 66,
+							"decoder_name": 43,
+							"gl2_accounted_message_size": 44,
+							"gl2_message_id": 45,
+							"gl2_processing_error": 46,
+							"gl2_remote_ip": 47,
+							"gl2_remote_port": 48,
+							"gl2_source_input": 49,
+							"gl2_source_node": 50,
+							"highlight": 51,
+							"id": 52,
+							"location": 53,
+							"manager_name": 54,
+							"message": 55,
+							"rule_description": 7,
+							"rule_firedtimes": 56,
+							"rule_group1": 57,
+							"rule_groups": 58,
+							"rule_id": 9,
+							"rule_level": 8,
+							"rule_mail": 59,
+							"sort": 60,
+							"source": 61,
+							"streams": 62,
+							"syslog_level": 63,
+							"syslog_type": 64,
+							"timestamp": 1,
+							"true": 65
+						},
+						"renameByName": {
+							"_id": "EVENT ID",
+							"agent_name": "",
+							"data_errDetails": "ERROR",
+							"data_errMessage": "ERROR MSG",
+							"data_ip": "IP",
+							"data_ip_country_code": "COUNTRY",
+							"data_message": "MSG",
+							"data_office_365_ActorIpAddress": "SRC IP",
+							"data_office_365_CreationTime": "EVENT TIME",
+							"data_office_365_DeviceProperties_BrowserType": "BROWSER",
+							"data_office_365_DeviceProperties_DisplayName": "HOSTNAME",
+							"data_office_365_DeviceProperties_OS": "OS",
+							"data_office_365_ExtendedProperties_RequestType": "REQ TYPE",
+							"data_office_365_ExtendedProperties_ResultStatusDetail": "RESULT",
+							"data_office_365_ExtendedProperties_UserAgent": "AGENT",
+							"data_office_365_ExtendedProperties_UserAuthenticationMethod": "AUTH METHOD",
+							"data_office_365_ResultStatus": "RESULT",
+							"data_office_365_UserId": "ACCOUNT",
+							"data_serverIP": "SERVER IP",
+							"data_serverIP_country_code": "SERVER COUNTRY",
+							"data_serverIP_geolocation": "",
+							"data_status_code": "",
+							"data_userAgent_browser": "BROWSER",
+							"data_userAgent_os": "OS",
+							"rule_description": "DESCRIPTION",
+							"rule_id": "RULE ID",
+							"rule_level": "",
+							"rule_mitre_tactic": "MITRE TACTIC",
+							"rule_mitre_technique": "MITRE TECHNIQUE",
+							"timestamp": "Date/Time"
+						}
+					}
+				}
+			],
+			"transparent": true,
+			"type": "table"
+		}
+	],
+	"refresh": "",
+	"schemaVersion": 39,
+	"tags": ["SAP"],
+	"templating": {
+		"list": [
+			{
+				"datasource": {
+					"type": "grafana-opensearch-datasource",
+					"uid": "replace_datasource_uid"
+				},
+				"filters": [],
+				"hide": 0,
+				"label": "",
+				"name": "Filters",
+				"skipUrlSync": false,
+				"type": "adhoc"
+			},
+			{
+				"current": {
+					"selected": true,
+					"text": ["All"],
+					"value": ["$__all"]
+				},
+				"datasource": {
+					"type": "grafana-opensearch-datasource",
+					"uid": "replace_datasource_uid"
+				},
+				"definition": "{ \"find\": \"terms\", \"field\": \"logSource\", \"query\": \"\"}",
+				"hide": 1,
+				"includeAll": true,
+				"label": "LOG SOURCE",
+				"multi": true,
+				"name": "log_source",
+				"options": [],
+				"query": "{ \"find\": \"terms\", \"field\": \"logSource\", \"query\": \"\"}",
+				"refresh": 1,
+				"regex": "",
+				"skipUrlSync": false,
+				"sort": 0,
+				"type": "query"
+			}
+		]
+	},
+	"time": {
+		"from": "now-24h",
+		"to": "now"
+	},
+	"timepicker": {
+		"refresh_intervals": ["5s", "10s", "30s", "1m", "5m", "15m", "30m", "1h", "2h", "1d"],
+		"time_options": ["5m", "15m", "1h", "6h", "12h", "24h", "2d", "7d", "30d"]
+	},
+	"timezone": "",
+	"title": "SAP - USERS AUTH",
+	"version": 5,
+	"weekStart": ""
+}

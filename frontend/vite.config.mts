@@ -39,12 +39,12 @@ export default defineConfig({
 				? {
 						key: fs.readFileSync("/certs/key.pem"),
 						cert: fs.readFileSync("/certs/cert.pem")
-				}
+				  }
 				: false,
 		proxy: {
 			"/api": {
-				target: "http://copilot-backend:5000",
-                //target: "http://127.0.0.1:5000", // for local development
+				//target: "http://copilot-backend:5000",
+				target: "http://127.0.0.1:5000", // for local development
 				changeOrigin: true
 			}
 		}

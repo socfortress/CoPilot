@@ -13,3 +13,4 @@ from app.integrations.alert_creation_settings.models.alert_creation_settings imp
 from app.integrations.models.customer_integration_settings import CustomerIntegrations
 from app.schedulers.models.scheduler import JobMetadata
 from app.integrations.monitoring_alert.models.monitoring_alert import MonitoringAlerts
+from app.integrations.sap_siem.models.sap_siem import SapSiemMultipleLogins

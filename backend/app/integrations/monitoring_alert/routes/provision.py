@@ -152,7 +152,7 @@ async def provision_monitoring_alert_testing_route(
     Used for testing purposes.
     """
     message = EventShipperPayload(
-        customer_code="replace_me",
+        customer_code="00002",
         integration="testing",
         version="1.0",
         **request,

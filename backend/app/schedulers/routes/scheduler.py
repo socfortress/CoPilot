@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import APIRouter
 from fastapi import Depends
 from loguru import logger
@@ -147,6 +149,7 @@ async def pause_job(job_id: str):
 async def update_job(
     job_id: str,
     time_interval: int,
+    extra_data: Optional[str] = None,
     session: AsyncSession = Depends(get_db),
 ):
     """
@@ -175,6 +178,7 @@ async def update_job(
             job_id,
             "update",
             time_interval=time_interval,
+            extra_data=extra_data,
         )
         logger.info(f"Job {job_id} updated successfully")
         return {"success": True, "message": "Job updated successfully"}

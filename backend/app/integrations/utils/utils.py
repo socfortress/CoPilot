@@ -38,36 +38,35 @@ async def get_customer_integration_response(
     return customer_integration_response
 
 
-def extract_mimecast_auth_keys(
-    customer_integration: CustomerIntegrations,
-) -> Dict[str, str]:
+def extract_auth_keys(customer_integration: CustomerIntegrations, service_name: str) -> Dict[str, str]:
     """
-    Extracts the authentication keys for Office365 integration from the given customer integration.
+    Extracts the authentication keys for the given service name from the customer integration.
 
     Args:
         customer_integration (CustomerIntegrations): The customer integration object.
+        service_name (str): The name of the service to extract the authentication keys for.
 
     Returns:
-        Dict[str, str]: A dictionary containing the authentication keys for Office365 integration.
+        Dict[str, str]: A dictionary containing the authentication keys for the service.
 
     Raises:
-        HTTPException: If no authentication keys are found for Office365 integration.
+        HTTPException: If no authentication keys are found for the service.
     """
-    mimecast_auth_keys = {}
+    auth_keys = {}
     try:
         for subscription in customer_integration.integration_subscriptions:
-            if subscription.integration_service.service_name == "Mimecast":
+            if subscription.integration_service.service_name == service_name:
                 for auth_key in subscription.integration_auth_keys:
-                    mimecast_auth_keys[auth_key.auth_key_name] = auth_key.auth_value
-        if not mimecast_auth_keys:
+                    auth_keys[auth_key.auth_key_name] = auth_key.auth_value
+        if not auth_keys:
             raise HTTPException(
                 status_code=404,
-                detail="No auth keys found for Mimecast integration. Please create auth keys for Mimecast integration.",
+                detail=f"No auth keys found for {service_name} integration. Please create auth keys for {service_name} integration.",
             )
     except Exception as e:
-        logger.error(f"Error extracting auth keys for Mimecast integration: {e}")
+        logger.error(f"Error extracting auth keys for {service_name} integration: {e}")
         raise HTTPException(
             status_code=404,
-            detail="No auth keys found for Mimecast integration. Please create auth keys for Mimecast integration.",
+            detail=f"No auth keys found for {service_name} integration. Please create auth keys for {service_name} integration.",
         )
-    return mimecast_auth_keys
+    return auth_keys

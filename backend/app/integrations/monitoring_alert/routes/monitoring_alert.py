@@ -1,4 +1,5 @@
 from typing import List
+from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
@@ -27,6 +28,12 @@ from app.integrations.monitoring_alert.schema.monitoring_alert import (
 )
 from app.integrations.monitoring_alert.services.suricata import analyze_suricata_alerts
 from app.integrations.monitoring_alert.services.wazuh import analyze_wazuh_alerts
+from app.integrations.sap_siem.services.sap_siem_multiple_logins import (
+    sap_siem_multiple_logins_same_ip,
+)
+from app.integrations.sap_siem.services.sap_siem_suspicious_logins import (
+    sap_siem_suspicious_logins,
+)
 
 monitoring_alerts_router = APIRouter()
 
@@ -217,6 +224,74 @@ async def run_suricata_analysis(
 
     # Call the analyze_wazuh_alerts function to analyze the alerts
     await analyze_suricata_alerts(monitoring_alerts, customer_meta, session)
+
+    return AlertAnalysisResponse(
+        success=True,
+        message="Analysis completed successfully",
+    )
+
+
+@monitoring_alerts_router.post(
+    "/run_analysis/sap_siem/suspicious_logins",
+    response_model=AlertAnalysisResponse,
+)
+async def run_sap_siem_suspicious_logins_analysis(
+    threshold: Optional[int] = 3,
+    session: AsyncSession = Depends(get_db),
+) -> AlertAnalysisResponse:
+    """
+    This route is used to run analysis on the monitoring alerts.
+
+    1. Get all the monitoring alerts from the database where the customer_code matches the customer_code provided
+     and the alert_source is SAP SIEM.
+
+    2. Call the sap_siem_suspicious_logins function to analyze the alerts.
+
+    Args:
+        request (CollectSapSiemRequest): The customer code.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        WazuhAnalysisResponse: The response containing the analysis results.
+    """
+    logger.info("Running analysis for SAP SIEM suspicious logins")
+
+    # Call the analyze_wazuh_alerts function to analyze the alerts
+    await sap_siem_suspicious_logins(threshold=threshold, session=session)
+
+    return AlertAnalysisResponse(
+        success=True,
+        message="Analysis completed successfully",
+    )
+
+
+@monitoring_alerts_router.post(
+    "/run_analysis/sap_siem/multiple_logins",
+    response_model=AlertAnalysisResponse,
+)
+async def run_sap_siem_multiple_logins_same_ip_analysis(
+    threshold: Optional[int] = 1,
+    session: AsyncSession = Depends(get_db),
+) -> AlertAnalysisResponse:
+    """
+    This route is used to run analysis on the monitoring alerts.
+
+    1. Get all the monitoring alerts from the database where the customer_code matches the customer_code provided
+     and the alert_source is SAP SIEM.
+
+    2. Call the sap_siem_multiple_logins_same_ip function to analyze the alerts.
+
+    Args:
+        request (CollectSapSiemRequest): The customer code.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        WazuhAnalysisResponse: The response containing the analysis results.
+    """
+    logger.info("Running analysis for SAP SIEM multiple logins")
+
+    # Call the analyze_wazuh_alerts function to analyze the alerts
+    await sap_siem_multiple_logins_same_ip(threshold=threshold, session=session)
 
     return AlertAnalysisResponse(
         success=True,
