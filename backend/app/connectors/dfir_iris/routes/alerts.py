@@ -116,7 +116,7 @@ async def get_alert_by_id(
     description="Get all alerts assigned to a user",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_all_alerts_assigned_to_user(user_id: int) -> AlertsResponse:
+async def get_all_alerts_assigned_to_user(user_id: int, session: AsyncSession = Depends(get_db)) -> AlertsResponse:
     """
     Fetches all alerts assigned to a specific user.
 
@@ -130,6 +130,7 @@ async def get_all_alerts_assigned_to_user(user_id: int) -> AlertsResponse:
     alerts = (
         await get_alerts(
             request=FilterAlertsRequest(alert_owner_id=user_id, per_page=1000),
+            session=session,
         )
     ).alerts
     alerts_assigned_to_user = []
