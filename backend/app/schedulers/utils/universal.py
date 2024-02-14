@@ -2,7 +2,10 @@ import os
 
 import requests
 from dotenv import load_dotenv
-
+from app.db.db_session import get_db_session
+from sqlalchemy import select
+from loguru import logger
+from app.schedulers.models.scheduler import JobMetadata
 from app.auth.services.universal import get_scheduler_password
 
 load_dotenv()
@@ -43,3 +46,24 @@ def scheduler_login():
     else:
         print("Failed to retrieve token")
         return None
+
+async def get_scheduled_job_metadata(job_id: str) -> JobMetadata:
+    """
+    Retrieves the metadata for a scheduled job.
+
+    Args:
+        job_id (str): The ID of the scheduled job.
+
+    Returns:
+        dict: The metadata for the scheduled job.
+              Returns None if the metadata retrieval fails.
+    """
+    async with get_db_session() as session:
+        stmt = select(JobMetadata).where(JobMetadata.job_id == job_id)
+        result = await session.execute(stmt)
+        job_metadata = result.scalars().first()
+        if job_metadata:
+            return job_metadata
+        else:
+            logger.info(f"JobMetadata for {job_id} not found.")
+            return None

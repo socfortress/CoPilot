@@ -22,7 +22,7 @@ class InvokeSapSiemRequest(BaseModel):
         examples=["SAP SIEM"],
     )
     threshold: Optional[int] = Field(
-        1,
+        3,
         description="Number of 'Invalid LoginID' before the first 'OK'",
     )
     time_range: Optional[str] = Field(
