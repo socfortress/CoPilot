@@ -108,15 +108,13 @@ copilot-frontend:
     ports:
         - "80:80"
         - "443:443"
-```
-
-````yaml
+````
 
 ### Upgrading Copilot
 
 🛠 You will likely want to upgrade often as we are frequently pushing new changes.
 
-To upgrade Copilot, you will need to stop the running container, pull the latest docker image, and start the container again.
+To upgrade Copilot, you will need to stop the running containers, pull the latest docker image, and start the containers again.
 
 ```bash
 # Stop the running container. Make sure you are in the CoPilot directory
