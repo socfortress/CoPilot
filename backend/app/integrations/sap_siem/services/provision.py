@@ -21,11 +21,11 @@ from app.customer_provisioning.services.grafana import create_grafana_folder
 from app.customer_provisioning.services.grafana import get_opensearch_version
 from app.customers.routes.customers import get_customer
 from app.customers.routes.customers import get_customer_meta
-from app.integrations.sap_siem.schema.provision import SapSiemEventStream
-from app.integrations.sap_siem.schema.provision import ProvisionSapSiemRequest
-from app.integrations.sap_siem.schema.provision import ProvisionSapSiemResponse
 from app.integrations.models.customer_integration_settings import CustomerIntegrations
 from app.integrations.routes import create_integration_meta
+from app.integrations.sap_siem.schema.provision import ProvisionSapSiemRequest
+from app.integrations.sap_siem.schema.provision import ProvisionSapSiemResponse
+from app.integrations.sap_siem.schema.provision import SapSiemEventStream
 from app.integrations.schema import CustomerIntegrationsMetaSchema
 from app.utils import get_connector_attribute
 

@@ -3,8 +3,8 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.db_session import get_db
-from app.integrations.mimecast.schema.mimecast import MimecastScheduledResponse
-from app.integrations.sap_siem.schema.provision import ProvisionSapSiemRequest, ProvisionSapSiemResponse
+from app.integrations.sap_siem.schema.provision import ProvisionSapSiemRequest
+from app.integrations.sap_siem.schema.provision import ProvisionSapSiemResponse
 from app.integrations.sap_siem.services.provision import provision_sap_siem
 from app.integrations.utils.utils import get_customer_integration_response
 from app.schedulers.models.scheduler import CreateSchedulerRequest

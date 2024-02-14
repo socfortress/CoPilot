@@ -129,16 +129,6 @@ def get_connectors_list():
             "Connection to Graylog GELF Input to receive events from integrations. Make sure you have created a GELF Input in Graylog.",
             "GELF_INPUT_PORT",
         ),
-        (
-            "Alert Creation Provisioning",
-            "3",
-            "host_only",
-            (
-                "Connection to Alert Creation Provisioning. Make sure you have "
-                "deployed the Alert Creation Provisioning Application provided by "
-                "SOCFortress: https://github.com/socfortress/Customer-Provisioning-Alert"
-            ),
-        ),
         # ... Add more connectors as needed ...
     ]
 

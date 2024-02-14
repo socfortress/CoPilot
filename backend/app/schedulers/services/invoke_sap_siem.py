@@ -6,13 +6,18 @@ from sqlalchemy import select
 
 from app.db.db_session import get_db_session
 from app.db.db_session import get_sync_db_session
+from app.integrations.models.customer_integration_settings import CustomerIntegrations
+from app.integrations.monitoring_alert.routes.monitoring_alert import (
+    run_sap_siem_multiple_logins_same_ip_analysis,
+)
+from app.integrations.monitoring_alert.routes.monitoring_alert import (
+    run_sap_siem_suspicious_logins_analysis,
+)
 from app.integrations.sap_siem.routes.sap_siem import collect_sap_siem_route
 from app.integrations.sap_siem.schema.sap_siem import InvokeSapSiemRequest
 from app.integrations.sap_siem.schema.sap_siem import InvokeSAPSiemResponse
-from app.integrations.models.customer_integration_settings import CustomerIntegrations
 from app.schedulers.models.scheduler import JobMetadata
 from app.schedulers.utils.universal import get_scheduled_job_metadata
-from app.integrations.monitoring_alert.routes.monitoring_alert import run_sap_siem_suspicious_logins_analysis, run_sap_siem_multiple_logins_same_ip_analysis
 
 load_dotenv()
 
@@ -69,7 +74,7 @@ async def invoke_sap_siem_integration_suspicious_logins_analysis() -> InvokeSAPS
         customer_codes = [row.customer_code for row in result.scalars()]
         logger.info(f"customer_codes: {customer_codes}")
         for customer_code in customer_codes:
-            extra_data = (await get_scheduled_job_metadata('invoke_sap_siem_integration_suspicious_logins_analysis')).extra_data
+            extra_data = (await get_scheduled_job_metadata("invoke_sap_siem_integration_suspicious_logins_analysis")).extra_data
             threshold = int(extra_data) if extra_data is not None else 3
             await run_sap_siem_suspicious_logins_analysis(
                 threshold=threshold,
@@ -90,6 +95,7 @@ async def invoke_sap_siem_integration_suspicious_logins_analysis() -> InvokeSAPS
 
     return InvokeSAPSiemResponse(success=True, message="SAP SIEM integration invoked for suspicious logins analysis.")
 
+
 async def invoke_sap_siem_integration_multiple_logins_same_ip_analysis() -> InvokeSAPSiemResponse:
     """
     Invokes the SAP SIEM integration for multiple logins from the same IP analysis.
@@ -104,7 +110,7 @@ async def invoke_sap_siem_integration_multiple_logins_same_ip_analysis() -> Invo
         customer_codes = [row.customer_code for row in result.scalars()]
         logger.info(f"customer_codes: {customer_codes}")
         for customer_code in customer_codes:
-            extra_data = (await get_scheduled_job_metadata('invoke_sap_siem_integration_multiple_logins_same_ip_analysis')).extra_data
+            extra_data = (await get_scheduled_job_metadata("invoke_sap_siem_integration_multiple_logins_same_ip_analysis")).extra_data
             threshold = int(extra_data) if extra_data is not None else 1
             await run_sap_siem_multiple_logins_same_ip_analysis(
                 threshold=threshold,
@@ -114,7 +120,9 @@ async def invoke_sap_siem_integration_multiple_logins_same_ip_analysis() -> Invo
     await session.close()
     with get_sync_db_session() as session:
         # Synchronous ORM operations
-        job_metadata = session.query(JobMetadata).filter_by(job_id="invoke_sap_siem_integration_multiple_logins_same_ip_analysis").one_or_none()
+        job_metadata = (
+            session.query(JobMetadata).filter_by(job_id="invoke_sap_siem_integration_multiple_logins_same_ip_analysis").one_or_none()
+        )
         if job_metadata:
             job_metadata.last_success = datetime.utcnow()
             session.add(job_metadata)

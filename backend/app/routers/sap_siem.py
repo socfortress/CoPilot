@@ -1,7 +1,9 @@
 from fastapi import APIRouter
 
+from app.integrations.sap_siem.routes.provision import (
+    integration_sap_siem_provision_scheduler_router,
+)
 from app.integrations.sap_siem.routes.sap_siem import integration_sap_siem_router
-from app.integrations.sap_siem.routes.provision import integration_sap_siem_provision_scheduler_router
 
 # Instantiate the APIRouter
 router = APIRouter()

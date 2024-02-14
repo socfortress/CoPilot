@@ -1,5 +1,7 @@
 from typing import Any
-from typing import Dict, List, Optional
+from typing import Dict
+from typing import List
+from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
@@ -34,12 +36,14 @@ class ProvisionSapSiemResponse(BaseModel):
     success: bool
     message: str
 
+
 # ! STREAMS ! #
 class StreamRule(BaseModel):
     field: str
     type: int
     inverted: bool
     value: str
+
 
 class SapSiemEventStream(BaseModel):
     title: str = Field(..., description="Title of the stream")
