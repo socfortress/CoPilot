@@ -69,8 +69,10 @@ async def invoke_sap_siem_integration_suspicious_logins_analysis() -> InvokeSAPS
         customer_codes = [row.customer_code for row in result.scalars()]
         logger.info(f"customer_codes: {customer_codes}")
         for customer_code in customer_codes:
+            extra_data = (await get_scheduled_job_metadata('invoke_sap_siem_integration_suspicious_logins_analysis')).extra_data
+            threshold = int(extra_data) if extra_data is not None else 3
             await run_sap_siem_suspicious_logins_analysis(
-                threshold=(await get_scheduled_job_metadata('invoke_sap_siem_integration_suspicious_logins_analysis')).extra_data,
+                threshold=threshold,
                 session=session,
             )
     # Close the session
