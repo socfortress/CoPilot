@@ -38,10 +38,7 @@ async def get_customer_integration_response(
     return customer_integration_response
 
 
-def extract_auth_keys(
-    customer_integration: CustomerIntegrations,
-    service_name: str
-) -> Dict[str, str]:
+def extract_auth_keys(customer_integration: CustomerIntegrations, service_name: str) -> Dict[str, str]:
     """
     Extracts the authentication keys for the given service name from the customer integration.
 

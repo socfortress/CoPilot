@@ -1,15 +1,18 @@
-from fastapi import HTTPException
-from loguru import logger
-import requests
-from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
-from datetime import datetime
 
-from app.integrations.sap_siem.schema.sap_siem import InvokeSapSiemRequest, ErrCode, SuspiciousLogin, CaseResponse, IrisCasePayload, AddAssetModel, SapSiemHit
-from app.integrations.sap_siem.schema.sap_siem import InvokeSAPSiemResponse, SapSiemAuthKeys, CollectSapSiemRequest, SapSiemResponseBody, SapSiemWazuhIndexerResponse
+from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
 from app.connectors.dfir_iris.utils.universal import initialize_client_and_case
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
+from app.integrations.sap_siem.schema.sap_siem import AddAssetModel
+from app.integrations.sap_siem.schema.sap_siem import CaseResponse
+from app.integrations.sap_siem.schema.sap_siem import ErrCode
+from app.integrations.sap_siem.schema.sap_siem import InvokeSAPSiemResponse
+from app.integrations.sap_siem.schema.sap_siem import IrisCasePayload
+from app.integrations.sap_siem.schema.sap_siem import SapSiemWazuhIndexerResponse
+from app.integrations.sap_siem.schema.sap_siem import SuspiciousLogin
 from app.utils import get_customer_alert_settings
 
 # global set to keep track of checked IPs
@@ -36,11 +39,9 @@ async def check_for_suspicious_login(hit, last_invalid_login, suspicious_logins,
         last_invalid_login[ip]["count"] += 1
         last_invalid_login[ip]["event_timestamp"] = event_timestamp
 
-
     logger.info(f"Checking if last_invalid_login[ip]['count'] >= threshold: {last_invalid_login[ip]['count']} >= {threshold}")
     logger.info(f"Hit: {hit}")
     if errCode == ErrCode.OK.value and last_invalid_login[ip]["count"] >= threshold:
-        logger.info(f"Found suspicious login.")
         logger.info(f"Found suspicious login: {loginID} with IP: {ip} and errCode: {errCode}")
         suspicious_login = SuspiciousLogin(
             _index=index,
@@ -57,6 +58,7 @@ async def check_for_suspicious_login(hit, last_invalid_login, suspicious_logins,
         suspicious_logins.append(suspicious_login)
         last_invalid_login[ip] = {"count": 0, "event_timestamp": None}
 
+
 async def find_suscpicious_logins(threshold: int) -> List[SuspiciousLogin]:
     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
     scroll_id = None
@@ -67,40 +69,19 @@ async def find_suscpicious_logins(threshold: int) -> List[SuspiciousLogin]:
         if scroll_id is None:
             # Initial search
             results = es_client.search(
-                #! TODO: change to sap_siem index when ready for deploy
+                # ! TODO: change to sap_siem index when ready for deploy
                 index="integrations_*",
                 body={
                     "size": 10,
-                    "query": {
-                        "bool": {
-                            "must": [
-                                {
-                                    "term": {
-                                        "case_created": "False"
-                                    }
-                                },
-                                {
-                                    "term": {
-                                        "event_analyzed": "False"
-                                    }
-                                }
-                            ]
-                        }
-                    },
+                    "query": {"bool": {"must": [{"term": {"case_created": "False"}}, {"term": {"event_analyzed": "False"}}]}},
                     "_source": ["logSource", "params_loginID", "errCode", "httpReq_country", "ip", "event_timestamp", "customer_code"],
-                    "sort": [
-                        {
-                            "event_timestamp": {
-                                "order": "asc"
-                            }
-                        }
-                    ]
+                    "sort": [{"event_timestamp": {"order": "asc"}}],
                 },
-                scroll='1m'  # Keep the search context open for 1 minute
+                scroll="1m",  # Keep the search context open for 1 minute
             )
         else:
             # Get the next batch of results
-            results = es_client.scroll(scroll_id=scroll_id, scroll='1m')
+            results = es_client.scroll(scroll_id=scroll_id, scroll="1m")
 
         # If there are no more results, break the loop
         if not results["hits"]["hits"]:
@@ -123,6 +104,7 @@ async def find_suscpicious_logins(threshold: int) -> List[SuspiciousLogin]:
 
     return suspicious_logins
 
+
 async def collect_user_activity(suspicious_logins: SuspiciousLogin) -> SapSiemWazuhIndexerResponse:
     """
     Collect the IP addresses of the suspicious logins and query the database for all activity from those IP addresses.
@@ -137,18 +119,8 @@ async def collect_user_activity(suspicious_logins: SuspiciousLogin) -> SapSiemWa
         index="integrations_*",
         body={
             "size": 1000,
-            "query": {
-                "bool": {
-                    "must": [
-                        {
-                            "term": {
-                                "ip": suspicious_logins.ip
-                            }
-                        }
-                    ]
-                }
-            },
-        }
+            "query": {"bool": {"must": [{"term": {"ip": suspicious_logins.ip}}]}},
+        },
     )
     return SapSiemWazuhIndexerResponse(**results)
 
@@ -171,6 +143,7 @@ def create_asset_payload(asset: SuspiciousLogin):
         analysis_status=2,
     )
 
+
 async def update_case_with_asset(case_id: str, asset_payload):
     """
     Update the case with the asset information.
@@ -181,7 +154,7 @@ async def update_case_with_asset(case_id: str, asset_payload):
     :return: None
     """
     logger.info(f"Updating IRIS case {case_id} with asset: {asset_payload}")
-    client, case_client = await initialize_client_and_case('DFIR-IRIS')
+    client, case_client = await initialize_client_and_case("DFIR-IRIS")
     return await fetch_and_validate_data(
         client,
         case_client.add_asset,
@@ -210,8 +183,10 @@ async def handle_user_activity(user_activity: SapSiemWazuhIndexerResponse, uniqu
             await update_case_with_asset(case_id, asset_payload)
             unique_instances.add(current_activity_frozenset)
 
+
 async def mark_as_checked(suspicious_login):
     checked_ips.add((suspicious_login.loginID, suspicious_login.ip))
+
 
 async def handle_common_suspicious_login_tasks(
     suspicious_login,
@@ -229,20 +204,16 @@ async def handle_common_suspicious_login_tasks(
     await handle_user_activity(user_activity, unique_instances, case.data.case_id)
     await mark_as_checked(suspicious_login)
 
+
 async def handle_suspicious_login(suspicious_login, unique_instances, case_ids, session: AsyncSession):
     logger.info(f"Handling suspicious login: {suspicious_login}")
-    await handle_common_suspicious_login_tasks(
-        suspicious_login,
-        unique_instances,
-        case_ids,
-        create_iris_case,
-        session
-    )
+    await handle_common_suspicious_login_tasks(suspicious_login, unique_instances, case_ids, create_iris_case, session)
     logger.info(f"Marking suspicious login as checked: {suspicious_login}")
     await update_case_created_flag(
         id=suspicious_login.id,
         index=suspicious_login.index,
     )
+
 
 async def update_case_created_flag(id: str, index: str):
     """
@@ -260,8 +231,8 @@ async def update_case_created_flag(id: str, index: str):
             body={
                 "doc": {
                     "case_created": "True",
-                }
-            }
+                },
+            },
         )
         logger.info(f"Updated case_created flag for suspicious login: {id}")
     except Exception as e:
@@ -299,6 +270,7 @@ async def update_case_created_flag(id: str, index: str):
             )
             return False
 
+
 async def update_event_analyzed_flag(id: str, index: str):
     """
     Update the event_analyzed flag in the Elasticsearch document to True.
@@ -315,8 +287,8 @@ async def update_event_analyzed_flag(id: str, index: str):
             body={
                 "doc": {
                     "event_analyzed": "True",
-                }
-            }
+                },
+            },
         )
         logger.info(f"Updated event_analyzed flag for suspicious login: {id}")
     except Exception as e:
@@ -364,15 +336,30 @@ async def create_iris_case(suspicious_login: SuspiciousLogin, session: AsyncSess
     :return: None
     """
     logger.info(f"Creating IRIS case for suspicious activity: {suspicious_login}")
+    case_name = (
+        f"Log Source: {suspicious_login.logSource} "
+        f"Potential SAP SIEM Unauthorized Access: "
+        f"{suspicious_login.loginID} from {suspicious_login.ip}"
+    )
+
+    case_description = (
+        f"Log Source: {suspicious_login.logSource}\n\n"
+        f"IP Address: {suspicious_login.ip}\n\n"
+        f"Country: {suspicious_login.country}\n\n"
+        f"Timestamp: {suspicious_login.event_timestamp}"
+    )
+
+    case_customer = (await get_customer_alert_settings(suspicious_login.customer_code, session=session)).iris_customer_id
+
     payload = IrisCasePayload(
-        case_name=f"Log Source: {suspicious_login.logSource} Potential SAP SIEM Unauthorized Access: {suspicious_login.loginID} from {suspicious_login.ip}",
-        case_description=f"Log Source: {suspicious_login.logSource}\n\nIP Address: {suspicious_login.ip}\n\nCountry: {suspicious_login.country}\n\nTimestamp: {suspicious_login.event_timestamp}",
-        case_customer= (await get_customer_alert_settings(suspicious_login.customer_code, session=session)).iris_customer_id,
+        case_name=case_name,
+        case_description=case_description,
+        case_customer=case_customer,
         case_classification=18,
         soc_id="1",
         create_customer=False,
     )
-    client, case_client = await initialize_client_and_case('DFIR-IRIS')
+    client, case_client = await initialize_client_and_case("DFIR-IRIS")
     result = await fetch_and_validate_data(
         client,
         case_client.add_case,
@@ -380,6 +367,7 @@ async def create_iris_case(suspicious_login: SuspiciousLogin, session: AsyncSess
     )
 
     return CaseResponse(**result)
+
 
 async def sap_siem_suspicious_logins(threshold: int, session: AsyncSession) -> InvokeSAPSiemResponse:
     """
@@ -403,7 +391,6 @@ async def sap_siem_suspicious_logins(threshold: int, session: AsyncSession) -> I
     case_ids = []
     for suspicious_login in suspicious_logins:
         await handle_suspicious_login(suspicious_login, unique_instaces, case_ids, session=session)
-
 
     # Clear the global set
     checked_ips.clear()

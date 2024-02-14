@@ -1,23 +1,28 @@
-from fastapi import HTTPException
 from collections import defaultdict
-from loguru import logger
-import requests
-from sqlalchemy.ext.asyncio import AsyncSession
-from typing import Set
-from typing import List
 from datetime import datetime
+from typing import List
+from typing import Set
+
+from fastapi import HTTPException
+from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from app.integrations.sap_siem.schema.sap_siem import InvokeSapSiemRequest, ErrCode, SuspiciousLogin, CaseResponse, IrisCasePayload, AddAssetModel, SapSiemHit
-from app.integrations.sap_siem.schema.sap_siem import InvokeSAPSiemResponse, SapSiemAuthKeys, CollectSapSiemRequest, SapSiemResponseBody, SapSiemWazuhIndexerResponse
 from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
 from app.connectors.dfir_iris.utils.universal import initialize_client_and_case
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
-from app.utils import get_customer_alert_settings
 from app.integrations.sap_siem.models.sap_siem import SapSiemMultipleLogins
+from app.integrations.sap_siem.schema.sap_siem import AddAssetModel
+from app.integrations.sap_siem.schema.sap_siem import CaseResponse
+from app.integrations.sap_siem.schema.sap_siem import InvokeSAPSiemResponse
+from app.integrations.sap_siem.schema.sap_siem import IrisCasePayload
+from app.integrations.sap_siem.schema.sap_siem import SapSiemWazuhIndexerResponse
+from app.integrations.sap_siem.schema.sap_siem import SuspiciousLogin
+from app.utils import get_customer_alert_settings
 
 # Global set to keep track of IPs that have already been checked
 checked_ips = set()
+
 
 async def handle_common_suspicious_login_tasks(
     suspicious_login,
@@ -68,6 +73,7 @@ async def handle_suspicious_login_multiple(suspicious_login, unique_instances, c
     )
     await update_event_analyzed_multiple_logins_flag(suspicious_login.id, suspicious_login.index)
 
+
 async def update_event_analyzed_multiple_logins_flag(id: str, index: str):
     """
     Update the event_analyzed_multiple_logins flag in the Elasticsearch document to True.
@@ -84,8 +90,8 @@ async def update_event_analyzed_multiple_logins_flag(id: str, index: str):
             body={
                 "doc": {
                     "event_analyzed_multiple_logins": "True",
-                }
-            }
+                },
+            },
         )
         logger.info(f"Updated event_analyzed_multiple_logins flag for suspicious login: {id}")
     except Exception as e:
@@ -123,6 +129,7 @@ async def update_event_analyzed_multiple_logins_flag(id: str, index: str):
             )
             return False
 
+
 async def mark_as_checked(suspicious_login):
     """
     Marks a suspicious login as checked by adding it to the set of checked IPs.
@@ -134,6 +141,7 @@ async def mark_as_checked(suspicious_login):
         None
     """
     checked_ips.add((suspicious_login.loginID, suspicious_login.ip))
+
 
 async def handle_user_activity(user_activity: SapSiemWazuhIndexerResponse, unique_instances, case_id):
     """
@@ -174,6 +182,7 @@ async def handle_user_activity(user_activity: SapSiemWazuhIndexerResponse, uniqu
             await update_event_analyzed_multiple_logins_flag(hit.id, hit.index)
             unique_instances.add(current_activity_frozenset)
 
+
 def create_asset_payload(asset: SuspiciousLogin):
     """
     Create a payload for adding an asset based on a SuspiciousLogin object.
@@ -202,6 +211,7 @@ def create_asset_payload(asset: SuspiciousLogin):
         analysis_status=2,
     )
 
+
 async def update_case_with_asset(case_id: str, asset_payload):
     """
     Update the case with the asset information.
@@ -212,13 +222,14 @@ async def update_case_with_asset(case_id: str, asset_payload):
     :return: None
     """
     logger.info(f"Updating IRIS case {case_id} with asset: {asset_payload}")
-    client, case_client = await initialize_client_and_case('DFIR-IRIS')
+    client, case_client = await initialize_client_and_case("DFIR-IRIS")
     return await fetch_and_validate_data(
         client,
         case_client.add_asset,
         cid=case_id,
         **asset_payload.to_dict(),
     )
+
 
 async def create_iris_case_multiple(suspicious_login: SuspiciousLogin, session: AsyncSession) -> CaseResponse:
     """
@@ -232,15 +243,28 @@ async def create_iris_case_multiple(suspicious_login: SuspiciousLogin, session: 
         CaseResponse: The response containing the created case information.
     """
     logger.info(f"Creating IRIS case same IP with multiple users: {suspicious_login}")
+    case_name = (
+        f"Log Source: {suspicious_login.logSource} SAP SIEM. " f"IP Address: {suspicious_login.ip} found logging in with multiple users."
+    )
+
+    case_description = (
+        f"Log Source: {suspicious_login.logSource}\n\n"
+        f"IP Address: {suspicious_login.ip}\n\n"
+        f"Country: {suspicious_login.country}\n\n"
+        f"Timestamp: {suspicious_login.event_timestamp}"
+    )
+
+    case_customer = (await get_customer_alert_settings(suspicious_login.customer_code, session=session)).iris_customer_id
+
     payload = IrisCasePayload(
-        case_name=f"Log Source: {suspicious_login.logSource} SAP SIEM. IP Address: {suspicious_login.ip} found logging in with multiple users.",
-        case_description=f"Log Source: {suspicious_login.logSource}\n\nIP Address: {suspicious_login.ip}\n\nCountry: {suspicious_login.country}\n\nTimestamp: {suspicious_login.event_timestamp}",
-        case_customer= (await get_customer_alert_settings(suspicious_login.customer_code, session=session)).iris_customer_id,
+        case_name=case_name,
+        case_description=case_description,
+        case_customer=case_customer,
         case_classification=18,
         soc_id="1",
         create_customer=False,
     )
-    client, case_client = await initialize_client_and_case('DFIR-IRIS')
+    client, case_client = await initialize_client_and_case("DFIR-IRIS")
     result = await fetch_and_validate_data(
         client,
         case_client.add_case,
@@ -249,6 +273,7 @@ async def create_iris_case_multiple(suspicious_login: SuspiciousLogin, session: 
     await update_event_analyzed_multiple_logins_flag(suspicious_login.id, suspicious_login.index)
 
     return CaseResponse(**result)
+
 
 async def collect_user_activity(suspicious_logins: SuspiciousLogin) -> SapSiemWazuhIndexerResponse:
     """
@@ -264,20 +289,11 @@ async def collect_user_activity(suspicious_logins: SuspiciousLogin) -> SapSiemWa
         index="integrations_*",
         body={
             "size": 1000,
-            "query": {
-                "bool": {
-                    "must": [
-                        {
-                            "term": {
-                                "ip": suspicious_logins.ip
-                            }
-                        }
-                    ]
-                }
-            },
-        }
+            "query": {"bool": {"must": [{"term": {"ip": suspicious_logins.ip}}]}},
+        },
     )
     return SapSiemWazuhIndexerResponse(**results)
+
 
 async def get_initial_search_results(es_client):
     """
@@ -293,32 +309,12 @@ async def get_initial_search_results(es_client):
         index="integrations_*",
         body={
             "size": 1000,
-            "query": {
-                "bool": {
-                    "must": [
-                        {
-                            "term": {
-                                "errMessage": "OK"
-                            }
-                        },
-                        {
-                            "term": {
-                                "event_analyzed_multiple_logins": "False"
-                            }
-                        }
-                    ]
-                }
-            },
-            "sort": [
-                {
-                    "event_timestamp": {
-                        "order": "asc"
-                    }
-                }
-            ]
+            "query": {"bool": {"must": [{"term": {"errMessage": "OK"}}, {"term": {"event_analyzed_multiple_logins": "False"}}]}},
+            "sort": [{"event_timestamp": {"order": "asc"}}],
         },
-        scroll='1m'
+        scroll="1m",
     )
+
 
 async def get_next_batch_of_results(es_client, scroll_id):
     """
@@ -331,7 +327,8 @@ async def get_next_batch_of_results(es_client, scroll_id):
     Returns:
         dict: The next batch of results.
     """
-    return es_client.scroll(scroll_id=scroll_id, scroll='1m')
+    return es_client.scroll(scroll_id=scroll_id, scroll="1m")
+
 
 async def process_hits(hits, ip_to_login_ids, suspicious_activity):
     """
@@ -366,6 +363,7 @@ async def process_hits(hits, ip_to_login_ids, suspicious_activity):
 
             suspicious_activity[hit.source.ip].append(suspicious_login)
 
+
 async def check_multiple_successful_logins_by_ip(threshold: int) -> List[SuspiciousLogin]:
     """
     Checks for multiple successful logins by IP address.
@@ -398,11 +396,7 @@ async def check_multiple_successful_logins_by_ip(threshold: int) -> List[Suspici
 
     es_client.clear_scroll(scroll_id=scroll_id)
 
-    suspicious_activity = {
-        ip: results
-        for ip, results in suspicious_activity.items()
-        if len(ip_to_login_ids[ip]) > threshold
-    }
+    suspicious_activity = {ip: results for ip, results in suspicious_activity.items() if len(ip_to_login_ids[ip]) > threshold}
 
     return [login for sublist in suspicious_activity.values() for login in sublist]
 
@@ -419,6 +413,7 @@ async def get_suspicious_ips(threshold: int) -> List[SuspiciousLogin]:
     """
     return await check_multiple_successful_logins_by_ip(threshold=threshold)
 
+
 async def get_existing_database_record(session: AsyncSession, ip: str) -> SapSiemMultipleLogins:
     """
     Retrieves an existing database record for the given IP address.
@@ -433,6 +428,7 @@ async def get_existing_database_record(session: AsyncSession, ip: str) -> SapSie
     result = await session.execute(select(SapSiemMultipleLogins).where(SapSiemMultipleLogins.ip == ip))
     return result.scalar_one_or_none() if result is not None else None
 
+
 def update_existing_database_record(existing_case: SapSiemMultipleLogins, new_login_ids: Set[str]) -> None:
     """
     Update the existing database record for a SapSiemMultipleLogins case with new login IDs.
@@ -444,11 +440,12 @@ def update_existing_database_record(existing_case: SapSiemMultipleLogins, new_lo
     Returns:
         None
     """
-    existing_loginIDs = set(existing_case.associated_loginIDs.split(','))
+    existing_loginIDs = set(existing_case.associated_loginIDs.split(","))
     if not new_login_ids.issubset(existing_loginIDs):
         updated_login_ids = existing_loginIDs.union(new_login_ids)
-        existing_case.associated_loginIDs = ','.join(updated_login_ids)
+        existing_case.associated_loginIDs = ",".join(updated_login_ids)
         existing_case.last_case_created_timestamp = datetime.now()
+
 
 def create_new_database_record(ip: str, new_login_ids: Set[str]) -> SapSiemMultipleLogins:
     """
@@ -464,8 +461,9 @@ def create_new_database_record(ip: str, new_login_ids: Set[str]) -> SapSiemMulti
     return SapSiemMultipleLogins(
         ip=ip,
         last_case_created_timestamp=datetime.now(),
-        associated_loginIDs=','.join(new_login_ids),
+        associated_loginIDs=",".join(new_login_ids),
     )
+
 
 async def sap_siem_multiple_logins_same_ip(threshold: int, session: AsyncSession) -> InvokeSAPSiemResponse:
     """
@@ -522,7 +520,6 @@ async def sap_siem_multiple_logins_same_ip(threshold: int, session: AsyncSession
 
     # Clear the global set
     checked_ips.clear()
-
 
     return InvokeSAPSiemResponse(
         success=True,

@@ -1,12 +1,11 @@
-from loguru import logger
 import requests
+from loguru import logger
 
-
-from app.integrations.sap_siem.schema.sap_siem import InvokeSAPSiemResponse, CollectSapSiemRequest, SapSiemResponseBody
+from app.integrations.sap_siem.schema.sap_siem import CollectSapSiemRequest
+from app.integrations.sap_siem.schema.sap_siem import InvokeSAPSiemResponse
+from app.integrations.sap_siem.schema.sap_siem import SapSiemResponseBody
 from app.integrations.utils.event_shipper import event_shipper
-
 from app.integrations.utils.schema import EventShipperPayload
-
 
 
 def build_request_payload(sap_siem_request: CollectSapSiemRequest) -> dict:
@@ -17,6 +16,7 @@ def build_request_payload(sap_siem_request: CollectSapSiemRequest) -> dict:
         "query": f"SELECT * FROM auditLog WHERE endpoint = 'accounts.login' and @timestamp >= '{sap_siem_request.lower_bound}' "
         f"and @timestamp < '{sap_siem_request.upper_bound}'",
     }
+
 
 async def make_request(sap_siem_request: CollectSapSiemRequest) -> SapSiemResponseBody:
     """
@@ -39,6 +39,7 @@ async def make_request(sap_siem_request: CollectSapSiemRequest) -> SapSiemRespon
     )
     return SapSiemResponseBody(**response.json())
 
+
 async def send_to_event_shipper(message: EventShipperPayload) -> None:
     """
     Sends the message to the event shipper.
@@ -47,7 +48,6 @@ async def send_to_event_shipper(message: EventShipperPayload) -> None:
         message (EventShipperPayload): The message to send to the event shipper.
     """
     await event_shipper(message)
-
 
 
 async def collect_sap_siem(sap_siem_request: CollectSapSiemRequest) -> InvokeSAPSiemResponse:

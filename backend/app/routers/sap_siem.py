@@ -11,4 +11,3 @@ router.include_router(
     prefix="/sap_siem",
     tags=["sap_siem"],
 )
-

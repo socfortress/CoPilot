@@ -27,9 +27,12 @@ from app.integrations.monitoring_alert.schema.monitoring_alert import (
 )
 from app.integrations.monitoring_alert.services.suricata import analyze_suricata_alerts
 from app.integrations.monitoring_alert.services.wazuh import analyze_wazuh_alerts
-from app.integrations.sap_siem.services.sap_siem_suspicious_logins import sap_siem_suspicious_logins
-from app.integrations.sap_siem.services.sap_siem_multiple_logins import sap_siem_multiple_logins_same_ip
-from app.integrations.sap_siem.schema.sap_siem import CollectSapSiemRequest
+from app.integrations.sap_siem.services.sap_siem_multiple_logins import (
+    sap_siem_multiple_logins_same_ip,
+)
+from app.integrations.sap_siem.services.sap_siem_suspicious_logins import (
+    sap_siem_suspicious_logins,
+)
 
 monitoring_alerts_router = APIRouter()
 
@@ -226,6 +229,7 @@ async def run_suricata_analysis(
         message="Analysis completed successfully",
     )
 
+
 @monitoring_alerts_router.post(
     "/run_analysis/sap_siem/suspicious_logins",
     response_model=AlertAnalysisResponse,
@@ -249,7 +253,7 @@ async def run_sap_siem_suspicious_logins_analysis(
     Returns:
         WazuhAnalysisResponse: The response containing the analysis results.
     """
-    logger.info(f"Running analysis for SAP SIEM suspicious logins")
+    logger.info("Running analysis for SAP SIEM suspicious logins")
 
     # Call the analyze_wazuh_alerts function to analyze the alerts
     await sap_siem_suspicious_logins(threshold=threshold, session=session)
@@ -258,6 +262,7 @@ async def run_sap_siem_suspicious_logins_analysis(
         success=True,
         message="Analysis completed successfully",
     )
+
 
 @monitoring_alerts_router.post(
     "/run_analysis/sap_siem/multiple_logins",
@@ -282,7 +287,7 @@ async def run_sap_siem_multiple_logins_same_ip_analysis(
     Returns:
         WazuhAnalysisResponse: The response containing the analysis results.
     """
-    logger.info(f"Running analysis for SAP SIEM multiple logins")
+    logger.info("Running analysis for SAP SIEM multiple logins")
 
     # Call the analyze_wazuh_alerts function to analyze the alerts
     await sap_siem_multiple_logins_same_ip(threshold=threshold, session=session)

@@ -1,7 +1,3 @@
-import base64
-import hashlib
-import hmac
-import uuid
 from datetime import datetime
 from datetime import timedelta
 from enum import Enum
@@ -11,9 +7,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
-from pydantic import HttpUrl
 from pydantic import root_validator
-
 
 
 class InvokeSapSiemRequest(BaseModel):
@@ -58,9 +52,7 @@ class InvokeSapSiemRequest(BaseModel):
             elif unit == "w":
                 lower_bound = now - timedelta(weeks=amount)
 
-            values["lower_bound"] = (
-                lower_bound.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
-            )
+            values["lower_bound"] = lower_bound.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
             values["upper_bound"] = now.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
         return values
 
@@ -92,6 +84,7 @@ class SapSiemAuthKeys(BaseModel):
         examples=["audit.eu1.gigya.com"],
     )
 
+
 class CollectSapSiemRequest(BaseModel):
     customer_code: str = Field(
         ...,
@@ -108,7 +101,6 @@ class CollectSapSiemRequest(BaseModel):
     )
     lower_bound: str = None
     upper_bound: str = None
-
 
 
 ######### ! SAP API RESPONSE ! #########
@@ -214,7 +206,6 @@ class Result(BaseModel):
     )
 
 
-
 class SapSiemResponseBody(BaseModel):
     results: List[Result] = Field(..., description="List of result objects")
     totalCount: int = Field(..., description="Total count of results")
@@ -225,7 +216,9 @@ class SapSiemResponseBody(BaseModel):
     time: str = Field(..., description="Time of the response")
     objectsCount: int = Field(..., description="Count of objects in results")
 
+
 #### ! WAZUH INDEXER RESULTS ! ####
+
 
 class SapSiemSource(BaseModel):
     logSource: Optional[str] = Field(None, description="The source of the log")
@@ -238,6 +231,7 @@ class SapSiemSource(BaseModel):
     customer_code: str = Field(..., description="The customer code")
     errDetails: Optional[str] = Field(None, description="Detailed error message")
 
+
 class SapSiemHit(BaseModel):
     index: str = Field(..., description="The index of the hit", alias="_index")
     id: str = Field(..., description="The ID of the hit", alias="_id")
@@ -245,14 +239,17 @@ class SapSiemHit(BaseModel):
     source: SapSiemSource = Field(..., description="The source data of the hit", alias="_source")
     sort: Optional[List[int]] = Field(None, description="The sort order of the hit")
 
+
 class SapSiemTotal(BaseModel):
     value: int = Field(..., description="The total number of hits")
     relation: str = Field(..., description="The relation of the total hits")
+
 
 class SapSiemHits(BaseModel):
     total: SapSiemTotal = Field(..., description="The total hits data")
     max_score: Optional[float] = Field(None, description="The maximum score among the hits")
     hits: List[SapSiemHit] = Field(..., description="The list of hits")
+
 
 class SapSiemShards(BaseModel):
     total: int = Field(..., description="The total number of shards")
@@ -260,12 +257,14 @@ class SapSiemShards(BaseModel):
     skipped: int = Field(..., description="The number of skipped shards")
     failed: int = Field(..., description="The number of failed shards")
 
+
 class SapSiemWazuhIndexerResponse(BaseModel):
     scroll_id: Optional[str] = Field(None, description="The scroll ID", alias="_scroll_id")
     took: int = Field(..., description="The time it took to execute the request")
     timed_out: bool = Field(..., description="Whether the request timed out")
     shards: SapSiemShards = Field(..., description="The shards data", alias="_shards")
     hits: SapSiemHits = Field(..., description="The hits data")
+
 
 class SuspiciousLogin(BaseModel):
     customer_code: str
@@ -278,6 +277,7 @@ class SuspiciousLogin(BaseModel):
     index: Optional[str] = Field(None, description="The index of the hit", alias="_index")
     id: Optional[str] = Field(None, description="The ID of the hit", alias="_id")
     errDetails: Optional[str] = Field(None, description="Detailed error message")
+
 
 class ErrCode(Enum):
     """

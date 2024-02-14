@@ -1,15 +1,15 @@
 from fastapi import APIRouter
 from fastapi import Depends
-from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
-from app.integrations.sap_siem.schema.sap_siem import InvokeSapSiemRequest
-from app.integrations.sap_siem.schema.sap_siem import InvokeSAPSiemResponse, SapSiemAuthKeys, CollectSapSiemRequest
-from app.integrations.sap_siem.services.collect import collect_sap_siem
 from app.integrations.routes import find_customer_integration
+from app.integrations.sap_siem.schema.sap_siem import CollectSapSiemRequest
+from app.integrations.sap_siem.schema.sap_siem import InvokeSapSiemRequest
+from app.integrations.sap_siem.schema.sap_siem import InvokeSAPSiemResponse
+from app.integrations.sap_siem.schema.sap_siem import SapSiemAuthKeys
+from app.integrations.sap_siem.services.collect import collect_sap_siem
 from app.integrations.utils.utils import extract_auth_keys
 from app.integrations.utils.utils import get_customer_integration_response
 
@@ -41,8 +41,8 @@ async def collect_sap_siem_route(sap_siem_request: InvokeSapSiemRequest, session
     auth_keys = SapSiemAuthKeys(**sap_siem_auth_keys)
     # if multiple apiKey values are present, make a loop to iterate through them
     # and collect the data for each apiKey
-    if ',' in auth_keys.API_KEY:
-        api_keys = auth_keys.API_KEY.split(',')
+    if "," in auth_keys.API_KEY:
+        api_keys = auth_keys.API_KEY.split(",")
         for key in api_keys:
             collect_sap_siem_request = CollectSapSiemRequest(
                 apiKey=key,

@@ -11,6 +11,7 @@ class SapSiemMultipleLogins(SQLModel, table=True):
     Table is used to track when an IP has successfully logged in with multiple loginIDs.
     Used in the SAP SIEM integration.
     """
+
     __tablename__ = "sap_siem_multiple_logins"
     id: Optional[int] = Field(primary_key=True)
     ip: str = Field(description="The IP involved in the case.")
