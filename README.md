@@ -63,7 +63,7 @@ systemctl restart docker
 
 ```bash
 #  Clone the CoPilot repository
-wget https://raw.githubusercontent.com/socfortress/CoPilot/v0.0.2/docker-compose.yml
+wget https://raw.githubusercontent.com/socfortress/CoPilot/v0.0.3/docker-compose.yml
 
 # Edit the docker-compose.yml file to set the server name and/or the services you want to use
 
