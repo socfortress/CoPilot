@@ -3,6 +3,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 # ! New with Async
 from sqlmodel import SQLModel
+from sqlalchemy import MetaData, text
+from sqlalchemy.exc import OperationalError
 
 from app.auth.services.universal import create_admin_user
 from app.auth.services.universal import create_scheduler_user
@@ -31,6 +33,36 @@ async def create_tables(async_engine):
     async with AsyncSession(async_engine) as session:
         async with session.begin():
             await add_connectors_if_not_exist(session)
+
+async def update_tables(async_engine):
+    """
+    Updates tables in the database. Needed for adding new columns to existing tables.
+
+    Args:
+        async_engine (AsyncEngine): The async engine to connect to the database.
+
+    Returns:
+        None
+    """
+    logger.info("Updating tables")
+    metadata = MetaData()
+
+    # Define the new columns to be added
+    new_columns = {
+        "scheduled_job_metadata": ["extra_data TEXT"]
+    }
+
+    async with async_engine.begin() as conn:
+        for table_name, columns in new_columns.items():
+            for column in columns:
+                alter_table_query = text(f"ALTER TABLE {table_name} ADD COLUMN {column}")
+                try:
+                    await conn.execute(alter_table_query)
+                except OperationalError as e:
+                    if 'duplicate column name' in str(e):
+                        logger.info(f"Column {column} already exists in {table_name}")
+                    else:
+                        raise
 
 
 async def create_roles(async_engine):

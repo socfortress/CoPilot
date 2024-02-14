@@ -13,7 +13,7 @@ from app.auth.utils import AuthHandler
 from app.db.db_session import async_engine
 from app.db.db_setup import create_available_integrations
 from app.db.db_setup import create_roles
-from app.db.db_setup import create_tables
+from app.db.db_setup import create_tables, update_tables
 from app.db.db_setup import ensure_admin_user
 from app.db.db_setup import ensure_scheduler_user
 from app.db.db_setup import ensure_scheduler_user_removed
@@ -125,6 +125,7 @@ app.include_router(api_router)
 async def init_db():
     # create_tables(engine)
     await create_tables(async_engine)
+    await update_tables(async_engine)
     await create_roles(async_engine)
     await create_available_integrations(async_engine)
     await ensure_admin_user(async_engine)
