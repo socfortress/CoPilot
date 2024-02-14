@@ -43,7 +43,7 @@
   "panels": [
     {
       "datasource": {
-        "type": "elasticsearch",
+        "type": "grafana-opensearch-datasource",
         "uid": "replace_datasource_uid"
       },
       "fieldConfig": {
@@ -93,14 +93,15 @@
           "values": false
         },
         "text": {},
-        "textMode": "auto"
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "9.2.1",
+      "pluginVersion": "10.2.3",
       "targets": [
         {
           "bucketAggs": [
             {
-              "field": "timestamp",
+              "field": "event_timestamp",
               "id": "2",
               "settings": {
                 "interval": "auto",
@@ -111,7 +112,7 @@
             }
           ],
           "datasource": {
-            "type": "elasticsearch",
+            "type": "grafana-opensearch-datasource",
             "uid": "replace_datasource_uid"
           },
           "metrics": [
@@ -121,7 +122,7 @@
               "type": "count"
             }
           ],
-          "query": "_exists_:data_errCode AND log_source:$log_source",
+          "query": "_exists_:errCode AND logSource:$log_source",
           "refId": "A",
           "timeField": "timestamp"
         }
@@ -131,7 +132,7 @@
     },
     {
       "datasource": {
-        "type": "elasticsearch",
+        "type": "grafana-opensearch-datasource",
         "uid": "replace_datasource_uid"
       },
       "fieldConfig": {
@@ -182,7 +183,7 @@
           "bucketAggs": [
             {
               "fake": true,
-              "field": "data_errDetails",
+              "field": "errDetails",
               "id": "4",
               "settings": {
                 "min_doc_count": 1,
@@ -194,7 +195,7 @@
             }
           ],
           "datasource": {
-            "type": "elasticsearch",
+            "type": "grafana-opensearch-datasource",
             "uid": "replace_datasource_uid"
           },
           "metrics": [
@@ -204,7 +205,7 @@
               "type": "count"
             }
           ],
-          "query": "_exists_:data_errCode AND log_source:$log_source",
+          "query": "_exists_:errCode AND logSource:$log_source",
           "refId": "A",
           "timeField": "timestamp"
         }
@@ -215,7 +216,7 @@
     },
     {
       "datasource": {
-        "type": "elasticsearch",
+        "type": "grafana-opensearch-datasource",
         "uid": "replace_datasource_uid"
       },
       "fieldConfig": {
@@ -225,7 +226,9 @@
           },
           "custom": {
             "align": "auto",
-            "displayMode": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
             "inspect": false
           },
           "mappings": [],
@@ -285,7 +288,9 @@
       },
       "id": 54,
       "options": {
+        "cellHeight": "sm",
         "footer": {
+          "countRows": false,
           "fields": "",
           "reducer": [
             "sum"
@@ -294,13 +299,13 @@
         },
         "showHeader": true
       },
-      "pluginVersion": "9.2.1",
+      "pluginVersion": "10.2.3",
       "targets": [
         {
           "bucketAggs": [
             {
               "fake": true,
-              "field": "data_errDetails",
+              "field": "errDetails",
               "id": "4",
               "settings": {
                 "min_doc_count": 1,
@@ -312,7 +317,7 @@
             }
           ],
           "datasource": {
-            "type": "elasticsearch",
+            "type": "grafana-opensearch-datasource",
             "uid": "replace_datasource_uid"
           },
           "metrics": [
@@ -322,7 +327,7 @@
               "type": "count"
             }
           ],
-          "query": "log_source:$log_source",
+          "query": "logSource:$log_source",
           "refId": "A",
           "timeField": "timestamp"
         }
@@ -359,7 +364,7 @@
         "rgba(50, 172, 45, 0.97)"
       ],
       "datasource": {
-        "type": "elasticsearch",
+        "type": "grafana-opensearch-datasource",
         "uid": "replace_datasource_uid"
       },
       "decimals": 0,
@@ -375,7 +380,7 @@
       "id": 67,
       "initialZoom": 1,
       "locationData": "countries",
-      "mapCenter": "(0°, 0°)",
+      "mapCenter": "(0Â°, 0Â°)",
       "mapCenterLatitude": 0,
       "mapCenterLongitude": 0,
       "maxDataPoints": 1,
@@ -394,7 +399,7 @@
           "bucketAggs": [
             {
               "fake": true,
-              "field": "data_ip_country_code",
+              "field": "ip_country_code",
               "id": "3",
               "settings": {
                 "min_doc_count": 1,
@@ -416,7 +421,7 @@
             }
           ],
           "datasource": {
-            "type": "elasticsearch",
+            "type": "grafana-opensearch-datasource",
             "uid": "replace_datasource_uid"
           },
           "metrics": [
@@ -426,7 +431,7 @@
               "type": "count"
             }
           ],
-          "query": "NOT data_errCode:0 AND log_source:$log_source",
+          "query": "NOT errCode:0 AND logSource:$log_source",
           "refId": "A",
           "timeField": "timestamp"
         }
@@ -440,7 +445,7 @@
     },
     {
       "datasource": {
-        "type": "elasticsearch",
+        "type": "grafana-opensearch-datasource",
         "uid": "replace_datasource_uid"
       },
       "fieldConfig": {
@@ -490,9 +495,10 @@
           "values": false
         },
         "text": {},
-        "textMode": "auto"
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "9.2.1",
+      "pluginVersion": "10.2.3",
       "targets": [
         {
           "bucketAggs": [
@@ -508,7 +514,7 @@
             }
           ],
           "datasource": {
-            "type": "elasticsearch",
+            "type": "grafana-opensearch-datasource",
             "uid": "replace_datasource_uid"
           },
           "metrics": [
@@ -518,7 +524,7 @@
               "type": "count"
             }
           ],
-          "query": "log_source:$log_source",
+          "query": "logSource:$log_source",
           "refId": "A",
           "timeField": "timestamp"
         }
@@ -528,7 +534,7 @@
     },
     {
       "datasource": {
-        "type": "elasticsearch",
+        "type": "grafana-opensearch-datasource",
         "uid": "replace_datasource_uid"
       },
       "fieldConfig": {
@@ -537,6 +543,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -550,6 +557,7 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 1,
             "pointSize": 5,
@@ -607,7 +615,7 @@
           "alias": "",
           "bucketAggs": [
             {
-              "field": "data_params_loginID",
+              "field": "params_loginID",
               "id": "3",
               "settings": {
                 "min_doc_count": "1",
@@ -627,7 +635,7 @@
             }
           ],
           "datasource": {
-            "type": "elasticsearch",
+            "type": "grafana-opensearch-datasource",
             "uid": "replace_datasource_uid"
           },
           "metrics": [
@@ -636,7 +644,7 @@
               "type": "count"
             }
           ],
-          "query": "log_source:$log_source",
+          "query": "logSource:$log_source",
           "refId": "A",
           "timeField": "timestamp"
         }
@@ -647,7 +655,7 @@
     },
     {
       "datasource": {
-        "type": "elasticsearch",
+        "type": "grafana-opensearch-datasource",
         "uid": "replace_datasource_uid"
       },
       "fieldConfig": {
@@ -697,9 +705,10 @@
           "values": false
         },
         "text": {},
-        "textMode": "auto"
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "9.2.1",
+      "pluginVersion": "10.2.3",
       "targets": [
         {
           "bucketAggs": [
@@ -716,17 +725,17 @@
             }
           ],
           "datasource": {
-            "type": "elasticsearch",
+            "type": "grafana-opensearch-datasource",
             "uid": "replace_datasource_uid"
           },
           "metrics": [
             {
-              "field": "data_params_loginID",
+              "field": "params_loginID",
               "id": "1",
               "type": "cardinality"
             }
           ],
-          "query": "log_source:$log_source",
+          "query": "logSource:$log_source",
           "refId": "A",
           "timeField": "timestamp"
         }
@@ -736,7 +745,7 @@
     },
     {
       "datasource": {
-        "type": "elasticsearch",
+        "type": "grafana-opensearch-datasource",
         "uid": "replace_datasource_uid"
       },
       "fieldConfig": {
@@ -770,8 +779,10 @@
       "id": 57,
       "options": {
         "displayMode": "gradient",
+        "maxVizHeight": 300,
         "minVizHeight": 10,
         "minVizWidth": 0,
+        "namePlacement": "auto",
         "orientation": "horizontal",
         "reduceOptions": {
           "calcs": [
@@ -780,15 +791,17 @@
           "fields": "",
           "values": false
         },
-        "showUnfilled": true
+        "showUnfilled": true,
+        "sizing": "auto",
+        "valueMode": "color"
       },
-      "pluginVersion": "9.2.1",
+      "pluginVersion": "10.2.3",
       "targets": [
         {
           "alias": "",
           "bucketAggs": [
             {
-              "field": "data_userAgent_raw",
+              "field": "userAgent_raw",
               "id": "2",
               "settings": {
                 "min_doc_count": "1",
@@ -811,7 +824,7 @@
             }
           ],
           "datasource": {
-            "type": "elasticsearch",
+            "type": "grafana-opensearch-datasource",
             "uid": "replace_datasource_uid"
           },
           "metrics": [
@@ -820,7 +833,7 @@
               "type": "count"
             }
           ],
-          "query": "log_source:$log_source",
+          "query": "logSource:$log_source",
           "refId": "A",
           "timeField": "timestamp"
         }
@@ -837,7 +850,7 @@
         "rgba(50, 172, 45, 0.97)"
       ],
       "datasource": {
-        "type": "elasticsearch",
+        "type": "grafana-opensearch-datasource",
         "uid": "replace_datasource_uid"
       },
       "decimals": 0,
@@ -853,7 +866,7 @@
       "id": 50,
       "initialZoom": 1,
       "locationData": "countries",
-      "mapCenter": "(0°, 0°)",
+      "mapCenter": "(0Â°, 0Â°)",
       "mapCenterLatitude": 0,
       "mapCenterLongitude": 0,
       "maxDataPoints": 1,
@@ -872,7 +885,7 @@
           "bucketAggs": [
             {
               "fake": true,
-              "field": "data_ip_country_code",
+              "field": "ip_country_code",
               "id": "3",
               "settings": {
                 "min_doc_count": 1,
@@ -894,7 +907,7 @@
             }
           ],
           "datasource": {
-            "type": "elasticsearch",
+            "type": "grafana-opensearch-datasource",
             "uid": "replace_datasource_uid"
           },
           "metrics": [
@@ -904,7 +917,7 @@
               "type": "count"
             }
           ],
-          "query": "log_source:$log_source",
+          "query": "logSource:$log_source",
           "refId": "A",
           "timeField": "timestamp"
         }
@@ -918,7 +931,7 @@
     },
     {
       "datasource": {
-        "type": "elasticsearch",
+        "type": "grafana-opensearch-datasource",
         "uid": "replace_datasource_uid"
       },
       "fieldConfig": {
@@ -928,7 +941,9 @@
           },
           "custom": {
             "align": "auto",
-            "displayMode": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
             "inspect": false
           },
           "mappings": [],
@@ -965,8 +980,10 @@
                 "id": "custom.align"
               },
               {
-                "id": "custom.displayMode",
-                "value": "color-text"
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
               }
             ]
           },
@@ -981,8 +998,10 @@
                 "value": 219
               },
               {
-                "id": "custom.displayMode",
-                "value": "color-text"
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
               }
             ]
           },
@@ -997,8 +1016,10 @@
                 "value": 326
               },
               {
-                "id": "custom.displayMode",
-                "value": "color-text"
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
               },
               {
                 "id": "links",
@@ -1019,8 +1040,10 @@
             },
             "properties": [
               {
-                "id": "custom.displayMode",
-                "value": "color-text"
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
               }
             ]
           },
@@ -1058,7 +1081,9 @@
       },
       "id": 58,
       "options": {
+        "cellHeight": "sm",
         "footer": {
+          "countRows": false,
           "fields": "",
           "reducer": [
             "sum"
@@ -1068,13 +1093,13 @@
         "showHeader": true,
         "sortBy": []
       },
-      "pluginVersion": "9.2.1",
+      "pluginVersion": "10.2.3",
       "targets": [
         {
           "bucketAggs": [
             {
               "fake": true,
-              "field": "data_params_loginID",
+              "field": "params_loginID",
               "id": "4",
               "settings": {
                 "min_doc_count": 1,
@@ -1085,7 +1110,7 @@
               "type": "terms"
             },
             {
-              "field": "data_errDetails",
+              "field": "errDetails",
               "id": "5",
               "settings": {
                 "min_doc_count": "1",
@@ -1096,7 +1121,7 @@
               "type": "terms"
             },
             {
-              "field": "data_ip_country_code",
+              "field": "ip_country_code",
               "id": "6",
               "settings": {
                 "min_doc_count": "1",
@@ -1108,7 +1133,7 @@
             }
           ],
           "datasource": {
-            "type": "elasticsearch",
+            "type": "grafana-opensearch-datasource",
             "uid": "replace_datasource_uid"
           },
           "metrics": [
@@ -1118,7 +1143,7 @@
               "type": "count"
             }
           ],
-          "query": "_exists_:data_errCode AND log_source:$log_source",
+          "query": "_exists_:errCode AND logSource:$log_source",
           "refId": "A",
           "timeField": "timestamp"
         }
@@ -1158,7 +1183,7 @@
     },
     {
       "datasource": {
-        "type": "elasticsearch",
+        "type": "grafana-opensearch-datasource",
         "uid": "replace_datasource_uid"
       },
       "fieldConfig": {
@@ -1168,7 +1193,9 @@
           },
           "custom": {
             "align": "auto",
-            "displayMode": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
             "filterable": true,
             "inspect": false
           },
@@ -1177,7 +1204,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "red",
@@ -1206,8 +1234,11 @@
                 "value": -1
               },
               {
-                "id": "custom.displayMode",
-                "value": "color-background"
+                "id": "custom.cellOptions",
+                "value": {
+                  "mode": "gradient",
+                  "type": "color-background"
+                }
               },
               {
                 "id": "custom.align"
@@ -1218,7 +1249,8 @@
                   "mode": "absolute",
                   "steps": [
                     {
-                      "color": "#37872D"
+                      "color": "#37872D",
+                      "value": null
                     },
                     {
                       "color": "red",
@@ -1336,8 +1368,10 @@
                 ]
               },
               {
-                "id": "custom.displayMode",
-                "value": "color-text"
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
               }
             ]
           },
@@ -1387,7 +1421,9 @@
       },
       "id": 27,
       "options": {
+        "cellHeight": "sm",
         "footer": {
+          "countRows": false,
           "enablePagination": true,
           "fields": "",
           "reducer": [
@@ -1403,12 +1439,12 @@
           }
         ]
       },
-      "pluginVersion": "9.2.1",
+      "pluginVersion": "10.2.3",
       "targets": [
         {
           "bucketAggs": [],
           "datasource": {
-            "type": "elasticsearch",
+            "type": "grafana-opensearch-datasource",
             "uid": "replace_datasource_uid"
           },
           "metrics": [
@@ -1420,7 +1456,7 @@
               "type": "raw_data"
             }
           ],
-          "query": "log_source:$log_source",
+          "query": "logSource:$log_source",
           "refId": "A",
           "timeField": "timestamp"
         }
@@ -2061,9 +2097,8 @@
       "type": "table"
     }
   ],
-  "refresh": false,
-  "schemaVersion": 37,
-  "style": "dark",
+  "refresh": "",
+  "schemaVersion": 39,
   "tags": [
     "SAP"
   ],
@@ -2071,7 +2106,7 @@
     "list": [
       {
         "datasource": {
-          "type": "elasticsearch",
+          "type": "grafana-opensearch-datasource",
           "uid": "replace_datasource_uid"
         },
         "filters": [],
@@ -2083,22 +2118,26 @@
       },
       {
         "current": {
-          "selected": false,
-          "text": "All",
-          "value": "$__all"
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
         },
         "datasource": {
-          "type": "elasticsearch",
+          "type": "grafana-opensearch-datasource",
           "uid": "replace_datasource_uid"
         },
-        "definition": "{ \"find\": \"terms\", \"field\": \"log_source\", \"query\": \"\"}",
+        "definition": "{ \"find\": \"terms\", \"field\": \"logSource\", \"query\": \"\"}",
         "hide": 1,
         "includeAll": true,
         "label": "LOG SOURCE",
         "multi": true,
         "name": "log_source",
         "options": [],
-        "query": "{ \"find\": \"terms\", \"field\": \"log_source\", \"query\": \"\"}",
+        "query": "{ \"find\": \"terms\", \"field\": \"logSource\", \"query\": \"\"}",
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
@@ -2138,5 +2177,6 @@
   },
   "timezone": "",
   "title": "SAP - USERS AUTH",
+  "version": 5,
   "weekStart": ""
 }
