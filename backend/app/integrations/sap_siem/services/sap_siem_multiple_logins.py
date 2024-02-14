@@ -286,7 +286,7 @@ async def collect_user_activity(suspicious_logins: SuspiciousLogin) -> SapSiemWa
     """
     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
     results = es_client.search(
-        index="integrations_*",
+        index="sap_siem_*",
         body={
             "size": 1000,
             "query": {"bool": {"must": [{"term": {"ip": suspicious_logins.ip}}]}},
@@ -306,7 +306,7 @@ async def get_initial_search_results(es_client):
         dict: The search results.
     """
     return es_client.search(
-        index="integrations_*",
+        index="sap_siem_*",
         body={
             "size": 1000,
             "query": {"bool": {"must": [{"term": {"errMessage": "OK"}}, {"term": {"event_analyzed_multiple_logins": "False"}}]}},

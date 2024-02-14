@@ -69,8 +69,7 @@ async def find_suscpicious_logins(threshold: int) -> List[SuspiciousLogin]:
         if scroll_id is None:
             # Initial search
             results = es_client.search(
-                # ! TODO: change to sap_siem index when ready for deploy
-                index="integrations_*",
+                index="sap_siem_*",
                 body={
                     "size": 10,
                     "query": {"bool": {"must": [{"term": {"case_created": "False"}}, {"term": {"event_analyzed": "False"}}]}},
@@ -117,7 +116,7 @@ async def collect_user_activity(suspicious_logins: SuspiciousLogin) -> SapSiemWa
     """
     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
     results = es_client.search(
-        index="integrations_*",
+        index="sap_siem_*",
         body={
             "size": 1000,
             "query": {"bool": {"must": [{"term": {"ip": suspicious_logins.ip}}]}},
