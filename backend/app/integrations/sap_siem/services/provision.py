@@ -119,7 +119,7 @@ async def build_event_stream_config(
     session: AsyncSession,
 ) -> SapSiemEventStream:
     """
-    Builds the configuration for a Mimecast event stream.
+    Builds the configuration for a SAP SIEM event stream.
 
     Args:
         customer_code (str): The customer code.
@@ -127,11 +127,11 @@ async def build_event_stream_config(
         session (AsyncSession): The async session.
 
     Returns:
-        SapSiemEventStream: The configured Mimecast event stream.
+        SapSiemEventStream: The configured SAP SIEM event stream.
     """
     return SapSiemEventStream(
-        title=f"Mimecast EVENTS - {(await get_customer(customer_code, session)).customer.customer_name}",
-        description=f"Mimecast EVENTS - {(await get_customer(customer_code, session)).customer.customer_name}",
+        title=f"SAP SIEM EVENTS - {(await get_customer(customer_code, session)).customer.customer_name}",
+        description=f"SAP SIEM EVENTS - {(await get_customer(customer_code, session)).customer.customer_name}",
         index_set_id=index_set_id,
         rules=[
             {
@@ -334,7 +334,7 @@ async def provision_sap_siem(
     await create_integration_meta_entry(
         CustomerIntegrationsMetaSchema(
             customer_code=provision_sap_siem_request.customer_code,
-            integration_name="Mimecast",
+            integration_name="SAP SIEM",
             graylog_input_id=None,
             graylog_index_id=index_set_id,
             graylog_stream_id=stream_id,

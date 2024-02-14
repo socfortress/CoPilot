@@ -66,7 +66,7 @@ class MimecastDashboard(Enum):
     SUMMARY = ("Mimecast", "summary.json")
 
 class SapSiemDashboard(Enum):
-    USER_AUTH = ("SapSiem", "users_auth.json")
+    USERS_AUTH = ("SapSiem", "users_auth.json")
 
 
 class DashboardProvisionRequest(BaseModel):
@@ -86,7 +86,7 @@ class DashboardProvisionRequest(BaseModel):
 
     @validator("dashboards", each_item=True)
     def check_dashboard_exists(cls, e):
-        valid_dashboards = {item.name: item for item in list(WazuhDashboard) + list(Office365Dashboard)}
+        valid_dashboards = {item.name: item for item in list(WazuhDashboard) + list(Office365Dashboard) + list(MimecastDashboard) + list(SapSiemDashboard)}
         if e not in valid_dashboards:
             raise ValueError(f'Dashboard identifier "{e}" is not recognized.')
         return e
