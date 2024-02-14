@@ -52,6 +52,13 @@ async def provision_sap_siem_route(
             job_id="invoke_sap_siem_integration_suspicious_logins_analysis",
         ),
     )
+    await add_scheduler_jobs(
+        CreateSchedulerRequest(
+            function_name="invoke_sap_siem_integration_multiple_logins_same_ip_analysis",
+            time_interval=provision_sap_siem_request.time_interval,
+            job_id="invoke_sap_siem_integration_multiple_logins_same_ip_analysis",
+        ),
+    )
     return ProvisionSapSiemResponse(
         success=True,
         message="SAP SIEM integration provisioned successfully.",

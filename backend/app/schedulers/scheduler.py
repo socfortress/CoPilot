@@ -11,7 +11,7 @@ from app.schedulers.services.invoke_mimecast import invoke_mimecast_integration
 from app.schedulers.services.invoke_mimecast import invoke_mimecast_integration_ttp
 from app.schedulers.services.monitoring_alert import invoke_suricata_monitoring_alert
 from app.schedulers.services.monitoring_alert import invoke_wazuh_monitoring_alert
-from app.schedulers.services.invoke_sap_siem import invoke_sap_siem_integration_collect, invoke_sap_siem_integration_suspicious_logins_analysis
+from app.schedulers.services.invoke_sap_siem import invoke_sap_siem_integration_collect, invoke_sap_siem_integration_suspicious_logins_analysis, invoke_sap_siem_integration_multiple_logins_same_ip_analysis
 
 
 def init_scheduler():
@@ -90,6 +90,7 @@ def get_function_by_name(function_name: str):
         "invoke_suricata_monitoring_alert": invoke_suricata_monitoring_alert,
         "invoke_sap_siem_integration_collection": invoke_sap_siem_integration_collect,
         "invoke_sap_siem_integration_suspicious_logins_analysis": invoke_sap_siem_integration_suspicious_logins_analysis,
+        "invoke_sap_siem_integration_multiple_logins_same_ip_analysis": invoke_sap_siem_integration_multiple_logins_same_ip_analysis,
         # Add other function mappings here
     }
     return function_map.get(
