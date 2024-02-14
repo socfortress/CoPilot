@@ -131,7 +131,6 @@ Copilot is designed to be a single pane of glass for your security operations. T
 ## Related repositories
 
 -   Provision Wazuh Worker Application: [https://github.com/socfortress/Customer-Provisioning-Worker](https://github.com/socfortress/Customer-Provisioning-Worker)
--   Provision Praeco Alert Application: [https://github.com/socfortress/Customer-Provisioning-Alert](https://github.com/socfortress/Customer-Provisioning-Alert)
 
 ## Help
 
