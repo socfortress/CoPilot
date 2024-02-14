@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.db_session import get_db
 from app.integrations.mimecast.schema.mimecast import MimecastScheduledResponse
 from app.integrations.sap_siem.schema.provision import ProvisionSapSiemRequest, ProvisionSapSiemResponse
-from app.integrations.mimecast.services.provision import provision_mimecast
+from app.integrations.sap_siem.services.provision import provision_sap_siem
 from app.integrations.utils.utils import get_customer_integration_response
 from app.schedulers.models.scheduler import CreateSchedulerRequest
 from app.schedulers.scheduler import add_scheduler_jobs
@@ -37,7 +37,7 @@ async def provision_sap_siem_route(
         provision_sap_siem_request.customer_code,
         session,
     )
-    #await provision_mimecast(provision_sap_siem_request, session)
+    await provision_sap_siem(provision_sap_siem_request, session)
     await add_scheduler_jobs(
         CreateSchedulerRequest(
             function_name="invoke_sap_siem_integration_collection",

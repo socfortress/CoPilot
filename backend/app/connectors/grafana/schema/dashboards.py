@@ -65,6 +65,9 @@ class Office365Dashboard(Enum):
 class MimecastDashboard(Enum):
     SUMMARY = ("Mimecast", "summary.json")
 
+class SapSiemDashboard(Enum):
+    USER_AUTH = ("SapSiem", "users_auth.json")
+
 
 class DashboardProvisionRequest(BaseModel):
     dashboards: List[str] = Field(
