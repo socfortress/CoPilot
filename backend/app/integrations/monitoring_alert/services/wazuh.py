@@ -6,7 +6,7 @@ from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.agents.routes.agents import get_agent
+from app.agents.routes.agents import get_agent_by_hostname
 from app.agents.schema.agents import AgentsResponse
 from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
 from app.connectors.dfir_iris.utils.universal import initialize_client_and_alert
@@ -420,7 +420,7 @@ async def create_and_update_alert_in_iris(
     """
     logger.info("Alert does not exist in IRIS. Creating alert.")
     alert_details = await create_alert_details(alert_details)
-    agent_details = await get_agent(alert_details.agent_id, session)
+    agent_details = await get_agent_by_hostname(alert_details.agent_name, session)
     ioc_payload = await build_ioc_payload(alert_details)
     iris_alert_payload = await build_alert_payload(
         alert_details=alert_details,
@@ -552,7 +552,7 @@ async def analyze_wazuh_alerts(
                 iris_alert_id,
             )
             alert_details = await create_alert_details(alert_details)
-            agent_details = await get_agent(alert_details.agent_id, session)
+            agent_details = await get_agent_by_hostname(alert_details.agent_name, session)
             asset_payload = await build_asset_payload(
                 agent_data=agent_details,
                 alert_details=alert_details,
