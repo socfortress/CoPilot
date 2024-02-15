@@ -266,14 +266,14 @@ async def provision_wazuh_monitoring_alert(
     notification_exists = await check_if_event_notification_exists("SEND TO COPILOT")
     if not notification_exists:
         url_whitelisted = await check_if_url_whitelist_entry_exists(
-            f"http://{os.getenv('SERVER_IP')}:5000/monitoring_alert/create",
+            f"http://{os.getenv('SERVER_IP')}:5000/api/monitoring_alert/create",
         )
         if not url_whitelisted:
             logger.info("Provisioning URL Whitelist")
             whitelisted_urls = await build_url_whitelisted_entries(
                 whitelist_url_model=GraylogUrlWhitelistEntryConfig(
                     id=await generate_random_id(),
-                    value=f"http://{os.getenv('SERVER_IP')}:5000/monitoring_alert/create",
+                    value=f"http://{os.getenv('SERVER_IP')}:5000/api/monitoring_alert/create",
                     title="SEND TO COPILOT",
                     type="literal",
                 ),
@@ -286,7 +286,7 @@ async def provision_wazuh_monitoring_alert(
                 title="SEND TO COPILOT",
                 description="Send alert to Copilot",
                 config={
-                    "url": f"http://{os.getenv('SERVER_IP')}:5000/monitoring_alert/create",
+                    "url": f"http://{os.getenv('SERVER_IP')}:5000/api/monitoring_alert/create",
                     "type": "http-notification-v1",
                 },
             ),
@@ -382,14 +382,14 @@ async def provision_suricata_monitoring_alert(
     notification_exists = await check_if_event_notification_exists("SEND TO COPILOT")
     if not notification_exists:
         url_whitelisted = await check_if_url_whitelist_entry_exists(
-            f"http://{os.getenv('SERVER_IP')}:5000/monitoring_alert/create",
+            f"http://{os.getenv('SERVER_IP')}:5000/api/monitoring_alert/create",
         )
         if not url_whitelisted:
             logger.info("Provisioning URL Whitelist")
             whitelisted_urls = await build_url_whitelisted_entries(
                 whitelist_url_model=GraylogUrlWhitelistEntryConfig(
                     id=await generate_random_id(),
-                    value=f"http://{os.getenv('SERVER_IP')}:5000/monitoring_alert/create",
+                    value=f"http://{os.getenv('SERVER_IP')}:5000/api/monitoring_alert/create",
                     title="SEND TO COPILOT",
                     type="literal",
                 ),
@@ -402,7 +402,7 @@ async def provision_suricata_monitoring_alert(
                 title="SEND TO COPILOT",
                 description="Send alert to Copilot",
                 config={
-                    "url": f"http://{os.getenv('SERVER_IP')}:5000/monitoring_alert/create",
+                    "url": f"http://{os.getenv('SERVER_IP')}:5000/api/monitoring_alert/create",
                     "type": "http-notification-v1",
                 },
             ),
