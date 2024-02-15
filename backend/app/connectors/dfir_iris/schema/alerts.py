@@ -6,6 +6,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
+from pydantic import validator
 
 
 class AlertsResponse(BaseModel):
@@ -94,3 +95,40 @@ class CaseCreationResponse(BaseModel):
     success: bool
     case: CaseData
     message: str
+
+
+class IrisAssetType(BaseModel):
+    asset_id: int
+    asset_icon_compromised: str
+    asset_name: str
+    asset_icon_not_compromised: str
+    asset_description: str
+
+class IrisAsset(BaseModel):
+    asset_name: str
+    asset_description: str
+    asset_type: IrisAssetType
+    custom_attributes: Optional[str]
+    asset_tags: str
+    asset_compromise_status_id: Optional[int]
+    date_update: Optional[str]
+    asset_enrichment: Optional[str]
+    case_id: Optional[int]
+    user_id: Optional[int]
+    asset_type_id: int
+    asset_id: int
+    asset_ip: str
+    asset_domain: Optional[str]
+    asset_uuid: str
+    analysis_status_id: Optional[int]
+    asset_info: Optional[str]
+    date_added: Optional[str]
+
+    @validator('asset_tags', pre=True)
+    def remove_agent_id(cls, v):
+        return v.replace('agent_id:', '') if v else v
+
+class AlertAssetsResponse(BaseModel):
+    success: bool
+    message: str
+    assets: List[IrisAsset]
