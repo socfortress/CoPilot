@@ -301,7 +301,7 @@ async def provision_wazuh_monitoring_alert(
                 priority=2,
                 config=GraylogAlertProvisionConfig(
                     type="aggregation-v1",
-                    query="syslog_level:ALERT AND syslog_type:wazuh",
+                    query="syslog_level:ALERT AND syslog_type:wazuh AND NOT (rule_group1:office365 OR rule_group1:vulnerability-detector)",
                     query_parameters=[],
                     streams=[],
                     group_by=[],
