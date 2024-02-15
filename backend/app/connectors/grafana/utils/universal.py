@@ -14,6 +14,7 @@ async def construct_grafana_url(
     connector_url: str,
     username: str,
     password: str,
+    verify: bool = False
 ) -> str:
     """
     Constructs a Grafana URL with embedded credentials.
@@ -22,16 +23,22 @@ async def construct_grafana_url(
         connector_url (str): The base URL of the Grafana instance.
         username (str): Username for Grafana authentication.
         password (str): Password for Grafana authentication.
+        verify (bool, optional): Whether to verify SSL certificates. Defaults to True.
 
     Returns:
         str: The complete Grafana URL with credentials.
     """
     if "http://" in connector_url:
-        return connector_url.replace("http://", f"http://{username}:{password}@")
+        url = connector_url.replace("http://", f"http://{username}:{password}@")
     elif "https://" in connector_url:
-        return connector_url.replace("https://", f"https://{username}:{password}@")
+        url = connector_url.replace("https://", f"https://{username}:{password}@")
     else:
         raise ValueError("Invalid connector URL format")
+
+    # Add the verify parameter to the URL
+    url += "?verify=" + str(verify).lower()
+
+    return url
 
 
 async def verify_grafana_credentials(attributes: Dict[str, Any]) -> Dict[str, Any]:
@@ -46,9 +53,9 @@ async def verify_grafana_credentials(attributes: Dict[str, Any]) -> Dict[str, An
     username = attributes["connector_username"]
     password = attributes["connector_password"]
 
-    grafana_url = await construct_grafana_url(connector_url, username, password)
+    grafana_url = await construct_grafana_url(connector_url, username, password, verify=False)
 
-    grafana_client = GrafanaApi.from_url(grafana_url, verify=False)
+    grafana_client = GrafanaApi.from_url(grafana_url)
     try:
         create_org = grafana_client.organization.create_organization(
             organization={
@@ -119,8 +126,9 @@ async def create_grafana_client(connector_name: str) -> GrafanaApi:
             attributes["connector_url"],
             attributes["connector_username"],
             attributes["connector_password"],
+            verify=False,
         )
-        return GrafanaApi.from_url(grafana_url, verify=False)
+        return GrafanaApi.from_url(grafana_url)
     except Exception as e:
         raise HTTPException(
             status_code=500,
