@@ -1,5 +1,7 @@
 from typing import List
 from typing import Optional
+from typing import Dict
+from typing import Any
 
 from pydantic import BaseModel
 from pydantic import Field
@@ -88,7 +90,8 @@ class GraylogEventNotificationsNotification(BaseModel):
     id: str
     title: str
     description: str
-    config: GraylogEventNotificationsConfig
+    #config: GraylogEventNotificationsConfig
+    config: Optional[Dict[str, Any]]
 
 
 class GraylogEventNotifications(BaseModel):
@@ -102,6 +105,6 @@ class GraylogEventNotifications(BaseModel):
 
 
 class GraylogEventNotificationsResponse(BaseModel):
-    event_notifications: GraylogEventNotifications
+    event_notifications: Optional[GraylogEventNotifications]
     message: str
     success: bool
