@@ -172,7 +172,11 @@ async def run_wazuh_analysis(
     logger.info(f"Found {len(monitoring_alerts)} monitoring alerts")
 
     if not monitoring_alerts:
-        raise HTTPException(status_code=404, detail="No monitoring alerts found")
+        logger.info(f"No monitoring alerts found for customer_code: {request.customer_code}")
+        return AlertAnalysisResponse(
+            success=True,
+            message="No monitoring alerts found",
+        )
 
     # Call the analyze_wazuh_alerts function to analyze the alerts
     await analyze_wazuh_alerts(monitoring_alerts, customer_meta, session)
