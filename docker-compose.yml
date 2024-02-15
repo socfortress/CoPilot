@@ -3,6 +3,9 @@ version: "2"
 services:
     copilot-backend:
         image: ghcr.io/socfortress/copilot-backend:latest
+        # Only expose if you want to access the docs
+        #ports:
+        #    - "5000:5000"
         volumes:
             - ./data/copilot-backend-data/logs:/opt/logs
             # Mount the copilot.db file to persist the database
