@@ -265,6 +265,8 @@ async def provision_wazuh_monitoring_alert(
     )
     notification_exists = await check_if_event_notification_exists("SEND TO COPILOT")
     if not notification_exists:
+        # ! Unfortunately Graylog does not support disabling SSL verification when sending webhooks
+        # ! Therefore, we need to send to API port of Copilot over HTTP
         url_whitelisted = await check_if_url_whitelist_entry_exists(
             f"http://{os.getenv('ALERT_FORWARDING_IP')}:5000/api/monitoring_alert/create",
         )
@@ -381,6 +383,8 @@ async def provision_suricata_monitoring_alert(
     )
     notification_exists = await check_if_event_notification_exists("SEND TO COPILOT")
     if not notification_exists:
+        # ! Unfortunately Graylog does not support disabling SSL verification when sending webhooks
+        # ! Therefore, we need to send to API port of Copilot over HTTP
         url_whitelisted = await check_if_url_whitelist_entry_exists(
             f"http://{os.getenv('ALERT_FORWARDING_IP')}:5000/api/monitoring_alert/create",
         )
