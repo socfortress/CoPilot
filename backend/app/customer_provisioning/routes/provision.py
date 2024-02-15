@@ -142,6 +142,7 @@ async def get_customer_meta_by_port(port: int, session: AsyncSession):
     )
     return result.scalars().first()
 
+
 async def update_customer_meta_table(
     request: ProvisionNewCustomer,
     session: AsyncSession,
