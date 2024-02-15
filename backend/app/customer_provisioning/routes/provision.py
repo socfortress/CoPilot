@@ -142,6 +142,40 @@ async def get_customer_meta_by_port(port: int, session: AsyncSession):
     )
     return result.scalars().first()
 
+async def update_customer_meta_table(
+    request: ProvisionNewCustomer,
+    session: AsyncSession,
+):
+    """
+    Update the customer meta table with the provided information.
+
+    Args:
+        request (ProvisionNewCustomer): The request object containing customer information.
+        customer_meta (CustomerProvisionMeta): The customer meta object containing additional information.
+        session (AsyncSession): The database session.
+
+    Returns:
+        CustomerProvisionMeta: The updated customer meta object.
+    """
+    logger.info(f"Updating customer meta table for customer {request.customer_name}")
+    customer_meta = CustomersMeta(
+        customer_code=request.customer_code,
+        customer_name=request.customer_name,
+        customer_meta_graylog_index=request.graylog_index_id,
+        customer_meta_graylog_stream=request.graylog_stream_id,
+        customer_meta_grafana_org_id=request.dashboards_to_include.organizationId,
+        customer_meta_wazuh_group=request.customer_code,
+        customer_meta_index_retention=str(request.hot_data_retention),
+        customer_meta_wazuh_registration_port=request.wazuh_registration_port,
+        customer_meta_wazuh_log_ingestion_port=request.wazuh_logs_port,
+        customer_meta_wazuh_api_port=request.wazuh_api_port,
+        customer_meta_wazuh_auth_password=request.wazuh_auth_password,
+        customer_meta_iris_customer_id=request.dfir_iris_id,
+    )
+    session.add(customer_meta)
+    await session.commit()
+    return customer_meta
+
 
 @customer_provisioning_router.post(
     "/provision",
@@ -167,6 +201,15 @@ async def provision_customer_route(
     """
     await check_unique_ports(request, session)
     logger.info("Provisioning new customer")
+    if request.only_insert_into_db is True:
+        logger.info("Only inserting into the database")
+        customer_meta = await update_customer_meta_table(request, session=session)
+        return CustomerProvisionResponse(
+            success=True,
+            message="Customer inserted into the database successfully",
+            customer_meta=customer_meta,
+            wazuh_worker_provisioned=False,
+        )
     customer_provision = await provision_wazuh_customer(request, session=session)
     return customer_provision
 

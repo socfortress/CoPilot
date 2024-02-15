@@ -72,6 +72,22 @@ class ProvisionNewCustomer(BaseModel):
     wazuh_cluster_key: str = Field(..., description="Password for the Wazuh cluster")
     wazuh_master_ip: str = Field(..., description="IP address of the Wazuh master")
     grafana_url: str = Field(..., description="URL of the Grafana instance")
+    only_insert_into_db: Optional[bool] = Field(
+        False,
+        description="Whether to only insert the customer into the database without provisioning any services",
+    )
+    dfir_iris_id: Optional[int] = Field(
+        None,
+        description="ID of the DFIR Iris customer",
+    )
+    graylog_index_id: Optional[str] = Field(
+        None,
+        description="ID of the Graylog index set",
+    )
+    graylog_stream_id: Optional[str] = Field(
+        None,
+        description="ID of the Graylog stream",
+    )
 
     @validator("customer_index_name")
     def validate_customer_index_name(cls, v):
