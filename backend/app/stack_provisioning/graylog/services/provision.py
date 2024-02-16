@@ -6,6 +6,8 @@ import json
 
 
 from app.stack_provisioning.graylog.schema.provision import ProvisionGraylogResponse
+from app.connectors.graylog.services.content_packs import insert_content_pack
+from app.connectors.graylog.schema.content_packs import ContentPack
 
 def get_content_pack_path(file_name: str) -> Path:
     """
@@ -41,7 +43,7 @@ def load_content_pack_json(file_name: str) -> dict:
         with open(file_path, "r") as file:
             content_pack_data = json.load(file)
 
-        return content_pack_data
+        return ContentPack(**content_pack_data).dict()
 
     except FileNotFoundError:
         logger.error(f"Content pack JSON file not found at {file_path}")
@@ -54,6 +56,7 @@ async def provision_wazuh_content_pack(
     Provision the Wazuh Content Pack in the Graylog instance
     """
     logger.info(f"Provisioning Wazuh Content Pack...")
-    content_path = load_content_pack_json("wazuh_content_pack.json")
-    logger.info(f"Content pack path: {content_path}")
+    content_pack = load_content_pack_json("wazuh_content_pack.json")
+    logger.info(f"Inserting Wazuh Content Pack...")
+    await insert_content_pack(content_pack)
     return ProvisionGraylogResponse(success=True, message="Wazuh Content Pack provisioned successfully")

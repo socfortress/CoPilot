@@ -173,11 +173,18 @@ async def send_post_request(
                 "message": "Successfully completed request with no content",
             }
         elif response.status_code == 201:
-            return {
-                "data": response.json(),
-                "success": True,
-                "message": "Successfully created data",
-            }
+            try:
+                return {
+                    "data": response.json(),
+                    "success": True,
+                    "message": "Successfully created data",
+                }
+            except ValueError:
+                return {
+                    "data": None,
+                    "success": True,
+                    "message": "Successfully created data, but no data returned",
+                }
         else:
             raise HTTPException(
                 status_code=500,
