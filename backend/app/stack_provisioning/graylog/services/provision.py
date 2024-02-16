@@ -2,6 +2,7 @@ from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from pathlib import Path
+import json
 
 
 from app.stack_provisioning.graylog.schema.provision import ProvisionGraylogResponse
@@ -20,6 +21,32 @@ def get_content_pack_path(file_name: str) -> Path:
     base_dir = current_file.parent.parent  # Move up two levels to the 'grafana' directory
     return base_dir / "templates" / file_name
 
+def load_content_pack_json(file_name: str) -> dict:
+    """
+    Load the JSON data of a dashboard from a file and replace the 'uid' value with the provided datasource UID.
+
+    Args:
+        dashboard_info (tuple): Information about the dashboard (e.g., file name, directory).
+        datasource_uid (str): The UID of the datasource to replace in the dashboard JSON.
+
+    Returns:
+        dict: The loaded dashboard data with the replaced 'uid' value.
+
+    Raises:
+        FileNotFoundError: If the dashboard JSON file is not found.
+        HTTPException: If there is an error decoding the JSON from the file.
+    """
+    file_path = get_content_pack_path(file_name)
+    try:
+        with open(file_path, "r") as file:
+            content_pack_data = json.load(file)
+
+        return content_pack_data
+
+    except FileNotFoundError:
+        logger.error(f"Content pack JSON file not found at {file_path}")
+        raise HTTPException(status_code=404, detail="Content pack JSON file not found")
+
 async def provision_wazuh_content_pack(
     session: AsyncSession,
 ) -> ProvisionGraylogResponse:
@@ -27,6 +54,6 @@ async def provision_wazuh_content_pack(
     Provision the Wazuh Content Pack in the Graylog instance
     """
     logger.info(f"Provisioning Wazuh Content Pack...")
-    content_path = get_content_pack_path("wazuh_content_pack.json")
+    content_path = load_content_pack_json("wazuh_content_pack.json")
     logger.info(f"Content pack path: {content_path}")
     return ProvisionGraylogResponse(success=True, message="Wazuh Content Pack provisioned successfully")
