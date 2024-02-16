@@ -72,6 +72,9 @@ mkdir data
 
 # Run Copilot
 docker compose up -d
+
+# Once Copilot has started up you can retrieve the admin password by running the following command (Only accessible the first time Copilot is started up)
+docker logs "$(docker ps --filter ancestor=ghcr.io/socfortress/copilot-backend:latest --format "{{.ID}}")" 2>&1 | grep "Admin user password"
 ```
 
 Copilot shall be available on the host interface, port 443, protocol HTTPS - `https://<your_instance_ip>`.
