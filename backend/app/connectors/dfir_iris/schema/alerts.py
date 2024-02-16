@@ -104,6 +104,7 @@ class IrisAssetType(BaseModel):
     asset_icon_not_compromised: str
     asset_description: str
 
+
 class IrisAsset(BaseModel):
     asset_name: str
     asset_description: str
@@ -124,9 +125,10 @@ class IrisAsset(BaseModel):
     asset_info: Optional[str]
     date_added: Optional[str]
 
-    @validator('asset_tags', pre=True)
+    @validator("asset_tags", pre=True)
     def remove_agent_id(cls, v):
-        return v.replace('agent_id:', '') if v else v
+        return v.replace("agent_id:", "") if v else v
+
 
 class AlertAssetsResponse(BaseModel):
     success: bool

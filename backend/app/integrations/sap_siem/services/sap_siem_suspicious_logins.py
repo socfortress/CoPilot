@@ -13,8 +13,8 @@ from app.integrations.sap_siem.schema.sap_siem import InvokeSAPSiemResponse
 from app.integrations.sap_siem.schema.sap_siem import IrisCasePayload
 from app.integrations.sap_siem.schema.sap_siem import SapSiemWazuhIndexerResponse
 from app.integrations.sap_siem.schema.sap_siem import SuspiciousLogin
-from app.integrations.utils.schema import ShufflePayload
 from app.integrations.utils.alerts import send_to_shuffle
+from app.integrations.utils.schema import ShufflePayload
 from app.utils import get_customer_alert_settings
 
 # global set to keep track of checked IPs
@@ -205,7 +205,7 @@ async def handle_common_suspicious_login_tasks(
     logger.info(f"User Activity: {user_activity}")
     await handle_user_activity(user_activity, unique_instances, case.data.case_id)
     await mark_as_checked(suspicious_login)
-    alert_source_link = ( await get_customer_alert_settings(suspicious_login.customer_code, session=session)).shuffle_endpoint
+    alert_source_link = (await get_customer_alert_settings(suspicious_login.customer_code, session=session)).shuffle_endpoint
     await send_to_shuffle(
         ShufflePayload(
             alert_id=case.data.case_id,

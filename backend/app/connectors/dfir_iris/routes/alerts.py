@@ -6,13 +6,15 @@ from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.utils import AuthHandler
-from app.connectors.dfir_iris.schema.alerts import AlertResponse, AlertAssetsResponse, IrisAsset
+from app.connectors.dfir_iris.schema.alerts import AlertAssetsResponse
+from app.connectors.dfir_iris.schema.alerts import AlertResponse
 from app.connectors.dfir_iris.schema.alerts import AlertsResponse
 from app.connectors.dfir_iris.schema.alerts import BookmarkedAlertsResponse
 from app.connectors.dfir_iris.schema.alerts import CaseCreationResponse
 from app.connectors.dfir_iris.schema.alerts import DeleteAlertResponse
 from app.connectors.dfir_iris.schema.alerts import DeleteMultipleAlertsRequest
 from app.connectors.dfir_iris.schema.alerts import FilterAlertsRequest
+from app.connectors.dfir_iris.schema.alerts import IrisAsset
 from app.connectors.dfir_iris.services.alerts import bookmark_alert
 from app.connectors.dfir_iris.services.alerts import create_case
 from app.connectors.dfir_iris.services.alerts import delete_alert
@@ -108,6 +110,7 @@ async def get_alert_by_id(
     """
     logger.info(f"Fetching alert {alert_id}")
     return await get_alert(alert_id=alert_id, session=session)
+
 
 @dfir_iris_alerts_router.get(
     "/assets/{alert_id}",

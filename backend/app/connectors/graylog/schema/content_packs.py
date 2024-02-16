@@ -1,28 +1,37 @@
-from pydantic import BaseModel, Field, Extra
-from typing import List, Optional, Any, Dict
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
+
+from pydantic import BaseModel
+from pydantic import Extra
+from pydantic import Field
+
 
 class Configuration(BaseModel):
-    api_url: Optional[str] = Field(None, alias='@value')
-    http_connect_timeout: Optional[int] = Field(None, alias='@value')
-    http_read_timeout: Optional[int] = Field(None, alias='@value')
-    http_user_agent: Optional[str] = Field(None, alias='@value')
-    http_write_timeout: Optional[int] = Field(None, alias='@value')
-    indicator: Optional[str] = Field(None, alias='@value')
-    type: Optional[str] = Field(None, alias='@value')
+    api_url: Optional[str] = Field(None, alias="@value")
+    http_connect_timeout: Optional[int] = Field(None, alias="@value")
+    http_read_timeout: Optional[int] = Field(None, alias="@value")
+    http_user_agent: Optional[str] = Field(None, alias="@value")
+    http_write_timeout: Optional[int] = Field(None, alias="@value")
+    indicator: Optional[str] = Field(None, alias="@value")
+    type: Optional[str] = Field(None, alias="@value")
     # Add other fields as needed
 
     class Config:
         extra = Extra.allow  # This line allows for additional fields that are not defined in the model.
 
+
 class Data(BaseModel):
     configuration: Optional[Configuration]
-    description: Optional[str] = Field(None, alias='@value')
-    name: Optional[str] = Field(None, alias='@value')
-    title: Optional[str] = Field(None, alias='@value')
+    description: Optional[str] = Field(None, alias="@value")
+    name: Optional[str] = Field(None, alias="@value")
+    title: Optional[str] = Field(None, alias="@value")
     # Define other fields as per your JSON structure
 
     class Config:
         extra = Extra.allow  # This line allows for additional fields that are not defined in the model.
+
 
 class Type(BaseModel):
     name: str
@@ -31,6 +40,7 @@ class Type(BaseModel):
     class Config:
         extra = Extra.allow  # This line allows for additional fields that are not defined in the model.
 
+
 class Constraint(BaseModel):
     type: str
     version: str
@@ -38,6 +48,7 @@ class Constraint(BaseModel):
 
     class Config:
         extra = Extra.allow  # This line allows for additional fields that are not defined in the model.
+
 
 class Entity(BaseModel):
     id: str
@@ -48,6 +59,7 @@ class Entity(BaseModel):
 
     class Config:
         extra = Extra.allow  # This line allows for additional fields that are not defined in the model.
+
 
 class ContentPack(BaseModel):
     id: str
@@ -65,6 +77,7 @@ class ContentPack(BaseModel):
 
     class Config:
         extra = Extra.allow  # This line allows for additional fields that are not defined in the model.
+
 
 class ContentPackList(BaseModel):
     total: int

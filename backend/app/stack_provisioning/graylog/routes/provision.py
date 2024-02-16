@@ -1,25 +1,26 @@
+from typing import List
+
 from fastapi import APIRouter
 from fastapi import Body
 from fastapi import Depends
 from fastapi import HTTPException
-from fastapi import Security
 from fastapi import Request
-from typing import List
+from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.auth.utils import AuthHandler
-from app.stack_provisioning.graylog.schema.provision import ProvisionGraylogResponse
+from app.connectors.graylog.schema.content_packs import ContentPack
+from app.connectors.graylog.schema.content_packs import ContentPackList
 from app.connectors.graylog.services.content_packs import get_content_packs
-from app.connectors.graylog.schema.content_packs import ContentPack, ContentPackList
 from app.db.db_session import get_db
+from app.stack_provisioning.graylog.schema.provision import ProvisionGraylogResponse
 
 stack_provisioning_graylog_router = APIRouter()
 
-async def does_content_pack_exist(
-    content_pack_name: str
-) -> bool:
+
+async def does_content_pack_exist(content_pack_name: str) -> bool:
     """
     Check if the content pack exists in the list of content packs.
 
@@ -41,6 +42,7 @@ async def does_content_pack_exist(
     logger.info(f"Content pack {content_pack_name} does not exist")
     return False
 
+
 @stack_provisioning_graylog_router.post(
     "/graylog/wazuh",
     response_model=ProvisionGraylogResponse,
@@ -55,6 +57,4 @@ async def provision_wazuh_content_pack(
     """
     logger.info(f"Provisioning Wazuh Content Pack...")
     await does_content_pack_exist("SOCFORTRESS_WAZUH_CONTENT_PACK_NOV_2023")
-    return ProvisionGraylogResponse(
-        success=True, message="Wazuh Content Pack provisioned successfully"
-    )
+    return ProvisionGraylogResponse(success=True, message="Wazuh Content Pack provisioned successfully")

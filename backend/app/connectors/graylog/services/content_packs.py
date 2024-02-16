@@ -1,11 +1,12 @@
+import json
+from typing import List
+
 from fastapi import HTTPException
 from loguru import logger
-from typing import List
-import json
 from pydantic import parse_obj_as
 
-
-from app.connectors.graylog.schema.content_packs import ContentPack, ContentPackList
+from app.connectors.graylog.schema.content_packs import ContentPack
+from app.connectors.graylog.schema.content_packs import ContentPackList
 from app.connectors.graylog.utils.universal import send_get_request
 
 

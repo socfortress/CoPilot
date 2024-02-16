@@ -46,12 +46,12 @@ from app.routers import sap_siem
 from app.routers import scheduler
 from app.routers import shuffle
 from app.routers import smtp
+from app.routers import stack_provisioning
 from app.routers import sublime
 from app.routers import threat_intel
 from app.routers import velociraptor
 from app.routers import wazuh_indexer
 from app.routers import wazuh_manager
-from app.routers import stack_provisioning
 from app.schedulers.scheduler import init_scheduler
 
 auth_handler = AuthHandler()
