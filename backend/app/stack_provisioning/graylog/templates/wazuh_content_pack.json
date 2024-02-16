@@ -1756,7 +1756,7 @@
   },
   "title":{
   "@type":"string",
-  "@value":"INTERHYVE - WAZUH EDR EVENTS"
+  "@value":"WAZUH EDR EVENTS"
   },
   "stream_rules":[
   {
