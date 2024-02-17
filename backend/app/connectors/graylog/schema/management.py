@@ -1,4 +1,5 @@
 from typing import List
+from datetime import datetime
 
 from pydantic import BaseModel
 
@@ -64,3 +65,17 @@ class UrlWhitelistEntryResponse(BaseModel):
     success: bool
     message: str
     url_whitelist_entries: UrlWhitelistEntries
+
+class GraylogServerInfo(BaseModel):
+    facility: str
+    codename: str
+    node_id: str
+    cluster_id: str
+    version: str
+    started_at: datetime
+    hostname: str
+    lifecycle: str
+    lb_status: str
+    timezone: str
+    operating_system: str
+    is_processing: bool

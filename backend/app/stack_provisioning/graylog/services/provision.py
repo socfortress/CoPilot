@@ -6,7 +6,7 @@ import json
 
 
 from app.stack_provisioning.graylog.schema.provision import ProvisionGraylogResponse
-from app.connectors.graylog.services.content_packs import insert_content_pack
+from app.connectors.graylog.services.content_packs import insert_content_pack, install_content_pack
 from app.connectors.graylog.schema.content_packs import ContentPack
 
 def get_content_pack_path(file_name: str) -> Path:
@@ -59,4 +59,6 @@ async def provision_wazuh_content_pack(
     content_pack = load_content_pack_json("wazuh_content_pack.json")
     logger.info(f"Inserting Wazuh Content Pack...")
     await insert_content_pack(content_pack)
+    # ! Content Pack ID is found in the `wazuh_content_pack.json` file
+    await install_content_pack(content_pack_id='261577fe-d9a2-4141-af74-635f085eee54', revision=1)
     return ProvisionGraylogResponse(success=True, message="Wazuh Content Pack provisioned successfully")

@@ -71,3 +71,40 @@ async def insert_content_pack(content_pack: ContentPack) -> bool:
         error_msg = f"Failed to insert content pack: {e}"
         logger.error(error_msg)
         raise HTTPException(status_code=500, detail=error_msg)
+
+
+async def install_content_pack(content_pack_id: str, revision: int) -> bool:
+    """Install a content pack in Graylog.
+
+    Args:
+        content_pack_id (str): The ID of the content pack to install.
+        revision (int): The revision of the content pack to install.
+
+    Returns:
+        bool: True if the content pack was installed successfully, False if it was not.
+
+    Raises:
+        HTTPException: If there is an error installing the content pack.
+    """
+    logger.info(f"Installing content pack {content_pack_id} in Graylog")
+    try:
+        content_pack_installed = await send_post_request(
+            endpoint=f"/api/system/content_packs/{content_pack_id}/{revision}/installations",
+            data={
+                  "comment": "Installed by SOCFortress CoPilot",
+                }
+        )
+        logger.info(f"Content pack installed: {content_pack_installed}")
+        if content_pack_installed["success"] is True:
+            logger.info(f"Content pack installed successfully")
+            return True
+        else:
+            raise HTTPException(status_code=500, detail=f"Content pack installation unsuccessful")
+    except KeyError as e:
+        error_msg = f"Failed to install content pack key: {e}"
+        logger.error(error_msg)
+        raise HTTPException(status_code=500, detail=error_msg)
+    except Exception as e:
+        error_msg = f"Failed to install content pack: {e}"
+        logger.error(error_msg)
+        raise HTTPException(status_code=500, detail=error_msg)

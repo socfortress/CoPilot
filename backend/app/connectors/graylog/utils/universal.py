@@ -159,6 +159,9 @@ async def send_post_request(
             json=data,
             verify=False,
         )
+        logger.info(
+            f"Response from POST request: {response.status_code} {response.text}",
+        )
 
         if response.status_code == 200:
             return {

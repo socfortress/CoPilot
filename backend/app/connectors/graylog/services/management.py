@@ -9,11 +9,21 @@ from app.connectors.graylog.schema.management import StartStreamResponse
 from app.connectors.graylog.schema.management import StopInputBody
 from app.connectors.graylog.schema.management import StopInputResponse
 from app.connectors.graylog.schema.management import StopStreamBody
-from app.connectors.graylog.schema.management import StopStreamResponse
+from app.connectors.graylog.schema.management import StopStreamResponse, GraylogServerInfo
 from app.connectors.graylog.services.collector import get_index_names
 from app.connectors.graylog.utils.universal import send_delete_request
 from app.connectors.graylog.utils.universal import send_post_request
-from app.connectors.graylog.utils.universal import send_put_request
+from app.connectors.graylog.utils.universal import send_put_request, send_get_request
+
+async def get_system_info() -> GraylogServerInfo:
+    """Get system information from Graylog.
+
+    Returns:
+        GraylogServerInfo: The system information from Graylog.
+    """
+    logger.info("Getting system information from Graylog")
+    response = await send_get_request(endpoint="/api/system")
+    return GraylogServerInfo(**response["data"])
 
 
 async def delete_index(index_name: DeletedIndexBody) -> DeletedIndexResponse:
