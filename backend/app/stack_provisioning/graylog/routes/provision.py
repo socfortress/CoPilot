@@ -50,6 +50,6 @@ async def provision_wazuh_content_pack_route(
     Provision the Wazuh Content Pack in the Graylog instance
     """
     logger.info(f"Provisioning Wazuh Content Pack...")
-    await does_content_pack_exist("SOCFORTRESS_WAZUH_CONTENT_PACK_NOV_2023")
+    await does_content_pack_exist("SOCFORTRESS_WAZUH_CONTENT_PACK")
     await provision_wazuh_content_pack(session)
     return ProvisionGraylogResponse(success=True, message="Wazuh Content Pack provisioned successfully")
