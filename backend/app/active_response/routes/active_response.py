@@ -47,6 +47,7 @@ async def provision_wazuh_content_pack_route(
                 },
             },
         ),
+        params={"wait_for_complete": True},
     )
 
     return ProvisionGraylogResponse(success=True, message="Wazuh Content Pack provisioned successfully")
