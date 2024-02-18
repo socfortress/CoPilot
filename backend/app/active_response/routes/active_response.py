@@ -43,12 +43,12 @@ async def provision_wazuh_content_pack_route(
                 "command": "windows_firewall0",
                 "custom": True,
                 "alert": {
-                    "action": "block",
+                    "action": "unblock",
                     "ip": "3.3.3.3",
                 },
             },
         ),
-        params={"wait_for_complete": True},
+        params={"wait_for_complete": True, "agents_list": ["105"]},
     )
 
     return ProvisionGraylogResponse(success=True, message="Wazuh Content Pack provisioned successfully")
