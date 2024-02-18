@@ -39,6 +39,9 @@ async def provision_wazuh_content_pack_route(
             ],
             "command": "test0",
             "custom": True,
+            "alert": {
+                "hello": "world",
+            },
         }),
     )
 
