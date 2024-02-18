@@ -74,12 +74,23 @@ def block_ip(ip):
     """Blocks an IP address on the Windows Firewall."""
     try:
         subprocess.run(
-            ["netsh", "advfirewall", "firewall", "add", "rule", f"name=Block Outbound {ip}", "dir=out", "action=block", f"remoteip={ip}"],
+            ["netsh", "advfirewall", "firewall", "add", "rule", f"name=SOCFortress Block Outbound {ip}", "dir=out", "action=block", f"remoteip={ip}"],
             check=True,
         )
         return f"Blocked IP {ip} on Windows Firewall"
     except subprocess.CalledProcessError as e:
         return f"Failed to block IP {ip} on Windows Firewall: {e}"
+
+def remove_ip(ip):
+    """Removes a blocked IP address from the Windows Firewall."""
+    try:
+        subprocess.run(
+            ["netsh", "advfirewall", "firewall", "delete", "rule", f"name=SOCFortress Block Outbound {ip}"],
+            check=True,
+        )
+        return f"Removed blocked IP {ip} from Windows Firewall"
+    except subprocess.CalledProcessError as e:
+        return f"Failed to remove blocked IP {ip} from Windows Firewall: {e}"
 
 
 def extract_alert_info(msg, argv):
@@ -106,6 +117,8 @@ def main(argv):
             sys.exit(OS_INVALID)
         if action == "block":
             write_debug_file(argv[0], block_ip(ip))
+        if action == "unblock":
+            write_debug_file(argv[0], remove_ip(ip))
     elif msg.command == COMMANDS["delete"]:
         # Optionally, include logic here to remove the firewall rule if necessary
         pass
