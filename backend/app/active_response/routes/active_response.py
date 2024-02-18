@@ -40,10 +40,11 @@ async def provision_wazuh_content_pack_route(
                 "arguments": [
                     "add",
                 ],
-                "command": "test0",
+                "command": "windows_firewall0",
                 "custom": True,
                 "alert": {
-                    "hello": "world",
+                    "action": "block",
+                    "ip": "1.1.1.1",
                 },
             },
         ),

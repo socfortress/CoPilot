@@ -37,10 +37,8 @@ class Message:
 def write_debug_file(ar_name, msg):
     """Writes a debug message to the log file."""
     with open(LOG_FILE, mode="a") as log_file:
-        ar_name_posix = str(PurePosixPath(PureWindowsPath(ar_name[ar_name.find("active-response") :])))
         log_msg = {
             "timestamp": datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"),
-            "ar_name": "windows_firewall",
             "message": json.loads(msg) if isinstance(msg, str) and msg.strip().startswith("{") else msg,
         }
         log_file.write(json.dumps(log_msg) + "\n")
