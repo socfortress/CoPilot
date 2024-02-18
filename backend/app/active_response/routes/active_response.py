@@ -44,7 +44,7 @@ async def provision_wazuh_content_pack_route(
                 "custom": True,
                 "alert": {
                     "action": "block",
-                    "ip": "2.2.2.2",
+                    "ip": "3.3.3.3",
                 },
             },
         ),

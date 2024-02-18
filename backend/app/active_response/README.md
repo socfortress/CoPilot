@@ -42,29 +42,26 @@ You can find the created `custom-ar.exe` executable in the `C:\Users\<USER>\dist
 
 #. On the Wazuh server, add the `<command>` and `<active-response>` blocks below to the `/var/ossec/etc/ossec.conf` configuration file. This uses the `custom-ar.exe` executable for Windows endpoints.
 
-.. code-block:: xml
-:emphasize-lines: 4
 
-      <ossec_config>
-        <command>
-          <name>windows-custom-ar</name>
-          <executable>custom-ar.exe</executable>
-          <timeout_allowed>yes</timeout_allowed>
-        </command>
+```xml
+<command>
+    <name>windows_firewall</name>
+    <executable>windows_firewall.exe</executable>
+    <timeout_allowed>no</timeout_allowed>
+  </command>
 
-        <active-response>
-          <disabled>no</disabled>
-          <command>windows-custom-ar</command>
-          <location>local</location>
-          <rules_id>503</rules_id>
-          <timeout>60</timeout>
-        </active-response>
-      </ossec_config>
+  <active-response>
+    <disabled>no</disabled>
+    <command>windows_firewall</command>
+    <location>local</location>
+    <timeout>60</timeout>
+  </active-response>
+```
 
 #. Restart the Wazuh manager to apply the changes:
 
-.. code-block:: console
-
-      # systemctl restart wazuh-manager
+```console
+systemctl restart wazuh-manager
+```
 
 With this configuration, Wazuh runs an executable instead of a Python script when triggering an active response on a Windows endpoint.
