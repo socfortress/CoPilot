@@ -7,41 +7,44 @@
 # License (version 2) as published by the FSF - Free Software
 # Foundation.
 
-import os
-import sys
-import json
 import datetime
-import subprocess
-from pathlib import PureWindowsPath, PurePosixPath
 import ipaddress
+import json
+import os
+import subprocess
+import sys
+from pathlib import PurePosixPath
+from pathlib import PureWindowsPath
 
-LOG_FILE = "C:\\Program Files (x86)\\ossec-agent\\active-response\\active-responses.log" if os.name == 'nt' else "/var/ossec/logs/active-responses.log"
+LOG_FILE = (
+    "C:\\Program Files (x86)\\ossec-agent\\active-response\\active-responses.log"
+    if os.name == "nt"
+    else "/var/ossec/logs/active-responses.log"
+)
 
-COMMANDS = {
-    "add": 0,
-    "delete": 1,
-    "continue": 2,
-    "abort": 3
-}
+COMMANDS = {"add": 0, "delete": 1, "continue": 2, "abort": 3}
 
 OS_SUCCESS = 0
 OS_INVALID = -1
+
 
 class Message:
     def __init__(self, alert="", command=0):
         self.alert = alert
         self.command = command
 
+
 def write_debug_file(ar_name, msg):
     """Writes a debug message to the log file."""
     with open(LOG_FILE, mode="a") as log_file:
-        ar_name_posix = str(PurePosixPath(PureWindowsPath(ar_name[ar_name.find("active-response"):])))
+        ar_name_posix = str(PurePosixPath(PureWindowsPath(ar_name[ar_name.find("active-response") :])))
         log_msg = {
-            "timestamp": datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S'),
+            "timestamp": datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"),
             "ar_name": "windows_firewall",
-            "message": json.loads(msg) if isinstance(msg, str) and msg.strip().startswith('{') else msg
+            "message": json.loads(msg) if isinstance(msg, str) and msg.strip().startswith("{") else msg,
         }
         log_file.write(json.dumps(log_msg) + "\n")
+
 
 def setup_and_check_message(argv):
     """Reads and validates the input message."""
@@ -50,12 +53,13 @@ def setup_and_check_message(argv):
     try:
         data = json.loads(input_str)
     except ValueError:
-        write_debug_file(argv[0], 'Decoding JSON has failed, invalid input format')
+        write_debug_file(argv[0], "Decoding JSON has failed, invalid input format")
         return Message(command=OS_INVALID)
     command = COMMANDS.get(data.get("command"), OS_INVALID)
     if command == OS_INVALID:
-        write_debug_file(argv[0], 'Not valid command: ' + data.get("command"))
+        write_debug_file(argv[0], "Not valid command: " + data.get("command"))
     return Message(alert=data, command=command)
+
 
 def is_valid_ipv4(ip):
     """Checks if an IP address is valid and not private."""
@@ -65,15 +69,18 @@ def is_valid_ipv4(ip):
     except ipaddress.AddressValueError:
         return False
 
+
 def block_ip(ip):
     """Blocks an IP address on the Windows Firewall."""
     try:
-        subprocess.run(["netsh", "advfirewall", "firewall", "add", "rule",
-                        f"name=Block Outbound {ip}", "dir=out", "action=block",
-                        f"remoteip={ip}"], check=True)
+        subprocess.run(
+            ["netsh", "advfirewall", "firewall", "add", "rule", f"name=Block Outbound {ip}", "dir=out", "action=block", f"remoteip={ip}"],
+            check=True,
+        )
         return f"Blocked IP {ip} on Windows Firewall"
     except subprocess.CalledProcessError as e:
         return f"Failed to block IP {ip} on Windows Firewall: {e}"
+
 
 def extract_alert_info(msg, argv):
     """Extracts the action and IP from the alert message."""
@@ -85,6 +92,7 @@ def extract_alert_info(msg, argv):
         write_debug_file(argv[0], f"Missing key in alert message: {str(e)}")
         sys.exit(OS_INVALID)
     return action, ip
+
 
 def main(argv):
     write_debug_file(argv[0], {"status": "Started"})
@@ -105,6 +113,7 @@ def main(argv):
         write_debug_file(argv[0], "Invalid command")
     write_debug_file(argv[0], "Ended")
     sys.exit(OS_SUCCESS)
+
 
 if __name__ == "__main__":
     main(sys.argv)

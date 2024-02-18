@@ -22,6 +22,7 @@ from app.middleware.exception_handlers import custom_http_exception_handler
 from app.middleware.exception_handlers import validation_exception_handler
 from app.middleware.exception_handlers import value_error_handler
 from app.middleware.logger import log_requests
+from app.routers import active_response
 from app.routers import agents
 from app.routers import alert_creation
 from app.routers import alert_creation_settings
@@ -52,7 +53,6 @@ from app.routers import threat_intel
 from app.routers import velociraptor
 from app.routers import wazuh_indexer
 from app.routers import wazuh_manager
-from app.routers import active_response
 from app.schedulers.scheduler import init_scheduler
 
 auth_handler = AuthHandler()

@@ -2,6 +2,7 @@ from loguru import logger
 
 from app.connectors.graylog.schema.management import DeletedIndexBody
 from app.connectors.graylog.schema.management import DeletedIndexResponse
+from app.connectors.graylog.schema.management import GraylogServerInfo
 from app.connectors.graylog.schema.management import StartInputBody
 from app.connectors.graylog.schema.management import StartInputResponse
 from app.connectors.graylog.schema.management import StartStreamBody
@@ -9,11 +10,13 @@ from app.connectors.graylog.schema.management import StartStreamResponse
 from app.connectors.graylog.schema.management import StopInputBody
 from app.connectors.graylog.schema.management import StopInputResponse
 from app.connectors.graylog.schema.management import StopStreamBody
-from app.connectors.graylog.schema.management import StopStreamResponse, GraylogServerInfo
+from app.connectors.graylog.schema.management import StopStreamResponse
 from app.connectors.graylog.services.collector import get_index_names
 from app.connectors.graylog.utils.universal import send_delete_request
+from app.connectors.graylog.utils.universal import send_get_request
 from app.connectors.graylog.utils.universal import send_post_request
-from app.connectors.graylog.utils.universal import send_put_request, send_get_request
+from app.connectors.graylog.utils.universal import send_put_request
+
 
 async def get_system_info() -> GraylogServerInfo:
     """Get system information from Graylog.

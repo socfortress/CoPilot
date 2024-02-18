@@ -1,5 +1,5 @@
-from typing import List
 from datetime import datetime
+from typing import List
 
 from pydantic import BaseModel
 
@@ -65,6 +65,7 @@ class UrlWhitelistEntryResponse(BaseModel):
     success: bool
     message: str
     url_whitelist_entries: UrlWhitelistEntries
+
 
 class GraylogServerInfo(BaseModel):
     facility: str

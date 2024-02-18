@@ -7,7 +7,8 @@ from pydantic import parse_obj_as
 
 from app.connectors.graylog.schema.content_packs import ContentPack
 from app.connectors.graylog.schema.content_packs import ContentPackList
-from app.connectors.graylog.utils.universal import send_get_request, send_post_request
+from app.connectors.graylog.utils.universal import send_get_request
+from app.connectors.graylog.utils.universal import send_post_request
 
 
 async def get_content_packs() -> List[ContentPack]:
@@ -38,6 +39,7 @@ async def get_content_packs() -> List[ContentPack]:
         error_msg = f"Failed to collect content packs: {e}"
         logger.error(error_msg)
         raise HTTPException(status_code=500, detail=error_msg)
+
 
 async def insert_content_pack(content_pack: ContentPack) -> bool:
     """Insert a content pack into Graylog.
@@ -91,8 +93,8 @@ async def install_content_pack(content_pack_id: str, revision: int) -> bool:
         content_pack_installed = await send_post_request(
             endpoint=f"/api/system/content_packs/{content_pack_id}/{revision}/installations",
             data={
-                  "comment": "Installed by SOCFortress CoPilot",
-                }
+                "comment": "Installed by SOCFortress CoPilot",
+            },
         )
         logger.info(f"Content pack installed: {content_pack_installed}")
         if content_pack_installed["success"] is True:

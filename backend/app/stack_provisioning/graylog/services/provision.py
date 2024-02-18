@@ -1,13 +1,15 @@
+import json
+from pathlib import Path
+
 from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
-from pathlib import Path
-import json
 
-
-from app.stack_provisioning.graylog.schema.provision import ProvisionGraylogResponse
-from app.connectors.graylog.services.content_packs import insert_content_pack, install_content_pack
 from app.connectors.graylog.schema.content_packs import ContentPack
+from app.connectors.graylog.services.content_packs import insert_content_pack
+from app.connectors.graylog.services.content_packs import install_content_pack
+from app.stack_provisioning.graylog.schema.provision import ProvisionGraylogResponse
+
 
 def get_content_pack_path(file_name: str) -> Path:
     """
@@ -22,6 +24,7 @@ def get_content_pack_path(file_name: str) -> Path:
     current_file = Path(__file__)  # Path to the current file
     base_dir = current_file.parent.parent  # Move up two levels to the 'grafana' directory
     return base_dir / "templates" / file_name
+
 
 def load_content_pack_json(file_name: str) -> dict:
     """
@@ -49,6 +52,7 @@ def load_content_pack_json(file_name: str) -> dict:
         logger.error(f"Content pack JSON file not found at {file_path}")
         raise HTTPException(status_code=404, detail="Content pack JSON file not found")
 
+
 async def provision_wazuh_content_pack(
     session: AsyncSession,
 ) -> ProvisionGraylogResponse:
@@ -60,5 +64,5 @@ async def provision_wazuh_content_pack(
     logger.info(f"Inserting Wazuh Content Pack...")
     await insert_content_pack(content_pack)
     # ! Content Pack ID is found in the `wazuh_content_pack.json` file
-    await install_content_pack(content_pack_id='261577fe-d9a2-4141-af74-635f085eee54', revision=1)
+    await install_content_pack(content_pack_id="261577fe-d9a2-4141-af74-635f085eee54", revision=1)
     return ProvisionGraylogResponse(success=True, message="Wazuh Content Pack provisioned successfully")

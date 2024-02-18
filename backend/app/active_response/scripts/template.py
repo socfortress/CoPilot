@@ -7,13 +7,14 @@
 # License (version 2) as published by the FSF - Free Software
 # Foundation.
 
+import datetime
+import json
 import os
 import sys
-import json
-import datetime
-from pathlib import PureWindowsPath, PurePosixPath
+from pathlib import PurePosixPath
+from pathlib import PureWindowsPath
 
-if os.name == 'nt':
+if os.name == "nt":
     LOG_FILE = "C:\\Program Files (x86)\\ossec-agent\\active-response\\active-responses.log"
 else:
     LOG_FILE = "/var/ossec/logs/active-responses.log"
@@ -26,6 +27,7 @@ ABORT_COMMAND = 3
 OS_SUCCESS = 0
 OS_INVALID = -1
 
+
 class message:
     def __init__(self):
         self.alert = ""
@@ -34,12 +36,11 @@ class message:
 
 def write_debug_file(ar_name, msg):
     with open(LOG_FILE, mode="a") as log_file:
-        ar_name_posix = str(PurePosixPath(PureWindowsPath(ar_name[ar_name.find("active-response"):])))
-        log_file.write(str(datetime.datetime.now().strftime('%Y/%m/%d %H:%M:%S')) + " " + ar_name_posix + ": " + msg +"\n")
+        ar_name_posix = str(PurePosixPath(PureWindowsPath(ar_name[ar_name.find("active-response") :])))
+        log_file.write(str(datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S")) + " " + ar_name_posix + ": " + msg + "\n")
 
 
 def setup_and_check_message(argv):
-
     # get alert from stdin
     input_str = ""
     for line in sys.stdin:
@@ -51,7 +52,7 @@ def setup_and_check_message(argv):
     try:
         data = json.loads(input_str)
     except ValueError:
-        write_debug_file(argv[0], 'Decoding JSON has failed, invalid input format')
+        write_debug_file(argv[0], "Decoding JSON has failed, invalid input format")
         message.command = OS_INVALID
         return message
 
@@ -65,15 +66,16 @@ def setup_and_check_message(argv):
         message.command = DELETE_COMMAND
     else:
         message.command = OS_INVALID
-        write_debug_file(argv[0], 'Not valid command: ' + command)
+        write_debug_file(argv[0], "Not valid command: " + command)
 
     return message
 
 
 def send_keys_and_check_message(argv, keys):
-
     # build and send message with keys
-    keys_msg = json.dumps({"version": 1,"origin":{"name": argv[0],"module":"active-response"},"command":"check_keys","parameters":{"keys":keys}})
+    keys_msg = json.dumps(
+        {"version": 1, "origin": {"name": argv[0], "module": "active-response"}, "command": "check_keys", "parameters": {"keys": keys}},
+    )
 
     write_debug_file(argv[0], keys_msg)
 
@@ -93,7 +95,7 @@ def send_keys_and_check_message(argv, keys):
     try:
         data = json.loads(input_str)
     except ValueError:
-        write_debug_file(argv[0], 'Decoding JSON has failed, invalid input format')
+        write_debug_file(argv[0], "Decoding JSON has failed, invalid input format")
         return message
 
     action = data.get("command")
@@ -110,7 +112,6 @@ def send_keys_and_check_message(argv, keys):
 
 
 def main(argv):
-
     write_debug_file(argv[0], "Started")
 
     # validate json and get command
@@ -120,8 +121,7 @@ def main(argv):
         sys.exit(OS_INVALID)
 
     if msg.command == ADD_COMMAND:
-
-        """ Start Custom Key
+        """Start Custom Key
         At this point, it is necessary to select the keys from the alert and add them into the keys array.
         """
 
@@ -134,7 +134,6 @@ def main(argv):
 
         # if necessary, abort execution
         if action != CONTINUE_COMMAND:
-
             if action == ABORT_COMMAND:
                 write_debug_file(argv[0], "Aborted")
                 sys.exit(OS_SUCCESS)
@@ -150,8 +149,7 @@ def main(argv):
         """ End Custom Action Add """
 
     elif msg.command == DELETE_COMMAND:
-
-        """ Start Custom Action Delete """
+        """Start Custom Action Delete"""
 
         os.remove("ar-test-result.txt")
 

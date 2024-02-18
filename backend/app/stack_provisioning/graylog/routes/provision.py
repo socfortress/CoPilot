@@ -7,12 +7,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.utils import AuthHandler
 from app.connectors.graylog.services.content_packs import get_content_packs
+from app.connectors.graylog.services.management import get_system_info
 from app.db.db_session import get_db
 from app.stack_provisioning.graylog.schema.provision import ProvisionGraylogResponse
-from app.stack_provisioning.graylog.services.provision import provision_wazuh_content_pack
-from app.connectors.graylog.services.management import get_system_info
+from app.stack_provisioning.graylog.services.provision import (
+    provision_wazuh_content_pack,
+)
 
 stack_provisioning_graylog_router = APIRouter()
+
 
 async def get_graylog_version() -> str:
     """
@@ -23,6 +26,7 @@ async def get_graylog_version() -> str:
     """
     system_info = await get_system_info()
     return system_info.version
+
 
 async def system_version_check(compatible_version: str) -> bool:
     """
@@ -38,12 +42,12 @@ async def system_version_check(compatible_version: str) -> bool:
     logger.info(f"Graylog System version: {system_version}")
 
     # Split the version strings at the '+' character and compare the parts before the '+'
-    system_version = system_version.split('+')[0]
-    compatible_version = compatible_version.split('+')[0]
+    system_version = system_version.split("+")[0]
+    compatible_version = compatible_version.split("+")[0]
 
     # Split these parts at the '.' character and convert them to integers
-    system_version_parts = list(map(int, system_version.split('.')))
-    compatible_version_parts = list(map(int, compatible_version.split('.')))
+    system_version_parts = list(map(int, system_version.split(".")))
+    compatible_version_parts = list(map(int, compatible_version.split(".")))
 
     if system_version_parts >= compatible_version_parts:
         return True
