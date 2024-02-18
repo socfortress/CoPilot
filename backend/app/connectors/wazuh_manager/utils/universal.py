@@ -254,6 +254,8 @@ async def send_put_request(
     if attributes is None:
         logger.error("No Wazuh Manager connector found in the database")
         return None
+    # Add the default `Content-Type` header to the request
+    wazuh_manager_client["Content-Type"] = "application/json"
     # Add the `Content-Type` header to the request if the data is XML
     if xml_data:
         wazuh_manager_client["Content-Type"] = "application/xml"
