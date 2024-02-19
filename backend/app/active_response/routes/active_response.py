@@ -16,7 +16,7 @@ from app.connectors.graylog.services.management import get_system_info
 from app.connectors.wazuh_manager.utils.universal import send_put_request
 from app.db.db_session import get_db
 from app.stack_provisioning.graylog.schema.provision import ProvisionGraylogResponse
-from app.active_response.schema.active_response import ActiveResponsesSupported, ActiveResponsesSupportedResponse, ActiveResponse, ActiveResponseDetails
+from app.active_response.schema.active_response import ActiveResponsesSupported, ActiveResponsesSupportedResponse, ActiveResponse, ActiveResponseDetails, InvokeActiveResponseRequest
 
 active_response_router = APIRouter()
 
@@ -87,28 +87,36 @@ async def get_supported_active_responses_route() -> ActiveResponsesSupportedResp
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def provision_wazuh_content_pack_route(
+    request: InvokeActiveResponseRequest,
     session: AsyncSession = Depends(get_db),
 ) -> ProvisionGraylogResponse:
     """
     Provision the Wazuh Content Pack in the Graylog instance
     """
     logger.info(f"Invoking Wazuh Active Response...")
+    logger.info(f"Request: {request}")
+    return None
     await send_put_request(
-        endpoint="active-response",
-        data=json.dumps(
-            {
-                "arguments": [
-                    "add",
-                ],
-                "command": "windows_firewall0",
-                "custom": True,
-                "alert": {
-                    "action": "unblock",
-                    "ip": "3.3.3.3",
-                },
-            },
-        ),
-        params={"wait_for_complete": True, "agents_list": ["105"]},
+        endpoint=request.endpoint,
+        data=json.dumps(request.data.dict()),
+        params=request.params,
     )
+    # await send_put_request(
+    #     endpoint="active-response",
+    #     data=json.dumps(
+    #         {
+    #             "arguments": [
+    #                 "add",
+    #             ],
+    #             "command": "windows_firewall0",
+    #             "custom": True,
+    #             "alert": {
+    #                 "action": "unblock",
+    #                 "ip": "3.3.3.3",
+    #             },
+    #         },
+    #     ),
+    #     params={"wait_for_complete": True, "agents_list": ["105"]},
+    # )
 
     return ProvisionGraylogResponse(success=True, message="Wazuh Content Pack provisioned successfully")
