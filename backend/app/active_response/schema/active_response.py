@@ -1,4 +1,6 @@
 from enum import Enum
+from typing import Any
+from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Union
@@ -8,7 +10,6 @@ from loguru import logger
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import root_validator
-from typing import Dict, Any
 
 
 class ActiveResponsesSupported(Enum):
@@ -92,17 +93,16 @@ class InvokeActiveResponseRequest(BaseModel):
 
     @root_validator(pre=True)
     def create_alert(cls, values):
-        command = values.get('command')
-        alert = values.get('alert')
+        command = values.get("command")
+        alert = values.get("alert")
         if command == ActiveResponseCommand.windows_firewall:
-            values['alert'] = WindowsFirewallAlert(**alert)
+            values["alert"] = WindowsFirewallAlert(**alert)
         elif command == ActiveResponseCommand.linux_firewall:
-            values['alert'] = LinuxFirewallAlert(**alert)
+            values["alert"] = LinuxFirewallAlert(**alert)
         else:
             raise HTTPException(status_code=400, detail="Invalid command for alert")
 
         return values
-
 
 
 class InvokeActiveResponseResponse(BaseModel):
