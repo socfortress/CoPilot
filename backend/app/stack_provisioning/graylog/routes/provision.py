@@ -93,7 +93,7 @@ async def provision_wazuh_content_pack_route(
     """
     Provision the Wazuh Content Pack in the Graylog instance
     """
-    logger.info(f"Provisioning Wazuh Content Pack...")
+    logger.info("Provisioning Wazuh Content Pack...")
     await system_version_check(compatible_version="5.0.13+083613e")
     await does_content_pack_exist("SOCFORTRESS_WAZUH_CONTENT_PACK")
     await provision_wazuh_content_pack(session)

@@ -1,4 +1,3 @@
-import json
 from typing import List
 
 from fastapi import HTTPException
@@ -61,10 +60,10 @@ async def insert_content_pack(content_pack: ContentPack) -> bool:
         )
         logger.info(f"Content pack inserted: {content_pack_inserted}")
         if content_pack_inserted["success"] is True:
-            logger.info(f"Content pack inserted successfully")
+            logger.info("Content pack inserted successfully")
             return True
         else:
-            raise HTTPException(status_code=500, detail=f"Content pack insertion unsuccessful")
+            raise HTTPException(status_code=500, detail="Content pack insertion unsuccessful")
     except KeyError as e:
         error_msg = f"Failed to insert content pack key: {e}"
         logger.error(error_msg)
@@ -98,10 +97,10 @@ async def install_content_pack(content_pack_id: str, revision: int) -> bool:
         )
         logger.info(f"Content pack installed: {content_pack_installed}")
         if content_pack_installed["success"] is True:
-            logger.info(f"Content pack installed successfully")
+            logger.info("Content pack installed successfully")
             return True
         else:
-            raise HTTPException(status_code=500, detail=f"Content pack installation unsuccessful")
+            raise HTTPException(status_code=500, detail="Content pack installation unsuccessful")
     except KeyError as e:
         error_msg = f"Failed to install content pack key: {e}"
         logger.error(error_msg)

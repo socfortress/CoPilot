@@ -59,9 +59,9 @@ async def provision_wazuh_content_pack(
     """
     Provision the Wazuh Content Pack in the Graylog instance
     """
-    logger.info(f"Provisioning Wazuh Content Pack...")
+    logger.info("Provisioning Wazuh Content Pack...")
     content_pack = load_content_pack_json("wazuh_content_pack.json")
-    logger.info(f"Inserting Wazuh Content Pack...")
+    logger.info("Inserting Wazuh Content Pack...")
     await insert_content_pack(content_pack)
     # ! Content Pack ID is found in the `wazuh_content_pack.json` file
     await install_content_pack(content_pack_id="261577fe-d9a2-4141-af74-635f085eee54", revision=1)

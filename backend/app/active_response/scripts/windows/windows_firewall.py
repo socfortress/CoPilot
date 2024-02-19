@@ -13,8 +13,6 @@ import json
 import os
 import subprocess
 import sys
-from pathlib import PurePosixPath
-from pathlib import PureWindowsPath
 
 LOG_FILE = (
     "C:\\Program Files (x86)\\ossec-agent\\active-response\\active-responses.log"

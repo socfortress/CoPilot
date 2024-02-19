@@ -2,11 +2,8 @@ from enum import Enum
 from typing import Any
 from typing import Dict
 from typing import List
-from typing import Optional
-from typing import Union
 
 from fastapi import HTTPException
-from loguru import logger
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import root_validator

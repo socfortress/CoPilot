@@ -9,17 +9,13 @@ from fastapi.responses import JSONResponse
 from loguru import logger
 
 from app.active_response.schema.active_response import ActiveResponse
-from app.active_response.schema.active_response import ActiveResponseCommand
 from app.active_response.schema.active_response import ActiveResponseDetails
 from app.active_response.schema.active_response import ActiveResponsesSupported
 from app.active_response.schema.active_response import ActiveResponsesSupportedResponse
 from app.active_response.schema.active_response import InvokeActiveResponseRequest
 from app.active_response.schema.active_response import InvokeActiveResponseResponse
-from app.active_response.schema.active_response import LinuxFirewallAlert
-from app.active_response.schema.active_response import WindowsFirewallAlert
 from app.auth.utils import AuthHandler
 from app.connectors.wazuh_manager.utils.universal import send_put_request
-from app.stack_provisioning.graylog.schema.provision import ProvisionGraylogResponse
 
 active_response_router = APIRouter()
 
@@ -108,7 +104,7 @@ async def invoke_active_response_route(
     Returns:
         InvokeActiveResponseResponse: The response object indicating the success or failure of the active response invocation.
     """
-    logger.info(f"Invoking Wazuh Active Response...")
+    logger.info("Invoking Wazuh Active Response...")
     # Append '0' to the command - This is required for Wazuh Active Response
     request.command = f"{request.command.value}0"
     # Create a dictionary with the request data
