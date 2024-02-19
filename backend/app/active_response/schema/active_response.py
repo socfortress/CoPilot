@@ -7,7 +7,8 @@ from fastapi import HTTPException
 from loguru import logger
 from pydantic import BaseModel
 from pydantic import Field
-from pydantic import validator
+from pydantic import root_validator
+from typing import Dict, Any
 
 
 class ActiveResponsesSupported(Enum):
@@ -54,12 +55,11 @@ class WindowsFirewallAlert(BaseModelWithEnum):
 class LinuxFirewallAlert(BaseModelWithEnum):
     action: AlertAction
     ip: str
-    port: Optional[int]
 
 
 class ActiveResponseCommand(str, Enum):
-    windows_firewall = "windows_firewall0"
-    linux_firewall = "linux_firewall0"
+    windows_firewall = "windows_firewall"
+    linux_firewall = "linux_firewall"
 
     @classmethod
     def _missing_(cls, value):
@@ -87,8 +87,22 @@ class InvokeActiveResponseRequest(BaseModel):
     arguments: list[str] = Field(default_factory=list)
     command: ActiveResponseCommand
     custom: bool = Field(True, const=True)
-    alert: Union[WindowsFirewallAlert, LinuxFirewallAlert]
+    alert: Dict[str, Any]
     params: ParamsModel
+
+    @root_validator(pre=True)
+    def create_alert(cls, values):
+        command = values.get('command')
+        alert = values.get('alert')
+        if command == ActiveResponseCommand.windows_firewall:
+            values['alert'] = WindowsFirewallAlert(**alert)
+        elif command == ActiveResponseCommand.linux_firewall:
+            values['alert'] = LinuxFirewallAlert(**alert)
+        else:
+            raise HTTPException(status_code=400, detail="Invalid command for alert")
+
+        return values
+
 
 
 class InvokeActiveResponseResponse(BaseModel):

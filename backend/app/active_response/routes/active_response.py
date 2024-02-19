@@ -48,14 +48,6 @@ async def read_markdown_file(file_path: str) -> str:
     async with aiofiles.open(file_path, "r") as file:
         return await file.read()
 
-
-def validate_alert_based_on_command(request: InvokeActiveResponseRequest):
-    if request.command == ActiveResponseCommand.windows_firewall and not isinstance(request.alert, WindowsFirewallAlert):
-        raise HTTPException(status_code=400, detail="Invalid alert parameters for windows_firewall command")
-    elif request.command == ActiveResponseCommand.linux_firewall and not isinstance(request.alert, LinuxFirewallAlert):
-        raise HTTPException(status_code=400, detail="Invalid alert parameters for linux_firewall command")
-
-
 @active_response_router.get(
     "/describe/{active_response_name}",
     response_model=ActiveResponse,
@@ -115,14 +107,15 @@ async def invoke_active_response_route(
     Returns:
         InvokeActiveResponseResponse: The response object indicating the success or failure of the active response invocation.
     """
-    validate_alert_based_on_command(request)
     logger.info(f"Invoking Wazuh Active Response...")
+    # Append '0' to the command - This is required for Wazuh Active Response
+    request.command = f"{request.command.value}0"
     # Create a dictionary with the request data
-    data_dict = {"command": request.command.value, "custom": request.custom, "arguments": request.arguments, "alert": request.alert.dict()}
+    data_dict = {"command": request.command, "custom": request.custom, "arguments": request.arguments, "alert": request.alert}
     await send_put_request(
         endpoint=request.endpoint,
         data=json.dumps(data_dict),
         params=request.params,
     )
 
-    return InvokeActiveResponseResponse(success=True, message="Wazuh Content Pack provisioned successfully")
+    return InvokeActiveResponseResponse(success=True, message="Wazuh Active Response invoked successfully")
