@@ -31,6 +31,7 @@ Method 1: Convert the Python script to an executable application
 ```powershell
 pyinstaller --log-level DEBUG --add-data "C:\Program Files (x86)\ossec-agent\libwazuhext.dll;." --add-data "C:\Program Files (x86)\ossec-agent\libwinpthread-1.dll;." --add-data "C:\Program Files (x86)\ossec-agent\libwazuhshared.dll;." -F <PATH_TO_CUSTOM-AR.PY>
 ```
+
 You can find the created `custom-ar.exe` executable in the `C:\Users\<USER>\dist\` directory.
 
 #. Copy the `custom-ar.exe` executable file to `C:\Program Files (x86)\ossec-agent\active-response\bin\` directory on the monitored endpoint.
@@ -41,7 +42,6 @@ You can find the created `custom-ar.exe` executable in the `C:\Users\<USER>\dist
       > Restart-Service -Name wazuh
 
 #. On the Wazuh server, add the `<command>` and `<active-response>` blocks below to the `/var/ossec/etc/ossec.conf` configuration file. This uses the `custom-ar.exe` executable for Windows endpoints.
-
 
 ```xml
 <command>

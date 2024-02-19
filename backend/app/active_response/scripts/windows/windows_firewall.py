@@ -72,12 +72,23 @@ def block_ip(ip):
     """Blocks an IP address on the Windows Firewall."""
     try:
         subprocess.run(
-            [r"C:\Windows\System32\netsh", "advfirewall", "firewall", "add", "rule", f"name=SOCFortress Block Outbound {ip}", "dir=out", "action=block", f"remoteip={ip}"],
+            [
+                r"C:\Windows\System32\netsh",
+                "advfirewall",
+                "firewall",
+                "add",
+                "rule",
+                f"name=SOCFortress Block Outbound {ip}",
+                "dir=out",
+                "action=block",
+                f"remoteip={ip}",
+            ],
             check=True,
         )
         return f"Blocked IP {ip} on Windows Firewall"
     except subprocess.CalledProcessError as e:
         return f"Failed to block IP {ip} on Windows Firewall: {e}"
+
 
 def remove_ip(ip):
     """Removes a blocked IP address from the Windows Firewall."""

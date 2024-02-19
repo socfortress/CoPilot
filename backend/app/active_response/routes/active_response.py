@@ -1,24 +1,28 @@
 import json
-
-from fastapi import APIRouter
 from pathlib import Path
-from fastapi import Depends
-from fastapi import HTTPException
-from fastapi.responses import JSONResponse
-from fastapi import Security
-import aiofiles
-from loguru import logger
-from sqlalchemy.ext.asyncio import AsyncSession
 
+import aiofiles
+from fastapi import APIRouter
+from fastapi import HTTPException
+from fastapi import Security
+from fastapi.responses import JSONResponse
+from loguru import logger
+
+from app.active_response.schema.active_response import ActiveResponse
+from app.active_response.schema.active_response import ActiveResponseCommand
+from app.active_response.schema.active_response import ActiveResponseDetails
+from app.active_response.schema.active_response import ActiveResponsesSupported
+from app.active_response.schema.active_response import ActiveResponsesSupportedResponse
+from app.active_response.schema.active_response import InvokeActiveResponseRequest
+from app.active_response.schema.active_response import InvokeActiveResponseResponse
+from app.active_response.schema.active_response import LinuxFirewallAlert
+from app.active_response.schema.active_response import WindowsFirewallAlert
 from app.auth.utils import AuthHandler
-from app.connectors.graylog.services.content_packs import get_content_packs
-from app.connectors.graylog.services.management import get_system_info
 from app.connectors.wazuh_manager.utils.universal import send_put_request
-from app.db.db_session import get_db
 from app.stack_provisioning.graylog.schema.provision import ProvisionGraylogResponse
-from app.active_response.schema.active_response import ActiveResponsesSupported, ActiveResponsesSupportedResponse, ActiveResponse, ActiveResponseDetails, InvokeActiveResponseRequest
 
 active_response_router = APIRouter()
+
 
 async def verify_active_response_name(active_response_name: str) -> None:
     """
@@ -28,6 +32,7 @@ async def verify_active_response_name(active_response_name: str) -> None:
     if active_response_name not in ActiveResponsesSupported.__members__:
         raise HTTPException(status_code=404, detail="Active Response not found")
 
+
 def get_markdown_content_path(directory: str, filename: str) -> str:
     """
     Get the path to the markdown content
@@ -35,12 +40,21 @@ def get_markdown_content_path(directory: str, filename: str) -> str:
     current_directory = Path(__file__).parent.parent
     return str(current_directory / f"scripts/{directory}/{filename}")
 
+
 async def read_markdown_file(file_path: str) -> str:
     """
     Read the content of a markdown file
     """
-    async with aiofiles.open(file_path, 'r') as file:
+    async with aiofiles.open(file_path, "r") as file:
         return await file.read()
+
+
+def validate_alert_based_on_command(request: InvokeActiveResponseRequest):
+    if request.command == ActiveResponseCommand.windows_firewall and not isinstance(request.alert, WindowsFirewallAlert):
+        raise HTTPException(status_code=400, detail="Invalid alert parameters for windows_firewall command")
+    elif request.command == ActiveResponseCommand.linux_firewall and not isinstance(request.alert, LinuxFirewallAlert):
+        raise HTTPException(status_code=400, detail="Invalid alert parameters for linux_firewall command")
+
 
 @active_response_router.get(
     "/describe/{active_response_name}",
@@ -75,48 +89,40 @@ async def get_supported_active_responses_route() -> ActiveResponsesSupportedResp
     Get the list of supported active responses
     """
     return ActiveResponsesSupportedResponse(
-        supported_active_responses=[ActiveResponse(name=active_response.name, description=active_response.value) for active_response in ActiveResponsesSupported],
+        supported_active_responses=[
+            ActiveResponse(name=active_response.name, description=active_response.value) for active_response in ActiveResponsesSupported
+        ],
         success=True,
         message="Supported Active Responses retrieved successfully",
     )
 
+
 @active_response_router.post(
     "/invoke",
-    response_model=ProvisionGraylogResponse,
-    description="Provision the Wazuh Content Pack in the Graylog instance",
+    response_model=InvokeActiveResponseResponse,
+    description="Invoke an active response",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def provision_wazuh_content_pack_route(
+async def invoke_active_response_route(
     request: InvokeActiveResponseRequest,
-    session: AsyncSession = Depends(get_db),
-) -> ProvisionGraylogResponse:
+) -> InvokeActiveResponseResponse:
     """
-    Provision the Wazuh Content Pack in the Graylog instance
+    Invoke an active response.
+
+    Args:
+        request (InvokeActiveResponseRequest): The request object containing the command, custom, arguments, and alert.
+
+    Returns:
+        InvokeActiveResponseResponse: The response object indicating the success or failure of the active response invocation.
     """
+    validate_alert_based_on_command(request)
     logger.info(f"Invoking Wazuh Active Response...")
-    logger.info(f"Request: {request}")
-    return None
+    # Create a dictionary with the request data
+    data_dict = {"command": request.command.value, "custom": request.custom, "arguments": request.arguments, "alert": request.alert.dict()}
     await send_put_request(
         endpoint=request.endpoint,
-        data=json.dumps(request.data.dict()),
+        data=json.dumps(data_dict),
         params=request.params,
     )
-    # await send_put_request(
-    #     endpoint="active-response",
-    #     data=json.dumps(
-    #         {
-    #             "arguments": [
-    #                 "add",
-    #             ],
-    #             "command": "windows_firewall0",
-    #             "custom": True,
-    #             "alert": {
-    #                 "action": "unblock",
-    #                 "ip": "3.3.3.3",
-    #             },
-    #         },
-    #     ),
-    #     params={"wait_for_complete": True, "agents_list": ["105"]},
-    # )
 
-    return ProvisionGraylogResponse(success=True, message="Wazuh Content Pack provisioned successfully")
+    return InvokeActiveResponseResponse(success=True, message="Wazuh Content Pack provisioned successfully")
