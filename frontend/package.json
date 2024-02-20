@@ -19,7 +19,7 @@
 		"test:e2e": "start-server-and-test preview http://localhost:4173/ 'cypress open --e2e'",
 		"test:e2e:ci": "start-server-and-test preview http://localhost:4173/ 'cypress run --e2e'",
 		"type-check": "vue-tsc --noEmit -p tsconfig.vitest.json --composite false",
-		"lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
+		"lint": "eslint . --ext .vue,.ts,.tsx,.cts,.mts --fix",
 		"tailwind-config-viewer": "tailwind-config-viewer -o",
 		"design-tokens": "node scripts/tokens-tool.js",
 		"start-server-old": "cd ../backend && uvicorn copilot:app --reload --port=5000",
@@ -29,7 +29,8 @@
 		"libs-check": "taze",
 		"libs-reload": "rm -rf node_modules package-lock.json && npm install",
 		"open:swagger": "open http://127.0.0.1:5000/docs#/",
-		"open:redoc": "open http://127.0.0.1:5000/redoc"
+		"open:redoc": "open http://127.0.0.1:5000/redoc",
+		"prettify": "prettier --write ."
 	},
 	"dependencies": {
 		"@ajoelp/json-to-formdata": "^1.5.0",
