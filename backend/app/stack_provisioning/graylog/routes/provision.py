@@ -9,7 +9,7 @@ from app.auth.utils import AuthHandler
 from app.connectors.graylog.services.content_packs import get_content_packs
 from app.connectors.graylog.services.management import get_system_info
 from app.db.db_session import get_db
-from app.stack_provisioning.graylog.schema.provision import ProvisionGraylogResponse
+from app.stack_provisioning.graylog.schema.provision import ProvisionGraylogResponse, AvailableContentPacksResponse, AvailableContentPacks
 from app.stack_provisioning.graylog.services.provision import (
     provision_wazuh_content_pack,
 )
@@ -80,6 +80,22 @@ async def does_content_pack_exist(content_pack_name: str) -> bool:
     logger.info(f"Content pack {content_pack_name} does not exist")
     return False
 
+@stack_provisioning_graylog_router.get(
+    "/graylog/available/content_packs",
+    response_model=AvailableContentPacksResponse,
+    description="Get the available content packs for provisioning in Graylog",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_available_content_packs_route() -> AvailableContentPacksResponse:
+    """
+    Get the available content packs for provisioning in Graylog
+    """
+    logger.info("Getting available content packs...")
+    return AvailableContentPacksResponse(
+        available_content_packs=[{"name": pack.name, "description": pack.value} for pack in AvailableContentPacks],
+        success=True,
+        message="Available content packs retrieved successfully",
+    )
 
 @stack_provisioning_graylog_router.post(
     "/graylog/wazuh",
