@@ -1,15 +1,22 @@
 {
 	"cSpell.words": [
 		"ajoelp",
+		"apexchart",
 		"colord",
+		"datejs",
+		"datetimesec",
 		"echarts",
+		"Healthcheck",
+		"majesticons",
 		"mimecast",
 		"picocolors",
 		"redoc",
 		"rushstack",
+		"sparkline",
 		"taze",
 		"uvicorn",
 		"venv",
-		"Wazuh"
+		"Wazuh",
+		"xaxis"
 	]
 }

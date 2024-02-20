@@ -288,6 +288,9 @@
 						/>
 					</div>
 				</n-tab-pane>
+				<n-tab-pane name="Assets" tab="Assets" display-directive="show:lazy">
+					<SocAlertAssetsList v-if="alert" :alert-id="alert.alert_id" />
+				</n-tab-pane>
 			</n-tabs>
 		</n-modal>
 	</n-spin>
@@ -306,6 +309,7 @@ import KVCard from "@/components/common/KVCard.vue"
 import SocAlertTimeline from "./SocAlertTimeline.vue"
 import SocAssignUser from "./SocAssignUser.vue"
 import SocAlertItemActions from "./SocAlertItemActions.vue"
+import SocAlertAssetsList from "./SocAlertAssetsList.vue"
 import "@/assets/scss/vuesjv-override.scss"
 import Api from "@/api"
 import {
