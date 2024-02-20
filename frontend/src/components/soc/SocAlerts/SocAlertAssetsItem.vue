@@ -12,6 +12,25 @@
 			<div class="main-box flex justify-between gap-4">
 				<div class="content">
 					<div class="title">{{ asset.asset_name }}</div>
+					<div class="description mt-2" v-if="asset.asset_description">
+						<template v-if="isUrl(asset.asset_description)">
+							<a
+								:href="asset.asset_description"
+								class="asset-url"
+								target="_blank"
+								alt="asset url"
+								rel="nofollow noopener noreferrer"
+							>
+								<code class="text-primary-color">
+									<span>
+										{{ asset.asset_description }}
+									</span>
+									<Icon :name="LinkIcon" :size="14" class="relative top-0.5" />
+								</code>
+							</a>
+						</template>
+						<template v-else>{{ excerpt }}</template>
+					</div>
 
 					<div class="badges-box flex flex-wrap items-center gap-3 mt-4">
 						<Badge type="splitted" v-if="asset.date_added">
@@ -82,16 +101,20 @@
 				</n-tab-pane>
 				<n-tab-pane name="Description" tab="Description" display-directive="show">
 					<div class="p-7 pt-4">
-						<n-input
-							:value="asset.asset_description"
-							type="textarea"
-							readonly
-							placeholder="Empty"
-							:autosize="{
-								minRows: 3,
-								maxRows: 10
-							}"
-						/>
+						<template v-if="isUrl(asset.asset_description)">
+							<a
+								:href="asset.asset_description"
+								class="asset-url"
+								target="_blank"
+								alt="asset url"
+								rel="nofollow noopener noreferrer"
+							>
+								{{ asset.asset_description }}
+							</a>
+						</template>
+						<template v-else>
+							<div v-html="descriptionFull"></div>
+						</template>
 					</div>
 				</n-tab-pane>
 			</n-tabs>
@@ -104,9 +127,10 @@ import Icon from "@/components/common/Icon.vue"
 import KVCard from "@/components/common/KVCard.vue"
 import Badge from "@/components/common/Badge.vue"
 import { computed, ref } from "vue"
-import { NModal, NTabs, NTabPane, NInput } from "naive-ui"
+import { NModal, NTabs, NTabPane } from "naive-ui"
 import _omit from "lodash/omit"
 import dayjs from "@/utils/dayjs"
+import { isUrl } from "@/utils"
 import type { SocAlertAsset } from "@/types/soc/asset.d"
 import { useRouter } from "vue-router"
 import { useSettingsStore } from "@/stores/settings"
@@ -120,6 +144,19 @@ const router = useRouter()
 const showDetails = ref(false)
 
 const dFormats = useSettingsStore().dateFormat
+
+const excerpt = computed(() => {
+	const text = asset.asset_description
+	const truncated = text.split(" ").slice(0, 30).join(" ")
+
+	return truncated + (truncated !== text ? "..." : "")
+})
+
+const descriptionFull = computed(() => {
+	const text = asset.asset_description
+
+	return text.replace(/\n/gim, "<br>") || "Empty"
+})
 
 const properties = computed(() => {
 	const props = _omit<Record<string, any>>(asset, ["asset_description", "asset_type"])
@@ -188,9 +225,30 @@ const formatDate = (date: string, useSec = false) => {
 	.main-box {
 		word-break: break-word;
 
-		.description {
-			color: var(--fg-secondary-color);
-			font-size: 13px;
+		.content {
+			max-width: 100%;
+
+			.description {
+				color: var(--fg-secondary-color);
+				font-size: 13px;
+
+				.asset-url {
+					display: block;
+
+					code {
+						padding: 8px 12px;
+						display: flex;
+						gap: 10px;
+
+						span {
+							white-space: nowrap;
+							flex-grow: 1;
+							overflow: hidden;
+							text-overflow: ellipsis;
+						}
+					}
+				}
+			}
 		}
 	}
 
