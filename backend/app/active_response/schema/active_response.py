@@ -33,6 +33,7 @@ class ActiveResponseDetails(BaseModel):
     class Config:
         json_encoders = {str: lambda v: v.encode("utf-8", "ignore").decode("utf-8")}
 
+
 class ActiveResponseDetailsResponse(BaseModel):
     success: bool
     message: str
