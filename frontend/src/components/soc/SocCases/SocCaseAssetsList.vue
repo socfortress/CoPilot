@@ -28,7 +28,7 @@ import Api from "@/api"
 import { useMessage, NSpin, NEmpty } from "naive-ui"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
-import type { SocAsset, SocAssetsState } from "@/types/soc/asset.d"
+import type { SocCaseAsset, SocCaseAssetsState } from "@/types/soc/asset.d"
 import { onBeforeMount } from "vue"
 
 const { caseId } = defineProps<{ caseId: string | number }>()
@@ -36,8 +36,8 @@ const { caseId } = defineProps<{ caseId: string | number }>()
 const loadingAssets = ref(false)
 const message = useMessage()
 
-const assetsList = ref<SocAsset[] | null>(null)
-const assetsState = ref<SocAssetsState | null>(null)
+const assetsList = ref<SocCaseAsset[] | null>(null)
+const assetsState = ref<SocCaseAssetsState | null>(null)
 
 const dFormats = useSettingsStore().dateFormat
 

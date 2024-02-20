@@ -65,7 +65,7 @@ class RotationStrategyConfig(BaseModel):
     type: str
     rotation_period: str = Field(..., alias="rotation_period")
     max_rotation_period: Optional[str] = Field(None, alias="max_rotation_period")
-    rotate_empty_index_set: bool = Field(..., alias="rotate_empty_index_set")
+    rotate_empty_index_set: Optional[bool] = Field(None, alias="rotate_empty_index_set")
 
 
 class RetentionStrategyConfig(BaseModel):

@@ -18,6 +18,8 @@ from app.integrations.sap_siem.schema.sap_siem import InvokeSAPSiemResponse
 from app.integrations.sap_siem.schema.sap_siem import IrisCasePayload
 from app.integrations.sap_siem.schema.sap_siem import SapSiemWazuhIndexerResponse
 from app.integrations.sap_siem.schema.sap_siem import SuspiciousLogin
+from app.integrations.utils.alerts import send_to_shuffle
+from app.integrations.utils.schema import ShufflePayload
 from app.utils import get_customer_alert_settings
 
 # Global set to keep track of IPs that have already been checked
@@ -49,6 +51,18 @@ async def handle_common_suspicious_login_tasks(
     user_activity = await collect_user_activity(suspicious_login)
     await handle_user_activity(user_activity, unique_instances, case.data.case_id)
     await mark_as_checked(suspicious_login)
+    alert_source_link = (await get_customer_alert_settings(suspicious_login.customer_code, session=session)).shuffle_endpoint
+    await send_to_shuffle(
+        ShufflePayload(
+            alert_id=case.data.case_id,
+            customer=suspicious_login.customer_code,
+            customer_code=suspicious_login.customer_code,
+            alert_source_link=f"{alert_source_link}/case?cid={case.data.case_id}",
+            rule_description=f"{case.data.case_name}",
+            hostname=suspicious_login.ip,
+        ),
+        session=session,
+    )
 
 
 async def handle_suspicious_login_multiple(suspicious_login, unique_instances, case_ids, session: AsyncSession):

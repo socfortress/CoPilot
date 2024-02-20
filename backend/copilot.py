@@ -22,6 +22,7 @@ from app.middleware.exception_handlers import custom_http_exception_handler
 from app.middleware.exception_handlers import validation_exception_handler
 from app.middleware.exception_handlers import value_error_handler
 from app.middleware.logger import log_requests
+from app.routers import active_response
 from app.routers import agents
 from app.routers import alert_creation
 from app.routers import alert_creation_settings
@@ -46,6 +47,7 @@ from app.routers import sap_siem
 from app.routers import scheduler
 from app.routers import shuffle
 from app.routers import smtp
+from app.routers import stack_provisioning
 from app.routers import sublime
 from app.routers import threat_intel
 from app.routers import velociraptor
@@ -117,6 +119,8 @@ api_router.include_router(mimecast.router)
 api_router.include_router(scheduler.router)
 api_router.include_router(monitoring_alert.router)
 api_router.include_router(sap_siem.router)
+api_router.include_router(stack_provisioning.router)
+api_router.include_router(active_response.router)
 
 # Include the APIRouter in the FastAPI app
 app.include_router(api_router)

@@ -26,8 +26,8 @@ class CaseModel(BaseModel):
     opened_by_user_id: int
     owner: str
     owner_id: int
-    state_id: int
-    state_name: str
+    state_id: Optional[int] = Field(None, description="The ID of the state the case is in.")
+    state_name: Optional[str] = Field(None, description="The name of the state the case is in.")
     customer_code: str
 
 

@@ -2,7 +2,7 @@ import { type FlaskBaseResponse } from "@/types/flask.d"
 import { HttpClient } from "./httpClient"
 import type { SocAlert, SocAlertCaseResponse } from "@/types/soc/alert.d"
 import type { SocCase, SocCaseExt } from "@/types/soc/case.d"
-import type { SocAsset, SocAssetsState } from "@/types/soc/asset.d"
+import type { SocAlertAsset, SocCaseAsset, SocCaseAssetsState } from "@/types/soc/asset.d"
 import type { SocNewNote, SocNote } from "@/types/soc/note.d"
 import type { SocUser } from "@/types/soc/user.d"
 
@@ -47,6 +47,9 @@ export default {
 			`/soc/alerts/alerts_by_user/${userId}`,
 			signal ? { signal } : {}
 		)
+	},
+	getAssetsByAlert(alertId: string) {
+		return HttpClient.get<FlaskBaseResponse & { assets: SocAlertAsset[] }>(`/soc/alerts/assets/${alertId}`)
 	},
 	addAlertBookmark(alertId: string) {
 		return HttpClient.post<FlaskBaseResponse & { alert: SocAlert }>(`/soc/alerts/bookmark/${alertId}`)
@@ -111,7 +114,7 @@ export default {
 		)
 	},
 	getAssetsByCase(caseId: string) {
-		return HttpClient.get<FlaskBaseResponse & { assets: SocAsset[]; state: SocAssetsState }>(
+		return HttpClient.get<FlaskBaseResponse & { assets: SocCaseAsset[]; state: SocCaseAssetsState }>(
 			`/soc/assets/${caseId}`
 		)
 	},

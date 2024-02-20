@@ -6,6 +6,7 @@ from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.utils import AuthHandler
+from app.connectors.dfir_iris.schema.alerts import AlertAssetsResponse
 from app.connectors.dfir_iris.schema.alerts import AlertResponse
 from app.connectors.dfir_iris.schema.alerts import AlertsResponse
 from app.connectors.dfir_iris.schema.alerts import BookmarkedAlertsResponse
@@ -13,6 +14,7 @@ from app.connectors.dfir_iris.schema.alerts import CaseCreationResponse
 from app.connectors.dfir_iris.schema.alerts import DeleteAlertResponse
 from app.connectors.dfir_iris.schema.alerts import DeleteMultipleAlertsRequest
 from app.connectors.dfir_iris.schema.alerts import FilterAlertsRequest
+from app.connectors.dfir_iris.schema.alerts import IrisAsset
 from app.connectors.dfir_iris.services.alerts import bookmark_alert
 from app.connectors.dfir_iris.services.alerts import create_case
 from app.connectors.dfir_iris.services.alerts import delete_alert
@@ -108,6 +110,35 @@ async def get_alert_by_id(
     """
     logger.info(f"Fetching alert {alert_id}")
     return await get_alert(alert_id=alert_id, session=session)
+
+
+@dfir_iris_alerts_router.get(
+    "/assets/{alert_id}",
+    response_model=AlertAssetsResponse,
+    description="Get all assets associated with an alert",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_assets_by_alert_id(
+    alert_id: str = Depends(verify_alert_exists),
+    session: AsyncSession = Depends(get_db),
+) -> AlertAssetsResponse:
+    """
+    Retrieve  the list of assets associated with an alert by its ID.
+
+    Args:
+        alert_id (str): The ID of the alert to retrieve.
+
+    Returns:
+        AlertResponse: The response containing the alert information.
+    """
+    logger.info(f"Fetching assets for alert {alert_id}")
+    assets_data = (await get_alert(alert_id=alert_id, session=session)).alert["assets"]
+    assets = [IrisAsset(**asset) for asset in assets_data]  # Parse the assets data into Asset objects
+    return AlertAssetsResponse(
+        success=True,
+        message="Successfully fetched assets",
+        assets=assets,
+    )
 
 
 @dfir_iris_alerts_router.get(

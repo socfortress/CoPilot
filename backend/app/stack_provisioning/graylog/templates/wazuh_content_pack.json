@@ -1,0 +1,4138 @@
+{
+	"id": "261577fe-d9a2-4141-af74-635f085eee54",
+	"rev": 1,
+	"v": "1",
+	"name": "SOCFORTRESS_WAZUH_CONTENT_PACK",
+	"summary": "Content Pack for Wazuh",
+	"description": "",
+	"vendor": "SOCFortress - info@socfortress.co",
+	"url": "https://github.com/socfortress/CoPilot/tree/main/backend/app/stack_provisioning/graylog/templates/wazuh_content_pack.json",
+	"created_at": "2024-02-17T15:43:29.597Z",
+	"server_version": "5.0.13+083613e",
+	"parameters": [],
+	"entities": [
+		{
+			"id": "4fbce4a8-897e-4c2f-8030-8fa884c34fd8",
+			"type": {
+				"name": "input",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "WAZUH EVENTS FLUENT BIT - TCP"
+				},
+				"configuration": {
+					"tls_key_file": {
+						"@type": "string",
+						"@value": "soc-syslog-manager"
+					},
+					"port": {
+						"@type": "integer",
+						"@value": 5555
+					},
+					"tls_enable": {
+						"@type": "boolean",
+						"@value": false
+					},
+					"use_null_delimiter": {
+						"@type": "boolean",
+						"@value": false
+					},
+					"recv_buffer_size": {
+						"@type": "integer",
+						"@value": 1048576
+					},
+					"tcp_keepalive": {
+						"@type": "boolean",
+						"@value": false
+					},
+					"tls_client_auth_cert_file": {
+						"@type": "string",
+						"@value": ""
+					},
+					"bind_address": {
+						"@type": "string",
+						"@value": "0.0.0.0"
+					},
+					"tls_cert_file": {
+						"@type": "string",
+						"@value": ""
+					},
+					"max_message_size": {
+						"@type": "integer",
+						"@value": 2097152
+					},
+					"tls_client_auth": {
+						"@type": "string",
+						"@value": "disabled"
+					},
+					"number_worker_threads": {
+						"@type": "integer",
+						"@value": 8
+					},
+					"tls_key_password": {
+						"@type": "string",
+						"@value": "na)R]Q`7q9>qxjqLdn-T[=sX"
+					}
+				},
+				"static_fields": {
+					"syslog_type": {
+						"@type": "string",
+						"@value": "wazuh"
+					}
+				},
+				"type": {
+					"@type": "string",
+					"@value": "org.graylog2.inputs.raw.tcp.RawTCPInput"
+				},
+				"global": {
+					"@type": "boolean",
+					"@value": false
+				},
+				"extractors": [
+					{
+						"target_field": {
+							"@type": "string",
+							"@value": ""
+						},
+						"condition_value": {
+							"@type": "string",
+							"@value": ""
+						},
+						"order": {
+							"@type": "integer",
+							"@value": 0
+						},
+						"converters": [],
+						"configuration": {
+							"list_separator": {
+								"@type": "string",
+								"@value": ", "
+							},
+							"kv_separator": {
+								"@type": "string",
+								"@value": ":"
+							},
+							"key_prefix": {
+								"@type": "string",
+								"@value": ""
+							},
+							"key_separator": {
+								"@type": "string",
+								"@value": "_"
+							},
+							"replace_key_whitespace": {
+								"@type": "boolean",
+								"@value": false
+							},
+							"key_whitespace_replacement": {
+								"@type": "string",
+								"@value": "_"
+							}
+						},
+						"source_field": {
+							"@type": "string",
+							"@value": "message"
+						},
+						"title": {
+							"@type": "string",
+							"@value": "FLUENTD - JSON EXTRACTOR"
+						},
+						"type": {
+							"@type": "string",
+							"@value": "JSON"
+						},
+						"cursor_strategy": {
+							"@type": "string",
+							"@value": "COPY"
+						},
+						"condition_type": {
+							"@type": "string",
+							"@value": "NONE"
+						}
+					},
+					{
+						"target_field": {
+							"@type": "string",
+							"@value": "hash_sha256"
+						},
+						"condition_value": {
+							"@type": "string",
+							"@value": "SHA256"
+						},
+						"order": {
+							"@type": "integer",
+							"@value": 10
+						},
+						"converters": [],
+						"configuration": {
+							"index": {
+								"@type": "integer",
+								"@value": 3
+							},
+							"split_by": {
+								"@type": "string",
+								"@value": ","
+							}
+						},
+						"source_field": {
+							"@type": "string",
+							"@value": "data_win_eventdata_hashes"
+						},
+						"title": {
+							"@type": "string",
+							"@value": "FILE HASHES 1 - SHA256"
+						},
+						"type": {
+							"@type": "string",
+							"@value": "SPLIT_AND_INDEX"
+						},
+						"cursor_strategy": {
+							"@type": "string",
+							"@value": "COPY"
+						},
+						"condition_type": {
+							"@type": "string",
+							"@value": "STRING"
+						}
+					},
+					{
+						"target_field": {
+							"@type": "string",
+							"@value": "sha256"
+						},
+						"condition_value": {
+							"@type": "string",
+							"@value": "SHA256"
+						},
+						"order": {
+							"@type": "integer",
+							"@value": 12
+						},
+						"converters": [],
+						"configuration": {
+							"index": {
+								"@type": "integer",
+								"@value": 2
+							},
+							"split_by": {
+								"@type": "string",
+								"@value": "="
+							}
+						},
+						"source_field": {
+							"@type": "string",
+							"@value": "hash_sha256"
+						},
+						"title": {
+							"@type": "string",
+							"@value": "SHA256 FILE HASH EXTRACTOR"
+						},
+						"type": {
+							"@type": "string",
+							"@value": "SPLIT_AND_INDEX"
+						},
+						"cursor_strategy": {
+							"@type": "string",
+							"@value": "COPY"
+						},
+						"condition_type": {
+							"@type": "string",
+							"@value": "STRING"
+						}
+					},
+					{
+						"target_field": {
+							"@type": "string",
+							"@value": "hash_sha256"
+						},
+						"condition_value": {
+							"@type": "string",
+							"@value": "SHA256"
+						},
+						"order": {
+							"@type": "integer",
+							"@value": 11
+						},
+						"converters": [],
+						"configuration": {
+							"index": {
+								"@type": "integer",
+								"@value": 3
+							},
+							"split_by": {
+								"@type": "string",
+								"@value": ","
+							}
+						},
+						"source_field": {
+							"@type": "string",
+							"@value": "data_win_eventdata_hash"
+						},
+						"title": {
+							"@type": "string",
+							"@value": "FILE HASHES 2 - SHA256"
+						},
+						"type": {
+							"@type": "string",
+							"@value": "SPLIT_AND_INDEX"
+						},
+						"cursor_strategy": {
+							"@type": "string",
+							"@value": "COPY"
+						},
+						"condition_type": {
+							"@type": "string",
+							"@value": "STRING"
+						}
+					},
+					{
+						"target_field": {
+							"@type": "string",
+							"@value": "rule_group3"
+						},
+						"condition_value": {
+							"@type": "string",
+							"@value": ""
+						},
+						"order": {
+							"@type": "integer",
+							"@value": 7
+						},
+						"converters": [],
+						"configuration": {
+							"index": {
+								"@type": "integer",
+								"@value": 3
+							},
+							"split_by": {
+								"@type": "string",
+								"@value": ","
+							}
+						},
+						"source_field": {
+							"@type": "string",
+							"@value": "rule_groups"
+						},
+						"title": {
+							"@type": "string",
+							"@value": "WAZUH RULE GROUPS SPLIT 3"
+						},
+						"type": {
+							"@type": "string",
+							"@value": "SPLIT_AND_INDEX"
+						},
+						"cursor_strategy": {
+							"@type": "string",
+							"@value": "COPY"
+						},
+						"condition_type": {
+							"@type": "string",
+							"@value": "NONE"
+						}
+					},
+					{
+						"target_field": {
+							"@type": "string",
+							"@value": "rule_group2"
+						},
+						"condition_value": {
+							"@type": "string",
+							"@value": ""
+						},
+						"order": {
+							"@type": "integer",
+							"@value": 6
+						},
+						"converters": [],
+						"configuration": {
+							"index": {
+								"@type": "integer",
+								"@value": 2
+							},
+							"split_by": {
+								"@type": "string",
+								"@value": ","
+							}
+						},
+						"source_field": {
+							"@type": "string",
+							"@value": "rule_groups"
+						},
+						"title": {
+							"@type": "string",
+							"@value": "WAZUH RULE GROUPS SPLIT 2"
+						},
+						"type": {
+							"@type": "string",
+							"@value": "SPLIT_AND_INDEX"
+						},
+						"cursor_strategy": {
+							"@type": "string",
+							"@value": "COPY"
+						},
+						"condition_type": {
+							"@type": "string",
+							"@value": "NONE"
+						}
+					},
+					{
+						"target_field": {
+							"@type": "string",
+							"@value": "rule_group1"
+						},
+						"condition_value": {
+							"@type": "string",
+							"@value": ""
+						},
+						"order": {
+							"@type": "integer",
+							"@value": 5
+						},
+						"converters": [],
+						"configuration": {
+							"index": {
+								"@type": "integer",
+								"@value": 1
+							},
+							"split_by": {
+								"@type": "string",
+								"@value": ","
+							}
+						},
+						"source_field": {
+							"@type": "string",
+							"@value": "rule_groups"
+						},
+						"title": {
+							"@type": "string",
+							"@value": "WAZUH RULE GROUPS SPLIT"
+						},
+						"type": {
+							"@type": "string",
+							"@value": "SPLIT_AND_INDEX"
+						},
+						"cursor_strategy": {
+							"@type": "string",
+							"@value": "COPY"
+						},
+						"condition_type": {
+							"@type": "string",
+							"@value": "NONE"
+						}
+					},
+					{
+						"target_field": {
+							"@type": "string",
+							"@value": "powershell_host_version"
+						},
+						"condition_value": {
+							"@type": "string",
+							"@value": ""
+						},
+						"order": {
+							"@type": "integer",
+							"@value": 2
+						},
+						"converters": [],
+						"configuration": {
+							"regex_value": {
+								"@type": "string",
+								"@value": "HostVersion=(\\d+.\\d+.\\d+.\\d+)"
+							}
+						},
+						"source_field": {
+							"@type": "string",
+							"@value": "data_win_eventdata_data"
+						},
+						"title": {
+							"@type": "string",
+							"@value": "Powershell Host Version"
+						},
+						"type": {
+							"@type": "string",
+							"@value": "REGEX"
+						},
+						"cursor_strategy": {
+							"@type": "string",
+							"@value": "COPY"
+						},
+						"condition_type": {
+							"@type": "string",
+							"@value": "NONE"
+						}
+					},
+					{
+						"target_field": {
+							"@type": "string",
+							"@value": "data_win_eventdata_rv_json"
+						},
+						"condition_value": {
+							"@type": "string",
+							"@value": ""
+						},
+						"order": {
+							"@type": "integer",
+							"@value": 8
+						},
+						"converters": [],
+						"configuration": {
+							"regex": {
+								"@type": "string",
+								"@value": "\\\\\\\""
+							},
+							"replacement": {
+								"@type": "string",
+								"@value": "\\\""
+							},
+							"replace_all": {
+								"@type": "boolean",
+								"@value": true
+							}
+						},
+						"source_field": {
+							"@type": "string",
+							"@value": "data_win_eventdata_rv"
+						},
+						"title": {
+							"@type": "string",
+							"@value": "EXTRACT JSON FROM F-SECURE MESSAGE"
+						},
+						"type": {
+							"@type": "string",
+							"@value": "REGEX_REPLACE"
+						},
+						"cursor_strategy": {
+							"@type": "string",
+							"@value": "CUT"
+						},
+						"condition_type": {
+							"@type": "string",
+							"@value": "NONE"
+						}
+					},
+					{
+						"target_field": {
+							"@type": "string",
+							"@value": ""
+						},
+						"condition_value": {
+							"@type": "string",
+							"@value": ""
+						},
+						"order": {
+							"@type": "integer",
+							"@value": 13
+						},
+						"converters": [],
+						"configuration": {
+							"list_separator": {
+								"@type": "string",
+								"@value": ", "
+							},
+							"kv_separator": {
+								"@type": "string",
+								"@value": ":"
+							},
+							"key_prefix": {
+								"@type": "string",
+								"@value": "misp_"
+							},
+							"key_separator": {
+								"@type": "string",
+								"@value": "_"
+							},
+							"replace_key_whitespace": {
+								"@type": "boolean",
+								"@value": false
+							},
+							"key_whitespace_replacement": {
+								"@type": "string",
+								"@value": "_"
+							}
+						},
+						"source_field": {
+							"@type": "string",
+							"@value": "misp_Event"
+						},
+						"title": {
+							"@type": "string",
+							"@value": "MISP EVENT JSON EXTRACTOR"
+						},
+						"type": {
+							"@type": "string",
+							"@value": "JSON"
+						},
+						"cursor_strategy": {
+							"@type": "string",
+							"@value": "COPY"
+						},
+						"condition_type": {
+							"@type": "string",
+							"@value": "NONE"
+						}
+					},
+					{
+						"target_field": {
+							"@type": "string",
+							"@value": ""
+						},
+						"condition_value": {
+							"@type": "string",
+							"@value": ""
+						},
+						"order": {
+							"@type": "integer",
+							"@value": 9
+						},
+						"converters": [],
+						"configuration": {
+							"list_separator": {
+								"@type": "string",
+								"@value": ", "
+							},
+							"kv_separator": {
+								"@type": "string",
+								"@value": ":"
+							},
+							"key_prefix": {
+								"@type": "string",
+								"@value": ""
+							},
+							"key_separator": {
+								"@type": "string",
+								"@value": "_"
+							},
+							"replace_key_whitespace": {
+								"@type": "boolean",
+								"@value": false
+							},
+							"key_whitespace_replacement": {
+								"@type": "string",
+								"@value": "_"
+							}
+						},
+						"source_field": {
+							"@type": "string",
+							"@value": "data_win_eventdata_rv_json"
+						},
+						"title": {
+							"@type": "string",
+							"@value": "EXTRACT KEY VALUE PAIRS FROM JSON F-SECURE MESSAGE"
+						},
+						"type": {
+							"@type": "string",
+							"@value": "JSON"
+						},
+						"cursor_strategy": {
+							"@type": "string",
+							"@value": "CUT"
+						},
+						"condition_type": {
+							"@type": "string",
+							"@value": "NONE"
+						}
+					},
+					{
+						"target_field": {
+							"@type": "string",
+							"@value": "imphash"
+						},
+						"condition_value": {
+							"@type": "string",
+							"@value": ""
+						},
+						"order": {
+							"@type": "integer",
+							"@value": 4
+						},
+						"converters": [
+							{
+								"type": {
+									"@type": "string",
+									"@value": "TOKENIZER"
+								},
+								"configuration": {}
+							}
+						],
+						"configuration": {
+							"index": {
+								"@type": "integer",
+								"@value": 4
+							},
+							"split_by": {
+								"@type": "string",
+								"@value": ","
+							}
+						},
+						"source_field": {
+							"@type": "string",
+							"@value": "data_win_eventdata_hash"
+						},
+						"title": {
+							"@type": "string",
+							"@value": "Extracted IMPHASH"
+						},
+						"type": {
+							"@type": "string",
+							"@value": "SPLIT_AND_INDEX"
+						},
+						"cursor_strategy": {
+							"@type": "string",
+							"@value": "COPY"
+						},
+						"condition_type": {
+							"@type": "string",
+							"@value": "NONE"
+						}
+					},
+					{
+						"target_field": {
+							"@type": "string",
+							"@value": "powershell_engine_version"
+						},
+						"condition_value": {
+							"@type": "string",
+							"@value": ""
+						},
+						"order": {
+							"@type": "integer",
+							"@value": 3
+						},
+						"converters": [],
+						"configuration": {
+							"regex_value": {
+								"@type": "string",
+								"@value": "EngineVersion=(\\d+.\\d+.\\d+.\\d+)"
+							}
+						},
+						"source_field": {
+							"@type": "string",
+							"@value": "data_win_eventdata_data"
+						},
+						"title": {
+							"@type": "string",
+							"@value": "Powershell Engine Version"
+						},
+						"type": {
+							"@type": "string",
+							"@value": "REGEX"
+						},
+						"cursor_strategy": {
+							"@type": "string",
+							"@value": "COPY"
+						},
+						"condition_type": {
+							"@type": "string",
+							"@value": "NONE"
+						}
+					},
+					{
+						"target_field": {
+							"@type": "string",
+							"@value": ""
+						},
+						"condition_value": {
+							"@type": "string",
+							"@value": ""
+						},
+						"order": {
+							"@type": "integer",
+							"@value": 14
+						},
+						"converters": [],
+						"configuration": {
+							"list_separator": {
+								"@type": "string",
+								"@value": ", "
+							},
+							"kv_separator": {
+								"@type": "string",
+								"@value": ":"
+							},
+							"key_prefix": {
+								"@type": "string",
+								"@value": "opencti_json_"
+							},
+							"key_separator": {
+								"@type": "string",
+								"@value": "_"
+							},
+							"replace_key_whitespace": {
+								"@type": "boolean",
+								"@value": false
+							},
+							"key_whitespace_replacement": {
+								"@type": "string",
+								"@value": "_"
+							}
+						},
+						"source_field": {
+							"@type": "string",
+							"@value": "opencti_source"
+						},
+						"title": {
+							"@type": "string",
+							"@value": "OPENCTI JSON EXTRACTOR I"
+						},
+						"type": {
+							"@type": "string",
+							"@value": "JSON"
+						},
+						"cursor_strategy": {
+							"@type": "string",
+							"@value": "COPY"
+						},
+						"condition_type": {
+							"@type": "string",
+							"@value": "NONE"
+						}
+					},
+					{
+						"target_field": {
+							"@type": "string",
+							"@value": "msg_timestamp"
+						},
+						"condition_value": {
+							"@type": "string",
+							"@value": ""
+						},
+						"order": {
+							"@type": "integer",
+							"@value": 1
+						},
+						"converters": [
+							{
+								"type": {
+									"@type": "string",
+									"@value": "DATE"
+								},
+								"configuration": {
+									"date_format": {
+										"@type": "string",
+										"@value": "yyyy-MM-dd'T'HH:mm:ss.SSS"
+									},
+									"time_zone": {
+										"@type": "string",
+										"@value": "Etc/UTC"
+									}
+								}
+							}
+						],
+						"configuration": {
+							"regex_value": {
+								"@type": "string",
+								"@value": "\"timestamp\":\"([^\"]*)\\+0000\""
+							}
+						},
+						"source_field": {
+							"@type": "string",
+							"@value": "message"
+						},
+						"title": {
+							"@type": "string",
+							"@value": "MSG_TIMESTAMP"
+						},
+						"type": {
+							"@type": "string",
+							"@value": "REGEX"
+						},
+						"cursor_strategy": {
+							"@type": "string",
+							"@value": "COPY"
+						},
+						"condition_type": {
+							"@type": "string",
+							"@value": "NONE"
+						}
+					}
+				]
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "9b317b42-770d-46fb-b740-96c679c38f73",
+			"type": {
+				"name": "lookup_adapter",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"_scope": {
+					"@type": "string",
+					"@value": "DEFAULT"
+				},
+				"name": {
+					"@type": "string",
+					"@value": "software-vendors"
+				},
+				"title": {
+					"@type": "string",
+					"@value": "Software Vendors"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "List of Approved Software Vendors"
+				},
+				"configuration": {
+					"type": {
+						"@type": "string",
+						"@value": "csvfile"
+					},
+					"path": {
+						"@type": "string",
+						"@value": "/etc/graylog/software_vendors.csv"
+					},
+					"separator": {
+						"@type": "string",
+						"@value": ","
+					},
+					"quotechar": {
+						"@type": "string",
+						"@value": "\""
+					},
+					"key_column": {
+						"@type": "string",
+						"@value": "vendor"
+					},
+					"value_column": {
+						"@type": "string",
+						"@value": "approved"
+					},
+					"check_interval": {
+						"@type": "long",
+						"@value": 60
+					},
+					"case_insensitive_lookup": {
+						"@type": "boolean",
+						"@value": true
+					}
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "41437203-db84-46a2-9ea1-0db7ed2c699e",
+			"type": {
+				"name": "lookup_adapter",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"_scope": {
+					"@type": "string",
+					"@value": "DEFAULT"
+				},
+				"name": {
+					"@type": "string",
+					"@value": "nist-800-53-to-cui-controls"
+				},
+				"title": {
+					"@type": "string",
+					"@value": "NIST 800-53 TO CUI CONTROLS"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "NIST 800-53 TO CUI CONTROLS"
+				},
+				"configuration": {
+					"type": {
+						"@type": "string",
+						"@value": "csvfile"
+					},
+					"path": {
+						"@type": "string",
+						"@value": "/etc/graylog/nist_800_53_to_cui.csv"
+					},
+					"separator": {
+						"@type": "string",
+						"@value": ","
+					},
+					"quotechar": {
+						"@type": "string",
+						"@value": "\""
+					},
+					"key_column": {
+						"@type": "string",
+						"@value": "nist_800_53"
+					},
+					"value_column": {
+						"@type": "string",
+						"@value": "cui"
+					},
+					"check_interval": {
+						"@type": "long",
+						"@value": 60
+					},
+					"case_insensitive_lookup": {
+						"@type": "boolean",
+						"@value": false
+					}
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "5f2980e7-a0ea-46f1-99aa-da8b93365663",
+			"type": {
+				"name": "lookup_adapter",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"_scope": {
+					"@type": "string",
+					"@value": "DEFAULT"
+				},
+				"name": {
+					"@type": "string",
+					"@value": "epss"
+				},
+				"title": {
+					"@type": "string",
+					"@value": "EPSS"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "https://www.first.org/epss/api - Get CVE Score"
+				},
+				"configuration": {
+					"type": {
+						"@type": "string",
+						"@value": "httpjsonpath"
+					},
+					"url": {
+						"@type": "string",
+						"@value": "https://api.first.org/data/v1/epss?cve=${key}"
+					},
+					"single_value_jsonpath": {
+						"@type": "string",
+						"@value": "$.status"
+					},
+					"multi_value_jsonpath": {
+						"@type": "string",
+						"@value": "$.data[0]"
+					},
+					"user_agent": {
+						"@type": "string",
+						"@value": "Graylog Lookup - https://www.graylog.org/"
+					}
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "1405cf60-dda4-43d4-bb60-53ceb06e1bf1",
+			"type": {
+				"name": "lookup_adapter",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"_scope": {
+					"@type": "string",
+					"@value": "DEFAULT"
+				},
+				"name": {
+					"@type": "string",
+					"@value": "socfortress-threat-intel"
+				},
+				"title": {
+					"@type": "string",
+					"@value": "SOCFortress Threat Intel"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "SOCFortress Threat Intel"
+				},
+				"configuration": {
+					"type": {
+						"@type": "string",
+						"@value": "httpjsonpath"
+					},
+					"url": {
+						"@type": "string",
+						"@value": "https://intel.socfortress.co/search?value=${key}"
+					},
+					"single_value_jsonpath": {
+						"@type": "string",
+						"@value": "$.success"
+					},
+					"multi_value_jsonpath": {
+						"@type": "string",
+						"@value": "$.data"
+					},
+					"user_agent": {
+						"@type": "string",
+						"@value": "curl/7.74.0"
+					},
+					"headers": {
+						"Content-Type": {
+							"@type": "string",
+							"@value": "application/json"
+						},
+						"module-version": {
+							"@type": "string",
+							"@value": "1.0"
+						},
+						"x-api-key": {
+							"@type": "string",
+							"@value": "REPLACE_ME"
+						}
+					}
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "731af176-a847-4a28-bf32-bd5ba4462d79",
+			"type": {
+				"name": "lookup_adapter",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"_scope": {
+					"@type": "string",
+					"@value": "DEFAULT"
+				},
+				"name": {
+					"@type": "string",
+					"@value": "network-ports"
+				},
+				"title": {
+					"@type": "string",
+					"@value": "Network Ports"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "List of Common Network Ports"
+				},
+				"configuration": {
+					"type": {
+						"@type": "string",
+						"@value": "csvfile"
+					},
+					"path": {
+						"@type": "string",
+						"@value": "/etc/graylog/network_ports.csv"
+					},
+					"separator": {
+						"@type": "string",
+						"@value": ","
+					},
+					"quotechar": {
+						"@type": "string",
+						"@value": "\""
+					},
+					"key_column": {
+						"@type": "string",
+						"@value": "port"
+					},
+					"value_column": {
+						"@type": "string",
+						"@value": "common"
+					},
+					"check_interval": {
+						"@type": "long",
+						"@value": 60
+					},
+					"case_insensitive_lookup": {
+						"@type": "boolean",
+						"@value": true
+					}
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "009f38c0-0cf3-4010-8c8c-e4ea87e6f4f5",
+			"type": {
+				"name": "lookup_cache",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"_scope": {
+					"@type": "string",
+					"@value": "DEFAULT"
+				},
+				"name": {
+					"@type": "string",
+					"@value": "epss-cache"
+				},
+				"title": {
+					"@type": "string",
+					"@value": "EPSS Cache"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "EPSS Cache"
+				},
+				"configuration": {
+					"type": {
+						"@type": "string",
+						"@value": "guava_cache"
+					},
+					"max_size": {
+						"@type": "integer",
+						"@value": 1000
+					},
+					"expire_after_access": {
+						"@type": "long",
+						"@value": 60
+					},
+					"expire_after_access_unit": {
+						"@type": "string",
+						"@value": "MINUTES"
+					},
+					"expire_after_write": {
+						"@type": "long",
+						"@value": 0
+					}
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "d8301ead-3d48-46bf-875f-7994a5dbe558",
+			"type": {
+				"name": "lookup_cache",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"_scope": {
+					"@type": "string",
+					"@value": "DEFAULT"
+				},
+				"name": {
+					"@type": "string",
+					"@value": "software-vendors"
+				},
+				"title": {
+					"@type": "string",
+					"@value": "Software Vendors"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "Cache of approved software vendors"
+				},
+				"configuration": {
+					"type": {
+						"@type": "string",
+						"@value": "guava_cache"
+					},
+					"max_size": {
+						"@type": "integer",
+						"@value": 1000
+					},
+					"expire_after_access": {
+						"@type": "long",
+						"@value": 60
+					},
+					"expire_after_access_unit": {
+						"@type": "string",
+						"@value": "SECONDS"
+					},
+					"expire_after_write": {
+						"@type": "long",
+						"@value": 0
+					}
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "55ff2d16-b318-4717-893f-fed63ca005fc",
+			"type": {
+				"name": "lookup_cache",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"_scope": {
+					"@type": "string",
+					"@value": "DEFAULT"
+				},
+				"name": {
+					"@type": "string",
+					"@value": "socfortress-threat-intel-cache"
+				},
+				"title": {
+					"@type": "string",
+					"@value": "SOCFortress Threat Intel Lookup Table"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "SOCFortress Threat Intel Lookup Table"
+				},
+				"configuration": {
+					"type": {
+						"@type": "string",
+						"@value": "guava_cache"
+					},
+					"max_size": {
+						"@type": "integer",
+						"@value": 1000
+					},
+					"expire_after_access": {
+						"@type": "long",
+						"@value": 60
+					},
+					"expire_after_access_unit": {
+						"@type": "string",
+						"@value": "MINUTES"
+					},
+					"expire_after_write": {
+						"@type": "long",
+						"@value": 0
+					}
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "2a2edc22-1d0b-4ebb-adc6-068d0017a602",
+			"type": {
+				"name": "lookup_cache",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"_scope": {
+					"@type": "string",
+					"@value": "DEFAULT"
+				},
+				"name": {
+					"@type": "string",
+					"@value": "network-ports"
+				},
+				"title": {
+					"@type": "string",
+					"@value": "Network Ports"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "Cache of common network ports"
+				},
+				"configuration": {
+					"type": {
+						"@type": "string",
+						"@value": "guava_cache"
+					},
+					"max_size": {
+						"@type": "integer",
+						"@value": 1000
+					},
+					"expire_after_access": {
+						"@type": "long",
+						"@value": 60
+					},
+					"expire_after_access_unit": {
+						"@type": "string",
+						"@value": "SECONDS"
+					},
+					"expire_after_write": {
+						"@type": "long",
+						"@value": 0
+					}
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "bf37d686-3cb7-4eeb-9eb9-e08c0adc724b",
+			"type": {
+				"name": "lookup_cache",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"_scope": {
+					"@type": "string",
+					"@value": "DEFAULT"
+				},
+				"name": {
+					"@type": "string",
+					"@value": "nist-800-53-to-cui-controls"
+				},
+				"title": {
+					"@type": "string",
+					"@value": "NIST 800-53 TO CUI CONTROLS"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "NIST 800-53 TO CUI CONTROLS"
+				},
+				"configuration": {
+					"type": {
+						"@type": "string",
+						"@value": "guava_cache"
+					},
+					"max_size": {
+						"@type": "integer",
+						"@value": 1000
+					},
+					"expire_after_access": {
+						"@type": "long",
+						"@value": 60
+					},
+					"expire_after_access_unit": {
+						"@type": "string",
+						"@value": "SECONDS"
+					},
+					"expire_after_write": {
+						"@type": "long",
+						"@value": 0
+					}
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "5d81905e-723d-4e57-9b2b-e088ffb5241d",
+			"type": {
+				"name": "lookup_table",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"default_single_value_type": {
+					"@type": "string",
+					"@value": "NULL"
+				},
+				"cache_name": {
+					"@type": "string",
+					"@value": "2a2edc22-1d0b-4ebb-adc6-068d0017a602"
+				},
+				"name": {
+					"@type": "string",
+					"@value": "network-ports"
+				},
+				"default_multi_value_type": {
+					"@type": "string",
+					"@value": "NULL"
+				},
+				"default_multi_value": {
+					"@type": "string",
+					"@value": ""
+				},
+				"data_adapter_name": {
+					"@type": "string",
+					"@value": "731af176-a847-4a28-bf32-bd5ba4462d79"
+				},
+				"_scope": {
+					"@type": "string",
+					"@value": "DEFAULT"
+				},
+				"title": {
+					"@type": "string",
+					"@value": "Network Ports"
+				},
+				"default_single_value": {
+					"@type": "string",
+					"@value": ""
+				},
+				"description": {
+					"@type": "string",
+					"@value": "Lookup table for network ports"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "55c75b17-7e24-4859-b230-a4122fc8ec19",
+			"type": {
+				"name": "lookup_table",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"default_single_value_type": {
+					"@type": "string",
+					"@value": "NULL"
+				},
+				"cache_name": {
+					"@type": "string",
+					"@value": "bf37d686-3cb7-4eeb-9eb9-e08c0adc724b"
+				},
+				"name": {
+					"@type": "string",
+					"@value": "nist_800_53_to_cui"
+				},
+				"default_multi_value_type": {
+					"@type": "string",
+					"@value": "NULL"
+				},
+				"default_multi_value": {
+					"@type": "string",
+					"@value": ""
+				},
+				"data_adapter_name": {
+					"@type": "string",
+					"@value": "41437203-db84-46a2-9ea1-0db7ed2c699e"
+				},
+				"_scope": {
+					"@type": "string",
+					"@value": "DEFAULT"
+				},
+				"title": {
+					"@type": "string",
+					"@value": "NIST 800-53 TO CUI CONTROLS"
+				},
+				"default_single_value": {
+					"@type": "string",
+					"@value": ""
+				},
+				"description": {
+					"@type": "string",
+					"@value": "NIST 800-53 TO CUI CONTROLS"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "d1b3ac8a-ac53-4e8b-be76-abc431a5a80f",
+			"type": {
+				"name": "lookup_table",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"default_single_value_type": {
+					"@type": "string",
+					"@value": "NULL"
+				},
+				"cache_name": {
+					"@type": "string",
+					"@value": "009f38c0-0cf3-4010-8c8c-e4ea87e6f4f5"
+				},
+				"name": {
+					"@type": "string",
+					"@value": "epss"
+				},
+				"default_multi_value_type": {
+					"@type": "string",
+					"@value": "NULL"
+				},
+				"default_multi_value": {
+					"@type": "string",
+					"@value": ""
+				},
+				"data_adapter_name": {
+					"@type": "string",
+					"@value": "5f2980e7-a0ea-46f1-99aa-da8b93365663"
+				},
+				"_scope": {
+					"@type": "string",
+					"@value": "DEFAULT"
+				},
+				"title": {
+					"@type": "string",
+					"@value": "EPSS Lookup Table"
+				},
+				"default_single_value": {
+					"@type": "string",
+					"@value": ""
+				},
+				"description": {
+					"@type": "string",
+					"@value": "https://www.first.org/epss/api"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "37164c4c-c986-4c7c-a5e3-d9a8f1ddc337",
+			"type": {
+				"name": "lookup_table",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"default_single_value_type": {
+					"@type": "string",
+					"@value": "NULL"
+				},
+				"cache_name": {
+					"@type": "string",
+					"@value": "d8301ead-3d48-46bf-875f-7994a5dbe558"
+				},
+				"name": {
+					"@type": "string",
+					"@value": "software-vendors"
+				},
+				"default_multi_value_type": {
+					"@type": "string",
+					"@value": "NULL"
+				},
+				"default_multi_value": {
+					"@type": "string",
+					"@value": ""
+				},
+				"data_adapter_name": {
+					"@type": "string",
+					"@value": "9b317b42-770d-46fb-b740-96c679c38f73"
+				},
+				"_scope": {
+					"@type": "string",
+					"@value": "DEFAULT"
+				},
+				"title": {
+					"@type": "string",
+					"@value": "Software Vendors"
+				},
+				"default_single_value": {
+					"@type": "string",
+					"@value": ""
+				},
+				"description": {
+					"@type": "string",
+					"@value": "Lookup table for Software Vendors"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "0d0105b5-0256-4a15-8f26-eff5b18ae614",
+			"type": {
+				"name": "lookup_table",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"default_single_value_type": {
+					"@type": "string",
+					"@value": "NULL"
+				},
+				"cache_name": {
+					"@type": "string",
+					"@value": "55ff2d16-b318-4717-893f-fed63ca005fc"
+				},
+				"name": {
+					"@type": "string",
+					"@value": "socfortress_threat_intel"
+				},
+				"default_multi_value_type": {
+					"@type": "string",
+					"@value": "NULL"
+				},
+				"default_multi_value": {
+					"@type": "string",
+					"@value": ""
+				},
+				"data_adapter_name": {
+					"@type": "string",
+					"@value": "1405cf60-dda4-43d4-bb60-53ceb06e1bf1"
+				},
+				"_scope": {
+					"@type": "string",
+					"@value": "DEFAULT"
+				},
+				"title": {
+					"@type": "string",
+					"@value": "SOCFortress Threat Intel Lookup Table"
+				},
+				"default_single_value": {
+					"@type": "string",
+					"@value": ""
+				},
+				"description": {
+					"@type": "string",
+					"@value": "SOCFortress Threat Intel Lookup Table"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "aa38e373-4bad-4bed-b6fe-fe707d749fdb",
+			"type": {
+				"name": "pipeline",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "WAZUH PROCESSING PIPELINES"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "WAZUH PROCESSING PIPELINES"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "pipeline \"WAZUH PROCESSING PIPELINES\"\nstage 0 match pass\nrule \"DROP OSQUERY SOCKET EVENTS - WELL KNOWN PROCESSES\"\nrule \"DROP OSQUERY PROCESS EVENTS - WELL KNOWN PROCESSES\"\nrule \"DROP SYSMON EVT 7 LOGS - WELL KNOWN PROCESS IMAGE\"\nrule \"DROP SYSMON EVT 12 LOGS - WELL KNOWN PROCESS IMAGE\"\nrule \"DROP SYSMON EVT 10 LOGS - WELL KNOWN SOURCE PROCESS IMAGE\"\nrule \"DROP SYSMON EVT 13 LOGS - WELL KNOWN PROCESS IMAGE\"\nstage 1 match either\nrule \"WAZUH CREATE FIELD SYSLOG LEVEL - NOTICE\"\nrule \"WAZUH CREATE FIELD SYSLOG LEVEL - WARNING\"\nrule \"WAZUH CREATE FIELD SYSLOG LEVEL - INFO\"\nrule \"WAZUH CREATE FIELD SYSLOG LEVEL - ALERT\"\nrule \"Linux Sysmon Timestamp - UTC\"\nrule \"Office365 Timestamp - UTC\"\nrule \"Osquery Epoch Timestamp - UTC\"\nrule \"Packetbeat Timestamp - UTC\"\nrule \"Windows Timestamp - UTC\"\nrule \"URL Encode data_name field for ASK SOCFortress API\"\nrule \"NIST 800-53 TO CUI MAPPING\"\nstage 2 match pass\nrule \"USER ADDED TO PRIVILEGE ADMIN GROUP\"\nrule \"ASK SOCFORTRESS WINDOWS - CHAINSAW\"\nstage 3 match either\nrule \"LINUX SYSMON EVENT 1 LOG NORMALIZATION\"\nrule \"LINUX SYSMON EVENT 5 LOG NORMALIZATION\"\nrule \"LINUX SYSMON EVENT 9 LOG NORMALIZATION\"\nrule \"LINUX SYSMON EVENT 11 LOG NORMALIZATION\"\nrule \"LINUX SYSMON EVENT 23 LOG NORMALIZATION\"\nrule \"LINUX PACKETBEAT DNS LOG NORMALIZATION\"\nrule \"WINDOWS SYSMON EVENT 1 LOG NORMALIZATION\"\nrule \"WINDOWS SYSMON EVENT 11 LOG NORMALIZATION\"\nrule \"WINDOWS SYSMON EVENT 2 LOG NORMALIZATION\"\nrule \"WINDOWS SYSMON EVENT 22 LOG NORMALIZATION\"\nrule \"WINDOWS SYSMON EVENT 23 LOG NORMALIZATION\"\nrule \"WINDOWS SYSMON EVENT 5 LOG NORMALIZATION\"\nrule \"WINDOWS SYSMON EVENT 9 LOG NORMALIZATION\"\nrule \"WINDOWS SYSMON EVENT 7 LOG NORMALIZATION\"\nrule \"WINDOWS SYSMON EVENT 10 LOG NORMALIZATION\"\nrule \"WINDOWS SYSMON EVENT 12 LOG NORMALIZATION\"\nrule \"WINDOWS SYSMON EVENT 13 LOG NORMALIZATION\"\nrule \"WINDOWS SYSMON EVENT 17 LOG NORMALIZATION\"\nrule \"LINUX OSQUERY PROCESS LIST LOG NORMALIZATION\"\nrule \"LINUX PACKETBEAT NETWORK LOG NORMALIZATION\"\nrule \"LINUX SYSMON EVENT 3 INBOUND CONNECTION LOG NORMALIZATION\"\nrule \"LINUX SYSMON EVENT 3 OUTBOUND CONNECTION LOG NORMALIZATION\"\nrule \"WINDOWS SYSMON EVENT 3 INBOUND CONNECTION LOG NORMALIZATION\"\nrule \"WINDOWS SYSMON EVENT 3 OUTBOUND CONNECTION LOG NORMALIZATION\"\nrule \"WINDOWS SYSMON EVENT 15 LOG NORMALIZATION\"\nrule \"OSSEC SYSCHECK ADDED EVENT NORMALIZATION\"\nrule \"EPSS CVE Criticality\"\nrule \"EPSS CVE Criticality - NMAP\"\nrule \"WINDOWS PROCESS ID - No EventData Field\"\nrule \"WINDOWS PROCESS ID - Non SOCFortress Sysmon\"\nrule \"Timestamp Failsafe - UTC\"\nrule \"LINUX OSQUERY-BPF PROCESS LIST LOG NORMALIZATION\"\nrule \"WINDOWS PROCESS ID - SIGMA - data_system_Execution_attributes_ProcessID\"\nrule \"WINDOWS PROCESS ID - SIGMA - data_event_ProcessId\"\nrule \"WINDOWS PROCESS ID - SIGMA - data_event_SourceProcessId\"\nrule \"LINUX OSQUERY PROCESS ID - GENERIC\"\nrule \"MacOS OSQUERY PROCESS_EVENTS LOG NORMALIZATION\"\nrule \"OpenAudit Remove field - data_system_network_item_dhcp_lease_obtained\"\nrule \"OpenAudit Remove field - data_system_software_item_install_date\"\nstage 4 match pass\nrule \"WINDOWS SYSMON EVENT 1 - SOFTWARE VENDORS\"\nrule \"WINDOWS SYSMON EVENT 1 - EMPTY SOFTWARE VENDORS\"\nrule \"WINDOWS SYSMON EVENT 7 - SOFTWARE VENDORS\"\nrule \"WINDOWS SYSMON EVENT 7 - EMPTY SOFTWARE VENDORS\"\nrule \"WINDOWS SYSMON EVENT 3 - NETWORK PORTS\"\nstage 5 match pass\nrule \"WINDOWS SYSMON EVENT 1 - UNAPPROVED SOFTWARE VENDORS\"\nrule \"WINDOWS SYSMON EVENT 7 - UNAPPROVED SOFTWARE VENDORS\"\nrule \"WINDOWS SYSMON EVENT 3 - UNCOMMON PORT\"\nstage 7 match either\nrule \"OVERRIDE SYSLOG LEVEL AFTER IoC FOUND\"\nstage 6 match either\nrule \"LINUX SYSMON EVENT 3 - SOCFORTRESS THREAT INTEL\"\nrule \"OSSEC SYSCHECK ADDED - SOCFORTRESS THREAT INTEL\"\nrule \"PACKETBEAT DNS QUERY - SOCFORTRESS THREAT INTEL\"\nrule \"PACKETBEAT HTTP/S CONNECTION - SOCFORTRESS THREAT INTEL\"\nrule \"WINDOWS SYSMON EVENT 1 - SOCFORTRESS THREAT INTEL\"\nrule \"WINDOWS SYSMON EVENT 15 - SOCFORTRESS THREAT INTEL\"\nrule \"WINDOWS SYSMON EVENT 22 - SOCFORTRESS THREAT INTEL\"\nrule \"WINDOWS SYSMON EVENT 3 - SOCFORTRESS THREAT INTEL\"\nrule \"WINDOWS SYSMON EVENT 6 - SOCFORTRESS THREAT INTEL\"\nrule \"WINDOWS SYSMON EVENT 7 - SOCFORTRESS THREAT INTEL\"\nend"
+				},
+				"connected_streams": [
+					{
+						"@type": "string",
+						"@value": "feb9e1d7-9346-4a2a-9566-59ed483c1b83"
+					}
+				]
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "5a6fdec9-fa76-41f2-be92-158fa380db42",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "NIST 800-53 TO CUI MAPPING"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "NIST 800-53 TO CUI MAPPING"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"NIST 800-53 TO CUI MAPPING\"\nwhen\n has_field(\"rule_nist_800_53\")\nthen\n let ldata = lookup(\n lookup_table: \"nist_800_53_to_cui\",\n key: to_string($message.rule_nist_800_53)\n );\n set_fields(\n fields: ldata,\n prefix: \"cui_\"\n );\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "1d4217e1-28ab-4950-b8be-a25fc8e9555c",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "LINUX SYSMON EVENT 3 - SOCFORTRESS THREAT INTEL"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "LINUX SYSMON EVENT 3 - SOCFORTRESS THREAT INTEL"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"LINUX SYSMON EVENT 3 - SOCFORTRESS THREAT INTEL\"\nwhen\n $message.rule_group1 == \"linux\" AND $message.rule_group3 == \"sysmon_event3\" AND $message.data_eventdata_DestinationIp != \"127.0.0.1\" AND $message.data_eventdata_DestinationIp != \"255.255.255.255\" AND $message.data_eventdata_DestinationIp != \"0.0.0.0\" AND $message.data_eventdata_destinationIsIpv6 == \"false\" AND ! in_private_net(to_string($message.data_eventdata_DestinationIp))\nthen\n let ip_and_ampersand = concat(to_string($message.data_eventdata_DestinationIp), \"&customer_code=\");\n let new_key = concat(ip_and_ampersand, to_string($message.agent_labels_customer));\n let ldata = lookup(\n lookup_table: \"socfortress_threat_intel\",\n key: new_key\n );\n set_fields(\n fields: ldata,\n prefix: \"threat_intel_\"\n );\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "5745b55a-7958-45d6-bdbf-67b8feca5b3a",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "WINDOWS PROCESS ID - SIGMA - data_system_Execution_attributes_ProcessID"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "WINDOWS PROCESS ID - SIGMA - data_system_Execution_attributes_ProcessID"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"WINDOWS PROCESS ID - SIGMA - data_system_Execution_attributes_ProcessID\"\nwhen\n has_field(\"data_system_Execution_attributes_ProcessID\") AND $message.rule_group1 == \"windows\" AND $message.rule_group2 == \"chainsaw\"\nthen\n set_field(\"process_id\", $message.data_system_Execution_attributes_ProcessID);\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "cf069904-64d8-4b2f-b57a-25fbc07dd47e",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "OVERRIDE SYSLOG LEVEL AFTER IoC FOUND"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "OVERRIDE SYSLOG LEVEL AFTER IoC FOUND"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"OVERRIDE SYSLOG LEVEL AFTER IoC FOUND\"\nwhen\n has_field(\"threat_intel_value\")\nthen\n set_field(\"syslog_level\", \"ALERT\");\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "fcf8bf1f-5280-474a-88bd-0ef50f2049db",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "LINUX SYSMON EVENT 9 LOG NORMALIZATION"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "LINUX SYSMON EVENT 9 LOG NORMALIZATION"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"LINUX SYSMON EVENT 9 LOG NORMALIZATION\"\nwhen\n $message.rule_group1 == \"linux\" AND $message.rule_group3 == \"sysmon_event9\"\nthen\n set_field(\"process_image\", $message.data_eventdata_image);\n set_field(\"process_id\", $message.data_eventdata_processId);\n set_field(\"user_name\", $message.data_eventdata_user);\n set_field(\"device\", $message.data_eventdata_device);\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "81633691-fa79-4ca8-a5ff-c67fc55ede49",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 22 LOG NORMALIZATION"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 22 LOG NORMALIZATION"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"WINDOWS SYSMON EVENT 22 LOG NORMALIZATION\"\nwhen\n $message.rule_group1 == \"windows\" AND $message.rule_group3 == \"sysmon_event_22\"\nthen\n set_field(\"process_image\", $message.data_win_eventdata_image);\n set_field(\"process_id\", $message.data_win_eventdata_processId);\n set_field(\"dns_query\", $message.data_win_eventdata_queryName);\n set_field(\"dns_answer\", $message.data_win_eventdata_queryResults);\n set_field(\"dns_response_code\", $message.data_win_eventdata_queryStatus);\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "ed57ba97-b339-41cf-91c1-1837feecf032",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "DROP SYSMON EVT 12 LOGS - WELL KNOWN PROCESS IMAGE"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "DROP SYSMON EVT 12 LOGS - WELL KNOWN PROCESS IMAGE"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"DROP SYSMON EVT 12 LOGS - WELL KNOWN PROCESS IMAGE\"\nwhen\n$message.rule_group3 == \"sysmon_event_12\" AND ($message.data_win_eventdata_image == \"C:\\\\\\\\Program Files\\\\\\\\ATERA Networks\\\\\\\\AteraAgent\\\\\\\\Packages\\\\\\\\AgentPackageHeartbeat\\\\\\\\AgentPackageHeartbeat.exe\" OR $message.data_win_eventdata_image == \"C:\\\\\\\\WINDOWS\\\\\\\\system32\\\\\\\\svchost.exe\" OR $message.data_win_eventdata_image == \"C:\\\\\\\\windows\\\\\\\\system32\\\\\\\\svchost.exe\" OR $message.data_win_eventdata_image == \"C:\\\\\\\\Windows\\\\\\\\system32\\\\\\\\svchost.exe\")\nthen\n drop_message();\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "a711be64-131f-494f-9068-9dcd56da1b02",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 15 LOG NORMALIZATION"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 15 LOG NORMALIZATION"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"WINDOWS SYSMON EVENT 15 LOG NORMALIZATION\"\nwhen\n $message.rule_group1 == \"windows\" AND $message.rule_group3 == \"sysmon_event_15\"\nthen\n set_field(\"process_image\", $message.data_win_eventdata_image);\n set_field(\"process_id\", $message.data_win_eventdata_processId);\n set_field(\"user_name\", $message.data_win_eventdata_user);\n set_field(\"target_file\", $message.data_win_eventdata_targetFilename);\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "de7d8e04-ad04-4185-8811-569f0cc17bd5",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "PACKETBEAT DNS QUERY - SOCFORTRESS THREAT INTEL"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "PACKETBEAT DNS QUERY - SOCFORTRESS THREAT INTEL"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"PACKETBEAT DNS QUERY - SOCFORTRESS THREAT INTEL\"\nwhen\n $message.rule_group1 == \"linux\" AND $message.rule_group3 == \"dns\"\nthen\n let dns_question_name_and_ampersand = concat(to_string($message.data_dns_question_name), \"&customer_code=\");\n let new_key = concat(dns_question_name_and_ampersand, to_string($message.agent_labels_customer));\n let ldata = lookup(\n lookup_table: \"socfortress_threat_intel\",\n key: new_key\n );\n set_fields(\n fields: ldata,\n prefix: \"threat_intel_\"\n );\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "73af67a1-87a4-4e61-bd96-f68557603a92",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "OSSEC SYSCHECK ADDED - SOCFORTRESS THREAT INTEL"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "OSSEC SYSCHECK ADDED - SOCFORTRESS THREAT INTEL"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"OSSEC SYSCHECK ADDED - SOCFORTRESS THREAT INTEL\"\nwhen\n $message.rule_group1 == \"ossec\" AND $message.rule_group2 == \"syscheck\" AND $message.syscheck_event == \"added\"\nthen\n let sha256_and_ampersand = concat(to_string($message.sha256), \"&customer_code=\");\n let new_key = concat(sha256_and_ampersand, to_string($message.agent_labels_customer));\n let ldata = lookup(\n lookup_table: \"socfortress_threat_intel\",\n key: new_key\n );\n set_fields(\n fields: ldata,\n prefix: \"threat_intel_\"\n );\nend\n"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "4105240a-13b3-4cf0-b62f-566227d522cb",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "Osquery Epoch Timestamp - UTC"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "Osquery Epoch Timestamp - UTC"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"Osquery Epoch Timestamp - UTC\"\nwhen\n has_field(\"data_unixTime\")\nthen\n let ts_millis = to_long($message.data_unixTime) * 1000;\n let new_date = parse_unix_milliseconds(ts_millis);\n set_field(\"timestamp_utc\", new_date);\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "546e667e-b3c4-482f-9f43-a836097290ed",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 2 LOG NORMALIZATION"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 2 LOG NORMALIZATION"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"WINDOWS SYSMON EVENT 2 LOG NORMALIZATION\"\nwhen\n $message.rule_group1 == \"windows\" AND $message.rule_group3 == \"sysmon_event2\"\nthen\n set_field(\"process_image\", $message.data_win_eventdata_image);\n set_field(\"process_id\", $message.data_win_eventdata_processId);\n set_field(\"target_file\", $message.data_win_eventdata_targetFilename);\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "5452ff04-d03a-4876-8417-63b00ecdd2ed",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "DROP OSQUERY PROCESS EVENTS - WELL KNOWN PROCESSES"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "DROP OSQUERY PROCESS EVENTS - WELL KNOWN PROCESSES"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"DROP OSQUERY PROCESS EVENTS - WELL KNOWN PROCESSES\"\nwhen\n$message.rule_group2 == \"process_events\" AND ($message.data_columns_path == \"/usr/bin/ls\" OR $message.data_columns_path == \"/usr/bin/ps\" OR $message.data_columns_path == \"/usr/bin/sleep\" OR $message.data_columns_path == \"/usr/bin/awk\" OR $message.data_columns_path == \"/var/ossec/bin/wazuh-control\" OR $message.data_columns_path == \"/usr/bin/runc\" OR $message.data_columns_path == \"/usr/libexec/docker/docker-init\")\nthen\n drop_message();\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "04371a3b-aaaf-4440-8cb4-4f53d0a74508",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "MacOS OSQUERY PROCESS_EVENTS LOG NORMALIZATION"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "MacOS OSQUERY PROCESS_EVENTS LOG NORMALIZATION"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"MacOS OSQUERY PROCESS_EVENTS LOG NORMALIZATION\"\nwhen\n $message.rule_group1 == \"osquery\" AND $message.rule_group2 == \"process_events\"\nthen\n set_field(\"process_name\", $message.data_columns_path);\n set_field(\"process_image\", $message.data_columns_path);\n set_field(\"process_id\", $message.data_columns_pid);\n set_field(\"user_name\", $message.data_columns_username);\n set_field(\"software_vendor\", $message.data_columns_signing_id);\n set_field(\"software_product\", $message.data_columns_signing_id);\n set_field(\"process_image_hashes\", $message.data_columns_cdhash);\n set_field(\"parent_process_id\", $message.data_columns_parent);\n set_field(\"parent_process_image\", $message.data_columns_parent);\n set_field(\"parent_process_user\", $message.data_win_eventdata_parentUser);\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "d501207b-5195-4a20-be79-342b824e36fa",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "Linux Sysmon Timestamp - UTC"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "Linux Sysmon Timestamp - UTC"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"Linux Sysmon Timestamp - UTC\"\nwhen\n has_field(\"data_system_systemTime\")\nthen\n let time = parse_date(to_string($message.data_system_systemTime), \"yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSS'Z'\", \"Etc/UTC\");\n set_field(\"timestamp_utc\", time);\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "ba83edb5-a196-42b8-9367-04d44e9c2402",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "LINUX SYSMON EVENT 3 LOG NORMALIZATION"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "LINUX SYSMON EVENT 3 LOG NORMALIZATION"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"LINUX SYSMON EVENT 3 LOG NORMALIZATION\"\nwhen\n $message.rule_group1 == \"linux\" AND $message.rule_group3 == \"sysmon_event3\"\nthen\n set_field(\"process_image\", $message.data_eventdata_image);\n set_field(\"process_id\", $message.data_eventdata_processId);\n set_field(\"protocol\", $message.data_eventdata_protocol);\n set_field(\"user_name\", $message.data_eventdata_user);\n set_field(\"dst_ip\", $message.data_eventdata_DestinationIp);\n set_field(\"dst_port\", $message.data_eventdata_destinationPort);\n set_field(\"src_ip\", $message.data_eventdata_sourceIp);\n set_field(\"src_port\", $message.data_eventdata_sourcePort);\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "f19ebc4f-2a74-4e0e-844c-4b86087ff753",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 22 - SOCFORTRESS THREAT INTEL"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 22 - SOCFORTRESS THREAT INTEL"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"WINDOWS SYSMON EVENT 22 - SOCFORTRESS THREAT INTEL\"\nwhen\n $message.rule_group1 == \"windows\" AND $message.rule_group3 == \"sysmon_event_22\"\nthen\n let query_name_and_ampersand = concat(to_string($message.data_win_eventdata_queryName), \"&customer_code=\");\n let new_key = concat(query_name_and_ampersand, to_string($message.agent_labels_customer));\n let ldata = lookup(\n lookup_table: \"socfortress_threat_intel\",\n key: new_key\n );\n set_fields(\n fields: ldata,\n prefix: \"threat_intel_\"\n );\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "90ec68d3-bf43-477d-8b1e-a9accf50b60e",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "DROP OSQUERY SOCKET EVENTS - WELL KNOWN PROCESSES"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "DROP OSQUERY SOCKET EVENTS - WELL KNOWN PROCESSES"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"DROP OSQUERY SOCKET EVENTS - WELL KNOWN PROCESSES\"\nwhen\n$message.rule_group2 == \"bpf_socket_events\" AND ($message.data_columns_path == \"/var/ossec/bin/wazuh-syscheckd\" OR $message.data_columns_path == \"/usr/bin/telegraf\" OR $message.data_columns_path == \"/usr/sbin/haproxy\" OR $message.data_columns_path == \"/var/ossec/bin/wazuh-control\" OR $message.data_columns_path == \"/opt/fluent-bit/bin/fluent-bit\" OR $message.data_columns_path == \"/var/ossec/framework/python/bin/python3.9\" OR $message.data_columns_path == \"/var/ossec/bin/wazuh-remoted\" OR $message.data_columns_path == \"/usr/share/filebeat/bin/filebeat\" OR $message.data_columns_path == \"/var/ossec/bin/wazuh-modulesd\" OR $message.data_columns_path == \"/worker\" OR $message.data_columns_path == \"/usr/bin/python3.9\" OR $message.data_columns_path == \"/usr/local/bin/python3.10\" OR $message.data_columns_path == \"/usr/local/sbin/haproxy\" OR $message.data_columns_path == \"/usr/bin/systemctl\" OR $message.data_columns_path == \"/usr/local/bin/python3.9\" OR $message.data_columns_path == \"/app/webapp\" OR $message.data_columns_path == \"/usr/share/graylog-server/jvm/bin/java\" OR $message.data_columns_path == \"/usr/share/grafana/bin/grafana\" OR $message.data_columns_path == \"/usr/bin/dockerd\" OR $message.data_columns_path == \"/usr/local/bin/velociraptor.bin\")\nthen\n drop_message();\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "7a45ad2d-e6f1-4d2b-8f9f-1f8b44a73f0b",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 23 LOG NORMALIZATION"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 23 LOG NORMALIZATION"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"WINDOWS SYSMON EVENT 23 LOG NORMALIZATION\"\nwhen\n $message.rule_group1 == \"windows\" AND $message.rule_group3 == \"sysmon_event_23\"\nthen\n set_field(\"process_image\", $message.data_win_eventdata_image);\n set_field(\"process_id\", $message.data_win_eventdata_processId);\n set_field(\"user_name\", $message.data_win_eventdata_user);\n set_field(\"target_file\", $message.data_win_eventdata_targetFilename);\n set_field(\"is_executable\", $message.data_win_eventdata_isExecutable);\n set_field(\"file_hashes\", $message.data_win_eventdata_hashes);\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "b807c042-0124-4a55-a92c-230c13fc1ca9",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 7 - SOFTWARE VENDORS"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 7 - SOFTWARE VENDORS"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"WINDOWS SYSMON EVENT 7 - SOFTWARE VENDORS\"\nwhen\n $message.rule_group1 == \"windows\" AND $message.rule_group3 == \"sysmon_event7\" AND has_field(\"data_win_eventdata_company\")\nthen\n let ldata = lookup_value(\n lookup_table: \"software-vendors\",\n key: to_string($message.data_win_eventdata_company,\"no\")\n );\n set_field(\"software_approved\", ldata);\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "b3d62cc1-de49-4e29-a39a-88d19ac6da02",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 7 - SOCFORTRESS THREAT INTEL"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 7 - SOCFORTRESS THREAT INTEL"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"WINDOWS SYSMON EVENT 7 - SOCFORTRESS THREAT INTEL\"\nwhen\n $message.rule_group1 == \"windows\" AND $message.rule_group3 == \"sysmon_event7\" AND $message.data_win_eventdata_signed == \"false\"\nthen\n let sha256_and_ampersand = concat(to_string($message.sha256), \"&customer_code=\");\n let new_key = concat(sha256_and_ampersand, to_string($message.agent_labels_customer));\n let ldata = lookup(\n lookup_table: \"socfortress_threat_intel\",\n key: new_key\n );\n set_fields(\n fields: ldata,\n prefix: \"threat_intel_\"\n );\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "f709c6a9-8e24-4a37-a86d-3507ffb67010",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "DROP SYSMON EVT 13 LOGS - WELL KNOWN PROCESS IMAGE"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "DROP SYSMON EVT 13 LOGS - WELL KNOWN PROCESS IMAGE"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"DROP SYSMON EVT 13 LOGS - WELL KNOWN PROCESS IMAGE\"\nwhen\n$message.rule_group3 == \"sysmon_event_13\" AND ($message.data_win_eventdata_image == \"C:\\\\\\\\WINDOWS\\\\\\\\system32\\\\\\\\svchost.exe\" OR $message.data_win_eventdata_image == \"C:\\\\\\\\windows\\\\\\\\system32\\\\\\\\svchost.exe\" OR $message.data_win_eventdata_image == \"C:\\\\\\\\Windows\\\\\\\\system32\\\\\\\\svchost.exe\" OR $message.data_win_eventdata_image == \"C:\\\\\\\\Program Files\\\\\\\\Google\\\\\\\\Chrome\\\\\\\\Application\\\\\\\\chrome.exe\")\nthen\n drop_message();\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "dbad257a-932d-48e5-8a70-ac3313857a9c",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "LINUX SYSMON EVENT 23 LOG NORMALIZATION"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "LINUX SYSMON EVENT 23 LOG NORMALIZATION"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"LINUX SYSMON EVENT 23 LOG NORMALIZATION\"\nwhen\n $message.rule_group1 == \"linux\" AND $message.rule_group3 == \"sysmon_event_23\"\nthen\n set_field(\"process_image\", $message.data_eventdata_image);\n set_field(\"process_id\", $message.data_eventdata_processId);\n set_field(\"user_name\", $message.data_eventdata_user);\n set_field(\"target_file\", $message.data_eventdata_targetFilename);\n set_field(\"is_executable\", $message.data_eventdata_isExecutable);\n set_field(\"file_hashes\", $message.data_eventdata_hashes);\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "31918fde-a64c-4ad6-b3c2-5a4407236ee4",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "LINUX OSQUERY PROCESS LIST LOG NORMALIZATION"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "LINUX OSQUERY PROCESS LIST LOG NORMALIZATION"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"LINUX OSQUERY PROCESS LIST LOG NORMALIZATION\"\nwhen\n$message.rule_group1 == \"osquery\" AND $message.rule_group2 == \"list_processes\"\nthen\n set_field(\"process_name\", $message.data_osquery_columns_name);\n set_field(\"process_image\", $message.data_osquery_columns_path);\n set_field(\"process_id\", $message.data_osquery_columns_pid);\n set_field(\"process_cmd_line\", $message.data_osquery_columns_cmdline);\n set_field(\"user_name\", $message.data_osquery_columns_username);\n set_field(\"parent_process_id\", $message.data_osquery_columns_parent);\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "2596c531-6959-4955-bfef-b32c5ce296fd",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 3 LOG NORMALIZATION"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 3 LOG NORMALIZATION"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"WINDOWS SYSMON EVENT 3 LOG NORMALIZATION\"\nwhen\n $message.rule_group1 == \"windows\" AND $message.rule_group3 == \"sysmon_event3\"\nthen\n set_field(\"process_image\", $message.data_win_eventdata_image);\n set_field(\"process_id\", $message.data_win_eventdata_processId);\n set_field(\"protocol\", $message.data_win_eventdata_protocol);\n set_field(\"user_name\", $message.data_win_eventdata_user);\n set_field(\"dst_ip\", $message.data_win_eventdata_destinationIp);\n set_field(\"dst_port\", $message.data_win_eventdata_destinationPort);\n set_field(\"src_ip\", $message.data_win_eventdata_sourceIp);\n set_field(\"src_port\", $message.data_win_eventdata_sourcePort);\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "3a47b63b-504a-4884-aac3-7c782988fa52",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "LINUX SYSMON EVENT 3 INBOUND CONNECTION LOG NORMALIZATION"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "LINUX SYSMON EVENT 3 INBOUND CONNECTION LOG NORMALIZATION"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"LINUX SYSMON EVENT 3 INBOUND CONNECTION LOG NORMALIZATION\"\nwhen\n $message.rule_group1 == \"linux\" AND $message.rule_group3 == \"sysmon_event3\" AND $message.data_eventdata_initiated == \"false\"\nthen\n set_field(\"process_image\", $message.data_eventdata_image);\n set_field(\"process_id\", $message.data_eventdata_processId);\n set_field(\"protocol\", $message.data_eventdata_protocol);\n set_field(\"user_name\", $message.data_eventdata_user);\n set_field(\"dst_ip\", $message.data_eventdata_DestinationIp);\n set_field(\"dst_port\", $message.data_eventdata_destinationPort);\n set_field(\"src_ip\", $message.data_eventdata_sourceIp);\n set_field(\"src_port\", $message.data_eventdata_sourcePort);\n set_field(\"traffic_direction\", \"ingress\"); \nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "731ca120-24f1-4d56-ab8c-6706d4592ac8",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "PACKETBEAT HTTP/S CONNECTION - SOCFORTRESS THREAT INTEL"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "PACKETBEAT HTTP/S CONNECTION - SOCFORTRESS THREAT INTEL"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"PACKETBEAT HTTP/S CONNECTION - SOCFORTRESS THREAT INTEL\"\nwhen\n $message.rule_group1 == \"linux\" AND $message.rule_group3 == \"tls\" OR $message.rule_group3 == \"http\"\nthen\n let ip_and_ampersand = concat(to_string($message.data_destination_ip), \"&customer_code=\");\n let new_key = concat(ip_and_ampersand, to_string($message.agent_labels_customer));\n let ldata = lookup(\n lookup_table: \"socfortress_threat_intel\",\n key: new_key\n );\n set_fields(\n fields: ldata,\n prefix: \"threat_intel_\"\n );\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "794068e2-fc89-41e8-a390-5f947695ba28",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 1 - UNAPPROVED SOFTWARE VENDORS"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 1 - UNAPPROVED SOFTWARE VENDORS"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"WINDOWS SYSMON EVENT 1 - UNAPPROVED SOFTWARE VENDORS\"\nwhen\n $message.rule_group1 == \"windows\" AND $message.rule_group3 == \"sysmon_event1\" AND ! has_field(\"software_approved\")\nthen\nset_field(\"software_approved\", \"no\");\nset_field(\"syslog_level\", \"WARNING\");\nlet build_message_0 = to_string(\" Sysmon - Event 1: Process creation Unapproved Software \");\nlet build_message_1 = concat(build_message_0, to_string($message.data_win_eventdata_company));\nset_field(\"rule_description\", build_message_1);\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "b4de7d44-01b1-4ec6-b4e4-92e991dcf6be",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 3 INBOUND CONNECTION LOG NORMALIZATION"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 3 INBOUND CONNECTION LOG NORMALIZATION"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"WINDOWS SYSMON EVENT 3 INBOUND CONNECTION LOG NORMALIZATION\"\nwhen\n $message.rule_group1 == \"windows\" AND $message.rule_group3 == \"sysmon_event3\" AND $message.data_win_eventdata_initiated == \"false\"\nthen\n set_field(\"process_image\", $message.data_win_eventdata_image);\n set_field(\"process_id\", $message.data_win_eventdata_processId);\n set_field(\"protocol\", $message.data_win_eventdata_protocol);\n set_field(\"user_name\", $message.data_win_eventdata_user);\n set_field(\"dst_ip\", $message.data_win_eventdata_destinationIp);\n set_field(\"dst_port\", $message.data_win_eventdata_destinationPort);\n set_field(\"src_ip\", $message.data_win_eventdata_sourceIp);\n set_field(\"src_port\", $message.data_win_eventdata_sourcePort);\n set_field(\"traffic_direction\", \"ingress\"); \nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "0f3bd968-508b-4fd4-9662-953b5a34e1e9",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "WAZUH CREATE FIELD SYSLOG LEVEL - WARNING"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "CREATE FIELD SYSLOG LEVEL - WARNING"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"WAZUH CREATE FIELD SYSLOG LEVEL - WARNING\"\nwhen to_long($message.rule_level) > 7 AND to_long($message.rule_level) < 12\nthen\nset_field(\"syslog_level\", \"WARNING\");\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "f663f3fd-955e-4b78-85f4-93571a64c252",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 3 OUTBOUND CONNECTION LOG NORMALIZATION"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 3 OUTBOUND CONNECTION LOG NORMALIZATION"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"WINDOWS SYSMON EVENT 3 OUTBOUND CONNECTION LOG NORMALIZATION\"\nwhen\n $message.rule_group1 == \"windows\" AND $message.rule_group3 == \"sysmon_event3\" AND $message.data_win_eventdata_initiated == \"true\"\nthen\n set_field(\"process_image\", $message.data_win_eventdata_image);\n set_field(\"process_id\", $message.data_win_eventdata_processId);\n set_field(\"protocol\", $message.data_win_eventdata_protocol);\n set_field(\"user_name\", $message.data_win_eventdata_user);\n set_field(\"dst_ip\", $message.data_win_eventdata_destinationIp);\n set_field(\"dst_port\", $message.data_win_eventdata_destinationPort);\n set_field(\"src_ip\", $message.data_win_eventdata_sourceIp);\n set_field(\"src_port\", $message.data_win_eventdata_sourcePort);\n set_field(\"traffic_direction\", \"external\"); \nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "694f2402-bb3e-4d24-b892-bcbcc73fecfb",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "LINUX SYSMON EVENT 11 LOG NORMALIZATION"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "LINUX SYSMON EVENT 11 LOG NORMALIZATION"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"LINUX SYSMON EVENT 11 LOG NORMALIZATION\"\nwhen\n $message.rule_group1 == \"linux\" AND $message.rule_group3 == \"sysmon_event_11\"\nthen\n set_field(\"process_image\", $message.data_eventdata_image);\n set_field(\"process_id\", $message.data_eventdata_processId);\n set_field(\"user_name\", $message.data_eventdata_user);\n set_field(\"target_file\", $message.data_eventdata_targetFilename);\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "bf6d21ee-ab54-465f-a786-44ac833d3416",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "WINDOWS PROCESS ID - SIGMA - data_event_ProcessId"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "WINDOWS PROCESS ID - SIGMA - data_event_ProcessId"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"WINDOWS PROCESS ID - SIGMA - data_event_ProcessId\"\nwhen\n has_field(\"data_event_ProcessId\") AND $message.rule_group1 == \"windows\" AND $message.rule_group2 == \"chainsaw\"\nthen\n set_field(\"process_id\", $message.data_event_ProcessId);\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "76aec17e-8048-46ce-9bd3-6dad333b66e5",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "WINDOWS PROCESS ID - SIGMA - data_event_SourceProcessId"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "WINDOWS PROCESS ID - SIGMA - data_event_SourceProcessId"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"WINDOWS PROCESS ID - SIGMA - data_event_SourceProcessId\"\nwhen\n has_field(\"data_event_SourceProcessId\") AND $message.rule_group1 == \"windows\" AND $message.rule_group2 == \"chainsaw\"\nthen\n set_field(\"process_id\", $message.data_event_SourceProcessId);\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "96a20a8a-1da1-48d4-81f0-0ef51a2c9e8e",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 13 LOG NORMALIZATION"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 13 LOG NORMALIZATION"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"WINDOWS SYSMON EVENT 13 LOG NORMALIZATION\"\nwhen\n $message.rule_group1 == \"windows\" AND $message.rule_group3 == \"sysmon_event_13\"\nthen\n set_field(\"process_image\", $message.data_win_eventdata_image);\n set_field(\"process_id\", $message.data_win_eventdata_processId);\n set_field(\"target_object\", $message.data_win_eventdata_targetObject);\n set_field(\"event_type\", $message.data_win_eventdata_eventType);\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "a47cbbda-bf0f-4b22-85c2-4ca03472c8dc",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 11 LOG NORMALIZATION"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 11 LOG NORMALIZATION"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"WINDOWS SYSMON EVENT 11 LOG NORMALIZATION\"\nwhen\n $message.rule_group1 == \"windows\" AND $message.rule_group3 == \"sysmon_event_11\"\nthen\n set_field(\"process_image\", $message.data_win_eventdata_image);\n set_field(\"process_id\", $message.data_win_eventdata_processId);\n set_field(\"user_name\", $message.data_win_eventdata_user);\n set_field(\"target_file\", $message.data_win_eventdata_targetFilename);\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "cae472b1-4e92-43d1-9433-4f29eca82916",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "LINUX PACKETBEAT NETWORK LOG NORMALIZATION"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "LINUX PACKETBEAT NETWORK LOG NORMALIZATION"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"LINUX PACKETBEAT NETWORK LOG NORMALIZATION\"\nwhen\n $message.rule_group1 == \"linux\" AND $message.rule_group2 == \"packetbeat\"\nthen\n set_field(\"protocol\", $message.data_network_transport);\n set_field(\"dst_ip\", $message.data_destination_ip);\n set_field(\"dst_port\", $message.data_destination_port);\n set_field(\"src_ip\", $message.data_source_ip);\n set_field(\"src_port\", $message.data_source_port);\n set_field(\"traffic_direction\", $message.data_network_direction); \n remove_field(\"$message.data_@metadata_beat\");\n remove_field(\"$message.data_@metadata_type\");\n remove_field(\"$message.data_@metadata_version\");\n remove_field(\"$message.data_agent_ephemeral_id\");\n remove_field(\"$message.data_host_architecture\");\n remove_field(\"$message.data_host_containerized\");\n remove_field(\"$message.data_host_hostname\");\n remove_field(\"$message.data_host_id\");\n remove_field(\"$message.data_host_ip\");\n remove_field(\"$message.data_host_mac\");\n remove_field(\"$message.data_host_name\");\n remove_field(\"$message.data_host_os_codename\");\n remove_field(\"$message.data_host_os_family\");\n remove_field(\"$message.data_host_os_kernel\");\n remove_field(\"$message.data_host_os_name\");\n remove_field(\"$message.data_host_os_platform\");\n remove_field(\"$message.data_host_os_type\");\n remove_field(\"$message.data_host_os_version\");\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "b709bcd4-70e1-4bf0-9a9c-c09ed9b5b09e",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 7 - UNAPPROVED SOFTWARE VENDORS"
+				},
+				"description": {
+					"@type": "string",
+					"@value": ""
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"WINDOWS SYSMON EVENT 7 - UNAPPROVED SOFTWARE VENDORS\"\nwhen\n $message.rule_group1 == \"windows\" AND $message.rule_group3 == \"sysmon_event7\" AND ! has_field(\"software_approved\")\nthen\nset_field(\"software_approved\", \"no\");\nlet build_message_0 = to_string(\" Sysmon - Event 7: Image Loaded by Unapproved Software \");\nlet build_message_1 = concat(build_message_0, to_string($message.data_win_eventdata_company));\nset_field(\"rule_description\", build_message_1);\nset_field(\"syslog_level\", \"WARNING\");\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "891d4cde-6e67-4b9d-98a7-52e9e73c5f4d",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 9 LOG NORMALIZATION"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 9 LOG NORMALIZATION"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"WINDOWS SYSMON EVENT 9 LOG NORMALIZATION\"\nwhen\n $message.rule_group1 == \"windows\" AND $message.rule_group3 == \"sysmon_event9\"\nthen\n set_field(\"process_image\", $message.data_win_eventdata_image);\n set_field(\"process_id\", $message.data_win_eventdata_processId);\n set_field(\"user_name\", $message.data_win_eventdata_user);\n set_field(\"device\", $message.data_win_eventdata_device);\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "286ba66f-f2c2-49c3-a1c4-e7360db4fb11",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "EPSS CVE Criticality - NMAP"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "EPSS CVE Criticality - NMAP"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"EPSS CVE Criticality - NMAP\"\nwhen\n $message.rule_group3 == \"network_scan\"\nthen\n let ldata = lookup(\n lookup_table: \"epss\",\n key: to_string($message.data_nmap_port_cve_id)\n );\n set_fields(\n fields: ldata,\n prefix: \"epss_\"\n );\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "c18f97ef-48f9-47b8-ac56-9c7d870bbe6a",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "LINUX SYSMON EVENT 3 OUTBOUND CONNECTION LOG NORMALIZATION"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "LINUX SYSMON EVENT 3 OUTBOUND CONNECTION LOG NORMALIZATION"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"LINUX SYSMON EVENT 3 OUTBOUND CONNECTION LOG NORMALIZATION\"\nwhen\n $message.rule_group1 == \"linux\" AND $message.rule_group3 == \"sysmon_event3\" AND $message.data_eventdata_initiated == \"true\"\nthen\n set_field(\"process_image\", $message.data_eventdata_image);\n set_field(\"process_id\", $message.data_eventdata_processId);\n set_field(\"protocol\", $message.data_eventdata_protocol);\n set_field(\"user_name\", $message.data_eventdata_user);\n set_field(\"dst_ip\", $message.data_eventdata_DestinationIp);\n set_field(\"dst_port\", $message.data_eventdata_destinationPort);\n set_field(\"src_ip\", $message.data_eventdata_sourceIp);\n set_field(\"src_port\", $message.data_eventdata_sourcePort);\n set_field(\"traffic_direction\", \"external\"); \nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "9544ca5f-1bd5-4c23-afab-ea30aa39e4c3",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 1 - SOFTWARE VENDORS"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 1 - SOFTWARE VENDORS"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"WINDOWS SYSMON EVENT 1 - SOFTWARE VENDORS\"\nwhen\n $message.rule_group1 == \"windows\" AND $message.rule_group3 == \"sysmon_event1\" AND has_field(\"data_win_eventdata_company\")\nthen\n let ldata = lookup_value(\n lookup_table: \"software-vendors\",\n key: to_string($message.data_win_eventdata_company)\n );\n set_field(\"software_approved\", ldata);\n let build_message_0 = to_string(\" Sysmon - Event 1: Process creation \");\n let build_message_1 = concat(build_message_0, to_string($message.data_win_eventdata_description));\n set_field(\"second_rule_description\", build_message_1);\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "917d7a35-5a98-4e8e-9b3a-daacc76e3d31",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 3 - SOCFORTRESS THREAT INTEL"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 3 - SOCFORTRESS THREAT INTEL"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"WINDOWS SYSMON EVENT 3 - SOCFORTRESS THREAT INTEL\"\nwhen\n $message.rule_group1 == \"windows\" AND $message.rule_group3 == \"sysmon_event3\" AND $message.data_win_eventdata_destinationIp != \"127.0.0.1\" AND $message.data_win_eventdata_destinationIp != \"255.255.255.255\" AND $message.data_win_eventdata_destinationIp != \"0.0.0.0\" AND $message.data_win_eventdata_destinationIsIpv6 == \"false\" AND !in_private_net(to_string($message.data_win_eventdata_destinationIp))\nthen\n let ip_and_ampersand = concat(to_string($message.data_win_eventdata_destinationIp), \"&customer_code=\");\n let new_key = concat(ip_and_ampersand, to_string($message.agent_labels_customer));\n let ldata = lookup(\n lookup_table: \"socfortress_threat_intel\",\n key: new_key\n );\n set_fields(\n fields: ldata,\n prefix: \"threat_intel_\"\n );\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "81cfe56d-b154-4be5-a7db-c062a863915c",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 10 LOG NORMALIZATION"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 10 LOG NORMALIZATION"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"WINDOWS SYSMON EVENT 10 LOG NORMALIZATION\"\nwhen\n $message.rule_group1 == \"windows\" AND $message.rule_group3 == \"sysmon_event_10\"\nthen\n set_field(\"target_image\", $message.data_win_eventdata_targetImage);\n set_field(\"granted_access\", $message.data_win_eventdata_grantedAccess);\n set_field(\"source_image\", $message.data_win_eventdata_sourceImage);\n set_field(\"call_trace\", $message.data_win_eventdata_callTrace);\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "6f33986b-32cf-4c5c-bc9a-8e5626e29cce",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 1 LOG NORMALIZATION"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 1 LOG NORMALIZATION"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"WINDOWS SYSMON EVENT 1 LOG NORMALIZATION\"\nwhen\n $message.rule_group1 == \"windows\" AND $message.rule_group3 == \"sysmon_event1\"\nthen\n set_field(\"process_name\", $message.data_win_eventdata_originalFileName);\n set_field(\"process_image\", $message.data_win_eventdata_image);\n set_field(\"process_id\", $message.data_win_eventdata_processId);\n set_field(\"process_cmd_line\", $message.data_win_eventdata_commandLine);\n set_field(\"user_name\", $message.data_win_eventdata_user);\n set_field(\"software_vendor\", $message.data_win_eventdata_company);\n set_field(\"process_image_hashes\", $message.data_win_eventdata_hashes);\n set_field(\"software_product\", $message.data_win_eventdata_product);\n set_field(\"parent_process_image\", $message.data_win_eventdata_parentImage);\n set_field(\"parent_cmd_line\", $message.data_win_eventdata_parentCommandLine);\n set_field(\"parent_process_id\", $message.data_win_eventdata_parentProcessId);\n set_field(\"parent_process_user\", $message.data_win_eventdata_parentUser);\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "f70e4aea-2343-45d1-8b19-224c5bdb8632",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "Packetbeat Timestamp - UTC"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "Packetbeat Timestamp - UTC"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"Packetbeat Timestamp - UTC\"\nwhen\n has_field(\"data_event_start\")\nthen\n let time = parse_date(to_string($message.data_event_start), \"yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSS'Z'\", \"Etc/UTC\");\n set_field(\"timestamp_utc\", time);\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "4cf85cca-5ab5-4b1a-a503-e4f2d1d75bd6",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "WAZUH CREATE FIELD SYSLOG LEVEL - NOTICE"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "WAZUH CREATE FIELD SYSLOG LEVEL - NOTICE"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"WAZUH CREATE FIELD SYSLOG LEVEL - NOTICE\"\nwhen to_long($message.rule_level) > 3 AND to_long($message.rule_level) < 8\nthen\nset_field(\"syslog_level\", \"NOTICE\");\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "50303dca-8cc3-4367-9974-6fa0091d73a7",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "LINUX SYSMON EVENT 1 LOG NORMALIZATION"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "LINUX SYSMON EVENT 1 LOG NORMALIZATION"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"LINUX SYSMON EVENT 1 LOG NORMALIZATION\"\nwhen\n $message.rule_group1 == \"linux\" AND $message.rule_group3 == \"sysmon_event1\"\nthen\n set_field(\"process_image\", $message.data_eventdata_image);\n set_field(\"process_id\", $message.data_eventdata_processId);\n set_field(\"process_cmd_line\", $message.data_eventdata_commandLine);\n set_field(\"user_name\", $message.data_eventdata_user);\n set_field(\"parent_process_image\", $message.data_eventdata_parentImage);\n set_field(\"parent_cmd_line\", $message.data_eventdata_parentCommandLine);\n set_field(\"parent_process_id\", $message.data_eventdata_parentProcessId);\n set_field(\"parent_process_user\", $message.data_eventdata_parentUser);\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "bfe85101-5ed8-442d-a0c2-3b3c6d3f1cd6",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 7 LOG NORMALIZATION"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 7 LOG NORMALIZATION"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"WINDOWS SYSMON EVENT 7 LOG NORMALIZATION\"\nwhen\n $message.rule_group1 == \"windows\" AND $message.rule_group3 == \"sysmon_event7\"\nthen\n set_field(\"dll_name\", $message.data_win_eventdata_originalFileName);\n set_field(\"process_image\", $message.data_win_eventdata_image);\n set_field(\"process_id\", $message.data_win_eventdata_processId);\n set_field(\"software_vendor\", $message.data_win_eventdata_company);\n set_field(\"image_loaded\", $message.data_win_eventdata_imageLoaded);\n set_field(\"dll_signature\", $message.data_win_eventdata_signature);\n set_field(\"dll_signed\", $message.data_win_eventdata_signed);\n set_field(\"dll_signature_status\", $message.data_win_eventdata_signatureStatus);\n set_field(\"dll_hashes\", $message.data_win_eventdata_hashes);\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "66d12fb9-3e88-4060-b17f-512ac5dac6a7",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 6 - SOCFORTRESS THREAT INTEL"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 6 - SOCFORTRESS THREAT INTEL"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"WINDOWS SYSMON EVENT 6 - SOCFORTRESS THREAT INTEL\"\nwhen\n $message.rule_group1 == \"windows\" AND $message.rule_group3 == \"sysmon_event6\" AND $message.data_win_eventdata_signed == \"false\"\nthen\n let sha256_and_ampersand = concat(to_string($message.sha256), \"&customer_code=\");\n let new_key = concat(sha256_and_ampersand, to_string($message.agent_labels_customer));\n let ldata = lookup(\n lookup_table: \"socfortress_threat_intel\",\n key: new_key\n );\n set_fields(\n fields: ldata,\n prefix: \"threat_intel_\"\n );\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "da125db2-5391-4fa7-8cfc-effabd40641c",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "LINUX OSQUERY PROCESS ID - GENERIC"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "LINUX OSQUERY PROCESS ID - GENERIC"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"LINUX OSQUERY PROCESS ID - GENERIC\"\nwhen\n$message.rule_group1 == \"osquery\"\nthen\n set_field(\"process_id\", $message.data_columns_pid);\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "571ffe1c-0220-4b91-bc0f-04302d1e800c",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 1 - SOCFORTRESS THREAT INTEL"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 1 - SOCFORTRESS THREAT INTEL"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"WINDOWS SYSMON EVENT 1 - SOCFORTRESS THREAT INTEL\"\nwhen\n $message.rule_group1 == \"windows\" AND $message.rule_group3 == \"sysmon_event1\" AND ! has_field(\"data_win_eventdata_company\")\nthen\n let sha256_and_ampersand = concat(to_string($message.sha256), \"&customer_code=\");\n let new_key = concat(sha256_and_ampersand, to_string($message.agent_labels_customer));\n let ldata = lookup(\n lookup_table: \"socfortress_threat_intel\",\n key: new_key\n );\n set_fields(\n fields: ldata,\n prefix: \"threat_intel_\"\n );\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "721afb39-b970-4636-b1e9-a3bec5b3c8da",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 17 LOG NORMALIZATION"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 17 LOG NORMALIZATION"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"WINDOWS SYSMON EVENT 17 LOG NORMALIZATION\"\nwhen\n $message.rule_group1 == \"windows\" AND $message.rule_group3 == \"sysmon_event_17\"\nthen\n set_field(\"process_image\", $message.data_win_eventdata_image);\n set_field(\"process_id\", $message.data_win_eventdata_processId);\n set_field(\"pipe_name\", $message.data_win_eventdata_pipeName);\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "056eeb4e-36ff-4ebe-9a79-77adc2f7106e",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 5 LOG NORMALIZATION"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 5 LOG NORMALIZATION"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"WINDOWS SYSMON EVENT 5 LOG NORMALIZATION\"\nwhen\n $message.rule_group1 == \"windows\" AND $message.rule_group3 == \"sysmon_event5\"\nthen\n set_field(\"process_image\", $message.data_win_eventdata_image);\n set_field(\"process_id\", $message.data_win_eventdata_processId);\n set_field(\"user_name\", $message.data_win_eventdata_user);\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "0fd58b5c-991c-418a-92dd-dadc2c1df8ee",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 7 - EMPTY SOFTWARE VENDORS"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 7 - EMPTY SOFTWARE VENDORS"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"WINDOWS SYSMON EVENT 7 - EMPTY SOFTWARE VENDORS\"\nwhen\n $message.rule_group1 == \"windows\" AND $message.rule_group3 == \"sysmon_event7\" AND ! has_field(\"data_win_eventdata_company\")\nthen\n let ldata = lookup_value(\n lookup_table: \"software-vendors\",\n key: to_string($message.data_win_eventdata_signature)\n );\n set_field(\"software_approved\", ldata);\n let build_message_0 = to_string(\" Sysmon - Event 7: Image Loaded With Empty Company Name - \");\n let build_message_1 = concat(build_message_0, to_string($message.data_win_eventdata_signature));\n set_field(\"rule_description\", build_message_1);\n set_field(\"syslog_level\", \"WARNING\");\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "169eaa47-8de6-4cd8-aa18-adb37ff884c0",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "LINUX PACKETBEAT DNS LOG NORMALIZATION"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "LINUX PACKETBEAT DNS LOG NORMALIZATION"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"LINUX PACKETBEAT DNS LOG NORMALIZATION\"\nwhen\n $message.rule_group1 == \"linux\" AND $message.rule_group3 == \"dns\"\nthen\n set_field(\"dns_query\", $message.data_dns_question_name);\n set_field(\"dns_answer\", $message.data_dns_resolved_ip);\n set_field(\"dns_response_code\", $message.data_dns_response_code);\n remove_field(\"$message.data_@metadata_beat\");\n remove_field(\"$message.data_@metadata_type\");\n remove_field(\"$message.data_@metadata_version\");\n remove_field(\"$message.data_agent_ephemeral_id\");\n remove_field(\"$message.data_host_architecture\");\n remove_field(\"$message.data_host_containerized\");\n remove_field(\"$message.data_host_hostname\");\n remove_field(\"$message.data_host_id\");\n remove_field(\"$message.data_host_ip\");\n remove_field(\"$message.data_host_mac\");\n remove_field(\"$message.data_host_name\");\n remove_field(\"$message.data_host_os_codename\");\n remove_field(\"$message.data_host_os_family\");\n remove_field(\"$message.data_host_os_kernel\");\n remove_field(\"$message.data_host_os_name\");\n remove_field(\"$message.data_host_os_platform\");\n remove_field(\"$message.data_host_os_type\");\n remove_field(\"$message.data_host_os_version\");\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "09c78369-36ac-4956-a1de-fa636aadae92",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "Timestamp Failsafe - UTC"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "Set Timestamp based upon `msg_timestamp` field which is the time Graylog ingested the message. This is a failsafe to catch if no other field names have been detected in the log that provide the timestamp value that the host assigned with the raw alert."
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"Timestamp Failsafe - UTC\"\nwhen\n ! has_field(\"timestamp_utc\")\nthen\n let msg_timestamp = $message.msg_timestamp;\n set_field(\"timestamp_utc\", msg_timestamp);\n remove_field(\"msg_timestamp\");\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "64b2b33d-f5a9-4365-9233-e9901abbf4c1",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "OSQUERY NETWORK CONNECTION LOG NORMALIZATION"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "OSQUERY NETWORK CONNECTION LOG NORMALIZATION"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"OSQUERY NETWORK CONNECTION LOG NORMALIZATION\"\nwhen\n $message.data_osquery_name == \"list_network_connection\"\nthen\n set_field(\"process_image\", $message.data_osquery_columns_name);\n set_field(\"process_id\", $message.data_osquery_columns_pid);\n set_field(\"protocol\", $message.data_osquery_columns_protocol);\n set_field(\"user_name\", $message.data_osquery_columns_username);\n set_field(\"dst_ip\", $message.data_osquery_columns_remote_address);\n set_field(\"dst_port\", $message.data_osquery_columns_remote_port);\n set_field(\"src_ip\", $message.data_osquery_columns_local_address);\n set_field(\"src_port\", $message.data_osquery_columns_local_port);\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "e71eaeef-b11b-4c97-afca-7f5875cd7459",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 15 - SOCFORTRESS THREAT INTEL"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 15 - SOCFORTRESS THREAT INTEL"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"WINDOWS SYSMON EVENT 15 - SOCFORTRESS THREAT INTEL\"\nwhen\n $message.rule_group1 == \"windows\" AND $message.rule_group3 == \"sysmon_event_15\"\nthen\n let sha256_and_ampersand = concat(to_string($message.sha256), \"&customer_code=\");\n let new_key = concat(sha256_and_ampersand, to_string($message.agent_labels_customer));\n let ldata = lookup(\n lookup_table: \"socfortress_threat_intel\",\n key: new_key\n );\n set_fields(\n fields: ldata,\n prefix: \"threat_intel_\"\n );\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "af6d5827-98f8-4470-b580-05365c9562cc",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 12 LOG NORMALIZATION"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 12 LOG NORMALIZATION"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"WINDOWS SYSMON EVENT 12 LOG NORMALIZATION\"\nwhen\n $message.rule_group1 == \"windows\" AND $message.rule_group3 == \"sysmon_event_12\"\nthen\n set_field(\"process_image\", $message.data_win_eventdata_image);\n set_field(\"process_id\", $message.data_win_eventdata_processId);\n set_field(\"target_object\", $message.data_win_eventdata_targetObject);\n set_field(\"event_type\", $message.data_win_eventdata_eventType);\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "be2a3538-26f8-4b0c-8df4-dea7ed241ecc",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "OpenAudit Remove field - data_system_network_item_dhcp_lease_obtained"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "OpenAudit Remove field - data_system_network_item_dhcp_lease_obtained"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"OpenAudit Remove field - data_system_network_item_dhcp_lease_obtained\"\nwhen\n // Apply the rule when the specified field is present\n has_field(\"data_system_network_item_dhcp_lease_obtained\")\nthen\n // Remove the specified field\n remove_field(\"data_system_network_item_dhcp_lease_obtained\");\nend\n"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "ad3d829e-ca93-42dc-b49e-4cc5104a8f69",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "LINUX SYSMON EVENT 5 LOG NORMALIZATION"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "LINUX SYSMON EVENT 5 LOG NORMALIZATION"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"LINUX SYSMON EVENT 5 LOG NORMALIZATION\"\nwhen\n $message.rule_group1 == \"linux\" AND $message.rule_group3 == \"sysmon_event5\"\nthen\n set_field(\"process_image\", $message.data_eventdata_image);\n set_field(\"process_id\", $message.data_eventdata_processId);\n set_field(\"user_name\", $message.data_eventdata_user);\nend\n"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "af720a8a-6293-48cf-a8a6-a5edea7b7e0b",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "WAZUH CREATE FIELD SYSLOG LEVEL - INFO"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "WAZUH CREATE FIELD SYSLOG LEVEL - INFO"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"WAZUH CREATE FIELD SYSLOG LEVEL - INFO\"\nwhen to_long($message.rule_level) > 0 AND to_long($message.rule_level) < 4\nthen\nset_field(\"syslog_level\", \"INFO\");\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "1ab185cc-0e73-4a98-b9aa-2cb5045fd4e3",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "EPSS CVE Criticality"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "EPSS CVE Criticality"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"EPSS CVE Criticality\"\nwhen\n $message.rule_group1 == \"vulnerability-detector\"\nthen\n let ldata = lookup(\n lookup_table: \"epss\",\n key: to_string($message.data_vulnerability_cve)\n );\n set_fields(\n fields: ldata,\n prefix: \"epss_\"\n );\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "bc32db42-cff2-4750-ad22-00d82a01924b",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 3 - NETWORK PORTS"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 3 - NETWORK PORTS"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"WINDOWS SYSMON EVENT 3 - NETWORK PORTS\"\nwhen\n $message.rule_group1 == \"windows\" AND $message.rule_group3 == \"sysmon_event3\" AND has_field(\"data_win_eventdata_destinationPort\")\nthen\n let ldata = lookup_value(\n lookup_table: \"network-ports\",\n key: to_string($message.data_win_eventdata_destinationPort)\n );\n set_field(\"port_common\", ldata);\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "76773053-f1c5-4e98-93be-69baf05f95b5",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "DROP SYSMON EVT 10 LOGS - WELL KNOWN SOURCE PROCESS IMAGE"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "DROP SYSMON EVT 10 LOGS - WELL KNOWN SOURCE PROCESS IMAGE"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"DROP SYSMON EVT 10 LOGS - WELL KNOWN SOURCE PROCESS IMAGE\"\nwhen\n$message.rule_group3 == \"sysmon_event_10\" AND $message.data_win_eventdata_sourceImage == \"C:\\\\\\\\Program Files\\\\\\\\ATERA Networks\\\\\\\\AteraAgent\\\\\\\\AteraAgent.exe\"\nthen\n drop_message();\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "0f68d0d0-3555-4da1-8ef0-6fa3a028b8af",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "DROP SYSMON EVT 7 LOGS - WELL KNOWN PROCESS IMAGE"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "DROP SYSMON EVT 7 LOGS - WELL KNOWN PROCESS IMAGE"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"DROP SYSMON EVT 7 LOGS - WELL KNOWN PROCESS IMAGE\"\nwhen\n$message.rule_group3 == \"sysmon_event7\" AND \n($message.data_win_eventdata_image == \"C:\\\\\\\\Program Files\\\\\\\\ATERA Networks\\\\\\\\AteraAgent\\\\\\\\Packages\\\\\\\\AgentPackageHeartbeat\\\\\\\\AgentPackageHeartbeat.exe\" \nOR $message.data_win_eventdata_image == \"C:\\\\\\\\Program Files\\\\\\\\ATERA Networks\\\\\\\\AteraAgent\\\\\\\\Packages\\\\\\\\AgentPackageSTRemote\\\\\\\\AgentPackageSTRemote.exe\" \nOR $message.data_win_eventdata_image == \"C:\\\\\\\\Program Files\\\\\\\\ATERA Networks\\\\\\\\AteraAgent\\\\\\\\Packages\\\\\\\\AgentPackageMonitoring\\\\\\\\AgentPackageMonitoring.exe\" \nOR $message.data_win_eventdata_image == \"C:\\\\\\\\Program Files\\\\\\\\ATERA Networks\\\\\\\\AteraAgent\\\\\\\\Packages\\\\\\\\AgentPackageInternalPoller\\\\\\\\AgentPackageInternalPoller.exe\")\nthen\n drop_message();\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "46b3df32-92c5-4cc7-8026-a66cc2623a52",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "Windows Timestamp - UTC"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "Windows Timestamp - UTC"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"Windows Timestamp - UTC\"\nwhen\n has_field(\"data_win_system_systemTime\")\nthen\n let time = parse_date(to_string($message.data_win_system_systemTime), \"yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSS'Z'\", \"Etc/UTC\");\n set_field(\"timestamp_utc\", time);\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "bb76d44c-45e5-4b3c-9414-a72c44370a7f",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 1 - EMPTY SOFTWARE VENDORS"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 1 - EMPTY SOFTWARE VENDORS"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"WINDOWS SYSMON EVENT 1 - EMPTY SOFTWARE VENDORS\"\nwhen\n $message.rule_group1 == \"windows\" AND $message.rule_group3 == \"sysmon_event1\" AND ! has_field(\"data_win_eventdata_company\")\nthen\n set_field(\"software_approved\", \"no\");\n let build_message_0 = to_string(\" Sysmon - Event 1: Process creation With Empty Company Name - \");\n let build_message_1 = concat(build_message_0, to_string($message.data_win_eventdata_image));\n set_field(\"second_rule_description\", build_message_1);\n set_field(\"syslog_level\", \"WARNING\");\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "992c3888-0fa5-42d8-8748-6a61c2b8464b",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "WINDOWS PROCESS ID - Non SOCFortress Sysmon"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "WINDOWS PROCESS ID - Non SOCFortress Sysmon"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"WINDOWS PROCESS ID - Non SOCFortress Sysmon\"\nwhen\n $message.rule_group1 != \"windows\" AND has_field(\"data_win_eventdata_processId\")\nthen\n set_field(\"process_id\", $message.data_win_eventdata_processId);\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "4d70e0a5-2a88-43aa-b659-16933a41c5da",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "OpenAudit Remove field - data_system_software_item_install_date"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "OpenAudit Remove field - data_system_software_item_install_date"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"OpenAudit Remove field - data_system_software_item_install_date\"\nwhen\n // Apply the rule when the specified field is present\n has_field(\"data_system_software_item_install_date\")\nthen\n // Remove the specified field\n remove_field(\"data_system_software_item_install_date\");\nend\n"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "d049995b-2c18-407a-bdd2-141c94b93568",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "WAZUH CREATE FIELD SYSLOG LEVEL - ALERT"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "CREATE FIELD SYSLOG LEVEL - ALERT"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"WAZUH CREATE FIELD SYSLOG LEVEL - ALERT\"\nwhen to_long($message.rule_level) > 11\nthen\nset_field(\"syslog_level\", \"ALERT\");\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "fad6eb39-5771-42ec-b95c-0b363c33bdb1",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "USER ADDED TO PRIVILEGE ADMIN GROUP"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "USER ADDED TO PRIVILEGE ADMIN GROUP"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"USER ADDED TO PRIVILEGE ADMIN GROUP\"\nwhen\n $message.data_win_system_eventID == \"4728\" OR $message.data_win_system_eventID == \"4732\" OR $message.data_win_system_eventID == \"4756\"\nthen\n let ldata = lookup_value(\n lookup_table: \"ad-admin-groups\",\n key: to_string($message.data_win_eventdata_targetUserName)\n );\n set_field(\"is_admin_group\", ldata);\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "833dcc65-5743-4525-a9a0-cb08f5358d67",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "OSSEC SYSCHECK ADDED EVENT NORMALIZATION"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "OSSEC SYSCHECK ADDED EVENT NORMALIZATION"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"OSSEC SYSCHECK ADDED EVENT NORMALIZATION\"\nwhen\n $message.rule_group1 == \"ossec\" AND $message.rule_group2 == \"syscheck\" AND $message.syscheck_event == \"added\"\nthen\n set_field(\"sha256\", $message.syscheck_sha256_after);\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "862acb0a-e994-47fe-b3b7-ea8474cf953a",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "WINDOWS PROCESS ID - No EventData Field"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "WINDOWS PROCESS ID - No EventData Field"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"WINDOWS PROCESS ID - No EventData Field\"\nwhen\n ! has_field(\"data_win_eventdata_processId\") AND $message.rule_group1 == \"windows\"\nthen\n set_field(\"process_id\", $message.data_win_system_processID);\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "f8767b41-6060-40d2-b47b-949421652dbc",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "LINUX OSQUERY-BPF PROCESS LIST LOG NORMALIZATION"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "LINUX OSQUERY-BPF PROCESS LIST LOG NORMALIZATION"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"LINUX OSQUERY-BPF PROCESS LIST LOG NORMALIZATION\"\nwhen\n$message.rule_group1 == \"osquery\" AND ($message.rule_group2 == \"bpf_process_events\" OR $message.rule_group2 == \"list_processes_with_hash\")\nthen\n set_field(\"process_name\", $message.data_columns_path);\n set_field(\"process_image\", $message.data_columns_path);\n set_field(\"process_id\", $message.data_columns_pid);\n set_field(\"process_cmd_line\", $message.data_columns_cmdline);\n set_field(\"parent_process_id\", $message.data_columns_parent);\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "f11d88a6-077a-4b62-9979-f78e79920c54",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 3 - UNCOMMON PORT"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "WINDOWS SYSMON EVENT 3 - UNCOMMON PORT"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"WINDOWS SYSMON EVENT 3 - UNCOMMON PORT\"\nwhen\n $message.rule_group1 == \"windows\" AND $message.rule_group3 == \"sysmon_event3\" AND ! has_field(\"port_common\")\nthen\nset_field(\"port_common\", \"no\");\nset_field(\"syslog_level\", \"WARNING\");\nlet build_message_0 = to_string(\" Sysmon - Event 3: Network connection to Uncommon Port by \");\nlet build_message_1 = concat(build_message_0, to_string($message.data_win_eventdata_image));\nset_field(\"rule_description\", build_message_1);\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "a08b82b7-6df9-4643-9d6e-549ed2f87c6d",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "Office365 Timestamp - UTC"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "Office365 Timestamp - UTC"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"Office365 Timestamp - UTC\"\nwhen\n has_field(\"data_office_365_CreationTime\")\nthen\n let creation_time = $message.data_office_365_CreationTime;\n set_field(\"timestamp_utc\", creation_time);\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "6233a285-38ea-48ef-bb17-fc85f94a75fc",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "URL Encode data_name field for ASK SOCFortress API"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "URL Encode `data_name` field for ASK SOCFortress API"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"URL Encode data_name field for ASK SOCFortress API\"\nwhen\n has_field(\"data_name\") AND $message.rule_group2 == \"chainsaw\" AND $message.data_logsource_product == \"windows\"\nthen\n let replaced = replace(to_string($message.data_name), \" \", \"%20\");\n set_field(\"sigma_name_encoded\", replaced);\nend\n"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "5e400ee7-a24d-4e5f-970d-9f20e01278f5",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "ASK SOCFORTRESS WINDOWS - CHAINSAW"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "ASK SOCFORTRESS WINDOWS - CHAINSAW"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"ASK SOCFORTRESS WINDOWS - CHAINSAW\"\nwhen\n has_field(\"sigma_name_encoded\")\nthen\n let ask_socfortress = to_string($message.sigma_name_encoded);\n let ldata = lookup_value(\"ask_socfortress_windows\", ask_socfortress);\n set_field(\"ask_socfortress_message\", ldata);\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"id": "feb9e1d7-9346-4a2a-9566-59ed483c1b83",
+			"type": {
+				"name": "stream",
+				"version": "1"
+			},
+			"v": "1",
+			"data": {
+				"alarm_callbacks": [],
+				"outputs": [],
+				"remove_matches": {
+					"@type": "boolean",
+					"@value": true
+				},
+				"title": {
+					"@type": "string",
+					"@value": "WAZUH EDR AGENTS"
+				},
+				"stream_rules": [
+					{
+						"type": {
+							"@type": "string",
+							"@value": "EXACT"
+						},
+						"field": {
+							"@type": "string",
+							"@value": "rule_group1"
+						},
+						"value": {
+							"@type": "string",
+							"@value": "office365"
+						},
+						"inverted": {
+							"@type": "boolean",
+							"@value": true
+						},
+						"description": {
+							"@type": "string",
+							"@value": ""
+						}
+					},
+					{
+						"type": {
+							"@type": "string",
+							"@value": "EXACT"
+						},
+						"field": {
+							"@type": "string",
+							"@value": "rule_group1"
+						},
+						"value": {
+							"@type": "string",
+							"@value": "socfortress_healthcheck"
+						},
+						"inverted": {
+							"@type": "boolean",
+							"@value": true
+						},
+						"description": {
+							"@type": "string",
+							"@value": ""
+						}
+					},
+					{
+						"type": {
+							"@type": "string",
+							"@value": "EXACT"
+						},
+						"field": {
+							"@type": "string",
+							"@value": "rule_group1"
+						},
+						"value": {
+							"@type": "string",
+							"@value": "suricata"
+						},
+						"inverted": {
+							"@type": "boolean",
+							"@value": true
+						},
+						"description": {
+							"@type": "string",
+							"@value": ""
+						}
+					},
+					{
+						"type": {
+							"@type": "string",
+							"@value": "EXACT"
+						},
+						"field": {
+							"@type": "string",
+							"@value": "syslog_type"
+						},
+						"value": {
+							"@type": "string",
+							"@value": "wazuh"
+						},
+						"inverted": {
+							"@type": "boolean",
+							"@value": false
+						},
+						"description": {
+							"@type": "string",
+							"@value": ""
+						}
+					}
+				],
+				"alert_conditions": [],
+				"matching_type": {
+					"@type": "string",
+					"@value": "AND"
+				},
+				"disabled": {
+					"@type": "boolean",
+					"@value": false
+				},
+				"description": {
+					"@type": "string",
+					"@value": "WAZUH EDR AGENTS"
+				},
+				"default_stream": {
+					"@type": "boolean",
+					"@value": false
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		}
+	]
+}

@@ -28,6 +28,11 @@ export const isMobile = () => {
 	return detectMobile
 }
 
+export const isUrl = (text: string) => {
+	const urlPattern = new RegExp("^(https?:\\/\\/)", "i")
+	return urlPattern.test(text)
+}
+
 export function renderIcon(icon: Component | string) {
 	if (typeof icon === "string") {
 		return () => h(Icon, { name: icon })
