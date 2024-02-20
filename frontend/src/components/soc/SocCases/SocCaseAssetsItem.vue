@@ -87,13 +87,13 @@ import KVCard from "@/components/common/KVCard.vue"
 import Badge from "@/components/common/Badge.vue"
 import SocCaseAssetLink from "./SocCaseAssetLink.vue"
 import { computed, ref } from "vue"
-import { NModal, NTabs, NTabPane, NInput } from "naive-ui"
+import { NModal, NTabs, NTabPane, NInput, NEmpty } from "naive-ui"
 import _omit from "lodash/omit"
 import _split from "lodash/split"
 import _upperFirst from "lodash/upperFirst"
-import type { SocAsset } from "@/types/soc/asset.d"
+import type { SocCaseAsset } from "@/types/soc/asset.d"
 
-const { asset } = defineProps<{ asset: SocAsset }>()
+const { asset } = defineProps<{ asset: SocCaseAsset }>()
 
 const InfoIcon = "carbon:information"
 

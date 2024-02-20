@@ -70,11 +70,11 @@ import Api from "@/api"
 import { useMessage, NSpin, NCollapse, NEmpty, NCollapseItem } from "naive-ui"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
-import type { SocAssetLink } from "@/types/soc/asset.d"
+import type { SocCaseAssetLink } from "@/types/soc/asset.d"
 import type { SocCase } from "@/types/soc/case.d"
 import SocCaseItem from "./SocCaseItem.vue"
 
-const { link } = defineProps<{ link: SocAssetLink }>()
+const { link } = defineProps<{ link: SocCaseAssetLink }>()
 
 const ChevronIcon = "carbon:chevron-right"
 
