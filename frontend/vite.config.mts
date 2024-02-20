@@ -39,14 +39,11 @@ export default (args: any) => {
 		server: {
 			https:
 				fs.existsSync("/certs/key.pem") && fs.existsSync("/certs/cert.pem")
-					? {
-							key: fs.readFileSync("/certs/key.pem"),
-							cert: fs.readFileSync("/certs/cert.pem")
-					  }
+					? { key: fs.readFileSync("/certs/key.pem"), cert: fs.readFileSync("/certs/cert.pem") }
 					: undefined,
 			proxy: {
 				"/api": {
-					//target: "http://copilot-backend:5000",
+					// target: "http://copilot-backend:5000",
 					target: process.env.VITE_API_URL, // for local development
 					changeOrigin: true
 				}

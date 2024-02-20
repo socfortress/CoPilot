@@ -6,17 +6,22 @@
 		"datejs",
 		"datetimesec",
 		"echarts",
+		"firedtimes",
 		"Healthcheck",
+		"healthchecks",
 		"majesticons",
 		"mimecast",
 		"picocolors",
 		"redoc",
 		"rushstack",
+		"Socfortress",
 		"sparkline",
 		"taze",
 		"uvicorn",
 		"venv",
+		"vuesjv",
 		"Wazuh",
-		"xaxis"
+		"xaxis",
+		"zondicons"
 	]
 }
