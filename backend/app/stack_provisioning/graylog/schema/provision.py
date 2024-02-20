@@ -4,7 +4,7 @@ from enum import Enum
 from typing import List
 
 class AvailableContentPacks(str, Enum):
-    Wazuh = "The Wazuh Content Pack which includes Input, Stream, Pipeline Rules, Piplines, and Lookup Tables for Wazuh logs and the SOCFortress SIEM stack."
+    SOCFORTRESS_WAZUH_CONTENT_PACK = "The Wazuh Content Pack which includes Input, Stream, Pipeline Rules, Piplines, and Lookup Tables for Wazuh logs and the SOCFortress SIEM stack."
 
 class ContentPack(BaseModel):
     name: str
@@ -13,7 +13,7 @@ class ContentPack(BaseModel):
 class AvailableContentPacksResponse(BaseModel):
     available_content_packs: List[ContentPack] = Field(
         ...,
-        example={"name": AvailableContentPacks.Wazuh.name, "description": AvailableContentPacks.Wazuh.value},
+        example={"name": AvailableContentPacks.SOCFORTRESS_WAZUH_CONTENT_PACK.name, "description": AvailableContentPacks.SOCFORTRESS_WAZUH_CONTENT_PACK.value},
         description="The available content packs for provisioning in Graylog",
     )
     success: bool = Field(
