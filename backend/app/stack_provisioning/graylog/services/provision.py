@@ -46,11 +46,22 @@ def load_content_pack_json(file_name: str) -> dict:
         with open(file_path, "r") as file:
             content_pack_data = json.load(file)
 
-        return ContentPack(**content_pack_data).dict()
+        return content_pack_data
 
     except FileNotFoundError:
         logger.error(f"Content pack JSON file not found at {file_path}")
         raise HTTPException(status_code=404, detail="Content pack JSON file not found")
+
+async def write_content_pack_to_file(content_pack: dict) -> None:
+    """
+    Write the content pack to a file. Just for testing purposes.
+
+    Args:
+        content_pack (dict): The content pack to write to a file.
+    """
+    file_path = get_content_pack_path("wazuh_content_pack_testing.json")
+    with open(file_path, "w") as file:
+        json.dump(content_pack, file, indent=4)
 
 
 async def provision_wazuh_content_pack(
@@ -61,6 +72,7 @@ async def provision_wazuh_content_pack(
     """
     logger.info("Provisioning Wazuh Content Pack...")
     content_pack = load_content_pack_json("wazuh_content_pack.json")
+    #await write_content_pack_to_file(content_pack)
     logger.info("Inserting Wazuh Content Pack...")
     await insert_content_pack(content_pack)
     # ! Content Pack ID is found in the `wazuh_content_pack.json` file
