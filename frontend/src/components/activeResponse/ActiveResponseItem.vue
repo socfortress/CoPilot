@@ -41,17 +41,17 @@
 			:bordered="false"
 			segmented
 		>
-			<Markdown :source="activeResponse.description" />
+			<ActiveResponseDetails :activeResponse="activeResponse" />
 		</n-modal>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { defineAsyncComponent, ref, toRefs } from "vue"
+import { ref, toRefs } from "vue"
 import type { SupportedActiveResponse } from "@/types/activeResponse"
 import ActiveResponseActions from "./ActiveResponseActions.vue"
+import ActiveResponseDetails from "./ActiveResponseDetails.vue"
 import { NButton, NModal } from "naive-ui"
-const Markdown = defineAsyncComponent(() => import("@/components/common/Markdown.vue"))
 import Icon from "@/components/common/Icon.vue"
 
 const props = defineProps<{
