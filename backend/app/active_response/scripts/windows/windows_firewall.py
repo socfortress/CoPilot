@@ -37,6 +37,7 @@ def write_debug_file(ar_name, msg):
     with open(LOG_FILE, mode="a") as log_file:
         log_msg = {
             "timestamp": datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S"),
+            "active_response": "windows_firewall",
             "message": json.loads(msg) if isinstance(msg, str) and msg.strip().startswith("{") else msg,
         }
         log_file.write(json.dumps(log_msg) + "\n")

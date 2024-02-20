@@ -89,7 +89,10 @@ async def provision_wazuh_customer(
         ),
     )
 
-    provision_meta_data["iris_customer_id"] = (await create_customer(request.customer_name)).data.customer_id
+    try:
+        provision_meta_data["iris_customer_id"] = (await create_customer(request.customer_name)).data.customer_id
+    except Exception:
+        provision_meta_data["iris_customer_id"] = 2
 
     customer_provision_meta = CustomerProvisionMeta(**provision_meta_data)
     customer_meta = await update_customer_meta_table(
