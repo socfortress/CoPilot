@@ -9,9 +9,9 @@ from app.auth.utils import AuthHandler
 from app.connectors.graylog.services.content_packs import get_content_packs
 from app.connectors.graylog.services.management import get_system_info
 from app.db.db_session import get_db
-from app.stack_provisioning.graylog.schema.provision import ProvisionGraylogResponse, AvailableContentPacksResponse, AvailableContentPacks
+from app.stack_provisioning.graylog.schema.provision import ProvisionGraylogResponse, AvailableContentPacksResponse, AvailableContentPacks, ProvisionContentPackRequest
 from app.stack_provisioning.graylog.services.provision import (
-    provision_wazuh_content_pack,
+    provision_content_pack,
 )
 
 stack_provisioning_graylog_router = APIRouter()
@@ -57,6 +57,26 @@ async def system_version_check(compatible_version: str) -> bool:
             detail=f"Graylog version {system_version} is not compatible with the content pack",
         )
 
+async def is_content_pack_available(content_pack_name: str) -> bool:
+    """
+    Check if the content pack is available for provisioning.
+
+    Args:
+        content_pack_name (str): The name of the content pack to check.
+
+    Returns:
+        bool: True if the content pack is available, False if it is not.
+    """
+    available_content_packs = [pack.name for pack in AvailableContentPacks]
+    if content_pack_name in available_content_packs:
+        logger.info(f"Content pack {content_pack_name} is available")
+        return True
+    else:
+        logger.info(f"Content pack {content_pack_name} is not available")
+        raise HTTPException(
+            status_code=400,
+            detail=f"Content pack {content_pack_name} is not available",
+        )
 
 async def does_content_pack_exist(content_pack_name: str) -> bool:
     """
@@ -98,19 +118,19 @@ async def get_available_content_packs_route() -> AvailableContentPacksResponse:
     )
 
 @stack_provisioning_graylog_router.post(
-    "/graylog/wazuh",
+    "/graylog/provision/content_pack",
     response_model=ProvisionGraylogResponse,
     description="Provision the Wazuh Content Pack in the Graylog instance",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def provision_wazuh_content_pack_route(
-    session: AsyncSession = Depends(get_db),
+async def provision_content_pack_route(
+    content_pack_request: ProvisionContentPackRequest,
 ) -> ProvisionGraylogResponse:
     """
-    Provision the Wazuh Content Pack in the Graylog instance
+    Provision the Content Pack in the Graylog instance
     """
-    logger.info("Provisioning Wazuh Content Pack...")
+    logger.info(f"Provisioning content pack {content_pack_request.content_pack_name.name}...")
     await system_version_check(compatible_version="5.0.13+083613e")
-    await does_content_pack_exist("SOCFORTRESS_WAZUH_CONTENT_PACK")
-    await provision_wazuh_content_pack(session)
-    return ProvisionGraylogResponse(success=True, message="Wazuh Content Pack provisioned successfully")
+    await does_content_pack_exist(content_pack_name=content_pack_request.content_pack_name.name)
+    await provision_content_pack(content_pack_request.content_pack_name.name)
+    return ProvisionGraylogResponse(success=True, message=f"{content_pack_request.content_pack_name.name} Content Pack provisioned successfully")
