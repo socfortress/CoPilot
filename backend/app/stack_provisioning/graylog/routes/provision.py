@@ -1,18 +1,18 @@
 from fastapi import APIRouter
-from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Security
 from loguru import logger
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.utils import AuthHandler
 from app.connectors.graylog.services.content_packs import get_content_packs
 from app.connectors.graylog.services.management import get_system_info
-from app.db.db_session import get_db
-from app.stack_provisioning.graylog.schema.provision import ProvisionGraylogResponse, AvailableContentPacksResponse, AvailableContentPacks, ProvisionContentPackRequest
-from app.stack_provisioning.graylog.services.provision import (
-    provision_content_pack,
+from app.stack_provisioning.graylog.schema.provision import AvailableContentPacks
+from app.stack_provisioning.graylog.schema.provision import (
+    AvailableContentPacksResponse,
 )
+from app.stack_provisioning.graylog.schema.provision import ProvisionContentPackRequest
+from app.stack_provisioning.graylog.schema.provision import ProvisionGraylogResponse
+from app.stack_provisioning.graylog.services.provision import provision_content_pack
 
 stack_provisioning_graylog_router = APIRouter()
 
@@ -57,6 +57,7 @@ async def system_version_check(compatible_version: str) -> bool:
             detail=f"Graylog version {system_version} is not compatible with the content pack",
         )
 
+
 async def is_content_pack_available(content_pack_name: str) -> bool:
     """
     Check if the content pack is available for provisioning.
@@ -77,6 +78,7 @@ async def is_content_pack_available(content_pack_name: str) -> bool:
             status_code=400,
             detail=f"Content pack {content_pack_name} is not available",
         )
+
 
 async def does_content_pack_exist(content_pack_name: str) -> bool:
     """
@@ -100,6 +102,7 @@ async def does_content_pack_exist(content_pack_name: str) -> bool:
     logger.info(f"Content pack {content_pack_name} does not exist")
     return False
 
+
 @stack_provisioning_graylog_router.get(
     "/graylog/available/content_packs",
     response_model=AvailableContentPacksResponse,
@@ -117,6 +120,7 @@ async def get_available_content_packs_route() -> AvailableContentPacksResponse:
         message="Available content packs retrieved successfully",
     )
 
+
 @stack_provisioning_graylog_router.post(
     "/graylog/provision/content_pack",
     response_model=ProvisionGraylogResponse,
@@ -133,4 +137,7 @@ async def provision_content_pack_route(
     await system_version_check(compatible_version="5.0.13+083613e")
     await does_content_pack_exist(content_pack_name=content_pack_request.content_pack_name.name)
     await provision_content_pack(content_pack_request.content_pack_name.name)
-    return ProvisionGraylogResponse(success=True, message=f"{content_pack_request.content_pack_name.name} Content Pack provisioned successfully")
+    return ProvisionGraylogResponse(
+        success=True,
+        message=f"{content_pack_request.content_pack_name.name} Content Pack provisioned successfully",
+    )

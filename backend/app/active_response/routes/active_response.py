@@ -5,15 +5,15 @@ import aiofiles
 from fastapi import APIRouter
 from fastapi import HTTPException
 from fastapi import Security
-from fastapi.responses import JSONResponse
 from loguru import logger
 
 from app.active_response.schema.active_response import ActiveResponse
 from app.active_response.schema.active_response import ActiveResponseDetails
+from app.active_response.schema.active_response import ActiveResponseDetailsResponse
 from app.active_response.schema.active_response import ActiveResponsesSupported
 from app.active_response.schema.active_response import ActiveResponsesSupportedResponse
 from app.active_response.schema.active_response import InvokeActiveResponseRequest
-from app.active_response.schema.active_response import InvokeActiveResponseResponse, ActiveResponseDetailsResponse
+from app.active_response.schema.active_response import InvokeActiveResponseResponse
 from app.auth.utils import AuthHandler
 from app.connectors.wazuh_manager.utils.universal import send_put_request
 

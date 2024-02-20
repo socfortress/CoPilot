@@ -50,9 +50,9 @@ def load_content_pack_json(file_name: str) -> dict:
         logger.error(f"Content pack JSON file not found at {file_path}")
         raise HTTPException(status_code=404, detail="Content pack JSON file not found")
 
-async def get_id_and_rev(data: dict) -> tuple:
-    return data.get('id'), data.get('rev')
 
+async def get_id_and_rev(data: dict) -> tuple:
+    return data.get("id"), data.get("rev")
 
 
 # ! Only for testing purposes
@@ -68,8 +68,6 @@ async def write_content_pack_to_file(content_pack: dict) -> None:
         json.dump(content_pack, file, indent=4)
 
 
-
-
 async def provision_content_pack(content_pack_name: str) -> ProvisionGraylogResponse:
     """
     Provision the Wazuh Content Pack in the Graylog instance
@@ -77,7 +75,7 @@ async def provision_content_pack(content_pack_name: str) -> ProvisionGraylogResp
     logger.info(f"Provisioning {content_pack_name} Content Pack...")
     content_pack = load_content_pack_json(f"{content_pack_name}.json")
     # ! Only for testing purposes
-    #await write_content_pack_to_file(content_pack)
+    # await write_content_pack_to_file(content_pack)
 
     logger.info(f"Inserting {content_pack_name} Content Pack...")
     await insert_content_pack(content_pack)

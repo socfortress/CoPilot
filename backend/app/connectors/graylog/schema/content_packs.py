@@ -23,7 +23,7 @@ class Configuration(BaseModel):
 
 
 class Data(BaseModel):
-    #configuration: Optional[Configuration]
+    # configuration: Optional[Configuration]
     description: Optional[str] = Field(None, alias="@value")
     name: Optional[str] = Field(None, alias="@value")
     title: Optional[str] = Field(None, alias="@value")
