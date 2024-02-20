@@ -97,6 +97,9 @@
 							:artifacts="artifacts"
 						/>
 					</n-tab-pane>
+					<n-tab-pane name="active-response" tab="Active Response" display-directive="show:lazy">
+						<ActiveResponseAgent v-if="agent" :agent="agent" embedded />
+					</n-tab-pane>
 				</n-tabs>
 			</n-spin>
 		</n-card>
@@ -121,6 +124,7 @@ import type { Artifact } from "@/types/artifacts.d"
 import ArtifactsCollect from "@/components/artifacts/ArtifactsCollect.vue"
 import ArtifactsCommand from "@/components/artifacts/ArtifactsCommand.vue"
 import ArtifactsQuarantine from "@/components/artifacts/ArtifactsQuarantine.vue"
+import ActiveResponseAgent from "@/components/activeResponse/ActiveResponseAgent.vue"
 
 const StarIcon = "carbon:star"
 const QuarantinedIcon = "ph:seal-warning-light"
