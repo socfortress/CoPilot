@@ -1,25 +1,30 @@
 # Windows Firewall
 
 ## Description
+
 Wazuh Active Response capable of creating a new rule in the Windows Firewall to block or unblock traffic to a specific IP address.
 
 ### Requirements
-* Python 3.11 or later installed on the Windows agent.
-* `windows_firewall.exe` - The executable file that will be used to create the rule in the Windows Firewall. Provided by SOCFortress at `https://repo.socfortress.co/repository/socfortress/active-response/windows_firewall.exe`.
 
-* Must be placed in the `C:\Program Files (x86)\ossec-agent\active-response\bin` directory on the Windows agent.
+-   Python 3.11 or later installed on the Windows agent.
+-   `windows_firewall.exe` - The executable file that will be used to create the rule in the Windows Firewall. Provided by SOCFortress at `https://repo.socfortress.co/repository/socfortress/active-response/windows_firewall.exe`.
+
+-   Must be placed in the `C:\Program Files (x86)\ossec-agent\active-response\bin` directory on the Windows agent.
 
 ### Download Python 3.11
+
 ```powershell
 Invoke-WebRequest -Uri "https://www.python.org/ftp/python/3.11.0/python-3.11.0-amd64.exe" -OutFile "$env:TEMP\python-3.11.0-amd64.exe"; Start-Process -FilePath "$env:TEMP\python-3.11.0-amd64.exe" -ArgumentList "/quiet InstallAllUsers=1 PrependPath=1" -Wait -NoNewWindow
 ```
 
 ### Download Script Via PowerShell
+
 ```powershell
 Invoke-WebRequest -Uri "https://repo.socfortress.co/repository/socfortress/active-response/windows_firewall.exe" -OutFile "C:\Program Files (x86)\ossec-agent\active-response\bin\windows_firewall.exe"
 ```
 
 ## Wazuh Manager Configuration
+
 The following configuration must be added to the `ossec.conf` file on the Wazuh manager.
 
 ```xml
