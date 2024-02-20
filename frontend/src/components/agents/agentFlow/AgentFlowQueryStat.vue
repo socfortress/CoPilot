@@ -11,12 +11,12 @@
 				</span>
 			</div>
 			<div class="actions whitespace-nowrap">
-				<Badge type="cursor" @click="showDetails = true">
-					<template #iconLeft>
-						<Icon :name="InfoIcon" :size="14"></Icon>
+				<n-button size="small" @click.stop="showDetails = true">
+					<template #icon>
+						<Icon :name="InfoIcon"></Icon>
 					</template>
-					<template #value>Details</template>
-				</Badge>
+					Details
+				</n-button>
 			</div>
 		</div>
 		<div class="main-box flex flex-col gap-2 mt-2">
@@ -41,12 +41,12 @@
 		</div>
 		<div class="footer-box">
 			<div class="actions whitespace-nowrap">
-				<Badge type="cursor" @click="showDetails = true">
-					<template #iconLeft>
-						<Icon :name="InfoIcon" :size="14"></Icon>
+				<n-button size="small" @click.stop="showDetails = true">
+					<template #icon>
+						<Icon :name="InfoIcon"></Icon>
 					</template>
-					<template #value>Details</template>
-				</Badge>
+					Details
+				</n-button>
 			</div>
 		</div>
 
@@ -88,7 +88,7 @@
 </template>
 
 <script setup lang="ts">
-import { NModal, NTabs, NTabPane, NInput } from "naive-ui"
+import { NModal, NTabs, NTabPane, NInput, NButton } from "naive-ui"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
 import type { FlowQueryStat } from "@/types/flow.d"

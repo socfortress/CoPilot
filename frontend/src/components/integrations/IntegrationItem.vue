@@ -9,12 +9,11 @@
 					<div class="id">#{{ integration.id }}</div>
 				</div>
 				<div class="actions">
-					<Badge type="cursor" @click.stop="showDetails = true">
-						<template #iconLeft>
-							<Icon :name="DetailsIcon" :size="14"></Icon>
+					<n-button size="small" @click.stop="showDetails = true">
+						<template #icon>
+							<Icon :name="InfoIcon"></Icon>
 						</template>
-						<template #value>Details</template>
-					</Badge>
+					</n-button>
 				</div>
 			</div>
 			<div class="main-box flex items-center gap-3">
@@ -51,7 +50,7 @@
 import Icon from "@/components/common/Icon.vue"
 import Badge from "@/components/common/Badge.vue"
 import { defineAsyncComponent, ref, toRefs } from "vue"
-import { NModal, NRadio } from "naive-ui"
+import { NModal, NRadio, NButton } from "naive-ui"
 import type { AvailableIntegration } from "@/types/integrations"
 const Markdown = defineAsyncComponent(() => import("@/components/common/Markdown.vue"))
 
@@ -64,7 +63,7 @@ const props = defineProps<{
 }>()
 const { integration, embedded, checked, selectable, disabled } = toRefs(props)
 
-const DetailsIcon = "carbon:settings-adjust"
+const InfoIcon = "carbon:information"
 
 const showDetails = ref(false)
 </script>

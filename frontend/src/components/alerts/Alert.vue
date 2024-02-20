@@ -15,13 +15,6 @@
 				<div class="rule-groups">{{ alert._source.rule_groups }}</div>
 
 				<div class="badges-box flex flex-wrap items-center gap-3" v-if="alert._id">
-					<!--
-						<Badge type="cursor">
-							<template #iconLeft>
-								<Icon :name="InfoIcon" :size="14"></Icon>
-							</template>
-						</Badge>
-					-->
 					<Badge type="splitted">
 						<template #iconLeft>
 							<Icon :name="TargetIcon" :size="13" class="!opacity-80"></Icon>

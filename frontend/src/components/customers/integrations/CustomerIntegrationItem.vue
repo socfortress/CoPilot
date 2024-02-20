@@ -10,12 +10,11 @@
 						</template>
 						<template #value>Deployed</template>
 					</Badge>
-					<Badge type="cursor" @click.stop="showDetails = true">
-						<template #iconLeft>
-							<Icon :name="DetailsIcon" :size="14"></Icon>
+					<n-button size="small" @click.stop="showDetails = true">
+						<template #icon>
+							<Icon :name="InfoIcon"></Icon>
 						</template>
-						<template #value>Details</template>
-					</Badge>
+					</n-button>
 				</div>
 			</div>
 			<div class="main-box flex items-center gap-3">
@@ -64,7 +63,7 @@
 import Icon from "@/components/common/Icon.vue"
 import Badge from "@/components/common/Badge.vue"
 import { computed, ref, toRefs } from "vue"
-import { NModal } from "naive-ui"
+import { NModal, NButton } from "naive-ui"
 import type { CustomerIntegration } from "@/types/integrations"
 import CustomerIntegrationActions from "./CustomerIntegrationActions.vue"
 import KVCard from "@/components/common/KVCard.vue"
@@ -82,7 +81,7 @@ const emit = defineEmits<{
 }>()
 
 const DeployIcon = "carbon:deploy"
-const DetailsIcon = "carbon:settings-adjust"
+const InfoIcon = "carbon:information"
 
 const showDetails = ref(false)
 const serviceName = computed(() => integration.value.integration_service_name)

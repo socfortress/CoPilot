@@ -1,24 +1,24 @@
 <template>
 	<div class="item flex flex-col gap-2 px-5 py-3" :class="{ default: stream.is_default }">
-		<div class="header-box flex justify-between">
-			<div class="info flex items-center gap-2">
+		<div class="header-box flex items-center gap-3">
+			<div class="info flex items-center gap-2 grow">
 				<div class="user flex items-center gap-2">
 					<Icon :name="UserIcon" :size="14"></Icon>
 					{{ stream.creator_user_id }}
 				</div>
 			</div>
 			<div class="time">{{ formatDate(stream.created_at) }}</div>
+			<n-button size="small" @click.stop="showDetails = true">
+				<template #icon>
+					<Icon :name="InfoIcon"></Icon>
+				</template>
+			</n-button>
 		</div>
 		<div class="main-box flex justify-between">
 			<div class="content">
 				<div class="title">{{ stream.title }}</div>
 				<div class="description mb-2">{{ stream.description }}</div>
 				<div class="badges-box flex flex-wrap items-center gap-3">
-					<Badge type="cursor" @click="showDetails = true">
-						<template #iconLeft>
-							<Icon :name="InfoIcon" :size="14"></Icon>
-						</template>
-					</Badge>
 					<Badge :type="stream.disabled ? 'muted' : 'active'">
 						<template #iconRight>
 							<Icon :name="stream.disabled ? DisabledIcon : EnabledIcon" :size="14"></Icon>

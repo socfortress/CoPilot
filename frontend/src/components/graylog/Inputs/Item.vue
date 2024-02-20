@@ -1,24 +1,24 @@
 <template>
 	<div class="item flex flex-col gap-2 px-5 py-3">
-		<div class="header-box flex justify-between">
-			<div class="info flex items-center gap-2">
+		<div class="header-box flex items-center gap-3">
+			<div class="info flex items-center gap-2 grow">
 				<div class="user flex items-center gap-2">
 					<Icon :name="UserIcon" :size="14"></Icon>
 					{{ input.creator_user_id }}
 				</div>
 			</div>
 			<div class="time">{{ formatDate(input.created_at) }}</div>
+			<n-button size="small" @click.stop="showDetails = true">
+				<template #icon>
+					<Icon :name="InfoIcon"></Icon>
+				</template>
+			</n-button>
 		</div>
 		<div class="main-box flex justify-between">
 			<div class="content">
 				<div class="title">{{ input.title }}</div>
 				<div class="name mb-2">{{ input.name }}</div>
 				<div class="badges-box flex flex-wrap items-center gap-3">
-					<Badge type="cursor" @click="showDetails = true">
-						<template #iconLeft>
-							<Icon :name="InfoIcon" :size="14"></Icon>
-						</template>
-					</Badge>
 					<Badge :type="input.global ? 'active' : 'muted'">
 						<template #iconRight>
 							<Icon :name="input.global ? GlobalIcon : DisabledIcon" :size="14"></Icon>
