@@ -16,7 +16,9 @@ from app.customer_provisioning.schema.provision import CustomerSubsctipion
 from app.customer_provisioning.schema.provision import GetDashboardsResponse
 from app.customer_provisioning.schema.provision import GetSubscriptionsResponse
 from app.customer_provisioning.schema.provision import ProvisionNewCustomer
-from app.customer_provisioning.services.provision import provision_wazuh_customer
+from app.customer_provisioning.schema.wazuh_worker import ProvisionWorkerRequest
+from app.customer_provisioning.schema.wazuh_worker import ProvisionWorkerResponse
+from app.customer_provisioning.services.provision import provision_wazuh_customer, provision_wazuh_worker
 from app.db.db_session import get_db
 from app.db.universal_models import Customers
 from app.db.universal_models import CustomersMeta
@@ -213,6 +215,29 @@ async def provision_customer_route(
         )
     customer_provision = await provision_wazuh_customer(request, session=session)
     return customer_provision
+
+@customer_provisioning_router.post(
+    "/provision/wazuh_worker",
+    response_model=ProvisionWorkerResponse,
+    description="Provision Wazuh Worker",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def provision_wazuh_worker_route(
+    request: ProvisionWorkerRequest = Body(...),
+    session: AsyncSession = Depends(get_db),
+):
+    """
+    Provisions a new Wazuh worker.
+
+    Args:
+        request (ProvisionWorkerRequest): The request data for provisioning a new Wazuh worker.
+        session (AsyncSession): The database session.
+
+    Returns:
+        ProvisionWorkerResponse: The response data for the provisioned Wazuh worker.
+    """
+    logger.info("Provisioning Wazuh worker")
+    return await provision_wazuh_worker(request, session=session)
 
 
 @customer_provisioning_router.get(
