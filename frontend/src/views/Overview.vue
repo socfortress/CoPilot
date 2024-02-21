@@ -1,6 +1,7 @@
 <template>
 	<div class="page" ref="page">
-		<div class="section justify-end flex">
+		<div class="section justify-end flex gap-3">
+			<ActiveResponseWizardButton size="small" type="primary" />
 			<ThreatIntelButton size="small" type="primary" />
 		</div>
 		<div class="section">
@@ -47,6 +48,7 @@ import ClusterHealth from "@/components/indices/ClusterHealth.vue"
 import NodeAllocation from "@/components/indices/NodeAllocation.vue"
 import IndicesMarquee from "@/components/indices/Marquee.vue"
 import ThreatIntelButton from "@/components/alerts/ThreatIntelButton.vue"
+import ActiveResponseWizardButton from "@/components/activeResponse/ActiveResponseWizardButton.vue"
 import AgentsCard from "@/components/overview/AgentsCard.vue"
 import HealthcheckCard from "@/components/overview/HealthcheckCard.vue"
 import SocAlertsCard from "@/components/overview/SocAlertsCard.vue"

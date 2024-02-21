@@ -1,5 +1,8 @@
 <template>
-	<n-button :size="size" :type="type" @click="showThreatIntelDrawer = true">Threat Intel</n-button>
+	<n-button :size="size" :type="type" @click="showThreatIntelDrawer = true">
+		<template #icon><Icon :name="ThreatIcon"></Icon></template>
+		Threat Intel
+	</n-button>
 
 	<n-drawer
 		v-model:show="showThreatIntelDrawer"
@@ -18,12 +21,14 @@
 import { ref, watch } from "vue"
 import { NButton, NDrawer, NDrawerContent } from "naive-ui"
 import ThreatIntelForm from "./ThreatIntelForm.vue"
+import Icon from "@/components/common/Icon.vue"
 
 const { type, size } = defineProps<{
 	size?: "tiny" | "small" | "medium" | "large"
 	type?: "default" | "tertiary" | "primary" | "info" | "success" | "warning" | "error"
 }>()
 
+const ThreatIcon = "mynaui:info-waves"
 const showThreatIntelDrawer = ref(false)
 const threatIntelCTX = ref<{ restore: () => void } | null>(null)
 

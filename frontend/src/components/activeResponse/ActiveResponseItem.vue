@@ -15,6 +15,7 @@
 				</div>
 				<ActiveResponseActions
 					class="actions-box"
+					v-if="!hideActions"
 					:agentId="agentId"
 					:activeResponse="activeResponse"
 					@start-loading="loading = true"
@@ -24,6 +25,7 @@
 			<div class="footer-box flex justify-between items-center gap-4">
 				<ActiveResponseActions
 					class="actions-box"
+					v-if="!hideActions"
 					:agentId="agentId"
 					:activeResponse="activeResponse"
 					:size="'small'"
@@ -57,9 +59,10 @@ import Icon from "@/components/common/Icon.vue"
 const props = defineProps<{
 	activeResponse: SupportedActiveResponse
 	embedded?: boolean
+	hideActions?: boolean
 	agentId?: string | number
 }>()
-const { activeResponse, embedded, agentId } = toRefs(props)
+const { activeResponse, embedded, agentId, hideActions } = toRefs(props)
 
 const InfoIcon = "carbon:information"
 const loading = ref(false)

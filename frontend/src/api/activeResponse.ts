@@ -19,14 +19,14 @@ export default {
 	},
 	getDetails(activeResponseName: string) {
 		return HttpClient.get<FlaskBaseResponse & { active_response: ActiveResponseDetails }>(
-			`/active_response/describe/${activeResponseName}`
+			`/active_response/describe/${activeResponseName.toLowerCase()}`
 		)
 	},
 	invoke(params: InvokeRequest) {
 		const payload = {
 			endpoint: "active-response",
 			arguments: [],
-			command: params.activeResponseName,
+			command: params.activeResponseName.toLowerCase(),
 			custom: true,
 			alert: {
 				action: params.action,

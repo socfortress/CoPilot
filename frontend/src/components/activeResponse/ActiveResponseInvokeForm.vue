@@ -150,6 +150,7 @@ function submit() {
 		.invoke(payload)
 		.then(res => {
 			if (res.data.success) {
+				message.success(res.data?.message || "Active Response invoked successfully")
 				emit("submitted")
 				reset()
 			} else {
