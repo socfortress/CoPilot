@@ -201,8 +201,7 @@ async def check_if_open_alert_exists_in_iris(alert_details: SuricataAlertModel, 
     client, alert_client = await initialize_client_and_alert("DFIR-IRIS")
     customer_iris_id = (
         await get_customer_alert_settings(
-            # customer_code=alert_details._source["agent_labels_customer"],
-            customer_code="00002",
+            customer_code=alert_details._source["agent_labels_customer"],
             session=session,
         )
     ).iris_customer_id
