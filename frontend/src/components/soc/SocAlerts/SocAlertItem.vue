@@ -352,8 +352,18 @@ const props = defineProps<{
 	showBadgesToggle?: boolean
 	showCheckbox?: boolean
 }>()
-const { alertData, alertId, isBookmark, highlight, users, embedded, hideSocCaseAction, hideBookmarkAction } =
-	toRefs(props)
+const {
+	alertData,
+	alertId,
+	isBookmark,
+	highlight,
+	users,
+	embedded,
+	hideSocCaseAction,
+	hideBookmarkAction,
+	showBadgesToggle,
+	showCheckbox
+} = toRefs(props)
 
 const ChevronIcon = "carbon:chevron-right"
 const InfoIcon = "carbon:information"

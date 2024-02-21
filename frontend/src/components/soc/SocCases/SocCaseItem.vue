@@ -276,7 +276,7 @@ import _omit from "lodash/omit"
 import _split from "lodash/split"
 import { useRouter } from "vue-router"
 
-const { caseData, caseId, embedded, hideSocCaseAction } = defineProps<{
+const { caseData, caseId, embedded, hideSocCaseAction, hideSocAlertLink } = defineProps<{
 	caseData?: SocCase
 	caseId?: number | string
 	embedded?: boolean

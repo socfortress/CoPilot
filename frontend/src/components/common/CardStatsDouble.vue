@@ -39,7 +39,7 @@ const props = defineProps<{
 	secondStatus?: "success" | "warning" | "error"
 	hovered?: boolean
 }>()
-const { title, value, subValue, firstLabel, secondLabel, firstStatus, secondStatus } = toRefs(props)
+const { title, value, subValue, firstLabel, secondLabel, firstStatus, secondStatus, hovered } = toRefs(props)
 
 const ArrowRightIcon = "carbon:arrow-right"
 </script>

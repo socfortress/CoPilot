@@ -30,12 +30,12 @@ import { computed, watch, ref } from "vue"
 import { StateName, type SocCase, type SocCaseExt } from "@/types/soc/case.d"
 
 const emit = defineEmits<{
-	(e: "startLoading"): void
-	(e: "stopLoading"): void
 	(e: "closed"): void
 	(e: "reopened"): void
 	(e: "deleted"): void
 	(e: "startDeleting"): void
+	(e: "startLoading"): void
+	(e: "stopLoading"): void
 }>()
 
 const { caseData, size } = defineProps<{
@@ -57,7 +57,11 @@ const loading = computed(() => loadingCaseClose.value || loadingCaseReopen.value
 const isCaseClosed = computed(() => caseData?.state_name === StateName.Closed)
 
 watch(loading, val => {
-	emit(val ? "startLoading" : "startLoading")
+	if (val) {
+		emit("startLoading")
+	} else {
+		emit("stopLoading")
+	}
 })
 
 function closeCase() {
