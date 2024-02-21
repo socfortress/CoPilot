@@ -34,6 +34,7 @@ from app.integrations.sap_siem.services.sap_siem_multiple_logins import (
 from app.integrations.sap_siem.services.sap_siem_suspicious_logins import (
     sap_siem_suspicious_logins,
 )
+from app.integrations.monitoring_alert.services.office365 import analyze_office365_exchange_online_alerts
 
 monitoring_alerts_router = APIRouter()
 

@@ -160,7 +160,7 @@ async def fetch_wazuh_indexer_details(alert_id: str, index: str) -> SuricataAler
 
 
 async def fetch_alert_details(alert: MonitoringAlerts) -> SuricataAlertModel:
-    logger.info(f"Analyzing Suricata alert: {alert.alert_id}")
+    logger.info(f"Analyzing Office365 Exchange Online alert: {alert}")
     alert_details = await fetch_wazuh_indexer_details(alert.alert_id, alert.alert_index)
     logger.info(f"Alert details: {alert_details}")
     return alert_details
@@ -488,7 +488,7 @@ async def analyze_office365_exchange_online_alerts(
     session: AsyncSession,
 ) -> AlertAnalysisResponse:
     """
-    Analyze the given Suricata alerts and create an alert if necessary. Otherwise update the existing alert with the asset.
+    Analyze the given Office365 Exchange Online Alert and create an alert if necessary. Otherwise update the existing alert with the asset.
 
     1. For each alert, extract the metadata from the Wazuh-Indexer.
     2. Check if the alert exists in IRIS. If it does, update the alert with the asset. If it does not, create the alert in IRIS.
@@ -502,7 +502,7 @@ async def analyze_office365_exchange_online_alerts(
     Returns:
         AlertAnalysisResponse: The analysis response.
     """
-    logger.info(f"Analyzing Suricata alerts with customer_meta: {customer_meta}")
+    logger.info(f"Analyzing Office365 Exchange Online alerts: {monitoring_alerts}")
     for alert in monitoring_alerts:
         alert_details = await fetch_alert_details(alert)
         iris_alert_id = await check_if_open_alert_exists_in_iris(alert_details, session=session)
