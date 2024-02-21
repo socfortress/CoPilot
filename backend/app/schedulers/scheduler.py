@@ -18,6 +18,8 @@ from app.schedulers.services.invoke_sap_siem import (
 )
 from app.schedulers.services.monitoring_alert import invoke_suricata_monitoring_alert
 from app.schedulers.services.monitoring_alert import invoke_wazuh_monitoring_alert
+from app.schedulers.services.monitoring_alert import invoke_office365_exchange_online_alert
+from app.schedulers.services.monitoring_alert import invoke_office365_threat_intel_alert
 
 
 def init_scheduler():
@@ -93,6 +95,8 @@ def get_function_by_name(function_name: str):
         "invoke_mimecast_integration": invoke_mimecast_integration,
         "invoke_mimecast_integration_ttp": invoke_mimecast_integration_ttp,
         "invoke_wazuh_monitoring_alert": invoke_wazuh_monitoring_alert,
+        "invoke_office365_exchange_online_alert": invoke_office365_exchange_online_alert,
+        "invoke_office365_threat_intel_alert": invoke_office365_threat_intel_alert,
         "invoke_suricata_monitoring_alert": invoke_suricata_monitoring_alert,
         "invoke_sap_siem_integration_collection": invoke_sap_siem_integration_collect,
         "invoke_sap_siem_integration_suspicious_logins_analysis": invoke_sap_siem_integration_suspicious_logins_analysis,

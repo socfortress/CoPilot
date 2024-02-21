@@ -580,7 +580,7 @@ async def provision_office365_exchange_online_alert(
                     providers=[
                         GraylogAlertProvisionProvider(
                             type="template-v1",
-                            template="OFFICE365 EXCHANGE ONLINE",
+                            template="OFFICE365_EXCHANGE_ONLINE",
                             require_values=True,
                         ),
                     ],
@@ -699,7 +699,7 @@ async def provision_office365_threat_intel_alert(
                     providers=[
                         GraylogAlertProvisionProvider(
                             type="template-v1",
-                            template="OFFICE365 THREAT INTEL",
+                            template="OFFICE365_THREAT_INTEL",
                             require_values=True,
                         ),
                     ],
