@@ -2,17 +2,19 @@ import { type FlaskBaseResponse } from "@/types/flask.d"
 import { HttpClient } from "./httpClient"
 import type { ActiveResponseDetails, SupportedActiveResponse } from "@/types/activeResponse"
 
+export type InvokeRequestAction = "block" | "unblock"
+
 export interface InvokeRequest {
 	activeResponseName: string
-	action: "block" | "unblock"
+	action: InvokeRequestAction
 	ip: string
 	agentId?: string
 }
 
 export default {
-	getSupported() {
+	getSupported(agentId?: string) {
 		return HttpClient.get<FlaskBaseResponse & { supported_active_responses: SupportedActiveResponse[] }>(
-			`/active_response/supported`
+			`/active_response/supported${agentId ? "/" + agentId : ""}`
 		)
 	},
 	getDetails(activeResponseName: string) {
