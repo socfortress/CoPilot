@@ -23,3 +23,6 @@ services:
 networks:
     default:
         driver: bridge
+        # In case you need to set the MTU
+        #driver_opts:
+        #    com.docker.network.driver.mtu: "1450"
