@@ -41,7 +41,7 @@ function getAvailableIntegrations() {
 	loadingActiveResponse.value = true
 
 	Api.activeResponse
-		.getSupported()
+		.getSupported(agent.agent_id)
 		.then(res => {
 			if (res.data.success) {
 				activeResponseList.value = res.data?.supported_active_responses || []

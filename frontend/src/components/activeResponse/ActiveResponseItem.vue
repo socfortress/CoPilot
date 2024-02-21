@@ -59,7 +59,7 @@ const props = defineProps<{
 	embedded?: boolean
 	agentId?: string | number
 }>()
-const { activeResponse, embedded } = toRefs(props)
+const { activeResponse, embedded, agentId } = toRefs(props)
 
 const InfoIcon = "carbon:information"
 const loading = ref(false)
