@@ -18,7 +18,8 @@ from app.customer_provisioning.schema.provision import GetSubscriptionsResponse
 from app.customer_provisioning.schema.provision import ProvisionNewCustomer
 from app.customer_provisioning.schema.wazuh_worker import ProvisionWorkerRequest
 from app.customer_provisioning.schema.wazuh_worker import ProvisionWorkerResponse
-from app.customer_provisioning.services.provision import provision_wazuh_customer, provision_wazuh_worker
+from app.customer_provisioning.services.provision import provision_wazuh_customer
+from app.customer_provisioning.services.provision import provision_wazuh_worker
 from app.db.db_session import get_db
 from app.db.universal_models import Customers
 from app.db.universal_models import CustomersMeta
@@ -215,6 +216,7 @@ async def provision_customer_route(
         )
     customer_provision = await provision_wazuh_customer(request, session=session)
     return customer_provision
+
 
 @customer_provisioning_router.post(
     "/provision/wazuh_worker",

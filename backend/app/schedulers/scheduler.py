@@ -16,10 +16,12 @@ from app.schedulers.services.invoke_sap_siem import (
 from app.schedulers.services.invoke_sap_siem import (
     invoke_sap_siem_integration_suspicious_logins_analysis,
 )
+from app.schedulers.services.monitoring_alert import (
+    invoke_office365_exchange_online_alert,
+)
+from app.schedulers.services.monitoring_alert import invoke_office365_threat_intel_alert
 from app.schedulers.services.monitoring_alert import invoke_suricata_monitoring_alert
 from app.schedulers.services.monitoring_alert import invoke_wazuh_monitoring_alert
-from app.schedulers.services.monitoring_alert import invoke_office365_exchange_online_alert
-from app.schedulers.services.monitoring_alert import invoke_office365_threat_intel_alert
 
 
 def init_scheduler():

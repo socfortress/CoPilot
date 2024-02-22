@@ -15,16 +15,16 @@ from app.integrations.monitoring_alert.schema.provision import (
     ProvisionWazuhMonitoringAlertResponse,
 )
 from app.integrations.monitoring_alert.services.provision import (
-    provision_suricata_monitoring_alert,
-)
-from app.integrations.monitoring_alert.services.provision import (
-    provision_wazuh_monitoring_alert,
-)
-from app.integrations.monitoring_alert.services.provision import (
     provision_office365_exchange_online_alert,
 )
 from app.integrations.monitoring_alert.services.provision import (
     provision_office365_threat_intel_alert,
+)
+from app.integrations.monitoring_alert.services.provision import (
+    provision_suricata_monitoring_alert,
+)
+from app.integrations.monitoring_alert.services.provision import (
+    provision_wazuh_monitoring_alert,
 )
 from app.integrations.utils.event_shipper import event_shipper
 from app.integrations.utils.schema import EventShipperPayload
@@ -62,6 +62,7 @@ async def invoke_provision_suricata_monitoring_alert(
         ),
     )
 
+
 async def invoke_provision_office365_exchange_online_alert(
     request: ProvisionMonitoringAlertRequest,
 ):
@@ -75,6 +76,7 @@ async def invoke_provision_office365_exchange_online_alert(
         ),
     )
 
+
 async def invoke_provision_office365_threat_intel_alert(
     request: ProvisionMonitoringAlertRequest,
 ):
@@ -87,6 +89,7 @@ async def invoke_provision_office365_threat_intel_alert(
             job_id="invoke_office365_threat_intel_alert",
         ),
     )
+
 
 # Create a dictionary that maps alert names to provision functions
 PROVISION_FUNCTIONS = {
@@ -167,10 +170,7 @@ async def provision_monitoring_alert_route(
     # Invoke the provision function
     await provision_function(request)
 
-    return ProvisionWazuhMonitoringAlertResponse(
-        success=True,
-        message=f"Monitoring alert {request.alert_name} provisioned successfully."
-    )
+    return ProvisionWazuhMonitoringAlertResponse(success=True, message=f"Monitoring alert {request.alert_name} provisioned successfully.")
 
 
 @monitoring_alerts_provision_router.post(

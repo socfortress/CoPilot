@@ -29,7 +29,9 @@ from app.integrations.monitoring_alert.schema.monitoring_alert import (
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
     FilterAlertsRequest,
 )
-from app.integrations.monitoring_alert.schema.monitoring_alert import Office365AlertModel
+from app.integrations.monitoring_alert.schema.monitoring_alert import (
+    Office365AlertModel,
+)
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
     Office365IrisAlertContext,
 )
