@@ -2,13 +2,13 @@ from enum import Enum
 from typing import Any
 from typing import Dict
 from typing import List
+from typing import Optional
 
 from fastapi import HTTPException
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import root_validator
 from pydantic import validator
-from typing import Optional
 
 
 class ActiveResponsesSupported(Enum):
@@ -87,7 +87,7 @@ class ParamsModel(BaseModel):
     wait_for_complete: bool
     agents_list: Optional[List[str]]
 
-    @validator('agents_list', pre=True)
+    @validator("agents_list", pre=True)
     def check_agents_list(cls, v):
         if v == ["*"]:
             return []

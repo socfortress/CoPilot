@@ -1,4 +1,3 @@
-from app.db.db_session import get_db
 from fastapi import APIRouter
 from fastapi import Body
 from fastapi import Depends
@@ -12,9 +11,13 @@ from app.auth.utils import AuthHandler
 from app.customer_provisioning.models.default_settings import (
     CustomerProvisioningDefaultSettings,
 )
-from app.customer_provisioning.schema.default import CustomerProvisioningDefaultSettingsResponse
+from app.customer_provisioning.schema.default import (
+    CustomerProvisioningDefaultSettingsResponse,
+)
+from app.db.db_session import get_db
 
 customer_provisioning_default_settings_router = APIRouter()
+
 
 @customer_provisioning_default_settings_router.get(
     "/default_settings",
@@ -33,14 +36,13 @@ async def get_all_customer_provisioning_default_settings(
             status_code=404,
             detail="No customer provisioning default settings found",
         )
-    logger.info(
-        f"Customer Provisioning Default Settings retrieved successfully: {customer_provisioning_default_settings}"
-    )
+    logger.info(f"Customer Provisioning Default Settings retrieved successfully: {customer_provisioning_default_settings}")
     return CustomerProvisioningDefaultSettingsResponse(
         message="Customer Provisioning Default Settings retrieved successfully",
         success=True,
         customer_provisioning_default_settings=customer_provisioning_default_settings,
     )
+
 
 @customer_provisioning_default_settings_router.post(
     "/default_settings",
@@ -65,6 +67,7 @@ async def create_customer_provisioning_default_settings(
     await db.refresh(customer_provisioning_default_settings)
     return customer_provisioning_default_settings
 
+
 @customer_provisioning_default_settings_router.put(
     "/default_settings",
     response_model=CustomerProvisioningDefaultSettings,
@@ -76,7 +79,9 @@ async def update_customer_provisioning_default_settings(
     db: AsyncSession = Depends(get_db),
 ):
     # Fetch the existing record
-    stmt = select(CustomerProvisioningDefaultSettings).where(CustomerProvisioningDefaultSettings.id == customer_provisioning_default_settings.id)
+    stmt = select(CustomerProvisioningDefaultSettings).where(
+        CustomerProvisioningDefaultSettings.id == customer_provisioning_default_settings.id,
+    )
     result = await db.execute(stmt)
     existing_settings = result.scalars().first()
 
@@ -90,6 +95,7 @@ async def update_customer_provisioning_default_settings(
     await db.commit()
     await db.refresh(existing_settings)
     return existing_settings
+
 
 @customer_provisioning_default_settings_router.delete(
     "/default_settings",
@@ -110,5 +116,3 @@ async def delete_customer_provisioning_default_settings(
     db.delete(existing_settings)
     await db.commit()
     return existing_settings
-
-

@@ -1,10 +1,10 @@
-from typing import List
-
 from pydantic import BaseModel
 from pydantic import Field
+
 from app.customer_provisioning.models.default_settings import (
     CustomerProvisioningDefaultSettings,
 )
+
 
 class CustomerProvisioningDefaultSettingsResponse(BaseModel):
     message: str = Field(
