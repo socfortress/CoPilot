@@ -1,5 +1,5 @@
 <template>
-	<n-button :size="size" :type="type" @click="showInvokeWizard = true">
+	<n-button :size="size" :type="type" @click="showInvokeWizard = true" :loading="loading">
 		<template #icon><Icon :name="InvokeIcon"></Icon></template>
 		Active Response
 	</n-button>
@@ -15,7 +15,7 @@
 		content-class="flex flex-col"
 		segmented
 	>
-		<ActiveResponseWizard />
+		<ActiveResponseWizard @mounted="activeResponseWizardCTX = $event" v-model:loading="loading" />
 	</n-modal>
 </template>
 
@@ -32,9 +32,10 @@ const { type, size } = defineProps<{
 
 const InvokeIcon = "solar:playback-speed-outline"
 const showInvokeWizard = ref(false)
-// const threatIntelCTX = ref<{ restore: () => void } | null>(null)
+const activeResponseWizardCTX = ref<{ reset: () => void } | null>(null)
+const loading = ref(false)
 
 watch(showInvokeWizard, () => {
-	// threatIntelCTX.value?.restore()
+	activeResponseWizardCTX.value?.reset()
 })
 </script>

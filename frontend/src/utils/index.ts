@@ -44,13 +44,22 @@ export function renderIcon(icon: Component | string) {
 export function iconFromOs(os: string): string {
 	const test = os.toLowerCase()
 	if (test.indexOf("mac") !== -1 || test.indexOf("darwin") !== -1 || test.indexOf("apple") !== -1) {
-		return "uit:apple-alt"
+		return "mdi:apple"
 	}
 	if (test.indexOf("win") !== -1 || test.indexOf("microsoft") !== -1) {
-		return "arcticons:microsoft-alt"
+		return "mdi:microsoft"
+	}
+	if (
+		test.indexOf("linux") !== -1 ||
+		test.indexOf("unix") !== -1 ||
+		test.indexOf("x11") !== -1 ||
+		test.indexOf("debian") !== -1 ||
+		test.indexOf("centos") !== -1
+	) {
+		return "mdi:linux"
 	}
 
-	return "uil:linux"
+	return "mdi:help-box"
 }
 
 export function getOS(): OS {

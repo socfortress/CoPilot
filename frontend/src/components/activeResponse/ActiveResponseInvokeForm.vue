@@ -19,7 +19,9 @@
 			</n-spin>
 		</div>
 		<div class="buttons-box flex justify-end gap-3">
-			<n-button @click="close()" secondary>Close</n-button>
+			<div class="flex gap-3">
+				<slot name="additionalActions"></slot>
+			</div>
 			<n-button type="primary" :disabled="!isValid" @click="validate()" :loading="loading">Submit</n-button>
 		</div>
 	</div>
@@ -39,7 +41,7 @@ import {
 	type FormValidationError,
 	useMessage
 } from "naive-ui"
-import { computed, ref } from "vue"
+import { computed, onMounted, ref } from "vue"
 import { watch } from "vue"
 import type { SupportedActiveResponse } from "@/types/activeResponse"
 import isIP from "validator/es/lib/isIP"
@@ -52,10 +54,15 @@ interface InvokeForm {
 }
 
 const emit = defineEmits<{
-	(e: "close"): void
 	(e: "submitted"): void
 	(e: "startLoading"): void
 	(e: "stopLoading"): void
+	(
+		e: "mounted",
+		value: {
+			reset: () => void
+		}
+	): void
 }>()
 
 const { activeResponse, agentId } = defineProps<{
@@ -111,11 +118,6 @@ function getClearForm(): InvokeForm {
 	}
 }
 
-function close() {
-	reset()
-	emit("close")
-}
-
 function reset() {
 	form.value = getClearForm()
 }
@@ -164,4 +166,10 @@ function submit() {
 			loading.value = false
 		})
 }
+
+onMounted(() => {
+	emit("mounted", {
+		reset
+	})
+})
 </script>

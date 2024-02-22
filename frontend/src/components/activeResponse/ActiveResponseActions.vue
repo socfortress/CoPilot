@@ -18,11 +18,15 @@
 			<ActiveResponseInvokeForm
 				:activeResponse="activeResponse"
 				:agentId="agentId"
-				@close="showInvokeForm = false"
-				@submitted="showInvokeForm = false"
+				@mounted="activeResponseInvokeFormCTX = $event"
+				@submitted="close()"
 				@startLoading="loadingInvoke = true"
 				@stopLoading="loadingInvoke = false"
-			/>
+			>
+				<template #additionalActions>
+					<n-button @click="close()" secondary>Close</n-button>
+				</template>
+			</ActiveResponseInvokeForm>
 		</n-modal>
 	</div>
 </template>
@@ -48,9 +52,9 @@ const { activeResponse, size, agentId } = defineProps<{
 
 const InvokeIcon = "solar:playback-speed-outline"
 const showInvokeForm = ref(false)
-
 const loadingInvoke = ref(false)
 const loading = computed(() => loadingInvoke.value)
+const activeResponseInvokeFormCTX = ref<{ reset: () => void } | null>(null)
 
 watch(loading, val => {
 	if (val) {
@@ -59,4 +63,9 @@ watch(loading, val => {
 		emit("stopLoading")
 	}
 })
+
+function close() {
+	activeResponseInvokeFormCTX.value?.reset()
+	showInvokeForm.value = false
+}
 </script>
