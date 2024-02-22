@@ -55,7 +55,7 @@ const emit = defineEmits<{
 	(e: "deleted"): void
 }>()
 
-const { integration, size } = defineProps<{
+const { integration, hideDeleteButton, size } = defineProps<{
 	integration: CustomerIntegration
 	hideDeleteButton?: boolean
 	size?: "tiny" | "small" | "medium" | "large"
@@ -77,7 +77,11 @@ const serviceName = computed(() => integration.integration_service_name)
 const customerCode = computed(() => integration.customer_code)
 
 watch(loading, val => {
-	emit(val ? "startLoading" : "startLoading")
+	if (val) {
+		emit("startLoading")
+	} else {
+		emit("stopLoading")
+	}
 })
 
 function office365Provision() {

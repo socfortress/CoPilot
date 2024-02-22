@@ -23,6 +23,16 @@ class AvailableMonitoringAlerts(str, Enum):
         "This alert monitors the Suricata logs. When an the alert_severity field is 1, it triggers "
         "an alert that is created within DFIR-IRIS. Ensure that you have a pipeline rule that sets "
     )
+    OFFICE365_EXCHANGE_ONLINE = (
+        "This alert monitors the Office365 Exchange events. When an alert is detected, it triggers an "
+        "alert that is created within DFIR-IRIS. Ensure that you have a pipeline rule that sets the "
+        "alert_severity field to 1 when the Office365 alert is detected."
+    )
+    OFFICE365_THREAT_INTEL = (
+        "This alert monitors the Office365 Threat Intelligence events. When an alert is detected, it triggers an "
+        "alert that is created within DFIR-IRIS. Ensure that you have a pipeline rule that sets the "
+        "alert_severity field to 1 when the Office365 alert is detected."
+    )
 
 
 class AvailableMonitoringAlertsResponse(BaseModel):

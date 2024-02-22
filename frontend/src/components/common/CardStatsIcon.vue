@@ -23,7 +23,7 @@ const props = withDefaults(
 	}>(),
 	{ boxSize: 40, iconSize: 28, boxed: false }
 )
-const { boxed, boxSize, iconSize, color } = toRefs(props)
+const { boxed, boxSize, iconSize, iconName, color } = toRefs(props)
 
 const style = computed<{ [key: string]: any }>(() => useThemeStore().style)
 

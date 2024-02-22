@@ -17,7 +17,7 @@
 </template>
 
 <script setup lang="ts">
-const { type, hintCursor, pointCursor, color } = defineProps<{
+const { type, hintCursor, pointCursor, color, href } = defineProps<{
 	type?: "splitted" | "muted" | "active" | "cursor"
 	hintCursor?: boolean
 	pointCursor?: boolean

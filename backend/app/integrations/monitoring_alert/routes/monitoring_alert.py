@@ -26,6 +26,9 @@ from app.integrations.monitoring_alert.schema.monitoring_alert import (
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
     MonitoringWazuhAlertsRequestModel,
 )
+from app.integrations.monitoring_alert.services.office365 import (
+    analyze_office365_exchange_online_alerts,
+)
 from app.integrations.monitoring_alert.services.suricata import analyze_suricata_alerts
 from app.integrations.monitoring_alert.services.wazuh import analyze_wazuh_alerts
 from app.integrations.sap_siem.services.sap_siem_multiple_logins import (
@@ -55,6 +58,13 @@ async def get_customer_meta(customer_code: str, session: AsyncSession) -> Custom
         select(CustomersMeta).where(CustomersMeta.customer_code == customer_code),
     )
     customer_meta = customer_meta.scalars().first()
+
+    if not customer_meta:
+        logger.info(f"Getting customer meta for customer_meta_office365_organization_id: {customer_code}")
+        customer_meta = await session.execute(
+            select(CustomersMeta).where(CustomersMeta.customer_meta_office365_organization_id == customer_code),
+        )
+        customer_meta = customer_meta.scalars().first()
 
     if not customer_meta:
         raise HTTPException(status_code=404, detail="Customer not found")
@@ -228,6 +238,54 @@ async def run_suricata_analysis(
 
     # Call the analyze_wazuh_alerts function to analyze the alerts
     await analyze_suricata_alerts(monitoring_alerts, customer_meta, session)
+
+    return AlertAnalysisResponse(
+        success=True,
+        message="Analysis completed successfully",
+    )
+
+
+@monitoring_alerts_router.post(
+    "/run_analysis/office365/exchange_online",
+    response_model=AlertAnalysisResponse,
+)
+async def run_office365_exchange_online_analysis(
+    request: MonitoringWazuhAlertsRequestModel,
+    session: AsyncSession = Depends(get_db),
+) -> AlertAnalysisResponse:
+    """
+    This route is used to run analysis on the monitoring alerts.
+
+    1. Get all the monitoring alerts from the database where the customer_code matches the customer_code provided
+     and the alert_source is OFFICE365_EXCHANGE_ONLINE.
+
+    2. Call the analyze_office365_exchange_online_alerts function to analyze the alerts.
+
+    Args:
+        request (MonitoringWazuhAlertsRequestModel): The customer code.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        WazuhAnalysisResponse: The response containing the analysis results.
+    """
+    logger.info(f"Running analysis for customer_code: {request.customer_code}")
+
+    customer_meta = await get_customer_meta(request.customer_code, session)
+
+    monitoring_alerts = await session.execute(
+        select(MonitoringAlerts).where(
+            (MonitoringAlerts.customer_code == request.customer_code) & (MonitoringAlerts.alert_source == "OFFICE365_EXCHANGE_ONLINE"),
+        ),
+    )
+    monitoring_alerts = monitoring_alerts.scalars().all()
+
+    logger.info(f"Found {len(monitoring_alerts)} monitoring alerts")
+
+    if not monitoring_alerts:
+        raise HTTPException(status_code=404, detail="No monitoring alerts found")
+
+    # Call the analyze_office365_exchange_online_alerts function to analyze the alerts
+    await analyze_office365_exchange_online_alerts(monitoring_alerts, customer_meta, session)
 
     return AlertAnalysisResponse(
         success=True,

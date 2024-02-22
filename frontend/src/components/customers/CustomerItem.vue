@@ -4,12 +4,12 @@
 			<div class="header-box flex justify-between items-center">
 				<div class="id">#{{ customer.customer_code }}</div>
 				<div class="actions" v-if="!hideCardActions">
-					<Badge type="cursor" @click="showDetails = true">
-						<template #iconLeft>
-							<Icon :name="DetailsIcon" :size="14"></Icon>
+					<n-button size="small" @click.stop="showDetails = true">
+						<template #icon>
+							<Icon :name="DetailsIcon"></Icon>
 						</template>
-						<template #value>Details</template>
-					</Badge>
+						Details
+					</n-button>
 				</div>
 			</div>
 			<div class="main-box flex items-center gap-3">
@@ -185,7 +185,7 @@ import CustomerProvision from "./provision/CustomerProvision.vue"
 import CustomerHealthcheckList from "./healthcheck/CustomerHealthcheckList.vue"
 import CustomerIntegrations from "./integrations/CustomerIntegrations.vue"
 import Api from "@/api"
-import { NAvatar, useMessage, NPopover, NModal, NTabs, NTabPane, NSpin, NScrollbar } from "naive-ui"
+import { NAvatar, useMessage, NPopover, NModal, NTabs, NTabPane, NSpin, NScrollbar, NButton } from "naive-ui"
 import type { Customer, CustomerMeta } from "@/types/customers.d"
 import { hashMD5 } from "@/utils"
 import _toSafeInteger from "lodash/toSafeInteger"

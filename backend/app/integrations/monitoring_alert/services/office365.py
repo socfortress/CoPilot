@@ -29,14 +29,16 @@ from app.integrations.monitoring_alert.schema.monitoring_alert import (
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
     FilterAlertsRequest,
 )
-from app.integrations.monitoring_alert.schema.monitoring_alert import SuricataAlertModel
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
-    SuricataIrisAlertContext,
+    Office365AlertModel,
 )
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
-    SuricataIrisAlertPayload,
+    Office365IrisAlertContext,
 )
-from app.integrations.monitoring_alert.schema.monitoring_alert import SuricataIrisAsset
+from app.integrations.monitoring_alert.schema.monitoring_alert import (
+    Office365IrisAlertPayload,
+)
+from app.integrations.monitoring_alert.schema.monitoring_alert import Office365IrisAsset
 from app.integrations.monitoring_alert.utils.db_operations import remove_alert_id
 from app.integrations.utils.alerts import validate_ioc_type
 from app.utils import get_customer_alert_settings
@@ -54,7 +56,7 @@ def valid_ioc_fields() -> Set[str]:
 
 
 async def construct_alert_source_link(
-    alert_details: SuricataIrisAlertContext,
+    alert_details: Office365IrisAlertContext,
     session: AsyncSession,
 ) -> str:
     """
@@ -78,7 +80,7 @@ async def construct_alert_source_link(
     ).grafana_url
 
     return (
-        f"{grafana_url}/explore?left=%5B%22now-6h%22,%22now%22,%22SURICATA%22,%7B%22refId%22:%22A%22,"
+        f"{grafana_url}/explore?left=%5B%22now-6h%22,%22now%22,%22Office365%22,%7B%22refId%22:%22A%22,"
         f"{query_string}"
         f"src_ip:%5C%22{alert_details.src_ip}%5C%22%22,"
         "%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,"
@@ -110,9 +112,9 @@ async def build_ioc_payload(alert_details: CreateAlertRequest) -> Optional[IrisI
 
 
 async def build_asset_payload(
-    alert_details: SuricataIrisAlertContext,
+    alert_details: Office365IrisAlertContext,
     session: AsyncSession,
-) -> SuricataIrisAsset:
+) -> Office365IrisAsset:
     """
     Build the payload for an IrisAsset object based on the agent data and alert details.
 
@@ -126,7 +128,7 @@ async def build_asset_payload(
     # Get the agent_id based on the hostname from the Agents table
     logger.info(f"Building asset payload for alert: {alert_details}")
     if alert_details is not None:
-        return SuricataIrisAsset(
+        return Office365IrisAsset(
             asset_name=alert_details.src_ip,
             asset_ip=alert_details.src_ip,
             asset_description=await construct_alert_source_link(
@@ -135,12 +137,12 @@ async def build_asset_payload(
             ),
             asset_type_id=2,
         )
-    return SuricataIrisAsset()
+    return Office365IrisAsset()
 
 
-async def fetch_wazuh_indexer_details(alert_id: str, index: str) -> SuricataAlertModel:
+async def fetch_wazuh_indexer_details(alert_id: str, index: str) -> Office365AlertModel:
     """
-    Fetch the Suricata alert details from the Wazuh-Indexer.
+    Fetch the Office365 alert details from the Wazuh-Indexer.
 
     Args:
         alert_id (str): The alert ID.
@@ -150,24 +152,24 @@ async def fetch_wazuh_indexer_details(alert_id: str, index: str) -> SuricataAler
         CollectAlertsResponse: The response from the Wazuh-Indexer.
     """
     logger.info(
-        f"Fetching Suricata alert details for alert_id: {alert_id} and index: {index}",
+        f"Fetching Office365 alert details for alert_id: {alert_id} and index: {index}",
     )
 
     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
     response = es_client.get(index=index, id=alert_id)
 
-    return SuricataAlertModel(**response)
+    return Office365AlertModel(**response)
 
 
-async def fetch_alert_details(alert: MonitoringAlerts) -> SuricataAlertModel:
-    logger.info(f"Analyzing Suricata alert: {alert.alert_id}")
+async def fetch_alert_details(alert: MonitoringAlerts) -> Office365AlertModel:
+    logger.info(f"Analyzing Office365 Exchange Online alert: {alert}")
     alert_details = await fetch_wazuh_indexer_details(alert.alert_id, alert.alert_index)
     logger.info(f"Alert details: {alert_details}")
     return alert_details
 
 
 async def check_event_exclusion(
-    alert_details: SuricataAlertModel,
+    alert_details: Office365AlertModel,
     alert_detail_service: AlertDetailsService,
     session: AsyncSession,
 ):
@@ -187,12 +189,12 @@ async def check_event_exclusion(
     logger.info("Alert is not excluded due to multi exclusion.")
 
 
-async def check_if_open_alert_exists_in_iris(alert_details: SuricataAlertModel, session: AsyncSession) -> list:
+async def check_if_open_alert_exists_in_iris(alert_details: Office365AlertModel, session: AsyncSession) -> list:
     """
     Check if the alert exists in IRIS.
 
     Args:
-        alert_details (SuricataAlertModel): The alert details.
+        alert_details (Office365AlertModel): The alert details.
         session (AsyncSession): The database session.
 
     Returns:
@@ -201,7 +203,8 @@ async def check_if_open_alert_exists_in_iris(alert_details: SuricataAlertModel, 
     client, alert_client = await initialize_client_and_alert("DFIR-IRIS")
     customer_iris_id = (
         await get_customer_alert_settings(
-            customer_code=alert_details._source["agent_labels_customer"],
+            # customer_code=alert_details._source["agent_labels_customer"],
+            customer_code="00002",
             session=session,
         )
     ).iris_customer_id
@@ -243,9 +246,9 @@ def construct_params(request: FilterAlertsRequest) -> dict:
 
 
 async def build_alert_context_payload(
-    alert_details: SuricataIrisAlertContext,
+    alert_details: Office365IrisAlertContext,
     session: AsyncSession,
-) -> SuricataIrisAlertContext:
+) -> Office365IrisAlertContext:
     """
     Builds the payload for the alert context.
 
@@ -255,9 +258,9 @@ async def build_alert_context_payload(
         session (AsyncSession): The async session.
 
     Returns:
-        SuricataIrisAlertContext: The built alert context payload.
+        Office365IrisAlertContext: The built alert context payload.
     """
-    return SuricataIrisAlertContext(
+    return Office365IrisAlertContext(
         customer_iris_id=(
             await get_customer_alert_settings(
                 customer_code=alert_details.agent_labels_customer,
@@ -288,21 +291,21 @@ async def build_alert_context_payload(
 
 
 async def build_alert_payload(
-    alert_details: SuricataIrisAlertContext,
+    alert_details: Office365IrisAlertContext,
     ioc_payload: Optional[IrisIoc],
     session: AsyncSession,
-) -> SuricataIrisAlertPayload:
+) -> Office365IrisAlertPayload:
     """
     Builds the payload for an alert based on the provided alert details, agent data, IoC payload, and session.
 
     Args:
-        alert_details (SuricataAlertModel): The details of the alert.
+        alert_details (Office365AlertModel): The details of the alert.
         agent_data: The agent data associated with the alert.
         ioc_payload (Optional[IrisIoc]): The IoC payload associated with the alert.
         session (AsyncSession): The session used for database operations.
 
     Returns:
-        SuricataIrisAlertPayload: The built alert payload.
+        Office365IrisAlertPayload: The built alert payload.
     """
     asset_payload = await build_asset_payload(
         alert_details=alert_details,
@@ -319,10 +322,10 @@ async def build_alert_payload(
 
     if ioc_payload:
         logger.info(f"Alert has IoC: {ioc_payload}")
-        return SuricataIrisAlertPayload(
+        return Office365IrisAlertPayload(
             alert_title=alert_details.alert_name,
             alert_description=alert_details.alert_name,
-            alert_source="COPILOT SURICATA ANALYSIS",
+            alert_source="COPILOT Office365 ANALYSIS",
             assets=[asset_payload],
             alert_status_id=3,
             alert_severity_id=5,
@@ -339,10 +342,10 @@ async def build_alert_payload(
         )
     else:
         logger.info("Alert does not have IoC")
-        return SuricataIrisAlertPayload(
+        return Office365IrisAlertPayload(
             alert_title=alert_details.alert_name,
             alert_description=alert_details.alert_name,
-            alert_source="COPILOT SURICATA ANALYSIS",
+            alert_source="COPILOT Office365 ANALYSIS",
             assets=[asset_payload],
             alert_status_id=3,
             alert_severity_id=5,
@@ -359,19 +362,19 @@ async def build_alert_payload(
 
 
 async def create_alert_details(
-    alert_details: SuricataAlertModel,
-) -> SuricataIrisAlertContext:
+    alert_details: Office365AlertModel,
+) -> Office365IrisAlertContext:
     """
-    Create an alert details object from the Suricata alert details.
+    Create an alert details object from the Office365 alert details.
 
     Args:
-        alert_details (SuricataAlertModel): The Suricata alert details.
+        alert_details (Office365AlertModel): The Office365 alert details.
 
     Returns:
-        SuricataIrisAlertContext: The alert details object.
+        Office365IrisAlertContext: The alert details object.
     """
     logger.info(f"Creating alert details for alert: {alert_details}")
-    return SuricataIrisAlertContext(
+    return Office365IrisAlertContext(
         index=alert_details._index,
         id=alert_details._id,
         alert_id=alert_details._source["alert_signature_id"],
@@ -390,14 +393,14 @@ async def create_alert_details(
 
 
 async def create_and_update_alert_in_iris(
-    alert_details: SuricataAlertModel,
+    alert_details: Office365AlertModel,
     session: AsyncSession,
 ) -> int:
     """
     Creates the alert, then updates the alert with the asset and IoC if available.
 
     Args:
-        alert_details (SuricataAlertModel): The details of the alert.
+        alert_details (Office365AlertModel): The details of the alert.
         session (AsyncSession): The async session object.
 
     Returns:
@@ -434,7 +437,7 @@ async def create_and_update_alert_in_iris(
         client,
         alert_client.update_alert,
         alert_id,
-        {"assets": [dict(SuricataIrisAsset(**iris_alert_payload.assets[0].to_dict()))]},
+        {"assets": [dict(Office365IrisAsset(**iris_alert_payload.assets[0].to_dict()))]},
     )
     if ioc_payload:
         await fetch_and_validate_data(
@@ -481,13 +484,13 @@ async def remove_duplicate_assets(current_assets):
     return current_assets
 
 
-async def analyze_suricata_alerts(
+async def analyze_office365_exchange_online_alerts(
     monitoring_alerts: MonitoringAlerts,
     customer_meta: CustomersMeta,
     session: AsyncSession,
 ) -> AlertAnalysisResponse:
     """
-    Analyze the given Suricata alerts and create an alert if necessary. Otherwise update the existing alert with the asset.
+    Analyze the given Office365 Exchange Online Alert and create an alert if necessary. Otherwise update the existing alert with the asset.
 
     1. For each alert, extract the metadata from the Wazuh-Indexer.
     2. Check if the alert exists in IRIS. If it does, update the alert with the asset. If it does not, create the alert in IRIS.
@@ -501,7 +504,7 @@ async def analyze_suricata_alerts(
     Returns:
         AlertAnalysisResponse: The analysis response.
     """
-    logger.info(f"Analyzing Suricata alerts with customer_meta: {customer_meta}")
+    logger.info(f"Analyzing Office365 Exchange Online alerts: {monitoring_alerts}")
     for alert in monitoring_alerts:
         alert_details = await fetch_alert_details(alert)
         iris_alert_id = await check_if_open_alert_exists_in_iris(alert_details, session=session)
@@ -543,7 +546,7 @@ async def analyze_suricata_alerts(
                 alert_details=alert_details,
                 session=session,
             )
-            current_assets.append(dict(SuricataIrisAsset(**asset_payload.to_dict())))
+            current_assets.append(dict(Office365IrisAsset(**asset_payload.to_dict())))
             current_assets = await remove_duplicate_assets(current_assets)
             await update_alert_with_assets(
                 client,
@@ -565,5 +568,5 @@ async def analyze_suricata_alerts(
 
     return AlertAnalysisResponse(
         success=True,
-        message="Suricata alerts analyzed successfully",
+        message="Office365 alerts analyzed successfully",
     )

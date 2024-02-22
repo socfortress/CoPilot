@@ -58,6 +58,20 @@ You can find the created `custom-ar.exe` executable in the `C:\Users\<USER>\dist
   </active-response>
 ```
 
+#. Create the rules file `/var/ossec/etc/rules/600000-active_response.xml` and add the following rule to trigger the custom active response:
+
+```xml
+<group name="active_response,">
+ <rule id="600000" level="10">
+    <decoded_as>json</decoded_as>
+    <field name="active_response">windows_firewall</field>
+    <description>Windows Firewall Active Response triggered.</description>
+    <group>socfortress,</group>
+    <options>no_full_log</options>
+  </rule>
+</group>
+```
+
 #. Restart the Wazuh manager to apply the changes:
 
 ```console

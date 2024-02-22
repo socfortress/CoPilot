@@ -85,7 +85,11 @@ const alertAskMessage = ref("")
 const isAskVisible = computed(() => alert._source?.rule_group3 === "sigma" && !alertAskMessage.value)
 
 watch(loading, val => {
-	emit(val ? "startLoading" : "startLoading")
+	if (val) {
+		emit("startLoading")
+	} else {
+		emit("stopLoading")
+	}
 })
 
 watch(alertUrl, val => {

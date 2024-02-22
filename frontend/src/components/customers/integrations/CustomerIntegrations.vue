@@ -56,7 +56,7 @@ import CustomerIntegrationForm from "./CustomerIntegrationForm.vue"
 import CustomerIntegrationItem from "./CustomerIntegrationItem.vue"
 import type { CustomerIntegration } from "@/types/integrations"
 
-const { customerCode } = defineProps<{
+const { customerCode, customerName } = defineProps<{
 	customerCode: string
 	customerName: string
 }>()

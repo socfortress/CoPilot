@@ -85,7 +85,11 @@ const loading = computed(() => loadingCaseCreation.value || loadingAlertDelete.v
 const existCase = ref(!!caseId)
 
 watch(loading, val => {
-	emit(val ? "startLoading" : "startLoading")
+	if (val) {
+		emit("startLoading")
+	} else {
+		emit("stopLoading")
+	}
 })
 
 function openSocCase() {

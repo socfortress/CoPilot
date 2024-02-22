@@ -297,7 +297,6 @@
 </template>
 
 <script setup lang="ts">
-// TODO: add customer goto function ??
 import AlertItem from "@/components/alerts/Alert.vue"
 import type { SocAlert } from "@/types/soc/alert.d"
 import type { Alert } from "@/types/alerts.d"
@@ -352,8 +351,18 @@ const props = defineProps<{
 	showBadgesToggle?: boolean
 	showCheckbox?: boolean
 }>()
-const { alertData, alertId, isBookmark, highlight, users, embedded, hideSocCaseAction, hideBookmarkAction } =
-	toRefs(props)
+const {
+	alertData,
+	alertId,
+	isBookmark,
+	highlight,
+	users,
+	embedded,
+	hideSocCaseAction,
+	hideBookmarkAction,
+	showBadgesToggle,
+	showCheckbox
+} = toRefs(props)
 
 const ChevronIcon = "carbon:chevron-right"
 const InfoIcon = "carbon:information"
@@ -483,7 +492,7 @@ function deleted() {
 	emit("deleted")
 }
 
-function gotoCustomer(code: any) {
+function gotoCustomer(code: string | number | { [key: string]: any }) {
 	router.push({ name: "Customers", query: { code: code.toString() } })
 }
 

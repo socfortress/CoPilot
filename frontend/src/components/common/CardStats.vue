@@ -28,7 +28,7 @@ const props = defineProps<{
 	vertical?: boolean
 	hovered?: boolean
 }>()
-const { title, value, vertical } = toRefs(props)
+const { title, value, vertical, hovered } = toRefs(props)
 
 const ArrowRightIcon = "carbon:arrow-right"
 </script>

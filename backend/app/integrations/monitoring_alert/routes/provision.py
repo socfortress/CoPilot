@@ -15,6 +15,12 @@ from app.integrations.monitoring_alert.schema.provision import (
     ProvisionWazuhMonitoringAlertResponse,
 )
 from app.integrations.monitoring_alert.services.provision import (
+    provision_office365_exchange_online_alert,
+)
+from app.integrations.monitoring_alert.services.provision import (
+    provision_office365_threat_intel_alert,
+)
+from app.integrations.monitoring_alert.services.provision import (
     provision_suricata_monitoring_alert,
 )
 from app.integrations.monitoring_alert.services.provision import (
@@ -57,10 +63,40 @@ async def invoke_provision_suricata_monitoring_alert(
     )
 
 
+async def invoke_provision_office365_exchange_online_alert(
+    request: ProvisionMonitoringAlertRequest,
+):
+    # Provision the Office365 Exchange Online monitoring alert
+    await provision_office365_exchange_online_alert(request)
+    await add_scheduler_jobs(
+        CreateSchedulerRequest(
+            function_name="invoke_office365_exchange_online_alert",
+            time_interval=5,
+            job_id="invoke_office365_exchange_online_alert",
+        ),
+    )
+
+
+async def invoke_provision_office365_threat_intel_alert(
+    request: ProvisionMonitoringAlertRequest,
+):
+    # Provision the Office365 Threat Intel monitoring alert
+    await provision_office365_threat_intel_alert(request)
+    await add_scheduler_jobs(
+        CreateSchedulerRequest(
+            function_name="invoke_office365_threat_intel_alert",
+            time_interval=5,
+            job_id="invoke_office365_threat_intel_alert",
+        ),
+    )
+
+
 # Create a dictionary that maps alert names to provision functions
 PROVISION_FUNCTIONS = {
     "WAZUH_SYSLOG_LEVEL_ALERT": invoke_provision_wazuh_monitoring_alert,
     "SURICATA_ALERT_SEVERITY_1": invoke_provision_suricata_monitoring_alert,
+    "OFFICE365_EXCHANGE_ONLINE": invoke_provision_office365_exchange_online_alert,
+    "OFFICE365_THREAT_INTEL": invoke_provision_office365_threat_intel_alert,
     # Add more alert names and functions as needed
 }
 
@@ -134,10 +170,7 @@ async def provision_monitoring_alert_route(
     # Invoke the provision function
     await provision_function(request)
 
-    return ProvisionWazuhMonitoringAlertResponse(
-        success=True,
-        message="Wazuh monitoring alerts provisioned.",
-    )
+    return ProvisionWazuhMonitoringAlertResponse(success=True, message=f"Monitoring alert {request.alert_name} provisioned successfully.")
 
 
 @monitoring_alerts_provision_router.post(
