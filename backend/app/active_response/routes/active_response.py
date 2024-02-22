@@ -3,12 +3,12 @@ from pathlib import Path
 
 import aiofiles
 from fastapi import APIRouter
-from fastapi import HTTPException
 from fastapi import Depends
+from fastapi import HTTPException
 from fastapi import Security
 from loguru import logger
-from app.db.db_session import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.active_response.schema.active_response import ActiveResponse
 from app.active_response.schema.active_response import ActiveResponseDetails
 from app.active_response.schema.active_response import ActiveResponseDetailsResponse
@@ -16,9 +16,10 @@ from app.active_response.schema.active_response import ActiveResponsesSupported
 from app.active_response.schema.active_response import ActiveResponsesSupportedResponse
 from app.active_response.schema.active_response import InvokeActiveResponseRequest
 from app.active_response.schema.active_response import InvokeActiveResponseResponse
+from app.agents.routes.agents import get_agent
 from app.auth.utils import AuthHandler
 from app.connectors.wazuh_manager.utils.universal import send_put_request
-from app.agents.routes.agents import get_agent
+from app.db.db_session import get_db
 
 active_response_router = APIRouter()
 
@@ -47,13 +48,16 @@ async def read_markdown_file(file_path: str) -> str:
     async with aiofiles.open(file_path, "r") as file:
         return await file.read()
 
+
 async def return_supported_active_responses_based_on_os(os: str) -> ActiveResponsesSupportedResponse:
     # if os contains windows
     if "Windows" in os:
         logger.info("Agent OS is Windows")
         return ActiveResponsesSupportedResponse(
             supported_active_responses=[
-                ActiveResponse(name=active_response.name, description=active_response.value) for active_response in ActiveResponsesSupported if "WINDOWS" in active_response.name
+                ActiveResponse(name=active_response.name, description=active_response.value)
+                for active_response in ActiveResponsesSupported
+                if "WINDOWS" in active_response.name
             ],
             success=True,
             message="Supported Active Responses retrieved successfully",
@@ -62,7 +66,9 @@ async def return_supported_active_responses_based_on_os(os: str) -> ActiveRespon
         logger.info("Agent OS is Linux")
         return ActiveResponsesSupportedResponse(
             supported_active_responses=[
-                ActiveResponse(name=active_response.name, description=active_response.value) for active_response in ActiveResponsesSupported if "LINUX" in active_response.name
+                ActiveResponse(name=active_response.name, description=active_response.value)
+                for active_response in ActiveResponsesSupported
+                if "LINUX" in active_response.name
             ],
             success=True,
             message="Supported Active Responses retrieved successfully",
@@ -108,6 +114,7 @@ async def get_supported_active_responses_route() -> ActiveResponsesSupportedResp
         success=True,
         message="Supported Active Responses retrieved successfully",
     )
+
 
 @active_response_router.get(
     "/supported/{agent_id}",

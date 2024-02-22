@@ -2,15 +2,18 @@ from datetime import datetime
 
 from dotenv import load_dotenv
 from loguru import logger
-from sqlalchemy import select, not_
+from sqlalchemy import select
 
 from app.db.db_session import get_db_session
 from app.db.db_session import get_sync_db_session
 from app.db.universal_models import CustomersMeta
 from app.integrations.monitoring_alert.routes.monitoring_alert import (
+    run_office365_exchange_online_analysis,
+)
+from app.integrations.monitoring_alert.routes.monitoring_alert import (
     run_suricata_analysis,
 )
-from app.integrations.monitoring_alert.routes.monitoring_alert import run_wazuh_analysis, run_office365_exchange_online_analysis
+from app.integrations.monitoring_alert.routes.monitoring_alert import run_wazuh_analysis
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
     AlertAnalysisResponse,
 )
@@ -99,6 +102,7 @@ async def invoke_suricata_monitoring_alert() -> AlertAnalysisResponse:
         message="Suricata monitoring alerts invoked.",
     )
 
+
 async def invoke_office365_exchange_online_alert() -> AlertAnalysisResponse:
     """
     Invokes the Office365 Exchange Online monitoring alerts scheduled job.
@@ -121,6 +125,7 @@ async def invoke_office365_exchange_online_alert() -> AlertAnalysisResponse:
         success=True,
         message="Office365 Exchange Online monitoring alerts invoked.",
     )
+
 
 async def invoke_office365_threat_intel_alert() -> AlertAnalysisResponse:
     """

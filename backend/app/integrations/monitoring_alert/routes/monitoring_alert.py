@@ -26,6 +26,9 @@ from app.integrations.monitoring_alert.schema.monitoring_alert import (
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
     MonitoringWazuhAlertsRequestModel,
 )
+from app.integrations.monitoring_alert.services.office365 import (
+    analyze_office365_exchange_online_alerts,
+)
 from app.integrations.monitoring_alert.services.suricata import analyze_suricata_alerts
 from app.integrations.monitoring_alert.services.wazuh import analyze_wazuh_alerts
 from app.integrations.sap_siem.services.sap_siem_multiple_logins import (
@@ -34,7 +37,6 @@ from app.integrations.sap_siem.services.sap_siem_multiple_logins import (
 from app.integrations.sap_siem.services.sap_siem_suspicious_logins import (
     sap_siem_suspicious_logins,
 )
-from app.integrations.monitoring_alert.services.office365 import analyze_office365_exchange_online_alerts
 
 monitoring_alerts_router = APIRouter()
 
@@ -241,6 +243,7 @@ async def run_suricata_analysis(
         success=True,
         message="Analysis completed successfully",
     )
+
 
 @monitoring_alerts_router.post(
     "/run_analysis/office365/exchange_online",

@@ -14,3 +14,6 @@ from app.integrations.models.customer_integration_settings import CustomerIntegr
 from app.schedulers.models.scheduler import JobMetadata
 from app.integrations.monitoring_alert.models.monitoring_alert import MonitoringAlerts
 from app.integrations.sap_siem.models.sap_siem import SapSiemMultipleLogins
+from app.customer_provisioning.models.default_settings import (
+    CustomerProvisioningDefaultSettings,
+)

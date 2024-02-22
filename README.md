@@ -49,27 +49,29 @@ To ease the installation and upgrades, Copilot is shipped in a single docker con
 ```
 nano /etc/docker/daemon.json
 ```
+
 ```json
 {
-  "dns": ["YOUR_DNS_SERVER"],
-  "log-driver": "json-file",
-  "log-opts": {
-    "max-size": "10m",
-    "max-file": "3"
-  }
+	"dns": ["YOUR_DNS_SERVER"],
+	"log-driver": "json-file",
+	"log-opts": {
+		"max-size": "10m",
+		"max-file": "3"
+	}
 }
 ```
 
 ### In case you need to set MTU
+
 ```json
 {
-  "dns": ["YOUR_DNS_SERVER"],
-  "log-driver": "json-file",
-  "log-opts": {
-    "max-size": "10m",
-    "max-file": "3"
-  },
-  "mtu": 1450
+	"dns": ["YOUR_DNS_SERVER"],
+	"log-driver": "json-file",
+	"log-opts": {
+		"max-size": "10m",
+		"max-file": "3"
+	},
+	"mtu": 1450
 }
 ```
 
