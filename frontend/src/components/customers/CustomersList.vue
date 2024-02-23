@@ -5,7 +5,7 @@
 				Total:
 				<strong class="font-mono">{{ totalCustomers }}</strong>
 			</div>
-			<div>
+			<div class="flex items-center gap-3">
 				<slot></slot>
 			</div>
 		</div>
