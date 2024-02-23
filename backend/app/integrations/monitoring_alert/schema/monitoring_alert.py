@@ -548,14 +548,15 @@ class SuricataIrisAlertPayload(BaseModel):
 
 
 ########### ! Office365 ALERTS SCHEMA ! ###########
-class Office365SourceModel(BaseModel):
-    alert_signature: str = Field(..., description="Signature of the alert")
-    alert_severity: int = Field(..., description="Severity level of the alert")
-    alert_signature_id: int = Field(..., description="Signature ID of the alert")
-    src_ip: str = Field(..., description="Source IP address")
-    dest_ip: str = Field(..., description="Destination IP address")
-    app_proto: str = Field(..., description="Application protocol")
-    agent_labels_customer: str = Field(..., description="Customer of the agent")
+class Office365ExchangeSourceModel(BaseModel):
+    client_ip: Optional[str] = Field("Not found", description="Client IP address")
+    operation: Optional[str] = Field("Not found", description="Operation")
+    creation_time: Optional[str] = Field("Not found", description="Creation time")
+    office365_id: str = Field(..., description="Office365 ID")
+    organization_name: str = Field(..., description="Organization name")
+    user_id: str = Field(..., description="User ID")
+    workload: str = Field(..., description="Workload")
+    organization_id: str = Field(..., description="Organization ID")
     timestamp: str = Field(..., description="The timestamp of the alert.")
     timestamp_utc: Optional[str] = Field(
         ...,
@@ -569,11 +570,10 @@ class Office365SourceModel(BaseModel):
         None,
         description="Date of the alert in Unix timestamp",
     )
-    alert_metadata_tag: Optional[str] = Field(
-        None,
-        description="Metadata tag for the alert",
+    rule_description: str = Field(
+        ...,
+        description="Description of the rule",
     )
-    alert_gid: Optional[int] = Field(None, description="Alert group ID")
 
     class Config:
         allow_population_by_field_name = True
@@ -583,11 +583,11 @@ class Office365SourceModel(BaseModel):
         return self.dict(exclude_none=True)
 
 
-class Office365AlertModel(BaseModel):
+class Office365ExchangeAlertModel(BaseModel):
     _index: str
     _id: str
     _version: int
-    _source: Office365SourceModel
+    _source: Office365ExchangeSourceModel
     asset_type_id: Optional[int] = Field(
         None,
         description="The asset type id of the alert which is needed for when we add the asset to IRIS.",
@@ -605,25 +605,20 @@ class Office365AlertModel(BaseModel):
         extra = Extra.allow
 
 
-########### ! Create Suricata Alerts In IRIS Schemas ! ###########
-class Office365IrisAsset(BaseModel):
+########### ! Create Office365 Exchange Alerts In IRIS Schemas ! ###########
+class Office365ExchangeIrisAsset(BaseModel):
     asset_name: Optional[str] = Field(
-        "Asset Does Not Apply to Suricata Alerts",
+        "Asset Does Not Apply to Office365 Exchange Alerts",
         description="Name of the asset",
-        example="Server01",
-    )
-    asset_ip: Optional[str] = Field(
-        "Asset Does Not Apply to Suricata Alerts",
-        description="IP address of the asset",
-        example="192.168.1.1",
+        example="test@socfortress.co"
     )
     asset_description: Optional[str] = Field(
-        "Asset Does Not Apply to Suricata Alerts",
+        "Asset Does Not Apply to Office365 Exchange Alerts",
         description="Description of the asset",
         example="Windows Server",
     )
     asset_type_id: Optional[int] = Field(
-        9,
+        1,
         description="Type ID of the asset",
         example=1,
     )
@@ -632,55 +627,16 @@ class Office365IrisAsset(BaseModel):
         return self.dict(exclude_none=True)
 
 
-class Office365IrisIoc(BaseModel):
-    ioc_value: str = Field(
-        ...,
-        description="Value of the IoC",
-        example="www.google.com",
-    )
-    ioc_description: str = Field(
-        ...,
-        description="Description of the IoC",
-        example="Google",
-    )
-    ioc_tlp_id: int = Field(1, description="TLP ID of the IoC", example=1)
-    ioc_type_id: int = Field(20, description="Type ID of the IoC", example=20)
-
-
-class Office365IrisAlertContext(BaseModel):
-    _source: Office365SourceModel
-    alert_id: str = Field(..., description="ID of the alert", example="123")
-    alert_name: str = Field(
-        ...,
-        description="Name of the alert",
-        example="Intrusion Detected",
-    )
-    alert_level: int = Field(..., description="Severity level of the alert", example=3)
-    rule_id: int = Field(
-        ...,
-        description="ID of the Suricata rule that triggered the alert",
-        example="2001",
-    )
-    src_ip: str = Field(
-        ...,
-        description="Source IP address of the alert",
-        example="1.1.1.1",
-    )
-    dest_ip: str = Field(
-        ...,
-        description="Destination IP address of the alert",
-        example="8.8.8.8",
-    )
-    app_proto: str = Field(
-        ...,
-        description="Application protocol of the alert",
-        example="TCP",
-    )
-    agent_labels_customer: str = Field(
-        ...,
-        description="Customer of the endpoint",
-        example="SOCFortress",
-    )
+class Office365ExchangeIrisAlertContext(BaseModel):
+    _source: Office365ExchangeSourceModel = Field(..., description="Source of the alert")
+    client_ip: Optional[str] = Field("Not found", description="Client IP address")
+    operation: Optional[str] = Field("Not found", description="Operation")
+    creation_time: Optional[str] = Field("Not found", description="Creation time")
+    office365_id: str = Field(..., description="Office365 ID")
+    organization_name: str = Field(..., description="Organization name")
+    user_id: str = Field(..., description="User ID")
+    workload: str = Field(..., description="Workload")
+    organization_id: str = Field(..., description="Organization ID")
     customer_iris_id: Optional[int] = Field(
         None,
         description="IRIS ID of the customer",
@@ -697,12 +653,21 @@ class Office365IrisAlertContext(BaseModel):
         "timestamp_utc",
         description="The timefield of the alert to be used when creating the IRIS alert.",
     )
+    rule_description: str = Field(
+        ...,
+        description="Description of the rule",
+    )
+    rule_id: str = Field(
+        ...,
+        description="ID of the rule that triggered the alert",
+        example="2001",
+    )
 
     def to_dict(self):
         return self.dict(exclude_none=True)
 
 
-class Office365IrisAlertPayload(BaseModel):
+class Office365ExchangeIrisAlertPayload(BaseModel):
     alert_title: str = Field(
         ...,
         description="Title of the alert",
@@ -714,7 +679,7 @@ class Office365IrisAlertPayload(BaseModel):
         example="Intrusion Detected by Firewall",
     )
     alert_source: str = Field(..., description="Source of the alert", example="Suricata")
-    assets: List[SuricataIrisAsset] = Field(..., description="List of affected assets")
+    assets: List[Office365ExchangeIrisAsset] = Field(..., description="List of affected assets")
     alert_status_id: int = Field(..., description="Status ID of the alert", example=3)
     alert_severity_id: int = Field(
         ...,
@@ -730,7 +695,7 @@ class Office365IrisAlertPayload(BaseModel):
         ...,
         description="Original content from the alert source",
     )
-    alert_context: SuricataIrisAlertContext = Field(
+    alert_context: Office365ExchangeIrisAlertContext = Field(
         ...,
         description="Contextual information about the alert",
     )

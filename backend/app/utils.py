@@ -657,9 +657,15 @@ async def get_customer_alert_settings(
     )
     settings = result.scalars().first()
 
-    if settings:
-        return settings
-    return None
+    if not settings:
+        result = await session.execute(
+            select(AlertCreationSettings).filter(
+                AlertCreationSettings.office365_organization_id == customer_code,
+            ),
+        )
+        settings = result.scalars().first()
+
+    return settings
 
 
 async def get_customer_alert_settings_office365(
