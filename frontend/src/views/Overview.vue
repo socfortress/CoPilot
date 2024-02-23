@@ -5,17 +5,19 @@
 			<ThreatIntelButton size="small" type="primary" />
 		</div>
 		<div class="section">
-			<div class="columns overflow-hidden">
-				<div class="basis-1/3">
+			<div class="columns column-800 overflow-hidden">
+				<div class="basis-2/5">
 					<AgentsCard />
 				</div>
-				<div class="basis-1/3">
+				<div class="basis-2/5">
 					<HealthcheckCard />
 				</div>
-				<div class="basis-1/3 flex gap-6">
-					<div class="grow overflow-hidden">
-						<SocAlertsCard class="h-full" :vertical="cardDirection === 'vertical'" />
-					</div>
+				<div class="basis-1/5 flex gap-6">
+					<!--
+						<div class="grow overflow-hidden">
+							<SocAlertsCard class="h-full" :vertical="cardDirection === 'vertical'" />
+						</div>
+					-->
 					<div class="grow overflow-hidden">
 						<CustomersCard class="h-full" :vertical="cardDirection === 'vertical'" />
 					</div>
@@ -51,7 +53,7 @@ import ThreatIntelButton from "@/components/alerts/ThreatIntelButton.vue"
 import ActiveResponseWizardButton from "@/components/activeResponse/ActiveResponseWizardButton.vue"
 import AgentsCard from "@/components/overview/AgentsCard.vue"
 import HealthcheckCard from "@/components/overview/HealthcheckCard.vue"
-import SocAlertsCard from "@/components/overview/SocAlertsCard.vue"
+// import SocAlertsCard from "@/components/overview/SocAlertsCard.vue"
 import CustomersCard from "@/components/overview/CustomersCard.vue"
 import PipeList from "@/components/graylog/Pipelines/PipeList.vue"
 import type { IndexStats } from "@/types/indices.d"
@@ -95,6 +97,15 @@ useResizeObserver(page, entries => {
 	@media (max-width: 1000px) {
 		.section {
 			.columns {
+				&:not(.column-1200, .column-800) {
+					flex-direction: column;
+				}
+			}
+		}
+	}
+	@media (max-width: 800px) {
+		.section {
+			.columns.column-800 {
 				flex-direction: column;
 			}
 		}
