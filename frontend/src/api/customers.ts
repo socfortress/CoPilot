@@ -5,7 +5,8 @@ import type {
 	CustomerAgentHealth,
 	CustomerDecomissionedData,
 	CustomerMeta,
-	CustomerProvision
+	CustomerProvision,
+	CustomerProvisioningDefaultSettings
 } from "@/types/customers.d"
 import type { Agent } from "@/types/agents.d"
 
@@ -13,6 +14,13 @@ export interface CustomerAgentsHealthcheckQuery {
 	minutes?: number
 	hours?: number
 	days?: number
+}
+
+export interface ProvisioningDefaultSettingsPayload {
+	clusterName: string
+	clusterKey: string
+	masterIp: string
+	grafanaUrl: string
 }
 
 export default {
@@ -121,5 +129,32 @@ export default {
 		return HttpClient.get<FlaskBaseResponse & { available_subscriptions: string[] }>(
 			`/customer_provisioning/provision/subscriptions`
 		)
+	},
+	getProvisioningDefaultSettings() {
+		return HttpClient.get<
+			FlaskBaseResponse & { customer_provisioning_default_settings: CustomerProvisioningDefaultSettings }
+		>(`/customer_provisioning/default_settings`)
+	},
+	setProvisioningDefaultSettings(payload: ProvisioningDefaultSettingsPayload) {
+		return HttpClient.post<
+			FlaskBaseResponse & { customer_provisioning_default_settings: CustomerProvisioningDefaultSettings }
+		>(`/customer_provisioning/default_settings`, {
+			id: 0,
+			cluster_name: payload.clusterName,
+			cluster_key: payload.clusterKey,
+			master_ip: payload.masterIp,
+			grafana_url: payload.grafanaUrl
+		})
+	},
+	updateProvisioningDefaultSettings(payload: ProvisioningDefaultSettingsPayload) {
+		return HttpClient.put<
+			FlaskBaseResponse & { customer_provisioning_default_settings: CustomerProvisioningDefaultSettings }
+		>(`/customer_provisioning/default_settings`, {
+			id: 0,
+			cluster_name: payload.clusterName,
+			cluster_key: payload.clusterKey,
+			master_ip: payload.masterIp,
+			grafana_url: payload.grafanaUrl
+		})
 	}
 }

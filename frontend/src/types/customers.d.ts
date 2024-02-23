@@ -89,3 +89,11 @@ export interface CustomerDecomissionedData {
 	stream_deleted: string
 	index_deleted: string
 }
+
+export interface CustomerProvisioningDefaultSettings {
+	id: number
+	cluster_name: string
+	cluster_key: string
+	master_ip: string
+	grafana_url: string
+}

@@ -8,7 +8,7 @@
 							<n-select v-model:value="form.action" :options="invokeActionOptions" />
 						</n-form-item>
 						<n-form-item label="IP Address" path="ip">
-							<n-input v-model:value.trim="form.ip" placeholder="Input the IP Address..." />
+							<n-input v-model:value.trim="form.ip" placeholder="Input the IP Address..." clearable />
 						</n-form-item>
 					</div>
 				</n-form>
