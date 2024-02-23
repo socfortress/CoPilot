@@ -60,7 +60,7 @@ async def create_customer_provisioning_default_settings(
     existing_settings = result.scalars().first()
 
     if existing_settings:
-        raise HTTPException(status_code=400, detail="Only one settings entry is allowed")
+        raise HTTPException(status_code=400, detail="Only one customer provisioning default settings can exist")
 
     db.add(customer_provisioning_default_settings)
     await db.commit()
