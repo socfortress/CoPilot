@@ -26,7 +26,7 @@ from app.integrations.monitoring_alert.schema.monitoring_alert import (
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
     MonitoringWazuhAlertsRequestModel,
 )
-from app.integrations.monitoring_alert.services.office365 import (
+from app.integrations.monitoring_alert.services.office365_exchange import (
     analyze_office365_exchange_online_alerts,
 )
 from app.integrations.monitoring_alert.services.suricata import analyze_suricata_alerts
