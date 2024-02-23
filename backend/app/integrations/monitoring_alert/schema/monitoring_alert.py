@@ -610,7 +610,7 @@ class Office365ExchangeIrisAsset(BaseModel):
     asset_name: Optional[str] = Field(
         "Asset Does Not Apply to Office365 Exchange Alerts",
         description="Name of the asset",
-        example="test@socfortress.co"
+        example="test@socfortress.co",
     )
     asset_description: Optional[str] = Field(
         "Asset Does Not Apply to Office365 Exchange Alerts",
@@ -775,7 +775,7 @@ class Office365ThreatIntelIrisAsset(BaseModel):
     asset_name: Optional[str] = Field(
         "Asset Does Not Apply to Office365 Exchange Alerts",
         description="Name of the asset",
-        example="test@socfortress.co"
+        example="test@socfortress.co",
     )
     asset_description: Optional[str] = Field(
         "Asset Does Not Apply to Office365 Exchange Alerts",

@@ -304,6 +304,7 @@ async def run_office365_exchange_online_analysis(
         message="Analysis completed successfully",
     )
 
+
 @monitoring_alerts_router.post(
     "/run_analysis/office365/threat_intel",
     response_model=AlertAnalysisResponse,

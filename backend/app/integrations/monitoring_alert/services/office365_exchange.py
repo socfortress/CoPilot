@@ -38,7 +38,9 @@ from app.integrations.monitoring_alert.schema.monitoring_alert import (
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
     Office365ExchangeIrisAlertPayload,
 )
-from app.integrations.monitoring_alert.schema.monitoring_alert import Office365ExchangeIrisAsset
+from app.integrations.monitoring_alert.schema.monitoring_alert import (
+    Office365ExchangeIrisAsset,
+)
 from app.integrations.monitoring_alert.utils.db_operations import remove_alert_id
 from app.integrations.utils.alerts import validate_ioc_type
 from app.utils import get_customer_alert_settings
@@ -204,7 +206,7 @@ async def check_if_open_alert_exists_in_iris(alert_details: Office365ExchangeAle
     customer_iris_id = (
         await get_customer_alert_settings(
             customer_code=alert_details._source["data_office365_OrganizationId"],
-            #customer_code="9668d0df-6e2e-40fd-947d-d568e520e084",
+            # customer_code="9668d0df-6e2e-40fd-947d-d568e520e084",
             session=session,
         )
     ).iris_customer_id
@@ -392,7 +394,6 @@ async def create_alert_details(
         time_field=alert_details._source.get("timestamp_utc", alert_details._source.get("timestamp")),
         rule_description=alert_details._source["rule_description"],
         rule_id=alert_details._source["rule_id"],
-
     )
 
 
