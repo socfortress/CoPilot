@@ -30,7 +30,9 @@ const settingsFormCTX = ref<{ load: () => void } | null>(null)
 const showForm = ref(false)
 const loading = ref(false)
 
-watch(showForm, () => {
-	settingsFormCTX.value?.load()
+watch(showForm, val => {
+	if (val) {
+		settingsFormCTX.value?.load()
+	}
 })
 </script>

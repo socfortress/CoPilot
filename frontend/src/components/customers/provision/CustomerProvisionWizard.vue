@@ -235,13 +235,14 @@ import {
 	type FormItemRule,
 	type FormValidationError
 } from "naive-ui"
-import type { CustomerMeta, CustomerProvision } from "@/types/customers.d"
+import type { CustomerMeta, CustomerProvision, CustomerProvisioningDefaultSettings } from "@/types/customers.d"
 import Icon from "@/components/common/Icon.vue"
 import Api from "@/api"
 import isURL from "validator/es/lib/isURL"
 import isPort from "validator/es/lib/isPort"
 import isIP from "validator/es/lib/isIP"
 import { onBeforeMount } from "vue"
+import _uniqBy from "lodash/uniqBy"
 
 const emit = defineEmits<{
 	(e: "update:loading", value: boolean): void
@@ -262,6 +263,7 @@ const ArrowLeftIcon = "carbon:arrow-left"
 const loading = ref(false)
 const loadingSubscriptions = ref(false)
 const loadingDashboards = ref(false)
+const loadingDefaultSettings = ref(false)
 const message = useMessage()
 const current = ref<number>(1)
 const currentStatus = ref<StepsProps["status"]>("process")
@@ -398,7 +400,7 @@ function validateAtLeastOne(rule: FormItemRule, value: string[]) {
 	return true
 }
 
-function getClearForm(): CustomerProvision {
+function getClearForm(settings?: CustomerProvisioningDefaultSettings): CustomerProvision {
 	return {
 		// step1
 		customer_name: customerName.value,
@@ -425,10 +427,10 @@ function getClearForm(): CustomerProvision {
 		wazuh_registration_port: "",
 		wazuh_logs_port: "",
 		wazuh_api_port: "",
-		wazuh_cluster_name: "",
-		wazuh_cluster_key: "",
-		wazuh_master_ip: "",
-		grafana_url: ""
+		wazuh_cluster_name: settings?.cluster_name || "",
+		wazuh_cluster_key: settings?.cluster_key || "",
+		wazuh_master_ip: settings?.master_ip || "",
+		grafana_url: settings?.grafana_url || ""
 	}
 }
 
@@ -446,6 +448,21 @@ function prev() {
 	current.value--
 }
 
+function getProvisioningDefaultSettings() {
+	loadingDefaultSettings.value = true
+
+	Api.customers
+		.getProvisioningDefaultSettings()
+		.then(res => {
+			if (res.data.success) {
+				setForm(res.data?.customer_provisioning_default_settings)
+			}
+		})
+		.finally(() => {
+			loadingDefaultSettings.value = false
+		})
+}
+
 function getSubscriptions() {
 	loadingSubscriptions.value = true
 
@@ -453,7 +470,10 @@ function getSubscriptions() {
 		.getProvisioningSubscriptions()
 		.then(res => {
 			if (res.data.success) {
-				subscriptionOptions.value = (res.data?.available_subscriptions || []).map(o => ({ label: o, value: o }))
+				subscriptionOptions.value = _uniqBy(
+					(res.data?.available_subscriptions || []).map(o => ({ label: o, value: o })),
+					"value"
+				)
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
@@ -473,7 +493,10 @@ function getDashboards() {
 		.getProvisioningDashboards()
 		.then(res => {
 			if (res.data.success) {
-				dashboardOptions.value = (res.data?.available_dashboards || []).map(o => ({ label: o, value: o }))
+				dashboardOptions.value = _uniqBy(
+					(res.data?.available_dashboards || []).map(o => ({ label: o, value: o })),
+					"value"
+				)
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
@@ -511,6 +534,11 @@ function reset() {
 	currentStatus.value = "process"
 	slideFormDirection.value = "right"
 	current.value = 1
+	setForm()
+}
+
+function setForm(settings?: CustomerProvisioningDefaultSettings) {
+	form.value = getClearForm(settings)
 }
 
 async function submit() {
@@ -540,6 +568,7 @@ async function submit() {
 }
 
 onBeforeMount(() => {
+	getProvisioningDefaultSettings()
 	getSubscriptions()
 	getDashboards()
 })

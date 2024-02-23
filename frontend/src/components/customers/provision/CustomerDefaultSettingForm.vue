@@ -202,20 +202,24 @@ function validateUrl(rule: FormItemRule, value: string) {
 }
 
 function getProvisioningDefaultSettings() {
-	if (!loadingDefaultSettings.value) {
-		loadingDefaultSettings.value = true
+	loadingDefaultSettings.value = true
 
-		Api.customers
-			.getProvisioningDefaultSettings()
-			.then(res => {
-				if (res.data.success) {
-					isNew.value = false
-					setForm(res.data?.customer_provisioning_default_settings)
-				}
-			})
-			.finally(() => {
-				loadingDefaultSettings.value = false
-			})
+	Api.customers
+		.getProvisioningDefaultSettings()
+		.then(res => {
+			if (res.data.success) {
+				isNew.value = false
+				setForm(res.data?.customer_provisioning_default_settings)
+			}
+		})
+		.finally(() => {
+			loadingDefaultSettings.value = false
+		})
+}
+
+function load() {
+	if (!loadingDefaultSettings.value) {
+		getProvisioningDefaultSettings()
 	}
 }
 
@@ -229,7 +233,7 @@ onBeforeMount(() => {
 
 onMounted(() => {
 	emit("mounted", {
-		load: getProvisioningDefaultSettings
+		load
 	})
 })
 </script>
