@@ -74,7 +74,7 @@ async def create_customer_provisioning_default_settings(
 
 @customer_provisioning_default_settings_router.put(
     "/default_settings",
-    response_model=CustomerProvisioningDefaultSettings,
+    response_model=CustomerProvisioningDefaultSettingsResponse,
     description="Update default settings for customer provisioning",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
@@ -98,12 +98,16 @@ async def update_customer_provisioning_default_settings(
 
     await db.commit()
     await db.refresh(existing_settings)
-    return existing_settings
+    return CustomerProvisioningDefaultSettingsResponse(
+        message="Customer Provisioning Default Settings updated successfully",
+        success=True,
+        customer_provisioning_default_settings=existing_settings,
+    )
 
 
 @customer_provisioning_default_settings_router.delete(
     "/default_settings",
-    response_model=CustomerProvisioningDefaultSettings,
+    response_model=CustomerProvisioningDefaultSettingsResponse,
     description="Delete default settings for customer provisioning",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
@@ -119,4 +123,8 @@ async def delete_customer_provisioning_default_settings(
 
     await db.delete(existing_settings)
     await db.commit()
-    return existing_settings
+    return CustomerProvisioningDefaultSettingsResponse(
+        message="Customer Provisioning Default Settings deleted successfully",
+        success=True,
+        customer_provisioning_default_settings=existing_settings,
+    )
