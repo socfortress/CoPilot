@@ -117,6 +117,6 @@ async def delete_customer_provisioning_default_settings(
     if not existing_settings:
         raise HTTPException(status_code=404, detail="Settings not found")
 
-    db.delete(existing_settings)
+    await db.delete(existing_settings)
     await db.commit()
     return existing_settings
