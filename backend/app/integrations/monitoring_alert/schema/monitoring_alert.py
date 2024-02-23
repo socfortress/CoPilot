@@ -547,7 +547,7 @@ class SuricataIrisAlertPayload(BaseModel):
         return self.dict(exclude_none=True)
 
 
-########### ! Office365 ALERTS SCHEMA ! ###########
+########### ! Office365 Exchange ALERTS SCHEMA ! ###########
 class Office365ExchangeSourceModel(BaseModel):
     client_ip: Optional[str] = Field("Not found", description="Client IP address")
     operation: Optional[str] = Field("Not found", description="Operation")
@@ -696,6 +696,172 @@ class Office365ExchangeIrisAlertPayload(BaseModel):
         description="Original content from the alert source",
     )
     alert_context: Office365ExchangeIrisAlertContext = Field(
+        ...,
+        description="Contextual information about the alert",
+    )
+    alert_iocs: Optional[List[IrisIoc]] = Field(
+        None,
+        description="List of IoCs related to the alert",
+    )
+    alert_source_event_time: str = Field(
+        ...,
+        description="Timestamp of the alert",
+        example="2021-01-01T00:00:00.000Z",
+    )
+
+    def to_dict(self):
+        return self.dict(exclude_none=True)
+
+
+########### ! Office365 Threat Intel ALERTS SCHEMA ! ###########
+class Office365ThreatIntelSourceModel(BaseModel):
+    client_ip: Optional[str] = Field("Not found", description="Client IP address")
+    operation: Optional[str] = Field("Not found", description="Operation")
+    creation_time: Optional[str] = Field("Not found", description="Creation time")
+    office365_id: str = Field(..., description="Office365 ID")
+    organization_name: str = Field(..., description="Organization name")
+    user_id: str = Field(..., description="User ID")
+    workload: str = Field(..., description="Workload")
+    organization_id: str = Field(..., description="Organization ID")
+    timestamp: str = Field(..., description="The timestamp of the alert.")
+    timestamp_utc: Optional[str] = Field(
+        ...,
+        description="The UTC timestamp of the alert.",
+    )
+    time_field: Optional[str] = Field(
+        "timestamp",
+        description="The timefield of the alert to be used when creating the IRIS alert.",
+    )
+    date: Optional[float] = Field(
+        None,
+        description="Date of the alert in Unix timestamp",
+    )
+    rule_description: str = Field(
+        ...,
+        description="Description of the rule",
+    )
+
+    class Config:
+        allow_population_by_field_name = True
+        extra = Extra.allow
+
+    def to_dict(self):
+        return self.dict(exclude_none=True)
+
+
+class Office365ThreatIntelAlertModel(BaseModel):
+    _index: str
+    _id: str
+    _version: int
+    _source: Office365ThreatIntelSourceModel
+    asset_type_id: Optional[int] = Field(
+        None,
+        description="The asset type id of the alert which is needed for when we add the asset to IRIS.",
+    )
+    ioc_value: Optional[str] = Field(
+        None,
+        description="The IoC value of the alert which is needed for when we add the IoC to IRIS.",
+    )
+    ioc_type: Optional[str] = Field(
+        None,
+        description="The IoC type of the alert which is needed for when we add the IoC to IRIS.",
+    )
+
+    class Config:
+        extra = Extra.allow
+
+
+########### ! Create Office365 Threat Intel Alerts In IRIS Schemas ! ###########
+class Office365ThreatIntelIrisAsset(BaseModel):
+    asset_name: Optional[str] = Field(
+        "Asset Does Not Apply to Office365 Exchange Alerts",
+        description="Name of the asset",
+        example="test@socfortress.co"
+    )
+    asset_description: Optional[str] = Field(
+        "Asset Does Not Apply to Office365 Exchange Alerts",
+        description="Description of the asset",
+        example="Windows Server",
+    )
+    asset_type_id: Optional[int] = Field(
+        1,
+        description="Type ID of the asset",
+        example=1,
+    )
+
+    def to_dict(self):
+        return self.dict(exclude_none=True)
+
+
+class Office365ThreatIntelIrisAlertContext(BaseModel):
+    _source: Office365ThreatIntelSourceModel = Field(..., description="Source of the alert")
+    client_ip: Optional[str] = Field("Not found", description="Client IP address")
+    operation: Optional[str] = Field("Not found", description="Operation")
+    creation_time: Optional[str] = Field("Not found", description="Creation time")
+    office365_id: str = Field(..., description="Office365 ID")
+    organization_name: str = Field(..., description="Organization name")
+    user_id: str = Field(..., description="User ID")
+    workload: str = Field(..., description="Workload")
+    organization_id: str = Field(..., description="Organization ID")
+    customer_iris_id: Optional[int] = Field(
+        None,
+        description="IRIS ID of the customer",
+    )
+    customer_name: Optional[str] = Field(
+        None,
+        description="Name of the customer",
+    )
+    customer_cases_index: Optional[str] = Field(
+        None,
+        description="IRIS case index name in the Wazuh-Indexer",
+    )
+    time_field: Optional[str] = Field(
+        "timestamp_utc",
+        description="The timefield of the alert to be used when creating the IRIS alert.",
+    )
+    rule_description: str = Field(
+        ...,
+        description="Description of the rule",
+    )
+    rule_id: str = Field(
+        ...,
+        description="ID of the rule that triggered the alert",
+        example="2001",
+    )
+
+    def to_dict(self):
+        return self.dict(exclude_none=True)
+
+
+class Office365ThreatIntelIrisAlertPayload(BaseModel):
+    alert_title: str = Field(
+        ...,
+        description="Title of the alert",
+        example="Intrusion Detected",
+    )
+    alert_description: str = Field(
+        ...,
+        description="Description of the alert",
+        example="Intrusion Detected by Firewall",
+    )
+    alert_source: str = Field(..., description="Source of the alert", example="Suricata")
+    assets: List[Office365ThreatIntelIrisAsset] = Field(..., description="List of affected assets")
+    alert_status_id: int = Field(..., description="Status ID of the alert", example=3)
+    alert_severity_id: int = Field(
+        ...,
+        description="Severity ID of the alert",
+        example=5,
+    )
+    alert_customer_id: int = Field(
+        ...,
+        description="Customer ID related to the alert",
+        example=1,
+    )
+    alert_source_content: Dict[str, Any] = Field(
+        ...,
+        description="Original content from the alert source",
+    )
+    alert_context: Office365ThreatIntelIrisAlertContext = Field(
         ...,
         description="Contextual information about the alert",
     )

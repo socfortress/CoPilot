@@ -46,7 +46,7 @@ async def get_all_customer_provisioning_default_settings(
 
 @customer_provisioning_default_settings_router.post(
     "/default_settings",
-    response_model=CustomerProvisioningDefaultSettings,
+    response_model=CustomerProvisioningDefaultSettingsResponse,
     description="Create a new default settings for customer provisioning",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
@@ -65,7 +65,11 @@ async def create_customer_provisioning_default_settings(
     db.add(customer_provisioning_default_settings)
     await db.commit()
     await db.refresh(customer_provisioning_default_settings)
-    return customer_provisioning_default_settings
+    return CustomerProvisioningDefaultSettingsResponse(
+        message="Customer Provisioning Default Settings created successfully",
+        success=True,
+        customer_provisioning_default_settings=customer_provisioning_default_settings,
+    )
 
 
 @customer_provisioning_default_settings_router.put(
