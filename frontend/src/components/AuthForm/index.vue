@@ -54,8 +54,8 @@ const title = computed<string>(() =>
 	typeRef.value === "signin"
 		? "SOCFortress CoPilot"
 		: typeRef.value === "signup"
-		? "SOCFortress CoPilot"
-		: "Forgot Password"
+			? "SOCFortress CoPilot"
+			: "Forgot Password"
 )
 
 function gotoSignIn() {
@@ -111,17 +111,6 @@ onBeforeMount(() => {
 		font-size: 18px;
 		line-height: 1.3;
 		color: var(--fg-secondary-color);
-	}
-
-	.social-btns {
-		.b-icon {
-			margin-right: 16px;
-
-			img {
-				display: block;
-				height: 20px;
-			}
-		}
 	}
 }
 

@@ -1,7 +1,7 @@
 import { fileURLToPath } from "node:url"
 import { mergeConfig, defineConfig, configDefaults } from "vitest/config"
-import viteConfig from "./vite.config"
-
+import viteConfig from "./vite.config.mts"
+// TODO: fix vite.config.mts import
 export default mergeConfig(
 	viteConfig,
 	defineConfig({

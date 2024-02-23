@@ -53,3 +53,5 @@ unplugin.components.d.ts
 package-lock.json
 *.checkpoint
 firewall.spec
+
+frontend/cypress/screenshots/
