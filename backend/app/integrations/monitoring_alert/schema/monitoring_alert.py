@@ -715,12 +715,11 @@ class Office365ExchangeIrisAlertPayload(BaseModel):
 
 ########### ! Office365 Threat Intel ALERTS SCHEMA ! ###########
 class Office365ThreatIntelSourceModel(BaseModel):
-    client_ip: Optional[str] = Field("Not found", description="Client IP address")
+    sender_ip: Optional[str] = Field("Not found", description="Sender IP address")
     operation: Optional[str] = Field("Not found", description="Operation")
     creation_time: Optional[str] = Field("Not found", description="Creation time")
     office365_id: str = Field(..., description="Office365 ID")
-    organization_name: str = Field(..., description="Organization name")
-    user_id: str = Field(..., description="User ID")
+    recipients: str = Field(..., description="Recipients")
     workload: str = Field(..., description="Workload")
     organization_id: str = Field(..., description="Organization ID")
     timestamp: str = Field(..., description="The timestamp of the alert.")
@@ -795,12 +794,11 @@ class Office365ThreatIntelIrisAsset(BaseModel):
 
 class Office365ThreatIntelIrisAlertContext(BaseModel):
     _source: Office365ThreatIntelSourceModel = Field(..., description="Source of the alert")
-    client_ip: Optional[str] = Field("Not found", description="Client IP address")
+    sender_ip: Optional[str] = Field("Not found", description="Sender IP address")
     operation: Optional[str] = Field("Not found", description="Operation")
     creation_time: Optional[str] = Field("Not found", description="Creation time")
     office365_id: str = Field(..., description="Office365 ID")
-    organization_name: str = Field(..., description="Organization name")
-    user_id: str = Field(..., description="User ID")
+    recipients: str = Field(..., description="Recipients")
     workload: str = Field(..., description="Workload")
     organization_id: str = Field(..., description="Organization ID")
     customer_iris_id: Optional[int] = Field(
