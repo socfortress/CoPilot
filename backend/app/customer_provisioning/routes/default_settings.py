@@ -46,7 +46,7 @@ async def get_all_customer_provisioning_default_settings(
 
 @customer_provisioning_default_settings_router.post(
     "/default_settings",
-    response_model=CustomerProvisioningDefaultSettings,
+    response_model=CustomerProvisioningDefaultSettingsResponse,
     description="Create a new default settings for customer provisioning",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
@@ -60,17 +60,21 @@ async def create_customer_provisioning_default_settings(
     existing_settings = result.scalars().first()
 
     if existing_settings:
-        raise HTTPException(status_code=400, detail="Only one settings entry is allowed")
+        raise HTTPException(status_code=400, detail="Only one customer provisioning default settings can exist")
 
     db.add(customer_provisioning_default_settings)
     await db.commit()
     await db.refresh(customer_provisioning_default_settings)
-    return customer_provisioning_default_settings
+    return CustomerProvisioningDefaultSettingsResponse(
+        message="Customer Provisioning Default Settings created successfully",
+        success=True,
+        customer_provisioning_default_settings=customer_provisioning_default_settings,
+    )
 
 
 @customer_provisioning_default_settings_router.put(
     "/default_settings",
-    response_model=CustomerProvisioningDefaultSettings,
+    response_model=CustomerProvisioningDefaultSettingsResponse,
     description="Update default settings for customer provisioning",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
@@ -94,12 +98,16 @@ async def update_customer_provisioning_default_settings(
 
     await db.commit()
     await db.refresh(existing_settings)
-    return existing_settings
+    return CustomerProvisioningDefaultSettingsResponse(
+        message="Customer Provisioning Default Settings updated successfully",
+        success=True,
+        customer_provisioning_default_settings=existing_settings,
+    )
 
 
 @customer_provisioning_default_settings_router.delete(
     "/default_settings",
-    response_model=CustomerProvisioningDefaultSettings,
+    response_model=CustomerProvisioningDefaultSettingsResponse,
     description="Delete default settings for customer provisioning",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
@@ -113,6 +121,10 @@ async def delete_customer_provisioning_default_settings(
     if not existing_settings:
         raise HTTPException(status_code=404, detail="Settings not found")
 
-    db.delete(existing_settings)
+    await db.delete(existing_settings)
     await db.commit()
-    return existing_settings
+    return CustomerProvisioningDefaultSettingsResponse(
+        message="Customer Provisioning Default Settings deleted successfully",
+        success=True,
+        customer_provisioning_default_settings=existing_settings,
+    )

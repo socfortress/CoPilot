@@ -3,6 +3,6 @@
 describe("My First Test", () => {
 	it("visits the app root url", () => {
 		cy.visit("/")
-		cy.contains("span", "Search")
+		cy.contains(".title", "SOCFortress CoPilot")
 	})
 })

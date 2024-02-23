@@ -2,6 +2,7 @@
 	"extends": "./tsconfig.app.json",
 	"compilerOptions": {
 		"composite": true,
-		"types": ["node", "jsdom"]
+		"types": ["node", "jsdom"],
+		"allowImportingTsExtensions": true
 	}
 }

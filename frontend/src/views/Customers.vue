@@ -1,6 +1,7 @@
 <template>
 	<div class="page">
 		<CustomersList :highlight="highlight" :reload="reload" @reloaded="reload = false">
+			<CustomerDefaultSettingsButton />
 			<CustomerCreationButton v-model:openForm="openForm" @submitted="reload = true" />
 		</CustomersList>
 	</div>
@@ -9,6 +10,7 @@
 <script setup lang="ts">
 import CustomersList from "@/components/customers/CustomersList.vue"
 import CustomerCreationButton from "@/components/customers/CustomerCreationButton.vue"
+import CustomerDefaultSettingsButton from "@/components/customers/provision/CustomerDefaultSettingsButton.vue"
 import { onBeforeMount, onMounted, onUnmounted, ref } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import { emitter } from "@/emitter"

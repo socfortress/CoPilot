@@ -112,17 +112,6 @@ onBeforeMount(() => {
 		line-height: 1.3;
 		color: var(--fg-secondary-color);
 	}
-
-	.social-btns {
-		.b-icon {
-			margin-right: 16px;
-
-			img {
-				display: block;
-				height: 20px;
-			}
-		}
-	}
 }
 
 .form-fade-enter-active,

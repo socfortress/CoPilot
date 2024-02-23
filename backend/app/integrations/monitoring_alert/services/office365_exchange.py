@@ -30,15 +30,17 @@ from app.integrations.monitoring_alert.schema.monitoring_alert import (
     FilterAlertsRequest,
 )
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
-    Office365AlertModel,
+    Office365ExchangeAlertModel,
 )
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
-    Office365IrisAlertContext,
+    Office365ExchangeIrisAlertContext,
 )
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
-    Office365IrisAlertPayload,
+    Office365ExchangeIrisAlertPayload,
 )
-from app.integrations.monitoring_alert.schema.monitoring_alert import Office365IrisAsset
+from app.integrations.monitoring_alert.schema.monitoring_alert import (
+    Office365ExchangeIrisAsset,
+)
 from app.integrations.monitoring_alert.utils.db_operations import remove_alert_id
 from app.integrations.utils.alerts import validate_ioc_type
 from app.utils import get_customer_alert_settings
@@ -56,7 +58,7 @@ def valid_ioc_fields() -> Set[str]:
 
 
 async def construct_alert_source_link(
-    alert_details: Office365IrisAlertContext,
+    alert_details: Office365ExchangeIrisAlertContext,
     session: AsyncSession,
 ) -> str:
     """
@@ -71,18 +73,18 @@ async def construct_alert_source_link(
         The alert source link.
     """
     logger.info(f"Constructing alert source link for alert: {alert_details}")
-    query_string = f"%22query%22:%22alert_signature_id:%5C%22{alert_details.alert_id}%5C%22%20AND%20"
+    query_string = f"%22query%22:%22data_office365_ClientIP:%5C%22{alert_details.client_ip}%5C%22%20AND%20"
     grafana_url = (
         await get_customer_alert_settings(
-            customer_code=alert_details.agent_labels_customer,
+            customer_code=alert_details.organization_id,
             session=session,
         )
     ).grafana_url
 
     return (
-        f"{grafana_url}/explore?left=%5B%22now-6h%22,%22now%22,%22Office365%22,%7B%22refId%22:%22A%22,"
+        f"{grafana_url}/explore?left=%5B%22now-6h%22,%22now%22,%22O365%22,%7B%22refId%22:%22A%22,"
         f"{query_string}"
-        f"src_ip:%5C%22{alert_details.src_ip}%5C%22%22,"
+        f"data_office365_UserId:%5C%22{alert_details.user_id}%5C%22%22,"
         "%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,"
         "%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D"
     )
@@ -112,9 +114,9 @@ async def build_ioc_payload(alert_details: CreateAlertRequest) -> Optional[IrisI
 
 
 async def build_asset_payload(
-    alert_details: Office365IrisAlertContext,
+    alert_details: Office365ExchangeIrisAlertContext,
     session: AsyncSession,
-) -> Office365IrisAsset:
+) -> Office365ExchangeIrisAsset:
     """
     Build the payload for an IrisAsset object based on the agent data and alert details.
 
@@ -128,19 +130,19 @@ async def build_asset_payload(
     # Get the agent_id based on the hostname from the Agents table
     logger.info(f"Building asset payload for alert: {alert_details}")
     if alert_details is not None:
-        return Office365IrisAsset(
-            asset_name=alert_details.src_ip,
-            asset_ip=alert_details.src_ip,
+        return Office365ExchangeIrisAsset(
+            asset_name=alert_details.user_id,
+            asset_ip=alert_details.client_ip,
             asset_description=await construct_alert_source_link(
                 alert_details,
                 session=session,
             ),
-            asset_type_id=2,
+            asset_type_id=1,
         )
-    return Office365IrisAsset()
+    return Office365ExchangeIrisAsset()
 
 
-async def fetch_wazuh_indexer_details(alert_id: str, index: str) -> Office365AlertModel:
+async def fetch_wazuh_indexer_details(alert_id: str, index: str) -> Office365ExchangeAlertModel:
     """
     Fetch the Office365 alert details from the Wazuh-Indexer.
 
@@ -158,10 +160,10 @@ async def fetch_wazuh_indexer_details(alert_id: str, index: str) -> Office365Ale
     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
     response = es_client.get(index=index, id=alert_id)
 
-    return Office365AlertModel(**response)
+    return Office365ExchangeAlertModel(**response)
 
 
-async def fetch_alert_details(alert: MonitoringAlerts) -> Office365AlertModel:
+async def fetch_alert_details(alert: MonitoringAlerts) -> Office365ExchangeAlertModel:
     logger.info(f"Analyzing Office365 Exchange Online alert: {alert}")
     alert_details = await fetch_wazuh_indexer_details(alert.alert_id, alert.alert_index)
     logger.info(f"Alert details: {alert_details}")
@@ -169,7 +171,7 @@ async def fetch_alert_details(alert: MonitoringAlerts) -> Office365AlertModel:
 
 
 async def check_event_exclusion(
-    alert_details: Office365AlertModel,
+    alert_details: Office365ExchangeAlertModel,
     alert_detail_service: AlertDetailsService,
     session: AsyncSession,
 ):
@@ -189,7 +191,7 @@ async def check_event_exclusion(
     logger.info("Alert is not excluded due to multi exclusion.")
 
 
-async def check_if_open_alert_exists_in_iris(alert_details: Office365AlertModel, session: AsyncSession) -> list:
+async def check_if_open_alert_exists_in_iris(alert_details: Office365ExchangeAlertModel, session: AsyncSession) -> list:
     """
     Check if the alert exists in IRIS.
 
@@ -203,13 +205,13 @@ async def check_if_open_alert_exists_in_iris(alert_details: Office365AlertModel,
     client, alert_client = await initialize_client_and_alert("DFIR-IRIS")
     customer_iris_id = (
         await get_customer_alert_settings(
-            # customer_code=alert_details._source["agent_labels_customer"],
-            customer_code="00002",
+            customer_code=alert_details._source["data_office365_OrganizationId"],
+            # customer_code="9668d0df-6e2e-40fd-947d-d568e520e084",
             session=session,
         )
     ).iris_customer_id
     request = FilterAlertsRequest(
-        alert_tags=alert_details._source["alert_signature_id"],
+        alert_tags=alert_details._source["rule_id"],
         alert_customer_id=customer_iris_id,
     )
     params = construct_params(request)
@@ -246,9 +248,9 @@ def construct_params(request: FilterAlertsRequest) -> dict:
 
 
 async def build_alert_context_payload(
-    alert_details: Office365IrisAlertContext,
+    alert_details: Office365ExchangeIrisAlertContext,
     session: AsyncSession,
-) -> Office365IrisAlertContext:
+) -> Office365ExchangeIrisAlertContext:
     """
     Builds the payload for the alert context.
 
@@ -260,41 +262,44 @@ async def build_alert_context_payload(
     Returns:
         Office365IrisAlertContext: The built alert context payload.
     """
-    return Office365IrisAlertContext(
+    return Office365ExchangeIrisAlertContext(
         customer_iris_id=(
             await get_customer_alert_settings(
-                customer_code=alert_details.agent_labels_customer,
+                customer_code=alert_details.organization_id,
                 session=session,
             )
         ).iris_customer_id,
         customer_name=(
             await get_customer_alert_settings(
-                customer_code=alert_details.agent_labels_customer,
+                customer_code=alert_details.organization_id,
                 session=session,
             )
         ).customer_name,
         customer_cases_index=(
             await get_customer_alert_settings(
-                customer_code=alert_details.agent_labels_customer,
+                customer_code=alert_details.organization_id,
                 session=session,
             )
         ).iris_index,
-        alert_id=alert_details.alert_id,
-        alert_name=alert_details.alert_name,
-        alert_level=alert_details.alert_level,
+        client_ip=alert_details.client_ip,
+        operation=alert_details.operation,
+        creation_time=alert_details.creation_time,
+        office365_id=alert_details.office365_id,
+        organization_name=alert_details.organization_name,
+        user_id=alert_details.user_id,
+        workload=alert_details.workload,
+        organization_id=alert_details.organization_id,
+        agent_labels_customer=alert_details.organization_id,
+        rule_description=alert_details.rule_description,
         rule_id=alert_details.rule_id,
-        src_ip=alert_details.src_ip,
-        dest_ip=alert_details.dest_ip,
-        app_proto=alert_details.app_proto,
-        agent_labels_customer=alert_details.agent_labels_customer,
     )
 
 
 async def build_alert_payload(
-    alert_details: Office365IrisAlertContext,
+    alert_details: Office365ExchangeIrisAlertContext,
     ioc_payload: Optional[IrisIoc],
     session: AsyncSession,
-) -> Office365IrisAlertPayload:
+) -> Office365ExchangeIrisAlertPayload:
     """
     Builds the payload for an alert based on the provided alert details, agent data, IoC payload, and session.
 
@@ -322,16 +327,16 @@ async def build_alert_payload(
 
     if ioc_payload:
         logger.info(f"Alert has IoC: {ioc_payload}")
-        return Office365IrisAlertPayload(
-            alert_title=alert_details.alert_name,
-            alert_description=alert_details.alert_name,
-            alert_source="COPILOT Office365 ANALYSIS",
+        return Office365ExchangeIrisAlertPayload(
+            alert_title=alert_details.rule_description,
+            alert_description=alert_details.rule_description,
+            alert_source="COPILOT OFFICE365 EXCHANGE ANALYSIS",
             assets=[asset_payload],
             alert_status_id=3,
             alert_severity_id=5,
             alert_customer_id=(
                 await get_customer_alert_settings(
-                    customer_code=alert_details.agent_labels_customer,
+                    customer_code=alert_details.organization_id,
                     session=session,
                 )
             ).iris_customer_id,
@@ -342,16 +347,16 @@ async def build_alert_payload(
         )
     else:
         logger.info("Alert does not have IoC")
-        return Office365IrisAlertPayload(
-            alert_title=alert_details.alert_name,
-            alert_description=alert_details.alert_name,
-            alert_source="COPILOT Office365 ANALYSIS",
+        return Office365ExchangeIrisAlertPayload(
+            alert_title=alert_details.rule_description,
+            alert_description=alert_details.rule_description,
+            alert_source="COPILOT OFFICE365 EXCHANGE ANALYSIS",
             assets=[asset_payload],
             alert_status_id=3,
             alert_severity_id=5,
             alert_customer_id=(
                 await get_customer_alert_settings(
-                    customer_code=alert_details.agent_labels_customer,
+                    customer_code=alert_details.organization_id,
                     session=session,
                 )
             ).iris_customer_id,
@@ -362,8 +367,8 @@ async def build_alert_payload(
 
 
 async def create_alert_details(
-    alert_details: Office365AlertModel,
-) -> Office365IrisAlertContext:
+    alert_details: Office365ExchangeAlertModel,
+) -> Office365ExchangeIrisAlertContext:
     """
     Create an alert details object from the Office365 alert details.
 
@@ -374,26 +379,26 @@ async def create_alert_details(
         Office365IrisAlertContext: The alert details object.
     """
     logger.info(f"Creating alert details for alert: {alert_details}")
-    return Office365IrisAlertContext(
+    return Office365ExchangeIrisAlertContext(
         index=alert_details._index,
         id=alert_details._id,
-        alert_id=alert_details._source["alert_signature_id"],
-        alert_name=alert_details._source["alert_signature"],
-        alert_level=alert_details._source["alert_severity"],
-        rule_id=alert_details._source["alert_signature_id"],
-        src_ip=alert_details._source["src_ip"],
-        dest_ip=alert_details._source["dest_ip"],
-        app_proto=alert_details._source.get(
-            "app_proto",
-            "No application protocol found",
-        ),
-        agent_labels_customer=alert_details._source["agent_labels_customer"],
+        client_ip=alert_details._source["data_office365_ClientIP"],
+        operation=alert_details._source["data_office365_Operation"],
+        creation_time=alert_details._source["data_office365_CreationTime"],
+        office365_id=alert_details._source["data_office365_Id"],
+        organization_name=alert_details._source["data_office365_OrganizationName"],
+        user_id=alert_details._source["data_office365_UserId"],
+        workload=alert_details._source["data_office365_Workload"],
+        organization_id=alert_details._source["data_office365_OrganizationId"],
+        agent_labels_customer=alert_details._source["data_office365_OrganizationId"],
         time_field=alert_details._source.get("timestamp_utc", alert_details._source.get("timestamp")),
+        rule_description=alert_details._source["rule_description"],
+        rule_id=alert_details._source["rule_id"],
     )
 
 
 async def create_and_update_alert_in_iris(
-    alert_details: Office365AlertModel,
+    alert_details: Office365ExchangeAlertModel,
     session: AsyncSession,
 ) -> int:
     """
@@ -430,14 +435,14 @@ async def create_and_update_alert_in_iris(
         client,
         alert_client.update_alert,
         alert_id,
-        {"alert_tags": f"{alert_details.alert_id}"},
+        {"alert_tags": f"{alert_details.rule_id}"},
     )
     # Update the alert with the asset payload
     await fetch_and_validate_data(
         client,
         alert_client.update_alert,
         alert_id,
-        {"assets": [dict(Office365IrisAsset(**iris_alert_payload.assets[0].to_dict()))]},
+        {"assets": [dict(Office365ExchangeIrisAsset(**iris_alert_payload.assets[0].to_dict()))]},
     )
     if ioc_payload:
         await fetch_and_validate_data(
@@ -516,6 +521,7 @@ async def analyze_office365_exchange_online_alerts(
                 alert_details,
                 session,
             )
+
             logger.info(f"Alert {iris_alert_id} created in IRIS.")
             await remove_alert_id(alert.alert_id, session)
             es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
@@ -546,7 +552,7 @@ async def analyze_office365_exchange_online_alerts(
                 alert_details=alert_details,
                 session=session,
             )
-            current_assets.append(dict(Office365IrisAsset(**asset_payload.to_dict())))
+            current_assets.append(dict(Office365ExchangeIrisAsset(**asset_payload.to_dict())))
             current_assets = await remove_duplicate_assets(current_assets)
             await update_alert_with_assets(
                 client,
