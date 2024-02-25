@@ -534,7 +534,7 @@ async def provision_office365_exchange_online_alert(
     notification_id = await get_notification_id("SEND TO COPILOT")
     await provision_alert_definition(
         GraylogAlertProvisionModel(
-            title="OFFICE365 EXCHANGE ONLINE ALERT",
+            title="OFFICE365 EXCHANGE ONLINE",
             description="Alert on Office365 Exchange Online alerts",
             priority=2,
             config=GraylogAlertProvisionConfig(
@@ -653,7 +653,7 @@ async def provision_office365_threat_intel_alert(
     notification_id = await get_notification_id("SEND TO COPILOT")
     await provision_alert_definition(
         GraylogAlertProvisionModel(
-            title="OFFICE365 THREAT INTEL ALERT",
+            title="OFFICE365 THREAT INTEL",
             description="Alert on Office365 Threat Intel alerts",
             priority=2,
             config=GraylogAlertProvisionConfig(
