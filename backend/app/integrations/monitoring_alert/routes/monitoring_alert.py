@@ -156,6 +156,31 @@ async def create_monitoring_alert(
         message="Monitoring alert created successfully",
     )
 
+@monitoring_alerts_router.post(
+    "/custom",
+    response_model=GraylogPostResponse,
+)
+async def create_custom_monitoring_alert(
+    monitoring_alert: GraylogPostRequest,
+    session: AsyncSession = Depends(get_db),
+) -> GraylogPostResponse:
+    """
+    Create a new custom monitoring alert.
+
+    Args:
+        monitoring_alert (MonitoringAlertsRequestModel): The monitoring alert details.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        GraylogPostResponse: The response containing the success message.
+    """
+    logger.info(f"Creating custom monitoring alert: {monitoring_alert}")
+
+    return GraylogPostResponse(
+        success=True,
+        message="Custom monitoring alert created successfully",
+    )
+
 
 @monitoring_alerts_router.post(
     "/run_analysis/wazuh",
