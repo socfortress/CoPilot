@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from fastapi import HTTPException
 from loguru import logger
+from typing import List
 
 from app.connectors.graylog.routes.events import get_all_event_definitions
 from app.connectors.graylog.schema.events import GraylogEventDefinitionsResponse
@@ -9,7 +10,7 @@ from app.integrations.monitoring_alert.schema.provision import (
     AvailableMonitoringAlertsResponse,
 )
 from app.integrations.monitoring_alert.schema.provision import (
-    ProvisionMonitoringAlertRequest,
+    ProvisionMonitoringAlertRequest, CustomMonitoringAlertProvisionModel
 )
 from app.integrations.monitoring_alert.schema.provision import (
     ProvisionWazuhMonitoringAlertResponse,
@@ -24,14 +25,31 @@ from app.integrations.monitoring_alert.services.provision import (
     provision_suricata_monitoring_alert,
 )
 from app.integrations.monitoring_alert.services.provision import (
-    provision_wazuh_monitoring_alert,
+    provision_wazuh_monitoring_alert, provision_custom_alert
 )
+from app.connectors.graylog.services.streams import get_streams
 from app.integrations.utils.event_shipper import event_shipper
 from app.integrations.utils.schema import EventShipperPayload
 from app.schedulers.models.scheduler import CreateSchedulerRequest
 from app.schedulers.scheduler import add_scheduler_jobs
 
 monitoring_alerts_provision_router = APIRouter()
+
+async def return_stream_ids(stream_names: List[str]) -> List[str]:
+    """
+    Return the stream IDs for the given stream names.
+
+    Args:
+        stream_names (List[str]): A list of stream names.
+
+    Returns:
+        List[str]: A list of stream IDs.
+    """
+    all_streams_response = await get_streams()
+    all_streams = all_streams_response.streams
+    stream_ids = [stream.id for stream in all_streams if stream.title in stream_names]
+    logger.info(f"Stream IDs collected: {stream_ids}")
+    return stream_ids
 
 
 # Define your provision functions
@@ -90,6 +108,11 @@ async def invoke_provision_office365_threat_intel_alert(
         ),
     )
 
+async def invoke_provision_custom_monitoring_alert(
+    request: CustomMonitoringAlertProvisionModel,
+):
+    # Provision the custom monitoring alert
+    await provision_custom_alert(request)
 
 # Create a dictionary that maps alert names to provision functions
 PROVISION_FUNCTIONS = {
@@ -97,6 +120,7 @@ PROVISION_FUNCTIONS = {
     "SURICATA_ALERT_SEVERITY_1": invoke_provision_suricata_monitoring_alert,
     "OFFICE365_EXCHANGE_ONLINE": invoke_provision_office365_exchange_online_alert,
     "OFFICE365_THREAT_INTEL": invoke_provision_office365_threat_intel_alert,
+    "CUSTOM": invoke_provision_custom_monitoring_alert,
     # Add more alert names and functions as needed
 }
 
@@ -172,6 +196,32 @@ async def provision_monitoring_alert_route(
 
     return ProvisionWazuhMonitoringAlertResponse(success=True, message=f"Monitoring alert {request.alert_name} provisioned successfully.")
 
+@monitoring_alerts_provision_router.post(
+    "/provision/custom",
+    response_model=ProvisionWazuhMonitoringAlertResponse,
+    description="Provisions custom monitoring alerts.",
+)
+async def provision_custom_monitoring_alert_route(
+    request: CustomMonitoringAlertProvisionModel,
+) -> ProvisionWazuhMonitoringAlertResponse:
+    await check_if_event_definition_exists(request.alert_name.replace("_", " "))
+
+    # Look up the provision function based on request.alert_name
+    provision_function = PROVISION_FUNCTIONS.get("CUSTOM")
+
+    if provision_function is None:
+        raise HTTPException(
+            status_code=400,
+            detail=f"No provision function found for alert name {request.alert_name}",
+        )
+
+    stream_ids = await return_stream_ids(request.streams)
+    request.streams = stream_ids
+
+    # Invoke the provision function
+    await provision_function(request)
+
+    return ProvisionWazuhMonitoringAlertResponse(success=True, message=f"Monitoring alert {request.alert_name} provisioned successfully.")
 
 @monitoring_alerts_provision_router.post(
     "/provision/testing",

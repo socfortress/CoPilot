@@ -18,7 +18,7 @@ from app.integrations.monitoring_alert.schema.provision import (
     GraylogAlertProvisionFieldSpecItem,
 )
 from app.integrations.monitoring_alert.schema.provision import (
-    GraylogAlertProvisionModel,
+    GraylogAlertProvisionModel, CustomMonitoringAlertProvisionModel
 )
 from app.integrations.monitoring_alert.schema.provision import (
     GraylogAlertProvisionNotification,
@@ -723,3 +723,61 @@ async def provision_office365_threat_intel_alert(
         success=True,
         message="Office365 Threat Intel monitoring alerts provisioned successfully",
     )
+
+async def provision_custom_alert(request: CustomMonitoringAlertProvisionModel) -> ProvisionWazuhMonitoringAlertResponse:
+    """
+    Provisions custom monitoring alerts.
+
+    Returns:
+        ProvisionWazuhMonitoringAlertResponse: The response indicating the success of provisioning the monitoring alerts.
+    """
+    #
+    logger.info(
+        f"Invoking provision_custom_alert with request: {request.dict()}",
+    )
+    return None
+    notification_exists = await check_if_event_notification_exists("SEND TO COPILOT - CUSTOM")
+    if not notification_exists:
+        # ! Unfortunately Graylog does not support disabling SSL verification when sending webhooks
+        # ! Therefore, we need to send to API port of Copilot over HTTP
+        url_whitelisted = await check_if_url_whitelist_entry_exists(
+            f"http://{os.getenv('ALERT_FORWARDING_IP')}:5000/api/monitoring_alert/custom",
+        )
+        if not url_whitelisted:
+            logger.info("Provisioning URL Whitelist")
+            whitelisted_urls = await build_url_whitelisted_entries(
+                whitelist_url_model=GraylogUrlWhitelistEntryConfig(
+                    id=await generate_random_id(),
+                    value=f"http://{os.getenv('ALERT_FORWARDING_IP')}:5000/api/monitoring_alert/custom",
+                    title="SEND TO COPILOT - CUSTOM",
+                    type="literal",
+                ),
+            )
+            await provision_webhook_url_whitelist(whitelisted_urls)
+
+        logger.info("Provisioning SEND TO COPILOT - CUSTOM Webhook")
+        notification_id = await provision_webhook(
+            GraylogAlertWebhookNotificationModel(
+                title="SEND TO COPILOT - CUSTOM",
+                description="Send alert to Copilot for custom alert",
+                config={
+                    "url": f"http://{os.getenv('ALERT_FORWARDING_IP')}:5000/api/monitoring_alert/custom",
+                    "type": "http-notification-v1",
+                },
+            ),
+        )
+        logger.info(f"SEND TO COPILOT - CUSTOM Webhook provisioned with id: {notification_id}")
+    notification_id = await get_notification_id("SEND TO COPILOT - CUSTOM")
+    # await provision_alert_definition(
+    #     GraylogAlertProvisionModel(
+    #         title=request.alert_name,
+    #         description=request.alert_description,
+    #         priority=request.alert_priority,
+    #         config=GraylogAlertProvisionConfig(
+    #             type="aggregation-v1",
+    #             query=f"{request.search_query}",
+    #             query_parameters=[],
+    #             streams=f"{request.streams}",
+    #             group_by=[],
+    #             series=[],
+    #             conditions={
