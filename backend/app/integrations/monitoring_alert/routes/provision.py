@@ -2,6 +2,10 @@ from fastapi import APIRouter
 from fastapi import HTTPException
 from loguru import logger
 from typing import List
+from app.db.db_session import get_db
+from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import Depends
+from app.integrations.monitoring_alert.routes.monitoring_alert import get_customer_meta
 
 from app.connectors.graylog.routes.events import get_all_event_definitions
 from app.connectors.graylog.schema.events import GraylogEventDefinitionsResponse
@@ -203,8 +207,11 @@ async def provision_monitoring_alert_route(
 )
 async def provision_custom_monitoring_alert_route(
     request: CustomMonitoringAlertProvisionModel,
+    session: AsyncSession = Depends(get_db),
 ) -> ProvisionWazuhMonitoringAlertResponse:
     await check_if_event_definition_exists(request.alert_name.replace("_", " "))
+    customer_code = next((field.value for field in request.custom_fields if field.name == 'CUSTOMER_CODE'), None)
+    await get_customer_meta(customer_code=customer_code, session=session)
 
     # Look up the provision function based on request.alert_name
     provision_function = PROVISION_FUNCTIONS.get("CUSTOM")
