@@ -218,8 +218,8 @@ class CustomMonitoringAlertProvisionModel(BaseModel):
         description="The search query to use for the alert.",
         example="syslog_type:wazuh AND syslog_level:alert",
     )
-    streams: List[str] = Field(
-        ...,
+    streams: Optional[List[str]] = Field(
+        [],
         description="The streams to use for the alert.",
         example=["5f3e4c3b3f37b70001f3d7b3"],
     )
