@@ -735,7 +735,6 @@ async def provision_custom_alert(request: CustomMonitoringAlertProvisionModel) -
     logger.info(
         f"Invoking provision_custom_alert with request: {request.dict()}",
     )
-    return None
     notification_exists = await check_if_event_notification_exists("SEND TO COPILOT - CUSTOM")
     if not notification_exists:
         # ! Unfortunately Graylog does not support disabling SSL verification when sending webhooks
@@ -768,16 +767,56 @@ async def provision_custom_alert(request: CustomMonitoringAlertProvisionModel) -
         )
         logger.info(f"SEND TO COPILOT - CUSTOM Webhook provisioned with id: {notification_id}")
     notification_id = await get_notification_id("SEND TO COPILOT - CUSTOM")
-    # await provision_alert_definition(
-    #     GraylogAlertProvisionModel(
-    #         title=request.alert_name,
-    #         description=request.alert_description,
-    #         priority=request.alert_priority,
-    #         config=GraylogAlertProvisionConfig(
-    #             type="aggregation-v1",
-    #             query=f"{request.search_query}",
-    #             query_parameters=[],
-    #             streams=f"{request.streams}",
-    #             group_by=[],
-    #             series=[],
-    #             conditions={
+    await provision_alert_definition(
+        GraylogAlertProvisionModel(
+            title=request.alert_name,
+            description=request.alert_description,
+            priority=request.alert_priority.value,
+            config=GraylogAlertProvisionConfig(
+                type="aggregation-v1",
+                query=f"{request.search_query}",
+                query_parameters=[],
+                streams=request.streams,
+                group_by=[],
+                series=[],
+                conditions={
+                    "expression": None,
+                },
+                search_within_ms=await convert_seconds_to_milliseconds(
+                    request.search_within_ms,
+                ),
+                execute_every_ms=await convert_seconds_to_milliseconds(
+                    request.execute_every_ms,
+                ),
+            ),
+            field_spec={
+                custom_field.name: GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(
+                            type="template-v1",
+                            template=f"${{source.{custom_field.value}}}",
+                            require_values=True,
+                        ),
+                    ],
+                )
+                for custom_field in request.custom_fields
+            },
+            key_spec=[],
+            notification_settings=GraylogAlertProvisionNotificationSettings(
+                grace_period_ms=0,
+                backlog_size=None,
+            ),
+            notifications=[
+                GraylogAlertProvisionNotification(
+                    notification_id=notification_id,
+                ),
+            ],
+            alert=True,
+        ),
+    )
+
+    return ProvisionWazuhMonitoringAlertResponse(
+        success=True,
+        message="Custom monitoring alerts provisioned successfully",
+    )

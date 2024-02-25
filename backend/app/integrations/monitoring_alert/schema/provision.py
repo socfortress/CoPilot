@@ -192,6 +192,10 @@ class CustomFields(BaseModel):
     name: str
     value: str
 
+    @validator('name')
+    def replace_spaces_with_underscores(cls, v):
+        return v.replace(' ', '_')
+
 class CustomMonitoringAlertProvisionModel(BaseModel):
     alert_name: str = Field(
         ...,
@@ -211,7 +215,7 @@ class CustomMonitoringAlertProvisionModel(BaseModel):
     search_query: str = Field(
         ...,
         description="The search query to use for the alert.",
-        example="source:Wazuh",
+        example="syslog_type:wazuh AND syslog_level:alert",
     )
     streams: List[str] = Field(
         ...,
