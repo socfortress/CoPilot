@@ -1,13 +1,9 @@
-from datetime import datetime
-from datetime import timedelta
-from enum import Enum
 from typing import Dict
 from typing import List
 from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
-from pydantic import root_validator
 
 
 class InvokeHuntressRequest(BaseModel):
@@ -22,6 +18,20 @@ class InvokeHuntressRequest(BaseModel):
         examples=["Huntress"],
     )
 
+
+class InvokeHuntressResponse(BaseModel):
+    success: bool = Field(
+        ...,
+        description="The success status.",
+        examples=[True],
+    )
+    message: str = Field(
+        ...,
+        description="The message.",
+        examples=["Huntress Events collected successfully."],
+    )
+
+
 class HuntressAuthKeys(BaseModel):
     API_KEY: str = Field(
         ...,
@@ -33,6 +43,7 @@ class HuntressAuthKeys(BaseModel):
         description="The secret key.",
         examples=["123456"],
     )
+
 
 class CollectHuntressRequest(BaseModel):
     customer_code: str = Field(
@@ -50,6 +61,7 @@ class CollectHuntressRequest(BaseModel):
         description="The secret key.",
         examples=["123456"],
     )
+
 
 class Remediation(BaseModel):
     id: int

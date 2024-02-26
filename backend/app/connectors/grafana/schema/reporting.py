@@ -1,16 +1,22 @@
-from pydantic import BaseModel, Field, validator
-from typing import List, Optional
+from typing import List
+from typing import Optional
+
 from fastapi import HTTPException
+from pydantic import BaseModel
+from pydantic import Field
+from pydantic import validator
 
 
 class GrafanaOrganizations(BaseModel):
     id: int = Field(..., description="The ID of the organization.")
     name: str = Field(..., description="The name of the organization.")
 
+
 class GrafanaOrganizationsResponse(BaseModel):
     message: str = Field(..., description="The message from the response.")
     orgs: List[GrafanaOrganizations] = Field(..., description="The organizations collected from Grafana.")
     success: bool = Field(..., description="The success of the response.")
+
 
 class GrafanaOrganizationDashboards(BaseModel):
     id: int
@@ -27,6 +33,7 @@ class GrafanaOrganizationDashboards(BaseModel):
     folderUid: Optional[str] = None
     folderTitle: Optional[str] = None
     folderUrl: Optional[str] = None
+
 
 class GrafanaDashboardResponse(BaseModel):
     message: str = Field(..., description="The message from the response.")
@@ -54,7 +61,6 @@ class FieldConfigDefaults(BaseModel):
     custom: dict  # More specific model can be created for custom options
     mappings: List[dict]  # More specific model can be created for mappings
     thresholds: dict  # Utilize Threshold model
-
 
 
 class FieldConfig(BaseModel):
@@ -141,6 +147,7 @@ class GrafanaDashboardDetails(BaseModel):
     meta: MetaDetails
     dashboard: DashboardDetails
 
+
 class GrafanaDashboardDetailsResponse(BaseModel):
     message: str = Field(..., description="The message from the response.")
     dashboard_details: GrafanaDashboardDetails = Field(..., description="The dashboard details collected from Grafana.")
@@ -151,6 +158,7 @@ class GrafanaDashboardPanelsResponse(BaseModel):
     message: str = Field(..., description="The message from the response.")
     panels: List[Panel] = Field(..., description="The panels collected from Grafana.")
     success: bool = Field(..., description="The success of the response.")
+
 
 class TimeRange(BaseModel):
     value: int
@@ -163,6 +171,7 @@ class TimeRange(BaseModel):
             raise HTTPException(status_code=400, detail=f"Invalid time range unit: {unit}. Must be one of {valid_units}")
         return unit
 
+
 class GrafanaGenerateIframeLinksRequest(BaseModel):
     org_id: int = Field(..., description="The ID of the organization.")
     dashboard_title: str = Field(..., description="The title of the dashboard.")
@@ -170,9 +179,11 @@ class GrafanaGenerateIframeLinksRequest(BaseModel):
     panel_ids: List[int] = Field(..., description="The IDs of the panels.")
     time_range: TimeRange = Field(..., description="Time range in minutes, hours, or days")
 
+
 class GrafanaLinksList(BaseModel):
     panel_id: int
     panel_url: str
+
 
 class GrafanaGenerateIframeLinksResponse(BaseModel):
     message: str = Field(..., description="The message from the response.")

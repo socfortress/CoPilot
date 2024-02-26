@@ -1,9 +1,12 @@
-from fastapi import HTTPException
-from loguru import logger
 from typing import List
 
+from fastapi import HTTPException
+from loguru import logger
+
+from app.connectors.grafana.schema.reporting import GrafanaDashboardDetails
+from app.connectors.grafana.schema.reporting import GrafanaOrganizationDashboards
+from app.connectors.grafana.schema.reporting import GrafanaOrganizations
 from app.connectors.grafana.utils.universal import create_grafana_client
-from app.connectors.grafana.schema.reporting import GrafanaOrganizations, GrafanaOrganizationDashboards, GrafanaDashboardDetails
 
 
 async def get_orgs() -> List[GrafanaOrganizations]:

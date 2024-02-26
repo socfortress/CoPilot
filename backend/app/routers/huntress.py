@@ -2,7 +2,6 @@ from fastapi import APIRouter
 
 from app.integrations.huntress.routes.huntress import integration_huntress_router
 
-
 # Instantiate the APIRouter
 router = APIRouter()
 

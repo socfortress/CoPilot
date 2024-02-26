@@ -1,29 +1,42 @@
+import time
+from datetime import datetime
+from datetime import timedelta
+from typing import List
+
 from fastapi import APIRouter
+from fastapi import Depends
 from fastapi import Security
 from loguru import logger
-from typing import List
-from fastapi import Depends
-from datetime import datetime, timedelta
-import time
-
-from app.auth.utils import AuthHandler
-from app.connectors.grafana.services.reporting import get_dashboards
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from app.db.db_session import get_db
+
+from app.auth.utils import AuthHandler
+from app.connectors.grafana.schema.reporting import GrafanaDashboardDetailsResponse
+from app.connectors.grafana.schema.reporting import GrafanaDashboardPanelsResponse
+from app.connectors.grafana.schema.reporting import GrafanaDashboardResponse
+from app.connectors.grafana.schema.reporting import GrafanaGenerateIframeLinksRequest
+from app.connectors.grafana.schema.reporting import GrafanaGenerateIframeLinksResponse
+from app.connectors.grafana.schema.reporting import GrafanaLinksList
+from app.connectors.grafana.schema.reporting import GrafanaOrganizationsResponse
+from app.connectors.grafana.schema.reporting import Panel
+from app.connectors.grafana.schema.reporting import TimeRange
+from app.connectors.grafana.services.reporting import get_dashboard_details
+from app.connectors.grafana.services.reporting import get_dashboards
+from app.connectors.grafana.services.reporting import get_orgs
 from app.connectors.models import Connectors
-from app.connectors.grafana.services.reporting import get_orgs, get_dashboard_details
-from app.connectors.grafana.schema.reporting import GrafanaOrganizationsResponse, GrafanaDashboardResponse, GrafanaDashboardDetailsResponse, Panel, GrafanaDashboardPanelsResponse, GrafanaGenerateIframeLinksRequest, GrafanaGenerateIframeLinksResponse, TimeRange, GrafanaLinksList
+from app.db.db_session import get_db
 
 # App specific imports
 
 
 grafana_reporting_router = APIRouter()
 
+
 async def get_grafana_url(session: AsyncSession):
     connector = await session.execute(select(Connectors).where(Connectors.connector_name == "Grafana"))
     connector = connector.scalars().first()
     return connector.connector_url
+
 
 def calculate_unix_timestamps(time_range: TimeRange):
     now = datetime.now()
@@ -43,9 +56,14 @@ def calculate_unix_timestamps(time_range: TimeRange):
 def generate_panel_urls(grafana_url: str, request: GrafanaGenerateIframeLinksRequest, timestamp_from: int, timestamp_to: int):
     panel_links: List[GrafanaLinksList] = []
     for panel_id in request.panel_ids:
-        panel_url = f"{grafana_url}/d-solo/{request.dashboard_uid}/{request.dashboard_title}?orgId={request.org_id}&from={timestamp_from}&to={timestamp_to}&panelId={panel_id}"
+        panel_url = (
+            f"{grafana_url}/d-solo/{request.dashboard_uid}/{request.dashboard_title}"
+            f"?orgId={request.org_id}&from={timestamp_from}&to={timestamp_to}"
+            f"&panelId={panel_id}"
+        )
         panel_links.append(GrafanaLinksList(panel_id=panel_id, panel_url=panel_url))
     return panel_links
+
 
 @grafana_reporting_router.get(
     "/orgs",
@@ -95,6 +113,7 @@ async def get_grafana_dashboards(org_id: int):
         success=True,
     )
 
+
 @grafana_reporting_router.get(
     "/dashboard/{dashboard_uid}",
     response_model=GrafanaDashboardDetailsResponse,
@@ -142,7 +161,7 @@ async def get_grafana_dashboard_panels(dashboard_uid: str):
     # Get the panel id and panel title from the dashboard details for each panel
     panels = []
     logger.info("Fetching panels from dashboard details")
-    for panel in dashboard_details['dashboard']['panels']:
+    for panel in dashboard_details["dashboard"]["panels"]:
         if panel["type"] != "row":
             panels.append(Panel(id=panel["id"], title=panel["title"]))
     logger.info(f"Panels: {panels}")
@@ -159,7 +178,10 @@ async def get_grafana_dashboard_panels(dashboard_uid: str):
     description="Generate Grafana dashboard iframe links",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def generate_grafana_iframe_links(request: GrafanaGenerateIframeLinksRequest, session: AsyncSession = Depends(get_db),):
+async def generate_grafana_iframe_links(
+    request: GrafanaGenerateIframeLinksRequest,
+    session: AsyncSession = Depends(get_db),
+):
     """
     Endpoint to generate Grafana dashboard iframe links.
 
@@ -184,4 +206,3 @@ async def generate_grafana_iframe_links(request: GrafanaGenerateIframeLinksReque
         links=panel_urls,
         success=True,
     )
-
