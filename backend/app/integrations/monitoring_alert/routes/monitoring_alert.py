@@ -26,6 +26,7 @@ from app.integrations.monitoring_alert.schema.monitoring_alert import (
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
     MonitoringWazuhAlertsRequestModel,
 )
+from app.integrations.monitoring_alert.services.custom import analyze_custom_alert
 from app.integrations.monitoring_alert.services.office365_exchange import (
     analyze_office365_exchange_online_alerts,
 )
@@ -40,7 +41,7 @@ from app.integrations.sap_siem.services.sap_siem_multiple_logins import (
 from app.integrations.sap_siem.services.sap_siem_suspicious_logins import (
     sap_siem_suspicious_logins,
 )
-from app.integrations.monitoring_alert.services.custom import analyze_custom_alert
+
 monitoring_alerts_router = APIRouter()
 
 
@@ -156,6 +157,7 @@ async def create_monitoring_alert(
         message="Monitoring alert created successfully",
     )
 
+
 @monitoring_alerts_router.post(
     "/custom",
     response_model=GraylogPostResponse,
@@ -178,7 +180,7 @@ async def create_custom_monitoring_alert(
     logger.info(f"Found index name {monitoring_alert.event.alert_index}")
 
     for field in monitoring_alert.event.fields:
-        if field == 'CUSTOMER_CODE':
+        if field == "CUSTOMER_CODE":
             customer_meta = await session.execute(
                 select(CustomersMeta).where(
                     CustomersMeta.customer_code == monitoring_alert.event.fields[field],
@@ -198,13 +200,12 @@ async def create_custom_monitoring_alert(
     if not customer_meta:
         raise HTTPException(status_code=404, detail="Customer not found")
 
-    await analyze_custom_alert(monitoring_alert, customer_meta, session)
+    await analyze_custom_alert(monitoring_alert, session)
 
     return GraylogPostResponse(
         success=True,
         message="Monitoring alert created successfully",
     )
-
 
 
 @monitoring_alerts_router.post(

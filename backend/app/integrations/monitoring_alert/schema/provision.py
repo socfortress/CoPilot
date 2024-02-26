@@ -6,8 +6,8 @@ from typing import Optional
 from fastapi import HTTPException
 from pydantic import BaseModel
 from pydantic import Field
-from pydantic import validator
 from pydantic import root_validator
+from pydantic import validator
 
 
 class AvailableMonitoringAlerts(str, Enum):
@@ -184,18 +184,21 @@ class GraylogAlertProvisionModel(BaseModel):
     notifications: List[GraylogAlertProvisionNotification]
     alert: bool
 
+
 class AlertPriority(Enum):
     LOW = 1
     NORMAL = 2
     HIGH = 3
 
+
 class CustomFields(BaseModel):
     name: str
     value: str
 
-    @validator('name')
+    @validator("name")
     def replace_spaces_with_underscores(cls, v):
-        return v.replace(' ', '_')
+        return v.replace(" ", "_")
+
 
 class CustomMonitoringAlertProvisionModel(BaseModel):
     alert_name: str = Field(
@@ -205,8 +208,19 @@ class CustomMonitoringAlertProvisionModel(BaseModel):
     )
     alert_description: str = Field(
         ...,
-        description="The description of the alert to provision.",
-        example="This alert monitors the SYSLOG_LEVEL field in the Wazuh logs. When the level is ALERT, it triggers an alert that is created within DFIR-IRIS. Ensure that you have a pipeline rule that sets the SYSLOG_LEVEL field to ALERT when the Wazuh rule level is greater than 11.",
+        description=(
+            "The description of the alert to provision. This alert monitors the "
+            "SYSLOG_LEVEL field in the Wazuh logs. When the level is ALERT, it "
+            "triggers an alert that is created within DFIR-IRIS. Ensure that you "
+            "have a pipeline rule that sets the SYSLOG_LEVEL field to ALERT when "
+            "the Wazuh rule level is greater than 11."
+        ),
+        example=(
+            "This alert monitors the SYSLOG_LEVEL field in the Wazuh logs. When "
+            "the level is ALERT, it triggers an alert that is created within "
+            "DFIR-IRIS. Ensure that you have a pipeline rule that sets the "
+            "SYSLOG_LEVEL field to ALERT when the Wazuh rule level is greater than 11."
+        ),
     )
     alert_priority: AlertPriority = Field(
         ...,
@@ -241,13 +255,13 @@ class CustomMonitoringAlertProvisionModel(BaseModel):
 
     @root_validator
     def check_customer_code(cls, values):
-        custom_fields = values.get('custom_fields')
+        custom_fields = values.get("custom_fields")
         if custom_fields is None:
             raise HTTPException(
                 status_code=400,
                 detail="At least one custom field with name CUSTOMER_CODE is required",
             )
-        if not any(field.name == 'CUSTOMER_CODE' for field in custom_fields):
+        if not any(field.name == "CUSTOMER_CODE" for field in custom_fields):
             raise HTTPException(
                 status_code=400,
                 detail="At least one custom field with name CUSTOMER_CODE is required",

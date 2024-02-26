@@ -12,13 +12,16 @@ from app.connectors.graylog.services.collector import get_url_whitelist_entries
 from app.connectors.graylog.utils.universal import send_post_request
 from app.connectors.graylog.utils.universal import send_put_request
 from app.integrations.monitoring_alert.schema.provision import (
+    CustomMonitoringAlertProvisionModel,
+)
+from app.integrations.monitoring_alert.schema.provision import (
     GraylogAlertProvisionConfig,
 )
 from app.integrations.monitoring_alert.schema.provision import (
     GraylogAlertProvisionFieldSpecItem,
 )
 from app.integrations.monitoring_alert.schema.provision import (
-    GraylogAlertProvisionModel, CustomMonitoringAlertProvisionModel
+    GraylogAlertProvisionModel,
 )
 from app.integrations.monitoring_alert.schema.provision import (
     GraylogAlertProvisionNotification,
@@ -723,6 +726,7 @@ async def provision_office365_threat_intel_alert(
         success=True,
         message="Office365 Threat Intel monitoring alerts provisioned successfully",
     )
+
 
 async def provision_custom_alert(request: CustomMonitoringAlertProvisionModel) -> ProvisionWazuhMonitoringAlertResponse:
     """

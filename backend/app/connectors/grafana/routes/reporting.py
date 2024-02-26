@@ -1,11 +1,10 @@
 from fastapi import APIRouter
-from fastapi import Body
 from fastapi import Security
 from loguru import logger
 
 from app.auth.utils import AuthHandler
-from app.connectors.grafana.services.dashboards import provision_dashboards
-from app.connectors.grafana.services.reporting import get_orgs, get_dashboards
+from app.connectors.grafana.services.reporting import get_dashboards
+from app.connectors.grafana.services.reporting import get_orgs
 
 # App specific imports
 
@@ -28,8 +27,10 @@ async def get_grafana_orgs():
     Returns:
         GrafanaDashboardResponse: The response containing the result of the dashboard provisioning.
     """
+    logger.info("Getting Grafana orgs")
     orgs = await get_orgs()
     return orgs
+
 
 @grafana_reporting_router.get(
     "/dashboards",

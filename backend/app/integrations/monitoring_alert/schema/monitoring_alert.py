@@ -4,10 +4,10 @@ from typing import Dict
 from typing import List
 from typing import Optional
 
+from fastapi import HTTPException
 from pydantic import BaseModel
 from pydantic import Extra
 from pydantic import Field
-from fastapi import HTTPException
 from pydantic import validator
 
 from app.integrations.alert_creation.general.schema.alert import IrisAsset
@@ -112,7 +112,7 @@ class GraylogEvent(BaseModel):
         description="Indicates if the event is an alert",
         example=True,
     )
-    #fields: GraylogEventFields = Field(..., description="Custom fields for the event")
+    # fields: GraylogEventFields = Field(..., description="Custom fields for the event")
     fields: Dict[str, Any] = Field(..., description="Custom fields for the event")
     group_by_fields: Dict[str, Any] = Field(
         ...,
@@ -128,9 +128,9 @@ class GraylogEvent(BaseModel):
     def alert_id(self) -> str:
         return self.origin_context.split(":")[5]
 
-    @validator('fields')
+    @validator("fields")
     def check_customer_code(cls, fields):
-        if 'CUSTOMER_CODE' not in fields:
+        if "CUSTOMER_CODE" not in fields:
             raise HTTPException(
                 status_code=400,
                 detail="CUSTOMER_CODE is required in the fields",
@@ -362,16 +362,8 @@ class WazuhIrisAlertPayload(BaseModel):
         return self.dict(exclude_none=True)
 
 
-
 ########### ! CUSTOM ALERTS SCHEMA ! ###########
 class CustomSourceModel(BaseModel):
-    alert_signature: str = Field(..., description="Signature of the alert")
-    alert_severity: int = Field(..., description="Severity level of the alert")
-    alert_signature_id: int = Field(..., description="Signature ID of the alert")
-    src_ip: str = Field(..., description="Source IP address")
-    dest_ip: str = Field(..., description="Destination IP address")
-    app_proto: str = Field(..., description="Application protocol")
-    agent_labels_customer: str = Field(..., description="Customer of the agent")
     timestamp: str = Field(..., description="The timestamp of the alert.")
     timestamp_utc: Optional[str] = Field(
         ...,
@@ -420,21 +412,24 @@ class CustomAlertModel(BaseModel):
     class Config:
         extra = Extra.allow
 
+    def to_dict(self):
+        return self.dict(exclude_none=True)
+
 
 ########### ! Create Custom Alerts In IRIS Schemas ! ###########
 class CustomIrisAsset(BaseModel):
     asset_name: Optional[str] = Field(
-        "Asset Does Not Apply to Suricata Alerts",
+        "Asset Does Not Apply to Custom Alerts",
         description="Name of the asset",
         example="Server01",
     )
     asset_ip: Optional[str] = Field(
-        "Asset Does Not Apply to Suricata Alerts",
+        "Asset Does Not Apply to Custom Alerts",
         description="IP address of the asset",
         example="192.168.1.1",
     )
     asset_description: Optional[str] = Field(
-        "Asset Does Not Apply to Suricata Alerts",
+        "Asset Does Not Apply to Custom Alerts",
         description="Description of the asset",
         example="Windows Server",
     )
@@ -463,39 +458,13 @@ class CustomIrisIoc(BaseModel):
     ioc_type_id: int = Field(20, description="Type ID of the IoC", example=20)
 
 
-class CustomIrisAlertContext(BaseModel):
+class CustomIrisAlertContext(Dict[str, Any]):
     _source: CustomSourceModel
     alert_id: str = Field(..., description="ID of the alert", example="123")
     alert_name: str = Field(
         ...,
         description="Name of the alert",
         example="Intrusion Detected",
-    )
-    alert_level: int = Field(..., description="Severity level of the alert", example=3)
-    rule_id: int = Field(
-        ...,
-        description="ID of the Suricata rule that triggered the alert",
-        example="2001",
-    )
-    src_ip: str = Field(
-        ...,
-        description="Source IP address of the alert",
-        example="1.1.1.1",
-    )
-    dest_ip: str = Field(
-        ...,
-        description="Destination IP address of the alert",
-        example="8.8.8.8",
-    )
-    app_proto: str = Field(
-        ...,
-        description="Application protocol of the alert",
-        example="TCP",
-    )
-    agent_labels_customer: str = Field(
-        ...,
-        description="Customer of the endpoint",
-        example="SOCFortress",
     )
     customer_iris_id: Optional[int] = Field(
         None,

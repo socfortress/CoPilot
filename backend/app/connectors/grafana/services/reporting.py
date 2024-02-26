@@ -1,11 +1,7 @@
-import json
-from pathlib import Path
-
 from fastapi import HTTPException
 from loguru import logger
 
 from app.connectors.grafana.utils.universal import create_grafana_client
-
 
 
 async def get_orgs() -> dict:

@@ -1,24 +1,30 @@
+from typing import List
+
 from fastapi import APIRouter
+from fastapi import Depends
 from fastapi import HTTPException
 from loguru import logger
-from typing import List
-from app.db.db_session import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import Depends
-from app.integrations.monitoring_alert.routes.monitoring_alert import get_customer_meta
 
 from app.connectors.graylog.routes.events import get_all_event_definitions
 from app.connectors.graylog.schema.events import GraylogEventDefinitionsResponse
+from app.connectors.graylog.services.streams import get_streams
+from app.db.db_session import get_db
+from app.integrations.monitoring_alert.routes.monitoring_alert import get_customer_meta
 from app.integrations.monitoring_alert.schema.provision import AvailableMonitoringAlerts
 from app.integrations.monitoring_alert.schema.provision import (
     AvailableMonitoringAlertsResponse,
 )
 from app.integrations.monitoring_alert.schema.provision import (
-    ProvisionMonitoringAlertRequest, CustomMonitoringAlertProvisionModel
+    CustomMonitoringAlertProvisionModel,
+)
+from app.integrations.monitoring_alert.schema.provision import (
+    ProvisionMonitoringAlertRequest,
 )
 from app.integrations.monitoring_alert.schema.provision import (
     ProvisionWazuhMonitoringAlertResponse,
 )
+from app.integrations.monitoring_alert.services.provision import provision_custom_alert
 from app.integrations.monitoring_alert.services.provision import (
     provision_office365_exchange_online_alert,
 )
@@ -29,15 +35,15 @@ from app.integrations.monitoring_alert.services.provision import (
     provision_suricata_monitoring_alert,
 )
 from app.integrations.monitoring_alert.services.provision import (
-    provision_wazuh_monitoring_alert, provision_custom_alert
+    provision_wazuh_monitoring_alert,
 )
-from app.connectors.graylog.services.streams import get_streams
 from app.integrations.utils.event_shipper import event_shipper
 from app.integrations.utils.schema import EventShipperPayload
 from app.schedulers.models.scheduler import CreateSchedulerRequest
 from app.schedulers.scheduler import add_scheduler_jobs
 
 monitoring_alerts_provision_router = APIRouter()
+
 
 async def return_stream_ids(stream_names: List[str]) -> List[str]:
     """
@@ -112,11 +118,13 @@ async def invoke_provision_office365_threat_intel_alert(
         ),
     )
 
+
 async def invoke_provision_custom_monitoring_alert(
     request: CustomMonitoringAlertProvisionModel,
 ):
     # Provision the custom monitoring alert
     await provision_custom_alert(request)
+
 
 # Create a dictionary that maps alert names to provision functions
 PROVISION_FUNCTIONS = {
@@ -200,6 +208,7 @@ async def provision_monitoring_alert_route(
 
     return ProvisionWazuhMonitoringAlertResponse(success=True, message=f"Monitoring alert {request.alert_name} provisioned successfully.")
 
+
 @monitoring_alerts_provision_router.post(
     "/provision/custom",
     response_model=ProvisionWazuhMonitoringAlertResponse,
@@ -210,7 +219,7 @@ async def provision_custom_monitoring_alert_route(
     session: AsyncSession = Depends(get_db),
 ) -> ProvisionWazuhMonitoringAlertResponse:
     await check_if_event_definition_exists(request.alert_name.replace("_", " "))
-    customer_code = next((field.value for field in request.custom_fields if field.name == 'CUSTOMER_CODE'), None)
+    customer_code = next((field.value for field in request.custom_fields if field.name == "CUSTOMER_CODE"), None)
     await get_customer_meta(customer_code=customer_code, session=session)
 
     # Look up the provision function based on request.alert_name
@@ -229,6 +238,7 @@ async def provision_custom_monitoring_alert_route(
     await provision_function(request)
 
     return ProvisionWazuhMonitoringAlertResponse(success=True, message=f"Monitoring alert {request.alert_name} provisioned successfully.")
+
 
 @monitoring_alerts_provision_router.post(
     "/provision/testing",
