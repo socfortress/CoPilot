@@ -40,7 +40,7 @@ from app.integrations.sap_siem.services.sap_siem_multiple_logins import (
 from app.integrations.sap_siem.services.sap_siem_suspicious_logins import (
     sap_siem_suspicious_logins,
 )
-
+from app.integrations.monitoring_alert.services.custom import analyze_custom_alert
 monitoring_alerts_router = APIRouter()
 
 
@@ -165,21 +165,46 @@ async def create_custom_monitoring_alert(
     session: AsyncSession = Depends(get_db),
 ) -> GraylogPostResponse:
     """
-    Create a new custom monitoring alert.
+    Create a new monitoring alert. This receives the alert from Graylog and stores it in the database.
 
     Args:
         monitoring_alert (MonitoringAlertsRequestModel): The monitoring alert details.
         session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
 
     Returns:
-        GraylogPostResponse: The response containing the success message.
+        MonitoringAlertsRequestModel: The created monitoring alert.
     """
-    logger.info(f"Creating custom monitoring alert: {monitoring_alert}")
+    logger.info(f"Creating monitoring alert: {monitoring_alert}")
+    logger.info(f"Found index name {monitoring_alert.event.alert_index}")
+
+    for field in monitoring_alert.event.fields:
+        if field == 'CUSTOMER_CODE':
+            customer_meta = await session.execute(
+                select(CustomersMeta).where(
+                    CustomersMeta.customer_code == monitoring_alert.event.fields[field],
+                ),
+            )
+            customer_meta = customer_meta.scalars().first()
+
+            if not customer_meta:
+                logger.info(f"Getting customer meta for customer_meta_office365_organization_id: {monitoring_alert.event.fields[field]}")
+                customer_meta = await session.execute(
+                    select(CustomersMeta).where(
+                        CustomersMeta.customer_meta_office365_organization_id == monitoring_alert.event.fields[field],
+                    ),
+                )
+                customer_meta = customer_meta.scalars().first()
+
+    if not customer_meta:
+        raise HTTPException(status_code=404, detail="Customer not found")
+
+    await analyze_custom_alert(monitoring_alert, customer_meta, session)
 
     return GraylogPostResponse(
         success=True,
-        message="Custom monitoring alert created successfully",
+        message="Monitoring alert created successfully",
     )
+
 
 
 @monitoring_alerts_router.post(
