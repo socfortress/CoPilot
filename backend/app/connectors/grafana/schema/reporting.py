@@ -1,5 +1,6 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 from typing import List, Optional
+from fastapi import HTTPException
 
 
 class GrafanaOrganizations(BaseModel):
@@ -149,4 +150,31 @@ class GrafanaDashboardDetailsResponse(BaseModel):
 class GrafanaDashboardPanelsResponse(BaseModel):
     message: str = Field(..., description="The message from the response.")
     panels: List[Panel] = Field(..., description="The panels collected from Grafana.")
+    success: bool = Field(..., description="The success of the response.")
+
+class TimeRange(BaseModel):
+    value: int
+    unit: str
+
+    @validator("unit")
+    def validate_unit(cls, unit):
+        valid_units = ["minutes", "hours", "days"]
+        if unit not in valid_units:
+            raise HTTPException(status_code=400, detail=f"Invalid time range unit: {unit}. Must be one of {valid_units}")
+        return unit
+
+class GrafanaGenerateIframeLinksRequest(BaseModel):
+    org_id: int = Field(..., description="The ID of the organization.")
+    dashboard_title: str = Field(..., description="The title of the dashboard.")
+    dashboard_uid: str = Field(..., description="The UID of the dashboard.")
+    panel_ids: List[int] = Field(..., description="The IDs of the panels.")
+    time_range: TimeRange = Field(..., description="Time range in minutes, hours, or days")
+
+class GrafanaLinksList(BaseModel):
+    panel_id: int
+    panel_url: str
+
+class GrafanaGenerateIframeLinksResponse(BaseModel):
+    message: str = Field(..., description="The message from the response.")
+    links: List[GrafanaLinksList] = Field(..., description="The links collected from Grafana.")
     success: bool = Field(..., description="The success of the response.")
