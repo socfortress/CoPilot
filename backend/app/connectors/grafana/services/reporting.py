@@ -1,10 +1,12 @@
 from fastapi import HTTPException
 from loguru import logger
+from typing import List
 
 from app.connectors.grafana.utils.universal import create_grafana_client
+from app.connectors.grafana.schema.reporting import GrafanaOrganizations, GrafanaOrganizationDashboards
 
 
-async def get_orgs() -> dict:
+async def get_orgs() -> List[GrafanaOrganizations]:
     """
     Update a dashboard in Grafana.
 
@@ -22,14 +24,14 @@ async def get_orgs() -> dict:
     logger.info("Getting organizations from Grafana")
     try:
         grafana_client = await create_grafana_client("Grafana")
-        orgs = grafana_client.organization.get_current_organization()
+        orgs = grafana_client.organizations.list_organization()
         return orgs
     except Exception as e:
         logger.error(f"Failed to collect organizations: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to collect organizations: {e}")
 
 
-async def get_dashboards() -> dict:
+async def get_dashboards(org_id: int) -> List[GrafanaOrganizationDashboards]:
     """
     Get dashboards from Grafana.
 
@@ -39,6 +41,8 @@ async def get_dashboards() -> dict:
     logger.info("Getting dashboards from Grafana")
     try:
         grafana_client = await create_grafana_client("Grafana")
+        logger.info(f"Switching to organization {org_id}")
+        grafana_client.user.switch_actual_user_organisation(org_id)
         dashboards = grafana_client.search.search_dashboards()
         return dashboards
     except Exception as e:
