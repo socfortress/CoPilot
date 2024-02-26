@@ -3,7 +3,7 @@ from loguru import logger
 from typing import List
 
 from app.connectors.grafana.utils.universal import create_grafana_client
-from app.connectors.grafana.schema.reporting import GrafanaOrganizations, GrafanaOrganizationDashboards
+from app.connectors.grafana.schema.reporting import GrafanaOrganizations, GrafanaOrganizationDashboards, GrafanaDashboardDetails
 
 
 async def get_orgs() -> List[GrafanaOrganizations]:
@@ -48,3 +48,23 @@ async def get_dashboards(org_id: int) -> List[GrafanaOrganizationDashboards]:
     except Exception as e:
         logger.error(f"Failed to collect dashboards: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to collect dashboards: {e}")
+
+
+async def get_dashboard_details(dashboard_uid: str) -> GrafanaDashboardDetails:
+    """
+    Get dashboard details from Grafana.
+
+    Args:
+        dashboard_uid (str): The UID of the dashboard.
+
+    Returns:
+        dict: The response containing the dashboard details collected from Grafana.
+    """
+    logger.info("Getting dashboard details from Grafana")
+    try:
+        grafana_client = await create_grafana_client("Grafana")
+        dashboard_details = grafana_client.dashboard.get_dashboard(dashboard_uid)
+        return dashboard_details
+    except Exception as e:
+        logger.error(f"Failed to collect dashboard details: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to collect dashboard details: {e}")
