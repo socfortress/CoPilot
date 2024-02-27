@@ -119,7 +119,10 @@ function getClearForm(): InvokeForm {
 }
 
 function reset() {
-	form.value = getClearForm()
+	if (!loading.value) {
+		form.value = getClearForm()
+		formRef.value?.restoreValidation()
+	}
 }
 
 function validate() {

@@ -254,7 +254,10 @@ function getPayload(meta: CustomerMetaExt): CustomerMeta {
 }
 
 function reset() {
-	form.value = getClearForm()
+	if (!loading.value) {
+		form.value = getClearForm()
+		formRef.value?.restoreValidation()
+	}
 }
 
 function submit() {

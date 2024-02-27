@@ -1,5 +1,5 @@
 <template>
-	<n-spin :show="loading" class="customer-provisioning-default-settings-form">
+	<n-spin :show="loading" class="custom-alert-form">
 		<n-form :label-width="80" :model="form" :rules="rules" ref="formRef">
 			<div class="flex flex-col gap-2">
 				<div class="flex gap-4">
@@ -12,14 +12,18 @@
 						/>
 					</n-form-item>
 					<n-form-item label="Name" path="alert_name" class="grow">
-						<n-input v-model:value.trim="form.alert_name" placeholder="Please inset Alert Name" clearable />
+						<n-input
+							v-model:value.trim="form.alert_name"
+							placeholder="Please insert Alert Name"
+							clearable
+						/>
 					</n-form-item>
 				</div>
 				<div class="flex flex-col gap-2">
 					<n-form-item label="Description" path="alert_description">
 						<n-input
 							v-model:value.trim="form.alert_description"
-							placeholder="Please inset Alert Description"
+							placeholder="Please insert Alert Description"
 							clearable
 							type="textarea"
 							:autosize="{
@@ -31,9 +35,48 @@
 					<n-form-item label="Search Query" path="search_query">
 						<n-input
 							v-model:value.trim="form.search_query"
-							placeholder="Please inset Search Query"
+							placeholder="Please insert Search Query"
 							clearable
 						/>
+					</n-form-item>
+				</div>
+				<div class="custom-fields-editor">
+					<n-form-item label="Custom fields" required path="custom_fields">
+						<div class="custom-fields-list flex flex-col gap-4">
+							<n-card size="small" v-for="cf of form.custom_fields" :key="cf.key">
+								<div class="custom-field-box flex gap-2">
+									<n-form-item label="Name" class="grow" size="small">
+										<n-input
+											v-model:value.trim="cf.name"
+											placeholder="Custom field Name"
+											clearable
+										/>
+									</n-form-item>
+									<n-form-item label="Value" class="grow" size="small">
+										<n-input
+											v-model:value.trim="cf.value"
+											placeholder="Custom field Value"
+											clearable
+										/>
+									</n-form-item>
+									<n-form-item size="small">
+										<n-button type="error" secondary>
+											<template #icon>
+												<Icon :name="RemoveIcon"></Icon>
+											</template>
+										</n-button>
+									</n-form-item>
+								</div>
+							</n-card>
+							<div>
+								<n-button @click="addCustomFiled()">
+									<template #icon>
+										<Icon :name="AddIcon"></Icon>
+									</template>
+									Add Custom Field
+								</n-button>
+							</div>
+						</div>
 					</n-form-item>
 				</div>
 				<div class="flex gap-4">
@@ -89,14 +132,17 @@ import {
 	NSpin,
 	NSelect,
 	NInputNumber,
+	NCard,
 	type FormValidationError,
 	type FormInst,
-	type FormRules
+	type FormRules,
+	type FormItemRule
 } from "naive-ui"
 import _trim from "lodash/trim"
 import _get from "lodash/get"
 import _toSafeInteger from "lodash/toSafeInteger"
 import { type CustomProvisionPayload, CustomProvisionPriority } from "@/api/monitoringAlerts"
+import Icon from "@/components/common/Icon.vue"
 
 interface CustomProvisionForm {
 	alert_name: string
@@ -106,6 +152,7 @@ interface CustomProvisionForm {
 	custom_fields: {
 		name: string
 		value: string
+		key: number
 	}[]
 	search_within_seconds: number
 	execute_every_seconds: number
@@ -121,6 +168,8 @@ const emit = defineEmits<{
 	): void
 }>()
 
+const RemoveIcon = "ph:trash"
+const AddIcon = "carbon:add-alt"
 const submittingCustomAlert = ref(false)
 const loading = computed(() => submittingCustomAlert.value)
 const message = useMessage()
@@ -136,7 +185,7 @@ const alertPriorityOptions: { label: string; value: CustomProvisionPriority }[] 
 const rules: FormRules = {
 	alert_priority: {
 		required: true,
-		message: "Please input the Alert Priority",
+		validator: validatorNumber("Alert Priority", "Required"),
 		trigger: ["input", "blur"]
 	},
 	alert_name: {
@@ -146,7 +195,24 @@ const rules: FormRules = {
 	},
 	alert_description: {
 		required: true,
-		message: "Please input the Alert Name",
+		message: "Please input the Alert Description",
+		trigger: ["input", "blur"]
+	},
+	search_query: {
+		required: true,
+		message: "Please input the Search Query",
+		trigger: ["input", "blur"]
+	},
+	search_within_seconds: {
+		required: true,
+		// message: "Please input Search within",
+		validator: validatorNumber("Search within"),
+		trigger: ["input", "blur"]
+	},
+	execute_every_seconds: {
+		required: true,
+		// message: "Please input Execute every",
+		validator: validatorNumber("Execute every"),
 		trigger: ["input", "blur"]
 	}
 }
@@ -165,6 +231,19 @@ const isValid = computed(() => {
 	return valid
 })
 
+function validatorNumber(fieldName: string, defaultMessage?: string) {
+	return (rule: FormItemRule, value: string) => {
+		if (!value) {
+			return new Error(defaultMessage || `${fieldName} is required`)
+		} else if (!/^\d*$/.test(value)) {
+			return new Error(`${fieldName} should be an integer`)
+		} else if (Number(value) < 1) {
+			return new Error(`${fieldName} should be above 1`)
+		}
+		return true
+	}
+}
+
 function validate() {
 	if (!formRef.value) return
 
@@ -175,6 +254,14 @@ function validate() {
 			message.warning("You must fill in the required fields correctly.")
 			return false
 		}
+	})
+}
+
+function addCustomFiled() {
+	form.value.custom_fields.push({
+		name: "",
+		value: "",
+		key: new Date().getTime()
 	})
 }
 
@@ -193,6 +280,7 @@ function getClearForm(): CustomProvisionForm {
 function reset() {
 	if (!loading.value) {
 		form.value = getClearForm()
+		formRef.value?.restoreValidation()
 	}
 }
 
@@ -238,3 +326,19 @@ onMounted(() => {
 	})
 })
 </script>
+
+<style lang="scss" scoped>
+.custom-alert-form {
+	.custom-fields-editor {
+		width: 100%;
+
+		.custom-fields-list {
+			width: 100%;
+
+			.custom-field-box {
+				width: 100%;
+			}
+		}
+	}
+}
+</style>
