@@ -13,7 +13,7 @@
 				<div class="content">
 					<div class="title">{{ asset.asset_name }}</div>
 					<div class="description mt-2" v-if="asset.asset_description">
-						<template v-if="isUrl(asset.asset_description)">
+						<template v-if="isUrlLike(asset.asset_description)">
 							<a
 								:href="asset.asset_description"
 								class="asset-url"
@@ -101,7 +101,7 @@
 				</n-tab-pane>
 				<n-tab-pane name="Description" tab="Description" display-directive="show">
 					<div class="p-7 pt-4">
-						<template v-if="isUrl(asset.asset_description)">
+						<template v-if="isUrlLike(asset.asset_description)">
 							<a
 								:href="asset.asset_description"
 								class="asset-url"
@@ -130,7 +130,7 @@ import { computed, ref } from "vue"
 import { NModal, NTabs, NTabPane } from "naive-ui"
 import _omit from "lodash/omit"
 import dayjs from "@/utils/dayjs"
-import { isUrl } from "@/utils"
+import { isUrlLike } from "@/utils"
 import type { SocAlertAsset } from "@/types/soc/asset.d"
 import { useRouter } from "vue-router"
 import { useSettingsStore } from "@/stores/settings"

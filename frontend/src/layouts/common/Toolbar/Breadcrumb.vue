@@ -60,15 +60,20 @@ function checkRoute(route: RouteLocationNormalizedLoaded) {
 
 	for (const chunk of pathChunks) {
 		if (chunk) {
+			const name = _capitalize(_upperCase(chunk))
+			const path = chunk.toLowerCase()
+
 			newItems.push({
-				name: _capitalize(_upperCase(chunk)),
-				path: chunk.toLowerCase(),
-				key: chunk + new Date().getTime()
+				name,
+				path,
+				key: name + path
 			})
 		}
 	}
 
-	items.value = newItems
+	if (JSON.stringify(items.value) !== JSON.stringify(newItems)) {
+		items.value = newItems
+	}
 }
 
 onBeforeMount(() => {

@@ -28,7 +28,7 @@ export const isMobile = () => {
 	return detectMobile
 }
 
-export const isUrl = (text: string) => {
+export const isUrlLike = (text: string) => {
 	const urlPattern = new RegExp("^(https?:\\/\\/)", "i")
 	return urlPattern.test(text)
 }

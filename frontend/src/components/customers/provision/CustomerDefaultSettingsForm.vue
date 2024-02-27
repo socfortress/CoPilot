@@ -169,6 +169,7 @@ function submit() {
 		.then(res => {
 			if (res.data.success) {
 				isNew.value = false
+				message.success(res.data?.message || "Customer Provisioning Default Settings updated successfully")
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}

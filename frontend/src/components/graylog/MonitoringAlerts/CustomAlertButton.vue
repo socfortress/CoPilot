@@ -1,9 +1,9 @@
 <template>
-	<n-button size="small" secondary @click="showForm = true" :loading="loading">
+	<n-button size="small" type="primary" secondary @click="showForm = true" :loading="loading">
 		<template #icon>
-			<Icon :name="SettingsIcon" :size="14"></Icon>
+			<Icon :name="DangerIcon"></Icon>
 		</template>
-		Default Settings
+		Custom Alert
 	</n-button>
 
 	<n-modal
@@ -11,11 +11,11 @@
 		display-directive="show"
 		preset="card"
 		:style="{ maxWidth: 'min(600px, 90vw)', minHeight: 'min(300px, 90vh)', overflow: 'hidden' }"
-		title="Customer Provisioning Default Settings"
+		title="Create a Custom Alert"
 		:bordered="false"
 		segmented
 	>
-		<CustomerDefaultSettingsForm @mounted="settingsFormCTX = $event" v-model:loading="loading" />
+		<CustomAlertForm @mounted="formCTX = $event" v-model:loading="loading" />
 	</n-modal>
 </template>
 
@@ -23,16 +23,17 @@
 import { ref, watch } from "vue"
 import { NButton, NModal } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
-import CustomerDefaultSettingsForm from "./CustomerDefaultSettingsForm.vue"
+import CustomAlertForm from "./CustomAlertForm.vue"
 
-const SettingsIcon = "carbon:settings-edit"
-const settingsFormCTX = ref<{ load: () => void } | null>(null)
+const DangerIcon = "majesticons:exclamation-line"
+
+const formCTX = ref<{ reset: () => void } | null>(null)
 const showForm = ref(false)
 const loading = ref(false)
 
 watch(showForm, val => {
 	if (val) {
-		settingsFormCTX.value?.load()
+		formCTX.value?.reset()
 	}
 })
 </script>
