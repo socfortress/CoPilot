@@ -225,7 +225,7 @@ class CustomMonitoringAlertProvisionModel(BaseModel):
     alert_priority: AlertPriority = Field(
         ...,
         description="The priority of the alert to provision.",
-        example="HIGH",
+        example=2,
     )
     search_query: str = Field(
         ...,
