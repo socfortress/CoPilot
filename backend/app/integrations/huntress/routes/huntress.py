@@ -20,7 +20,7 @@ integration_huntress_router = APIRouter()
     response_model=InvokeHuntressResponse,
     description="Pull down Huntress Events.",
 )
-async def collect_sap_siem_route(huntress_request: InvokeHuntressRequest, session: AsyncSession = Depends(get_db)):
+async def collect_huntress_route(huntress_request: InvokeHuntressRequest, session: AsyncSession = Depends(get_db)):
     """Pull down Huntress Events."""
     customer_integration_response = await get_customer_integration_response(
         huntress_request.customer_code,

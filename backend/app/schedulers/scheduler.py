@@ -22,7 +22,7 @@ from app.schedulers.services.monitoring_alert import (
 from app.schedulers.services.monitoring_alert import invoke_office365_threat_intel_alert
 from app.schedulers.services.monitoring_alert import invoke_suricata_monitoring_alert
 from app.schedulers.services.monitoring_alert import invoke_wazuh_monitoring_alert
-
+from app.schedulers.services.invoke_huntress import invoke_huntress_integration_collect
 
 def init_scheduler():
     """
@@ -103,6 +103,7 @@ def get_function_by_name(function_name: str):
         "invoke_sap_siem_integration_collection": invoke_sap_siem_integration_collect,
         "invoke_sap_siem_integration_suspicious_logins_analysis": invoke_sap_siem_integration_suspicious_logins_analysis,
         "invoke_sap_siem_integration_multiple_logins_same_ip_analysis": invoke_sap_siem_integration_multiple_logins_same_ip_analysis,
+        "invoke_huntress_integration_collection": invoke_huntress_integration_collect,
         # Add other function mappings here
     }
     return function_map.get(
