@@ -29,8 +29,8 @@ def build_index_set_config(request: ProvisionNewCustomer) -> TimeBasedIndexSet:
         TimeBasedIndexSet: The configured time-based index set.
     """
     return TimeBasedIndexSet(
-        title=f"Wazuh - {request.customer_name}",
-        description=f"Wazuh - {request.customer_name}",
+        title=f"{request.customer_name} - Wazuh EDR EVENTS",
+        description=f"{request.customer_name} - Wazuh EDR EVENTS",
         index_prefix=request.customer_index_name,
         rotation_strategy_class="org.graylog2.indexer.rotation.strategies.TimeBasedRotationStrategy",
         rotation_strategy={
@@ -126,8 +126,8 @@ def build_event_stream_config(
         WazuhEventStream: The configured Wazuh event stream.
     """
     return WazuhEventStream(
-        title=f"WAZUH EVENTS CUSTOMERS - {request.customer_name}",
-        description=f"WAZUH EVENTS CUSTOMERS - {request.customer_name}",
+        title=f"{request.customer_name} - Wazuh EDR EVENTS",
+        description=f"{request.customer_name} - Wazuh EDR EVENTS",
         index_set_id=index_set_id,
         rules=[
             {
