@@ -45,8 +45,8 @@ async def build_index_set_config(
         TimeBasedIndexSet: The configured time-based index set.
     """
     return TimeBasedIndexSet(
-        title=f"Mimecast - {(await get_customer(customer_code, session)).customer.customer_name}",
-        description=f"Mimecast - {customer_code}",
+        title=f"{(await get_customer(customer_code, session)).customer.customer_name} - Mimecast",
+        description=f"{customer_code} - Mimecast",
         index_prefix=f"mimecast_{customer_code}",
         rotation_strategy_class="org.graylog2.indexer.rotation.strategies.TimeBasedRotationStrategy",
         rotation_strategy={
@@ -130,8 +130,8 @@ async def build_event_stream_config(
         MimecastEventStream: The configured Mimecast event stream.
     """
     return MimecastEventStream(
-        title=f"Mimecast EVENTS - {(await get_customer(customer_code, session)).customer.customer_name}",
-        description=f"Mimecast EVENTS - {(await get_customer(customer_code, session)).customer.customer_name}",
+        title=f"{(await get_customer(customer_code, session)).customer.customer_name} - Mimecast",
+        description=f"{(await get_customer(customer_code, session)).customer.customer_name} - Mimecast",
         index_set_id=index_set_id,
         rules=[
             {
