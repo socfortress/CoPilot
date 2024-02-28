@@ -121,7 +121,7 @@ async def create_monitoring_alert(
 
     customer_meta = await session.execute(
         select(CustomersMeta).where(
-            CustomersMeta.customer_code == monitoring_alert.event.fields['CUSTOMER_CODE'],
+            CustomersMeta.customer_code == monitoring_alert.event.fields["CUSTOMER_CODE"],
         ),
     )
     customer_meta = customer_meta.scalars().first()
@@ -130,7 +130,7 @@ async def create_monitoring_alert(
         logger.info(f"Getting customer meta for customer_meta_office365_organization_id: {monitoring_alert.event.fields['CUSTOMER_CODE']}")
         customer_meta = await session.execute(
             select(CustomersMeta).where(
-                CustomersMeta.customer_meta_office365_organization_id == monitoring_alert.event.fields['CUSTOMER_CODE'],
+                CustomersMeta.customer_meta_office365_organization_id == monitoring_alert.event.fields["CUSTOMER_CODE"],
             ),
         )
         customer_meta = customer_meta.scalars().first()
