@@ -4,9 +4,11 @@ from typing import Dict
 from typing import List
 from typing import Optional
 
+from fastapi import HTTPException
 from pydantic import BaseModel
 from pydantic import Extra
 from pydantic import Field
+from pydantic import validator
 
 from app.integrations.alert_creation.general.schema.alert import IrisAsset
 from app.integrations.alert_creation.general.schema.alert import IrisIoc
@@ -110,7 +112,8 @@ class GraylogEvent(BaseModel):
         description="Indicates if the event is an alert",
         example=True,
     )
-    fields: GraylogEventFields = Field(..., description="Custom fields for the event")
+    # fields: GraylogEventFields = Field(..., description="Custom fields for the event")
+    fields: Dict[str, Any] = Field(..., description="Custom fields for the event")
     group_by_fields: Dict[str, Any] = Field(
         ...,
         description="Fields used to group events",
@@ -120,6 +123,19 @@ class GraylogEvent(BaseModel):
     @property
     def alert_index(self) -> str:
         return self.origin_context.split(":")[4]
+
+    @property
+    def alert_id(self) -> str:
+        return self.origin_context.split(":")[5]
+
+    @validator("fields")
+    def check_customer_code(cls, fields):
+        if "CUSTOMER_CODE" not in fields:
+            raise HTTPException(
+                status_code=400,
+                detail="CUSTOMER_CODE is required in the fields",
+            )
+        return fields
 
 
 class GraylogPostRequest(BaseModel):
@@ -329,6 +345,177 @@ class WazuhIrisAlertPayload(BaseModel):
         description="Original content from the alert source",
     )
     alert_context: WazuhIrisAlertContext = Field(
+        ...,
+        description="Contextual information about the alert",
+    )
+    alert_iocs: Optional[List[IrisIoc]] = Field(
+        None,
+        description="List of IoCs related to the alert",
+    )
+    alert_source_event_time: str = Field(
+        ...,
+        description="Timestamp of the alert",
+        example="2021-01-01T00:00:00.000Z",
+    )
+
+    def to_dict(self):
+        return self.dict(exclude_none=True)
+
+
+########### ! CUSTOM ALERTS SCHEMA ! ###########
+class CustomSourceModel(BaseModel):
+    timestamp: str = Field(..., description="The timestamp of the alert.")
+    timestamp_utc: Optional[str] = Field(
+        ...,
+        description="The UTC timestamp of the alert.",
+    )
+    time_field: Optional[str] = Field(
+        "timestamp",
+        description="The timefield of the alert to be used when creating the IRIS alert.",
+    )
+    date: Optional[float] = Field(
+        None,
+        description="Date of the alert in Unix timestamp",
+    )
+    alert_metadata_tag: Optional[str] = Field(
+        None,
+        description="Metadata tag for the alert",
+    )
+    alert_gid: Optional[int] = Field(None, description="Alert group ID")
+
+    class Config:
+        allow_population_by_field_name = True
+        extra = Extra.allow
+
+    def to_dict(self):
+        return self.dict(exclude_none=True)
+
+
+class CustomAlertModel(BaseModel):
+    _index: str
+    _id: str
+    _version: int
+    _source: CustomSourceModel
+    asset_type_id: Optional[int] = Field(
+        None,
+        description="The asset type id of the alert which is needed for when we add the asset to IRIS.",
+    )
+    ioc_value: Optional[str] = Field(
+        None,
+        description="The IoC value of the alert which is needed for when we add the IoC to IRIS.",
+    )
+    ioc_type: Optional[str] = Field(
+        None,
+        description="The IoC type of the alert which is needed for when we add the IoC to IRIS.",
+    )
+
+    class Config:
+        extra = Extra.allow
+
+    def to_dict(self):
+        return self.dict(exclude_none=True)
+
+
+########### ! Create Custom Alerts In IRIS Schemas ! ###########
+class CustomIrisAsset(BaseModel):
+    asset_name: Optional[str] = Field(
+        "Asset Does Not Apply to Custom Alerts",
+        description="Name of the asset",
+        example="Server01",
+    )
+    asset_ip: Optional[str] = Field(
+        "Asset Does Not Apply to Custom Alerts",
+        description="IP address of the asset",
+        example="192.168.1.1",
+    )
+    asset_description: Optional[str] = Field(
+        "Asset Does Not Apply to Custom Alerts",
+        description="Description of the asset",
+        example="Windows Server",
+    )
+    asset_type_id: Optional[int] = Field(
+        9,
+        description="Type ID of the asset",
+        example=1,
+    )
+
+    def to_dict(self):
+        return self.dict(exclude_none=True)
+
+
+class CustomIrisIoc(BaseModel):
+    ioc_value: str = Field(
+        ...,
+        description="Value of the IoC",
+        example="www.google.com",
+    )
+    ioc_description: str = Field(
+        ...,
+        description="Description of the IoC",
+        example="Google",
+    )
+    ioc_tlp_id: int = Field(1, description="TLP ID of the IoC", example=1)
+    ioc_type_id: int = Field(20, description="Type ID of the IoC", example=20)
+
+
+class CustomIrisAlertContext(Dict[str, Any]):
+    _source: CustomSourceModel
+    alert_id: str = Field(..., description="ID of the alert", example="123")
+    alert_name: str = Field(
+        ...,
+        description="Name of the alert",
+        example="Intrusion Detected",
+    )
+    customer_iris_id: Optional[int] = Field(
+        None,
+        description="IRIS ID of the customer",
+    )
+    customer_name: Optional[str] = Field(
+        None,
+        description="Name of the customer",
+    )
+    customer_cases_index: Optional[str] = Field(
+        None,
+        description="IRIS case index name in the Wazuh-Indexer",
+    )
+    time_field: Optional[str] = Field(
+        "timestamp_utc",
+        description="The timefield of the alert to be used when creating the IRIS alert.",
+    )
+
+    def to_dict(self):
+        return self.dict(exclude_none=True)
+
+
+class CustomIrisAlertPayload(BaseModel):
+    alert_title: str = Field(
+        ...,
+        description="Title of the alert",
+        example="Intrusion Detected",
+    )
+    alert_description: str = Field(
+        ...,
+        description="Description of the alert",
+        example="Intrusion Detected by Firewall",
+    )
+    alert_source: str = Field(..., description="Source of the alert", example="Suricata")
+    assets: List[CustomIrisAsset] = Field(..., description="List of affected assets")
+    alert_status_id: int = Field(..., description="Status ID of the alert", example=3)
+    alert_severity_id: int = Field(
+        ...,
+        description="Severity ID of the alert",
+        example=5,
+    )
+    alert_customer_id: int = Field(
+        ...,
+        description="Customer ID related to the alert",
+        example=1,
+    )
+    alert_source_content: Dict[str, Any] = Field(
+        ...,
+        description="Original content from the alert source",
+    )
+    alert_context: CustomIrisAlertContext = Field(
         ...,
         description="Contextual information about the alert",
     )

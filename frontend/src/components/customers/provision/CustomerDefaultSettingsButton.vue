@@ -15,7 +15,7 @@
 		:bordered="false"
 		segmented
 	>
-		<CustomerDefaultSettingForm @mounted="settingsFormCTX = $event" v-model:loading="loading" />
+		<CustomerDefaultSettingsForm @mounted="settingsFormCTX = $event" v-model:loading="loading" />
 	</n-modal>
 </template>
 
@@ -23,7 +23,7 @@
 import { ref, watch } from "vue"
 import { NButton, NModal } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
-import CustomerDefaultSettingForm from "./CustomerDefaultSettingForm.vue"
+import CustomerDefaultSettingsForm from "./CustomerDefaultSettingsForm.vue"
 
 const SettingsIcon = "carbon:settings-edit"
 const settingsFormCTX = ref<{ load: () => void } | null>(null)

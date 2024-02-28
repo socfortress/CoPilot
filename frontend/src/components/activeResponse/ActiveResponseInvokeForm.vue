@@ -119,6 +119,13 @@ function getClearForm(): InvokeForm {
 }
 
 function reset() {
+	if (!loading.value) {
+		resetForm()
+		formRef.value?.restoreValidation()
+	}
+}
+
+function resetForm() {
 	form.value = getClearForm()
 }
 
@@ -154,7 +161,7 @@ function submit() {
 			if (res.data.success) {
 				message.success(res.data?.message || "Active Response invoked successfully")
 				emit("submitted")
-				reset()
+				resetForm()
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}

@@ -6,6 +6,7 @@ from typing import Optional
 from fastapi import HTTPException
 from pydantic import BaseModel
 from pydantic import Field
+from pydantic import root_validator
 from pydantic import validator
 
 
@@ -182,3 +183,87 @@ class GraylogAlertProvisionModel(BaseModel):
     notification_settings: GraylogAlertProvisionNotificationSettings
     notifications: List[GraylogAlertProvisionNotification]
     alert: bool
+
+
+class AlertPriority(Enum):
+    LOW = 1
+    NORMAL = 2
+    HIGH = 3
+
+
+class CustomFields(BaseModel):
+    name: str
+    value: str
+
+    @validator("name")
+    def replace_spaces_with_underscores(cls, v):
+        return v.replace(" ", "_")
+
+
+class CustomMonitoringAlertProvisionModel(BaseModel):
+    alert_name: str = Field(
+        ...,
+        description="The name of the alert to provision.",
+        example="WAZUH_SYSLOG_LEVEL_ALERT",
+    )
+    alert_description: str = Field(
+        ...,
+        description=(
+            "The description of the alert to provision. This alert monitors the "
+            "SYSLOG_LEVEL field in the Wazuh logs. When the level is ALERT, it "
+            "triggers an alert that is created within DFIR-IRIS. Ensure that you "
+            "have a pipeline rule that sets the SYSLOG_LEVEL field to ALERT when "
+            "the Wazuh rule level is greater than 11."
+        ),
+        example=(
+            "This alert monitors the SYSLOG_LEVEL field in the Wazuh logs. When "
+            "the level is ALERT, it triggers an alert that is created within "
+            "DFIR-IRIS. Ensure that you have a pipeline rule that sets the "
+            "SYSLOG_LEVEL field to ALERT when the Wazuh rule level is greater than 11."
+        ),
+    )
+    alert_priority: AlertPriority = Field(
+        ...,
+        description="The priority of the alert to provision.",
+        example=2,
+    )
+    search_query: str = Field(
+        ...,
+        description="The search query to use for the alert.",
+        example="syslog_type:wazuh AND syslog_level:alert",
+    )
+    streams: Optional[List[str]] = Field(
+        [],
+        description="The streams to use for the alert.",
+        example=["5f3e4c3b3f37b70001f3d7b3"],
+    )
+    custom_fields: List[CustomFields] = Field(
+        ...,
+        description="The custom fields to use for the alert.",
+        example=[{"name": "source", "value": "Wazuh"}],
+    )
+    search_within_ms: int = Field(
+        ...,
+        description="The time in milliseconds to search within for the alert.",
+        example=300000,
+    )
+    execute_every_ms: int = Field(
+        ...,
+        description="The time in milliseconds to execute the alert search.",
+        example=300000,
+    )
+
+    @root_validator
+    def check_customer_code(cls, values):
+        custom_fields = values.get("custom_fields")
+        if custom_fields is None:
+            raise HTTPException(
+                status_code=400,
+                detail="At least one custom field with name CUSTOMER_CODE is required",
+            )
+        if not any(field.name == "CUSTOMER_CODE" for field in custom_fields):
+            raise HTTPException(
+                status_code=400,
+                detail="At least one custom field with name CUSTOMER_CODE is required",
+            )
+        return values

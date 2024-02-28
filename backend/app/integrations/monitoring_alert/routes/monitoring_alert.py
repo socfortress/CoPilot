@@ -26,6 +26,7 @@ from app.integrations.monitoring_alert.schema.monitoring_alert import (
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
     MonitoringWazuhAlertsRequestModel,
 )
+from app.integrations.monitoring_alert.services.custom import analyze_custom_alert
 from app.integrations.monitoring_alert.services.office365_exchange import (
     analyze_office365_exchange_online_alerts,
 )
@@ -150,6 +151,56 @@ async def create_monitoring_alert(
     except Exception as e:
         logger.error(f"Error creating monitoring alert: {e}")
         raise HTTPException(status_code=500, detail="Error creating monitoring alert")
+
+    return GraylogPostResponse(
+        success=True,
+        message="Monitoring alert created successfully",
+    )
+
+
+@monitoring_alerts_router.post(
+    "/custom",
+    response_model=GraylogPostResponse,
+)
+async def create_custom_monitoring_alert(
+    monitoring_alert: GraylogPostRequest,
+    session: AsyncSession = Depends(get_db),
+) -> GraylogPostResponse:
+    """
+    Create a new monitoring alert. This receives the alert from Graylog and stores it in the database.
+
+    Args:
+        monitoring_alert (MonitoringAlertsRequestModel): The monitoring alert details.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        MonitoringAlertsRequestModel: The created monitoring alert.
+    """
+    logger.info(f"Creating monitoring alert: {monitoring_alert}")
+    logger.info(f"Found index name {monitoring_alert.event.alert_index}")
+
+    for field in monitoring_alert.event.fields:
+        if field == "CUSTOMER_CODE":
+            customer_meta = await session.execute(
+                select(CustomersMeta).where(
+                    CustomersMeta.customer_code == monitoring_alert.event.fields[field],
+                ),
+            )
+            customer_meta = customer_meta.scalars().first()
+
+            if not customer_meta:
+                logger.info(f"Getting customer meta for customer_meta_office365_organization_id: {monitoring_alert.event.fields[field]}")
+                customer_meta = await session.execute(
+                    select(CustomersMeta).where(
+                        CustomersMeta.customer_meta_office365_organization_id == monitoring_alert.event.fields[field],
+                    ),
+                )
+                customer_meta = customer_meta.scalars().first()
+
+    if not customer_meta:
+        raise HTTPException(status_code=404, detail="Customer not found")
+
+    await analyze_custom_alert(monitoring_alert, session)
 
     return GraylogPostResponse(
         success=True,

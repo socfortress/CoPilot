@@ -7,6 +7,7 @@ from loguru import logger
 from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
 from app.connectors.grafana.schema.dashboards import GrafanaDashboard
 from app.connectors.grafana.schema.dashboards import GrafanaDashboardResponse
+from app.connectors.grafana.schema.dashboards import HuntressDashboard
 from app.connectors.grafana.schema.dashboards import MimecastDashboard
 from app.connectors.grafana.schema.dashboards import Office365Dashboard
 from app.connectors.grafana.schema.dashboards import SapSiemDashboard
@@ -146,7 +147,12 @@ async def provision_dashboards(
     errors = []
 
     valid_dashboards = {
-        item.name: item for item in list(WazuhDashboard) + list(Office365Dashboard) + list(MimecastDashboard) + list(SapSiemDashboard)
+        item.name: item
+        for item in list(WazuhDashboard)
+        + list(Office365Dashboard)
+        + list(MimecastDashboard)
+        + list(SapSiemDashboard)
+        + list(HuntressDashboard)
     }
 
     for dashboard_name in dashboard_request.dashboards:

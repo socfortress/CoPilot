@@ -13,7 +13,7 @@
 				<div class="content">
 					<div class="title" v-html="asset.asset_name"></div>
 					<div class="description mt-2" v-if="asset.asset_description">
-						<template v-if="isUrl(asset.asset_description)">
+						<template v-if="isUrlLike(asset.asset_description)">
 							<a
 								:href="asset.asset_description"
 								class="asset-url"
@@ -70,7 +70,7 @@
 				</n-tab-pane>
 				<n-tab-pane name="Description" tab="Description" display-directive="show">
 					<div class="p-7 pt-4">
-						<template v-if="isUrl(asset.asset_description)">
+						<template v-if="isUrlLike(asset.asset_description)">
 							<a
 								:href="asset.asset_description"
 								class="asset-url"
@@ -110,7 +110,7 @@ import Badge from "@/components/common/Badge.vue"
 import SocCaseAssetLink from "./SocCaseAssetLink.vue"
 import { computed, ref } from "vue"
 import { NModal, NTabs, NTabPane, NEmpty } from "naive-ui"
-import { isUrl } from "@/utils"
+import { isUrlLike } from "@/utils"
 import _omit from "lodash/omit"
 import _split from "lodash/split"
 import _upperFirst from "lodash/upperFirst"

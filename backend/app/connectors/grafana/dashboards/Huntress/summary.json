@@ -1,0 +1,1215 @@
+{
+	"annotations": {
+		"list": [
+			{
+				"builtIn": 1,
+				"datasource": {
+					"type": "grafana",
+					"uid": "-- Grafana --"
+				},
+				"enable": true,
+				"hide": true,
+				"iconColor": "rgba(0, 211, 255, 1)",
+				"name": "Annotations & Alerts",
+				"type": "dashboard"
+			}
+		]
+	},
+	"editable": true,
+	"fiscalYearStartMonth": 0,
+	"graphTooltip": 0,
+	"id": null,
+	"links": [],
+	"liveNow": false,
+	"panels": [
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "red",
+								"value": null
+							}
+						]
+					}
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 4,
+				"x": 0,
+				"y": 0
+			},
+			"id": 5,
+			"options": {
+				"colorMode": "value",
+				"graphMode": "none",
+				"justifyMode": "auto",
+				"orientation": "auto",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"textMode": "auto",
+				"wideLayout": true
+			},
+			"pluginVersion": "10.2.3",
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"format": "table",
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "severity:critical",
+					"queryType": "lucene",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "EVENTS - CRITICAL",
+			"type": "stat"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"custom": {
+						"align": "auto",
+						"cellOptions": {
+							"type": "auto"
+						},
+						"inspect": false
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "red",
+								"value": null
+							}
+						]
+					}
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "source"
+						},
+						"properties": [
+							{
+								"id": "custom.cellOptions",
+								"value": {
+									"type": "color-background"
+								}
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 6,
+				"x": 4,
+				"y": 0
+			},
+			"id": 6,
+			"options": {
+				"cellHeight": "sm",
+				"footer": {
+					"countRows": false,
+					"fields": "",
+					"reducer": ["sum"],
+					"show": false
+				},
+				"showHeader": true
+			},
+			"pluginVersion": "10.2.3",
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "source",
+							"id": "3",
+							"settings": {
+								"min_doc_count": "1",
+								"order": "desc",
+								"orderBy": "_term",
+								"size": "10"
+							},
+							"type": "terms"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"format": "table",
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "severity:critical",
+					"queryType": "lucene",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "EVENTS - CRITICAL (SOURCE)",
+			"transformations": [
+				{
+					"id": "organize",
+					"options": {
+						"excludeByName": {},
+						"includeByName": {},
+						"indexByName": {},
+						"renameByName": {
+							"source": "SOURCE"
+						}
+					}
+				}
+			],
+			"transparent": true,
+			"type": "table"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"custom": {
+						"align": "auto",
+						"cellOptions": {
+							"type": "auto"
+						},
+						"inspect": false
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "red",
+								"value": null
+							}
+						]
+					}
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "subject"
+						},
+						"properties": [
+							{
+								"id": "custom.cellOptions",
+								"value": {
+									"type": "color-background"
+								}
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 14,
+				"x": 10,
+				"y": 0
+			},
+			"id": 7,
+			"options": {
+				"cellHeight": "sm",
+				"footer": {
+					"countRows": false,
+					"fields": "",
+					"reducer": ["sum"],
+					"show": false
+				},
+				"showHeader": true
+			},
+			"pluginVersion": "10.2.3",
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "subject",
+							"id": "3",
+							"settings": {
+								"min_doc_count": "1",
+								"order": "desc",
+								"orderBy": "_term",
+								"size": "10"
+							},
+							"type": "terms"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"format": "table",
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "severity:critical",
+					"queryType": "lucene",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "EVENTS - CRITICAL (SUBJECT)",
+			"type": "table"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "orange",
+								"value": null
+							}
+						]
+					}
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 4,
+				"x": 0,
+				"y": 7
+			},
+			"id": 3,
+			"options": {
+				"colorMode": "value",
+				"graphMode": "none",
+				"justifyMode": "auto",
+				"orientation": "auto",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"textMode": "auto",
+				"wideLayout": true
+			},
+			"pluginVersion": "10.2.3",
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"format": "table",
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "",
+					"queryType": "lucene",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "EVENTS",
+			"type": "stat"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "palette-classic"
+					},
+					"custom": {
+						"axisBorderShow": false,
+						"axisCenteredZero": false,
+						"axisColorMode": "text",
+						"axisLabel": "",
+						"axisPlacement": "auto",
+						"barAlignment": 0,
+						"drawStyle": "bars",
+						"fillOpacity": 0,
+						"gradientMode": "none",
+						"hideFrom": {
+							"legend": false,
+							"tooltip": false,
+							"viz": false
+						},
+						"insertNulls": false,
+						"lineInterpolation": "linear",
+						"lineWidth": 1,
+						"pointSize": 5,
+						"scaleDistribution": {
+							"type": "linear"
+						},
+						"showPoints": "auto",
+						"spanNulls": false,
+						"stacking": {
+							"group": "A",
+							"mode": "none"
+						},
+						"thresholdsStyle": {
+							"mode": "off"
+						}
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					}
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 14,
+				"w": 20,
+				"x": 4,
+				"y": 7
+			},
+			"id": 1,
+			"options": {
+				"legend": {
+					"calcs": [],
+					"displayMode": "table",
+					"placement": "right",
+					"showLegend": true
+				},
+				"tooltip": {
+					"mode": "single",
+					"sort": "none"
+				}
+			},
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "source",
+							"id": "3",
+							"settings": {
+								"min_doc_count": "0",
+								"order": "desc",
+								"orderBy": "_term",
+								"size": "10"
+							},
+							"type": "terms"
+						},
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "10m"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"format": "table",
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "",
+					"queryType": "lucene",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "EVENTS BY AGENT - HISTOGRAM",
+			"transformations": [
+				{
+					"id": "organize",
+					"options": {
+						"excludeByName": {},
+						"includeByName": {},
+						"indexByName": {},
+						"renameByName": {
+							"Count": "Agent"
+						}
+					}
+				}
+			],
+			"type": "timeseries"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "palette-classic"
+					},
+					"custom": {
+						"hideFrom": {
+							"legend": false,
+							"tooltip": false,
+							"viz": false
+						}
+					},
+					"mappings": []
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 4,
+				"x": 0,
+				"y": 14
+			},
+			"id": 4,
+			"options": {
+				"legend": {
+					"displayMode": "table",
+					"placement": "right",
+					"showLegend": true
+				},
+				"pieType": "donut",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"tooltip": {
+					"mode": "single",
+					"sort": "none"
+				}
+			},
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "platform",
+							"id": "3",
+							"settings": {
+								"min_doc_count": "0",
+								"order": "desc",
+								"orderBy": "_term",
+								"size": "10"
+							},
+							"type": "terms"
+						},
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"format": "table",
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "",
+					"queryType": "lucene",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "EVENTS BY PLATRFORM",
+			"transformations": [
+				{
+					"id": "organize",
+					"options": {}
+				}
+			],
+			"type": "piechart"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "palette-classic"
+					},
+					"custom": {
+						"hideFrom": {
+							"legend": false,
+							"tooltip": false,
+							"viz": false
+						}
+					},
+					"mappings": []
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "high"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "super-light-red",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "critical"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "red",
+									"mode": "fixed"
+								}
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 4,
+				"x": 0,
+				"y": 21
+			},
+			"id": 8,
+			"options": {
+				"legend": {
+					"displayMode": "table",
+					"placement": "right",
+					"showLegend": true
+				},
+				"pieType": "donut",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"tooltip": {
+					"mode": "single",
+					"sort": "none"
+				}
+			},
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "severity",
+							"id": "3",
+							"settings": {
+								"min_doc_count": "0",
+								"order": "desc",
+								"orderBy": "_term",
+								"size": "10"
+							},
+							"type": "terms"
+						},
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"format": "table",
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "",
+					"queryType": "lucene",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "EVENTS BY SEVERITY",
+			"transformations": [
+				{
+					"id": "organize",
+					"options": {}
+				}
+			],
+			"type": "piechart"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "palette-classic"
+					},
+					"custom": {
+						"axisBorderShow": false,
+						"axisCenteredZero": false,
+						"axisColorMode": "text",
+						"axisLabel": "",
+						"axisPlacement": "auto",
+						"barAlignment": 0,
+						"drawStyle": "bars",
+						"fillOpacity": 0,
+						"gradientMode": "none",
+						"hideFrom": {
+							"legend": false,
+							"tooltip": false,
+							"viz": false
+						},
+						"insertNulls": false,
+						"lineInterpolation": "linear",
+						"lineWidth": 1,
+						"pointSize": 5,
+						"scaleDistribution": {
+							"type": "linear"
+						},
+						"showPoints": "auto",
+						"spanNulls": false,
+						"stacking": {
+							"group": "A",
+							"mode": "none"
+						},
+						"thresholdsStyle": {
+							"mode": "off"
+						}
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					}
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "high"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "super-light-red",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "critical"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "red",
+									"mode": "fixed"
+								}
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 14,
+				"w": 20,
+				"x": 4,
+				"y": 21
+			},
+			"id": 2,
+			"options": {
+				"legend": {
+					"calcs": [],
+					"displayMode": "table",
+					"placement": "right",
+					"showLegend": true
+				},
+				"tooltip": {
+					"mode": "single",
+					"sort": "none"
+				}
+			},
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "severity",
+							"id": "3",
+							"settings": {
+								"min_doc_count": "0",
+								"order": "desc",
+								"orderBy": "_term",
+								"size": "10"
+							},
+							"type": "terms"
+						},
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "10m"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"format": "table",
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "",
+					"queryType": "lucene",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "EVENTS BY SEVERITY - HISTOGRAM",
+			"transformations": [
+				{
+					"id": "organize",
+					"options": {
+						"excludeByName": {},
+						"includeByName": {},
+						"indexByName": {},
+						"renameByName": {
+							"Count": "Agent"
+						}
+					}
+				}
+			],
+			"type": "timeseries"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "palette-classic"
+					},
+					"custom": {
+						"hideFrom": {
+							"legend": false,
+							"tooltip": false,
+							"viz": false
+						}
+					},
+					"mappings": []
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "high"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "super-light-red",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "critical"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "red",
+									"mode": "fixed"
+								}
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 4,
+				"x": 0,
+				"y": 28
+			},
+			"id": 9,
+			"options": {
+				"legend": {
+					"displayMode": "table",
+					"placement": "bottom",
+					"showLegend": true
+				},
+				"pieType": "donut",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"tooltip": {
+					"mode": "single",
+					"sort": "none"
+				}
+			},
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "indicator_types",
+							"id": "3",
+							"settings": {
+								"min_doc_count": "0",
+								"order": "desc",
+								"orderBy": "_term",
+								"size": "10"
+							},
+							"type": "terms"
+						},
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"format": "table",
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "",
+					"queryType": "lucene",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "EVENTS BY INDICATOR TYPES",
+			"transformations": [
+				{
+					"id": "organize",
+					"options": {}
+				}
+			],
+			"type": "piechart"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"custom": {
+						"align": "auto",
+						"cellOptions": {
+							"type": "auto"
+						},
+						"filterable": true,
+						"inspect": false
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green"
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					}
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "EVENT ID"
+						},
+						"properties": [
+							{
+								"id": "links",
+								"value": [
+									{
+										"targetBlank": true,
+										"title": "EVENT DETAILS",
+										"url": "https://grafana.company.local/explore?left=%7B%22datasource%22:%22HUNTRESS%22,%22queries%22:%5B%7B%22refId%22:%22A%22,%22query%22:%22_id:${__value.text}%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D,%22range%22:%7B%22from%22:%22now-6h%22,%22to%22:%22now%22%7D%7D"
+									}
+								]
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 15,
+				"w": 24,
+				"x": 0,
+				"y": 35
+			},
+			"id": 10,
+			"options": {
+				"cellHeight": "sm",
+				"footer": {
+					"countRows": false,
+					"enablePagination": true,
+					"fields": "",
+					"reducer": ["sum"],
+					"show": false
+				},
+				"showHeader": true
+			},
+			"pluginVersion": "10.2.3",
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"format": "table",
+					"metrics": [
+						{
+							"id": "1",
+							"settings": {
+								"order": "desc",
+								"size": "500",
+								"useTimeRange": true
+							},
+							"type": "raw_data"
+						}
+					],
+					"query": "",
+					"queryType": "lucene",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "EVENTS",
+			"transformations": [
+				{
+					"id": "filterFieldsByName",
+					"options": {
+						"include": {
+							"names": [
+								"timestamp",
+								"_id",
+								"body",
+								"footholds",
+								"indicator_types",
+								"platform",
+								"severity",
+								"source",
+								"status",
+								"subject",
+								"summary",
+								"agent_id"
+							]
+						}
+					}
+				},
+				{
+					"id": "organize",
+					"options": {
+						"excludeByName": {},
+						"includeByName": {},
+						"indexByName": {
+							"_id": 1,
+							"agent_id": 3,
+							"body": 8,
+							"footholds": 9,
+							"indicator_types": 5,
+							"platform": 4,
+							"severity": 10,
+							"source": 2,
+							"status": 11,
+							"subject": 6,
+							"summary": 7,
+							"timestamp": 0
+						},
+						"renameByName": {
+							"_id": "EVENT ID",
+							"agent_id": "AGENT ID",
+							"body": "BODY",
+							"footholds": "FOOTHOLDS",
+							"indicator_types": "INDICATOR TYPES",
+							"platform": "PLATFORM",
+							"severity": "SEVERITY",
+							"source": "SOURCE",
+							"status": "STATUS",
+							"subject": "SUBJECT",
+							"summary": "SUMMARY",
+							"timestamp": "DATE/TIME"
+						}
+					}
+				}
+			],
+			"transparent": true,
+			"type": "table"
+		}
+	],
+	"refresh": "",
+	"schemaVersion": 39,
+	"tags": [],
+	"templating": {
+		"list": []
+	},
+	"time": {
+		"from": "now-24h",
+		"to": "now"
+	},
+	"timepicker": {},
+	"timezone": "",
+	"title": "HUNTRESS - _SUMMARY",
+	"version": 4,
+	"weekStart": ""
+}

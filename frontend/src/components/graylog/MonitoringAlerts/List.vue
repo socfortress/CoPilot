@@ -23,6 +23,7 @@
 						</div>
 					</div>
 				</n-popover>
+				<CustomAlertButton />
 			</div>
 			<n-pagination
 				v-model:page="currentPage"
@@ -68,6 +69,7 @@ import { ref, onBeforeMount, computed } from "vue"
 import { useMessage, NSpin, NPopover, NButton, NEmpty, NPagination } from "naive-ui"
 import Api from "@/api"
 import MonitoringAlert from "./Item.vue"
+import CustomAlertButton from "./CustomAlertButton.vue"
 import type { AvailableMonitoringAlert } from "@/types/monitoringAlerts"
 import Icon from "@/components/common/Icon.vue"
 import type { EventDefinition } from "@/types/graylog/event-definition"

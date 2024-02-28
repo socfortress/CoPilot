@@ -7,6 +7,26 @@ export interface ProvisionsMonitoringAlertParams {
 	executeEvery: number
 }
 
+export enum CustomProvisionPriority {
+	"LOW" = 1,
+	"MEDIUM" = 2,
+	"HIGH" = 3
+}
+
+export interface CustomProvisionPayload {
+	alert_name: string
+	alert_description: string
+	alert_priority: CustomProvisionPriority
+	search_query: string
+	streams: { [key: string]: any }
+	custom_fields: {
+		name: string
+		value: string
+	}[]
+	search_within_ms: number
+	execute_every_ms: number
+}
+
 export default {
 	getAvailableMonitoringAlerts() {
 		return HttpClient.get<FlaskBaseResponse & { available_monitoring_alerts: AvailableMonitoringAlert[] }>(
@@ -19,5 +39,8 @@ export default {
 			execute_every: params.executeEvery,
 			alert_name: alertName
 		})
+	},
+	customProvision(payload: CustomProvisionPayload) {
+		return HttpClient.post<FlaskBaseResponse>(`/monitoring_alert/provision/custom`, payload)
 	}
 }

@@ -37,6 +37,7 @@ from app.routers import dnstwist
 from app.routers import grafana
 from app.routers import graylog
 from app.routers import healthcheck
+from app.routers import huntress
 from app.routers import influxdb
 from app.routers import integrations
 from app.routers import logs
@@ -121,6 +122,7 @@ api_router.include_router(monitoring_alert.router)
 api_router.include_router(sap_siem.router)
 api_router.include_router(stack_provisioning.router)
 api_router.include_router(active_response.router)
+api_router.include_router(huntress.router)
 
 # Include the APIRouter in the FastAPI app
 app.include_router(api_router)

@@ -254,6 +254,13 @@ function getPayload(meta: CustomerMetaExt): CustomerMeta {
 }
 
 function reset() {
+	if (!loading.value) {
+		resetForm()
+		formRef.value?.restoreValidation()
+	}
+}
+
+function resetForm() {
 	form.value = getClearForm()
 }
 
@@ -267,7 +274,7 @@ function submit() {
 			if (res.data.success) {
 				emit("submitted", res.data.customer_meta)
 				if (resetOnSubmit.value) {
-					reset()
+					resetForm()
 				}
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")

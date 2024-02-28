@@ -7,6 +7,7 @@ from app.db.db_session import sync_engine
 from app.schedulers.models.scheduler import CreateSchedulerRequest
 from app.schedulers.models.scheduler import JobMetadata
 from app.schedulers.services.agent_sync import agent_sync
+from app.schedulers.services.invoke_huntress import invoke_huntress_integration_collect
 from app.schedulers.services.invoke_mimecast import invoke_mimecast_integration
 from app.schedulers.services.invoke_mimecast import invoke_mimecast_integration_ttp
 from app.schedulers.services.invoke_sap_siem import invoke_sap_siem_integration_collect
@@ -103,6 +104,7 @@ def get_function_by_name(function_name: str):
         "invoke_sap_siem_integration_collection": invoke_sap_siem_integration_collect,
         "invoke_sap_siem_integration_suspicious_logins_analysis": invoke_sap_siem_integration_suspicious_logins_analysis,
         "invoke_sap_siem_integration_multiple_logins_same_ip_analysis": invoke_sap_siem_integration_multiple_logins_same_ip_analysis,
+        "invoke_huntress_integration_collection": invoke_huntress_integration_collect,
         # Add other function mappings here
     }
     return function_map.get(
