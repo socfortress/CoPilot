@@ -15,6 +15,7 @@ import flow from "./flow"
 import integrations from "./integrations"
 import monitoringAlerts from "./monitoringAlerts"
 import activeResponse from "./activeResponse"
+import stackProvisioning from "./stackProvisioning"
 
 export default {
 	agents,
@@ -33,5 +34,6 @@ export default {
 	flow,
 	integrations,
 	monitoringAlerts,
-	activeResponse
+	activeResponse,
+	stackProvisioning
 }
