@@ -8,8 +8,8 @@ export default {
 			`/stack_provisioning/graylog/available/content_packs`
 		)
 	},
-	deploy(contentPackName: string) {
-		return HttpClient.post<FlaskBaseResponse>(`/stack_provisioning/graylog/available/content_packs`, {
+	provisionContentPack(contentPackName: string) {
+		return HttpClient.post<FlaskBaseResponse>(`/stack_provisioning/graylog/provision/content_pack`, {
 			content_pack_name: contentPackName
 		})
 	}
