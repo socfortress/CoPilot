@@ -41,34 +41,56 @@
 					</n-form-item>
 				</div>
 				<div class="custom-fields-editor">
-					<n-form-item label="Custom fields" required path="custom_fields">
-						<div class="custom-fields-list flex flex-col gap-4">
-							<n-card size="small" v-for="cf of form.custom_fields" :key="cf.key">
+					<n-form-item label="Custom fields" path="custom_fields">
+						<div class="custom-fields-list flex flex-col gap-1">
+							<n-card size="small" v-for="(cf, index) of form.custom_fields" :key="cf.key">
 								<div class="custom-field-box flex gap-2">
-									<n-form-item label="Name" class="grow" size="small">
+									<n-form-item
+										label="Name"
+										class="grow"
+										size="small"
+										:path="`custom_fields[${index}].name`"
+										:rule="{
+											required: true,
+											message: `Field Name required`,
+											trigger: ['input', 'blur']
+										}"
+									>
 										<n-input
 											v-model:value.trim="cf.name"
+											@update:value="validate()"
 											placeholder="Custom field Name"
 											clearable
 										/>
 									</n-form-item>
-									<n-form-item label="Value" class="grow" size="small">
+									<n-form-item
+										label="Value"
+										class="grow"
+										size="small"
+										:path="`custom_fields[${index}].value`"
+										:rule="{
+											required: true,
+											message: `Field Value required`,
+											trigger: ['input', 'blur']
+										}"
+									>
 										<n-input
 											v-model:value.trim="cf.value"
+											@update:value="validate()"
 											placeholder="Custom field Value"
 											clearable
 										/>
 									</n-form-item>
 									<n-form-item size="small">
-										<n-button type="error" secondary>
+										<n-button type="error" secondary @click="removeCustomFiled(cf.key)">
 											<template #icon>
-												<Icon :name="RemoveIcon"></Icon>
+												<Icon :name="RemoveIcon" :size="16"></Icon>
 											</template>
 										</n-button>
 									</n-form-item>
 								</div>
 							</n-card>
-							<div>
+							<div class="mt-3">
 								<n-button @click="addCustomFiled()">
 									<template #icon>
 										<Icon :name="AddIcon"></Icon>
@@ -108,7 +130,7 @@
 						<n-button
 							type="primary"
 							:disabled="!isValid"
-							@click="validate()"
+							@click="validate(() => submit())"
 							:loading="submittingCustomAlert"
 						>
 							Submit
@@ -136,7 +158,8 @@ import {
 	type FormValidationError,
 	type FormInst,
 	type FormRules,
-	type FormItemRule
+	type FormItemRule,
+	type MessageReactive
 } from "naive-ui"
 import _trim from "lodash/trim"
 import _get from "lodash/get"
@@ -214,10 +237,60 @@ const rules: FormRules = {
 		// message: "Please input Execute every",
 		validator: validatorNumber("Execute every"),
 		trigger: ["input", "blur"]
+	},
+	custom_fields: {
+		required: true,
+		validator(rule: FormItemRule, value: string) {
+			if (!areAllCustomerFieldsFilled.value) {
+				return new Error(`Please fill all customer fields`)
+			}
+
+			if (!areAllCustomerFieldsUniques.value) {
+				return new Error(`There are duplicated fields`)
+			}
+
+			if (!value.length || !isCustomerCodePresent.value) {
+				return new Error(`At least one custom field with name CUSTOMER_CODE is required`)
+			}
+			return true
+		},
+		trigger: ["input", "blur"]
 	}
 }
 
+const areAllCustomerFieldsFilled = computed(() => {
+	const fieldsFilled = form.value.custom_fields.filter(o => !!o.name && !!o.value)
+
+	return fieldsFilled.length === form.value.custom_fields.length
+})
+
+const areAllCustomerFieldsUniques = computed(() => {
+	const fieldsFilled = form.value.custom_fields.filter(o => !!o.name).map(o => o.name)
+
+	const uniques: string[] = fieldsFilled.filter((value, index, self) => self.indexOf(value) === index)
+
+	return uniques.length === form.value.custom_fields.length
+})
+
+const isCustomerCodePresent = computed(() => {
+	const field = form.value.custom_fields.filter(o => o.name === "CUSTOMER_CODE" && !!o.value)
+
+	return !!field.length
+})
+
 const isValid = computed(() => {
+	if (!areAllCustomerFieldsFilled.value) {
+		return false
+	}
+
+	if (!isCustomerCodePresent.value) {
+		return false
+	}
+
+	if (!areAllCustomerFieldsUniques.value) {
+		return false
+	}
+
 	let valid = true
 
 	for (const key in rules) {
@@ -244,14 +317,20 @@ function validatorNumber(fieldName: string, defaultMessage?: string) {
 	}
 }
 
-function validate() {
+let validationMessage: MessageReactive | null = null
+
+function validate(cb?: () => void) {
 	if (!formRef.value) return
 
 	formRef.value.validate((errors?: Array<FormValidationError>) => {
 		if (!errors) {
-			submit()
+			validationMessage?.destroy()
+			validationMessage = null
+			if (cb) cb()
 		} else {
-			message.warning("You must fill in the required fields correctly.")
+			if (!validationMessage) {
+				validationMessage = message.warning("You must fill in the required fields correctly.")
+			}
 			return false
 		}
 	})
@@ -263,6 +342,10 @@ function addCustomFiled() {
 		value: "",
 		key: new Date().getTime()
 	})
+}
+
+function removeCustomFiled(key: number) {
+	form.value.custom_fields = form.value.custom_fields.filter(o => o.key !== key)
 }
 
 function getClearForm(): CustomProvisionForm {
@@ -279,9 +362,13 @@ function getClearForm(): CustomProvisionForm {
 
 function reset() {
 	if (!loading.value) {
-		form.value = getClearForm()
+		resetForm()
 		formRef.value?.restoreValidation()
 	}
+}
+
+function resetForm() {
+	form.value = getClearForm()
 }
 
 function submit() {
@@ -302,8 +389,10 @@ function submit() {
 		.customProvision(payload)
 		.then(res => {
 			if (res.data.success) {
-				// TODO: check default message
-				message.success(res.data?.message || "Customer Alert created successfully")
+				message.success(
+					res.data?.message || `Monitoring alert "${payload.alert_name}" provisioned successfully`
+				)
+				resetForm()
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
@@ -334,6 +423,10 @@ onMounted(() => {
 
 		.custom-fields-list {
 			width: 100%;
+
+			.n-card {
+				background-color: var(--bg-secondary-color);
+			}
 
 			.custom-field-box {
 				width: 100%;

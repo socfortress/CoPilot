@@ -149,9 +149,13 @@ function getClearForm(settings?: Omit<CustomerProvisioningDefaultSettings, "id">
 
 function reset() {
 	if (!loading.value) {
-		form.value = getClearForm()
+		resetForm()
 		formRef.value?.restoreValidation()
 	}
+}
+
+function resetForm() {
+	form.value = getClearForm()
 }
 
 function submit() {

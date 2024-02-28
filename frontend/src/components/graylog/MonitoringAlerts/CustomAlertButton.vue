@@ -1,9 +1,9 @@
 <template>
 	<n-button size="small" type="primary" secondary @click="showForm = true" :loading="loading">
-		<template #icon>
-			<Icon :name="DangerIcon"></Icon>
-		</template>
-		Custom Alert
+		<div class="flex items-center gap-2">
+			<Icon :name="DangerIcon" :size="18"></Icon>
+			<span class="hidden xs:block">Custom Alert</span>
+		</div>
 	</n-button>
 
 	<n-modal
