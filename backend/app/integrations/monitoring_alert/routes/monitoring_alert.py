@@ -170,11 +170,11 @@ async def create_custom_monitoring_alert(
     Create a new monitoring alert. This receives the alert from Graylog and stores it in the database.
 
     Args:
-        monitoring_alert (MonitoringAlertsRequestModel): The monitoring alert details.
+        monitoring_alert (GraylogPostRequest): The monitoring alert details.
         session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
 
     Returns:
-        MonitoringAlertsRequestModel: The created monitoring alert.
+        GraylogPostRequest: The created monitoring alert.
     """
     logger.info(f"Creating monitoring alert: {monitoring_alert}")
     logger.info(f"Found index name {monitoring_alert.event.alert_index}")
