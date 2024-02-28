@@ -184,7 +184,7 @@ function provisionsMonitoringAlert() {
 			.provisionsMonitoringAlert(alert.name, params)
 			.then(res => {
 				if (res.data.success) {
-					message.success("Alert Provisioned Successfully")
+					message.success(res.data?.message || `Monitoring alert ${alert.name} provisioned successfully`)
 					emit("provisioned")
 				} else {
 					message.warning(res.data?.message || "An error occurred. Please try again later.")

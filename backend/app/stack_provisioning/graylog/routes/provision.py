@@ -124,7 +124,7 @@ async def get_available_content_packs_route() -> AvailableContentPacksResponse:
 @stack_provisioning_graylog_router.post(
     "/graylog/provision/content_pack",
     response_model=ProvisionGraylogResponse,
-    description="Provision the Wazuh Content Pack in the Graylog instance",
+    description="Provision the Content Pack in the Graylog instance",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def provision_content_pack_route(

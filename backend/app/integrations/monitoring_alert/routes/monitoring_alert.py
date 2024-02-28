@@ -121,16 +121,16 @@ async def create_monitoring_alert(
 
     customer_meta = await session.execute(
         select(CustomersMeta).where(
-            CustomersMeta.customer_code == monitoring_alert.event.fields.CUSTOMER_CODE,
+            CustomersMeta.customer_code == monitoring_alert.event.fields["CUSTOMER_CODE"],
         ),
     )
     customer_meta = customer_meta.scalars().first()
 
     if not customer_meta:
-        logger.info(f"Getting customer meta for customer_meta_office365_organization_id: {monitoring_alert.event.fields.CUSTOMER_CODE}")
+        logger.info(f"Getting customer meta for customer_meta_office365_organization_id: {monitoring_alert.event.fields['CUSTOMER_CODE']}")
         customer_meta = await session.execute(
             select(CustomersMeta).where(
-                CustomersMeta.customer_meta_office365_organization_id == monitoring_alert.event.fields.CUSTOMER_CODE,
+                CustomersMeta.customer_meta_office365_organization_id == monitoring_alert.event.fields["CUSTOMER_CODE"],
             ),
         )
         customer_meta = customer_meta.scalars().first()
@@ -140,10 +140,10 @@ async def create_monitoring_alert(
 
     try:
         monitoring_alert = MonitoringAlerts(
-            alert_id=monitoring_alert.event.fields.ALERT_ID,
+            alert_id=monitoring_alert.event.fields["ALERT_ID"],
             alert_index=monitoring_alert.event.alert_index,
-            customer_code=monitoring_alert.event.fields.CUSTOMER_CODE,
-            alert_source=monitoring_alert.event.fields.ALERT_SOURCE,
+            customer_code=monitoring_alert.event.fields["CUSTOMER_CODE"],
+            alert_source=monitoring_alert.event.fields["ALERT_SOURCE"],
         )
         session.add(monitoring_alert)
         await session.commit()
