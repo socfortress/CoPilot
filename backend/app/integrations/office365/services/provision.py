@@ -282,8 +282,8 @@ async def build_index_set_config(
         TimeBasedIndexSet: The configured time-based index set.
     """
     return TimeBasedIndexSet(
-        title=f"Office365 - {(await get_customer(customer_code, session)).customer.customer_name}",
-        description=f"Office365 - {customer_code}",
+        title=f"{(await get_customer(customer_code, session)).customer.customer_name} - Office365",
+        description=f"{customer_code} - Office365",
         index_prefix=f"office365_{customer_code}",
         rotation_strategy_class="org.graylog2.indexer.rotation.strategies.TimeBasedRotationStrategy",
         rotation_strategy={
@@ -382,8 +382,8 @@ async def build_event_stream_config(
         Office365EventStream: The configured Wazuh event stream.
     """
     return Office365EventStream(
-        title=f"Office365 EVENTS - {(await get_customer(customer_code, session)).customer.customer_name}",
-        description=f"Office365 EVENTS - {(await get_customer(customer_code, session)).customer.customer_name}",
+        title=f"{(await get_customer(customer_code, session)).customer.customer_name} - Office365",
+        description=f"{(await get_customer(customer_code, session)).customer.customer_name} - Office365",
         index_set_id=index_set_id,
         rules=[
             {
@@ -798,75 +798,6 @@ async def provision_office365(
         ),
     )
 
-    # Create alert in Praeco
-    await provision_alert_in_praeco(
-        PraecoAlertConfig(
-            alert=["post"],
-            filter=[
-                {
-                    "query": {
-                        "query_string": {
-                            "query": "syslog_level:ALERT AND data_office365_Subscription:Audit.Exchange",
-                        },
-                    },
-                },
-            ],
-            generate_kibana_discover_url=False,
-            http_post_ignore_ssl_errors=False,
-            http_post_timeout=60,
-            http_post_url=[
-                f"http://{os.getenv('SERVER_IP')}:5000/api/v1/alerts/office365/exchange",
-            ],
-            import_config="BaseRule.config",
-            index="office365_*",
-            is_enabled=True,
-            kibana_discover_from_timedelta={"minutes": 10},
-            kibana_discover_to_timedelta={"minutes": 10},
-            match_enhancements=[],
-            name="Office365 - Exchange",
-            realert={"minutes": 0},
-            timestamp_field="timestamp_utc",
-            timestamp_type="iso",
-            type="any",
-            use_strftime_index=False,
-        ),
-        session=session,
-    )
-
-    await provision_alert_in_praeco(
-        PraecoAlertConfig(
-            alert=["post"],
-            filter=[
-                {
-                    "query": {
-                        "query_string": {
-                            "query": "syslog_level:ALERT AND data_office365_UserId:ThreatIntel",
-                        },
-                    },
-                },
-            ],
-            generate_kibana_discover_url=False,
-            http_post_ignore_ssl_errors=False,
-            http_post_timeout=60,
-            http_post_url=[
-                f"http://{os.getenv('SERVER_IP')}:5000/api/v1/alerts/office365/threat_intel",
-            ],
-            import_config="BaseRule.config",
-            index="office365_*",
-            is_enabled=True,
-            kibana_discover_from_timedelta={"minutes": 10},
-            kibana_discover_to_timedelta={"minutes": 10},
-            match_enhancements=[],
-            name="Office365 - Threat Intel",
-            realert={"minutes": 0},
-            timestamp_field="timestamp_utc",
-            timestamp_type="iso",
-            type="any",
-            use_strftime_index=False,
-        ),
-        session=session,
-    )
-
     await update_customer_integration_table(customer_code, session)
 
     return ProvisionOffice365Response(
@@ -874,45 +805,6 @@ async def provision_office365(
         message=f"Successfully provisioned Office365 integration for customer {customer_code}.",
     )
 
-
-######### ! Provision in Praeco ! ############
-async def provision_alert_in_praeco(
-    request: PraecoAlertConfig,
-    session: AsyncSession,
-) -> PraecoProvisionAlertResponse:
-    """
-    Provisions the given alert in Praeco. https://github.com/socfortress/Customer-Provisioning-Alert
-
-    Args:
-        request (PraecoAlertConfig): The request object containing the necessary information for provisioning.
-        session (AsyncSession): The async session object for making HTTP requests.
-
-    Returns:
-        PraecoProvisionAlertResponse: The response object indicating the success or failure of the provisioning operation.
-    """
-    logger.info(f"Provisioning to alert creation - Praeco {request}")
-    api_endpoint = await get_connector_attribute(
-        connector_id=15,
-        column_name="connector_url",
-        session=session,
-    )
-    # Send the POST request to Praeco
-    response = requests.post(
-        url=f"{api_endpoint}/provision_alert",
-        json=request.dict(by_alias=True),
-    )
-    logger.info(f"Response: {response.json()}")
-    # Check the response status code
-    if response.status_code != 200:
-        return PraecoProvisionAlertResponse(
-            success=False,
-            message=f"Failed to provision to Alert Creation App: {response.text}",
-        )
-    # Return the response
-    return PraecoProvisionAlertResponse(
-        success=True,
-        message="Successfully provisioned to Alert Creation App.",
-    )
 
 
 ######### ! Update Database ! ############
