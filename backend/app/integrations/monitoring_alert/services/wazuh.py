@@ -399,7 +399,7 @@ async def create_alert_details(alert_details: WazuhAlertModel) -> CreateAlertReq
         agent_id=alert_details._source["agent_id"],
         agent_labels_customer=alert_details._source["agent_labels_customer"],
         timestamp=alert_details._source["timestamp"],
-        timestamp_utc=alert_details._source["timestamp_utc"],
+        timestamp_utc=alert_details._source.get("timestamp_utc", alert_details._source["timestamp"]),
         process_id=alert_details._source.get("process_id", "No process ID found"),
     )
 
