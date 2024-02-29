@@ -2,7 +2,7 @@ import type { Dashboard, Org, Panel, PanelLink } from "@/types/reporting"
 import { HttpClient } from "./httpClient"
 import type { FlaskBaseResponse } from "@/types/flask.d"
 
-export type PanelsLinksTimeRange = "minutes" | "hours" | "days"
+export type PanelsLinksTimeUnit = "minutes" | "hours" | "days"
 
 export interface PanelsLinksPayload {
 	org_id: string | number
@@ -11,7 +11,7 @@ export interface PanelsLinksPayload {
 	panel_ids: number[]
 	time_range: {
 		value: number
-		unit: PanelsLinksTimeRange
+		unit: PanelsLinksTimeUnit
 	}
 }
 
