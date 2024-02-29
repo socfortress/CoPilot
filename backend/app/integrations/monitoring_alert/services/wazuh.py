@@ -421,6 +421,7 @@ async def create_and_update_alert_in_iris(
     logger.info("Alert does not exist in IRIS. Creating alert.")
     alert_details = await create_alert_details(alert_details)
     agent_details = await get_agent_by_hostname(alert_details.agent_name, session)
+    logger.info(f"Agent details: {agent_details}")
     ioc_payload = await build_ioc_payload(alert_details)
     iris_alert_payload = await build_alert_payload(
         alert_details=alert_details,
