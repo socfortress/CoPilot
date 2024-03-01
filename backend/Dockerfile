@@ -102,5 +102,8 @@ ENV GELF_INPUT_PORT=gelf_port
 
 ENV ALERT_CREATION_PROVISIONING_URL=http://1.1.1.1
 
+ARG CRYPTOLENS_AUTH
+ENV CRYPTOLENS_AUTH=$CRYPTOLENS_AUTH
+
 # Run your application
 CMD ["sh", "-c", "ls -la && /opt/venv/bin/python copilot.py"]
