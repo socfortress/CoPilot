@@ -236,6 +236,15 @@ async def update_job(
             extra_data=extra_data,
         )
         logger.info(f"Job {job_id} updated successfully")
+        # Update the job metadata
+        await manage_job_metadata(
+            session,
+            job_id,
+            "update",
+            time_interval=time_interval,
+            extra_data=extra_data,
+        )
+
         return {"success": True, "message": "Job updated successfully"}
     logger.error(f"Job {job_id} not found for updating")
     return {"success": False, "message": "Job not found"}

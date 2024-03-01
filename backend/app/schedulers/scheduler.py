@@ -50,7 +50,7 @@ def initialize_job_metadata():
         # Implement logic to initialize or update job metadata.
         # Example: Check and add metadata for each known job
         known_jobs = [
-            {"job_id": "agent_sync", "time_interval": 60, "function": agent_sync},
+            {"job_id": "agent_sync", "time_interval": 15, "function": agent_sync},
             # {"job_id": "invoke_mimecast_integration", "time_interval": 5, "function": invoke_mimecast_integration}
         ]
         for job in known_jobs:
