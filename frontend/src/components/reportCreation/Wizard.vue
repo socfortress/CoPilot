@@ -58,17 +58,20 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeMount, ref } from "vue"
+import { computed, onBeforeMount, ref, watchEffect, watch } from "vue"
 import { NSpin, NForm, NFormItem, NInputGroup, NInputNumber, NButton, NSelect, useMessage } from "naive-ui"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import type { Dashboard, Org, Panel, PanelLink } from "@/types/reporting"
 import type { PanelsLinksPayload, PanelsLinksTimeUnit } from "@/api/reporting"
-import { watch } from "vue"
 import { useStorage } from "@vueuse/core"
 
+const emit = defineEmits<{
+	(e: "reset"): void
+	(e: "generated", value: PanelLink[]): void
+}>()
+
 const GenerateLinksIcon = "carbon:report-data"
-// const PrintIcon = "carbon:report-data"
 
 const message = useMessage()
 const orgsList = ref<Org[]>([])
@@ -104,6 +107,10 @@ const timeUnitOptions: { label: string; value: PanelsLinksTimeUnit }[] = [
 const canSelectDashboard = computed(() => !!selectedOrgId.value)
 const canSelectPanels = computed(() => canSelectDashboard.value && !!selectedDashboardUID.value)
 const isValid = computed(() => canSelectPanels.value && selectedPanels.value.length)
+
+watch([selectedOrgId, selectedDashboardUID, selectedPanels, timeUnit, timeValue], () => {
+	emit("reset")
+})
 
 watch(selectedOrgId, val => {
 	dashboardsList.value = []
@@ -215,6 +222,7 @@ function getLinks() {
 			.then(res => {
 				if (res.data.success) {
 					linksList.value = res.data?.links || []
+					emit("generated", linksList.value)
 				} else {
 					message.warning(res.data?.message || "An error occurred. Please try again later.")
 				}
