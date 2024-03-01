@@ -67,6 +67,7 @@ jsonschema==4.17.3
 kiwisolver==1.4.5
 kombu==5.3.2
 libmagic==1.0
+licensing==0.43
 loguru==0.7.2
 lxml==4.9.3
 maec==4.1.0.17

@@ -54,6 +54,7 @@ from app.routers import threat_intel
 from app.routers import velociraptor
 from app.routers import wazuh_indexer
 from app.routers import wazuh_manager
+from app.routers import license
 from app.schedulers.scheduler import init_scheduler
 
 auth_handler = AuthHandler()
@@ -123,6 +124,7 @@ api_router.include_router(sap_siem.router)
 api_router.include_router(stack_provisioning.router)
 api_router.include_router(active_response.router)
 api_router.include_router(huntress.router)
+api_router.include_router(license.router)
 
 # Include the APIRouter in the FastAPI app
 app.include_router(api_router)
