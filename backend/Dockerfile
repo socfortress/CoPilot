@@ -41,6 +41,9 @@ WORKDIR /opt/copilot/backend
 COPY requirements.txt ./
 RUN /opt/venv/bin/pip install --no-cache-dir -r requirements.txt
 
+# Install required browsers for playwright
+RUN playwright install
+
 # Copy your application into the Docker image
 WORKDIR /opt/copilot/backend
 COPY . .

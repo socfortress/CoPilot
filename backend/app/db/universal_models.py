@@ -154,3 +154,11 @@ class LogEntry(SQLModel, table=True):
     status_code: int
     message: str
     additional_info: str = Field(default=None, nullable=True)
+
+class License(SQLModel, table=True):
+    __tablename__ = "license"
+    id: Optional[int] = Field(primary_key=True)
+    license_key: str = Field(max_length=1024)
+    customer_name: str = Field(max_length=1024)
+    customer_email: str = Field(max_length=1024)
+    company_name: str = Field(max_length=1024)
