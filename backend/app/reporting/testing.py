@@ -39,14 +39,13 @@ async def generate_report(
 ):
     logger.info("Generating report")
     async with async_playwright() as p:
-        for browser_type in [p.chromium]:
-            browser = await browser_type.launch(headless=False)
-            context = await browser.new_context(ignore_https_errors=True)
-            page = await context.new_page()
-            await login_to_page(page, session)
-            if not await check_login_success(page):
-                await browser.close()
-                return
-            await capture_screenshots(page, request.urls)
+        browser = await p.chromium.launch(headless=False)
+        context = await browser.new_context(ignore_https_errors=True)
+        page = await context.new_page()
+        await login_to_page(page, session)
+        if not await check_login_success(page):
             await browser.close()
+            return
+        await capture_screenshots(page, request.urls)
+        await browser.close()
 
