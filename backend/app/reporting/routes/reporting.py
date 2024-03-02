@@ -12,6 +12,7 @@ import multiprocessing
 from app.db.db_session import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.reporting.testing import generate_report
+from app.reporting.schema.reporting import GenerateReportRequest
 
 report_generation_router = APIRouter()
 
@@ -20,8 +21,11 @@ report_generation_router = APIRouter()
     "/generate-report",
     description="Create a new report.",
 )
-async def create_report(session: AsyncSession = Depends(get_db)):
+async def create_report(
+    request: GenerateReportRequest,
+    session: AsyncSession = Depends(get_db)
+):
     logger.info("Generating report")
-    await generate_report()
+    await generate_report(request, session)
     return {"message": "Report generation started."}
 
