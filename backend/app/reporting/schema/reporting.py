@@ -1,4 +1,5 @@
 from pydantic import BaseModel, Field
+from typing import List
 
 
 class GenerateReportRequest(BaseModel):
@@ -11,3 +12,12 @@ class GenerateReportRequest(BaseModel):
         ],
         description="List of URLs to generate screenshots for",
     )
+
+class Base64Image(BaseModel):
+    base64_image: str
+    url: str
+
+class GenerateReportResponse(BaseModel):
+    base64_images: List[Base64Image]
+    message: str
+    success: bool

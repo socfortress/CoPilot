@@ -1,8 +1,9 @@
 import asyncio
 from playwright.async_api import async_playwright
 from loguru import logger
+import base64
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.reporting.schema.reporting import GenerateReportRequest
+from app.reporting.schema.reporting import GenerateReportRequest, GenerateReportResponse, Base64Image
 from app.utils import get_connector_attribute
 
 
@@ -28,10 +29,14 @@ async def check_login_success(page):
         return False
 
 async def capture_screenshots(page, urls):
+    base64_images = []
     for url in urls:
         await page.goto(url)
         await page.wait_for_load_state(state='networkidle')
-        await page.screenshot(path=f'example-chromium-{urls.index(url)}.png')
+        screenshot = await page.screenshot(type='png')
+        base64_image = base64.b64encode(screenshot).decode('utf-8')
+        base64_images.append({"url": url, "base64_image": base64_image})
+    return base64_images
 
 async def generate_report(
     request: GenerateReportRequest,
@@ -46,6 +51,10 @@ async def generate_report(
         if not await check_login_success(page):
             await browser.close()
             return
-        await capture_screenshots(page, request.urls)
+        base64_images = await capture_screenshots(page, request.urls)
         await browser.close()
-
+        return GenerateReportResponse(
+            base64_images=[Base64Image(url=img['url'], base64_image=img['base64_image']) for img in base64_images],
+            message="Report generated successfully",
+            success=True
+        )
