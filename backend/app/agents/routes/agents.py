@@ -239,7 +239,7 @@ async def sync_all_agents(
     logger.info("Syncing agents from Wazuh Manager")
     #backgroud_tasks.add_task(sync_agents, session)
     loop = asyncio.get_event_loop()
-    loop.create_task(sync_agents(session))
+    loop.create_task(sync_agents(session=session))
     return SyncedAgentsResponse(
         success=True,
         message="Agents synced started successfully",

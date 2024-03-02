@@ -4,6 +4,7 @@ from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
+
 import app.agents.velociraptor.services.agents as velociraptor_services
 import app.agents.wazuh.services.agents as wazuh_services
 from app.agents.schema.agents import SyncedAgent
