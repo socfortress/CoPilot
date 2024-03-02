@@ -54,7 +54,6 @@ from app.routers import threat_intel
 from app.routers import velociraptor
 from app.routers import wazuh_indexer
 from app.routers import wazuh_manager
-from app.routers import reporting
 from app.routers import license
 from app.schedulers.scheduler import init_scheduler
 
@@ -126,7 +125,6 @@ api_router.include_router(stack_provisioning.router)
 api_router.include_router(active_response.router)
 api_router.include_router(huntress.router)
 api_router.include_router(license.router)
-api_router.include_router(reporting.router)
 
 # Include the APIRouter in the FastAPI app
 app.include_router(api_router)

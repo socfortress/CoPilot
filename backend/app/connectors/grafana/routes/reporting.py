@@ -17,12 +17,12 @@ from app.connectors.grafana.schema.reporting import GrafanaDashboardResponse
 from app.connectors.grafana.schema.reporting import GrafanaGenerateIframeLinksRequest
 from app.connectors.grafana.schema.reporting import GrafanaGenerateIframeLinksResponse
 from app.connectors.grafana.schema.reporting import GrafanaLinksList
-from app.connectors.grafana.schema.reporting import GrafanaOrganizationsResponse
+from app.connectors.grafana.schema.reporting import GrafanaOrganizationsResponse, GenerateReportRequest, GenerateReportResponse
 from app.connectors.grafana.schema.reporting import Panel
 from app.connectors.grafana.schema.reporting import TimeRange
 from app.connectors.grafana.services.reporting import get_dashboard_details
 from app.connectors.grafana.services.reporting import get_dashboards
-from app.connectors.grafana.services.reporting import get_orgs
+from app.connectors.grafana.services.reporting import get_orgs, generate_report
 from app.connectors.models import Connectors
 from app.db.db_session import get_db
 
@@ -206,3 +206,15 @@ async def generate_grafana_iframe_links(
         links=panel_urls,
         success=True,
     )
+
+
+@grafana_reporting_router.post(
+    "/generate-report",
+    description="Create a new report.",
+)
+async def create_report(
+    request: GenerateReportRequest,
+    session: AsyncSession = Depends(get_db)
+) -> GenerateReportResponse:
+    logger.info("Generating report")
+    return await generate_report(request, session)
