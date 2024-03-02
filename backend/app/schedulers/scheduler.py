@@ -85,6 +85,7 @@ def schedule_enabled_jobs(scheduler):
                     id=job_metadata.job_id,
                     replace_existing=True,
                 )
+                logger.info(f"Scheduled job: {job_metadata.job_id}")
             except ValueError as e:
                 logger.error(f"Error scheduling job: {e}")
 

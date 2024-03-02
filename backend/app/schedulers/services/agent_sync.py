@@ -6,12 +6,14 @@ from dotenv import load_dotenv
 
 from app.db.db_session import get_sync_db_session
 from app.schedulers.models.scheduler import JobMetadata
+from app.db.db_session import get_db_session
 from app.schedulers.utils.universal import scheduler_login
+from app.agents.routes.agents import sync_all_agents
 
 load_dotenv()
 
 
-def agent_sync():
+async def agent_sync():
     """
     Synchronizes agents by sending a request to the server and updating the job metadata.
 
@@ -21,21 +23,8 @@ def agent_sync():
     If the token retrieval fails, it prints a failure message. If the job metadata for
     'agent_sync' does not exist, it prints a message indicating the absence of the metadata.
     """
-    # Get the scheduler auth token
-    headers = scheduler_login()
-
-    # Check if the token was successfully retrieved
-    if headers:
-        # Your actual task
-        response = requests.post(
-            f"http://{os.getenv('SERVER_IP')}:5000/agents/sync",
-            headers=headers,
-        )
-
-        # Process the response here if needed
-        print(response.json())
-    else:
-        print("Failed to retrieve token")
+    async with get_db_session() as session:
+        await sync_all_agents(session=session)
 
     # Use get_sync_db_session to create and manage a synchronous session
     with get_sync_db_session() as session:
