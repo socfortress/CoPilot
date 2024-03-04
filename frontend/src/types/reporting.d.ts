@@ -48,3 +48,8 @@ export interface PanelLink {
 	panel_id: number
 	panel_url: string
 }
+
+export interface PanelImage {
+	base64_image: string
+	url: string
+}

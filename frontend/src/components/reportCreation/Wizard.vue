@@ -44,7 +44,10 @@
 						/>
 					</n-form-item>
 				</div>
-				<div class="flex justify-end">
+				<div class="flex justify-end gap-4 items-center">
+					<div v-if="isDirty && linksList.length" class="text-secondary-color">
+						Press the button to refresh the panels
+					</div>
 					<n-button type="success" @click="getLinks()" :loading="loadingLinks" v-if="isValid">
 						<template #icon>
 							<Icon :name="GenerateLinksIcon"></Icon>
@@ -58,7 +61,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeMount, ref, watchEffect, watch } from "vue"
+import { computed, onBeforeMount, ref, watch } from "vue"
 import { NSpin, NForm, NFormItem, NInputGroup, NInputNumber, NButton, NSelect, useMessage } from "naive-ui"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
@@ -74,6 +77,7 @@ const emit = defineEmits<{
 const GenerateLinksIcon = "carbon:report-data"
 
 const message = useMessage()
+const isDirty = ref(false)
 const orgsList = ref<Org[]>([])
 const dashboardsList = ref<Dashboard[]>([])
 const panelsList = ref<Panel[]>([])
@@ -109,6 +113,7 @@ const canSelectPanels = computed(() => canSelectDashboard.value && !!selectedDas
 const isValid = computed(() => canSelectPanels.value && selectedPanels.value.length)
 
 watch([selectedOrgId, selectedDashboardUID, selectedPanels, timeUnit, timeValue], () => {
+	isDirty.value = true
 	emit("reset")
 })
 
@@ -222,6 +227,8 @@ function getLinks() {
 			.then(res => {
 				if (res.data.success) {
 					linksList.value = res.data?.links || []
+					isDirty.value = false
+
 					emit("generated", linksList.value)
 				} else {
 					message.warning(res.data?.message || "An error occurred. Please try again later.")
