@@ -1,4 +1,4 @@
-import type { Dashboard, Org, Panel, PanelLink } from "@/types/reporting"
+import type { Dashboard, Org, Panel, PanelLink, PanelImage } from "@/types/reporting"
 import { HttpClient } from "./httpClient"
 import type { FlaskBaseResponse } from "@/types/flask.d"
 
@@ -26,18 +26,17 @@ export default {
 		return HttpClient.get<FlaskBaseResponse & { panels: Panel[] }>(`/reporting/dashboard_panels/${dashboardUID}`)
 	},
 	generatePanelsLinks(payload: PanelsLinksPayload) {
-		// TODO: remove
-		/* for test
-		const payload = {
-			org_id: 44,
-			dashboard_title: "string",
-			dashboard_uid: "fd4ba63e-9e67-42cd-8fe7-f638cea19d7a",
-			panel_ids: [5, 6, 7],
-			time_range: {
-				value: 1,
-				unit: "hours"
-			}
-		}*/
 		return HttpClient.post<FlaskBaseResponse & { links: PanelLink[] }>(`/reporting/generate_iframe_links`, payload)
+	},
+	generatePanelsImages(urls: string[]) {
+		return HttpClient.post<FlaskBaseResponse & { base64_images: PanelImage[] }>(
+			`/reporting/generate-report`,
+			{
+				urls
+			},
+			{
+				timeout: 0
+			}
+		)
 	}
 }

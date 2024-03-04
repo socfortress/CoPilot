@@ -1,15 +1,18 @@
 <template>
 	<div class="report-panels">
-		isDirty:{{ isDirty }},{{ linksList.length }}
-		<div class="panels-container grid grid-cols-2 gap-6" :class="{ printing }">
-			<div class="panel" v-for="panel of linksList" :key="panel.panel_id">
-				<iframe :src="panel.panel_url + '&theme=light'" v-show="panelTheme === 'light'"></iframe>
-				<iframe :src="panel.panel_url + '&theme=dark'" v-show="panelTheme === 'dark'"></iframe>
+		<div class="panels-container grid grid-cols-2 gap-6 p-6" :class="{ printing }" v-if="panelsList.length">
+			<div class="panel" v-for="panel of panelsList" :key="panel.id">
+				<img :src="'data:image/png;base64,' + panel.image" v-if="panel.image" />
+				<iframe :src="panel.url + '&theme=' + panelTheme" v-else></iframe>
+				<!--
+					<iframe :src="panel.panel_url + '&theme=light'" v-show="panelTheme === 'light'"></iframe>
+					<iframe :src="panel.panel_url + '&theme=dark'" v-show="panelTheme === 'dark'"></iframe>
+				-->
 			</div>
 		</div>
 
-		<div class="toolbar">
-			<n-button type="success" v-if="linksList.length" @click="print()">
+		<div class="toolbar mt-5">
+			<n-button type="success" v-if="linksList.length" @click="print()" :loading="loading">
 				<template #icon>
 					<Icon :name="PrintIcon"></Icon>
 				</template>
@@ -20,25 +23,79 @@
 </template>
 
 <script setup lang="ts">
-import { NButton } from "naive-ui"
-import type { PanelLink } from "@/types/reporting"
+import { ref, nextTick, computed, toRefs } from "vue"
+import { NButton, useMessage } from "naive-ui"
+import type { PanelLink, PanelImage } from "@/types/reporting"
 import Icon from "@/components/common/Icon.vue"
-import { ref, nextTick } from "vue"
-// import html2canvas from "html2canvas"
+import { type ThemeName } from "@/types/theme.d"
+import { useThemeStore } from "@/stores/theme"
+import Api from "@/api"
+import { mockImage } from "./data"
+import { saveAs } from "file-saver"
+import html2canvas from "html2canvas"
+
 // @ts-ignore
 // import domtoimage from "dom-to-image-more"
 
 const isDirty = defineModel<boolean>("isDirty", { default: false })
-const printing = ref(false)
-const panelTheme = ref<"light" | "dark">("light")
 
-const { linksList } = defineProps<{
+const props = defineProps<{
 	linksList: PanelLink[]
 }>()
+const { linksList } = toRefs(props)
 
 const PrintIcon = "carbon:printer"
+const message = useMessage()
+const imagesList = ref<PanelImage[]>([])
+const printing = ref(false)
+// const panelTheme = ref<"light" | "dark">("light")
+const panelTheme = computed<ThemeName>(() => useThemeStore().themeName)
+const loadingImages = ref(false)
+const loadingPrint = ref(false)
+const loading = computed(() => loadingImages.value || loadingPrint.value)
+
+const panelsList = computed(() => {
+	const panels = []
+
+	for (const i in linksList.value) {
+		panels.push({
+			id: linksList.value[i].panel_id,
+			url: linksList.value[i].panel_url,
+			image: imagesList.value[i]?.base64_image // || mockImage
+		})
+	}
+
+	return panels
+})
 
 function print() {
+	/*
+	html2canvas(document.querySelector(".panels-container")).then(canvas => {
+		//document.body.appendChild(canvas)
+		console.log(canvas.toDataURL("image/jpeg", 0.9))
+	})
+*/
+
+	loadingPrint.value = true
+	getImages(() => {
+		nextTick(() => {
+			setTimeout(() => {
+				html2canvas(document.querySelector(".panels-container"))
+					.then(canvas => {
+						//document.body.appendChild(canvas)
+						loadingPrint.value = false
+						const dataURL = canvas.toDataURL("image/png", 1)
+						console.log(dataURL)
+						saveAs(dataURL, "report.png")
+					})
+					.catch(() => {
+						loadingPrint.value = false
+					})
+			}, 2000)
+		})
+	})
+
+	/*
 	printing.value = true
 	// panelTheme.value = "light"
 
@@ -49,6 +106,7 @@ function print() {
 			printing.value = false
 		}, 2000)
 	})
+	*/
 
 	/*
 	// @ts-ignore
@@ -73,12 +131,45 @@ function print() {
 		})
 		*/
 }
+
+function getImages(cb?: () => void) {
+	loadingImages.value = true
+
+	Api.reporting
+		.generatePanelsImages(linksList.value.map(o => o.panel_url + "&theme=" + panelTheme.value))
+		.then(res => {
+			if (res.data.success) {
+				imagesList.value = res.data?.base64_images || []
+
+				if (cb) {
+					cb()
+				}
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			loadingImages.value = false
+		})
+}
 </script>
 
 <style lang="scss" scoped>
 .report-panels {
 	.panels-container {
+		border-radius: var(--border-radius);
+		background-color: var(--bg-secondary-color);
+		border: var(--border-small-050);
+
 		.panel {
+			border-radius: var(--border-radius);
+			background-color: var(--bg-secondary-color);
+			border: var(--border-small-050);
+			overflow: hidden;
+
 			iframe {
 				width: 100%;
 				height: 500px;

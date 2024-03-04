@@ -1,7 +1,7 @@
 <template>
 	<div class="page">
 		<ReportWizard @generated="setLinks($event)" @reset="isDirty = true" />
-		<ReportPanels :links-list="linksList" v-model:is-dirty="isDirty" />
+		<ReportPanels :links-list="linksList" v-model:is-dirty="isDirty" class="mt-5" />
 	</div>
 </template>
 
