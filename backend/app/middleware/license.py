@@ -136,11 +136,15 @@ async def add_license_to_db(session: AsyncSession, result, request):
     return new_license
 
 async def get_license(session: AsyncSession) -> License:
-    result = await session.execute(select(License))
-    license = result.scalars().first()
-    if not license:
+    try:
+        result = await session.execute(select(License))
+        license = result.scalars().first()
+        if not license:
+            raise HTTPException(status_code=404, detail="No license found")
+        return license
+    except Exception as e:
+        logger.error(e)
         raise HTTPException(status_code=404, detail="No license found")
-    return license
 
 def check_license(license: License):
     result, _ = Key.activate(
@@ -202,8 +206,10 @@ async def verify_license_key(session: AsyncSession = Depends(get_db)) -> License
     """
     try:
         license = await get_license(session)
+        logger.info(f"License: {license}")
         result = check_license(license)
         result = result.__dict__
+        logger.info(result)
         if is_license_expired(result):
             raise HTTPException(status_code=400, detail="License is expired")
         return result
