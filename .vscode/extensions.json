@@ -7,12 +7,10 @@
 		"ecmel.vscode-html-css",
 		"george-alison.html-preview-vscodes",
 		"esbenp.prettier-vscode",
-		"octref.vetur",
 		"ms-vscode.remtoe-remote-wsl",
 		"dbaeumer.vscode-eslint",
 		"Vue.volar",
 		"Gruntfuggly.todo-tree",
-		"Vue.vscode-typescript-vue-plugin",
 		"usernamehw.errorlens",
 		"streetsidesoftware.code-spell-checker"
 	]
