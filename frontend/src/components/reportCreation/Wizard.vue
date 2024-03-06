@@ -36,7 +36,7 @@
 				<div class="flex">
 					<n-form-item label="Panels" v-if="canSelectPanels" class="grow">
 						<n-select
-							v-model:value="selectedPanels"
+							v-model:value="selectedPanelsIds"
 							:options="panelsOptions"
 							:loading="loadingPanels"
 							multiple
@@ -44,7 +44,7 @@
 						/>
 					</n-form-item>
 				</div>
-				<div class="flex justify-end gap-4 items-center">
+				<div class="flex justify-end gap-4 items-center" v-if="!hideGenerateButton">
 					<div v-if="isDirty && linksList.length" class="text-secondary-color">
 						Press the button to refresh the panels
 					</div>
@@ -61,7 +61,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeMount, ref, watch } from "vue"
+import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
 import { NSpin, NForm, NFormItem, NInputGroup, NInputNumber, NButton, NSelect, useMessage } from "naive-ui"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
@@ -70,12 +70,16 @@ import type { PanelsLinksPayload, PanelsLinksTimeUnit } from "@/api/reporting"
 import { useStorage } from "@vueuse/core"
 
 const emit = defineEmits<{
-	(e: "reset"): void
+	(e: "updated", value: Panel[]): void
 	(e: "generated", value: PanelLink[]): void
 }>()
 
-const GenerateLinksIcon = "carbon:report-data"
+const props = defineProps<{
+	hideGenerateButton?: boolean
+}>()
+const { hideGenerateButton } = toRefs(props)
 
+const GenerateLinksIcon = "carbon:report-data"
 const message = useMessage()
 const isDirty = ref(false)
 const orgsList = ref<Org[]>([])
@@ -91,13 +95,12 @@ const selectedDashboardUID = ref<string | null>(null)
 const selectedDashboard = computed(() =>
 	selectedDashboardUID.value ? dashboardsList.value.find(o => o.uid === selectedDashboardUID.value) || null : null
 )
-const selectedPanels = ref<number[]>([])
+const selectedPanelsIds = ref<number[]>([])
+const selectedPanels = computed(() =>
+	selectedPanelsIds.value ? panelsList.value.filter(o => selectedPanelsIds.value.includes(o.id)) : []
+)
 const timeUnit = useStorage<PanelsLinksTimeUnit>("report-wizard-time-unit", "hours", localStorage)
 const timeValue = useStorage<number>("report-wizard-time-value", 1, localStorage)
-
-const loading = computed(
-	() => loadingOrgs.value || loadingDashboards.value || loadingPanels.value || loadingLinks.value
-)
 
 const orgsOptions = computed(() => orgsList.value.map(o => ({ value: o.id, label: o.name })))
 const dashboardsOptions = computed(() => dashboardsList.value.map(o => ({ value: o.uid, label: o.title })))
@@ -110,18 +113,22 @@ const timeUnitOptions: { label: string; value: PanelsLinksTimeUnit }[] = [
 
 const canSelectDashboard = computed(() => !!selectedOrgId.value)
 const canSelectPanels = computed(() => canSelectDashboard.value && !!selectedDashboardUID.value)
-const isValid = computed(() => canSelectPanels.value && selectedPanels.value.length)
+const isValid = computed(() => canSelectPanels.value && selectedPanelsIds.value.length)
 
-watch([selectedOrgId, selectedDashboardUID, selectedPanels, timeUnit, timeValue], () => {
+const loading = computed(
+	() => loadingOrgs.value || loadingDashboards.value || loadingPanels.value || loadingLinks.value
+)
+
+watch([selectedOrgId, selectedDashboardUID, selectedPanelsIds, timeUnit, timeValue], () => {
 	isDirty.value = true
-	emit("reset")
+	emit("updated", selectedPanels.value)
 })
 
 watch(selectedOrgId, val => {
 	dashboardsList.value = []
 	panelsList.value = []
 	selectedDashboardUID.value = null
-	selectedPanels.value = []
+	selectedPanelsIds.value = []
 
 	if (val) {
 		getDashboards()
@@ -130,7 +137,7 @@ watch(selectedOrgId, val => {
 
 watch(selectedDashboardUID, val => {
 	panelsList.value = []
-	selectedPanels.value = []
+	selectedPanelsIds.value = []
 
 	if (val) {
 		getPanels()
@@ -205,7 +212,7 @@ function getLinks() {
 	if (
 		selectedOrgId.value &&
 		selectedDashboard.value &&
-		selectedPanels.value.length &&
+		selectedPanelsIds.value.length &&
 		timeUnit.value &&
 		timeValue.value
 	) {
@@ -215,7 +222,7 @@ function getLinks() {
 			org_id: selectedOrgId.value,
 			dashboard_title: selectedDashboard.value.title,
 			dashboard_uid: selectedDashboard.value.uid,
-			panel_ids: selectedPanels.value,
+			panel_ids: selectedPanelsIds.value,
 			time_range: {
 				value: timeValue.value,
 				unit: timeUnit.value

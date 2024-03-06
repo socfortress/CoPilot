@@ -1,14 +1,14 @@
 <template>
 	<div class="report-panels">
-		<div class="panels-container" v-if="panelsList.length">
+		<div class="panels-container" v-if="panelsBlock.length">
 			<div
 				class="panel"
-				v-for="panel of panelsList"
+				v-for="panel of panelsBlock"
 				:key="panel.id"
 				:style="panel.width ? `flex-basis:${panel.width}%` : ''"
 			>
 				<div class="toolbar">
-					<n-popover trigger="hover" overlap raw placement="right-start">
+					<n-popover trigger="hover" overlap raw placement="right-start" class="popover-report-panel-slider">
 						<template #trigger>
 							<n-button size="tiny">
 								<template #icon>
@@ -16,37 +16,20 @@
 								</template>
 							</n-button>
 						</template>
-						<div class="popover-input-container">
-							<div class="w-52 flex items-center gap-3 py-2 px-5">
-								<span class="font-mono w-12">{{ panel.width }}</span>
-								<n-slider :tooltip="false" v-model:value="panel.width" :min="0" :max="100" :step="10" />
-							</div>
-							<!--
-								<n-input-number
-									size="tiny"
-									v-model:value="panel.width"
-									:min="0"
-									:max="100"
-									:step="10"
-									class="max-w-32"
-								/>
-							-->
+						<div class="w-52 flex items-center gap-3 py-2 px-5">
+							<span class="font-mono w-12">{{ panel.width / 100 }}</span>
+							<n-slider :tooltip="false" v-model:value="panel.width" :min="0" :max="100" :step="10" />
 						</div>
 					</n-popover>
 				</div>
 				<div class="content">
-					<img :src="'data:image/png;base64,' + panel.image" v-if="panel.image" />
-					<iframe :src="panel.url + '&theme=' + panelTheme" v-else></iframe>
-					<!--
-						<iframe :src="panel.panel_url + '&theme=light'" v-show="panelTheme === 'light'"></iframe>
-						<iframe :src="panel.panel_url + '&theme=dark'" v-show="panelTheme === 'dark'"></iframe>
-					-->
+					{{ panel.name }}
 				</div>
 			</div>
 		</div>
 
 		<div class="toolbar mt-5">
-			<n-button type="success" v-if="linksList.length" @click="print()" :loading="loading">
+			<n-button type="success" v-if="panelsBlock.length" @click="print()" :loading="loading">
 				<template #icon>
 					<Icon :name="PrintIcon"></Icon>
 				</template>
@@ -57,97 +40,57 @@
 </template>
 
 <script setup lang="ts">
-import { ref, nextTick, computed, toRefs, watch, onBeforeMount } from "vue"
-import { useMessage, NButton, NInputNumber, NSlider, NPopover } from "naive-ui"
-import type { PanelLink, PanelImage } from "@/types/reporting"
+import { ref, computed, toRefs, watch } from "vue"
+import { NButton, NSlider, NPopover } from "naive-ui"
+import type { PanelLink, Panel } from "@/types/reporting"
 import Icon from "@/components/common/Icon.vue"
-import { type ThemeName } from "@/types/theme.d"
-import { useThemeStore } from "@/stores/theme"
-import Api from "@/api"
-import { mockImage, mockLinks } from "./data"
-import { saveAs } from "file-saver"
-import html2canvas from "html2canvas"
+// import Api from "@/api"
+// import { saveAs } from "file-saver"
+
+interface PanelBlock {
+	id: string | number
+	name: string
+	width: number
+}
 
 const props = defineProps<{
-	linksList: PanelLink[]
+	panelsList?: Panel[]
+	linksList?: PanelLink[]
 }>()
-const { linksList } = toRefs(props)
+const { panelsList } = toRefs(props)
 
 const MenuIcon = "carbon:overflow-menu-horizontal"
 const PrintIcon = "carbon:printer"
-const message = useMessage()
-const imagesList = ref<PanelImage[]>([])
-const panelTheme = computed<ThemeName>(() => useThemeStore().themeName)
+// const message = useMessage()
 const loadingImages = ref(false)
 const loadingPrint = ref(false)
 const loading = computed(() => loadingImages.value || loadingPrint.value)
-const panelsList = ref([])
+const panelsBlock = ref<PanelBlock[]>([])
 
-watch(linksList, () => {
-	createPanels()
+watch(panelsList, val => {
+	createPanels(val || [])
 })
 
-onBeforeMount(() => {
-	createPanels()
-})
+function createPanels(list: Panel[]) {
+	const panels: PanelBlock[] = []
 
-function createPanels() {
-	const panels = []
-	for (const i in mockLinks /*linksList.value*/) {
+	for (const panel of list) {
 		panels.push({
-			id: mockLinks[i].panel_id, // linksList.value[i].panel_id,
-			url: mockLinks[i].panel_url, // linksList.value[i].panel_url,
-			image: imagesList.value[i]?.base64_image || mockImage,
+			id: panel.id,
+			name: panel.title,
 			width: 50
 		})
 	}
 
-	panelsList.value = panels
+	panelsBlock.value = panels
 }
 
 function print() {
 	loadingPrint.value = true
-	getImages(() => {
-		nextTick(() => {
-			setTimeout(() => {
-				html2canvas(document.querySelector(".panels-container"))
-					.then(canvas => {
-						//document.body.appendChild(canvas)
-						loadingPrint.value = false
-						const dataURL = canvas.toDataURL("image/png", 1)
-						console.log(dataURL)
-						saveAs(dataURL, "report.png")
-					})
-					.catch(() => {
-						loadingPrint.value = false
-					})
-			}, 2000)
-		})
-	})
-}
 
-function getImages(cb?: () => void) {
-	loadingImages.value = true
-
-	Api.reporting
-		.generatePanelsImages(linksList.value.map(o => o.panel_url + "&theme=" + panelTheme.value))
-		.then(res => {
-			if (res.data.success) {
-				imagesList.value = res.data?.base64_images || []
-
-				if (cb) {
-					cb()
-				}
-			} else {
-				message.warning(res.data?.message || "An error occurred. Please try again later.")
-			}
-		})
-		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-		})
-		.finally(() => {
-			loadingImages.value = false
-		})
+	setTimeout(() => {
+		loadingPrint.value = false
+	}, 2000)
 }
 </script>
 
@@ -159,41 +102,45 @@ function getImages(cb?: () => void) {
 		border: var(--border-small-050);
 		display: flex;
 		flex-wrap: wrap;
-		padding: 1vw;
+		padding: clamp(5px, 1vw, 10px);
 
 		.panel {
 			overflow: hidden;
 			flex-grow: 1;
 			min-width: 200px;
-			padding: 1vw;
+			padding: clamp(5px, 1vw, 10px);
 			position: relative;
 
 			.toolbar {
 				position: absolute;
-				top: 8px;
-				right: 8px;
+				top: 7px;
+				right: 7px;
 				backdrop-filter: blur(2px);
 			}
 			.content {
 				border-radius: var(--border-radius);
-				background-color: var(--bg-secondary-color);
+				background-color: var(--bg-color);
 				border: var(--border-small-050);
 				overflow: hidden;
-			}
-
-			iframe {
-				width: 100%;
-				aspect-ratio: 1;
-			}
-			img {
-				width: 100%;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				aspect-ratio: 1.6;
+				font-size: clamp(12px, 1.7vw, 18px);
+				font-weight: bold;
+				padding: 3vw;
+				text-align: center;
 			}
 		}
 	}
 }
+</style>
 
-.popover-input-container {
-	background-color: var(--bg-secondary-color);
+<style lang="scss">
+.popover-report-panel-slider {
+	background-color: rgba(var(--modal-color-rgb), 0.5);
 	border-radius: var(--border-radius);
+	overflow: hidden;
+	backdrop-filter: blur(5px);
 }
 </style>

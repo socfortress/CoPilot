@@ -49,7 +49,6 @@
 		"detect-touch-device": "^1.1.6",
 		"echarts": "^5.5.0",
 		"file-saver": "^2.0.5",
-		"html2canvas": "^1.4.1",
 		"jose": "^5.2.2",
 		"js-md5": "^0.8.3",
 		"lodash": "^4.17.21",
