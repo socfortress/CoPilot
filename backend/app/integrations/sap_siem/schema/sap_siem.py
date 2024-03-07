@@ -224,6 +224,10 @@ class Result(BaseModel):
         "False",
         description="Whether the event has been analyzed for brute force IP",
     )
+    event_analyzed_brute_force_same_ip: Optional[str] = Field(
+        "False",
+        description="Whether the event has been analyzed for brute force same IP",
+    )
 
 
 

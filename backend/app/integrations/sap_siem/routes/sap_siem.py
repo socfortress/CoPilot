@@ -18,6 +18,7 @@ from app.integrations.sap_siem.services.sap_siem_failed_same_user_from_different
 from app.integrations.sap_siem.services.sap_siem_failed_same_user_different_geo_location import sap_siem_failed_same_user_diff_geo
 from app.integrations.sap_siem.services.sap_siem_successful_same_user_different_geo_location import sap_siem_successful_same_user_diff_geo
 from app.integrations.sap_siem.services.sap_siem_brute_forced_failed_logins import sap_siem_brute_force_failed_multiple_ips
+from app.integrations.sap_siem.services.sap_siem_brute_force_same_ip import sap_siem_brute_force_failed_same_ip
 
 integration_sap_siem_router = APIRouter()
 
@@ -185,5 +186,25 @@ async def invoke_sap_siem_brute_force_failed_logins_route(
 ):
     logger.info("Invoking SAP SIEM integration for brute force failed logins.")
     await sap_siem_brute_force_failed_multiple_ips(threshold=threshold, time_range=time_range, session=session)
+
+    return InvokeSAPSiemResponse(success=True, message="SAP SIEM Events collected successfully.")
+
+
+@integration_sap_siem_router.post(
+    "/brute_force_failed_logins_same_ip",
+    response_model=InvokeSAPSiemResponse,
+    description="Rule: Logins from the same IP address\n\n"
+                "Period: within 5 minutes\n\n"
+                "Prerequisite: \n\n"
+                "- At least 10 different user name failed login attempts from the same IP address\n\n"
+                "Result: IP addresses belong to an attack network",
+)
+async def invoke_sap_siem_brute_force_failed_logins_same_ip_route(
+    threshold: Optional[int] = 0,
+    time_range: Optional[int] = 5,
+    session: AsyncSession = Depends(get_db),
+):
+    logger.info("Invoking SAP SIEM integration for brute force failed logins from the same IP.")
+    await sap_siem_brute_force_failed_same_ip(threshold=threshold, time_range=time_range, session=session)
 
     return InvokeSAPSiemResponse(success=True, message="SAP SIEM Events collected successfully.")
