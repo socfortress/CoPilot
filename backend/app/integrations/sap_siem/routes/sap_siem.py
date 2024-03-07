@@ -16,6 +16,7 @@ from app.integrations.utils.utils import get_customer_integration_response
 from app.integrations.sap_siem.services.sap_siem_successful_user_login_after_using_different_ip import sap_siem_successful_user_login_with_different_ip
 from app.integrations.sap_siem.services.sap_siem_failed_same_user_from_different_ip import sap_siem_failed_same_user_diff_ip
 from app.integrations.sap_siem.services.sap_siem_failed_same_user_different_geo_location import sap_siem_failed_same_user_diff_geo
+from app.integrations.sap_siem.services.sap_siem_successful_same_user_different_geo_location import sap_siem_successful_same_user_diff_geo
 
 integration_sap_siem_router = APIRouter()
 
@@ -130,5 +131,39 @@ async def invoke_sap_siem_same_user_failed_login_from_different_geo_location_rou
 ):
     logger.info("Invoking SAP SIEM integration for same user failed login from different geo location.")
     await sap_siem_failed_same_user_diff_geo(threshold=threshold, time_range=time_range, session=session)
+
+    return InvokeSAPSiemResponse(success=True, message="SAP SIEM Events collected successfully.")
+
+@integration_sap_siem_router.post(
+    "/same_user_successful_login_from_different_geo_location",
+    response_model=InvokeSAPSiemResponse,
+    description="Rule: Same user from different geo locations\n\n"
+                "Period: within 20 minutes\n\n"
+                "Prerequisite: \n\n"
+                "- At least 1 failed login attempt with the same username from two different GEO IP country locations\n\n"
+                "- from the 2nd successful login thereafter in another GEO IP country location\n\n"
+                "Result: User compressed, IP addresses belong to an attack network\n\n"
+                "This function would trigger a suspicious login when the following conditions are met:\n\n"
+                "1. There is at least one failed login attempt from the same user (identified by `login_id`) from two different GEO IP country locations within the last 20 minutes.\n"
+                "2. There is at least one successful login attempt from the same user from a different GEO IP country location within the last 20 minutes.\n\n"
+                "Here are some examples:\n\n"
+                "Example 1:\n"
+                "- At 12:00, a failed login attempt is made by user `user1` from IP `1.1.1.1` located in the US.\n"
+                "- At 12:10, another failed login attempt is made by `user1` from IP `2.2.2.2` located in Canada.\n"
+                "- At 12:15, a successful login attempt is made by `user1` from IP `3.3.3.3` located in the UK.\n"
+                "- In this case, the function would trigger a suspicious login for `user1` because there are failed login attempts from two different countries (US and Canada) and a successful login from a different country (UK) within 20 minutes.\n\n"
+                "Example 2:\n"
+                "- At 12:00, a failed login attempt is made by user `user2` from IP `4.4.4.4` located in the US.\n"
+                "- At 12:10, another failed login attempt is made by `user2` from IP `5.5.5.5` also located in the US.\n"
+                "- At 12:15, a successful login attempt is made by `user2` from IP `6.6.6.6` located in the US.\n"
+                "- In this case, the function would not trigger a suspicious login for `user2` because all the login attempts are from the same country (US).",
+)
+async def invoke_sap_siem_same_user_successful_login_from_different_geo_location_route(
+    threshold: Optional[int] = 0,
+    time_range: Optional[int] = 20,
+    session: AsyncSession = Depends(get_db),
+):
+    logger.info("Invoking SAP SIEM integration for same user successful login from different geo location.")
+    await sap_siem_successful_same_user_diff_geo(threshold=threshold, time_range=time_range, session=session)
 
     return InvokeSAPSiemResponse(success=True, message="SAP SIEM Events collected successfully.")

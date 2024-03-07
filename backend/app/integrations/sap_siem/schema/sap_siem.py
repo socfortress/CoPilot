@@ -216,6 +216,10 @@ class Result(BaseModel):
         "False",
         description="Whether the event has been analyzed for same user failed login from different geo",
     )
+    event_analyzed_same_user_successful_diff_geo: Optional[str] = Field(
+        "False",
+        description="Whether the event has been analyzed for same user successful login from different geo",
+    )
 
 
 
