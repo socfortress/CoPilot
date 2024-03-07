@@ -204,6 +204,15 @@ class Result(BaseModel):
         "False",
         description="Whether the event has been analyzed for multiple logins",
     )
+    event_analyzed_success_login_diff_ip: Optional[str] = Field(
+        "False",
+        description="Whether the event has been analyzed for successful login from different IP",
+    )
+    event_analyzed_same_user_failed_diff_ip: Optional[str] = Field(
+        "False",
+        description="Whether the event has been analyzed for same user failed login from different IP",
+    )
+
 
 
 class SapSiemResponseBody(BaseModel):
