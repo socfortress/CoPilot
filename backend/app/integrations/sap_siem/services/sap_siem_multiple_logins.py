@@ -1,5 +1,6 @@
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timedelta
+from dateutil.tz import tzutc
 from typing import List
 from typing import Set
 
@@ -300,7 +301,8 @@ async def collect_user_activity(suspicious_logins: SuspiciousLogin) -> SapSiemWa
     """
     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
     results = es_client.search(
-        index="sap_siem_*",
+        #index="sap_siem_*",
+        index="new-integrations*",
         body={
             "size": 1000,
             "query": {"bool": {"must": [{"term": {"ip": suspicious_logins.ip}}]}},
@@ -320,7 +322,8 @@ async def get_initial_search_results(es_client):
         dict: The search results.
     """
     return es_client.search(
-        index="sap_siem_*",
+        #index="sap_siem_*",
+        index="new-integrations*",
         body={
             "size": 1000,
             "query": {"bool": {"must": [{"term": {"errMessage": "OK"}}, {"term": {"event_analyzed_multiple_logins": "False"}}]}},
@@ -356,26 +359,74 @@ async def process_hits(hits, ip_to_login_ids, suspicious_activity):
     Returns:
         None
     """
+    # for hit in hits:
+    #     if hit.source.errMessage == "OK":
+    #         # Convert loginID to lowercase before comparing
+    #         login_id = hit.source.params_loginID.lower()
+    #         ip_to_login_ids[hit.source.ip].add(login_id)
+
+    #         suspicious_login = SuspiciousLogin(
+    #             _index=hit.index,
+    #             _id=hit.id,
+    #             customer_code=hit.source.customer_code,
+    #             logSource=hit.source.logSource,
+    #             loginID=hit.source.params_loginID,
+    #             country=hit.source.httpReq_country,
+    #             ip=hit.source.ip,
+    #             event_timestamp=hit.source.event_timestamp,
+    #             errMessage=hit.source.errMessage,
+    #             errDetails=hit.source.errDetails,
+    #         )
+
+    #         suspicious_activity[hit.source.ip].append(suspicious_login)
+    # Keep track of the timestamps for each loginID for each IP
+    ip_to_login_timestamps = defaultdict(lambda: defaultdict(list))
+
     for hit in hits:
         if hit.source.errMessage == "OK":
+            #logger.info(f"Processing hit: {hit}")
             # Convert loginID to lowercase before comparing
             login_id = hit.source.params_loginID.lower()
-            ip_to_login_ids[hit.source.ip].add(login_id)
+            ip = hit.source.ip
 
-            suspicious_login = SuspiciousLogin(
-                _index=hit.index,
-                _id=hit.id,
-                customer_code=hit.source.customer_code,
-                logSource=hit.source.logSource,
-                loginID=hit.source.params_loginID,
-                country=hit.source.httpReq_country,
-                ip=hit.source.ip,
-                event_timestamp=hit.source.event_timestamp,
-                errMessage=hit.source.errMessage,
-                errDetails=hit.source.errDetails,
-            )
+            # Ignore loginID if it does not contain a '@'
+            if '@' not in login_id:
+                logger.info(f"Ignoring loginID {login_id} as it does not contain a '@'")
+                continue
 
-            suspicious_activity[hit.source.ip].append(suspicious_login)
+            # Parse the event timestamp
+            event_timestamp = datetime.strptime(hit.source.event_timestamp, "%Y-%m-%dT%H:%M:%S.%fZ")
+
+            # Add the timestamp to the list for this loginID for this IP
+            ip_to_login_timestamps[ip][login_id].append(event_timestamp)
+
+            logger.info(f"Added timestamp {event_timestamp} for IP {ip} and loginID {login_id}")
+
+            # Check if there's another loginID for the same IP within the last 10 minutes
+            for other_login_id, timestamps in ip_to_login_timestamps[ip].items():
+                if other_login_id != login_id:
+                    if any(event_timestamp - timedelta(minutes=10) <= other_timestamp <= event_timestamp for other_timestamp in timestamps):
+                        # Add the loginID to the set for this IP
+                        ip_to_login_ids[ip].add(login_id)
+
+                        logger.info(f"Detected multiple logins within 10 minutes for IP {ip}: {login_id} and {other_login_id}")
+
+                        suspicious_login = SuspiciousLogin(
+                            _index=hit.index,
+                            _id=hit.id,
+                            customer_code=hit.source.customer_code,
+                            logSource=hit.source.logSource,
+                            loginID=hit.source.params_loginID,
+                            country=hit.source.httpReq_country,
+                            ip=hit.source.ip,
+                            event_timestamp=hit.source.event_timestamp,
+                            errMessage=hit.source.errMessage,
+                            errDetails=hit.source.errDetails,
+                        )
+
+                        suspicious_activity[ip].append(suspicious_login)
+                        logger.info(f"Added suspicious login: {suspicious_login}")
+                        break
 
 
 async def check_multiple_successful_logins_by_ip(threshold: int) -> List[SuspiciousLogin]:
@@ -397,6 +448,7 @@ async def check_multiple_successful_logins_by_ip(threshold: int) -> List[Suspici
     while True:
         if scroll_id is None:
             results = await get_initial_search_results(es_client)
+            logger.info(f"Initial search results: {results}")
         else:
             results = await get_next_batch_of_results(es_client, scroll_id)
 
