@@ -15,6 +15,7 @@ from app.integrations.utils.utils import extract_auth_keys
 from app.integrations.utils.utils import get_customer_integration_response
 from app.integrations.sap_siem.services.sap_siem_successful_user_login_after_using_different_ip import sap_siem_successful_user_login_with_different_ip
 from app.integrations.sap_siem.services.sap_siem_failed_same_user_from_different_ip import sap_siem_failed_same_user_diff_ip
+from app.integrations.sap_siem.services.sap_siem_failed_same_user_different_geo_location import sap_siem_failed_same_user_diff_geo
 
 integration_sap_siem_router = APIRouter()
 
@@ -110,5 +111,24 @@ async def invoke_sap_siem_same_user_failed_login_from_different_ip_route(
 ):
     logger.info("Invoking SAP SIEM integration for same user failed login from different IP.")
     await sap_siem_failed_same_user_diff_ip(threshold=threshold, time_range=time_range, session=session)
+
+    return InvokeSAPSiemResponse(success=True, message="SAP SIEM Events collected successfully.")
+
+@integration_sap_siem_router.post(
+    "/same_user_failed_login_from_different_geo_location",
+    response_model=InvokeSAPSiemResponse,
+    description="Rule: Same user from different geo locations\n\n"
+                "Period: within 20 minutes\n\n"
+                "Prerequisite: \n\n"
+                "- At least 3 failed login attempts with the same user name from at least two different GEO IP country locations\n\n"
+                "Result: User compressed, IP addresses belong to an attack network",
+)
+async def invoke_sap_siem_same_user_failed_login_from_different_geo_location_route(
+    threshold: Optional[int] = 0,
+    time_range: Optional[int] = 20,
+    session: AsyncSession = Depends(get_db),
+):
+    logger.info("Invoking SAP SIEM integration for same user failed login from different geo location.")
+    await sap_siem_failed_same_user_diff_geo(threshold=threshold, time_range=time_range, session=session)
 
     return InvokeSAPSiemResponse(success=True, message="SAP SIEM Events collected successfully.")
