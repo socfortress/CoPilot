@@ -347,7 +347,7 @@ async def get_next_batch_of_results(es_client, scroll_id):
     return es_client.scroll(scroll_id=scroll_id, scroll="1m")
 
 
-async def process_hits(hits, ip_to_login_ids, suspicious_activity):
+async def process_hits(hits, ip_to_login_ids, suspicious_activity, time_range):
     """
     Process the hits received from SAP SIEM and update the IP to login IDs mapping and suspicious activity.
 
@@ -405,7 +405,7 @@ async def process_hits(hits, ip_to_login_ids, suspicious_activity):
             # Check if there's another loginID for the same IP within the last 10 minutes
             for other_login_id, timestamps in ip_to_login_timestamps[ip].items():
                 if other_login_id != login_id:
-                    if any(event_timestamp - timedelta(minutes=10) <= other_timestamp <= event_timestamp for other_timestamp in timestamps):
+                    if any(event_timestamp - timedelta(minutes=time_range) <= other_timestamp <= event_timestamp for other_timestamp in timestamps):
                         # Add the loginID to the set for this IP
                         ip_to_login_ids[ip].add(login_id)
 
@@ -429,7 +429,7 @@ async def process_hits(hits, ip_to_login_ids, suspicious_activity):
                         break
 
 
-async def check_multiple_successful_logins_by_ip(threshold: int) -> List[SuspiciousLogin]:
+async def check_multiple_successful_logins_by_ip(threshold: int, time_range: int) -> List[SuspiciousLogin]:
     """
     Checks for multiple successful logins by IP address.
 
@@ -456,7 +456,7 @@ async def check_multiple_successful_logins_by_ip(threshold: int) -> List[Suspici
             break
 
         results = SapSiemWazuhIndexerResponse(**results)
-        await process_hits(results.hits.hits, ip_to_login_ids, suspicious_activity)
+        await process_hits(results.hits.hits, ip_to_login_ids, suspicious_activity, time_range)
 
         scroll_id = results.scroll_id
 
@@ -469,7 +469,7 @@ async def check_multiple_successful_logins_by_ip(threshold: int) -> List[Suspici
     return [login for sublist in suspicious_activity.values() for login in sublist]
 
 
-async def get_suspicious_ips(threshold: int) -> List[SuspiciousLogin]:
+async def get_suspicious_ips(threshold: int, time_range: int) -> List[SuspiciousLogin]:
     """
     Retrieves a list of suspicious login attempts based on the specified threshold.
 
@@ -479,7 +479,7 @@ async def get_suspicious_ips(threshold: int) -> List[SuspiciousLogin]:
     Returns:
         List[SuspiciousLogin]: A list of SuspiciousLogin objects representing the suspicious login attempts.
     """
-    return await check_multiple_successful_logins_by_ip(threshold=threshold)
+    return await check_multiple_successful_logins_by_ip(threshold=threshold, time_range=time_range)
 
 
 async def get_existing_database_record(session: AsyncSession, ip: str) -> SapSiemMultipleLogins:
@@ -533,7 +533,7 @@ def create_new_database_record(ip: str, new_login_ids: Set[str]) -> SapSiemMulti
     )
 
 
-async def sap_siem_multiple_logins_same_ip(threshold: int, session: AsyncSession) -> InvokeSAPSiemResponse:
+async def sap_siem_multiple_logins_same_ip(threshold: int, time_range: int, session: AsyncSession) -> InvokeSAPSiemResponse:
     """
     Finds same IP with multiple users and handles suspicious logins.
 
@@ -546,7 +546,7 @@ async def sap_siem_multiple_logins_same_ip(threshold: int, session: AsyncSession
     """
     logger.info("Finding same IP with multiple users")
 
-    suspicious_ips = await get_suspicious_ips(threshold)
+    suspicious_ips = await get_suspicious_ips(threshold, time_range)
     logger.info(f"Suspicious IPs: {suspicious_ips}")
 
     unique_instances = set()

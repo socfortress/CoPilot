@@ -111,9 +111,17 @@ async def invoke_sap_siem_integration_multiple_logins_same_ip_analysis() -> Invo
         logger.info(f"customer_codes: {customer_codes}")
         for customer_code in customer_codes:
             extra_data = (await get_scheduled_job_metadata("invoke_sap_siem_integration_multiple_logins_same_ip_analysis")).extra_data
-            threshold = int(extra_data) if extra_data is not None else 1
+            if extra_data is not None:
+                data_parts = extra_data.split(',')
+                for part in data_parts:
+                    key, value = part.split('=')
+                    if key == 'threshold':
+                        threshold = int(value)
+                    elif key == 'time_range':
+                        time_range = int(value)
             await run_sap_siem_multiple_logins_same_ip_analysis(
                 threshold=threshold,
+                time_range=time_range,
                 session=session,
             )
     # Close the session

@@ -443,7 +443,8 @@ async def run_sap_siem_suspicious_logins_analysis(
     response_model=AlertAnalysisResponse,
 )
 async def run_sap_siem_multiple_logins_same_ip_analysis(
-    threshold: Optional[int] = 1,
+    threshold: Optional[int] = 0,
+    time_range: Optional[int] = 10,
     session: AsyncSession = Depends(get_db),
 ) -> AlertAnalysisResponse:
     """
@@ -464,7 +465,7 @@ async def run_sap_siem_multiple_logins_same_ip_analysis(
     logger.info("Running analysis for SAP SIEM multiple logins")
 
     # Call the analyze_wazuh_alerts function to analyze the alerts
-    await sap_siem_multiple_logins_same_ip(threshold=threshold, session=session)
+    await sap_siem_multiple_logins_same_ip(threshold=threshold, time_range=time_range, session=session)
 
     return AlertAnalysisResponse(
         success=True,
