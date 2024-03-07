@@ -228,6 +228,10 @@ class Result(BaseModel):
         "False",
         description="Whether the event has been analyzed for brute force same IP",
     )
+    event_analyzed_successful_login_after_failures_diff_loginID: Optional[str] = Field(
+        "False",
+        description="Whether the event has been analyzed for successful login after failures",
+    )
 
 
 

@@ -19,6 +19,7 @@ from app.integrations.sap_siem.services.sap_siem_failed_same_user_different_geo_
 from app.integrations.sap_siem.services.sap_siem_successful_same_user_different_geo_location import sap_siem_successful_same_user_diff_geo
 from app.integrations.sap_siem.services.sap_siem_brute_forced_failed_logins import sap_siem_brute_force_failed_multiple_ips
 from app.integrations.sap_siem.services.sap_siem_brute_force_same_ip import sap_siem_brute_force_failed_same_ip
+from app.integrations.sap_siem.services.sap_siem_successful_login_same_ip_after_multiple_failures import sap_siem_successful_login_after_failures
 
 integration_sap_siem_router = APIRouter()
 
@@ -206,5 +207,25 @@ async def invoke_sap_siem_brute_force_failed_logins_same_ip_route(
 ):
     logger.info("Invoking SAP SIEM integration for brute force failed logins from the same IP.")
     await sap_siem_brute_force_failed_same_ip(threshold=threshold, time_range=time_range, session=session)
+
+    return InvokeSAPSiemResponse(success=True, message="SAP SIEM Events collected successfully.")
+
+@integration_sap_siem_router.post(
+    "/successful_login_after_multiple_failed_logins",
+    response_model=InvokeSAPSiemResponse,
+    description="Rule: Successful login after multiple failed logins\n\n"
+                "Period: within 2 minutes\n\n"
+                "Prerequisite: \n\n"
+                "- At least 3 different user names that have failed from the same IP addressn\n"
+                "- At least one successful login from the same IP address after 3 different user names. \n\n"
+                "Result: User compromised, IP address belongs to an attack network",
+)
+async def invoke_sap_siem_successful_login_after_multiple_failed_logins_route(
+    threshold: Optional[int] = 0,
+    time_range: Optional[int] = 2,
+    session: AsyncSession = Depends(get_db),
+):
+    logger.info("Invoking SAP SIEM integration for successful login after multiple failed logins.")
+    await sap_siem_successful_login_after_failures(threshold=threshold, time_range=time_range, session=session)
 
     return InvokeSAPSiemResponse(success=True, message="SAP SIEM Events collected successfully.")
