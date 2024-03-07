@@ -220,6 +220,10 @@ class Result(BaseModel):
         "False",
         description="Whether the event has been analyzed for same user successful login from different geo",
     )
+    event_analyzed_brute_force_ip: Optional[str] = Field(
+        "False",
+        description="Whether the event has been analyzed for brute force IP",
+    )
 
 
 
