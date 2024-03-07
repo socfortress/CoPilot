@@ -17,7 +17,7 @@ from app.integrations.sap_siem.services.sap_siem_successful_user_login_after_usi
 from app.integrations.sap_siem.services.sap_siem_failed_same_user_from_different_ip import sap_siem_failed_same_user_diff_ip
 from app.integrations.sap_siem.services.sap_siem_failed_same_user_different_geo_location import sap_siem_failed_same_user_diff_geo
 from app.integrations.sap_siem.services.sap_siem_successful_same_user_different_geo_location import sap_siem_successful_same_user_diff_geo
-from app.integrations.sap_siem.services.sap_siem_brute_forced_failed_logins import sap_siem_brute_force_failed
+from app.integrations.sap_siem.services.sap_siem_brute_forced_failed_logins import sap_siem_brute_force_failed_multiple_ips
 
 integration_sap_siem_router = APIRouter()
 
@@ -170,7 +170,7 @@ async def invoke_sap_siem_same_user_successful_login_from_different_geo_location
     return InvokeSAPSiemResponse(success=True, message="SAP SIEM Events collected successfully.")
 
 @integration_sap_siem_router.post(
-    "/brute_force_failed_logins",
+    "/brute_force_failed_logins_multiple_ips",
     response_model=InvokeSAPSiemResponse,
     description="Rule: Logins from different IP addresses\n\n"
                 "Period: within 3 minutes\n\n"
@@ -184,6 +184,6 @@ async def invoke_sap_siem_brute_force_failed_logins_route(
     session: AsyncSession = Depends(get_db),
 ):
     logger.info("Invoking SAP SIEM integration for brute force failed logins.")
-    await sap_siem_brute_force_failed(threshold=threshold, time_range=time_range, session=session)
+    await sap_siem_brute_force_failed_multiple_ips(threshold=threshold, time_range=time_range, session=session)
 
     return InvokeSAPSiemResponse(success=True, message="SAP SIEM Events collected successfully.")

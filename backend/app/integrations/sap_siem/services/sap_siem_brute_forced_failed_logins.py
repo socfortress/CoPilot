@@ -511,7 +511,7 @@ def create_new_database_record(ip: str, new_login_ids: Set[str]) -> SapSiemMulti
     )
 
 
-async def sap_siem_brute_force_failed(threshold: int, time_range: int, session: AsyncSession) -> InvokeSAPSiemResponse:
+async def sap_siem_brute_force_failed_multiple_ips(threshold: int, time_range: int, session: AsyncSession) -> InvokeSAPSiemResponse:
     """
     Finds same IP with multiple users and handles suspicious logins.
 
