@@ -13,6 +13,14 @@ from app.integrations.monitoring_alert.routes.monitoring_alert import (
 from app.integrations.monitoring_alert.routes.monitoring_alert import (
     run_sap_siem_suspicious_logins_analysis,
 )
+from app.integrations.sap_siem.routes.sap_siem import invoke_sap_siem_successful_user_login_with_different_ip_route
+from app.integrations.sap_siem.routes.sap_siem import invoke_sap_siem_same_user_failed_login_from_different_ip_route
+from app.integrations.sap_siem.routes.sap_siem import invoke_sap_siem_same_user_failed_login_from_different_geo_location_route
+from app.integrations.sap_siem.routes.sap_siem import invoke_sap_siem_same_user_successful_login_from_different_geo_location_route
+from app.integrations.sap_siem.routes.sap_siem import invoke_sap_siem_brute_force_failed_logins_route
+from app.integrations.sap_siem.routes.sap_siem import invoke_sap_siem_brute_force_failed_logins_same_ip_route
+from app.integrations.sap_siem.routes.sap_siem import invoke_sap_siem_successful_login_after_multiple_failed_logins_route
+
 from app.integrations.sap_siem.routes.sap_siem import collect_sap_siem_route
 from app.integrations.sap_siem.schema.sap_siem import InvokeSapSiemRequest
 from app.integrations.sap_siem.schema.sap_siem import InvokeSAPSiemResponse
@@ -140,3 +148,318 @@ async def invoke_sap_siem_integration_multiple_logins_same_ip_analysis() -> Invo
             print("JobMetadata for 'invoke_sap_siem_integration_multiple_logins_same_ip_analysis' not found.")
 
     return InvokeSAPSiemResponse(success=True, message="SAP SIEM integration invoked for multiple logins from the same IP analysis.")
+
+async def invoke_sap_siem_integration_successful_user_login_with_different_ip() -> InvokeSAPSiemResponse:
+    """
+    Invokes the SAP SIEM integration for successful user login with different IP.
+    """
+    logger.info("Invoking SAP SIEM integration for successful user login with different IP scheduled job.")
+    customer_codes = []
+    async with get_db_session() as session:
+        stmt = select(CustomerIntegrations).where(
+            CustomerIntegrations.integration_service_name == "SAP SIEM",
+        )
+        result = await session.execute(stmt)
+        customer_codes = [row.customer_code for row in result.scalars()]
+        logger.info(f"customer_codes: {customer_codes}")
+        for customer_code in customer_codes:
+            extra_data = (await get_scheduled_job_metadata("invoke_sap_siem_integration_multiple_logins_same_ip_analysis")).extra_data
+            if extra_data is not None:
+                data_parts = extra_data.split(',')
+                for part in data_parts:
+                    key, value = part.split('=')
+                    if key == 'threshold':
+                        threshold = int(value)
+                    elif key == 'time_range':
+                        time_range = int(value)
+            await invoke_sap_siem_successful_user_login_with_different_ip_route(
+                threshold=threshold,
+                time_range=time_range,
+                session=session,
+            )
+    # Close the session
+    await session.close()
+    with get_sync_db_session() as session:
+        # Synchronous ORM operations
+        job_metadata = (
+            session.query(JobMetadata).filter_by(job_id="invoke_sap_siem_integration_successful_user_login_with_different_ip").one_or_none()
+        )
+        if job_metadata:
+            job_metadata.last_success = datetime.utcnow()
+            session.add(job_metadata)
+            session.commit()
+        else:
+            # Handle the case where job_metadata does not exist
+            print("JobMetadata for 'invoke_sap_siem_integration_successful_user_login_with_different_ip' not found.")
+
+    return InvokeSAPSiemResponse(success=True, message="SAP SIEM integration invoked for successful user login with different IP.")
+
+async def invoke_sap_siem_integration_same_user_failed_login_from_different_ip() -> InvokeSAPSiemResponse:
+    """
+    Invokes the SAP SIEM integration for same user failed login from different IP.
+    """
+    logger.info("Invoking SAP SIEM integration for same user failed login from different IP scheduled job.")
+    customer_codes = []
+    async with get_db_session() as session:
+        stmt = select(CustomerIntegrations).where(
+            CustomerIntegrations.integration_service_name == "SAP SIEM",
+        )
+        result = await session.execute(stmt)
+        customer_codes = [row.customer_code for row in result.scalars()]
+        logger.info(f"customer_codes: {customer_codes}")
+        for customer_code in customer_codes:
+            extra_data = (await get_scheduled_job_metadata("invoke_sap_siem_integration_same_user_failed_login_from_different_ip")).extra_data
+            if extra_data is not None:
+                data_parts = extra_data.split(',')
+                for part in data_parts:
+                    key, value = part.split('=')
+                    if key == 'threshold':
+                        threshold = int(value)
+                    elif key == 'time_range':
+                        time_range = int(value)
+            await invoke_sap_siem_same_user_failed_login_from_different_ip_route(
+                threshold=threshold,
+                time_range=time_range,
+                session=session,
+            )
+    # Close the session
+    await session.close()
+    with get_sync_db_session() as session:
+        # Synchronous ORM operations
+        job_metadata = (
+            session.query(JobMetadata).filter_by(job_id="invoke_sap_siem_integration_same_user_failed_login_from_different_ip").one_or_none()
+        )
+        if job_metadata:
+            job_metadata.last_success = datetime.utcnow()
+            session.add(job_metadata)
+            session.commit()
+        else:
+            # Handle the case where job_metadata does not exist
+            print("JobMetadata for 'invoke_sap_siem_integration_same_user_failed_login_from_different_ip' not found.")
+
+    return InvokeSAPSiemResponse(success=True, message="SAP SIEM integration invoked for same user failed login from different IP.")
+
+async def invoke_sap_siem_integration_same_user_failed_login_from_different_geo_location() -> InvokeSAPSiemResponse:
+    """
+    Invokes the SAP SIEM integration for same user failed login from different geo location.
+    """
+    logger.info("Invoking SAP SIEM integration for same user failed login from different geo location scheduled job.")
+    customer_codes = []
+    async with get_db_session() as session:
+        stmt = select(CustomerIntegrations).where(
+            CustomerIntegrations.integration_service_name == "SAP SIEM",
+        )
+        result = await session.execute(stmt)
+        customer_codes = [row.customer_code for row in result.scalars()]
+        logger.info(f"customer_codes: {customer_codes}")
+        for customer_code in customer_codes:
+            extra_data = (await get_scheduled_job_metadata("invoke_sap_siem_integration_same_user_failed_login_from_different_geo_location")).extra_data
+            if extra_data is not None:
+                data_parts = extra_data.split(',')
+                for part in data_parts:
+                    key, value = part.split('=')
+                    if key == 'threshold':
+                        threshold = int(value)
+                    elif key == 'time_range':
+                        time_range = int(value)
+            await invoke_sap_siem_same_user_failed_login_from_different_geo_location_route(
+                threshold=threshold,
+                time_range=time_range,
+                session=session,
+            )
+    # Close the session
+    await session.close()
+    with get_sync_db_session() as session:
+        # Synchronous ORM operations
+        job_metadata = (
+            session.query(JobMetadata).filter_by(job_id="invoke_sap_siem_integration_same_user_failed_login_from_different_geo_location").one_or_none()
+        )
+        if job_metadata:
+            job_metadata.last_success = datetime.utcnow()
+            session.add(job_metadata)
+            session.commit()
+        else:
+            # Handle the case where job_metadata does not exist
+            print("JobMetadata for 'invoke_sap_siem_integration_same_user_failed_login_from_different_geo_location' not found.")
+
+    return InvokeSAPSiemResponse(success=True, message="SAP SIEM integration invoked for same user failed login from different geo location.")
+
+async def invoke_sap_siem_integration_same_user_successful_login_from_different_geo_location() -> InvokeSAPSiemResponse:
+    """
+    Invokes the SAP SIEM integration for same user successful login from different geo location.
+    """
+    logger.info("Invoking SAP SIEM integration for same user successful login from different geo location scheduled job.")
+    customer_codes = []
+    async with get_db_session() as session:
+        stmt = select(CustomerIntegrations).where(
+            CustomerIntegrations.integration_service_name == "SAP SIEM",
+        )
+        result = await session.execute(stmt)
+        customer_codes = [row.customer_code for row in result.scalars()]
+        logger.info(f"customer_codes: {customer_codes}")
+        for customer_code in customer_codes:
+            extra_data = (await get_scheduled_job_metadata("invoke_sap_siem_integration_same_user_successful_login_from_different_geo_location")).extra_data
+            if extra_data is not None:
+                data_parts = extra_data.split(',')
+                for part in data_parts:
+                    key, value = part.split('=')
+                    if key == 'threshold':
+                        threshold = int(value)
+                    elif key == 'time_range':
+                        time_range = int(value)
+            await invoke_sap_siem_same_user_successful_login_from_different_geo_location_route(
+                threshold=threshold,
+                time_range=time_range,
+                session=session,
+            )
+    # Close the session
+    await session.close()
+    with get_sync_db_session() as session:
+        # Synchronous ORM operations
+        job_metadata = (
+            session.query(JobMetadata).filter_by(job_id="invoke_sap_siem_integration_same_user_successful_login_from_different_geo_location").one_or_none()
+        )
+        if job_metadata:
+            job_metadata.last_success = datetime.utcnow()
+            session.add(job_metadata)
+            session.commit()
+        else:
+            # Handle the case where job_metadata does not exist
+            print("JobMetadata for 'invoke_sap_siem_integration_same_user_successful_login_from_different_geo_location' not found.")
+
+    return InvokeSAPSiemResponse(success=True, message="SAP SIEM integration invoked for same user successful login from different geo location.")
+
+async def invoke_sap_siem_integration_brute_force_failed_logins() -> InvokeSAPSiemResponse:
+    """
+    Invokes the SAP SIEM integration for brute force failed logins.
+    """
+    logger.info("Invoking SAP SIEM integration for brute force failed logins scheduled job.")
+    customer_codes = []
+    async with get_db_session() as session:
+        stmt = select(CustomerIntegrations).where(
+            CustomerIntegrations.integration_service_name == "SAP SIEM",
+        )
+        result = await session.execute(stmt)
+        customer_codes = [row.customer_code for row in result.scalars()]
+        logger.info(f"customer_codes: {customer_codes}")
+        for customer_code in customer_codes:
+            extra_data = (await get_scheduled_job_metadata("invoke_sap_siem_integration_brute_force_failed_logins")).extra_data
+            if extra_data is not None:
+                data_parts = extra_data.split(',')
+                for part in data_parts:
+                    key, value = part.split('=')
+                    if key == 'threshold':
+                        threshold = int(value)
+                    elif key == 'time_range':
+                        time_range = int(value)
+            await invoke_sap_siem_brute_force_failed_logins_route(
+                threshold=threshold,
+                time_range=time_range,
+                session=session,
+            )
+    # Close the session
+    await session.close()
+    with get_sync_db_session() as session:
+        # Synchronous ORM operations
+        job_metadata = (
+            session.query(JobMetadata).filter_by(job_id="invoke_sap_siem_integration_brute_force_failed_logins").one_or_none()
+        )
+        if job_metadata:
+            job_metadata.last_success = datetime.utcnow()
+            session.add(job_metadata)
+            session.commit()
+        else:
+            # Handle the case where job_metadata does not exist
+            print("JobMetadata for 'invoke_sap_siem_integration_brute_force_failed_logins' not found.")
+
+    return InvokeSAPSiemResponse(success=True, message="SAP SIEM integration invoked for brute force failed logins.")
+
+async def invoke_sap_siem_integration_brute_force_failed_logins_same_ip() -> InvokeSAPSiemResponse:
+    """
+    Invokes the SAP SIEM integration for brute force failed logins from the same IP.
+    """
+    logger.info("Invoking SAP SIEM integration for brute force failed logins from the same IP scheduled job.")
+    customer_codes = []
+    async with get_db_session() as session:
+        stmt = select(CustomerIntegrations).where(
+            CustomerIntegrations.integration_service_name == "SAP SIEM",
+        )
+        result = await session.execute(stmt)
+        customer_codes = [row.customer_code for row in result.scalars()]
+        logger.info(f"customer_codes: {customer_codes}")
+        for customer_code in customer_codes:
+            extra_data = (await get_scheduled_job_metadata("invoke_sap_siem_integration_brute_force_failed_logins_same_ip")).extra_data
+            if extra_data is not None:
+                data_parts = extra_data.split(',')
+                for part in data_parts:
+                    key, value = part.split('=')
+                    if key == 'threshold':
+                        threshold = int(value)
+                    elif key == 'time_range':
+                        time_range = int(value)
+            await invoke_sap_siem_brute_force_failed_logins_same_ip_route(
+                threshold=threshold,
+                time_range=time_range,
+                session=session,
+            )
+    # Close the session
+    await session.close()
+    with get_sync_db_session() as session:
+        # Synchronous ORM operations
+        job_metadata = (
+            session.query(JobMetadata).filter_by(job_id="invoke_sap_siem_integration_brute_force_failed_logins_same_ip").one_or_none()
+        )
+        if job_metadata:
+            job_metadata.last_success = datetime.utcnow()
+            session.add(job_metadata)
+            session.commit()
+        else:
+            # Handle the case where job_metadata does not exist
+            print("JobMetadata for 'invoke_sap_siem_integration_brute_force_failed_logins_same_ip' not found.")
+
+    return InvokeSAPSiemResponse(success=True, message="SAP SIEM integration invoked for brute force failed logins from the same IP.")
+
+async def invoke_sap_siem_integration_successful_login_after_multiple_failed_logins() -> InvokeSAPSiemResponse:
+    """
+    Invokes the SAP SIEM integration for successful login after multiple failed logins.
+    """
+    logger.info("Invoking SAP SIEM integration for successful login after multiple failed logins scheduled job.")
+    customer_codes = []
+    async with get_db_session() as session:
+        stmt = select(CustomerIntegrations).where(
+            CustomerIntegrations.integration_service_name == "SAP SIEM",
+        )
+        result = await session.execute(stmt)
+        customer_codes = [row.customer_code for row in result.scalars()]
+        logger.info(f"customer_codes: {customer_codes}")
+        for customer_code in customer_codes:
+            extra_data = (await get_scheduled_job_metadata("invoke_sap_siem_integration_successful_login_after_multiple_failed_logins")).extra_data
+            if extra_data is not None:
+                data_parts = extra_data.split(',')
+                for part in data_parts:
+                    key, value = part.split('=')
+                    if key == 'threshold':
+                        threshold = int(value)
+                    elif key == 'time_range':
+                        time_range = int(value)
+            await invoke_sap_siem_successful_login_after_multiple_failed_logins_route(
+                threshold=threshold,
+                time_range=time_range,
+                session=session,
+            )
+    # Close the session
+    await session.close()
+    with get_sync_db_session() as session:
+        # Synchronous ORM operations
+        job_metadata = (
+            session.query(JobMetadata).filter_by(job_id="invoke_sap_siem_integration_successful_login_after_multiple_failed_logins").one_or_none()
+        )
+        if job_metadata:
+            job_metadata.last_success = datetime.utcnow()
+            session.add(job_metadata)
+            session.commit()
+        else:
+            # Handle the case where job_metadata does not exist
+            print("JobMetadata for 'invoke_sap_siem_integration_successful_login_after_multiple_failed_logins' not found.")
+
+    return InvokeSAPSiemResponse(success=True, message="SAP SIEM integration invoked for successful login after multiple failed logins.")

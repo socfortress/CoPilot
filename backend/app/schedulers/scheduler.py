@@ -17,6 +17,14 @@ from app.schedulers.services.invoke_sap_siem import (
 from app.schedulers.services.invoke_sap_siem import (
     invoke_sap_siem_integration_suspicious_logins_analysis,
 )
+from app.schedulers.services.invoke_sap_siem import invoke_sap_siem_integration_successful_user_login_with_different_ip
+from app.schedulers.services.invoke_sap_siem import invoke_sap_siem_integration_same_user_failed_login_from_different_ip
+from app.schedulers.services.invoke_sap_siem import invoke_sap_siem_integration_same_user_failed_login_from_different_geo_location
+from app.schedulers.services.invoke_sap_siem import invoke_sap_siem_integration_same_user_successful_login_from_different_geo_location
+from app.schedulers.services.invoke_sap_siem import invoke_sap_siem_integration_brute_force_failed_logins
+from app.schedulers.services.invoke_sap_siem import invoke_sap_siem_integration_brute_force_failed_logins_same_ip
+from app.schedulers.services.invoke_sap_siem import invoke_sap_siem_integration_successful_login_after_multiple_failed_logins
+
 from app.schedulers.services.monitoring_alert import (
     invoke_office365_exchange_online_alert,
 )
@@ -105,6 +113,13 @@ def get_function_by_name(function_name: str):
         "invoke_sap_siem_integration_collection": invoke_sap_siem_integration_collect,
         "invoke_sap_siem_integration_suspicious_logins_analysis": invoke_sap_siem_integration_suspicious_logins_analysis,
         "invoke_sap_siem_integration_multiple_logins_same_ip_analysis": invoke_sap_siem_integration_multiple_logins_same_ip_analysis,
+        "invoke_sap_siem_integration_successful_user_login_with_different_ip": invoke_sap_siem_integration_successful_user_login_with_different_ip,
+        "invoke_sap_siem_integration_same_user_failed_login_from_different_ip": invoke_sap_siem_integration_same_user_failed_login_from_different_ip,
+        "invoke_sap_siem_integration_same_user_failed_login_from_different_geo_location": invoke_sap_siem_integration_same_user_failed_login_from_different_geo_location,
+        "invoke_sap_siem_integration_same_user_successful_login_from_different_geo_location": invoke_sap_siem_integration_same_user_successful_login_from_different_geo_location,
+        "invoke_sap_siem_integration_brute_force_failed_logins": invoke_sap_siem_integration_brute_force_failed_logins,
+        "invoke_sap_siem_integration_brute_force_failed_logins_same_ip": invoke_sap_siem_integration_brute_force_failed_logins_same_ip,
+        "invoke_sap_siem_integration_successful_login_after_multiple_failed_logins": invoke_sap_siem_integration_successful_login_after_multiple_failed_logins,
         "invoke_huntress_integration_collection": invoke_huntress_integration_collect,
         # Add other function mappings here
     }
