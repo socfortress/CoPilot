@@ -44,6 +44,9 @@ RUN /opt/venv/bin/pip install --no-cache-dir -r requirements.txt
 # Install required browsers for playwright
 RUN playwright install
 
+# Install wkhtmltopdf
+RUN apt-get install -y wkhtmltopdf
+
 # Copy your application into the Docker image
 WORKDIR /opt/copilot/backend
 COPY . .

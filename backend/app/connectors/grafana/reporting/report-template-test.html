@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Grafana Dashboard Report</title>
+    <style>
+        html, body {
+            padding: 0;
+            margin: 0;
+        }
+        * {
+            box-sizing: border-box;
+        }
+        :root {
+            --border-radius: 6px;
+            --bg-secondary-color: #f0f0f0;
+            --border-small-050: 1px solid #ccc;
+        }
+        .dashboard-container, .screenshots-container {
+            background-color: var(--bg-secondary-color);
+            display: flex;
+            flex-wrap: wrap;
+            box-sizing: border-box;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+        .dashboard-panel, .screenshot {
+            background-color: white;
+            overflow: hidden;
+            flex-grow: 1;
+            min-width: 300px; /* Adjust based on your content */
+            box-sizing: border-box;
+            padding: 10px;
+            margin: 10px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+        }
+        .screenshot img {
+            border-radius: var(--border-radius);
+        }
+        .caption {
+            text-align: center;
+            font-size: 0.8em;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="screenshots-container">
+        <h2>Screenshots</h2>
+        {% for panel in panels %}
+        <div class="screenshot">
+            <img src="data:image/png;base64,{{ panel.base64_image }}" alt="Screenshot" style="width: {{ panel.width }}px; height: {{ panel.height }}px;">
+            <div class="caption">Page {{ loop.index }}</div>
+        </div>
+        {% endfor %}
+    </div>
+</body>
+</html>

@@ -117,6 +117,7 @@ pytest-playwright==0.4.4
 python-dateutil==2.8.2
 python-dotenv==1.0.0
 python-jose==3.3.0
+pdfkit==1.0.0
 python-magic==0.4.27
 python-multipart==0.0.6
 pytz==2023.3.post1
@@ -128,6 +129,7 @@ regex==2023.10.3
 reportlab==4.0.5
 requests==2.31.0
 requests-cache==1.1.0
+Jinja2=3.1.2
 rfc3339-validator==0.1.4
 rfc3986-validator==0.1.1
 rich==13.6.0

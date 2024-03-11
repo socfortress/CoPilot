@@ -5,6 +5,11 @@ from loguru import logger
 from playwright.async_api import async_playwright
 from loguru import logger
 import base64
+import os
+import sys
+import subprocess
+import pdfkit
+from jinja2 import Environment, FileSystemLoader
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.connectors.grafana.schema.reporting import GenerateReportRequest, GenerateReportResponse, Base64Image
 from app.utils import get_connector_attribute
@@ -13,6 +18,11 @@ from app.connectors.grafana.schema.reporting import GrafanaDashboardDetails
 from app.connectors.grafana.schema.reporting import GrafanaOrganizationDashboards
 from app.connectors.grafana.schema.reporting import GrafanaOrganizations
 from app.connectors.grafana.utils.universal import create_grafana_client
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from reportlab.platypus import SimpleDocTemplate, Image
+from reportlab.lib.units import inch
+from pathlib import Path
 
 
 async def get_orgs() -> List[GrafanaOrganizations]:
@@ -101,13 +111,61 @@ async def check_login_success(page):
 
 async def capture_screenshots(page, urls):
     base64_images = []
-    for url in urls:
+    for i, url in enumerate(urls):
         await page.goto(url)
         await page.wait_for_load_state(state='networkidle')
         screenshot = await page.screenshot(type='png')
         base64_image = base64.b64encode(screenshot).decode('utf-8')
-        base64_images.append({"url": url, "base64_image": base64_image})
+        width = await page.evaluate('window.innerWidth')
+        height = await page.evaluate('window.innerHeight')
+        base64_images.append({
+            'url': url,
+            'base64_image': base64_image,
+            'width': width,
+            'height': height,
+            'page_number': i + 1
+        })
     return base64_images
+
+def get_wkhtmltopdf_path():
+    if sys.platform == 'win32':
+        return 'C:\\Program Files\\wkhtmltopdf\\bin\\wkhtmltopdf.exe'
+    elif sys.platform == 'darwin':
+        return '/usr/local/bin/wkhtmltopdf'
+    else:
+        try:
+            # Try to find the path using 'which' command in Linux
+            path = subprocess.check_output(['which', 'wkhtmltopdf'])
+            return path.strip()
+        except Exception as e:
+            logger.error(f"Could not find wkhtmltopdf: {e}")
+            return None
+
+def create_pdf(html_string):
+    logger.info(f"Creating PDF from HTML: {html_string}")
+    wkhtmltopdf_path = get_wkhtmltopdf_path()
+    if wkhtmltopdf_path is None:
+        logger.error("Cannot create PDF without wkhtmltopdf")
+        return
+    config = pdfkit.configuration(wkhtmltopdf=wkhtmltopdf_path)
+    pdfkit.from_string(html_string, 'report.pdf', configuration=config)
+
+
+def generate_html(base64_images):
+    # Load the template
+    templates_dir = Path(__file__).parent / '../reporting'
+    env = Environment(loader=FileSystemLoader(templates_dir))
+    template = env.get_template('report-template-test.html')
+
+    # Define the context
+    context = {
+        'panels': base64_images,  # Assuming this is adjusted to contain base64 encoded images
+    }
+
+    # Render the template with the context
+    html_string = template.render(context)
+
+    return html_string
 
 async def generate_report(
     request: GenerateReportRequest,
@@ -124,6 +182,8 @@ async def generate_report(
             return
         base64_images = await capture_screenshots(page, request.urls)
         await browser.close()
+        html_string = generate_html(base64_images)
+        create_pdf(html_string)
         return GenerateReportResponse(
             base64_images=[Base64Image(url=img['url'], base64_image=img['base64_image']) for img in base64_images],
             message="Report generated successfully",
