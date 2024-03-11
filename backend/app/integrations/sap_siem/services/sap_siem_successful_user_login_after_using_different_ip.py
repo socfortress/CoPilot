@@ -50,6 +50,7 @@ async def handle_common_suspicious_login_tasks(
     case = await create_case_fn(suspicious_login, session)
     case_ids.append(case.data.case_id)
     user_activity = await collect_user_activity(suspicious_login)
+    logger.info(f"User activity: {user_activity}")
     await handle_user_activity(user_activity, unique_instances, case.data.case_id)
     await mark_as_checked(suspicious_login)
     alert_source_link = (await get_customer_alert_settings(suspicious_login.customer_code, session=session)).shuffle_endpoint
@@ -86,7 +87,6 @@ async def handle_suspicious_login_multiple(suspicious_login, unique_instances, c
         create_iris_case_multiple,
         session,
     )
-    await update_event_analyzed_multiple_logins_flag(suspicious_login.id, suspicious_login.index)
 
 
 async def update_event_analyzed_multiple_logins_flag(id: str, index: str):
@@ -285,7 +285,6 @@ async def create_iris_case_multiple(suspicious_login: SuspiciousLogin, session: 
         case_client.add_case,
         **payload.to_dict(),
     )
-    await update_event_analyzed_multiple_logins_flag(suspicious_login.id, suspicious_login.index)
 
     return CaseResponse(**result)
 
@@ -301,8 +300,8 @@ async def collect_user_activity(suspicious_logins: SuspiciousLogin) -> SapSiemWa
     """
     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
     results = es_client.search(
-        index="sap_siem_*",
-        #index="new-integrations*",
+        #index="sap_siem_*",
+        index="new-integrations*",
         body={
             "size": 1000,
             "query": {"bool": {"must": [{"term": {"params_loginID": suspicious_logins.loginID}}]}},
@@ -322,8 +321,8 @@ async def get_initial_search_results(es_client):
         dict: The search results.
     """
     return es_client.search(
-        index="sap_siem_*",
-        #index="new-integrations*",
+        #index="sap_siem_*",
+        index="new-integrations*",
         body={
             "size": 1000,
             "query": {"bool": {"must": [{"term": {"event_analyzed_success_login_diff_ip": "False"}}]}},
@@ -359,6 +358,7 @@ async def process_hits(hits, login_id_to_ips, suspicious_activity, time_range):
     Returns:
         None
     """
+    logger.info(f"Processing hits: {hits} for sap_siem_successful_user_login_after_using_different_ip")
     login_id_to_ips = defaultdict(lambda: defaultdict(list))
 
     for hit in hits:
