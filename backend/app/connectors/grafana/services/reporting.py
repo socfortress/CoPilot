@@ -109,22 +109,22 @@ async def check_login_success(page):
         print("Login failed")
         return False
 
-async def capture_screenshots(page, urls):
+async def capture_screenshots(page, panels):
     base64_images = []
-    for i, url in enumerate(urls):
-        await page.goto(url)
+    for i, panel in enumerate(panels):
+        await page.goto(panel.url)
         await page.wait_for_load_state(state='networkidle')
+        await page.set_viewport_size({"width": panel.width, "height": panel.height})
         screenshot = await page.screenshot(type='png')
         base64_image = base64.b64encode(screenshot).decode('utf-8')
-        width = await page.evaluate('window.innerWidth')
-        height = await page.evaluate('window.innerHeight')
         base64_images.append({
-            'url': url,
+            'url': panel.url,
             'base64_image': base64_image,
-            'width': width,
-            'height': height,
-            'page_number': i + 1
+            'width': panel.width,
+            'height': panel.height,
+            'page_number': panel.page_number
         })
+    base64_images.sort(key=lambda x: x['page_number'])
     return base64_images
 
 def get_wkhtmltopdf_path():
@@ -180,7 +180,7 @@ async def generate_report(
         if not await check_login_success(page):
             await browser.close()
             return
-        base64_images = await capture_screenshots(page, request.urls)
+        base64_images = await capture_screenshots(page, request.panels)
         await browser.close()
         html_string = generate_html(base64_images)
         create_pdf(html_string)

@@ -51,7 +51,7 @@
         {% for panel in panels %}
         <div class="screenshot">
             <img src="data:image/png;base64,{{ panel.base64_image }}" alt="Screenshot" style="width: {{ panel.width }}px; height: {{ panel.height }}px;">
-            <div class="caption">Page {{ loop.index }}</div>
+            <div class="caption">Page {{ panel.page_number }}</div>
         </div>
         {% endfor %}
     </div>
