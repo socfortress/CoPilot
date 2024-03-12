@@ -52,38 +52,28 @@
 				font-size: 0.8em;
 				color: #666;
 			}
-
-			.cover-box {
-				page-break-inside: avoid;
-			}
-			.toc-box {
-				page-break-inside: avoid;
-			}
-			.toc-box h2 {
+			h2 {
 				text-align: center;
 				color: #333;
 				margin-bottom: 20px;
 			}
-			.toc-box .table-of-contents {
+			.table-of-contents {
 				margin-bottom: 20px;
 			}
-			.toc-box .table-of-contents li {
+			.table-of-contents li {
 				margin-bottom: 10px;
 			}
 		</style>
 	</head>
 	<body>
-		<div class="cover-box">cover..</div>
-		<div class="toc-box">
+		<div class="screenshots-container">
 			<h2>Table of Contents</h2>
 			<ul class="table-of-contents">
 				{% for group in panel_groups %} {% for panel in group %}
 				<li>Page {{ panel.page_number }} - {{ panel.title }}</li>
 				{% endfor %} {% endfor %}
 			</ul>
-		</div>
-		<div class="panels"></div>
-		<div class="screenshots-container">
+
 			<h2>Screenshots</h2>
 			{% for group in panel_groups %}
 			<div class="screenshot-row">

@@ -33,7 +33,7 @@
 						</n-input-group>
 					</n-form-item>
 				</div>
-				<div class="flex">
+				<div class="flex" v-if="!hidePanels">
 					<n-form-item label="Panels" v-if="canSelectPanels" class="grow">
 						<n-select
 							v-model:value="selectedPanelsIds"
@@ -71,13 +71,15 @@ import { useStorage } from "@vueuse/core"
 
 const emit = defineEmits<{
 	(e: "updated", value: Panel[]): void
+	(e: "updateAvailable", value: Panel[]): void
 	(e: "generated", value: PanelLink[]): void
 }>()
 
 const props = defineProps<{
 	hideGenerateButton?: boolean
+	hidePanels?: boolean
 }>()
-const { hideGenerateButton } = toRefs(props)
+const { hideGenerateButton, hidePanels } = toRefs(props)
 
 const GenerateLinksIcon = "carbon:report-data"
 const message = useMessage()
@@ -195,6 +197,7 @@ function getPanels() {
 			.then(res => {
 				if (res.data.success) {
 					panelsList.value = res.data?.panels || []
+					emit("updateAvailable", panelsList.value)
 				} else {
 					message.warning(res.data?.message || "An error occurred. Please try again later.")
 				}

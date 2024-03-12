@@ -1,35 +1,72 @@
 <template>
 	<div class="report-panels">
-		<div class="panels-container" v-if="panelsBlock.length">
-			<div
-				class="panel"
-				v-for="panel of panelsBlock"
-				:key="panel.id"
-				:style="panel.width ? `flex-basis:${panel.width}%` : ''"
-			>
-				<div class="toolbar">
-					<n-popover trigger="hover" overlap raw placement="right-start" class="popover-report-panel-slider">
-						<template #trigger>
-							<n-button size="tiny">
-								<template #icon>
-									<Icon :name="MenuIcon"></Icon>
-								</template>
-							</n-button>
+		<div class="editor flex gap-3">
+			<div class="panels-container grow">
+				<div class="rows-container">
+					<draggable
+						v-model="rows"
+						item-key="id"
+						:animation="200"
+						ghost-class="ghost-row"
+						handle=".pan-area"
+						group="rows"
+						class="flex flex-col gap-2"
+					>
+						<template #item="{ element: row }">
+							<div class="row">
+								<draggable
+									v-model="row.panels"
+									item-key="id"
+									:animation="200"
+									ghost-class="ghost-panel"
+									group="panels"
+									class="flex gap-2"
+								>
+									<template #header>
+										<div class="column-header flex justify-between">
+											<Icon :name="PanIcon" :size="20" class="pan-area"></Icon>
+										</div>
+									</template>
+									<template #item="{ element: panel }">
+										<div class="panel">
+											{{ panel.id }}
+										</div>
+									</template>
+								</draggable>
+							</div>
 						</template>
-						<div class="w-52 flex items-center gap-3 py-2 px-5">
-							<span class="font-mono w-12">{{ panel.width / 100 }}</span>
-							<n-slider :tooltip="false" v-model:value="panel.width" :min="0" :max="100" :step="10" />
+						<template #footer>
+							<div class="column flex items-center justify-center">
+								<button class="add-task-btn flex items-center justify-center !mt-0" @click="addRow()">
+									<Icon :name="AddIcon" :size="20"></Icon>
+									<span>Add row</span>
+								</button>
+							</div>
+						</template>
+					</draggable>
+				</div>
+			</div>
+
+			<div class="panels-sidebar flex flex-col gap-2 p-2">
+				<draggable
+					class="dragArea list-group"
+					:list="availablePanels"
+					:group="{ name: 'panels', pull: 'clone', put: false }"
+					item-key="id"
+				>
+					<template #item="{ element: panel }">
+						<div class="panel">
+							<div class="content">
+								{{ panel.title }}
+							</div>
 						</div>
-					</n-popover>
-				</div>
-				<div class="content">
-					{{ panel.name }}
-				</div>
+					</template>
+				</draggable>
 			</div>
 		</div>
 
 		<div class="toolbar mt-5">
-			<n-button type="success" v-if="panelsBlock.length" @click="print()" :loading="loading">
+			<n-button type="success" v-if="availablePanels?.length" @click="print()" :loading="loading">
 				<template #icon>
 					<Icon :name="PrintIcon"></Icon>
 				</template>
@@ -40,49 +77,41 @@
 </template>
 
 <script setup lang="ts">
+/**
+ * PDF:  ->  backend/report.pdf
+ * TPL:  ->  backend/app/connectors/grafana/reporting/report-template-test.html
+ */
+
 import { ref, computed, toRefs, watch } from "vue"
 import { NButton, NSlider, NPopover } from "naive-ui"
 import type { PanelLink, Panel } from "@/types/reporting"
 import Icon from "@/components/common/Icon.vue"
+import draggable from "vuedraggable"
 // import Api from "@/api"
 // import { saveAs } from "file-saver"
 
-interface PanelBlock {
-	id: string | number
-	name: string
-	width: number
-}
-
 const props = defineProps<{
 	panelsList?: Panel[]
+	availablePanels?: Panel[]
 	linksList?: PanelLink[]
 }>()
-const { panelsList } = toRefs(props)
+const { availablePanels } = toRefs(props)
 
-const MenuIcon = "carbon:overflow-menu-horizontal"
+// const MenuIcon = "carbon:overflow-menu-horizontal"
+const PanIcon = "carbon:pan-horizontal"
+const AddIcon = "carbon:add-alt"
 const PrintIcon = "carbon:printer"
 // const message = useMessage()
-const loadingImages = ref(false)
 const loadingPrint = ref(false)
-const loading = computed(() => loadingImages.value || loadingPrint.value)
-const panelsBlock = ref<PanelBlock[]>([])
+const loading = computed(() => loadingPrint.value)
 
-watch(panelsList, val => {
-	createPanels(val || [])
-})
+const rows = ref<any[]>([])
 
-function createPanels(list: Panel[]) {
-	const panels: PanelBlock[] = []
-
-	for (const panel of list) {
-		panels.push({
-			id: panel.id,
-			name: panel.title,
-			width: 50
-		})
-	}
-
-	panelsBlock.value = panels
+function addRow() {
+	rows.value.push({
+		id: new Date().getTime(),
+		panels: [{ id: new Date().getTime() + "a" }, { id: new Date().getTime() + "b" }]
+	})
 }
 
 function print() {
@@ -96,51 +125,52 @@ function print() {
 
 <style lang="scss" scoped>
 .report-panels {
-	.panels-container {
-		border-radius: var(--border-radius);
-		background-color: var(--bg-secondary-color);
-		border: var(--border-small-050);
-		display: flex;
-		flex-wrap: wrap;
-		padding: clamp(5px, 1vw, 10px);
+	.editor {
+		width: 100%;
+		.panels-container {
+			.rows-container {
+				.row {
+					border-radius: var(--border-radius);
+					background-color: var(--bg-secondary-color);
+					border: var(--border-small-050);
+					display: flex;
+					flex-wrap: wrap;
+					padding: 20px;
 
-		.panel {
-			overflow: hidden;
-			flex-grow: 1;
-			min-width: 200px;
-			padding: clamp(5px, 1vw, 10px);
-			position: relative;
-
-			.toolbar {
-				position: absolute;
-				top: 7px;
-				right: 7px;
-				backdrop-filter: blur(2px);
+					.panel {
+						background-color: red;
+						padding: 20px;
+					}
+				}
 			}
-			.content {
-				border-radius: var(--border-radius);
-				background-color: var(--bg-color);
-				border: var(--border-small-050);
-				overflow: hidden;
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				aspect-ratio: 1.6;
-				font-size: clamp(12px, 1.7vw, 18px);
-				font-weight: bold;
-				padding: 3vw;
-				text-align: center;
+		}
+
+		.panels-sidebar {
+			width: 180px;
+			border-radius: var(--border-radius);
+			background-color: var(--bg-secondary-color);
+			border: var(--border-small-050);
+			display: flex;
+			flex-wrap: wrap;
+
+			.panel {
+				width: 100%;
+				.content {
+					border-radius: var(--border-radius);
+					background-color: var(--bg-color);
+					border: var(--border-small-050);
+					overflow: hidden;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					aspect-ratio: 1.8;
+					font-size: 12px;
+					font-weight: bold;
+					padding: 16px;
+					text-align: center;
+				}
 			}
 		}
 	}
-}
-</style>
-
-<style lang="scss">
-.popover-report-panel-slider {
-	background-color: rgba(var(--modal-color-rgb), 0.5);
-	border-radius: var(--border-radius);
-	overflow: hidden;
-	backdrop-filter: blur(5px);
 }
 </style>
