@@ -18,10 +18,6 @@ from app.connectors.grafana.schema.reporting import GrafanaDashboardDetails
 from app.connectors.grafana.schema.reporting import GrafanaOrganizationDashboards
 from app.connectors.grafana.schema.reporting import GrafanaOrganizations
 from app.connectors.grafana.utils.universal import create_grafana_client
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
-from reportlab.platypus import SimpleDocTemplate, Image
-from reportlab.lib.units import inch
 from pathlib import Path
 
 
@@ -112,6 +108,7 @@ async def check_login_success(page):
 async def capture_screenshots(page, panels):
     base64_images = []
     for i, panel in enumerate(panels):
+        logger.info(f"Panel Row: {panel.row}")
         await page.goto(panel.url)
         await page.wait_for_load_state(state='networkidle')
         await page.set_viewport_size({"width": panel.width, "height": panel.height})
@@ -122,7 +119,8 @@ async def capture_screenshots(page, panels):
             'base64_image': base64_image,
             'width': panel.width,
             'height': panel.height,
-            'page_number': panel.page_number
+            'page_number': panel.page_number,
+            'row': panel.row
         })
     base64_images.sort(key=lambda x: x['page_number'])
     return base64_images
@@ -142,7 +140,6 @@ def get_wkhtmltopdf_path():
             return None
 
 def create_pdf(html_string):
-    logger.info(f"Creating PDF from HTML: {html_string}")
     wkhtmltopdf_path = get_wkhtmltopdf_path()
     if wkhtmltopdf_path is None:
         logger.error("Cannot create PDF without wkhtmltopdf")
@@ -151,15 +148,44 @@ def create_pdf(html_string):
     pdfkit.from_string(html_string, 'report.pdf', configuration=config)
 
 
+# def generate_html(base64_images):
+#     # Load the template
+#     templates_dir = Path(__file__).parent / '../reporting'
+#     env = Environment(loader=FileSystemLoader(templates_dir))
+#     template = env.get_template('report-template-test.html')
+
+#     # Define the context
+#     context = {
+#         'panels': base64_images,  # Assuming this is adjusted to contain base64 encoded images
+#     }
+
+#     # Render the template with the context
+#     html_string = template.render(context)
+
+#     return html_string
 def generate_html(base64_images):
     # Load the template
     templates_dir = Path(__file__).parent / '../reporting'
     env = Environment(loader=FileSystemLoader(templates_dir))
     template = env.get_template('report-template-test.html')
 
+    # Group the panels into rows
+    panel_groups = []
+    current_group = []
+    for panel in base64_images:
+        if panel['row']:
+            current_group.append(panel)
+        else:
+            if current_group:
+                panel_groups.append(current_group)
+                current_group = []
+            panel_groups.append([panel])
+    if current_group:
+        panel_groups.append(current_group)
+
     # Define the context
     context = {
-        'panels': base64_images,  # Assuming this is adjusted to contain base64 encoded images
+        'panel_groups': panel_groups,
     }
 
     # Render the template with the context

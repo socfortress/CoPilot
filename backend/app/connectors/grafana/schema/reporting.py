@@ -195,6 +195,7 @@ class RequestPanel(BaseModel):
     width: int = Field(800, description="Width of the screenshot")
     height: int = Field(600, description="Height of the screenshot")
     page_number: int = Field(..., description="Page number of the screenshot")
+    row: bool = Field(False, description="Whether the panel is a row panel")
 
 
 class GenerateReportRequest(BaseModel):
@@ -205,24 +206,28 @@ class GenerateReportRequest(BaseModel):
                 "width": 800,
                 "height": 600,
                 "page_number": 1,
+                "row": False,
             },
             {
                 "url": "http://ashdevcopilot01.socfortress.local:3000/d-solo/ab9bab2c-5d86-43e7-bac2-c1d68fc91342/huntress-summary?orgId=1&from=1708725654862&to=1709330454862&panelId=1",
                 "width": 800,
                 "height": 600,
                 "page_number": 2,
+                "row": False,
             },
             {
                 "url": "http://ashdevcopilot01.socfortress.local:3000/d-solo/a1891b09-fba9-498e-807e-1ad774c8557f/sap-users-auth?orgId=44&from=1709303384274&to=1709389784274&panelId=43",
                 "width": 800,
                 "height": 600,
                 "page_number": 3,
+                "row": False,
             },
             {
                 "url": "http://ashdevcopilot01.socfortress.local:3000/d-solo/ab9bab2c-5d86-43e7-bac2-c1d68fc91342/huntress-summary?orgId=1&from=1706799780600&to=1709391780600&panelId=10",
                 "width": 800,
                 "height": 600,
                 "page_number": 4,
+                "row": False,
             },
         ],
         description="List of panels to generate screenshots for",
