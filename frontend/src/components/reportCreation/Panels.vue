@@ -1,77 +1,90 @@
 <template>
-	<div class="report-panels">
-		<div class="editor flex gap-3">
-			<div class="panels-container grow">
-				<div class="rows-container">
+	<div class="report-panels h-full w-full flex gap-3">
+		<div class="panels-container grow h-full flex flex-col gap-4">
+			<div class="rows-container grow" v-if="availablePanels?.length">
+				<n-scrollbar style="max-height: 100%" trigger="none">
+					<div class="pr-4">
+						<draggable
+							v-model="rows"
+							item-key="id"
+							:animation="200"
+							ghost-class="ghost-row"
+							handle=".pan-area"
+							:group="{ name: 'rows', pull: false, put: false }"
+							class="flex flex-col gap-2"
+						>
+							<template #item="{ element: row }">
+								<div class="row">
+									<draggable
+										v-model="row.panels"
+										item-key="id"
+										:animation="200"
+										ghost-class="ghost-panel"
+										:group="{
+											name: 'panels',
+											put(to: any) {
+												return to.el.children.length < 4
+											},
+											pull: ['panels']
+										}"
+										class="flex gap-2 w-full"
+									>
+										<template #header>
+											<div class="row-header flex justify-end">
+												<div class="pan-area">
+													<Icon :name="PanIcon" :size="20"></Icon>
+												</div>
+											</div>
+										</template>
+										<template #item="{ element: panel }">
+											<div class="panel">
+												<div class="content">
+													{{ panel.title }}
+												</div>
+											</div>
+										</template>
+									</draggable>
+								</div>
+							</template>
+						</draggable>
+					</div>
+				</n-scrollbar>
+			</div>
+			<div class="toolbar pr-4 flex items-center justify-between" v-if="availablePanels?.length">
+				<n-button class="add-task-btn flex items-center justify-center !mt-0" @click="addRow()">
+					<Icon :name="AddIcon" :size="20"></Icon>
+					<span>Add row</span>
+				</n-button>
+
+				<n-button type="success" @click="print()" :loading="loading">
+					<template #icon>
+						<Icon :name="PrintIcon"></Icon>
+					</template>
+					Print Report
+				</n-button>
+			</div>
+		</div>
+
+		<div class="panels-sidebar h-full" v-if="availablePanels?.length">
+			<n-scrollbar style="max-height: 100%" trigger="none">
+				<div class="p-3">
 					<draggable
-						v-model="rows"
+						class="flex flex-col gap-3"
+						:list="availablePanels"
+						:group="{ name: 'panels', pull: 'clone', put: false }"
+						:sort="false"
 						item-key="id"
-						:animation="200"
-						ghost-class="ghost-row"
-						handle=".pan-area"
-						group="rows"
-						class="flex flex-col gap-2"
 					>
-						<template #item="{ element: row }">
-							<div class="row">
-								<draggable
-									v-model="row.panels"
-									item-key="id"
-									:animation="200"
-									ghost-class="ghost-panel"
-									group="panels"
-									class="flex gap-2"
-								>
-									<template #header>
-										<div class="column-header flex justify-between">
-											<Icon :name="PanIcon" :size="20" class="pan-area"></Icon>
-										</div>
-									</template>
-									<template #item="{ element: panel }">
-										<div class="panel">
-											{{ panel.id }}
-										</div>
-									</template>
-								</draggable>
-							</div>
-						</template>
-						<template #footer>
-							<div class="column flex items-center justify-center">
-								<button class="add-task-btn flex items-center justify-center !mt-0" @click="addRow()">
-									<Icon :name="AddIcon" :size="20"></Icon>
-									<span>Add row</span>
-								</button>
+						<template #item="{ element: panel }">
+							<div class="panel">
+								<div class="content">
+									{{ panel.title }}
+								</div>
 							</div>
 						</template>
 					</draggable>
 				</div>
-			</div>
-
-			<div class="panels-sidebar flex flex-col gap-2 p-2">
-				<draggable
-					class="dragArea list-group"
-					:list="availablePanels"
-					:group="{ name: 'panels', pull: 'clone', put: false }"
-					item-key="id"
-				>
-					<template #item="{ element: panel }">
-						<div class="panel">
-							<div class="content">
-								{{ panel.title }}
-							</div>
-						</div>
-					</template>
-				</draggable>
-			</div>
-		</div>
-
-		<div class="toolbar mt-5">
-			<n-button type="success" v-if="availablePanels?.length" @click="print()" :loading="loading">
-				<template #icon>
-					<Icon :name="PrintIcon"></Icon>
-				</template>
-				Print Report
-			</n-button>
+			</n-scrollbar>
 		</div>
 	</div>
 </template>
@@ -83,7 +96,7 @@
  */
 
 import { ref, computed, toRefs, watch } from "vue"
-import { NButton, NSlider, NPopover } from "naive-ui"
+import { NButton, NSlider, NPopover, NScrollbar } from "naive-ui"
 import type { PanelLink, Panel } from "@/types/reporting"
 import Icon from "@/components/common/Icon.vue"
 import draggable from "vuedraggable"
@@ -98,19 +111,19 @@ const props = defineProps<{
 const { availablePanels } = toRefs(props)
 
 // const MenuIcon = "carbon:overflow-menu-horizontal"
-const PanIcon = "carbon:pan-horizontal"
+const PanIcon = "carbon:draggable"
 const AddIcon = "carbon:add-alt"
 const PrintIcon = "carbon:printer"
 // const message = useMessage()
 const loadingPrint = ref(false)
 const loading = computed(() => loadingPrint.value)
 
-const rows = ref<any[]>([])
+const rows = ref<{ id: number; panels: Panel[] }[]>([])
 
 function addRow() {
 	rows.value.push({
 		id: new Date().getTime(),
-		panels: [{ id: new Date().getTime() + "a" }, { id: new Date().getTime() + "b" }]
+		panels: []
 	})
 }
 
@@ -125,50 +138,99 @@ function print() {
 
 <style lang="scss" scoped>
 .report-panels {
-	.editor {
-		width: 100%;
-		.panels-container {
-			.rows-container {
-				.row {
-					border-radius: var(--border-radius);
-					background-color: var(--bg-secondary-color);
-					border: var(--border-small-050);
-					display: flex;
-					flex-wrap: wrap;
-					padding: 20px;
+	overflow: hidden;
+	.panels-container {
+		overflow: hidden;
 
-					.panel {
-						background-color: red;
-						padding: 20px;
+		.rows-container {
+			overflow: hidden;
+			border-radius: var(--border-radius);
+
+			.row {
+				border-radius: var(--border-radius);
+				background-color: var(--bg-secondary-color);
+				border: var(--border-small-050);
+				padding: 20px;
+				height: 172px;
+				position: relative;
+				transition: border-color 0.2s;
+
+				.row-header {
+					position: absolute;
+					top: 0;
+					right: 0;
+					bottom: 0;
+
+					.pan-area {
+						position: absolute;
+						top: 50%;
+						transform: translateY(-50%);
+						cursor: move;
 					}
+				}
+
+				.panel {
+					height: 130px;
+					aspect-ratio: unset;
+					flex: 1 1 0px;
+				}
+
+				&:hover {
+					border-color: var(--primary-color);
+				}
+
+				&.ghost-row {
+					border: 2px dashed var(--primary-040-color) !important;
 				}
 			}
 		}
+	}
 
-		.panels-sidebar {
-			width: 180px;
-			border-radius: var(--border-radius);
-			background-color: var(--bg-secondary-color);
-			border: var(--border-small-050);
-			display: flex;
-			flex-wrap: wrap;
+	.panels-sidebar {
+		border-radius: var(--border-radius);
+		background-color: var(--bg-secondary-color);
+		border: var(--border-small-050);
 
-			.panel {
-				width: 100%;
-				.content {
-					border-radius: var(--border-radius);
-					background-color: var(--bg-color);
-					border: var(--border-small-050);
-					overflow: hidden;
-					display: flex;
-					align-items: center;
-					justify-content: center;
-					aspect-ratio: 1.8;
-					font-size: 12px;
-					font-weight: bold;
-					padding: 16px;
-					text-align: center;
+		:deep() {
+			.n-scrollbar {
+				.n-scrollbar-rail {
+					right: 3px;
 				}
+			}
+		}
+	}
+
+	.panel {
+		height: 100px;
+		aspect-ratio: 1.72;
+		cursor: move;
+
+		.content {
+			border-radius: var(--border-radius);
+			background-color: var(--bg-color);
+			border: var(--border-small-050);
+			overflow: hidden;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 12px;
+			font-weight: bold;
+			padding: 16px;
+			text-align: center;
+			transition: border-color 0.2s;
+			width: 100%;
+			height: 100%;
+		}
+
+		&:hover {
+			.content {
+				border-color: var(--primary-color);
+			}
+		}
+
+		&.ghost-panel {
+			.content {
+				border: 2px dashed var(--primary-040-color) !important;
 			}
 		}
 	}

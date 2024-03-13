@@ -1,12 +1,12 @@
 <template>
-	<div class="page">
+	<div class="page page-wrapped page-without-footer flex flex-col gap-4">
 		<ReportWizard
 			@updated="setPanels($event)"
 			@updateAvailable="setAvailable($event)"
 			hide-generate-button
 			hide-panels
 		/>
-		<ReportPanels :panels-list="panelsList" :available-panels="availablePanels" class="mt-5" />
+		<ReportPanels :panels-list="panelsList" :available-panels="availablePanels" />
 	</div>
 </template>
 
@@ -27,3 +27,9 @@ function setAvailable(panels: Panel[]) {
 	availablePanels.value = panels
 }
 </script>
+
+<style lang="scss" scoped>
+.page {
+	overflow: hidden;
+}
+</style>
