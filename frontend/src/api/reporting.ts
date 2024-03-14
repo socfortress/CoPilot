@@ -28,15 +28,14 @@ export default {
 	generatePanelsLinks(payload: PanelsLinksPayload) {
 		return HttpClient.post<FlaskBaseResponse & { links: PanelLink[] }>(`/reporting/generate_iframe_links`, payload)
 	},
-	generatePanelsImages(urls: string[]) {
+	generateReport(rows: Array<{ id: number }>[]) {
 		return HttpClient.post<FlaskBaseResponse & { base64_images: PanelImage[] }>(
 			`/reporting/generate-report`,
 			{
-				urls
+				timerange: "1h",
+				rows
 			},
-			{
-				timeout: 0
-			}
+			{ timeout: 0 }
 		)
 	}
 }

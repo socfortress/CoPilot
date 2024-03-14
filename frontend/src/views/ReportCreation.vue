@@ -1,12 +1,12 @@
 <template>
 	<div class="page page-wrapped page-without-footer flex flex-col gap-4">
 		<ReportWizard
-			@updated="setPanels($event)"
-			@updateAvailable="setAvailable($event)"
-			hide-generate-button
-			hide-panels
+			@organization="org = $event"
+			@dashboard="dashboard = $event"
+			@panels="panels = $event"
+			hide-panels-select
 		/>
-		<ReportPanels :panels-list="panelsList" :available-panels="availablePanels" />
+		<ReportPanels :org="org" :dashboard="dashboard" :panels="panels" />
 	</div>
 </template>
 
@@ -14,18 +14,11 @@
 import { ref } from "vue"
 import ReportWizard from "@/components/reportCreation/Wizard.vue"
 import ReportPanels from "@/components/reportCreation/Panels.vue"
-import type { Panel } from "@/types/reporting"
+import type { Dashboard, Org, Panel } from "@/types/reporting"
 
-const panelsList = ref<Panel[]>([])
-const availablePanels = ref<Panel[]>([])
-
-function setPanels(panels: Panel[]) {
-	panelsList.value = panels
-}
-
-function setAvailable(panels: Panel[]) {
-	availablePanels.value = panels
-}
+const org = ref<Org | null>(null)
+const dashboard = ref<Dashboard | null>(null)
+const panels = ref<Panel[]>([])
 </script>
 
 <style lang="scss" scoped>

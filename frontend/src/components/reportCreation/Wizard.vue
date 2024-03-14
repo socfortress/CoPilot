@@ -3,6 +3,18 @@
 		<n-spin v-model:show="loading">
 			<n-form :label-width="80" class="flex flex-col gap-5">
 				<div class="grid gap-5 grid-cols-1 sm:grid-cols-3">
+					<n-form-item label="Time Range">
+						<n-input-group>
+							<n-select
+								v-model:value="timeUnit"
+								:options="timeUnitOptions"
+								placeholder="Time unit"
+								class="!min-w-28 basis-1"
+							/>
+							<n-input-number v-model:value="timeValue" :min="1" placeholder="Time" class="grow" />
+						</n-input-group>
+					</n-form-item>
+
 					<n-form-item label="Organization">
 						<n-select
 							v-model:value="selectedOrgId"
@@ -20,20 +32,8 @@
 							clearable
 						/>
 					</n-form-item>
-
-					<n-form-item label="Time Range" v-if="canSelectPanels">
-						<n-input-group>
-							<n-select
-								v-model:value="timeUnit"
-								:options="timeUnitOptions"
-								placeholder="Time unit"
-								class="!min-w-28 basis-1"
-							/>
-							<n-input-number v-model:value="timeValue" :min="1" placeholder="Time" class="grow" />
-						</n-input-group>
-					</n-form-item>
 				</div>
-				<div class="flex" v-if="!hidePanels">
+				<div class="flex" v-if="!hidePanelsSelect">
 					<n-form-item label="Panels" v-if="canSelectPanels" class="grow">
 						<n-select
 							v-model:value="selectedPanelsIds"
@@ -44,17 +44,6 @@
 						/>
 					</n-form-item>
 				</div>
-				<div class="flex justify-end gap-4 items-center" v-if="!hideGenerateButton">
-					<div v-if="isDirty && linksList.length" class="text-secondary-color">
-						Press the button to refresh the panels
-					</div>
-					<n-button type="success" @click="getLinks()" :loading="loadingLinks" v-if="isValid">
-						<template #icon>
-							<Icon :name="GenerateLinksIcon"></Icon>
-						</template>
-						Show Panels
-					</n-button>
-				</div>
 			</n-form>
 		</n-spin>
 	</div>
@@ -62,37 +51,37 @@
 
 <script setup lang="ts">
 import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
-import { NSpin, NForm, NFormItem, NInputGroup, NInputNumber, NButton, NSelect, useMessage } from "naive-ui"
+import { NSpin, NForm, NFormItem, NInputGroup, NInputNumber, NSelect, useMessage } from "naive-ui"
 import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
-import type { Dashboard, Org, Panel, PanelLink } from "@/types/reporting"
-import type { PanelsLinksPayload, PanelsLinksTimeUnit } from "@/api/reporting"
+import type { Dashboard, Org, Panel } from "@/types/reporting"
+import type { PanelsLinksTimeUnit } from "@/api/reporting"
 import { useStorage } from "@vueuse/core"
 
 const emit = defineEmits<{
-	(e: "updated", value: Panel[]): void
-	(e: "updateAvailable", value: Panel[]): void
-	(e: "generated", value: PanelLink[]): void
+	(e: "selected", value: Panel[]): void
+	(e: "panels", value: Panel[]): void
+	(e: "dashboard", value: Dashboard | null): void
+	(e: "organization", value: Org | null): void
 }>()
 
 const props = defineProps<{
-	hideGenerateButton?: boolean
-	hidePanels?: boolean
+	hidePanelsSelect?: boolean
 }>()
-const { hideGenerateButton, hidePanels } = toRefs(props)
+const { hidePanelsSelect } = toRefs(props)
 
-const GenerateLinksIcon = "carbon:report-data"
 const message = useMessage()
-const isDirty = ref(false)
 const orgsList = ref<Org[]>([])
 const dashboardsList = ref<Dashboard[]>([])
 const panelsList = ref<Panel[]>([])
-const linksList = ref<PanelLink[]>([])
+
 const loadingOrgs = ref(false)
 const loadingDashboards = ref(false)
 const loadingPanels = ref(false)
-const loadingLinks = ref(false)
+
 const selectedOrgId = ref<number | string | null>(null)
+const selectedOrg = computed(() =>
+	selectedOrgId.value ? orgsList.value.find(o => o.id === selectedOrgId.value) || null : null
+)
 const selectedDashboardUID = ref<string | null>(null)
 const selectedDashboard = computed(() =>
 	selectedDashboardUID.value ? dashboardsList.value.find(o => o.uid === selectedDashboardUID.value) || null : null
@@ -115,22 +104,16 @@ const timeUnitOptions: { label: string; value: PanelsLinksTimeUnit }[] = [
 
 const canSelectDashboard = computed(() => !!selectedOrgId.value)
 const canSelectPanels = computed(() => canSelectDashboard.value && !!selectedDashboardUID.value)
-const isValid = computed(() => canSelectPanels.value && selectedPanelsIds.value.length)
 
-const loading = computed(
-	() => loadingOrgs.value || loadingDashboards.value || loadingPanels.value || loadingLinks.value
-)
-
-watch([selectedOrgId, selectedDashboardUID, selectedPanelsIds, timeUnit, timeValue], () => {
-	isDirty.value = true
-	emit("updated", selectedPanels.value)
-})
+const loading = computed(() => loadingOrgs.value || loadingDashboards.value || loadingPanels.value)
 
 watch(selectedOrgId, val => {
 	dashboardsList.value = []
 	panelsList.value = []
 	selectedDashboardUID.value = null
 	selectedPanelsIds.value = []
+
+	emit("organization", selectedOrg.value)
 
 	if (val) {
 		getDashboards()
@@ -141,9 +124,19 @@ watch(selectedDashboardUID, val => {
 	panelsList.value = []
 	selectedPanelsIds.value = []
 
+	emit("dashboard", selectedDashboard.value)
+
 	if (val) {
 		getPanels()
 	}
+})
+
+watch(panelsList, val => {
+	emit("panels", val)
+})
+
+watch(selectedPanelsIds, () => {
+	emit("selected", selectedPanels.value)
 })
 
 function getOrgs() {
@@ -197,7 +190,6 @@ function getPanels() {
 			.then(res => {
 				if (res.data.success) {
 					panelsList.value = res.data?.panels || []
-					emit("updateAvailable", panelsList.value)
 				} else {
 					message.warning(res.data?.message || "An error occurred. Please try again later.")
 				}
@@ -207,48 +199,6 @@ function getPanels() {
 			})
 			.finally(() => {
 				loadingPanels.value = false
-			})
-	}
-}
-
-function getLinks() {
-	if (
-		selectedOrgId.value &&
-		selectedDashboard.value &&
-		selectedPanelsIds.value.length &&
-		timeUnit.value &&
-		timeValue.value
-	) {
-		loadingLinks.value = true
-
-		const payload: PanelsLinksPayload = {
-			org_id: selectedOrgId.value,
-			dashboard_title: selectedDashboard.value.title,
-			dashboard_uid: selectedDashboard.value.uid,
-			panel_ids: selectedPanelsIds.value,
-			time_range: {
-				value: timeValue.value,
-				unit: timeUnit.value
-			}
-		}
-
-		Api.reporting
-			.generatePanelsLinks(payload)
-			.then(res => {
-				if (res.data.success) {
-					linksList.value = res.data?.links || []
-					isDirty.value = false
-
-					emit("generated", linksList.value)
-				} else {
-					message.warning(res.data?.message || "An error occurred. Please try again later.")
-				}
-			})
-			.catch(err => {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-			})
-			.finally(() => {
-				loadingLinks.value = false
 			})
 	}
 }
