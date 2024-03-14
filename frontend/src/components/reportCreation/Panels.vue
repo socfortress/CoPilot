@@ -1,8 +1,8 @@
 <template>
 	<n-spin v-model:show="loading" class="overflow-hidden h-full w-full" content-class="overflow-hidden h-full w-full">
-		<div class="report-panels h-full w-full flex gap-2">
+		<div class="report-panels h-full w-full flex gap-2" v-if="panelsList?.length">
 			<div class="panels-container grow h-full flex flex-col gap-4">
-				<div class="rows-container" v-if="availablePanels?.length">
+				<div class="rows-container">
 					<n-scrollbar style="max-height: 100%" trigger="none">
 						<div class="drag-wrapper">
 							<draggable
@@ -68,7 +68,7 @@
 														</n-tooltip>
 													</div>
 													<div class="content">
-														{{ panel.title }}
+														{{ panel.panelTitle }}
 													</div>
 												</div>
 											</template>
@@ -79,7 +79,7 @@
 						</div>
 					</n-scrollbar>
 				</div>
-				<div class="toolbar pr-4 flex items-center justify-between" v-if="availablePanels?.length">
+				<div class="toolbar pr-4 flex items-center justify-between">
 					<n-button class="add-task-btn flex items-center justify-center !mt-0" @click="addRow()">
 						<template #icon>
 							<Icon :name="AddIcon"></Icon>
@@ -96,12 +96,12 @@
 				</div>
 			</div>
 
-			<div class="panels-sidebar h-full" v-if="availablePanels?.length">
+			<div class="panels-sidebar h-full">
 				<n-scrollbar style="max-height: 100%" trigger="none">
 					<div class="p-3">
 						<draggable
 							class="flex flex-col gap-3"
-							:list="availablePanels"
+							:list="panelsList"
 							:group="{ name: 'panels', pull: 'clone', put: false }"
 							:sort="false"
 							item-key="id"
@@ -109,7 +109,7 @@
 							<template #item="{ element: panel }">
 								<div class="panel">
 									<div class="content">
-										{{ panel.title }}
+										{{ panel.panelTitle }}
 									</div>
 								</div>
 							</template>
@@ -128,39 +128,65 @@
  */
 
 import { ref, computed, toRefs, watch } from "vue"
-import { NButton, NSlider, NSpin, NScrollbar, NTooltip } from "naive-ui"
-import type { PanelLink, Panel } from "@/types/reporting"
+import { NButton, NSpin, NScrollbar, NTooltip, useMessage } from "naive-ui"
+import type { Dashboard, Org, Panel } from "@/types/reporting"
 import Icon from "@/components/common/Icon.vue"
 import draggable from "vuedraggable"
-// import Api from "@/api"
+import Api from "@/api"
 // import { saveAs } from "file-saver"
+
+interface OrgData {
+	id: number
+	rows: Row[]
+}
 
 interface Row {
 	id: number
-	panels: Panel[]
+	panels: PanelData[]
+}
+
+interface PanelData {
+	panelId: number
+	panelTitle: string
+	orgId: number
+	orgName: string
+	dashboardUID: string
+	dashboardTitle: string
 }
 
 const props = defineProps<{
-	panelsList?: Panel[]
-	availablePanels?: Panel[]
-	linksList?: PanelLink[]
+	org: Org | null
+	dashboard: Dashboard | null
+	panels: Panel[]
 }>()
-const { availablePanels } = toRefs(props)
+const { org, dashboard, panels } = toRefs(props)
 
-// const MenuIcon = "carbon:overflow-menu-horizontal"
 const PanIcon = "carbon:draggable"
 const CloseIcon = "carbon:close"
 const AddIcon = "carbon:add-alt"
-const TrashIcon = "carbon:trash-can"
 const PrintIcon = "carbon:printer"
-// const message = useMessage()
+const message = useMessage()
 const loadingPrint = ref(false)
 const loading = computed(() => loadingPrint.value)
-const rows = ref<Row[]>([])
 
-watch(availablePanels, val => {
-	if (val?.length && !rows.value.length) {
-		addRow()
+const orgs = ref<OrgData[]>([])
+const rows = computed<Row[]>(() => orgs.value.find(o => o.id === org.value?.id)?.rows || [])
+const panelsList = ref<PanelData[]>([])
+
+watch(org, val => {
+	if (val) {
+		setOrg(val)
+	}
+	panelsList.value = []
+})
+
+watch(panels, val => {
+	if (val?.length) {
+		setPanelsList(val)
+
+		if (!rows.value.length) {
+			addRow()
+		}
 	}
 })
 
@@ -177,19 +203,74 @@ function removeRow(row: Row) {
 		1
 	)
 }
-function removePanel(row: Row, panel: Panel) {
+function removePanel(row: Row, panel: PanelData) {
 	row.panels.splice(
-		row.panels.findIndex(o => o.id === panel.id),
+		row.panels.findIndex(o => o.panelId === panel.panelId),
 		1
 	)
+}
+
+function setPanelsList(panels: Panel[]) {
+	if (org.value && dashboard.value && panels.length) {
+		panelsList.value = []
+
+		for (const panel of panels) {
+			panelsList.value.push({
+				panelId: panel.id,
+				panelTitle: panel.title,
+				orgId: org.value.id,
+				orgName: org.value.name,
+				dashboardUID: dashboard.value.uid,
+				dashboardTitle: dashboard.value.title
+			})
+		}
+	}
+}
+
+function setOrg(org: Org) {
+	const exist = orgs.value.find(o => o.id === org.id)
+	if (!exist) {
+		orgs.value.push({
+			id: org.id,
+			rows: []
+		})
+	}
 }
 
 function print() {
 	loadingPrint.value = true
 
-	setTimeout(() => {
-		loadingPrint.value = false
-	}, 2000)
+	const payload: any[] = []
+
+	for (const row of rows.value) {
+		if (row.panels.length) {
+			payload.push({
+				id: row.id,
+				panels: row.panels.map(o => ({
+					panel_id: o.panelId,
+					org_id: 1,
+					dashboard_title: "HUNTRESS - _SUMMARY",
+					dashboard_uid: "ab9bab2c-5d86-43e7-bac2-c1d68fc91342"
+				}))
+			})
+		}
+	}
+
+	Api.reporting
+		.generateReport(payload)
+		.then(res => {
+			if (res.data.success) {
+				console.log(res.data)
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			loadingPrint.value = false
+		})
 }
 </script>
 
