@@ -191,47 +191,18 @@ class GrafanaGenerateIframeLinksResponse(BaseModel):
     success: bool = Field(..., description="The success of the response.")
 
 class RequestPanel(BaseModel):
-    url: str = Field(..., description="URL to generate screenshot for")
-    width: int = Field(800, description="Width of the screenshot")
-    height: int = Field(600, description="Height of the screenshot")
-    page_number: int = Field(..., description="Page number of the screenshot")
-    row: bool = Field(False, description="Whether the panel is a row panel")
+    panel_id: int = Field(..., description="Panel ID")
+    org_id: int = Field(..., description="Organization ID")
+    dashboard_title: str = Field(..., description="Dashboard title")
+    dashboard_uid: str = Field(..., description="Dashboard UID")
 
+class RequestRow(BaseModel):
+    id: int = Field(..., description="Row ID")
+    panels: List[RequestPanel] = Field(..., description="Panels in the row")
 
 class GenerateReportRequest(BaseModel):
-    panels: list[RequestPanel] = Field(
-        [
-            {
-                "url": "http://ashdevcopilot01.socfortress.local:3000/d-solo/ab9bab2c-5d86-43e7-bac2-c1d68fc91342/huntress-summary?orgId=1&from=1708725633941&to=1709330433941&panelId=5",
-                "width": 800,
-                "height": 600,
-                "page_number": 1,
-                "row": False,
-            },
-            {
-                "url": "http://ashdevcopilot01.socfortress.local:3000/d-solo/ab9bab2c-5d86-43e7-bac2-c1d68fc91342/huntress-summary?orgId=1&from=1708725654862&to=1709330454862&panelId=1",
-                "width": 800,
-                "height": 600,
-                "page_number": 2,
-                "row": False,
-            },
-            {
-                "url": "http://ashdevcopilot01.socfortress.local:3000/d-solo/a1891b09-fba9-498e-807e-1ad774c8557f/sap-users-auth?orgId=44&from=1709303384274&to=1709389784274&panelId=43",
-                "width": 800,
-                "height": 600,
-                "page_number": 3,
-                "row": False,
-            },
-            {
-                "url": "http://ashdevcopilot01.socfortress.local:3000/d-solo/ab9bab2c-5d86-43e7-bac2-c1d68fc91342/huntress-summary?orgId=1&from=1706799780600&to=1709391780600&panelId=10",
-                "width": 800,
-                "height": 600,
-                "page_number": 4,
-                "row": False,
-            },
-        ],
-        description="List of panels to generate screenshots for",
-    )
+    timerange: str = Field(..., description="Time range for the report")
+    rows: List[RequestRow] = Field(..., description="Rows in the report")
 
 # class GenerateReportRequest(BaseModel):
 #     urls: list[str] = Field(
