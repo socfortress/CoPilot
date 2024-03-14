@@ -13,7 +13,7 @@ from app.db.universal_models import CustomersMeta
 
 class CustomerSubsctipion(Enum):
     WAZUH = "Wazuh"
-    OFFICE365 = "Office365"
+    #OFFICE365 = "Office365"
 
 
 class ProvisionNewCustomer(BaseModel):
