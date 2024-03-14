@@ -23,7 +23,7 @@ class GrafanaDashboardResponse(BaseModel):
 
 # ! DASHBOARD CLASSES NEED TO BE DEFINED HERE !
 class WazuhDashboard(Enum):
-    SUMMARY = ("Wazuh", "summary.json")
+    WAZUH_SUMMARY = ("Wazuh", "summary.json")
     EDR_WINDOWS_EVENT_LOGS = ("Wazuh", "edr_windows_event_logs.json")
     EDR_WAZUH_INVENOTRY = ("Wazuh", "edr_wazuh_inventory.json")
     EDR_USERS_AND_GROUPS = ("Wazuh", "edr_users_and_groups.json")
@@ -63,7 +63,7 @@ class Office365Dashboard(Enum):
 
 
 class MimecastDashboard(Enum):
-    SUMMARY = ("Mimecast", "summary.json")
+    MIMECAST_SUMMARY = ("Mimecast", "summary.json")
 
 
 class SapSiemDashboard(Enum):
@@ -71,7 +71,7 @@ class SapSiemDashboard(Enum):
 
 
 class HuntressDashboard(Enum):
-    SUMMARY = ("Huntress", "summary.json")
+    HUNTRESS_SUMMARY = ("Huntress", "summary.json")
 
 
 class DashboardProvisionRequest(BaseModel):
