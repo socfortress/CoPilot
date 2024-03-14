@@ -39,8 +39,9 @@ def get_available_dashboards():
     """
     try:
         wazuh_dashboards = [dashboard.name for dashboard in WazuhDashboard]
-        office365_dashboards = [dashboard.name for dashboard in Office365Dashboard]
-        return wazuh_dashboards + office365_dashboards
+        #office365_dashboards = [dashboard.name for dashboard in Office365Dashboard]
+        #return wazuh_dashboards + office365_dashboards
+        return wazuh_dashboards
     except Exception as e:
         raise HTTPException(
             status_code=500,
