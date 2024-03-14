@@ -38,6 +38,8 @@ class IndexConfigModel(BaseModel):
     def is_valid_index(self, index_name: str) -> bool:
         """
         Checks if the index name starts with "wazuh_" and is not in the SKIP_INDEX_NAMES list.
+        UPDATE: Modifying this method to return not self.is_index_skipped(index_name) and not index_name.__contains__("deflector")
+        So that users whom do not use `wazuh-` index naming convention can still receive alerts.
 
         Args:
             index_name (str): The name of the index to check.
