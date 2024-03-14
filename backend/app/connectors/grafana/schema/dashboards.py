@@ -57,7 +57,7 @@ class Office365Dashboard(Enum):
     ONEDRIVE = ("Office365", "onedrive.json")
     POWERBI = ("Office365", "powerbi.json")
     SHAREPOINT = ("Office365", "sharepoint.json")
-    SUMMARY = ("Office365", "summary.json")
+    OFFICE365_SUMMARY = ("Office365", "summary.json")
     TEAMS = ("Office365", "teams.json")
     THREAT_INTELLIGENCE = ("Office365", "threat_intelligence.json")
 
