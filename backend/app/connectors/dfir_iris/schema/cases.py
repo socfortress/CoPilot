@@ -77,6 +77,11 @@ class SingleCaseModel(BaseModel):
     status_name: str
     customer_code: str
 
+    def __init__(self, **data):
+        if 'custom_attributes' in data and not data['custom_attributes']:
+            data['custom_attributes'] = {"default_key": "no custom attributes found"}  # Replace with your default entry
+        super().__init__(**data)
+
 
 class SingleCaseBody(BaseModel):
     case_id: int
