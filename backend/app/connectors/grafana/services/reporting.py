@@ -170,28 +170,6 @@ async def capture_screenshots(page, panels: List[RequestPanel]) -> List[RequestP
             panel.panel_base64 = None
     return panels
 
-def get_wkhtmltopdf_path():
-    if sys.platform == 'win32':
-        return 'C:\\Program Files\\wkhtmltopdf\\bin\\wkhtmltopdf.exe'
-    elif sys.platform == 'darwin':
-        return '/usr/local/bin/wkhtmltopdf'
-    else:
-        try:
-            # Try to find the path using 'which' command in Linux
-            path = subprocess.check_output(['which', 'wkhtmltopdf'])
-            return path.strip()
-        except Exception as e:
-            logger.error(f"Could not find wkhtmltopdf: {e}")
-            return None
-
-def create_pdf(html_string):
-    wkhtmltopdf_path = get_wkhtmltopdf_path()
-    if wkhtmltopdf_path is None:
-        logger.error("Cannot create PDF without wkhtmltopdf")
-        return
-    config = pdfkit.configuration(wkhtmltopdf=wkhtmltopdf_path)
-    pdfkit.from_string(html_string, 'report.pdf', configuration=config)
-
 
 async def generate_grafana_iframe_links(
     request: GrafanaGenerateIframeLinksRequest,
@@ -259,12 +237,27 @@ async def generate_panel_urls_object(panel: RequestPanel, timerange: dict, sessi
     )
     return await generate_grafana_iframe_links(iframe_links_request, session)
 
+async def write_html_to_file(html_string: str, file_path: str):
+    """Write the given HTML string to a file."""
+    with open(file_path, 'w') as f:
+        f.write(html_string)
+
+async def generate_pdf_from_html(html_file_path: str, pdf_file_path: str):
+    """Generate a PDF from the given HTML file using Playwright."""
+    async with async_playwright() as p:
+        browser = await p.chromium.launch()
+        context = await browser.new_context()
+        page = await context.new_page()
+        await page.emulate_media(media='screen')
+        await page.goto(f'file://{os.getcwd()}/{html_file_path}')
+        await page.pdf(path=pdf_file_path)
+        await browser.close()
+
 async def generate_report(
     request: GenerateReportRequest,
     session: AsyncSession
 ):
     logger.info("Generating report")
-    logger.info(f"Request: {request}")
     for row in request.rows:
         for panel in row.panels:
             panel.row_id = row.id
@@ -280,8 +273,6 @@ async def generate_report(
             # add the panel url to the request.panel_url
             panel.panel_url = panel_urls
 
-    logger.info(f"Request: {request}")
-
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=False)
         context = await browser.new_context(ignore_https_errors=True)
@@ -295,8 +286,19 @@ async def generate_report(
         panels = await capture_screenshots(page, all_panels)
         await browser.close()
         html_string = generate_html(panels)
-        create_pdf(html_string)
+        await write_html_to_file(html_string, 'report.html')
+        await generate_pdf_from_html('report.html', 'report.pdf')
+
+        #! convert pdf to base64 and return
+        with open('report.pdf', 'rb') as f:
+            pdf_base64 = base64.b64encode(f.read()).decode('utf-8')
+
+
+
+        # ! NEED TO CONVERT PDF TO USE PLAYWRIGHT
+        # create_pdf(html_string)
         return GenerateReportResponse(
+            base64_result=pdf_base64,
             message="Report generated successfully",
             success=True
         )

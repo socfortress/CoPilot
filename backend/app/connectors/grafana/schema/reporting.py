@@ -259,5 +259,6 @@ class Base64Image(BaseModel):
     url: str
 
 class GenerateReportResponse(BaseModel):
+    base64_result: str
     message: str
     success: bool
