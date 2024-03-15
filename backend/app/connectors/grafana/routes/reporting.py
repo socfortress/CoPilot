@@ -16,7 +16,7 @@ from app.connectors.grafana.schema.reporting import GrafanaDashboardPanelsRespon
 from app.connectors.grafana.schema.reporting import GrafanaDashboardResponse
 from app.connectors.grafana.schema.reporting import GrafanaGenerateIframeLinksRequest
 from app.connectors.grafana.schema.reporting import GrafanaGenerateIframeLinksResponse
-from app.connectors.grafana.schema.reporting import GrafanaLinksList
+from app.connectors.grafana.schema.reporting import GrafanaLinksList, GenerateReportCreation
 from app.connectors.grafana.schema.reporting import GrafanaOrganizationsResponse, GenerateReportRequest, GenerateReportResponse
 from app.connectors.grafana.schema.reporting import Panel
 from app.connectors.grafana.schema.reporting import TimeRange
@@ -40,11 +40,11 @@ async def get_grafana_url(session: AsyncSession):
 
 def calculate_unix_timestamps(time_range: TimeRange):
     now = datetime.now()
-    if time_range.unit == "minutes":
+    if time_range.unit == "m":
         start_time = now - timedelta(minutes=time_range.value)
-    elif time_range.unit == "hours":
+    elif time_range.unit == "h":
         start_time = now - timedelta(hours=time_range.value)
-    elif time_range.unit == "days":
+    elif time_range.unit == "d":
         start_time = now - timedelta(days=time_range.value)
 
     timestamp_from = int(time.mktime(start_time.timetuple())) * 1000
@@ -55,13 +55,13 @@ def calculate_unix_timestamps(time_range: TimeRange):
 
 def generate_panel_urls(grafana_url: str, request: GrafanaGenerateIframeLinksRequest, timestamp_from: int, timestamp_to: int):
     panel_links: List[GrafanaLinksList] = []
-    for panel_id in request.panel_ids:
-        panel_url = (
-            f"{grafana_url}/d-solo/{request.dashboard_uid}/{request.dashboard_title}"
-            f"?orgId={request.org_id}&from={timestamp_from}&to={timestamp_to}"
-            f"&panelId={panel_id}"
-        )
-        panel_links.append(GrafanaLinksList(panel_id=panel_id, panel_url=panel_url))
+    #for panel_id in request.panel_ids:
+    panel_url = (
+        f"{grafana_url}/d-solo/{request.dashboard_uid}/{request.dashboard_title}"
+        f"?orgId={request.org_id}&from={timestamp_from}&to={timestamp_to}"
+        f"&panelId={request.panel_id}"
+    )
+    panel_links.append(GrafanaLinksList(panel_id=request.panel_id, panel_url=panel_url))
     return panel_links
 
 
@@ -210,6 +210,7 @@ async def generate_grafana_iframe_links(
 
 @grafana_reporting_router.post(
     "/generate-report",
+    response_model=GenerateReportResponse,
     description="Create a new report.",
 )
 async def create_report(

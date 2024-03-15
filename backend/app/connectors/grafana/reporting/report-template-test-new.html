@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Grafana Dashboard Report</title>
+    <style>
+        html, body {
+            padding: 0;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            color: #333;
+            background-color: #f9f9f9;
+        }
+        * {
+            box-sizing: border-box;
+        }
+        :root {
+            --border-radius: 6px;
+            --bg-secondary-color: #f0f0f0;
+            --border-small-050: 1px solid #ccc;
+        }
+        .screenshots-container {
+            max-width: 960px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .screenshot-row {
+            display: flex;
+            justify-content: space-around; /* Adjusted for spacing */
+            flex-wrap: wrap; /* Allow wrapping as needed */
+        }
+        .screenshot {
+            flex: 1; /* Adjust to allow flexible sizing */
+            max-width: 45%; /* Each image can take up to 45% of the container width */
+            margin: 10px;
+            border: var(--border-small-050);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+        }
+        .screenshot img {
+            width: 100%;
+            height: auto;
+        }
+        .caption {
+            padding: 10px;
+            background-color: var(--bg-secondary-color);
+            text-align: center;
+            font-size: 0.8em;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+<div class="cover-box">cover..</div>
+<div class="screenshots-container">
+    <h2>Screenshots</h2>
+    {% for group in panel_groups %}
+    <div class="screenshot-row">
+        {% for panel in group %}
+        <div class="screenshot">
+            <img
+                src="data:image/png;base64,{{ panel.panel_base64 }}"
+                alt="Screenshot"
+                style="width: auto; height: auto; max-width: 100%;"
+            />
+        </div>
+        {% endfor %}
+    </div>
+    {% endfor %}
+</div>
+</body>
+</html>

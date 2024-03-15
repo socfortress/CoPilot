@@ -166,7 +166,7 @@ class TimeRange(BaseModel):
 
     @validator("unit")
     def validate_unit(cls, unit):
-        valid_units = ["minutes", "hours", "days"]
+        valid_units = ["m", "h", "d"]
         if unit not in valid_units:
             raise HTTPException(status_code=400, detail=f"Invalid time range unit: {unit}. Must be one of {valid_units}")
         return unit
@@ -176,7 +176,7 @@ class GrafanaGenerateIframeLinksRequest(BaseModel):
     org_id: int = Field(..., description="The ID of the organization.")
     dashboard_title: str = Field(..., description="The title of the dashboard.")
     dashboard_uid: str = Field(..., description="The UID of the dashboard.")
-    panel_ids: List[int] = Field(..., description="The IDs of the panels.")
+    panel_id: int = Field(..., description="The IDs of the panels.")
     time_range: TimeRange = Field(..., description="Time range in minutes, hours, or days")
 
 
@@ -195,6 +195,9 @@ class RequestPanel(BaseModel):
     org_id: int = Field(..., description="Organization ID")
     dashboard_title: str = Field(..., description="Dashboard title")
     dashboard_uid: str = Field(..., description="Dashboard UID")
+    panel_url: Optional[str] = Field(None, description="Panel URL")
+    panel_base64: Optional[str] = Field(None, description="Panel Base64")
+    row_id: Optional[int] = Field(None, description="Row ID")
 
 class RequestRow(BaseModel):
     id: int = Field(..., description="Row ID")
@@ -202,24 +205,59 @@ class RequestRow(BaseModel):
 
 class GenerateReportRequest(BaseModel):
     timerange: str = Field(..., description="Time range for the report")
-    rows: List[RequestRow] = Field(..., description="Rows in the report")
+    #rows: List[RequestRow] = Field(..., description="Rows in the report")
+    rows: List[RequestRow] = Field(..., description="Rows in the report", example=[
+        {
+            "id": 1710437961108,
+            "panels": [
+                {
+                    "panel_id": 5,
+                    "org_id": 1,
+                    "dashboard_title": "HUNTRESS - _SUMMARY",
+                    "dashboard_uid": "ab9bab2c-5d86-43e7-bac2-c1d68fc91342"
+                },
+                {
+                    "panel_id": 3,
+                    "org_id": 1,
+                    "dashboard_title": "HUNTRESS - _SUMMARY",
+                    "dashboard_uid": "ab9bab2c-5d86-43e7-bac2-c1d68fc91342"
+                }
+            ]
+        },
+        {
+            "id": 1710437961109,
+            "panels": [
+                {
+                    "panel_id": 5,
+                    "org_id": 1,
+                    "dashboard_title": "HUNTRESS - _SUMMARY",
+                    "dashboard_uid": "ab9bab2c-5d86-43e7-bac2-c1d68fc91342"
+                },
+                {
+                    "panel_id": 3,
+                    "org_id": 1,
+                    "dashboard_title": "HUNTRESS - _SUMMARY",
+                    "dashboard_uid": "ab9bab2c-5d86-43e7-bac2-c1d68fc91342"
+                }
+            ]
+        }
+    ])
 
-# class GenerateReportRequest(BaseModel):
-#     urls: list[str] = Field(
-#         [
-#             'http://ashdevcopilot01.socfortress.local:3000/d-solo/ab9bab2c-5d86-43e7-bac2-c1d68fc91342/huntress-summary?orgId=1&from=1708725633941&to=1709330433941&panelId=5',
-#             'http://ashdevcopilot01.socfortress.local:3000/d-solo/ab9bab2c-5d86-43e7-bac2-c1d68fc91342/huntress-summary?orgId=1&from=1708725654862&to=1709330454862&panelId=1',
-#             'http://ashdevcopilot01.socfortress.local:3000/d-solo/a1891b09-fba9-498e-807e-1ad774c8557f/sap-users-auth?orgId=44&from=1709303384274&to=1709389784274&panelId=43',
-#             'http://ashdevcopilot01.socfortress.local:3000/d-solo/ab9bab2c-5d86-43e7-bac2-c1d68fc91342/huntress-summary?orgId=1&from=1706799780600&to=1709391780600&panelId=10'
-#         ],
-#         description="List of URLs to generate screenshots for",
-#     )
+class GenerateReportCreation(BaseModel):
+    urls: list[str] = Field(
+        [
+            'http://ashdevcopilot01.socfortress.local:3000/d-solo/ab9bab2c-5d86-43e7-bac2-c1d68fc91342/huntress-summary?orgId=1&from=1708725633941&to=1709330433941&panelId=5',
+            'http://ashdevcopilot01.socfortress.local:3000/d-solo/ab9bab2c-5d86-43e7-bac2-c1d68fc91342/huntress-summary?orgId=1&from=1708725654862&to=1709330454862&panelId=1',
+            'http://ashdevcopilot01.socfortress.local:3000/d-solo/a1891b09-fba9-498e-807e-1ad774c8557f/sap-users-auth?orgId=44&from=1709303384274&to=1709389784274&panelId=43',
+            'http://ashdevcopilot01.socfortress.local:3000/d-solo/ab9bab2c-5d86-43e7-bac2-c1d68fc91342/huntress-summary?orgId=1&from=1706799780600&to=1709391780600&panelId=10'
+        ],
+        description="List of URLs to generate screenshots for",
+    )
 
 class Base64Image(BaseModel):
     base64_image: str
     url: str
 
 class GenerateReportResponse(BaseModel):
-    base64_images: List[Base64Image]
     message: str
     success: bool

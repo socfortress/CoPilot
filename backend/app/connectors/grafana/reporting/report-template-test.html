@@ -73,32 +73,22 @@
 		</style>
 	</head>
 	<body>
-		<div class="cover-box">cover..</div>
-		<div class="toc-box">
-			<h2>Table of Contents</h2>
-			<ul class="table-of-contents">
-				{% for group in panel_groups %} {% for panel in group %}
-				<li>Page {{ panel.page_number }} - {{ panel.title }}</li>
-				{% endfor %} {% endfor %}
-			</ul>
-		</div>
-		<div class="panels"></div>
-		<div class="screenshots-container">
-			<h2>Screenshots</h2>
-			{% for group in panel_groups %}
-			<div class="screenshot-row">
-				{% for panel in group %}
-				<div class="screenshot">
-					<img
-						src="data:image/png;base64,{{ panel.base64_image }}"
-						alt="Screenshot"
-						style="width: {{ panel.width }}px; height: {{ panel.height }}px;"
-					/>
-					<div class="caption">Page {{ panel.page_number }}</div>
-				</div>
-				{% endfor %}
-			</div>
-			{% endfor %}
-		</div>
-	</body>
+    <div class="cover-box">cover..</div>
+    <div class="screenshots-container">
+        <h2>Screenshots</h2>
+        {% for group in panel_groups %}
+        <div class="screenshot-row">
+            {% for panel in group %}
+            <div class="screenshot">
+                <img
+                    src="data:image/png;base64,{{ panel.panel_base64 }}"
+                    alt="Screenshot"
+                    style="width: 800px; height: 600px;"
+                />
+            </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+    </div>
+</body>
 </html>
