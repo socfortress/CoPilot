@@ -48,12 +48,6 @@ jobs:
         username: ${{ secrets.REPO_OWNER }}
         password: ${{ secrets.REPO_TOKEN }}
 
-    - name: Install dependencies
-      run: |
-        rm -rf node_modules
-        rm package-lock.json
-        npm install
-
     - name: Build and push Docker image
       uses: docker/build-push-action@v2
       with:
