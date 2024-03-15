@@ -58,7 +58,7 @@ class SingleCaseModel(BaseModel):
     classification: Optional[Union[str, None]]
     classification_id: Optional[Union[int, None]]
     close_date: Optional[Union[str, None]]
-    custom_attributes: Optional[Union[str, None]]
+    custom_attributes: Optional[Union[str, None]] = Field(None, description="The custom attributes of the case.")
     customer_id: int
     customer_name: str
     initial_date: str
