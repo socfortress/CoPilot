@@ -92,7 +92,7 @@ async def create_influxdb_client(connector_name: str) -> InfluxDBClientAsync:
     except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to create Elasticsearch client: {e}",
+            detail=f"Failed to create InfluxDB client: {e}",
         )
 
 
