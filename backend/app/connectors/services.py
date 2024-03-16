@@ -314,6 +314,7 @@ class ConnectorServices:
                 connector_response = await service_instance.verify_authentication(
                     connector_response,
                 )
+
                 # If the connector is verified, update the connector record in the database
                 if connector_response["connectionSuccessful"]:
                     connector.connector_verified = True
