@@ -34,7 +34,6 @@
         }
         .screenshot {
             flex: 1; /* Adjust to allow flexible sizing */
-            max-width: 45%; /* Each image can take up to 45% of the container width */
             margin: 10px;
             border: var(--border-small-050);
             border-radius: var(--border-radius);
@@ -54,17 +53,17 @@
     </style>
 </head>
 <body>
-<div class="cover-box">cover..</div>
+<<div class="cover-box">cover..</div>
 <div class="screenshots-container">
     <h2>Screenshots</h2>
     {% for group in panel_groups %}
     <div class="screenshot-row">
         {% for panel in group %}
-        <div class="screenshot">
+        <div class="screenshot" style="{% if group|length == 1 %}flex: 0 0 100%; max-width: 100%;{% else %}flex: 1; max-width: 45%;{% endif %}">
             <img
                 src="data:image/png;base64,{{ panel.panel_base64 }}"
                 alt="Screenshot"
-                style="width: auto; height: auto; max-width: 100%;"
+                style="width: 100%; height: auto;"
             />
         </div>
         {% endfor %}
