@@ -55,3 +55,7 @@ package-lock.json
 firewall.spec
 
 frontend/cypress/screenshots/
+
+backend/report.pdf
+
+backend/report.html
