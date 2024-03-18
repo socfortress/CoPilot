@@ -129,6 +129,16 @@ def get_connectors_list():
             "Connection to Graylog GELF Input to receive events from integrations. Make sure you have created a GELF Input in Graylog.",
             "GELF_INPUT_PORT",
         ),
+        (
+            "HAProxy Provisioning",
+            "3",
+            "host_only",
+            (
+                "Connection to HAProxy Provisioning. Make sure you have deployed the "
+                "HAProxy Provisioning Application provided by "
+                "SOCFortress: https://github.com/socfortress/Customer-Provisioning-Worker"
+            ),
+        ),
         # ... Add more connectors as needed ...
     ]
 

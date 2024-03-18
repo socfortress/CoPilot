@@ -128,6 +128,24 @@ async def provision_wazuh_customer(
             wazuh_worker_provisioned=False,
         )
 
+    provsion_haproxy = await provision_haproxy(
+        ProvisionWorkerRequest(
+            customer_name=request.customer_name,
+            wazuh_registration_port=request.wazuh_registration_port,
+            wazuh_logs_port=request.wazuh_logs_port,
+            wazuh_worker_hostname=request.wazuh_worker_hostname,
+        ),
+        session,
+    )
+
+    if provsion_haproxy.success is False:
+        return CustomerProvisionResponse(
+            message=f"Customer {request.customer_name} provisioned successfully, but the HAProxy failed to provision",
+            success=True,
+            customer_meta=customer_meta.dict(),
+            wazuh_worker_provisioned=True,
+        )
+
     return CustomerProvisionResponse(
         message=f"Customer {request.customer_name} provisioned successfully",
         success=True,
@@ -245,4 +263,42 @@ async def provision_wazuh_worker(
     return ProvisionWorkerResponse(
         success=True,
         message="Wazuh worker provisioned successfully",
+    )
+
+######### ! Provision HAProxy ! ############
+async def provision_haproxy(
+    request: ProvisionWorkerRequest,
+    session: AsyncSession,
+) -> ProvisionWorkerResponse:
+    """
+    Provisions a HAProxy.
+
+    Args:
+        request (ProvisionWorkerRequest): The request object containing the necessary information for provisioning.
+        session (AsyncSession): The async session object for making HTTP requests.
+
+    Returns:
+        ProvisionWorkerResponse: The response object indicating the success or failure of the provisioning operation.
+    """
+    logger.info(f"Provisioning HAProxy {request}")
+    api_endpoint = await get_connector_attribute(
+        connector_id=16,
+        column_name="connector_url",
+        session=session,
+    )
+    # Send the POST request to the Wazuh worker
+    response = requests.post(
+        url=f"{api_endpoint}/provision_worker/haproxy",
+        json=request.dict(),
+    )
+    # Check the response status code
+    if response.status_code != 200:
+        return ProvisionWorkerResponse(
+            success=False,
+            message=f"Failed to provision HAProxy: {response.text}",
+        )
+    # Return the response
+    return ProvisionWorkerResponse(
+        success=True,
+        message="HAProxy provisioned successfully",
     )

@@ -88,6 +88,10 @@ class ProvisionNewCustomer(BaseModel):
         None,
         description="ID of the Graylog stream",
     )
+    wazuh_worker_hostname: Optional[str] = Field(
+        None,
+        description="Hostname of the Wazuh worker",
+    )
 
     @validator("customer_index_name")
     def validate_customer_index_name(cls, v):
