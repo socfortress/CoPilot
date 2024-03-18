@@ -101,7 +101,7 @@ def get_template_path(template_info: WazuhAgentsTemplatePaths) -> Path:
 
 
 # Function to update Wazuh group configuration
-async def configure_wazuh_group(group_code, template_path):
+async def configure_wazuh_group(group_code, template_path, request: ProvisionNewCustomer):
     """
     Configures a Wazuh group with the provided group code and template file.
 
@@ -120,6 +120,8 @@ async def configure_wazuh_group(group_code, template_path):
 
     # Replace placeholder with the customer code
     group_config = config_template.replace("REPLACE", group_code.split("_")[-1])
+    # Replace placeholder with the cluster name
+    group_config = group_config.replace("CLUSTER_NAME", request.wazuh_cluster_name)
 
     # Make the API request to update the group configuration
     return await send_wazuh_put_request(
@@ -158,7 +160,7 @@ async def apply_group_configurations(request: ProvisionNewCustomer):
         group_code = f"{group}_{request.customer_code}"
         template_path = get_template_path(template)
         try:
-            await configure_wazuh_group(group_code, template_path)
+            await configure_wazuh_group(group_code, template_path, request)
         except Exception as e:
             logger.error(f"Error configuring group {group_code}: {e}")
 
