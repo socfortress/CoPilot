@@ -673,6 +673,11 @@ async def create_grafana_datasource(
     """
     logger.info("Creating Grafana datasource")
     grafana_client = await create_grafana_client("Grafana")
+    grafana_url = await get_connector_attribute(
+        connector_id=12,
+        column_name="connector_url",
+        session=session,
+    )
     # Switch to the newly created organization
     grafana_client.user.switch_actual_user_organisation(
         (await get_customer_meta(customer_code, session)).customer_meta.customer_meta_grafana_org_id,
@@ -703,6 +708,18 @@ async def create_grafana_datasource(
         },
         isDefault=False,
         jsonData={
+            "dataLinks": [
+                {
+                    "field": "^_id$",
+                    "url": (
+                        "{}/explore?left=%7B%22datasource%22:%22O365%22,%22queries%22:%5B%7B"
+                        "%22refId%22:%22A%22,%22query%22:%22_id:${{__value.raw}}%22,%22alias%22:%22%22,"
+                        "%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:"
+                        "%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:"
+                        "%22timestamp%22%7D%5D,%22range%22:%7B%22from%22:%22now-6h%22,%22to%22:%22now%22%7D%7D"
+                    ).format(grafana_url)
+                }
+            ],
             "database": f"office365_{customer_code}*",
             "flavor": "opensearch",
             "includeFrozen": False,
