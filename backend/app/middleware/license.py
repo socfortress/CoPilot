@@ -187,6 +187,26 @@ def is_license_expired(license: dict) -> bool:
     """
     return dt.now() > license['expires']
 
+async def is_feature_enabled(feature_name: str, session: AsyncSession) -> bool:
+    """
+    Check if a feature is enabled in a license.
+
+    Args:
+        license (License): The license to check.
+        feature_name (str): The feature name to check.
+        session (AsyncSession): The database session.
+
+    Returns:
+        bool: True if the feature is enabled, False otherwise.
+    """
+    license = await get_license(session)
+    license_details = LicenseResponse(**check_license(license).__dict__)
+    for data_object in license_details.data_objects:
+        if data_object['Name'] == feature_name and data_object['IntValue'] == 1:
+            return True
+
+    raise HTTPException(status_code=400, detail="Feature not enabled")
+
 @license_router.post(
     "/create_new_key",
     description="Create a new license key",
