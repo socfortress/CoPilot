@@ -205,7 +205,7 @@ async def is_feature_enabled(feature_name: str, session: AsyncSession) -> bool:
         if data_object['Name'] == feature_name and data_object['IntValue'] == 1:
             return True
 
-    raise HTTPException(status_code=400, detail="Feature not enabled")
+    raise HTTPException(status_code=400, detail="Feature not enabled. You must purchase a license to use this feature.")
 
 @license_router.post(
     "/create_new_key",
