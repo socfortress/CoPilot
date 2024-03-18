@@ -313,6 +313,7 @@ export const useThemeStore = defineStore("theme", {
 
 			const bgSidebar = this.sidebarBackground
 			const bgBody = this.bodyBackground
+			const bgBodyRGB = hex2rgb(bgBody).join(", ")
 
 			const boxedWidth = state.boxed.width
 			const routerTransitionDuration = state.routerTransitionDuration
@@ -362,6 +363,7 @@ export const useThemeStore = defineStore("theme", {
 			return {
 				"--bg-sidebar": `${bgSidebar}`,
 				"--bg-body": `${bgBody}`,
+				"--bg-body-rgb": `${bgBodyRGB}`,
 
 				"--fg-color": `${fgColor}`,
 				"--fg-secondary-color": `${fgSecondaryColor}`,

@@ -2,8 +2,8 @@
 	<div class="report-wizard">
 		<n-spin v-model:show="loading">
 			<n-form :label-width="80" class="flex flex-col gap-5">
-				<div class="grid gap-5 grid-cols-1 sm:grid-cols-3">
-					<n-form-item label="Time Range">
+				<div class="flex gap-5 flex-col sm:flex-row">
+					<n-form-item label="Time Range" class="sm:max-w-56">
 						<n-input-group>
 							<n-select
 								v-model:value="timeUnit"
@@ -15,7 +15,7 @@
 						</n-input-group>
 					</n-form-item>
 
-					<n-form-item label="Organization">
+					<n-form-item label="Organization" class="flex flex-grow">
 						<n-select
 							v-model:value="selectedOrgId"
 							:options="orgsOptions"
@@ -24,7 +24,7 @@
 						/>
 					</n-form-item>
 
-					<n-form-item label="Dashboard" v-if="canSelectDashboard">
+					<n-form-item label="Dashboard" v-if="canSelectDashboard" class="flex flex-grow">
 						<n-select
 							v-model:value="selectedDashboardUID"
 							:options="dashboardsOptions"
@@ -54,7 +54,7 @@ import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
 import { NSpin, NForm, NFormItem, NInputGroup, NInputNumber, NSelect, useMessage } from "naive-ui"
 import Api from "@/api"
 import type { Dashboard, Org, Panel } from "@/types/reporting"
-import type { PanelsLinksTimeUnit } from "@/api/reporting"
+import type { ReportTimeRange, RowPanelTimeUnit } from "@/api/reporting"
 import { useStorage } from "@vueuse/core"
 
 const emit = defineEmits<{
@@ -62,6 +62,7 @@ const emit = defineEmits<{
 	(e: "panels", value: Panel[]): void
 	(e: "dashboard", value: Dashboard | null): void
 	(e: "organization", value: Org | null): void
+	(e: "timerange", value: ReportTimeRange): void
 }>()
 
 const props = defineProps<{
@@ -90,16 +91,16 @@ const selectedPanelsIds = ref<number[]>([])
 const selectedPanels = computed(() =>
 	selectedPanelsIds.value ? panelsList.value.filter(o => selectedPanelsIds.value.includes(o.id)) : []
 )
-const timeUnit = useStorage<PanelsLinksTimeUnit>("report-wizard-time-unit", "hours", localStorage)
+const timeUnit = useStorage<RowPanelTimeUnit>("report-wizard-time-unit", "h", localStorage)
 const timeValue = useStorage<number>("report-wizard-time-value", 1, localStorage)
 
 const orgsOptions = computed(() => orgsList.value.map(o => ({ value: o.id, label: o.name })))
 const dashboardsOptions = computed(() => dashboardsList.value.map(o => ({ value: o.uid, label: o.title })))
 const panelsOptions = computed(() => panelsList.value.map(o => ({ value: o.id, label: o.title })))
-const timeUnitOptions: { label: string; value: PanelsLinksTimeUnit }[] = [
-	{ label: "Minutes", value: "minutes" },
-	{ label: "Hours", value: "hours" },
-	{ label: "Days", value: "days" }
+const timeUnitOptions: { label: string; value: RowPanelTimeUnit }[] = [
+	{ label: "Minutes", value: "m" },
+	{ label: "Hours", value: "h" },
+	{ label: "Days", value: "d" }
 ]
 
 const canSelectDashboard = computed(() => !!selectedOrgId.value)
@@ -107,37 +108,58 @@ const canSelectPanels = computed(() => canSelectDashboard.value && !!selectedDas
 
 const loading = computed(() => loadingOrgs.value || loadingDashboards.value || loadingPanels.value)
 
-watch(selectedOrgId, val => {
-	dashboardsList.value = []
-	panelsList.value = []
-	selectedDashboardUID.value = null
-	selectedPanelsIds.value = []
+watch(
+	selectedOrgId,
+	val => {
+		dashboardsList.value = []
+		panelsList.value = []
+		selectedDashboardUID.value = null
+		selectedPanelsIds.value = []
 
-	emit("organization", selectedOrg.value)
+		emit("organization", selectedOrg.value)
 
-	if (val) {
-		getDashboards()
-	}
-})
+		if (val) {
+			getDashboards()
+		}
+	},
+	{ immediate: true }
+)
 
-watch(selectedDashboardUID, val => {
-	panelsList.value = []
-	selectedPanelsIds.value = []
+watch(
+	selectedDashboardUID,
+	val => {
+		panelsList.value = []
+		selectedPanelsIds.value = []
 
-	emit("dashboard", selectedDashboard.value)
+		emit("dashboard", selectedDashboard.value)
 
-	if (val) {
-		getPanels()
-	}
-})
+		if (val) {
+			getPanels()
+		}
+	},
+	{ immediate: true }
+)
 
-watch(panelsList, val => {
-	emit("panels", val)
-})
+watch(
+	panelsList,
+	val => {
+		emit("panels", val)
+	},
+	{ immediate: true }
+)
 
 watch(selectedPanelsIds, () => {
 	emit("selected", selectedPanels.value)
 })
+
+watch(
+	[timeValue, timeUnit],
+	([value, unit]) => {
+		console.log("timerange")
+		emit("timerange", `${value}${unit}`)
+	},
+	{ immediate: true }
+)
 
 function getOrgs() {
 	loadingOrgs.value = true
