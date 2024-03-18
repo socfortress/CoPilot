@@ -120,7 +120,8 @@ async def configure_wazuh_group(group_code, template_path, request: ProvisionNew
 
     # Replace placeholder with the customer code
     group_config = config_template.replace("REPLACE", group_code.split("_")[-1])
-    group_config = config_template.replace("CLUSTER_NAME", request.wazuh_cluster_name)
+    # Replace placeholder with the cluster name
+    group_config = group_config.replace("CLUSTER_NAME", request.wazuh_cluster_name)
 
     # Make the API request to update the group configuration
     return await send_wazuh_put_request(
