@@ -4,7 +4,7 @@ from typing import List
 from loguru import logger
 from typing import Optional
 from licensing.models import *
-from licensing.methods import Key, Helpers
+from licensing.methods import Key, Helpers, Data
 from app.db.universal_models import License
 from sqlalchemy import select
 import os
@@ -14,6 +14,7 @@ from fastapi import Depends
 from fastapi import HTTPException
 from pydantic import BaseModel, Field
 from app.db.db_session import get_db
+from enum import Enum
 from sqlalchemy.ext.asyncio import AsyncSession
 
 class CreateLicenseRequest(BaseModel):
@@ -84,6 +85,24 @@ class LicenseResponse(BaseModel):
     data_objects: List
     sign_date: dt
     reseller: Optional[Any]
+
+class Feature(Enum):
+    MIMECAST = "MIMECAST"
+    SAP_SIEM = "SAP SIEM"
+    HUNTRESS = "HUNTRESS"
+    REPORTING = "REPORTING"
+    # Add more features as needed
+
+    @classmethod
+    def get_feature_name(cls, feature_name):
+        feature_map = {
+            cls.MIMECAST.value: "MIMECAST",
+            cls.SAP_SIEM.value: "SAP SIEM",
+            cls.HUNTRESS.value: "HUNTRESS",
+            cls.REPORTING.value: "REPORTING",
+            # Add more mappings as needed
+        }
+        return feature_map.get(feature_name)
 
 license_router = APIRouter()
 
@@ -216,4 +235,43 @@ async def verify_license_key(session: AsyncSession = Depends(get_db)) -> License
     except Exception as e:
         logger.error(e)
         raise HTTPException(status_code=400, detail="License verification failed")
+
+@license_router.post(
+    "/add_feature/{feature_name}",
+    description="Add a feature to a license",
+)
+async def add_feature_to_license(feature_name: str, session: AsyncSession = Depends(get_db)):
+    """
+    Add a feature to a license.
+
+    Args:
+        feature_name (str): The feature name to add.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        LicenseVerificationResponse: A Pydantic model containing the verification status and message.
+    """
+    logger.info(f"Adding feature: {feature_name} to license")
+    # Check if the feature name is valid
+    feature_name = Feature.get_feature_name(feature_name)
+    if feature_name is None:
+        logger.error("Invalid feature name")
+        raise HTTPException(status_code=400, detail="Invalid feature name")
+    try:
+        license = await get_license(session)
+        logger.info(f"License: {license}")
+        result, _ = Data.add_data_object_to_key(
+            token=get_auth_token(),
+            product_id=get_product_id(),
+            key=license.license_key,
+            name=feature_name,
+            string_value=f"[{feature_name}]",
+            check_for_duplicates=True,
+            int_value=1,
+        )
+        logger.info(result)
+        return result
+    except Exception as e:
+        logger.error(e)
+        raise HTTPException(status_code=400, detail="Feature addition failed")
 
