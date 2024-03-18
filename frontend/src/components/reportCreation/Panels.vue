@@ -1,6 +1,6 @@
 <template>
 	<n-spin v-model:show="loading" class="overflow-hidden h-full w-full" content-class="overflow-hidden h-full w-full">
-		<div class="report-panels h-full w-full flex gap-2" v-if="panelsList?.length">
+		<div class="report-panels h-full w-full flex gap-2" v-if="org">
 			<div class="panels-container grow h-full flex flex-col gap-4">
 				<div class="rows-container">
 					<n-scrollbar style="max-height: 100%" trigger="none">
@@ -16,6 +16,7 @@
 							>
 								<template #item="{ element: row }">
 									<div class="row p-3">
+										<div class="empty-message" v-if="!row.panels.length">Drop panels here</div>
 										<draggable
 											v-model="row.panels"
 											item-key="id"
@@ -28,7 +29,7 @@
 												},
 												pull: ['panels']
 											}"
-											class="flex gap-3 w-full h-full"
+											class="drop-panels-area flex gap-3 w-full h-full"
 										>
 											<template #header>
 												<div class="left-box flex justify-end">
@@ -80,14 +81,18 @@
 					</n-scrollbar>
 				</div>
 				<div class="toolbar pr-4 flex items-center justify-between">
-					<n-button class="add-task-btn flex items-center justify-center !mt-0" @click="addRow()">
+					<n-button
+						class="add-task-btn flex items-center justify-center !mt-0"
+						@click="addRow()"
+						v-if="dashboard || panelsReady"
+					>
 						<template #icon>
 							<Icon :name="AddIcon"></Icon>
 						</template>
 						<span>Add row</span>
 					</n-button>
 
-					<n-button type="success" @click="print()" :loading="loading">
+					<n-button type="success" @click="print()" :loading="loading" v-if="panelsReady">
 						<template #icon>
 							<Icon :name="PrintIcon"></Icon>
 						</template>
@@ -97,7 +102,7 @@
 			</div>
 
 			<div class="panels-sidebar h-full">
-				<n-scrollbar style="max-height: 100%" trigger="none">
+				<n-scrollbar style="max-height: 100%" trigger="none" v-if="dashboard && panelsList.length">
 					<div class="p-3">
 						<draggable
 							class="flex flex-col gap-3"
@@ -116,7 +121,25 @@
 						</draggable>
 					</div>
 				</n-scrollbar>
+				<div v-else class="p-3 h-full">
+					<div class="empty-message p-3">
+						<div v-if="!dashboard">
+							Select a
+							<code>Dashboard</code>
+							to get the panels
+						</div>
+						<div v-else>No Panels found</div>
+					</div>
+				</div>
 			</div>
+		</div>
+
+		<div v-else class="empty-message">
+			Select an
+			<code>Organization</code>
+			/
+			<code>Dashboard</code>
+			to create the Report
 		</div>
 	</n-spin>
 </template>
@@ -127,13 +150,21 @@
  * TPL:  ->  backend/app/connectors/grafana/reporting/report-template-test.html
  */
 
+// TODO: complete report.html
+
 import { ref, computed, toRefs, watch } from "vue"
 import { NButton, NSpin, NScrollbar, NTooltip, useMessage } from "naive-ui"
 import type { Dashboard, Org, Panel } from "@/types/reporting"
 import Icon from "@/components/common/Icon.vue"
 import draggable from "vuedraggable"
 import Api from "@/api"
-// import { saveAs } from "file-saver"
+import type { ReportTimeRange, RowPayload } from "@/api/reporting"
+import { saveAs } from "file-saver"
+import { useStorage } from "@vueuse/core"
+import _kebabCase from "lodash/kebabCase"
+
+const ROW_WIDTH = 1000
+const ROW_HEIGHT = 300
 
 interface OrgData {
 	id: number
@@ -155,11 +186,12 @@ interface PanelData {
 }
 
 const props = defineProps<{
+	timerange: ReportTimeRange | null
 	org: Org | null
 	dashboard: Dashboard | null
 	panels: Panel[]
 }>()
-const { org, dashboard, panels } = toRefs(props)
+const { timerange, org, dashboard, panels } = toRefs(props)
 
 const PanIcon = "carbon:draggable"
 const CloseIcon = "carbon:close"
@@ -169,9 +201,25 @@ const message = useMessage()
 const loadingPrint = ref(false)
 const loading = computed(() => loadingPrint.value)
 
-const orgs = ref<OrgData[]>([])
-const rows = computed<Row[]>(() => orgs.value.find(o => o.id === org.value?.id)?.rows || [])
+const orgs = useStorage<OrgData[]>("report-panel-orgs-data", [], localStorage)
+const rows = computed<Row[]>({
+	get() {
+		return orgs.value.find(o => o.id === org.value?.id)?.rows || []
+	},
+	set(val: Row[]) {
+		const orgData = orgs.value.find(o => o.id === org.value?.id)
+		if (orgData?.rows) {
+			orgData.rows = val
+		}
+	}
+})
 const panelsList = ref<PanelData[]>([])
+
+const panelsReady = computed<number>(() => {
+	return rows.value.reduce((acc, row) => {
+		return acc + row.panels.length
+	}, 0)
+})
 
 watch(org, val => {
 	if (val) {
@@ -238,29 +286,41 @@ function setOrg(org: Org) {
 }
 
 function print() {
+	if (!timerange.value) {
+		return
+	}
+
 	loadingPrint.value = true
 
-	const payload: any[] = []
+	const payload: RowPayload[] = []
 
 	for (const row of rows.value) {
 		if (row.panels.length) {
+			const panel_width = ROW_WIDTH / row.panels.length
+			const panel_height = ROW_HEIGHT
+
 			payload.push({
 				id: row.id,
 				panels: row.panels.map(o => ({
+					org_id: o.orgId,
+					dashboard_title: o.dashboardTitle,
+					dashboard_uid: o.dashboardUID,
 					panel_id: o.panelId,
-					org_id: 1,
-					dashboard_title: "HUNTRESS - _SUMMARY",
-					dashboard_uid: "ab9bab2c-5d86-43e7-bac2-c1d68fc91342"
+					panel_width,
+					panel_height
 				}))
 			})
 		}
 	}
 
+	const reportFileName = `report${org.value?.name ? "-" + _kebabCase(org.value.name) : ""}.pdf`
+
 	Api.reporting
-		.generateReport(payload)
+		.generateReport(timerange.value, payload)
 		.then(res => {
 			if (res.data.success) {
-				console.log(res.data)
+				const dataUri = "data:application/pdf;base64," + res.data.base64_result
+				saveAs(dataUri, reportFileName)
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
@@ -275,93 +335,20 @@ function print() {
 </script>
 
 <style lang="scss" scoped>
+.empty-message {
+	border: 2px dashed var(--border-color) !important;
+	border-radius: var(--border-radius);
+	height: 100%;
+	width: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+}
 .report-panels {
 	overflow: hidden;
-	.panels-container {
-		overflow: hidden;
-
-		.rows-container {
-			overflow: hidden;
-			border-radius: var(--border-radius);
-
-			.drag-wrapper {
-				padding-right: 16px;
-				padding-left: 30px;
-			}
-
-			.row {
-				border-radius: var(--border-radius);
-				background-color: var(--bg-secondary-color);
-				border: var(--border-small-050);
-				height: 155px;
-				position: relative;
-				transition: border-color 0.2s;
-
-				.left-box {
-					position: absolute;
-					top: -1px;
-					left: -30px;
-					bottom: -1px;
-					width: 25px;
-					border: var(--border-small-050);
-					background-color: var(--bg-secondary-color);
-					border-radius: var(--border-radius);
-
-					.pan-area {
-						position: absolute;
-						top: 50%;
-						left: 2px;
-						transform: translateY(-50%);
-						cursor: move;
-					}
-
-					.delete-box {
-						position: absolute;
-						top: 3px;
-						left: 3px;
-					}
-				}
-
-				.panel {
-					height: 130px;
-					aspect-ratio: unset;
-					flex: 1 1 0px;
-					position: relative;
-
-					.delete-box {
-						position: absolute;
-						top: 4px;
-						right: 4px;
-					}
-				}
-
-				&:hover {
-					border-color: var(--primary-020-color);
-				}
-
-				&.ghost-row {
-					border: 2px dashed var(--primary-040-color) !important;
-				}
-			}
-		}
-	}
-
-	.panels-sidebar {
-		border-radius: var(--border-radius);
-		background-color: var(--bg-secondary-color);
-		border: var(--border-small-050);
-
-		:deep() {
-			.n-scrollbar {
-				.n-scrollbar-rail {
-					right: 3px;
-				}
-			}
-		}
-	}
 
 	.panel {
-		height: 100px;
 		aspect-ratio: 1.72;
 		cursor: move;
 
@@ -392,6 +379,118 @@ function print() {
 			.content {
 				border: 2px dashed var(--primary-040-color) !important;
 			}
+		}
+	}
+
+	.panels-container {
+		overflow: hidden;
+
+		.rows-container {
+			overflow: hidden;
+			border-radius: var(--border-radius);
+
+			.drag-wrapper {
+				padding-right: 16px;
+				padding-left: 20px;
+			}
+
+			.row {
+				border-radius: var(--border-radius);
+				background-color: var(--bg-secondary-color);
+				border: var(--border-small-050);
+				height: 155px;
+				position: relative;
+				transition: border-color 0.2s;
+				.empty-message {
+					position: absolute;
+					z-index: 0;
+					width: unset;
+					height: unset;
+					@apply top-3 bottom-3 left-3 right-3;
+				}
+
+				.drop-panels-area {
+					position: absolute;
+					width: unset;
+					height: unset;
+					@apply top-3 bottom-3 left-3 right-3;
+				}
+
+				.left-box {
+					position: absolute;
+					top: 0;
+					left: -32px;
+					bottom: 0;
+					width: 25px;
+					border: var(--border-small-050);
+					background-color: var(--bg-secondary-color);
+					border-radius: var(--border-radius);
+
+					.pan-area {
+						position: absolute;
+						top: 50%;
+						left: 2px;
+						transform: translateY(-50%);
+						cursor: move;
+					}
+
+					.delete-box {
+						position: absolute;
+						top: 0px;
+						left: 0px;
+						right: 0;
+						background-color: rgba(var(--secondary4-color-rgb), 0.1);
+						border-top-left-radius: var(--border-radius);
+						border-top-right-radius: var(--border-radius);
+						text-align: center;
+						padding-top: 4px;
+					}
+
+					&:hover {
+						border-color: var(--primary-020-color);
+					}
+				}
+
+				.panel {
+					height: 100%;
+					aspect-ratio: unset;
+					flex: 1 1 0px;
+					position: relative;
+
+					.delete-box {
+						position: absolute;
+						top: 4px;
+						right: 4px;
+					}
+				}
+
+				&:hover {
+					border-color: var(--primary-020-color);
+				}
+
+				&.ghost-row {
+					border: 2px dashed var(--primary-040-color) !important;
+				}
+			}
+		}
+	}
+
+	.panels-sidebar {
+		border-radius: var(--border-radius);
+		background-color: var(--bg-secondary-color);
+		border: var(--border-small-050);
+		width: 200px;
+
+		:deep() {
+			.n-scrollbar {
+				.n-scrollbar-rail {
+					right: 3px;
+				}
+			}
+		}
+
+		.panel {
+			width: 100%;
 		}
 	}
 }

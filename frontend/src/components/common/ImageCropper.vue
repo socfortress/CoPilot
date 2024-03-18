@@ -42,7 +42,7 @@
 
 <script lang="ts" setup>
 import { NButton, NCard, NUpload, NUploadDragger, NModal } from "naive-ui"
-import { type FileInfo } from "naive-ui/lib/upload/src/interface"
+import { type FileInfo } from "naive-ui/es/upload/src/interface"
 import { ref, toRefs } from "vue"
 import { Cropper, CircleStencil, type CropperResult } from "vue-advanced-cropper"
 import "vue-advanced-cropper/dist/style.css"
