@@ -8,7 +8,11 @@ from dotenv import load_dotenv
 from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy import and_
+from xml.dom import minidom
 from sqlalchemy import update
+from xml.etree.ElementTree import Element, SubElement, tostring, parse, Comment, ElementTree
+import xml.etree.ElementTree as ET
+from xml.dom.minidom import parseString
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
@@ -48,14 +52,19 @@ from app.integrations.office365.schema.provision import ProvisionOffice365Respon
 from app.integrations.utils.schema import PraecoAlertConfig
 from app.integrations.utils.schema import PraecoProvisionAlertResponse
 from app.utils import get_connector_attribute
+import aiofiles
+
 
 load_dotenv()
 
 
 ############ ! WAZUH MANAGER ! ############
-async def get_wazuh_configuration() -> str:
+async def get_wazuh_configuration(file_name: str) -> str:
     """
-    Retrieves the Wazuh configuration from the manager.
+    Retrieves the Wazuh configuration from the manager and writes it to a file.
+
+    Args:
+        file_name (str): The name of the file where the configuration data will be written.
 
     Returns:
         str: The Wazuh configuration data.
@@ -63,7 +72,17 @@ async def get_wazuh_configuration() -> str:
     endpoint = "manager/configuration"
     params = {"raw": True}
     response = await send_get_request(endpoint=endpoint, params=params)
-    return response["data"]
+    config_data = response["data"]
+
+    # Get the directory of the current module
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    # Create the full file path
+    file_path = os.path.join(dir_path, file_name)
+
+    async with aiofiles.open(file_path, 'w') as f:
+        await f.write(config_data)
+
+    return config_data
 
 
 async def office365_template_with_api_type(
@@ -74,87 +93,74 @@ async def office365_template_with_api_type(
     Returns a configured Office365 template for Wazuh.
 
     Args:
-        wazuh_config (str): The current Wazuh configuration.
-        tenant_id (str): Office365 Tenant ID.
-        client_id (str): Office365 Client ID.
-        client_secret (str): Office365 Client Secret.
-        api_type (str): The type of Office365 API.
+        customer_code (str): The customer code.
+        provision_office365_auth_keys (ProvisionOffice365AuthKeys): The Office365 auth keys.
 
     Returns:
         str: The Office365 template configured with the given parameters.
     """
 
-    template = f"""
-    <ossec_config>
-    <office365>
-        <enabled>yes</enabled>
-        <interval>1m</interval>
-        <curl_max_size>5M</curl_max_size>
-        <only_future_events>yes</only_future_events>
-        <!-- Office365 Integration For {customer_code} -->
-        <api_auth>
-            <tenant_id>{provision_office365_auth_keys.TENANT_ID}</tenant_id>
-            <client_id>{provision_office365_auth_keys.CLIENT_ID}</client_id>
-            <client_secret>{provision_office365_auth_keys.CLIENT_SECRET}</client_secret>
-            <api_type>{provision_office365_auth_keys.API_TYPE}</api_type>
-        </api_auth>
-        <subscriptions>
-            <subscription>Audit.SharePoint</subscription>
-            <subscription>Audit.Exchange</subscription>
-            <subscription>DLP.ALL</subscription>
-            <subscription>Audit.General</subscription>
-            <subscription>Audit.AzureActiveDirectory</subscription>
-        </subscriptions>
-    </office365>
-    </ossec_config>
-    """
+    # Get the directory of the current module
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    # Create the full file path
+    wazuh_config = os.path.join(dir_path, 'wazuh_config.xml')
 
-    return template
+    # Parse the existing XML file
+    tree = parse(wazuh_config)
+    root = tree.getroot()
 
+    # Create the office365 element and add it to ossec_config
+    office365 = SubElement(root, 'office365')
 
-async def office365_template(
-    customer_code: str,
-    provision_office365_auth_keys: ProvisionOffice365AuthKeys,
-) -> str:
-    """
-    Returns a configured Office365 template for Wazuh.
+    # Add the child elements to office365
+    SubElement(office365, 'enabled').text = 'yes'
+    SubElement(office365, 'interval').text = '1m'
+    SubElement(office365, 'curl_max_size').text = '5M'
+    SubElement(office365, 'only_future_events').text = 'yes'
 
-    Args:
-        wazuh_config (str): The current Wazuh configuration.
-        tenant_id (str): Office365 Tenant ID.
-        client_id (str): Office365 Client ID.
-        client_secret (str): Office365 Client Secret.
-        api_type (str): The type of Office365 API.
+    # Create the api_auth element and add it to office365
+    api_auth = SubElement(office365, 'api_auth')
 
-    Returns:
-        str: The Office365 template configured with the given parameters.
-    """
+    # Add the customer code as a comment within the api_auth block
+    #api_auth.insert(0, Comment(f' Customer Code: {customer_code} '))
 
-    template = f"""
-    <ossec_config>
-    <office365>
-        <enabled>yes</enabled>
-        <interval>1m</interval>
-        <curl_max_size>5M</curl_max_size>
-        <only_future_events>yes</only_future_events>
-        <!-- Office365 Integration For {customer_code} -->
-        <api_auth>
-            <tenant_id>{provision_office365_auth_keys.TENANT_ID}</tenant_id>
-            <client_id>{provision_office365_auth_keys.CLIENT_ID}</client_id>
-            <client_secret>{provision_office365_auth_keys.CLIENT_SECRET}</client_secret>
-        </api_auth>
-        <subscriptions>
-            <subscription>Audit.SharePoint</subscription>
-            <subscription>Audit.Exchange</subscription>
-            <subscription>DLP.ALL</subscription>
-            <subscription>Audit.General</subscription>
-            <subscription>Audit.AzureActiveDirectory</subscription>
-        </subscriptions>
-    </office365>
-    </ossec_config>
-    """
+    # Add the child elements to api_auth
+    SubElement(api_auth, 'tenant_id').text = provision_office365_auth_keys.TENANT_ID
+    SubElement(api_auth, 'client_id').text = provision_office365_auth_keys.CLIENT_ID
+    SubElement(api_auth, 'client_secret').text = provision_office365_auth_keys.CLIENT_SECRET
+    SubElement(api_auth, 'api_type').text = provision_office365_auth_keys.API_TYPE
 
-    return template
+    # Create the subscriptions element and add it to office365
+    subscriptions = SubElement(office365, 'subscriptions')
+
+    # Add the child elements to subscriptions
+    SubElement(subscriptions, 'subscription').text = 'Audit.SharePoint'
+    SubElement(subscriptions, 'subscription').text = 'Audit.Exchange'
+    SubElement(subscriptions, 'subscription').text = 'DLP.ALL'
+    SubElement(subscriptions, 'subscription').text = 'Audit.General'
+    SubElement(subscriptions, 'subscription').text = 'Audit.AzureActiveDirectory'
+
+    # Convert the office365 element to a string
+    office365_str = tostring(office365).decode('utf-8')
+
+    # Pretty print the office365 element
+    dom = parseString(office365_str)
+    pretty_office365_str = dom.toprettyxml(indent="  ")
+
+    # Remove the XML declaration from the pretty printed office365 string
+    pretty_office365_str = pretty_office365_str.replace('<?xml version="1.0" ?>', '').strip()
+
+    # Convert the entire XML to a string
+    xml_str = tostring(root).decode('utf-8')
+
+    # Replace the original office365 string with the pretty printed office365 string
+    xml_str = xml_str.replace(office365_str, pretty_office365_str)
+
+    # Overwrite the existing XML file with the new contents
+    async with aiofiles.open(wazuh_config, 'w') as f:
+        await f.write(xml_str)
+
+    return xml_str
 
 
 async def append_office365_template(wazuh_config: str, office365_template: str) -> str:
@@ -171,19 +177,80 @@ async def append_office365_template(wazuh_config: str, office365_template: str) 
 
     return wazuh_config + office365_template
 
+async def add_api_auth_to_office365_block(customer_code: str, provision_office365_auth_keys: ProvisionOffice365AuthKeys) -> str:
+    try:
+        # Get the directory of the current module
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        # Create the full file path
+        wazuh_config = os.path.join(dir_path, 'wazuh_config.xml')
+
+        # Parse the existing XML file
+        tree = ET.ElementTree()
+        tree.parse(wazuh_config)
+        root = tree.getroot()
+
+        # Find the office365 block
+        office365_block = root.find('office365')
+
+        # If the office365 block exists
+        if office365_block is not None:
+            # Find the index of the subscriptions block
+            subscriptions_index = list(office365_block).index(office365_block.find('subscriptions'))
+
+            # Create a new api_auth block
+            api_auth_block = ET.Element('api_auth')
+
+            # Add the tenant_id, client_id, client_secret, and api_type to the api_auth block
+            ET.SubElement(api_auth_block, 'tenant_id').text = provision_office365_auth_keys.TENANT_ID
+            ET.SubElement(api_auth_block, 'client_id').text = provision_office365_auth_keys.CLIENT_ID
+            ET.SubElement(api_auth_block, 'client_secret').text = provision_office365_auth_keys.CLIENT_SECRET
+            ET.SubElement(api_auth_block, 'api_type').text = provision_office365_auth_keys.API_TYPE
+
+            # Pretty print the new api_auth block
+            pretty_api_auth_block = minidom.parseString(ET.tostring(api_auth_block)).toprettyxml(indent="   ")
+
+            # Parse the pretty printed api_auth block back to an Element
+            pretty_api_auth_element = ET.fromstring(pretty_api_auth_block)
+
+            # Insert the new pretty printed api_auth block above the subscriptions block
+            office365_block.insert(subscriptions_index, pretty_api_auth_element)
+
+            # Convert the modified configuration back to string format
+            modified_config = ET.tostring(root, encoding='utf-8').decode('utf-8')
+
+            # Overwrite the existing XML file with the new contents
+            with open(wazuh_config, 'w') as f:
+                f.write(modified_config)
+
+            return modified_config
+
+    except Exception as e:
+        logger.error(f"An error occurred: {e}")
+        # Print the full traceback
+        import traceback
+        traceback.print_exc()
+
 
 async def update_wazuh_configuration(
-    wazuh_config: str,
     provision_office365_auth_keys: ProvisionOffice365AuthKeys,
 ) -> None:
     """
     Updates the Wazuh configuration. If it fails, remove the <api_type> tag and retry.
 
     Args:
-        wazuh_config (str): The Wazuh configuration in string format.
         provision_office365_auth_keys (ProvisionOffice365AuthKeys): The Office365 authentication keys.
     """
     endpoint = "manager/configuration"
+
+    # Get the directory of the current module
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    # Create the full file path
+    wazuh_config_path = os.path.join(dir_path, 'wazuh_config.xml')
+
+    # Read the Wazuh configuration from the file
+    async with aiofiles.open(wazuh_config_path, 'r') as f:
+        wazuh_config = await f.read()
+
     data = wazuh_config.encode("utf-8")
 
     try:
@@ -235,13 +302,12 @@ async def update_wazuh_configuration(
             detail="Failed to update Wazuh configuration.",
         )
 
-
 async def check_if_office365_is_already_provisioned(
     customer_code: str,
     wazuh_config: str,
 ) -> bool:
     """
-    If the string "Office365 Integration For {customer_code}" is found in the Wazuh configuration, return True.
+    If the string "Office365 Integration" is found in the Wazuh configuration, return True.
 
     Args:
         customer_code (str): The customer code.
@@ -250,10 +316,28 @@ async def check_if_office365_is_already_provisioned(
     Returns:
         bool: True if the Office365 integration is already provisioned, False otherwise.
     """
-    if f"Office365 Integration For {customer_code}" in wazuh_config:
+    if f"office365" in wazuh_config:
+        return True
+    return False
+
+async def check_if_office365_is_already_provisioned_for_customer(
+    tenant_id: str,
+    wazuh_config: str,
+) -> bool:
+    """
+    If the string "Office365 Integration" is found in the Wazuh configuration, return True.
+
+    Args:
+        customer_code (str): The customer code.
+        wazuh_config (str): The Wazuh configuration in string format.
+
+    Returns:
+        bool: True if the Office365 integration is already provisioned, False otherwise.
+    """
+    if f"{tenant_id}" in wazuh_config:
         raise HTTPException(
             status_code=400,
-            detail=f"Office365 integration already provisioned for customer {customer_code}.",
+            detail=f"Office365 integration is already provisioned for customer {tenant_id}.",
         )
 
 
@@ -263,7 +347,6 @@ async def restart_wazuh_manager() -> None:
     """
     logger.info("Restarting Wazuh manager service.")
     await send_put_request(endpoint="manager/restart", data=None)
-
 
 ################## ! GRAYLOG ! ##################
 
@@ -739,6 +822,7 @@ async def create_grafana_datasource(
     return GrafanaDataSourceCreationResponse(**results)
 
 
+
 ################## ! MAIN FUNCTION ! ##################
 
 
@@ -750,22 +834,35 @@ async def provision_office365(
     logger.info(f"Provisioning Office365 integration for customer {customer_code}.")
 
     # Get Wazuh configuration
-    wazuh_config = await get_wazuh_configuration()
+    wazuh_config = await get_wazuh_configuration(file_name="wazuh_config.xml")
 
     # Check if Office365 is already provisioned
-    await check_if_office365_is_already_provisioned(customer_code, wazuh_config)
+    office365_provisioned = await check_if_office365_is_already_provisioned(customer_code, wazuh_config)
 
     # Create Office365 template
-    office365_templated = await office365_template_with_api_type(
-        customer_code,
-        provision_office365_auth_keys,
-    )
+    if office365_provisioned:
+        logger.info("Office365 integration is already provisioned.")
+    else:
+        logger.info("Office365 integration is not yet provisioned.")
+        logger.info("Creating new Office365 block.")
+        office365_templated = await office365_template_with_api_type(
+            customer_code,
+            provision_office365_auth_keys,
+        )
 
-    # Append Office365 template to Wazuh configuration
-    wazuh_config = await append_office365_template(wazuh_config, office365_templated)
+    # Check if Office365 is already provisioned for customer
+    await check_if_office365_is_already_provisioned_for_customer(provision_office365_auth_keys.TENANT_ID, wazuh_config)
+
+    # If Office365 is already provisioned but not for the customer, add the api_auth contents to the office365 block
+    if office365_provisioned and not await check_if_office365_is_already_provisioned_for_customer(provision_office365_auth_keys.TENANT_ID, wazuh_config):
+        wazuh_config = await add_api_auth_to_office365_block(customer_code, provision_office365_auth_keys)
+    else:
+        # Append Office365 template to Wazuh configuration
+        wazuh_config = await append_office365_template(wazuh_config, office365_templated)
 
     # Update Wazuh configuration
-    await update_wazuh_configuration(wazuh_config, provision_office365_auth_keys)
+    #await update_wazuh_configuration(wazuh_config, provision_office365_auth_keys)
+    await update_wazuh_configuration(provision_office365_auth_keys)
 
     # Restart Wazuh manager
     await restart_wazuh_manager()
