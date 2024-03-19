@@ -3,7 +3,7 @@ from typing import List
 from typing import Optional
 from typing import Union
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class Provider(BaseModel):
@@ -46,7 +46,7 @@ class Storage(BaseModel):
 class EventDefinition(BaseModel):
     _scope: str
     alert: bool
-    config: Config
+    config: Optional[Config] = Field(None, description="The configuration for the event definition")
     description: str
     field_spec: Dict[str, FieldSpecItem]
     id: str
