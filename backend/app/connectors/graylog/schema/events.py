@@ -29,6 +29,11 @@ ExpressionItem.update_forward_refs()
 class Conditions(BaseModel):
     expression: Optional[Union[str, ExpressionItem]] = None
 
+class SeriesItem(BaseModel):
+    type: str
+    id: str
+    field: Optional[str] = None
+
 
 class Config(BaseModel):
     conditions: Optional[Conditions] = Field(None, description="The conditions to be met for the config")
@@ -37,7 +42,7 @@ class Config(BaseModel):
     query: Optional[str] = Field(None, description="The query to be executed")
     query_parameters: Optional[List[str]] = Field(None, description="The parameters for the query")
     search_within_ms: Optional[int] = Field(None, description="The search window in milliseconds")
-    series: Optional[List[str]] = Field(None, description="The series to be included in the config")
+    series: Optional[Union[str, List[SeriesItem]]] = Field(None, description="The series to be included in the config")
     streams: Optional[List[str]] = Field(None, description="The streams to be included in the config")
     type: str = Field(..., description="The type of the config")
 
