@@ -162,6 +162,7 @@ class GraylogAlertProvisionConfig(BaseModel):
     series: List
     conditions: Dict
     type: str = Field(..., alias="type")
+    event_limit: int = Field(1000, description="The event limit for the config")
 
 
 class GraylogAlertProvisionNotificationSettings(BaseModel):

@@ -319,6 +319,7 @@ async def provision_wazuh_monitoring_alert(
                     execute_every_ms=await convert_seconds_to_milliseconds(
                         request.execute_every,
                     ),
+                    event_limit=1000,
                 ),
                 field_spec={
                     "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
