@@ -24,6 +24,7 @@ export interface RowPanelPayload {
 	panel_id: number
 	panel_width: number
 	panel_height: number
+	theme: "light" | "dark"
 }
 
 export interface RowPayload {
@@ -49,7 +50,8 @@ export default {
 	generateReport(timerange: ReportTimeRange, rows: RowPayload[]) {
 		return HttpClient.post<FlaskBaseResponse & { base64_result: string }>(
 			`/reporting/generate-report`,
-			{ timerange, rows },
+			// TODO: add real params
+			{ timerange, timerange_text: "", logo_base64: "", company_name: "", rows },
 			{ timeout: 0 }
 		)
 	}

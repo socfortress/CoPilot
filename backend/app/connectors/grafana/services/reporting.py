@@ -55,7 +55,7 @@ def generate_panel_urls(grafana_url: str, request: GrafanaGenerateIframeLinksReq
     panel_url = (
         f"{grafana_url}/d-solo/{request.dashboard_uid}/{request.dashboard_title}"
         f"?orgId={request.org_id}&from={timestamp_from}&to={timestamp_to}"
-        f"&panelId={request.panel_id}"
+        f"&panelId={request.panel_id}&theme=light"
     )
     panel_links.append(GrafanaLinksList(panel_id=request.panel_id, panel_url=panel_url))
     return panel_links

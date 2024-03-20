@@ -163,8 +163,14 @@ import { saveAs } from "file-saver"
 import { useStorage } from "@vueuse/core"
 import _kebabCase from "lodash/kebabCase"
 
-const ROW_WIDTH = 1000
-const ROW_HEIGHT = 300
+// TODO: add logo input file and send in base64 . save on localstorage
+// TODO: tenere in considerazione anche il "gap" della riga nel template
+// TODO: aggiungere dentro il panel la dashboardTitle
+// TODO: rimuovere "prepared by" dalla cover
+// TODO: aggiunger drawer con form metadata (logo,company,theme, retina)
+
+const ROW_WIDTH = 800
+const ROW_HEIGHT = 320
 
 interface OrgData {
 	id: number
@@ -296,8 +302,8 @@ function print() {
 
 	for (const row of rows.value) {
 		if (row.panels.length) {
-			const panel_width = ROW_WIDTH / row.panels.length
-			const panel_height = ROW_HEIGHT
+			const panel_width = (ROW_WIDTH / row.panels.length) * 2
+			const panel_height = ROW_HEIGHT * 2
 
 			payload.push({
 				id: row.id,
@@ -307,7 +313,9 @@ function print() {
 					dashboard_uid: o.dashboardUID,
 					panel_id: o.panelId,
 					panel_width,
-					panel_height
+					panel_height,
+					// TODO: send real param
+					theme: "light"
 				}))
 			})
 		}
