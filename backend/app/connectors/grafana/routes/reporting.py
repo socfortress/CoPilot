@@ -219,5 +219,6 @@ async def create_report(
     session: AsyncSession = Depends(get_db)
 ) -> GenerateReportResponse:
     logger.info("Generating report")
-    await is_feature_enabled("REPORTING", session)
+    # ! License Check
+    #await is_feature_enabled("REPORTING", session)
     return await generate_report(request, session)
