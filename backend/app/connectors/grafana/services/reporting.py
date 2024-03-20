@@ -49,13 +49,13 @@ def calculate_unix_timestamps(time_range: TimeRange):
 
     return timestamp_from, timestamp_to
 
-def generate_panel_urls(grafana_url: str, request: GrafanaGenerateIframeLinksRequest, timestamp_from: int, timestamp_to: int):
+def generate_panel_urls(grafana_url: str, request: GrafanaGenerateIframeLinksRequest, timestamp_from: int, timestamp_to: int, theme: str = "dark"):
     panel_links: List[GrafanaLinksList] = []
     #for panel_id in request.panel_ids:
     panel_url = (
         f"{grafana_url}/d-solo/{request.dashboard_uid}/{request.dashboard_title}"
         f"?orgId={request.org_id}&from={timestamp_from}&to={timestamp_to}"
-        f"&panelId={request.panel_id}&theme=light"
+        f"&panelId={request.panel_id}&theme={theme}"
     )
     panel_links.append(GrafanaLinksList(panel_id=request.panel_id, panel_url=panel_url))
     return panel_links
