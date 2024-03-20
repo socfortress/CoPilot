@@ -157,8 +157,9 @@ async def capture_screenshots(page, panels: List[RequestPanel]) -> List[RequestP
                 last_url = panel.panel_url
 
             # Assuming default dimensions are always used in this example
-            width = 910
-            height = 683
+            logger.info(f"Panel width: {panel.panel_width}, height: {panel.panel_height} for panel {panel.panel_id}")
+            width = panel.panel_width
+            height = panel.panel_height
             await page.set_viewport_size({"width": width, "height": height})
 
             screenshot = await page.screenshot(type='png')

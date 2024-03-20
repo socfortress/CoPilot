@@ -198,6 +198,8 @@ class RequestPanel(BaseModel):
     panel_url: Optional[str] = Field(None, description="Panel URL")
     panel_base64: Optional[str] = Field(None, description="Panel Base64")
     row_id: Optional[int] = Field(None, description="Row ID")
+    panel_width: int = Field(..., description="Panel width")
+    panel_height: int = Field(..., description="Panel height")
 
 class RequestRow(BaseModel):
     id: int = Field(..., description="Row ID")
@@ -214,13 +216,17 @@ class GenerateReportRequest(BaseModel):
                     "panel_id": 5,
                     "org_id": 1,
                     "dashboard_title": "HUNTRESS - _SUMMARY",
-                    "dashboard_uid": "ab9bab2c-5d86-43e7-bac2-c1d68fc91342"
+                    "dashboard_uid": "ab9bab2c-5d86-43e7-bac2-c1d68fc91342",
+                    "panel_width": 500,
+                    "panel_height": 300
                 },
                 {
                     "panel_id": 3,
                     "org_id": 1,
                     "dashboard_title": "HUNTRESS - _SUMMARY",
-                    "dashboard_uid": "ab9bab2c-5d86-43e7-bac2-c1d68fc91342"
+                    "dashboard_uid": "ab9bab2c-5d86-43e7-bac2-c1d68fc91342",
+                    "panel_width": 500,
+                    "panel_height": 300
                 }
             ]
         },
@@ -231,13 +237,17 @@ class GenerateReportRequest(BaseModel):
                     "panel_id": 5,
                     "org_id": 1,
                     "dashboard_title": "HUNTRESS - _SUMMARY",
-                    "dashboard_uid": "ab9bab2c-5d86-43e7-bac2-c1d68fc91342"
+                    "dashboard_uid": "ab9bab2c-5d86-43e7-bac2-c1d68fc91342",
+                    "panel_width": 500,
+                    "panel_height": 300
                 },
                 {
                     "panel_id": 3,
                     "org_id": 1,
                     "dashboard_title": "HUNTRESS - _SUMMARY",
-                    "dashboard_uid": "ab9bab2c-5d86-43e7-bac2-c1d68fc91342"
+                    "dashboard_uid": "ab9bab2c-5d86-43e7-bac2-c1d68fc91342",
+                    "panel_width": 500,
+                    "panel_height": 300
                 }
             ]
         }
