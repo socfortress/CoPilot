@@ -439,6 +439,7 @@ async def provision_suricata_monitoring_alert(
                 execute_every_ms=await convert_seconds_to_milliseconds(
                     request.execute_every,
                 ),
+                event_limit=1000,
             ),
             field_spec={
                 "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
@@ -558,6 +559,7 @@ async def provision_office365_exchange_online_alert(
                 execute_every_ms=await convert_seconds_to_milliseconds(
                     request.execute_every,
                 ),
+                event_limit=1000,
             ),
             field_spec={
                 "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
@@ -677,6 +679,7 @@ async def provision_office365_threat_intel_alert(
                 execute_every_ms=await convert_seconds_to_milliseconds(
                     request.execute_every,
                 ),
+                event_limit=1000,
             ),
             field_spec={
                 "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
@@ -794,6 +797,7 @@ async def provision_custom_alert(request: CustomMonitoringAlertProvisionModel) -
                 execute_every_ms=await convert_seconds_to_milliseconds(
                     request.execute_every_ms,
                 ),
+                event_limit=1000,
             ),
             field_spec={
                 custom_field.name: GraylogAlertProvisionFieldSpecItem(
