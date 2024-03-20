@@ -248,6 +248,7 @@ async def provision_alert_definition(
         endpoint="/api/events/definitions",
         data=alert_definition_model.dict(),
     )
+    logger.info(f"Graylog alert definition provisioned response: {response}")
     if response["success"]:
         return True
     raise HTTPException(status_code=500, detail="Failed to provision alert definition")
