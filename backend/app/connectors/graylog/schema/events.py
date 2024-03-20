@@ -17,8 +17,17 @@ class FieldSpecItem(BaseModel):
     providers: List[Provider]
 
 
+class ExpressionItem(BaseModel):
+    expr: str
+    ref: Optional[str] = None
+    value: Optional[int] = None
+    left: Optional['ExpressionItem'] = None
+    right: Optional['ExpressionItem'] = None
+
+ExpressionItem.update_forward_refs()
+
 class Conditions(BaseModel):
-    expression: Optional[str]
+    expression: Optional[Union[str, ExpressionItem]] = None
 
 
 class Config(BaseModel):
