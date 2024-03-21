@@ -60,6 +60,7 @@ async def collect_wazuh_agents() -> WazuhAgentsList:
                     agent_label=agent_group,
                     agent_last_seen=last_keep_alive,
                     wazuh_agent_version=agent.get("version", "n/a"),
+                    wazuh_agent_status=agent.get("status", "n/a"),
                 )
                 wazuh_agents_list.append(wazuh_agent)
 

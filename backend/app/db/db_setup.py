@@ -50,7 +50,8 @@ async def update_tables(async_engine):
     # Define the new columns to be added
     new_columns = {
         "scheduled_job_metadata": ["extra_data TEXT"],
-        "customer_provisioning_default_settings": ["wazuh_worker_hostname TEXT"]
+        "customer_provisioning_default_settings": ["wazuh_worker_hostname TEXT"],
+        "agents": ["wazuh_agent_status TEXT"],
     }
 
     async with async_engine.begin() as conn:
