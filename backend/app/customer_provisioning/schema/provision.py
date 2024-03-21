@@ -166,3 +166,25 @@ class CustomersMetaResponse(BaseModel):
         ...,
         description="Customer meta data for the newly provisioned customer",
     )
+
+class ProvisionHaProxyRequest(BaseModel):
+    customer_name: str = Field(
+        ...,
+        example="SOCFortress",
+        description="The name of the customer",
+    )
+    wazuh_registration_port: str = Field(
+        ...,
+        example="1515",
+        description="The port for the Wazuh registration service",
+    )
+    wazuh_logs_port: str = Field(
+        ...,
+        example="1514",
+        description="The port for the Wazuh logs service",
+    )
+    wazuh_worker_hostname: Optional[str] = Field(
+        None,
+        example="worker1",
+        description="The hostname of the Wazuh worker",
+    )

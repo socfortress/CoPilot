@@ -9,6 +9,7 @@ from app.connectors.graylog.services.management import start_stream
 from app.customer_provisioning.schema.graylog import StreamConnectionToPipelineRequest
 from app.customer_provisioning.schema.provision import CustomerProvisionMeta
 from app.customer_provisioning.schema.provision import CustomerProvisionResponse
+from app.customer_provisioning.schema.provision import ProvisionHaProxyRequest
 from app.customer_provisioning.schema.provision import ProvisionNewCustomer
 from app.customer_provisioning.schema.wazuh_worker import ProvisionWorkerRequest
 from app.customer_provisioning.schema.wazuh_worker import ProvisionWorkerResponse
@@ -129,7 +130,7 @@ async def provision_wazuh_customer(
         )
 
     provsion_haproxy = await provision_haproxy(
-        ProvisionWorkerRequest(
+        ProvisionHaProxyRequest(
             customer_name=request.customer_name,
             wazuh_registration_port=request.wazuh_registration_port,
             wazuh_logs_port=request.wazuh_logs_port,
