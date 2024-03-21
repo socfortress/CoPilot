@@ -33,6 +33,7 @@ class WazuhDashboard(Enum):
     EDR_PROCESS_INJECTION = ("Wazuh", "edr_process_injection.json")
     EDR_OPEN_AUDIT = ("Wazuh", "edr_open_audit.json")
     EDR_NETWORK_SCAN = ("Wazuh", "edr_network_scan.json")
+    EDR_NETWORK_CONNECTIONS = ("Wazuh", "edr_network_connections.json")
     EDR_MITRE = ("Wazuh", "edr_mitre.json")
     EDR_FIM = ("Wazuh", "edr_fim.json")
     EDR_DOCKER_MONITORING = ("Wazuh", "edr_docker_monitoring.json")
