@@ -17,6 +17,15 @@ from app.db.db_session import get_db
 from enum import Enum
 from sqlalchemy.ext.asyncio import AsyncSession
 
+class ReplaceLicenseRequest(BaseModel):
+    """
+    A Pydantic model for replacing a license.
+
+    Attributes:
+        license_key (str): The license key to replace.
+    """
+    license_key: str = Field(..., title="The license key to replace")
+
 class CreateLicenseRequest(BaseModel):
     """
     A Pydantic model for creating a license.
@@ -127,6 +136,21 @@ def get_rsa_pub_key():
 def get_product_id():
     return 24355
 
+def create_trial_key(auth, request):
+    result, _ = Key.create_key(
+        token=auth,
+        product_id=request.product_id,
+        period=7,
+        notes=request.notes,
+        new_customer=request.new_customer,
+        name=request.name,
+        email=request.email,
+        company_name=request.company_name,
+    )
+    logger.info(result)
+    result = CreateCustomerKeyResponseModel(response=[result])
+    return result
+
 def create_key(auth, request):
     result, _ = Key.create_key(
         token=auth,
@@ -175,6 +199,16 @@ def check_license(license: License):
     )
     return result
 
+def extend_license(license: License, period: int):
+    result, _ = Key.extend_license(
+        token=get_auth_token(),
+        product_id=get_product_id(),
+        key=license.license_key,
+        no_of_days=period,
+    )
+    logger.info(result)
+    return result
+
 def is_license_expired(license: dict) -> bool:
     """
     Check if a license is expired.
@@ -208,6 +242,27 @@ async def is_feature_enabled(feature_name: str, session: AsyncSession) -> bool:
     raise HTTPException(status_code=400, detail="Feature not enabled. You must purchase a license to use this feature.")
 
 @license_router.post(
+    "/create_trial_key",
+    description="Create a trial license key",
+)
+async def create_trial_license_key(request: CreateLicenseRequest, session: AsyncSession = Depends(get_db)):
+    """
+    Create a trial license key.
+
+    Args:
+        request (CreateLicenseRequest): The request containing the license key to create.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        LicenseVerificationResponse: A Pydantic model containing the verification status and message.
+    """
+    await check_if_license_exists(session)
+    auth = get_auth_token()
+    result = create_trial_key(auth, request)
+    await add_license_to_db(session, result, request)
+    return result
+
+@license_router.post(
     "/create_new_key",
     description="Create a new license key",
 )
@@ -227,6 +282,30 @@ async def create_new_license_key(request: CreateLicenseRequest, session: AsyncSe
     result = create_key(auth, request)
     await add_license_to_db(session, result, request)
     return result
+
+@license_router.post(
+    "/extend_license",
+    description="Extend a license",
+)
+async def extend_license_key(period: int, session: AsyncSession = Depends(get_db)):
+    """
+    Extend a license key.
+
+    Args:
+        period (int): The period to extend the license by.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        LicenseVerificationResponse: A Pydantic model containing the verification status and message.
+    """
+    try:
+        license = await get_license(session)
+        logger.info(f"License: {license}")
+        result = extend_license(license, period)
+        return result
+    except Exception as e:
+        logger.error(e)
+        raise HTTPException(status_code=400, detail="License extension failed")
 
 @license_router.get(
     "/verify_license",
@@ -295,3 +374,31 @@ async def add_feature_to_license(feature_name: str, session: AsyncSession = Depe
         logger.error(e)
         raise HTTPException(status_code=400, detail="Feature addition failed")
 
+
+@license_router.post(
+    "/replace_license_in_db",
+    description="Replace a license",
+)
+async def replace_license_in_db(request: ReplaceLicenseRequest, session: AsyncSession = Depends(get_db)):
+    """
+    Replace a license in the database.
+
+    Args:
+        request (ReplaceLicenseRequest): The request containing the license key to replace.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        LicenseVerificationResponse: A Pydantic model containing the verification status and message.
+    """
+    try:
+        # Update the license in the database
+        result = await session.execute(select(License))
+        license = result.scalars().first()
+        if not license:
+            raise HTTPException(status_code=404, detail="No license found")
+        license.license_key = request.license_key
+        await session.commit()
+        return {"message": "License replaced successfully", "success": True}
+    except Exception as e:
+        logger.error(e)
+        raise HTTPException(status_code=400, detail="License replacement failed")
