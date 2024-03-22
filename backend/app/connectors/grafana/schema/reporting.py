@@ -206,6 +206,9 @@ class RequestRow(BaseModel):
     panels: List[RequestPanel] = Field(..., description="Panels in the row")
 
 class GenerateReportRequest(BaseModel):
+    company_name: str = Field(..., description="Company name", example="SOC Fortress")
+    timerange_text: str = Field(..., description="Time range text", example="Last 7 days")
+    logo_base64: str = Field(..., description="Base64 encoded logo", example="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAABjklEQVRIS+2Vv0oDQRDG")
     timerange: str = Field(..., description="Time range for the report")
     #rows: List[RequestRow] = Field(..., description="Rows in the report")
     rows: List[RequestRow] = Field(..., description="Rows in the report", example=[

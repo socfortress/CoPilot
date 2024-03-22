@@ -200,7 +200,7 @@ async def generate_grafana_iframe_links(
 
 
 
-def generate_html(panels: List[RequestPanel]) -> str:
+def generate_html(panels: List[RequestPanel], request: GenerateReportRequest) -> str:
     # Load the template
     logger.info(f"Rendering HTML with panels: {len(panels)} panels")
     templates_dir = Path(__file__).parent / '../reporting'
@@ -219,7 +219,10 @@ def generate_html(panels: List[RequestPanel]) -> str:
     panel_groups_list = list(panel_groups.values())
 
     # Render the template with the grouped panels
-    html_content = template.render(panel_groups=panel_groups_list)
+    html_content = template.render(panel_groups=panel_groups_list,
+                                      company_name=request.company_name,
+                                      timerange_text=request.timerange_text,
+                                      logo_base64=request.logo_base64)
     return html_content
 
 def parse_timerange(timerange: str) -> dict:
@@ -286,7 +289,7 @@ async def generate_report(
         all_panels = [panel for row in request.rows for panel in row.panels]
         panels = await capture_screenshots(page, all_panels)
         await browser.close()
-        html_string = generate_html(panels)
+        html_string = generate_html(panels, request)
         await write_html_to_file(html_string, 'report.html')
         await generate_pdf_from_html('report.html', 'report.pdf')
 
