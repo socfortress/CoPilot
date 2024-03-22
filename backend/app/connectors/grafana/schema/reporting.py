@@ -178,6 +178,7 @@ class GrafanaGenerateIframeLinksRequest(BaseModel):
     dashboard_uid: str = Field(..., description="The UID of the dashboard.")
     panel_id: int = Field(..., description="The IDs of the panels.")
     time_range: TimeRange = Field(..., description="Time range in minutes, hours, or days")
+    theme: Optional[str] = Field(None, description="The theme of the panel.")
 
 
 class GrafanaLinksList(BaseModel):
@@ -200,6 +201,7 @@ class RequestPanel(BaseModel):
     row_id: Optional[int] = Field(None, description="Row ID")
     panel_width: int = Field(..., description="Panel width")
     panel_height: int = Field(..., description="Panel height")
+    theme: Optional[str] = Field(None, description="Panel theme")
 
 class RequestRow(BaseModel):
     id: int = Field(..., description="Row ID")

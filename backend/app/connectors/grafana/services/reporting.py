@@ -193,7 +193,7 @@ async def generate_grafana_iframe_links(
     timestamp_from, timestamp_to = calculate_unix_timestamps(request.time_range)
 
     # build the URL string for each panel_id
-    panel_urls = generate_panel_urls(grafana_url, request, timestamp_from, timestamp_to)
+    panel_urls = generate_panel_urls(grafana_url, request, timestamp_from, timestamp_to, theme=request.theme)
 
     # return only the panel url
     return panel_urls[0].panel_url
@@ -237,7 +237,8 @@ async def generate_panel_urls_object(panel: RequestPanel, timerange: dict, sessi
         dashboard_uid=panel.dashboard_uid,
         dashboard_title=panel.dashboard_title,
         org_id=panel.org_id,
-        panel_id=panel.panel_id
+        panel_id=panel.panel_id,
+        theme=panel.theme
     )
     return await generate_grafana_iframe_links(iframe_links_request, session)
 
