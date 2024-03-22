@@ -68,6 +68,9 @@
 															Remove Panel
 														</n-tooltip>
 													</div>
+													<div class="dashboard-title">
+														{{ panel.dashboardTitle }}
+													</div>
 													<div class="content">
 														{{ panel.panelTitle }}
 													</div>
@@ -80,7 +83,7 @@
 						</div>
 					</n-scrollbar>
 				</div>
-				<div class="toolbar pr-4 flex items-center justify-between">
+				<div class="toolbar pr-4 flex items-center justify-between gap-2">
 					<n-button
 						class="add-task-btn flex items-center justify-center !mt-0"
 						@click="addRow()"
@@ -92,12 +95,19 @@
 						<span>Add row</span>
 					</n-button>
 
-					<n-button type="success" @click="print()" :loading="loading" v-if="panelsReady">
-						<template #icon>
-							<Icon :name="PrintIcon"></Icon>
-						</template>
-						Print Report
-					</n-button>
+					<div class="flex items-center gap-2" v-if="panelsReady">
+						<n-button type="success" @click="print()" :loading="loading">
+							<template #icon>
+								<Icon :name="PrintIcon"></Icon>
+							</template>
+							Print Report
+						</n-button>
+						<n-button type="success" @click="openSettings()" :loading="loading">
+							<template #icon>
+								<Icon :name="SettingsIcon"></Icon>
+							</template>
+						</n-button>
+					</div>
 				</div>
 			</div>
 
@@ -141,6 +151,18 @@
 			<code>Dashboard</code>
 			to create the Report
 		</div>
+
+		<n-drawer
+			v-model:show="settingDrawerOpen"
+			:width="500"
+			style="max-width: 90vw"
+			:trap-focus="false"
+			display-directive="show"
+		>
+			<n-drawer-content title="Report Settings" closable :native-scrollbar="false">
+				<PrintSettings @update="printSettings = $event" />
+			</n-drawer-content>
+		</n-drawer>
 	</n-spin>
 </template>
 
@@ -153,22 +175,19 @@
 // TODO: complete report.html
 
 import { ref, computed, toRefs, watch } from "vue"
-import { NButton, NSpin, NScrollbar, NTooltip, useMessage } from "naive-ui"
+import { NButton, NSpin, NScrollbar, NTooltip, NDrawer, NDrawerContent, useMessage } from "naive-ui"
 import type { Dashboard, Org, Panel } from "@/types/reporting"
 import Icon from "@/components/common/Icon.vue"
+import PrintSettings, { type PrintSettingsData } from "./PrintSettings.vue"
 import draggable from "vuedraggable"
 import Api from "@/api"
-import type { ReportTimeRange, RowPayload } from "@/api/reporting"
+import type { GenerateReportPayload, ReportTimeRange, RowPayload } from "@/api/reporting"
 import { saveAs } from "file-saver"
 import { useStorage } from "@vueuse/core"
 import _kebabCase from "lodash/kebabCase"
+import * as defaultSettings from "./defaultSettings"
 
-// TODO: add logo input file and send in base64 . save on localstorage
-// TODO: tenere in considerazione anche il "gap" della riga nel template
-// TODO: aggiungere dentro il panel la dashboardTitle
-// TODO: rimuovere "prepared by" dalla cover
-// TODO: aggiunger drawer con form metadata (logo,company,theme, retina)
-
+const ROW_GAP = 20
 const ROW_WIDTH = 800
 const ROW_HEIGHT = 320
 
@@ -201,11 +220,15 @@ const { timerange, org, dashboard, panels } = toRefs(props)
 
 const PanIcon = "carbon:draggable"
 const CloseIcon = "carbon:close"
+const SettingsIcon = "carbon:settings"
 const AddIcon = "carbon:add-alt"
 const PrintIcon = "carbon:printer"
 const message = useMessage()
 const loadingPrint = ref(false)
 const loading = computed(() => loadingPrint.value)
+
+const settingDrawerOpen = ref(false)
+const printSettings = ref<Partial<PrintSettingsData>>({})
 
 const orgs = useStorage<OrgData[]>("report-panel-orgs-data", [], localStorage)
 const rows = computed<Row[]>({
@@ -243,6 +266,10 @@ watch(panels, val => {
 		}
 	}
 })
+
+function openSettings() {
+	settingDrawerOpen.value = true
+}
 
 function addRow() {
 	rows.value.push({
@@ -298,14 +325,26 @@ function print() {
 
 	loadingPrint.value = true
 
-	const payload: RowPayload[] = []
+	const timeValue = parseInt(timerange.value.match(/\d+/)?.[0] || "1")
+	const timeUnit = (timerange.value.match(/[a-z]/i)?.[0] || "h").toLocaleLowerCase()
+	const timerangeText = `Last ${timeValue} ${timeUnit === "d" ? "Day" : timeUnit === "h" ? "Hour" : "minute"}${timeValue > 1 ? "s" : ""}`
+
+	const payload: GenerateReportPayload = {
+		timerange: timerange.value,
+		timerange_text: timerangeText,
+		logo_base64: printSettings.value.logo || defaultSettings.logo,
+		company_name: printSettings.value.company || defaultSettings.company,
+		rows: []
+	}
+
+	const density = printSettings.value.retina ? 2 : 1
 
 	for (const row of rows.value) {
 		if (row.panels.length) {
-			const panel_width = (ROW_WIDTH / row.panels.length) * 2
-			const panel_height = ROW_HEIGHT * 2
+			const panel_width = ((ROW_WIDTH - ROW_GAP * (row.panels.length - 1)) / row.panels.length) * density
+			const panel_height = ROW_HEIGHT * density
 
-			payload.push({
+			payload.rows.push({
 				id: row.id,
 				panels: row.panels.map(o => ({
 					org_id: o.orgId,
@@ -314,8 +353,7 @@ function print() {
 					panel_id: o.panelId,
 					panel_width,
 					panel_height,
-					// TODO: send real param
-					theme: "light"
+					theme: printSettings.value.theme || defaultSettings.theme
 				}))
 			})
 		}
@@ -324,7 +362,7 @@ function print() {
 	const reportFileName = `report${org.value?.name ? "-" + _kebabCase(org.value.name) : ""}.pdf`
 
 	Api.reporting
-		.generateReport(timerange.value, payload)
+		.generateReport(payload)
 		.then(res => {
 			if (res.data.success) {
 				const dataUri = "data:application/pdf;base64," + res.data.base64_result
@@ -469,6 +507,19 @@ function print() {
 						position: absolute;
 						top: 4px;
 						right: 4px;
+					}
+
+					.dashboard-title {
+						font-size: 10px;
+						position: absolute;
+						top: 0px;
+						left: 0px;
+						right: 28px;
+						padding: 5px 10px;
+						color: var(--fg-secondary-color);
+						white-space: nowrap;
+						overflow: hidden;
+						text-overflow: ellipsis;
 					}
 				}
 

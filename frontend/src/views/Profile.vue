@@ -8,6 +8,7 @@
 						v-if="propicEnabled"
 						v-slot="{ openCropper }"
 						@crop="setCroppedImage"
+						shape="circle"
 						:placeholder="'Select your profile picture'"
 					>
 						<Icon :name="EditIcon" :size="16" class="edit" @click="openCropper()"></Icon>
@@ -44,6 +45,7 @@
 						v-if="propicEnabled"
 						v-slot="{ openCropper }"
 						@crop="setCroppedImage"
+						shape="circle"
 						:placeholder="'Select your profile picture'"
 					>
 						<n-button size="large" type="primary" @click="openCropper()">Edit profile image</n-button>

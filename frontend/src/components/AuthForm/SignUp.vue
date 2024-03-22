@@ -69,6 +69,7 @@
 								<ImageCropper
 									v-slot="{ openCropper }"
 									@crop="setCroppedImage"
+									shape="circle"
 									:placeholder="'Select your profile picture'"
 								>
 									<n-button type="primary" @click="openCropper()" size="small">

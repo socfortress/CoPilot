@@ -5,9 +5,10 @@ import type { MessageApiInjection } from "naive-ui/es/message/src/MessageProvide
 import type { DialogApiInjection } from "naive-ui/es/dialog/src/DialogProvider"
 import { h } from "vue"
 
-export function isAgentOnline(last_seen: string) {
-	const lastSeenDate = dayjs(last_seen)
+export function isAgentOnline(lastSeen: string) {
+	const lastSeenDate = dayjs(lastSeen)
 	if (!lastSeenDate.isValid()) return false
+	if (!dayjs().isAfter(lastSeenDate)) return false
 
 	return lastSeenDate.isAfter(dayjs().subtract(1, "h"))
 }

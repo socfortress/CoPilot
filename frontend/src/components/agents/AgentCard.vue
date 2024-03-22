@@ -70,9 +70,9 @@
 
 <script setup lang="ts">
 import { computed, ref, toRefs } from "vue"
-import { type Agent } from "@/types/agents.d"
+import { AgentStatus, type Agent } from "@/types/agents.d"
 import dayjs from "@/utils/dayjs"
-import { handleDeleteAgent, isAgentOnline, toggleAgentCritical } from "./utils"
+import { handleDeleteAgent, toggleAgentCritical } from "./utils"
 import { NTooltip, NButton, NSpin, NCard, useMessage, useDialog } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
@@ -97,7 +97,7 @@ const loading = ref(false)
 const message = useMessage()
 const dialog = useDialog()
 const isOnline = computed(() => {
-	return isAgentOnline(agent.value.wazuh_last_seen)
+	return agent.value.wazuh_agent_status === AgentStatus.Active
 })
 const formatLastSeen = computed(() => {
 	const lastSeenDate = dayjs(agent.value.wazuh_last_seen)

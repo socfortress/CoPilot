@@ -32,6 +32,14 @@ export interface RowPayload {
 	panels: RowPanelPayload[]
 }
 
+export interface GenerateReportPayload {
+	timerange: ReportTimeRange
+	timerange_text: string
+	logo_base64: string
+	company_name: string
+	rows: RowPayload[]
+}
+
 export type ReportTimeRange = `${number}${RowPanelTimeUnit}`
 
 export default {
@@ -47,11 +55,10 @@ export default {
 	generatePanelsLinks(payload: PanelsLinksPayload) {
 		return HttpClient.post<FlaskBaseResponse & { links: PanelLink[] }>(`/reporting/generate_iframe_links`, payload)
 	},
-	generateReport(timerange: ReportTimeRange, rows: RowPayload[]) {
+	generateReport({ timerange, timerange_text, logo_base64, company_name, rows }: GenerateReportPayload) {
 		return HttpClient.post<FlaskBaseResponse & { base64_result: string }>(
 			`/reporting/generate-report`,
-			// TODO: add real params
-			{ timerange, timerange_text: "", logo_base64: "", company_name: "", rows },
+			{ timerange, timerange_text, logo_base64, company_name, rows },
 			{ timeout: 0 }
 		)
 	}
