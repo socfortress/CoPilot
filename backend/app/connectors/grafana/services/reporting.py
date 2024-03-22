@@ -279,7 +279,7 @@ async def generate_report(
             panel.panel_url = panel_urls
 
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=False)
+        browser = await p.chromium.launch(headless=True)
         context = await browser.new_context(ignore_https_errors=True)
         page = await context.new_page()
         await login_to_page(page, session)
