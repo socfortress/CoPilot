@@ -206,7 +206,7 @@ def generate_html(panels: List[RequestPanel], request: GenerateReportRequest) ->
     templates_dir = Path(__file__).parent / '../reporting'
     env = Environment(loader=FileSystemLoader(templates_dir))
     logger.info(f"Templates dir: {templates_dir}")
-    template = env.get_template('report-template-test-new.html')
+    template = env.get_template('report-template.html')
 
     panel_groups = {}
     for panel in panels:
@@ -300,8 +300,9 @@ async def generate_report(
 
 
 
-        # ! NEED TO CONVERT PDF TO USE PLAYWRIGHT
-        # create_pdf(html_string)
+        # ! Delete the report.html and report.pdf files
+        os.remove('report.html')
+        os.remove('report.pdf')
         return GenerateReportResponse(
             base64_result=pdf_base64,
             message="Report generated successfully",
