@@ -1,4 +1,5 @@
 from typing import List
+import traceback
 
 from fastapi import HTTPException
 from loguru import logger
@@ -125,20 +126,26 @@ async def get_dashboard_details(dashboard_uid: str) -> GrafanaDashboardDetails:
         raise HTTPException(status_code=500, detail=f"Failed to collect dashboard details: {e}")
 
 async def login_to_page(page, session: AsyncSession):
-    # Navigate to the login page
-    await page.goto(f'{await get_connector_attribute(connector_id=12, column_name="connector_url", session=session)}/login')
-    # Enter the username and password
-    await page.fill('input[name="user"]', f'{await get_connector_attribute(connector_id=12, column_name="connector_username", session=session)}')
-    await page.fill('input[name="password"]', f'{await get_connector_attribute(connector_id=12, column_name="connector_password", session=session)}')
-    # Click the login button
-    await page.click('button[data-testid="data-testid Login button"]')
-    # Wait for navigation to complete
-    await page.wait_for_load_state(state='networkidle')
+    try:
+        # Navigate to the login page
+        await page.goto(f'{await get_connector_attribute(connector_id=12, column_name="connector_url", session=session)}/login')
+        # Enter the username and password
+        await page.fill('input[name="user"]', f'{await get_connector_attribute(connector_id=12, column_name="connector_username", session=session)}')
+        await page.fill('input[name="password"]', f'{await get_connector_attribute(connector_id=12, column_name="connector_password", session=session)}')
+        # Click the login button
+        await page.click('button[data-testid="data-testid Login button"]')
+        # Wait for navigation to complete
+        await page.wait_for_load_state(state='networkidle')
+    except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail="Failed to login to Grafana")
 
 async def check_login_success(page):
     # Check if login was successful by checking for an element that is only visible when logged in
     body_class = await page.evaluate('document.body.className')
-    if 'app-grafana no-overlay-scrollbar page-dashboard' in body_class:
+    logger.info(f"Body class: {body_class}")
+    #if 'app-grafana no-overlay-scrollbar page-dashboard' in body_class:
+    if 'app-grafana' in body_class:
         logger.info("Login to Grafana successful")
         return True
     else:
@@ -278,7 +285,7 @@ async def generate_report(
             panel.panel_url = panel_urls
 
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=False)
+        browser = await p.chromium.launch(headless=True)
         context = await browser.new_context(ignore_https_errors=True)
         page = await context.new_page()
         await login_to_page(page, session)
