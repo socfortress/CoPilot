@@ -139,11 +139,10 @@ async def check_login_success(page):
     # Check if login was successful by checking for an element that is only visible when logged in
     body_class = await page.evaluate('document.body.className')
     if 'app-grafana no-overlay-scrollbar page-dashboard' in body_class:
-        print("Login successful")
+        logger.info("Login to Grafana successful")
         return True
     else:
-        print("Login failed")
-        return False
+        raise HTTPException(status_code=500, detail="Failed to login to Grafana")
 
 async def capture_screenshots(page, panels: List[RequestPanel]) -> List[RequestPanel]:
     logger.info("Capturing screenshots")
@@ -279,7 +278,7 @@ async def generate_report(
             panel.panel_url = panel_urls
 
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
+        browser = await p.chromium.launch(headless=False)
         context = await browser.new_context(ignore_https_errors=True)
         page = await context.new_page()
         await login_to_page(page, session)
