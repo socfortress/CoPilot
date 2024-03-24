@@ -1,9 +1,10 @@
 from collections import defaultdict
-from datetime import datetime, timedelta
-from dateutil.tz import tzutc
+from datetime import datetime
+from datetime import timedelta
 from typing import List
 from typing import Set
 
+from dateutil.tz import tzutc
 from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -302,7 +303,7 @@ async def collect_user_activity(suspicious_logins: SuspiciousLogin) -> SapSiemWa
     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
     results = es_client.search(
         index="sap_siem_*",
-        #index="new-integrations*",
+        # index="new-integrations*",
         body={
             "size": 1000,
             "query": {"bool": {"must": [{"term": {"ip": suspicious_logins.ip}}]}},
@@ -323,7 +324,7 @@ async def get_initial_search_results(es_client):
     """
     return es_client.search(
         index="sap_siem_*",
-        #index="new-integrations*",
+        # index="new-integrations*",
         body={
             "size": 1000,
             "query": {"bool": {"must": [{"term": {"errMessage": "OK"}}, {"term": {"event_analyzed_multiple_logins": "False"}}]}},
@@ -384,13 +385,13 @@ async def process_hits(hits, ip_to_login_ids, suspicious_activity, time_range):
 
     for hit in hits:
         if hit.source.errMessage == "OK":
-            #logger.info(f"Processing hit: {hit}")
+            # logger.info(f"Processing hit: {hit}")
             # Convert loginID to lowercase before comparing
             login_id = hit.source.params_loginID.lower()
             ip = hit.source.ip
 
             # Ignore loginID if it does not contain a '@'
-            if '@' not in login_id:
+            if "@" not in login_id:
                 logger.info(f"Ignoring loginID {login_id} as it does not contain a '@'")
                 continue
 
@@ -405,7 +406,10 @@ async def process_hits(hits, ip_to_login_ids, suspicious_activity, time_range):
             # Check if there's another loginID for the same IP within the last 10 minutes
             for other_login_id, timestamps in ip_to_login_timestamps[ip].items():
                 if other_login_id != login_id:
-                    if any(event_timestamp - timedelta(minutes=time_range) <= other_timestamp <= event_timestamp for other_timestamp in timestamps):
+                    if any(
+                        event_timestamp - timedelta(minutes=time_range) <= other_timestamp <= event_timestamp
+                        for other_timestamp in timestamps
+                    ):
                         # Add the loginID to the set for this IP
                         ip_to_login_ids[ip].add(login_id)
 

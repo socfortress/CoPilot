@@ -21,7 +21,7 @@ export interface ProvisioningDefaultSettingsPayload {
 	clusterKey: string
 	masterIp: string
 	grafanaUrl: string
-    wazuhWorkerHostname: string
+	wazuhWorkerHostname: string
 }
 
 export default {
@@ -145,7 +145,7 @@ export default {
 			cluster_key: payload.clusterKey,
 			master_ip: payload.masterIp,
 			grafana_url: payload.grafanaUrl,
-            wazuh_worker_hostname: payload.wazuhWorkerHostname
+			wazuh_worker_hostname: payload.wazuhWorkerHostname
 		})
 	},
 	updateProvisioningDefaultSettings(payload: ProvisioningDefaultSettingsPayload) {
@@ -157,7 +157,7 @@ export default {
 			cluster_key: payload.clusterKey,
 			master_ip: payload.masterIp,
 			grafana_url: payload.grafanaUrl,
-            wazuh_worker_hostname: payload.wazuhWorkerHostname
+			wazuh_worker_hostname: payload.wazuhWorkerHostname
 		})
 	}
 }

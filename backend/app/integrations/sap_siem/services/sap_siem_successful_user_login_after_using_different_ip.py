@@ -1,9 +1,10 @@
 from collections import defaultdict
-from datetime import datetime, timedelta
-from dateutil.tz import tzutc
+from datetime import datetime
+from datetime import timedelta
 from typing import List
 from typing import Set
 
+from dateutil.tz import tzutc
 from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -259,7 +260,8 @@ async def create_iris_case_multiple(suspicious_login: SuspiciousLogin, session: 
     """
     logger.info(f"Creating IRIS case same IP with multiple users: {suspicious_login}")
     case_name = (
-        f"Log Source: {suspicious_login.logSource} SAP SIEM. " f"User {suspicious_login.loginID} had a successful login after failed attempts from different IPs."
+        f"Log Source: {suspicious_login.logSource} SAP SIEM. "
+        f"User {suspicious_login.loginID} had a successful login after failed attempts from different IPs."
     )
 
     case_description = (
@@ -300,7 +302,7 @@ async def collect_user_activity(suspicious_logins: SuspiciousLogin) -> SapSiemWa
     """
     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
     results = es_client.search(
-        #index="sap_siem_*",
+        # index="sap_siem_*",
         index="new-integrations*",
         body={
             "size": 1000,
@@ -321,7 +323,7 @@ async def get_initial_search_results(es_client):
         dict: The search results.
     """
     return es_client.search(
-        #index="sap_siem_*",
+        # index="sap_siem_*",
         index="new-integrations*",
         body={
             "size": 1000,
@@ -368,7 +370,7 @@ async def process_hits(hits, login_id_to_ips, suspicious_activity, time_range):
         errCode = hit.source.errCode
 
         # Ignore loginID if it does not contain a '@'
-        if '@' not in login_id:
+        if "@" not in login_id:
             logger.info(f"Ignoring loginID {login_id} as it does not contain a '@'")
             continue
 
@@ -406,6 +408,7 @@ async def process_hits(hits, login_id_to_ips, suspicious_activity, time_range):
             )
             suspicious_activity[login_id].append(suspicious_login)
             logger.info(f"Added suspicious login: {suspicious_login}")
+
 
 async def check_multiple_successful_logins_by_ip(threshold: int, time_range: int) -> List[SuspiciousLogin]:
     """

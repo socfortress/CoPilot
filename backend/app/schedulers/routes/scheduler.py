@@ -8,9 +8,9 @@ from sqlalchemy.future import select
 
 from app.db.db_session import get_db
 from app.schedulers.models.scheduler import JobMetadata
+from app.schedulers.scheduler import get_function_by_name
 from app.schedulers.scheduler import init_scheduler
 from app.schedulers.schema.scheduler import JobsResponse
-from app.schedulers.scheduler import get_function_by_name
 
 scheduler_router = APIRouter()
 
@@ -50,13 +50,13 @@ async def manage_job_metadata(session, job_id, action, **kwargs):
     Returns:
         JobMetadata: The updated or deleted job metadata.
     """
-    if action == 'add':
+    if action == "add":
         job_metadata = JobMetadata(
             job_id=job_id,
             last_success=None,
-            time_interval=kwargs['time_interval'],
+            time_interval=kwargs["time_interval"],
             enabled=True,
-            extra_data=kwargs['extra_data'],
+            extra_data=kwargs["extra_data"],
         )
         session.add(job_metadata)
         await session.commit()
@@ -110,6 +110,7 @@ async def get_all_jobs(session: AsyncSession = Depends(get_db)) -> JobsResponse:
         success=True,
         message="Jobs successfully retrieved.",
     )
+
 
 @scheduler_router.post("/add", description="Add a job")
 async def add_job(

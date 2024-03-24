@@ -266,6 +266,7 @@ async def provision_wazuh_worker(
         message="Wazuh worker provisioned successfully",
     )
 
+
 ######### ! Provision HAProxy ! ############
 async def provision_haproxy(
     request: ProvisionWorkerRequest,

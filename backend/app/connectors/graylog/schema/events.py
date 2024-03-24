@@ -3,7 +3,8 @@ from typing import List
 from typing import Optional
 from typing import Union
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
+from pydantic import Field
 
 
 class Provider(BaseModel):
@@ -21,13 +22,16 @@ class ExpressionItem(BaseModel):
     expr: str
     ref: Optional[str] = None
     value: Optional[int] = None
-    left: Optional['ExpressionItem'] = None
-    right: Optional['ExpressionItem'] = None
+    left: Optional["ExpressionItem"] = None
+    right: Optional["ExpressionItem"] = None
+
 
 ExpressionItem.update_forward_refs()
 
+
 class Conditions(BaseModel):
     expression: Optional[Union[str, ExpressionItem]] = None
+
 
 class SeriesItem(BaseModel):
     type: str

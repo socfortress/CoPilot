@@ -33,8 +33,8 @@ from app.threat_intel.services.socfortress import (
     verifiy_socfortress_threat_intel_connector,
 )
 from app.utils import verify_alert_creation_provisioning_connection
-from app.utils import verify_wazuh_worker_provisioning_connection
 from app.utils import verify_haproxy_provisioning_connection
+from app.utils import verify_wazuh_worker_provisioning_connection
 
 UPLOAD_FOLDER = "file-store"
 UPLOAD_FOLDER = os.path.join(
@@ -152,6 +152,7 @@ class WazuhWorkerProvisioningService(ConnectorServiceInterface):
         return await verify_wazuh_worker_provisioning_connection(
             connector.connector_name,
         )
+
 
 # HAProxy Provisioning Service
 class HAProxyProvisioningService(ConnectorServiceInterface):

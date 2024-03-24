@@ -13,7 +13,7 @@ from app.db.universal_models import CustomersMeta
 
 class CustomerSubsctipion(Enum):
     WAZUH = "Wazuh"
-    #OFFICE365 = "Office365"
+    # OFFICE365 = "Office365"
 
 
 class ProvisionNewCustomer(BaseModel):
@@ -166,6 +166,7 @@ class CustomersMetaResponse(BaseModel):
         ...,
         description="Customer meta data for the newly provisioned customer",
     )
+
 
 class ProvisionHaProxyRequest(BaseModel):
     customer_name: str = Field(

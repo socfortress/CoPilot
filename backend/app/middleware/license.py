@@ -1,21 +1,26 @@
+import os
 from datetime import datetime as dt
+from enum import Enum
 from typing import Any
 from typing import List
-from loguru import logger
 from typing import Optional
-from licensing.models import *
-from licensing.methods import Key, Helpers, Data
-from app.db.universal_models import License
-from sqlalchemy import select
-import os
 
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
-from pydantic import BaseModel, Field
-from app.db.db_session import get_db
-from enum import Enum
+from licensing.methods import Data
+from licensing.methods import Helpers
+from licensing.methods import Key
+from licensing.models import *
+from loguru import logger
+from pydantic import BaseModel
+from pydantic import Field
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.db.db_session import get_db
+from app.db.universal_models import License
+
 
 class ReplaceLicenseRequest(BaseModel):
     """
@@ -24,7 +29,9 @@ class ReplaceLicenseRequest(BaseModel):
     Attributes:
         license_key (str): The license key to replace.
     """
+
     license_key: str = Field(..., title="The license key to replace")
+
 
 class CreateLicenseRequest(BaseModel):
     """
@@ -38,6 +45,7 @@ class CreateLicenseRequest(BaseModel):
         email (str): The customer email.
         company_name (str): The customer company name.
     """
+
     product_id: int = Field(24355, title="The product id")
     notes: str = Field("Test Key", title="The notes")
     new_customer: bool = Field(True, title="Whether the customer is new")
@@ -45,14 +53,17 @@ class CreateLicenseRequest(BaseModel):
     email: str = Field(..., title="The customer email")
     company_name: str = Field("Test Company", title="The customer company name")
 
+
 class CreateCustomerKeyResult(BaseModel):
     customerId: int
     key: str
     result: int
     message: Optional[str]
 
+
 class CreateCustomerKeyResponseModel(BaseModel):
     response: List[Optional[CreateCustomerKeyResult]]
+
 
 class Customer(BaseModel):
     Id: int
@@ -61,12 +72,14 @@ class Customer(BaseModel):
     CompanyName: str
     Created: int
 
+
 class RawResponse(BaseModel):
     license_key: str
     signature: str
     result: int
     message: str
     metadata: Optional[Any]
+
 
 class LicenseResponse(BaseModel):
     product_id: int
@@ -95,6 +108,7 @@ class LicenseResponse(BaseModel):
     sign_date: dt
     reseller: Optional[Any]
 
+
 class Feature(Enum):
     MIMECAST = "MIMECAST"
     SAP_SIEM = "SAP SIEM"
@@ -113,7 +127,9 @@ class Feature(Enum):
         }
         return feature_map.get(feature_name)
 
+
 license_router = APIRouter()
+
 
 async def check_if_license_exists(session: AsyncSession):
     # Get the first row and raise HTTPException stating license already exists
@@ -130,11 +146,14 @@ def get_auth_token():
         raise HTTPException(status_code=500, detail="Auth token not found")
     return auth
 
+
 def get_rsa_pub_key():
     return "<RSAKeyValue><Modulus>vJusFdHoph6IyVrUnL7E3kH5YKsBdnIN5k+rW6J0g7gFPy7wBJfSDCtUMxB7XcOKiC1aZu/Wt7ShdzYsmYcd/duu4+qIMfP4CbW6RPIBFyj1Tk6xj72zKqU42sUymzzVVIeCtNdV0fkTdEZtI1zJeSXPcWtyY4PWOV1mFG9PST6uCuNDC+mXVESDyYHwd7JU8ZHDCEYD2eDJ4/58kT+jNpobS2BeRc4GMNPwISK/BNQG62X2sFJUWv7gB+qGXd/zqmucKEnB7Y1RyIVgnQPXKI/nrdoFHxRcUtEjhBMeqAQB0R8QvrMmlx1B7HzR+KBARTJdiPBrwxbopvhJus6c6Q==</Modulus><Exponent>AQAB</Exponent></RSAKeyValue>"
 
+
 def get_product_id():
     return 24355
+
 
 def create_trial_key(auth, request):
     result, _ = Key.create_key(
@@ -151,6 +170,7 @@ def create_trial_key(auth, request):
     result = CreateCustomerKeyResponseModel(response=[result])
     return result
 
+
 def create_key(auth, request):
     result, _ = Key.create_key(
         token=auth,
@@ -166,6 +186,7 @@ def create_key(auth, request):
     result = CreateCustomerKeyResponseModel(response=[result])
     return result
 
+
 async def add_license_to_db(session: AsyncSession, result, request):
     new_license = License(
         license_key=result.response[0].key,
@@ -178,6 +199,7 @@ async def add_license_to_db(session: AsyncSession, result, request):
     await session.commit()
     return new_license
 
+
 async def get_license(session: AsyncSession) -> License:
     try:
         result = await session.execute(select(License))
@@ -189,6 +211,7 @@ async def get_license(session: AsyncSession) -> License:
         logger.error(e)
         raise HTTPException(status_code=404, detail="No license found")
 
+
 def check_license(license: License):
     result, _ = Key.activate(
         token=get_auth_token(),
@@ -198,6 +221,7 @@ def check_license(license: License):
         machine_code=Helpers.GetMachineCode(v=2),
     )
     return result
+
 
 def extend_license(license: License, period: int):
     result, _ = Key.extend_license(
@@ -209,6 +233,7 @@ def extend_license(license: License, period: int):
     logger.info(result)
     return result
 
+
 def is_license_expired(license: dict) -> bool:
     """
     Check if a license is expired.
@@ -219,7 +244,8 @@ def is_license_expired(license: dict) -> bool:
     Returns:
         bool: True if the license is expired, False otherwise.
     """
-    return dt.now() > license['expires']
+    return dt.now() > license["expires"]
+
 
 async def is_feature_enabled(feature_name: str, session: AsyncSession) -> bool:
     """
@@ -236,10 +262,11 @@ async def is_feature_enabled(feature_name: str, session: AsyncSession) -> bool:
     license = await get_license(session)
     license_details = LicenseResponse(**check_license(license).__dict__)
     for data_object in license_details.data_objects:
-        if data_object['Name'] == feature_name and data_object['IntValue'] == 1:
+        if data_object["Name"] == feature_name and data_object["IntValue"] == 1:
             return True
 
     raise HTTPException(status_code=400, detail="Feature not enabled. You must purchase a license to use this feature.")
+
 
 @license_router.post(
     "/create_trial_key",
@@ -262,6 +289,7 @@ async def create_trial_license_key(request: CreateLicenseRequest, session: Async
     await add_license_to_db(session, result, request)
     return result
 
+
 @license_router.post(
     "/create_new_key",
     description="Create a new license key",
@@ -282,6 +310,7 @@ async def create_new_license_key(request: CreateLicenseRequest, session: AsyncSe
     result = create_key(auth, request)
     await add_license_to_db(session, result, request)
     return result
+
 
 @license_router.post(
     "/extend_license",
@@ -307,13 +336,14 @@ async def extend_license_key(period: int, session: AsyncSession = Depends(get_db
         logger.error(e)
         raise HTTPException(status_code=400, detail="License extension failed")
 
+
 @license_router.get(
     "/verify_license",
     response_model=LicenseResponse,
     description="Verify a license key",
 )
 async def verify_license_key(session: AsyncSession = Depends(get_db)) -> LicenseResponse:
-    """"
+    """ "
     Verify a license key.
 
     Args:
@@ -334,6 +364,7 @@ async def verify_license_key(session: AsyncSession = Depends(get_db)) -> License
     except Exception as e:
         logger.error(e)
         raise HTTPException(status_code=400, detail="License verification failed")
+
 
 @license_router.post(
     "/add_feature/{feature_name}",

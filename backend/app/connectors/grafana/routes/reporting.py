@@ -11,18 +11,22 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.auth.utils import AuthHandler
+from app.connectors.grafana.schema.reporting import GenerateReportCreation
+from app.connectors.grafana.schema.reporting import GenerateReportRequest
+from app.connectors.grafana.schema.reporting import GenerateReportResponse
 from app.connectors.grafana.schema.reporting import GrafanaDashboardDetailsResponse
 from app.connectors.grafana.schema.reporting import GrafanaDashboardPanelsResponse
 from app.connectors.grafana.schema.reporting import GrafanaDashboardResponse
 from app.connectors.grafana.schema.reporting import GrafanaGenerateIframeLinksRequest
 from app.connectors.grafana.schema.reporting import GrafanaGenerateIframeLinksResponse
-from app.connectors.grafana.schema.reporting import GrafanaLinksList, GenerateReportCreation
-from app.connectors.grafana.schema.reporting import GrafanaOrganizationsResponse, GenerateReportRequest, GenerateReportResponse
+from app.connectors.grafana.schema.reporting import GrafanaLinksList
+from app.connectors.grafana.schema.reporting import GrafanaOrganizationsResponse
 from app.connectors.grafana.schema.reporting import Panel
 from app.connectors.grafana.schema.reporting import TimeRange
+from app.connectors.grafana.services.reporting import generate_report
 from app.connectors.grafana.services.reporting import get_dashboard_details
 from app.connectors.grafana.services.reporting import get_dashboards
-from app.connectors.grafana.services.reporting import get_orgs, generate_report
+from app.connectors.grafana.services.reporting import get_orgs
 from app.connectors.models import Connectors
 from app.db.db_session import get_db
 from app.middleware.license import is_feature_enabled
@@ -56,7 +60,7 @@ def calculate_unix_timestamps(time_range: TimeRange):
 
 def generate_panel_urls(grafana_url: str, request: GrafanaGenerateIframeLinksRequest, timestamp_from: int, timestamp_to: int):
     panel_links: List[GrafanaLinksList] = []
-    #for panel_id in request.panel_ids:
+    # for panel_id in request.panel_ids:
     panel_url = (
         f"{grafana_url}/d-solo/{request.dashboard_uid}/{request.dashboard_title}"
         f"?orgId={request.org_id}&from={timestamp_from}&to={timestamp_to}"
@@ -214,11 +218,8 @@ async def generate_grafana_iframe_links(
     response_model=GenerateReportResponse,
     description="Create a new report.",
 )
-async def create_report(
-    request: GenerateReportRequest,
-    session: AsyncSession = Depends(get_db)
-) -> GenerateReportResponse:
+async def create_report(request: GenerateReportRequest, session: AsyncSession = Depends(get_db)) -> GenerateReportResponse:
     logger.info("Generating report")
     # ! License Check
-    #await is_feature_enabled("REPORTING", session)
+    # await is_feature_enabled("REPORTING", session)
     return await generate_report(request, session)

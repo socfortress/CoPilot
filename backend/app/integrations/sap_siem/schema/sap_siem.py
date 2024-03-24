@@ -234,7 +234,6 @@ class Result(BaseModel):
     )
 
 
-
 class SapSiemResponseBody(BaseModel):
     results: List[Result] = Field(..., description="List of result objects")
     totalCount: int = Field(..., description="Total count of results")

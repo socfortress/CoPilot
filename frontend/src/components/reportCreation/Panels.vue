@@ -327,7 +327,9 @@ function print() {
 
 	const timeValue = parseInt(timerange.value.match(/\d+/)?.[0] || "1")
 	const timeUnit = (timerange.value.match(/[a-z]/i)?.[0] || "h").toLocaleLowerCase()
-	const timerangeText = `Last ${timeValue} ${timeUnit === "d" ? "Day" : timeUnit === "h" ? "Hour" : "minute"}${timeValue > 1 ? "s" : ""}`
+	const timerangeText = `Last ${timeValue} ${timeUnit === "d" ? "Day" : timeUnit === "h" ? "Hour" : "minute"}${
+		timeValue > 1 ? "s" : ""
+	}`
 
 	const payload: GenerateReportPayload = {
 		timerange: timerange.value,

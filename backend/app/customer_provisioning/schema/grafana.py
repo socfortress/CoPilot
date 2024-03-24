@@ -34,9 +34,9 @@ class GrafanaJsonData(BaseModel):
             {
                 "field": "^data_vulnerability_cve$",
                 "url": "https://nvd.nist.gov/vuln/detail",
-            }
+            },
         ],
-        alias="dataLinks"
+        alias="dataLinks",
     )
 
 

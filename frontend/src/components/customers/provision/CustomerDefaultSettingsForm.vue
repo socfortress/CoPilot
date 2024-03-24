@@ -90,10 +90,10 @@ const rules: FormRules = {
 		validator: validateUrl,
 		trigger: ["blur"]
 	},
-  wazuh_worker_hostname: {
-    message: "Please input the Wazuh Worker Hostname",
-    trigger: ["input", "blur"]
-  }
+	wazuh_worker_hostname: {
+		message: "Please input the Wazuh Worker Hostname",
+		trigger: ["input", "blur"]
+	}
 }
 
 const fieldsMeta = {
@@ -113,10 +113,10 @@ const fieldsMeta = {
 		label: "Grafana URL",
 		placeholder: "Insert the Grafana URL"
 	},
-  wazuh_worker_hostname: {
-    label: "Wazuh Worker Hostname",
-    placeholder: "Insert the Wazuh Worker Hostname"
-  }
+	wazuh_worker_hostname: {
+		label: "Wazuh Worker Hostname",
+		placeholder: "Insert the Wazuh Worker Hostname"
+	}
 }
 
 const isValid = computed(() => {
@@ -152,7 +152,7 @@ function getClearForm(settings?: Omit<CustomerProvisioningDefaultSettings, "id">
 		cluster_key: settings?.cluster_key || "",
 		master_ip: settings?.master_ip || "",
 		grafana_url: settings?.grafana_url || "",
-    wazuh_worker_hostname: settings?.wazuh_worker_hostname || ""
+		wazuh_worker_hostname: settings?.wazuh_worker_hostname || ""
 	}
 }
 
@@ -177,7 +177,7 @@ function submit() {
 		clusterKey: form.value.cluster_key,
 		masterIp: form.value.master_ip,
 		grafanaUrl: form.value.grafana_url,
-    wazuhWorkerHostname: form.value.wazuh_worker_hostname
+		wazuhWorkerHostname: form.value.wazuh_worker_hostname
 	}
 
 	Api.customers[method](payload)

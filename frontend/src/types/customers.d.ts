@@ -96,5 +96,5 @@ export interface CustomerProvisioningDefaultSettings {
 	cluster_key: string
 	master_ip: string
 	grafana_url: string
-    wazuh_worker_hostname: string
+	wazuh_worker_hostname: string
 }

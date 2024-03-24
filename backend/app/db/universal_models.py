@@ -158,6 +158,7 @@ class LogEntry(SQLModel, table=True):
     message: str
     additional_info: str = Field(default=None, nullable=True)
 
+
 class License(SQLModel, table=True):
     __tablename__ = "license"
     id: Optional[int] = Field(primary_key=True)

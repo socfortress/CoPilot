@@ -47,7 +47,7 @@ class IndexConfigModel(BaseModel):
         Returns:
             bool: True if the index is valid, False otherwise.
         """
-        #return index_name.startswith("wazuh") and not self.is_index_skipped(index_name)
+        # return index_name.startswith("wazuh") and not self.is_index_skipped(index_name)
         #! Modifying the return statement to return not self.is_index_skipped(index_name) and not index_name.__contains__("deflector")
         # ! Using this so that users whom do not use `wazuh-` index naming convention can still receive alerts
         return not self.is_index_skipped(index_name) and not index_name.__contains__("deflector")
