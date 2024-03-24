@@ -30,8 +30,8 @@ jobs:
                   tags: ghcr.io/socfortress/copilot-backend:test_auto
                   #tags: ghcr.io/socfortress/copilot-backend:latest
                   build-args: |
-                    CRYPTOLENS_AUTH=${{ secrets.CRYPTOLENS_AUTH }}
-                    RSA_PUBLIC_KEY=${{ secrets.RSA_PUBLIC_KEY }}
+                      CRYPTOLENS_AUTH=${{ secrets.CRYPTOLENS_AUTH }}
+                      RSA_PUBLIC_KEY=${{ secrets.RSA_PUBLIC_KEY }}
 
     build-frontend:
         runs-on: ubuntu-latest

@@ -4,7 +4,6 @@ from datetime import timedelta
 from typing import List
 from typing import Set
 
-from dateutil.tz import tzutc
 from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -351,17 +350,21 @@ async def get_next_batch_of_results(es_client, scroll_id):
 
 async def process_hits(hits, ip_to_login_ids, suspicious_activity, time_range):
     """
-    This function, `process_hits`, is designed to analyze a list of login attempts (or "hits") and identify suspicious activity based on certain criteria. It takes four arguments: `hits`, `ip_to_login_ids`, `suspicious_activity`, and `time_range`.
+    This function, `process_hits`, is designed to analyze a list of login attempts (or "hits") and identify suspicious activity based on certain criteria.
+        It takes four arguments: `hits`, `ip_to_login_ids`, `suspicious_activity`, and `time_range`.
 
     Here's a simplified explanation of what it does:
 
     1. It starts by creating a dictionary (`ip_to_login_ids`) that maps IP addresses to login IDs. Each login ID is associated with a list of timestamps and error codes.
 
-    2. It then loops through each login attempt in `hits`. For each attempt, it extracts the login ID, IP address, and error code. If the login ID doesn't contain a '@', it's ignored.
+    2. It then loops through each login attempt in `hits`. For each attempt, it extracts the login ID, IP address, and error code. If the login ID doesn't contain a '@',
+         it's ignored.
 
-    3. The function then checks if there are at least 3 different failed login attempts (identified by error codes not equal to "0") from the same IP address within the last 2 minutes. It also checks if there's at least one successful login attempt (identified by error code "0") from the same IP address after the 4th login attempt.
+    3. The function then checks if there are at least 3 different failed login attempts (identified by error codes not equal to "0") from the same IP address within the
+        last 2 minutes. It also checks if there's at least one successful login attempt (identified by error code "0") from the same IP address after the 4th login attempt.
 
-    4. If these conditions are met, the function considers this as suspicious activity. It creates a `SuspiciousLogin` object with details about the suspicious login attempt and adds it to the `suspicious_activity` dictionary, which maps IP addresses to a list of suspicious login objects.
+    4. If these conditions are met, the function considers this as suspicious activity. It creates a `SuspiciousLogin` object with
+        details about the suspicious login attempt and adds it to the `suspicious_activity` dictionary, which maps IP addresses to a list of suspicious login objects.
 
     For example, consider the following sequence of login attempts from the same IP address:
 
@@ -371,7 +374,8 @@ async def process_hits(hits, ip_to_login_ids, suspicious_activity, time_range):
     - User4 successfully logs in at 12:01:30
     - User5 successfully logs in at 12:02:00
 
-    In this case, the function would identify the IP address as suspicious because there are 3 different failed login attempts within 2 minutes, followed by at least one successful login attempt.
+    In this case, the function would identify the IP address as suspicious because there are 3 different failed login attempts within 2 minutes,
+        followed by at least one successful login attempt.
     """
     ip_to_login_ids = defaultdict(lambda: defaultdict(list))
 

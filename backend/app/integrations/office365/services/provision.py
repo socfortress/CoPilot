@@ -5,15 +5,11 @@ from datetime import datetime
 from typing import List
 from xml.dom import minidom
 from xml.dom.minidom import parseString
-from xml.etree.ElementTree import Comment
-from xml.etree.ElementTree import Element
-from xml.etree.ElementTree import ElementTree
 from xml.etree.ElementTree import SubElement
 from xml.etree.ElementTree import parse
 from xml.etree.ElementTree import tostring
 
 import aiofiles
-import requests
 from dotenv import load_dotenv
 from fastapi import HTTPException
 from loguru import logger
@@ -55,8 +51,6 @@ from app.integrations.office365.schema.provision import PipelineRuleTitles
 from app.integrations.office365.schema.provision import PipelineTitles
 from app.integrations.office365.schema.provision import ProvisionOffice365AuthKeys
 from app.integrations.office365.schema.provision import ProvisionOffice365Response
-from app.integrations.utils.schema import PraecoAlertConfig
-from app.integrations.utils.schema import PraecoProvisionAlertResponse
 from app.utils import get_connector_attribute
 
 load_dotenv()
@@ -323,7 +317,7 @@ async def check_if_office365_is_already_provisioned(
     Returns:
         bool: True if the Office365 integration is already provisioned, False otherwise.
     """
-    if f"office365" in wazuh_config:
+    if "office365" in wazuh_config:
         return True
     return False
 
@@ -863,7 +857,8 @@ async def provision_office365(
 
     # If Office365 is already provisioned but not for the customer, add the api_auth contents to the office365 block
     if office365_provisioned and not await check_if_office365_is_already_provisioned_for_customer(
-        provision_office365_auth_keys.TENANT_ID, wazuh_config,
+        provision_office365_auth_keys.TENANT_ID,
+        wazuh_config,
     ):
         wazuh_config = await add_api_auth_to_office365_block(customer_code, provision_office365_auth_keys)
     else:

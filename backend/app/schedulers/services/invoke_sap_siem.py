@@ -307,7 +307,8 @@ async def invoke_sap_siem_integration_same_user_failed_login_from_different_geo_
             print("JobMetadata for 'invoke_sap_siem_integration_same_user_failed_login_from_different_geo_location' not found.")
 
     return InvokeSAPSiemResponse(
-        success=True, message="SAP SIEM integration invoked for same user failed login from different geo location.",
+        success=True,
+        message="SAP SIEM integration invoked for same user failed login from different geo location.",
     )
 
 
@@ -359,7 +360,8 @@ async def invoke_sap_siem_integration_same_user_successful_login_from_different_
             print("JobMetadata for 'invoke_sap_siem_integration_same_user_successful_login_from_different_geo_location' not found.")
 
     return InvokeSAPSiemResponse(
-        success=True, message="SAP SIEM integration invoked for same user successful login from different geo location.",
+        success=True,
+        message="SAP SIEM integration invoked for same user successful login from different geo location.",
     )
 
 

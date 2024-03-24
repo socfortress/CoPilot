@@ -11,7 +11,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.auth.utils import AuthHandler
-from app.connectors.grafana.schema.reporting import GenerateReportCreation
 from app.connectors.grafana.schema.reporting import GenerateReportRequest
 from app.connectors.grafana.schema.reporting import GenerateReportResponse
 from app.connectors.grafana.schema.reporting import GrafanaDashboardDetailsResponse

@@ -1,14 +1,11 @@
-import os
 from datetime import datetime
 
-import requests
 from dotenv import load_dotenv
 
 from app.agents.routes.agents import sync_all_agents
 from app.db.db_session import get_db_session
 from app.db.db_session import get_sync_db_session
 from app.schedulers.models.scheduler import JobMetadata
-from app.schedulers.utils.universal import scheduler_login
 
 load_dotenv()
 

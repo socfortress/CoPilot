@@ -8,7 +8,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.auth.utils import AuthHandler
-from app.connectors.grafana.schema.dashboards import Office365Dashboard
 from app.connectors.grafana.schema.dashboards import WazuhDashboard
 from app.customer_provisioning.schema.provision import CustomerProvisionResponse
 from app.customer_provisioning.schema.provision import CustomersMetaResponse

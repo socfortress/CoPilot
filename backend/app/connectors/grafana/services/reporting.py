@@ -51,7 +51,11 @@ def calculate_unix_timestamps(time_range: TimeRange):
 
 
 def generate_panel_urls(
-    grafana_url: str, request: GrafanaGenerateIframeLinksRequest, timestamp_from: int, timestamp_to: int, theme: str = "dark",
+    grafana_url: str,
+    request: GrafanaGenerateIframeLinksRequest,
+    timestamp_from: int,
+    timestamp_to: int,
+    theme: str = "dark",
 ):
     panel_links: List[GrafanaLinksList] = []
     # for panel_id in request.panel_ids:
@@ -134,16 +138,19 @@ async def login_to_page(page, session: AsyncSession):
         await page.goto(f'{await get_connector_attribute(connector_id=12, column_name="connector_url", session=session)}/login')
         # Enter the username and password
         await page.fill(
-            'input[name="user"]', f'{await get_connector_attribute(connector_id=12, column_name="connector_username", session=session)}',
+            'input[name="user"]',
+            f'{await get_connector_attribute(connector_id=12, column_name="connector_username", session=session)}',
         )
         await page.fill(
-            'input[name="password"]', f'{await get_connector_attribute(connector_id=12, column_name="connector_password", session=session)}',
+            'input[name="password"]',
+            f'{await get_connector_attribute(connector_id=12, column_name="connector_password", session=session)}',
         )
         # Click the login button
         await page.click('button[data-testid="data-testid Login button"]')
         # Wait for navigation to complete
         await page.wait_for_load_state(state="networkidle")
     except Exception as e:
+        logger.error(f"Failed to login to Grafana: {e}")
         traceback.print_exc()
         raise HTTPException(status_code=500, detail="Failed to login to Grafana")
 
@@ -309,7 +316,7 @@ async def generate_report(request: GenerateReportRequest, session: AsyncSession)
         await write_html_to_file(html_string, "report.html")
         await generate_pdf_from_html("report.html", "report.pdf")
 
-        #! convert pdf to base64 and return
+        # ! convert pdf to base64 and return
         with open("report.pdf", "rb") as f:
             pdf_base64 = base64.b64encode(f.read()).decode("utf-8")
 

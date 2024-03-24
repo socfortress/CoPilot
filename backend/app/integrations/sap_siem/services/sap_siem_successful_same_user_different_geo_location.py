@@ -4,7 +4,6 @@ from datetime import timedelta
 from typing import List
 from typing import Set
 
-from dateutil.tz import tzutc
 from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -362,7 +361,8 @@ async def process_hits(hits, login_id_to_ips, suspicious_activity, time_range=20
     - At 12:00, a failed login attempt is made by user `user1` from IP `1.1.1.1` located in the US.
     - At 12:10, another failed login attempt is made by `user1` from IP `2.2.2.2` located in Canada.
     - At 12:15, a successful login attempt is made by `user1` from IP `3.3.3.3` located in the UK.
-    - In this case, the function would trigger a suspicious login for `user1` because there are failed login attempts from two different countries (US and Canada) and a successful login from a different country (UK) within 20 minutes.
+    - In this case, the function would trigger a suspicious login for `user1` because there are failed login attempts from two different countries (US and Canada) and
+        a successful login from a different country (UK) within 20 minutes.
 
     Example 2:
     - At 12:00, a failed login attempt is made by user `user2` from IP `4.4.4.4` located in the US.
@@ -400,7 +400,8 @@ async def process_hits(hits, login_id_to_ips, suspicious_activity, time_range=20
                     ips_in_last_20_minutes.add((other_ip, other_errCode, other_country))
                     logger.info(f"IPs in last 20 minutes: {ips_in_last_20_minutes}")
 
-        # If there is at least 1 failed IP from at least two different GEO IP country locations and a successful login from a different location, log the suspicious activity
+        # If there is at least 1 failed IP from at least two different GEO IP country locations and a successful login from a different location,
+        #  log the suspicious activity
         failed_ips = [ip for ip, errCode, country in ips_in_last_20_minutes if errCode != "0"]
         successful_ips = [ip for ip, errCode, country in ips_in_last_20_minutes if errCode == "0"]
         countries = set([country for ip, errCode, country in ips_in_last_20_minutes if errCode != "0"])

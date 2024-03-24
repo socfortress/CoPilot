@@ -4,7 +4,6 @@ from datetime import timedelta
 from typing import List
 from typing import Set
 
-from dateutil.tz import tzutc
 from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
