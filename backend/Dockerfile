@@ -112,5 +112,8 @@ ENV ALERT_CREATION_PROVISIONING_URL=http://1.1.1.1
 ARG CRYPTOLENS_AUTH
 ENV CRYPTOLENS_AUTH=$CRYPTOLENS_AUTH
 
+ARG RSA_PUBLIC_KEY
+ENV RSA_PUBLIC_KEY=$RSA_PUBLIC_KEY
+
 # Run your application
 CMD ["sh", "-c", "ls -la && /opt/venv/bin/python copilot.py"]

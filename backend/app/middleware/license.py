@@ -11,7 +11,7 @@ from fastapi import HTTPException
 from licensing.methods import Data
 from licensing.methods import Helpers
 from licensing.methods import Key
-from licensing.models import *
+#from licensing.models import *
 from loguru import logger
 from pydantic import BaseModel
 from pydantic import Field
@@ -148,7 +148,10 @@ def get_auth_token():
 
 
 def get_rsa_pub_key():
-    return "<RSAKeyValue><Modulus>vJusFdHoph6IyVrUnL7E3kH5YKsBdnIN5k+rW6J0g7gFPy7wBJfSDCtUMxB7XcOKiC1aZu/Wt7ShdzYsmYcd/duu4+qIMfP4CbW6RPIBFyj1Tk6xj72zKqU42sUymzzVVIeCtNdV0fkTdEZtI1zJeSXPcWtyY4PWOV1mFG9PST6uCuNDC+mXVESDyYHwd7JU8ZHDCEYD2eDJ4/58kT+jNpobS2BeRc4GMNPwISK/BNQG62X2sFJUWv7gB+qGXd/zqmucKEnB7Y1RyIVgnQPXKI/nrdoFHxRcUtEjhBMeqAQB0R8QvrMmlx1B7HzR+KBARTJdiPBrwxbopvhJus6c6Q==</Modulus><Exponent>AQAB</Exponent></RSAKeyValue>"
+    rsa_public_key = os.getenv("RSA_PUBLIC_KEY")
+    if not rsa_public_key:
+        raise HTTPException(status_code=500, detail="RSA public key not found")
+    return rsa_public_key
 
 
 def get_product_id():

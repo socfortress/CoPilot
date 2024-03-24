@@ -1,7 +1,5 @@
 import base64
 import os
-import subprocess
-import sys
 import time
 import traceback
 from datetime import datetime
@@ -9,7 +7,6 @@ from datetime import timedelta
 from pathlib import Path
 from typing import List
 
-import pdfkit
 from fastapi import HTTPException
 from jinja2 import Environment
 from jinja2 import FileSystemLoader
@@ -18,13 +15,10 @@ from playwright.async_api import async_playwright
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from app.connectors.grafana.schema.reporting import Base64Image
-from app.connectors.grafana.schema.reporting import GenerateReportCreation
 from app.connectors.grafana.schema.reporting import GenerateReportRequest
 from app.connectors.grafana.schema.reporting import GenerateReportResponse
 from app.connectors.grafana.schema.reporting import GrafanaDashboardDetails
 from app.connectors.grafana.schema.reporting import GrafanaGenerateIframeLinksRequest
-from app.connectors.grafana.schema.reporting import GrafanaGenerateIframeLinksResponse
 from app.connectors.grafana.schema.reporting import GrafanaLinksList
 from app.connectors.grafana.schema.reporting import GrafanaOrganizationDashboards
 from app.connectors.grafana.schema.reporting import GrafanaOrganizations
