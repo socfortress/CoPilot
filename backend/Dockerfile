@@ -115,5 +115,8 @@ ENV CRYPTOLENS_AUTH=$CRYPTOLENS_AUTH
 ARG RSA_PUBLIC_KEY
 ENV RSA_PUBLIC_KEY=$RSA_PUBLIC_KEY
 
+ARG PRODUCT_ID
+ENV PRODUCT_ID=$PRODUCT_ID
+
 # Run your application
 CMD ["sh", "-c", "ls -la && /opt/venv/bin/python copilot.py"]

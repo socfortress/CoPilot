@@ -156,7 +156,10 @@ def get_rsa_pub_key():
 
 
 def get_product_id():
-    return 24355
+    product_id = os.getenv("PRODUCT_ID")
+    if not product_id:
+        raise HTTPException(status_code=500, detail="Product id not found")
+    return product_id
 
 
 def create_trial_key(auth, request):
