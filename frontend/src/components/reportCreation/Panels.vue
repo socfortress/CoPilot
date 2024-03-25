@@ -15,7 +15,7 @@
 								class="flex flex-col gap-2"
 							>
 								<template #item="{ element: row }">
-									<div class="row p-3">
+									<div class="row p-3" :class="{ 'height-large': row.height === 2 }">
 										<div class="empty-message" v-if="!row.panels.length">Drop panels here</div>
 										<draggable
 											v-model="row.panels"
@@ -47,6 +47,36 @@
 															</template>
 															Remove Row
 														</n-tooltip>
+													</div>
+													<div class="settings-box">
+														<n-popover trigger="click">
+															<template #trigger>
+																<n-button text>
+																	<template #icon>
+																		<Icon :name="RowSettingsIcon" :size="13"></Icon>
+																	</template>
+																</n-button>
+															</template>
+
+															<div class="py-1 flex gap-3 items-center">
+																<div class="text-secondary-color text-sm">
+																	Row height:
+																</div>
+																<n-switch
+																	size="small"
+																	v-model:value="row.height"
+																	:unchecked-value="1"
+																	:checked-value="2"
+																>
+																	<template #checked>
+																		<small>Large</small>
+																	</template>
+																	<template #unchecked>
+																		<small>Regular</small>
+																	</template>
+																</n-switch>
+															</div>
+														</n-popover>
 													</div>
 												</div>
 											</template>
@@ -157,6 +187,7 @@
 			:width="500"
 			style="max-width: 90vw"
 			:trap-focus="false"
+			:class="{ 'opacity-0': preloadingPrintSettings }"
 			display-directive="show"
 		>
 			<n-drawer-content title="Report Settings" closable :native-scrollbar="false">
@@ -167,21 +198,14 @@
 </template>
 
 <script setup lang="ts">
-/**
- * PDF:  ->  backend/report.pdf
- * TPL:  ->  backend/app/connectors/grafana/reporting/report-template-test.html
- */
-
-// TODO: complete report.html
-
-import { ref, computed, toRefs, watch } from "vue"
-import { NButton, NSpin, NScrollbar, NTooltip, NDrawer, NDrawerContent, useMessage } from "naive-ui"
+import { ref, computed, toRefs, watch, onMounted } from "vue"
+import { NButton, NSpin, NScrollbar, NTooltip, NDrawer, NDrawerContent, NPopover, NSwitch, useMessage } from "naive-ui"
 import type { Dashboard, Org, Panel } from "@/types/reporting"
 import Icon from "@/components/common/Icon.vue"
 import PrintSettings, { type PrintSettingsData } from "./PrintSettings.vue"
 import draggable from "vuedraggable"
 import Api from "@/api"
-import type { GenerateReportPayload, ReportTimeRange, RowPayload } from "@/api/reporting"
+import type { GenerateReportPayload, ReportTimeRange } from "@/api/reporting"
 import { saveAs } from "file-saver"
 import { useStorage } from "@vueuse/core"
 import _kebabCase from "lodash/kebabCase"
@@ -198,6 +222,7 @@ interface OrgData {
 
 interface Row {
 	id: number
+	height: 1 | 2
 	panels: PanelData[]
 }
 
@@ -223,12 +248,14 @@ const CloseIcon = "carbon:close"
 const SettingsIcon = "carbon:settings"
 const AddIcon = "carbon:add-alt"
 const PrintIcon = "carbon:printer"
+const RowSettingsIcon = "carbon:fit-to-height"
 const message = useMessage()
 const loadingPrint = ref(false)
 const loading = computed(() => loadingPrint.value)
 
 const settingDrawerOpen = ref(false)
 const printSettings = ref<Partial<PrintSettingsData>>({})
+const preloadingPrintSettings = ref(true)
 
 const orgs = useStorage<OrgData[]>("report-panel-orgs-data", [], localStorage)
 const rows = computed<Row[]>({
@@ -274,6 +301,7 @@ function openSettings() {
 function addRow() {
 	rows.value.push({
 		id: new Date().getTime(),
+		height: 1,
 		panels: []
 	})
 }
@@ -344,7 +372,7 @@ function print() {
 	for (const row of rows.value) {
 		if (row.panels.length) {
 			const panel_width = ((ROW_WIDTH - ROW_GAP * (row.panels.length - 1)) / row.panels.length) * density
-			const panel_height = ROW_HEIGHT * density
+			const panel_height = ROW_HEIGHT * density * (row.height || 1)
 
 			payload.rows.push({
 				id: row.id,
@@ -380,6 +408,17 @@ function print() {
 			loadingPrint.value = false
 		})
 }
+
+onMounted(() => {
+	// need to preload print settings from drawer
+	settingDrawerOpen.value = true
+	setTimeout(() => {
+		settingDrawerOpen.value = false
+		setTimeout(() => {
+			preloadingPrintSettings.value = false
+		}, 300)
+	}, 100)
+})
 </script>
 
 <style lang="scss" scoped>
@@ -449,6 +488,10 @@ function print() {
 				height: 155px;
 				position: relative;
 				transition: border-color 0.2s;
+
+				&.height-large {
+					height: 300px;
+				}
 				.empty-message {
 					position: absolute;
 					z-index: 0;
@@ -490,6 +533,18 @@ function print() {
 						background-color: rgba(var(--secondary4-color-rgb), 0.1);
 						border-top-left-radius: var(--border-radius);
 						border-top-right-radius: var(--border-radius);
+						text-align: center;
+						padding-top: 4px;
+					}
+
+					.settings-box {
+						position: absolute;
+						bottom: 0px;
+						left: 0px;
+						right: 0;
+						background-color: var(--hover-005-color);
+						border-bottom-left-radius: var(--border-radius);
+						border-bottom-right-radius: var(--border-radius);
 						text-align: center;
 						padding-top: 4px;
 					}

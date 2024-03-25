@@ -37,12 +37,12 @@
 </template>
 
 <script setup lang="ts">
+import { watch, onMounted } from "vue"
 import { NAvatar, NButton, NInput, NFormItem, NRadioGroup, NRadioButton, NSwitch } from "naive-ui"
 import ImageCropper, { type ImageCropperResult } from "@/components/common/ImageCropper.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useStorage } from "@vueuse/core"
 import * as defaultSettings from "./defaultSettings"
-import { watch } from "vue"
 
 export interface PrintSettingsData {
 	logo: string
@@ -63,16 +63,24 @@ const theme = useStorage<"light" | "dark">("report-settings-theme", defaultSetti
 const retina = useStorage<boolean>("report-settings-retina", defaultSettings.retina, localStorage)
 
 watch([logo, company, theme, retina], () => {
-	emit("update", {
-		logo: logo.value,
-		company: company.value,
-		theme: theme.value,
-		retina: retina.value
-	})
+	emitData()
 })
 
 function setCroppedImage(result: ImageCropperResult) {
 	const canvas = result.canvas as HTMLCanvasElement
 	logo.value = canvas.toDataURL()
 }
+
+function emitData() {
+	emit("update", {
+		logo: logo.value,
+		company: company.value,
+		theme: theme.value,
+		retina: retina.value
+	})
+}
+
+onMounted(() => {
+	emitData()
+})
 </script>
