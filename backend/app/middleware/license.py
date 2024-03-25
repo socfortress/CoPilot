@@ -109,6 +109,10 @@ class LicenseResponse(BaseModel):
     sign_date: dt
     reseller: Optional[Any]
 
+class GetLicenseResponse(BaseModel):
+    license_key: str
+    success: bool
+    message: str
 
 class Feature(Enum):
     MIMECAST = "MIMECAST"
@@ -127,6 +131,21 @@ class Feature(Enum):
             # Add more mappings as needed
         }
         return feature_map.get(feature_name)
+
+class SubscriptionCatalog(str, Enum):
+    """
+    The subscription catalog.
+    """
+
+    MIMECAST = (
+        "Integrate your SIEM stack with Mimecast to detect and respond to advanced threats."
+        "This integration includes ingesting of Mimecast logs into your SIEM stack, Grafana dashboards,"
+        "and alerts for advanced threat detection.",
+    )
+    HUNTRESS = (
+        "Integrate your SIEM stack with Huntress to detect and respond to advanced threats."
+    )
+
 
 
 license_router = APIRouter()
@@ -217,7 +236,6 @@ async def get_license(session: AsyncSession) -> License:
     except Exception as e:
         logger.error(e)
         raise HTTPException(status_code=404, detail="No license found")
-
 
 def check_license(license: License):
     result, _ = Key.activate(
@@ -371,6 +389,28 @@ async def verify_license_key(session: AsyncSession = Depends(get_db)) -> License
     except Exception as e:
         logger.error(e)
         raise HTTPException(status_code=400, detail="License verification failed")
+
+@license_router.get(
+    "/get_license",
+    description="Get a license",
+)
+async def get_license_key(session: AsyncSession = Depends(get_db)) -> GetLicenseResponse:
+    """ "
+    Get a license key.
+
+    Args:
+        license_key (str): The license key to verify.
+
+    Returns:
+        LicenseVerificationResponse: A Pydantic model containing the verification status and message.
+    """
+    try:
+        # retrieve the license from the database
+        license = await get_license(session)
+        return GetLicenseResponse(license_key=license.license_key, success=True, message="License retrieved successfully")
+    except Exception as e:
+        logger.error(e)
+        raise HTTPException(status_code=400, detail="License retrieval failed")
 
 
 @license_router.post(
