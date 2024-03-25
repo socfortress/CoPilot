@@ -114,6 +114,11 @@ class GetLicenseResponse(BaseModel):
     success: bool
     message: str
 
+class GetLicenseFeaturesResponse(BaseModel):
+    features: List[str]
+    success: bool
+    message: str
+
 class Feature(Enum):
     MIMECAST = "MIMECAST"
     SAP_SIEM = "SAP SIEM"
@@ -411,6 +416,36 @@ async def get_license_key(session: AsyncSession = Depends(get_db)) -> GetLicense
     except Exception as e:
         logger.error(e)
         raise HTTPException(status_code=400, detail="License retrieval failed")
+
+@license_router.get(
+    "/get_license_features",
+    response_model=GetLicenseFeaturesResponse,
+    description="Get license features",
+)
+async def get_license_features(session: AsyncSession = Depends(get_db)) -> GetLicenseFeaturesResponse:
+    """
+    Get the features enabled in a license.
+
+    Args:
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        dict: A dictionary containing the features enabled in the license.
+    """
+    try:
+        license = await get_license(session)
+        license_details = LicenseResponse(**check_license(license).__dict__)
+        features = {}
+        for data_object in license_details.data_objects:
+            features[data_object["Name"]] = data_object["IntValue"]
+        return GetLicenseFeaturesResponse(
+            features=[feature for feature, value in features.items() if value == 1],
+            success=True,
+            message="License features retrieved successfully",
+        )
+    except Exception as e:
+        logger.error(e)
+        raise HTTPException(status_code=400, detail="Failed to get license features")
 
 
 @license_router.post(
