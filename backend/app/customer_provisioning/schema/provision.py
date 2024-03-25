@@ -13,7 +13,7 @@ from app.db.universal_models import CustomersMeta
 
 class CustomerSubsctipion(Enum):
     WAZUH = "Wazuh"
-    OFFICE365 = "Office365"
+    # OFFICE365 = "Office365"
 
 
 class ProvisionNewCustomer(BaseModel):
@@ -88,6 +88,10 @@ class ProvisionNewCustomer(BaseModel):
         None,
         description="ID of the Graylog stream",
     )
+    wazuh_worker_hostname: Optional[str] = Field(
+        None,
+        description="Hostname of the Wazuh worker",
+    )
 
     @validator("customer_index_name")
     def validate_customer_index_name(cls, v):
@@ -161,4 +165,27 @@ class CustomersMetaResponse(BaseModel):
     customer_meta: CustomersMeta = Field(
         ...,
         description="Customer meta data for the newly provisioned customer",
+    )
+
+
+class ProvisionHaProxyRequest(BaseModel):
+    customer_name: str = Field(
+        ...,
+        example="SOCFortress",
+        description="The name of the customer",
+    )
+    wazuh_registration_port: str = Field(
+        ...,
+        example="1515",
+        description="The port for the Wazuh registration service",
+    )
+    wazuh_logs_port: str = Field(
+        ...,
+        example="1514",
+        description="The port for the Wazuh logs service",
+    )
+    wazuh_worker_hostname: Optional[str] = Field(
+        None,
+        example="worker1",
+        description="The hostname of the Wazuh worker",
     )

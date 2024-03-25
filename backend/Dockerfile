@@ -41,6 +41,13 @@ WORKDIR /opt/copilot/backend
 COPY requirements.txt ./
 RUN /opt/venv/bin/pip install --no-cache-dir -r requirements.txt
 
+# Install required browsers for playwright
+RUN playwright install-deps
+RUN playwright install
+
+# Install wkhtmltopdf
+RUN apt-get install -y wkhtmltopdf
+
 # Copy your application into the Docker image
 WORKDIR /opt/copilot/backend
 COPY . .
@@ -101,6 +108,15 @@ ENV EVENT_SHIPPER_URL=graylog_host
 ENV GELF_INPUT_PORT=gelf_port
 
 ENV ALERT_CREATION_PROVISIONING_URL=http://1.1.1.1
+
+ARG CRYPTOLENS_AUTH
+ENV CRYPTOLENS_AUTH=$CRYPTOLENS_AUTH
+
+ARG RSA_PUBLIC_KEY
+ENV RSA_PUBLIC_KEY=$RSA_PUBLIC_KEY
+
+ARG PRODUCT_ID
+ENV PRODUCT_ID=$PRODUCT_ID
 
 # Run your application
 CMD ["sh", "-c", "ls -la && /opt/venv/bin/python copilot.py"]

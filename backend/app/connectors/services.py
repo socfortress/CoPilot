@@ -33,6 +33,7 @@ from app.threat_intel.services.socfortress import (
     verifiy_socfortress_threat_intel_connector,
 )
 from app.utils import verify_alert_creation_provisioning_connection
+from app.utils import verify_haproxy_provisioning_connection
 from app.utils import verify_wazuh_worker_provisioning_connection
 
 UPLOAD_FOLDER = "file-store"
@@ -153,6 +154,17 @@ class WazuhWorkerProvisioningService(ConnectorServiceInterface):
         )
 
 
+# HAProxy Provisioning Service
+class HAProxyProvisioningService(ConnectorServiceInterface):
+    async def verify_authentication(
+        self,
+        connector: ConnectorResponse,
+    ) -> Optional[ConnectorResponse]:
+        return await verify_haproxy_provisioning_connection(
+            connector.connector_name,
+        )
+
+
 # SOCFortress Threat Intel Service
 class SocfortressThreatIntelService(ConnectorServiceInterface):
     async def verify_authentication(
@@ -216,6 +228,7 @@ def get_connector_service(connector_name: str) -> Type[ConnectorServiceInterface
         "InfluxDB": InfluxDBService,
         "Grafana": GrafanaService,
         "Wazuh Worker Provisioning": WazuhWorkerProvisioningService,
+        "HAProxy Provisioning": HAProxyProvisioningService,
         "SocfortressThreatIntel": SocfortressThreatIntelService,
         "AskSocfortress": AskSocfortressService,
         "Event Shipper": EventShipperService,
@@ -314,6 +327,7 @@ class ConnectorServices:
                 connector_response = await service_instance.verify_authentication(
                     connector_response,
                 )
+
                 # If the connector is verified, update the connector record in the database
                 if connector_response["connectionSuccessful"]:
                     connector.connector_verified = True

@@ -27,7 +27,7 @@
 							:stencil-props="stencilProps"
 							:resize-image="resizeImage"
 							image-restriction="stencil"
-							:stencil-component="CircleStencil"
+							:stencil-component="stencil"
 						></Cropper>
 					</div>
 				</div>
@@ -42,9 +42,9 @@
 
 <script lang="ts" setup>
 import { NButton, NCard, NUpload, NUploadDragger, NModal } from "naive-ui"
-import { type FileInfo } from "naive-ui/lib/upload/src/interface"
-import { ref, toRefs } from "vue"
-import { Cropper, CircleStencil, type CropperResult } from "vue-advanced-cropper"
+import { type FileInfo } from "naive-ui/es/upload/src/interface"
+import { computed, ref, toRefs } from "vue"
+import { Cropper, CircleStencil, RectangleStencil, type CropperResult } from "vue-advanced-cropper"
 import "vue-advanced-cropper/dist/style.css"
 
 export type ImageCropperResult = CropperResult
@@ -56,11 +56,13 @@ const emit = defineEmits<{
 const props = withDefaults(
 	defineProps<{
 		placeholder?: string
+		shape?: "square" | "circle"
 	}>(),
-	{ placeholder: "Select a picture" }
+	{ placeholder: "Select an image", shape: "square" }
 )
-const { placeholder } = toRefs(props)
+const { placeholder, shape } = toRefs(props)
 
+const stencil = computed(() => (shape.value === "circle" ? CircleStencil : RectangleStencil))
 const img = ref("")
 const showCropper = ref(false)
 const cropper = ref<typeof Cropper | null>(null)

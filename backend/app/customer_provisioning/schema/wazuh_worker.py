@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pydantic import BaseModel
 from pydantic import Field
 
@@ -42,6 +44,11 @@ class ProvisionWorkerRequest(BaseModel):
         ...,
         example="1.1.1.1",
         description="The IP address of the Wazuh master",
+    )
+    wazuh_worker_hostname: Optional[str] = Field(
+        None,
+        example="worker1",
+        description="The hostname of the Wazuh worker",
     )
 
 

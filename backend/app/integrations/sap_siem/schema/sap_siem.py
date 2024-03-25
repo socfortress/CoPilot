@@ -204,6 +204,34 @@ class Result(BaseModel):
         "False",
         description="Whether the event has been analyzed for multiple logins",
     )
+    event_analyzed_success_login_diff_ip: Optional[str] = Field(
+        "False",
+        description="Whether the event has been analyzed for successful login from different IP",
+    )
+    event_analyzed_same_user_failed_diff_ip: Optional[str] = Field(
+        "False",
+        description="Whether the event has been analyzed for same user failed login from different IP",
+    )
+    event_analyzed_same_user_failed_diff_geo: Optional[str] = Field(
+        "False",
+        description="Whether the event has been analyzed for same user failed login from different geo",
+    )
+    event_analyzed_same_user_successful_diff_geo: Optional[str] = Field(
+        "False",
+        description="Whether the event has been analyzed for same user successful login from different geo",
+    )
+    event_analyzed_brute_force_ip: Optional[str] = Field(
+        "False",
+        description="Whether the event has been analyzed for brute force IP",
+    )
+    event_analyzed_brute_force_same_ip: Optional[str] = Field(
+        "False",
+        description="Whether the event has been analyzed for brute force same IP",
+    )
+    event_analyzed_successful_login_after_failures_diff_loginID: Optional[str] = Field(
+        "False",
+        description="Whether the event has been analyzed for successful login after failures",
+    )
 
 
 class SapSiemResponseBody(BaseModel):

@@ -10,11 +10,18 @@ export interface Agent {
 	velociraptor_id: string
 	velociraptor_last_seen: string
 	wazuh_agent_version: string
+	wazuh_agent_status: AgentStatus
 	velociraptor_agent_version: string
 	customer_code: null | string
 	vulnerabilities?: AgentVulnerabilities[]
 	online?: boolean
 	quarantined?: boolean
+}
+
+export enum AgentStatus {
+	Active = "active",
+	Disconnected = "disconnected",
+	NotFound = "not found"
 }
 
 export interface AgentVulnerabilities {

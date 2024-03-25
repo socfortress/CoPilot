@@ -16,6 +16,7 @@ const CustomersIcon = "carbon:user-multiple"
 const LogsIcon = "carbon:cloud-logging"
 const UsersIcon = "carbon:group-security"
 const IntegrationsIcon = "carbon:ibm-cloud-direct-link-2-dedicated"
+const ReportCreationIcon = "carbon:report-data"
 
 /*eslint @typescript-eslint/no-unused-vars: "off"*/
 export default function getItems(mode: "vertical" | "horizontal", collapsed: boolean): MenuMixedOption[] {
@@ -265,6 +266,20 @@ export default function getItems(mode: "vertical" | "horizontal", collapsed: boo
 				),
 			key: "Integrations",
 			icon: renderIcon(IntegrationsIcon)
+		},
+		{
+			label: () =>
+				h(
+					RouterLink,
+					{
+						to: {
+							name: "ReportCreation"
+						}
+					},
+					{ default: () => "Report Creation" }
+				),
+			key: "ReportCreation",
+			icon: renderIcon(ReportCreationIcon)
 		}
 	]
 }

@@ -10,9 +10,30 @@ from app.schedulers.services.agent_sync import agent_sync
 from app.schedulers.services.invoke_huntress import invoke_huntress_integration_collect
 from app.schedulers.services.invoke_mimecast import invoke_mimecast_integration
 from app.schedulers.services.invoke_mimecast import invoke_mimecast_integration_ttp
+from app.schedulers.services.invoke_sap_siem import (
+    invoke_sap_siem_integration_brute_force_failed_logins,
+)
+from app.schedulers.services.invoke_sap_siem import (
+    invoke_sap_siem_integration_brute_force_failed_logins_same_ip,
+)
 from app.schedulers.services.invoke_sap_siem import invoke_sap_siem_integration_collect
 from app.schedulers.services.invoke_sap_siem import (
     invoke_sap_siem_integration_multiple_logins_same_ip_analysis,
+)
+from app.schedulers.services.invoke_sap_siem import (
+    invoke_sap_siem_integration_same_user_failed_login_from_different_geo_location,
+)
+from app.schedulers.services.invoke_sap_siem import (
+    invoke_sap_siem_integration_same_user_failed_login_from_different_ip,
+)
+from app.schedulers.services.invoke_sap_siem import (
+    invoke_sap_siem_integration_same_user_successful_login_from_different_geo_location,
+)
+from app.schedulers.services.invoke_sap_siem import (
+    invoke_sap_siem_integration_successful_login_after_multiple_failed_logins,
+)
+from app.schedulers.services.invoke_sap_siem import (
+    invoke_sap_siem_integration_successful_user_login_with_different_ip,
 )
 from app.schedulers.services.invoke_sap_siem import (
     invoke_sap_siem_integration_suspicious_logins_analysis,
@@ -50,7 +71,7 @@ def initialize_job_metadata():
         # Implement logic to initialize or update job metadata.
         # Example: Check and add metadata for each known job
         known_jobs = [
-            {"job_id": "agent_sync", "time_interval": 60, "function": agent_sync},
+            {"job_id": "agent_sync", "time_interval": 15, "function": agent_sync},
             # {"job_id": "invoke_mimecast_integration", "time_interval": 5, "function": invoke_mimecast_integration}
         ]
         for job in known_jobs:
@@ -85,6 +106,7 @@ def schedule_enabled_jobs(scheduler):
                     id=job_metadata.job_id,
                     replace_existing=True,
                 )
+                logger.info(f"Scheduled job: {job_metadata.job_id}")
             except ValueError as e:
                 logger.error(f"Error scheduling job: {e}")
 
@@ -104,6 +126,13 @@ def get_function_by_name(function_name: str):
         "invoke_sap_siem_integration_collection": invoke_sap_siem_integration_collect,
         "invoke_sap_siem_integration_suspicious_logins_analysis": invoke_sap_siem_integration_suspicious_logins_analysis,
         "invoke_sap_siem_integration_multiple_logins_same_ip_analysis": invoke_sap_siem_integration_multiple_logins_same_ip_analysis,
+        "invoke_sap_siem_integration_successful_user_login_with_different_ip": invoke_sap_siem_integration_successful_user_login_with_different_ip,
+        "invoke_sap_siem_integration_same_user_failed_login_from_different_ip": invoke_sap_siem_integration_same_user_failed_login_from_different_ip,
+        "invoke_sap_siem_integration_same_user_failed_login_from_different_geo_location": invoke_sap_siem_integration_same_user_failed_login_from_different_geo_location,
+        "invoke_sap_siem_integration_same_user_successful_login_from_different_geo_location": invoke_sap_siem_integration_same_user_successful_login_from_different_geo_location,
+        "invoke_sap_siem_integration_brute_force_failed_logins": invoke_sap_siem_integration_brute_force_failed_logins,
+        "invoke_sap_siem_integration_brute_force_failed_logins_same_ip": invoke_sap_siem_integration_brute_force_failed_logins_same_ip,
+        "invoke_sap_siem_integration_successful_login_after_multiple_failed_logins": invoke_sap_siem_integration_successful_login_after_multiple_failed_logins,
         "invoke_huntress_integration_collection": invoke_huntress_integration_collect,
         # Add other function mappings here
     }

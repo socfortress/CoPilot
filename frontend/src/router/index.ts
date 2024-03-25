@@ -141,6 +141,12 @@ const router = createRouter({
 			component: () => import("@/views/Integrations.vue"),
 			meta: { title: "Integrations", auth: true, roles: UserRole.All }
 		},
+		{
+			path: "/report-creation",
+			name: "ReportCreation",
+			component: () => import("@/views/ReportCreation.vue"),
+			meta: { title: "Report Creation", auth: true, roles: UserRole.All }
+		},
 
 		{
 			path: "/profile",

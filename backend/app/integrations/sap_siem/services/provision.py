@@ -45,8 +45,8 @@ async def build_index_set_config(
         TimeBasedIndexSet: The configured time-based index set.
     """
     return TimeBasedIndexSet(
-        title=f"SAP SIEM - {(await get_customer(customer_code, session)).customer.customer_name}",
-        description=f"SAP SIEM - {customer_code}",
+        title=f"{(await get_customer(customer_code, session)).customer.customer_name} - SAP SIEM",
+        description=f"{customer_code} - SAP SIEM",
         index_prefix=f"sap_siem_{customer_code}",
         rotation_strategy_class="org.graylog2.indexer.rotation.strategies.TimeBasedRotationStrategy",
         rotation_strategy={
@@ -130,8 +130,8 @@ async def build_event_stream_config(
         SapSiemEventStream: The configured SAP SIEM event stream.
     """
     return SapSiemEventStream(
-        title=f"SAP SIEM EVENTS - {(await get_customer(customer_code, session)).customer.customer_name}",
-        description=f"SAP SIEM EVENTS - {(await get_customer(customer_code, session)).customer.customer_name}",
+        title=f"{(await get_customer(customer_code, session)).customer.customer_name} - SAP SIEM",
+        description=f"{(await get_customer(customer_code, session)).customer.customer_name} - SAP SIEM",
         index_set_id=index_set_id,
         rules=[
             {

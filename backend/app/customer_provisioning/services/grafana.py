@@ -83,6 +83,19 @@ async def create_grafana_datasource(
         },
         isDefault=False,
         jsonData={
+            "dataLinks": [
+                {"field": "^data_vulnerability_cve$", "url": "https://nvd.nist.gov/vuln/detail/${__value.raw}"},
+                {
+                    "field": "^_id$",
+                    "url": (
+                        "{}/explore?left=%7B%22datasource%22:%22WAZUH%22,%22queries%22:%5B%7B"
+                        "%22refId%22:%22A%22,%22query%22:%22_id:${{__value.raw}}%22,%22alias%22:%22%22,"
+                        "%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:"
+                        "%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:"
+                        "%22timestamp%22%7D%5D,%22range%22:%7B%22from%22:%22now-6h%22,%22to%22:%22now%22%7D%7D"
+                    ).format(request.grafana_url),
+                },
+            ],
             "database": f"{request.customer_index_name}*",
             "flavor": "opensearch",
             "includeFrozen": False,

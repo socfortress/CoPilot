@@ -14,6 +14,7 @@ class WazuhAgent(BaseModel):
     agent_label: str = Field(..., alias="label")
     agent_last_seen: str = Field(..., alias="wazuh_last_seen")
     wazuh_agent_version: str = Field(..., alias="wazuh_agent_version")
+    wazuh_agent_status: Optional[str] = Field(None, alias="wazuh_agent_status")
 
     @property
     def agent_last_seen_as_datetime(self):

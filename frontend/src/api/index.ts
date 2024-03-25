@@ -16,6 +16,7 @@ import integrations from "./integrations"
 import monitoringAlerts from "./monitoringAlerts"
 import activeResponse from "./activeResponse"
 import stackProvisioning from "./stackProvisioning"
+import reporting from "./reporting"
 
 export default {
 	agents,
@@ -35,5 +36,6 @@ export default {
 	integrations,
 	monitoringAlerts,
 	activeResponse,
-	stackProvisioning
+	stackProvisioning,
+	reporting
 }

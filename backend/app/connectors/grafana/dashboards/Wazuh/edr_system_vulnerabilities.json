@@ -92,7 +92,6 @@
 				"y": 1
 			},
 			"id": 43,
-			"links": [],
 			"options": {
 				"colorMode": "value",
 				"graphMode": "area",
@@ -103,10 +102,12 @@
 					"fields": "",
 					"values": false
 				},
+				"showPercentChange": false,
 				"text": {},
-				"textMode": "auto"
+				"textMode": "auto",
+				"wideLayout": true
 			},
-			"pluginVersion": "10.0.3",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [
@@ -141,12 +142,127 @@
 			"type": "stat"
 		},
 		{
-			"columns": [],
 			"datasource": {
 				"type": "elasticsearch",
 				"uid": "replace_datasource_uid"
 			},
-			"fontSize": "100%",
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"custom": {
+						"align": "auto",
+						"cellOptions": {
+							"type": "auto"
+						},
+						"inspect": false
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					}
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "Time"
+						},
+						"properties": [
+							{
+								"id": "displayName",
+								"value": "Time"
+							},
+							{
+								"id": "unit",
+								"value": "time: YYYY-MM-DD HH:mm:ss"
+							},
+							{
+								"id": "custom.align"
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "Count"
+						},
+						"properties": [
+							{
+								"id": "unit",
+								"value": "short"
+							},
+							{
+								"id": "decimals",
+								"value": -1
+							},
+							{
+								"id": "custom.cellOptions",
+								"value": {
+									"type": "color-background"
+								}
+							},
+							{
+								"id": "custom.align"
+							},
+							{
+								"id": "thresholds",
+								"value": {
+									"mode": "absolute",
+									"steps": [
+										{
+											"color": "rgba(50, 172, 45, 0.97)",
+											"value": null
+										},
+										{
+											"color": "rgba(237, 129, 40, 0.89)",
+											"value": 0
+										},
+										{
+											"color": "#FA6400",
+											"value": 1
+										}
+									]
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "agent_name"
+						},
+						"properties": [
+							{
+								"id": "displayName",
+								"value": "AGENT"
+							},
+							{
+								"id": "unit",
+								"value": "short"
+							},
+							{
+								"id": "decimals",
+								"value": 2
+							},
+							{
+								"id": "custom.align"
+							}
+						]
+					}
+				]
+			},
 			"gridPos": {
 				"h": 7,
 				"w": 8,
@@ -154,45 +270,17 @@
 				"y": 1
 			},
 			"id": 31,
-			"showHeader": true,
-			"sort": {
-				"col": 0,
-				"desc": true
+			"options": {
+				"cellHeight": "sm",
+				"footer": {
+					"countRows": false,
+					"fields": "",
+					"reducer": ["sum"],
+					"show": false
+				},
+				"showHeader": true
 			},
-			"styles": [
-				{
-					"alias": "Time",
-					"align": "auto",
-					"dateFormat": "YYYY-MM-DD HH:mm:ss",
-					"pattern": "Time",
-					"type": "date"
-				},
-				{
-					"alias": "",
-					"align": "auto",
-					"colorMode": "row",
-					"colors": ["rgba(50, 172, 45, 0.97)", "rgba(237, 129, 40, 0.89)", "#FA6400"],
-					"dateFormat": "YYYY-MM-DD HH:mm:ss",
-					"decimals": -1,
-					"mappingType": 1,
-					"pattern": "Count",
-					"thresholds": ["0", "1"],
-					"type": "number",
-					"unit": "short"
-				},
-				{
-					"alias": "AGENT",
-					"align": "auto",
-					"colors": ["rgba(245, 54, 54, 0.9)", "rgba(237, 129, 40, 0.89)", "rgba(50, 172, 45, 0.97)"],
-					"dateFormat": "YYYY-MM-DD HH:mm:ss",
-					"decimals": 2,
-					"mappingType": 1,
-					"pattern": "agent_name",
-					"thresholds": [],
-					"type": "number",
-					"unit": "short"
-				}
-			],
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [
@@ -222,16 +310,138 @@
 				}
 			],
 			"title": "AGENTS",
-			"transform": "table",
-			"type": "table-old"
+			"transformations": [
+				{
+					"id": "merge",
+					"options": {
+						"reducers": []
+					}
+				}
+			],
+			"type": "table"
 		},
 		{
-			"columns": [],
 			"datasource": {
 				"type": "elasticsearch",
 				"uid": "replace_datasource_uid"
 			},
-			"fontSize": "100%",
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"custom": {
+						"align": "auto",
+						"cellOptions": {
+							"type": "auto"
+						},
+						"inspect": false
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					}
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "Time"
+						},
+						"properties": [
+							{
+								"id": "displayName",
+								"value": "Time"
+							},
+							{
+								"id": "unit",
+								"value": "time: YYYY-MM-DD HH:mm:ss"
+							},
+							{
+								"id": "custom.align"
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "Count"
+						},
+						"properties": [
+							{
+								"id": "unit",
+								"value": "short"
+							},
+							{
+								"id": "decimals",
+								"value": -1
+							},
+							{
+								"id": "custom.cellOptions",
+								"value": {
+									"type": "color-background"
+								}
+							},
+							{
+								"id": "custom.align"
+							},
+							{
+								"id": "thresholds",
+								"value": {
+									"mode": "absolute",
+									"steps": [
+										{
+											"color": "rgba(50, 172, 45, 0.97)",
+											"value": null
+										},
+										{
+											"color": "rgba(237, 129, 40, 0.89)",
+											"value": 0
+										},
+										{
+											"color": "#FA6400",
+											"value": 1
+										}
+									]
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "data_vulnerability_cvss_cvss2_base_score"
+						},
+						"properties": [
+							{
+								"id": "displayName",
+								"value": "CVSS2"
+							},
+							{
+								"id": "unit",
+								"value": "short"
+							},
+							{
+								"id": "decimals",
+								"value": 2
+							},
+							{
+								"id": "custom.align"
+							}
+						]
+					}
+				]
+			},
 			"gridPos": {
 				"h": 7,
 				"w": 6,
@@ -239,45 +449,17 @@
 				"y": 1
 			},
 			"id": 54,
-			"showHeader": true,
-			"sort": {
-				"col": 0,
-				"desc": true
+			"options": {
+				"cellHeight": "sm",
+				"footer": {
+					"countRows": false,
+					"fields": "",
+					"reducer": ["sum"],
+					"show": false
+				},
+				"showHeader": true
 			},
-			"styles": [
-				{
-					"alias": "Time",
-					"align": "auto",
-					"dateFormat": "YYYY-MM-DD HH:mm:ss",
-					"pattern": "Time",
-					"type": "date"
-				},
-				{
-					"alias": "",
-					"align": "auto",
-					"colorMode": "row",
-					"colors": ["rgba(50, 172, 45, 0.97)", "rgba(237, 129, 40, 0.89)", "#FA6400"],
-					"dateFormat": "YYYY-MM-DD HH:mm:ss",
-					"decimals": -1,
-					"mappingType": 1,
-					"pattern": "Count",
-					"thresholds": ["0", "1"],
-					"type": "number",
-					"unit": "short"
-				},
-				{
-					"alias": "CVSS2",
-					"align": "auto",
-					"colors": ["rgba(245, 54, 54, 0.9)", "rgba(237, 129, 40, 0.89)", "rgba(50, 172, 45, 0.97)"],
-					"dateFormat": "YYYY-MM-DD HH:mm:ss",
-					"decimals": 2,
-					"mappingType": 1,
-					"pattern": "data_vulnerability_cvss_cvss2_base_score",
-					"thresholds": [],
-					"type": "number",
-					"unit": "short"
-				}
-			],
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [
@@ -307,8 +489,15 @@
 				}
 			],
 			"title": "CVSS2 BASE SCORE",
-			"transform": "table",
-			"type": "table-old"
+			"transformations": [
+				{
+					"id": "merge",
+					"options": {
+						"reducers": []
+					}
+				}
+			],
+			"type": "table"
 		},
 		{
 			"datasource": {
@@ -430,7 +619,7 @@
 				},
 				"showHeader": true
 			},
-			"pluginVersion": "10.0.3",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [
@@ -529,8 +718,10 @@
 			"id": 37,
 			"options": {
 				"displayMode": "gradient",
+				"maxVizHeight": 300,
 				"minVizHeight": 10,
 				"minVizWidth": 0,
+				"namePlacement": "auto",
 				"orientation": "horizontal",
 				"reduceOptions": {
 					"calcs": ["sum"],
@@ -538,10 +729,11 @@
 					"values": false
 				},
 				"showUnfilled": true,
+				"sizing": "auto",
 				"text": {},
 				"valueMode": "color"
 			},
-			"pluginVersion": "10.0.3",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [
@@ -681,7 +873,6 @@
 				"y": 8
 			},
 			"id": 45,
-			"links": [],
 			"maxDataPoints": 3,
 			"options": {
 				"legend": {
@@ -909,7 +1100,7 @@
 				},
 				"showHeader": true
 			},
-			"pluginVersion": "10.0.3",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [
@@ -1162,7 +1353,7 @@
 				"showHeader": true,
 				"sortBy": []
 			},
-			"pluginVersion": "10.0.3",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [
@@ -1227,6 +1418,7 @@
 						"mode": "palette-classic"
 					},
 					"custom": {
+						"axisBorderShow": false,
 						"axisCenteredZero": false,
 						"axisColorMode": "text",
 						"axisLabel": "",
@@ -1240,6 +1432,7 @@
 							"tooltip": false,
 							"viz": false
 						},
+						"insertNulls": false,
 						"lineInterpolation": "linear",
 						"lineWidth": 1,
 						"pointSize": 5,
@@ -1589,7 +1782,7 @@
 				"showHeader": true,
 				"sortBy": []
 			},
-			"pluginVersion": "10.0.3",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [],
@@ -1883,7 +2076,7 @@
 				},
 				"showHeader": true
 			},
-			"pluginVersion": "10.0.3",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [],
@@ -1977,10 +2170,9 @@
 						"h": 7,
 						"w": 4,
 						"x": 0,
-						"y": 27
+						"y": 54
 					},
 					"id": 63,
-					"links": [],
 					"options": {
 						"colorMode": "value",
 						"graphMode": "area",
@@ -1991,10 +2183,12 @@
 							"fields": "",
 							"values": false
 						},
+						"showPercentChange": false,
 						"text": {},
-						"textMode": "auto"
+						"textMode": "auto",
+						"wideLayout": true
 					},
-					"pluginVersion": "10.0.3",
+					"pluginVersion": "10.4.0",
 					"targets": [
 						{
 							"bucketAggs": [
@@ -2029,61 +2223,145 @@
 					"type": "stat"
 				},
 				{
-					"columns": [],
 					"datasource": {
 						"type": "elasticsearch",
 						"uid": "replace_datasource_uid"
 					},
-					"fontSize": "100%",
+					"fieldConfig": {
+						"defaults": {
+							"color": {
+								"mode": "thresholds"
+							},
+							"custom": {
+								"align": "auto",
+								"cellOptions": {
+									"type": "auto"
+								},
+								"inspect": false
+							},
+							"mappings": [],
+							"thresholds": {
+								"mode": "absolute",
+								"steps": [
+									{
+										"color": "green",
+										"value": null
+									},
+									{
+										"color": "red",
+										"value": 80
+									}
+								]
+							}
+						},
+						"overrides": [
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "Time"
+								},
+								"properties": [
+									{
+										"id": "displayName",
+										"value": "Time"
+									},
+									{
+										"id": "unit",
+										"value": "time: YYYY-MM-DD HH:mm:ss"
+									},
+									{
+										"id": "custom.align"
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "Count"
+								},
+								"properties": [
+									{
+										"id": "unit",
+										"value": "short"
+									},
+									{
+										"id": "decimals",
+										"value": -1
+									},
+									{
+										"id": "custom.cellOptions",
+										"value": {
+											"type": "color-background"
+										}
+									},
+									{
+										"id": "custom.align"
+									},
+									{
+										"id": "thresholds",
+										"value": {
+											"mode": "absolute",
+											"steps": [
+												{
+													"color": "rgba(50, 172, 45, 0.97)",
+													"value": null
+												},
+												{
+													"color": "rgba(237, 129, 40, 0.89)",
+													"value": 0
+												},
+												{
+													"color": "#FA6400",
+													"value": 1
+												}
+											]
+										}
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "agent_name"
+								},
+								"properties": [
+									{
+										"id": "displayName",
+										"value": "AGENT"
+									},
+									{
+										"id": "unit",
+										"value": "short"
+									},
+									{
+										"id": "decimals",
+										"value": 2
+									},
+									{
+										"id": "custom.align"
+									}
+								]
+							}
+						]
+					},
 					"gridPos": {
 						"h": 7,
 						"w": 8,
 						"x": 4,
-						"y": 27
+						"y": 54
 					},
 					"id": 64,
-					"showHeader": true,
-					"sort": {
-						"col": 0,
-						"desc": true
+					"options": {
+						"cellHeight": "sm",
+						"footer": {
+							"countRows": false,
+							"fields": "",
+							"reducer": ["sum"],
+							"show": false
+						},
+						"showHeader": true
 					},
-					"styles": [
-						{
-							"$$hashKey": "object:108",
-							"alias": "Time",
-							"align": "auto",
-							"dateFormat": "YYYY-MM-DD HH:mm:ss",
-							"pattern": "Time",
-							"type": "date"
-						},
-						{
-							"$$hashKey": "object:109",
-							"alias": "",
-							"align": "auto",
-							"colorMode": "row",
-							"colors": ["rgba(50, 172, 45, 0.97)", "rgba(237, 129, 40, 0.89)", "#FA6400"],
-							"dateFormat": "YYYY-MM-DD HH:mm:ss",
-							"decimals": -1,
-							"mappingType": 1,
-							"pattern": "Count",
-							"thresholds": ["0", "1"],
-							"type": "number",
-							"unit": "short"
-						},
-						{
-							"$$hashKey": "object:110",
-							"alias": "AGENT",
-							"align": "auto",
-							"colors": ["rgba(245, 54, 54, 0.9)", "rgba(237, 129, 40, 0.89)", "rgba(50, 172, 45, 0.97)"],
-							"dateFormat": "YYYY-MM-DD HH:mm:ss",
-							"decimals": 2,
-							"mappingType": 1,
-							"pattern": "agent_name",
-							"thresholds": [],
-							"type": "number",
-							"unit": "short"
-						}
-					],
+					"pluginVersion": "10.4.0",
 					"targets": [
 						{
 							"bucketAggs": [
@@ -2117,8 +2395,15 @@
 						}
 					],
 					"title": "DOCKER HOST",
-					"transform": "table",
-					"type": "table-old"
+					"transformations": [
+						{
+							"id": "merge",
+							"options": {
+								"reducers": []
+							}
+						}
+					],
+					"type": "table"
 				},
 				{
 					"datasource": {
@@ -2255,7 +2540,7 @@
 						"h": 7,
 						"w": 6,
 						"x": 12,
-						"y": 27
+						"y": 54
 					},
 					"id": 71,
 					"options": {
@@ -2268,7 +2553,7 @@
 						},
 						"showHeader": true
 					},
-					"pluginVersion": "10.0.3",
+					"pluginVersion": "10.4.0",
 					"targets": [
 						{
 							"bucketAggs": [
@@ -2449,7 +2734,7 @@
 						"h": 7,
 						"w": 6,
 						"x": 18,
-						"y": 27
+						"y": 54
 					},
 					"id": 65,
 					"options": {
@@ -2462,7 +2747,7 @@
 						},
 						"showHeader": true
 					},
-					"pluginVersion": "10.0.3",
+					"pluginVersion": "10.4.0",
 					"targets": [
 						{
 							"bucketAggs": [
@@ -2536,13 +2821,15 @@
 						"h": 11,
 						"w": 17,
 						"x": 0,
-						"y": 34
+						"y": 61
 					},
 					"id": 67,
 					"options": {
 						"displayMode": "gradient",
+						"maxVizHeight": 300,
 						"minVizHeight": 10,
 						"minVizWidth": 0,
+						"namePlacement": "auto",
 						"orientation": "vertical",
 						"reduceOptions": {
 							"calcs": ["sum"],
@@ -2550,10 +2837,11 @@
 							"values": false
 						},
 						"showUnfilled": true,
+						"sizing": "auto",
 						"text": {},
 						"valueMode": "color"
 					},
-					"pluginVersion": "10.0.3",
+					"pluginVersion": "10.4.0",
 					"targets": [
 						{
 							"bucketAggs": [
@@ -2720,10 +3008,9 @@
 						"h": 11,
 						"w": 7,
 						"x": 17,
-						"y": 34
+						"y": 61
 					},
 					"id": 66,
-					"links": [],
 					"maxDataPoints": 3,
 					"options": {
 						"legend": {
@@ -2821,14 +3108,16 @@
 								"align": "auto",
 								"cellOptions": {
 									"type": "auto"
-								}
+								},
+								"inspect": false
 							},
 							"mappings": [],
 							"thresholds": {
 								"mode": "absolute",
 								"steps": [
 									{
-										"color": "green"
+										"color": "green",
+										"value": null
 									},
 									{
 										"color": "red",
@@ -2974,18 +3263,20 @@
 						"h": 12,
 						"w": 24,
 						"x": 0,
-						"y": 46
+						"y": 55
 					},
 					"id": 68,
 					"options": {
+						"cellHeight": "sm",
 						"footer": {
+							"countRows": false,
 							"fields": "",
 							"reducer": ["sum"],
 							"show": false
 						},
 						"showHeader": true
 					},
-					"pluginVersion": "8.3.3",
+					"pluginVersion": "10.4.0",
 					"targets": [
 						{
 							"bucketAggs": [],
@@ -3068,8 +3359,7 @@
 		}
 	],
 	"refresh": "",
-	"schemaVersion": 38,
-	"style": "dark",
+	"schemaVersion": 39,
 	"tags": ["EDR"],
 	"templating": {
 		"list": [

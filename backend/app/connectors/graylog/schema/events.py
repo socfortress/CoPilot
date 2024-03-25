@@ -4,6 +4,7 @@ from typing import Optional
 from typing import Union
 
 from pydantic import BaseModel
+from pydantic import Field
 
 
 class Provider(BaseModel):
@@ -17,20 +18,37 @@ class FieldSpecItem(BaseModel):
     providers: List[Provider]
 
 
+class ExpressionItem(BaseModel):
+    expr: str
+    ref: Optional[str] = None
+    value: Optional[int] = None
+    left: Optional["ExpressionItem"] = None
+    right: Optional["ExpressionItem"] = None
+
+
+ExpressionItem.update_forward_refs()
+
+
 class Conditions(BaseModel):
-    expression: Optional[str]
+    expression: Optional[Union[str, ExpressionItem]] = None
+
+
+class SeriesItem(BaseModel):
+    type: str
+    id: str
+    field: Optional[str] = None
 
 
 class Config(BaseModel):
-    conditions: Conditions
-    execute_every_ms: int
-    group_by: List[str]
-    query: str
-    query_parameters: List[str]
-    search_within_ms: int
-    series: List[str]
-    streams: List[str]
-    type: str
+    conditions: Optional[Conditions] = Field(None, description="The conditions to be met for the config")
+    execute_every_ms: Optional[int] = Field(None, description="The execution frequency in milliseconds")
+    group_by: Optional[List[str]] = Field(None, description="The fields to group by")
+    query: Optional[str] = Field(None, description="The query to be executed")
+    query_parameters: Optional[List[str]] = Field(None, description="The parameters for the query")
+    search_within_ms: Optional[int] = Field(None, description="The search window in milliseconds")
+    series: Optional[Union[str, List[SeriesItem]]] = Field(None, description="The series to be included in the config")
+    streams: Optional[List[str]] = Field(None, description="The streams to be included in the config")
+    type: str = Field(..., description="The type of the config")
 
 
 class NotificationSettings(BaseModel):
@@ -46,7 +64,7 @@ class Storage(BaseModel):
 class EventDefinition(BaseModel):
     _scope: str
     alert: bool
-    config: Config
+    config: Optional[Config] = Field(None, description="The configuration for the event definition")
     description: str
     field_spec: Dict[str, FieldSpecItem]
     id: str

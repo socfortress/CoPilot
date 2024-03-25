@@ -54,10 +54,9 @@
 
 <script setup lang="ts">
 import { computed, onBeforeMount, ref, watch } from "vue"
-import { type Agent } from "@/types/agents.d"
+import { AgentStatus, type Agent } from "@/types/agents.d"
 import AgentCard from "@/components/agents/AgentCard.vue"
 import AgentToolbar from "@/components/agents/AgentToolbar.vue"
-import { isAgentOnline } from "@/components/agents/utils"
 import Api from "@/api"
 import { useRouter } from "vue-router"
 import { useMessage, NSpin, NScrollbar, NEmpty, NPagination } from "naive-ui"
@@ -104,7 +103,7 @@ const agentsCritical = computed(() => {
 })
 
 const agentsOnline = computed(() => {
-	return agents.value.filter(({ online }) => online)
+	return agents.value.filter(({ wazuh_agent_status }) => wazuh_agent_status === AgentStatus.Active)
 })
 
 function gotoAgentPage(agent: Agent) {
@@ -118,10 +117,7 @@ function getAgents() {
 		.getAgents()
 		.then(res => {
 			if (res.data.success) {
-				agents.value = (res.data.agents || []).map(o => {
-					o.online = isAgentOnline(o.wazuh_last_seen)
-					return o
-				})
+				agents.value = res.data.agents || []
 			} else {
 				message.error(res.data?.message || "An error occurred. Please try again later.")
 			}

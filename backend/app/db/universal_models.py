@@ -93,6 +93,7 @@ class Agents(SQLModel, table=True):
     velociraptor_id: str = Field(max_length=256)
     velociraptor_last_seen: datetime
     wazuh_agent_version: str = Field(max_length=256)
+    wazuh_agent_status: str = Field("not found", max_length=256)
     velociraptor_agent_version: str = Field(max_length=256)
     customer_code: Optional[str] = Field(foreign_key="customers.customer_code")
     quarantined: bool = Field(default=False)
@@ -115,6 +116,7 @@ class Agents(SQLModel, table=True):
             label=wazuh_agent.agent_label,
             wazuh_last_seen=wazuh_last_seen_value,
             wazuh_agent_version=wazuh_agent.wazuh_agent_version,
+            wazuh_agent_status=wazuh_agent.wazuh_agent_status if wazuh_agent.wazuh_agent_status else "not found",
             velociraptor_id=velociraptor_agent.client_id if velociraptor_agent.client_id else "n/a",
             velociraptor_last_seen=velociraptor_agent.client_last_seen_as_datetime,
             velociraptor_agent_version=velociraptor_agent.client_version,
@@ -137,6 +139,7 @@ class Agents(SQLModel, table=True):
         self.label = wazuh_agent.agent_label
         self.wazuh_last_seen = wazuh_last_seen_value
         self.wazuh_agent_version = wazuh_agent.wazuh_agent_version
+        self.wazuh_agent_status = wazuh_agent.wazuh_agent_status if wazuh_agent.wazuh_agent_status else "not found"
         self.velociraptor_id = velociraptor_agent.client_id if velociraptor_agent.client_id else "n/a"
         self.velociraptor_last_seen = velociraptor_agent.client_last_seen_as_datetime
         self.velociraptor_agent_version = velociraptor_agent.client_version
@@ -154,3 +157,12 @@ class LogEntry(SQLModel, table=True):
     status_code: int
     message: str
     additional_info: str = Field(default=None, nullable=True)
+
+
+class License(SQLModel, table=True):
+    __tablename__ = "license"
+    id: Optional[int] = Field(primary_key=True)
+    license_key: str = Field(max_length=1024)
+    customer_name: str = Field(max_length=1024)
+    customer_email: str = Field(max_length=1024)
+    company_name: str = Field(max_length=1024)

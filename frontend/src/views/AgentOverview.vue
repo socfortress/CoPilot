@@ -110,8 +110,8 @@
 import { ref, onBeforeMount, computed, nextTick } from "vue"
 import { useRoute } from "vue-router"
 import Api from "@/api"
-import { type Agent } from "@/types/agents.d"
-import { handleDeleteAgent, isAgentOnline, toggleAgentCritical } from "@/components/agents/utils"
+import { AgentStatus, type Agent } from "@/types/agents.d"
+import { handleDeleteAgent, toggleAgentCritical } from "@/components/agents/utils"
 import { useRouter } from "vue-router"
 import VulnerabilitiesSection from "@/components/agents/VulnerabilitiesSection.vue"
 import AlertsList from "@/components/alerts/AlertsList.vue"
@@ -141,7 +141,7 @@ const agentId = ref<string | null>(null)
 const artifacts = ref<Artifact[]>([])
 
 const isOnline = computed(() => {
-	return isAgentOnline(agent.value?.wazuh_last_seen ?? "")
+	return agent.value?.wazuh_agent_status === AgentStatus.Active
 })
 
 const isQuarantined = computed(() => {

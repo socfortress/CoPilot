@@ -47,8 +47,8 @@
 									:type="theme === ThemeEnum.Light ? 'primary' : 'default'"
 								>
 									<template #icon>
-										<Icon :name="LigthIcon" v-if="theme === ThemeEnum.Light"></Icon>
-										<Icon :name="LigthOutlineIcon" v-else></Icon>
+										<Icon :name="LightIcon" v-if="theme === ThemeEnum.Light"></Icon>
+										<Icon :name="LightOutlineIcon" v-else></Icon>
 									</template>
 									Light
 								</n-button>
@@ -160,9 +160,9 @@ import { useWindowSize } from "@vueuse/core"
 
 const SettingsIcon = "carbon:settings-adjust"
 const CloseIcon = "carbon:close"
-const LigthIcon = "ion:sunny"
+const LightIcon = "ion:sunny"
 const DarkIcon = "ion:moon"
-const LigthOutlineIcon = "ion:sunny-outline"
+const LightOutlineIcon = "ion:sunny-outline"
 const DarkOutlineIcon = "ion:moon-outline"
 const ColorIcon = "carbon:circle-solid"
 

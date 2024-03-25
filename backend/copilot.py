@@ -40,6 +40,7 @@ from app.routers import healthcheck
 from app.routers import huntress
 from app.routers import influxdb
 from app.routers import integrations
+from app.routers import license
 from app.routers import logs
 from app.routers import mimecast
 from app.routers import monitoring_alert
@@ -123,6 +124,7 @@ api_router.include_router(sap_siem.router)
 api_router.include_router(stack_provisioning.router)
 api_router.include_router(active_response.router)
 api_router.include_router(huntress.router)
+api_router.include_router(license.router)
 
 # Include the APIRouter in the FastAPI app
 app.include_router(api_router)

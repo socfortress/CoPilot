@@ -58,7 +58,14 @@ class SingleCaseModel(BaseModel):
     classification: Optional[Union[str, None]]
     classification_id: Optional[Union[int, None]]
     close_date: Optional[Union[str, None]]
-    custom_attributes: Optional[Union[str, None]]
+    # custom_attributes: Optional[Union[str, None]] = Field(
+    #     None,
+    #     description="The custom attributes of the case.",
+    # )
+    custom_attributes: Optional[Dict[str, Union[str, None]]] = Field(
+        None,
+        description="The custom attributes of the case.",
+    )
     customer_id: int
     customer_name: str
     initial_date: str
@@ -76,6 +83,11 @@ class SingleCaseModel(BaseModel):
     status_id: int
     status_name: str
     customer_code: str
+
+    def __init__(self, **data):
+        if "custom_attributes" in data and not data["custom_attributes"]:
+            data["custom_attributes"] = {"default_key": "no custom attributes found"}  # Replace with your default entry
+        super().__init__(**data)
 
 
 class SingleCaseBody(BaseModel):

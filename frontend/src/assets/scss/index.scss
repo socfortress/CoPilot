@@ -19,6 +19,7 @@ body {
 	text-rendering: optimizeLegibility;
 	line-height: 1.35;
 	font-size: 15px;
+	text-wrap: pretty;
 
 	margin: 0;
 	padding: 0;
@@ -149,4 +150,51 @@ mark {
 	border-radius: var(--border-radius-small);
 	background-color: var(--primary-030-color);
 	color: var(--fg-color);
+}
+
+@media print {
+	html,
+	body {
+		overflow: initial;
+	}
+	body {
+		#app {
+			height: initial;
+			background-color: white;
+
+			& > .n-config-provider {
+				& > .layout {
+					display: block;
+					height: initial;
+					background-color: white;
+
+					& > .header-bar {
+						display: none;
+					}
+					& > .main {
+						background-color: white;
+						overflow: initial;
+						height: initial;
+
+						header.toolbar {
+							display: none;
+						}
+						footer.footer {
+							display: none;
+						}
+
+						& > .n-scrollbar {
+							overflow: initial;
+							height: initial;
+
+							& > .n-scrollbar-container {
+								overflow: initial;
+								height: initial;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
 }

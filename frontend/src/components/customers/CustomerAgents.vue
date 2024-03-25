@@ -24,7 +24,6 @@ import { useMessage, NSpin, NEmpty } from "naive-ui"
 import type { Customer } from "@/types/customers.d"
 import { useRouter } from "vue-router"
 import type { Agent } from "@/types/agents.d"
-import { isAgentOnline } from "@/components/agents/utils"
 
 const props = defineProps<{
 	customer: Customer
@@ -47,10 +46,7 @@ function getAgents() {
 		.getCustomerAgents(customer.value.customer_code)
 		.then(res => {
 			if (res.data.success) {
-				list.value = (res.data.agents || []).map(o => {
-					o.online = isAgentOnline(o.wazuh_last_seen)
-					return o
-				})
+				list.value = res.data.agents || []
 			} else {
 				message.error(res.data?.message || "An error occurred. Please try again later.")
 			}

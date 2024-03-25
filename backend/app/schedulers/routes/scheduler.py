@@ -8,6 +8,7 @@ from sqlalchemy.future import select
 
 from app.db.db_session import get_db
 from app.schedulers.models.scheduler import JobMetadata
+from app.schedulers.scheduler import get_function_by_name
 from app.schedulers.scheduler import init_scheduler
 from app.schedulers.schema.scheduler import JobsResponse
 
@@ -49,6 +50,18 @@ async def manage_job_metadata(session, job_id, action, **kwargs):
     Returns:
         JobMetadata: The updated or deleted job metadata.
     """
+    if action == "add":
+        job_metadata = JobMetadata(
+            job_id=job_id,
+            last_success=None,
+            time_interval=kwargs["time_interval"],
+            enabled=True,
+            extra_data=kwargs["extra_data"],
+        )
+        session.add(job_metadata)
+        await session.commit()
+        return job_metadata
+
     job_metadata = await session.execute(select(JobMetadata).filter_by(job_id=job_id))
     job_metadata = job_metadata.scalars().first()
 
@@ -97,6 +110,49 @@ async def get_all_jobs(session: AsyncSession = Depends(get_db)) -> JobsResponse:
         success=True,
         message="Jobs successfully retrieved.",
     )
+
+
+@scheduler_router.post("/add", description="Add a job")
+async def add_job(
+    job_id: str,
+    function_name: str,
+    time_interval: int,
+    extra_data: Optional[str] = None,
+    session: AsyncSession = Depends(get_db),
+):
+    """
+    Add a job to the scheduler.
+
+    Args:
+        job_id (str): The ID of the job.
+        function_name (str): The name of the function to be scheduled.
+        time_interval (int): The time interval for the job in minutes.
+        extra_data (str, optional): Additional data to be stored with the job metadata. Defaults to None.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        dict: A dictionary containing the success status and a message.
+    """
+    scheduler = get_scheduler()
+    job_function = get_function_by_name(function_name)
+    scheduler.add_job(
+        job_function,
+        "interval",
+        minutes=time_interval,
+        id=job_id,
+        replace_existing=True,
+    )
+    await manage_job_metadata(
+        session,
+        job_id,
+        "add",
+        time_interval=time_interval,
+        extra_data=extra_data,
+    )
+    if not scheduler.running:
+        scheduler.start()
+    logger.info(f"Job {job_id} added successfully")
+    return {"success": True, "message": "Job added successfully"}
 
 
 @scheduler_router.post("/start/{job_id}", description="Start a job")
@@ -181,6 +237,15 @@ async def update_job(
             extra_data=extra_data,
         )
         logger.info(f"Job {job_id} updated successfully")
+        # Update the job metadata
+        await manage_job_metadata(
+            session,
+            job_id,
+            "update",
+            time_interval=time_interval,
+            extra_data=extra_data,
+        )
+
         return {"success": True, "message": "Job updated successfully"}
     logger.error(f"Job {job_id} not found for updating")
     return {"success": False, "message": "Job not found"}

@@ -29,6 +29,15 @@ class GrafanaJsonData(BaseModel):
     maxConcurrentShardRequests: int = Field(5, alias="maxConcurrentShardRequests")
     timeField: str = Field(..., alias="timeField")
     tlsSkipVerify: bool = Field(True, alias="tlsSkipVerify")
+    dataLinks: list = Field(
+        [
+            {
+                "field": "^data_vulnerability_cve$",
+                "url": "https://nvd.nist.gov/vuln/detail",
+            },
+        ],
+        alias="dataLinks",
+    )
 
 
 class GrafanaDatasource(BaseModel):

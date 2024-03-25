@@ -48,7 +48,11 @@ async def update_tables(async_engine):
     logger.info("Updating tables")
 
     # Define the new columns to be added
-    new_columns = {"scheduled_job_metadata": ["extra_data TEXT"]}
+    new_columns = {
+        "scheduled_job_metadata": ["extra_data TEXT"],
+        "customer_provisioning_default_settings": ["wazuh_worker_hostname TEXT"],
+        "agents": ["wazuh_agent_status TEXT"],
+    }
 
     async with async_engine.begin() as conn:
         for table_name, columns in new_columns.items():

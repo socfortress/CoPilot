@@ -248,6 +248,7 @@ async def provision_alert_definition(
         endpoint="/api/events/definitions",
         data=alert_definition_model.dict(),
     )
+    logger.info(f"Graylog alert definition provisioned response: {response}")
     if response["success"]:
         return True
     raise HTTPException(status_code=500, detail="Failed to provision alert definition")
@@ -318,6 +319,7 @@ async def provision_wazuh_monitoring_alert(
                     execute_every_ms=await convert_seconds_to_milliseconds(
                         request.execute_every,
                     ),
+                    event_limit=1000,
                 ),
                 field_spec={
                     "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
@@ -437,6 +439,7 @@ async def provision_suricata_monitoring_alert(
                 execute_every_ms=await convert_seconds_to_milliseconds(
                     request.execute_every,
                 ),
+                event_limit=1000,
             ),
             field_spec={
                 "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
@@ -556,6 +559,7 @@ async def provision_office365_exchange_online_alert(
                 execute_every_ms=await convert_seconds_to_milliseconds(
                     request.execute_every,
                 ),
+                event_limit=1000,
             ),
             field_spec={
                 "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
@@ -675,6 +679,7 @@ async def provision_office365_threat_intel_alert(
                 execute_every_ms=await convert_seconds_to_milliseconds(
                     request.execute_every,
                 ),
+                event_limit=1000,
             ),
             field_spec={
                 "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
@@ -792,6 +797,7 @@ async def provision_custom_alert(request: CustomMonitoringAlertProvisionModel) -
                 execute_every_ms=await convert_seconds_to_milliseconds(
                     request.execute_every_ms,
                 ),
+                event_limit=1000,
             ),
             field_spec={
                 custom_field.name: GraylogAlertProvisionFieldSpecItem(
@@ -799,7 +805,7 @@ async def provision_custom_alert(request: CustomMonitoringAlertProvisionModel) -
                     providers=[
                         GraylogAlertProvisionProvider(
                             type="template-v1",
-                            template=f"${{source.{custom_field.value}}}",
+                            template=f"${{source.{custom_field.value}}}" if custom_field.name != "CUSTOMER_CODE" else custom_field.value,
                             require_values=True,
                         ),
                     ],

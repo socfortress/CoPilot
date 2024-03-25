@@ -6,11 +6,14 @@ from typing import List
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import Security
+from fastapi.exceptions import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.auth.utils import AuthHandler
+from app.connectors.grafana.schema.reporting import GenerateReportRequest
+from app.connectors.grafana.schema.reporting import GenerateReportResponse
 from app.connectors.grafana.schema.reporting import GrafanaDashboardDetailsResponse
 from app.connectors.grafana.schema.reporting import GrafanaDashboardPanelsResponse
 from app.connectors.grafana.schema.reporting import GrafanaDashboardResponse
@@ -20,11 +23,14 @@ from app.connectors.grafana.schema.reporting import GrafanaLinksList
 from app.connectors.grafana.schema.reporting import GrafanaOrganizationsResponse
 from app.connectors.grafana.schema.reporting import Panel
 from app.connectors.grafana.schema.reporting import TimeRange
+from app.connectors.grafana.services.reporting import generate_report
 from app.connectors.grafana.services.reporting import get_dashboard_details
 from app.connectors.grafana.services.reporting import get_dashboards
 from app.connectors.grafana.services.reporting import get_orgs
 from app.connectors.models import Connectors
 from app.db.db_session import get_db
+
+# from app.middleware.license import is_feature_enabled
 
 # App specific imports
 
@@ -40,11 +46,11 @@ async def get_grafana_url(session: AsyncSession):
 
 def calculate_unix_timestamps(time_range: TimeRange):
     now = datetime.now()
-    if time_range.unit == "minutes":
+    if time_range.unit == "m":
         start_time = now - timedelta(minutes=time_range.value)
-    elif time_range.unit == "hours":
+    elif time_range.unit == "h":
         start_time = now - timedelta(hours=time_range.value)
-    elif time_range.unit == "days":
+    elif time_range.unit == "d":
         start_time = now - timedelta(days=time_range.value)
 
     timestamp_from = int(time.mktime(start_time.timetuple())) * 1000
@@ -55,13 +61,13 @@ def calculate_unix_timestamps(time_range: TimeRange):
 
 def generate_panel_urls(grafana_url: str, request: GrafanaGenerateIframeLinksRequest, timestamp_from: int, timestamp_to: int):
     panel_links: List[GrafanaLinksList] = []
-    for panel_id in request.panel_ids:
-        panel_url = (
-            f"{grafana_url}/d-solo/{request.dashboard_uid}/{request.dashboard_title}"
-            f"?orgId={request.org_id}&from={timestamp_from}&to={timestamp_to}"
-            f"&panelId={panel_id}"
-        )
-        panel_links.append(GrafanaLinksList(panel_id=panel_id, panel_url=panel_url))
+    # for panel_id in request.panel_ids:
+    panel_url = (
+        f"{grafana_url}/d-solo/{request.dashboard_uid}/{request.dashboard_title}"
+        f"?orgId={request.org_id}&from={timestamp_from}&to={timestamp_to}"
+        f"&panelId={request.panel_id}"
+    )
+    panel_links.append(GrafanaLinksList(panel_id=request.panel_id, panel_url=panel_url))
     return panel_links
 
 
@@ -206,3 +212,16 @@ async def generate_grafana_iframe_links(
         links=panel_urls,
         success=True,
     )
+
+
+@grafana_reporting_router.post(
+    "/generate-report",
+    response_model=GenerateReportResponse,
+    description="Create a new report.",
+)
+async def create_report(request: GenerateReportRequest, session: AsyncSession = Depends(get_db)) -> GenerateReportResponse:
+    logger.info("Generating report")
+    # ! License Check
+    # await is_feature_enabled("REPORTING", session)
+    raise HTTPException(status_code=501, detail="Feature not enabled. Please check back later.")
+    return await generate_report(request, session)

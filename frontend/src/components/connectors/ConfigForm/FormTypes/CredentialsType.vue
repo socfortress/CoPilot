@@ -7,7 +7,13 @@
 			<n-input v-model:value="form.connector_username" required type="text" />
 		</n-form-item>
 		<n-form-item label="Password" path="connector_password">
-			<n-input v-model:value="form.connector_password" required type="password" autocomplete="off" />
+			<n-input
+				v-model:value="form.connector_password"
+				required
+				type="password"
+				show-password-on="click"
+				autocomplete="off"
+			/>
 		</n-form-item>
 	</n-form>
 </template>

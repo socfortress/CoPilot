@@ -25,7 +25,6 @@
 	"fiscalYearStartMonth": 0,
 	"graphTooltip": 0,
 	"id": null,
-	"iteration": 1658194363330,
 	"links": [
 		{
 			"asDropdown": true,
@@ -78,7 +77,6 @@
 				"y": 0
 			},
 			"id": 43,
-			"links": [],
 			"options": {
 				"colorMode": "value",
 				"graphMode": "area",
@@ -89,10 +87,12 @@
 					"fields": "",
 					"values": false
 				},
+				"showPercentChange": false,
 				"text": {},
-				"textMode": "auto"
+				"textMode": "auto",
+				"wideLayout": true
 			},
-			"pluginVersion": "9.0.0",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [
@@ -136,7 +136,9 @@
 					},
 					"custom": {
 						"align": "auto",
-						"displayMode": "auto",
+						"cellOptions": {
+							"type": "auto"
+						},
 						"inspect": false
 					},
 					"mappings": [],
@@ -215,7 +217,9 @@
 			},
 			"id": 31,
 			"options": {
+				"cellHeight": "sm",
 				"footer": {
+					"countRows": false,
 					"fields": "",
 					"reducer": ["sum"],
 					"show": false
@@ -223,7 +227,7 @@
 				"showHeader": true,
 				"sortBy": []
 			},
-			"pluginVersion": "9.0.0",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [
@@ -277,7 +281,9 @@
 					},
 					"custom": {
 						"align": "auto",
-						"displayMode": "auto",
+						"cellOptions": {
+							"type": "auto"
+						},
 						"inspect": false
 					},
 					"mappings": [],
@@ -380,7 +386,9 @@
 			},
 			"id": 44,
 			"options": {
+				"cellHeight": "sm",
 				"footer": {
+					"countRows": false,
 					"fields": "",
 					"reducer": ["sum"],
 					"show": false
@@ -388,7 +396,7 @@
 				"showHeader": true,
 				"sortBy": []
 			},
-			"pluginVersion": "9.0.0",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [
@@ -611,13 +619,13 @@
 				"y": 7
 			},
 			"id": 23,
-			"links": [],
 			"maxDataPoints": 3,
 			"options": {
 				"legend": {
 					"calcs": [],
 					"displayMode": "table",
 					"placement": "right",
+					"showLegend": true,
 					"values": ["value"]
 				},
 				"pieType": "pie",
@@ -678,57 +686,87 @@
 			"type": "piechart"
 		},
 		{
-			"aliasColors": {},
-			"bars": true,
-			"dashLength": 10,
-			"dashes": false,
 			"datasource": {
 				"type": "elasticsearch",
 				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
 				"defaults": {
-					"links": []
+					"color": {
+						"mode": "palette-classic"
+					},
+					"custom": {
+						"axisBorderShow": false,
+						"axisCenteredZero": false,
+						"axisColorMode": "text",
+						"axisLabel": "",
+						"axisPlacement": "auto",
+						"barAlignment": 0,
+						"drawStyle": "bars",
+						"fillOpacity": 100,
+						"gradientMode": "none",
+						"hideFrom": {
+							"legend": false,
+							"tooltip": false,
+							"viz": false
+						},
+						"insertNulls": false,
+						"lineInterpolation": "linear",
+						"lineWidth": 1,
+						"pointSize": 5,
+						"scaleDistribution": {
+							"type": "linear"
+						},
+						"showPoints": "never",
+						"spanNulls": false,
+						"stacking": {
+							"group": "A",
+							"mode": "normal"
+						},
+						"thresholdsStyle": {
+							"mode": "off"
+						}
+					},
+					"decimals": -1,
+					"links": [],
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					},
+					"unit": "short"
 				},
 				"overrides": []
 			},
-			"fill": 1,
-			"fillGradient": 0,
 			"gridPos": {
 				"h": 12,
 				"w": 18,
 				"x": 6,
 				"y": 7
 			},
-			"hiddenSeries": false,
 			"id": 10,
-			"legend": {
-				"alignAsTable": true,
-				"avg": false,
-				"current": false,
-				"max": false,
-				"min": false,
-				"rightSide": true,
-				"show": true,
-				"total": false,
-				"values": false
-			},
-			"lines": false,
-			"linewidth": 1,
-			"links": [],
-			"nullPointMode": "null",
 			"options": {
-				"alertThreshold": true
+				"legend": {
+					"calcs": [],
+					"displayMode": "table",
+					"placement": "right",
+					"showLegend": true
+				},
+				"tooltip": {
+					"mode": "multi",
+					"sort": "none"
+				}
 			},
-			"percentage": false,
-			"pluginVersion": "9.0.0",
-			"pointradius": 5,
-			"points": false,
-			"renderer": "flot",
-			"seriesOverrides": [],
-			"spaceLength": 10,
-			"stack": true,
-			"steppedLine": false,
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [
@@ -770,37 +808,8 @@
 					"timeField": "timestamp"
 				}
 			],
-			"thresholds": [],
-			"timeRegions": [],
 			"title": "TOP 10 AGENTS - HISTOGRAM",
-			"tooltip": {
-				"shared": true,
-				"sort": 0,
-				"value_type": "individual"
-			},
-			"type": "graph",
-			"xaxis": {
-				"mode": "time",
-				"show": true,
-				"values": []
-			},
-			"yaxes": [
-				{
-					"decimals": -1,
-					"format": "short",
-					"logBase": 1,
-					"show": true
-				},
-				{
-					"decimals": -1,
-					"format": "short",
-					"logBase": 1,
-					"show": true
-				}
-			],
-			"yaxis": {
-				"align": false
-			}
+			"type": "timeseries"
 		},
 		{
 			"datasource": {
@@ -983,13 +992,13 @@
 				"y": 19
 			},
 			"id": 45,
-			"links": [],
 			"maxDataPoints": 3,
 			"options": {
 				"legend": {
 					"calcs": [],
-					"displayMode": "hidden",
+					"displayMode": "list",
 					"placement": "right",
+					"showLegend": false,
 					"values": ["value"]
 				},
 				"pieType": "donut",
@@ -1065,7 +1074,9 @@
 					},
 					"custom": {
 						"align": "auto",
-						"displayMode": "auto",
+						"cellOptions": {
+							"type": "auto"
+						},
 						"inspect": false
 					},
 					"decimals": 0,
@@ -1257,10 +1268,11 @@
 				"y": 19
 			},
 			"id": 46,
-			"links": [],
 			"maxDataPoints": 3,
 			"options": {
+				"cellHeight": "sm",
 				"footer": {
+					"countRows": false,
 					"fields": "",
 					"reducer": ["sum"],
 					"show": false
@@ -1268,7 +1280,7 @@
 				"showHeader": true,
 				"sortBy": []
 			},
-			"pluginVersion": "9.0.0",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [
@@ -1531,13 +1543,13 @@
 				"y": 19
 			},
 			"id": 47,
-			"links": [],
 			"maxDataPoints": 3,
 			"options": {
 				"legend": {
 					"calcs": [],
 					"displayMode": "table",
 					"placement": "right",
+					"showLegend": true,
 					"values": ["value"]
 				},
 				"pieType": "donut",
@@ -1614,14 +1626,18 @@
 					},
 					"custom": {
 						"align": "auto",
-						"displayMode": "auto"
+						"cellOptions": {
+							"type": "auto"
+						},
+						"inspect": false
 					},
 					"mappings": [],
 					"thresholds": {
 						"mode": "absolute",
 						"steps": [
 							{
-								"color": "semi-dark-orange"
+								"color": "semi-dark-orange",
+								"value": null
 							}
 						]
 					}
@@ -1703,8 +1719,11 @@
 								"value": "Not Applicable"
 							},
 							{
-								"id": "custom.displayMode",
-								"value": "color-background-solid"
+								"id": "custom.cellOptions",
+								"value": {
+									"mode": "basic",
+									"type": "color-background"
+								}
 							},
 							{
 								"id": "mappings",
@@ -1776,7 +1795,9 @@
 			},
 			"id": 27,
 			"options": {
+				"cellHeight": "sm",
 				"footer": {
+					"countRows": false,
 					"fields": "",
 					"reducer": ["sum"],
 					"show": false
@@ -1784,7 +1805,7 @@
 				"showHeader": true,
 				"sortBy": []
 			},
-			"pluginVersion": "8.4.3",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [],
@@ -1860,8 +1881,7 @@
 		}
 	],
 	"refresh": false,
-	"schemaVersion": 36,
-	"style": "dark",
+	"schemaVersion": 39,
 	"tags": ["EDR"],
 	"templating": {
 		"list": [
@@ -1916,7 +1936,5 @@
 	},
 	"timezone": "",
 	"title": "EDR - SYSTEM SECURITY AUDIT",
-	"uid": null,
-	"version": 2,
 	"weekStart": ""
 }

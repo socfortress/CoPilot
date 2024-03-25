@@ -1,5 +1,7 @@
+import asyncio
+
+# from fastapi import BackgroundTasks
 from fastapi import APIRouter
-from fastapi import BackgroundTasks
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Security
@@ -218,7 +220,7 @@ async def get_agent_by_hostname(
     ],
 )
 async def sync_all_agents(
-    backgroud_tasks: BackgroundTasks,
+    # backgroud_tasks: BackgroundTasks,
     session: AsyncSession = Depends(get_db),
 ) -> SyncedAgentsResponse:
     """
@@ -236,7 +238,9 @@ async def sync_all_agents(
 
     """
     logger.info("Syncing agents from Wazuh Manager")
-    backgroud_tasks.add_task(sync_agents, session)
+    # backgroud_tasks.add_task(sync_agents, session)
+    loop = asyncio.get_event_loop()
+    loop.create_task(sync_agents(session=session))
     return SyncedAgentsResponse(
         success=True,
         message="Agents synced started successfully",

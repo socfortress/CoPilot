@@ -61,7 +61,7 @@ class GraylogIndicesResponse(BaseModel):
 
 class ConfiguredInputAttributes(BaseModel):
     recv_buffer_size: int
-    tcp_keepalive: bool
+    tcp_keepalive: Optional[bool] = Field(None, description="TCP keepalive")
     use_null_delimiter: Optional[bool]
     number_worker_threads: int
     tls_client_auth_cert_file: Optional[str]
@@ -72,10 +72,10 @@ class ConfiguredInputAttributes(BaseModel):
     expand_structured_data: Optional[bool]
     port: int
     tls_key_file: Optional[str]
-    tls_enable: bool
+    tls_enable: Optional[bool] = Field(None, description="TLS is enabled")
     tls_key_password: Optional[str]
     max_message_size: Optional[int]
-    tls_client_auth: str
+    tls_client_auth: Optional[str] = Field(None, description="TLS client authentication")
     override_source: Optional[str]
     charset_name: Optional[str]
     allow_override_date: Optional[bool]
@@ -97,7 +97,7 @@ class ConfiguredInput(BaseModel):
 
 class MessageInputAttributes(BaseModel):
     recv_buffer_size: int
-    tcp_keepalive: bool
+    tcp_keepalive: Optional[bool] = Field(None, description="TCP keepalive")
     use_null_delimiter: Optional[bool]
     number_worker_threads: int
     tls_client_auth_cert_file: Optional[str]
@@ -105,10 +105,10 @@ class MessageInputAttributes(BaseModel):
     tls_cert_file: Optional[str]
     port: int
     tls_key_file: Optional[str]
-    tls_enable: bool
+    tls_enable: Optional[bool] = Field(None, description="TLS is enabled")
     tls_key_password: Optional[str]
     max_message_size: Optional[int]
-    tls_client_auth: str
+    tls_client_auth: Optional[str] = Field(None, description="TLS client authentication")
 
 
 class MessageInput(BaseModel):
