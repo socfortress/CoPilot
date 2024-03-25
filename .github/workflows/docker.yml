@@ -2,7 +2,7 @@ name: Docker
 
 on:
     push:
-        branches: [reporting]
+        branches: [main]
 
 jobs:
     build-backend:
@@ -27,8 +27,7 @@ jobs:
               with:
                   context: ./backend
                   push: true
-                  tags: ghcr.io/socfortress/copilot-backend:test_auto
-                  #tags: ghcr.io/socfortress/copilot-backend:latest
+                  tags: ghcr.io/socfortress/copilot-backend:latest
                   build-args: |
                       CRYPTOLENS_AUTH=${{ secrets.CRYPTOLENS_AUTH }}
                       RSA_PUBLIC_KEY=${{ secrets.RSA_PUBLIC_KEY }}
@@ -56,5 +55,4 @@ jobs:
               with:
                   context: ./frontend
                   push: true
-                  tags: ghcr.io/socfortress/copilot-frontend:test_auto
-                  #tags: ghcr.io/socfortress/copilot-frontend:latest
+                  tags: ghcr.io/socfortress/copilot-frontend:latest
