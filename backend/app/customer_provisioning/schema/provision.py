@@ -208,6 +208,10 @@ class ProvisionDashboardRequest(BaseModel):
         ...,
         description="UID of the Grafana datasource",
     )
+    grafana_folder_id: int = Field(
+        ...,
+        description="ID of the Grafana folder",
+    )
 
 class ProvisionDashboardResponse(BaseModel):
     message: str = Field(

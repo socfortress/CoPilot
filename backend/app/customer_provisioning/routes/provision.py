@@ -10,6 +10,7 @@ from sqlalchemy.future import select
 from app.auth.utils import AuthHandler
 from app.connectors.grafana.schema.dashboards import WazuhDashboard
 from app.customer_provisioning.schema.provision import CustomerProvisionResponse
+from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
 from app.customer_provisioning.schema.provision import CustomersMetaResponse
 from app.customer_provisioning.schema.provision import CustomerSubsctipion
 from app.customer_provisioning.schema.provision import GetDashboardsResponse
@@ -353,5 +354,12 @@ async def provision_dashboards_route(
         ProvisionDashboardsResponse: The response data for the provisioned dashboards.
     """
     logger.info("Provisioning dashboards")
-    return await provision_dashboards(request, session=session)
+    return await provision_dashboards(DashboardProvisionRequest
+    (
+        dashboards=request.dashboards_to_include.dashboards,
+        organizationId=request.grafana_org_id,
+        folderId=request.grafana_folder_id,
+        datasourceUid=request.grafana_datasource_uid,
+    ))
+
 
