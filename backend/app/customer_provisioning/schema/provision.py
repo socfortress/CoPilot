@@ -199,6 +199,33 @@ class ProvisionDashboardRequest(BaseModel):
     dashboards_to_include: DashboardProvisionRequest = Field(
         ...,
         description="Dashboards to include in the customer's Grafana instance",
+        example={
+            "dashboards": [
+                "WAZUH_SUMMARY",
+                "EDR_WINDOWS_EVENT_LOGS",
+                "EDR_WAZUH_INVENOTRY",
+                "EDR_USERS_AND_GROUPS",
+                "EDR_SYSTEM_VULNERABILITIES",
+                "EDR_SYSTEM_SECURITY_AUDIT",
+                "EDR_SYSTEM_PROCESSES",
+                "EDR_PROCESS_INJECTION",
+                "EDR_OPEN_AUDIT",
+                "EDR_NETWORK_SCAN",
+                "EDR_NETWORK_CONNECTIONS",
+                "EDR_MITRE",
+                "EDR_FIM",
+                "EDR_DOCKER_MONITORING",
+                "EDR_DNS_REQUESTS",
+                "EDR_DLL_SIDE_LOADING",
+                "EDR_COMPLIANCE",
+                "EDR_AV_MALWARE_IOC",
+                "EDR_AGENT_INVENTORY",
+                "EDR_AD_INVENOTRY"
+            ],
+            "organizationId": 1,
+            "folderId": 1,
+            "datasourceUid": "wazuh"
+        },
     )
     grafana_org_id: int = Field(
         ...,
