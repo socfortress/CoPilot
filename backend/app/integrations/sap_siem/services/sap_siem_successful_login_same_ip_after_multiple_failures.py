@@ -63,6 +63,7 @@ async def handle_common_suspicious_login_tasks(
             hostname=suspicious_login.ip,
             rule_name="Rule:_Successful_login_after_multiple_failed_logins",
             affected_user=suspicious_login.loginID,
+            alert_type="user",
         ),
         session=session,
     )

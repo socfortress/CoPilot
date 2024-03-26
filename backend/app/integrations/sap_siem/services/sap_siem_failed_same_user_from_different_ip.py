@@ -63,6 +63,7 @@ async def handle_common_suspicious_login_tasks(
             hostname=suspicious_login.ip,
             rule_name="Rule:_Same_user_from_different_IP_addresses",
             affected_user=suspicious_login.loginID,
+            alert_type="user",
         ),
         session=session,
     )
