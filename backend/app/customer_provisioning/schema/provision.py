@@ -61,16 +61,16 @@ class ProvisionNewCustomer(BaseModel):
         ...,
         description="Dashboards to include in the customer's Grafana instance",
     )
-    wazuh_auth_password: str = Field(..., description="Password for the Wazuh API user")
-    wazuh_registration_port: str = Field(
-        ...,
+    wazuh_auth_password: Optional[str] = Field("n/a", description="Password for the Wazuh API user")
+    wazuh_registration_port: Optional[str] = Field(
+        "n/a",
         description="Port for the Wazuh registration service",
     )
-    wazuh_logs_port: str = Field(..., description="Port for the Wazuh logs service")
-    wazuh_api_port: str = Field(..., description="Port for the Wazuh API service")
-    wazuh_cluster_name: str = Field(..., description="Name of the Wazuh cluster")
-    wazuh_cluster_key: str = Field(..., description="Password for the Wazuh cluster")
-    wazuh_master_ip: str = Field(..., description="IP address of the Wazuh master")
+    wazuh_logs_port: Optional[str] = Field("n/a", description="Port for the Wazuh logs service")
+    wazuh_api_port: Optional[str] = Field("n/a", description="Port for the Wazuh API service")
+    wazuh_cluster_name: Optional[str] = Field("n/a", description="Name of the Wazuh cluster")
+    wazuh_cluster_key: Optional[str] = Field("n/a", description="Password for the Wazuh cluster")
+    wazuh_master_ip: Optional[str] = Field("n/a", description="IP address of the Wazuh master")
     grafana_url: str = Field(..., description="URL of the Grafana instance")
     only_insert_into_db: Optional[bool] = Field(
         False,
@@ -91,6 +91,14 @@ class ProvisionNewCustomer(BaseModel):
     wazuh_worker_hostname: Optional[str] = Field(
         None,
         description="Hostname of the Wazuh worker",
+    )
+    provision_wazuh_worker: bool = Field(
+        False,
+        description="Whether to provision a Wazuh worker for the customer",
+    )
+    provision_ha_proxy: bool = Field(
+        False,
+        description="Whether to provision an HAProxy for the customer",
     )
 
     @validator("customer_index_name")
