@@ -61,7 +61,7 @@ async def handle_common_suspicious_login_tasks(
             alert_source_link=f"{alert_source_link}/case?cid={case.data.case_id}",
             rule_description=f"{case.data.case_name}",
             hostname=suspicious_login.ip,
-            rule_name="Rule: Same user from different IP addresses",
+            rule_name="Rule:_Same_user_from_different_IP_addresses",
             affected_user=suspicious_login.loginID,
         ),
         session=session,
