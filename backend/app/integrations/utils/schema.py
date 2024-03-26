@@ -193,6 +193,9 @@ class ShufflePayload(BaseModel):
         examples="test-hostname",
     )
 
+    class Config:
+        extra = Extra.allow
+
     def to_dict(self):
         return self.dict(exclude_none=True)
 

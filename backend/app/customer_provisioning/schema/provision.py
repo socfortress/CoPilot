@@ -189,3 +189,30 @@ class ProvisionHaProxyRequest(BaseModel):
         example="worker1",
         description="The hostname of the Wazuh worker",
     )
+
+class ProvisionDashboardRequest(BaseModel):
+    customer_name: str = Field(
+        ...,
+        example="SOCFortress",
+        description="The name of the customer",
+    )
+    dashboards_to_include: DashboardProvisionRequest = Field(
+        ...,
+        description="Dashboards to include in the customer's Grafana instance",
+    )
+    grafana_org_id: int = Field(
+        ...,
+        description="ID of the Grafana organization",
+    )
+    grafana_datasource_uid: str = Field(
+        ...,
+        description="UID of the Grafana datasource",
+    )
+
+class ProvisionDashboardResponse(BaseModel):
+    message: str = Field(
+        ...,
+        description="Message indicating the status of the request",
+    )
+    success: bool = Field(..., description="Whether the request was successful or not")
+
