@@ -11,6 +11,7 @@ from app.connectors.graylog.schema.monitoring import GraylogEventNotificationsRe
 from app.connectors.graylog.services.collector import get_url_whitelist_entries
 from app.connectors.graylog.utils.universal import send_post_request
 from app.connectors.graylog.utils.universal import send_put_request
+from app.stack_provisioning.graylog.routes.provision import get_graylog_version
 from app.integrations.monitoring_alert.schema.provision import (
     CustomMonitoringAlertProvisionModel,
 )
@@ -244,6 +245,14 @@ async def provision_alert_definition(
     Returns:
         bool: True if the alert definition was provisioned successfully, False otherwise.
     """
+    # If the graylog version is less than 5.2, remove the `event_limit` key from the config
+    graylog_version = await get_graylog_version()
+    logger.info(f"Graylog version: {graylog_version}")
+    if graylog_version < "5.2":
+        logger.info("Graylog version is less than 5.2. Removing event_limit from config")
+        if hasattr(alert_definition_model.config, 'event_limit'):
+            delattr(alert_definition_model.config, 'event_limit')
+
     response = await send_post_request(
         endpoint="/api/events/definitions",
         data=alert_definition_model.dict(),
@@ -297,75 +306,75 @@ async def provision_wazuh_monitoring_alert(
                 },
             ),
         )
-        logger.info(f"SEND TO COPILOT Webhook provisioned with id: {notification_id}")
-        await provision_alert_definition(
-            GraylogAlertProvisionModel(
-                title="WAZUH SYSLOG LEVEL ALERT",
-                description="Alert on Wazuh syslog level equal to ALERT",
-                priority=2,
-                config=GraylogAlertProvisionConfig(
-                    type="aggregation-v1",
-                    query="syslog_level:ALERT AND syslog_type:wazuh AND NOT (rule_group1:office365 OR rule_group1:vulnerability-detector)",
-                    query_parameters=[],
-                    streams=[],
-                    group_by=[],
-                    series=[],
-                    conditions={
-                        "expression": None,
-                    },
-                    search_within_ms=await convert_seconds_to_milliseconds(
-                        request.search_within_last,
-                    ),
-                    execute_every_ms=await convert_seconds_to_milliseconds(
-                        request.execute_every,
-                    ),
-                    event_limit=1000,
-                ),
-                field_spec={
-                    "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
-                        data_type="string",
-                        providers=[
-                            GraylogAlertProvisionProvider(
-                                type="template-v1",
-                                template="${source._id}",
-                                require_values=True,
-                            ),
-                        ],
-                    ),
-                    "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
-                        data_type="string",
-                        providers=[
-                            GraylogAlertProvisionProvider(
-                                type="template-v1",
-                                template="${source.agent_labels_customer}",
-                                require_values=True,
-                            ),
-                        ],
-                    ),
-                    "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
-                        data_type="string",
-                        providers=[
-                            GraylogAlertProvisionProvider(
-                                type="template-v1",
-                                template="WAZUH",
-                                require_values=True,
-                            ),
-                        ],
-                    ),
+    notification_id = await get_notification_id("SEND TO COPILOT")
+    await provision_alert_definition(
+        GraylogAlertProvisionModel(
+            title="WAZUH SYSLOG LEVEL ALERT",
+            description="Alert on Wazuh syslog level equal to ALERT",
+            priority=2,
+            config=GraylogAlertProvisionConfig(
+                type="aggregation-v1",
+                query="syslog_level:ALERT AND syslog_type:wazuh AND NOT (rule_group1:office365 OR rule_group1:vulnerability-detector)",
+                query_parameters=[],
+                streams=[],
+                group_by=[],
+                series=[],
+                conditions={
+                    "expression": None,
                 },
-                key_spec=[],
-                notification_settings=GraylogAlertProvisionNotificationSettings(
-                    grace_period_ms=0,
-                    backlog_size=None,
+                search_within_ms=await convert_seconds_to_milliseconds(
+                    request.search_within_last,
                 ),
-                notifications=[
-                    GraylogAlertProvisionNotification(
-                        notification_id=notification_id,
-                    ),
-                ],
-                alert=True,
+                execute_every_ms=await convert_seconds_to_milliseconds(
+                    request.execute_every,
+                ),
+                event_limit=1000,
             ),
-        )
+            field_spec={
+                "ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(
+                            type="template-v1",
+                            template="${source._id}",
+                            require_values=True,
+                        ),
+                    ],
+                ),
+                "CUSTOMER_CODE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(
+                            type="template-v1",
+                            template="${source.agent_labels_customer}",
+                            require_values=True,
+                        ),
+                    ],
+                ),
+                "ALERT_SOURCE": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(
+                            type="template-v1",
+                            template="WAZUH",
+                            require_values=True,
+                        ),
+                    ],
+                ),
+            },
+            key_spec=[],
+            notification_settings=GraylogAlertProvisionNotificationSettings(
+                grace_period_ms=0,
+                backlog_size=None,
+            ),
+            notifications=[
+                GraylogAlertProvisionNotification(
+                    notification_id=notification_id,
+                ),
+            ],
+            alert=True,
+        ),
+    )
 
     return ProvisionWazuhMonitoringAlertResponse(
         success=True,
