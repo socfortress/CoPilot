@@ -109,6 +109,11 @@ class LicenseResponse(BaseModel):
     sign_date: dt
     reseller: Optional[Any]
 
+class VerifyLicenseResponse(BaseModel):
+    license: LicenseResponse
+    success: bool
+    message: str
+
 class GetLicenseResponse(BaseModel):
     license_key: str
     success: bool
@@ -243,6 +248,7 @@ async def get_license(session: AsyncSession) -> License:
         raise HTTPException(status_code=404, detail="No license found")
 
 def check_license(license: License):
+    logger.info(f"Checking license: {license}")
     result, _ = Key.activate(
         token=get_auth_token(),
         rsa_pub_key=get_rsa_pub_key(),
@@ -361,7 +367,7 @@ async def extend_license_key(period: int, session: AsyncSession = Depends(get_db
         license = await get_license(session)
         logger.info(f"License: {license}")
         result = extend_license(license, period)
-        return result
+        return {"message": "License extended successfully", "success": True}
     except Exception as e:
         logger.error(e)
         raise HTTPException(status_code=400, detail="License extension failed")
@@ -369,10 +375,10 @@ async def extend_license_key(period: int, session: AsyncSession = Depends(get_db
 
 @license_router.get(
     "/verify_license",
-    response_model=LicenseResponse,
+    response_model=VerifyLicenseResponse,
     description="Verify a license key",
 )
-async def verify_license_key(session: AsyncSession = Depends(get_db)) -> LicenseResponse:
+async def verify_license_key(session: AsyncSession = Depends(get_db)) -> VerifyLicenseResponse:
     """ "
     Verify a license key.
 
@@ -390,7 +396,7 @@ async def verify_license_key(session: AsyncSession = Depends(get_db)) -> License
         logger.info(result)
         if is_license_expired(result):
             raise HTTPException(status_code=400, detail="License is expired")
-        return result
+        return VerifyLicenseResponse(license=result, success=True, message="License verified successfully")
     except Exception as e:
         logger.error(e)
         raise HTTPException(status_code=400, detail="License verification failed")
