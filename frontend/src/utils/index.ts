@@ -2,6 +2,7 @@ import Icon from "@/components/common/Icon.vue"
 import { type Component, h } from "vue"
 import { isMobile as detectMobile } from "detect-touch-device"
 import { md5 } from "js-md5"
+import dayjs from "@/utils/dayjs"
 
 export type OS = "Unknown" | "Windows" | "MacOS" | "UNIX" | "Linux"
 
@@ -78,4 +79,15 @@ export const delay = (t: number) => {
 
 export const hashMD5 = (text: number | string) => {
 	return md5(text.toString())
+}
+
+export function formatDate(date: Date | string | number, format: string) {
+	let parsedDate = date
+	if (typeof date === "number" && date.toString().length === 10) {
+		parsedDate = date * 1000
+	}
+	const datejs = dayjs(parsedDate)
+	if (!datejs.isValid()) return date
+
+	return datejs.format(format)
 }

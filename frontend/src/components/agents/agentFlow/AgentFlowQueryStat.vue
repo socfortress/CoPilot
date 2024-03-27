@@ -3,11 +3,11 @@
 		<div class="header-box flex justify-between items-center gap-3">
 			<div class="id grow flex flex-wrap gap-2">
 				<span>
-					{{ formatDate(stat.first_active) }}
+					{{ formatDate(stat.first_active, dFormats.datetimesecmill) }}
 				</span>
 				<span>•</span>
 				<span>
-					{{ formatDate(stat.last_active) }}
+					{{ formatDate(stat.last_active, dFormats.datetimesecmill) }}
 				</span>
 			</div>
 			<div class="actions whitespace-nowrap">
@@ -91,6 +91,7 @@
 import { NModal, NTabs, NTabPane, NInput, NButton } from "naive-ui"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
+import { formatDate } from "@/utils"
 import type { FlowQueryStat } from "@/types/flow.d"
 import Icon from "@/components/common/Icon.vue"
 import KVCard from "@/components/common/KVCard.vue"
@@ -119,10 +120,6 @@ const properties = computed(() => {
 		"total_queries"
 	])
 })
-
-function formatDate(timestamp: number): string {
-	return dayjs(timestamp / 1000).format(dFormats.datetimesecmill)
-}
 </script>
 
 <style lang="scss" scoped>

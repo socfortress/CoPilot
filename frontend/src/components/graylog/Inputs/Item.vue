@@ -7,7 +7,7 @@
 					{{ input.creator_user_id }}
 				</div>
 			</div>
-			<div class="time">{{ formatDate(input.created_at) }}</div>
+			<div class="time">{{ formatDateTime(input.created_at) }}</div>
 			<n-button size="small" @click.stop="showDetails = true">
 				<template #icon>
 					<Icon :name="InfoIcon"></Icon>
@@ -34,7 +34,7 @@
 								<template #label>Running</template>
 							</Badge>
 						</template>
-						{{ formatDate(input.started_at) }}
+						{{ formatDateTime(input.started_at) }}
 					</n-tooltip>
 				</div>
 			</div>
@@ -62,7 +62,7 @@
 				</n-button>
 			</div>
 
-			<div class="time">{{ formatDate(input.created_at) }}</div>
+			<div class="time">{{ formatDateTime(input.created_at) }}</div>
 		</div>
 
 		<n-modal
@@ -119,13 +119,13 @@
 import { useSettingsStore } from "@/stores/settings"
 import Icon from "@/components/common/Icon.vue"
 import Badge from "@/components/common/Badge.vue"
-import dayjs from "@/utils/dayjs"
 import { NModal, NButton, useMessage, NTooltip, NTabs, NTabPane } from "naive-ui"
 import { computed, ref } from "vue"
 import { SimpleJsonViewer } from "vue-sjv"
 import "@/assets/scss/vuesjv-override.scss"
 import Api from "@/api"
 import type { InputExtended } from "@/types/graylog/inputs.d"
+import { formatDate } from "@/utils"
 
 const emit = defineEmits<{
 	(e: "updated"): void
@@ -147,8 +147,8 @@ const showDetails = ref(false)
 const isRunning = computed(() => input?.state === "RUNNING")
 const dFormats = useSettingsStore().dateFormat
 
-function formatDate(timestamp: string): string {
-	return dayjs(timestamp).format(dFormats.datetimesec)
+function formatDateTime(timestamp: string): string {
+	return formatDate(timestamp, dFormats.datetimesec).toString()
 }
 
 function stop() {

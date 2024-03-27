@@ -12,7 +12,7 @@
 					<template #trigger>
 						<div class="flex items-center gap-2 cursor-help">
 							<span>
-								{{ formatDate(flow.start_time) }}
+								{{ formatDate(flow.start_time, dFormats.datetimesec) }}
 							</span>
 							<Icon :name="TimeIcon" :size="16"></Icon>
 						</div>
@@ -57,7 +57,7 @@
 			</div>
 		</div>
 		<div class="footer-box">
-			<div class="time">{{ formatDate(flow.start_time) }}</div>
+			<div class="time">{{ formatDate(flow.start_time, dFormats.datetimesec) }}</div>
 		</div>
 
 		<n-modal
@@ -152,6 +152,7 @@
 import { NPopover, NModal, NTabs, NTabPane, NEmpty, NScrollbar, NInput } from "naive-ui"
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
+import { formatDate } from "@/utils"
 import type { FlowResult } from "@/types/flow.d"
 import Icon from "@/components/common/Icon.vue"
 import AgentFlowTimeline from "./AgentFlowTimeline.vue"
@@ -191,10 +192,6 @@ const properties = computed(() => {
 		"user_notified"
 	])
 })
-
-function formatDate(timestamp: number): string {
-	return dayjs(timestamp / 1000).format(dFormats.datetimesec)
-}
 </script>
 
 <style lang="scss" scoped>

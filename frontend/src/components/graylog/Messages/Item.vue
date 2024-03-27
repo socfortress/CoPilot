@@ -2,13 +2,13 @@
 	<div class="item flex flex-col gap-2 px-5 py-3">
 		<div class="header-box flex justify-between">
 			<div class="caller">{{ message.caller }}</div>
-			<div class="time">{{ formatDate(message.timestamp) }}</div>
+			<div class="time">{{ formatDate(message.timestamp, dFormats.datetimesec) }}</div>
 		</div>
 		<div class="main-box">
 			<div class="content">{{ message.content }}</div>
 		</div>
 		<div class="footer-box">
-			<div class="time">{{ formatDate(message.timestamp) }}</div>
+			<div class="time">{{ formatDate(message.timestamp, dFormats.datetimesec) }}</div>
 		</div>
 	</div>
 </template>
@@ -16,15 +16,11 @@
 <script setup lang="ts">
 import { type Message } from "@/types/graylog/index.d"
 import { useSettingsStore } from "@/stores/settings"
-import dayjs from "@/utils/dayjs"
+import { formatDate } from "@/utils"
 
 const { message } = defineProps<{ message: Message }>()
 
 const dFormats = useSettingsStore().dateFormat
-
-function formatDate(timestamp: string): string {
-	return dayjs(timestamp).format(dFormats.datetimesec)
-}
 </script>
 
 <style lang="scss" scoped>

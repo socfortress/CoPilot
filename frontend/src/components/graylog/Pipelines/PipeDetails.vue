@@ -7,7 +7,7 @@
 		</div>
 
 		<div class="time">
-			{{ formatDate(pipeline.modified_at) }}
+			{{ formatDate(pipeline.modified_at, dFormats.datetimesec) }}
 		</div>
 	</div>
 
@@ -46,7 +46,7 @@ import { computed, toRefs } from "vue"
 import type { PipelineFull, PipelineFullStage } from "@/types/graylog/pipelines.d"
 import Icon from "@/components/common/Icon.vue"
 import RulesSmallList, { type RuleExtended } from "./RulesSmallList.vue"
-import dayjs from "@/utils/dayjs"
+import { formatDate } from "@/utils"
 import { useSettingsStore } from "@/stores/settings"
 
 interface PipelineFullStageExt extends Omit<PipelineFullStage, "rules" | "rule_ids"> {
@@ -92,10 +92,6 @@ const stages = computed<PipelineFullStageExt[]>(() => {
 
 	return stages
 })
-
-function formatDate(timestamp: string): string {
-	return dayjs(timestamp).format(dFormats.datetimesec)
-}
 </script>
 
 <style lang="scss" scoped>
