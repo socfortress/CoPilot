@@ -5,6 +5,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
+from pydantic import UUID4
 
 
 class WorkflowsResponse(BaseModel):
@@ -46,3 +47,18 @@ class WorkflowExecutionResponseModel(BaseModel):
         ...,
         description="List of workflow objects",
     )
+
+class RequestWorkflowExecutionModel(BaseModel):
+    workflow_id: str = Field(..., description="Unique identifier for the workflow")
+    execution_argument: str = Field(..., description="Execution argument for the workflow")
+
+class ExecuteWorklow(BaseModel):
+    success: bool = Field(..., description="Indicates if the workflow execution was successful")
+    execution_id: UUID4 = Field(..., description="The unique identifier for the workflow execution")
+    authorization: UUID4 = Field(..., description="The authorization token for the workflow execution")
+
+class RequestWorkflowExecutionResponse(BaseModel):
+    message: str = Field(..., description="Response message")
+    success: bool = Field(..., description="Success status")
+    data: Dict[str, Any] = Field(..., description="Data object")
+
