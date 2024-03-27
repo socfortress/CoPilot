@@ -14,18 +14,18 @@
 					<template #trigger>
 						<div class="flex items-center gap-2 cursor-help">
 							<span>
-								{{ formatDate(rule.modified_at) }}
+								{{ formatDateTime(rule.modified_at) }}
 							</span>
 							<Icon :name="TimeIcon" :size="16"></Icon>
 						</div>
 					</template>
 					<div class="flex flex-col py-2 px-1">
 						<n-timeline>
-							<n-timeline-item type="success" title="Created" :time="formatDate(rule.created_at)" />
+							<n-timeline-item type="success" title="Created" :time="formatDateTime(rule.created_at)" />
 							<n-timeline-item
 								v-if="rule.modified_at"
 								title="Modified"
-								:time="formatDate(rule.modified_at)"
+								:time="formatDateTime(rule.modified_at)"
 							/>
 						</n-timeline>
 					</div>
@@ -38,7 +38,7 @@
 		</div>
 		<div class="footer-box flex justify-end items-center gap-3">
 			<div class="time">
-				{{ formatDate(rule.modified_at) }}
+				{{ formatDateTime(rule.modified_at) }}
 			</div>
 		</div>
 
@@ -54,11 +54,11 @@
 			<div class="p-7 pt-4">
 				<div class="mb-2">
 					Created:
-					<code>{{ formatDate(rule.created_at) }}</code>
+					<code>{{ formatDateTime(rule.created_at) }}</code>
 				</div>
 				<div class="mb-2">
 					Modified:
-					<code>{{ formatDate(rule.modified_at) }}</code>
+					<code>{{ formatDateTime(rule.modified_at) }}</code>
 				</div>
 				<div class="mb-2">
 					Errors :
@@ -86,7 +86,7 @@ import { NModal, NInput, NPopover, NTimeline, NTimelineItem } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import type { PipelineRule } from "@/types/graylog/pipelines.d"
 import { useSettingsStore } from "@/stores/settings"
-import dayjs from "@/utils/dayjs"
+import { formatDate } from "@/utils"
 
 const props = defineProps<{ rule: PipelineRule; highlight: boolean | null | undefined }>()
 const { rule, highlight } = toRefs(props)
@@ -97,8 +97,8 @@ const InfoIcon = "carbon:information"
 const showDetails = ref(false)
 const dFormats = useSettingsStore().dateFormat
 
-function formatDate(timestamp: string): string {
-	return dayjs(timestamp).format(dFormats.datetimesec)
+function formatDateTime(timestamp: string): string {
+	return formatDate(timestamp, dFormats.datetimesec).toString()
 }
 </script>
 

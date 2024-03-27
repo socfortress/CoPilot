@@ -17,6 +17,7 @@ import monitoringAlerts from "./monitoringAlerts"
 import activeResponse from "./activeResponse"
 import stackProvisioning from "./stackProvisioning"
 import reporting from "./reporting"
+import license from "./license"
 
 export default {
 	agents,
@@ -37,5 +38,6 @@ export default {
 	monitoringAlerts,
 	activeResponse,
 	stackProvisioning,
-	reporting
+	reporting,
+	license
 }

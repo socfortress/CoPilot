@@ -8,11 +8,15 @@
 				</div>
 				<div class="mb-2">
 					Created:
-					<code>{{ pipeline?.created_at ? formatDate(pipeline.created_at) : "-" }}</code>
+					<code>
+						{{ pipeline?.created_at ? formatDate(pipeline.created_at, dFormats.datetimesec) : "-" }}
+					</code>
 				</div>
 				<div class="mb-2">
 					Modified:
-					<code>{{ pipeline?.modified_at ? formatDate(pipeline.modified_at) : "-" }}</code>
+					<code>
+						{{ pipeline?.modified_at ? formatDate(pipeline.modified_at, dFormats.datetimesec) : "-" }}
+					</code>
 				</div>
 				<div class="mb-2">
 					Errors :
@@ -42,13 +46,9 @@ import { NTabs, NTabPane, NInput } from "naive-ui"
 import { toRefs } from "vue"
 import type { Pipeline } from "@/types/graylog/pipelines.d"
 import { useSettingsStore } from "@/stores/settings"
-import dayjs from "@/utils/dayjs"
+import { formatDate } from "@/utils"
 
 const props = defineProps<{ pipeline?: Pipeline }>()
 const { pipeline } = toRefs(props)
 const dFormats = useSettingsStore().dateFormat
-
-function formatDate(timestamp: string): string {
-	return dayjs(timestamp).format(dFormats.datetimesec)
-}
 </script>

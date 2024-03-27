@@ -60,11 +60,11 @@
 									</template>
 									<template #value>
 										<span class="flex">
-											{{ formatDate(commandTime) }}
+											{{ formatDate(commandTime, dFormats.timesec) }}
 
 											<n-spin :size="12" v-if="loading" class="ml-2" />
 
-											{{ responseTime ? " / " + formatDate(responseTime) : "" }}
+											{{ responseTime ? " / " + formatDate(responseTime, dFormats.timesec) : "" }}
 										</span>
 									</template>
 								</Badge>
@@ -124,6 +124,7 @@ import type { Artifact, CommandResult } from "@/types/artifacts.d"
 import dayjs from "@/utils/dayjs"
 import Icon from "@/components/common/Icon.vue"
 import { useSettingsStore } from "@/stores/settings"
+import { formatDate } from "@/utils"
 // import { commandResult } from "./mock"
 
 const emit = defineEmits<{
@@ -176,10 +177,6 @@ const agentHostnameOptions = computed(() => {
 const artifactsOptions = computed(() => {
 	return (artifactsList.value || []).map(o => ({ value: o.name, label: o.name }))
 })
-
-function formatDate(timestamp: string | Date): string {
-	return dayjs(timestamp).format(dFormats.timesec)
-}
 
 function getData() {
 	if (areFiltersValid.value) {

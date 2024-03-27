@@ -32,6 +32,7 @@ import KVCard from "@/components/common/KVCard.vue"
 import { onBeforeMount, ref } from "vue"
 import _isString from "lodash/isString"
 import _isNumber from "lodash/isNumber"
+import { formatDate } from "@/utils"
 
 interface Prop {
 	key: string
@@ -46,10 +47,6 @@ const displayData = ref<Prop[]>([])
 
 const showDetails = ref(false)
 const dFormats = useSettingsStore().dateFormat
-
-function formatDate(timestamp: string | number): string {
-	return dayjs(timestamp).format(dFormats.datetimesec)
-}
 
 onBeforeMount(() => {
 	for (const key in collect) {
@@ -68,7 +65,7 @@ onBeforeMount(() => {
 		}
 
 		if (prop.value && typeof prop.value === "string") {
-			prop.value = dayjs(value).isValid() ? formatDate(value) : value.toString()
+			prop.value = dayjs(value).isValid() ? formatDate(value, dFormats.datetimesec) : value.toString()
 		}
 
 		if (prop.value && typeof prop.value === "number") {
@@ -76,7 +73,7 @@ onBeforeMount(() => {
 
 			if (numText.length === 10 || numText.length === 13) {
 				if (dayjs(value).isValid()) {
-					prop.value = formatDate(value)
+					prop.value = formatDate(value, dFormats.datetimesec).toString()
 				}
 			}
 		}

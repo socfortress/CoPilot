@@ -35,7 +35,9 @@
 					</div>
 					<div class="item">
 						<div class="key">timestamp</div>
-						<div class="value">{{ response?.timestamp ? formatDate(response.timestamp) : "-" }}</div>
+						<div class="value">
+							{{ response?.timestamp ? formatDate(response.timestamp, dFormats.datetime) : "-" }}
+						</div>
 					</div>
 					<div class="item">
 						<div class="key">report_url</div>
@@ -66,10 +68,9 @@ import { ref, computed, onMounted } from "vue"
 import { useMessage, NSpin, NButton, NInput } from "naive-ui"
 import Api from "@/api"
 import _trim from "lodash/trim"
-import _toNumber from "lodash/toNumber"
 import type { ThreatIntelResponse } from "@/types/threatIntel.d"
 import { useSettingsStore } from "@/stores/settings"
-import dayjs from "@/utils/dayjs"
+import { formatDate } from "@/utils"
 
 const emit = defineEmits<{
 	(
@@ -101,13 +102,6 @@ function restore() {
 	loading.value = false
 	response.value = null
 	error.value = ""
-}
-
-const formatDate = (date: string) => {
-	const datejs = dayjs(_toNumber(date) * 1000)
-	if (!datejs.isValid()) return date
-
-	return datejs.format(dFormats.datetime)
 }
 
 function create() {
