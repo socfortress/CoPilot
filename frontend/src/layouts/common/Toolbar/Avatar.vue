@@ -12,6 +12,7 @@ import { ref, h } from "vue"
 import { useAuthStore } from "@/stores/auth"
 
 const UserIcon = "ion:person-outline"
+const LicenseIcon = "carbon:license"
 const LogoutIcon = "ion:log-out-outline"
 const ContactIcon = "ic:outline-alternate-email"
 
@@ -28,6 +29,11 @@ const options = ref([
 		label: "Profile",
 		key: "route-Profile",
 		icon: renderIcon(UserIcon)
+	},
+	{
+		label: "License",
+		key: "route-License",
+		icon: renderIcon(LicenseIcon)
 	},
 	{
 		label: () =>

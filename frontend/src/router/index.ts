@@ -147,6 +147,12 @@ const router = createRouter({
 			component: () => import("@/views/ReportCreation.vue"),
 			meta: { title: "Report Creation", auth: true, roles: UserRole.All }
 		},
+		{
+			path: "/license",
+			name: "License",
+			component: () => import("@/views/License.vue"),
+			meta: { title: "License", auth: true, roles: UserRole.All }
+		},
 
 		{
 			path: "/profile",
