@@ -142,17 +142,20 @@ async def wait_for_workflow_execution_results(execution: ExecuteWorklow):
     Function to get the workflow results until the status of `FINISHED` is reached.
     """
     logger.info(f"Retrieving workflow execution results for execution ID: {execution.execution_id}")
-    for i in range(5):
-        response = await send_post_request(
-            f"/api/v1/streams/results",
-            {"execution_id": str(execution.execution_id),
-             "authorization": str(execution.authorization)},
-        )
-        status = response.get('data', {}).get('status')
-        if status == "FINISHED":
-            logger.info(f"Workflow execution with ID {execution.execution_id} has finished")
-            return True
-        await asyncio.sleep(5)
+    for i in range(10):
+        try:
+            response = await send_post_request(
+                f"/api/v1/streams/results",
+                {"execution_id": str(execution.execution_id),
+                 "authorization": str(execution.authorization)},
+            )
+            status = response.get('data', {}).get('status')
+            if status == "FINISHED":
+                logger.info(f"Workflow execution with ID {execution.execution_id} has finished")
+                return True
+        except Exception as e:
+            logger.error(f"Error retrieving workflow execution results: {e}")
+        await asyncio.sleep(2 ** i)
     logger.info(f"Workflow execution with ID {execution.execution_id} did not finish after 5 attempts")
     raise HTTPException(
         status_code=500,
