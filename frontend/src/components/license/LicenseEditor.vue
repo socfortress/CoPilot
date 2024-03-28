@@ -1,6 +1,6 @@
 <template>
 	<n-spin :show="loading">
-		<div class="license-box" :class="{ loading: loadingLicense }">
+		<div class="license-box" :class="{ loading: loadingLicense && !licenseKey }">
 			<p class="flex gap-4 items-center" v-if="loadingLicense || licenseKey">
 				<span>your license:</span>
 				<Icon :name="LoadingIcon" v-if="loadingLicense"></Icon>

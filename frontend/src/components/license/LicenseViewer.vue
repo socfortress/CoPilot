@@ -45,7 +45,7 @@
 					<Icon :name="FeaturesIcon" :size="14"></Icon>
 					Features:
 				</div>
-				<div class="value">{{ featuresText }}</div>
+				<div class="value">{{ featuresText || "No feature enabled" }}</div>
 			</div>
 		</div>
 	</n-spin>
