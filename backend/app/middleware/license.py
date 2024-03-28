@@ -1,4 +1,5 @@
 import os
+import requests
 from datetime import datetime as dt
 from enum import Enum
 from typing import Any
@@ -21,6 +22,25 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.db_session import get_db
 from app.db.universal_models import License
+
+class ThreatIntelRegisterRequest(BaseModel):
+    """
+    A Pydantic model for registering to the SOCFortress Threat Intel Feed which
+        requires a valid API key.
+    """
+    customer_name: str = Field(..., description="The customer name")
+    requested_by: str = Field("CoPilot", description="The system requesting access")
+    registration_url: str = Field("https://intel.socfortress.co/register", description="The registration URL")
+    requesting_api_key: str = Field(os.getenv("COPILOT_API_KEY"), description="The requesting API key")
+
+class ThreatIntelRegisterResponse(BaseModel):
+    """
+    A Pydantic model for the response to registering to the SOCFortress Threat Intel Feed.
+    """
+    api_key: str = Field(..., description="The API key")
+    success: bool = Field(..., description="Indicates if the registration was successful")
+    message: str = Field(..., description="The message")
+
 
 
 class ReplaceLicenseRequest(BaseModel):
@@ -522,3 +542,19 @@ async def replace_license_in_db(request: ReplaceLicenseRequest, session: AsyncSe
     except Exception as e:
         logger.error(e)
         raise HTTPException(status_code=400, detail="License replacement failed")
+
+
+@license_router.post(
+    "/register_to_threat_intel",
+    description="Register to the SOCFortress Threat Intel Feed",
+)
+async def register_to_threat_intel(request: ThreatIntelRegisterRequest):
+    """
+    Register to the SOCFortress Threat Intel Feed.
+
+    Args:
+        request (ThreatIntelRegisterRequest): The request containing the customer name.
+
+    Returns:
+        ThreatIntelRegisterResponse: A Pydantic model containing the API key, success status, and message.
+    """
