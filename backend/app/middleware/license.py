@@ -64,6 +64,9 @@ class CreateCustomerKeyResult(BaseModel):
 
 class CreateCustomerKeyResponseModel(BaseModel):
     response: List[Optional[CreateCustomerKeyResult]]
+
+class CreateCustomerKeyRouteResponse(BaseModel):
+    response: List[Optional[CreateCustomerKeyResult]]
     success: bool = Field(..., title="Indicates if the key creation was successful")
     message: str = Field(..., title="The message")
 
@@ -220,7 +223,6 @@ def create_key(auth, request):
         email=request.email,
         company_name=request.company_name,
     )
-    logger.info(result)
     result = CreateCustomerKeyResponseModel(response=[result])
     return result
 
@@ -330,10 +332,10 @@ async def create_trial_license_key(request: CreateLicenseRequest, session: Async
 
 @license_router.post(
     "/create_new_key",
-    response_model=CreateCustomerKeyResponseModel,
+    response_model=CreateCustomerKeyRouteResponse,
     description="Create a new license key",
 )
-async def create_new_license_key(request: CreateLicenseRequest, session: AsyncSession = Depends(get_db)) -> CreateCustomerKeyResponseModel:
+async def create_new_license_key(request: CreateLicenseRequest, session: AsyncSession = Depends(get_db)) -> CreateCustomerKeyRouteResponse:
     """
     Create a new license key.
 
@@ -347,8 +349,9 @@ async def create_new_license_key(request: CreateLicenseRequest, session: AsyncSe
     await check_if_license_exists(session)
     auth = get_auth_token()
     result = create_key(auth, request)
+    logger.info(f"Result: {result}")
     await add_license_to_db(session, result, request)
-    return CreateCustomerKeyResponseModel(response=result.response, success=True, message="License created successfully")
+    return CreateCustomerKeyRouteResponse(response=result.response, success=True, message="License created successfully")
 
 
 @license_router.post(
