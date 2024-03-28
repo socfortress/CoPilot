@@ -8,6 +8,11 @@
 							<n-step title="Provisioning" />
 							<n-step title="Graylog" />
 							<n-step title="Subscription" />
+							<n-step title="Infrastructure">
+								<template #icon>
+									<Icon :name="SkipIcon" v-if="!isInfrastructureEnabled"></Icon>
+								</template>
+							</n-step>
 							<n-step title="Wazuh Worker">
 								<template #icon>
 									<Icon :name="SkipIcon" v-if="!isWazuhStepEnabled"></Icon>
@@ -131,7 +136,20 @@
 							</n-form-item>
 						</div>
 
-						<div v-else-if="current === 4" class="px-7 flex flex-wrap gap-3">
+						<div v-else-if="current === 4" class="px-7 flex gap-3">
+							<n-card class="grow">
+								<n-form-item label="Deploy HA Proxy" path="provision_ha_proxy">
+									<n-switch v-model:value="form.provision_ha_proxy" clearable />
+								</n-form-item>
+							</n-card>
+							<n-card class="grow">
+								<n-form-item label="Deploy Wazuh Worker" path="provision_wazuh_worker">
+									<n-switch v-model:value="form.provision_wazuh_worker" clearable />
+								</n-form-item>
+							</n-card>
+						</div>
+
+						<div v-else-if="current === 5" class="px-7 flex flex-wrap gap-3">
 							<n-form-item label="Auth Password" path="wazuh_auth_password" class="grow">
 								<n-input
 									v-model:value="form.wazuh_auth_password"
@@ -229,6 +247,8 @@ import {
 	NSelect,
 	NInputNumber,
 	NSpin,
+	NSwitch,
+	NCard,
 	type StepsProps,
 	type FormRules,
 	type FormInst,
@@ -277,11 +297,22 @@ const allDashboardsSelected = computed(
 	() => form.value.dashboards_to_include.dashboards.length === dashboardOptions.value.length
 )
 
-const isWazuhStepEnabled = computed(() => form.value.customer_subscription.map(o => o.toLowerCase()).includes("wazuh"))
-const isNextStepEnabled = computed(() => current.value < 3 || (current.value === 3 && isWazuhStepEnabled.value))
+const isInfrastructureEnabled = computed(() =>
+	form.value.customer_subscription.map(o => o.toLowerCase()).includes("wazuh")
+)
+const isWazuhStepEnabled = computed(() => isInfrastructureEnabled.value && form.value.provision_wazuh_worker)
+const isNextStepEnabled = computed(
+	() =>
+		current.value < 3 ||
+		(current.value === 3 && isInfrastructureEnabled.value) ||
+		(current.value === 4 && isWazuhStepEnabled.value)
+)
 const isPrevStepEnabled = computed(() => current.value > 1)
 const isSubmitEnabled = computed(
-	() => (current.value === 3 && !isWazuhStepEnabled.value) || (current.value === 4 && isWazuhStepEnabled.value)
+	() =>
+		(current.value === 3 && !isInfrastructureEnabled.value) ||
+		(current.value === 4 && !isWazuhStepEnabled.value) ||
+		(current.value === 5 && isWazuhStepEnabled.value)
 )
 const slideFormDirection = ref<"right" | "left">("right")
 
@@ -430,7 +461,9 @@ function getClearForm(settings?: CustomerProvisioningDefaultSettings): CustomerP
 		wazuh_cluster_name: settings?.cluster_name || "",
 		wazuh_cluster_key: settings?.cluster_key || "",
 		wazuh_master_ip: settings?.master_ip || "",
-		grafana_url: settings?.grafana_url || ""
+		grafana_url: settings?.grafana_url || "",
+		provision_wazuh_worker: false,
+		provision_ha_proxy: false
 	}
 }
 
