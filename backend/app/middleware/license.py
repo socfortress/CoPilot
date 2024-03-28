@@ -388,8 +388,8 @@ async def verify_license_key(session: AsyncSession = Depends(get_db)) -> VerifyL
     Returns:
         LicenseVerificationResponse: A Pydantic model containing the verification status and message.
     """
+    license = await get_license(session)
     try:
-        license = await get_license(session)
         logger.info(f"License: {license}")
         result = check_license(license)
         result = result.__dict__
@@ -433,8 +433,8 @@ async def get_license_features(session: AsyncSession = Depends(get_db)) -> GetLi
     Returns:
         dict: A dictionary containing the features enabled in the license.
     """
+    license = await get_license(session)
     try:
-        license = await get_license(session)
         license_details = LicenseResponse(**check_license(license).__dict__)
         features = {}
         for data_object in license_details.data_objects:
