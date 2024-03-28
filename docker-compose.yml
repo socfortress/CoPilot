@@ -5,7 +5,7 @@ services:
         image: ghcr.io/socfortress/copilot-backend:latest
         # Expose the Ports for Graylog Alerting and Docs
         ports:
-           - "5000:5000"
+            - "5000:5000"
         volumes:
             - ./data/copilot-backend-data/logs:/opt/logs
             # Mount the copilot.db file to persist the database

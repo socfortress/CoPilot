@@ -67,7 +67,6 @@ async def invoke_provision_wazuh_monitoring_alert(
     request: ProvisionMonitoringAlertRequest,
 ):
     # Provision the Wazuh monitoring alert
-    logger.info(f"Hi Taylor")
     await provision_wazuh_monitoring_alert(request)
     await add_scheduler_jobs(
         CreateSchedulerRequest(

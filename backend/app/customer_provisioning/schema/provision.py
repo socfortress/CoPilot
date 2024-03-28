@@ -198,6 +198,7 @@ class ProvisionHaProxyRequest(BaseModel):
         description="The hostname of the Wazuh worker",
     )
 
+
 class ProvisionDashboardRequest(BaseModel):
     customer_name: str = Field(
         ...,
@@ -228,11 +229,11 @@ class ProvisionDashboardRequest(BaseModel):
                 "EDR_COMPLIANCE",
                 "EDR_AV_MALWARE_IOC",
                 "EDR_AGENT_INVENTORY",
-                "EDR_AD_INVENOTRY"
+                "EDR_AD_INVENOTRY",
             ],
             "organizationId": 1,
             "folderId": 1,
-            "datasourceUid": "wazuh"
+            "datasourceUid": "wazuh",
         },
     )
     grafana_org_id: int = Field(
@@ -248,10 +249,10 @@ class ProvisionDashboardRequest(BaseModel):
         description="ID of the Grafana folder",
     )
 
+
 class ProvisionDashboardResponse(BaseModel):
     message: str = Field(
         ...,
         description="Message indicating the status of the request",
     )
     success: bool = Field(..., description="Whether the request was successful or not")
-

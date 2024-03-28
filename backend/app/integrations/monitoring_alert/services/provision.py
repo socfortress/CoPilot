@@ -11,7 +11,6 @@ from app.connectors.graylog.schema.monitoring import GraylogEventNotificationsRe
 from app.connectors.graylog.services.collector import get_url_whitelist_entries
 from app.connectors.graylog.utils.universal import send_post_request
 from app.connectors.graylog.utils.universal import send_put_request
-from app.stack_provisioning.graylog.routes.provision import get_graylog_version
 from app.integrations.monitoring_alert.schema.provision import (
     CustomMonitoringAlertProvisionModel,
 )
@@ -48,6 +47,7 @@ from app.integrations.monitoring_alert.schema.provision import (
 from app.integrations.monitoring_alert.schema.provision import (
     ProvisionWazuhMonitoringAlertResponse,
 )
+from app.stack_provisioning.graylog.routes.provision import get_graylog_version
 
 load_dotenv()
 import uuid
@@ -250,8 +250,8 @@ async def provision_alert_definition(
     logger.info(f"Graylog version: {graylog_version}")
     if graylog_version < "5.2":
         logger.info("Graylog version is less than 5.2. Removing event_limit from config")
-        if hasattr(alert_definition_model.config, 'event_limit'):
-            delattr(alert_definition_model.config, 'event_limit')
+        if hasattr(alert_definition_model.config, "event_limit"):
+            delattr(alert_definition_model.config, "event_limit")
 
     response = await send_post_request(
         endpoint="/api/events/definitions",

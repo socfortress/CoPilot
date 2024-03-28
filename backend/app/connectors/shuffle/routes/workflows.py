@@ -2,16 +2,19 @@ from fastapi import APIRouter
 from fastapi import HTTPException
 from fastapi import Security
 from loguru import logger
-from typing import Dict
 
 from app.auth.utils import AuthHandler
+from app.connectors.shuffle.schema.workflows import RequestWorkflowExecutionModel
+from app.connectors.shuffle.schema.workflows import RequestWorkflowExecutionResponse
 from app.connectors.shuffle.schema.workflows import WorkflowExecutionBodyModel
 from app.connectors.shuffle.schema.workflows import WorkflowExecutionResponseModel
-from app.connectors.shuffle.schema.workflows import WorkflowsResponse, RequestWorkflowExecutionModel, RequestWorkflowExecutionResponse
+from app.connectors.shuffle.schema.workflows import WorkflowsResponse
+from app.connectors.shuffle.services.workflows import execute_workflow
 from app.connectors.shuffle.services.workflows import get_workflow_executions
-from app.connectors.shuffle.services.workflows import get_workflows, execute_workflow
+from app.connectors.shuffle.services.workflows import get_workflows
 
 shuffle_workflows_router = APIRouter()
+
 
 async def validate_execution_id(workflow_id: str) -> bool:
     """
@@ -124,8 +127,5 @@ async def execute_workflow_request(
     return RequestWorkflowExecutionResponse(
         success=True,
         message="Successfully executed workflow",
-        data= await execute_workflow(workflow_execution_body),
+        data=await execute_workflow(workflow_execution_body),
     )
-
-
-

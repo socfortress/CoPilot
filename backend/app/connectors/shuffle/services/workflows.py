@@ -1,13 +1,16 @@
+import asyncio
 from typing import List
 
 from fastapi import HTTPException
 from loguru import logger
-import asyncio
 
+from app.connectors.shuffle.schema.workflows import ExecuteWorklow
+from app.connectors.shuffle.schema.workflows import RequestWorkflowExecutionModel
 from app.connectors.shuffle.schema.workflows import WorkflowExecutionBodyModel
-from app.connectors.shuffle.schema.workflows import WorkflowExecutionStatusResponseModel, RequestWorkflowExecutionModel, ExecuteWorklow
+from app.connectors.shuffle.schema.workflows import WorkflowExecutionStatusResponseModel
 from app.connectors.shuffle.schema.workflows import WorkflowsResponse
-from app.connectors.shuffle.utils.universal import send_get_request, send_post_request
+from app.connectors.shuffle.utils.universal import send_get_request
+from app.connectors.shuffle.utils.universal import send_post_request
 
 
 def remove_large_images_from_actions(workflows: List) -> List:
@@ -100,6 +103,7 @@ async def get_workflow_executions(
             detail=f"Failed to get workflow executions with error: {e}",
         )
 
+
 async def execute_workflow(workflow_execution_body: RequestWorkflowExecutionModel):
     """
     Execute a workflow.
@@ -114,10 +118,14 @@ async def execute_workflow(workflow_execution_body: RequestWorkflowExecutionMode
         HTTPException: If the workflow is not found.
     """
     logger.info(f"Executing workflow with ID: {workflow_execution_body.workflow_id}")
-    response = ExecuteWorklow(**(await send_post_request(
-        f"/api/v1/workflows/{workflow_execution_body.workflow_id}/execute",
-        {"execution_argument": workflow_execution_body.execution_argument},
-    ))['data'])
+    response = ExecuteWorklow(
+        **(
+            await send_post_request(
+                f"/api/v1/workflows/{workflow_execution_body.workflow_id}/execute",
+                {"execution_argument": workflow_execution_body.execution_argument},
+            )
+        )["data"],
+    )
     logger.info(f"Response from executing workflow: {response}")
     try:
         if response.success:
@@ -137,6 +145,7 @@ async def execute_workflow(workflow_execution_body: RequestWorkflowExecutionMode
             detail=f"Failed to execute workflow with error: {e}",
         )
 
+
 async def wait_for_workflow_execution_results(execution: ExecuteWorklow):
     """
     Function to get the workflow results until the status of `FINISHED` is reached.
@@ -145,17 +154,16 @@ async def wait_for_workflow_execution_results(execution: ExecuteWorklow):
     for i in range(10):
         try:
             response = await send_post_request(
-                f"/api/v1/streams/results",
-                {"execution_id": str(execution.execution_id),
-                 "authorization": str(execution.authorization)},
+                "/api/v1/streams/results",
+                {"execution_id": str(execution.execution_id), "authorization": str(execution.authorization)},
             )
-            status = response.get('data', {}).get('status')
+            status = response.get("data", {}).get("status")
             if status == "FINISHED":
                 logger.info(f"Workflow execution with ID {execution.execution_id} has finished")
                 return True
         except Exception as e:
             logger.error(f"Error retrieving workflow execution results: {e}")
-        await asyncio.sleep(2 ** i)
+        await asyncio.sleep(2**i)
     logger.info(f"Workflow execution with ID {execution.execution_id} did not finish after 5 attempts")
     raise HTTPException(
         status_code=500,
@@ -169,9 +177,7 @@ async def get_workflow_exectution_results(execution: ExecuteWorklow):
     """
     logger.info(f"Retrieving workflow execution results for execution ID: {execution.execution_id}")
     response = await send_post_request(
-        f"/api/v1/streams/results",
-        {"execution_id": str(execution.execution_id),
-         "authorization": str(execution.authorization)},
+        "/api/v1/streams/results",
+        {"execution_id": str(execution.execution_id), "authorization": str(execution.authorization)},
     )
-    return response.get('data', {})
-
+    return response.get("data", {})

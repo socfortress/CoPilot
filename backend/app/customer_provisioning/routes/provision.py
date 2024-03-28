@@ -8,20 +8,19 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.auth.utils import AuthHandler
+from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
 from app.connectors.grafana.schema.dashboards import WazuhDashboard
 from app.customer_provisioning.schema.provision import CustomerProvisionResponse
-from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
 from app.customer_provisioning.schema.provision import CustomersMetaResponse
 from app.customer_provisioning.schema.provision import CustomerSubsctipion
 from app.customer_provisioning.schema.provision import GetDashboardsResponse
 from app.customer_provisioning.schema.provision import GetSubscriptionsResponse
-from app.customer_provisioning.schema.provision import ProvisionNewCustomer
 from app.customer_provisioning.schema.provision import ProvisionDashboardRequest
 from app.customer_provisioning.schema.provision import ProvisionDashboardResponse
+from app.customer_provisioning.schema.provision import ProvisionNewCustomer
 from app.customer_provisioning.schema.wazuh_worker import ProvisionWorkerRequest
 from app.customer_provisioning.schema.wazuh_worker import ProvisionWorkerResponse
 from app.customer_provisioning.services.provision import provision_dashboards
-
 from app.customer_provisioning.services.provision import provision_wazuh_customer
 from app.customer_provisioning.services.provision import provision_wazuh_worker
 from app.db.db_session import get_db
@@ -333,6 +332,7 @@ async def get_customer_meta(
         customer_meta=customer_meta,
     )
 
+
 @customer_provisioning_router.post(
     "/provision/dashboards",
     response_model=ProvisionDashboardResponse,
@@ -354,12 +354,11 @@ async def provision_dashboards_route(
         ProvisionDashboardsResponse: The response data for the provisioned dashboards.
     """
     logger.info("Provisioning dashboards")
-    return await provision_dashboards(DashboardProvisionRequest
-    (
-        dashboards=request.dashboards_to_include.dashboards,
-        organizationId=request.grafana_org_id,
-        folderId=request.grafana_folder_id,
-        datasourceUid=request.grafana_datasource_uid,
-    ))
-
-
+    return await provision_dashboards(
+        DashboardProvisionRequest(
+            dashboards=request.dashboards_to_include.dashboards,
+            organizationId=request.grafana_org_id,
+            folderId=request.grafana_folder_id,
+            datasourceUid=request.grafana_datasource_uid,
+        ),
+    )
