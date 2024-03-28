@@ -415,13 +415,8 @@ async def get_license_key(session: AsyncSession = Depends(get_db)) -> GetLicense
     Returns:
         LicenseVerificationResponse: A Pydantic model containing the verification status and message.
     """
-    try:
-        # retrieve the license from the database
-        license = await get_license(session)
-        return GetLicenseResponse(license_key=license.license_key, success=True, message="License retrieved successfully")
-    except Exception as e:
-        logger.error(e)
-        raise HTTPException(status_code=400, detail="License retrieval failed")
+    license = await get_license(session)
+    return GetLicenseResponse(license_key=license.license_key, success=True, message="License retrieved successfully")
 
 @license_router.get(
     "/get_license_features",
