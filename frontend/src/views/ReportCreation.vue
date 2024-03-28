@@ -21,7 +21,7 @@
 import { ref } from "vue"
 import ReportWizard from "@/components/reportCreation/Wizard.vue"
 import ReportPanels from "@/components/reportCreation/Panels.vue"
-import type { Dashboard, Org, Panel } from "@/types/reporting"
+import type { Dashboard, Org, Panel } from "@/types/reporting.d"
 import type { ReportTimeRange } from "@/api/reporting"
 import Icon from "@/components/common/Icon.vue"
 

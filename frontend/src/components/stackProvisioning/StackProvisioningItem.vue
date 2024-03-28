@@ -34,7 +34,7 @@ import { ref } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import { NButton, useMessage } from "naive-ui"
 import Api from "@/api"
-import type { AvailableContentPack } from "@/types/stackProvisioning"
+import type { AvailableContentPack } from "@/types/stackProvisioning.d"
 
 const emit = defineEmits<{
 	(e: "provisioned"): void

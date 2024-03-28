@@ -51,7 +51,7 @@ import Icon from "@/components/common/Icon.vue"
 import Badge from "@/components/common/Badge.vue"
 import { defineAsyncComponent, ref, toRefs } from "vue"
 import { NModal, NRadio, NButton } from "naive-ui"
-import type { AvailableIntegration } from "@/types/integrations"
+import type { AvailableIntegration } from "@/types/integrations.d"
 const Markdown = defineAsyncComponent(() => import("@/components/common/Markdown.vue"))
 
 const props = defineProps<{

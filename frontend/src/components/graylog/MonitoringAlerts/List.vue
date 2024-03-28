@@ -70,9 +70,9 @@ import { useMessage, NSpin, NPopover, NButton, NEmpty, NPagination } from "naive
 import Api from "@/api"
 import MonitoringAlert from "./Item.vue"
 import CustomAlertButton from "./CustomAlertButton.vue"
-import type { AvailableMonitoringAlert } from "@/types/monitoringAlerts"
+import type { AvailableMonitoringAlert } from "@/types/monitoringAlerts.d"
 import Icon from "@/components/common/Icon.vue"
-import type { EventDefinition } from "@/types/graylog/event-definition"
+import type { EventDefinition } from "@/types/graylog/event-definition.d"
 
 const { eventsList } = defineProps<{ eventsList: EventDefinition[] }>()
 

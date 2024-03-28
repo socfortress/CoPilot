@@ -90,7 +90,7 @@
 </template>
 
 <script setup lang="ts">
-import type { AvailableMonitoringAlert } from "@/types/monitoringAlerts"
+import type { AvailableMonitoringAlert } from "@/types/monitoringAlerts.d"
 import { ref } from "vue"
 import Icon from "@/components/common/Icon.vue"
 import Badge from "@/components/common/Badge.vue"

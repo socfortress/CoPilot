@@ -25,8 +25,8 @@ import { ref, onBeforeMount } from "vue"
 import { useMessage, NSpin, NEmpty } from "naive-ui"
 import Api from "@/api"
 import ActiveResponseItem from "./ActiveResponseItem.vue"
-import type { Agent } from "@/types/agents"
-import type { SupportedActiveResponse } from "@/types/activeResponse"
+import type { Agent } from "@/types/agents.d"
+import type { SupportedActiveResponse } from "@/types/activeResponse.d"
 
 const { embedded, agent } = defineProps<{
 	embedded?: boolean

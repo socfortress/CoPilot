@@ -130,7 +130,7 @@ import Api from "@/api"
 import { onBeforeMount, ref } from "vue"
 import isEmail from "validator/es/lib/isEmail"
 import { computed } from "vue"
-import type { LicenseKey } from "@/types/license"
+import type { LicenseKey } from "@/types/license.d"
 import type { NewLicensePayload } from "@/api/license"
 
 const emit = defineEmits<{

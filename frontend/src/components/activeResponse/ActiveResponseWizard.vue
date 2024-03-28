@@ -99,7 +99,7 @@ import { NSteps, NStep, useMessage, NScrollbar, NButton, NEmpty, NSpin, type Ste
 import Icon from "@/components/common/Icon.vue"
 import Api from "@/api"
 import { onBeforeMount } from "vue"
-import type { SupportedActiveResponse } from "@/types/activeResponse"
+import type { SupportedActiveResponse } from "@/types/activeResponse.d"
 import ActiveResponseItem from "./ActiveResponseItem.vue"
 import ActiveResponseInvokeForm from "./ActiveResponseInvokeForm.vue"
 import { iconFromOs } from "@/utils"

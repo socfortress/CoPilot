@@ -46,7 +46,7 @@ import Icon from "@/components/common/Icon.vue"
 import Api from "@/api"
 import { computed, h, ref } from "vue"
 import { watch } from "vue"
-import type { CustomerIntegration } from "@/types/integrations"
+import type { CustomerIntegration } from "@/types/integrations.d"
 
 const emit = defineEmits<{
 	(e: "startLoading"): void

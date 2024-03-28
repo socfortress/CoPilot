@@ -1,6 +1,6 @@
 import { type FlaskBaseResponse } from "@/types/flask.d"
 import { HttpClient } from "./httpClient"
-import type { License, LicenseFeatures, LicenseKey } from "@/types/license"
+import type { License, LicenseFeatures, LicenseKey } from "@/types/license.d"
 
 export interface NewLicensePayload {
 	name: string

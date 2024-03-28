@@ -107,7 +107,7 @@ import Badge from "@/components/common/Badge.vue"
 import { computed, ref, toRefs } from "vue"
 import Api from "@/api"
 import { NAvatar, useMessage, NModal, NSpin, NButton, NCard } from "naive-ui"
-import type { Connector } from "@/types/connectors"
+import type { Connector } from "@/types/connectors.d"
 import ConfigForm from "./ConfigForm"
 
 const emit = defineEmits<{
