@@ -1,7 +1,7 @@
 <template>
 	<div class="quarantine-item flex flex-col gap-1 px-5 py-3">
 		<div class="time text-secondary-color">
-			{{ formatDate(quarantine.Time) }}
+			{{ formatDate(quarantine.Time, dFormats.datetimesec) }}
 		</div>
 		<div class="result">{{ quarantine.Result }}</div>
 	</div>
@@ -10,15 +10,11 @@
 <script setup lang="ts">
 import { useSettingsStore } from "@/stores/settings"
 import type { QuarantineResult } from "@/types/artifacts.d"
-import dayjs from "@/utils/dayjs"
+import { formatDate } from "@/utils"
 
 const { quarantine } = defineProps<{ quarantine: QuarantineResult }>()
 
 const dFormats = useSettingsStore().dateFormat
-
-function formatDate(timestamp: string): string {
-	return dayjs(timestamp).format(dFormats.datetimesec)
-}
 </script>
 
 <style lang="scss" scoped>

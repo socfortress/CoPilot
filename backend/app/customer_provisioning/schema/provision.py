@@ -61,16 +61,16 @@ class ProvisionNewCustomer(BaseModel):
         ...,
         description="Dashboards to include in the customer's Grafana instance",
     )
-    wazuh_auth_password: str = Field(..., description="Password for the Wazuh API user")
-    wazuh_registration_port: str = Field(
-        ...,
+    wazuh_auth_password: Optional[str] = Field("n/a", description="Password for the Wazuh API user")
+    wazuh_registration_port: Optional[str] = Field(
+        "n/a",
         description="Port for the Wazuh registration service",
     )
-    wazuh_logs_port: str = Field(..., description="Port for the Wazuh logs service")
-    wazuh_api_port: str = Field(..., description="Port for the Wazuh API service")
-    wazuh_cluster_name: str = Field(..., description="Name of the Wazuh cluster")
-    wazuh_cluster_key: str = Field(..., description="Password for the Wazuh cluster")
-    wazuh_master_ip: str = Field(..., description="IP address of the Wazuh master")
+    wazuh_logs_port: Optional[str] = Field("n/a", description="Port for the Wazuh logs service")
+    wazuh_api_port: Optional[str] = Field("n/a", description="Port for the Wazuh API service")
+    wazuh_cluster_name: Optional[str] = Field("n/a", description="Name of the Wazuh cluster")
+    wazuh_cluster_key: Optional[str] = Field("n/a", description="Password for the Wazuh cluster")
+    wazuh_master_ip: Optional[str] = Field("n/a", description="IP address of the Wazuh master")
     grafana_url: str = Field(..., description="URL of the Grafana instance")
     only_insert_into_db: Optional[bool] = Field(
         False,
@@ -91,6 +91,14 @@ class ProvisionNewCustomer(BaseModel):
     wazuh_worker_hostname: Optional[str] = Field(
         None,
         description="Hostname of the Wazuh worker",
+    )
+    provision_wazuh_worker: bool = Field(
+        False,
+        description="Whether to provision a Wazuh worker for the customer",
+    )
+    provision_ha_proxy: bool = Field(
+        False,
+        description="Whether to provision an HAProxy for the customer",
     )
 
     @validator("customer_index_name")
@@ -189,3 +197,62 @@ class ProvisionHaProxyRequest(BaseModel):
         example="worker1",
         description="The hostname of the Wazuh worker",
     )
+
+
+class ProvisionDashboardRequest(BaseModel):
+    customer_name: str = Field(
+        ...,
+        example="SOCFortress",
+        description="The name of the customer",
+    )
+    dashboards_to_include: DashboardProvisionRequest = Field(
+        ...,
+        description="Dashboards to include in the customer's Grafana instance",
+        example={
+            "dashboards": [
+                "WAZUH_SUMMARY",
+                "EDR_WINDOWS_EVENT_LOGS",
+                "EDR_WAZUH_INVENOTRY",
+                "EDR_USERS_AND_GROUPS",
+                "EDR_SYSTEM_VULNERABILITIES",
+                "EDR_SYSTEM_SECURITY_AUDIT",
+                "EDR_SYSTEM_PROCESSES",
+                "EDR_PROCESS_INJECTION",
+                "EDR_OPEN_AUDIT",
+                "EDR_NETWORK_SCAN",
+                "EDR_NETWORK_CONNECTIONS",
+                "EDR_MITRE",
+                "EDR_FIM",
+                "EDR_DOCKER_MONITORING",
+                "EDR_DNS_REQUESTS",
+                "EDR_DLL_SIDE_LOADING",
+                "EDR_COMPLIANCE",
+                "EDR_AV_MALWARE_IOC",
+                "EDR_AGENT_INVENTORY",
+                "EDR_AD_INVENOTRY",
+            ],
+            "organizationId": 1,
+            "folderId": 1,
+            "datasourceUid": "wazuh",
+        },
+    )
+    grafana_org_id: int = Field(
+        ...,
+        description="ID of the Grafana organization",
+    )
+    grafana_datasource_uid: str = Field(
+        ...,
+        description="UID of the Grafana datasource",
+    )
+    grafana_folder_id: int = Field(
+        ...,
+        description="ID of the Grafana folder",
+    )
+
+
+class ProvisionDashboardResponse(BaseModel):
+    message: str = Field(
+        ...,
+        description="Message indicating the status of the request",
+    )
+    success: bool = Field(..., description="Whether the request was successful or not")

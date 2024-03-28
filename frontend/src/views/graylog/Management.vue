@@ -44,7 +44,7 @@ import Events from "@/components/graylog/Events/List.vue"
 import Streams from "@/components/graylog/Streams/List.vue"
 import MonitoringAlerts from "@/components/graylog/MonitoringAlerts/List.vue"
 import Inputs from "@/components/graylog/Inputs/List.vue"
-import type { EventDefinition } from "@/types/graylog/event-definition"
+import type { EventDefinition } from "@/types/graylog/event-definition.d"
 import { useRoute, useRouter } from "vue-router"
 import { watch } from "vue"
 

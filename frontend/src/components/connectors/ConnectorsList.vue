@@ -32,7 +32,7 @@ import { ref, onBeforeMount, computed } from "vue"
 import { useMessage, NSpin, NEmpty } from "naive-ui"
 import Api from "@/api"
 import ConnectorItem from "./ConnectorItem.vue"
-import type { Connector } from "@/types/connectors"
+import type { Connector } from "@/types/connectors.d"
 
 const message = useMessage()
 const loadingConnectors = ref(false)

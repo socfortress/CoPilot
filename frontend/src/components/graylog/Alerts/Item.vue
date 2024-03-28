@@ -44,11 +44,11 @@
 						</div>
 						<div class="box">
 							timestamp:
-							<code>{{ formatDate(alertsEvent.event.timestamp) }}</code>
+							<code>{{ formatDateTime(alertsEvent.event.timestamp) }}</code>
 						</div>
 						<div class="box">
 							timestamp processing:
-							<code>{{ formatDate(alertsEvent.event.timestamp_processing) }}</code>
+							<code>{{ formatDateTime(alertsEvent.event.timestamp_processing) }}</code>
 						</div>
 					</div>
 				</n-popover>
@@ -58,7 +58,7 @@
 					<template #trigger>
 						<div class="flex items-center gap-2 cursor-help">
 							<span>
-								{{ formatDate(alertsEvent.event.timestamp) }}
+								{{ formatDateTime(alertsEvent.event.timestamp) }}
 							</span>
 							<Icon :name="TimeIcon" :size="16"></Icon>
 						</div>
@@ -68,12 +68,12 @@
 							<n-timeline-item
 								type="success"
 								title="Timestamp"
-								:time="formatDate(alertsEvent.event.timestamp)"
+								:time="formatDateTime(alertsEvent.event.timestamp)"
 							/>
 							<n-timeline-item
 								v-if="alertsEvent.event.timestamp_processing"
 								title="Processing"
-								:time="formatDate(alertsEvent.event.timestamp_processing)"
+								:time="formatDateTime(alertsEvent.event.timestamp_processing)"
 							/>
 						</n-timeline>
 					</div>
@@ -84,7 +84,7 @@
 			<div class="content">{{ alertsEvent.event.message }}</div>
 		</div>
 		<div class="footer-box flex justify-end items-center gap-3">
-			<div class="time">{{ formatDate(alertsEvent.event.timestamp) }}</div>
+			<div class="time">{{ formatDateTime(alertsEvent.event.timestamp) }}</div>
 		</div>
 	</div>
 </template>
@@ -93,7 +93,7 @@
 import { type AlertsEventElement } from "@/types/graylog/alerts.d"
 import { NPopover, NTimeline, NTimelineItem } from "naive-ui"
 import { useSettingsStore } from "@/stores/settings"
-import dayjs from "@/utils/dayjs"
+import { formatDate } from "@/utils"
 import Icon from "@/components/common/Icon.vue"
 import { useRouter } from "vue-router"
 
@@ -110,8 +110,8 @@ const LinkIcon = "carbon:launch"
 const router = useRouter()
 const dFormats = useSettingsStore().dateFormat
 
-function formatDate(timestamp: string): string {
-	return dayjs(timestamp).format(dFormats.datetimesec)
+function formatDateTime(timestamp: string): string {
+	return formatDate(timestamp, dFormats.datetimesec).toString()
 }
 
 function gotoIndicesPage(index: string) {

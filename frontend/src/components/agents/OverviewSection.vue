@@ -26,7 +26,7 @@
 
 <script setup lang="ts">
 import { computed, toRefs } from "vue"
-import dayjs from "@/utils/dayjs"
+import { formatDate } from "@/utils"
 import { type Agent } from "@/types/agents.d"
 import { useSettingsStore } from "@/stores/settings"
 import KVCard from "@/components/common/KVCard.vue"
@@ -47,7 +47,7 @@ const propsSanitized = computed(() => {
 	for (const key in agent.value) {
 		if (["wazuh_last_seen", "velociraptor_last_seen"].includes(key)) {
 			// @ts-ignore
-			obj.push({ key, val: formatDate(agent.value[key]) || "-" })
+			obj.push({ key, val: formatDate(agent.value[key], dFormats.datetime) || "-" })
 		} else {
 			// @ts-ignore
 			obj.push({ key, val: agent.value[key] || "-" })
@@ -56,13 +56,6 @@ const propsSanitized = computed(() => {
 
 	return obj
 })
-
-const formatDate = (date: string) => {
-	const datejs = dayjs(date)
-	if (!datejs.isValid()) return date
-
-	return datejs.format(dFormats.datetime)
-}
 
 function gotoCustomer(code: string | number) {
 	router.push({ name: "Customers", query: { code } })

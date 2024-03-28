@@ -50,7 +50,7 @@
 
 <script setup lang="ts">
 import { ref, toRefs } from "vue"
-import type { SupportedActiveResponse } from "@/types/activeResponse"
+import type { SupportedActiveResponse } from "@/types/activeResponse.d"
 import ActiveResponseActions from "./ActiveResponseActions.vue"
 import ActiveResponseDetails from "./ActiveResponseDetails.vue"
 import { NButton, NModal } from "naive-ui"

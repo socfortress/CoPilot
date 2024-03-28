@@ -118,5 +118,8 @@ ENV RSA_PUBLIC_KEY=$RSA_PUBLIC_KEY
 ARG PRODUCT_ID
 ENV PRODUCT_ID=$PRODUCT_ID
 
+ARG COPILOT_API_KEY
+ENV COPILOT_API_KEY=$COPILOT_API_KEY
+
 # Run your application
 CMD ["sh", "-c", "ls -la && /opt/venv/bin/python copilot.py"]

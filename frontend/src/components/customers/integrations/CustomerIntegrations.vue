@@ -54,7 +54,7 @@ import Icon from "@/components/common/Icon.vue"
 import Api from "@/api"
 import CustomerIntegrationForm from "./CustomerIntegrationForm.vue"
 import CustomerIntegrationItem from "./CustomerIntegrationItem.vue"
-import type { CustomerIntegration } from "@/types/integrations"
+import type { CustomerIntegration } from "@/types/integrations.d"
 
 const { customerCode, customerName } = defineProps<{
 	customerCode: string

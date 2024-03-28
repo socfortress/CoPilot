@@ -13,7 +13,7 @@
 import { ref, onBeforeMount, defineAsyncComponent } from "vue"
 import { useMessage, NSpin, NEmpty } from "naive-ui"
 import Api from "@/api"
-import type { ActiveResponseDetails, SupportedActiveResponse } from "@/types/activeResponse"
+import type { ActiveResponseDetails, SupportedActiveResponse } from "@/types/activeResponse.d"
 const Markdown = defineAsyncComponent(() => import("@/components/common/Markdown.vue"))
 
 const { activeResponse } = defineProps<{

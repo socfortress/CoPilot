@@ -7,7 +7,7 @@
 					{{ stream.creator_user_id }}
 				</div>
 			</div>
-			<div class="time">{{ formatDate(stream.created_at) }}</div>
+			<div class="time">{{ formatDate(stream.created_at, dFormats.datetimesec) }}</div>
 			<n-button size="small" @click.stop="showDetails = true">
 				<template #icon>
 					<Icon :name="InfoIcon"></Icon>
@@ -61,7 +61,7 @@
 					Start
 				</n-button>
 			</div>
-			<div class="time">{{ formatDate(stream.created_at) }}</div>
+			<div class="time">{{ formatDate(stream.created_at, dFormats.datetimesec) }}</div>
 		</div>
 
 		<n-modal
@@ -91,7 +91,7 @@ import { type Stream } from "@/types/graylog/stream.d"
 import { useSettingsStore } from "@/stores/settings"
 import Icon from "@/components/common/Icon.vue"
 import Badge from "@/components/common/Badge.vue"
-import dayjs from "@/utils/dayjs"
+import { formatDate } from "@/utils"
 import { NModal, NButton, useMessage } from "naive-ui"
 import { ref, toRefs } from "vue"
 import { SimpleJsonViewer } from "vue-sjv"
@@ -112,10 +112,6 @@ const message = useMessage()
 const loading = ref(false)
 const showDetails = ref(false)
 const dFormats = useSettingsStore().dateFormat
-
-function formatDate(timestamp: string): string {
-	return dayjs(timestamp).format(dFormats.datetimesec)
-}
 
 function stop() {
 	loading.value = true

@@ -36,7 +36,7 @@ import { NButton, NModal } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import { computed, ref } from "vue"
 import { watch } from "vue"
-import type { SupportedActiveResponse } from "@/types/activeResponse"
+import type { SupportedActiveResponse } from "@/types/activeResponse.d"
 import ActiveResponseInvokeForm from "./ActiveResponseInvokeForm.vue"
 
 const emit = defineEmits<{

@@ -107,45 +107,47 @@ async def provision_wazuh_customer(
         session,
     )
 
-    provision_worker = await provision_wazuh_worker(
-        ProvisionWorkerRequest(
-            customer_name=request.customer_name,
-            wazuh_auth_password=request.wazuh_auth_password,
-            wazuh_registration_port=request.wazuh_registration_port,
-            wazuh_logs_port=request.wazuh_logs_port,
-            wazuh_api_port=request.wazuh_api_port,
-            wazuh_cluster_name=request.wazuh_cluster_name,
-            wazuh_cluster_key=request.wazuh_cluster_key,
-            wazuh_master_ip=request.wazuh_master_ip,
-        ),
-        session,
-    )
-
-    if provision_worker.success is False:
-        return CustomerProvisionResponse(
-            message=f"Customer {request.customer_name} provisioned successfully, but the Wazuh worker failed to provision",
-            success=True,
-            customer_meta=customer_meta.dict(),
-            wazuh_worker_provisioned=False,
+    if request.provision_wazuh_worker is True:
+        provision_worker = await provision_wazuh_worker(
+            ProvisionWorkerRequest(
+                customer_name=request.customer_name,
+                wazuh_auth_password=request.wazuh_auth_password,
+                wazuh_registration_port=request.wazuh_registration_port,
+                wazuh_logs_port=request.wazuh_logs_port,
+                wazuh_api_port=request.wazuh_api_port,
+                wazuh_cluster_name=request.wazuh_cluster_name,
+                wazuh_cluster_key=request.wazuh_cluster_key,
+                wazuh_master_ip=request.wazuh_master_ip,
+            ),
+            session,
         )
 
-    provsion_haproxy = await provision_haproxy(
-        ProvisionHaProxyRequest(
-            customer_name=request.customer_name,
-            wazuh_registration_port=request.wazuh_registration_port,
-            wazuh_logs_port=request.wazuh_logs_port,
-            wazuh_worker_hostname=request.wazuh_worker_hostname,
-        ),
-        session,
-    )
+        if provision_worker.success is False:
+            return CustomerProvisionResponse(
+                message=f"Customer {request.customer_name} provisioned successfully, but the Wazuh worker failed to provision",
+                success=True,
+                customer_meta=customer_meta.dict(),
+                wazuh_worker_provisioned=False,
+            )
 
-    if provsion_haproxy.success is False:
-        return CustomerProvisionResponse(
-            message=f"Customer {request.customer_name} provisioned successfully, but the HAProxy failed to provision",
-            success=True,
-            customer_meta=customer_meta.dict(),
-            wazuh_worker_provisioned=True,
+    if request.provision_ha_proxy is True:
+        provsion_haproxy = await provision_haproxy(
+            ProvisionHaProxyRequest(
+                customer_name=request.customer_name,
+                wazuh_registration_port=request.wazuh_registration_port,
+                wazuh_logs_port=request.wazuh_logs_port,
+                wazuh_worker_hostname=request.wazuh_worker_hostname,
+            ),
+            session,
         )
+
+        if provsion_haproxy.success is False:
+            return CustomerProvisionResponse(
+                message=f"Customer {request.customer_name} provisioned successfully, but the HAProxy failed to provision",
+                success=True,
+                customer_meta=customer_meta.dict(),
+                wazuh_worker_provisioned=True,
+            )
 
     return CustomerProvisionResponse(
         message=f"Customer {request.customer_name} provisioned successfully",

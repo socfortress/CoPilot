@@ -6,7 +6,7 @@
 					<template #icon><Icon :name="UpdatedIcon" :size="15"></Icon></template>
 				</n-button>
 				<span>Last check:</span>
-				<strong>{{ lastCheck ? formatDate(lastCheck) : "..." }}</strong>
+				<strong>{{ lastCheck ? formatDate(lastCheck, dFormats.datetimesec) : "..." }}</strong>
 			</div>
 
 			<div class="toolbar flex items-center gap-3">
@@ -40,7 +40,7 @@ import type { ThroughputMetric } from "@/types/graylog/index.d"
 import Icon from "@/components/common/Icon.vue"
 import UncommittedEntries from "@/components/graylog/Metrics/UncommittedEntries.vue"
 import MetricsList from "@/components/graylog/Metrics/List.vue"
-import dayjs from "@/utils/dayjs"
+import { formatDate } from "@/utils"
 import { useSettingsStore } from "@/stores/settings"
 import { useStorage } from "@vueuse/core"
 
@@ -114,10 +114,6 @@ function stop() {
 
 function start() {
 	getDataTimer.value = setInterval(getData, intervalSelected.value)
-}
-
-function formatDate(timestamp: string | Date): string {
-	return dayjs(timestamp).format(dFormats.datetimesec)
 }
 
 watch(intervalSelected, () => {

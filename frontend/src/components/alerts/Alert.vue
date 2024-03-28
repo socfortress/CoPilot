@@ -6,7 +6,7 @@
 				<Icon :name="InfoIcon" :size="16"></Icon>
 			</div>
 			<div class="time">
-				{{ formatDate(alert._source.timestamp_utc) }}
+				{{ formatDate(alert._source.timestamp_utc, dFormats.datetimesec) }}
 			</div>
 		</div>
 		<div class="main-box flex justify-between gap-4">
@@ -112,7 +112,7 @@
 				@updated-url="alert._source.alert_url = $event"
 				@updated-ask-message="alert._source.ask_socfortress_message = $event"
 			/>
-			<div class="time">{{ formatDate(alert._source.timestamp_utc) }}</div>
+			<div class="time">{{ formatDate(alert._source.timestamp_utc, dFormats.datetimesec) }}</div>
 		</div>
 
 		<n-modal
@@ -216,7 +216,7 @@
 import { computed, defineAsyncComponent, ref, toRefs } from "vue"
 import { NPopover, NModal, NTabs, NTabPane, NInput } from "naive-ui"
 import { useSettingsStore } from "@/stores/settings"
-import dayjs from "@/utils/dayjs"
+import { formatDate } from "@/utils"
 import Icon from "@/components/common/Icon.vue"
 import Badge from "@/components/common/Badge.vue"
 const AlertActions = defineAsyncComponent(() => import("./AlertActions.vue"))
@@ -254,10 +254,6 @@ const agentProperties = computed(() => {
 		"agent_name"
 	])
 })
-
-function formatDate(timestamp: string): string {
-	return dayjs(timestamp).format(dFormats.datetimesec)
-}
 
 function gotoAgentPage(agentId: string) {
 	router.push({ name: "Agent", params: { id: agentId } })

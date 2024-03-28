@@ -2,9 +2,11 @@ import os
 from datetime import datetime as dt
 from enum import Enum
 from typing import Any
+from typing import Dict
 from typing import List
 from typing import Optional
 
+import requests
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
@@ -19,8 +21,32 @@ from pydantic import Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.connectors.schema import UpdateConnector
+from app.connectors.services import ConnectorServices
 from app.db.db_session import get_db
 from app.db.universal_models import License
+
+
+class ThreatIntelRegisterRequest(BaseModel):
+    """
+    A Pydantic model for registering to the SOCFortress Threat Intel Feed which
+        requires a valid API key.
+    """
+
+    customer_name: str = Field(..., description="The customer name")
+    requested_by: str = Field("CoPilot", description="The system requesting access")
+    registration_url: str = Field("https://intel.socfortress.co/register", description="The registration URL")
+    requesting_api_key: str = Field(os.getenv("COPILOT_API_KEY"), description="The requesting API key")
+
+
+class ThreatIntelRegisterResponse(BaseModel):
+    """
+    A Pydantic model for the response to registering to the SOCFortress Threat Intel Feed.
+    """
+
+    api_key: str = Field(..., description="The API key")
+    success: bool = Field(..., description="Indicates if the registration was successful")
+    message: str = Field(..., description="The message")
 
 
 class ReplaceLicenseRequest(BaseModel):
@@ -64,6 +90,12 @@ class CreateCustomerKeyResult(BaseModel):
 
 class CreateCustomerKeyResponseModel(BaseModel):
     response: List[Optional[CreateCustomerKeyResult]]
+
+
+class CreateCustomerKeyRouteResponse(BaseModel):
+    response: List[Optional[CreateCustomerKeyResult]]
+    success: bool = Field(..., title="Indicates if the key creation was successful")
+    message: str = Field(..., title="The message")
 
 
 class Customer(BaseModel):
@@ -110,6 +142,24 @@ class LicenseResponse(BaseModel):
     reseller: Optional[Any]
 
 
+class VerifyLicenseResponse(BaseModel):
+    license: LicenseResponse
+    success: bool
+    message: str
+
+
+class GetLicenseResponse(BaseModel):
+    license_key: str
+    success: bool
+    message: str
+
+
+class GetLicenseFeaturesResponse(BaseModel):
+    features: List[str]
+    success: bool
+    message: str
+
+
 class Feature(Enum):
     MIMECAST = "MIMECAST"
     SAP_SIEM = "SAP SIEM"
@@ -127,6 +177,19 @@ class Feature(Enum):
             # Add more mappings as needed
         }
         return feature_map.get(feature_name)
+
+
+class SubscriptionCatalog(str, Enum):
+    """
+    The subscription catalog.
+    """
+
+    MIMECAST = (
+        "Integrate your SIEM stack with Mimecast to detect and respond to advanced threats."
+        "This integration includes ingesting of Mimecast logs into your SIEM stack, Grafana dashboards,"
+        "and alerts for advanced threat detection.",
+    )
+    HUNTRESS = "Integrate your SIEM stack with Huntress to detect and respond to advanced threats."
 
 
 license_router = APIRouter()
@@ -189,7 +252,6 @@ def create_key(auth, request):
         email=request.email,
         company_name=request.company_name,
     )
-    logger.info(result)
     result = CreateCustomerKeyResponseModel(response=[result])
     return result
 
@@ -220,6 +282,7 @@ async def get_license(session: AsyncSession) -> License:
 
 
 def check_license(license: License):
+    logger.info(f"Checking license: {license}")
     result, _ = Key.activate(
         token=get_auth_token(),
         rsa_pub_key=get_rsa_pub_key(),
@@ -299,9 +362,10 @@ async def create_trial_license_key(request: CreateLicenseRequest, session: Async
 
 @license_router.post(
     "/create_new_key",
+    response_model=CreateCustomerKeyRouteResponse,
     description="Create a new license key",
 )
-async def create_new_license_key(request: CreateLicenseRequest, session: AsyncSession = Depends(get_db)):
+async def create_new_license_key(request: CreateLicenseRequest, session: AsyncSession = Depends(get_db)) -> CreateCustomerKeyRouteResponse:
     """
     Create a new license key.
 
@@ -315,8 +379,9 @@ async def create_new_license_key(request: CreateLicenseRequest, session: AsyncSe
     await check_if_license_exists(session)
     auth = get_auth_token()
     result = create_key(auth, request)
+    logger.info(f"Result: {result}")
     await add_license_to_db(session, result, request)
-    return result
+    return CreateCustomerKeyRouteResponse(response=result.response, success=True, message="License created successfully")
 
 
 @license_router.post(
@@ -337,8 +402,8 @@ async def extend_license_key(period: int, session: AsyncSession = Depends(get_db
     try:
         license = await get_license(session)
         logger.info(f"License: {license}")
-        result = extend_license(license, period)
-        return result
+        extend_license(license, period)
+        return {"message": "License extended successfully", "success": True}
     except Exception as e:
         logger.error(e)
         raise HTTPException(status_code=400, detail="License extension failed")
@@ -346,10 +411,10 @@ async def extend_license_key(period: int, session: AsyncSession = Depends(get_db
 
 @license_router.get(
     "/verify_license",
-    response_model=LicenseResponse,
+    response_model=VerifyLicenseResponse,
     description="Verify a license key",
 )
-async def verify_license_key(session: AsyncSession = Depends(get_db)) -> LicenseResponse:
+async def verify_license_key(session: AsyncSession = Depends(get_db)) -> VerifyLicenseResponse:
     """ "
     Verify a license key.
 
@@ -359,18 +424,67 @@ async def verify_license_key(session: AsyncSession = Depends(get_db)) -> License
     Returns:
         LicenseVerificationResponse: A Pydantic model containing the verification status and message.
     """
+    license = await get_license(session)
     try:
-        license = await get_license(session)
         logger.info(f"License: {license}")
         result = check_license(license)
         result = result.__dict__
         logger.info(result)
         if is_license_expired(result):
             raise HTTPException(status_code=400, detail="License is expired")
-        return result
+        return VerifyLicenseResponse(license=result, success=True, message="License verified successfully")
     except Exception as e:
         logger.error(e)
         raise HTTPException(status_code=400, detail="License verification failed")
+
+
+@license_router.get(
+    "/get_license",
+    description="Get a license",
+)
+async def get_license_key(session: AsyncSession = Depends(get_db)) -> GetLicenseResponse:
+    """ "
+    Get a license key.
+
+    Args:
+        license_key (str): The license key to verify.
+
+    Returns:
+        LicenseVerificationResponse: A Pydantic model containing the verification status and message.
+    """
+    license = await get_license(session)
+    return GetLicenseResponse(license_key=license.license_key, success=True, message="License retrieved successfully")
+
+
+@license_router.get(
+    "/get_license_features",
+    response_model=GetLicenseFeaturesResponse,
+    description="Get license features",
+)
+async def get_license_features(session: AsyncSession = Depends(get_db)) -> GetLicenseFeaturesResponse:
+    """
+    Get the features enabled in a license.
+
+    Args:
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        dict: A dictionary containing the features enabled in the license.
+    """
+    license = await get_license(session)
+    try:
+        license_details = LicenseResponse(**check_license(license).__dict__)
+        features = {}
+        for data_object in license_details.data_objects:
+            features[data_object["Name"]] = data_object["IntValue"]
+        return GetLicenseFeaturesResponse(
+            features=[feature for feature, value in features.items() if value == 1],
+            success=True,
+            message="License features retrieved successfully",
+        )
+    except Exception as e:
+        logger.error(e)
+        raise HTTPException(status_code=400, detail="Failed to get license features")
 
 
 @license_router.post(
@@ -440,3 +554,69 @@ async def replace_license_in_db(request: ReplaceLicenseRequest, session: AsyncSe
     except Exception as e:
         logger.error(e)
         raise HTTPException(status_code=400, detail="License replacement failed")
+
+
+def create_headers(request: ThreatIntelRegisterRequest) -> Dict[str, str]:
+    return {
+        "x-api-key": request.requesting_api_key,
+        "Content-Type": "application/json",
+        "module": "1.0",
+        "SOCFortress_Threat_Intel": "c1f882d9-cd09-4f9c-81a6-71fe0fb53129",
+    }
+
+
+def create_payload(request: ThreatIntelRegisterRequest) -> Dict[str, str]:
+    return {
+        "customer_name": request.customer_name,
+        "requested_by": request.requested_by,
+    }
+
+
+async def update_connector(response: ThreatIntelRegisterResponse, session: AsyncSession):
+    await ConnectorServices.update_connector_by_id(
+        connector_id=10,
+        connector=UpdateConnector(
+            connector_api_key=response.api_key,
+            connector_url="https://intel.socfortress.co/search",
+        ),
+        session=session,
+    )
+
+
+@license_router.post(
+    "/register_to_threat_intel",
+    description="Register to the SOCFortress Threat Intel Feed",
+)
+async def register_to_threat_intel(
+    request: ThreatIntelRegisterRequest,
+    session: AsyncSession = Depends(get_db),
+):
+    """
+    Register to the SOCFortress Threat Intel Feed.
+
+    Args:
+        request (ThreatIntelRegisterRequest): The request containing the customer name.
+
+    Returns:
+        ThreatIntelRegisterResponse: A Pydantic model containing the API key, success status, and message.
+    """
+    logger.info(f"Registering to the SOCFortress Threat Intel Feed: {request}")
+    try:
+        headers = create_headers(request)
+        payload = create_payload(request)
+        response = ThreatIntelRegisterResponse(
+            **requests.post(
+                request.registration_url,
+                headers=headers,
+                json=payload,
+            ).json(),
+        )
+        await update_connector(response, session)
+        return ThreatIntelRegisterResponse(
+            api_key=response.api_key,
+            success=response.success,
+            message=response.message,
+        )
+    except Exception as e:
+        logger.error(e)
+        raise HTTPException(status_code=500, detail="Failed to register to the SOCFortress Threat Intel Feed")

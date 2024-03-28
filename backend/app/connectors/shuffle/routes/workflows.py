@@ -4,13 +4,34 @@ from fastapi import Security
 from loguru import logger
 
 from app.auth.utils import AuthHandler
+from app.connectors.shuffle.schema.workflows import RequestWorkflowExecutionModel
+from app.connectors.shuffle.schema.workflows import RequestWorkflowExecutionResponse
 from app.connectors.shuffle.schema.workflows import WorkflowExecutionBodyModel
 from app.connectors.shuffle.schema.workflows import WorkflowExecutionResponseModel
 from app.connectors.shuffle.schema.workflows import WorkflowsResponse
+from app.connectors.shuffle.services.workflows import execute_workflow
 from app.connectors.shuffle.services.workflows import get_workflow_executions
 from app.connectors.shuffle.services.workflows import get_workflows
 
 shuffle_workflows_router = APIRouter()
+
+
+async def validate_execution_id(workflow_id: str) -> bool:
+    """
+    Validate the execution ID.
+
+    Args:
+        workflow_id (str): The workflow ID.
+
+    Returns:
+        bool: True if the workflow ID is valid, False otherwise.
+    """
+    workflows = await get_workflows()
+    for workflow in workflows.workflows:
+        if workflow["id"] == workflow_id:
+            logger.info("Workflow validation successful")
+            return True
+    raise HTTPException(status_code=404, detail="Workflow not found")
 
 
 @shuffle_workflows_router.get(
@@ -76,3 +97,35 @@ async def get_all_workflow_executions() -> WorkflowExecutionResponseModel:
         )
     else:
         raise HTTPException(status_code=404, detail="No workflows found")
+
+
+@shuffle_workflows_router.post(
+    "/execute",
+    response_model=RequestWorkflowExecutionResponse,
+    description="Execute a workflow",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def execute_workflow_request(
+    workflow_execution_body: RequestWorkflowExecutionModel,
+) -> RequestWorkflowExecutionResponse:
+    """
+    Execute a workflow.
+
+    Args:
+        workflow_execution_body (WorkflowExecutionBodyModel): The workflow execution body model.
+
+    Returns:
+        RequestWorkflowExecutionResponse: The response model containing the workflow executions.
+
+    Raises:
+        HTTPException: If the workflow is not found.
+    """
+    logger.info(f"Executing workflow with ID: {workflow_execution_body.workflow_id}")
+
+    await validate_execution_id(workflow_execution_body.workflow_id)
+
+    return RequestWorkflowExecutionResponse(
+        success=True,
+        message="Successfully executed workflow",
+        data=await execute_workflow(workflow_execution_body),
+    )

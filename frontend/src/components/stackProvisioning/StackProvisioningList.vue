@@ -18,7 +18,7 @@ import { ref, onBeforeMount, computed } from "vue"
 import { useMessage, NSpin, NEmpty } from "naive-ui"
 import Api from "@/api"
 import StackProvisioningItem from "./StackProvisioningItem.vue"
-import type { AvailableContentPack } from "@/types/stackProvisioning"
+import type { AvailableContentPack } from "@/types/stackProvisioning.d"
 
 const message = useMessage()
 const loadingList = ref(false)

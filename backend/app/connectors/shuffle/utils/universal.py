@@ -117,7 +117,7 @@ async def send_get_request(
         }
 
 
-def send_post_request(
+async def send_post_request(
     endpoint: str,
     data: Dict[str, Any] = None,
     connector_name: str = "Shuffle",
@@ -134,13 +134,11 @@ def send_post_request(
         Dict[str, Any]: The response from the POST request.
     """
     logger.info(f"Sending POST request to {endpoint}")
-    attributes = get_connector_info_from_db(connector_name)
+    async with get_db_session() as session:  # This will correctly enter the context manager
+        attributes = await get_connector_info_from_db(connector_name, session)
     if attributes is None:
         logger.error("No Shuffle connector found in the database")
-        return {
-            "success": False,
-            "message": "No Shuffle connector found in the database",
-        }
+        return None
 
     try:
         HEADERS = {
@@ -149,10 +147,6 @@ def send_post_request(
         response = requests.post(
             f"{attributes['connector_url']}{endpoint}",
             headers=HEADERS,
-            auth=(
-                attributes["connector_username"],
-                attributes["connector_password"],
-            ),
             json=data,
             verify=False,
         )
