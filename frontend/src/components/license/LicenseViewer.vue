@@ -1,6 +1,6 @@
 <template>
 	<n-spin :show="loading">
-		<p class="mb-2">license details:</p>
+		<p class="mb-2" v-if="license">license details:</p>
 		<div class="license-box flex flex-col gap-7" v-if="license">
 			<div class="section" v-if="!hideKey">
 				<div class="label">
@@ -107,7 +107,9 @@ function getLicense() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			if (err.response.status !== 404) {
+				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			}
 		})
 		.finally(() => {
 			loadingLicense.value = false
@@ -127,7 +129,9 @@ function getLicenseFeatures() {
 			}
 		})
 		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			if (err.response.status !== 404) {
+				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			}
 		})
 		.finally(() => {
 			loadingFeatures.value = false
