@@ -81,6 +81,8 @@ export interface CustomerProvision {
 	wazuh_cluster_key: string
 	wazuh_master_ip: string
 	grafana_url: string
+	provision_wazuh_worker: boolean
+	provision_ha_proxy: boolean
 }
 
 export interface CustomerDecomissionedData {
