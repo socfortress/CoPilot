@@ -6,6 +6,7 @@ from typing import Optional
 from pydantic import BaseModel
 from pydantic import Field
 
+
 class IntegrationRequest(BaseModel):
     app_name: str = Field(..., description="The name of the application", example="PagerDuty")
     category: str = Field(..., description="The category of the application", example="cases")

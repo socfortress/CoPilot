@@ -1,5 +1,4 @@
 from fastapi import APIRouter
-from fastapi import HTTPException
 from fastapi import Security
 from loguru import logger
 
@@ -8,6 +7,7 @@ from app.connectors.shuffle.schema.integrations import IntegrationRequest
 from app.connectors.shuffle.services.integrations import execute_integration
 
 shuffle_integrations_router = APIRouter()
+
 
 @shuffle_integrations_router.post(
     "/execute",

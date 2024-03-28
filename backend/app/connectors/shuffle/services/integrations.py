@@ -1,11 +1,6 @@
-import asyncio
-from typing import List
-
-from fastapi import HTTPException
 from loguru import logger
 
 from app.connectors.shuffle.schema.integrations import IntegrationRequest
-from app.connectors.shuffle.utils.universal import send_get_request
 from app.connectors.shuffle.utils.universal import send_post_request
 
 
