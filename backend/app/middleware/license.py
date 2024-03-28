@@ -3,7 +3,7 @@ import requests
 from datetime import datetime as dt
 from enum import Enum
 from typing import Any
-from typing import List
+from typing import List, Dict
 from typing import Optional
 
 from fastapi import APIRouter
@@ -12,6 +12,8 @@ from fastapi import HTTPException
 from licensing.methods import Data
 from licensing.methods import Helpers
 from licensing.methods import Key
+from app.connectors.services import ConnectorServices
+from app.connectors.schema import UpdateConnector
 
 # from licensing.models import *
 from loguru import logger
@@ -544,11 +546,36 @@ async def replace_license_in_db(request: ReplaceLicenseRequest, session: AsyncSe
         raise HTTPException(status_code=400, detail="License replacement failed")
 
 
+def create_headers(request: ThreatIntelRegisterRequest) -> Dict[str, str]:
+    return {
+        "x-api-key": request.requesting_api_key,
+        "Content-Type": "application/json",
+        "module": "1.0",
+        "SOCFortress_Threat_Intel": "c1f882d9-cd09-4f9c-81a6-71fe0fb53129"
+    }
+
+def create_payload(request: ThreatIntelRegisterRequest) -> Dict[str, str]:
+    return {
+        "customer_name": request.customer_name,
+        "requested_by": request.requested_by,
+    }
+
+async def update_connector(response: ThreatIntelRegisterResponse, session: AsyncSession):
+    await ConnectorServices.update_connector_by_id(
+        connector_id=10,
+        connector=UpdateConnector(
+            connector_api_key=response.api_key,
+            connector_url="https://intel.socfortress.co/search",
+        ),
+        session=session,
+    )
+
 @license_router.post(
     "/register_to_threat_intel",
     description="Register to the SOCFortress Threat Intel Feed",
 )
-async def register_to_threat_intel(request: ThreatIntelRegisterRequest):
+async def register_to_threat_intel(request: ThreatIntelRegisterRequest,
+                                   session: AsyncSession = Depends(get_db),):
     """
     Register to the SOCFortress Threat Intel Feed.
 
@@ -558,3 +585,21 @@ async def register_to_threat_intel(request: ThreatIntelRegisterRequest):
     Returns:
         ThreatIntelRegisterResponse: A Pydantic model containing the API key, success status, and message.
     """
+    logger.info(f"Registering to the SOCFortress Threat Intel Feed: {request}")
+    try:
+        headers = create_headers(request)
+        payload = create_payload(request)
+        response = ThreatIntelRegisterResponse(**requests.post(
+            request.registration_url,
+            headers=headers,
+            json=payload,
+        ).json())
+        await update_connector(response, session)
+        return ThreatIntelRegisterResponse(
+            api_key=response.api_key,
+            success=response.success,
+            message=response.message,
+        )
+    except Exception as e:
+        logger.error(e)
+        raise HTTPException(status_code=500, detail="Failed to register to the SOCFortress Threat Intel Feed")
