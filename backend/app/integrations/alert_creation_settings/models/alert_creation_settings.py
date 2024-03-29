@@ -38,7 +38,7 @@ class EventOrder(SQLModel, table=True):
 class AlertCreationSettings(SQLModel, table=True):
     __tablename__ = "custom_alert_creation_settings"
     id: Optional[int] = Field(primary_key=True)
-    customer_code: str = Field(max_length=11, nullable=False)
+    customer_code: str = Field(max_length=50, nullable=False)
     customer_name: str = Field(max_length=50, nullable=False)
     excluded_wazuh_rules: Optional[str] = Field(max_length=1024)
     excluded_suricata_rules: Optional[str] = Field(max_length=1024)
