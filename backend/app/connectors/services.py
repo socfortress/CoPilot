@@ -36,7 +36,7 @@ from app.utils import verify_alert_creation_provisioning_connection
 from app.utils import verify_haproxy_provisioning_connection
 from app.utils import verify_wazuh_worker_provisioning_connection
 
-UPLOAD_FOLDER = "file-store"
+UPLOAD_FOLDER = "data"
 UPLOAD_FOLDER = os.path.join(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
     UPLOAD_FOLDER,
