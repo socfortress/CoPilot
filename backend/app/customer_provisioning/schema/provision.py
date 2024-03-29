@@ -248,6 +248,10 @@ class ProvisionDashboardRequest(BaseModel):
         ...,
         description="ID of the Grafana folder",
     )
+    grafana_url: str = Field(
+        ...,
+        description="URL of the Grafana instance",
+    )
 
 
 class ProvisionDashboardResponse(BaseModel):

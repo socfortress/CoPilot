@@ -31,7 +31,7 @@ def get_dashboard_path(dashboard_info: tuple) -> Path:
     return base_dir / "dashboards" / folder_name / file_name
 
 
-def load_dashboard_json(dashboard_info: tuple, datasource_uid: str) -> dict:
+def load_dashboard_json(dashboard_info: tuple, datasource_uid: str, grafana_url: str) -> dict:
     """
     Load the JSON data of a dashboard from a file and replace the 'uid' value with the provided datasource UID.
 
@@ -53,6 +53,7 @@ def load_dashboard_json(dashboard_info: tuple, datasource_uid: str) -> dict:
 
         # Search for 'uid' with 'wazuh_datasource_uid' and replace it
         replace_uid_value(dashboard_data, datasource_uid)
+        replace_grafana_url(dashboard_data, grafana_url)
 
         return dashboard_data
 
@@ -88,6 +89,27 @@ def replace_uid_value(
     elif isinstance(obj, list):
         for item in obj:
             replace_uid_value(item, new_value, key_to_replace, old_value)
+
+
+def replace_grafana_url(obj, new_value, key_to_replace="url", old_value="https://grafana.company.local"):
+    """
+    Recursively replaces the value of a specified key in a nested dictionary or list.
+
+    Args:
+        obj (dict or list): The object to be traversed and modified.
+        new_value: The new value to replace the old value with.
+        key_to_replace (str): The key to be replaced. Defaults to "url".
+        old_value: The old value to be replaced. Defaults to "https://grafana.company.local".
+    """
+    if isinstance(obj, dict):
+        for k, v in obj.items():
+            if k == key_to_replace and isinstance(v, str) and v.startswith(old_value):
+                obj[k] = v.replace(old_value, new_value)
+            elif isinstance(v, (dict, list)):
+                replace_grafana_url(v, new_value, key_to_replace, old_value)
+    elif isinstance(obj, list):
+        for item in obj:
+            replace_grafana_url(item, new_value, key_to_replace, old_value)
 
 
 async def update_dashboard(
@@ -161,6 +183,7 @@ async def provision_dashboards(
             dashboard_json = load_dashboard_json(
                 dashboard_enum.value,
                 datasource_uid=dashboard_request.datasourceUid,
+                grafana_url=dashboard_request.grafana_url,
             )
             updated_dashboard = await update_dashboard(
                 dashboard_json=dashboard_json,

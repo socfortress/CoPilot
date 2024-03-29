@@ -89,6 +89,10 @@ class DashboardProvisionRequest(BaseModel):
         "uid-to-be-replaced",
         description="Datasource UID to use for dashboards",
     )
+    grafana_url: str = Field(
+        "https://grafana.company.local",
+        description="URL of the Grafana instance for the links within the dashboards.",
+    )
 
     @validator("dashboards", each_item=True)
     def check_dashboard_exists(cls, e):
