@@ -8,7 +8,7 @@ from sqlmodel import SQLModel
 
 class Customers(SQLModel, table=True):
     id: Optional[int] = Field(primary_key=True)
-    customer_code: str = Field(max_length=11, nullable=False)
+    customer_code: str = Field(max_length=50, nullable=False)
     parent_customer_code: Optional[str] = Field(max_length=11)
     customer_name: str = Field(max_length=50, nullable=False)
     contact_last_name: Optional[str] = Field(max_length=50)
