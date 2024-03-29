@@ -87,6 +87,7 @@ async def provision_wazuh_customer(
             organizationId=provision_meta_data["grafana_organization_id"],
             folderId=provision_meta_data["grafana_edr_folder_id"],
             datasourceUid=provision_meta_data["wazuh_datasource_uid"],
+            grafana_url=request.grafana_url,
         ),
     )
 

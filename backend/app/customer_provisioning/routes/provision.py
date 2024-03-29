@@ -360,5 +360,6 @@ async def provision_dashboards_route(
             organizationId=request.grafana_org_id,
             folderId=request.grafana_folder_id,
             datasourceUid=request.grafana_datasource_uid,
+            grafana_url=request.grafana_url,
         ),
     )
