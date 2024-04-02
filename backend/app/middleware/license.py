@@ -655,7 +655,12 @@ async def create_trial_license_key(request: TrialLicenseRequest, session: AsyncS
     logger.info(f"Results: {results}")
     if results["data"]["success"] is False:
         raise HTTPException(status_code=400, detail=f"Failed to create trial license: {results['data']['message']}")
-    await add_license_to_db(session, results["data"]["license_key"], request)
+    await add_license_to_db(session, results["data"]["license_key"], AddLicenseToDB(
+        customer_email=request.email,
+        customer_name=request.customer_name,
+        company_name=request.company_name,
+    )
+    )
     return TrialLicenseResponse(
         license_key=results["data"]["license_key"],
         success=results["data"]["success"],
