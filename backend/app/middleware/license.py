@@ -60,25 +60,18 @@ class ReplaceLicenseRequest(BaseModel):
     license_key: str = Field(..., title="The license key to replace")
 
 
-class CreateLicenseRequest(BaseModel):
-    """
-    A Pydantic model for creating a license.
+class TrialLicenseRequest(BaseModel):
+    period: Optional[int] = Field(7, title="The period of the trial license")
+    email: str = Field(..., title="The email of the user")
+    feature_name: str = Field(..., title="The feature name")
+    customer_name: str = Field(..., title="The customer name")
+    company_name: str = Field(..., title="The company name")
 
-    Attributes:
-        product_id (int): The product id.
-        notes (str): The notes.
-        new_customer (bool): Whether the customer is new.
-        name (str): The customer name.
-        email (str): The customer email.
-        company_name (str): The customer company name.
-    """
 
-    product_id: int = Field(24355, title="The product id")
-    notes: str = Field("Test Key", title="The notes")
-    new_customer: bool = Field(True, title="Whether the customer is new")
-    name: str = Field("Test Customer", title="The customer name")
-    email: str = Field(..., title="The customer email")
-    company_name: str = Field("Test Company", title="The customer company name")
+class TrialLicenseResponse(BaseModel):
+    license_key: str
+    success: bool
+    message: str
 
 
 class CreateCustomerKeyResult(BaseModel):
@@ -99,11 +92,11 @@ class CreateCustomerKeyRouteResponse(BaseModel):
 
 
 class Customer(BaseModel):
-    Id: int
-    Name: str
-    Email: str
-    CompanyName: str
-    Created: int
+    id: int
+    name: str
+    email: str
+    companyName: str
+    created: dt
 
 
 class RawResponse(BaseModel):
@@ -115,7 +108,7 @@ class RawResponse(BaseModel):
 
 
 class LicenseResponse(BaseModel):
-    product_id: int
+    productId: int
     id: int
     key: str
     created: dt
@@ -131,15 +124,15 @@ class LicenseResponse(BaseModel):
     f8: bool
     notes: str
     block: bool
-    global_id: int
+    globalId: int
     customer: Customer
-    activated_machines: List
-    trial_activation: bool
-    max_no_of_machines: int
-    allowed_machines: Optional[Any]
-    data_objects: List
-    sign_date: dt
-    reseller: Optional[Any]
+    activatedMachines: List
+    trialActivation: bool
+    maxNoOfMachines: int
+    allowedMachines: Optional[Any]
+    dataObjects: List
+    signDate: dt
+    reseller: Optional[Any] = None
 
 
 class VerifyLicenseResponse(BaseModel):
@@ -159,6 +152,140 @@ class GetLicenseFeaturesResponse(BaseModel):
     success: bool
     message: str
 
+
+class Feature(BaseModel):
+    id: int
+    subscription_price_id: str
+    name: str
+    price: int
+    currency: str
+    info: str
+    short_description: str
+    full_description: str
+
+class GetSubscriptionCatalogFeaturesResponse(BaseModel):
+    features: List[Feature]
+    success: bool
+    message: str
+
+class FeatureSubscriptionRequest(BaseModel):
+    feature_id: int = Field(..., example=1)
+    cancel_url: str = Field(..., example="https://example.com/cancel")
+    success_url: str = Field(..., example="https://example.com/success")
+
+###### ! CREATE SESSION CHECKOUT ! ######
+class AutomaticTax(BaseModel):
+    enabled: bool
+    liability: Optional[str] = None
+    status: Optional[str] = None
+
+
+class CustomText(BaseModel):
+    after_submit: Optional[str] = None
+    shipping_address: Optional[str] = None
+    submit: Optional[str] = None
+    terms_of_service_acceptance: Optional[str] = None
+
+
+class InvoiceData(BaseModel):
+    account_tax_ids: Optional[str] = None
+    custom_fields: Optional[str] = None
+    description: Optional[str] = None
+    footer: Optional[str] = None
+    issuer: Optional[str] = None
+    metadata: Dict = {}
+    rendering_options: Optional[str] = None
+
+
+class InvoiceCreation(BaseModel):
+    enabled: bool
+    invoice_data: InvoiceData
+
+
+class PaymentMethodOptionsCard(BaseModel):
+    request_three_d_secure: str
+
+
+class PaymentMethodOptions(BaseModel):
+    card: PaymentMethodOptionsCard
+
+
+class PhoneNumberCollection(BaseModel):
+    enabled: bool
+
+
+class TotalDetails(BaseModel):
+    amount_discount: int
+    amount_shipping: int
+    amount_tax: int
+
+
+class CheckoutSession(BaseModel):
+    after_expiration: Optional[str] = None
+    allow_promotion_codes: Optional[str] = None
+    amount_subtotal: int
+    amount_total: int
+    automatic_tax: AutomaticTax
+    billing_address_collection: Optional[str] = None
+    cancel_url: str
+    client_reference_id: Optional[str] = None
+    client_secret: Optional[str] = None
+    consent: Optional[str] = None
+    consent_collection: Optional[str] = None
+    created: int
+    currency: str
+    currency_conversion: Optional[str] = None
+    custom_fields: List = []
+    custom_text: CustomText
+    customer: Optional[str] = None
+    customer_creation: str
+    customer_details: Optional[str] = None
+    customer_email: Optional[str] = None
+    expires_at: int
+    id: str
+    invoice: Optional[str] = None
+    invoice_creation: Optional[InvoiceCreation] = None
+    livemode: bool
+    locale: Optional[str] = None
+    metadata: Dict
+    mode: str
+    object: str
+    payment_intent: Optional[str] = None
+    payment_link: Optional[str] = None
+    payment_method_collection: str
+    payment_method_configuration_details: Optional[str] = None
+    payment_method_options: PaymentMethodOptions
+    payment_method_types: List[str]
+    payment_status: str
+    phone_number_collection: PhoneNumberCollection
+    recovered_from: Optional[str] = None
+    setup_intent: Optional[str] = None
+    shipping_address_collection: Optional[str] = None
+    shipping_cost: Optional[str] = None
+    shipping_details: Optional[str] = None
+    shipping_options: List = []
+    status: str
+    submit_type: Optional[str] = None
+    subscription: Optional[str] = None
+    success_url: str
+    total_details: TotalDetails
+    ui_mode: str
+    url: str
+
+
+class CheckoutSessionResponse(BaseModel):
+    success: bool = True
+    message: str = "Checkout session created successfully"
+    session: CheckoutSession
+
+class CancelSubscriptionRequest(BaseModel):
+    customer_email: str
+    subscription_price_id: str
+    feature_name: str
+
+class CancelSubscriptionResponse(BaseModel):
+    success: bool
+    message: str
 
 class Feature(Enum):
     MIMECAST = "MIMECAST"
@@ -258,8 +385,8 @@ def create_key(auth, request):
 
 async def add_license_to_db(session: AsyncSession, result, request):
     new_license = License(
-        license_key=result.response[0].key,
-        customer_name=request.name,
+        license_key=result,
+        customer_name=request.customer_name,
         customer_email=request.email,
         company_name=request.company_name,
     )
@@ -314,7 +441,9 @@ def is_license_expired(license: dict) -> bool:
     Returns:
         bool: True if the license is expired, False otherwise.
     """
-    return dt.now() > license["expires"]
+    logger.info(f"License: {license}")
+    expires = dt.strptime(license["data"]["license"]["expires"], "%Y-%m-%dT%H:%M:%S.%f")
+    return dt.now() > expires
 
 
 async def is_feature_enabled(feature_name: str, session: AsyncSession) -> bool:
@@ -338,11 +467,107 @@ async def is_feature_enabled(feature_name: str, session: AsyncSession) -> bool:
     raise HTTPException(status_code=400, detail="Feature not enabled. You must purchase a license to use this feature.")
 
 
-@license_router.post(
-    "/create_trial_key",
-    description="Create a trial license key",
+async def send_get_request(endpoint: str) -> Dict[str, Any]:
+    """
+    Sends a GET request to the Shuffle service.
+
+    Args:
+        endpoint (str): The endpoint to send the GET request to.
+
+    Returns:
+        Dict[str, Any]: The response from the GET request.
+    """
+    logger.info(f"Sending GET request to {endpoint}")
+
+    try:
+        HEADERS = {
+            "x-api-key": f"{os.getenv('COPILOT_API_KEY')}",
+            "Content-Type": "application/json",
+            "module-version": "1.0",
+        }
+        response = requests.get(
+            f"https://license.socfortress.co/{endpoint}",
+            headers=HEADERS,
+            verify=False,
+        )
+
+        if response.status_code == 204:
+            return {
+                "data": None,
+                "success": True,
+                "message": "Successfully completed request with no content",
+            }
+        else:
+            return {
+                "data": response.json(),
+                "success": False if response.status_code >= 400 else True,
+                "message": f"Successfully retrieved data",
+            }
+    except Exception as e:
+        logger.error(f"Failed to send GET request to {endpoint} with error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to send GET request to {endpoint} with error: {e}",
+        )
+
+@license_router.get(
+    "/subscription_features",
+    description="Get the subscription features available",
+    response_model=GetSubscriptionCatalogFeaturesResponse,
 )
-async def create_trial_license_key(request: CreateLicenseRequest, session: AsyncSession = Depends(get_db)):
+async def get_subscription_catalog():
+    """
+    Get the subscription catalog. This is handled by the Middleware running in SOCFortress Infra
+
+    Returns:
+        dict: A dictionary containing the subscription catalog.
+    """
+    try:
+        results = await send_get_request("features")
+        return GetSubscriptionCatalogFeaturesResponse(
+            features=results["data"]["features"],
+            success=results["success"],
+            message=results["message"],
+        )
+    except Exception as e:
+        logger.error(e)
+        raise HTTPException(status_code=400, detail="Failed to get subscription features")
+
+@license_router.post(
+    "/create_checkout_session",
+    description="Create a checkout session",
+    response_model=CheckoutSessionResponse,
+)
+async def create_checkout_session(request: FeatureSubscriptionRequest):
+    """
+    Create a checkout session.
+
+    Args:
+        request (FeatureSubscriptionRequest): The request containing the feature id and user id.
+
+    Returns:
+        dict: A dictionary containing the checkout session.
+    """
+    results = await send_post_request(
+        "create-checkout-session",
+        data={"feature_id": request.feature_id, "cancel_url": request.cancel_url, "success_url": request.success_url}
+    )
+    logger.info(f"Results: {results}")
+    if results["data"]["success"] is False:
+        raise HTTPException(status_code=400, detail=f"Failed to create checkout session: {results['data']['message']}")
+    return CheckoutSessionResponse(
+        session=results["data"]["session"],
+        success=results["data"]["success"],
+        message=results["data"]["message"],
+    )
+
+
+@license_router.post(
+    "/trial_license",
+    description="Create a trial license",
+    response_model=TrialLicenseResponse,
+)
+async def create_trial_license_key(request: TrialLicenseRequest, session: AsyncSession = Depends(get_db)) -> TrialLicenseResponse:
     """
     Create a trial license key.
 
@@ -354,39 +579,76 @@ async def create_trial_license_key(request: CreateLicenseRequest, session: Async
         LicenseVerificationResponse: A Pydantic model containing the verification status and message.
     """
     await check_if_license_exists(session)
-    auth = get_auth_token()
-    result = create_trial_key(auth, request)
-    await add_license_to_db(session, result, request)
-    return result
-
+    results = await send_post_request(
+        "trial-license",
+        data={"email": request.email, "feature_name": request.feature_name, "customer_name": request.customer_name, "period": request.period, "company_name": request.company_name}
+    )
+    logger.info(f"Results: {results}")
+    if results["data"]["success"] is False:
+        raise HTTPException(status_code=400, detail=f"Failed to create trial license: {results['data']['message']}")
+    await add_license_to_db(session, results["data"]["license_key"], request)
+    return TrialLicenseResponse(
+        license_key=results["data"]["license_key"],
+        success=results["data"]["success"],
+        message=results["data"]["message"],
+    )
 
 @license_router.post(
-    "/create_new_key",
-    response_model=CreateCustomerKeyRouteResponse,
-    description="Create a new license key",
+    "/cancel_subscription",
+    description="Cancel a subscription",
+    response_model=CancelSubscriptionResponse,
 )
-async def create_new_license_key(request: CreateLicenseRequest, session: AsyncSession = Depends(get_db)) -> CreateCustomerKeyRouteResponse:
+async def cancel_subscription(request: CancelSubscriptionRequest) -> CancelSubscriptionResponse:
     """
-    Create a new license key.
+    Cancel a subscription.
 
     Args:
-        license_key (str): The license key to verify.
-        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+        request (CancelSubscriptionRequest): The request containing the customer email, subscription price id, and feature name.
 
     Returns:
-        LicenseVerificationResponse: A Pydantic model containing the verification status and message.
+        dict: A dictionary containing the cancellation status.
     """
-    await check_if_license_exists(session)
-    auth = get_auth_token()
-    result = create_key(auth, request)
-    logger.info(f"Result: {result}")
-    await add_license_to_db(session, result, request)
-    return CreateCustomerKeyRouteResponse(response=result.response, success=True, message="License created successfully")
+    results = await send_post_request(
+        "cancel-subscription",
+        data={"customer_email": request.customer_email, "subscription_price_id": request.subscription_price_id, "feature_name": request.feature_name}
+    )
+    logger.info(f"Results: {results}")
+    if results["data"]["success"] is False:
+        raise HTTPException(status_code=400, detail=f"Failed to cancel subscription: {results['data']['message']}")
+    return CancelSubscriptionResponse(
+        success=results["data"]["success"],
+        message=results["data"]["message"],
+    )
+
+# @license_router.post(
+#     "/create_new_key",
+#     response_model=CreateCustomerKeyRouteResponse,
+#     description="Create a new license key",
+#     deprecated=True,
+# )
+# async def create_new_license_key(request: CreateLicenseRequest, session: AsyncSession = Depends(get_db)) -> CreateCustomerKeyRouteResponse:
+#     """
+#     Create a new license key.
+
+#     Args:
+#         license_key (str): The license key to verify.
+#         session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+#     Returns:
+#         LicenseVerificationResponse: A Pydantic model containing the verification status and message.
+#     """
+#     await check_if_license_exists(session)
+#     auth = get_auth_token()
+#     result = create_key(auth, request)
+#     logger.info(f"Result: {result}")
+#     await add_license_to_db(session, result, request)
+#     return CreateCustomerKeyRouteResponse(response=result.response, success=True, message="License created successfully")
 
 
 @license_router.post(
     "/extend_license",
     description="Extend a license",
+    deprecated=True,
 )
 async def extend_license_key(period: int, session: AsyncSession = Depends(get_db)):
     """
@@ -426,13 +688,13 @@ async def verify_license_key(session: AsyncSession = Depends(get_db)) -> VerifyL
     """
     license = await get_license(session)
     try:
-        logger.info(f"License: {license}")
-        result = check_license(license)
-        result = result.__dict__
-        logger.info(result)
+        result = await send_post_request(
+            "verify-license",
+            data={"license_key": license.license_key}
+            )
         if is_license_expired(result):
             raise HTTPException(status_code=400, detail="License is expired")
-        return VerifyLicenseResponse(license=result, success=True, message="License verified successfully")
+        return VerifyLicenseResponse(license=result['data']['license'], success=True, message="License verified successfully")
     except Exception as e:
         logger.error(e)
         raise HTTPException(status_code=400, detail="License verification failed")
@@ -456,6 +718,51 @@ async def get_license_key(session: AsyncSession = Depends(get_db)) -> GetLicense
     return GetLicenseResponse(license_key=license.license_key, success=True, message="License retrieved successfully")
 
 
+async def send_post_request(endpoint: str, data: Dict[str, Any] = None) -> Dict[str, Any]:
+    """
+    Sends a POST request to the Shuffle service.
+
+    Args:
+        endpoint (str): The endpoint to send the POST request to.
+        data (Dict[str, Any]): The data to send with the POST request.
+        connector_name (str, optional): The name of the connector to use. Defaults to "Shuffle".
+
+    Returns:
+        Dict[str, Any]: The response from the POST request.
+    """
+    logger.info(f"Sending POST request to {endpoint}")
+
+    try:
+        HEADERS = {
+            "x-api-key": f"{os.getenv('COPILOT_API_KEY')}",
+            "Content-Type": "application/json",
+            "module-version": "1.0",
+        }
+        response = requests.post(
+            f"https://license.socfortress.co/{endpoint}",
+            headers=HEADERS,
+            json=data,
+            verify=False,
+        )
+
+        if response.status_code == 200:
+            return {
+                "data": response.json(),
+                "success": True,
+                "message": f"Successfully retrieved data",
+            }
+        else:
+            return {
+                "success": False,
+                "message": f"Failed to send POST request to {endpoint}",
+            }
+    except Exception as e:
+        logger.error(f"Failed to send GET request to {endpoint} with error: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to send GET request to {endpoint} with error: {e}",
+        )
+
 @license_router.get(
     "/get_license_features",
     response_model=GetLicenseFeaturesResponse,
@@ -473,14 +780,14 @@ async def get_license_features(session: AsyncSession = Depends(get_db)) -> GetLi
     """
     license = await get_license(session)
     try:
-        license_details = LicenseResponse(**check_license(license).__dict__)
-        features = {}
-        for data_object in license_details.data_objects:
-            features[data_object["Name"]] = data_object["IntValue"]
+        results = await send_post_request(
+            "license-features",
+            data={"license_key": license.license_key}
+            )
         return GetLicenseFeaturesResponse(
-            features=[feature for feature, value in features.items() if value == 1],
-            success=True,
-            message="License features retrieved successfully",
+            features=results["data"]["features"],
+            success=results["success"],
+            message=results["message"],
         )
     except Exception as e:
         logger.error(e)
@@ -490,6 +797,7 @@ async def get_license_features(session: AsyncSession = Depends(get_db)) -> GetLi
 @license_router.post(
     "/add_feature/{feature_name}",
     description="Add a feature to a license",
+    deprecated=True,
 )
 async def add_feature_to_license(feature_name: str, session: AsyncSession = Depends(get_db)):
     """
@@ -586,6 +894,7 @@ async def update_connector(response: ThreatIntelRegisterResponse, session: Async
 @license_router.post(
     "/register_to_threat_intel",
     description="Register to the SOCFortress Threat Intel Feed",
+    deprecated=True,
 )
 async def register_to_threat_intel(
     request: ThreatIntelRegisterRequest,
