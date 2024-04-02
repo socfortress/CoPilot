@@ -29,9 +29,6 @@ jobs:
                   push: true
                   tags: ghcr.io/socfortress/copilot-backend:latest
                   build-args: |
-                      CRYPTOLENS_AUTH=${{ secrets.CRYPTOLENS_AUTH }}
-                      RSA_PUBLIC_KEY=${{ secrets.RSA_PUBLIC_KEY }}
-                      PRODUCT_ID=${{ secrets.PRODUCT_ID }}
                       COPILOT_API_KEY=${{ secrets.COPILOT_API_KEY }}
 
     build-frontend:
