@@ -172,6 +172,16 @@ class FeatureSubscriptionRequest(BaseModel):
     feature_id: int = Field(..., example=1)
     cancel_url: str = Field(..., example="https://example.com/cancel")
     success_url: str = Field(..., example="https://example.com/success")
+    customer_email: str = Field(..., example="info@socfortress.co")
+    company_name: str = Field(..., example="SOCFORTRESS")
+
+class GetLicenseByEmailRequest(BaseModel):
+    email: str = Field(..., example="info@socfortress.co")
+
+class AddLicenseToDB(BaseModel):
+    customer_name: str
+    customer_email: str
+    company_name: str
 
 ###### ! CREATE SESSION CHECKOUT ! ######
 class AutomaticTax(BaseModel):
@@ -219,6 +229,14 @@ class TotalDetails(BaseModel):
     amount_shipping: int
     amount_tax: int
 
+class CustomerDetails(BaseModel):
+    address: Optional[str] = None
+    email: Optional[str] = None
+    name: Optional[str] = None
+    phone: Optional[str] = None
+    tax_exempt: Optional[str] = None
+    tax_ids: Optional[str] = None
+
 
 class CheckoutSession(BaseModel):
     after_expiration: Optional[str] = None
@@ -239,7 +257,7 @@ class CheckoutSession(BaseModel):
     custom_text: CustomText
     customer: Optional[str] = None
     customer_creation: str
-    customer_details: Optional[str] = None
+    customer_details: Optional[CustomerDetails] = None
     customer_email: Optional[str] = None
     expires_at: int
     id: str
@@ -383,29 +401,44 @@ def create_key(auth, request):
     return result
 
 
-async def add_license_to_db(session: AsyncSession, result, request):
+async def add_license_to_db(session: AsyncSession, result, request: AddLicenseToDB):
+    """
+    Add a new license to the database.
+
+    :param session: AsyncSession object for the database session
+    :param result: The license key to be added
+    :param request: The request object containing customer details
+    :return: The newly added License object
+    """
+
     new_license = License(
         license_key=result,
         customer_name=request.customer_name,
-        customer_email=request.email,
-        company_name=request.company_name,
+        customer_email=request.customer_email,
+        company_name=request.company_name
     )
+
     logger.info(f"Adding new license: {new_license} to the database")
     session.add(new_license)
     await session.commit()
     return new_license
 
-
 async def get_license(session: AsyncSession) -> License:
+    """
+    Get the license from the database
+
+    :param session: The AsyncSession object for the database
+    :return: The License object
+    """
     try:
         result = await session.execute(select(License))
         license = result.scalars().first()
-        if not license:
+        if license is None:
             raise HTTPException(status_code=404, detail="No license found")
         return license
     except Exception as e:
-        logger.error(e)
-        raise HTTPException(status_code=404, detail="No license found")
+        logger.error(f"Unexpected error when retrieving license: {e}")
+        raise HTTPException(status_code=500, detail="Unexpected error when retrieving license") from e
 
 
 def check_license(license: License):
@@ -534,6 +567,42 @@ async def get_subscription_catalog():
         raise HTTPException(status_code=400, detail="Failed to get subscription features")
 
 @license_router.post(
+    "/retrieve_license_by_email",
+    description="Retrieve a license by email",
+    response_model=GetLicenseResponse,
+)
+async def retrieve_license_by_email(request: GetLicenseByEmailRequest, session: AsyncSession = Depends(get_db)) -> GetLicenseResponse:
+    """
+    Retrieve a license by email.
+
+    Args:
+        request (GetLicenseRequest): The request containing the email to retrieve the license by.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        GetLicenseResponse: A Pydantic model containing the license key, success status, and message.
+    """
+    results = await send_post_request(
+        "retrieve-license-by-email",
+        data={"email": request.email}
+        )
+    logger.info(f"Results: {results}")
+    if results["data"]["success"] is False:
+        raise HTTPException(status_code=400, detail=f"Failed to retrieve license by email: {results['data']['message']}")
+
+    # Add the license to the database
+    await add_license_to_db(session, results["data"]["license"]["key"], AddLicenseToDB(
+        customer_email=results["data"]["license"]["customer"]["email"],
+        customer_name=results["data"]["license"]["customer"]["name"],
+        company_name=results["data"]["license"]["customer"]["companyName"],
+    ))
+    return GetLicenseResponse(
+        license_key=results["data"]["license"]["key"],
+        success=results["data"]["success"],
+        message=results["data"]["message"],
+    )
+
+@license_router.post(
     "/create_checkout_session",
     description="Create a checkout session",
     response_model=CheckoutSessionResponse,
@@ -550,7 +619,7 @@ async def create_checkout_session(request: FeatureSubscriptionRequest):
     """
     results = await send_post_request(
         "create-checkout-session",
-        data={"feature_id": request.feature_id, "cancel_url": request.cancel_url, "success_url": request.success_url}
+        data={"feature_id": request.feature_id, "cancel_url": request.cancel_url, "success_url": request.success_url, "customer_email": request.customer_email, "company_name": request.company_name}
     )
     logger.info(f"Results: {results}")
     if results["data"]["success"] is False:
