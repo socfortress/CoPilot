@@ -46,7 +46,7 @@ class UserInput(SQLModel):
     password: str = Field(
         max_length=256,
         min_length=8,
-        regex="^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&#])[A-Za-z\\d@$!%*?&#]{8,}$",
+        regex="^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&#]).{8,}$",
         description="Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character",
     )
     email: EmailStr
