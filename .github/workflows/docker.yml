@@ -2,7 +2,7 @@ name: Docker
 
 on:
     push:
-        branches: [license-integration]
+        branches: [main]
 
 jobs:
     build-backend:
