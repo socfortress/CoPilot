@@ -831,10 +831,10 @@ async def send_post_request(endpoint: str, data: Dict[str, Any] = None) -> Dict[
                 "message": f"Failed to send POST request to {endpoint}",
             }
     except Exception as e:
-        logger.error(f"Failed to send GET request to {endpoint} with error: {e}")
+        logger.error(f"Failed to send POST request to {endpoint} with error: {e}")
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to send GET request to {endpoint} with error: {e}",
+            detail=f"Failed to send POST request to {endpoint} with error: {e}",
         )
 
 @license_router.get(
