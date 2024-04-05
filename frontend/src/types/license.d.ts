@@ -46,3 +46,14 @@ export enum LicenseFeatures {
 }
 
 export type LicenseKey = `${string}-${string}-${string}-${string}`
+
+export interface SubscriptionFeature {
+	id: number
+	subscription_price_id: string
+	name: string
+	price: number
+	currency: string
+	info: string
+	short_description: string
+	full_description: string
+}
