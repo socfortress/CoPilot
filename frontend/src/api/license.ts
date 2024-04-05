@@ -1,6 +1,6 @@
 import { type FlaskBaseResponse } from "@/types/flask.d"
 import { HttpClient } from "./httpClient"
-import type { License, LicenseFeatures, LicenseKey } from "@/types/license.d"
+import type { License, LicenseFeatures, LicenseKey, SubscriptionFeature } from "@/types/license.d"
 
 export interface NewLicensePayload {
 	name: string
@@ -11,6 +11,9 @@ export interface NewLicensePayload {
 export default {
 	getLicense() {
 		return HttpClient.get<FlaskBaseResponse & { license_key: LicenseKey }>(`/license/get_license`)
+	},
+	getSubscriptionFeatures() {
+		return HttpClient.get<FlaskBaseResponse & { features: SubscriptionFeature[] }>(`/license/subscription_features`)
 	},
 	verifyLicense() {
 		return HttpClient.get<FlaskBaseResponse & { license: License }>(`/license/verify_license`)
