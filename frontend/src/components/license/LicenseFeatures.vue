@@ -1,24 +1,28 @@
 <template>
-	<div class="license-features">
+	<div class="license-features" :class="{ loading }">
 		<div class="license-features-box flex items-center justify-center">
 			<n-spin :show="loading" class="h-full" content-class="h-full">
-				<div class="wrapper h-full flex flex-col" v-if="!loading">
+				<div class="wrapper h-full flex flex-col gap-4" v-if="!loading">
 					<h3>
-						{{ features.length ? "Your features" : "Add features to unlock power" }}
+						{{ features.length ? "Your features" : "Unlock features" }}
 					</h3>
-					<div class="features-list grow">
-						<template v-if="activeSubscriptions.length">
-							<SubscriptionCard
-								v-for="subscription of activeSubscriptions"
-								:key="subscription.id"
-								:subscription="subscription"
-								embedded
-							/>
-						</template>
-						<LicenseCheckoutWizard v-else />
+					<div class="grow overflow-hidden">
+						<n-scrollbar>
+							<template v-if="activeSubscriptions.length">
+								<div class="features-list flex flex-col gap-2">
+									<SubscriptionCard
+										v-for="subscription of activeSubscriptions"
+										:key="subscription.id"
+										:subscription="subscription"
+										embedded
+									/>
+								</div>
+							</template>
+							<LicenseCheckoutWizard v-else />
+						</n-scrollbar>
 					</div>
 					<div class="cta-section" v-if="activeSubscriptions.length">
-						<n-button type="primary" @click="openCheckout()">
+						<n-button type="primary" @click="openCheckout()" class="!w-full">
 							<template #icon>
 								<Icon :name="ExtendIcon"></Icon>
 							</template>
@@ -31,9 +35,14 @@
 
 		<div class="footer mt-3" v-if="!hideKey && !loading">
 			<template v-if="license">
-				Your license:
-				<strong>{{ license.key }}</strong>
-				<Icon :name="InfoIcon" :size="14" class="relative top-0.5 ml-1"></Icon>
+				<span class="cursor-pointer" @click="showLicenseDetails = true">
+					Your license:
+					<strong>{{ license }}</strong>
+					<Icon :name="InfoIcon" :size="14" class="relative top-0.5 ml-1"></Icon>
+				</span>
+			</template>
+			<template v-else>
+				<span class="cursor-pointer">If you possess a license, you may load it by clicking here</span>
 			</template>
 		</div>
 
@@ -41,7 +50,7 @@
 			v-model:show="showCheckoutForm"
 			preset="card"
 			:style="{ maxWidth: 'min(600px, 90vw)', minHeight: 'min(300px, 90vh)', overflow: 'hidden' }"
-			title="Add feature "
+			title="Add feature"
 			:bordered="false"
 			content-class="flex flex-col"
 			segmented
@@ -53,29 +62,28 @@
 			v-model:show="showLicenseDetails"
 			preset="card"
 			:style="{ maxWidth: 'min(600px, 90vw)', minHeight: 'min(300px, 90vh)', overflow: 'hidden' }"
-			title="Add feature "
+			title="License details"
 			:bordered="false"
 			content-class="flex flex-col"
 			segmented
 		>
-			<LicenseDetails />
+			<LicenseDetails :features-data="features" hide-features v-if="license" embedded />
 		</n-modal>
 	</div>
 </template>
 
 <script setup lang="ts">
-// TODO: features-list: add scroller
-import { NSpin, NModal, NButton, useMessage } from "naive-ui"
+import { NScrollbar, NSpin, NModal, NButton, useMessage } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import Api from "@/api"
-import { onBeforeMount, onMounted, ref, toRefs } from "vue"
-import { computed } from "vue"
-import { LicenseFeatures, type License, type SubscriptionFeature } from "@/types/license.d"
+import { onBeforeMount, onMounted, ref, toRefs, computed } from "vue"
+import { LicenseFeatures, type LicenseKey, type SubscriptionFeature } from "@/types/license.d"
 import SubscriptionCard from "./SubscriptionCard.vue"
 import LicenseCheckoutWizard from "./LicenseCheckoutWizard.vue"
+import LicenseDetails from "./LicenseDetails.vue"
 
 const emit = defineEmits<{
-	(e: "licenseLoaded", value: License): void
+	(e: "licenseLoaded", value: LicenseKey): void
 	(
 		e: "mounted",
 		value: {
@@ -97,7 +105,7 @@ const loadingLicense = ref(false)
 const loadingFeatures = ref(false)
 const loadingSubscriptions = ref(false)
 
-const license = ref<License | null>(null)
+const license = ref<LicenseKey | null>(null)
 const features = ref<LicenseFeatures[]>([])
 const subscriptions = ref<SubscriptionFeature[]>([])
 
@@ -111,11 +119,11 @@ function getLicense() {
 	loadingLicense.value = true
 
 	Api.license
-		.verifyLicense()
+		.getLicense()
 		.then(res => {
 			if (res.data.success) {
-				license.value = res.data?.license
-				//emit("licenseLoaded", license.value)
+				license.value = res.data?.license_key
+				emit("licenseLoaded", license.value)
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
@@ -199,20 +207,32 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .license-features {
-	min-height: 300px;
-	min-width: 300px;
 	display: flex;
 	flex-direction: column;
+	overflow: hidden;
+
+	&.loading {
+		min-height: 300px;
+		min-width: 300px;
+	}
+
 	.license-features-box {
 		background-color: var(--bg-color);
 		border-radius: var(--border-radius);
 		padding: 14px 18px;
 		flex-grow: 1;
+		overflow: hidden;
 	}
 	.footer {
 		width: 100%;
 		text-align: center;
 		font-size: 12px;
+
+		.cursor-pointer {
+			&:hover {
+				color: var(--primary-color);
+			}
+		}
 	}
 }
 </style>

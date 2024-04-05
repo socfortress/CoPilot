@@ -1,10 +1,15 @@
 <template>
 	<div class="license-viewer flex justify-center items-center gap-4" :class="{ 'has-side': !!license }">
 		<div class="main-box">
-			<LicenseFeatures @license-loaded="license = $event" :hide-key="!!license" class="h-full" />
+			<LicenseFeatures
+				@license-loaded="licenseLoaded"
+				:hide-key="!!license"
+				class="h-full"
+				:class="{ 'mt-8': !license }"
+			/>
 		</div>
 		<div class="side-box">
-			<LicenseDetails hide-features :license="license" v-if="license" />
+			<LicenseDetails hide-features v-if="license" />
 		</div>
 	</div>
 </template>
@@ -12,10 +17,19 @@
 <script setup lang="ts">
 import LicenseFeatures from "./LicenseFeatures.vue"
 import LicenseDetails from "./LicenseDetails.vue"
-import type { License } from "@/types/license"
+import type { LicenseKey } from "@/types/license"
 import { ref } from "vue"
 
-const license = ref<License | undefined>(undefined)
+const emit = defineEmits<{
+	(e: "licenseLoaded", value: LicenseKey): void
+}>()
+
+const license = ref<LicenseKey | undefined>(undefined)
+
+function licenseLoaded(licenseKey: LicenseKey) {
+	license.value = licenseKey
+	emit("licenseLoaded", licenseKey)
+}
 </script>
 
 <style lang="scss" scoped>

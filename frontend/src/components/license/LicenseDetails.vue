@@ -1,6 +1,6 @@
 <template>
-	<n-spin :show="loading">
-		<div class="license-details-box flex flex-col gap-7" v-if="license">
+	<n-spin :show="loading" content-class="min-h-48">
+		<div class="license-details-box flex flex-col gap-7" :class="{ embedded }" v-if="license">
 			<div class="section" v-if="!hideKey">
 				<div class="label">
 					<Icon :name="KeyIcon" :size="14"></Icon>
@@ -61,8 +61,7 @@
 import { NSpin, useMessage } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import Api from "@/api"
-import { onBeforeMount, onMounted, ref } from "vue"
-import { computed } from "vue"
+import { onBeforeMount, onMounted, ref, toRefs, computed } from "vue"
 import { LicenseFeatures, type License } from "@/types/license.d"
 import { formatDate } from "@/utils"
 import { useSettingsStore } from "@/stores/settings"
@@ -77,11 +76,14 @@ const emit = defineEmits<{
 	): void
 }>()
 
-const {
-	license: licenseData,
-	hideKey,
-	hideFeatures
-} = defineProps<{ license?: License; hideKey?: boolean; hideFeatures?: boolean }>()
+const props = defineProps<{
+	licenseData?: License
+	featuresData?: LicenseFeatures[]
+	hideKey?: boolean
+	hideFeatures?: boolean
+	embedded?: boolean
+}>()
+const { licenseData, featuresData, hideKey, hideFeatures, embedded } = toRefs(props)
 
 const KeyIcon = "ph:key"
 const ExpiresIcon = "ph:calendar-blank"
@@ -94,9 +96,10 @@ const loadingLicense = ref(false)
 const loadingFeatures = ref(false)
 const dFormats = useSettingsStore().dateFormat
 
-const licenseObject = ref<License | null>(null)
-const features = ref<LicenseFeatures[]>([])
-const license = computed(() => licenseData || licenseObject.value || null)
+const licenseLoaded = ref<License | null>(null)
+const featuresLoaded = ref<LicenseFeatures[]>([])
+const license = computed(() => licenseData?.value || licenseLoaded.value || null)
+const features = computed(() => featuresData?.value || featuresLoaded.value || [])
 const expiresText = computed(() => (license.value ? formatDate(license.value.expires, dFormats.datetime) : ""))
 const periodText = computed(() =>
 	license.value ? `${license.value.period} Day${license.value.period === 1 ? "" : "s"}` : ""
@@ -111,7 +114,7 @@ function getLicense() {
 		.verifyLicense()
 		.then(res => {
 			if (res.data.success) {
-				licenseObject.value = res.data?.license
+				licenseLoaded.value = res.data?.license
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
@@ -133,7 +136,7 @@ function getLicenseFeatures() {
 		.getLicenseFeatures()
 		.then(res => {
 			if (res.data.success) {
-				features.value = res.data?.features
+				featuresLoaded.value = res.data?.features
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
@@ -149,8 +152,10 @@ function getLicenseFeatures() {
 }
 
 function load() {
-	getLicense()
-	if (!hideFeatures) {
+	if (!license.value) {
+		getLicense()
+	}
+	if (!hideFeatures.value && !features.value.length) {
 		getLicenseFeatures()
 	}
 }
@@ -170,7 +175,11 @@ onMounted(() => {
 .license-details-box {
 	background-color: var(--bg-color);
 	border-radius: var(--border-radius);
-	padding: 14px 18px;
+
+	&:not(.embedded) {
+		padding: 14px 18px;
+	}
+
 	.section {
 		display: flex;
 		flex-direction: column;
