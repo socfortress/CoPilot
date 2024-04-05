@@ -56,12 +56,23 @@ onMounted(() => {
 			& > .n-scrollbar-rail {
 				top: calc(var(--toolbar-height) + 2px);
 			}
+
+			& > .n-scrollbar-container {
+				& > .n-scrollbar-content {
+					min-height: 100%;
+					display: flex;
+					flex-direction: column;
+				}
+			}
 		}
 	}
 
 	.view {
 		padding: var(--view-padding);
 		padding-top: 0;
+		flex-grow: 1;
+		display: flex;
+		flex-direction: column;
 
 		&.boxed {
 			max-width: var(--boxed-width);
