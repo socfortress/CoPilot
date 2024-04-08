@@ -17,7 +17,7 @@ from loguru import logger
 
 module_huntress_router = APIRouter()
 
-async def post_to_copilot_huntress_module(data: CollectHuntress, session: AsyncSession):
+async def post_to_copilot_huntress_module(data: CollectHuntress, license_key: str):
     """
     Send a POST request to the copilot-huntress-module Docker container.
 
@@ -25,14 +25,13 @@ async def post_to_copilot_huntress_module(data: CollectHuntress, session: AsyncS
         data (CollectHuntress): The data to send to the copilot-huntress-module Docker container.
     """
     logger.info(f"Sending POST request to http://copilot-huntress-module/collect with data: {data.dict()}")
-    license = await get_license(session)
     async with AsyncClient() as client:
         try:
             response = await asyncio.wait_for(
                 client.post(
                     "http://copilot-huntress-module/collect",
                     json=data.dict(),
-                    params={"license_key": license.license_key, "feature_name": "HUNTRESS"}
+                    params={"license_key": license_key, "feature_name": "HUNTRESS"}
                 ),
                 timeout=120  # 2 minutes
             )
@@ -64,6 +63,8 @@ async def collect_huntress_route(huntress_request: InvokeHuntressRequest, sessio
     huntress_auth_keys = extract_auth_keys(customer_integration, service_name="Huntress")
 
     auth_keys = HuntressAuthKeys(**huntress_auth_keys)
+
+    license = await get_license(session)
 
     await post_to_copilot_huntress_module(
         data=CollectHuntress(
@@ -97,7 +98,7 @@ async def collect_huntress_route(huntress_request: InvokeHuntressRequest, sessio
             api_key=auth_keys.API_KEY,
             api_secret=auth_keys.API_SECRET,
         ),
-        session=session,
+        license_key=license.license_key,
     )
 
 
