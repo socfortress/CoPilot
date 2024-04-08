@@ -36,6 +36,7 @@ async def post_to_copilot_huntress_module(data: CollectHuntress, session: AsyncS
                 ),
                 timeout=120  # 2 minutes
             )
+            logger.info(f"Response from http://copilot-huntress-module/collect: {response.json()}")
             return response
         except asyncio.TimeoutError:
             logger.error("The request timed out after 2 minutes.")
