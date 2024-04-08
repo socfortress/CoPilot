@@ -64,6 +64,7 @@ onMounted(() => {
 	.view {
 		padding: var(--view-padding);
 		padding-top: calc(var(--view-padding) / 2);
+		width: 100%;
 
 		&.boxed {
 			max-width: var(--boxed-width);

@@ -71,6 +71,7 @@ onMounted(() => {
 		padding: var(--view-padding);
 		padding-top: 0;
 		flex-grow: 1;
+		width: 100%;
 		display: flex;
 		flex-direction: column;
 
