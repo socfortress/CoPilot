@@ -62,7 +62,7 @@ import { NSpin, useMessage } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import Api from "@/api"
 import { onBeforeMount, onMounted, ref, toRefs, computed } from "vue"
-import { LicenseFeatures, type License } from "@/types/license.d"
+import { type LicenseFeatures, type License } from "@/types/license.d"
 import { formatDate } from "@/utils"
 import { useSettingsStore } from "@/stores/settings"
 import KVCard from "@/components/common/KVCard.vue"
@@ -98,8 +98,8 @@ const dFormats = useSettingsStore().dateFormat
 
 const licenseLoaded = ref<License | null>(null)
 const featuresLoaded = ref<LicenseFeatures[]>([])
-const license = computed(() => licenseData?.value || licenseLoaded.value || null)
-const features = computed(() => featuresData?.value || featuresLoaded.value || [])
+const license = computed(() => licenseLoaded.value || licenseData?.value || null)
+const features = computed(() => featuresLoaded.value || featuresData?.value || [])
 const expiresText = computed(() => (license.value ? formatDate(license.value.expires, dFormats.datetime) : ""))
 const periodText = computed(() =>
 	license.value ? `${license.value.period} Day${license.value.period === 1 ? "" : "s"}` : ""

@@ -1,45 +1,63 @@
 <template>
-	<div class="license-subscription-feature-box" :class="{ embedded }">
+	<div class="license-subscription-feature-box" :class="{ embedded, selectable, disabled }">
 		<div class="px-4 py-3 flex flex-col gap-2">
 			<div class="header-box flex justify-between items-center">
 				<div class="flex items-center gap-2 cursor-pointer">
-					{{ subscription.name }}
+					<span>{{ subscription.name }}</span>
+					<span class="info-btn pt-0.5" @click="showDetails = true">
+						<Icon :name="InfoIcon" :size="14"></Icon>
+					</span>
 				</div>
-				<div class="actions">
-					<n-button size="small" @click.stop="showDetails = true">
-						<template #icon>
-							<Icon :name="InfoIcon"></Icon>
-						</template>
-						{{ subscription.price }}
-					</n-button>
+				<div class="price">
+					{{ price(subscription.price) }}
 				</div>
 			</div>
 			<div class="main-box flex items-center gap-3">
 				<div class="content flex flex-col gap-1 grow">
-					<div class="title">{{ subscription.name }}</div>
+					<div class="title">{{ subscription.info }}</div>
 					<div class="description">
-						{{ subscription.full_description }}
+						{{ subscription.short_description }}
 					</div>
 				</div>
 			</div>
 		</div>
+
+		<n-modal
+			v-model:show="showDetails"
+			preset="card"
+			:style="{ maxWidth: 'min(600px, 90vw)', minHeight: 'min(300px, 90vh)', overflow: 'hidden' }"
+			:title="subscription.name"
+			:bordered="false"
+			content-class="flex flex-col gap-4"
+			segmented
+		>
+			<div class="flex gap-4 justify-between">
+				<div>{{ subscription.info }}</div>
+				<div class="font-mono whitespace-nowrap text-primary-color">
+					{{ price(subscription.price) }}
+				</div>
+			</div>
+			<div>{{ subscription.full_description }}</div>
+		</n-modal>
 	</div>
 </template>
 
 <script setup lang="ts">
 import Icon from "@/components/common/Icon.vue"
 import { ref, toRefs } from "vue"
-import { NButton } from "naive-ui"
+import { NModal } from "naive-ui"
 import type { SubscriptionFeature } from "@/types/license"
+import { price } from "@/utils"
 
 const props = defineProps<{
 	subscription: SubscriptionFeature
 	embedded?: boolean
+	selectable?: boolean
+	disabled?: boolean
 }>()
-const { subscription, embedded } = toRefs(props)
+const { subscription, embedded, selectable, disabled } = toRefs(props)
 
 const InfoIcon = "carbon:information"
-
 const showDetails = ref(false)
 </script>
 
@@ -52,11 +70,17 @@ const showDetails = ref(false)
 
 	.header-box {
 		font-size: 13px;
-		.id {
+		line-height: 1.25;
+		.price {
+			font-size: 15px;
 			font-family: var(--font-family-mono);
-			word-break: break-word;
-			color: var(--fg-secondary-color);
-			line-height: 1.2;
+			color: var(--primary-color);
+		}
+
+		.info-btn {
+			&:hover {
+				color: var(--primary-color);
+			}
 		}
 	}
 

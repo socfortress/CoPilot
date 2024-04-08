@@ -4,21 +4,12 @@
 			<template #icon><Icon :name="WarningIcon"></Icon></template>
 		</n-empty>
 		<template v-else>
-			<div class="list flex flex-col gap-2" v-if="subscriptions.length">
-				<div class="list-title">Available features:</div>
+			<div class="list flex flex-col gap-2" v-if="availableSubscriptions.length">
 				<SubscriptionCard
-					v-for="subscription of subscriptions"
+					v-for="subscription of availableSubscriptions"
 					:key="subscription.id"
 					:subscription="subscription"
-					embedded
-				/>
-			</div>
-			<div class="list flex flex-col gap-2" v-if="subscriptions.length">
-				<div class="list-title">Current features:</div>
-				<SubscriptionCard
-					v-for="subscription of subscriptions"
-					:key="subscription.id"
-					:subscription="subscription"
+					selectable
 					embedded
 				/>
 			</div>
@@ -27,17 +18,20 @@
 </template>
 
 <script setup lang="ts">
-import { NButton, NSpin, NEmpty, useMessage } from "naive-ui"
+import { NSpin, NEmpty, useMessage } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import Api from "@/api"
-import { onBeforeMount, ref, watch } from "vue"
+import { onBeforeMount, ref, toRefs } from "vue"
 import { computed } from "vue"
 import SubscriptionCard from "./SubscriptionCard.vue"
-import type { LicenseFeatures, LicenseKey, SubscriptionFeature } from "@/types/license.d"
+import type { LicenseFeatures, SubscriptionFeature } from "@/types/license.d"
 
-const LoadingIcon = "eos-icons:loading"
-const LicenseIcon = "carbon:license"
-const ExtendIcon = "carbon:intent-request-create"
+const props = defineProps<{
+	featuresData?: LicenseFeatures[]
+	subscriptionsData?: SubscriptionFeature[]
+}>()
+const { featuresData, subscriptionsData } = toRefs(props)
+
 const WarningIcon = "carbon:warning-alt"
 
 const message = useMessage()
@@ -45,8 +39,15 @@ const loadingFeatures = ref(false)
 const loadingSubscriptions = ref(false)
 const loading = computed(() => loadingFeatures.value || loadingSubscriptions.value)
 
-const subscriptions = ref<SubscriptionFeature[]>([])
-const features = ref<LicenseFeatures[]>([])
+const featuresLoaded = ref<LicenseFeatures[]>([])
+const subscriptionsLoaded = ref<SubscriptionFeature[]>([])
+const features = computed(() => featuresLoaded.value || featuresData?.value || [])
+const subscriptions = computed(() => subscriptionsLoaded.value || subscriptionsData?.value || [])
+
+const availableSubscriptions = computed<SubscriptionFeature[]>(() =>
+	subscriptions.value.filter(o => features.value.includes(o.name))
+)
+
 const errorMessage = ref<string | null>(null)
 
 function getLicenseFeatures() {
@@ -56,7 +57,7 @@ function getLicenseFeatures() {
 		.getLicenseFeatures()
 		.then(res => {
 			if (res.data.success) {
-				features.value = res.data?.features
+				featuresLoaded.value = res.data?.features
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
@@ -79,7 +80,7 @@ function getSubscriptionFeatures() {
 		.getSubscriptionFeatures()
 		.then(res => {
 			if (res.data.success) {
-				subscriptions.value = res.data?.features || []
+				subscriptionsLoaded.value = res.data?.features || []
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
@@ -93,7 +94,11 @@ function getSubscriptionFeatures() {
 }
 
 onBeforeMount(() => {
-	getLicenseFeatures()
-	getSubscriptionFeatures()
+	if (!features.value.length) {
+		getLicenseFeatures()
+	}
+	if (!subscriptions.value.length) {
+		getSubscriptionFeatures()
+	}
 })
 </script>
