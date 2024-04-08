@@ -23,6 +23,7 @@ from app.customer_provisioning.services.graylog import create_index_set
 from app.customer_provisioning.services.graylog import get_pipeline_id
 from app.customer_provisioning.services.wazuh_manager import apply_group_configurations
 from app.customer_provisioning.services.wazuh_manager import create_wazuh_groups
+from app.customer_provisioning.services.dfir_iris import add_user_to_all_customers
 from app.db.universal_models import CustomersMeta
 from app.integrations.alert_creation_settings.models.alert_creation_settings import (
     AlertCreationSettings,
@@ -95,6 +96,10 @@ async def provision_wazuh_customer(
         provision_meta_data["iris_customer_id"] = (await create_customer(request.customer_name)).data.customer_id
     except Exception:
         provision_meta_data["iris_customer_id"] = 2
+
+    await add_user_to_all_customers(
+        request.dfir_iris_username,
+    )
 
     customer_provision_meta = CustomerProvisionMeta(**provision_meta_data)
     customer_meta = await update_customer_meta_table(
