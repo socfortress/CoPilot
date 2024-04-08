@@ -37,7 +37,7 @@ function licenseLoaded(licenseKey: LicenseKey) {
 	height: 100%;
 
 	.main-box {
-		max-width: 400px;
+		width: 450px;
 	}
 	.side-box {
 		overflow: hidden;

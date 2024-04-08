@@ -1,28 +1,37 @@
 <template>
 	<div class="license-features" :class="{ loading }">
 		<div class="license-features-box flex items-center justify-center">
-			<n-spin :show="loading" class="h-full" content-class="h-full">
+			<n-spin :show="loading" class="h-full w-full" content-class="h-full">
 				<div class="wrapper h-full flex flex-col gap-4" v-if="!loading">
 					<h3>
 						{{ features.length ? "Your features" : "Unlock features" }}
 					</h3>
 					<div class="grow overflow-hidden">
-						<n-scrollbar>
-							<template v-if="activeSubscriptions.length">
-								<div class="features-list flex flex-col gap-2">
+						<n-scrollbar v-if="!loading">
+							<div class="features-list flex flex-col gap-2" v-if="license">
+								<template v-if="activeSubscriptions.length">
 									<SubscriptionCard
 										v-for="subscription of activeSubscriptions"
 										:key="subscription.id"
 										:subscription="subscription"
 										embedded
 									/>
-								</div>
-							</template>
-							<LicenseCheckoutWizard v-else />
+								</template>
+								<n-empty description="No features unlocked" class="justify-center h-48" v-else>
+									<template #icon>
+										<Icon :name="NoFeaturesIcon"></Icon>
+									</template>
+								</n-empty>
+							</div>
+							<LicenseCheckoutWizard
+								v-else
+								:features-data="features"
+								:subscriptions-data="subscriptions"
+							/>
 						</n-scrollbar>
 					</div>
-					<div class="cta-section" v-if="activeSubscriptions.length">
-						<n-button type="primary" @click="openCheckout()" class="!w-full">
+					<div class="cta-section" v-if="license">
+						<n-button type="primary" @click="openCheckout()" class="!w-full" size="large">
 							<template #icon>
 								<Icon :name="ExtendIcon"></Icon>
 							</template>
@@ -55,7 +64,7 @@
 			content-class="flex flex-col"
 			segmented
 		>
-			<LicenseCheckoutWizard />
+			<LicenseCheckoutWizard :features-data="features" :subscriptions-data="subscriptions" />
 		</n-modal>
 
 		<n-modal
@@ -73,11 +82,11 @@
 </template>
 
 <script setup lang="ts">
-import { NScrollbar, NSpin, NModal, NButton, useMessage } from "naive-ui"
+import { NScrollbar, NSpin, NModal, NButton, NEmpty, useMessage } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import Api from "@/api"
 import { onBeforeMount, onMounted, ref, toRefs, computed } from "vue"
-import { LicenseFeatures, type LicenseKey, type SubscriptionFeature } from "@/types/license.d"
+import { type LicenseFeatures, type LicenseKey, type SubscriptionFeature } from "@/types/license.d"
 import SubscriptionCard from "./SubscriptionCard.vue"
 import LicenseCheckoutWizard from "./LicenseCheckoutWizard.vue"
 import LicenseDetails from "./LicenseDetails.vue"
@@ -97,6 +106,7 @@ const { hideKey } = toRefs(props)
 
 const InfoIcon = "carbon:information"
 const ExtendIcon = "carbon:intent-request-create"
+const NoFeaturesIcon = "carbon:intent-request-uninstall"
 
 const message = useMessage()
 const showCheckoutForm = ref(false)
@@ -122,8 +132,8 @@ function getLicense() {
 		.getLicense()
 		.then(res => {
 			if (res.data.success) {
-				license.value = res.data?.license_key
-				emit("licenseLoaded", license.value)
+				//license.value = res.data?.license_key
+				//emit("licenseLoaded", license.value)
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
@@ -145,7 +155,7 @@ function getLicenseFeatures() {
 		.getLicenseFeatures()
 		.then(res => {
 			if (res.data.success) {
-				features.value = res.data?.features
+				//features.value = res.data?.features
 				if (features.value.length) {
 					getSubscriptionFeatures()
 				}
@@ -188,9 +198,7 @@ function openCheckout() {
 }
 
 function load() {
-	if (!hideKey.value) {
-		getLicense()
-	}
+	getLicense()
 	getLicenseFeatures()
 }
 
