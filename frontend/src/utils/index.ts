@@ -91,3 +91,22 @@ export function formatDate(date: Date | string | number, format: string) {
 
 	return datejs.format(format)
 }
+
+export function price(
+	amount: number,
+	options: { currency?: "USD" | "EUR"; splitDecimal?: boolean } = { currency: "USD", splitDecimal: true }
+) {
+	let symbol = ""
+	switch (options.currency) {
+		case "USD":
+			symbol = "$"
+			break
+		case "EUR":
+			symbol = "€"
+			break
+	}
+
+	const price = options.splitDecimal ? (amount / 100).toFixed(2) : amount
+
+	return `${symbol}${price}`
+}
