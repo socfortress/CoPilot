@@ -41,16 +41,14 @@ export interface LicenseDataObject {
 	IntValue: number
 }
 
-export enum LicenseFeatures {
-	"Reporting" = "REPORTING"
-}
+export type LicenseFeatures = "REPORTING" | "THREAT INTEL"
 
 export type LicenseKey = `${string}-${string}-${string}-${string}`
 
 export interface SubscriptionFeature {
 	id: number
 	subscription_price_id: string
-	name: string
+	name: LicenseFeatures
 	price: number
 	currency: string
 	info: string
