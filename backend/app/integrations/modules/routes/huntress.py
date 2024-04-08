@@ -27,7 +27,7 @@ async def post_to_copilot_huntress_module(data: CollectHuntress, session: AsyncS
     license = await get_license(session)
     async with AsyncClient() as client:
         response = await client.post("http://copilot-huntress-module/collect", json=data.dict(),
-                                     params={"license": license.license_key,
+                                     params={"license_key": license.license_key,
                                              "feature_name": "HUNTRESS"})
         return response
 
