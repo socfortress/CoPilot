@@ -49,57 +49,60 @@ async def post_to_copilot_huntress_module(data: CollectHuntress, license_key: st
 )
 async def collect_huntress_route(huntress_request: InvokeHuntressRequest, session: AsyncSession = Depends(get_db)):
     """Pull down Huntress Events."""
-    customer_integration_response = await get_customer_integration_response(
-        huntress_request.customer_code,
-        session,
-    )
+    try:
+        customer_integration_response = await get_customer_integration_response(
+            huntress_request.customer_code,
+            session,
+        )
 
-    customer_integration = await find_customer_integration(
-        huntress_request.customer_code,
-        huntress_request.integration_name,
-        customer_integration_response,
-    )
+        customer_integration = await find_customer_integration(
+            huntress_request.customer_code,
+            huntress_request.integration_name,
+            customer_integration_response,
+        )
 
-    huntress_auth_keys = extract_auth_keys(customer_integration, service_name="Huntress")
+        huntress_auth_keys = extract_auth_keys(customer_integration, service_name="Huntress")
 
-    auth_keys = HuntressAuthKeys(**huntress_auth_keys)
+        auth_keys = HuntressAuthKeys(**huntress_auth_keys)
 
-    license = await get_license(session)
+        license = await get_license(session)
 
-    await post_to_copilot_huntress_module(
-        data=CollectHuntress(
-            integration="huntress",
-            customer_code=huntress_request.customer_code,
-            graylog_host=await get_connector_attribute(
-                connector_id=14,
-                column_name="connector_url",
-                session=session,
+        await post_to_copilot_huntress_module(
+            data=CollectHuntress(
+                integration="huntress",
+                customer_code=huntress_request.customer_code,
+                graylog_host=await get_connector_attribute(
+                    connector_id=14,
+                    column_name="connector_url",
+                    session=session,
+                ),
+                graylog_port=await get_connector_attribute(
+                    connector_id=14,
+                    column_name="connector_extra_data",
+                    session=session,
+                ),
+                wazuh_indexer_host=await get_connector_attribute(
+                    connector_id=1,
+                    column_name="connector_url",
+                    session=session,
+                ),
+                wazuh_indexer_username=await get_connector_attribute(
+                    connector_id=1,
+                    column_name="connector_username",
+                    session=session,
+                ),
+                wazuh_indexer_password=await get_connector_attribute(
+                    connector_id=1,
+                    column_name="connector_password",
+                    session=session,
+                ),
+                api_key=auth_keys.API_KEY,
+                api_secret=auth_keys.API_SECRET,
             ),
-            graylog_port=await get_connector_attribute(
-                connector_id=14,
-                column_name="connector_extra_data",
-                session=session,
-            ),
-            wazuh_indexer_host=await get_connector_attribute(
-                connector_id=1,
-                column_name="connector_url",
-                session=session,
-            ),
-            wazuh_indexer_username=await get_connector_attribute(
-                connector_id=1,
-                column_name="connector_username",
-                session=session,
-            ),
-            wazuh_indexer_password=await get_connector_attribute(
-                connector_id=1,
-                column_name="connector_password",
-                session=session,
-            ),
-            api_key=auth_keys.API_KEY,
-            api_secret=auth_keys.API_SECRET,
-        ),
-        license_key=license.license_key,
-    )
-
+            license_key=license.license_key,
+        )
+    except Exception as e:
+        logger.error(f"Error during DB session: {str(e)}")
+        return InvokeHuntressResponse(success=False, message=str(e))
 
     return InvokeHuntressResponse(success=True, message="Huntress Events collected successfully.")
