@@ -55,3 +55,11 @@ export interface SubscriptionFeature {
 	short_description: string
 	full_description: string
 }
+
+export interface CheckoutPayload {
+	feature_id: number
+	cancel_url: string
+	success_url: string
+	customer_email: string
+	company_name: string
+}
