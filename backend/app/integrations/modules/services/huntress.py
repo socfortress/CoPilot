@@ -12,8 +12,10 @@ async def post_to_copilot_huntress_module(data: CollectHuntress, license_key: st
     """
     logger.info(f"Sending POST request to http://copilot-huntress-module/collect with data: {data.dict()}")
     async with AsyncClient() as client:
-        client.post(
+        response = await client.post(
             "http://copilot-huntress-module/collect",
             json=data.dict(),
             params={"license_key": license_key, "feature_name": "HUNTRESS"}
         )
+        logger.info(f"Response from http://copilot-huntress-module/collect: {response.json()}")
+    return None
