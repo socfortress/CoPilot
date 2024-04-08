@@ -14,6 +14,7 @@ async def post_to_copilot_huntress_module(data: CollectHuntress, license_key: st
         await client.post(
             "http://copilot-huntress-module/collect",
             json=data.dict(),
-            params={"license_key": license_key, "feature_name": "HUNTRESS"}
+            params={"license_key": license_key, "feature_name": "HUNTRESS"},
+            timeout=120
         )
     return None
