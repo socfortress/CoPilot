@@ -10,6 +10,7 @@ from app.integrations.modules.schema.huntress import InvokeHuntressResponse, Col
 from app.integrations.routes import find_customer_integration
 from app.integrations.utils.utils import extract_auth_keys
 from app.integrations.utils.utils import get_customer_integration_response
+from app.integrations.modules.services.huntress import post_to_copilot_huntress_module
 from app.utils import get_connector_attribute
 from app.middleware.license import get_license
 from app.db.universal_models import License
@@ -132,21 +133,6 @@ module_huntress_router = APIRouter()
 #             logger.error("The request timed out after 2 minutes.")
 #             return None
 
-async def post_to_copilot_huntress_module(data: CollectHuntress, license_key: str):
-    """
-    Send a POST request to the copilot-huntress-module Docker container.
-
-    Args:
-        data (CollectHuntress): The data to send to the copilot-huntress-module Docker container.
-    """
-    logger.info(f"Sending POST request to http://copilot-huntress-module/collect with data: {data.dict()}")
-    async with AsyncClient() as client:
-        client.post(
-            "http://copilot-huntress-module/collect",
-            json=data.dict(),
-            params={"license_key": license_key, "feature_name": "HUNTRESS"}
-        )
-
 async def get_huntress_auth_keys(customer_integration) -> HuntressAuthKeys:
     """
     Extract the Huntress authentication keys from the CustomerIntegration.
@@ -223,7 +209,7 @@ async def collect_huntress_route(huntress_request: InvokeHuntressRequest, sessio
 
         license = await get_license(session)
 
-        post_to_copilot_huntress_module(data=collect_huntress_data, license_key=license.license_key)
+        await post_to_copilot_huntress_module(data=collect_huntress_data, license_key=license.license_key)
 
     except Exception as e:
         logger.error(f"Error during DB session: {str(e)}")
