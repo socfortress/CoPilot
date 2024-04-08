@@ -11,5 +11,4 @@ class CopilotResponse(BaseModel):
     extra_data: Optional[dict] = Field(
         None,
         description="The Copilot response data.",
-        examples={"copilot_version": "1.0.0"},
     )
