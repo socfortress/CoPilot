@@ -108,7 +108,31 @@ module_huntress_router = APIRouter()
 #     return InvokeHuntressResponse(success=True, message="Huntress Events collected successfully.")
 
 
-async def post_to_copilot_huntress_module(data: CollectHuntress, license_key: str) -> InvokeHuntressResponse:
+# async def post_to_copilot_huntress_module(data: CollectHuntress, license_key: str) -> InvokeHuntressResponse:
+#     """
+#     Send a POST request to the copilot-huntress-module Docker container.
+
+#     Args:
+#         data (CollectHuntress): The data to send to the copilot-huntress-module Docker container.
+#     """
+#     logger.info(f"Sending POST request to http://copilot-huntress-module/collect with data: {data.dict()}")
+#     async with AsyncClient() as client:
+#         try:
+#             response = await asyncio.wait_for(
+#                 client.post(
+#                     "http://copilot-huntress-module/collect",
+#                     json=data.dict(),
+#                     params={"license_key": license_key, "feature_name": "HUNTRESS"}
+#                 ),
+#                 timeout=120  # 2 minutes
+#             )
+#             logger.info(f"Response from http://copilot-huntress-module/collect: {response.json()}")
+#             return InvokeHuntressResponse(success=True, message="Huntress Events collected successfully.")
+#         except asyncio.TimeoutError:
+#             logger.error("The request timed out after 2 minutes.")
+#             return None
+
+async def post_to_copilot_huntress_module(data: CollectHuntress, license_key: str):
     """
     Send a POST request to the copilot-huntress-module Docker container.
 
@@ -117,20 +141,11 @@ async def post_to_copilot_huntress_module(data: CollectHuntress, license_key: st
     """
     logger.info(f"Sending POST request to http://copilot-huntress-module/collect with data: {data.dict()}")
     async with AsyncClient() as client:
-        try:
-            response = await asyncio.wait_for(
-                client.post(
-                    "http://copilot-huntress-module/collect",
-                    json=data.dict(),
-                    params={"license_key": license_key, "feature_name": "HUNTRESS"}
-                ),
-                timeout=120  # 2 minutes
-            )
-            logger.info(f"Response from http://copilot-huntress-module/collect: {response.json()}")
-            return InvokeHuntressResponse(success=True, message="Huntress Events collected successfully.")
-        except asyncio.TimeoutError:
-            logger.error("The request timed out after 2 minutes.")
-            return None
+        client.post(
+            "http://copilot-huntress-module/collect",
+            json=data.dict(),
+            params={"license_key": license_key, "feature_name": "HUNTRESS"}
+        )
 
 async def get_huntress_auth_keys(customer_integration) -> HuntressAuthKeys:
     """
@@ -208,13 +223,10 @@ async def collect_huntress_route(huntress_request: InvokeHuntressRequest, sessio
 
         license = await get_license(session)
 
-        # response = await post_to_copilot_huntress_module(
-        #     data=collect_huntress_data,
-        #     license_key=license.license_key,
-        # )
-
-        return await post_to_copilot_huntress_module(data=collect_huntress_data, license_key=license.license_key)
+        post_to_copilot_huntress_module(data=collect_huntress_data, license_key=license.license_key)
 
     except Exception as e:
         logger.error(f"Error during DB session: {str(e)}")
         return InvokeHuntressResponse(success=False, message=str(e))
+
+    return InvokeHuntressResponse(success=True, message="Huntress Events collected successfully.")
