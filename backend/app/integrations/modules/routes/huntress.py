@@ -108,7 +108,7 @@ module_huntress_router = APIRouter()
 #     return InvokeHuntressResponse(success=True, message="Huntress Events collected successfully.")
 
 
-async def post_to_copilot_huntress_module(data: CollectHuntress, license_key: str):
+async def post_to_copilot_huntress_module(data: CollectHuntress, license_key: str) -> InvokeHuntressResponse:
     """
     Send a POST request to the copilot-huntress-module Docker container.
 
@@ -127,13 +127,27 @@ async def post_to_copilot_huntress_module(data: CollectHuntress, license_key: st
                 timeout=120  # 2 minutes
             )
             logger.info(f"Response from http://copilot-huntress-module/collect: {response.json()}")
-            return response
+            return InvokeHuntressResponse(success=True, message="Huntress Events collected successfully.")
         except asyncio.TimeoutError:
             logger.error("The request timed out after 2 minutes.")
             return None
 
-async def get_huntress_auth_keys(customer_integration):
-    huntress_auth_keys = extract_auth_keys(customer_integration, service_name="Huntress")
+async def get_huntress_auth_keys(customer_integration) -> HuntressAuthKeys:
+    """
+    Extract the Huntress authentication keys from the CustomerIntegration.
+
+    Args:
+        customer_integration (CustomerIntegration): The CustomerIntegration containing the
+            Huntress authentication keys.
+
+    Returns:
+        HuntressAuthKeys: The extracted Huntress authentication keys.
+    """
+    huntress_auth_keys = extract_auth_keys(
+        customer_integration,
+        service_name="Huntress",
+    )
+
     return HuntressAuthKeys(**huntress_auth_keys)
 
 async def get_collect_huntress_data(huntress_request, session, auth_keys):
@@ -194,16 +208,13 @@ async def collect_huntress_route(huntress_request: InvokeHuntressRequest, sessio
 
         license = await get_license(session)
 
-        response = await post_to_copilot_huntress_module(
-            data=collect_huntress_data,
-            license_key=license.license_key,
-        )
+        # response = await post_to_copilot_huntress_module(
+        #     data=collect_huntress_data,
+        #     license_key=license.license_key,
+        # )
 
-        if response is None or response.status_code != 200:
-            raise Exception("Failed to post to copilot-huntress-module")
+        return await post_to_copilot_huntress_module(data=collect_huntress_data, license_key=license.license_key)
 
     except Exception as e:
         logger.error(f"Error during DB session: {str(e)}")
         return InvokeHuntressResponse(success=False, message=str(e))
-
-    return InvokeHuntressResponse(success=True, message="Huntress Events collected successfully.")
