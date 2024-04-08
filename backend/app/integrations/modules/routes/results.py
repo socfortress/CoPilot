@@ -9,7 +9,7 @@ from loguru import logger
 module_results_router = APIRouter()
 
 
-@module_results_router.post("/results")
+@module_results_router.post("")
 async def receive_results(data: CopilotResponse, session: AsyncSession = Depends(get_db)):
     logger.info(f"Received results: {data.dict()}")
     return {"message": "Results received successfully"}
