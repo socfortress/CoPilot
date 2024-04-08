@@ -296,7 +296,6 @@ function purge() {
 }
 
 function itemDeleted(alertId: string, noEmit = false) {
-	console.log("itemDeleted", alertId, noEmit)
 	clearChecked(alertId)
 	getAlerts()
 	if (!noEmit) {

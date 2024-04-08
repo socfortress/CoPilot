@@ -51,7 +51,6 @@ const dFormats = useSettingsStore().dateFormat
 onBeforeMount(() => {
 	for (const key in collect) {
 		const value = collect[key]
-		console.log(key, value, typeof value)
 
 		const prop: Prop = {
 			key: "",
