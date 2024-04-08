@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from fastapi import Depends
 from httpx import AsyncClient
+import asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.db_session import get_db
@@ -26,10 +27,19 @@ async def post_to_copilot_huntress_module(data: CollectHuntress, session: AsyncS
     logger.info(f"Sending POST request to http://copilot-huntress-module/collect with data: {data.dict()}")
     license = await get_license(session)
     async with AsyncClient() as client:
-        response = await client.post("http://copilot-huntress-module/collect", json=data.dict(),
-                                     params={"license_key": license.license_key,
-                                             "feature_name": "HUNTRESS"})
-        return response
+        try:
+            response = await asyncio.wait_for(
+                client.post(
+                    "http://copilot-huntress-module/collect",
+                    json=data.dict(),
+                    params={"license_key": license.license_key, "feature_name": "HUNTRESS"}
+                ),
+                timeout=120  # 2 minutes
+            )
+            return response
+        except asyncio.TimeoutError:
+            logger.error("The request timed out after 2 minutes.")
+            return None
 
 
 @module_huntress_router.post(
