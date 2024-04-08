@@ -12,7 +12,7 @@
 					{{ price(subscription.price) }}
 				</div>
 			</div>
-			<div class="main-box flex items-center gap-3">
+			<div class="main-box flex items-center gap-3" v-if="!hideDetails">
 				<div class="content flex flex-col gap-1 grow">
 					<div class="title">{{ subscription.info }}</div>
 					<div class="description">
@@ -54,8 +54,9 @@ const props = defineProps<{
 	embedded?: boolean
 	selectable?: boolean
 	disabled?: boolean
+	hideDetails?: boolean
 }>()
-const { subscription, embedded, selectable, disabled } = toRefs(props)
+const { subscription, embedded, selectable, disabled, hideDetails } = toRefs(props)
 
 const InfoIcon = "carbon:information"
 const showDetails = ref(false)
