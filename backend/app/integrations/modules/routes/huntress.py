@@ -209,7 +209,7 @@ async def collect_huntress_route(huntress_request: InvokeHuntressRequest, sessio
 
         license = await get_license(session)
 
-        post_to_copilot_huntress_module(data=collect_huntress_data, license_key=license.license_key)
+        await post_to_copilot_huntress_module(data=collect_huntress_data, license_key=license.license_key)
 
     except Exception as e:
         logger.error(f"Error during DB session: {str(e)}")
