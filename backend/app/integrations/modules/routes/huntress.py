@@ -194,10 +194,14 @@ async def collect_huntress_route(huntress_request: InvokeHuntressRequest, sessio
 
         license = await get_license(session)
 
-        await post_to_copilot_huntress_module(
+        response = await post_to_copilot_huntress_module(
             data=collect_huntress_data,
             license_key=license.license_key,
         )
+
+        if response is None or response.status_code != 200:
+            raise Exception("Failed to post to copilot-huntress-module")
+
     except Exception as e:
         logger.error(f"Error during DB session: {str(e)}")
         return InvokeHuntressResponse(success=False, message=str(e))
