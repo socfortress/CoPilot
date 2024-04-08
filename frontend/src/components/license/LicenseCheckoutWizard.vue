@@ -19,25 +19,46 @@
 			</template>
 			<template v-else>
 				<SubscriptionCard :subscription="selectedSubscription" embedded hide-details />
-				<div class="checkout-form item-appear item-appear-bottom item-appear-005 mt-5">
-					<n-form :label-width="80" :model="checkoutForm" :rules="rules" ref="formRef">
-						<div class="flex flex-col gap-2">
-							<n-form-item label="Company Name" path="company_name">
-								<n-input
-									v-model:value.trim="checkoutForm.company_name"
-									placeholder="Input Company Name..."
-									clearable
-								/>
-							</n-form-item>
-							<n-form-item label="Email" path="customer_email">
-								<n-input
-									v-model:value.trim="checkoutForm.customer_email"
-									placeholder="Input email..."
-									clearable
-								/>
-							</n-form-item>
-						</div>
-					</n-form>
+				<div class="checkout-form item-appear item-appear-bottom item-appear-005 mt-8">
+					<n-spin :show="loadingLicense || loadingSession">
+						<n-form :label-width="80" :model="checkoutForm" :rules="rules" ref="formRef">
+							<div class="flex flex-col gap-1">
+								<n-form-item label="Company Name" path="company_name">
+									<n-input
+										v-model:value.trim="checkoutForm.company_name"
+										placeholder="Input Company Name..."
+										clearable
+									/>
+								</n-form-item>
+								<n-form-item label="Email" path="customer_email">
+									<n-input
+										v-model:value.trim="checkoutForm.customer_email"
+										placeholder="Input email..."
+										clearable
+									/>
+								</n-form-item>
+								<div class="flex justify-end gap-4">
+									<n-button quaternary @click="selectedSubscription = null">
+										<template #icon>
+											<Icon :name="ArrowLeftIcon"></Icon>
+										</template>
+										Back
+									</n-button>
+									<n-button
+										type="success"
+										:disabled="!isValid"
+										@click="createCheckoutSession()"
+										:loading="loadingSession"
+									>
+										<template #icon>
+											<Icon :name="CartIcon"></Icon>
+										</template>
+										Checkout
+									</n-button>
+								</div>
+							</div>
+						</n-form>
+					</n-spin>
 				</div>
 			</template>
 		</template>
@@ -45,14 +66,25 @@
 </template>
 
 <script setup lang="ts">
-import { NSpin, NEmpty, NForm, NFormItem, NInput, useMessage, type FormItemRule, type FormRules } from "naive-ui"
+import {
+	NSpin,
+	NEmpty,
+	NForm,
+	NFormItem,
+	NInput,
+	NButton,
+	useMessage,
+	type FormItemRule,
+	type FormRules
+} from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import Api from "@/api"
 import { onBeforeMount, ref, toRefs } from "vue"
 import { computed } from "vue"
 import SubscriptionCard from "./SubscriptionCard.vue"
-import type { CheckoutPayload, LicenseCustomer, LicenseFeatures, SubscriptionFeature } from "@/types/license.d"
+import type { CheckoutPayload, License, LicenseCustomer, LicenseFeatures, SubscriptionFeature } from "@/types/license.d"
 import isEmail from "validator/es/lib/isEmail"
+import { watch } from "vue"
 
 const props = defineProps<{
 	featuresData?: LicenseFeatures[]
@@ -61,15 +93,20 @@ const props = defineProps<{
 const { featuresData, subscriptionsData } = toRefs(props)
 
 const WarningIcon = "carbon:warning-alt"
+const CartIcon = "carbon:shopping-cart"
+const ArrowLeftIcon = "carbon:arrow-left"
 
 const message = useMessage()
 const loadingFeatures = ref(false)
 const loadingSubscriptions = ref(false)
+const loadingLicense = ref(false)
+const loadingSession = ref(false)
 const loading = computed(() => loadingFeatures.value || loadingSubscriptions.value)
 const selectedSubscription = ref<SubscriptionFeature | null>(null)
 const errorMessage = ref<string | null>(null)
 const checkoutForm = ref<CheckoutPayload>(getCheckoutForm())
 
+const license = ref<License | null>(null)
 const featuresLoaded = ref<LicenseFeatures[]>([])
 const subscriptionsLoaded = ref<SubscriptionFeature[]>([])
 const features = computed(() => featuresLoaded.value || featuresData?.value || [])
@@ -77,6 +114,17 @@ const subscriptions = computed(() => subscriptionsLoaded.value || subscriptionsD
 const availableSubscriptions = computed<SubscriptionFeature[]>(() =>
 	subscriptions.value.filter(o => features.value.includes(o.name))
 )
+const isValid = computed(() => {
+	if (!checkoutForm.value.company_name) {
+		return false
+	}
+
+	if (!isEmail(checkoutForm.value.customer_email)) {
+		return false
+	}
+
+	return true
+})
 
 const rules: FormRules = {
 	company_name: {
@@ -98,13 +146,27 @@ const rules: FormRules = {
 	}
 }
 
-function getCheckoutForm(args?: { customer?: LicenseCustomer; subscription?: SubscriptionFeature }): CheckoutPayload {
+watch(selectedSubscription, val => {
+	if (val && !license.value) {
+		getLicense()
+	}
+})
+
+function getCheckoutForm(args?: {
+	email?: string
+	companyName?: string
+	customer?: LicenseCustomer
+	subscription?: SubscriptionFeature | null
+}): CheckoutPayload {
+	const customerEmail = args?.email || args?.customer?.email || ""
+	const companyName = args?.companyName || args?.customer?.companyName || ""
+
 	return {
 		feature_id: args?.subscription?.id || 0,
 		cancel_url: `${location.origin}/cancel`,
-		success_url: `${location.origin}/success?email=${args?.customer?.CompanyName || ""}`,
-		customer_email: args?.customer?.Email || "",
-		company_name: args?.customer?.CompanyName || ""
+		success_url: `${location.origin}/success?email=${customerEmail}`,
+		customer_email: customerEmail,
+		company_name: companyName
 	}
 }
 
@@ -148,6 +210,57 @@ function getSubscriptionFeatures() {
 		})
 		.finally(() => {
 			loadingSubscriptions.value = false
+		})
+}
+
+function getLicense() {
+	loadingLicense.value = true
+
+	Api.license
+		.verifyLicense()
+		.then(res => {
+			if (res.data.success) {
+				license.value = res.data?.license
+				checkoutForm.value = getCheckoutForm({ customer: license.value.customer })
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			if (err.response.status !== 404) {
+				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.finally(() => {
+			loadingLicense.value = false
+		})
+}
+
+function createCheckoutSession() {
+	loadingSession.value = true
+
+	const payload = getCheckoutForm({
+		email: checkoutForm.value.customer_email,
+		companyName: checkoutForm.value.company_name,
+		subscription: selectedSubscription.value
+	})
+
+	Api.license
+		.createCheckoutSession(payload)
+		.then(res => {
+			if (res.data.success) {
+				window.location.href = res.data.session.url
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			if (err.response.status !== 404) {
+				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.finally(() => {
+			loadingSession.value = false
 		})
 }
 

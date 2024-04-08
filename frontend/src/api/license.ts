@@ -1,6 +1,13 @@
 import { type FlaskBaseResponse } from "@/types/flask.d"
 import { HttpClient } from "./httpClient"
-import type { License, LicenseFeatures, LicenseKey, SubscriptionFeature } from "@/types/license.d"
+import type {
+	CheckoutPayload,
+	License,
+	LicenseCheckoutSession,
+	LicenseFeatures,
+	LicenseKey,
+	SubscriptionFeature
+} from "@/types/license.d"
 
 export interface NewLicensePayload {
 	name: string
@@ -26,6 +33,13 @@ export default {
 			license_key
 		})
 	},
+	createCheckoutSession(payload: CheckoutPayload) {
+		return HttpClient.post<FlaskBaseResponse & { session: LicenseCheckoutSession }>(
+			`/license/create_checkout_session`,
+			payload
+		)
+	},
+	// TODO: remove, deprecated
 	extendLicense(period: number) {
 		return HttpClient.post<FlaskBaseResponse>(
 			`/license/extend_license`,
@@ -35,6 +49,7 @@ export default {
 			}
 		)
 	},
+	// TODO: remove, deprecated
 	createLicense({ name, email, companyName }: NewLicensePayload) {
 		return HttpClient.post<FlaskBaseResponse>(`/license/create_new_key`, {
 			product_id: 24355,

@@ -45,7 +45,7 @@
 					<KVCard v-for="(value, key) of license.customer" :key="key">
 						<template #key>{{ key }}</template>
 						<template #value>
-							<template v-if="key === 'Created'">
+							<template v-if="key === 'created'">
 								{{ formatDate(value, dFormats.datetime) }}
 							</template>
 							<template v-else>{{ value ?? "-" }}</template>
