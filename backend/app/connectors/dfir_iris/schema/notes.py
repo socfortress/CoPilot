@@ -6,24 +6,6 @@ from pydantic import BaseModel
 from pydantic import Field
 
 
-# ! OLD IRIS VERSION ! #
-# class CustomAttributes(BaseModel):
-#     # Define additional fields if custom_attributes contains specific keys
-#     pass
-
-# # ! OLD IRIS VERSION ! #
-# class NoteDetails(BaseModel):
-#     custom_attributes: CustomAttributes
-#     group_id: int
-#     group_title: str
-#     group_uuid: str
-#     note_content: str
-#     note_creationdate: str
-#     note_id: int
-#     note_lastupdate: str
-#     note_title: str
-#     note_uuid: str
-
 class Directory(BaseModel):
     id: int
     name: str
@@ -59,8 +41,6 @@ class NoteDetailsResponse(BaseModel):
 
 class NoteItem(BaseModel):
     note_details: NoteDetails
-    #note_id: int
-    #note_title: str
 
 
 class NotesResponse(BaseModel):
