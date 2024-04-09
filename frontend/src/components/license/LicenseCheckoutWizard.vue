@@ -163,8 +163,8 @@ function getCheckoutForm(args?: {
 
 	return {
 		feature_id: args?.subscription?.id || 0,
-		cancel_url: `${location.origin}/cancel`,
-		success_url: `${location.origin}/success?email=${customerEmail}`,
+		cancel_url: `${location.origin}/license/cancel`,
+		success_url: `${location.origin}/license/success?email=${customerEmail}`,
 		customer_email: customerEmail,
 		company_name: companyName
 	}
