@@ -83,6 +83,7 @@ export interface CustomerProvision {
 	grafana_url: string
 	provision_wazuh_worker: boolean
 	provision_ha_proxy: boolean
+	dfir_iris_username: string
 }
 
 export interface CustomerDecomissionedData {
