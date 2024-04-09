@@ -14,52 +14,6 @@ from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
 from app.connectors.dfir_iris.utils.universal import initialize_client_and_case
 
 
-# ! OLD WAY PRIOR TO LATEST IRIS VERSION ! #
-# async def process_notes(notes: List[Dict], case_id: int) -> List[Dict]:
-#     """
-#     Process a list of notes for a given case.
-
-#     Args:
-#         notes (List[Dict]): The list of notes to be processed.
-#         case_id (int): The ID of the case.
-
-#     Returns:
-#         List[Dict]: The processed list of notes.
-#     """
-#     processed_notes = []
-#     for note in notes:
-#         note_details = await get_case_note_details(note["note_id"], case_id)
-#         logger.info(f"Note details: {note_details}")
-#         note["note_details"] = note_details.note_details
-#         processed_notes.append(note)
-#     return processed_notes
-
-# ! OLD WAY PRIOR TO LATEST IRIS VERSION ! #
-# async def get_case_notes(case_id: int, search_term: str) -> NotesResponse:
-#     """
-#     Retrieves case notes based on the provided case ID and search term.
-
-#     Args:
-#         case_id (int): The ID of the case.
-#         search_term (str): The search term to filter the notes.
-
-#     Returns:
-#         NotesResponse: An object containing the success status, message, and retrieved notes.
-#     """
-#     client, case = await initialize_client_and_case("DFIR-IRIS")
-#     result = await fetch_and_validate_data(
-#         client,
-#         case.search_notes,
-#         search_term,
-#         case_id,
-#     )
-#     logger.info(f"Result: {result}")
-#     processed_notes = await process_notes(result["data"], case_id)
-#     return NotesResponse(
-#         success=True,
-#         message="Successfully fetched notes for case",
-#         notes=processed_notes,
-#     )
 
 async def process_directories(directories: List[Dict], case_id: int) -> List[Dict]:
     """
@@ -108,30 +62,6 @@ async def get_case_notes(case_id: int, search_term: str) -> NotesResponse:
     )
 
 
-# ! OLD WAY PRIOR TO LATEST IRIS VERSION ! #
-# async def get_case_note_details(note_id: int, case_id: int) -> NoteDetailsResponse:
-#     """
-#     Retrieves the details of a specific case note.
-
-#     Args:
-#         note_id (int): The ID of the note.
-#         case_id (int): The ID of the case.
-
-#     Returns:
-#         NoteDetailsResponse: The response containing the note details.
-
-#     Raises:
-#         SomeException: If there is an error retrieving the note details.
-#     """
-#     client, case = await initialize_client_and_case("DFIR-IRIS")
-#     result = await fetch_and_validate_data(client, case.get_note, note_id, case_id)
-#     note_details = NoteDetails(**result["data"])
-#     return NoteDetailsResponse(
-#         success=True,
-#         message="Successfully fetched note details",
-#         note_details=note_details,
-#     )
-
 async def get_case_note_details(directory_id: int, case_id: int) -> NoteDetailsResponse:
     """
     Retrieves the details of a specific case note.
@@ -178,12 +108,12 @@ async def perform_note_creation(
     result = await fetch_and_validate_data(
         client,
         case.add_notes_directory,
-        note_creation_body.note_title,
+        "CoPilot",
         None,
         case_id,
     )
     logger.info(f"Result: {result}")
-    note_id = result["data"]["group_id"]
+    note_id = result["data"]["id"]
     custom_attributes = {}
     return await fetch_and_validate_data(
         client,
