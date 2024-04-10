@@ -86,4 +86,4 @@ async def collect_huntress_route(mimecast_request: InvokeMimecastRequest, sessio
         logger.error(f"Error during DB session: {str(e)}")
         return InvokeMimecastResponse(success=False, message=str(e))
 
-    return InvokeMimecastResponse(success=True, message="Huntress Events collected successfully.")
+    return InvokeMimecastResponse(success=True, message="Mimecast Events collected successfully.")
