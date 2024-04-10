@@ -19,6 +19,7 @@ class IndexConfigModel(BaseModel):
             ".opensearch": True,
             ".kibana": True,
             "praeco": True,
+            "filebeat": True,
         },
         description="A dictionary containing index names to be skipped and their skip status.",
     )
