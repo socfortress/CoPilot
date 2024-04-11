@@ -39,6 +39,11 @@ export default {
 			payload
 		)
 	},
+	retrieveLicenseByEmail(email: string) {
+		return HttpClient.post<FlaskBaseResponse & { license_key: LicenseKey }>(`/license/retrieve_license_by_email`, {
+			email
+		})
+	},
 	// TODO: remove, deprecated
 	extendLicense(period: number) {
 		return HttpClient.post<FlaskBaseResponse>(
