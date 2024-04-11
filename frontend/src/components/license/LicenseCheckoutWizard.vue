@@ -16,6 +16,17 @@
 						@click="selectedSubscription = subscription"
 					/>
 				</div>
+				<template v-else>
+					<n-empty
+						description="Congratulations, you have already unlocked all available features"
+						class="justify-center h-48"
+						v-if="!loading"
+					>
+						<template #icon>
+							<Icon :name="CheckIcon"></Icon>
+						</template>
+					</n-empty>
+				</template>
 			</template>
 			<template v-else>
 				<SubscriptionCard :subscription="selectedSubscription" embedded hide-details />
@@ -94,6 +105,7 @@ const { featuresData, subscriptionsData } = toRefs(props)
 
 const WarningIcon = "carbon:warning-alt"
 const CartIcon = "carbon:shopping-cart"
+const CheckIcon = "carbon:checkmark-outline"
 const ArrowLeftIcon = "carbon:arrow-left"
 
 const message = useMessage()
@@ -112,7 +124,7 @@ const subscriptionsLoaded = ref<SubscriptionFeature[]>([])
 const features = computed(() => featuresLoaded.value || featuresData?.value || [])
 const subscriptions = computed(() => subscriptionsLoaded.value || subscriptionsData?.value || [])
 const availableSubscriptions = computed<SubscriptionFeature[]>(() =>
-	subscriptions.value.filter(o => features.value.includes(o.name))
+	subscriptions.value.filter(o => !features.value.includes(o.name))
 )
 const isValid = computed(() => {
 	if (!checkoutForm.value.company_name) {

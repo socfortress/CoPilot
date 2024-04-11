@@ -1,6 +1,6 @@
 <template>
 	<div class="license-subscription-feature-box" :class="{ embedded, selectable, disabled }">
-		<div class="px-4 py-3 flex flex-col gap-2">
+		<n-spin :show="canceling" content-class="px-4 py-3 flex flex-col gap-2">
 			<div class="header-box flex justify-between items-center">
 				<div class="flex items-center gap-2 cursor-pointer">
 					<span>{{ subscription.name }}</span>
@@ -13,14 +13,27 @@
 				</div>
 			</div>
 			<div class="main-box flex items-center gap-3" v-if="!hideDetails">
-				<div class="content flex flex-col gap-1 grow">
+				<div class="content flex flex-col gap-2 grow">
 					<div class="title">{{ subscription.info }}</div>
 					<div class="description">
 						{{ subscription.short_description }}
 					</div>
+					<div class="flex items-center justify-end" v-if="showDeleteOnCard && licenseData">
+						<n-popconfirm @positive-click="cancelSubscription()">
+							<template #trigger>
+								<n-button text size="small" class="opacity-50">
+									<template #icon>
+										<Icon :name="DeleteIcon" :size="16"></Icon>
+									</template>
+									Unsubscribe
+								</n-button>
+							</template>
+							{{ deleteMessage }}
+						</n-popconfirm>
+					</div>
 				</div>
 			</div>
-		</div>
+		</n-spin>
 
 		<n-modal
 			v-model:show="showDetails"
@@ -28,16 +41,31 @@
 			:style="{ maxWidth: 'min(600px, 90vw)', minHeight: 'min(300px, 90vh)', overflow: 'hidden' }"
 			:title="subscription.name"
 			:bordered="false"
-			content-class="flex flex-col gap-4"
+			content-class="flex flex-col"
 			segmented
 		>
-			<div class="flex gap-4 justify-between">
-				<div>{{ subscription.info }}</div>
-				<div class="font-mono whitespace-nowrap text-primary-color">
-					{{ price(subscription.price) }}
+			<n-spin :show="canceling" content-class="flex flex-col gap-4 grow" class="flex flex-col grow">
+				<div class="flex gap-4 justify-between">
+					<div>{{ subscription.info }}</div>
+					<div class="font-mono whitespace-nowrap text-primary-color">
+						{{ price(subscription.price) }}
+					</div>
 				</div>
-			</div>
-			<div>{{ subscription.full_description }}</div>
+				<div class="grow">{{ subscription.full_description }}</div>
+				<div class="flex items-center justify-end" v-if="showDeleteOnDialog && licenseData">
+					<n-popconfirm to="body" @positive-click="cancelSubscription()">
+						<template #trigger>
+							<n-button text size="small" class="opacity-50">
+								<template #icon>
+									<Icon :name="DeleteIcon" :size="16"></Icon>
+								</template>
+								Unsubscribe
+							</n-button>
+						</template>
+						{{ deleteMessage }}
+					</n-popconfirm>
+				</div>
+			</n-spin>
 		</n-modal>
 	</div>
 </template>
@@ -45,9 +73,15 @@
 <script setup lang="ts">
 import Icon from "@/components/common/Icon.vue"
 import { ref, toRefs } from "vue"
-import { NModal } from "naive-ui"
-import type { SubscriptionFeature } from "@/types/license"
+import { NSpin, NModal, NButton, NPopconfirm, useMessage } from "naive-ui"
+import Api from "@/api"
+import type { License, SubscriptionFeature } from "@/types/license"
 import { price } from "@/utils"
+import type { CancelSubscriptionPayload } from "@/api/license"
+
+const emit = defineEmits<{
+	(e: "deleted"): void
+}>()
 
 const props = defineProps<{
 	subscription: SubscriptionFeature
@@ -55,11 +89,45 @@ const props = defineProps<{
 	selectable?: boolean
 	disabled?: boolean
 	hideDetails?: boolean
+	showDeleteOnCard?: boolean
+	showDeleteOnDialog?: boolean
+	licenseData?: License
 }>()
-const { subscription, embedded, selectable, disabled, hideDetails } = toRefs(props)
+const { subscription, embedded, selectable, disabled, hideDetails, showDeleteOnCard, showDeleteOnDialog, licenseData } =
+	toRefs(props)
 
+const DeleteIcon = "ph:minus-circle"
 const InfoIcon = "carbon:information"
+const message = useMessage()
 const showDetails = ref(false)
+const deleteMessage = "Are you sure you want to give up this feature?"
+const canceling = ref(false)
+
+function cancelSubscription() {
+	canceling.value = true
+
+	const payload: CancelSubscriptionPayload = {
+		customer_email: licenseData.value?.customer.email || "",
+		subscription_price_id: subscription.value.subscription_price_id,
+		feature_name: subscription.value.name
+	}
+
+	Api.license
+		.cancelSubscription(payload)
+		.then(res => {
+			if (res.data.success) {
+				emit("deleted")
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			canceling.value = false
+		})
+}
 </script>
 
 <style lang="scss" scoped>

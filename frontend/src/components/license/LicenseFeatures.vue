@@ -14,7 +14,11 @@
 										v-for="subscription of activeSubscriptions"
 										:key="subscription.id"
 										:subscription="subscription"
+										:licenseData="licenseData"
 										embedded
+										showDeleteOnCard
+										showDeleteOnDialog
+										@deleted="load()"
 									/>
 								</template>
 								<n-empty description="No features unlocked" class="justify-center h-48" v-else>
@@ -23,11 +27,7 @@
 									</template>
 								</n-empty>
 							</div>
-							<LicenseCheckoutWizard
-								v-else
-								:features-data="features"
-								:subscriptions-data="subscriptions"
-							/>
+							<LicenseCheckoutWizard v-else :features-data="features" />
 						</n-scrollbar>
 					</div>
 					<div class="cta-section" v-if="license">
@@ -86,13 +86,13 @@ import { NScrollbar, NSpin, NModal, NButton, NEmpty, useMessage } from "naive-ui
 import Icon from "@/components/common/Icon.vue"
 import Api from "@/api"
 import { onBeforeMount, onMounted, ref, toRefs, computed } from "vue"
-import { type LicenseFeatures, type LicenseKey, type SubscriptionFeature } from "@/types/license.d"
+import { type License, type LicenseFeatures, type LicenseKey, type SubscriptionFeature } from "@/types/license.d"
 import SubscriptionCard from "./SubscriptionCard.vue"
 import LicenseCheckoutWizard from "./LicenseCheckoutWizard.vue"
 import LicenseDetails from "./LicenseDetails.vue"
 
 const emit = defineEmits<{
-	(e: "licenseLoaded", value: LicenseKey): void
+	(e: "licenseKeyLoaded", value: LicenseKey): void
 	(
 		e: "mounted",
 		value: {
@@ -101,8 +101,11 @@ const emit = defineEmits<{
 	): void
 }>()
 
-const props = defineProps<{ hideKey?: boolean }>()
-const { hideKey } = toRefs(props)
+const props = defineProps<{
+	hideKey?: boolean
+	licenseData?: License
+}>()
+const { hideKey, licenseData } = toRefs(props)
 
 const InfoIcon = "carbon:information"
 const ExtendIcon = "carbon:intent-request-create"
@@ -132,8 +135,8 @@ function getLicense() {
 		.getLicense()
 		.then(res => {
 			if (res.data.success) {
-				//license.value = res.data?.license_key
-				//emit("licenseLoaded", license.value)
+				license.value = res.data?.license_key
+				emit("licenseKeyLoaded", license.value)
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
@@ -155,7 +158,7 @@ function getLicenseFeatures() {
 		.getLicenseFeatures()
 		.then(res => {
 			if (res.data.success) {
-				//features.value = res.data?.features
+				features.value = res.data?.features
 				if (features.value.length) {
 					getSubscriptionFeatures()
 				}

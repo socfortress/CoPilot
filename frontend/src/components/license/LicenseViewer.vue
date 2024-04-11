@@ -1,34 +1,40 @@
 <template>
-	<div class="license-viewer flex justify-center items-center gap-4" :class="{ 'has-side': !!license }">
+	<div class="license-viewer flex justify-center items-center gap-4" :class="{ 'has-side': !!key }">
 		<div class="main-box">
 			<LicenseFeatures
-				@license-loaded="licenseLoaded"
-				:hide-key="!!license"
+				@license-key-loaded="licenseKeyLoaded"
+				:hide-key="!!key"
+				:license-data="details"
 				class="h-full"
-				:class="{ 'mt-8': !license }"
+				:class="{ 'mt-8': !key }"
 			/>
 		</div>
 		<div class="side-box">
-			<LicenseDetails hide-features v-if="license" />
+			<LicenseDetails hide-features @license-loaded="licenseLoaded" v-if="key" />
 		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
+import { ref } from "vue"
 import LicenseFeatures from "./LicenseFeatures.vue"
 import LicenseDetails from "./LicenseDetails.vue"
-import type { LicenseKey } from "@/types/license"
-import { ref } from "vue"
+import type { License, LicenseKey } from "@/types/license"
 
 const emit = defineEmits<{
-	(e: "licenseLoaded", value: LicenseKey): void
+	(e: "licenseKeyLoaded", value: LicenseKey): void
 }>()
 
-const license = ref<LicenseKey | undefined>(undefined)
+const key = ref<LicenseKey | undefined>(undefined)
+const details = ref<License | undefined>(undefined)
 
-function licenseLoaded(licenseKey: LicenseKey) {
-	license.value = licenseKey
-	emit("licenseLoaded", licenseKey)
+function licenseKeyLoaded(licenseKey: LicenseKey) {
+	key.value = licenseKey
+	emit("licenseKeyLoaded", licenseKey)
+}
+
+function licenseLoaded(license: License) {
+	details.value = license
 }
 </script>
 

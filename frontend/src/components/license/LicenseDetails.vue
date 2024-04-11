@@ -68,6 +68,7 @@ import { useSettingsStore } from "@/stores/settings"
 import KVCard from "@/components/common/KVCard.vue"
 
 const emit = defineEmits<{
+	(e: "licenseLoaded", value: License): void
 	(
 		e: "mounted",
 		value: {
@@ -115,6 +116,7 @@ function getLicense() {
 		.then(res => {
 			if (res.data.success) {
 				licenseLoaded.value = res.data?.license
+				emit("licenseLoaded", licenseLoaded.value)
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}

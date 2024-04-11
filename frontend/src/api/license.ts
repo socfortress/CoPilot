@@ -15,6 +15,12 @@ export interface NewLicensePayload {
 	companyName: string
 }
 
+export interface CancelSubscriptionPayload {
+	customer_email: string
+	subscription_price_id: string
+	feature_name: string
+}
+
 export default {
 	getLicense() {
 		return HttpClient.get<FlaskBaseResponse & { license_key: LicenseKey }>(`/license/get_license`)
@@ -43,6 +49,9 @@ export default {
 		return HttpClient.post<FlaskBaseResponse & { license_key: LicenseKey }>(`/license/retrieve_license_by_email`, {
 			email
 		})
+	},
+	cancelSubscription(payload: CancelSubscriptionPayload) {
+		return HttpClient.post<FlaskBaseResponse>(`/license/cancel_subscription`, payload)
 	},
 	// TODO: remove, deprecated
 	extendLicense(period: number) {
