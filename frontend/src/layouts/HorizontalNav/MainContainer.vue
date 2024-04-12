@@ -83,6 +83,11 @@ onMounted(() => {
 
 	@media (max-width: $sidebar-bp) {
 		padding-left: 0px;
+
+		.view {
+			padding-top: calc(var(--view-padding) / 2);
+		}
+
 		&.sidebar-collapsed {
 			padding-left: 0px;
 		}

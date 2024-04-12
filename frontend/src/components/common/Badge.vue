@@ -74,6 +74,8 @@ const { type, hintCursor, pointCursor, color, href } = defineProps<{
 			&:first-child {
 				border-right: var(--border-small-100);
 				background-color: var(--primary-005-color);
+				line-height: 1.1;
+				white-space: nowrap;
 			}
 			&:last-child {
 				font-family: var(--font-family-mono);

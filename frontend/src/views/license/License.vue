@@ -1,6 +1,10 @@
 <template>
-	<div class="page grow flex flex-col" :class="{ 'page-wrapped': licenseKey }">
-		<LicenseViewer class="grow" @license-key-loaded="licenseKey = $event" />
+	<div class="page grow flex flex-col" :class="{ 'limit-height': licenseKey }">
+		<LicenseViewer
+			class="grow"
+			:class="{ 'overflow-hidden': licenseKey }"
+			@license-key-loaded="licenseKey = $event"
+		/>
 	</div>
 </template>
 
@@ -11,3 +15,14 @@ import { ref } from "vue"
 
 const licenseKey = ref<LicenseKey | undefined>(undefined)
 </script>
+
+<style lang="scss" scoped>
+.page {
+	&.limit-height {
+		@media (min-width: 801px) {
+			max-height: calc(100svh - var(--toolbar-height) - var(--view-padding) - var(--header-bar-height) - 66px);
+			overflow: hidden;
+		}
+	}
+}
+</style>

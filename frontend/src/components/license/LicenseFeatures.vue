@@ -76,7 +76,7 @@
 			content-class="flex flex-col"
 			segmented
 		>
-			<LicenseDetails :features-data="features" hide-features v-if="license" embedded />
+			<LicenseDetails :features-data="features" hide-features v-if="license" />
 		</n-modal>
 	</div>
 </template>
@@ -230,6 +230,7 @@ onMounted(() => {
 	.license-features-box {
 		background-color: var(--bg-color);
 		border-radius: var(--border-radius);
+		border: var(--border-small-100);
 		padding: 18px;
 		flex-grow: 1;
 		overflow: hidden;

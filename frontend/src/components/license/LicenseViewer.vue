@@ -10,13 +10,16 @@
 			/>
 		</div>
 		<div class="side-box">
-			<LicenseDetails hide-features @license-loaded="licenseLoaded" v-if="key" />
+			<n-scrollbar style="max-width: 100%">
+				<LicenseDetails hide-features @license-loaded="licenseLoaded" v-if="key" class="min-h-full" />
+			</n-scrollbar>
 		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
 import { ref } from "vue"
+import { NScrollbar } from "naive-ui"
 import LicenseFeatures from "./LicenseFeatures.vue"
 import LicenseDetails from "./LicenseDetails.vue"
 import type { License, LicenseKey } from "@/types/license"
@@ -44,6 +47,7 @@ function licenseLoaded(license: License) {
 
 	.main-box {
 		width: 450px;
+		min-width: 300px;
 	}
 	.side-box {
 		overflow: hidden;
@@ -53,6 +57,16 @@ function licenseLoaded(license: License) {
 		align-items: stretch;
 		.side-box {
 			flex-grow: 1;
+		}
+	}
+
+	@media (max-width: 800px) {
+		flex-direction: column;
+
+		.main-box {
+			width: unset;
+			min-width: unset;
+			max-width: unset;
 		}
 	}
 }

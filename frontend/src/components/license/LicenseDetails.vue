@@ -1,58 +1,69 @@
 <template>
-	<n-spin :show="loading" content-class="min-h-48">
-		<div class="license-details-box flex flex-col gap-7" :class="{ embedded }" v-if="license">
-			<div class="section" v-if="!hideKey">
-				<div class="label">
-					<Icon :name="KeyIcon" :size="14"></Icon>
-					Key
-				</div>
-				<div class="value">{{ license.key }}</div>
-			</div>
-			<div class="section" v-if="!hideFeatures">
-				<div class="label">
-					<Icon :name="FeaturesIcon" :size="14"></Icon>
-					Features
-				</div>
-				<div class="value flex flex-wrap gap-2">
-					<template v-if="features.length">
+	<n-spin :show="loading" content-class=" grow flex flex-col" class="flex flex-col overflow-hidden">
+		<div v-if="license" class="flex flex-col gap-4">
+			<KVCard v-if="!hideKey" class="!basis-auto">
+				<template #key>
+					<span class="flex gap-3 items-center">
+						<Icon :name="KeyIcon" :size="14"></Icon>
+						<span>Key</span>
+					</span>
+				</template>
+				<template #value>{{ license.key }}</template>
+			</KVCard>
+			<KVCard v-if="!hideFeatures" class="!basis-auto">
+				<template #key>
+					<span class="flex gap-3 items-center">
+						<Icon :name="FeaturesIcon" :size="14"></Icon>
+						<span>Features</span>
+					</span>
+				</template>
+				<template #value>
+					<div v-if="features.length" class="grid gap-2 grid-auto-flow-200">
 						<KVCard v-for="feature of features" :key="feature">
-							<template #value>{{ feature }}</template>
-						</KVCard>
-					</template>
-					<template v-else>No feature enabled</template>
-				</div>
-			</div>
-			<div class="section">
-				<div class="label">
-					<Icon :name="ExpiresIcon" :size="14"></Icon>
-					Expires
-				</div>
-				<div class="value">{{ expiresText }}</div>
-			</div>
-			<div class="section">
-				<div class="label">
-					<Icon :name="PeriodIcon" :size="14"></Icon>
-					Period
-				</div>
-				<div class="value">{{ periodText }}</div>
-			</div>
-			<div class="section">
-				<div class="label">
-					<Icon :name="CustomerIcon" :size="14"></Icon>
-					Customer
-				</div>
-				<div class="value grid gap-2 grid-auto-flow-200">
-					<KVCard v-for="(value, key) of license.customer" :key="key">
-						<template #key>{{ key }}</template>
-						<template #value>
-							<template v-if="key === 'created'">
-								{{ formatDate(value, dFormats.datetime) }}
+							<template #value>
+								<span class="flex gap-3 items-center">
+									<Icon :name="CheckIcon" :size="14" class="text-primary-color"></Icon>
+									<span>{{ feature }}</span>
+								</span>
 							</template>
-							<template v-else>{{ value ?? "-" }}</template>
-						</template>
-					</KVCard>
-				</div>
-			</div>
+						</KVCard>
+					</div>
+					<template v-else>No feature enabled</template>
+				</template>
+			</KVCard>
+			<KVCard class="!basis-auto">
+				<template #key>
+					<span class="flex gap-3 items-center">
+						<Icon :name="ExpiresIcon" :size="14"></Icon>
+						<span>Expires</span>
+					</span>
+				</template>
+				<template #value>
+					{{ expiresText }}
+					<span class="text-secondary-color">({{ periodText }})</span>
+				</template>
+			</KVCard>
+			<KVCard class="!basis-auto">
+				<template #key>
+					<span class="flex gap-3 items-center">
+						<Icon :name="CustomerIcon" :size="14"></Icon>
+						<span>Customer</span>
+					</span>
+				</template>
+				<template #value>
+					<div class="flex flex-wrap gap-2">
+						<Badge type="splitted" v-for="(value, key) of license.customer" :key="key">
+							<template #label>{{ sanitizeKey(key) }}</template>
+							<template #value>
+								<template v-if="key === 'created'">
+									{{ formatDate(value, dFormats.datetime) }}
+								</template>
+								<template v-else>{{ value ?? "-" }}</template>
+							</template>
+						</Badge>
+					</div>
+				</template>
+			</KVCard>
 		</div>
 	</n-spin>
 </template>
@@ -65,6 +76,8 @@ import { onBeforeMount, onMounted, ref, toRefs, computed } from "vue"
 import { type LicenseFeatures, type License } from "@/types/license.d"
 import { formatDate } from "@/utils"
 import { useSettingsStore } from "@/stores/settings"
+import _startCase from "lodash/startCase"
+import Badge from "@/components/common/Badge.vue"
 import KVCard from "@/components/common/KVCard.vue"
 
 const emit = defineEmits<{
@@ -82,14 +95,13 @@ const props = defineProps<{
 	featuresData?: LicenseFeatures[]
 	hideKey?: boolean
 	hideFeatures?: boolean
-	embedded?: boolean
 }>()
-const { licenseData, featuresData, hideKey, hideFeatures, embedded } = toRefs(props)
+const { licenseData, featuresData, hideKey, hideFeatures } = toRefs(props)
 
 const KeyIcon = "ph:key"
 const ExpiresIcon = "ph:calendar-blank"
-const PeriodIcon = "majesticons:clock-line"
 const CustomerIcon = "carbon:user"
+const CheckIcon = "carbon:checkmark-outline"
 const FeaturesIcon = "material-symbols:checklist"
 
 const message = useMessage()
@@ -162,6 +174,10 @@ function load() {
 	}
 }
 
+function sanitizeKey(text: string) {
+	return _startCase(text).toLowerCase()
+}
+
 onBeforeMount(() => {
 	load()
 })
@@ -172,33 +188,3 @@ onMounted(() => {
 	})
 })
 </script>
-
-<style lang="scss" scoped>
-.license-details-box {
-	background-color: var(--bg-color);
-	border-radius: var(--border-radius);
-
-	&:not(.embedded) {
-		padding: 14px 18px;
-	}
-
-	.section {
-		display: flex;
-		flex-direction: column;
-		gap: 6px;
-		.label {
-			display: flex;
-			align-items: center;
-			gap: 10px;
-			color: var(--fg-secondary-color);
-			font-family: var(--font-family-mono);
-			font-size: 14px;
-		}
-
-		.value {
-			font-size: 16px;
-			font-weight: bold;
-		}
-	}
-}
-</style>
