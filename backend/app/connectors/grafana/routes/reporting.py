@@ -30,7 +30,7 @@ from app.connectors.grafana.services.reporting import get_orgs
 from app.connectors.models import Connectors
 from app.db.db_session import get_db
 
-# from app.middleware.license import is_feature_enabled
+from app.middleware.license import is_feature_enabled
 
 # App specific imports
 

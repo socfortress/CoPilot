@@ -152,6 +152,11 @@ class GetLicenseFeaturesResponse(BaseModel):
     success: bool
     message: str
 
+class IsFeatureEnabledResponse(BaseModel):
+    enabled: bool
+    success: bool
+    message: str
+
 
 class Feature(BaseModel):
     id: int
@@ -489,9 +494,12 @@ async def is_feature_enabled(feature_name: str, session: AsyncSession) -> bool:
         bool: True if the feature is enabled, False otherwise.
     """
     license = await get_license(session)
-    license_details = LicenseResponse(**check_license(license).__dict__)
-    for data_object in license_details.data_objects:
-        if data_object["Name"] == feature_name and data_object["IntValue"] == 1:
+    result = await send_post_request(
+            "verify-license",
+            data={"license_key": license.license_key}
+            )
+    for data_object in result["data"]["license"]["dataObjects"]:
+        if data_object["name"] == feature_name and data_object["intValue"] == 1:
             return True
 
     raise HTTPException(status_code=400, detail="Feature not enabled. You must purchase a license to use this feature.")
@@ -833,6 +841,36 @@ async def send_post_request(endpoint: str, data: Dict[str, Any] = None) -> Dict[
             status_code=500,
             detail=f"Failed to send POST request to {endpoint} with error: {e}",
         )
+
+@license_router.get(
+    "/is_feature_enabled/{feature_name}",
+    response_model=IsFeatureEnabledResponse,
+    description="Check if a feature is enabled in a license",
+)
+async def is_feature_enabled_route(feature_name: str, session: AsyncSession = Depends(get_db)) -> IsFeatureEnabledResponse:
+    """
+    Check if a feature is enabled in a license.
+
+    Args:
+        feature_name (str): The feature name to check.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        bool: True if the feature is enabled, False otherwise.
+    """
+    if await is_feature_enabled(feature_name, session):
+        return IsFeatureEnabledResponse(
+            enabled=True,
+            success=True,
+            message="Feature is enabled",
+        )
+    else:
+        return IsFeatureEnabledResponse(
+            enabled=False,
+            success=True,
+            message="Feature is not enabled",
+        )
+
 
 @license_router.get(
     "/get_license_features",
