@@ -430,15 +430,12 @@ async def get_license(session: AsyncSession) -> License:
     :param session: The AsyncSession object for the database
     :return: The License object
     """
-    try:
-        result = await session.execute(select(License))
-        license = result.scalars().first()
-        if license is None:
-            raise HTTPException(status_code=404, detail="No license found")
+    result = await session.execute(select(License))
+    license = result.scalars().first()
+    if license is None:
+        raise HTTPException(status_code=404, detail="No license found")
+    else:
         return license
-    except Exception as e:
-        logger.error(f"Unexpected error when retrieving license: {e}")
-        raise HTTPException(status_code=500, detail="Unexpected error when retrieving license") from e
 
 
 def check_license(license: License):
