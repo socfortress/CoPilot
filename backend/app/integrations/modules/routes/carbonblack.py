@@ -58,6 +58,7 @@ async def get_collect_carbonblack_data(carbonblack_request, session, auth_keys):
         carbonblack_api_key=auth_keys.carbonblack_api_key,
         carbonblack_api_id=auth_keys.carbonblack_api_id,
         carbonblack_org_key=auth_keys.carbonblack_org_key,
+        time_range='-24h',
     )
 
 @module_carbonblack_router.post(
