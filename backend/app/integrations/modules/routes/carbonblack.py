@@ -33,8 +33,12 @@ async def get_carbonblack_auth_keys(customer_integration) -> CarbonBlackAuthKeys
         customer_integration,
         service_name="CarbonBlack",
     )
+    logger.info(f"carbonblack_auth_keys: {carbonblack_auth_keys}")
 
-    return CarbonBlackAuthKeys(**carbonblack_auth_keys)
+    return CarbonBlackAuthKeys(carbonblack_api_url=carbonblack_auth_keys["API_URL"],
+                                carbonblack_api_key=carbonblack_auth_keys["API_KEY"],
+                                carbonblack_api_id=carbonblack_auth_keys["API_ID"],
+                                carbonblack_org_key=carbonblack_auth_keys["ORGANIZATION_KEY"])
 
 async def get_collect_carbonblack_data(carbonblack_request, session, auth_keys):
     return CollectCarbonBlack(

@@ -24,7 +24,7 @@ async def invoke_carbonblack_integration_collect() -> InvokeCarbonBlackResponse:
     customer_codes = []
     async with get_db_session() as session:
         stmt = select(CustomerIntegrations).where(
-            CustomerIntegrations.integration_service_name == "Carbonblack",
+            CustomerIntegrations.integration_service_name == "CarbonBlack",
         )
         result = await session.execute(stmt)
         customer_codes = [row.customer_code for row in result.scalars()]
@@ -33,7 +33,7 @@ async def invoke_carbonblack_integration_collect() -> InvokeCarbonBlackResponse:
             await collect_carbonblack_route(
                 InvokeCarbonBlackRequest(
                     customer_code=customer_code,
-                    integration_name="Carbonblack",
+                    integration_name="CarbonBlack",
                 ),
                 session,
             )
