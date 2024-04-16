@@ -34,6 +34,9 @@ export default {
 	getLicenseFeatures() {
 		return HttpClient.get<FlaskBaseResponse & { features: LicenseFeatures[] }>(`/license/get_license_features`)
 	},
+	isFeatureEnabled(feature_name: LicenseFeatures) {
+		return HttpClient.get<FlaskBaseResponse & { enabled: boolean }>(`/license/is_feature_enabled/${feature_name}`)
+	},
 	replaceLicense(license_key: LicenseKey) {
 		return HttpClient.post<FlaskBaseResponse>(`/license/replace_license_in_db`, {
 			license_key
