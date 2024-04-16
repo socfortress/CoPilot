@@ -3,9 +3,18 @@
 		<div class="license-features-box flex items-center justify-center">
 			<n-spin :show="loading" class="h-full w-full" content-class="h-full">
 				<div class="wrapper h-full flex flex-col gap-4" v-if="!loading">
-					<h3>
-						{{ features.length ? "Your features" : "Unlock features" }}
-					</h3>
+					<div class="flex justify-between items-center gap-4">
+						<h3>
+							{{ features.length ? "Your features" : "Unlock features" }}
+						</h3>
+						<n-popover class="max-w-80" trigger="hover" v-if="features.length">
+							<template #trigger>
+								<Icon :name="InfoIcon" :size="20" class="cursor-help"></Icon>
+							</template>
+							To unsubscribe, click on the feature you wish to remove, and then click on the "Unsubscribe"
+							button.
+						</n-popover>
+					</div>
 					<div class="grow overflow-hidden">
 						<n-scrollbar v-if="!loading">
 							<div class="features-list flex flex-col gap-2" v-if="license">
@@ -95,7 +104,7 @@
 </template>
 
 <script setup lang="ts">
-import { NScrollbar, NSpin, NModal, NButton, NEmpty, useMessage } from "naive-ui"
+import { NScrollbar, NSpin, NModal, NButton, NEmpty, NPopover, useMessage } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import Api from "@/api"
 import { onBeforeMount, onMounted, ref, toRefs, computed } from "vue"

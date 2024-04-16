@@ -1,10 +1,14 @@
 <template>
-	<div class="license-subscription-feature-box" :class="{ embedded, selectable, disabled }">
+	<div
+		class="license-subscription-feature-box"
+		:class="{ embedded, disabled }"
+		@click="selectable ? () => {} : (showDetails = true)"
+	>
 		<n-spin :show="canceling" content-class="px-4 py-3 flex flex-col gap-2">
 			<div class="header-box flex justify-between items-center">
 				<div class="flex items-center gap-2 cursor-pointer">
 					<span>{{ subscription.name }}</span>
-					<span class="info-btn pt-0.5" @click.stop="showDetails = true">
+					<span class="info-btn pt-0.5" @click.stop="showDetails = true" v-if="selectable">
 						<Icon :name="InfoIcon" :size="14"></Icon>
 					</span>
 				</div>
@@ -136,6 +140,7 @@ function cancelSubscription() {
 	background-color: var(--bg-color);
 	border: var(--border-small-050);
 	transition: all 0.2s var(--bezier-ease);
+	cursor: pointer;
 
 	.header-box {
 		font-size: 13px;
@@ -166,10 +171,6 @@ function cancelSubscription() {
 
 	&.embedded {
 		background-color: var(--bg-secondary-color);
-	}
-
-	&.selectable {
-		cursor: pointer;
 	}
 
 	&.disabled {
