@@ -173,13 +173,13 @@ const router = createRouter({
 					path: "success",
 					name: "LicenseSuccess",
 					component: () => import("@/views/license/Success.vue"),
-					meta: { title: "License Success" }
+					meta: { title: "License Success", skipPin: true }
 				},
 				{
 					path: "cancel",
 					name: "LicenseCancel",
 					component: () => import("@/views/license/Cancel.vue"),
-					meta: { title: "License Cancel" }
+					meta: { title: "License Cancel", skipPin: true }
 				}
 			]
 		},
@@ -194,14 +194,14 @@ const router = createRouter({
 			path: "/login",
 			name: "Login",
 			component: Login,
-			meta: { title: "Login", forceLayout: Layout.Blank, checkAuth: true }
+			meta: { title: "Login", forceLayout: Layout.Blank, checkAuth: true, skipPin: true }
 		},
 		{
 			path: "/register",
 			name: "Register",
 			component: () => import("@/views/Auth/Login.vue"),
 			props: { formType: "signup" as FormType },
-			meta: { title: "Register", forceLayout: Layout.Blank, checkAuth: true }
+			meta: { title: "Register", forceLayout: Layout.Blank, checkAuth: true, skipPin: true }
 		},
 		{
 			path: "/logout",
@@ -212,7 +212,7 @@ const router = createRouter({
 			path: "/:pathMatch(.*)*",
 			name: "NotFound",
 			component: () => import("@/views/NotFound.vue"),
-			meta: { forceLayout: Layout.Blank }
+			meta: { forceLayout: Layout.Blank, skipPin: true }
 		}
 	]
 })

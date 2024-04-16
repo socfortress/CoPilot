@@ -9,5 +9,6 @@ declare module "vue-router" {
 	interface RouteMeta extends RouteMetaAuth {
 		title?: string
 		forceLayout?: Layout
+		skipPin?: boolean
 	}
 }
