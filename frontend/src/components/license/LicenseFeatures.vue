@@ -16,7 +16,6 @@
 										:subscription="subscription"
 										:licenseData="licenseData"
 										embedded
-										showDeleteOnCard
 										showDeleteOnDialog
 										@deleted="load()"
 									/>
@@ -51,7 +50,9 @@
 				</span>
 			</template>
 			<template v-else>
-				<span class="cursor-pointer">If you possess a license, you may load it by clicking here</span>
+				<span class="cursor-pointer" @click="showLicenseUpload = true">
+					If you possess a license, you may load it by clicking here
+				</span>
 			</template>
 		</div>
 
@@ -78,6 +79,18 @@
 		>
 			<LicenseDetails :features-data="features" hide-features v-if="license" />
 		</n-modal>
+
+		<n-modal
+			v-model:show="showLicenseUpload"
+			preset="card"
+			:style="{ maxWidth: 'min(600px, 90vw)', minHeight: 'min(300px, 90vh)', overflow: 'hidden' }"
+			title="Upload your license"
+			:bordered="false"
+			content-class="flex flex-col"
+			segmented
+		>
+			<LicenseLoadForm @uploaded="licenseUploaded()" />
+		</n-modal>
 	</div>
 </template>
 
@@ -89,6 +102,7 @@ import { onBeforeMount, onMounted, ref, toRefs, computed } from "vue"
 import { type License, type LicenseFeatures, type LicenseKey, type SubscriptionFeature } from "@/types/license.d"
 import SubscriptionCard from "./SubscriptionCard.vue"
 import LicenseCheckoutWizard from "./LicenseCheckoutWizard.vue"
+import LicenseLoadForm from "./LicenseLoadForm.vue"
 import LicenseDetails from "./LicenseDetails.vue"
 
 const emit = defineEmits<{
@@ -114,6 +128,7 @@ const NoFeaturesIcon = "carbon:intent-request-uninstall"
 const message = useMessage()
 const showCheckoutForm = ref(false)
 const showLicenseDetails = ref(false)
+const showLicenseUpload = ref(false)
 const loadingLicense = ref(false)
 const loadingFeatures = ref(false)
 const loadingSubscriptions = ref(false)
@@ -136,7 +151,9 @@ function getLicense() {
 		.then(res => {
 			if (res.data.success) {
 				license.value = res.data?.license_key
-				emit("licenseKeyLoaded", license.value)
+				if (license.value) {
+					emit("licenseKeyLoaded", license.value)
+				}
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
@@ -198,6 +215,11 @@ function getSubscriptionFeatures() {
 
 function openCheckout() {
 	showCheckoutForm.value = true
+}
+
+function licenseUploaded() {
+	showLicenseUpload.value = false
+	load()
 }
 
 function load() {

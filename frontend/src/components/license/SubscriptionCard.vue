@@ -4,7 +4,7 @@
 			<div class="header-box flex justify-between items-center">
 				<div class="flex items-center gap-2 cursor-pointer">
 					<span>{{ subscription.name }}</span>
-					<span class="info-btn pt-0.5" @click="showDetails = true">
+					<span class="info-btn pt-0.5" @click.stop="showDetails = true">
 						<Icon :name="InfoIcon" :size="14"></Icon>
 					</span>
 				</div>
