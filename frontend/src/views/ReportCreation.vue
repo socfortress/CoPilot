@@ -8,22 +8,27 @@
 			hide-panels-select
 		/>
 		<ReportPanels :timerange="timerange" :org="org" :dashboard="dashboard" :panels="panels" />
-		<div class="mobile-overlay">
-			<div>
-				<Icon :name="AlertIcon" :size="18" class="relative top-0.5 mr-1"></Icon>
+		<div class="overlay mobile-overlay">
+			<n-alert>
+				<template #icon>
+					<Icon :name="AlertIcon" :size="18"></Icon>
+				</template>
 				This function is available only for desktop devices
-			</div>
+			</n-alert>
 		</div>
+		<LicenseFeatureOverlay :feature="'REPORTING'" />
 	</div>
 </template>
 
 <script setup lang="ts">
 import { ref } from "vue"
+import { NAlert } from "naive-ui"
 import ReportWizard from "@/components/reportCreation/Wizard.vue"
 import ReportPanels from "@/components/reportCreation/Panels.vue"
 import type { Dashboard, Org, Panel } from "@/types/reporting.d"
 import type { ReportTimeRange } from "@/api/reporting"
 import Icon from "@/components/common/Icon.vue"
+import LicenseFeatureOverlay from "@/components/license/LicenseFeatureOverlay.vue"
 
 const AlertIcon = "mdi:alert-outline"
 
@@ -41,20 +46,7 @@ const panels = ref<Panel[]>([])
 	position: relative;
 
 	.mobile-overlay {
-		background-color: rgba(var(--bg-body-rgb), 0.8);
-		position: absolute;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		padding: 40px;
-		text-align: center;
-		font-size: 20px;
 		display: none;
-
 		@media (max-width: $sidebar-bp) {
 			display: flex;
 		}

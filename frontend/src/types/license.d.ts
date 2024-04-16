@@ -41,7 +41,7 @@ export interface LicenseDataObject {
 	intValue: number
 }
 
-export type LicenseFeatures = "REPORTING" | "THREAT INTEL"
+export type LicenseFeatures = "REPORTING" | "THREAT INTEL" | "HUNTRESS" | "MIMECAST" | "CARBONBLACK"
 
 export type LicenseKey = `${string}-${string}-${string}-${string}`
 
