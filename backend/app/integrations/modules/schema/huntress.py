@@ -1,7 +1,7 @@
+from fastapi import HTTPException
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import validator
-from fastapi import HTTPException
 
 
 class InvokeHuntressRequest(BaseModel):
@@ -15,6 +15,7 @@ class InvokeHuntressRequest(BaseModel):
         description="The integration name.",
         examples=["Huntress"],
     )
+
 
 class HuntressAuthKeys(BaseModel):
     API_KEY: str = Field(
@@ -40,6 +41,7 @@ class InvokeHuntressResponse(BaseModel):
         description="The message.",
         examples=["Huntress Events collected successfully."],
     )
+
 
 class CollectHuntress(BaseModel):
     integration: str = Field(..., example="huntress")

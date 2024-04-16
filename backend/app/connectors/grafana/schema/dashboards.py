@@ -75,6 +75,10 @@ class HuntressDashboard(Enum):
     HUNTRESS_SUMMARY = ("Huntress", "summary.json")
 
 
+class CarbonBlackDashboard(Enum):
+    CARBONBLACK_SUMMARY = ("CarbonBlack", "summary.json")
+
+
 class DashboardProvisionRequest(BaseModel):
     dashboards: List[str] = Field(
         ...,
@@ -103,6 +107,7 @@ class DashboardProvisionRequest(BaseModel):
             + list(MimecastDashboard)
             + list(SapSiemDashboard)
             + list(HuntressDashboard)
+            + list(CarbonBlackDashboard)
         }
         if e not in valid_dashboards:
             raise ValueError(f'Dashboard identifier "{e}" is not recognized.')

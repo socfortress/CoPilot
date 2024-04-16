@@ -6,8 +6,8 @@ from sqlalchemy import and_
 from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.connectors.grafana.schema.dashboards import CarbonBlackDashboard
 from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
-from app.connectors.grafana.schema.dashboards import HuntressDashboard
 from app.connectors.grafana.services.dashboards import provision_dashboards
 from app.connectors.grafana.utils.universal import create_grafana_client
 from app.connectors.graylog.services.management import start_stream
@@ -308,20 +308,19 @@ async def provision_carbonblack(
             folder_title="CARBONBLACK",
         )
     ).id
-    # ! TODO: AWAITING DASHBOARD TEMPLATE CREATION # !
-    # await provision_dashboards(
-    #     DashboardProvisionRequest(
-    #         dashboards=[dashboard.name for dashboard in HuntressDashboard],
-    #         organizationId=(
-    #             await get_customer_meta(
-    #                 provision_carbonblack_request.customer_code,
-    #                 session,
-    #             )
-    #         ).customer_meta.customer_meta_grafana_org_id,
-    #         folderId=grafana_carbonblack_folder_id,
-    #         datasourceUid=carbonblack_datasource_uid,
-    #     ),
-    # )
+    await provision_dashboards(
+        DashboardProvisionRequest(
+            dashboards=[dashboard.name for dashboard in CarbonBlackDashboard],
+            organizationId=(
+                await get_customer_meta(
+                    provision_carbonblack_request.customer_code,
+                    session,
+                )
+            ).customer_meta.customer_meta_grafana_org_id,
+            folderId=grafana_carbonblack_folder_id,
+            datasourceUid=carbonblack_datasource_uid,
+        ),
+    )
     await create_integration_meta_entry(
         CustomerIntegrationsMetaSchema(
             customer_code=provision_carbonblack_request.customer_code,

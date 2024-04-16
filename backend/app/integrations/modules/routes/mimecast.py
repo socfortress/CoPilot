@@ -1,18 +1,22 @@
 from fastapi import APIRouter
 from fastapi import Depends
+from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.db_session import get_db
-from app.integrations.modules.schema.mimecast import MimecastAuthKeys, CollectMimecast, InvokeMimecastRequest, InvokeMimecastResponse
+from app.integrations.modules.schema.mimecast import CollectMimecast
+from app.integrations.modules.schema.mimecast import InvokeMimecastRequest
+from app.integrations.modules.schema.mimecast import InvokeMimecastResponse
+from app.integrations.modules.schema.mimecast import MimecastAuthKeys
+from app.integrations.modules.services.mimecast import post_to_copilot_mimecast_module
 from app.integrations.routes import find_customer_integration
 from app.integrations.utils.utils import extract_auth_keys
 from app.integrations.utils.utils import get_customer_integration_response
-from app.integrations.modules.services.mimecast import post_to_copilot_mimecast_module
-from app.utils import get_connector_attribute
 from app.middleware.license import get_license
-from loguru import logger
+from app.utils import get_connector_attribute
 
 module_mimecast_router = APIRouter()
+
 
 async def get_mimecast_auth_keys(customer_integration) -> MimecastAuthKeys:
     """
@@ -31,6 +35,7 @@ async def get_mimecast_auth_keys(customer_integration) -> MimecastAuthKeys:
     )
 
     return MimecastAuthKeys(**mimecast_auth_keys)
+
 
 async def get_collect_mimecast_data(mimecast_request, session, auth_keys):
     return CollectMimecast(
@@ -54,6 +59,7 @@ async def get_collect_mimecast_data(mimecast_request, session, auth_keys):
         uri=auth_keys.URI,
         time_range="15m",
     )
+
 
 @module_mimecast_router.post(
     "",

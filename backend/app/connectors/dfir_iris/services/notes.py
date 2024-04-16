@@ -14,7 +14,6 @@ from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
 from app.connectors.dfir_iris.utils.universal import initialize_client_and_case
 
 
-
 async def process_directories(directories: List[Dict], case_id: int) -> List[Dict]:
     """
     Process a list of notes for a given case.
@@ -28,13 +27,14 @@ async def process_directories(directories: List[Dict], case_id: int) -> List[Dic
     """
     processed_notes = []
     for directory in directories:
-        for note in directory['notes']:
+        for note in directory["notes"]:
             logger.info(f"Note: {note}")
             note_details = await get_case_note_details(note["id"], case_id)
             logger.info(f"Note details: {note_details}")
             note["note_details"] = note_details.note_details
             processed_notes.append(note)
     return processed_notes
+
 
 async def get_case_notes(case_id: int, search_term: str) -> NotesResponse:
     """

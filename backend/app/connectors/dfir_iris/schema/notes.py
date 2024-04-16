@@ -12,10 +12,12 @@ class Directory(BaseModel):
     parent_id: Optional[int]
     case_id: int
 
+
 class ModificationHistory(BaseModel):
     user: str
     user_id: int
     action: str
+
 
 class NoteDetails(BaseModel):
     directory: Directory

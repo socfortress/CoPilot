@@ -1,9 +1,9 @@
 from typing import Any
 from typing import Callable
 from typing import Dict
+from typing import List
 from typing import Optional
 from typing import Tuple
-from typing import List
 from typing import Union
 
 import requests
@@ -333,6 +333,7 @@ async def check_user_exists(user_id: int) -> bool:
     except Exception as e:
         logger.error(f"Failed to check if user {user_id} exists: {e}")
         return False
+
 
 async def collect_all_customers() -> List[str]:
     """

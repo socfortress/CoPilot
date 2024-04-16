@@ -16,6 +16,7 @@ class UsersResponse(BaseModel):
     success: bool
     users: List[User]
 
+
 class UserAddedToCustomerResponse(BaseModel):
     success: bool
     message: str

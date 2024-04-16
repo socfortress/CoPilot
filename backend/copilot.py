@@ -28,6 +28,7 @@ from app.routers import alert_creation
 from app.routers import alert_creation_settings
 from app.routers import ask_socfortress
 from app.routers import auth
+from app.routers import carbonblack
 from app.routers import connectors
 from app.routers import cortex
 from app.routers import customer_provisioning
@@ -37,13 +38,13 @@ from app.routers import dnstwist
 from app.routers import grafana
 from app.routers import graylog
 from app.routers import healthcheck
-from app.routers import carbonblack
 from app.routers import huntress
 from app.routers import influxdb
 from app.routers import integrations
 from app.routers import license
 from app.routers import logs
 from app.routers import mimecast
+from app.routers import modules
 from app.routers import monitoring_alert
 from app.routers import office365
 from app.routers import sap_siem
@@ -56,7 +57,6 @@ from app.routers import threat_intel
 from app.routers import velociraptor
 from app.routers import wazuh_indexer
 from app.routers import wazuh_manager
-from app.routers import modules
 from app.schedulers.scheduler import init_scheduler
 
 auth_handler = AuthHandler()

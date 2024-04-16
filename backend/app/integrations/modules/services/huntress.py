@@ -1,6 +1,8 @@
 import httpx
 from loguru import logger
+
 from app.integrations.modules.schema.huntress import CollectHuntress
+
 
 async def post_to_copilot_huntress_module(data: CollectHuntress, license_key: str):
     """
@@ -15,6 +17,6 @@ async def post_to_copilot_huntress_module(data: CollectHuntress, license_key: st
             "http://copilot-huntress-module/collect",
             json=data.dict(),
             params={"license_key": license_key, "feature_name": "HUNTRESS"},
-            timeout=120
+            timeout=120,
         )
     return None

@@ -1,22 +1,22 @@
 from fastapi import APIRouter
 from fastapi import Depends
-from httpx import AsyncClient
-import asyncio
+from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.db_session import get_db
+from app.integrations.modules.schema.huntress import CollectHuntress
+from app.integrations.modules.schema.huntress import HuntressAuthKeys
 from app.integrations.modules.schema.huntress import InvokeHuntressRequest
-from app.integrations.modules.schema.huntress import InvokeHuntressResponse, CollectHuntress, HuntressAuthKeys
+from app.integrations.modules.schema.huntress import InvokeHuntressResponse
+from app.integrations.modules.services.huntress import post_to_copilot_huntress_module
 from app.integrations.routes import find_customer_integration
 from app.integrations.utils.utils import extract_auth_keys
 from app.integrations.utils.utils import get_customer_integration_response
-from app.integrations.modules.services.huntress import post_to_copilot_huntress_module
-from app.utils import get_connector_attribute
 from app.middleware.license import get_license
-from app.db.universal_models import License
-from loguru import logger
+from app.utils import get_connector_attribute
 
 module_huntress_router = APIRouter()
+
 
 async def get_huntress_auth_keys(customer_integration) -> HuntressAuthKeys:
     """
@@ -35,6 +35,7 @@ async def get_huntress_auth_keys(customer_integration) -> HuntressAuthKeys:
     )
 
     return HuntressAuthKeys(**huntress_auth_keys)
+
 
 async def get_collect_huntress_data(huntress_request, session, auth_keys):
     return CollectHuntress(
@@ -68,6 +69,7 @@ async def get_collect_huntress_data(huntress_request, session, auth_keys):
         api_key=auth_keys.API_KEY,
         api_secret=auth_keys.API_SECRET,
     )
+
 
 @module_huntress_router.post(
     "",

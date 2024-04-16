@@ -1,8 +1,9 @@
-from pydantic import BaseModel
 from typing import Optional
+
+from fastapi import HTTPException
+from pydantic import BaseModel
 from pydantic import Field
 from pydantic import validator
-from fastapi import HTTPException
 
 
 class InvokeCarbonBlackRequest(BaseModel):
@@ -16,6 +17,7 @@ class InvokeCarbonBlackRequest(BaseModel):
         description="The integration name.",
         examples=["CarbonBlack"],
     )
+
 
 class CarbonBlackAuthKeys(BaseModel):
     carbonblack_api_url: str = Field(..., example="https://127.0.0.1")
@@ -40,6 +42,7 @@ class InvokeCarbonBlackResponse(BaseModel):
         description="The message.",
         examples=["CarbonBlack Events collected successfully."],
     )
+
 
 class CollectCarbonBlack(BaseModel):
     integration: str = Field(..., example="carbonblack")

@@ -1,8 +1,9 @@
+from typing import Optional
+
+from fastapi import HTTPException
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import validator
-from fastapi import HTTPException
-from typing import Optional
 
 
 class InvokeMimecastRequest(BaseModel):
@@ -16,6 +17,7 @@ class InvokeMimecastRequest(BaseModel):
         description="The integration name.",
         examples=["Mimecast"],
     )
+
 
 class MimecastAuthKeys(BaseModel):
     APP_ID: str = Field(
@@ -61,6 +63,7 @@ class InvokeMimecastResponse(BaseModel):
         description="The message.",
         examples=["Mimecast Events collected successfully."],
     )
+
 
 class CollectMimecast(BaseModel):
     integration: str = Field(..., example="mimecast")

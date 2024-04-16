@@ -6,12 +6,11 @@ from sqlalchemy import select
 
 from app.db.db_session import get_db_session
 from app.db.db_session import get_sync_db_session
+from app.integrations.models.customer_integration_settings import CustomerIntegrations
 from app.integrations.modules.routes.carbonblack import collect_carbonblack_route
 from app.integrations.modules.schema.carbonblack import InvokeCarbonBlackRequest
 from app.integrations.modules.schema.carbonblack import InvokeCarbonBlackResponse
-from app.integrations.models.customer_integration_settings import CustomerIntegrations
 from app.schedulers.models.scheduler import JobMetadata
-from app.schedulers.utils.universal import get_scheduled_job_metadata
 
 load_dotenv()
 

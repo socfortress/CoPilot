@@ -3,13 +3,15 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.db_session import get_db
-from app.schedulers.services.invoke_carbonblack import invoke_carbonblack_integration_collect
 from app.integrations.carbonblack.schema.provision import ProvisionCarbonBlackRequest
 from app.integrations.carbonblack.schema.provision import ProvisionCarbonBlackResponse
 from app.integrations.carbonblack.services.provision import provision_carbonblack
 from app.integrations.utils.utils import get_customer_integration_response
 from app.schedulers.models.scheduler import CreateSchedulerRequest
 from app.schedulers.scheduler import add_scheduler_jobs
+from app.schedulers.services.invoke_carbonblack import (
+    invoke_carbonblack_integration_collect,
+)
 
 integration_carbonblack_provision_scheduler_router = APIRouter()
 
@@ -50,6 +52,7 @@ async def provision_carbonblack_route(
         success=True,
         message="CarbonBlack provisioned successfully",
     )
+
 
 @integration_carbonblack_provision_scheduler_router.get(
     "/test",
