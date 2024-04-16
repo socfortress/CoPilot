@@ -1,0 +1,34 @@
+version: "2"
+
+services:
+    copilot-backend:
+        image: ghcr.io/socfortress/copilot-backend:latest
+        # Expose the Ports for Graylog Alerting and Docs
+        ports:
+            - "5000:5000"
+        volumes:
+            - ./data/copilot-backend-data/logs:/opt/logs
+            # Mount the copilot.db file to persist the database
+            - ./data/data:/opt/copilot/backend/data
+        env_file: .env
+
+    copilot-frontend:
+        image: ghcr.io/socfortress/copilot-frontend:latest
+        environment:
+            - SERVER_HOST=${SERVER_HOST:-localhost} # Set the domain name of your server
+        ports:
+            - "80:80"
+            - "443:443"
+
+    copilot-huntress-module:
+        image: ghcr.io/socfortress/copilot-huntress-module:latest
+
+    copilot-mimecast-module:
+        image: ghcr.io/socfortress/copilot-mimecast-module:latest
+
+networks:
+    default:
+        driver: bridge
+        # In case you need to set the MTU
+        #driver_opts:
+        #    com.docker.network.driver.mtu: "1450"

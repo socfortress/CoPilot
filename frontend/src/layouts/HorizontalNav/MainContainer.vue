@@ -56,12 +56,24 @@ onMounted(() => {
 			& > .n-scrollbar-rail {
 				top: calc(var(--toolbar-height) + 2px);
 			}
+
+			& > .n-scrollbar-container {
+				& > .n-scrollbar-content {
+					min-height: 100%;
+					display: flex;
+					flex-direction: column;
+				}
+			}
 		}
 	}
 
 	.view {
 		padding: var(--view-padding);
 		padding-top: 0;
+		flex-grow: 1;
+		width: 100%;
+		display: flex;
+		flex-direction: column;
 
 		&.boxed {
 			max-width: var(--boxed-width);
@@ -71,6 +83,11 @@ onMounted(() => {
 
 	@media (max-width: $sidebar-bp) {
 		padding-left: 0px;
+
+		.view {
+			padding-top: calc(var(--view-padding) / 2);
+		}
+
 		&.sidebar-collapsed {
 			padding-left: 0px;
 		}

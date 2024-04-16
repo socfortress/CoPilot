@@ -6,22 +6,33 @@ from pydantic import BaseModel
 from pydantic import Field
 
 
-class CustomAttributes(BaseModel):
-    # Define additional fields if custom_attributes contains specific keys
-    pass
+class Directory(BaseModel):
+    id: int
+    name: str
+    parent_id: Optional[int]
+    case_id: int
+
+
+class ModificationHistory(BaseModel):
+    user: str
+    user_id: int
+    action: str
 
 
 class NoteDetails(BaseModel):
-    custom_attributes: CustomAttributes
-    group_id: int
-    group_title: str
-    group_uuid: str
-    note_content: str
-    note_creationdate: str
+    directory: Directory
     note_id: int
-    note_lastupdate: str
-    note_title: str
     note_uuid: str
+    note_title: str
+    note_content: str
+    note_user: int
+    note_creationdate: str
+    note_lastupdate: str
+    note_case_id: int
+    custom_attributes: Optional[Dict]
+    directory_id: int
+    modification_history: Dict[str, ModificationHistory]
+    comments: List[str]
 
 
 class NoteDetailsResponse(BaseModel):
@@ -32,8 +43,6 @@ class NoteDetailsResponse(BaseModel):
 
 class NoteItem(BaseModel):
     note_details: NoteDetails
-    note_id: int
-    note_title: str
 
 
 class NotesResponse(BaseModel):

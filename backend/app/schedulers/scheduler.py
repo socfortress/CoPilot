@@ -7,6 +7,9 @@ from app.db.db_session import sync_engine
 from app.schedulers.models.scheduler import CreateSchedulerRequest
 from app.schedulers.models.scheduler import JobMetadata
 from app.schedulers.services.agent_sync import agent_sync
+from app.schedulers.services.invoke_carbonblack import (
+    invoke_carbonblack_integration_collect,
+)
 from app.schedulers.services.invoke_huntress import invoke_huntress_integration_collect
 from app.schedulers.services.invoke_mimecast import invoke_mimecast_integration
 from app.schedulers.services.invoke_mimecast import invoke_mimecast_integration_ttp
@@ -134,6 +137,7 @@ def get_function_by_name(function_name: str):
         "invoke_sap_siem_integration_brute_force_failed_logins_same_ip": invoke_sap_siem_integration_brute_force_failed_logins_same_ip,
         "invoke_sap_siem_integration_successful_login_after_multiple_failed_logins": invoke_sap_siem_integration_successful_login_after_multiple_failed_logins,
         "invoke_huntress_integration_collection": invoke_huntress_integration_collect,
+        "invoke_carbonblack_integration_collection": invoke_carbonblack_integration_collect,
         # Add other function mappings here
     }
     return function_map.get(

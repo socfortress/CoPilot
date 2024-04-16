@@ -4,6 +4,7 @@ from pathlib import Path
 from fastapi import HTTPException
 from loguru import logger
 
+from app.connectors.grafana.schema.dashboards import CarbonBlackDashboard
 from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
 from app.connectors.grafana.schema.dashboards import GrafanaDashboard
 from app.connectors.grafana.schema.dashboards import GrafanaDashboardResponse
@@ -175,6 +176,7 @@ async def provision_dashboards(
         + list(MimecastDashboard)
         + list(SapSiemDashboard)
         + list(HuntressDashboard)
+        + list(CarbonBlackDashboard)
     }
 
     for dashboard_name in dashboard_request.dashboards:

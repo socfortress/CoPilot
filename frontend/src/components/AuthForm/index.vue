@@ -37,8 +37,7 @@ import Logo from "@/layouts/common/Logo.vue"
 import { NButton } from "naive-ui"
 import { ref, onBeforeMount, computed } from "vue"
 import { useRouter } from "vue-router"
-
-export type FormType = "signin" | "signup" | "forgotpassword"
+import type { FormType } from "./types"
 
 const props = defineProps<{
 	type?: FormType

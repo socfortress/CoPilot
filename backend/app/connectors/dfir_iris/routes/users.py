@@ -7,12 +7,15 @@ from loguru import logger
 from app.auth.utils import AuthHandler
 from app.connectors.dfir_iris.schema.alerts import AlertResponse
 from app.connectors.dfir_iris.schema.users import User
+from app.connectors.dfir_iris.schema.users import UserAddedToCustomerResponse
 from app.connectors.dfir_iris.schema.users import UsersResponse
 from app.connectors.dfir_iris.services.users import assign_user_to_alert
 from app.connectors.dfir_iris.services.users import delete_user_from_alert
 from app.connectors.dfir_iris.services.users import get_users
+from app.connectors.dfir_iris.utils.universal import add_user_to_customers
 from app.connectors.dfir_iris.utils.universal import check_alert_exists
 from app.connectors.dfir_iris.utils.universal import check_user_exists
+from app.connectors.dfir_iris.utils.universal import collect_all_customers
 
 
 def verify_user_exists(user_id: int) -> int:
@@ -96,6 +99,39 @@ async def assign_user_to_alert_route(
     """
     logger.info(f"Assigning user {user_id} to alert {alert_id}")
     return await assign_user_to_alert(alert_id, user_id)
+
+
+@dfir_iris_users_router.post(
+    "/add/{user_id}",
+    response_model=AlertResponse,
+    description="Add a user to a list of customers",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def add_user_to_customers_route(
+    user_id: int,
+) -> UserAddedToCustomerResponse:
+    """
+    Add a user to a list of customers.
+
+    Parameters:
+    - customers (List[str]): The list of customer IDs.
+    - user_id (int): The ID of the user.
+
+    Returns:
+    - AlertResponse: The response containing the added user.
+
+    Raises:
+    - HTTPException: If the customer or user does not exist.
+    """
+    customers = await collect_all_customers()
+    customer_ids = [str(customer["customer_id"]) for customer in customers]
+    logger.info(f"Customer IDs: {customer_ids}")
+    logger.info(f"Adding user {user_id} to customers {customer_ids}")
+    success = await add_user_to_customers(customer_ids, user_id)
+    if success:
+        return UserAddedToCustomerResponse(message=f"User {user_id} added to customers {customers}", success=True)
+    else:
+        raise HTTPException(status_code=400, detail=f"Failed to add user {user_id} to customers {customers}")
 
 
 @dfir_iris_users_router.delete(

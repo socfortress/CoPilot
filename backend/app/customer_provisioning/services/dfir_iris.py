@@ -1,11 +1,13 @@
 from fastapi import HTTPException
 from loguru import logger
 
+from app.connectors.dfir_iris.routes.users import add_user_to_customers_route
 from app.connectors.dfir_iris.schema.admin import CreateCustomerResponse
 from app.connectors.dfir_iris.schema.admin import ListCustomers
 from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
 from app.connectors.dfir_iris.utils.universal import initialize_client_and_admin
 from app.connectors.dfir_iris.utils.universal import initialize_client_and_customer
+from app.connectors.dfir_iris.utils.universal import initialize_client_and_user
 
 
 async def check_customer_exists(customer_name: str) -> bool:
@@ -46,6 +48,27 @@ async def create_customer(customer_name: str) -> CreateCustomerResponse:
     client, admin = await initialize_client_and_admin("DFIR-IRIS")
     result = await fetch_and_validate_data(client, admin.add_customer, customer_name)
     return CreateCustomerResponse(success=result["success"], data=result["data"])
+
+
+async def add_user_to_all_customers(username: str):
+    """
+    Add a user to all customers.
+
+    Args:
+        username (str): The username of the user to be added.
+
+    Returns:
+        None
+    """
+    client, user = await initialize_client_and_user("DFIR-IRIS")
+    user = await fetch_and_validate_data(client, user.get_user, username)
+    if user is None or not user["success"]:
+        raise HTTPException(
+            status_code=400,
+            detail=f"User {username} does not exist",
+        )
+    logger.info(f"User: {user}")
+    await add_user_to_customers_route(user["data"]["user_id"])
 
 
 async def delete_customer(customer_id: int):

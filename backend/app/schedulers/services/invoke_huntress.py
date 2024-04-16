@@ -6,10 +6,10 @@ from sqlalchemy import select
 
 from app.db.db_session import get_db_session
 from app.db.db_session import get_sync_db_session
-from app.integrations.huntress.routes.huntress import collect_huntress_route
-from app.integrations.huntress.schema.huntress import InvokeHuntressRequest
-from app.integrations.huntress.schema.huntress import InvokeHuntressResponse
 from app.integrations.models.customer_integration_settings import CustomerIntegrations
+from app.integrations.modules.routes.huntress import collect_huntress_route
+from app.integrations.modules.schema.huntress import InvokeHuntressRequest
+from app.integrations.modules.schema.huntress import InvokeHuntressResponse
 from app.schedulers.models.scheduler import JobMetadata
 from app.schedulers.utils.universal import get_scheduled_job_metadata
 

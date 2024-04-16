@@ -13,6 +13,7 @@ from app.customer_provisioning.schema.provision import ProvisionHaProxyRequest
 from app.customer_provisioning.schema.provision import ProvisionNewCustomer
 from app.customer_provisioning.schema.wazuh_worker import ProvisionWorkerRequest
 from app.customer_provisioning.schema.wazuh_worker import ProvisionWorkerResponse
+from app.customer_provisioning.services.dfir_iris import add_user_to_all_customers
 from app.customer_provisioning.services.dfir_iris import create_customer
 from app.customer_provisioning.services.grafana import create_grafana_datasource
 from app.customer_provisioning.services.grafana import create_grafana_folder
@@ -95,6 +96,11 @@ async def provision_wazuh_customer(
         provision_meta_data["iris_customer_id"] = (await create_customer(request.customer_name)).data.customer_id
     except Exception:
         provision_meta_data["iris_customer_id"] = 2
+
+    if request.dfir_iris_username is not None:
+        await add_user_to_all_customers(
+            request.dfir_iris_username,
+        )
 
     customer_provision_meta = CustomerProvisionMeta(**provision_meta_data)
     customer_meta = await update_customer_meta_table(

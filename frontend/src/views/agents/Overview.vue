@@ -222,7 +222,7 @@ onBeforeMount(() => {
 			getAgent()
 		})
 	} else {
-		router.replace(`/agents`).catch(() => {})
+		router.replace({ name: "Agents" }).catch(() => {})
 	}
 })
 </script>

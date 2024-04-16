@@ -6,7 +6,6 @@ from typing import List
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import Security
-from fastapi.exceptions import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -221,7 +220,5 @@ async def generate_grafana_iframe_links(
 )
 async def create_report(request: GenerateReportRequest, session: AsyncSession = Depends(get_db)) -> GenerateReportResponse:
     logger.info("Generating report")
-    # ! License Check
     # await is_feature_enabled("REPORTING", session)
-    raise HTTPException(status_code=501, detail="Feature not enabled. Please check back later.")
     return await generate_report(request, session)

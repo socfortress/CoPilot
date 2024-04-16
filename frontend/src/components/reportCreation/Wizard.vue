@@ -155,7 +155,6 @@ watch(selectedPanelsIds, () => {
 watch(
 	[timeValue, timeUnit],
 	([value, unit]) => {
-		console.log("timerange")
 		emit("timerange", `${value}${unit}`)
 	},
 	{ immediate: true }

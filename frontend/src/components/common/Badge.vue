@@ -3,7 +3,7 @@
 		:is="!!href ? 'a' : 'div'"
 		class="badge"
 		:href="href"
-		:class="[type, color, { 'cursor-help': hintCursor, 'cursor-pointer': pointCursor }]"
+		:class="[type, color, { 'cursor-help': hintCursor, 'cursor-pointer': pointCursor, fluid }]"
 	>
 		<span v-if="$slots.label || $slots.iconLeft || $slots.iconRight" class="flex items-center gap-2">
 			<slot name="iconLeft"></slot>
@@ -17,10 +17,11 @@
 </template>
 
 <script setup lang="ts">
-const { type, hintCursor, pointCursor, color, href } = defineProps<{
+const { type, hintCursor, pointCursor, color, href, fluid } = defineProps<{
 	type?: "splitted" | "muted" | "active" | "cursor"
 	hintCursor?: boolean
 	pointCursor?: boolean
+	fluid?: boolean
 	color?: "danger" | "warning"
 	href?: string
 }>()
@@ -74,6 +75,8 @@ const { type, hintCursor, pointCursor, color, href } = defineProps<{
 			&:first-child {
 				border-right: var(--border-small-100);
 				background-color: var(--primary-005-color);
+				line-height: 1.1;
+				white-space: nowrap;
 			}
 			&:last-child {
 				font-family: var(--font-family-mono);
@@ -92,6 +95,23 @@ const { type, hintCursor, pointCursor, color, href } = defineProps<{
 			& > span {
 				&:first-child {
 					background-color: var(--secondary3-opacity-010-color);
+				}
+			}
+		}
+	}
+
+	&.fluid {
+		min-height: 26px;
+		height: unset;
+
+		&.splitted {
+			& > span {
+				&:last-child {
+					line-height: 1.1;
+					padding-top: 5px;
+					padding-bottom: 5px;
+					display: flex;
+					align-items: center;
 				}
 			}
 		}

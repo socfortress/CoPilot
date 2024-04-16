@@ -207,7 +207,8 @@ async def provision_customer_route(
     Returns:
         CustomerProvisionResponse: The response data for the provisioned customer.
     """
-    await check_unique_ports(request, session)
+    if request.provision_wazuh_worker is True:
+        await check_unique_ports(request, session)
     logger.info("Provisioning new customer")
     if request.only_insert_into_db is True:
         logger.info("Only inserting into the database")

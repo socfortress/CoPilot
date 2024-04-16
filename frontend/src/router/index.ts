@@ -4,7 +4,7 @@ import Login from "@/views/Auth/Login.vue"
 import { UserRole } from "@/types/auth.d"
 import { Layout } from "@/types/theme.d"
 import { authCheck } from "@/utils/auth"
-import type { FormType } from "@/components/AuthForm/index.vue"
+import type { FormType } from "@/components/AuthForm/types.d"
 
 const router = createRouter({
 	history: createWebHistory(import.meta.env.BASE_URL),
@@ -33,15 +33,24 @@ const router = createRouter({
 		},
 		{
 			path: "/agents",
-			name: "Agents",
-			component: () => import("@/views/Agents.vue"),
-			meta: { title: "Agents", auth: true, roles: UserRole.All }
-		},
-		{
-			path: "/agent/:id?",
-			name: "Agent",
-			component: () => import("@/views/AgentOverview.vue"),
-			meta: { title: "Agent", auth: true, roles: UserRole.All }
+			meta: {
+				auth: true,
+				roles: UserRole.All
+			},
+			children: [
+				{
+					path: "",
+					name: "Agents",
+					component: () => import("@/views/agents/Agents.vue"),
+					meta: { title: "Agents" }
+				},
+				{
+					path: ":id",
+					name: "Agent",
+					component: () => import("@/views/agents/Overview.vue"),
+					meta: { title: "Agent" }
+				}
+			]
 		},
 		{
 			path: "/graylog",
@@ -149,9 +158,30 @@ const router = createRouter({
 		},
 		{
 			path: "/license",
-			name: "License",
-			component: () => import("@/views/License.vue"),
-			meta: { title: "License", auth: true, roles: UserRole.All }
+			meta: {
+				auth: true,
+				roles: UserRole.All
+			},
+			children: [
+				{
+					path: "",
+					name: "License",
+					component: () => import("@/views/license/License.vue"),
+					meta: { title: "License" }
+				},
+				{
+					path: "success",
+					name: "LicenseSuccess",
+					component: () => import("@/views/license/Success.vue"),
+					meta: { title: "License Success", skipPin: true }
+				},
+				{
+					path: "cancel",
+					name: "LicenseCancel",
+					component: () => import("@/views/license/Cancel.vue"),
+					meta: { title: "License Cancel", skipPin: true }
+				}
+			]
 		},
 
 		{
@@ -164,14 +194,14 @@ const router = createRouter({
 			path: "/login",
 			name: "Login",
 			component: Login,
-			meta: { title: "Login", forceLayout: Layout.Blank, checkAuth: true }
+			meta: { title: "Login", forceLayout: Layout.Blank, checkAuth: true, skipPin: true }
 		},
 		{
 			path: "/register",
 			name: "Register",
 			component: () => import("@/views/Auth/Login.vue"),
 			props: { formType: "signup" as FormType },
-			meta: { title: "Register", forceLayout: Layout.Blank, checkAuth: true }
+			meta: { title: "Register", forceLayout: Layout.Blank, checkAuth: true, skipPin: true }
 		},
 		{
 			path: "/logout",
@@ -182,7 +212,7 @@ const router = createRouter({
 			path: "/:pathMatch(.*)*",
 			name: "NotFound",
 			component: () => import("@/views/NotFound.vue"),
-			meta: { forceLayout: Layout.Blank }
+			meta: { forceLayout: Layout.Blank, skipPin: true }
 		}
 	]
 })

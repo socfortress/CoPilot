@@ -28,6 +28,7 @@
 		font-family: var(--font-family-mono);
 		height: 100%;
 		flex-grow: 1;
+		word-break: break-word;
 	}
 }
 </style>

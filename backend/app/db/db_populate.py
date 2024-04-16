@@ -266,6 +266,7 @@ def get_available_integrations_list():
         ("Mimecast", "Integrate Mimecast with SOCFortress."),
         ("SAP SIEM", "Integrate SAP SIEM with SOCFortress."),
         ("Huntress", "Integrate Huntress with SOCFortress."),
+        ("CarbonBlack", "Integrate CarbonBlack with SOCFortress."),
         # ... Add more available integrations as needed ...
     ]
 
@@ -361,6 +362,10 @@ async def get_available_integrations_auth_keys_list(session: AsyncSession):
         ("SAP SIEM", "API_DOMAIN"),
         ("Huntress", "API_KEY"),
         ("Huntress", "API_SECRET"),
+        ("CarbonBlack", "API_KEY"),
+        ("CarbonBlack", "API_URL"),
+        ("CarbonBlack", "API_ID"),
+        ("CarbonBlack", "ORGANIZATION_KEY"),
         # ... Add more available integrations auth keys as needed ...
     ]
 

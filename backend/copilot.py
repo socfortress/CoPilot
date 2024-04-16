@@ -28,6 +28,7 @@ from app.routers import alert_creation
 from app.routers import alert_creation_settings
 from app.routers import ask_socfortress
 from app.routers import auth
+from app.routers import carbonblack
 from app.routers import connectors
 from app.routers import cortex
 from app.routers import customer_provisioning
@@ -43,6 +44,7 @@ from app.routers import integrations
 from app.routers import license
 from app.routers import logs
 from app.routers import mimecast
+from app.routers import modules
 from app.routers import monitoring_alert
 from app.routers import office365
 from app.routers import sap_siem
@@ -125,6 +127,8 @@ api_router.include_router(stack_provisioning.router)
 api_router.include_router(active_response.router)
 api_router.include_router(huntress.router)
 api_router.include_router(license.router)
+api_router.include_router(modules.router)
+api_router.include_router(carbonblack.router)
 
 # Include the APIRouter in the FastAPI app
 app.include_router(api_router)

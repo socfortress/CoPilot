@@ -54,6 +54,13 @@
 									clearable
 								/>
 							</n-form-item>
+							<n-form-item label="DFIR-IRIS Username" path="dfir_iris_username" class="grow">
+								<n-input
+									v-model:value.trim="form.dfir_iris_username"
+									placeholder="The Username of the API Key CoPilot uses to connect to DFIR-IRIS..."
+									clearable
+								/>
+							</n-form-item>
 						</div>
 
 						<div v-else-if="current === 2" class="px-7 flex flex-col gap-3">
@@ -437,6 +444,7 @@ function getClearForm(settings?: CustomerProvisioningDefaultSettings): CustomerP
 		customer_name: customerName.value,
 		customer_code: customerCode.value,
 		customer_grafana_org_name: "",
+		dfir_iris_username: "",
 
 		// step 2
 		customer_index_name: "",

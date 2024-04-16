@@ -41,7 +41,7 @@
 </template>
 
 <script lang="ts" setup>
-import { useRouter, type RouteRecordName } from "vue-router"
+import { useRouter, type RouteLocationNormalized, type RouteRecordName } from "vue-router"
 import { type RemovableRef, useStorage } from "@vueuse/core"
 import { computed, type ComputedRef } from "vue"
 import { NTag } from "naive-ui"
@@ -50,18 +50,13 @@ import _split from "lodash/split"
 import _uniqBy from "lodash/uniqBy"
 import Icon from "@/components/common/Icon.vue"
 
-const PinnedIcon = "tabler:pinned"
-
 interface Page {
 	name: RouteRecordName | string
 	fullPath: string
 	title: string
 }
 
-defineOptions({
-	name: "PinnedPages"
-})
-
+const PinnedIcon = "tabler:pinned"
 const router = useRouter()
 
 const removeLatestPage = (pageName: RouteRecordName | string) => {
@@ -76,6 +71,7 @@ const gotoPage = (pageName: RouteRecordName | string) => {
 	router.push({ name: pageName })
 	return true
 }
+
 const pinPage = (page: Page) => {
 	const isPresent = pinned.value.findIndex(p => p.name === page.name) !== -1
 	if (!isPresent) {
@@ -93,10 +89,10 @@ const latestSanitized: ComputedRef<Page[]> = computed(() => {
 	) as Page[]
 })
 
-router.afterEach(route => {
+const checkRoute = (route: RouteLocationNormalized) => {
 	const title = route.meta?.title || _split(route.name?.toString(), "-").at(-1)
 
-	if (route.name && title) {
+	if (route.name && title && !route.meta?.skipPin) {
 		const page: Page = {
 			name: route.name,
 			fullPath: route.fullPath,
@@ -104,6 +100,10 @@ router.afterEach(route => {
 		}
 		latest.value = _uniqBy([page, ...latest.value, page], "name")
 	}
+}
+
+router.afterEach(route => {
+	checkRoute(route)
 })
 </script>
 

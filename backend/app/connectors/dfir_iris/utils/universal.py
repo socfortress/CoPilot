@@ -1,6 +1,7 @@
 from typing import Any
 from typing import Callable
 from typing import Dict
+from typing import List
 from typing import Optional
 from typing import Tuple
 from typing import Union
@@ -331,4 +332,60 @@ async def check_user_exists(user_id: int) -> bool:
         return True
     except Exception as e:
         logger.error(f"Failed to check if user {user_id} exists: {e}")
+        return False
+
+
+async def collect_all_customers() -> List[str]:
+    """
+    Collects all customers from the DFIR-IRIS system.
+
+    Returns:
+        List[str]: A list of customer IDs.
+    """
+    try:
+        dfir_iris_client = await create_dfir_iris_client("DFIR-IRIS")
+        customers = Customer(session=dfir_iris_client).list_customers()
+        assert_api_resp(customers, soft_fail=False)
+        customers = get_data_from_resp(customers)
+        logger.info(f"Collected all customers: {customers}")
+        return customers
+    except Exception as e:
+        logger.error(f"Failed to collect all customers: {e}")
+        return []
+
+
+async def add_user_to_customers(customers: List[str], user_id: int) -> bool:
+    """
+    Add a user to a list of customers.
+
+    Args:
+        customers (List[int]): The list of customer IDs.
+        user_id (int): The ID of the user to add.
+
+    Returns:
+        bool: True if the user was added successfully, False otherwise.
+    """
+    try:
+        logger.info(f"Adding user {user_id} to customers {customers}")
+        async with get_db_session() as session:  # This will correctly enter the context manager
+            attributes = await get_connector_info_from_db("DFIR-IRIS", session)
+        headers = {
+            "Authorization": f"Bearer {attributes['connector_api_key']}",
+        }
+        logger.info(f"Headers: {headers}")
+        data = {
+            "customers_membership": customers,
+        }
+        url_endpoint = f"{attributes['connector_url']}/manage/users/{user_id}/customers/update"
+
+        response = requests.post(url_endpoint, headers=headers, json=data, verify=False)
+        logger.info(f"Response: {response.json()}")
+        if response.status_code == 200:
+            logger.info(f"User {user_id} added to customers {customers}")
+            return True
+        else:
+            logger.error(f"Failed to add user {user_id} to customers {customers}")
+            return False
+    except Exception as e:
+        logger.error(f"Failed to add user {user_id} to customers {customers}: {e}")
         return False

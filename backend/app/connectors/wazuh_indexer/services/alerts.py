@@ -113,7 +113,13 @@ async def collect_alerts_generic(
         if "No mapping found for [timestamp_utc] in order to sort on" in str(e):
             logger.warning("Retrying with timestamp field set to 'timestamp'")
             body.timestamp_field = "timestamp"
-            return await collect_alerts_generic(index_name, body, is_host_specific)
+            try:
+                return await collect_alerts_generic(index_name, body, is_host_specific)
+            except RequestError as e:
+                if "No mapping found for [timestamp] in order to sort on" in str(e):
+                    logger.warning("Retrying with timestamp field set to '@timestamp'")
+                    body.timestamp_field = "@timestamp"
+                    return await collect_alerts_generic(index_name, body, is_host_specific)
         else:
             logger.warning(f"An error occurred while collecting alerts: {e}")
             raise HTTPException(
