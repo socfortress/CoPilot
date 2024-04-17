@@ -64,6 +64,17 @@
 					</div>
 				</template>
 			</KVCard>
+			<KVCard class="!basis-auto" v-if="dockerCompose">
+				<template #key>
+					<span class="flex gap-3 items-center">
+						<Icon :name="ConfigIcon" :size="14"></Icon>
+						<span>Docker Configuration</span>
+					</span>
+				</template>
+				<template #value>
+					<Markdown :source="dockerCompose" transparent />
+				</template>
+			</KVCard>
 		</div>
 	</n-spin>
 </template>
@@ -72,13 +83,14 @@
 import { NSpin, useMessage } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import Api from "@/api"
-import { onBeforeMount, onMounted, ref, toRefs, computed } from "vue"
+import { onBeforeMount, onMounted, ref, toRefs, computed, defineAsyncComponent } from "vue"
 import { type LicenseFeatures, type License } from "@/types/license.d"
 import { formatDate } from "@/utils"
 import { useSettingsStore } from "@/stores/settings"
 import _startCase from "lodash/startCase"
 import Badge from "@/components/common/Badge.vue"
 import KVCard from "@/components/common/KVCard.vue"
+const Markdown = defineAsyncComponent(() => import("@/components/common/Markdown.vue"))
 
 const emit = defineEmits<{
 	(e: "licenseLoaded", value: License): void
@@ -103,14 +115,17 @@ const ExpiresIcon = "ph:calendar-blank"
 const CustomerIcon = "carbon:user"
 const CheckIcon = "carbon:checkmark-outline"
 const FeaturesIcon = "material-symbols:checklist"
+const ConfigIcon = "carbon:settings"
 
 const message = useMessage()
 const loadingLicense = ref(false)
 const loadingFeatures = ref(false)
+const loadingDockerCompose = ref(false)
 const dFormats = useSettingsStore().dateFormat
 
 const licenseLoaded = ref<License | null>(null)
 const featuresLoaded = ref<LicenseFeatures[]>([])
+const dockerCompose = ref<string | null>(null)
 const license = computed(() => licenseLoaded.value || licenseData?.value || null)
 const features = computed(() => featuresLoaded.value || featuresData?.value || [])
 const expiresText = computed(() => (license.value ? formatDate(license.value.expires, dFormats.datetime) : ""))
@@ -118,7 +133,7 @@ const periodText = computed(() =>
 	license.value ? `${license.value.period} Day${license.value.period === 1 ? "" : "s"}` : ""
 )
 
-const loading = computed(() => loadingLicense.value || loadingFeatures.value)
+const loading = computed(() => loadingLicense.value || loadingFeatures.value || loadingDockerCompose.value)
 
 function getLicense() {
 	loadingLicense.value = true
@@ -165,6 +180,28 @@ function getLicenseFeatures() {
 		})
 }
 
+function retrieveDockerCompose() {
+	loadingDockerCompose.value = true
+
+	Api.license
+		.retrieveDockerCompose()
+		.then(res => {
+			if (res.data.success) {
+				dockerCompose.value = res.data?.docker_compose
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			if (err.response.status !== 404) {
+				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.finally(() => {
+			loadingDockerCompose.value = false
+		})
+}
+
 function load() {
 	if (!license.value) {
 		getLicense()
@@ -172,6 +209,8 @@ function load() {
 	if (!hideFeatures.value && !features.value.length) {
 		getLicenseFeatures()
 	}
+
+	retrieveDockerCompose()
 }
 
 function sanitizeKey(text: string) {
