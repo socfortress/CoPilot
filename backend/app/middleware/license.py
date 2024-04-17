@@ -313,10 +313,12 @@ class CancelSubscriptionResponse(BaseModel):
     success: bool
     message: str
 
+
 class RetrieveDockerCompose(BaseModel):
     docker_compose: str
     success: bool
     message: str
+
 
 license_router = APIRouter()
 
@@ -827,6 +829,7 @@ async def replace_license_in_db(request: ReplaceLicenseRequest, session: AsyncSe
         logger.error(e)
         raise HTTPException(status_code=400, detail="License replacement failed")
 
+
 @license_router.post(
     "/retrieve-docker-compose",
     response_model=RetrieveDockerCompose,
@@ -891,5 +894,3 @@ async def update_connector(response: ThreatIntelRegisterResponse, session: Async
         ),
         session=session,
     )
-
-
