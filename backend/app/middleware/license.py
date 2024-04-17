@@ -313,6 +313,10 @@ class CancelSubscriptionResponse(BaseModel):
     success: bool
     message: str
 
+class RetrieveDockerCompose(BaseModel):
+    docker_compose: str
+    success: bool
+    message: str
 
 license_router = APIRouter()
 
@@ -823,6 +827,41 @@ async def replace_license_in_db(request: ReplaceLicenseRequest, session: AsyncSe
         logger.error(e)
         raise HTTPException(status_code=400, detail="License replacement failed")
 
+@license_router.post(
+    "/retrieve-docker-compose",
+    response_model=RetrieveDockerCompose,
+    description="Retrieve Docker Compose for features enabled",
+)
+async def retrieve_docker_compose(session: AsyncSession = Depends(get_db)) -> RetrieveDockerCompose:
+    """
+    Retrieve the Docker Compose for features enabled in the license.
+
+    Args:
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        RetrieveDockerCompose: A Pydantic model containing the Docker Compose for features enabled.
+    """
+    try:
+        license = await get_license(session)
+        if license.license_key:
+            results = await send_post_request("retrieve-docker-compose", data={"license_key": license.license_key})
+            logger.info(f"Results: {results}")
+            return RetrieveDockerCompose(
+                docker_compose=results["data"]["docker_compose"],
+                success=results["success"],
+                message=results["message"],
+            )
+        else:
+            return RetrieveDockerCompose(
+                docker_compose="",
+                success=False,
+                message="License key not found",
+            )
+    except Exception as e:
+        logger.error(e)
+        raise HTTPException(status_code=400, detail="Failed to retrieve Docker Compose")
+
 
 def create_headers(request: ThreatIntelRegisterRequest) -> Dict[str, str]:
     return {
@@ -852,3 +891,5 @@ async def update_connector(response: ThreatIntelRegisterResponse, session: Async
         ),
         session=session,
     )
+
+
