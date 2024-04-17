@@ -56,6 +56,9 @@ export default {
 	cancelSubscription(payload: CancelSubscriptionPayload) {
 		return HttpClient.post<FlaskBaseResponse>(`/license/cancel_subscription`, payload)
 	},
+	retrieveDockerCompose() {
+		return HttpClient.post<FlaskBaseResponse & { docker_compose: string }>(`/license/retrieve-docker-compose`)
+	},
 	// TODO: remove, deprecated
 	extendLicense(period: number) {
 		return HttpClient.post<FlaskBaseResponse>(

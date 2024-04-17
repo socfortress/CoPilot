@@ -52,6 +52,7 @@ function licenseLoaded(license: License) {
 	.side-box {
 		overflow: hidden;
 		transition: all 0.3s var(--bezier-ease);
+		border-radius: var(--border-radius);
 	}
 	&.has-side {
 		align-items: stretch;
