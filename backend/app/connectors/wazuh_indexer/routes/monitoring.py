@@ -14,8 +14,10 @@ from app.connectors.wazuh_indexer.schema.monitoring import ShardsResponse
 from app.connectors.wazuh_indexer.services.monitoring import cluster_healthcheck
 from app.connectors.wazuh_indexer.services.monitoring import indices_stats
 from app.connectors.wazuh_indexer.services.monitoring import node_allocation
+from app.connectors.wazuh_indexer.services.monitoring import (
+    output_shard_number_to_be_set_based_on_nodes,
+)
 from app.connectors.wazuh_indexer.services.monitoring import shards
-from app.connectors.wazuh_indexer.services.monitoring import output_shard_number_to_be_set_based_on_nodes
 
 wazuh_indexer_router = APIRouter()
 
@@ -122,6 +124,7 @@ async def get_shards() -> Union[ShardsResponse, HTTPException]:
     else:
         raise HTTPException(status_code=500, detail="Failed to retrieve shards.")
 
+
 @wazuh_indexer_router.get(
     "/output_shard_number_to_be_set_based_on_nodes",
     description="Fetch Wazuh Indexer output_shard_number_to_be_set_based_on_nodes",
@@ -144,4 +147,3 @@ async def get_output_shard_number_to_be_set_based_on_nodes_route() -> int:
         return output_shard_number_to_be_set_based_on_nodes_response
     else:
         raise HTTPException(status_code=500, detail="Failed to retrieve output_shard_number_to_be_set_based_on_nodes.")
-

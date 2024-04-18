@@ -12,6 +12,9 @@ from app.connectors.grafana.services.dashboards import provision_dashboards
 from app.connectors.grafana.utils.universal import create_grafana_client
 from app.connectors.graylog.services.management import start_stream
 from app.connectors.graylog.utils.universal import send_post_request
+from app.connectors.wazuh_indexer.services.monitoring import (
+    output_shard_number_to_be_set_based_on_nodes,
+)
 from app.customer_provisioning.schema.grafana import GrafanaDatasource
 from app.customer_provisioning.schema.grafana import GrafanaDataSourceCreationResponse
 from app.customer_provisioning.schema.graylog import GraylogIndexSetCreationResponse
@@ -28,7 +31,6 @@ from app.integrations.models.customer_integration_settings import CustomerIntegr
 from app.integrations.routes import create_integration_meta
 from app.integrations.schema import CustomerIntegrationsMetaSchema
 from app.utils import get_connector_attribute
-from app.connectors.wazuh_indexer.services.monitoring import output_shard_number_to_be_set_based_on_nodes
 
 
 ################## ! GRAYLOG ! ##################
