@@ -52,10 +52,7 @@ class RuleExclude(BaseModel):
 
 
 class RuleExcludeResponse(BaseModel):
-    success: bool
+    wazuh_rule: str
+    explanation: str
     message: str
-    recommended_exclusion: str = Field(
-        ...,
-        description="The recommended exclusion for the rule",
-        example="C:\\\\Windows\\\\ServiceState\\\\EventLog\\\\Data\\\\lastalive1\.dat",
-    )
+    success: bool
