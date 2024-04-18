@@ -15,6 +15,7 @@ from app.connectors.wazuh_indexer.services.monitoring import cluster_healthcheck
 from app.connectors.wazuh_indexer.services.monitoring import indices_stats
 from app.connectors.wazuh_indexer.services.monitoring import node_allocation
 from app.connectors.wazuh_indexer.services.monitoring import shards
+from app.connectors.wazuh_indexer.services.monitoring import output_shard_number_to_be_set_based_on_nodes
 
 wazuh_indexer_router = APIRouter()
 
@@ -120,3 +121,27 @@ async def get_shards() -> Union[ShardsResponse, HTTPException]:
         return shards_response
     else:
         raise HTTPException(status_code=500, detail="Failed to retrieve shards.")
+
+@wazuh_indexer_router.get(
+    "/output_shard_number_to_be_set_based_on_nodes",
+    description="Fetch Wazuh Indexer output_shard_number_to_be_set_based_on_nodes",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_output_shard_number_to_be_set_based_on_nodes_route() -> int:
+    """
+    Fetch Wazuh Indexer output_shard_number_to_be_set_based_on_nodes.
+
+    This endpoint retrieves the output_shard_number_to_be_set_based_on_nodes of the Wazuh Indexer service.
+
+    Returns:
+        ElasticsearchResponse: A Pydantic model representing the output_shard_number_to_be_set_based_on_nodes of the Wazuh Indexer service.
+
+    Raises:
+        HTTPException: An exception with a 500 status code is raised if the output_shard_number_to_be_set_based_on_nodes cannot be retrieved.
+    """
+    output_shard_number_to_be_set_based_on_nodes_response = await output_shard_number_to_be_set_based_on_nodes()
+    if output_shard_number_to_be_set_based_on_nodes_response is not None:
+        return output_shard_number_to_be_set_based_on_nodes_response
+    else:
+        raise HTTPException(status_code=500, detail="Failed to retrieve output_shard_number_to_be_set_based_on_nodes.")
+

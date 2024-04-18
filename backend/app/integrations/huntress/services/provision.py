@@ -28,7 +28,7 @@ from app.integrations.models.customer_integration_settings import CustomerIntegr
 from app.integrations.routes import create_integration_meta
 from app.integrations.schema import CustomerIntegrationsMetaSchema
 from app.utils import get_connector_attribute
-
+from app.connectors.wazuh_indexer.services.monitoring import output_shard_number_to_be_set_based_on_nodes
 
 ################## ! GRAYLOG ! ##################
 async def build_index_set_config(
@@ -62,7 +62,7 @@ async def build_index_set_config(
         },
         creation_date=datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
         index_analyzer="standard",
-        shards=1,
+        shards=await output_shard_number_to_be_set_based_on_nodes(),
         replicas=0,
         index_optimization_max_num_segments=1,
         index_optimization_disabled=False,

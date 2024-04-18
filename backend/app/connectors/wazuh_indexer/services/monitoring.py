@@ -133,3 +133,23 @@ async def shards() -> Union[ShardsResponse, Dict[str, str]]:
         logger.error(f"Shards check failed with error: {e}")
         e = f"Shards check failed with error: {e}"
         raise Exception(str(e))
+
+
+async def output_shard_number_to_be_set_based_on_nodes() -> int:
+    """
+    Retrieves the number of nodes in the Wazuh Indexer cluster.
+    Based on that number, it returns the number of shards to be set for the new index.
+    This is a 1:1 mapping between the number of nodes and the number of shards.
+
+    Returns:
+        int: The number of shards to be set for the new index.
+    """
+    es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
+    try:
+        cluster_health_data = es_client.cluster.health()
+        cluster_health_model = ClusterHealth(**cluster_health_data)
+        return cluster_health_model.number_of_nodes
+    except Exception as e:
+        logger.error(f"Shards check failed with error: {e}")
+        e = f"Shards check failed with error: {e}"
+        raise Exception(str(e))
