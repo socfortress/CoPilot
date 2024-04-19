@@ -283,3 +283,8 @@ export enum AlertSourceSyslogLevel {
 export enum AlertSourceSyslogType {
 	Wazuh = "wazuh"
 }
+
+export interface WazuhRuleExclude {
+	wazuh_rule: string
+	explanation: string
+}
