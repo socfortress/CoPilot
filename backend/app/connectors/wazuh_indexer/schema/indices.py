@@ -20,6 +20,8 @@ class IndexConfigModel(BaseModel):
             ".kibana": True,
             "praeco": True,
             "filebeat": True,
+            ".tasks": True,
+            ".task": True,
         },
         description="A dictionary containing index names to be skipped and their skip status.",
     )
