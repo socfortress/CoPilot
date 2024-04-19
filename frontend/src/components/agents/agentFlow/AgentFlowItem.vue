@@ -85,6 +85,7 @@
 							type="textarea"
 							readonly
 							placeholder="Empty"
+							size="large"
 							:autosize="{
 								minRows: 3,
 								maxRows: 18

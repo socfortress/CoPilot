@@ -49,6 +49,7 @@
 							:value="event?.config?.query"
 							type="textarea"
 							readonly
+							size="large"
 							placeholder="Empty"
 							:autosize="{
 								minRows: 3,

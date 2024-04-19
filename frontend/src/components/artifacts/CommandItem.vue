@@ -20,6 +20,7 @@
 					type="textarea"
 					readonly
 					placeholder="Empty"
+					size="large"
 					:autosize="{
 						minRows: 3
 					}"
@@ -35,6 +36,7 @@
 					type="textarea"
 					readonly
 					placeholder="Empty"
+					size="large"
 					:autosize="{
 						minRows: 3
 					}"
