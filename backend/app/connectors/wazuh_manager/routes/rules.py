@@ -9,11 +9,14 @@ from sqlalchemy.future import select
 
 from app.auth.routes.auth import AuthHandler
 from app.connectors.wazuh_manager.models.rules import DisabledRule
+
+# from app.connectors.wazuh_manager.schema.rules import RuleExclude
 from app.connectors.wazuh_manager.schema.rules import AllDisabledRuleResponse
 from app.connectors.wazuh_manager.schema.rules import RuleDisable
 from app.connectors.wazuh_manager.schema.rules import RuleDisableResponse
 from app.connectors.wazuh_manager.schema.rules import RuleEnable
 from app.connectors.wazuh_manager.schema.rules import RuleEnableResponse
+from app.connectors.wazuh_manager.schema.rules import RuleExcludeResponse
 
 # from app.connectors.wazuh_manager.schema.rules import RuleExclude
 # from app.connectors.wazuh_manager.schema.rules import RuleExcludeResponse
@@ -22,9 +25,6 @@ from app.connectors.wazuh_manager.services.rules import enable_rule
 
 # from app.connectors.wazuh_manager.services.rules import exclude_rule
 from app.db.db_session import get_db
-
-# from app.connectors.wazuh_manager.schema.rules import RuleExclude
-from app.connectors.wazuh_manager.schema.rules import RuleExcludeResponse
 
 # from app.connectors.wazuh_manager.services.rules import exclude_rule
 
@@ -164,7 +164,7 @@ async def enable_wazuh_rule(
 async def exclude_wazuh_rule() -> RuleExcludeResponse:
     raise HTTPException(status_code=501, detail="Feature not yet ready")
     return RuleExcludeResponse(
-        wazuh_rule="<group name=\"windows, sysmon, sysmon_event1, windows_sysmon_event1\">\n<rule id=\"100126\" level=\"1\">\n<if_sid>100125</if_sid>\n<field name=\"win.eventdata.user\">NT AUTHORITY\\\\SYSTEM</field>\n<field name=\"win.eventdata.originalFileName\">Wmiprvse.exe</field>\n<field name=\"win.eventdata.image\">C:\\\\Windows\\\\System32\\\\wbem\\\\WmiPrvSE.exe</field>\n<field name=\"win.eventdata.parentCommandLine\">C:\\\\Windows\\\\system32\\\\svchost.exe -k DcomLaunch -p</field>\n<description>Exclusion rule for specific system processes and parent commands.</description>\n</rule>\n</group>",
+        wazuh_rule='<group name="windows, sysmon, sysmon_event1, windows_sysmon_event1">\n<rule id="100126" level="1">\n<if_sid>100125</if_sid>\n<field name="win.eventdata.user">NT AUTHORITY\\\\SYSTEM</field>\n<field name="win.eventdata.originalFileName">Wmiprvse.exe</field>\n<field name="win.eventdata.image">C:\\\\Windows\\\\System32\\\\wbem\\\\WmiPrvSE.exe</field>\n<field name="win.eventdata.parentCommandLine">C:\\\\Windows\\\\system32\\\\svchost.exe -k DcomLaunch -p</field>\n<description>Exclusion rule for specific system processes and parent commands.</description>\n</rule>\n</group>',
         explanation="This rule is designed to exclude specific system processes identified by their user, original filename, image path, and parent command line. It triggers based on the presence of these attributes, which are commonly associated with legitimate system activities as defined in the payload. The rule is set to level 1 as a basic exclusion without generating an alert. It inherits from a previous rule with ID 100125. The exclusion is based on matching the exact strings for the user, original file name, process image, and parent command line execution parameters.",
         message="This is a test",
         success=True,

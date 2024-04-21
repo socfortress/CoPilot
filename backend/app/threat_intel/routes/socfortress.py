@@ -7,11 +7,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
+from app.middleware.license import get_license
+from app.middleware.license import is_feature_enabled
 from app.threat_intel.schema.socfortress import IoCResponse
 from app.threat_intel.schema.socfortress import SocfortressThreatIntelRequest
 from app.threat_intel.services.socfortress import socfortress_threat_intel_lookup
 from app.utils import get_connector_attribute
-from app.middleware.license import get_license, is_feature_enabled
 
 # App specific imports
 
@@ -45,6 +46,7 @@ async def ensure_api_key_exists(session: AsyncSession = Depends(get_db)) -> bool
         )
     return True
 
+
 @threat_intel_socfortress_router.post(
     "/socfortress",
     response_model=IoCResponse,
@@ -54,7 +56,7 @@ async def ensure_api_key_exists(session: AsyncSession = Depends(get_db)) -> bool
 async def threat_intel_socfortress(
     request: SocfortressThreatIntelRequest,
     session: AsyncSession = Depends(get_db),
-    #_key_exists: bool = Depends(ensure_api_key_exists),
+    # _key_exists: bool = Depends(ensure_api_key_exists),
 ):
     """
     Endpoint for SocFortress Threat Intel.
