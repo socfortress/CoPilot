@@ -162,6 +162,7 @@ async def enable_wazuh_rule(
     description="Retrieve recommended exclusion for a Wazuh Rule",
 )
 async def exclude_wazuh_rule() -> RuleExcludeResponse:
+    raise HTTPException(status_code=501, detail="Feature not yet ready")
     return RuleExcludeResponse(
         wazuh_rule="<group name=\"windows, sysmon, sysmon_event1, windows_sysmon_event1\">\n<rule id=\"100126\" level=\"1\">\n<if_sid>100125</if_sid>\n<field name=\"win.eventdata.user\">NT AUTHORITY\\\\SYSTEM</field>\n<field name=\"win.eventdata.originalFileName\">Wmiprvse.exe</field>\n<field name=\"win.eventdata.image\">C:\\\\Windows\\\\System32\\\\wbem\\\\WmiPrvSE.exe</field>\n<field name=\"win.eventdata.parentCommandLine\">C:\\\\Windows\\\\system32\\\\svchost.exe -k DcomLaunch -p</field>\n<description>Exclusion rule for specific system processes and parent commands.</description>\n</rule>\n</group>",
         explanation="This rule is designed to exclude specific system processes identified by their user, original filename, image path, and parent command line. It triggers based on the presence of these attributes, which are commonly associated with legitimate system activities as defined in the payload. The rule is set to level 1 as a basic exclusion without generating an alert. It inherits from a previous rule with ID 100125. The exclusion is based on matching the exact strings for the user, original file name, process image, and parent command line execution parameters.",
