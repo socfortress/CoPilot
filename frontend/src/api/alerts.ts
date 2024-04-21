@@ -1,6 +1,13 @@
 import { HttpClient } from "./httpClient"
 import type { FlaskBaseResponse } from "@/types/flask.d"
-import type { AlertsByHost, AlertsByRule, AlertsByRulePerHost, AlertsSummary } from "@/types/alerts.d"
+import type {
+	AlertSourceContent,
+	AlertsByHost,
+	AlertsByRule,
+	AlertsByRulePerHost,
+	AlertsSummary,
+	WazuhRuleExclude
+} from "@/types/alerts.d"
 
 export type AlertsQueryTimeRange = `${number}${"h" | "d" | "w"}`
 
@@ -93,5 +100,8 @@ export default {
 			`/soc/general_alert/create`,
 			body
 		)
+	},
+	wazuhManagerRuleExclude(source: AlertSourceContent) {
+		return HttpClient.post<FlaskBaseResponse & WazuhRuleExclude>(`/wazuh_manager/rule/exclude`, source)
 	}
 }

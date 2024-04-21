@@ -143,6 +143,7 @@ async def invoke_socfortress_threat_intel_api(
 
 
 async def get_ioc_response(
+    license_key: str,
     request: SocfortressThreatIntelRequest,
     session: AsyncSession,
 ) -> IoCResponse:
@@ -156,12 +157,8 @@ async def get_ioc_response(
     Returns:
         IoCResponse: The response object containing the IoC data and success status.
     """
-    api_key = await get_socfortress_threat_intel_attributes(
-        "connector_api_key",
-        session,
-    )
-    url = await get_socfortress_threat_intel_attributes("connector_url", session)
-    response_data = await invoke_socfortress_threat_intel_api(api_key, url, request)
+    url = "https://intel.socfortress.co/search"
+    response_data = await invoke_socfortress_threat_intel_api(license_key, url, request)
 
     # Using .get() with default values
     data = response_data.get("data", {})
@@ -172,6 +169,7 @@ async def get_ioc_response(
 
 
 async def socfortress_threat_intel_lookup(
+    lincense_key: str,
     request: SocfortressThreatIntelRequest,
     session: AsyncSession,
 ) -> IoCResponse:
@@ -185,4 +183,8 @@ async def socfortress_threat_intel_lookup(
     Returns:
         IoCResponse: The response object containing the threat intelligence information.
     """
-    return await get_ioc_response(request, session)
+    return await get_ioc_response(
+        license_key=lincense_key,
+        request=request,
+        session=session,
+    )

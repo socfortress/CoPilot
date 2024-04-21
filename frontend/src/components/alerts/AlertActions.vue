@@ -30,6 +30,16 @@
 			<template #icon><Icon :name="AskIcon"></Icon></template>
 			Ask SOCFortress
 		</n-button>
+		<n-button
+			:loading="loadingWazuhRuleExclude"
+			secondary
+			:size="size"
+			@click="wazuhManagerRuleExclude()"
+			v-if="isWazuhRulesVisible"
+		>
+			<template #icon><Icon :name="RulesIcon"></Icon></template>
+			Exclude Rule in Wazuh
+		</n-button>
 
 		<n-modal
 			v-model:show="showSocResponse"
@@ -44,21 +54,34 @@
 				type="textarea"
 				readonly
 				placeholder="SOCFortress Response"
+				size="large"
 				:autosize="{
 					minRows: 3
 				}"
 			/>
 		</n-modal>
+
+		<n-modal
+			v-model:show="showWazuhRuleExclude"
+			preset="card"
+			:style="{ maxWidth: 'min(800px, 90vw)', overflow: 'hidden' }"
+			title="Recommended exclusion for a Wazuh Rule"
+			:bordered="false"
+			content-class="!p-0"
+			segmented
+		>
+			<AlertWazuhRules :data="wazuhRuleData" v-if="wazuhRuleData" />
+		</n-modal>
 	</div>
 </template>
 
 <script setup lang="ts">
+import { computed, onBeforeMount, ref, watch } from "vue"
 import { NButton, NInput, NModal, useMessage } from "naive-ui"
-import Icon from "@/components/common/Icon.vue"
-import type { Alert } from "@/types/alerts.d"
+import AlertWazuhRules from "./AlertWazuhRules.vue"
 import Api from "@/api"
-import { computed, onBeforeMount, ref } from "vue"
-import { watch } from "vue"
+import Icon from "@/components/common/Icon.vue"
+import type { Alert, WazuhRuleExclude } from "@/types/alerts.d"
 
 const emit = defineEmits<{
 	(e: "startLoading"): void
@@ -72,17 +95,22 @@ const { alert, size } = defineProps<{ alert: Alert; size?: "tiny" | "small" | "m
 const DangerIcon = "majesticons:exclamation-line"
 const AskIcon = "majesticons:question-mark-circle-line"
 const ViewIcon = "iconoir:eye-alt"
+const RulesIcon = "carbon:rule-cancelled"
 
 const message = useMessage()
 const showSocResponse = ref(false)
+const showWazuhRuleExclude = ref(false)
 const loadingSocAlert = ref(false)
 const loadingAskSoc = ref(false)
-const loading = computed(() => loadingSocAlert.value || loadingAskSoc.value)
+const loadingWazuhRuleExclude = ref(false)
+const loading = computed(() => loadingSocAlert.value || loadingAskSoc.value || loadingWazuhRuleExclude.value)
 
 const alertUrl = ref("")
 const alertAskMessage = ref("")
+const wazuhRuleData = ref<WazuhRuleExclude | null>(null)
 
 const isAskVisible = computed(() => alert._source?.rule_group3 === "sigma" && !alertAskMessage.value)
+const isWazuhRulesVisible = computed(() => alert._source)
 
 watch(loading, val => {
 	if (val) {
@@ -122,6 +150,35 @@ function askSOCFortress() {
 		})
 		.finally(() => {
 			loadingAskSoc.value = false
+		})
+}
+
+function wazuhManagerRuleExclude() {
+	if (wazuhRuleData.value) {
+		showWazuhRuleExclude.value = true
+		return
+	}
+
+	loadingWazuhRuleExclude.value = true
+
+	Api.alerts
+		.wazuhManagerRuleExclude(alert._source)
+		.then(res => {
+			if (res.data.success) {
+				wazuhRuleData.value = {
+					wazuh_rule: res.data.wazuh_rule,
+					explanation: res.data.explanation
+				}
+				showWazuhRuleExclude.value = true
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			loadingWazuhRuleExclude.value = false
 		})
 }
 
