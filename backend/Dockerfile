@@ -1,7 +1,3 @@
-# build with `docker build -t python-backend -f Dockerfile.deb .`
-# run with `docker run -p 5000:5000 -d python-backend`
-# Start with the base Debian 11 image
-# looking to split into 2 containers, one for the backend and one for the frontend
 FROM debian:11
 
 # Set environment variables
@@ -51,6 +47,8 @@ RUN apt-get install -y wkhtmltopdf
 # Copy your application into the Docker image
 WORKDIR /opt/copilot/backend
 COPY . .
+COPY wait-for-it.sh /usr/wait-for-it.sh
+RUN chmod +x /usr/wait-for-it.sh
 # Create file-store folder
 RUN mkdir file-store
 
@@ -113,4 +111,6 @@ ARG COPILOT_API_KEY
 ENV COPILOT_API_KEY=$COPILOT_API_KEY
 
 # Run your application
-CMD ["sh", "-c", "ls -la && /opt/venv/bin/python copilot.py"]
+# CMD ["sh", "-c", "ls -la && /opt/venv/bin/python copilot.py"]
+# Use wait-for-it.sh to wait for the MySQL service to be ready before starting your application
+CMD ["/usr/wait-for-it.sh", "copilot-mysql:3306", "--", "/opt/venv/bin/python", "copilot.py"]
