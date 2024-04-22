@@ -18,7 +18,7 @@ from app.db.db_populate import add_available_integrations_auth_keys_if_not_exist
 from app.db.db_populate import add_available_integrations_if_not_exist
 from app.db.db_populate import add_connectors_if_not_exist
 from app.db.db_populate import add_roles_if_not_exist
-from app.db.db_session import SQLALCHEMY_DATABASE_URI
+from app.db.db_session import SQLALCHEMY_DATABASE_URI, db_password
 
 
 async def create_database_if_not_exists(db_url: str, db_name: str):
@@ -47,6 +47,32 @@ async def create_database_if_not_exists(db_url: str, db_name: str):
     finally:
         conn.close()
         engine.dispose()
+
+async def create_copilot_user_if_not_exists(db_url: str, db_user_name: str):
+    """
+    Create a user if it does not already exist.
+
+    Args:
+        db_url (str): Database URL to connect to MySQL server (without database part).
+        db_user_name (str): The name of the user to create.
+    """
+    db_name = 'copilot'
+    engine = create_engine(db_url)
+    conn = engine.connect()
+    try:
+        # Check if user exists
+        conn.execute("commit")
+        exists = conn.execute(text(f"SELECT * FROM mysql.user WHERE user = '{db_user_name}';")).fetchone()
+        if not exists:
+            # Create user if it does not exist
+            conn.execute("commit")
+            conn.execute(text(f"CREATE USER '{db_user_name}'@'%' IDENTIFIED BY '{db_password}';"))
+            conn.execute(text(f"GRANT ALL PRIVILEGES ON {db_name}.* TO '{db_user_name}'@'%';"))
+            logger.info(f"User '{db_user_name}' created successfully.")
+        else:
+            logger.info(f"User '{db_user_name}' already exists.")
+    except SQLAlchemyError as e:
+        logger.info(f"An error occurred: {e}")
 
 def apply_migrations():
     """

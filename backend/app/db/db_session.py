@@ -140,12 +140,13 @@ logger.info(f"Loading environment from {Path(__file__).parent.parent.parent.pare
 
 db_user = env.str("MYSQL_USER", default="copilot")
 db_password = env.str("MYSQL_PASSWORD")
+db_root_password = env.str("MYSQL_ROOT_PASSWORD")
 
 logger.info(f"DB User: {db_user} and password: {db_password}")
 
 # Update the SQLALCHEMY_DATABASE_URI to a MySQL compatible one in settings.py
 # For this example, let's assume it has been updated. copilot-mysql
-SQLALCHEMY_DATABASE_URI_NO_DB = f"mysql+pymysql://{db_user}:{db_password}@10.255.254.2"
+SQLALCHEMY_DATABASE_URI_NO_DB = f"mysql+pymysql://root:{db_root_password}@10.255.254.2"
 SQLALCHEMY_DATABASE_URI = f"mysql+aiomysql://{db_user}:{db_password}@10.255.254.2/copilot"
 
 session = "placeholder"

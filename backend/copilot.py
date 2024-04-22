@@ -11,7 +11,7 @@ from loguru import logger
 
 from app.auth.utils import AuthHandler
 from app.db.db_session import async_engine, get_db
-from app.db.db_setup import create_available_integrations, create_database_if_not_exists
+from app.db.db_setup import create_available_integrations, create_database_if_not_exists, create_copilot_user_if_not_exists
 from app.db.db_setup import create_roles
 from app.db.db_setup import create_tables, apply_migrations, add_connectors
 from app.db.db_setup import ensure_admin_user
@@ -142,6 +142,7 @@ async def init_db():
     logger.info("Initializing database")
     # create_tables(engine)
     await create_database_if_not_exists(db_url=SQLALCHEMY_DATABASE_URI_NO_DB, db_name='copilot')
+    await create_copilot_user_if_not_exists(db_url=SQLALCHEMY_DATABASE_URI_NO_DB, db_user_name='copilot')
     apply_migrations()
     await add_connectors(async_engine)
     #await create_tables(async_engine)
