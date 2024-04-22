@@ -67,8 +67,9 @@ async def create_copilot_user_if_not_exists(db_url: str, db_user_name: str):
             # Create user if it does not exist
             conn.execute("commit")
             conn.execute(text(f"CREATE USER '{db_user_name}'@'%' IDENTIFIED BY '{db_password}';"))
+            logger.info(f"User '{db_user_name}' created successfully with password '{db_password}'.")
             conn.execute(text(f"GRANT ALL PRIVILEGES ON {db_name}.* TO '{db_user_name}'@'%';"))
-            logger.info(f"User '{db_user_name}' created successfully.")
+            logger.info(f"User '{db_user_name}' created successfully and granted all privileges to the '{db_name}' database.")
         else:
             logger.info(f"User '{db_user_name}' already exists.")
     except SQLAlchemyError as e:
