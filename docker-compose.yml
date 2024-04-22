@@ -12,7 +12,7 @@ services:
             - ./data/data:/opt/copilot/backend/data
         env_file: .env
         depends_on:
-            - mysql
+            - copilot-mysql
 
     copilot-frontend:
         image: ghcr.io/socfortress/copilot-frontend:latest
