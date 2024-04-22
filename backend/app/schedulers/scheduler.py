@@ -1,15 +1,13 @@
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from loguru import logger
-from sqlalchemy import inspect, Table
+
 from sqlalchemy.ext.asyncio import AsyncSession
-import sqlalchemy as sa
-from app.db.db_session import SyncSessionLocal
-from apscheduler.executors.pool import ThreadPoolExecutor, ProcessPoolExecutor
+
+
 from app.db.db_session import sync_engine
 from sqlalchemy.future import select
 from app.db.db_session import async_engine
-from app.db.db_session import jobstore_engine
 from app.schedulers.models.scheduler import CreateSchedulerRequest
 from app.schedulers.models.scheduler import JobMetadata
 from app.schedulers.services.agent_sync import agent_sync
@@ -105,34 +103,6 @@ async def get_scheduler_instance():
     if scheduler_instance is None:
         return await init_scheduler()
     return scheduler_instance
-
-# ! WORKING BUT I WANT TO MAKE BETTER IF POSSIBLE ! #
-# async def init_scheduler():
-#     logger.info("Initializing scheduler...")
-#     try:
-#         jobstores = {"default": SQLAlchemyJobStore(engine=sync_engine, tablename="schedulerjob")}
-#         executors = {
-#             'default': AsyncIOExecutor()  # This executor can run asyncio coroutines
-#         }
-#         event_loop = asyncio.get_event_loop()
-#         scheduler = AsyncIOScheduler(event_loop=event_loop)
-#         scheduler.add_listener(scheduler_listener, EVENT_JOB_MISSED | EVENT_JOB_ERROR)
-#         scheduler.configure(jobstores=jobstores, executors=executors)
-
-#         await initialize_job_metadata()
-#         logger.info("Scheduling enabled jobs...")
-#         await schedule_enabled_jobs(scheduler)
-
-#         if not scheduler.running:
-#             logger.info("Starting scheduler...")
-#             scheduler.start()
-#             logger.info("Scheduler started.")
-#         else:
-#             logger.info("Scheduler is already running.")
-
-#         return scheduler
-#     except Exception as e:
-#         logger.error(f"Error initializing scheduler: {e}")
 
 
 async def initialize_job_metadata():
@@ -243,18 +213,34 @@ async def add_scheduler_jobs(create_scheduler_request: CreateSchedulerRequest):
     Args:
         create_scheduler_request (CreateSchedulerRequest): The request object containing the job details.
     """
-    scheduler = await init_scheduler()
+    scheduler = await get_scheduler_instance()
     logger.info(f"create_scheduler_request: {create_scheduler_request}")
 
     job_function = get_function_by_name(create_scheduler_request.function_name)
 
-    scheduler.add_job(
-        job_function,
-        "interval",
-        minutes=create_scheduler_request.time_interval,
-        id=create_scheduler_request.job_id,
-        replace_existing=True,
-    )
+    # Here, we use the async add_job if the job function is a coroutine
+    if asyncio.iscoroutinefunction(job_function):
+            # Adding coroutine functions directly
+            scheduler.add_job(
+                job_function,
+                "interval",
+                minutes=create_scheduler_request.time_interval,
+                id=create_scheduler_request.job_id,
+                replace_existing=True,
+                coalesce=True,
+                max_instances=1
+            )
+    else:
+        # Regular functions go here
+        scheduler.add_job(
+            job_function,
+            "interval",
+            minutes=create_scheduler_request.time_interval,
+            id=create_scheduler_request.job_id,
+            replace_existing=True,
+            coalesce=True,
+            max_instances=1
+        )
 
     await add_job_metadata(create_scheduler_request)
 
@@ -269,7 +255,7 @@ async def add_job_metadata(create_scheduler_request: CreateSchedulerRequest):
     Args:
         create_scheduler_request (CreateSchedulerRequest): The request object containing the job details.
     """
-    async with AsyncSession() as session:
+    async with AsyncSession(async_engine) as session:
         # Using SQLAlchemy 1.4+ style with select() and scalars() for fetching results
         stmt = select(JobMetadata).where(JobMetadata.job_id == create_scheduler_request.job_id)
         result = await session.execute(stmt)

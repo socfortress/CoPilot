@@ -141,13 +141,15 @@ logger.info(f"Loading environment from {Path(__file__).parent.parent.parent.pare
 db_user = env.str("MYSQL_USER", default="copilot")
 db_password = env.str("MYSQL_PASSWORD")
 db_root_password = env.str("MYSQL_ROOT_PASSWORD")
+db_url = env.str("MYSQL_URL", default="copilot-mysql")
 
 logger.info(f"DB User: {db_user} and password: {db_password}")
 
 # Update the SQLALCHEMY_DATABASE_URI to a MySQL compatible one in settings.py
 # For this example, let's assume it has been updated. copilot-mysql
-SQLALCHEMY_DATABASE_URI_NO_DB = f"mysql+pymysql://root:{db_root_password}@copilot-mysql"
-SQLALCHEMY_DATABASE_URI = f"mysql+aiomysql://{db_user}:{db_password}@copilot-mysql/copilot"
+SQLALCHEMY_DATABASE_URI_NO_DB = f"mysql+pymysql://root:{db_root_password}@{db_url}"
+SQLALCHEMY_DATABASE_URI = f"mysql+aiomysql://{db_user}:{db_password}@{db_url}/copilot"
+
 
 session = "placeholder"
 
@@ -162,13 +164,6 @@ async_engine = create_async_engine(
 # ! THIS IS USED BY THE SCHEDULER ! #
 sync_engine = create_engine(
     SQLALCHEMY_DATABASE_URI.replace("+aiomysql", "+pymysql"),
-    echo=False,
-    # Additional MySQL-specific options can be set here if needed
-)
-
-JOBSTORE_DATABASE_URI = "mysql+pymysql://copilot:H7U3AHsXWSGvE5L123B7$GQdLQz@10.255.254.2/job_store"
-jobstore_engine = create_engine(
-    JOBSTORE_DATABASE_URI,
     echo=False,
     # Additional MySQL-specific options can be set here if needed
 )
