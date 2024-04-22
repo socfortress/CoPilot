@@ -2,6 +2,11 @@ from loguru import logger
 from sqlalchemy import text
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.ext.asyncio import AsyncSession
+from alembic import command
+from sqlalchemy import create_engine
+from sqlalchemy.exc import SQLAlchemyError
+import os
+from alembic.config import Config
 
 # ! New with Async
 from sqlmodel import SQLModel
@@ -13,7 +18,76 @@ from app.db.db_populate import add_available_integrations_auth_keys_if_not_exist
 from app.db.db_populate import add_available_integrations_if_not_exist
 from app.db.db_populate import add_connectors_if_not_exist
 from app.db.db_populate import add_roles_if_not_exist
+from app.db.db_session import SQLALCHEMY_DATABASE_URI
 
+
+async def create_database_if_not_exists(db_url: str, db_name: str):
+    """
+    Create a database if it does not already exist.
+
+    Args:
+        db_url (str): Database URL to connect to MySQL server (without database part).
+        db_name (str): The name of the database to create.
+    """
+    engine = create_engine(db_url)
+    conn = engine.connect()
+    try:
+        # Check if database exists
+        conn.execute("commit")
+        exists = conn.execute(text(f"SHOW DATABASES LIKE '{db_name}';")).fetchone()
+        if not exists:
+            # Create database if it does not exist
+            conn.execute("commit")
+            conn.execute(text(f"CREATE DATABASE {db_name};"))
+            logger.info(f"Database '{db_name}' created successfully.")
+        else:
+            logger.info(f"Database '{db_name}' already exists.")
+    except SQLAlchemyError as e:
+        print(f"An error occurred: {e}")
+    finally:
+        conn.close()
+        engine.dispose()
+
+def apply_migrations():
+    """
+    Applies Alembic migrations to ensure the database schema is up to date.
+    """
+    logger.info("Applying migrations")
+
+    # Navigate up three levels from db_setup.py to the backend directory, then to the alembic directory
+    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+    alembic_directory = os.path.join(base_dir, 'alembic')
+
+    logger.info(f'base_dir: {base_dir}')
+    logger.info(f'Alembic directory: {alembic_directory}')
+
+    alembic_cfg = Config(os.path.join(alembic_directory, 'alembic.ini'))
+    alembic_cfg.set_main_option("sqlalchemy.url", SQLALCHEMY_DATABASE_URI.replace("+aiomysql", "+pymysql"))
+    alembic_cfg.set_main_option("script_location", alembic_directory)
+
+    # Apply migrations to the latest revision
+    try:
+        command.upgrade(alembic_cfg, "head")
+    except OperationalError as e:
+        logger.error(f"Error applying migrations: {e}")
+        raise e
+
+async def add_connectors(async_engine):
+    """
+    Adds connectors to the database.
+
+    Args:
+        async_engine (AsyncEngine): The async engine used to connect to the database.
+
+    Returns:
+        None
+    """
+    logger.info("Adding connectors")
+    async with AsyncSession(
+        async_engine,
+    ) as session:  # Create an AsyncSession, not just a connection
+        async with session.begin():  # Start a transaction
+            await add_connectors_if_not_exist(session)
 
 async def create_tables(async_engine):
     """
@@ -99,10 +173,15 @@ async def create_available_integrations(async_engine):
     async with AsyncSession(
         async_engine,
     ) as session:  # Create an AsyncSession, not just a connection
-        async with session.begin():  # Start a transaction
+        try:
             await add_available_integrations_if_not_exist(session)
             await add_available_integrations_auth_keys_if_not_exist(session)
-            await session.commit()
+        except Exception as e:
+            logger.error(f"Error creating available integrations: {e}")
+            await session.rollback()  # Explicit rollback on error
+            raise  # Re-raise the exception to handle it further up the call stack
+        else:
+            await session.commit()  # Explicit commit if all operations are successful
 
 
 async def ensure_admin_user(async_engine):

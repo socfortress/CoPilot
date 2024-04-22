@@ -10,10 +10,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 
 from app.auth.utils import AuthHandler
-from app.db.db_session import async_engine
-from app.db.db_setup import create_available_integrations
+from app.db.db_session import async_engine, get_db
+from app.db.db_setup import create_available_integrations, create_database_if_not_exists
 from app.db.db_setup import create_roles
-from app.db.db_setup import create_tables
+from app.db.db_setup import create_tables, apply_migrations, add_connectors
 from app.db.db_setup import ensure_admin_user
 from app.db.db_setup import ensure_scheduler_user
 from app.db.db_setup import ensure_scheduler_user_removed
@@ -57,7 +57,8 @@ from app.routers import threat_intel
 from app.routers import velociraptor
 from app.routers import wazuh_indexer
 from app.routers import wazuh_manager
-from app.schedulers.scheduler import init_scheduler
+from app.schedulers.scheduler import init_scheduler, get_scheduler_instance
+from app.db.db_session import SQLALCHEMY_DATABASE_URI_NO_DB
 
 auth_handler = AuthHandler()
 # Get the `SERVER_IP` from the `.env` file
@@ -84,6 +85,7 @@ app.add_middleware(
 
 
 ################## ! Middleware LOGGING TO `log_entry` table ! ##################
+# Comment out logging for now, not sure I want to use it
 app.middleware("http")(log_requests)  # using the imported middleware
 
 
@@ -134,21 +136,26 @@ api_router.include_router(carbonblack.router)
 app.include_router(api_router)
 
 
+
 @app.on_event("startup")
 async def init_db():
+    logger.info("Initializing database")
     # create_tables(engine)
-    await create_tables(async_engine)
-    await update_tables(async_engine)
+    await create_database_if_not_exists(db_url=SQLALCHEMY_DATABASE_URI_NO_DB, db_name='copilot')
+    apply_migrations()
+    await add_connectors(async_engine)
+    #await create_tables(async_engine)
+    #await update_tables(async_engine)
     await create_roles(async_engine)
     await create_available_integrations(async_engine)
     await ensure_admin_user(async_engine)
     await ensure_scheduler_user(async_engine)
 
     # Initialize the scheduler
-    scheduler = init_scheduler()
+    scheduler = await init_scheduler()
 
-    logger.info("Starting scheduler")
     if not scheduler.running:
+        logger.info("Scheduler is not running, starting now...")
         scheduler.start()
 
 
@@ -161,8 +168,9 @@ def hello():
 async def shutdown_scheduler():
     logger.info("Shutting down scheduler")
     # Initialize the scheduler
-    scheduler = init_scheduler()
+    scheduler = await get_scheduler_instance()
     if scheduler.running:
+        logger.info("Scheduler is running, shutting down now...")
         scheduler.shutdown()
 
     await ensure_scheduler_user_removed(async_engine)

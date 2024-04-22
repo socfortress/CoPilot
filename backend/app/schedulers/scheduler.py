@@ -1,9 +1,15 @@
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from loguru import logger
-
+from sqlalchemy import inspect, Table
+from sqlalchemy.ext.asyncio import AsyncSession
+import sqlalchemy as sa
 from app.db.db_session import SyncSessionLocal
+from apscheduler.executors.pool import ThreadPoolExecutor, ProcessPoolExecutor
 from app.db.db_session import sync_engine
+from sqlalchemy.future import select
+from app.db.db_session import async_engine
+from app.db.db_session import jobstore_engine
 from app.schedulers.models.scheduler import CreateSchedulerRequest
 from app.schedulers.models.scheduler import JobMetadata
 from app.schedulers.services.agent_sync import agent_sync
@@ -47,38 +53,104 @@ from app.schedulers.services.monitoring_alert import (
 from app.schedulers.services.monitoring_alert import invoke_office365_threat_intel_alert
 from app.schedulers.services.monitoring_alert import invoke_suricata_monitoring_alert
 from app.schedulers.services.monitoring_alert import invoke_wazuh_monitoring_alert
+from apscheduler.executors.asyncio import AsyncIOExecutor
+import asyncio
+from apscheduler.events import EVENT_JOB_MISSED, EVENT_JOB_ERROR
 
+def scheduler_listener(event):
+    if event.exception:
+        logger.error(f'Job {event.job_id} crashed: {event.exception}')
+    else:
+        logger.info(f'Job {event.job_id} that was scheduled to run at {event.scheduled_run_time}, missed its run time by {event.scheduled_run_time - event.scheduled_run_time}')
 
-def init_scheduler():
+# Global variable to hold the scheduler instance
+scheduler_instance = None
+
+async def init_scheduler():
+    global scheduler_instance
+    if scheduler_instance is not None:
+        logger.info("Returning existing scheduler instance.")
+        return scheduler_instance
+
+    logger.info("Initializing new scheduler...")
+    try:
+        jobstores = {"default": SQLAlchemyJobStore(engine=sync_engine, tablename="schedulerjob")}
+        executors = {
+            'default': AsyncIOExecutor()  # This executor can run asyncio coroutines
+        }
+        event_loop = asyncio.get_event_loop()
+        scheduler_instance = AsyncIOScheduler(event_loop=event_loop)
+        scheduler_instance.add_listener(scheduler_listener, EVENT_JOB_MISSED | EVENT_JOB_ERROR)
+        scheduler_instance.configure(jobstores=jobstores, executors=executors)
+        await initialize_job_metadata()
+        logger.info("Scheduling enabled jobs...")
+        await schedule_enabled_jobs(scheduler_instance)
+
+        if not scheduler_instance.running:
+            logger.info("Starting scheduler...")
+            scheduler_instance.start()
+            logger.info("Scheduler started.")
+
+    except Exception as e:
+        logger.error(f"Error initializing scheduler: {e}")
+        raise
+
+    return scheduler_instance
+
+async def get_scheduler_instance():
     """
-    Initializes and configures the scheduler.
+    Retrieves the current scheduler instance. Initializes one if it does not exist.
     """
-    scheduler = AsyncIOScheduler()
-    jobstores = {"default": SQLAlchemyJobStore(engine=sync_engine)}
-    scheduler.configure(jobstores=jobstores)
+    global scheduler_instance
+    if scheduler_instance is None:
+        return await init_scheduler()
+    return scheduler_instance
 
-    initialize_job_metadata()
-    schedule_enabled_jobs(scheduler)
+# ! WORKING BUT I WANT TO MAKE BETTER IF POSSIBLE ! #
+# async def init_scheduler():
+#     logger.info("Initializing scheduler...")
+#     try:
+#         jobstores = {"default": SQLAlchemyJobStore(engine=sync_engine, tablename="schedulerjob")}
+#         executors = {
+#             'default': AsyncIOExecutor()  # This executor can run asyncio coroutines
+#         }
+#         event_loop = asyncio.get_event_loop()
+#         scheduler = AsyncIOScheduler(event_loop=event_loop)
+#         scheduler.add_listener(scheduler_listener, EVENT_JOB_MISSED | EVENT_JOB_ERROR)
+#         scheduler.configure(jobstores=jobstores, executors=executors)
 
-    if not scheduler.running:
-        scheduler.start()
+#         await initialize_job_metadata()
+#         logger.info("Scheduling enabled jobs...")
+#         await schedule_enabled_jobs(scheduler)
 
-    return scheduler
+#         if not scheduler.running:
+#             logger.info("Starting scheduler...")
+#             scheduler.start()
+#             logger.info("Scheduler started.")
+#         else:
+#             logger.info("Scheduler is already running.")
+
+#         return scheduler
+#     except Exception as e:
+#         logger.error(f"Error initializing scheduler: {e}")
 
 
-def initialize_job_metadata():
+async def initialize_job_metadata():
     """
     Initializes job metadata from the database.
     """
-    with SyncSessionLocal() as session:
+    async with AsyncSession(async_engine) as session:
         # Implement logic to initialize or update job metadata.
         # Example: Check and add metadata for each known job
         known_jobs = [
-            {"job_id": "agent_sync", "time_interval": 15, "function": agent_sync},
+            {"job_id": "agent_sync", "time_interval": 1, "function": agent_sync},
             # {"job_id": "invoke_mimecast_integration", "time_interval": 5, "function": invoke_mimecast_integration}
         ]
         for job in known_jobs:
-            job_metadata = session.query(JobMetadata).filter_by(job_id=job["job_id"]).one_or_none()
+            # Create a select statement for the JobMetadata table
+            stmt = select(JobMetadata).where(JobMetadata.job_id == job['job_id'])
+            result = await session.execute(stmt)
+            job_metadata = result.scalars().one_or_none()
             if not job_metadata:
                 job_metadata = JobMetadata(
                     job_id=job["job_id"],
@@ -90,25 +162,43 @@ def initialize_job_metadata():
             else:
                 job_metadata.time_interval = job["time_interval"]
                 job_metadata.enabled = True
-        session.commit()
+        await session.commit()
 
 
-def schedule_enabled_jobs(scheduler):
+async def schedule_enabled_jobs(scheduler):
     """
     Schedules jobs that are enabled in the database.
     """
-    with SyncSessionLocal() as session:
-        job_metadatas = session.query(JobMetadata).filter_by(enabled=True).all()
+    async with AsyncSession(async_engine) as session:
+        stmt = select(JobMetadata).where(JobMetadata.enabled == True)
+        result = await session.execute(stmt)
+        job_metadatas = result.scalars().all()
+
         for job_metadata in job_metadatas:
             try:
                 job_function = get_function_by_name(job_metadata.job_id)
-                scheduler.add_job(
-                    job_function,
-                    "interval",
-                    minutes=job_metadata.time_interval,
-                    id=job_metadata.job_id,
-                    replace_existing=True,
-                )
+                if asyncio.iscoroutinefunction(job_function):
+                    # Adding coroutine functions directly
+                    scheduler.add_job(
+                        job_function,
+                        "interval",
+                        minutes=job_metadata.time_interval,
+                        id=job_metadata.job_id,
+                        replace_existing=True,
+                        coalesce=True,
+                        max_instances=1
+                    )
+                else:
+                    # Regular functions go here
+                    scheduler.add_job(
+                        job_function,
+                        "interval",
+                        minutes=job_metadata.time_interval,
+                        id=job_metadata.job_id,
+                        replace_existing=True,
+                        coalesce=True,
+                        max_instances=1
+                    )
                 logger.info(f"Scheduled job: {job_metadata.job_id}")
             except ValueError as e:
                 logger.error(f"Error scheduling job: {e}")
@@ -153,7 +243,7 @@ async def add_scheduler_jobs(create_scheduler_request: CreateSchedulerRequest):
     Args:
         create_scheduler_request (CreateSchedulerRequest): The request object containing the job details.
     """
-    scheduler = init_scheduler()
+    scheduler = await init_scheduler()
     logger.info(f"create_scheduler_request: {create_scheduler_request}")
 
     job_function = get_function_by_name(create_scheduler_request.function_name)
@@ -179,8 +269,12 @@ async def add_job_metadata(create_scheduler_request: CreateSchedulerRequest):
     Args:
         create_scheduler_request (CreateSchedulerRequest): The request object containing the job details.
     """
-    with SyncSessionLocal() as session:
-        job_metadata = session.query(JobMetadata).filter_by(job_id=create_scheduler_request.job_id).one_or_none()
+    async with AsyncSession() as session:
+        # Using SQLAlchemy 1.4+ style with select() and scalars() for fetching results
+        stmt = select(JobMetadata).where(JobMetadata.job_id == create_scheduler_request.job_id)
+        result = await session.execute(stmt)
+        job_metadata = result.scalars().one_or_none()
+
         if not job_metadata:
             job_metadata = JobMetadata(
                 job_id=create_scheduler_request.job_id,
@@ -192,4 +286,5 @@ async def add_job_metadata(create_scheduler_request: CreateSchedulerRequest):
         else:
             job_metadata.time_interval = create_scheduler_request.time_interval
             job_metadata.enabled = True
-        session.commit()
+
+        await session.commit()

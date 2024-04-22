@@ -50,17 +50,17 @@ class Connectors(SQLModel, table=True):
     """
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    connector_name: str = Field()
-    connector_type: str = Field()
-    connector_url: str = Field()
+    connector_name: str = Field(max_length=256)
+    connector_type: str = Field(max_length=256)
+    connector_url: str = Field(max_length=750)
     connector_last_updated: datetime = Field(default=datetime.utcnow())
-    connector_username: Optional[str] = Field(default=None)
-    connector_password: Optional[str] = Field(default=None)
-    connector_api_key: Optional[str] = Field(default=None)
+    connector_username: Optional[str] = Field(default=None, max_length=256)
+    connector_password: Optional[str] = Field(default=None, max_length=256)
+    connector_api_key: Optional[str] = Field(default=None, max_length=750)
 
     # Fields moved from ConnectorsAvailable
-    connector_description: Optional[str] = Field(default=None)
-    connector_supports: Optional[str] = Field(default=None)
+    connector_description: Optional[str] = Field(default=None, max_length=1000)
+    connector_supports: Optional[str] = Field(default=None, max_length=1000)
     connector_configured: bool = Field(default=False)
     connector_verified: bool = Field(default=False)
     connector_accepts_host_only: bool = Field(default=False)
@@ -68,7 +68,8 @@ class Connectors(SQLModel, table=True):
     connector_accepts_username_password: bool = Field(default=False)
     connector_accepts_file: bool = Field(default=False)
     connector_accepts_extra_data: bool = Field(default=False)
-    connector_extra_data: Optional[str] = Field(default=None)
+    connector_extra_data: Optional[str] = Field(default=None, max_length=1000)
+    connector_enabled: bool = Field(default=False)
 
     # Relationship
     history_logs: List[ConnectorHistory] = Relationship(
