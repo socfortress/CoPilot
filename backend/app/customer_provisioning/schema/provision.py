@@ -63,8 +63,8 @@ class ProvisionNewCustomer(BaseModel):
         example={
             "dashboards": [
                 "WAZUH_SUMMARY",
-            ]
-        }
+            ],
+        },
     )
     wazuh_auth_password: Optional[str] = Field("n/a", description="Password for the Wazuh API user")
     wazuh_registration_port: Optional[str] = Field(

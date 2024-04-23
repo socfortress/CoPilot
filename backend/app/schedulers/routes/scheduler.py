@@ -3,18 +3,17 @@ from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
-from datetime import datetime
 from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-import pytz
 
 from app.db.db_session import get_db
 from app.schedulers.models.scheduler import JobMetadata
 from app.schedulers.scheduler import get_function_by_name
 from app.schedulers.scheduler import get_scheduler_instance
 from app.schedulers.scheduler import init_scheduler
+from app.schedulers.schema.scheduler import JobsNextRunResponse
 from app.schedulers.schema.scheduler import JobsResponse
 
 scheduler_router = APIRouter()
@@ -116,8 +115,9 @@ async def get_all_jobs(session: AsyncSession = Depends(get_db)) -> JobsResponse:
         message="Jobs successfully retrieved.",
     )
 
-@scheduler_router.get("/next_run/{job_id}")
-async def get_next_run(job_id: str):
+
+@scheduler_router.get("/next_run/{job_id}", response_model=JobsNextRunResponse, description="Get the next run time of a job")
+async def get_next_run(job_id: str) -> JobsNextRunResponse:
     """
     Get the next run time of a job.
 
@@ -131,11 +131,13 @@ async def get_next_run(job_id: str):
     job = await find_job_by_id(scheduler, job_id)
     if job is None:
         raise HTTPException(status_code=404, detail="Job not found")
-    now = datetime.now(pytz.utc)
     next_run_time = job.next_run_time
-    delta = next_run_time - now
     logger.info(f"Next run time for job {job_id}: {next_run_time}")
-    return None
+    return JobsNextRunResponse(
+        next_run_time=next_run_time,
+        success=True,
+        message="Next run time successfully retrieved.",
+    )
 
 
 @scheduler_router.post("/add", description="Add a job")
