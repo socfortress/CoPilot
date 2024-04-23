@@ -60,6 +60,11 @@ class ProvisionNewCustomer(BaseModel):
     dashboards_to_include: DashboardProvisionRequest = Field(
         ...,
         description="Dashboards to include in the customer's Grafana instance",
+        example={
+            "dashboards": [
+                "WAZUH_SUMMARY",
+            ]
+        }
     )
     wazuh_auth_password: Optional[str] = Field("n/a", description="Password for the Wazuh API user")
     wazuh_registration_port: Optional[str] = Field(
