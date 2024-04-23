@@ -12,9 +12,6 @@ from pydantic import validator
 from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
-from sqlalchemy.types import TypeDecorator, Integer
-from sqlalchemy import Column
-from sqlalchemy import ForeignKey
 
 
 class Role(SQLModel, table=True):
@@ -35,7 +32,6 @@ class User(SQLModel, table=True):
 
     smtp: "SMTP" = Relationship(back_populates="user")
     role: Optional["Role"] = Relationship(back_populates="user")
-
 
 
 # Enum class for role_id 1,2
@@ -60,7 +56,7 @@ class UserInput(SQLModel):
         foreign_key="role.id",
     )
 
-    @validator('role_id')
+    @validator("role_id")
     def check_role_id(cls, value):
         if value not in [e.value for e in RoleEnum]:
             raise ValueError("Invalid role ID")

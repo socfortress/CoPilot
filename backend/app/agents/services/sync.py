@@ -1,9 +1,9 @@
 from typing import List
 
+from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from fastapi import HTTPException
 
 import app.agents.velociraptor.services.agents as velociraptor_services
 import app.agents.wazuh.services.agents as wazuh_services

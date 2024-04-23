@@ -10,14 +10,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 
 from app.auth.utils import AuthHandler
-from app.db.db_session import async_engine, get_db
-from app.db.db_setup import create_available_integrations, create_database_if_not_exists, create_copilot_user_if_not_exists
+from app.db.db_session import SQLALCHEMY_DATABASE_URI_NO_DB
+from app.db.db_session import async_engine
+from app.db.db_setup import add_connectors
+from app.db.db_setup import apply_migrations
+from app.db.db_setup import create_available_integrations
+from app.db.db_setup import create_copilot_user_if_not_exists
+from app.db.db_setup import create_database_if_not_exists
 from app.db.db_setup import create_roles
-from app.db.db_setup import create_tables, apply_migrations, add_connectors
 from app.db.db_setup import ensure_admin_user
 from app.db.db_setup import ensure_scheduler_user
 from app.db.db_setup import ensure_scheduler_user_removed
-from app.db.db_setup import update_tables
 from app.middleware.exception_handlers import custom_http_exception_handler
 from app.middleware.exception_handlers import validation_exception_handler
 from app.middleware.exception_handlers import value_error_handler
@@ -57,8 +60,8 @@ from app.routers import threat_intel
 from app.routers import velociraptor
 from app.routers import wazuh_indexer
 from app.routers import wazuh_manager
-from app.schedulers.scheduler import init_scheduler, get_scheduler_instance
-from app.db.db_session import SQLALCHEMY_DATABASE_URI_NO_DB
+from app.schedulers.scheduler import get_scheduler_instance
+from app.schedulers.scheduler import init_scheduler
 
 auth_handler = AuthHandler()
 # Get the `SERVER_IP` from the `.env` file
@@ -138,13 +141,12 @@ api_router.include_router(carbonblack.router)
 app.include_router(api_router)
 
 
-
 @app.on_event("startup")
 async def init_db():
     logger.info("Initializing database")
     if environment == "PRODUCTION":
-        await create_database_if_not_exists(db_url=SQLALCHEMY_DATABASE_URI_NO_DB, db_name='copilot')
-        await create_copilot_user_if_not_exists(db_url=SQLALCHEMY_DATABASE_URI_NO_DB, db_user_name='copilot')
+        await create_database_if_not_exists(db_url=SQLALCHEMY_DATABASE_URI_NO_DB, db_name="copilot")
+        await create_copilot_user_if_not_exists(db_url=SQLALCHEMY_DATABASE_URI_NO_DB, db_user_name="copilot")
     apply_migrations()
     await add_connectors(async_engine)
     await create_roles(async_engine)

@@ -119,19 +119,21 @@
 #         yield session
 
 
-
 # ! NEW WITH MYSQL ! #
 
-from sqlmodel import Session, create_engine
-from contextlib import asynccontextmanager, contextmanager
-from loguru import logger
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
-#from settings import SQLALCHEMY_DATABASE_URI
+from contextlib import asynccontextmanager
+from contextlib import contextmanager
+
+# from settings import SQLALCHEMY_DATABASE_URI
 from pathlib import Path
 
 from environs import Env
 from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.orm import sessionmaker
+from sqlmodel import Session
+from sqlmodel import create_engine
 
 env = Env()
 env.read_env(Path(__file__).parent.parent / ".env")
@@ -169,16 +171,9 @@ sync_engine = create_engine(
 )
 
 # Create a configured "AsyncSession" class
-AsyncSessionLocal = sessionmaker(
-    bind=async_engine,
-    class_=AsyncSession,
-    expire_on_commit=False
-)
-SyncSessionLocal = sessionmaker(
-    bind=sync_engine,
-    class_=Session,
-    expire_on_commit=False
-)
+AsyncSessionLocal = sessionmaker(bind=async_engine, class_=AsyncSession, expire_on_commit=False)
+SyncSessionLocal = sessionmaker(bind=sync_engine, class_=Session, expire_on_commit=False)
+
 
 @asynccontextmanager
 async def get_db_session():
@@ -194,6 +189,7 @@ async def get_db_session():
             logger.info("Closing DB session")
             await session.close()
 
+
 @contextmanager
 def get_sync_db_session():
     session = SyncSessionLocal()
@@ -208,12 +204,13 @@ def get_sync_db_session():
         logger.info("Closing sync DB session")
         session.close()
 
+
 @asynccontextmanager
 async def get_session():
     async with get_db_session() as session:
         yield session
 
+
 async def get_db():
     async with get_session() as session:
         yield session
-

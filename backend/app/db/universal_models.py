@@ -1,15 +1,17 @@
 from datetime import datetime
 from typing import Optional
 
+from sqlalchemy import Column
+from sqlalchemy import Float
+from sqlalchemy import LargeBinary
 from sqlmodel import Field
 from sqlmodel import Relationship
-from sqlmodel import SQLModel, Index
-from sqlalchemy import Column, Float, LargeBinary
+from sqlmodel import SQLModel
 
 
 class Customers(SQLModel, table=True):
     id: Optional[int] = Field(primary_key=True)
-    customer_code: str = Field(sa_column_kwargs={'index': True}, max_length=50, nullable=False)
+    customer_code: str = Field(sa_column_kwargs={"index": True}, max_length=50, nullable=False)
     parent_customer_code: Optional[str] = Field(max_length=11)
     customer_name: str = Field(max_length=50, nullable=False)
     contact_last_name: Optional[str] = Field(max_length=50)
@@ -119,7 +121,9 @@ class Agents(SQLModel, table=True):
             wazuh_agent_version=wazuh_agent.wazuh_agent_version,
             wazuh_agent_status=wazuh_agent.wazuh_agent_status if wazuh_agent.wazuh_agent_status else "not found",
             velociraptor_id=velociraptor_agent.client_id if velociraptor_agent.client_id else "n/a",
-            velociraptor_last_seen=velociraptor_agent.client_last_seen_as_datetime if velociraptor_agent.client_last_seen_as_datetime else "1970-01-01T00:00:00+00:00",
+            velociraptor_last_seen=velociraptor_agent.client_last_seen_as_datetime
+            if velociraptor_agent.client_last_seen_as_datetime
+            else "1970-01-01T00:00:00+00:00",
             velociraptor_agent_version=velociraptor_agent.client_version if velociraptor_agent.client_version else "n/a",
             customer_code=customer_code,
         )
@@ -167,6 +171,7 @@ class License(SQLModel, table=True):
     customer_name: str = Field(max_length=1024)
     customer_email: str = Field(max_length=1024)
     company_name: str = Field(max_length=1024)
+
 
 class SchedulerJob(SQLModel, table=True):
     id: str = Field(default=None, primary_key=True, nullable=False, max_length=255)

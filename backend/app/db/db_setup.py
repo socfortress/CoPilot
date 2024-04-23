@@ -1,16 +1,17 @@
+import os
+
 from loguru import logger
+from sqlalchemy import create_engine
 from sqlalchemy import text
 from sqlalchemy.exc import OperationalError
-from sqlalchemy.ext.asyncio import AsyncSession
-from alembic import command
-from sqlalchemy import create_engine
 from sqlalchemy.exc import SQLAlchemyError
-import os
-from alembic.config import Config
+from sqlalchemy.ext.asyncio import AsyncSession
 
 # ! New with Async
 from sqlmodel import SQLModel
 
+from alembic import command
+from alembic.config import Config
 from app.auth.services.universal import create_admin_user
 from app.auth.services.universal import create_scheduler_user
 from app.auth.services.universal import remove_scheduler_user
@@ -18,7 +19,8 @@ from app.db.db_populate import add_available_integrations_auth_keys_if_not_exist
 from app.db.db_populate import add_available_integrations_if_not_exist
 from app.db.db_populate import add_connectors_if_not_exist
 from app.db.db_populate import add_roles_if_not_exist
-from app.db.db_session import SQLALCHEMY_DATABASE_URI, db_password
+from app.db.db_session import SQLALCHEMY_DATABASE_URI
+from app.db.db_session import db_password
 
 
 async def create_database_if_not_exists(db_url: str, db_name: str):
@@ -48,6 +50,7 @@ async def create_database_if_not_exists(db_url: str, db_name: str):
         conn.close()
         engine.dispose()
 
+
 async def create_copilot_user_if_not_exists(db_url: str, db_user_name: str):
     """
     Create a user if it does not already exist.
@@ -56,7 +59,7 @@ async def create_copilot_user_if_not_exists(db_url: str, db_user_name: str):
         db_url (str): Database URL to connect to MySQL server (without database part).
         db_user_name (str): The name of the user to create.
     """
-    db_name = 'copilot'
+    db_name = "copilot"
     engine = create_engine(db_url)
     conn = engine.connect()
     try:
@@ -75,6 +78,7 @@ async def create_copilot_user_if_not_exists(db_url: str, db_user_name: str):
     except SQLAlchemyError as e:
         logger.info(f"An error occurred: {e}")
 
+
 def apply_migrations():
     """
     Applies Alembic migrations to ensure the database schema is up to date.
@@ -83,12 +87,12 @@ def apply_migrations():
 
     # Navigate up three levels from db_setup.py to the backend directory, then to the alembic directory
     base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-    alembic_directory = os.path.join(base_dir, 'alembic')
+    alembic_directory = os.path.join(base_dir, "alembic")
 
-    logger.info(f'base_dir: {base_dir}')
-    logger.info(f'Alembic directory: {alembic_directory}')
+    logger.info(f"base_dir: {base_dir}")
+    logger.info(f"Alembic directory: {alembic_directory}")
 
-    alembic_cfg = Config(os.path.join(alembic_directory, 'alembic.ini'))
+    alembic_cfg = Config(os.path.join(alembic_directory, "alembic.ini"))
     alembic_cfg.set_main_option("sqlalchemy.url", SQLALCHEMY_DATABASE_URI.replace("+aiomysql", "+pymysql"))
     alembic_cfg.set_main_option("script_location", alembic_directory)
 
@@ -98,6 +102,7 @@ def apply_migrations():
     except OperationalError as e:
         logger.error(f"Error applying migrations: {e}")
         raise e
+
 
 async def add_connectors(async_engine):
     """
@@ -115,6 +120,7 @@ async def add_connectors(async_engine):
     ) as session:  # Create an AsyncSession, not just a connection
         async with session.begin():  # Start a transaction
             await add_connectors_if_not_exist(session)
+
 
 async def create_tables(async_engine):
     """

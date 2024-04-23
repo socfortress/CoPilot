@@ -1,13 +1,12 @@
 from datetime import datetime
 
 from dotenv import load_dotenv
+from loguru import logger
+from sqlalchemy.future import select
 
 from app.agents.routes.agents import sync_all_agents
 from app.db.db_session import get_db_session
-from app.db.db_session import get_sync_db_session
 from app.schedulers.models.scheduler import JobMetadata
-from loguru import logger
-from sqlalchemy.future import select
 
 load_dotenv()
 

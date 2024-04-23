@@ -1,16 +1,17 @@
+import asyncio
 from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.db.db_session import get_db
 from app.schedulers.models.scheduler import JobMetadata
-from app.schedulers.scheduler import get_function_by_name, get_scheduler_instance
-from fastapi import HTTPException
-import asyncio
+from app.schedulers.scheduler import get_function_by_name
+from app.schedulers.scheduler import get_scheduler_instance
 from app.schedulers.scheduler import init_scheduler
 from app.schedulers.schema.scheduler import JobsResponse
 
@@ -186,6 +187,7 @@ async def run_job_manually(job_id: str, session: AsyncSession = Depends(get_db))
         return {"success": True, "message": "Job executed successfully", "result": result}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @scheduler_router.post("/start/{job_id}", description="Start a job")
 async def start_job(job_id: str):

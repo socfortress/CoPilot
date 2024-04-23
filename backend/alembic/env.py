@@ -2,9 +2,19 @@ from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
-#from app.db.all_models import *
+from sqlmodel import SQLModel
+
+from alembic import context
+
+# from app.db.all_models import *
 from app.auth.models.users import User
 from app.connectors.models import Connectors
+
+# from app.integrations.sap_siem.models.sap_siem import SapSiemMultipleLogins
+from app.customer_provisioning.models.default_settings import (
+    CustomerProvisioningDefaultSettings,
+)
+
 # from app.connectors.sublime.models.alerts import SublimeAlerts
 # from app.connectors.wazuh_manager.models.rules import DisabledRule
 from app.db.universal_models import Agents
@@ -15,15 +25,8 @@ from app.integrations.alert_creation_settings.models.alert_creation_settings imp
     AlertCreationSettings,
 )
 from app.integrations.models.customer_integration_settings import CustomerIntegrations
-from app.schedulers.models.scheduler import JobMetadata
 from app.integrations.monitoring_alert.models.monitoring_alert import MonitoringAlerts
-# from app.integrations.sap_siem.models.sap_siem import SapSiemMultipleLogins
-from app.customer_provisioning.models.default_settings import (
-    CustomerProvisioningDefaultSettings,
-)
-from sqlmodel import SQLModel
-
-from alembic import context
+from app.schedulers.models.scheduler import JobMetadata
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -84,9 +87,7 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection, target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()

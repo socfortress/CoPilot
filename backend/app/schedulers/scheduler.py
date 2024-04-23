@@ -1,13 +1,16 @@
+import asyncio
+
+from apscheduler.events import EVENT_JOB_ERROR
+from apscheduler.events import EVENT_JOB_MISSED
+from apscheduler.executors.asyncio import AsyncIOExecutor
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from loguru import logger
-
 from sqlalchemy.ext.asyncio import AsyncSession
-
-
-from app.db.db_session import sync_engine
 from sqlalchemy.future import select
+
 from app.db.db_session import async_engine
+from app.db.db_session import sync_engine
 from app.schedulers.models.scheduler import CreateSchedulerRequest
 from app.schedulers.models.scheduler import JobMetadata
 from app.schedulers.services.agent_sync import agent_sync
@@ -51,18 +54,20 @@ from app.schedulers.services.monitoring_alert import (
 from app.schedulers.services.monitoring_alert import invoke_office365_threat_intel_alert
 from app.schedulers.services.monitoring_alert import invoke_suricata_monitoring_alert
 from app.schedulers.services.monitoring_alert import invoke_wazuh_monitoring_alert
-from apscheduler.executors.asyncio import AsyncIOExecutor
-import asyncio
-from apscheduler.events import EVENT_JOB_MISSED, EVENT_JOB_ERROR
+
 
 def scheduler_listener(event):
     if event.exception:
-        logger.error(f'Job {event.job_id} crashed: {event.exception}')
+        logger.error(f"Job {event.job_id} crashed: {event.exception}")
     else:
-        logger.info(f'Job {event.job_id} that was scheduled to run at {event.scheduled_run_time}, missed its run time by {event.scheduled_run_time - event.scheduled_run_time}')
+        logger.info(
+            f"Job {event.job_id} that was scheduled to run at {event.scheduled_run_time}, missed its run time by {event.scheduled_run_time - event.scheduled_run_time}",
+        )
+
 
 # Global variable to hold the scheduler instance
 scheduler_instance = None
+
 
 async def init_scheduler():
     global scheduler_instance
@@ -73,9 +78,7 @@ async def init_scheduler():
     logger.info("Initializing new scheduler...")
     try:
         jobstores = {"default": SQLAlchemyJobStore(engine=sync_engine, tablename="schedulerjob")}
-        executors = {
-            'default': AsyncIOExecutor()  # This executor can run asyncio coroutines
-        }
+        executors = {"default": AsyncIOExecutor()}  # This executor can run asyncio coroutines
         event_loop = asyncio.get_event_loop()
         scheduler_instance = AsyncIOScheduler(event_loop=event_loop)
         scheduler_instance.add_listener(scheduler_listener, EVENT_JOB_MISSED | EVENT_JOB_ERROR)
@@ -94,6 +97,7 @@ async def init_scheduler():
         raise
 
     return scheduler_instance
+
 
 async def get_scheduler_instance():
     """
@@ -118,7 +122,7 @@ async def initialize_job_metadata():
         ]
         for job in known_jobs:
             # Create a select statement for the JobMetadata table
-            stmt = select(JobMetadata).where(JobMetadata.job_id == job['job_id'])
+            stmt = select(JobMetadata).where(JobMetadata.job_id == job["job_id"])
             result = await session.execute(stmt)
             job_metadata = result.scalars().one_or_none()
             if not job_metadata:
@@ -156,7 +160,7 @@ async def schedule_enabled_jobs(scheduler):
                         id=job_metadata.job_id,
                         replace_existing=True,
                         coalesce=True,
-                        max_instances=1
+                        max_instances=1,
                     )
                 else:
                     # Regular functions go here
@@ -167,7 +171,7 @@ async def schedule_enabled_jobs(scheduler):
                         id=job_metadata.job_id,
                         replace_existing=True,
                         coalesce=True,
-                        max_instances=1
+                        max_instances=1,
                     )
                 logger.info(f"Scheduled job: {job_metadata.job_id}")
             except ValueError as e:
@@ -220,16 +224,16 @@ async def add_scheduler_jobs(create_scheduler_request: CreateSchedulerRequest):
 
     # Here, we use the async add_job if the job function is a coroutine
     if asyncio.iscoroutinefunction(job_function):
-            # Adding coroutine functions directly
-            scheduler.add_job(
-                job_function,
-                "interval",
-                minutes=create_scheduler_request.time_interval,
-                id=create_scheduler_request.job_id,
-                replace_existing=True,
-                coalesce=True,
-                max_instances=1
-            )
+        # Adding coroutine functions directly
+        scheduler.add_job(
+            job_function,
+            "interval",
+            minutes=create_scheduler_request.time_interval,
+            id=create_scheduler_request.job_id,
+            replace_existing=True,
+            coalesce=True,
+            max_instances=1,
+        )
     else:
         # Regular functions go here
         scheduler.add_job(
@@ -239,7 +243,7 @@ async def add_scheduler_jobs(create_scheduler_request: CreateSchedulerRequest):
             id=create_scheduler_request.job_id,
             replace_existing=True,
             coalesce=True,
-            max_instances=1
+            max_instances=1,
         )
 
     await add_job_metadata(create_scheduler_request)
