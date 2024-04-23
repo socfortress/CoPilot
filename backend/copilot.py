@@ -65,7 +65,7 @@ auth_handler = AuthHandler()
 load_dotenv()
 server_ip = os.getenv("SERVER_IP", "localhost")
 environment = os.getenv("ENVIRONMENT", "PRODUCTION")
-admin_user_needed = os.getenv("ADMIN_USER_NEEDED", "TRUE")
+
 # Not needed for now
 # ssl_keyfile = os.path.join(os.path.dirname(__file__), "../nginx/server.key")
 # ssl_certfile = os.path.join(os.path.dirname(__file__), "../nginx/server.crt")
@@ -149,9 +149,7 @@ async def init_db():
     await add_connectors(async_engine)
     await create_roles(async_engine)
     await create_available_integrations(async_engine)
-    if admin_user_needed == "TRUE":
-        logger.info("Creating admin user")
-        await ensure_admin_user(async_engine)
+    await ensure_admin_user(async_engine)
     await ensure_scheduler_user(async_engine)
 
     # Initialize the scheduler
