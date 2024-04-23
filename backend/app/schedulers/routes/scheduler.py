@@ -80,6 +80,7 @@ async def manage_job_metadata(session, job_id, action, **kwargs):
     return job_metadata
 
 
+
 @scheduler_router.get("", response_model=JobsResponse, description="Get all jobs")
 async def get_all_jobs(session: AsyncSession = Depends(get_db)) -> JobsResponse:
     """
@@ -100,12 +101,15 @@ async def get_all_jobs(session: AsyncSession = Depends(get_db)) -> JobsResponse:
             select(JobMetadata).filter_by(job_id=job.id),
         )
         job_metadata = job_metadata.scalars().first()
+        logger.info(f"job_metadata: {job_metadata}")
         apscheduler_jobs.append(
             {
                 "id": job.id,
                 "name": job.name,
                 "time_interval": job_metadata.time_interval,
                 "enabled": job_metadata.enabled,
+                "description": job_metadata.job_description,
+                "last_success": job_metadata.last_success,
             },
         )
     logger.info(f"apscheduler_jobs: {apscheduler_jobs}")

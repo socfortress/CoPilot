@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import List
 
 from pydantic import BaseModel
+from typing import Optional
 
 
 class Job(BaseModel):
@@ -9,6 +10,8 @@ class Job(BaseModel):
     name: str
     enabled: bool
     time_interval: int
+    last_success: Optional[datetime]
+    description: Optional[str]
 
 
 class JobsResponse(BaseModel):

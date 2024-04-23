@@ -14,6 +14,7 @@ class JobMetadata(SQLModel, table=True):
     time_interval: int  # The frequency of the job in minutes
     extra_data: Optional[str] = None  # Extra data for the job
     enabled: bool  # Indicates if the job is active or not
+    job_description: Optional[str] = Field(max_length=1024)  # Description of the job
 
 
 class CreateSchedulerRequest(BaseModel):
