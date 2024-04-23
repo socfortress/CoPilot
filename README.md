@@ -91,6 +91,9 @@ wget https://raw.githubusercontent.com/socfortress/CoPilot/v0.0.7/docker-compose
 # Create the path for storing your data
 mkdir data
 
+# Copy .env.example to .env
+cp .env.example .env
+
 # Run Copilot
 docker compose up -d
 
