@@ -77,7 +77,7 @@ async def init_scheduler():
 
     logger.info("Initializing new scheduler...")
     try:
-        jobstores = {"default": SQLAlchemyJobStore(engine=sync_engine, tablename="schedulerjob")}
+        jobstores = {"default": SQLAlchemyJobStore(engine=sync_engine)}
         executors = {"default": AsyncIOExecutor()}  # This executor can run asyncio coroutines
         event_loop = asyncio.get_event_loop()
         scheduler_instance = AsyncIOScheduler(event_loop=event_loop)

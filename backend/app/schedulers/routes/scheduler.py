@@ -3,10 +3,12 @@ from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
+from datetime import datetime
 from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+import pytz
 
 from app.db.db_session import get_db
 from app.schedulers.models.scheduler import JobMetadata
@@ -113,6 +115,27 @@ async def get_all_jobs(session: AsyncSession = Depends(get_db)) -> JobsResponse:
         success=True,
         message="Jobs successfully retrieved.",
     )
+
+@scheduler_router.get("/next_run/{job_id}")
+async def get_next_run(job_id: str):
+    """
+    Get the next run time of a job.
+
+    Args:
+        job_id (str): The ID of the job.
+
+    Returns:
+        dict: A dictionary containing the next run time of the job.
+    """
+    scheduler = await get_scheduler_instance()
+    job = await find_job_by_id(scheduler, job_id)
+    if job is None:
+        raise HTTPException(status_code=404, detail="Job not found")
+    now = datetime.now(pytz.utc)
+    next_run_time = job.next_run_time
+    delta = next_run_time - now
+    logger.info(f"Next run time for job {job_id}: {next_run_time}")
+    return None
 
 
 @scheduler_router.post("/add", description="Add a job")
