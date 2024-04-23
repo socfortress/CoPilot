@@ -1,5 +1,6 @@
 from typing import List
 
+from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -67,7 +68,13 @@ async def add_agent_to_db(
     """
     new_agent = Agents.create_from_model(agent, client, customer_code)
     session.add(new_agent)
-    await session.commit()  # Use the await keyword to commit asynchronously
+    logger.info(f"Adding agent {agent.agent_name} to the database")
+    try:
+        await session.commit()  # Use the await keyword to commit asynchronously
+    except Exception as e:
+        logger.error(f"Failed to add agent {agent.agent_name} to the database: {e}")
+        await session.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
     logger.info(f"Agent {agent.agent_name} added to the database")
 
 

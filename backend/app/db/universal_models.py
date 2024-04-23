@@ -1,6 +1,9 @@
 from datetime import datetime
 from typing import Optional
 
+from sqlalchemy import Column
+from sqlalchemy import Float
+from sqlalchemy import LargeBinary
 from sqlmodel import Field
 from sqlmodel import Relationship
 from sqlmodel import SQLModel
@@ -8,7 +11,7 @@ from sqlmodel import SQLModel
 
 class Customers(SQLModel, table=True):
     id: Optional[int] = Field(primary_key=True)
-    customer_code: str = Field(max_length=50, nullable=False)
+    customer_code: str = Field(sa_column_kwargs={"index": True}, max_length=50, nullable=False)
     parent_customer_code: Optional[str] = Field(max_length=11)
     customer_name: str = Field(max_length=50, nullable=False)
     contact_last_name: Optional[str] = Field(max_length=50)
@@ -83,7 +86,7 @@ class CustomersMeta(SQLModel, table=True):
 
 class Agents(SQLModel, table=True):
     id: Optional[int] = Field(primary_key=True)
-    agent_id: str = Field(index=True)
+    agent_id: str = Field(index=True, max_length=256)
     ip_address: str = Field(max_length=256)
     os: str = Field(max_length=256)
     hostname: str = Field(max_length=256)
@@ -95,7 +98,7 @@ class Agents(SQLModel, table=True):
     wazuh_agent_version: str = Field(max_length=256)
     wazuh_agent_status: str = Field("not found", max_length=256)
     velociraptor_agent_version: str = Field(max_length=256)
-    customer_code: Optional[str] = Field(foreign_key="customers.customer_code")
+    customer_code: Optional[str] = Field(foreign_key="customers.customer_code", max_length=256)
     quarantined: bool = Field(default=False)
 
     customer: Optional[Customers] = Relationship(back_populates="agents")
@@ -118,8 +121,10 @@ class Agents(SQLModel, table=True):
             wazuh_agent_version=wazuh_agent.wazuh_agent_version,
             wazuh_agent_status=wazuh_agent.wazuh_agent_status if wazuh_agent.wazuh_agent_status else "not found",
             velociraptor_id=velociraptor_agent.client_id if velociraptor_agent.client_id else "n/a",
-            velociraptor_last_seen=velociraptor_agent.client_last_seen_as_datetime,
-            velociraptor_agent_version=velociraptor_agent.client_version,
+            velociraptor_last_seen=velociraptor_agent.client_last_seen_as_datetime
+            if velociraptor_agent.client_last_seen_as_datetime
+            else "1970-01-01T00:00:00+00:00",
+            velociraptor_agent_version=velociraptor_agent.client_version if velociraptor_agent.client_version else "n/a",
             customer_code=customer_code,
         )
 
@@ -150,13 +155,13 @@ class LogEntry(SQLModel, table=True):
     __tablename__ = "log_entries"
     id: Optional[int] = Field(primary_key=True)
     timestamp: datetime = Field(default=datetime.utcnow())
-    event_type: str
+    event_type: str = Field(default="Info", max_length=256)
     user_id: int = Field(default=None, nullable=True)
-    route: str
-    method: str
+    route: str = Field(default=None, nullable=True, max_length=256)
+    method: str = Field(default=None, nullable=True, max_length=256)
     status_code: int
-    message: str
-    additional_info: str = Field(default=None, nullable=True)
+    message: str = Field(default=None, nullable=True, max_length=5024)
+    additional_info: str = Field(default=None, nullable=True, max_length=5024)
 
 
 class License(SQLModel, table=True):
@@ -166,3 +171,12 @@ class License(SQLModel, table=True):
     customer_name: str = Field(max_length=1024)
     customer_email: str = Field(max_length=1024)
     company_name: str = Field(max_length=1024)
+
+
+class SchedulerJob(SQLModel, table=True):
+    id: str = Field(default=None, primary_key=True, nullable=False, max_length=255)
+    next_run_time: float = Field(sa_column=Column(Float(), index=True))
+    job_state: bytes = Field(sa_column=Column(LargeBinary(), nullable=False))
+
+    def __repr__(self):
+        return f"<SchedulerJob(id={self.id}, next_run_time={self.next_run_time})>"

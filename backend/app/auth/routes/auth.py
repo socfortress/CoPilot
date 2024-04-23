@@ -99,7 +99,7 @@ async def register(user: UserInput, session: AsyncSession = Depends(get_db)):
         username=user.username,
         password=hashed_pwd,
         email=user.email,
-        role_id=user.role_id,
+        role_id=user.role_id.value if user.role_id else 2,
     )
     logger.info(f"User: {u}")
     session.add(u)

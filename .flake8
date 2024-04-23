@@ -3,7 +3,7 @@
 max-line-length = 180
 #select = B,C,E,F,W,T4,B9
 #ignore = E203, E266, E501, W503, F403, F401
-ignore = E402, W503, E231, W605, E266
+ignore = E402, W503, E231, W605, E266, E712
     # E402, # module level import not at top of file (using isort)
     # W503, # line break before binary operator
     # E231, # missing whitespace after ',' (caused by black style)
@@ -11,3 +11,4 @@ ignore = E402, W503, E231, W605, E266
 extend-ignore = E203
 exclude =
     .venv
+    backend/alembic/env.py

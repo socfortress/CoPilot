@@ -1,7 +1,9 @@
+import asyncio
 from typing import Optional
 
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -9,15 +11,16 @@ from sqlalchemy.future import select
 from app.db.db_session import get_db
 from app.schedulers.models.scheduler import JobMetadata
 from app.schedulers.scheduler import get_function_by_name
+from app.schedulers.scheduler import get_scheduler_instance
 from app.schedulers.scheduler import init_scheduler
 from app.schedulers.schema.scheduler import JobsResponse
 
 scheduler_router = APIRouter()
 
 
-def get_scheduler():
+async def get_scheduler():
     # Singleton pattern or reference to existing instance
-    return init_scheduler()
+    return await init_scheduler()
 
 
 async def find_job_by_id(scheduler, job_id):
@@ -88,7 +91,7 @@ async def get_all_jobs(session: AsyncSession = Depends(get_db)) -> JobsResponse:
         JobsResponse: The response containing the list of jobs.
 
     """
-    scheduler = get_scheduler()
+    scheduler = await get_scheduler_instance()
     jobs = scheduler.get_jobs()
     apscheduler_jobs = []
     for job in jobs:
@@ -133,7 +136,7 @@ async def add_job(
     Returns:
         dict: A dictionary containing the success status and a message.
     """
-    scheduler = get_scheduler()
+    scheduler = await get_scheduler_instance()
     job_function = get_function_by_name(function_name)
     scheduler.add_job(
         job_function,
@@ -155,6 +158,37 @@ async def add_job(
     return {"success": True, "message": "Job added successfully"}
 
 
+@scheduler_router.post("/jobs/run/{job_id}", description="Run a job")
+async def run_job_manually(job_id: str, session: AsyncSession = Depends(get_db)):
+    """
+    Manually triggers a scheduled job for immediate execution.
+
+    Args:
+        job_id (str): The identifier of the job to run.
+        session (AsyncSession): The database session dependency.
+
+    Returns:
+        A JSON response with the result of the operation.
+    """
+    scheduler = await get_scheduler_instance()  # Make sure your scheduler is properly initialized
+    job = scheduler.get_job(job_id)
+
+    if job is None:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    try:
+        # Retrieve the function associated with the job and run it
+        job_function = get_function_by_name(job.name)  # Ensure this function maps job names to function objects
+        if asyncio.iscoroutinefunction(job_function):
+            result = await job_function()  # Execute the function if it's async
+        else:
+            result = job_function()  # Execute synchronously if not an async function
+
+        return {"success": True, "message": "Job executed successfully", "result": result}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @scheduler_router.post("/start/{job_id}", description="Start a job")
 async def start_job(job_id: str):
     """
@@ -168,7 +202,7 @@ async def start_job(job_id: str):
             - If the job is found and successfully started, the success status is True and the message is "Job started successfully".
             - If the job is not found, the success status is False and the message is "Job not found".
     """
-    scheduler = get_scheduler()
+    scheduler = await get_scheduler_instance()
     job = await find_job_by_id(scheduler, job_id)
     if job:
         job.resume()
@@ -191,7 +225,7 @@ async def pause_job(job_id: str):
             - If the job is paused successfully, the success status is True and the message is "Job paused successfully".
             - If the job is not found, the success status is False and the message is "Job not found".
     """
-    scheduler = get_scheduler()
+    scheduler = await get_scheduler_instance()
     job = await find_job_by_id(scheduler, job_id)
     if job:
         job.pause()
@@ -225,7 +259,7 @@ async def update_job(
         "message": "Job updated successfully"
     }
     """
-    scheduler = get_scheduler()
+    scheduler = await get_scheduler_instance()
     job = await find_job_by_id(scheduler, job_id)
     if job:
         job.reschedule(trigger="interval", minutes=time_interval)
@@ -263,7 +297,7 @@ async def delete_job(job_id: str, session: AsyncSession = Depends(get_db)):
     Returns:
         dict: A dictionary containing the success status and a message.
     """
-    scheduler = get_scheduler()
+    scheduler = await get_scheduler_instance()
     job = await find_job_by_id(scheduler, job_id)
     if job:
         scheduler.remove_job(job_id)

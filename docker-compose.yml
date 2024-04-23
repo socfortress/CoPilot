@@ -11,6 +11,8 @@ services:
             # Mount the copilot.db file to persist the database
             - ./data/data:/opt/copilot/backend/data
         env_file: .env
+        depends_on:
+            - copilot-mysql
 
     copilot-frontend:
         image: ghcr.io/socfortress/copilot-frontend:latest
@@ -19,6 +21,21 @@ services:
         ports:
             - "80:80"
             - "443:443"
+
+    copilot-mysql:
+        image: mysql:5.7
+        environment:
+            MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+            MYSQL_DATABASE: copilot
+            MYSQL_USER: ${MYSQL_USER}
+            MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+        ports:
+            - "3306:3306"
+        volumes:
+            - mysql-data:/var/lib/mysql
+
+volumes:
+    mysql-data:
 
 networks:
     default:

@@ -1,10 +1,11 @@
 from datetime import datetime
 
 from dotenv import load_dotenv
+from loguru import logger
+from sqlalchemy.future import select
 
 from app.agents.routes.agents import sync_all_agents
 from app.db.db_session import get_db_session
-from app.db.db_session import get_sync_db_session
 from app.schedulers.models.scheduler import JobMetadata
 
 load_dotenv()
@@ -20,17 +21,18 @@ async def agent_sync():
     If the token retrieval fails, it prints a failure message. If the job metadata for
     'agent_sync' does not exist, it prints a message indicating the absence of the metadata.
     """
+    logger.info("Synchronizing agents via scheduler...")
     async with get_db_session() as session:
         await sync_all_agents(session=session)
 
-    # Use get_sync_db_session to create and manage a synchronous session
-    with get_sync_db_session() as session:
-        # Synchronous ORM operations
-        job_metadata = session.query(JobMetadata).filter_by(job_id="agent_sync").one_or_none()
+        stmt = select(JobMetadata).where(JobMetadata.job_id == "agent_sync")
+        result = await session.execute(stmt)
+        job_metadata = result.scalars().first()
+
         if job_metadata:
             job_metadata.last_success = datetime.utcnow()
             session.add(job_metadata)
-            session.commit()
+            await session.commit()  # Asynchronously commit the transaction
+            logger.info("Updated job metadata with the last success timestamp.")
         else:
-            # Handle the case where job_metadata does not exist
-            print("JobMetadata for 'agent_sync' not found.")
+            logger.warning("JobMetadata for 'agent_sync' not found.")

@@ -24,7 +24,7 @@ class Role(SQLModel, table=True):
 
 class User(SQLModel, table=True):
     id: Optional[int] = Field(primary_key=True)
-    username: str = Field(index=True)
+    username: str = Field(index=True, max_length=256)
     password: str = Field(max_length=256, min_length=6)
     email: EmailStr
     created_at: datetime.datetime = datetime.datetime.now()
@@ -55,6 +55,12 @@ class UserInput(SQLModel):
         description="Role ID 1: admin, 2: analyst",
         foreign_key="role.id",
     )
+
+    @validator("role_id")
+    def check_role_id(cls, value):
+        if value not in [e.value for e in RoleEnum]:
+            raise ValueError("Invalid role ID")
+        return value
 
 
 class UserLogin(SQLModel):

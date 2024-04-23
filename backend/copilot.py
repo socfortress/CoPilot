@@ -10,14 +10,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
 
 from app.auth.utils import AuthHandler
+from app.db.db_session import SQLALCHEMY_DATABASE_URI_NO_DB
 from app.db.db_session import async_engine
+from app.db.db_setup import add_connectors
+from app.db.db_setup import apply_migrations
 from app.db.db_setup import create_available_integrations
+from app.db.db_setup import create_copilot_user_if_not_exists
+from app.db.db_setup import create_database_if_not_exists
 from app.db.db_setup import create_roles
-from app.db.db_setup import create_tables
 from app.db.db_setup import ensure_admin_user
 from app.db.db_setup import ensure_scheduler_user
 from app.db.db_setup import ensure_scheduler_user_removed
-from app.db.db_setup import update_tables
 from app.middleware.exception_handlers import custom_http_exception_handler
 from app.middleware.exception_handlers import validation_exception_handler
 from app.middleware.exception_handlers import value_error_handler
@@ -57,12 +60,15 @@ from app.routers import threat_intel
 from app.routers import velociraptor
 from app.routers import wazuh_indexer
 from app.routers import wazuh_manager
+from app.schedulers.scheduler import get_scheduler_instance
 from app.schedulers.scheduler import init_scheduler
 
 auth_handler = AuthHandler()
 # Get the `SERVER_IP` from the `.env` file
 load_dotenv()
 server_ip = os.getenv("SERVER_IP", "localhost")
+environment = os.getenv("ENVIRONMENT", "PRODUCTION")
+
 # Not needed for now
 # ssl_keyfile = os.path.join(os.path.dirname(__file__), "../nginx/server.key")
 # ssl_certfile = os.path.join(os.path.dirname(__file__), "../nginx/server.crt")
@@ -84,6 +90,7 @@ app.add_middleware(
 
 
 ################## ! Middleware LOGGING TO `log_entry` table ! ##################
+# Comment out logging for now, not sure I want to use it
 app.middleware("http")(log_requests)  # using the imported middleware
 
 
@@ -136,19 +143,22 @@ app.include_router(api_router)
 
 @app.on_event("startup")
 async def init_db():
-    # create_tables(engine)
-    await create_tables(async_engine)
-    await update_tables(async_engine)
+    logger.info("Initializing database")
+    if environment == "PRODUCTION":
+        await create_database_if_not_exists(db_url=SQLALCHEMY_DATABASE_URI_NO_DB, db_name="copilot")
+        await create_copilot_user_if_not_exists(db_url=SQLALCHEMY_DATABASE_URI_NO_DB, db_user_name="copilot")
+    apply_migrations()
+    await add_connectors(async_engine)
     await create_roles(async_engine)
     await create_available_integrations(async_engine)
     await ensure_admin_user(async_engine)
     await ensure_scheduler_user(async_engine)
 
     # Initialize the scheduler
-    scheduler = init_scheduler()
+    scheduler = await init_scheduler()
 
-    logger.info("Starting scheduler")
     if not scheduler.running:
+        logger.info("Scheduler is not running, starting now...")
         scheduler.start()
 
 
@@ -161,8 +171,9 @@ def hello():
 async def shutdown_scheduler():
     logger.info("Shutting down scheduler")
     # Initialize the scheduler
-    scheduler = init_scheduler()
+    scheduler = await get_scheduler_instance()
     if scheduler.running:
+        logger.info("Scheduler is running, shutting down now...")
         scheduler.shutdown()
 
     await ensure_scheduler_user_removed(async_engine)

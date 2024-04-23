@@ -293,20 +293,29 @@ async def add_available_integrations_if_not_exist(session: AsyncSession):
     available_integrations_list = get_available_integrations_list()
 
     for available_integration_data in available_integrations_list:
-        query = select(AvailableIntegrations).where(
-            AvailableIntegrations.integration_name == available_integration_data["integration_name"],
-        )
-        result = await session.execute(query)
-        existing_available_integration = result.scalars().first()
+        try:
+            query = select(AvailableIntegrations).where(
+                AvailableIntegrations.integration_name == available_integration_data["integration_name"],
+            )
+            result = await session.execute(query)
+            existing_available_integration = result.scalars().first()
 
-        if existing_available_integration is None:
-            new_available_integration = AvailableIntegrations(
-                **available_integration_data,
-            )
-            session.add(new_available_integration)
-            logger.info(
-                f"Added new available integration: {available_integration_data['integration_name']}",
-            )
+            if existing_available_integration is None:
+                new_available_integration = AvailableIntegrations(
+                    **available_integration_data,
+                )
+                logger.info(f"New available integration: {available_integration_data}")
+                session.add(new_available_integration)
+                logger.info(
+                    f"Added new available integration: {available_integration_data['integration_name']}",
+                )
+        except Exception as e:
+            logger.error(f"Error adding available integration: {e}")
+            await session.rollback()
+            raise e
+    await session.commit()
+    # Close the session
+    await session.close()
 
 
 def load_available_integrations_auth_keys(
@@ -368,24 +377,30 @@ async def get_available_integrations_auth_keys_list(session: AsyncSession):
         ("CarbonBlack", "ORGANIZATION_KEY"),
         # ... Add more available integrations auth keys as needed ...
     ]
-
-    for integration_name, auth_key_name in available_integrations:
-        query = select(AvailableIntegrations.id).where(
-            AvailableIntegrations.integration_name == integration_name,
-        )
-        result = await session.execute(query)
-        integration_id = result.scalars().first()
-
-        if integration_id:
-            available_integrations_auth_keys.append(
-                load_available_integrations_auth_keys(
-                    integration_id,
-                    integration_name,
-                    auth_key_name,
-                ),
+    logger.info("Getting available integrations auth keys.")
+    try:
+        for integration_name, auth_key_name in available_integrations:
+            query = select(AvailableIntegrations.id).where(
+                AvailableIntegrations.integration_name == integration_name,
             )
+            result = await session.execute(query)
+            integration_id = result.scalars().first()
+            logger.info(f"Integration ID for {integration_name}: {integration_id}")
+            if integration_id:
+                logger.info(f"Found integration ID for {integration_name}: {integration_id}")
+                available_integrations_auth_keys.append(
+                    load_available_integrations_auth_keys(
+                        integration_id,
+                        integration_name,
+                        auth_key_name,
+                    ),
+                )
 
-    return available_integrations_auth_keys
+        return available_integrations_auth_keys
+    except Exception as e:
+        logger.error(f"Error getting available integrations auth keys: {e}")
+        await session.rollback()
+        raise e
 
 
 async def add_available_integrations_auth_keys_if_not_exist(session: AsyncSession):
@@ -398,33 +413,39 @@ async def add_available_integrations_auth_keys_if_not_exist(session: AsyncSessio
     Returns:
         None
     """
+    logger.info("Checking for existence of available integrations auth keys.")
     available_integrations_auth_keys_list = await get_available_integrations_auth_keys_list(session=session)
-
+    logger.info("Adding available integrations auth keys to the database.")
     for available_integration_auth_keys_data in available_integrations_auth_keys_list:
-        query = select(AvailableIntegrations).where(
-            AvailableIntegrations.integration_name == available_integration_auth_keys_data["integration_name"],
-        )
-        result = await session.execute(query)
-        existing_integration = result.scalars().first()
-
-        if existing_integration:
-            available_integration_auth_keys_data["integration_id"] = existing_integration.id
-            auth_key_query = select(AvailableIntegrationsAuthKeys).where(
-                and_(
-                    AvailableIntegrationsAuthKeys.integration_id == existing_integration.id,
-                    AvailableIntegrationsAuthKeys.auth_key_name == available_integration_auth_keys_data["auth_key_name"],
-                ),
+        try:
+            query = select(AvailableIntegrations).where(
+                AvailableIntegrations.integration_name == available_integration_auth_keys_data["integration_name"],
             )
-            auth_key_result = await session.execute(auth_key_query)
-            existing_auth_key = auth_key_result.scalars().first()
+            result = await session.execute(query)
+            existing_integration = result.scalars().first()
 
-            if existing_auth_key is None:
-                new_auth_key = AvailableIntegrationsAuthKeys(
-                    **available_integration_auth_keys_data,
+            if existing_integration:
+                available_integration_auth_keys_data["integration_id"] = existing_integration.id
+                auth_key_query = select(AvailableIntegrationsAuthKeys).where(
+                    and_(
+                        AvailableIntegrationsAuthKeys.integration_id == existing_integration.id,
+                        AvailableIntegrationsAuthKeys.auth_key_name == available_integration_auth_keys_data["auth_key_name"],
+                    ),
                 )
-                session.add(new_auth_key)
-                logger.info(
-                    f"Added new available integration auth keys: "
-                    f"{available_integration_auth_keys_data['auth_key_name']} for "
-                    f"{available_integration_auth_keys_data['integration_name']}",
-                )
+                auth_key_result = await session.execute(auth_key_query)
+                existing_auth_key = auth_key_result.scalars().first()
+
+                if existing_auth_key is None:
+                    new_auth_key = AvailableIntegrationsAuthKeys(
+                        **available_integration_auth_keys_data,
+                    )
+                    session.add(new_auth_key)
+                    logger.info(
+                        f"Added new available integration auth keys: "
+                        f"{available_integration_auth_keys_data['auth_key_name']} for "
+                        f"{available_integration_auth_keys_data['integration_name']}",
+                    )
+        except Exception as e:
+            logger.error(f"Error adding available integration auth keys: {e}")
+            raise e
+    await session.commit()

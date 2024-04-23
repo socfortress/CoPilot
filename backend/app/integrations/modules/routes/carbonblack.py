@@ -70,10 +70,10 @@ async def get_collect_carbonblack_data(carbonblack_request, session, auth_keys):
 @module_carbonblack_router.post(
     "",
     response_model=InvokeCarbonBlackResponse,
-    description="Invoke the Huntress module.",
+    description="Invoke the CarbonBlack module.",
 )
 async def collect_carbonblack_route(carbonblack_request: InvokeCarbonBlackRequest, session: AsyncSession = Depends(get_db)):
-    """Pull down Huntress Events."""
+    """Pull down CarbonBlack Events."""
     try:
         customer_integration_response = await get_customer_integration_response(
             carbonblack_request.customer_code,
