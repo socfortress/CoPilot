@@ -77,7 +77,7 @@ async def init_scheduler():
 
     logger.info("Initializing new scheduler...")
     try:
-        jobstores = {"default": SQLAlchemyJobStore(engine=sync_engine, tablename="schedulerjob")}
+        jobstores = {"default": SQLAlchemyJobStore(engine=sync_engine)}
         executors = {"default": AsyncIOExecutor()}  # This executor can run asyncio coroutines
         event_loop = asyncio.get_event_loop()
         scheduler_instance = AsyncIOScheduler(event_loop=event_loop)
@@ -117,7 +117,7 @@ async def initialize_job_metadata():
         # Implement logic to initialize or update job metadata.
         # Example: Check and add metadata for each known job
         known_jobs = [
-            {"job_id": "agent_sync", "time_interval": 15, "function": agent_sync},
+            {"job_id": "agent_sync", "time_interval": 1, "function": agent_sync},
             # {"job_id": "invoke_mimecast_integration", "time_interval": 5, "function": invoke_mimecast_integration}
         ]
         for job in known_jobs:
