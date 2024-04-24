@@ -48,7 +48,7 @@ const router = createRouter({
 					path: ":id",
 					name: "Agent",
 					component: () => import("@/views/agents/Overview.vue"),
-					meta: { title: "Agent" }
+					meta: { title: "Agent", skipPin: true }
 				}
 			]
 		},
