@@ -133,7 +133,11 @@ async def create_monitoring_alert(
                 CustomersMeta.customer_meta_office365_organization_id == monitoring_alert.event.fields["CUSTOMER_CODE"],
             ),
         )
-        customer_meta = customer_meta.scalars().first()
+        try:
+            customer_meta = customer_meta.scalars().first()
+        except Exception as e:
+            logger.error(f"Error getting customer meta for the customer_meta_office365_organization_id: {monitoring_alert.event.fields['CUSTOMER_CODE']}")
+            raise HTTPException(status_code=500, detail="Error getting customer meta")
 
     if not customer_meta:
         raise HTTPException(status_code=404, detail="Customer not found")
