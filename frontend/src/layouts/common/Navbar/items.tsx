@@ -265,6 +265,20 @@ export default function getItems(mode: "vertical" | "horizontal", collapsed: boo
 				),
 			key: "ReportCreation",
 			icon: renderIcon(ReportCreationIcon)
+		},
+		{
+			label: () =>
+				h(
+					RouterLink,
+					{
+						to: {
+							name: "Scheduler"
+						}
+					},
+					{ default: () => "Scheduler" }
+				),
+			key: "Scheduler",
+			icon: renderIcon(ReportCreationIcon)
 		}
 	]
 }

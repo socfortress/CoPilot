@@ -157,6 +157,12 @@ const router = createRouter({
 			meta: { title: "Report Creation", auth: true, roles: UserRole.All }
 		},
 		{
+			path: "/scheduler",
+			name: "Scheduler",
+			component: () => import("@/views/Scheduler.vue"),
+			meta: { title: "Scheduler", auth: true, roles: UserRole.All }
+		},
+		{
 			path: "/license",
 			meta: {
 				auth: true,
