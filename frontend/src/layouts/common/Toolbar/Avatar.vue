@@ -14,6 +14,7 @@ import { useAuthStore } from "@/stores/auth"
 const UserIcon = "ion:person-outline"
 const LicenseIcon = "carbon:license"
 const LogoutIcon = "ion:log-out-outline"
+const LogsIcon = "carbon:cloud-logging"
 const ContactIcon = "ic:outline-alternate-email"
 
 defineOptions({
@@ -34,6 +35,11 @@ const options = ref([
 		label: "License",
 		key: "route-License",
 		icon: renderIcon(LicenseIcon)
+	},
+	{
+		label: "Logs",
+		key: "route-Logs",
+		icon: renderIcon(LogsIcon)
 	},
 	{
 		label: () =>
