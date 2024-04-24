@@ -18,6 +18,6 @@ export default {
 		return HttpClient.post<FlaskBaseResponse>(`/scheduler/jobs/${action}/${job_id}`)
 	},
 	updateJob(job_id: string, payload: UpdateJobPayload) {
-		return HttpClient.put<FlaskBaseResponse>(`/scheduler/jobs/update/${job_id}`, payload)
+		return HttpClient.put<FlaskBaseResponse>(`/scheduler/jobs/update/${job_id}`, {}, { params: payload })
 	}
 }
