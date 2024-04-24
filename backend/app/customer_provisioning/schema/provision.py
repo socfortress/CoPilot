@@ -269,3 +269,16 @@ class ProvisionDashboardResponse(BaseModel):
         description="Message indicating the status of the request",
     )
     success: bool = Field(..., description="Whether the request was successful or not")
+
+class UpdateOffice365OrgIdRequest(BaseModel):
+    office365_org_id: str = Field(
+        ...,
+        description="Office 365 organization ID",
+    )
+
+class UpdateOffice365OrgIdResponse(BaseModel):
+    message: str = Field(
+        ...,
+        description="Message indicating the status of the request",
+    )
+    success: bool = Field(..., description="Whether the request was successful or not")

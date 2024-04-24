@@ -150,6 +150,7 @@ async def send_post_request(
             json=data,
             verify=False,
         )
+        logger.info(f"Response from Shuffle API: {response.json()}")
 
         if response.status_code == 204:
             return {
