@@ -18,6 +18,7 @@ import activeResponse from "./activeResponse"
 import stackProvisioning from "./stackProvisioning"
 import reporting from "./reporting"
 import license from "./license"
+import scheduler from "./scheduler"
 
 export default {
 	agents,
@@ -39,5 +40,6 @@ export default {
 	activeResponse,
 	stackProvisioning,
 	reporting,
-	license
+	license,
+	scheduler
 }
