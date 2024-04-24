@@ -16,12 +16,12 @@
 </template>
 
 <script lang="ts" setup>
-import AuthForm from "@/components/AuthForm/index.vue"
+import AuthForm from "@/components/auth/AuthForm.vue"
 import { ref, computed, onBeforeMount, toRefs } from "vue"
 import { useRoute } from "vue-router"
 import { useThemeStore } from "@/stores/theme"
 import { useAuthStore } from "@/stores/auth"
-import type { FormType } from "@/components/AuthForm/index.vue"
+import type { FormType } from "@/components/auth/types.d"
 
 type Align = "left" | "center" | "right"
 
