@@ -1,51 +1,81 @@
 <template>
 	<div class="item flex flex-col gap-2 px-5 py-3">
 		<div class="header-box flex justify-between gap-4">
-			<div class="name">{{ alert.name }}</div>
-			<div class="badge flex mb-2">
-				<Badge :type="isEnabled ? 'active' : 'muted'">
-					<template #iconRight>
-						<Icon :name="isEnabled ? EnabledIcon : DisabledIcon" :size="13"></Icon>
+			<div class="name">{{ job.id }}</div>
+			<div class="time flex items-center gap-2">
+				{{ formatDate(job.last_success, dFormats.datetimesec) }}
+
+				<n-tooltip>
+					<template #trigger>
+						<Icon :name="TimeIcon"></Icon>
 					</template>
-					<template #label>
-						<span class="whitespace-nowrap">
-							{{ isEnabled ? "Enabled" : "Not Enabled" }}
-						</span>
-					</template>
-				</Badge>
+					Last success time
+				</n-tooltip>
 			</div>
+
+			<!--
+				<div class="badge flex mb-2">
+					<Badge :type="isEnabled ? 'active' : 'muted'">
+						<template #iconRight>
+							<Icon :name="isEnabled ? EnabledIcon : DisabledIcon" :size="13"></Icon>
+						</template>
+						<template #label>
+							<span class="whitespace-nowrap">
+								{{ isEnabled ? "Enabled" : "Not Enabled" }}
+							</span>
+						</template>
+					</Badge>
+				</div>
+			-->
 		</div>
 		<div class="main-box flex justify-between gap-4">
-			<div class="content">{{ alert.value }}</div>
-			<div class="actions-box">
-				<n-button
-					v-if="!isEnabled"
-					:loading="loadingProvision"
-					type="success"
-					secondary
-					@click="openFormDialog()"
-				>
-					<template #icon><Icon :name="EnableIcon"></Icon></template>
-					Enable
-				</n-button>
+			<div class="content">
+				<div class="title">{{ job.name }}</div>
+				<div class="description mt-1">{{ job.description }}</div>
+				<div class="badges-box flex flex-wrap items-center gap-3 mt-4">
+					<Badge type="splitted">
+						<template #label>Interval</template>
+						<template #value>
+							{{ job.time_interval }} {{ job.time_interval === 1 ? "minute" : "minutes" }}
+						</template>
+					</Badge>
+				</div>
 			</div>
+			<!--
+					<div class="actions-box">
+						<n-button
+						v-if="!isEnabled"
+						:loading="loadingProvision"
+						type="success"
+						secondary
+						@click="openFormDialog()"
+						>
+						<template #icon><Icon :name="EnableIcon"></Icon></template>
+						Enable
+					</n-button>
+				</div>
+			-->
 		</div>
 		<div class="footer-box flex justify-between items-center gap-4">
 			<div class="actions-box">
-				<n-button
-					v-if="!isEnabled"
-					:loading="loadingProvision"
-					type="success"
-					secondary
-					size="small"
-					@click="openFormDialog()"
-				>
-					<template #icon><Icon :name="EnableIcon"></Icon></template>
-					Enable
-				</n-button>
+				<!--
+
+					<n-button
+						v-if="!isEnabled"
+						:loading="loadingProvision"
+						type="success"
+						secondary
+						size="small"
+						@click="openFormDialog()"
+						>
+						<template #icon><Icon :name="EnableIcon"></Icon></template>
+						Enable
+					</n-button>
+				-->
 			</div>
 		</div>
 
+		<!--
 		<n-modal
 			:title="alert.name"
 			v-model:show="showFormDialog"
@@ -86,6 +116,7 @@
 				</div>
 			</template>
 		</n-modal>
+		-->
 	</div>
 </template>
 
@@ -103,24 +134,26 @@ import {
 	NForm,
 	NFormItem,
 	NInputNumber,
+	NTooltip,
 	type FormValidationError
 } from "naive-ui"
 import Api from "@/api"
 import type { ProvisionsMonitoringAlertParams } from "@/api/monitoringAlerts"
+import type { Job } from "@/types/scheduler"
+import { formatDate } from "@/utils"
+import { useSettingsStore } from "@/stores/settings"
 
-const emit = defineEmits<{
-	(e: "provisioned"): void
-}>()
-
-const { alert, isEnabled } = defineProps<{ alert: AvailableMonitoringAlert; isEnabled: boolean }>()
+const { job } = defineProps<{ job: Job }>()
 
 const DisabledIcon = "carbon:subtract"
+const TimeIcon = "carbon:time"
 const EnabledIcon = "ph:check-bold"
 const EnableIcon = "carbon:play"
 
 const loadingProvision = ref(false)
 const showFormDialog = ref(false)
 const message = useMessage()
+const dFormats = useSettingsStore().dateFormat
 
 const formRef = ref()
 const formModel = ref<{ searchWithinLast: null | number; executeEvery: null | number }>(getClearFormModel())
@@ -185,7 +218,7 @@ function provisionsMonitoringAlert() {
 			.then(res => {
 				if (res.data.success) {
 					message.success(res.data?.message || `Monitoring alert ${alert.name} provisioned successfully`)
-					emit("provisioned")
+					//	emit("provisioned")
 				} else {
 					message.warning(res.data?.message || "An error occurred. Please try again later.")
 				}
@@ -209,16 +242,18 @@ function provisionsMonitoringAlert() {
 
 	.header-box {
 		font-size: 13px;
-
-		.name {
-			font-family: var(--font-family-mono);
-			word-break: break-word;
-			color: var(--fg-secondary-color);
-		}
+		font-family: var(--font-family-mono);
+		word-break: break-word;
+		color: var(--fg-secondary-color);
 	}
 	.main-box {
 		.content {
 			word-break: break-word;
+
+			.description {
+				color: var(--fg-secondary-color);
+				font-size: 13px;
+			}
 		}
 	}
 
