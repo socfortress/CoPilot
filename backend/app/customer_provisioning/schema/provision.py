@@ -54,7 +54,7 @@ class ProvisionNewCustomer(BaseModel):
     )
     customer_subscription: List[CustomerSubsctipion] = Field(
         ...,
-        example=["Wazuh", "Office365"],
+        example=["Wazuh"],
         description="List of subscriptions for the customer",
     )
     dashboards_to_include: DashboardProvisionRequest = Field(
