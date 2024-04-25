@@ -21,7 +21,7 @@ from app.integrations.monitoring_alert.schema.monitoring_alert import (
     GraylogPostResponse,
 )
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
-    MonitoringAlertsRequestModel, MonitoringAlertsResponseModel,
+    MonitoringAlertsRequestModel, MonitoringAlertsResponseModel
 )
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
     MonitoringWazuhAlertsRequestModel,
@@ -43,6 +43,13 @@ from app.integrations.sap_siem.services.sap_siem_suspicious_logins import (
 )
 
 monitoring_alerts_router = APIRouter()
+
+ALERT_ANALYZERS = {
+    "WAZUH": analyze_wazuh_alerts,
+    "SURICATA": analyze_suricata_alerts,
+    "OFFICE365_THREAT_INTEL": analyze_office365_threatintel_alerts,
+    "OFFICE365_EXCHANGE_ONLINE": analyze_office365_exchange_online_alerts,
+}
 
 
 async def get_customer_meta(customer_code: str, session: AsyncSession) -> CustomersMeta:
@@ -101,6 +108,47 @@ async def list_monitoring_alerts(
     return MonitoringAlertsResponseModel(monitoring_alerts=monitoring_alerts,
                                          success=True,
                                          message="Monitoring alerts retrieved successfully")
+
+@monitoring_alerts_router.post(
+    "/invoke/{monitoring_alert_id}",
+    response_model=MonitoringAlertsRequestModel,
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def invoke_monitoring_alert(
+    monitoring_alert_id: int,
+    session: AsyncSession = Depends(get_db),
+) -> MonitoringAlertsRequestModel:
+    """
+    Invoke a monitoring alert.
+
+    Args:
+        monitoring_alert_id (int): The ID of the monitoring alert to invoke.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        MonitoringAlertsRequestModel: The monitoring alert that was invoked.
+    """
+    logger.info(f"Invoking monitoring alert: {monitoring_alert_id}")
+    monitoring_alert = await session.execute(select(MonitoringAlerts).where(MonitoringAlerts.id == monitoring_alert_id))
+    monitoring_alert = monitoring_alert.scalars().first()
+    logger.info(f"Found monitoring alert: {monitoring_alert}")
+
+    if not monitoring_alert:
+        raise HTTPException(status_code=404, detail="Monitoring alert not found")
+
+    customer_meta = await get_customer_meta(monitoring_alert.customer_code, session)
+
+    analyze_alert = ALERT_ANALYZERS.get(monitoring_alert.alert_source)
+    logger.info(f"Found alert analyzer: {analyze_alert}")
+
+    if analyze_alert:
+        await analyze_alert([monitoring_alert], customer_meta, session)
+    else:
+        logger.warning(f"Unknown alert source: {monitoring_alert.alert_source}")
+
+    return monitoring_alert
+
+
 
 
 @monitoring_alerts_router.post("/create", response_model=GraylogPostResponse)
