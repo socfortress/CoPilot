@@ -111,13 +111,13 @@ async def list_monitoring_alerts(
 
 @monitoring_alerts_router.post(
     "/invoke/{monitoring_alert_id}",
-    response_model=MonitoringAlertsRequestModel,
+    response_model=AlertAnalysisResponse,
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def invoke_monitoring_alert(
     monitoring_alert_id: int,
     session: AsyncSession = Depends(get_db),
-) -> MonitoringAlertsRequestModel:
+) -> AlertAnalysisResponse:
     """
     Invoke a monitoring alert.
 
@@ -126,7 +126,7 @@ async def invoke_monitoring_alert(
         session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
 
     Returns:
-        MonitoringAlertsRequestModel: The monitoring alert that was invoked.
+        AlertAnalysisResponse: The monitoring alert that was invoked.
     """
     logger.info(f"Invoking monitoring alert: {monitoring_alert_id}")
     monitoring_alert = await session.execute(select(MonitoringAlerts).where(MonitoringAlerts.id == monitoring_alert_id))
@@ -142,11 +142,11 @@ async def invoke_monitoring_alert(
     logger.info(f"Found alert analyzer: {analyze_alert}")
 
     if analyze_alert:
-        await analyze_alert([monitoring_alert], customer_meta, session)
+        return await analyze_alert([monitoring_alert], customer_meta, session)
     else:
         logger.warning(f"Unknown alert source: {monitoring_alert.alert_source}")
 
-    return monitoring_alert
+    raise HTTPException(status_code=500, detail="Unknown alert source")
 
 
 
