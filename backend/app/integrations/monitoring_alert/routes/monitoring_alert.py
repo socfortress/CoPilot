@@ -21,7 +21,7 @@ from app.integrations.monitoring_alert.schema.monitoring_alert import (
     GraylogPostResponse,
 )
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
-    MonitoringAlertsRequestModel,
+    MonitoringAlertsRequestModel, MonitoringAlertsResponseModel,
 )
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
     MonitoringWazuhAlertsRequestModel,
@@ -78,12 +78,12 @@ async def get_customer_meta(customer_code: str, session: AsyncSession) -> Custom
 
 @monitoring_alerts_router.get(
     "/list",
-    response_model=List[MonitoringAlertsRequestModel],
+    response_model=MonitoringAlertsResponseModel,
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
 async def list_monitoring_alerts(
     session: AsyncSession = Depends(get_db),
-) -> List[MonitoringAlertsRequestModel]:
+) -> MonitoringAlertsResponseModel:
     """
     List all monitoring alerts.
 
@@ -98,7 +98,9 @@ async def list_monitoring_alerts(
     monitoring_alerts = await session.execute(select(MonitoringAlerts))
     monitoring_alerts = monitoring_alerts.scalars().all()
 
-    return monitoring_alerts
+    return MonitoringAlertsResponseModel(monitoring_alerts=monitoring_alerts,
+                                         success=True,
+                                         message="Monitoring alerts retrieved successfully")
 
 
 @monitoring_alerts_router.post("/create", response_model=GraylogPostResponse)
@@ -190,7 +192,10 @@ async def create_custom_monitoring_alert(
                     CustomersMeta.customer_code == monitoring_alert.event.fields[field],
                 ),
             )
-            customer_meta = customer_meta.scalars().first()
+            try:
+                customer_meta = customer_meta.scalars().first()
+            except Exception as e:
+                logger.error(f"Error getting customer meta for the customer_code: {monitoring_alert.event.fields[field]}")
 
             if not customer_meta:
                 logger.info(f"Getting customer meta for customer_meta_office365_organization_id: {monitoring_alert.event.fields[field]}")
@@ -199,7 +204,11 @@ async def create_custom_monitoring_alert(
                         CustomersMeta.customer_meta_office365_organization_id == monitoring_alert.event.fields[field],
                     ),
                 )
-                customer_meta = customer_meta.scalars().first()
+                try:
+                    customer_meta = customer_meta.scalars().first()
+                except Exception as e:
+                    logger.error(f"Error getting customer meta for the customer_meta_office365_organization_id: {monitoring_alert.event.fields[field]}")
+                    raise HTTPException(status_code=500, detail="Error getting customer meta")
 
     if not customer_meta:
         raise HTTPException(status_code=404, detail="Customer not found")
