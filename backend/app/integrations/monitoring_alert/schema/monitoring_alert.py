@@ -14,6 +14,7 @@ from app.integrations.alert_creation.general.schema.alert import IrisAsset
 from app.integrations.alert_creation.general.schema.alert import IrisIoc
 
 
+
 class MonitoringAlertsRequestModel(BaseModel):
     id: Optional[int] = None
     alert_id: str
