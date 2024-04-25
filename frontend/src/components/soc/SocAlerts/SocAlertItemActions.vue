@@ -56,6 +56,7 @@ import Icon from "@/components/common/Icon.vue"
 import Api from "@/api"
 import { computed, ref, watch } from "vue"
 import SocCaseItem from "../SocCases/SocCaseItem.vue"
+import type { Size } from "naive-ui/es/button/src/interface"
 
 const emit = defineEmits<{
 	(e: "startLoading"): void
@@ -68,7 +69,7 @@ const emit = defineEmits<{
 const { alertId, caseId, size } = defineProps<{
 	alertId?: string | number | null
 	caseId?: string | number | null
-	size?: "tiny" | "small" | "medium" | "large"
+	size?: Size
 }>()
 
 const DeleteIcon = "ph:trash"

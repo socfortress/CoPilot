@@ -22,10 +22,11 @@ import { ref } from "vue"
 import { NButton, NModal } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import StackProvisioningList from "./StackProvisioningList.vue"
+import type { Size, Type } from "naive-ui/es/button/src/interface"
 
 const { type, size } = defineProps<{
-	size?: "tiny" | "small" | "medium" | "large"
-	type?: "default" | "tertiary" | "primary" | "info" | "success" | "warning" | "error"
+	size?: Size
+	type?: Type
 }>()
 
 const PackIcon = "mdi:package-variant"
