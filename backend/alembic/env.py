@@ -24,6 +24,16 @@ from app.db.universal_models import LogEntry
 from app.integrations.alert_creation_settings.models.alert_creation_settings import (
     AlertCreationSettings,
 )
+from app.network_connectors.models.network_connectors import (
+    AvailableNetworkConnectors,
+    AvailableNetworkConnectorsKeys,
+    CustomerNetworkConnectors,
+    NetworkConnectorsService,
+    NetworkConnectorsSubscription,
+    NetworkConnectorsConfig,
+    CustomerNetworkConnectorsMeta
+)
+
 from app.integrations.models.customer_integration_settings import CustomerIntegrations
 from app.integrations.monitoring_alert.models.monitoring_alert import MonitoringAlerts
 from app.schedulers.models.scheduler import JobMetadata
