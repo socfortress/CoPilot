@@ -38,6 +38,7 @@ import { computed, ref } from "vue"
 import { watch } from "vue"
 import type { SupportedActiveResponse } from "@/types/activeResponse.d"
 import ActiveResponseInvokeForm from "./ActiveResponseInvokeForm.vue"
+import type { Size } from "naive-ui/es/button/src/interface"
 
 const emit = defineEmits<{
 	(e: "startLoading"): void
@@ -47,7 +48,7 @@ const emit = defineEmits<{
 const { activeResponse, size, agentId } = defineProps<{
 	activeResponse: SupportedActiveResponse
 	agentId?: string | number
-	size?: "tiny" | "small" | "medium" | "large"
+	size?: Size
 }>()
 
 const InvokeIcon = "solar:playback-speed-outline"

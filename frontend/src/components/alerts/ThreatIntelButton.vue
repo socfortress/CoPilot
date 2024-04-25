@@ -22,10 +22,11 @@ import { ref, watch } from "vue"
 import { NButton, NDrawer, NDrawerContent } from "naive-ui"
 import ThreatIntelForm from "./ThreatIntelForm.vue"
 import Icon from "@/components/common/Icon.vue"
+import type { Size, Type } from "naive-ui/es/button/src/interface"
 
 const { type, size } = defineProps<{
-	size?: "tiny" | "small" | "medium" | "large"
-	type?: "default" | "tertiary" | "primary" | "info" | "success" | "warning" | "error"
+	size?: Size
+	type?: Type
 }>()
 
 const ThreatIcon = "mynaui:info-waves"
