@@ -45,6 +45,7 @@ from app.routers import healthcheck
 from app.routers import huntress
 from app.routers import influxdb
 from app.routers import integrations
+from app.routers import network_connectors
 from app.routers import license
 from app.routers import logs
 from app.routers import mimecast
@@ -137,6 +138,7 @@ api_router.include_router(huntress.router)
 api_router.include_router(license.router)
 api_router.include_router(modules.router)
 api_router.include_router(carbonblack.router)
+api_router.include_router(network_connectors.router)
 
 # Include the APIRouter in the FastAPI app
 app.include_router(api_router)

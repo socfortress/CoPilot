@@ -72,6 +72,9 @@ class NetworkConnectorsSubscription(SQLModel, table=True):
     network_connectors_service: "NetworkConnectorsService" = Relationship(
         back_populates="network_connectors_subscriptions",
     )
+    network_connectors_keys: List["NetworkConnectorsKeys"] = Relationship(
+        back_populates="network_connectors_subscription",
+    )  # Moved here
 
 
 class NetworkConnectorsConfig(SQLModel, table=True):
@@ -86,7 +89,19 @@ class NetworkConnectorsConfig(SQLModel, table=True):
     # Relationships
     network_connectors_service: "NetworkConnectorsService" = Relationship(back_populates="configs")
 
-
+class NetworkConnectorsKeys(SQLModel, table=True):
+    __tablename__ = "network_connectors_keys"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    subscription_id: int = Field(
+        default=None,
+        foreign_key="network_connectors_subscriptions.id",
+    )
+    auth_key_name: str = Field(max_length=255)  # e.g., 'credentials', 'rate_limit'
+    auth_value: str = Field(max_length=1024)  # e.g., JSON/encrypted credentials
+    # Relationships
+    network_connectors_subscription: "NetworkConnectorsSubscription" = Relationship(
+        back_populates="network_connectors_keys",
+    )  # Adjusted relationship
 
 class CustomerNetworkConnectorsMeta(SQLModel, table=True):
     __tablename__ = "customer_network_connectors_meta"
