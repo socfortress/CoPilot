@@ -16,7 +16,7 @@ const CustomersIcon = "carbon:user-multiple"
 const UsersIcon = "carbon:group-security"
 const IntegrationsIcon = "carbon:ibm-cloud-direct-link-2-dedicated"
 const ReportCreationIcon = "carbon:report-data"
-const SchedulerIcon = "clarity:process-on-vm-line"
+const SchedulerIcon = "material-symbols:autoplay"
 
 /*eslint @typescript-eslint/no-unused-vars: "off"*/
 export default function getItems(mode: "vertical" | "horizontal", collapsed: boolean): MenuMixedOption[] {
