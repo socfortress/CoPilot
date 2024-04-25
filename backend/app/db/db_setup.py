@@ -17,6 +17,8 @@ from app.auth.services.universal import create_scheduler_user
 from app.auth.services.universal import remove_scheduler_user
 from app.db.db_populate import add_available_integrations_auth_keys_if_not_exist
 from app.db.db_populate import add_available_integrations_if_not_exist
+from app.db.db_populate import add_available_network_connectors_auth_keys_if_not_exist
+from app.db.db_populate import add_available_network_connectors_if_not_exist
 from app.db.db_populate import add_connectors_if_not_exist
 from app.db.db_populate import add_roles_if_not_exist
 from app.db.db_session import SQLALCHEMY_DATABASE_URI
@@ -209,6 +211,30 @@ async def create_available_integrations(async_engine):
         try:
             await add_available_integrations_if_not_exist(session)
             await add_available_integrations_auth_keys_if_not_exist(session)
+        except Exception as e:
+            logger.error(f"Error creating available integrations: {e}")
+            await session.rollback()  # Explicit rollback on error
+            raise  # Re-raise the exception to handle it further up the call stack
+        else:
+            await session.commit()  # Explicit commit if all operations are successful
+
+async def create_available_network_connectors(async_engine):
+    """
+    Creates available network connectors in the database.
+
+    Args:
+        async_engine (AsyncEngine): The async engine used to connect to the database.
+
+    Returns:
+        None
+    """
+    logger.info("Creating available network connectors")
+    async with AsyncSession(
+        async_engine,
+    ) as session:  # Create an AsyncSession, not just a connection
+        try:
+            await add_available_network_connectors_if_not_exist(session)
+            await add_available_network_connectors_auth_keys_if_not_exist(session)
         except Exception as e:
             logger.error(f"Error creating available integrations: {e}")
             await session.rollback()  # Explicit rollback on error

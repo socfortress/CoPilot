@@ -12,6 +12,7 @@ from app.integrations.models.customer_integration_settings import AvailableInteg
 from app.integrations.models.customer_integration_settings import (
     AvailableIntegrationsAuthKeys,
 )
+from app.network_connectors.models.network_connectors import AvailableNetworkConnectors, AvailableNetworkConnectorsKeys
 
 load_dotenv()
 
@@ -203,7 +204,7 @@ async def add_roles_if_not_exist(session: AsyncSession) -> None:
     await session.commit()  # Commit the transaction
     logger.info("Role check and addition completed.")
 
-
+# ! AVAILABLE THIRD PARTY INTEGRATIONS ! #
 def load_available_integrations_data(
     integration_name: str,
     description: str,
@@ -447,5 +448,234 @@ async def add_available_integrations_auth_keys_if_not_exist(session: AsyncSessio
                     )
         except Exception as e:
             logger.error(f"Error adding available integration auth keys: {e}")
+            raise e
+    await session.commit()
+
+
+
+
+# ! AVAILABLE NETWORK CONNECTORS ! #
+def load_available_network_connectors_data(
+    network_connector_name: str,
+    description: str,
+    network_connector_details: str,
+):
+    """
+    Load available network_connectors data from environment variables.
+
+    Args:
+        network_connector_name (str): The name of the network_connector.
+        description (str): The description of the network_connector.
+
+    Returns:
+        dict: A dictionary containing the network_connector data.
+    """
+    logger.info(f"Loading available network_connectors data for {network_connector_name}.")
+    return {
+        "network_connector_name": network_connector_name,
+        "description": description,
+        "network_connector_details": network_connector_details,
+    }
+
+
+def load_markdown_for_network_connector(network_connector_name: str) -> str:
+    """
+    Load markdown content for a given network_connector from a file.
+
+    Args:
+        network_connector_name (str): The name of the network_connector.
+
+    Returns:
+        str: The content of the markdown file.
+    """
+    # file_path = os.path.join("network_connectors_markdown", f"{network_connector_name.lower()}.md")
+    # if space in the network_connector name, replace it with underscore
+    if " " in network_connector_name:
+        network_connector_name = network_connector_name.replace(" ", "_")
+    file_path = os.path.join(
+        "app",
+        "network_connectors",
+        "markdown",
+        f"{network_connector_name.lower()}.md",
+    )
+    try:
+        with open(file_path, "r") as file:
+            return file.read()
+    except FileNotFoundError:
+        return "No deployment intrusctions available."
+
+
+def get_available_network_connectors_list():
+    """
+    Get a list of available network_connectors.
+
+    Returns:
+        list: A list of available network_connectors data, where each item contains the network_connector name, description, and markdown details.
+    """
+    available_network_connectors = [
+        ("Fortinet", "Integrate Fortinet with SOCFortress."),
+        # ... Add more available network_connectors as needed ...
+    ]
+
+    return [
+        load_available_network_connectors_data(
+            network_connector_name,
+            description,
+            load_markdown_for_network_connector(network_connector_name),
+        )
+        for network_connector_name, description in available_network_connectors
+    ]
+
+
+async def add_available_network_connectors_if_not_exist(session: AsyncSession):
+    """
+    Adds available network_connectors to the database if they do not already exist.
+
+    Args:
+        session (AsyncSession): The database session.
+
+    Returns:
+        None
+    """
+    available_network_connectors_list = get_available_network_connectors_list()
+
+    for available_network_connector_data in available_network_connectors_list:
+        try:
+            query = select(AvailableNetworkConnectors).where(
+                AvailableNetworkConnectors.network_connector_name == available_network_connector_data["network_connector_name"],
+            )
+            result = await session.execute(query)
+            existing_available_network_connector = result.scalars().first()
+
+            if existing_available_network_connector is None:
+                new_available_network_connector = AvailableNetworkConnectors(
+                    **available_network_connector_data,
+                )
+                logger.info(f"New available network_connector: {available_network_connector_data}")
+                session.add(new_available_network_connector)
+                logger.info(
+                    f"Added new available network_connector: {available_network_connector_data['network_connector_name']}",
+                )
+        except Exception as e:
+            logger.error(f"Error adding available network_connector: {e}")
+            await session.rollback()
+            raise e
+    await session.commit()
+    # Close the session
+    await session.close()
+
+
+def load_available_network_connectors_auth_keys(
+    network_connector_id: int,
+    network_connector_name: str,
+    auth_key_name: str,
+):
+    """
+    Load available network_connectors auth keys from environment variables.
+
+    Args:
+        network_connector_id (int): The ID of the network_connector.
+        network_connector_name (str): The name of the network_connector.
+        auth_key_name (str): The name of the auth key.
+
+    Returns:
+        dict: A dictionary containing the auth key data.
+    """
+    logger.info(
+        f"Loading available network_connectors auth keys data for {network_connector_name}.",
+    )
+    return {
+        "network_connector_id": network_connector_id,
+        "network_connector_name": network_connector_name,
+        "auth_key_name": auth_key_name,
+    }
+
+
+async def get_available_network_connectors_auth_keys_list(session: AsyncSession):
+    """
+    Get a list of available network_connectors auth keys with their corresponding network_connector IDs.
+
+    Args:
+        session (AsyncSession): The database session.
+
+    Returns:
+        list: A list of available network_connectors auth keys data, where each item contains the network_connector ID, network_connector name, and auth key name.
+    """
+    available_network_connectors_auth_keys = []
+    available_network_connectors = [
+        ("Fortinet", "SYSLOG_PORT"),
+
+        # ... Add more available network_connectors auth keys as needed ...
+    ]
+    logger.info("Getting available network_connectors auth keys.")
+    try:
+        for network_connector_name, auth_key_name in available_network_connectors:
+            query = select(AvailableNetworkConnectors.id).where(
+                AvailableNetworkConnectors.network_connector_name == network_connector_name,
+            )
+            result = await session.execute(query)
+            network_connector_id = result.scalars().first()
+            logger.info(f"Network Connector ID for {network_connector_name}: {network_connector_id}")
+            if network_connector_id:
+                logger.info(f"Found network_connector ID for {network_connector_name}: {network_connector_id}")
+                available_network_connectors_auth_keys.append(
+                    load_available_network_connectors_auth_keys(
+                        network_connector_id,
+                        network_connector_name,
+                        auth_key_name,
+                    ),
+                )
+
+        return available_network_connectors_auth_keys
+    except Exception as e:
+        logger.error(f"Error getting available network_connectors auth keys: {e}")
+        await session.rollback()
+        raise e
+
+
+async def add_available_network_connectors_auth_keys_if_not_exist(session: AsyncSession):
+    """
+    Adds available network_connectors auth keys to the database if they do not already exist.
+
+    Args:
+        session (AsyncSession): The database session.
+
+    Returns:
+        None
+    """
+    logger.info("Checking for existence of available network_connectors auth keys.")
+    available_network_connectors_auth_keys_list = await get_available_network_connectors_auth_keys_list(session=session)
+    logger.info("Adding available network_connectors auth keys to the database.")
+    for available_network_connector_auth_keys_data in available_network_connectors_auth_keys_list:
+        try:
+            query = select(AvailableNetworkConnectors).where(
+                AvailableNetworkConnectors.network_connector_name == available_network_connector_auth_keys_data["network_connector_name"],
+            )
+            result = await session.execute(query)
+            existing_network_connector = result.scalars().first()
+
+            if existing_network_connector:
+                available_network_connector_auth_keys_data["network_connector_id"] = existing_network_connector.id
+                auth_key_query = select(AvailableNetworkConnectorsKeys).where(
+                    and_(
+                        AvailableNetworkConnectorsKeys.network_connector_id == existing_network_connector.id,
+                        AvailableNetworkConnectorsKeys.auth_key_name == available_network_connector_auth_keys_data["auth_key_name"],
+                    ),
+                )
+                auth_key_result = await session.execute(auth_key_query)
+                existing_auth_key = auth_key_result.scalars().first()
+
+                if existing_auth_key is None:
+                    new_auth_key = AvailableNetworkConnectorsKeys(
+                        **available_network_connector_auth_keys_data,
+                    )
+                    session.add(new_auth_key)
+                    logger.info(
+                        f"Added new available network_connector auth keys: "
+                        f"{available_network_connector_auth_keys_data['auth_key_name']} for "
+                        f"{available_network_connector_auth_keys_data['network_connector_name']}",
+                    )
+        except Exception as e:
+            logger.error(f"Error adding available network_connector auth keys: {e}")
             raise e
     await session.commit()

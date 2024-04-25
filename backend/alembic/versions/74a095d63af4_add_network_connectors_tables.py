@@ -55,10 +55,10 @@ def upgrade() -> None:
     )
     op.create_table('available_network_connectors_keys',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('integration_id', sa.Integer(), nullable=True),
+    sa.Column('network_connector_id', sa.Integer(), nullable=True),
     sa.Column('network_connector_name', sa.String(length=255), nullable=False),
     sa.Column('auth_key_name', sa.String(length=255), nullable=False),
-    sa.ForeignKeyConstraint(['integration_id'], ['available_network_connectors.id'], ),
+    sa.ForeignKeyConstraint(['network_connector_id'], ['available_network_connectors.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('network_connectors_configs',

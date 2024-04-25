@@ -15,6 +15,7 @@ from app.db.db_session import async_engine
 from app.db.db_setup import add_connectors
 from app.db.db_setup import apply_migrations
 from app.db.db_setup import create_available_integrations
+from app.db.db_setup import create_available_network_connectors
 from app.db.db_setup import create_copilot_user_if_not_exists
 from app.db.db_setup import create_database_if_not_exists
 from app.db.db_setup import create_roles
@@ -151,6 +152,7 @@ async def init_db():
     await add_connectors(async_engine)
     await create_roles(async_engine)
     await create_available_integrations(async_engine)
+    await create_available_network_connectors(async_engine)
     await ensure_admin_user(async_engine)
     await ensure_scheduler_user(async_engine)
 

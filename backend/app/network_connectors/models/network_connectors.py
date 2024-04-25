@@ -22,7 +22,7 @@ class AvailableNetworkConnectors(SQLModel, table=True):
 class AvailableNetworkConnectorsKeys(SQLModel, table=True):
     __tablename__ = "available_network_connectors_keys"
     id: Optional[int] = Field(default=None, primary_key=True)
-    integration_id: int = Field(default=None, foreign_key="available_network_connectors.id")
+    network_connector_id: int = Field(default=None, foreign_key="available_network_connectors.id")
     network_connector_name: str = Field(max_length=255, nullable=False)
     auth_key_name: str = Field(max_length=255, nullable=False)
     # Relationships
