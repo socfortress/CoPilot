@@ -148,6 +148,40 @@ async def invoke_monitoring_alert(
 
     raise HTTPException(status_code=500, detail="Unknown alert source")
 
+@monitoring_alerts_router.delete(
+    "/{monitoring_alert_id}",
+    response_model=MonitoringAlertsResponseModel,
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def delete_monitoring_alert(
+    monitoring_alert_id: int,
+    session: AsyncSession = Depends(get_db),
+) -> MonitoringAlertsResponseModel:
+    """
+    Delete a monitoring alert.
+
+    Args:
+        monitoring_alert_id (int): The ID of the monitoring alert to delete.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        MonitoringAlertsResponseModel: The monitoring alert that was deleted.
+    """
+    logger.info(f"Deleting monitoring alert: {monitoring_alert_id}")
+    monitoring_alert = await session.execute(select(MonitoringAlerts).where(MonitoringAlerts.id == monitoring_alert_id))
+    monitoring_alert = monitoring_alert.scalars().first()
+    logger.info(f"Found monitoring alert: {monitoring_alert}")
+
+    if not monitoring_alert:
+        raise HTTPException(status_code=404, detail="Monitoring alert not found")
+
+    await session.delete(monitoring_alert)
+    await session.commit()
+
+    return MonitoringAlertsResponseModel(monitoring_alerts=[monitoring_alert],
+                                         success=True,
+                                         message="Monitoring alert deleted successfully")
+
 
 
 
