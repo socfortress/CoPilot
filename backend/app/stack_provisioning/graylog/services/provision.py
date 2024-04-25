@@ -6,7 +6,7 @@ from loguru import logger
 
 from app.connectors.graylog.services.content_packs import insert_content_pack
 from app.connectors.graylog.services.content_packs import install_content_pack
-from app.stack_provisioning.graylog.schema.provision import ProvisionGraylogResponse
+from app.stack_provisioning.graylog.schema.provision import ProvisionGraylogResponse, ContentPackKeywords, ProvisionContentPackRequest
 
 
 def get_content_pack_path(file_name: str) -> Path:
@@ -67,20 +67,45 @@ async def write_content_pack_to_file(content_pack: dict) -> None:
     with open(file_path, "w") as file:
         json.dump(content_pack, file, indent=4)
 
+async def replace_keywords(content_pack: dict, keywords: str) -> dict:
+    """
+    Function that checks if the below keywords exist within the content pack:
+        * customer_code
+        * CUSTOMER_NAME
+        * TCP_PORT
+        * UDP_PORT
 
-async def provision_content_pack(content_pack_name: str) -> ProvisionGraylogResponse:
+    If they do, replace them with the `keywords`
+
+    Args:
+        content_pack (dict): The content pack to replace the keywords in
+        keywords (str): The keywords to replace
+
+    Returns:
+        dict: The content pack with the keywords replaced
+    """
+    for keyword in ["customer_code", "CUSTOMER_NAME", "TCP_PORT", "UDP_PORT"]:
+        if keyword in content_pack:
+            content_pack[keyword] = keywords
+    return content_pack
+
+
+
+
+async def provision_content_pack(content_pack_request: ProvisionContentPackRequest) -> ProvisionGraylogResponse:
     """
     Provision the Wazuh Content Pack in the Graylog instance
     """
-    logger.info(f"Provisioning {content_pack_name} Content Pack...")
-    content_pack = load_content_pack_json(f"{content_pack_name}.json")
+    logger.info(f"Provisioning {content_pack_request.content_pack_name.name} Content Pack with keywords {content_pack_request.keywords} ...")
+    content_pack = load_content_pack_json(f"{content_pack_request.content_pack_name.name}.json")
     # ! Only for testing purposes
     # await write_content_pack_to_file(content_pack)
+    # return ProvisionGraylogResponse(success=True, message=f"{content_pack_request.content_pack_name.name} Content Pack provisioned successfully")
 
-    logger.info(f"Inserting {content_pack_name} Content Pack...")
+    logger.info(f"Inserting {content_pack_request.content_pack_name.name} Content Pack...")
     await insert_content_pack(content_pack)
     # ! Content Pack ID is found in the first `id` field and the revision is found in the first `rev` field
     id, rev = await get_id_and_rev(content_pack)
     logger.info(f"Id: {id}, Rev: {rev}")
     await install_content_pack(content_pack_id=id, revision=rev)
-    return ProvisionGraylogResponse(success=True, message=f"{content_pack_name} Content Pack provisioned successfully")
+    return ProvisionGraylogResponse(success=True, message=f"{content_pack_request.content_pack_name.name} Content Pack provisioned successfully")

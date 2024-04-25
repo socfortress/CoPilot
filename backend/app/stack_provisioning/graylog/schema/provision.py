@@ -1,6 +1,7 @@
 from enum import Enum
 from typing import Any
 from typing import List
+from typing import Optional
 
 from fastapi import HTTPException
 from pydantic import BaseModel
@@ -12,6 +13,12 @@ class AvailableContentPacks(str, Enum):
         "The Wazuh Content Pack which includes Input, Stream, Pipeline Rules,"
         " Pipelines, and Lookup Tables for Wazuh logs and the SOCFortress SIEM stack."
     )
+
+class ContentPackKeywords(BaseModel):
+    customer_name: Optional[str] = Field(None, description="Name of the customer")
+    customer_code: Optional[str] = Field(None, description="Code of the customer")
+    tcp_port: Optional[int] = Field(None, description="TCP port of the customer")
+    udp_port: Optional[int] = Field(None, description="UDP port of the customer")
 
 
 class ContentPack(BaseModel):
@@ -45,6 +52,10 @@ class ProvisionContentPackRequest(BaseModel):
         ...,
         example=AvailableContentPacks.SOCFORTRESS_WAZUH_CONTENT_PACK,
         description="The name of the content pack to provision in Graylog",
+    )
+    keywords: Optional[ContentPackKeywords] = Field(
+        None,
+        description="The keywords of the content pack to provision in Graylog",
     )
 
     def __init__(self, **data: Any):

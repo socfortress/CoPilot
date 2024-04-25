@@ -1,0 +1,102 @@
+{
+  "v": 1,
+  "id": "e89e15e5-ab02-4275-baf6-a854732304e7",
+  "rev": 1,
+  "name": "SOCFORTRESS_FORTINET_STREAM",
+  "summary": "SOCFORTRESS_FORTINET_STREAM",
+  "description": "",
+  "vendor": "SOCFortress",
+  "url": "",
+  "parameters": [],
+  "entities": [
+    {
+      "v": "1",
+      "type": {
+        "name": "stream",
+        "version": "1"
+      },
+      "id": "b3d3485c-6755-40be-8b56-c083db7da9e8",
+      "data": {
+        "alarm_callbacks": [],
+        "outputs": [],
+        "remove_matches": {
+          "@type": "boolean",
+          "@value": true
+        },
+        "title": {
+          "@type": "string",
+          "@value": "COMPANY_NAME - FORTINET LOGS AND EVENTS"
+        },
+        "stream_rules": [
+          {
+            "type": {
+              "@type": "string",
+              "@value": "EXACT"
+            },
+            "field": {
+              "@type": "string",
+              "@value": "syslog_type"
+            },
+            "value": {
+              "@type": "string",
+              "@value": "fortinet"
+            },
+            "inverted": {
+              "@type": "boolean",
+              "@value": false
+            },
+            "description": {
+              "@type": "string",
+              "@value": ""
+            }
+          },
+          {
+            "type": {
+              "@type": "string",
+              "@value": "EXACT"
+            },
+            "field": {
+              "@type": "string",
+              "@value": "syslog_customer"
+            },
+            "value": {
+              "@type": "string",
+              "@value": "customer_code"
+            },
+            "inverted": {
+              "@type": "boolean",
+              "@value": false
+            },
+            "description": {
+              "@type": "string",
+              "@value": ""
+            }
+          }
+        ],
+        "alert_conditions": [],
+        "matching_type": {
+          "@type": "string",
+          "@value": "AND"
+        },
+        "disabled": {
+          "@type": "boolean",
+          "@value": false
+        },
+        "description": {
+          "@type": "string",
+          "@value": "COMPANY_NAME - FORTINET LOGS AND EVENTS"
+        },
+        "default_stream": {
+          "@type": "boolean",
+          "@value": false
+        }
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=5.0.13+083613e"
+        }
+      ]
+    }
+  ]
+}

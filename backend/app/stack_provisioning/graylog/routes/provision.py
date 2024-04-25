@@ -135,8 +135,9 @@ async def provision_content_pack_route(
     """
     logger.info(f"Provisioning content pack {content_pack_request.content_pack_name.name}...")
     await system_version_check(compatible_version="5.0.13+083613e")
-    await does_content_pack_exist(content_pack_name=content_pack_request.content_pack_name.name)
-    await provision_content_pack(content_pack_request.content_pack_name.name)
+    #await does_content_pack_exist(content_pack_name=content_pack_request.content_pack_name.name)
+    #await provision_content_pack(content_pack_request.content_pack_name.name)
+    await provision_content_pack(content_pack_request)
     return ProvisionGraylogResponse(
         success=True,
         message=f"{content_pack_request.content_pack_name.name} Content Pack provisioned successfully",

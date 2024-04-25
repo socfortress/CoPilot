@@ -1,0 +1,126 @@
+{
+  "v": 1,
+  "id": "d78f5cba-223a-4e12-a337-9c4539bb05d9",
+  "rev": 1,
+  "name": "SOCFORTRESS_FORTINET_INPUT_SYSLOG_TCP",
+  "summary": "SOCFORTRESS_FORTINET_INPUT_SYSLOG_TCP",
+  "description": "",
+  "vendor": "SOCFortress",
+  "url": "",
+  "parameters": [],
+  "entities": [
+    {
+      "v": "1",
+      "type": {
+        "name": "input",
+        "version": "1"
+      },
+      "id": "86c918a0-6df5-4c79-9906-8e4ab87bfd6c",
+      "data": {
+        "title": {
+          "@type": "string",
+          "@value": "COMPANY_NAME - FORTINET LOGS AND EVENTS"
+        },
+        "configuration": {
+          "tls_key_file": {
+            "@type": "string",
+            "@value": "soc-syslog-manager"
+          },
+          "port": {
+            "@type": "integer",
+            "@value": TCP_PORT
+          },
+          "tls_enable": {
+            "@type": "boolean",
+            "@value": false
+          },
+          "use_null_delimiter": {
+            "@type": "boolean",
+            "@value": false
+          },
+          "recv_buffer_size": {
+            "@type": "integer",
+            "@value": 1048576
+          },
+          "tcp_keepalive": {
+            "@type": "boolean",
+            "@value": false
+          },
+          "force_rdns": {
+            "@type": "boolean",
+            "@value": false
+          },
+          "allow_override_date": {
+            "@type": "boolean",
+            "@value": false
+          },
+          "tls_client_auth_cert_file": {
+            "@type": "string",
+            "@value": ""
+          },
+          "bind_address": {
+            "@type": "string",
+            "@value": "0.0.0.0"
+          },
+          "tls_cert_file": {
+            "@type": "string",
+            "@value": ""
+          },
+          "expand_structured_data": {
+            "@type": "boolean",
+            "@value": false
+          },
+          "max_message_size": {
+            "@type": "integer",
+            "@value": 2097152
+          },
+          "store_full_message": {
+            "@type": "boolean",
+            "@value": false
+          },
+          "tls_client_auth": {
+            "@type": "string",
+            "@value": "disabled"
+          },
+          "charset_name": {
+            "@type": "string",
+            "@value": "UTF-8"
+          },
+          "number_worker_threads": {
+            "@type": "integer",
+            "@value": 4
+          },
+          "tls_key_password": {
+            "@type": "string",
+            "@value": "password"
+          }
+        },
+        "static_fields": {
+          "syslog_type": {
+            "@type": "string",
+            "@value": "fortinet"
+          },
+          "syslog_customer": {
+            "@type": "string",
+            "@value": "customer_code"
+          }
+        },
+        "type": {
+          "@type": "string",
+          "@value": "org.graylog2.inputs.syslog.tcp.SyslogTCPInput"
+        },
+        "global": {
+          "@type": "boolean",
+          "@value": true
+        },
+        "extractors": []
+      },
+      "constraints": [
+        {
+          "type": "server-version",
+          "version": ">=5.0.13+083613e"
+        }
+      ]
+    }
+  ]
+}
