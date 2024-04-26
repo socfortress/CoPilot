@@ -228,6 +228,7 @@ async def add_api_auth_to_office365_block(customer_code: str, provision_office36
         logger.error(f"An error occurred: {e}")
         # Print the full traceback
         import traceback
+        raise HTTPException(status_code=500, detail="Internal Server Error. Ensure that you do not have multiple `ossec_config` blocks within your wazuh-manager's ossec.conf file.")
 
         traceback.print_exc()
 
