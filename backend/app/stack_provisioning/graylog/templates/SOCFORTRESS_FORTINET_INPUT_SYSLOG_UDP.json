@@ -1,0 +1,90 @@
+{
+	"v": 1,
+	"id": "REPLACE_UUID_GLOBAL",
+	"rev": 1,
+	"name": "customer_name_FORTINET_INPUT_SYSLOG_UDP",
+	"summary": "customer_name_FORTINET_INPUT_SYSLOG_UDP",
+	"description": "",
+	"vendor": "SOCFortress",
+	"url": "",
+	"parameters": [],
+	"entities": [
+		{
+			"v": "1",
+			"type": {
+				"name": "input",
+				"version": "1"
+			},
+			"id": "REPLACE_UUID_SPECIFIC",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "customer_name - FORTINET LOGS AND EVENTS"
+				},
+				"configuration": {
+					"port": {
+						"@type": "integer",
+						"@value": "SYSLOG_PORT"
+					},
+					"recv_buffer_size": {
+						"@type": "integer",
+						"@value": 262144
+					},
+					"force_rdns": {
+						"@type": "boolean",
+						"@value": false
+					},
+					"allow_override_date": {
+						"@type": "boolean",
+						"@value": true
+					},
+					"bind_address": {
+						"@type": "string",
+						"@value": "0.0.0.0"
+					},
+					"expand_structured_data": {
+						"@type": "boolean",
+						"@value": false
+					},
+					"store_full_message": {
+						"@type": "boolean",
+						"@value": false
+					},
+					"charset_name": {
+						"@type": "string",
+						"@value": "UTF-8"
+					},
+					"number_worker_threads": {
+						"@type": "integer",
+						"@value": 8
+					}
+				},
+				"static_fields": {
+					"syslog_type": {
+						"@type": "string",
+						"@value": "fortinet"
+					},
+					"syslog_customer": {
+						"@type": "string",
+						"@value": "customer_code"
+					}
+				},
+				"type": {
+					"@type": "string",
+					"@value": "org.graylog2.inputs.syslog.udp.SyslogUDPInput"
+				},
+				"global": {
+					"@type": "boolean",
+					"@value": true
+				},
+				"extractors": []
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		}
+	]
+}

@@ -15,6 +15,7 @@ from app.db.db_session import async_engine
 from app.db.db_setup import add_connectors
 from app.db.db_setup import apply_migrations
 from app.db.db_setup import create_available_integrations
+from app.db.db_setup import create_available_network_connectors
 from app.db.db_setup import create_copilot_user_if_not_exists
 from app.db.db_setup import create_database_if_not_exists
 from app.db.db_setup import create_roles
@@ -49,6 +50,7 @@ from app.routers import logs
 from app.routers import mimecast
 from app.routers import modules
 from app.routers import monitoring_alert
+from app.routers import network_connectors
 from app.routers import office365
 from app.routers import sap_siem
 from app.routers import scheduler
@@ -136,6 +138,7 @@ api_router.include_router(huntress.router)
 api_router.include_router(license.router)
 api_router.include_router(modules.router)
 api_router.include_router(carbonblack.router)
+api_router.include_router(network_connectors.router)
 
 # Include the APIRouter in the FastAPI app
 app.include_router(api_router)
@@ -151,6 +154,7 @@ async def init_db():
     await add_connectors(async_engine)
     await create_roles(async_engine)
     await create_available_integrations(async_engine)
+    await create_available_network_connectors(async_engine)
     await ensure_admin_user(async_engine)
     await ensure_scheduler_user(async_engine)
 

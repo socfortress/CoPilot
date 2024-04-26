@@ -25,6 +25,12 @@ class MonitoringAlertsRequestModel(BaseModel):
         orm_mode = True
 
 
+class MonitoringAlertsResponseModel(BaseModel):
+    success: bool
+    message: str
+    monitoring_alerts: List[MonitoringAlertsRequestModel]
+
+
 class MonitoringWazuhAlertsRequestModel(BaseModel):
     customer_code: str
 

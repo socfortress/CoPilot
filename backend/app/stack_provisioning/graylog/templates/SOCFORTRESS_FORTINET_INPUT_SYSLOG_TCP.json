@@ -1,0 +1,126 @@
+{
+	"v": 1,
+	"id": "REPLACE_UUID_GLOBAL",
+	"rev": 1,
+	"name": "customer_name_FORTINET_INPUT_SYSLOG_TCP",
+	"summary": "customer_name_FORTINET_INPUT_SYSLOG_TCP",
+	"description": "",
+	"vendor": "SOCFortress",
+	"url": "",
+	"parameters": [],
+	"entities": [
+		{
+			"v": "1",
+			"type": {
+				"name": "input",
+				"version": "1"
+			},
+			"id": "REPLACE_UUID_SPECIFIC",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "customer_name - FORTINET LOGS AND EVENTS"
+				},
+				"configuration": {
+					"tls_key_file": {
+						"@type": "string",
+						"@value": "soc-syslog-manager"
+					},
+					"port": {
+						"@type": "integer",
+						"@value": "SYSLOG_PORT"
+					},
+					"tls_enable": {
+						"@type": "boolean",
+						"@value": false
+					},
+					"use_null_delimiter": {
+						"@type": "boolean",
+						"@value": false
+					},
+					"recv_buffer_size": {
+						"@type": "integer",
+						"@value": 1048576
+					},
+					"tcp_keepalive": {
+						"@type": "boolean",
+						"@value": false
+					},
+					"force_rdns": {
+						"@type": "boolean",
+						"@value": false
+					},
+					"allow_override_date": {
+						"@type": "boolean",
+						"@value": false
+					},
+					"tls_client_auth_cert_file": {
+						"@type": "string",
+						"@value": ""
+					},
+					"bind_address": {
+						"@type": "string",
+						"@value": "0.0.0.0"
+					},
+					"tls_cert_file": {
+						"@type": "string",
+						"@value": ""
+					},
+					"expand_structured_data": {
+						"@type": "boolean",
+						"@value": false
+					},
+					"max_message_size": {
+						"@type": "integer",
+						"@value": 2097152
+					},
+					"store_full_message": {
+						"@type": "boolean",
+						"@value": false
+					},
+					"tls_client_auth": {
+						"@type": "string",
+						"@value": "disabled"
+					},
+					"charset_name": {
+						"@type": "string",
+						"@value": "UTF-8"
+					},
+					"number_worker_threads": {
+						"@type": "integer",
+						"@value": 4
+					},
+					"tls_key_password": {
+						"@type": "string",
+						"@value": "password"
+					}
+				},
+				"static_fields": {
+					"syslog_type": {
+						"@type": "string",
+						"@value": "fortinet"
+					},
+					"syslog_customer": {
+						"@type": "string",
+						"@value": "customer_code"
+					}
+				},
+				"type": {
+					"@type": "string",
+					"@value": "org.graylog2.inputs.syslog.tcp.SyslogTCPInput"
+				},
+				"global": {
+					"@type": "boolean",
+					"@value": true
+				},
+				"extractors": []
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		}
+	]
+}

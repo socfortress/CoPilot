@@ -72,11 +72,12 @@ import Api from "@/api"
 import { useAuthStore } from "@/stores/auth"
 import passwordValidator from "password-validator"
 import Icon from "@/components/common/Icon.vue"
+import type { Size, Type } from "naive-ui/es/button/src/interface"
 
 const { type, size, username } = defineProps<{
 	username: string
-	size?: "tiny" | "small" | "medium" | "large"
-	type?: "default" | "tertiary" | "primary" | "info" | "success" | "warning" | "error"
+	size?: Size
+	type?: Type
 }>()
 
 const showFormDrawer = ref(false)

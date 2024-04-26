@@ -18,6 +18,8 @@ from app.customer_provisioning.schema.provision import GetSubscriptionsResponse
 from app.customer_provisioning.schema.provision import ProvisionDashboardRequest
 from app.customer_provisioning.schema.provision import ProvisionDashboardResponse
 from app.customer_provisioning.schema.provision import ProvisionNewCustomer
+from app.customer_provisioning.schema.provision import UpdateOffice365OrgIdRequest
+from app.customer_provisioning.schema.provision import UpdateOffice365OrgIdResponse
 from app.customer_provisioning.schema.wazuh_worker import ProvisionWorkerRequest
 from app.customer_provisioning.schema.wazuh_worker import ProvisionWorkerResponse
 from app.customer_provisioning.services.provision import provision_dashboards
@@ -363,4 +365,44 @@ async def provision_dashboards_route(
             datasourceUid=request.grafana_datasource_uid,
             grafana_url=request.grafana_url,
         ),
+    )
+
+
+@customer_provisioning_router.put(
+    "/update/office365_org_id/{customer_code}",
+    response_model=UpdateOffice365OrgIdResponse,
+    description="Update Office 365 organization ID",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def update_office_365_org_id(
+    customer_code: str,
+    request: UpdateOffice365OrgIdRequest = Body(...),
+    session: AsyncSession = Depends(get_db),
+):
+    """
+    Update Office 365 organization ID for a customer.
+
+    Args:
+        customer_code (str): The code of the customer to update.
+        request (UpdateOffice365OrgIdRequest): The request data for updating Office 365 organization ID.
+        session (AsyncSession): The database session.
+
+    Returns:
+        UpdateOffice365OrgIdResponse: The response data for the updated Office 365 organization ID.
+    """
+    logger.info("Updating Office 365 organization ID")
+    # Update within the `CustomersMeta` table based on the customer code
+    stmt = select(CustomersMeta).where(CustomersMeta.customer_code == customer_code)
+    result = await session.execute(stmt)
+    customer_meta = result.scalars().first()
+    if not customer_meta:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Customer meta not found for customer: {customer_code}. Please provision the customer first.",
+        )
+    customer_meta.customer_meta_office365_organization_id = request.office365_org_id
+    await session.commit()
+    return UpdateOffice365OrgIdResponse(
+        message="Office 365 organization ID updated successfully",
+        success=True,
     )

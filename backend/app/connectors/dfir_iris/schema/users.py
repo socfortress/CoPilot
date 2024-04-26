@@ -20,3 +20,8 @@ class UsersResponse(BaseModel):
 class UserAddedToCustomerResponse(BaseModel):
     success: bool
     message: str
+
+
+class UserRemovedFromCustomerResponse(BaseModel):
+    success: bool
+    message: str

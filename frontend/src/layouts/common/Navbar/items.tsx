@@ -13,10 +13,10 @@ const ArtifactsIcon = "carbon:document-multiple-01"
 const SOCIcon = "carbon:security"
 const HealthcheckIcon = "ph:heartbeat"
 const CustomersIcon = "carbon:user-multiple"
-const LogsIcon = "carbon:cloud-logging"
 const UsersIcon = "carbon:group-security"
 const IntegrationsIcon = "carbon:ibm-cloud-direct-link-2-dedicated"
 const ReportCreationIcon = "carbon:report-data"
+const SchedulerIcon = "material-symbols:autoplay"
 
 /*eslint @typescript-eslint/no-unused-vars: "off"*/
 export default function getItems(mode: "vertical" | "horizontal", collapsed: boolean): MenuMixedOption[] {
@@ -231,20 +231,6 @@ export default function getItems(mode: "vertical" | "horizontal", collapsed: boo
 					RouterLink,
 					{
 						to: {
-							name: "Logs"
-						}
-					},
-					{ default: () => "Logs" }
-				),
-			key: "Logs",
-			icon: renderIcon(LogsIcon)
-		},
-		{
-			label: () =>
-				h(
-					RouterLink,
-					{
-						to: {
 							name: "Users"
 						}
 					},
@@ -280,6 +266,20 @@ export default function getItems(mode: "vertical" | "horizontal", collapsed: boo
 				),
 			key: "ReportCreation",
 			icon: renderIcon(ReportCreationIcon)
+		},
+		{
+			label: () =>
+				h(
+					RouterLink,
+					{
+						to: {
+							name: "Scheduler"
+						}
+					},
+					{ default: () => "Scheduler" }
+				),
+			key: "Scheduler",
+			icon: renderIcon(SchedulerIcon)
 		}
 	]
 }

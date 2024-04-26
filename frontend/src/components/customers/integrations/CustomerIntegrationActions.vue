@@ -47,6 +47,7 @@ import Api from "@/api"
 import { computed, h, ref } from "vue"
 import { watch } from "vue"
 import type { CustomerIntegration } from "@/types/integrations.d"
+import type { Size } from "naive-ui/es/button/src/interface"
 
 const emit = defineEmits<{
 	(e: "startLoading"): void
@@ -58,7 +59,7 @@ const emit = defineEmits<{
 const { integration, hideDeleteButton, size } = defineProps<{
 	integration: CustomerIntegration
 	hideDeleteButton?: boolean
-	size?: "tiny" | "small" | "medium" | "large"
+	size?: Size
 }>()
 
 const DeployIcon = "carbon:deploy"

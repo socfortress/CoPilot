@@ -1,0 +1,350 @@
+{
+	"v": 1,
+	"id": "368ca3ae-4418-4bbb-b3b0-054d68a01751",
+	"rev": 1,
+	"name": "SOCFORTRESS_FORTINET_PROCESSING_PIPELINE",
+	"summary": "SOCFORTRESS_FORTINET_PROCESSING_PIPELINE",
+	"description": "",
+	"vendor": "SOCFortress",
+	"url": "",
+	"parameters": [],
+	"entities": [
+		{
+			"v": "1",
+			"type": {
+				"name": "pipeline",
+				"version": "1"
+			},
+			"id": "65608435-50d7-4652-8865-54787dfe5f0d",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "FORTINET PROCESSING PIPELINE"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "FORTINET PROCESSING PIPELINE"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "pipeline \"FORTINET PROCESSING PIPELINE\"\nstage 0 match pass\nrule \"FORTINET CREATE FIELD SYSLOG LEVEL - Alert\"\nrule \"FORTINET CREATE FIELD SYSLOG LEVEL - Critical\"\nrule \"FORTINET CREATE FIELD SYSLOG LEVEL - Debug\"\nrule \"FORTINET CREATE FIELD SYSLOG LEVEL - Emergency\"\nrule \"FORTINET CREATE FIELD SYSLOG LEVEL - Error\"\nrule \"FORTINET CREATE FIELD SYSLOG LEVEL - Informational\"\nrule \"FORTINET CREATE FIELD SYSLOG LEVEL - NOTICE\"\nrule \"FORTINET CREATE FIELD SYSLOG LEVEL - Warning\"\nstage 1 match pass\nrule \"DROP FORTINET SYSTEM WIRELESS LOGS - NOTICE\"\nrule \"DROP FORTINET TRAFFIC LOGS\"\nrule \"DROP FORTINET UTM APPCONTROL LOGS - INFORMATION\"\nend"
+				},
+				"connected_streams": []
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"v": "1",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"id": "90379b8d-82e2-4ea9-905d-6ddc65fb9a64",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "FORTINET CREATE FIELD SYSLOG LEVEL - Emergency"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "FORTINET CREATE FIELD SYSLOG LEVEL - Emergency"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"FORTINET CREATE FIELD SYSLOG LEVEL - Emergency\"\nwhen has_field(\"level\") AND to_long($message.level) == 0\nthen\nset_field(\"syslog_level\", \"Emergency\");\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"v": "1",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"id": "c53d3fc9-88bd-4c49-8543-c658867304d6",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "FORTINET CREATE FIELD SYSLOG LEVEL - Informational"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "FORTINET CREATE FIELD SYSLOG LEVEL - Informational"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"FORTINET CREATE FIELD SYSLOG LEVEL - Informational\"\nwhen has_field(\"level\") AND to_long($message.level) == 6\nthen\nset_field(\"syslog_level\", \"Informational\");\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"v": "1",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"id": "d8041d5a-5064-43db-bbbf-5d5806e7f42d",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "FORTINET CREATE FIELD SYSLOG LEVEL - NOTICE"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "FORTINET CREATE FIELD SYSLOG LEVEL - NOTICE"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"FORTINET CREATE FIELD SYSLOG LEVEL - NOTICE\"\nwhen has_field(\"level\") AND to_long($message.level) == 5\nthen\nset_field(\"syslog_level\", \"Notice\");\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"v": "1",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"id": "3a10b7c6-58e0-4445-8785-ec6f52700e74",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "FORTINET CREATE FIELD SYSLOG LEVEL - Warning"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "FORTINET CREATE FIELD SYSLOG LEVEL - Warning"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"FORTINET CREATE FIELD SYSLOG LEVEL - Warning\"\nwhen has_field(\"level\") AND to_long($message.level) == 4\nthen\nset_field(\"syslog_level\", \"Warning\");\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"v": "1",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"id": "fe239c28-c37b-4d0a-b08b-945c988bb052",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "DROP FORTINET SYSTEM WIRELESS LOGS - NOTICE"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "DROP FORTINET SYSTEM WIRELESS LOGS - NOTICE"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"DROP FORTINET SYSTEM WIRELESS LOGS - NOTICE\"\nwhen\n    $message.type == \"event\" AND $message.subtype == \"wireless\" AND $message.syslog_level == \"Notice\"\nthen\n    drop_message();\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"v": "1",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"id": "a7b13aff-50b7-4280-b612-0a4436aaccbc",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "FORTINET CREATE FIELD SYSLOG LEVEL - Error"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "FORTINET CREATE FIELD SYSLOG LEVEL - Error"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"FORTINET CREATE FIELD SYSLOG LEVEL - Error\"\nwhen has_field(\"level\") AND to_long($message.level) == 3\nthen\nset_field(\"syslog_level\", \"Error\");\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"v": "1",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"id": "ad4297a5-4e50-4780-9a23-cd59f560adeb",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "FORTINET CREATE FIELD SYSLOG LEVEL - Alert"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "FORTINET CREATE FIELD SYSLOG LEVEL - Alert"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"FORTINET CREATE FIELD SYSLOG LEVEL - Alert\"\nwhen has_field(\"level\") AND to_long($message.level) == 1\nthen\nset_field(\"syslog_level\", \"Alert\");\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"v": "1",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"id": "ed3c5523-1b06-4b2f-8be2-68077545ddca",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "DROP FORTINET TRAFFIC LOGS"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "DROP FORTINET TRAFFIC LOGS"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"DROP FORTINET TRAFFIC LOGS\"\nwhen\n    $message.type == \"traffic\"\nthen\n    drop_message();\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"v": "1",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"id": "73150f91-f0cc-4d9e-9e85-670f03f2d203",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "FORTINET CREATE FIELD SYSLOG LEVEL - Debug"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "FORTINET CREATE FIELD SYSLOG LEVEL - Debug"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"FORTINET CREATE FIELD SYSLOG LEVEL - Debug\"\nwhen has_field(\"level\") AND to_long($message.level) == 7\nthen\nset_field(\"syslog_level\", \"Debug\");\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"v": "1",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"id": "f361e1f9-c18c-43e7-bcb7-8e9ecd4e15af",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "DROP FORTINET UTM APPCONTROL LOGS - INFORMATION"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "DROP FORTINET UTM APPCONTROL LOGS - INFORMATION"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"DROP FORTINET UTM APPCONTROL LOGS - INFORMATION\"\nwhen\n    $message.type == \"utm\" AND $message.subtype == \"app\" AND $message.syslog_level == \"information\"\nthen\n    drop_message();\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"v": "1",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"id": "1642ba73-fc24-4613-bb3b-12f41a3a5e94",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "FORTINET CREATE FIELD SYSLOG LEVEL - Critical"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "FORTINET CREATE FIELD SYSLOG LEVEL - Critical"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"FORTINET CREATE FIELD SYSLOG LEVEL - Critical\"\nwhen has_field(\"level\") AND to_long($message.level) == 2\nthen\nset_field(\"syslog_level\", \"Critical\");\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		}
+	]
+}

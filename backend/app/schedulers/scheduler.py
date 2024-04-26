@@ -117,7 +117,12 @@ async def initialize_job_metadata():
         # Implement logic to initialize or update job metadata.
         # Example: Check and add metadata for each known job
         known_jobs = [
-            {"job_id": "agent_sync", "time_interval": 15, "function": agent_sync},
+            {
+                "job_id": "agent_sync",
+                "time_interval": 15,
+                "function": agent_sync,
+                "description": "Synchronizes agents with the Wazuh Manager and Velociraptor server.",
+            },
             # {"job_id": "invoke_mimecast_integration", "time_interval": 5, "function": invoke_mimecast_integration}
         ]
         for job in known_jobs:
@@ -131,6 +136,7 @@ async def initialize_job_metadata():
                     last_success=None,
                     time_interval=job["time_interval"],
                     enabled=True,
+                    job_description=job["description"],
                 )
                 session.add(job_metadata)
             else:

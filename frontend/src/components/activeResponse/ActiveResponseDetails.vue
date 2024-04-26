@@ -1,6 +1,6 @@
 <template>
 	<div class="active-response-details">
-		<n-spin :show="loadingActiveResponse">
+		<n-spin :show="loadingActiveResponse" class="min-h-48">
 			<Markdown v-if="activeResponseDetails?.markdown_content" :source="activeResponseDetails.markdown_content" />
 			<template v-else>
 				<n-empty description="No description found" class="justify-center h-48" v-if="!loadingActiveResponse" />

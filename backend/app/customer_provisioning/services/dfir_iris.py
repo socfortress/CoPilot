@@ -82,6 +82,13 @@ async def delete_customer(customer_id: int):
         None
     """
     client, admin = await initialize_client_and_admin("DFIR-IRIS")
-    result = await fetch_and_validate_data(client, admin.delete_customer, customer_id)
+    try:
+        result = await fetch_and_validate_data(client, admin.delete_customer, customer_id)
+    except Exception as e:
+        logger.error(f"Failed to delete customer: please remove the user from the iris customer within DFIR-IRIS {e}")
+        raise HTTPException(
+            status_code=400,
+            detail="Failed to delete IRIS customer: please remove the user from the iris customer within DFIR-IRIS",
+        )
     logger.info(f"Result: {result}")
     return None

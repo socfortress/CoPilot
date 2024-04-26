@@ -16,4 +16,5 @@ async def execute_integration(request: IntegrationRequest) -> dict:
     """
     logger.info(f"Executing integration: {request}")
     response = await send_post_request("/api/v1/apps/categories/run", request.dict())
+    logger.info(f"Response: {response}")
     return response

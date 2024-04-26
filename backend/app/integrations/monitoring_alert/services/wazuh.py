@@ -162,7 +162,16 @@ async def fetch_wazuh_indexer_details(alert_id: str, index: str) -> WazuhAlertMo
     )
 
     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
-    response = es_client.get(index=index, id=alert_id)
+    logger.info(f"Fetching alert from wazuh-indexer: {alert_id}")
+    try:
+        response = es_client.get(index=index, id=alert_id)
+    except Exception as e:
+        logger.info(f"Error fetching alert from wazuh-indexer: {e}")
+        raise HTTPException(
+            status_code=404,
+            detail=f"Alert not found in Wazuh-Indexer index: {index} with ID: {alert_id}",
+        )
+    logger.info(f"Alert retrieved from wazuh-indexer: {response}")
 
     return WazuhAlertModel(**response)
 
@@ -515,8 +524,10 @@ async def analyze_wazuh_alerts(
         WazuhAnalysisResponse: The analysis response.
     """
     logger.info(f"Analyzing Wazuh alerts with customer_meta: {customer_meta}")
+    logger.info(f"Analyzing Wazuh alerts: {monitoring_alerts}")
     alert_detail_service = await AlertDetailsService.create()
     for alert in monitoring_alerts:
+        logger.info(f"Analyzing Wazuh alert: {alert.alert_id}")
         alert_details = await fetch_alert_details(alert)
         await check_event_exclusion(alert_details, alert_detail_service, session)
         iris_alert_id = await check_if_open_alert_exists_in_iris(alert_details, session=session)

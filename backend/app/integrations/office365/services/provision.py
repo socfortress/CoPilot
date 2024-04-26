@@ -46,6 +46,7 @@ from app.customer_provisioning.services.grafana import create_grafana_folder
 from app.customer_provisioning.services.grafana import get_opensearch_version
 from app.customers.routes.customers import get_customer
 from app.customers.routes.customers import get_customer_meta
+from app.db.universal_models import CustomersMeta
 from app.integrations.models.customer_integration_settings import CustomerIntegrations
 from app.integrations.office365.schema.provision import PipelineRuleTitles
 from app.integrations.office365.schema.provision import PipelineTitles
@@ -225,10 +226,10 @@ async def add_api_auth_to_office365_block(customer_code: str, provision_office36
 
     except Exception as e:
         logger.error(f"An error occurred: {e}")
-        # Print the full traceback
-        import traceback
-
-        traceback.print_exc()
+        raise HTTPException(
+            status_code=500,
+            detail="Error found in ossec.conf. Multiple <ossec_config> blocks found. Remove all additional <ossec_config> blocks and try again.",
+        )
 
 
 async def update_wazuh_configuration(
@@ -918,6 +919,7 @@ async def provision_office365(
     )
 
     await update_customer_integration_table(customer_code, session)
+    await update_customermeta_table(customer_code, session, provision_office365_auth_keys.TENANT_ID)
 
     return ProvisionOffice365Response(
         success=True,
@@ -947,6 +949,22 @@ async def update_customer_integration_table(
             ),
         )
         .values(deployed=True),
+    )
+    await session.commit()
+
+    return None
+
+
+async def update_customermeta_table(customer_code: str, session: AsyncSession, tenant_id: str) -> None:
+    """
+    Updates the `customer_meta` table to set the `office365_tenant_id` column to the given tenant_id.
+
+    Args:
+        customer_code (str): The customer code.
+        session (AsyncSession): The async session object for making HTTP requests.
+    """
+    await session.execute(
+        update(CustomersMeta).where(CustomersMeta.customer_code == customer_code).values(customer_meta_office365_organization_id=tenant_id),
     )
     await session.commit()
 
