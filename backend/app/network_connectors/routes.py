@@ -364,8 +364,8 @@ async def find_customer_network_connector(
     customer_network_connector_response,
 ) -> Optional[CustomerNetworkConnectors]:
     for ci in customer_network_connector_response.available_network_connectors:
-        for subscription in ci.network_connector_subscriptions:
-            if subscription.network_connector_service.service_name == network_connector_name:
+        for subscription in ci.network_connectors_subscriptions:
+            if subscription.network_connectors_service.service_name == network_connector_name:
                 return ci
     return None
 

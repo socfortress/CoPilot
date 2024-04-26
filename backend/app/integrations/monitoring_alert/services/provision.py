@@ -47,7 +47,7 @@ from app.integrations.monitoring_alert.schema.provision import (
 from app.integrations.monitoring_alert.schema.provision import (
     ProvisionWazuhMonitoringAlertResponse,
 )
-from app.stack_provisioning.graylog.routes.provision import get_graylog_version
+from app.stack_provisioning.graylog.services.utils import get_graylog_version
 
 load_dotenv()
 import uuid
