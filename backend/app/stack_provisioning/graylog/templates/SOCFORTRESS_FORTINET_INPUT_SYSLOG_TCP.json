@@ -1,9 +1,9 @@
 {
   "v": 1,
-  "id": "d78f5cba-223a-4e12-a337-9c4539bb05d9",
+  "id": "REPLACE_UUID_GLOBAL",
   "rev": 1,
-  "name": "SOCFORTRESS_FORTINET_INPUT_SYSLOG_TCP",
-  "summary": "SOCFORTRESS_FORTINET_INPUT_SYSLOG_TCP",
+  "name": "customer_name_FORTINET_INPUT_SYSLOG_TCP",
+  "summary": "customer_name_FORTINET_INPUT_SYSLOG_TCP",
   "description": "",
   "vendor": "SOCFortress",
   "url": "",
@@ -15,11 +15,11 @@
         "name": "input",
         "version": "1"
       },
-      "id": "86c918a0-6df5-4c79-9906-8e4ab87bfd6c",
+      "id": "REPLACE_UUID_SPECIFIC",
       "data": {
         "title": {
           "@type": "string",
-          "@value": "COMPANY_NAME - FORTINET LOGS AND EVENTS"
+          "@value": "customer_name - FORTINET LOGS AND EVENTS"
         },
         "configuration": {
           "tls_key_file": {
@@ -28,7 +28,7 @@
           },
           "port": {
             "@type": "integer",
-            "@value": TCP_PORT
+            "@value": "SYSLOG_PORT"
           },
           "tls_enable": {
             "@type": "boolean",
