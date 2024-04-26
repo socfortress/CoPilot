@@ -1,27 +1,42 @@
 <template>
 	<div class="job-actions flex flex-col gap-3" :class="{ '!flex-row': inline }">
-		<n-button :size="size" type="success" secondary @click="showForm = true" :loading="loading">
-			<div class="flex items-center gap-2">
-				<Icon :name="StartIcon" :size="16"></Icon>
-				Start
-			</div>
-		</n-button>
-		<div class="flex gap-3">
-			<n-button :size="size" type="success" secondary @click="showForm = true" :loading="loading">
-				<div class="flex items-center gap-2">
+		<div class="flex gap-3 items-center">
+			<n-button
+				:size="size"
+				:type="job.enabled ? 'warning' : 'success'"
+				secondary
+				@click="toggleState()"
+				:loading="loadingAction"
+				class="grow"
+			>
+				<template #icon>
+					<Icon :name="job.enabled ? PauseIcon : StartIcon"></Icon>
+				</template>
+				{{ job.enabled ? "Pause" : "Start" }}
+			</n-button>
+
+			<NextTooltip :job-id="job.id" v-if="job.enabled && !inline" />
+		</div>
+		<div class="flex gap-3 items-center">
+			<n-button :size="size" type="success" secondary @click="run()" :loading="loadingRun">
+				<template #icon>
 					<Icon :name="RunIcon"></Icon>
-					Run once
-				</div>
+				</template>
+				Run once
 			</n-button>
-			<n-button :size="size" secondary @click="showForm = true" :loading="loading">
-				<div class="flex items-center gap-2">
+			<n-button :size="size" secondary @click="showForm = true" :loading="loadingUpdate">
+				<template #icon>
 					<Icon :name="UpdatedIcon"></Icon>
-				</div>
+				</template>
 			</n-button>
+
+			<NextTooltip :job-id="job.id" v-if="job.enabled && inline" />
 		</div>
 	</div>
 
-	<n-modal
+	<!--
+
+		<n-modal
 		v-model:show="showForm"
 		display-directive="show"
 		preset="card"
@@ -29,18 +44,20 @@
 		title="Create a Custom Alert"
 		:bordered="false"
 		segmented
-	>
+		>
 		<CustomAlertForm @mounted="formCTX = $event" v-model:loading="loading" />
 	</n-modal>
-</template>
+--></template>
 
 <script setup lang="ts">
 import { ref, toRefs, watch } from "vue"
-import { NButton, NModal } from "naive-ui"
+import { NButton, NModal, NTooltip, NPopover, NSpin, useMessage } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import CustomAlertForm from "./CustomAlertForm.vue"
+import NextTooltip from "./NextTooltip.vue"
 import type { Job } from "@/types/scheduler"
 import type { Size } from "naive-ui/es/button/src/interface"
+import Api from "@/api"
 
 const props = defineProps<{ job: Job; size?: Size; inline?: boolean }>()
 const { job, size, inline } = toRefs(props)
@@ -50,13 +67,61 @@ const PauseIcon = "carbon:pause-filled"
 const RunIcon = "carbon:play"
 const UpdatedIcon = "carbon:settings-adjust"
 
+const message = useMessage()
 const formCTX = ref<{ reset: () => void } | null>(null)
 const showForm = ref(false)
-const loading = ref(false)
+const loadingRun = ref(false)
+const loadingAction = ref(false)
+const loadingUpdate = ref(false)
 
 watch(showForm, val => {
 	if (val) {
 		formCTX.value?.reset()
 	}
 })
+
+function toggleState() {
+	loadingAction.value = true
+
+	const action = job.value.enabled ? "pause" : "start"
+
+	Api.scheduler
+		.jobAction(job.value.id, action)
+		.then(res => {
+			if (res.data.success) {
+				job.value.enabled = action === "start"
+				message.success(res.data?.message || "Job updated successfully.")
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			loadingAction.value = false
+		})
+}
+
+function run() {
+	loadingRun.value = true
+
+	Api.scheduler
+		.jobAction(job.value.id, "run")
+		.then(res => {
+			if (res.data.success) {
+				// TODO: check timezone with Taylor
+				job.value.last_success = new Date()
+				message.success(res.data?.message || "Job executed successfully.")
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			loadingRun.value = false
+		})
+}
 </script>
