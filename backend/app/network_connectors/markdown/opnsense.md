@@ -9,8 +9,6 @@ To configure a remote syslog server in OPNsense, follow these steps:
 ### Step 2: Configuring the Syslog Server
 Navigate to System Logs:
   - In the OPNsense web interface, go to *System* > *Settings* > *Logging*.
-
-### Step 3: Saving the Configuration
 Configure Remote Syslog Server:
 - Check the box next to *Enable Remote Logging* to enable remote logging.
 - Enter the IP address or hostname of your remote syslog server in the *Remote log servers* field.
