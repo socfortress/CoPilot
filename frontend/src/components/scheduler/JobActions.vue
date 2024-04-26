@@ -34,30 +34,29 @@
 		</div>
 	</div>
 
-	<!--
-
-		<n-modal
+	<n-modal
 		v-model:show="showForm"
 		display-directive="show"
 		preset="card"
-		:style="{ maxWidth: 'min(600px, 90vw)', minHeight: 'min(300px, 90vh)', overflow: 'hidden' }"
-		title="Create a Custom Alert"
+		:style="{ maxWidth: 'min(450px, 90vw)', minHeight: 'min(300px, 90vh)', overflow: 'hidden' }"
+		:title="`Update ${job.name}`"
 		:bordered="false"
 		segmented
-		>
-		<CustomAlertForm @mounted="formCTX = $event" v-model:loading="loading" />
+	>
+		<JobForm @updated="update($event)" :job="job" />
 	</n-modal>
---></template>
+</template>
 
 <script setup lang="ts">
-import { ref, toRefs, watch } from "vue"
-import { NButton, NModal, NTooltip, NPopover, NSpin, useMessage } from "naive-ui"
+import { ref, toRefs } from "vue"
+import { NButton, NModal, useMessage } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
-import CustomAlertForm from "./CustomAlertForm.vue"
+import JobForm from "./JobForm.vue"
 import NextTooltip from "./NextTooltip.vue"
 import type { Job } from "@/types/scheduler"
 import type { Size } from "naive-ui/es/button/src/interface"
 import Api from "@/api"
+import type { UpdateJobPayload } from "@/api/scheduler"
 
 const props = defineProps<{ job: Job; size?: Size; inline?: boolean }>()
 const { job, size, inline } = toRefs(props)
@@ -68,17 +67,10 @@ const RunIcon = "carbon:play"
 const UpdatedIcon = "carbon:settings-adjust"
 
 const message = useMessage()
-const formCTX = ref<{ reset: () => void } | null>(null)
 const showForm = ref(false)
 const loadingRun = ref(false)
 const loadingAction = ref(false)
 const loadingUpdate = ref(false)
-
-watch(showForm, val => {
-	if (val) {
-		formCTX.value?.reset()
-	}
-})
 
 function toggleState() {
 	loadingAction.value = true
@@ -123,5 +115,10 @@ function run() {
 		.finally(() => {
 			loadingRun.value = false
 		})
+}
+
+function update(payload: UpdateJobPayload) {
+	showForm.value = false
+	job.value.time_interval = payload.time_interval
 }
 </script>
