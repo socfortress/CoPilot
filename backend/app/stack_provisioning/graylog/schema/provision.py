@@ -13,18 +13,12 @@ class AvailableContentPacks(str, Enum):
         "The Wazuh Content Pack which includes Input, Stream, Pipeline Rules,"
         " Pipelines, and Lookup Tables for Wazuh logs and the SOCFortress SIEM stack."
     )
-    SOCFORTRESS_FORTINET_INPUT_SYSLOG_TCP = (
-        "The Fortinet Input Syslog TCP content pack"
-    )
-    SOCFORTRESS_FORTINET_INPUT_SYSLOG_UDP = (
-        "The Fortinet Input Syslog UDP content pack"
-    )
-    SOCFORTRESS_FORTINET_PROCESSING_PIPELINE = (
-        "The Fortinet Processing Pipeline content pack"
-    )
-    SOCFORTRESS_FORTINET_STREAM = (
-        "The Fortinet Stream content pack"
-    )
+    # ! COMMENTING OUT UNTIL READY ! #
+    # SOCFORTRESS_FORTINET_INPUT_SYSLOG_TCP = "The Fortinet Input Syslog TCP content pack"
+    # SOCFORTRESS_FORTINET_INPUT_SYSLOG_UDP = "The Fortinet Input Syslog UDP content pack"
+    # SOCFORTRESS_FORTINET_PROCESSING_PIPELINE = "The Fortinet Processing Pipeline content pack"
+    # SOCFORTRESS_FORTINET_STREAM = "The Fortinet Stream content pack"
+
 
 class ContentPackKeywords(BaseModel):
     customer_name: Optional[str] = Field(None, description="Name of the customer")
@@ -65,6 +59,7 @@ class AvailableContentPacksResponse(BaseModel):
         example="Available content packs retrieved successfully",
         description="Message from the request to get available content packs",
     )
+
 
 class ProvisionNetworkContentPackRequest(BaseModel):
     content_pack_name: str = Field(
@@ -112,6 +107,7 @@ class ProvisionGraylogResponse(BaseModel):
         example="Graylog provisioned successfully",
         description="Message from the Graylog provisioning",
     )
+
 
 class ReplaceContentPackKeywords(BaseModel):
     REPLACE_UUID_GLOBAL: str = Field(

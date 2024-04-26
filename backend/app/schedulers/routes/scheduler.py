@@ -80,7 +80,6 @@ async def manage_job_metadata(session, job_id, action, **kwargs):
     return job_metadata
 
 
-
 @scheduler_router.get("", response_model=JobsResponse, description="Get all jobs")
 async def get_all_jobs(session: AsyncSession = Depends(get_db)) -> JobsResponse:
     """

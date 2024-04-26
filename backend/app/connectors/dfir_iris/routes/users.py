@@ -7,7 +7,8 @@ from loguru import logger
 from app.auth.utils import AuthHandler
 from app.connectors.dfir_iris.schema.alerts import AlertResponse
 from app.connectors.dfir_iris.schema.users import User
-from app.connectors.dfir_iris.schema.users import UserAddedToCustomerResponse, UserRemovedFromCustomerResponse
+from app.connectors.dfir_iris.schema.users import UserAddedToCustomerResponse
+from app.connectors.dfir_iris.schema.users import UserRemovedFromCustomerResponse
 from app.connectors.dfir_iris.schema.users import UsersResponse
 from app.connectors.dfir_iris.services.users import assign_user_to_alert
 from app.connectors.dfir_iris.services.users import delete_user_from_alert
@@ -133,6 +134,7 @@ async def add_user_to_customers_route(
     else:
         raise HTTPException(status_code=400, detail=f"Failed to add user {user_id} to customers {customers}")
 
+
 @dfir_iris_users_router.delete(
     "/remove/{user_id}/{customer_id}",
     response_model=AlertResponse,
@@ -169,6 +171,7 @@ async def remove_user_from_customer_route(
         return UserRemovedFromCustomerResponse(message=f"User {user_id} removed from customer {customer_id}", success=True)
     else:
         raise HTTPException(status_code=400, detail=f"Failed to remove user {user_id} from customer {customer_id}")
+
 
 @dfir_iris_users_router.delete(
     "/assign/{alert_id}/{user_id}",

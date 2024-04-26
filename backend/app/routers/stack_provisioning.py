@@ -1,10 +1,10 @@
 from fastapi import APIRouter
 
-from app.stack_provisioning.graylog.routes.provision import (
-    stack_provisioning_graylog_router,
-)
 from app.stack_provisioning.graylog.routes.fortinet import (
     stack_provisioning_graylog_fortinet_router,
+)
+from app.stack_provisioning.graylog.routes.provision import (
+    stack_provisioning_graylog_router,
 )
 
 # Instantiate the APIRouter

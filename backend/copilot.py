@@ -45,12 +45,12 @@ from app.routers import healthcheck
 from app.routers import huntress
 from app.routers import influxdb
 from app.routers import integrations
-from app.routers import network_connectors
 from app.routers import license
 from app.routers import logs
 from app.routers import mimecast
 from app.routers import modules
 from app.routers import monitoring_alert
+from app.routers import network_connectors
 from app.routers import office365
 from app.routers import sap_siem
 from app.routers import scheduler

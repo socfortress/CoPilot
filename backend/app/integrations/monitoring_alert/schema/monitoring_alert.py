@@ -14,7 +14,6 @@ from app.integrations.alert_creation.general.schema.alert import IrisAsset
 from app.integrations.alert_creation.general.schema.alert import IrisIoc
 
 
-
 class MonitoringAlertsRequestModel(BaseModel):
     id: Optional[int] = None
     alert_id: str
@@ -25,10 +24,12 @@ class MonitoringAlertsRequestModel(BaseModel):
     class Config:
         orm_mode = True
 
+
 class MonitoringAlertsResponseModel(BaseModel):
     success: bool
     message: str
     monitoring_alerts: List[MonitoringAlertsRequestModel]
+
 
 class MonitoringWazuhAlertsRequestModel(BaseModel):
     customer_code: str

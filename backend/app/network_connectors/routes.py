@@ -25,8 +25,8 @@ from app.network_connectors.models.network_connectors import CustomerNetworkConn
 from app.network_connectors.models.network_connectors import (
     CustomerNetworkConnectorsMeta,
 )
-from app.network_connectors.models.network_connectors import NetworkConnectorsKeys
 from app.network_connectors.models.network_connectors import NetworkConnectorsConfig
+from app.network_connectors.models.network_connectors import NetworkConnectorsKeys
 from app.network_connectors.models.network_connectors import NetworkConnectorsService
 from app.network_connectors.models.network_connectors import (
     NetworkConnectorsSubscription,
@@ -259,7 +259,6 @@ async def create_network_connector_subscription(
     """
     Create NetworkConnectorsSubscription instance.
     """
-    logger.info(f"network_connector_auth_keys: {network_connector_auth_keys}, network_connector_service: {network_connector_service}, customer_network_connectors: {customer_network_connectors}")
     for auth_key in network_connector_auth_keys:
         new_network_connector_subscription = NetworkConnectorsSubscription(
             customer_network_connectors=customer_network_connectors,
@@ -273,7 +272,6 @@ async def create_network_connector_subscription(
         )
         session.add(new_network_connector_subscription)
         await session.commit()
-
 
 
 async def get_customer_and_service_ids(session, customer_code, network_connector_name):
@@ -503,7 +501,9 @@ def process_customer_network_connectors(customer_network_connectors_data):
     """
     processed_customer_network_connectors = []
     for ci in customer_network_connectors_data:
-        first_service_id = ci.network_connectors_subscriptions[0].network_connectors_service_id if ci.network_connectors_subscriptions else None
+        first_service_id = (
+            ci.network_connectors_subscriptions[0].network_connectors_service_id if ci.network_connectors_subscriptions else None
+        )
         customer_network_connector_obj = CustomerNetworkConnectors(
             id=ci.id,
             customer_code=ci.customer_code,
@@ -697,12 +697,8 @@ async def create_network_connector(
         network_connector_service_name=network_connector_service_name,
         session=session,
     )
-    logger.info(
-        "Getting customer network_connector auth keys for subscription creation."
-    )
-    logger.info(
-        f"Customer Network Connectors: {customer_network_connectors}"
-    )
+    logger.info("Getting customer network_connector auth keys for subscription creation.")
+    logger.info(f"Customer Network Connectors: {customer_network_connectors}")
     await create_network_connector_subscription(
         customer_network_connectors,
         network_connector_service,

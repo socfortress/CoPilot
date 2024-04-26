@@ -1,30 +1,27 @@
-from fastapi import APIRouter
-from fastapi import Security
-from loguru import logger
-from fastapi import Depends
-from fastapi import HTTPException
 from typing import Dict
 
-from app.auth.utils import AuthHandler
-from app.stack_provisioning.graylog.schema.provision import AvailableContentPacks
-from app.stack_provisioning.graylog.schema.provision import (
-    AvailableContentPacksResponse,
-)
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import Security
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
-from app.stack_provisioning.graylog.schema.fortinet import ProvisionFortinetRequest, ProvisionFortinetResponse, ProvisionFortinetKeys
-from app.stack_provisioning.graylog.schema.provision import ProvisionContentPackRequest
-from app.stack_provisioning.graylog.schema.provision import ProvisionGraylogResponse
-from app.stack_provisioning.graylog.services.provision import provision_content_pack
-from app.stack_provisioning.graylog.services.utils import system_version_check, does_content_pack_exist
+from app.network_connectors.routes import find_customer_network_connector
+from app.network_connectors.routes import (
+    get_customer_network_connectors_by_customer_code,
+)
 from app.network_connectors.schema import CustomerNetworkConnectors
 from app.network_connectors.schema import CustomerNetworkConnectorsResponse
-from app.network_connectors.routes import get_customer_network_connectors_by_customer_code
 from app.stack_provisioning.graylog.schema.fortinet import FortinetCustomerDetails
-from app.network_connectors.routes import find_customer_network_connector
+from app.stack_provisioning.graylog.schema.fortinet import ProvisionFortinetKeys
+from app.stack_provisioning.graylog.schema.fortinet import ProvisionFortinetRequest
+from app.stack_provisioning.graylog.schema.fortinet import ProvisionFortinetResponse
 from app.stack_provisioning.graylog.services.fortinet import provision_fortinet
 
 stack_provisioning_graylog_fortinet_router = APIRouter()
+
 
 async def get_customer_integration_response(
     customer_code: str,
@@ -82,6 +79,7 @@ def extract_fortinet_keys(
         )
     return fortinet_keys
 
+
 @stack_provisioning_graylog_fortinet_router.post(
     "/graylog/provision/fortinet",
     response_model=ProvisionFortinetResponse,
@@ -124,12 +122,12 @@ async def provision_fortinet_route(
         )
 
     return await provision_fortinet(
-        customer_details = FortinetCustomerDetails(
-            customer_code = provision_fortinet_request.customer_code,
-            customer_name = customer_integration.customer_name,
-            protocal_type = protocol_type,
-            syslog_port = int(fortinet_keys["SYSLOG_PORT"]),
+        customer_details=FortinetCustomerDetails(
+            customer_code=provision_fortinet_request.customer_code,
+            customer_name=customer_integration.customer_name,
+            protocal_type=protocol_type,
+            syslog_port=int(fortinet_keys["SYSLOG_PORT"]),
         ),
-        keys = ProvisionFortinetKeys(**fortinet_keys),
-        session = session,
+        keys=ProvisionFortinetKeys(**fortinet_keys),
+        session=session,
     )

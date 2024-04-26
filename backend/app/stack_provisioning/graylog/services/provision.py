@@ -1,14 +1,21 @@
 import json
 from pathlib import Path
+from uuid import uuid4
 
 from fastapi import HTTPException
 from loguru import logger
-from uuid import uuid4
 
 from app.connectors.graylog.services.content_packs import insert_content_pack
 from app.connectors.graylog.services.content_packs import install_content_pack
-from app.stack_provisioning.graylog.schema.provision import AvailableContentPacks, ProvisionGraylogResponse, ContentPackKeywords, ProvisionContentPackRequest, ProvisionNetworkContentPackRequest, ReplaceContentPackKeywords
+from app.stack_provisioning.graylog.schema.provision import AvailableContentPacks
+from app.stack_provisioning.graylog.schema.provision import ProvisionContentPackRequest
+from app.stack_provisioning.graylog.schema.provision import ProvisionGraylogResponse
+from app.stack_provisioning.graylog.schema.provision import (
+    ProvisionNetworkContentPackRequest,
+)
+from app.stack_provisioning.graylog.schema.provision import ReplaceContentPackKeywords
 from app.stack_provisioning.graylog.services.utils import does_content_pack_exist
+
 
 def get_content_pack_path(file_name: str) -> Path:
     """
@@ -89,6 +96,7 @@ async def retrieve_valid_content_packs(content_pack_type: str) -> list:
             valid_content_pack_names.append(content_pack)
     return valid_content_pack_names
 
+
 def replace_keywords_in_json_complex(data, replacements):
     """
     Recursively replace specified keywords in JSON data, including within strings, with the provided values in the replacements dictionary.
@@ -111,6 +119,7 @@ def replace_keywords_in_json_complex(data, replacements):
     else:
         return data
 
+
 def convert_port_value_to_int(data):
     """
     Recursively navigates through a JSON-like dictionary and converts the port value to an integer.
@@ -123,10 +132,10 @@ def convert_port_value_to_int(data):
     """
     if isinstance(data, dict):
         for key, value in data.items():
-            if key == 'port' and isinstance(value, dict) and '@value' in value and isinstance(value['@value'], str):
+            if key == "port" and isinstance(value, dict) and "@value" in value and isinstance(value["@value"], str):
                 try:
                     # Convert the string to an integer
-                    value['@value'] = int(value['@value'])
+                    value["@value"] = int(value["@value"])
                 except ValueError:
                     # Handle the case where the string cannot be converted to an integer
                     pass
@@ -139,14 +148,13 @@ def convert_port_value_to_int(data):
     return data
 
 
-
-
-
 async def provision_content_pack(content_pack_request: ProvisionContentPackRequest) -> ProvisionGraylogResponse:
     """
     Provision the Wazuh Content Pack in the Graylog instance
     """
-    logger.info(f"Provisioning {content_pack_request.content_pack_name.name} Content Pack with keywords {content_pack_request.keywords} ...")
+    logger.info(
+        f"Provisioning {content_pack_request.content_pack_name.name} Content Pack with keywords {content_pack_request.keywords} ...",
+    )
 
     content_pack = load_content_pack_json(f"{content_pack_request.content_pack_name.name}.json")
     # ! Only for testing purposes
@@ -159,15 +167,19 @@ async def provision_content_pack(content_pack_request: ProvisionContentPackReque
     id, rev = await get_id_and_rev(content_pack)
     logger.info(f"Id: {id}, Rev: {rev}")
     await install_content_pack(content_pack_id=id, revision=rev)
-    return ProvisionGraylogResponse(success=True, message=f"{content_pack_request.content_pack_name.name} Content Pack provisioned successfully")
+    return ProvisionGraylogResponse(
+        success=True,
+        message=f"{content_pack_request.content_pack_name.name} Content Pack provisioned successfully",
+    )
 
 
 async def filter_content_packs(content_packs, protocol_type):
     if protocol_type == "TCP":
-        return [pack for pack in content_packs if 'UDP' not in pack]
+        return [pack for pack in content_packs if "UDP" not in pack]
     if protocol_type == "UDP":
-        return [pack for pack in content_packs if 'TCP' not in pack]
+        return [pack for pack in content_packs if "TCP" not in pack]
     return content_packs
+
 
 async def process_content_pack(content_pack, content_pack_request):
     if await does_content_pack_exist(content_pack):
@@ -179,12 +191,13 @@ async def process_content_pack(content_pack, content_pack_request):
         REPLACE_UUID_SPECIFIC=str(uuid4()),
         customer_name=content_pack_request.keywords.customer_name,
         customer_code=content_pack_request.keywords.customer_code,
-        SYSLOG_PORT=content_pack_request.keywords.syslog_port
+        SYSLOG_PORT=content_pack_request.keywords.syslog_port,
     )
     if "PROCESSING_PIPELINE" not in content_pack:
         content_pack = replace_keywords_in_json_complex(content_pack, replace_content_pack_keywords.dict())
         content_pack = convert_port_value_to_int(content_pack)
     await insert_and_install_content_pack(content_pack)
+
 
 async def insert_and_install_content_pack(content_pack):
     logger.info(f"Inserting {content_pack} Content Pack...")
@@ -192,6 +205,7 @@ async def insert_and_install_content_pack(content_pack):
     id, rev = await get_id_and_rev(content_pack)
     logger.info(f"Id: {id}, Rev: {rev}")
     await install_content_pack(content_pack_id=id, revision=rev)
+
 
 async def provision_content_pack_network_connector(content_pack_request: ProvisionNetworkContentPackRequest) -> ProvisionGraylogResponse:
     logger.info(f"Provisioning {content_pack_request.content_pack_name} Content Pack with keywords {content_pack_request.keywords} ...")

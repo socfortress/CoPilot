@@ -24,18 +24,21 @@ from app.db.universal_models import LogEntry
 from app.integrations.alert_creation_settings.models.alert_creation_settings import (
     AlertCreationSettings,
 )
-from app.network_connectors.models.network_connectors import (
-    AvailableNetworkConnectors,
-    AvailableNetworkConnectorsKeys,
-    CustomerNetworkConnectors,
-    NetworkConnectorsService,
-    NetworkConnectorsSubscription,
-    NetworkConnectorsConfig,
-    CustomerNetworkConnectorsMeta
-)
-
 from app.integrations.models.customer_integration_settings import CustomerIntegrations
 from app.integrations.monitoring_alert.models.monitoring_alert import MonitoringAlerts
+from app.network_connectors.models.network_connectors import AvailableNetworkConnectors
+from app.network_connectors.models.network_connectors import (
+    AvailableNetworkConnectorsKeys,
+)
+from app.network_connectors.models.network_connectors import CustomerNetworkConnectors
+from app.network_connectors.models.network_connectors import (
+    CustomerNetworkConnectorsMeta,
+)
+from app.network_connectors.models.network_connectors import NetworkConnectorsConfig
+from app.network_connectors.models.network_connectors import NetworkConnectorsService
+from app.network_connectors.models.network_connectors import (
+    NetworkConnectorsSubscription,
+)
 from app.schedulers.models.scheduler import JobMetadata
 
 # this is the Alembic Config object, which provides

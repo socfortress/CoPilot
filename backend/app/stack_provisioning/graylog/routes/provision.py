@@ -10,7 +10,8 @@ from app.stack_provisioning.graylog.schema.provision import (
 from app.stack_provisioning.graylog.schema.provision import ProvisionContentPackRequest
 from app.stack_provisioning.graylog.schema.provision import ProvisionGraylogResponse
 from app.stack_provisioning.graylog.services.provision import provision_content_pack
-from app.stack_provisioning.graylog.services.utils import system_version_check, does_content_pack_exist
+from app.stack_provisioning.graylog.services.utils import does_content_pack_exist
+from app.stack_provisioning.graylog.services.utils import system_version_check
 
 stack_provisioning_graylog_router = APIRouter()
 

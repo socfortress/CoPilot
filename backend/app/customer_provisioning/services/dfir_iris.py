@@ -8,7 +8,7 @@ from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
 from app.connectors.dfir_iris.utils.universal import initialize_client_and_admin
 from app.connectors.dfir_iris.utils.universal import initialize_client_and_customer
 from app.connectors.dfir_iris.utils.universal import initialize_client_and_user
-from app.connectors.dfir_iris.routes.users import remove_user_from_customer_route
+
 
 async def check_customer_exists(customer_name: str) -> bool:
     """
@@ -85,10 +85,10 @@ async def delete_customer(customer_id: int):
     try:
         result = await fetch_and_validate_data(client, admin.delete_customer, customer_id)
     except Exception as e:
-        logger.error(f"Failed to delete customer: please remove the user from the iris customer within DFIR-IRIS")
+        logger.error(f"Failed to delete customer: please remove the user from the iris customer within DFIR-IRIS {e}")
         raise HTTPException(
             status_code=400,
-            detail=f"Failed to delete IRIS customer: please remove the user from the iris customer within DFIR-IRIS",
+            detail="Failed to delete IRIS customer: please remove the user from the iris customer within DFIR-IRIS",
         )
     logger.info(f"Result: {result}")
     return None

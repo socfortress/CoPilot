@@ -1,11 +1,9 @@
 from fastapi import HTTPException
-
 from loguru import logger
 
 from app.connectors.graylog.services.content_packs import get_content_packs
 from app.connectors.graylog.services.management import get_system_info
 from app.stack_provisioning.graylog.schema.provision import AvailableContentPacks
-
 
 
 async def get_graylog_version() -> str:

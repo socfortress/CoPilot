@@ -12,7 +12,10 @@ from app.integrations.models.customer_integration_settings import AvailableInteg
 from app.integrations.models.customer_integration_settings import (
     AvailableIntegrationsAuthKeys,
 )
-from app.network_connectors.models.network_connectors import AvailableNetworkConnectors, AvailableNetworkConnectorsKeys
+from app.network_connectors.models.network_connectors import AvailableNetworkConnectors
+from app.network_connectors.models.network_connectors import (
+    AvailableNetworkConnectorsKeys,
+)
 
 load_dotenv()
 
@@ -203,6 +206,7 @@ async def add_roles_if_not_exist(session: AsyncSession) -> None:
 
     await session.commit()  # Commit the transaction
     logger.info("Role check and addition completed.")
+
 
 # ! AVAILABLE THIRD PARTY INTEGRATIONS ! #
 def load_available_integrations_data(
@@ -452,8 +456,6 @@ async def add_available_integrations_auth_keys_if_not_exist(session: AsyncSessio
     await session.commit()
 
 
-
-
 # ! AVAILABLE NETWORK CONNECTORS ! #
 def load_available_network_connectors_data(
     network_connector_name: str,
@@ -604,7 +606,6 @@ async def get_available_network_connectors_auth_keys_list(session: AsyncSession)
     available_network_connectors_auth_keys = []
     available_network_connectors = [
         ("Fortinet", "SYSLOG_PORT"),
-
         # ... Add more available network_connectors auth keys as needed ...
     ]
     logger.info("Getting available network_connectors auth keys.")

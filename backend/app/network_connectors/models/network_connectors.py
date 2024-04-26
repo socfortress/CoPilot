@@ -89,6 +89,7 @@ class NetworkConnectorsConfig(SQLModel, table=True):
     # Relationships
     network_connectors_service: "NetworkConnectorsService" = Relationship(back_populates="configs")
 
+
 class NetworkConnectorsKeys(SQLModel, table=True):
     __tablename__ = "network_connectors_keys"
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -102,6 +103,7 @@ class NetworkConnectorsKeys(SQLModel, table=True):
     network_connectors_subscription: "NetworkConnectorsSubscription" = Relationship(
         back_populates="network_connectors_keys",
     )  # Adjusted relationship
+
 
 class CustomerNetworkConnectorsMeta(SQLModel, table=True):
     __tablename__ = "customer_network_connectors_meta"

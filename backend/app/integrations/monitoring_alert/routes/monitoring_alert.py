@@ -1,4 +1,3 @@
-from typing import List
 from typing import Optional
 
 from fastapi import APIRouter
@@ -21,7 +20,7 @@ from app.integrations.monitoring_alert.schema.monitoring_alert import (
     GraylogPostResponse,
 )
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
-    MonitoringAlertsRequestModel, MonitoringAlertsResponseModel
+    MonitoringAlertsResponseModel,
 )
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
     MonitoringWazuhAlertsRequestModel,
@@ -105,9 +104,12 @@ async def list_monitoring_alerts(
     monitoring_alerts = await session.execute(select(MonitoringAlerts))
     monitoring_alerts = monitoring_alerts.scalars().all()
 
-    return MonitoringAlertsResponseModel(monitoring_alerts=monitoring_alerts,
-                                         success=True,
-                                         message="Monitoring alerts retrieved successfully")
+    return MonitoringAlertsResponseModel(
+        monitoring_alerts=monitoring_alerts,
+        success=True,
+        message="Monitoring alerts retrieved successfully",
+    )
+
 
 @monitoring_alerts_router.post(
     "/invoke/{monitoring_alert_id}",
@@ -148,6 +150,7 @@ async def invoke_monitoring_alert(
 
     raise HTTPException(status_code=500, detail="Unknown alert source")
 
+
 @monitoring_alerts_router.delete(
     "/{monitoring_alert_id}",
     response_model=MonitoringAlertsResponseModel,
@@ -178,11 +181,11 @@ async def delete_monitoring_alert(
     await session.delete(monitoring_alert)
     await session.commit()
 
-    return MonitoringAlertsResponseModel(monitoring_alerts=[monitoring_alert],
-                                         success=True,
-                                         message="Monitoring alert deleted successfully")
-
-
+    return MonitoringAlertsResponseModel(
+        monitoring_alerts=[monitoring_alert],
+        success=True,
+        message="Monitoring alert deleted successfully",
+    )
 
 
 @monitoring_alerts_router.post("/create", response_model=GraylogPostResponse)
@@ -220,7 +223,9 @@ async def create_monitoring_alert(
         try:
             customer_meta = customer_meta.scalars().first()
         except Exception as e:
-            logger.error(f"Error getting customer meta for the customer_meta_office365_organization_id: {monitoring_alert.event.fields['CUSTOMER_CODE']}")
+            logger.error(
+                f"Error {e} getting customer meta for the customer_meta_office365_organization_id: {monitoring_alert.event.fields['CUSTOMER_CODE']}",
+            )
             raise HTTPException(status_code=500, detail="Error getting customer meta")
 
     if not customer_meta:
@@ -277,7 +282,7 @@ async def create_custom_monitoring_alert(
             try:
                 customer_meta = customer_meta.scalars().first()
             except Exception as e:
-                logger.error(f"Error getting customer meta for the customer_code: {monitoring_alert.event.fields[field]}")
+                logger.error(f"Error {e} getting customer meta for the customer_code: {monitoring_alert.event.fields[field]}")
 
             if not customer_meta:
                 logger.info(f"Getting customer meta for customer_meta_office365_organization_id: {monitoring_alert.event.fields[field]}")
@@ -289,7 +294,9 @@ async def create_custom_monitoring_alert(
                 try:
                     customer_meta = customer_meta.scalars().first()
                 except Exception as e:
-                    logger.error(f"Error getting customer meta for the customer_meta_office365_organization_id: {monitoring_alert.event.fields[field]}")
+                    logger.error(
+                        f"Error {e} getting customer meta for the customer_meta_office365_organization_id: {monitoring_alert.event.fields[field]}",
+                    )
                     raise HTTPException(status_code=500, detail="Error getting customer meta")
 
     if not customer_meta:

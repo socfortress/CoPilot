@@ -17,7 +17,9 @@ from app.customer_provisioning.schema.provision import GetDashboardsResponse
 from app.customer_provisioning.schema.provision import GetSubscriptionsResponse
 from app.customer_provisioning.schema.provision import ProvisionDashboardRequest
 from app.customer_provisioning.schema.provision import ProvisionDashboardResponse
-from app.customer_provisioning.schema.provision import ProvisionNewCustomer, UpdateOffice365OrgIdRequest, UpdateOffice365OrgIdResponse
+from app.customer_provisioning.schema.provision import ProvisionNewCustomer
+from app.customer_provisioning.schema.provision import UpdateOffice365OrgIdRequest
+from app.customer_provisioning.schema.provision import UpdateOffice365OrgIdResponse
 from app.customer_provisioning.schema.wazuh_worker import ProvisionWorkerRequest
 from app.customer_provisioning.schema.wazuh_worker import ProvisionWorkerResponse
 from app.customer_provisioning.services.provision import provision_dashboards

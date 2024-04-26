@@ -1,6 +1,11 @@
-from pydantic import BaseModel, Field
+from typing import Any
+from typing import Dict
+from typing import Optional
+
+from pydantic import BaseModel
+from pydantic import Field
 from pydantic import root_validator
-from typing import Dict, Any, Optional
+
 
 class ProvisionFortinetRequest(BaseModel):
     customer_code: str = Field(
@@ -35,12 +40,14 @@ class ProvisionFortinetResponse(BaseModel):
     success: bool
     message: str
 
+
 class ProvisionFortinetKeys(BaseModel):
     SYSLOG_PORT: str = Field(
         ...,
         description="The syslog port.",
         examples=["514"],
     )
+
 
 class FortinetCustomerDetails(BaseModel):
     customer_name: str = Field(
@@ -63,4 +70,3 @@ class FortinetCustomerDetails(BaseModel):
         description="The syslog port.",
         examples=[514],
     )
-

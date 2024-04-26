@@ -226,7 +226,10 @@ async def add_api_auth_to_office365_block(customer_code: str, provision_office36
 
     except Exception as e:
         logger.error(f"An error occurred: {e}")
-        raise HTTPException(status_code=500, detail="Error found in ossec.conf. Multiple <ossec_config> blocks found. Remove all additional <ossec_config> blocks and try again.")
+        raise HTTPException(
+            status_code=500,
+            detail="Error found in ossec.conf. Multiple <ossec_config> blocks found. Remove all additional <ossec_config> blocks and try again.",
+        )
 
 
 async def update_wazuh_configuration(
@@ -951,11 +954,8 @@ async def update_customer_integration_table(
 
     return None
 
-async def update_customermeta_table(
-    customer_code: str,
-    session: AsyncSession,
-    tenant_id: str
-) -> None:
+
+async def update_customermeta_table(customer_code: str, session: AsyncSession, tenant_id: str) -> None:
     """
     Updates the `customer_meta` table to set the `office365_tenant_id` column to the given tenant_id.
 
@@ -964,11 +964,8 @@ async def update_customermeta_table(
         session (AsyncSession): The async session object for making HTTP requests.
     """
     await session.execute(
-        update(CustomersMeta)
-        .where(CustomersMeta.customer_code == customer_code)
-        .values(customer_meta_office365_organization_id=tenant_id)
+        update(CustomersMeta).where(CustomersMeta.customer_code == customer_code).values(customer_meta_office365_organization_id=tenant_id),
     )
     await session.commit()
 
     return None
-
