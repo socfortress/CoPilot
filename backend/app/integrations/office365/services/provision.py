@@ -226,8 +226,6 @@ async def add_api_auth_to_office365_block(customer_code: str, provision_office36
 
     except Exception as e:
         logger.error(f"An error occurred: {e}")
-        # Print the full traceback
-        import traceback
         raise HTTPException(status_code=500, detail="Error found in ossec.conf. Multiple <ossec_config> blocks found. Remove all additional <ossec_config> blocks and try again.")
 
 
