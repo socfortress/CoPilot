@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from pydantic import root_validator
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 class ProvisionFortinetRequest(BaseModel):
     customer_code: str = Field(
@@ -12,6 +12,16 @@ class ProvisionFortinetRequest(BaseModel):
         "Fortinet",
         description="The integration name.",
         examples=["Fortinet"],
+    )
+    tcp_enabled: Optional[bool] = Field(
+        False,
+        description="The tcp enabled.",
+        examples=[True],
+    )
+    udp_enabled: Optional[bool] = Field(
+        False,
+        description="The udp enabled.",
+        examples=[True],
     )
 
     # ensure the `integration_name` is always set to "Fortinet"
@@ -31,3 +41,26 @@ class ProvisionFortinetKeys(BaseModel):
         description="The syslog port.",
         examples=["514"],
     )
+
+class FortinetCustomerDetails(BaseModel):
+    customer_name: str = Field(
+        ...,
+        description="The customer name.",
+        examples=["Customer 1"],
+    )
+    customer_code: str = Field(
+        ...,
+        description="The customer code.",
+        examples=["00002"],
+    )
+    protocal_type: str = Field(
+        ...,
+        description="The protocal type.",
+        examples=["TCP"],
+    )
+    syslog_port: int = Field(
+        ...,
+        description="The syslog port.",
+        examples=[514],
+    )
+

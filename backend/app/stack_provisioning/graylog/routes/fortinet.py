@@ -20,7 +20,9 @@ from app.stack_provisioning.graylog.services.utils import system_version_check, 
 from app.network_connectors.schema import CustomerNetworkConnectors
 from app.network_connectors.schema import CustomerNetworkConnectorsResponse
 from app.network_connectors.routes import get_customer_network_connectors_by_customer_code
+from app.stack_provisioning.graylog.schema.fortinet import FortinetCustomerDetails
 from app.network_connectors.routes import find_customer_network_connector
+from app.stack_provisioning.graylog.services.fortinet import provision_fortinet
 
 stack_provisioning_graylog_fortinet_router = APIRouter()
 
@@ -106,12 +108,28 @@ async def provision_fortinet_route(
 
     fortinet_keys = extract_fortinet_keys(customer_integration)
 
-    auth_keys = ProvisionFortinetKeys(**fortinet_keys)
-
-    raise HTTPException(status_code=501, detail="Not implemented")
+    if provision_fortinet_request.tcp_enabled and provision_fortinet_request.udp_enabled:
+        raise HTTPException(
+            status_code=400,
+            detail="Both TCP and UDP are enabled. Please choose one of them.",
+        )
+    elif provision_fortinet_request.tcp_enabled:
+        protocol_type = "TCP"
+    elif provision_fortinet_request.udp_enabled:
+        protocol_type = "UDP"
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail="Either TCP or UDP should be enabled.",
+        )
 
     return await provision_fortinet(
-        provision_fortinet_request.customer_code,
-        auth_keys,
-        session,
+        customer_details = FortinetCustomerDetails(
+            customer_code = provision_fortinet_request.customer_code,
+            customer_name = customer_integration.customer_name,
+            protocal_type = protocol_type,
+            syslog_port = int(fortinet_keys["SYSLOG_PORT"]),
+        ),
+        keys = ProvisionFortinetKeys(**fortinet_keys),
+        session = session,
     )

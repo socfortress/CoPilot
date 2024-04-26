@@ -1,9 +1,9 @@
 {
   "v": 1,
-  "id": "8b349be1-78e4-4e6c-b1a4-85d734e88eec",
+  "id": "REPLACE_UUID_GLOBAL",
   "rev": 1,
-  "name": "SOCFORTRESS_FORTINET_INPUT_SYSLOG_UDP",
-  "summary": "SOCFORTRESS_FORTINET_INPUT_SYSLOG_UDP",
+  "name": "customer_name_FORTINET_INPUT_SYSLOG_UDP",
+  "summary": "customer_name_FORTINET_INPUT_SYSLOG_UDP",
   "description": "",
   "vendor": "SOCFortress",
   "url": "",
@@ -15,16 +15,16 @@
         "name": "input",
         "version": "1"
       },
-      "id": "ee66dc62-e5a0-41e4-abd8-bd14312cca73",
+      "id": "REPLACE_UUID_SPECIFIC",
       "data": {
         "title": {
           "@type": "string",
-          "@value": "COMPANY_NAME - FORTINET LOGS AND EVENTS"
+          "@value": "customer_name - FORTINET LOGS AND EVENTS"
         },
         "configuration": {
           "port": {
             "@type": "integer",
-            "@value": UDP_PORT
+            "@value": "SYSLOG_PORT"
           },
           "recv_buffer_size": {
             "@type": "integer",

@@ -1,9 +1,9 @@
 {
   "v": 1,
-  "id": "e89e15e5-ab02-4275-baf6-a854732304e7",
+  "id": "REPLACE_UUID_GLOBAL",
   "rev": 1,
-  "name": "SOCFORTRESS_FORTINET_STREAM",
-  "summary": "SOCFORTRESS_FORTINET_STREAM",
+  "name": "customer_name_FORTINET_STREAM",
+  "summary": "customer_name_FORTINET_STREAM",
   "description": "",
   "vendor": "SOCFortress",
   "url": "",
@@ -15,7 +15,7 @@
         "name": "stream",
         "version": "1"
       },
-      "id": "b3d3485c-6755-40be-8b56-c083db7da9e8",
+      "id": "REPLACE_UUID_SPECIFIC",
       "data": {
         "alarm_callbacks": [],
         "outputs": [],
@@ -25,7 +25,7 @@
         },
         "title": {
           "@type": "string",
-          "@value": "COMPANY_NAME - FORTINET LOGS AND EVENTS"
+          "@value": "customer_name - FORTINET LOGS AND EVENTS"
         },
         "stream_rules": [
           {
@@ -84,7 +84,7 @@
         },
         "description": {
           "@type": "string",
-          "@value": "COMPANY_NAME - FORTINET LOGS AND EVENTS"
+          "@value": "customer_name - FORTINET LOGS AND EVENTS"
         },
         "default_stream": {
           "@type": "boolean",
