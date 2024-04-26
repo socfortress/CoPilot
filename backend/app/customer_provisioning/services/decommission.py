@@ -40,6 +40,9 @@ async def decomission_wazuh_customer(
     """
     logger.info(f"Decomissioning customer {customer_meta.customer_name}")
 
+    # Delete DFIR-IRIS Customer
+    await delete_customer(customer_id=customer_meta.customer_meta_iris_customer_id)
+
     # Delete the Wazuh Agents
     agents = await gather_wazuh_agents(customer_meta.customer_code)
     agents_deleted = await delete_wazuh_agents(agents)
@@ -60,9 +63,6 @@ async def decomission_wazuh_customer(
     await delete_grafana_organization(
         organization_id=int(customer_meta.customer_meta_grafana_org_id),
     )
-
-    # Delete DFIR-IRIS Customer
-    await delete_customer(customer_id=customer_meta.customer_meta_iris_customer_id)
 
     # Decommission Wazuh Worker
     await decommission_wazuh_worker(
