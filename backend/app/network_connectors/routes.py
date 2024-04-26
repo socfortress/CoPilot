@@ -503,7 +503,6 @@ def process_customer_network_connectors(customer_network_connectors_data):
     """
     processed_customer_network_connectors = []
     for ci in customer_network_connectors_data:
-        logger.info(f"Processing customer network_connector: {ci}")
         first_service_id = ci.network_connectors_subscriptions[0].network_connectors_service_id if ci.network_connectors_subscriptions else None
         customer_network_connector_obj = CustomerNetworkConnectors(
             id=ci.id,
@@ -555,7 +554,6 @@ async def get_customer_network_connectors(session: AsyncSession = Depends(get_db
         customer_network_connectors_data,
     )
 
-    logger.info(f"Processed customer_network_connectors: {processed_customer_network_connectors}")
     return CustomerNetworkConnectorsResponse(
         available_network_connectors=processed_customer_network_connectors,
         message="Customer network_connectors successfully retrieved.",
