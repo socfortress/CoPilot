@@ -23,7 +23,7 @@ Once logged in, follow these steps to configure the syslog server:
   - **Facility:** Choose the syslog facility to be used (e.g., Local7).
   - **Source IP:** (Optional) Specify the source IP address if you want the logs to come from a specific interface IP.
     
-* *Note* *: The syslog format needs to be configured using FortiGate's CLI. Ensure that the format is set to rfc5424
+* *Note*: The syslog format needs to be configured using FortiGate's CLI. Ensure that the format is set to rfc5424
 - **Configure Filters (if needed)**
   - You can specify what kind of logs you want to send (e.g., traffic, event, virus, etc.). Select the appropriate log types.
 - **Test Connection (if available)**
