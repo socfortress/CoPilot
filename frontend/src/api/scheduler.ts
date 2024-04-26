@@ -15,7 +15,8 @@ export default {
 		return HttpClient.get<FlaskBaseResponse & { next_run_time: Date }>(`/scheduler/next_run/${job_id}`)
 	},
 	jobAction(job_id: string, action: "run" | "start" | "pause") {
-		return HttpClient.post<FlaskBaseResponse>(`/scheduler/jobs/${action}/${job_id}`)
+		const endpoint = action === "run" ? "jobs/run" : action
+		return HttpClient.post<FlaskBaseResponse>(`/scheduler/${endpoint}/${job_id}`)
 	},
 	updateJob(job_id: string, payload: UpdateJobPayload) {
 		return HttpClient.put<FlaskBaseResponse>(`/scheduler/jobs/update/${job_id}`, {}, { params: payload })
