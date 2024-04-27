@@ -49,7 +49,7 @@
 					<div class="flex flex-col gap-1">
 						<div class="box">
 							agent_id:
-							<code class="cursor-pointer text-primary-color" @click="gotoAgentPage(healthData.agent_id)">
+							<code class="cursor-pointer text-primary-color" @click="gotoAgent(healthData.agent_id)">
 								{{ healthData.agent_id }}
 								<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
 							</code>
@@ -92,7 +92,7 @@ import type { CustomerAgentHealth, CustomerHealthcheckSource } from "@/types/cus
 import dayjs from "@/utils/dayjs"
 import { iconFromOs } from "@/utils"
 import { useSettingsStore } from "@/stores/settings"
-import { useRouter } from "vue-router"
+import { useGoto } from "@/composables/useGoto"
 
 const { healthData, source, bgSecondary, type } = defineProps<{
 	healthData: CustomerAgentHealth
@@ -106,7 +106,7 @@ const AgentIcon = "carbon:police"
 const LinkIcon = "carbon:launch"
 
 const showDetails = ref(false)
-const router = useRouter()
+const { gotoAgent } = useGoto()
 
 const agentVersion = computed(() => {
 	let agent = ""
@@ -141,10 +141,6 @@ const dFormats = useSettingsStore().dateFormat
 
 function formatDate(timestamp: string | number, utc: boolean = true): string {
 	return dayjs(timestamp).utc(utc).format(dFormats.datetimesec)
-}
-
-function gotoAgentPage(agentId: string) {
-	router.push({ name: "Agent", params: { id: agentId } })
 }
 </script>
 

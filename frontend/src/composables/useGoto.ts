@@ -11,7 +11,16 @@ export function useGoto() {
 		}
 	}
 
+	function gotoAgent(agentId?: string | number) {
+		if (agentId) {
+			router.push({ name: "Agent", params: { id: agentId.toString() } })
+		} else {
+			router.push({ name: "Agents" })
+		}
+	}
+
 	return {
-		gotoCustomer
+		gotoCustomer,
+		gotoAgent
 	}
 }

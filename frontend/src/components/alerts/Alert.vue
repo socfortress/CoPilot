@@ -47,7 +47,7 @@
 								agent_id:
 								<code
 									class="cursor-pointer text-primary-color"
-									@click="gotoAgentPage(alert._source.agent_id)"
+									@click="gotoAgent(alert._source.agent_id)"
 								>
 									{{ alert._source.agent_id }}
 									<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
@@ -131,7 +131,7 @@
 							<template #key>{{ key }}</template>
 							<template #value>
 								<template v-if="key === 'agent_id'">
-									<code class="cursor-pointer text-primary-color" @click="gotoAgentPage(value + '')">
+									<code class="cursor-pointer text-primary-color" @click="gotoAgent(value + '')">
 										{{ value }}
 										<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
 									</code>
@@ -226,7 +226,6 @@ const AlertActions = defineAsyncComponent(() => import("./AlertActions.vue"))
 import type { Alert } from "@/types/alerts.d"
 import { SimpleJsonViewer } from "vue-sjv"
 import "@/assets/scss/vuesjv-override.scss"
-import { useRouter } from "vue-router"
 import _pick from "lodash/pick"
 import KVCard from "@/components/common/KVCard.vue"
 import { useGoto } from "@/composables/useGoto"
@@ -241,8 +240,7 @@ const MailIcon = "carbon:email"
 const AgentIcon = "carbon:police"
 const LinkIcon = "carbon:launch"
 
-const { gotoCustomer } = useGoto()
-const router = useRouter()
+const { gotoCustomer, gotoAgent } = useGoto()
 const loading = ref(false)
 const showDetails = ref(false)
 const dFormats = useSettingsStore().dateFormat
@@ -259,10 +257,6 @@ const agentProperties = computed(() => {
 		"agent_name"
 	])
 })
-
-function gotoAgentPage(agentId: string) {
-	router.push({ name: "Agent", params: { id: agentId } })
-}
 </script>
 
 <style lang="scss" scoped>

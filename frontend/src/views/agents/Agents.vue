@@ -10,7 +10,7 @@
 					:agents-critical="agentsCritical"
 					:agents-online="agentsOnline"
 					@sync="syncAgents()"
-					@click="gotoAgentPage"
+					@click="gotoAgent($event.agent_id)"
 				/>
 			</div>
 			<div class="main grow flex flex-col overflow-hidden">
@@ -24,7 +24,7 @@
 									:agent="agent"
 									show-actions
 									@delete="syncAgents()"
-									@click="gotoAgentPage(agent)"
+									@click="gotoAgent(agent.agent_id)"
 									class="item-appear item-appear-bottom item-appear-005"
 								/>
 							</template>
@@ -58,12 +58,12 @@ import { AgentStatus, type Agent } from "@/types/agents.d"
 import AgentCard from "@/components/agents/AgentCard.vue"
 import AgentToolbar from "@/components/agents/AgentToolbar.vue"
 import Api from "@/api"
-import { useRouter } from "vue-router"
 import { useMessage, NSpin, NScrollbar, NEmpty, NPagination } from "naive-ui"
 import _debounce from "lodash/debounce"
+import { useGoto } from "@/composables/useGoto"
 
 const message = useMessage()
-const router = useRouter()
+const { gotoAgent } = useGoto()
 const loadingAgents = ref(false)
 const loadingSync = ref(false)
 const agents = ref<Agent[]>([])
@@ -105,10 +105,6 @@ const agentsCritical = computed(() => {
 const agentsOnline = computed(() => {
 	return agents.value.filter(({ wazuh_agent_status }) => wazuh_agent_status === AgentStatus.Active)
 })
-
-function gotoAgentPage(agent: Agent) {
-	router.push({ name: "Agent", params: { id: agent.agent_id } })
-}
 
 function getAgents() {
 	loadingAgents.value = true
