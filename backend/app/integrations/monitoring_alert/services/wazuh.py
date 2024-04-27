@@ -539,7 +539,8 @@ async def analyze_wazuh_alerts(
                 alert_details,
                 session,
             )
-            await remove_alert_id(alert.alert_id, session)
+            # ! TODO: REMOVE COMMENTED OUT WHEN READY TO FINALIZE ! #
+            #await remove_alert_id(alert.alert_id, session)
             es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
             await add_alert_to_document(
                 es_client=es_client,
