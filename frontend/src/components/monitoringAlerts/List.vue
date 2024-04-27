@@ -38,6 +38,7 @@
 						:key="alert.id"
 						:alert="alert"
 						@deleted="getData()"
+						@invoked="getData()"
 						class="item-appear item-appear-bottom item-appear-005 mb-2"
 					/>
 				</template>

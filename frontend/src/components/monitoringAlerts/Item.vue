@@ -1,5 +1,5 @@
 <template>
-	<n-spin :show="loadingDelete">
+	<n-spin :show="loading" :description="loadingDelete ? 'Deleting' : 'Invoking'">
 		<div class="monitoring-alerts-item flex flex-col gap-2 px-5 py-3" :class="{ embedded }">
 			<div class="header-box flex justify-between">
 				<div class="id flex items-center">#{{ alert.id }}</div>
@@ -37,8 +37,12 @@
 				<AlertActions
 					class="actions-box"
 					:alert="alert"
-					@deleted="deleted()"
-					@deleting="loadingDelete = true"
+					@deleted="emit('deleted')"
+					@invoked="emit('invoked')"
+					@startDeleting="loadingDelete = true"
+					@stopDeleting="loadingDelete = false"
+					@startInvoking="loadingInvoke = true"
+					@stopInvoking="loadingInvoke = false"
 				/>
 			</div>
 			<div class="footer-box flex justify-between items-center gap-3">
@@ -47,8 +51,12 @@
 					:alert="alert"
 					size="small"
 					inline
-					@deleted="deleted()"
-					@deleting="loadingDelete = true"
+					@deleted="emit('deleted')"
+					@invoked="emit('invoked')"
+					@startDeleting="loadingDelete = true"
+					@stopDeleting="loadingDelete = false"
+					@startInvoking="loadingInvoke = true"
+					@stopInvoking="loadingInvoke = false"
 				/>
 			</div>
 		</div>
@@ -58,7 +66,7 @@
 <script setup lang="ts">
 import Icon from "@/components/common/Icon.vue"
 import Badge from "@/components/common/Badge.vue"
-import { ref } from "vue"
+import { computed, ref } from "vue"
 import AlertActions from "./ItemActions.vue"
 import { NSpin } from "naive-ui"
 import { useGoto } from "@/composables/useGoto"
@@ -71,17 +79,15 @@ const { alert, embedded } = defineProps<{
 
 const emit = defineEmits<{
 	(e: "deleted"): void
+	(e: "invoked"): void
 }>()
 
 const LinkIcon = "carbon:launch"
 
 const { gotoCustomer, gotoIndex } = useGoto()
 const loadingDelete = ref(false)
-
-function deleted() {
-	loadingDelete.value = false
-	emit("deleted")
-}
+const loadingInvoke = ref(false)
+const loading = computed(() => loadingDelete.value || loadingInvoke.value)
 </script>
 
 <style lang="scss" scoped>

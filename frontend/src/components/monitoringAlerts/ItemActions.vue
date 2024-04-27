@@ -20,11 +20,14 @@ import type { Size } from "naive-ui/es/button/src/interface"
 import type { MonitoringAlert } from "@/types/monitoringAlerts"
 
 const emit = defineEmits<{
-	(e: "invoked"): void
-	(e: "deleted"): void
-	(e: "deleting"): void
+	(e: "startInvoking"): void
+	(e: "stopInvoking"): void
+	(e: "startDeleting"): void
+	(e: "stopDeleting"): void
 	(e: "startLoading"): void
 	(e: "stopLoading"): void
+	(e: "invoked"): void
+	(e: "deleted"): void
 }>()
 
 const { alert, size, inline } = defineProps<{
@@ -47,6 +50,22 @@ watch(loading, val => {
 		emit("startLoading")
 	} else {
 		emit("stopLoading")
+	}
+})
+
+watch(loadingInvoke, val => {
+	if (val) {
+		emit("startInvoking")
+	} else {
+		emit("stopInvoking")
+	}
+})
+
+watch(loadingDelete, val => {
+	if (val) {
+		emit("startDeleting")
+	} else {
+		emit("stopDeleting")
 	}
 })
 
@@ -88,12 +107,12 @@ function handleDelete() {
 
 function deleteAlert() {
 	loadingDelete.value = true
-	emit("deleting")
 
 	Api.monitoringAlerts
 		.delete(alert.id)
 		.then(res => {
 			if (res.data.success) {
+				emit("deleted")
 				message.success(res.data?.message || "Alert deleted successfully.")
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
@@ -103,7 +122,6 @@ function deleteAlert() {
 			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
-			emit("deleted")
 			loadingDelete.value = false
 		})
 }
