@@ -115,7 +115,7 @@
 								>
 									<code
 										class="cursor-pointer text-primary-color"
-										@click="gotoCustomer(alert.customer.customer_code)"
+										@click="gotoCustomer({ code: alert.customer.customer_code })"
 									>
 										{{ alert.customer?.customer_name || alert.customer.customer_code || "-" }}
 										<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
@@ -214,7 +214,10 @@
 							<template #key>{{ key }}</template>
 							<template #value>
 								<template v-if="key === 'customer_code' && value && value !== 'Customer Not Found'">
-									<code class="cursor-pointer text-primary-color" @click="gotoCustomer(value)">
+									<code
+										class="cursor-pointer text-primary-color"
+										@click="gotoCustomer({ code: value })"
+									>
 										#{{ value }}
 										<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
 									</code>
@@ -232,7 +235,7 @@
 							type="active"
 							style="max-width: 145px"
 							class="cursor-pointer"
-							@click="gotoUsersPage(ownerId)"
+							@click="gotoSocUsers(ownerId)"
 						>
 							<template #iconRight>
 								<Icon :name="LinkIcon" :size="14"></Icon>
@@ -327,7 +330,6 @@ import {
 import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
 import type { SocUser } from "@/types/soc/user.d"
-import { useRouter } from "vue-router"
 import { useGoto } from "@/composables/useGoto"
 
 const checked = defineModel<boolean>("checked", { default: false })
@@ -384,9 +386,8 @@ const showBadges = ref(false)
 const loadingDelete = ref(false)
 const loadingData = ref(false)
 const loadingBookmark = ref(false)
-const router = useRouter()
 const message = useMessage()
-const { gotoCustomer } = useGoto()
+const { gotoCustomer, gotoSocUsers } = useGoto()
 
 const alert = ref(alertData.value || null)
 
@@ -448,10 +449,6 @@ function updateAlert(alertUpdated: SocAlert) {
 		alert.value.owner = ownerObject
 		alert.value.modification_history = modificationHistory
 	}
-}
-
-function gotoUsersPage(userId?: string | number) {
-	router.push({ name: "Soc-Users", query: userId ? { user_id: userId } : {} })
 }
 
 function getAlert(id: string | number, cb?: () => void) {

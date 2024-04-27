@@ -7,7 +7,7 @@
 					<template v-if="item.key === 'customer_code'">
 						<code
 							class="cursor-pointer text-primary-color"
-							@click="gotoCustomer(item.val)"
+							@click="gotoCustomer({ code: item.val })"
 							v-if="item.val && item.val !== '-'"
 						>
 							{{ item.val }}

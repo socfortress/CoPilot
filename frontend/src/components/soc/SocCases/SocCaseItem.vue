@@ -174,7 +174,7 @@
 										>
 											<code
 												class="cursor-pointer text-primary-color"
-												@click="gotoCustomer(value)"
+												@click="gotoCustomer({ code: value })"
 											>
 												#{{ value }}
 												<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />

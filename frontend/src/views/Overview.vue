@@ -49,7 +49,7 @@
 			</div>
 		</div>
 		<div class="section">
-			<PipeList minHeight="28px" @open-rule="gotoPipelinesPage($event)" />
+			<PipeList minHeight="28px" @open-rule="gotoGraylogPipelines($event)" />
 		</div>
 
 		<n-drawer
@@ -73,7 +73,6 @@
 <script setup lang="ts">
 import { ref } from "vue"
 import { NButton, NDrawer, NDrawerContent } from "naive-ui"
-import { useRouter } from "vue-router"
 import ClusterHealth from "@/components/indices/ClusterHealth.vue"
 import NodeAllocation from "@/components/indices/NodeAllocation.vue"
 import IndicesMarquee from "@/components/indices/Marquee.vue"
@@ -90,15 +89,10 @@ import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
 
 const QuickActionsIcon = "ant-design:thunderbolt-outlined"
-const router = useRouter()
 const page = ref()
 const cardDirection = ref<"horizontal" | "vertical">("horizontal")
 const showQuickActions = ref(false)
-const { gotoIndex } = useGoto()
-
-function gotoPipelinesPage(rule: string) {
-	router.push({ name: "Graylog-Pipelines", query: { rule } })
-}
+const { gotoIndex, gotoGraylogPipelines } = useGoto()
 
 useResizeObserver(page, entries => {
 	const entry = entries[0]

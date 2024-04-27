@@ -65,7 +65,7 @@
 								agent_labels_customer:
 								<code
 									class="cursor-pointer text-primary-color"
-									@click="gotoCustomer(alert._source.agent_labels_customer)"
+									@click="gotoCustomer({ code: alert._source.agent_labels_customer })"
 								>
 									{{ alert._source.agent_labels_customer }}
 									<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
@@ -137,7 +137,10 @@
 									</code>
 								</template>
 								<template v-else-if="key === 'agent_labels_customer'">
-									<code class="cursor-pointer text-primary-color" @click="gotoCustomer(value + '')">
+									<code
+										class="cursor-pointer text-primary-color"
+										@click="gotoCustomer(value ? { code: value.toString() } : undefined)"
+									>
 										{{ value }}
 										<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
 									</code>

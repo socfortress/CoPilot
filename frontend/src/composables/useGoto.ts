@@ -3,9 +3,11 @@ import { useRouter } from "vue-router"
 export function useGoto() {
 	const router = useRouter()
 
-	function gotoCustomer(code?: string | number | { [key: string]: any }) {
-		if (code) {
-			router.push({ name: "Customers", query: { code: code.toString() } })
+	function gotoCustomer(params?: { code?: string | number | { [key: string]: any }; action?: "add-customer" }) {
+		if (params?.code) {
+			router.push({ name: "Customers", query: { code: params.code.toString() } })
+		} else if (params?.action) {
+			router.push({ name: "Customers", query: { action: params.action.toString() } })
 		} else {
 			router.push({ name: "Customers" })
 		}
@@ -20,11 +22,7 @@ export function useGoto() {
 	}
 
 	function gotoIndex(indexName?: string) {
-		if (indexName) {
-			router.push({ name: "Indices", query: { index_name: indexName } })
-		} else {
-			router.push({ name: "Indices" })
-		}
+		router.push({ name: "Indices", query: indexName ? { index_name: indexName } : {} })
 	}
 
 	function gotoLicense() {
@@ -43,6 +41,26 @@ export function useGoto() {
 		router.push({ name: "Graylog-Management", hash: tabName ? `#${tabName}` : undefined })
 	}
 
+	function gotoSocAlerts() {
+		router.push({ name: "Soc-Alerts" })
+	}
+
+	function gotoAlerts() {
+		router.push({ name: "Alerts" })
+	}
+
+	function gotoConnectors() {
+		router.push({ name: "Connectors" })
+	}
+
+	function gotoGraylogPipelines(rule?: string) {
+		router.push({ name: "Graylog-Pipelines", query: rule ? { rule } : {} })
+	}
+
+	function gotoSocUsers(userId?: string | number) {
+		router.push({ name: "Soc-Users", query: userId ? { user_id: userId } : {} })
+	}
+
 	return {
 		gotoCustomer,
 		gotoAgent,
@@ -50,6 +68,11 @@ export function useGoto() {
 		gotoLicense,
 		gotoHealthcheck,
 		gotoGraylogMetrics,
-		gotoGraylogManagement
+		gotoGraylogManagement,
+		gotoSocAlerts,
+		gotoGraylogPipelines,
+		gotoSocUsers,
+		gotoAlerts,
+		gotoConnectors
 	}
 }
