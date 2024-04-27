@@ -1,10 +1,9 @@
 <template>
 	<div class="page">
-		Pending Alerts...
-		<SocCasesList />
+		<MonitoringAlerts />
 	</div>
 </template>
 
 <script setup lang="ts">
-import SocCasesList from "@/components/soc/SocCases/SocCasesList.vue"
+import MonitoringAlerts from "@/components/monitoringAlerts/List.vue"
 </script>
