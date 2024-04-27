@@ -8,7 +8,7 @@
 			hide-panels-select
 		/>
 		<ReportPanels :timerange="timerange" :org="org" :dashboard="dashboard" :panels="panels" />
-		<div class="overlay mobile-overlay">
+		<div class="over-layer mobile-layer">
 			<n-alert>
 				<template #icon>
 					<Icon :name="AlertIcon" :size="18"></Icon>
@@ -45,7 +45,7 @@ const panels = ref<Panel[]>([])
 	overflow: hidden;
 	position: relative;
 
-	.mobile-overlay {
+	.mobile-layer {
 		display: none;
 		@media (max-width: $sidebar-bp) {
 			display: flex;

@@ -1,7 +1,7 @@
 <template>
 	<div class="page">
 		<div class="agent-toolbar">
-			<div class="back-btn" @click="gotoAgents()">
+			<div class="back-btn" @click="gotoAgent()">
 				<Icon :name="ArrowIcon" :size="16"></Icon>
 				<span>Agents list</span>
 			</div>
@@ -125,11 +125,13 @@ import ArtifactsCollect from "@/components/artifacts/ArtifactsCollect.vue"
 import ArtifactsCommand from "@/components/artifacts/ArtifactsCommand.vue"
 import ArtifactsQuarantine from "@/components/artifacts/ArtifactsQuarantine.vue"
 import ActiveResponseAgent from "@/components/activeResponse/ActiveResponseAgent.vue"
+import { useGoto } from "@/composables/useGoto"
 
 const StarIcon = "carbon:star"
 const QuarantinedIcon = "ph:seal-warning-light"
 const ArrowIcon = "carbon:arrow-left"
 
+const { gotoAgent } = useGoto()
 const message = useMessage()
 const router = useRouter()
 const dialog = useDialog()
@@ -159,12 +161,12 @@ function getAgent() {
 					agent.value = res.data.agents[0] || null
 				} else {
 					message.error(res.data?.message || "An error occurred. Please try again later.")
-					gotoAgents()
+					gotoAgent()
 				}
 			})
 			.catch(err => {
 				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-				gotoAgents()
+				gotoAgent()
 			})
 			.finally(() => {
 				loadingAgent.value = false
@@ -201,17 +203,13 @@ function handleDelete() {
 				loadingAgent.value = true
 			},
 			cbSuccess: () => {
-				gotoAgents()
+				gotoAgent()
 			},
 			cbAfter: () => {
 				loadingAgent.value = false
 			}
 		})
 	}
-}
-
-function gotoAgents() {
-	router.push({ name: "Agents" })
 }
 
 onBeforeMount(() => {

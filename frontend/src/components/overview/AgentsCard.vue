@@ -5,7 +5,7 @@
 			firstLabel="Total"
 			hovered
 			class="cursor-pointer"
-			@click="gotoAgentsPage()"
+			@click="gotoAgent()"
 			:value="total"
 			secondLabel="Online"
 			:subValue="onlineTotal"
@@ -25,10 +25,10 @@ import CardStatsDouble from "@/components/common/CardStatsDouble.vue"
 import CardStatsIcon from "@/components/common/CardStatsIcon.vue"
 import Api from "@/api"
 import { useMessage, NSpin } from "naive-ui"
-import { useRouter } from "vue-router"
+import { useGoto } from "@/composables/useGoto"
 
 const AgentsIcon = "carbon:network-3"
-const router = useRouter()
+const { gotoAgent } = useGoto()
 const message = useMessage()
 const loading = ref(false)
 const agents = ref<Agent[]>([])
@@ -59,10 +59,6 @@ function getData() {
 		.finally(() => {
 			loading.value = false
 		})
-}
-
-function gotoAgentsPage() {
-	router.push({ name: "Agents" })
 }
 
 onBeforeMount(() => {

@@ -38,7 +38,7 @@
 		v-model:show="showForm"
 		display-directive="show"
 		preset="card"
-		:style="{ maxWidth: 'min(450px, 90vw)', minHeight: 'min(300px, 90vh)', overflow: 'hidden' }"
+		:style="{ maxWidth: 'min(450px, 90vw)', overflow: 'hidden' }"
 		:title="`Update ${job.name}`"
 		:bordered="false"
 		segmented

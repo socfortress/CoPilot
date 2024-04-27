@@ -7,7 +7,7 @@
 					<template v-if="item.key === 'customer_code'">
 						<code
 							class="cursor-pointer text-primary-color"
-							@click="gotoCustomer(item.val)"
+							@click="gotoCustomer({ code: item.val })"
 							v-if="item.val && item.val !== '-'"
 						>
 							{{ item.val }}
@@ -31,7 +31,7 @@ import { type Agent } from "@/types/agents.d"
 import { useSettingsStore } from "@/stores/settings"
 import KVCard from "@/components/common/KVCard.vue"
 import Icon from "@/components/common/Icon.vue"
-import { useRouter } from "vue-router"
+import { useGoto } from "@/composables/useGoto"
 
 const props = defineProps<{
 	agent: Agent
@@ -39,8 +39,8 @@ const props = defineProps<{
 const { agent } = toRefs(props)
 
 const LinkIcon = "carbon:launch"
-const router = useRouter()
 const dFormats = useSettingsStore().dateFormat
+const { gotoCustomer } = useGoto()
 
 const propsSanitized = computed(() => {
 	const obj = []
@@ -56,10 +56,6 @@ const propsSanitized = computed(() => {
 
 	return obj
 })
-
-function gotoCustomer(code: string | number) {
-	router.push({ name: "Customers", query: { code } })
-}
 </script>
 
 <style lang="scss" scoped>

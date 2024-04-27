@@ -6,7 +6,7 @@
 			:vertical="vertical"
 			hovered
 			class="cursor-pointer h-full"
-			@click="gotoSocAlertsPage()"
+			@click="gotoSocAlerts()"
 		>
 			<template #icon>
 				<CardStatsIcon :iconName="SOCIcon" boxed :boxSize="40"></CardStatsIcon>
@@ -22,7 +22,7 @@ import CardStats from "@/components/common/CardStats.vue"
 import Api from "@/api"
 import { useMessage, NSpin } from "naive-ui"
 import type { SocAlert } from "@/types/soc/alert.d"
-import { useRouter } from "vue-router"
+import { useGoto } from "@/composables/useGoto"
 
 const props = defineProps<{
 	vertical?: boolean
@@ -30,7 +30,7 @@ const props = defineProps<{
 const { vertical } = toRefs(props)
 
 const SOCIcon = "carbon:security"
-const router = useRouter()
+const { gotoSocAlerts } = useGoto()
 const message = useMessage()
 const loading = ref(false)
 const alerts = ref<SocAlert[]>([])
@@ -57,10 +57,6 @@ function getData() {
 		.finally(() => {
 			loading.value = false
 		})
-}
-
-function gotoSocAlertsPage() {
-	router.push({ name: "Soc-Alerts" })
 }
 
 onBeforeMount(() => {

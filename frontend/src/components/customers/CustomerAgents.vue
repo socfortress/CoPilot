@@ -8,7 +8,7 @@
 				bg-secondary
 				show-actions
 				@delete="getAgents()"
-				@click="gotoAgentPage(agent)"
+				@click="gotoAgent(agent.agent_id)"
 				class="item-appear item-appear-bottom item-appear-005"
 			/>
 			<n-empty v-if="!list.length" description="No Agents found" class="justify-center h-48" />
@@ -22,8 +22,8 @@ import AgentCard from "@/components/agents/AgentCard.vue"
 import Api from "@/api"
 import { useMessage, NSpin, NEmpty } from "naive-ui"
 import type { Customer } from "@/types/customers.d"
-import { useRouter } from "vue-router"
 import type { Agent } from "@/types/agents.d"
+import { useGoto } from "@/composables/useGoto"
 
 const props = defineProps<{
 	customer: Customer
@@ -31,13 +31,9 @@ const props = defineProps<{
 const { customer } = toRefs(props)
 
 const loading = ref(false)
-const router = useRouter()
+const { gotoAgent } = useGoto()
 const message = useMessage()
 const list = ref<Agent[] | []>([])
-
-function gotoAgentPage(agent: Agent) {
-	router.push({ name: "Agent", params: { id: agent.agent_id } })
-}
 
 function getAgents() {
 	loading.value = true

@@ -117,6 +117,12 @@ const router = createRouter({
 					name: "Soc-Users",
 					component: () => import("@/views/soc/Users.vue"),
 					meta: { title: "SOC Users" }
+				},
+				{
+					path: "pending-alerts",
+					name: "Soc-PendingAlerts",
+					component: () => import("@/views/soc/PendingAlerts.vue"),
+					meta: { title: "SOC Pending Alerts" }
 				}
 			]
 		},

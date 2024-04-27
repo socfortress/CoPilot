@@ -14,10 +14,10 @@ class AvailableContentPacks(str, Enum):
         " Pipelines, and Lookup Tables for Wazuh logs and the SOCFortress SIEM stack."
     )
     # ! COMMENTING OUT UNTIL READY ! #
-    # SOCFORTRESS_FORTINET_INPUT_SYSLOG_TCP = "The Fortinet Input Syslog TCP content pack"
-    # SOCFORTRESS_FORTINET_INPUT_SYSLOG_UDP = "The Fortinet Input Syslog UDP content pack"
-    # SOCFORTRESS_FORTINET_PROCESSING_PIPELINE = "The Fortinet Processing Pipeline content pack"
-    # SOCFORTRESS_FORTINET_STREAM = "The Fortinet Stream content pack"
+    SOCFORTRESS_FORTINET_INPUT_SYSLOG_TCP = "The Fortinet Input Syslog TCP content pack"
+    SOCFORTRESS_FORTINET_INPUT_SYSLOG_UDP = "The Fortinet Input Syslog UDP content pack"
+    SOCFORTRESS_FORTINET_PROCESSING_PIPELINE = "The Fortinet Processing Pipeline content pack"
+    SOCFORTRESS_FORTINET_STREAM = "The Fortinet Stream content pack"
 
 
 class ContentPackKeywords(BaseModel):

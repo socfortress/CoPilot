@@ -30,10 +30,7 @@
 						</div>
 						<div class="box">
 							index_name:
-							<code
-								class="cursor-pointer text-primary-color"
-								@click="gotoIndicesPage(alertsEvent.index_name)"
-							>
+							<code class="cursor-pointer text-primary-color" @click="gotoIndex(alertsEvent.index_name)">
 								{{ alertsEvent.index_name }}
 								<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
 							</code>
@@ -95,7 +92,7 @@ import { NPopover, NTimeline, NTimelineItem } from "naive-ui"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
 import Icon from "@/components/common/Icon.vue"
-import { useRouter } from "vue-router"
+import { useGoto } from "@/composables/useGoto"
 
 const { alertsEvent } = defineProps<{ alertsEvent: AlertsEventElement }>()
 
@@ -107,15 +104,11 @@ const InfoIcon = "carbon:information"
 const TimeIcon = "carbon:time"
 const LinkIcon = "carbon:launch"
 
-const router = useRouter()
 const dFormats = useSettingsStore().dateFormat
+const { gotoIndex } = useGoto()
 
 function formatDateTime(timestamp: string): string {
 	return formatDate(timestamp, dFormats.datetimesec).toString()
-}
-
-function gotoIndicesPage(index: string) {
-	router.push({ name: "Indices", query: { index_name: index } })
 }
 
 function gotoEventsPage(event_definition_id: string) {

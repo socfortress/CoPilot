@@ -1,7 +1,7 @@
 <template>
 	<div class="alert-summary flex flex-col">
 		<div class="header-box flex justify-between gap-4">
-			<div class="id flex items-center gap-2" @click="gotoIndicesPage(alertsSummary.index_name)">
+			<div class="id flex items-center gap-2" @click="gotoIndex(alertsSummary.index_name)">
 				<IndexIcon :health="alertsSummary.indexStats?.health" color v-if="alertsSummary.indexStats?.health" />
 				<Icon :name="PlaceholderIcon" v-else :size="18" />
 
@@ -50,8 +50,8 @@ import Alert from "./Alert.vue"
 import IndexIcon from "@/components/indices/IndexIcon.vue"
 import Icon from "@/components/common/Icon.vue"
 import type { IndexStats } from "@/types/indices.d"
-import { useRouter } from "vue-router"
 import { ref } from "vue"
+import { useGoto } from "@/composables/useGoto"
 
 export interface AlertsSummaryExt extends AlertsSummary {
 	indexStats?: IndexStats
@@ -63,12 +63,8 @@ const ExpandIcon = "carbon:chevron-down"
 const PlaceholderIcon = "ph:question"
 const LinkIcon = "carbon:launch"
 
-const router = useRouter()
 const showAllAlerts = ref(false)
-
-function gotoIndicesPage(index: string) {
-	router.push({ name: "Indices", query: { index_name: index } })
-}
+const { gotoIndex } = useGoto()
 </script>
 
 <style lang="scss" scoped>

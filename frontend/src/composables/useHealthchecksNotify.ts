@@ -2,13 +2,13 @@ import { computed, watch } from "vue"
 import { usHealthcheckStore } from "@/stores/healthcheck"
 import { useNotifications, type Notification } from "./useNotifications"
 import { IndexHealth } from "@/types/indices.d"
-import { useRouter } from "vue-router"
 import _capitalize from "lodash/capitalize"
+import { useGoto } from "./useGoto"
 
 export function useHealthchecksNotify() {
 	return {
 		init: () => {
-			const router = useRouter()
+			const { gotoHealthcheck, gotoIndex, gotoGraylogMetrics } = useGoto()
 
 			const uncommittedJournalEntriesThreshold = usHealthcheckStore().uncommittedJournalEntriesThreshold
 			const uncommittedJournalEntries = computed(() => usHealthcheckStore().uncommittedJournalEntries)
@@ -29,7 +29,7 @@ export function useHealthchecksNotify() {
 						read: false,
 						date: new Date(),
 						action() {
-							router.push({ name: "Graylog-Metrics" })
+							gotoGraylogMetrics()
 						},
 						actionTitle: "See Graylog Metrics"
 					}
@@ -55,7 +55,7 @@ export function useHealthchecksNotify() {
 						read: false,
 						date: new Date(),
 						action() {
-							router.push({ name: "Indices" })
+							gotoIndex()
 						},
 						actionTitle: "See Cluster"
 					}
@@ -81,7 +81,7 @@ export function useHealthchecksNotify() {
 						read: false,
 						date: new Date(),
 						action() {
-							router.push({ name: "Healthcheck" })
+							gotoHealthcheck()
 						},
 						actionTitle: "See Healthcheck"
 					}

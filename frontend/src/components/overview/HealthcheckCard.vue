@@ -6,7 +6,7 @@
 			:value="total"
 			hovered
 			class="cursor-pointer"
-			@click="gotoHealthcheckPage()"
+			@click="gotoHealthcheck()"
 			secondLabel="Critical"
 			:subValue="criticalTotal"
 			:secondStatus="criticalTotal ? 'warning' : undefined"
@@ -30,11 +30,11 @@ import CardStatsIcon from "@/components/common/CardStatsIcon.vue"
 import Api from "@/api"
 import { useMessage, NSpin } from "naive-ui"
 import { InfluxDBAlertLevel, type InfluxDBAlert } from "@/types/healthchecks.d"
-import { useRouter } from "vue-router"
 import { useThemeStore } from "@/stores/theme"
+import { useGoto } from "@/composables/useGoto"
 
 const HealthcheckIcon = "ph:heartbeat"
-const router = useRouter()
+const { gotoHealthcheck } = useGoto()
 const message = useMessage()
 const loading = ref(false)
 const healthcheck = ref<InfluxDBAlert[]>([])
@@ -69,10 +69,6 @@ function getData() {
 		.finally(() => {
 			loading.value = false
 		})
-}
-
-function gotoHealthcheckPage() {
-	router.push({ name: "Healthcheck" })
 }
 
 onBeforeMount(() => {

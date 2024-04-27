@@ -75,13 +75,13 @@ import { computed, onMounted, ref } from "vue"
 import { NText, NModal, NCard, NDivider, NAvatar, NScrollbar, type ScrollbarInst } from "naive-ui"
 import { useMagicKeys, whenever } from "@vueuse/core"
 import Highlighter from "vue-highlight-words"
-import { useRouter } from "vue-router"
 import { useThemeSwitch } from "@/composables/useThemeSwitch"
 import { useFullscreenSwitch } from "@/composables/useFullscreenSwitch"
 import { useSearchDialog } from "@/composables/useSearchDialog"
 import { getOS } from "@/utils"
 import Icon from "@/components/common/Icon.vue"
 import { emitter } from "@/emitter"
+import { useGoto } from "@/composables/useGoto"
 
 const SearchIcon = "ion:search-outline"
 const ArrowEnterIcon = "fluent:arrow-enter-left-24-regular"
@@ -111,13 +111,12 @@ interface Group {
 }
 type Groups = Group[]
 
-const router = useRouter()
-
 const showSearchBox = ref(false)
 const search = ref("")
 const activeItem = ref<null | string | number>(null)
 const commandIcon = ref("⌘")
 const scrollContent = ref<(ScrollbarInst & { $el: any }) | null>(null)
+const { gotoCustomer, gotoSocAlerts, gotoAlerts, gotoConnectors } = useGoto()
 
 const groups = ref<Groups>([
 	{
@@ -130,7 +129,7 @@ const groups = ref<Groups>([
 				title: "Add a Customer",
 				label: "Shortcut",
 				action() {
-					router.push({ name: "Customers", query: { action: "add-customer" } })
+					gotoCustomer({ action: "add-customer" })
 					emitter.emit("action:add-customer")
 				}
 			},
@@ -141,7 +140,7 @@ const groups = ref<Groups>([
 				title: "Configure a connector",
 				label: "Shortcut",
 				action() {
-					router.push({ name: "Connectors" })
+					gotoConnectors()
 				}
 			},
 			{
@@ -151,7 +150,7 @@ const groups = ref<Groups>([
 				title: "View Escalated Alerts",
 				label: "Shortcut",
 				action() {
-					router.push({ name: "Soc-Alerts" })
+					gotoSocAlerts()
 				}
 			},
 			{
@@ -161,7 +160,7 @@ const groups = ref<Groups>([
 				title: "View Identified Alerts",
 				label: "Shortcut",
 				action() {
-					router.push({ name: "Alerts" })
+					gotoAlerts()
 				}
 			}
 		]

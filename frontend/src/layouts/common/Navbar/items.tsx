@@ -194,6 +194,19 @@ export default function getItems(mode: "vertical" | "horizontal", collapsed: boo
 							{ default: () => "Users" }
 						),
 					key: "Soc-Users"
+				},
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "Soc-PendingAlerts"
+								}
+							},
+							{ default: () => "Pending Alerts" }
+						),
+					key: "Soc-PendingAlerts"
 				}
 			]
 		},

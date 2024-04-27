@@ -114,7 +114,7 @@ function reopenCase() {
 function handleDelete() {
 	dialog.warning({
 		title: "Confirm",
-		content: "This will delete the case are you sure you want to proceed?",
+		content: "This will delete the case, are you sure you want to proceed?",
 		positiveText: "Yes I'm sure",
 		negativeText: "Cancel",
 		onPositiveClick: () => {

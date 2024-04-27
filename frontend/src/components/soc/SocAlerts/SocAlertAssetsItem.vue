@@ -47,7 +47,7 @@
 							<template #label>Updated</template>
 							<template #value>{{ formatDate(asset.date_update) }}</template>
 						</Badge>
-						<Badge type="active" class="cursor-pointer" @click="gotoAgentPage(asset.asset_tags)">
+						<Badge type="active" class="cursor-pointer" @click="gotoAgent(asset.asset_tags)">
 							<template #iconRight>
 								<Icon :name="LinkIcon" :size="14"></Icon>
 							</template>
@@ -76,7 +76,7 @@
 								<template v-if="key === 'asset_tags'">
 									<code
 										class="cursor-pointer text-primary-color"
-										@click="gotoAgentPage(value)"
+										@click="gotoAgent(value)"
 										v-if="value && value !== '-'"
 									>
 										{{ value }}
@@ -132,15 +132,15 @@ import _omit from "lodash/omit"
 import dayjs from "@/utils/dayjs"
 import { isUrlLike } from "@/utils"
 import type { SocAlertAsset } from "@/types/soc/asset.d"
-import { useRouter } from "vue-router"
 import { useSettingsStore } from "@/stores/settings"
+import { useGoto } from "@/composables/useGoto"
 
 const { asset } = defineProps<{ asset: SocAlertAsset }>()
 
 const InfoIcon = "carbon:information"
 const ClockIcon = "carbon:time"
 const LinkIcon = "carbon:launch"
-const router = useRouter()
+const { gotoAgent } = useGoto()
 const showDetails = ref(false)
 
 const dFormats = useSettingsStore().dateFormat
@@ -172,10 +172,6 @@ const properties = computed(() => {
 const assetType = computed(() => {
 	return asset.asset_type || {}
 })
-
-function gotoAgentPage(agentId: string) {
-	router.push({ name: "Agent", params: { id: agentId } })
-}
 
 const formatDate = (date: string, useSec = false) => {
 	const datejs = dayjs(date)

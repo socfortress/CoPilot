@@ -47,7 +47,7 @@
 								agent_id:
 								<code
 									class="cursor-pointer text-primary-color"
-									@click="gotoAgentPage(alert._source.agent_id)"
+									@click="gotoAgent(alert._source.agent_id)"
 								>
 									{{ alert._source.agent_id }}
 									<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
@@ -65,7 +65,7 @@
 								agent_labels_customer:
 								<code
 									class="cursor-pointer text-primary-color"
-									@click="gotoCustomer(alert._source.agent_labels_customer)"
+									@click="gotoCustomer({ code: alert._source.agent_labels_customer })"
 								>
 									{{ alert._source.agent_labels_customer }}
 									<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
@@ -131,13 +131,16 @@
 							<template #key>{{ key }}</template>
 							<template #value>
 								<template v-if="key === 'agent_id'">
-									<code class="cursor-pointer text-primary-color" @click="gotoAgentPage(value + '')">
+									<code class="cursor-pointer text-primary-color" @click="gotoAgent(value + '')">
 										{{ value }}
 										<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
 									</code>
 								</template>
 								<template v-else-if="key === 'agent_labels_customer'">
-									<code class="cursor-pointer text-primary-color" @click="gotoCustomer(value + '')">
+									<code
+										class="cursor-pointer text-primary-color"
+										@click="gotoCustomer(value ? { code: value.toString() } : undefined)"
+									>
 										{{ value }}
 										<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
 									</code>
@@ -226,9 +229,9 @@ const AlertActions = defineAsyncComponent(() => import("./AlertActions.vue"))
 import type { Alert } from "@/types/alerts.d"
 import { SimpleJsonViewer } from "vue-sjv"
 import "@/assets/scss/vuesjv-override.scss"
-import { useRouter } from "vue-router"
 import _pick from "lodash/pick"
 import KVCard from "@/components/common/KVCard.vue"
+import { useGoto } from "@/composables/useGoto"
 
 const props = defineProps<{ alert: Alert; hideActions?: boolean }>()
 const { alert, hideActions } = toRefs(props)
@@ -240,7 +243,7 @@ const MailIcon = "carbon:email"
 const AgentIcon = "carbon:police"
 const LinkIcon = "carbon:launch"
 
-const router = useRouter()
+const { gotoCustomer, gotoAgent } = useGoto()
 const loading = ref(false)
 const showDetails = ref(false)
 const dFormats = useSettingsStore().dateFormat
@@ -257,14 +260,6 @@ const agentProperties = computed(() => {
 		"agent_name"
 	])
 })
-
-function gotoAgentPage(agentId: string) {
-	router.push({ name: "Agent", params: { id: agentId } })
-}
-
-function gotoCustomer(code: string | number) {
-	router.push({ name: "Customers", query: { code } })
-}
 </script>
 
 <style lang="scss" scoped>

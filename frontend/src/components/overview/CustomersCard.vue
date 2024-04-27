@@ -6,7 +6,7 @@
 			:vertical="vertical"
 			hovered
 			class="cursor-pointer h-full"
-			@click="gotoCustomersPage()"
+			@click="gotoCustomer()"
 		>
 			<template #icon>
 				<CardStatsIcon :iconName="CustomersIcon" boxed :boxSize="40"></CardStatsIcon>
@@ -22,7 +22,7 @@ import CardStats from "@/components/common/CardStats.vue"
 import Api from "@/api"
 import { useMessage, NSpin } from "naive-ui"
 import type { Customer } from "@/types/customers.d"
-import { useRouter } from "vue-router"
+import { useGoto } from "@/composables/useGoto"
 
 const props = defineProps<{
 	vertical?: boolean
@@ -30,7 +30,7 @@ const props = defineProps<{
 const { vertical } = toRefs(props)
 
 const CustomersIcon = "carbon:user-multiple"
-const router = useRouter()
+const { gotoCustomer } = useGoto()
 const message = useMessage()
 const loading = ref(false)
 const customers = ref<Customer[]>([])
@@ -57,10 +57,6 @@ function getData() {
 		.finally(() => {
 			loading.value = false
 		})
-}
-
-function gotoCustomersPage() {
-	router.push({ name: "Customers" })
 }
 
 onBeforeMount(() => {

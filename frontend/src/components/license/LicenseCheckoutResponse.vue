@@ -35,7 +35,7 @@ import Api from "@/api"
 import { NButton, NCard, NSpin, useMessage } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import type { LicenseKey } from "@/types/license"
-import { useRouter } from "vue-router"
+import { useGoto } from "@/composables/useGoto"
 
 const props = defineProps<{ type: "success" | "error"; data?: { email?: string } }>()
 const { type, data } = toRefs(props)
@@ -43,7 +43,7 @@ const { type, data } = toRefs(props)
 const ErrorIcon = "majesticons:exclamation-line"
 const LicenseIcon = "carbon:license"
 const CheckIcon = "carbon:checkmark-outline"
-const router = useRouter()
+const { gotoLicense } = useGoto()
 const message = useMessage()
 const loadingLicense = ref(false)
 const license = ref<LicenseKey | null>(null)
@@ -68,10 +68,6 @@ function getLicense(email: string) {
 		.finally(() => {
 			loadingLicense.value = false
 		})
-}
-
-function gotoLicense() {
-	router.push({ name: "License" })
 }
 
 onBeforeMount(() => {
