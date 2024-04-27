@@ -35,7 +35,7 @@
 </template>
 
 <script setup lang="ts">
-import { NButton, NSpin, NModal, useMessage } from "naive-ui"
+import { NButton, NModal, useMessage } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import Api from "@/api"
 import { onBeforeMount, ref } from "vue"

@@ -19,8 +19,17 @@ export function useGoto() {
 		}
 	}
 
+	function gotoIndex(indexName?: string) {
+		if (indexName) {
+			router.push({ name: "Indices", query: { index_name: indexName } })
+		} else {
+			router.push({ name: "Indices" })
+		}
+	}
+
 	return {
 		gotoCustomer,
-		gotoAgent
+		gotoAgent,
+		gotoIndex
 	}
 }

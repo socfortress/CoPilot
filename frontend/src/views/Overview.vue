@@ -36,7 +36,7 @@
 			</div>
 		</div>
 		<div class="section">
-			<IndicesMarquee @click="gotoIndicesPage" />
+			<IndicesMarquee @click="gotoIndex($event.index)" />
 		</div>
 		<div class="section">
 			<div class="columns">
@@ -85,19 +85,16 @@ import HealthcheckCard from "@/components/overview/HealthcheckCard.vue"
 // import SocAlertsCard from "@/components/overview/SocAlertsCard.vue"
 import CustomersCard from "@/components/overview/CustomersCard.vue"
 import PipeList from "@/components/graylog/Pipelines/PipeList.vue"
-import type { IndexStats } from "@/types/indices.d"
 import { useResizeObserver } from "@vueuse/core"
 import Icon from "@/components/common/Icon.vue"
+import { useGoto } from "@/composables/useGoto"
 
 const QuickActionsIcon = "ant-design:thunderbolt-outlined"
 const router = useRouter()
 const page = ref()
 const cardDirection = ref<"horizontal" | "vertical">("horizontal")
 const showQuickActions = ref(false)
-
-function gotoIndicesPage(index: IndexStats) {
-	router.push({ name: "Indices", query: { index_name: index.index } })
-}
+const { gotoIndex } = useGoto()
 
 function gotoPipelinesPage(rule: string) {
 	router.push({ name: "Graylog-Pipelines", query: { rule } })
