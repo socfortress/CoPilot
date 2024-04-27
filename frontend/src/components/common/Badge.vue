@@ -17,6 +17,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: refactor
 const { type, hintCursor, pointCursor, color, href, fluid } = defineProps<{
 	type?: "splitted" | "muted" | "active" | "cursor"
 	hintCursor?: boolean
