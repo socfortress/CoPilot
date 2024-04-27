@@ -1,5 +1,5 @@
 <template>
-	<div class="overlay feature-overlay" v-if="showBanner">
+	<div class="over-layer feature-layer" v-if="showBanner">
 		<n-alert title="Feature required">
 			<template #icon>
 				<Icon :name="AlertIcon" :size="18"></Icon>

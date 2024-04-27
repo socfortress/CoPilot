@@ -2,7 +2,7 @@
 	<n-spin
 		:show="loading"
 		:description="loadingDelete ? 'Deleting Soc Alert' : 'Loading Soc Alert'"
-		class="soc-alert-item flex flex-col gap-0"
+		class="soc-alert-item flex flex-col gap-0 min-h-36 pb-2"
 		:class="{ bookmarked: isBookmark, highlight, embedded }"
 		:id="'alert-' + alert?.alert_id"
 	>
