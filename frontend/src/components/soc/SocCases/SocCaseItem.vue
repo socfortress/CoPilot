@@ -275,7 +275,7 @@ import dayjs from "@/utils/dayjs"
 import { type SocCase, StateName, type SocCaseExt } from "@/types/soc/case.d"
 import _omit from "lodash/omit"
 import _split from "lodash/split"
-import { useRouter } from "vue-router"
+import { useGoto } from "@/composables/useGoto"
 
 const { caseData, caseId, embedded, hideSocCaseAction, hideSocAlertLink } = defineProps<{
 	caseData?: SocCase
@@ -297,7 +297,7 @@ const OwnerIcon = "carbon:user-military"
 const StatusIcon = "fluent:status-20-regular"
 const AddIcon = "carbon:add-alt"
 
-const router = useRouter()
+const { gotoCustomer } = useGoto()
 const showSocAlertDetails = ref(false)
 const showDetails = ref(false)
 const loadingDetails = ref(false)
@@ -428,10 +428,6 @@ function getDetails() {
 				loadingDetails.value = false
 			})
 	}
-}
-
-function gotoCustomer(code: string | number) {
-	router.push({ name: "Customers", query: { code } })
 }
 
 watch(showDetails, val => {

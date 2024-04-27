@@ -229,6 +229,7 @@ import "@/assets/scss/vuesjv-override.scss"
 import { useRouter } from "vue-router"
 import _pick from "lodash/pick"
 import KVCard from "@/components/common/KVCard.vue"
+import { useGoto } from "@/composables/useGoto"
 
 const props = defineProps<{ alert: Alert; hideActions?: boolean }>()
 const { alert, hideActions } = toRefs(props)
@@ -240,6 +241,7 @@ const MailIcon = "carbon:email"
 const AgentIcon = "carbon:police"
 const LinkIcon = "carbon:launch"
 
+const { gotoCustomer } = useGoto()
 const router = useRouter()
 const loading = ref(false)
 const showDetails = ref(false)
@@ -260,10 +262,6 @@ const agentProperties = computed(() => {
 
 function gotoAgentPage(agentId: string) {
 	router.push({ name: "Agent", params: { id: agentId } })
-}
-
-function gotoCustomer(code: string | number) {
-	router.push({ name: "Customers", query: { code } })
 }
 </script>
 

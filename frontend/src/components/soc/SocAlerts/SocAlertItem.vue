@@ -328,6 +328,7 @@ import { useSettingsStore } from "@/stores/settings"
 import dayjs from "@/utils/dayjs"
 import type { SocUser } from "@/types/soc/user.d"
 import { useRouter } from "vue-router"
+import { useGoto } from "@/composables/useGoto"
 
 const checked = defineModel<boolean>("checked", { default: false })
 
@@ -385,6 +386,7 @@ const loadingData = ref(false)
 const loadingBookmark = ref(false)
 const router = useRouter()
 const message = useMessage()
+const { gotoCustomer } = useGoto()
 
 const alert = ref(alertData.value || null)
 
@@ -490,10 +492,6 @@ function caseCreated(caseId: string | number) {
 function deleted() {
 	loadingDelete.value = false
 	emit("deleted")
-}
-
-function gotoCustomer(code: string | number | { [key: string]: any }) {
-	router.push({ name: "Customers", query: { code: code.toString() } })
 }
 
 watch(checked, val => {
