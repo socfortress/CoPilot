@@ -27,9 +27,29 @@ export function useGoto() {
 		}
 	}
 
+	function gotoLicense() {
+		router.push({ name: "License" })
+	}
+
+	function gotoHealthcheck() {
+		router.push({ name: "Healthcheck" })
+	}
+
+	function gotoGraylogMetrics() {
+		router.push({ name: "Graylog-Metrics" })
+	}
+
+	function gotoGraylogManagement(tabName?: "messages" | "alerts" | "events" | "streams" | "provisioning" | "inputs") {
+		router.push({ name: "Graylog-Management", hash: tabName ? `#${tabName}` : undefined })
+	}
+
 	return {
 		gotoCustomer,
 		gotoAgent,
-		gotoIndex
+		gotoIndex,
+		gotoLicense,
+		gotoHealthcheck,
+		gotoGraylogMetrics,
+		gotoGraylogManagement
 	}
 }

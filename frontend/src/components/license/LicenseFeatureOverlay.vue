@@ -26,22 +26,18 @@
 import { ref } from "vue"
 import { NAlert, NButton } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
-import { useRouter } from "vue-router"
 import Api from "@/api"
 import { onBeforeMount } from "vue"
 import type { LicenseFeatures } from "@/types/license"
+import { useGoto } from "@/composables/useGoto"
 
 const { feature } = defineProps<{ feature: LicenseFeatures }>()
 
 const LicenseIcon = "carbon:license"
 const AlertIcon = "mdi:alert-outline"
 
-const router = useRouter()
+const { gotoLicense } = useGoto()
 const showBanner = ref(false)
-
-function gotoLicense() {
-	router.push({ name: "License" })
-}
 
 function checkFeature(feature: LicenseFeatures) {
 	Api.license

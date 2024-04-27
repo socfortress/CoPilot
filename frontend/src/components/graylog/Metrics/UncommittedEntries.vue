@@ -13,7 +13,7 @@
 			</div>
 		</div>
 		<div class="footer">
-			<n-button type="primary" ghost icon-placement="right" @click="gotoMessages()">
+			<n-button type="primary" ghost icon-placement="right" @click="gotoGraylogManagement('messages')">
 				<template #icon>
 					<Icon :name="LinkIcon" :size="14"></Icon>
 				</template>
@@ -27,20 +27,19 @@
 import Icon from "@/components/common/Icon.vue"
 import { NButton } from "naive-ui"
 import { computed, ref, toRefs } from "vue"
-import { useRouter } from "vue-router"
 import { useThemeStore } from "@/stores/theme"
 import dayjs from "@/utils/dayjs"
 import "@/assets/scss/apexchart-override.scss"
 import { watch } from "vue"
 import { usHealthcheckStore } from "@/stores/healthcheck"
 import apexchart from "vue3-apexcharts"
+import { useGoto } from "@/composables/useGoto"
 
 const UNCOMMITTED_JOURNAL_ENTRIES_THRESHOLD = usHealthcheckStore().uncommittedJournalEntriesThreshold
 
 const props = defineProps<{
 	value: number
 }>()
-const router = useRouter()
 const { value } = toRefs(props)
 
 const LinkIcon = "carbon:launch"
@@ -48,14 +47,11 @@ const DangerIcon = "majesticons:exclamation-line"
 
 const style = computed<{ [key: string]: any }>(() => useThemeStore().style)
 const isThemeDark = computed(() => useThemeStore().isThemeDark)
+const { gotoGraylogManagement } = useGoto()
 
 const isWarning = computed<boolean>(() => {
 	return value.value > UNCOMMITTED_JOURNAL_ENTRIES_THRESHOLD
 })
-
-function gotoMessages() {
-	router.push({ name: "Graylog-Management" })
-}
 
 const series = ref<{ name: string; data: any }[]>([
 	{
