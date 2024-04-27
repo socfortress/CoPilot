@@ -1,6 +1,6 @@
 import { type FlaskBaseResponse } from "@/types/flask.d"
 import { HttpClient } from "./httpClient"
-import type { AvailableMonitoringAlert } from "@/types/monitoringAlerts.d"
+import type { AvailableMonitoringAlert, MonitoringAlert } from "@/types/monitoringAlerts.d"
 
 export interface ProvisionsMonitoringAlertParams {
 	searchWithinLast: number
@@ -42,5 +42,17 @@ export default {
 	},
 	customProvision(payload: CustomProvisionPayload) {
 		return HttpClient.post<FlaskBaseResponse>(`/monitoring_alert/provision/custom`, payload)
+	},
+	listAll(signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { monitoring_alerts: MonitoringAlert[] }>(
+			`/monitoring_alert/list`,
+			signal ? { signal } : {}
+		)
+	},
+	invoke(alertId: number) {
+		return HttpClient.post<FlaskBaseResponse>(`/monitoring_alert/invoke/${alertId}`)
+	},
+	delete(alertId: number) {
+		return HttpClient.delete<FlaskBaseResponse>(`/monitoring_alert/${alertId}`)
 	}
 }

@@ -19,7 +19,6 @@ import stackProvisioning from "./stackProvisioning"
 import reporting from "./reporting"
 import license from "./license"
 import scheduler from "./scheduler"
-import monitoringAlert from "./monitoringAlert"
 
 export default {
 	agents,
@@ -42,6 +41,5 @@ export default {
 	stackProvisioning,
 	reporting,
 	license,
-	scheduler,
-	monitoringAlert
+	scheduler
 }
