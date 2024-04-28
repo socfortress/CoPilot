@@ -28,6 +28,16 @@ class ProvisionFortinetRequest(BaseModel):
         description="The udp enabled.",
         examples=[True],
     )
+    hot_data_retention: int = Field(
+        ...,
+        example=30,
+        description="Number of days to retain hot data",
+    )
+    index_replicas: int = Field(
+        ...,
+        example=1,
+        description="Number of replicas for the customer's Graylog instance",
+    )
 
     # ensure the `integration_name` is always set to "Fortinet"
     @root_validator(pre=True)
@@ -69,4 +79,14 @@ class FortinetCustomerDetails(BaseModel):
         ...,
         description="The syslog port.",
         examples=[514],
+    )
+    hot_data_retention: int = Field(
+        ...,
+        example=30,
+        description="Number of days to retain hot data",
+    )
+    index_replicas: int = Field(
+        ...,
+        example=1,
+        description="Number of replicas for the customer's Graylog instance",
     )

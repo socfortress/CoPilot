@@ -53,6 +53,9 @@ from app.integrations.office365.schema.provision import PipelineTitles
 from app.integrations.office365.schema.provision import ProvisionOffice365AuthKeys
 from app.integrations.office365.schema.provision import ProvisionOffice365Response
 from app.utils import get_connector_attribute
+from app.connectors.wazuh_indexer.services.monitoring import (
+    output_shard_number_to_be_set_based_on_nodes,
+)
 
 load_dotenv()
 
@@ -371,7 +374,7 @@ async def build_index_set_config(
     return TimeBasedIndexSet(
         title=f"{(await get_customer(customer_code, session)).customer.customer_name} - Office365",
         description=f"{customer_code} - Office365",
-        index_prefix=f"office365_{customer_code}",
+        index_prefix=f"office365-{customer_code}",
         rotation_strategy_class="org.graylog2.indexer.rotation.strategies.TimeBasedRotationStrategy",
         rotation_strategy={
             "type": "org.graylog2.indexer.rotation.strategies.TimeBasedRotationStrategyConfig",
@@ -386,7 +389,7 @@ async def build_index_set_config(
         },
         creation_date=datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
         index_analyzer="standard",
-        shards=1,
+        shards=await output_shard_number_to_be_set_based_on_nodes(),
         replicas=0,
         index_optimization_max_num_segments=1,
         index_optimization_disabled=False,

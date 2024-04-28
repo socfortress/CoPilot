@@ -39,6 +39,7 @@ from app.integrations.alert_creation_settings.models.alert_creation_settings imp
 from app.integrations.alert_creation_settings.models.alert_creation_settings import (
     EventOrder,
 )
+from app.db.universal_models import CustomersMeta
 
 
 ################## ! 422 VALIDATION ERROR TYPES FOR PYDANTIC VALUE ERROR RESPONSE ! ##################
@@ -633,6 +634,31 @@ async def get_connector_attribute(
 
     if connector:
         return getattr(connector, column_name, None)
+    return None
+
+async def get_customer_meta_attribute(
+    customer_code: str,
+    column_name: str,
+    session: AsyncSession = Depends(get_session),
+) -> Optional[Any]:
+    """
+    Retrieve the value of a specific column from a customer.
+
+    Args:
+        customer_code (str): The code of the customer.
+        column_name (str): The name of the column to retrieve.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_session).
+
+    Returns:
+        Optional[Any]: The value of the column, or None if the customer or column does not exist.
+    """
+    result = await session.execute(
+        select(CustomersMeta).filter(CustomersMeta.customer_code == customer_code),
+    )
+    customer = result.scalars().first()
+
+    if customer:
+        return getattr(customer, column_name, None)
     return None
 
 

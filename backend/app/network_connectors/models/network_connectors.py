@@ -113,5 +113,6 @@ class CustomerNetworkConnectorsMeta(SQLModel, table=True):
     graylog_input_id: Optional[str] = Field(max_length=1024)
     graylog_index_id: str = Field(max_length=1024, nullable=False)
     graylog_stream_id: str = Field(max_length=1024, nullable=False)
+    graylog_pipeline_id: str = Field(max_length=1024, nullable=False)
     grafana_org_id: str = Field(max_length=1024, nullable=False)
     grafana_dashboard_folder_id: str = Field(max_length=1024, nullable=False)

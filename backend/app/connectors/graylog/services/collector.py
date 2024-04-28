@@ -219,3 +219,61 @@ async def get_url_whitelist_entries() -> UrlWhitelistEntryResponse:
             success=False,
             message="Failed to collect URL whitelist entries",
         )
+
+
+async def get_stream_id_by_stream_name(stream_name: str) -> str:
+    """Get stream ID from Graylog by stream name.
+
+    Args:
+        stream_name (str): The name of the stream.
+
+    Returns:
+        str: The ID of the stream.
+
+    Raises:
+        HTTPException: If there is an error collecting the stream ID.
+    """
+    logger.info(f"Getting stream ID from Graylog for stream {stream_name}")
+    streams_collected = await send_get_request(endpoint="/api/streams")
+    try:
+        if streams_collected["success"]:
+            for stream in streams_collected["data"]["streams"]:
+                if stream["title"] == stream_name:
+                    return stream["id"]
+        else:
+            return ""
+    except KeyError as e:
+        logger.error(f"Failed to collect stream ID key: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to collect stream ID key: {e}",
+        )
+
+
+async def get_input_id_by_input_name(input_name: str) -> str:
+    """Get input ID from Graylog by input name.
+
+    Args:
+        input_name (str): The name of the input.
+
+    Returns:
+        str: The ID of the input.
+
+    Raises:
+        HTTPException: If there is an error collecting the input ID.
+    """
+    logger.info(f"Getting input ID from Graylog for input {input_name}")
+    inputs_collected = await send_get_request(endpoint="/api/system/inputs")
+    try:
+        if inputs_collected["success"]:
+            for input in inputs_collected["data"]["inputs"]:
+                if input["title"] == input_name:
+                    return input["id"]
+        else:
+            return ""
+    except KeyError as e:
+        logger.error(f"Failed to collect input ID key: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to collect input ID key: {e}",
+        )

@@ -1,9 +1,12 @@
 from fastapi import HTTPException
 from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 
 from app.connectors.graylog.services.content_packs import get_content_packs
 from app.connectors.graylog.services.management import get_system_info
 from app.stack_provisioning.graylog.schema.provision import AvailableContentPacks
+from app.network_connectors.models.network_connectors import CustomerNetworkConnectorsMeta
 
 
 async def get_graylog_version() -> str:
@@ -90,3 +93,21 @@ async def does_content_pack_exist(content_pack_name: str) -> bool:
             )
     logger.info(f"Content pack {content_pack_name} does not exist")
     return False
+
+
+async def insert_into_customer_network_connectors_meta_table(
+    customer_network_connectors_meta: CustomerNetworkConnectorsMeta,
+    session: AsyncSession,
+) -> None:
+    """
+    Insert the customer network connectors meta into the database.
+
+    Args:
+        customer_network_connectors_meta (CustomerNetworkConnectorsMeta): The customer network connectors meta to insert.
+        session (AsyncSession): The async session object for database operations.
+
+    Returns:
+        None
+    """
+    await session.add(customer_network_connectors_meta)
+    await session.commit()
