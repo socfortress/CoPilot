@@ -455,7 +455,7 @@ async def delete_agent(
     await delete_agent_wazuh(agent_id)
     client_id = await fetch_velociraptor_id(db=session, agent_id=agent_id)
     logger.info(f"Client ID: {client_id}")
-    if client_id != "n/a":
+    if client_id != "Unknown":
         await delete_agent_velociraptor(client_id)
     await delete_agent_from_database(db=session, agent_id=agent_id)
     return AgentModifyResponse(
