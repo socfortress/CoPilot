@@ -78,6 +78,19 @@ class HuntressDashboard(Enum):
 class CarbonBlackDashboard(Enum):
     CARBONBLACK_SUMMARY = ("CarbonBlack", "summary.json")
 
+class FortinetDashboard(Enum):
+    FORTINET_SYSTEM_LOGS = ("Fortinet", "fortinet_system_logs.json")
+    FORTINET_UTM_ANOMALIES = ("Fortinet", "fortinet_utm_anomalies.json")
+    FORTINET_UTM_APP_CONTROL = ("Fortinet", "fortinet_utm_app_control.json")
+    FOTINET_UTM_DLP = ("Fortinet", "fortinet_utm_dlp.json")
+    FORTINET_UTM_DNS = ("Fortinet", "fortinet_utm_dns.json")
+    FORTINET_UTM_IPS = ("Fortinet", "fortinet_utm_ips.json")
+    FORTINET_UTM_SSL = ("Fortinet", "fortinet_utm_ssl.json")
+    FORTINET_UTM_SUMMARY = ("Fortinet", "fortinet_utm_summary.json")
+    FORTINET_UTM_VIRUS = ("Fortinet", "fortinet_utm_virus.json")
+    FORTINET_UTM_WEBFILTER = ("Fortinet", "fortinet_utm_webfilter.json")
+    FORTINET_VPN = ("Fortinet", "fortinet_vpn.json")
+
 
 class DashboardProvisionRequest(BaseModel):
     dashboards: List[str] = Field(
@@ -108,6 +121,7 @@ class DashboardProvisionRequest(BaseModel):
             + list(SapSiemDashboard)
             + list(HuntressDashboard)
             + list(CarbonBlackDashboard)
+            + list(FortinetDashboard)
         }
         if e not in valid_dashboards:
             raise ValueError(f'Dashboard identifier "{e}" is not recognized.')
