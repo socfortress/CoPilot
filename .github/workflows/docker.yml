@@ -2,7 +2,7 @@ name: Docker
 
 on:
     push:
-        branches: [main]
+        branches: [network-connectors]
 
 jobs:
     build-backend:
@@ -31,6 +31,13 @@ jobs:
                   build-args: |
                       COPILOT_API_KEY=${{ secrets.COPILOT_API_KEY }}
 
+            - name: Notify Discord
+              uses: appleboy/discord-action@v1.5.3
+              with:
+                  webhook_id: ${{ secrets.DISCORD_WEBHOOK_ID }}
+                  webhook_token: ${{ secrets.DISCORD_WEBHOOK_TOKEN }}
+                  message: "Docker image for backend has been successfully built and pushed."
+
     build-frontend:
         runs-on: ubuntu-latest
 
@@ -54,3 +61,10 @@ jobs:
                   context: ./frontend
                   push: true
                   tags: ghcr.io/socfortress/copilot-frontend:latest
+
+            - name: Notify Discord
+              uses: appleboy/discord-action@v1.5.3
+              with:
+                  webhook_id: ${{ secrets.DISCORD_WEBHOOK_ID }}
+                  webhook_token: ${{ secrets.DISCORD_WEBHOOK_TOKEN }}
+                  message: "Docker image for frontend has been successfully built and pushed."
