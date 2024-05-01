@@ -153,7 +153,10 @@ async def get_stream_and_index_ids(customer_details):
     stream_id = await get_stream_id_by_stream_name(stream_name=f'{customer_details.customer_name} - FORTINET LOGS AND EVENTS')
     index_id = (await create_index_set(request=customer_details)).data.id
     content_pack_stream_id = await get_content_pack_id_by_content_pack_name(content_pack_name=f'{customer_details.customer_name}_FORTINET_STREAM')
-    content_pack_input_id = await get_input_id_by_input_name(input_name=f'{customer_details.customer_name} - FORTINET LOGS AND EVENTS')
+    if customer_details.protocal_type == 'TCP':
+        content_pack_input_id = await get_content_pack_id_by_content_pack_name(content_pack_name=f'{customer_details.customer_name}_FORTINET_INPUT_SYSLOG_TCP')
+    elif customer_details.protocal_type == 'UDP':
+        content_pack_input_id = await get_content_pack_id_by_content_pack_name(content_pack_name=f'{customer_details.customer_name}_FORTINET_INPUT_SYSLOG_UDP')
     return stream_id, index_id, content_pack_stream_id, content_pack_input_id
 
 #### ! GRAFANA ! ####
