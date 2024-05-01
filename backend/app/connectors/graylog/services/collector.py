@@ -277,3 +277,31 @@ async def get_input_id_by_input_name(input_name: str) -> str:
             status_code=500,
             detail=f"Failed to collect input ID key: {e}",
         )
+
+async def get_content_pack_id_by_content_pack_name(content_pack_name: str) -> str:
+    """Get content pack ID from Graylog by content pack name.
+
+    Args:
+        content_pack_name (str): The name of the content pack.
+
+    Returns:
+        str: The ID of the content pack.
+
+    Raises:
+        HTTPException: If there is an error collecting the content pack ID.
+    """
+    logger.info(f"Getting content pack ID from Graylog for content pack {content_pack_name}")
+    content_packs_collected = await send_get_request(endpoint="/api/system/content_packs")
+    try:
+        if content_packs_collected["success"]:
+            for content_pack in content_packs_collected["data"]["content_packs"]:
+                if content_pack["name"] == content_pack_name:
+                    return content_pack["id"]
+        else:
+            return ""
+    except KeyError as e:
+        logger.error(f"Failed to collect content pack ID key: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to collect content pack ID key: {e}",
+        )

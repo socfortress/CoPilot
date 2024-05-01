@@ -24,7 +24,7 @@ from app.stack_provisioning.graylog.services.provision import (
     provision_content_pack_network_connector,
 )
 from app.customer_provisioning.services.graylog import get_pipeline_id, connect_stream_to_pipeline
-from app.connectors.graylog.services.collector import get_stream_id_by_stream_name, get_input_id_by_input_name
+from app.connectors.graylog.services.collector import get_stream_id_by_stream_name, get_input_id_by_input_name, get_content_pack_id_by_content_pack_name
 from app.utils import get_customer_meta_attribute
 
 from app.connectors.graylog.utils.universal import send_post_request
@@ -152,7 +152,9 @@ async def get_stream_and_index_ids(customer_details):
     """
     stream_id = await get_stream_id_by_stream_name(stream_name=f'{customer_details.customer_name} - FORTINET LOGS AND EVENTS')
     index_id = (await create_index_set(request=customer_details)).data.id
-    return stream_id, index_id
+    content_pack_stream_id = await get_content_pack_id_by_content_pack_name(content_pack_name=f'{customer_details.customer_name}_FORTINET_STREAM')
+    content_pack_input_id = await get_input_id_by_input_name(input_name=f'{customer_details.customer_name} - FORTINET LOGS AND EVENTS')
+    return stream_id, index_id, content_pack_stream_id, content_pack_input_id
 
 #### ! GRAFANA ! ####
 async def create_grafana_datasource(
@@ -219,7 +221,7 @@ async def create_grafana_datasource(
     )
     return GrafanaDataSourceCreationResponse(**results)
 
-async def create_customer_network_connector_meta(customer_details, stream_id, index_id, session):
+async def create_customer_network_connector_meta(customer_details, stream_id, index_id, content_pack_stream_id, content_pack_input_id, session):
     """
     Create a CustomerNetworkConnectorsMeta object with the provided details.
 
@@ -238,6 +240,8 @@ async def create_customer_network_connector_meta(customer_details, stream_id, in
         graylog_stream_id=stream_id,
         graylog_input_id=(await get_input_id_by_input_name(input_name=f'{customer_details.customer_name} - FORTINET LOGS AND EVENTS')),
         graylog_pipeline_id=((await get_pipeline_id(subscription="FORTINET"))[0]),
+        graylog_content_pack_input_id=content_pack_input_id,
+        graylog_content_pack_stream_id=content_pack_stream_id,
         grafana_org_id=(await get_customer_meta_attribute(session=session, customer_code=customer_details.customer_code, column_name='customer_meta_grafana_org_id')),
         graylog_index_id=index_id,
         grafana_dashboard_folder_id=None,
@@ -278,8 +282,8 @@ async def provision_fortinet(customer_details: FortinetCustomerDetails, keys: Pr
     if await validate_grafana_organization_id(customer_details.customer_code, session) is None:
         raise HTTPException(status_code=404, detail="Grafana organization ID not found. Please provision Grafana for the customer first.")
     await provision_content_pack(customer_details)
-    stream_id, index_id = await get_stream_and_index_ids(customer_details)
-    customer_network_connector_meta = await create_customer_network_connector_meta(customer_details, stream_id, index_id, session)
+    stream_id, index_id, content_pack_stream_id, content_pack_input_id = await get_stream_and_index_ids(customer_details)
+    customer_network_connector_meta = await create_customer_network_connector_meta(customer_details, stream_id, index_id, content_pack_stream_id, content_pack_input_id, session)
     await assign_stream_to_index(stream_id=stream_id, index_id=index_id)
     pipeline_id = await get_pipeline_id(subscription="FORTINET")
     await connect_stream_to_pipeline(
