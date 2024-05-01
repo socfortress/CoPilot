@@ -32,7 +32,7 @@ jobs:
                       COPILOT_API_KEY=${{ secrets.COPILOT_API_KEY }}
 
             - name: Notify Discord
-              uses: appleboy/discord-action@v1.5.3
+              uses: appleboy/discord-action@v1.0.0
               with:
                   webhook_id: ${{ secrets.DISCORD_WEBHOOK_ID }}
                   webhook_token: ${{ secrets.DISCORD_WEBHOOK_TOKEN }}
@@ -63,7 +63,7 @@ jobs:
                   tags: ghcr.io/socfortress/copilot-frontend:latest
 
             - name: Notify Discord
-              uses: appleboy/discord-action@v1.5.3
+              uses: appleboy/discord-action@v1.0.0
               with:
                   webhook_id: ${{ secrets.DISCORD_WEBHOOK_ID }}
                   webhook_token: ${{ secrets.DISCORD_WEBHOOK_TOKEN }}
