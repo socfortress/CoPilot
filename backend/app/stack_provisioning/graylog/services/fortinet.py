@@ -248,6 +248,7 @@ async def create_customer_network_connector_meta(customer_details, stream_id, in
         grafana_org_id=(await get_customer_meta_attribute(session=session, customer_code=customer_details.customer_code, column_name='customer_meta_grafana_org_id')),
         graylog_index_id=index_id,
         grafana_dashboard_folder_id=None,
+        grafana_datasource_uid=None,
     )
 
 async def validate_grafana_organization_id(customer_code, session):
@@ -295,14 +296,24 @@ async def provision_fortinet(customer_details: FortinetCustomerDetails, keys: Pr
         )
     )
     # Grafana Deployment
-    fortinet_datasource_uid = (
+    customer_network_connector_meta.grafana_datasource_uid = (
         await create_grafana_datasource(
             customer_code=customer_details.customer_code,
             session=session,
         )
     ).datasource.uid
-    customer_network_connector_meta.grafana_dashboard_folder_id = (
-        await create_grafana_folder(
+    # customer_network_connector_meta.grafana_dashboard_folder_id = (
+    #     await create_grafana_folder(
+    #         organization_id=(
+    #             await get_customer_meta(
+    #                 customer_details.customer_code,
+    #                 session,
+    #             )
+    #         ).customer_meta.customer_meta_grafana_org_id,
+    #         folder_title="FORTINET",
+    #     )
+    # ).uid
+    grafana_folder = await create_grafana_folder(
             organization_id=(
                 await get_customer_meta(
                     customer_details.customer_code,
@@ -311,7 +322,6 @@ async def provision_fortinet(customer_details: FortinetCustomerDetails, keys: Pr
             ).customer_meta.customer_meta_grafana_org_id,
             folder_title="FORTINET",
         )
-    ).id
     await provision_dashboards(
         DashboardProvisionRequest(
             dashboards=[dashboard.name for dashboard in FortinetDashboard],
@@ -321,10 +331,11 @@ async def provision_fortinet(customer_details: FortinetCustomerDetails, keys: Pr
                     session,
                 )
             ).customer_meta.customer_meta_grafana_org_id,
-            folderId=customer_network_connector_meta.grafana_dashboard_folder_id,
-            datasourceUid=fortinet_datasource_uid,
+            folderId=grafana_folder.id,
+            datasourceUid=customer_network_connector_meta.grafana_datasource_uid,
         ),
     )
+    customer_network_connector_meta.grafana_dashboard_folder_id = grafana_folder.uid
     await insert_into_customer_network_connectors_meta_table(
         customer_network_connectors_meta=customer_network_connector_meta,
         session=session,

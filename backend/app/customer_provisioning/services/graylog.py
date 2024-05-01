@@ -6,7 +6,7 @@ from loguru import logger
 
 from app.connectors.graylog.services.pipelines import get_pipelines
 from app.connectors.graylog.utils.universal import send_delete_request
-from app.connectors.graylog.utils.universal import send_post_request
+from app.connectors.graylog.utils.universal import send_post_request, send_get_request
 from app.customer_provisioning.schema.graylog import GraylogIndexSetCreationResponse
 from app.customer_provisioning.schema.graylog import StreamConnectionToPipelineRequest
 from app.customer_provisioning.schema.graylog import StreamConnectionToPipelineResponse
@@ -267,5 +267,54 @@ async def delete_index_set(index_set_id: str):
     logger.info(f"Deleting index set {index_set_id}")
     response = await send_delete_request(
         endpoint=f"/api/system/indices/index_sets/{index_set_id}",
+    )
+    return response
+
+async def get_content_pack_installation_id(content_pack_id: str):
+    """
+    Retrieves the installation ID of a content pack.
+
+    Args:
+        content_pack_id (str): The ID of the content pack.
+
+    Returns:
+        str: The installation ID of the content pack.
+    """
+    logger.info(f"Getting installation ID for content pack {content_pack_id}")
+    response = await send_get_request(
+        endpoint=f"/api/system/content_packs/{content_pack_id}/installations",
+    )
+    return response['data']['installations'][0]['_id']
+
+async def uninstall_content_pack(content_pack_id: str):
+    """
+    Uninstalls a content pack.
+
+    Args:
+        content_pack_id (str): The ID of the content pack to be deleted.
+
+    Returns:
+        The result of the content pack deletion request.
+    """
+    logger.info(f"Deleting content pack {content_pack_id}")
+    installation_id = await get_content_pack_installation_id(content_pack_id)
+    response = await send_delete_request(
+        endpoint=f"/api/system/content_packs/{content_pack_id}/installations/{installation_id}",
+    )
+    return response
+
+async def delete_content_pack(content_pack_id: str):
+    """
+    Deletes a content pack.
+
+    Args:
+        content_pack_id (str): The ID of the content pack to be deleted.
+
+    Returns:
+        The result of the content pack deletion request.
+    """
+    logger.info(f"Deleting content pack {content_pack_id}")
+    response = await send_delete_request(
+        endpoint=f"/api/system/content_packs/{content_pack_id}",
     )
     return response

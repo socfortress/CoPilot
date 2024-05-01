@@ -118,3 +118,4 @@ class CustomerNetworkConnectorsMeta(SQLModel, table=True):
     graylog_content_pack_stream_id: str = Field(max_length=1024, nullable=False)
     grafana_org_id: str = Field(max_length=1024, nullable=False)
     grafana_dashboard_folder_id: str = Field(max_length=1024, nullable=False)
+    grafana_datasource_uid: str = Field(max_length=1024, nullable=False)

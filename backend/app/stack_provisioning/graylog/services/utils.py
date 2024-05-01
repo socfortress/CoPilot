@@ -87,10 +87,13 @@ async def does_content_pack_exist(content_pack_name: str) -> bool:
         logger.info(f"Checking content pack {content_pack.name}")
         if content_pack.name == content_pack_name:
             logger.info(f"Content pack {content_pack_name} exists")
-            raise HTTPException(
-                status_code=400,
-                detail=f"Content pack {content_pack_name} already exists",
-            )
+            if "PROCESSING_PIPELINE" in content_pack.name:
+                return True
+            else:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Content pack {content_pack_name} already exists",
+                )
     logger.info(f"Content pack {content_pack_name} does not exist")
     return False
 
