@@ -2,10 +2,20 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from loguru import logger
 from datetime import datetime
 import json
+from fastapi import HTTPException
 
 from app.stack_provisioning.graylog.schema.fortinet import FortinetCustomerDetails
 from app.stack_provisioning.graylog.schema.fortinet import ProvisionFortinetKeys
+from app.stack_provisioning.graylog.schema.fortinet import ProvisionFortinetResponse
+from app.customer_provisioning.services.grafana import create_grafana_folder
+from app.customer_provisioning.schema.grafana import GrafanaDatasource
+from app.customer_provisioning.schema.grafana import GrafanaDataSourceCreationResponse
+from app.customer_provisioning.services.grafana import get_opensearch_version
 from app.stack_provisioning.graylog.schema.provision import ContentPackKeywords
+from app.connectors.grafana.schema.dashboards import FortinetDashboard
+from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
+from app.connectors.grafana.services.dashboards import provision_dashboards
+from app.connectors.grafana.utils.universal import create_grafana_client
 from app.stack_provisioning.graylog.schema.provision import (
     ProvisionNetworkContentPackRequest,
 )
@@ -24,9 +34,14 @@ from app.customer_provisioning.schema.provision import ProvisionNewCustomer
 from app.connectors.wazuh_indexer.services.monitoring import (
     output_shard_number_to_be_set_based_on_nodes,
 )
+from app.utils import get_connector_attribute
 from app.connectors.graylog.services.streams import assign_stream_to_index
 from app.network_connectors.models.network_connectors import CustomerNetworkConnectorsMeta
+from app.customers.routes.customers import get_customer
+from app.customers.routes.customers import get_customer_meta
 
+
+#### ! GRAYLOG ! ####
 async def build_index_set_config(request: FortinetCustomerDetails) -> TimeBasedIndexSet:
     """
     Build the configuration for a time-based index set.
@@ -139,6 +154,71 @@ async def get_stream_and_index_ids(customer_details):
     index_id = (await create_index_set(request=customer_details)).data.id
     return stream_id, index_id
 
+#### ! GRAFANA ! ####
+async def create_grafana_datasource(
+    customer_code: str,
+    session: AsyncSession,
+) -> GrafanaDataSourceCreationResponse:
+    """
+    Creates a Grafana datasource for the specified customer.
+
+    Args:
+        customer_code (str): The customer code.
+        session (AsyncSession): The async session.
+
+    Returns:
+        GrafanaDataSourceCreationResponse: The response containing the created datasource details.
+    """
+    logger.info("Creating Grafana datasource")
+    grafana_client = await create_grafana_client("Grafana")
+    # Switch to the newly created organization
+    grafana_client.user.switch_actual_user_organisation(
+        (await get_customer_meta(customer_code, session)).customer_meta.customer_meta_grafana_org_id,
+    )
+    datasource_payload = GrafanaDatasource(
+        name="FORTINET",
+        type="grafana-opensearch-datasource",
+        typeName="OpenSearch",
+        access="proxy",
+        url=await get_connector_attribute(
+            connector_id=1,
+            column_name="connector_url",
+            session=session,
+        ),
+        database=f"fortinet-{customer_code}*",
+        basicAuth=True,
+        basicAuthUser=await get_connector_attribute(
+            connector_id=1,
+            column_name="connector_username",
+            session=session,
+        ),
+        secureJsonData={
+            "basicAuthPassword": await get_connector_attribute(
+                connector_id=1,
+                column_name="connector_password",
+                session=session,
+            ),
+        },
+        isDefault=False,
+        jsonData={
+            "database": f"fortinet-{customer_code}*",
+            "flavor": "opensearch",
+            "includeFrozen": False,
+            "logLevelField": "severity",
+            "logMessageField": "summary",
+            "maxConcurrentShardRequests": 5,
+            "pplEnabled": True,
+            "timeField": "timestamp",
+            "tlsSkipVerify": True,
+            "version": await get_opensearch_version(),
+        },
+        readOnly=True,
+    )
+    results = grafana_client.datasource.create_datasource(
+        datasource=datasource_payload.dict(),
+    )
+    return GrafanaDataSourceCreationResponse(**results)
+
 async def create_customer_network_connector_meta(customer_details, stream_id, index_id, session):
     """
     Create a CustomerNetworkConnectorsMeta object with the provided details.
@@ -163,7 +243,20 @@ async def create_customer_network_connector_meta(customer_details, stream_id, in
         grafana_dashboard_folder_id=None,
     )
 
-async def provision_fortinet(customer_details: FortinetCustomerDetails, keys: ProvisionFortinetKeys, session: AsyncSession):
+async def validate_grafana_organization_id(customer_code, session):
+    """
+    Validate the Grafana organization ID for the customer.
+
+    Args:
+        customer_code (str): The customer code.
+        session (Session): Database session.
+
+    Returns:
+        int: The Grafana organization ID.
+    """
+    return (await get_customer_meta_attribute(session=session, customer_code=customer_code, column_name='customer_meta_grafana_org_id'))
+
+async def provision_fortinet(customer_details: FortinetCustomerDetails, keys: ProvisionFortinetKeys, session: AsyncSession) -> ProvisionFortinetResponse:
     """
     Provisions a Fortinet customer by performing the following steps:
     1. Provisions the content pack for the customer.
@@ -182,6 +275,8 @@ async def provision_fortinet(customer_details: FortinetCustomerDetails, keys: Pr
     Returns:
         None
     """
+    if await validate_grafana_organization_id(customer_details.customer_code, session) is None:
+        raise HTTPException(status_code=404, detail="Grafana organization ID not found. Please provision Grafana for the customer first.")
     await provision_content_pack(customer_details)
     stream_id, index_id = await get_stream_and_index_ids(customer_details)
     customer_network_connector_meta = await create_customer_network_connector_meta(customer_details, stream_id, index_id, session)
@@ -192,10 +287,47 @@ async def provision_fortinet(customer_details: FortinetCustomerDetails, keys: Pr
             stream_id=stream_id, pipeline_ids=pipeline_id
         )
     )
+    # Grafana Deployment
+    fortinet_datasource_uid = (
+        await create_grafana_datasource(
+            customer_code=customer_details.customer_code,
+            session=session,
+        )
+    ).datasource.uid
+    customer_network_connector_meta.grafana_dashboard_folder_id = (
+        await create_grafana_folder(
+            organization_id=(
+                await get_customer_meta(
+                    customer_details.customer_code,
+                    session,
+                )
+            ).customer_meta.customer_meta_grafana_org_id,
+            folder_title="FORTINET",
+        )
+    ).id
+    await provision_dashboards(
+        DashboardProvisionRequest(
+            dashboards=[dashboard.name for dashboard in FortinetDashboard],
+            organizationId=(
+                await get_customer_meta(
+                    customer_details.customer_code,
+                    session,
+                )
+            ).customer_meta.customer_meta_grafana_org_id,
+            folderId=customer_network_connector_meta.grafana_dashboard_folder_id,
+            datasourceUid=fortinet_datasource_uid,
+        ),
+    )
     await insert_into_customer_network_connectors_meta_table(
         customer_network_connectors_meta=customer_network_connector_meta,
         session=session,
     )
+
+    return ProvisionFortinetResponse(
+        message="Fortinet customer provisioned successfully",
+        success=True,
+    )
+
 
 async def insert_into_customer_network_connectors_meta_table(
     customer_network_connectors_meta: CustomerNetworkConnectorsMeta,
