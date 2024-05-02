@@ -1,0 +1,82 @@
+# [Crowdstrike Integration](https://www.crowdstrike.com/blog/tech-center/integrate-with-your-siem)
+
+
+## Prerequisites
+Before using the Falcon SIEM Connector, you’ll want to first define the API client and set its scope. Refer to this guide (https://www.crowdstrike.com/blog/tech-center/get-access-falcon-apis/) to getting access to the CrowdStrike API for setting up a new API client key. For the new API client, make sure the scope includes read access for Event streams.
+
+![Crowdstrike API Settings](/images/crowdstrike/crowdstrike_api_settings.png)
+
+<!-- Running the Crowdstrike-Connector Container -->
+## Configuration
+
+The configuration for our API creds and syslog forwarder settings are stored within `/opt/crowdstrike/etc/cs.falconhoseclient.cfg`. Adjust to make your changes. **NOTE that the `api_url` , `cliend_id` , `client_secret` , and `syslog_host` will need to be updated.** Below is an example, CoPilot will take care of this for you.
+
+```yaml
+[Settings]
+version = 3
+api_url = https://REPLACE_BASE_URL/sensors/entities/datafeed/v2
+request_token_url = https://api.crowdstrike.com/oauth2/token
+app_id = SIEM-Connector-v2.0.0
+
+enable_correlation_id = false
+format_floats_as_scientific = true
+
+# API Client ID
+client_id = REPLACE_CLIENT_ID
+# API Client Secret
+client_secret = REPLACE_CLIENT_SECRET
+
+# Amount of time (in seconds) we will wait for a connect to complete.
+connection_timeout = 10
+# Amount of time to wait (in seconds) for a server's response headers after fully writing the request.
+read_timeout = 30
+
+# Specify partition number 0 to n or 'all' (without quote) for all partitions
+partition = all
+
+http_proxy =
+
+# Output formats
+# Supported formats are
+#   1.syslog: will output syslog format with flat key=value pairs uses the mapping configuration below.
+;             Use syslog format if CEF/LEEF output is required.
+#   2.json: will output raw json format received from FalconHose API (default)
+output_format = syslog
+
+# Will be true regardless if Syslog is not enabled
+# If path does not exist or user has no permission, log file will be used
+output_to_file = false
+output_path = /var/log/crowdstrike/falconhoseclient/output
+
+# Offset file full filepath and filename
+offset_path = /var/log/crowdstrike/falconhoseclient/stream_offsets
+
+[Output_File_Rotation]
+# If the output is writing to a file, then the settings below will govern output file rotation
+#
+# If true, then the rotation rules will apply. If not, the client will continue to write to the same file.
+rotate_file = true
+# Maximum individual output file size in MB
+max_size = 500
+# Number of backups of the output file to be stored
+max_backups = 10
+# Maximum age of backup output files before it is deleted in DAYS
+max_age = 30
+
+[Logging]
+verbose_log = true
+# Maximum individual log file size in MB
+max_size = 500
+# Number of backups to be stored
+max_backups = 10
+# Maximum age of backup files before it is deleted in DAYS
+max_age = 30
+
+[Syslog]
+send_to_syslog_server = true
+host = REPLACE_SYSLOG_HOST
+port = REPLACE_SYSLOG_PORT
+protocol = tcp
+```
+
+
