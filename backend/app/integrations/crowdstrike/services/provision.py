@@ -411,7 +411,6 @@ async def load_and_replace_docker_compose(customer_name: str):
     with open(os.path.join(parent_directory, 'templates', 'docker-compose.yml'), 'r') as file:
         data = file.read()
     data = data.replace("CUSTOMER_NAME", customer_name)
-    data = data.replace("/UPLOAD_FOLDER", UPLOAD_FOLDER)
     return data
 
 async def save_uploaded_file(file, filename, customer_name):

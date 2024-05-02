@@ -4,5 +4,5 @@ services:
   crowdstrike-connector-CUSTOMER_NAME:
     image: ghcr.io/socfortress/crowdstrike-connector
     volumes:
-      - /UPLOAD_FOLDER/CUSTOMER_NAME/cs.falconhoseclient.cfg:/opt/crowdstrike/etc/cs.falconhoseclient.cfg
+      - /opt/CoPilot/data/data/CUSTOMER_NAME/cs.falconhoseclient.cfg:/opt/crowdstrike/etc/cs.falconhoseclient.cfg
     restart: unless-stopped
