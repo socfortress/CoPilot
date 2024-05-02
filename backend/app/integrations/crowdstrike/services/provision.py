@@ -287,6 +287,9 @@ async def provision_crowdstrike(customer_details: CrowdstrikeCustomerDetails, ke
     Returns:
         None
     """
+    # If customer name contains a space, replace it with a _
+    if " " in customer_details.customer_name:
+        customer_details.customer_name = customer_details.customer_name.replace(" ", "_")
     if await validate_grafana_organization_id(customer_details.customer_code, session) is None:
         raise HTTPException(status_code=404, detail="Grafana organization ID not found. Please provision Grafana for the customer first.")
     await provision_content_pack(customer_details)
@@ -335,7 +338,6 @@ async def provision_crowdstrike(customer_details: CrowdstrikeCustomerDetails, ke
     )
     await create_customer_directory_if_needed(customer_name=customer_details.customer_name)
     file = await load_and_replace_docker_compose(customer_name=customer_details.customer_name)
-    logger.info(f"file: {file}")
     await save_uploaded_file(file=file, filename=f"{customer_details.customer_name}_docker-compose.yml", customer_name=customer_details.customer_name)
     await load_and_replace_falconhose_cfg(customer_details=customer_details, keys=keys, session=session)
 
