@@ -14,7 +14,7 @@ The configuration for our API creds and syslog forwarder settings are stored wit
 ```yaml
 [Settings]
 version = 3
-api_url = https://REPLACE_BASE_URL/sensors/entities/datafeed/v2
+api_url = REPLACE_BASE_URL/sensors/entities/datafeed/v2
 request_token_url = https://api.crowdstrike.com/oauth2/token
 app_id = SIEM-Connector-v2.0.0
 

@@ -272,6 +272,7 @@ def get_available_integrations_list():
         ("SAP SIEM", "Integrate SAP SIEM with SOCFortress."),
         ("Huntress", "Integrate Huntress with SOCFortress."),
         ("CarbonBlack", "Integrate CarbonBlack with SOCFortress."),
+        ("Crowdstrike", "Integrate Crowdstrike with SOCFortress."),
         # ... Add more available integrations as needed ...
     ]
 
@@ -380,6 +381,9 @@ async def get_available_integrations_auth_keys_list(session: AsyncSession):
         ("CarbonBlack", "API_URL"),
         ("CarbonBlack", "API_ID"),
         ("CarbonBlack", "ORGANIZATION_KEY"),
+        ("Crowdstrike", "CLIENT_ID"),
+        ("Crowdstrike", "CLIENT_SECRET"),
+        ("Crowdstrike", "BASE_URL"),
         # ... Add more available integrations auth keys as needed ...
     ]
     logger.info("Getting available integrations auth keys.")
