@@ -384,6 +384,7 @@ async def get_available_integrations_auth_keys_list(session: AsyncSession):
         ("Crowdstrike", "CLIENT_ID"),
         ("Crowdstrike", "CLIENT_SECRET"),
         ("Crowdstrike", "BASE_URL"),
+        ("Crowdstrike", "SYSLOG_PORT"),
         # ... Add more available integrations auth keys as needed ...
     ]
     logger.info("Getting available integrations auth keys.")

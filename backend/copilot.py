@@ -61,6 +61,7 @@ from app.routers import sublime
 from app.routers import threat_intel
 from app.routers import velociraptor
 from app.routers import wazuh_indexer
+from app.routers import crowdstrike
 from app.routers import wazuh_manager
 from app.schedulers.scheduler import get_scheduler_instance
 from app.schedulers.scheduler import init_scheduler
@@ -139,6 +140,7 @@ api_router.include_router(license.router)
 api_router.include_router(modules.router)
 api_router.include_router(carbonblack.router)
 api_router.include_router(network_connectors.router)
+api_router.include_router(crowdstrike.router)
 
 # Include the APIRouter in the FastAPI app
 app.include_router(api_router)

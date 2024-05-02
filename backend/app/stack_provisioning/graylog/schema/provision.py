@@ -18,6 +18,8 @@ class AvailableContentPacks(str, Enum):
     SOCFORTRESS_FORTINET_INPUT_SYSLOG_UDP = "The Fortinet Input Syslog UDP content pack"
     SOCFORTRESS_FORTINET_PROCESSING_PIPELINE = "The Fortinet Processing Pipeline content pack"
     SOCFORTRESS_FORTINET_STREAM = "The Fortinet Stream content pack"
+    SOCFORTRESS_CROWDSTRIKE_INPUT_TCP = "The Crowdstrike Input TCP content pack"
+    SOCFORTRESS_CROWDSTRIKE_STREAM = "The Crowdstrike Stream content pack"
 
 
 class ContentPackKeywords(BaseModel):

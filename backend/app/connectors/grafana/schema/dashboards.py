@@ -91,6 +91,9 @@ class FortinetDashboard(Enum):
     FORTINET_UTM_WEBFILTER = ("Fortinet", "fortinet_utm_webfilter.json")
     FORTINET_VPN = ("Fortinet", "fortinet_vpn.json")
 
+class CrowdstrikeDashboard(Enum):
+    CROWDSTRIKE_SUMMARY = ("Crowdstrike", "summary.json")
+
 
 class DashboardProvisionRequest(BaseModel):
     dashboards: List[str] = Field(
@@ -122,6 +125,7 @@ class DashboardProvisionRequest(BaseModel):
             + list(HuntressDashboard)
             + list(CarbonBlackDashboard)
             + list(FortinetDashboard)
+            + list(CrowdstrikeDashboard)
         }
         if e not in valid_dashboards:
             raise ValueError(f'Dashboard identifier "{e}" is not recognized.')
