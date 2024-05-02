@@ -123,5 +123,6 @@ async def provision_crowdstrike_route(
             hot_data_retention=provision_crowdstrike_request.hot_data_retention,
             index_replicas=provision_crowdstrike_request.index_replicas,
         ),
+        keys=auth_keys,
         session=session,
     )
