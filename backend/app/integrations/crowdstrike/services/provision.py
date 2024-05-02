@@ -378,6 +378,9 @@ async def create_customer_directory_if_needed(customer_name: str):
         customer_name (str): The name of the customer.
     """
     # Create the path to the customer's directory
+    # If customer name contains a space, replace it with a _
+    if " " in customer_name:
+        customer_name = customer_name.replace(" ", "_")
     customer_directory = os.path.join(UPLOAD_FOLDER, customer_name)
     # Check if the directory exists
     if not os.path.exists(customer_directory):
@@ -399,6 +402,9 @@ async def load_and_replace_docker_compose(customer_name: str):
     current_directory = os.path.dirname(os.path.abspath(__file__))
     # Go up one level
     parent_directory = os.path.dirname(current_directory)
+    # If customer name contains a space, replace it with a _
+    if " " in customer_name:
+        customer_name = customer_name.replace(" ", "_")
     # Open the docker-compose.yml file and read the content
     with open(os.path.join(parent_directory, 'templates', 'docker-compose.yml'), 'r') as file:
         data = file.read()
@@ -417,6 +423,9 @@ async def save_uploaded_file(file, filename, customer_name):
     Returns:
         str: The path to the saved file.
     """
+    # If customer name contains a space, replace it with a _
+    if " " in customer_name:
+        customer_name = customer_name.replace(" ", "_")
     customer_upload_folder = os.path.join(UPLOAD_FOLDER, customer_name)
     async with aiofiles.open(os.path.join(customer_upload_folder, filename), "wb") as f:
         await f.write(file.encode())
@@ -449,6 +458,9 @@ async def load_and_replace_falconhose_cfg(customer_details: CrowdstrikeCustomerD
     data = data.replace("REPLACE_SYSLOG_HOST", connector_url)
     data = data.replace("REPLACE_SYSLOG_PORT", keys.SYSLOG_PORT)
     # Save the file
+    # If customer name contains a space, replace it with a _
+    if " " in customer_details.customer_name:
+        customer_details.customer_name = customer_details.customer_name.replace(" ", "_")
     customer_upload_folder = os.path.join(UPLOAD_FOLDER, customer_details.customer_name)
     async with aiofiles.open(os.path.join(customer_upload_folder, 'cs.falconhoseclient.cfg'), "w") as f:
         await f.write(data)
