@@ -782,7 +782,7 @@ async def create_grafana_datasource(
             column_name="connector_url",
             session=session,
         ),
-        database=f"office365_{customer_code}*",
+        database=f"office365-{customer_code}*",
         basicAuth=True,
         basicAuthUser=await get_connector_attribute(
             connector_id=1,
@@ -810,7 +810,7 @@ async def create_grafana_datasource(
                     ).format(grafana_url),
                 },
             ],
-            "database": f"office365_{customer_code}*",
+            "database": f"office365-{customer_code}*",
             "flavor": "opensearch",
             "includeFrozen": False,
             "logLevelField": "syslog_level",
