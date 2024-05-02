@@ -12,6 +12,10 @@ class AvailableNetworkConnectors(str, Enum):
         "The Fortinet Network Connector which includes Input, Stream, Pipeline Rules,"
         " Pipelines, and Lookup Tables for Fortinet logs and the SOCFortress SIEM stack."
     )
+    CROWDSTRIKE = (
+        "The Crowdstrike Network Connector which includes Input, Stream, Pipeline Rules,"
+        " Pipelines, and Lookup Tables for Crowdstrike logs and the SOCFortress SIEM stack."
+    )
 
 class DecommissionNetworkContentPackRequest(BaseModel):
     network_connector: AvailableNetworkConnectors = Field(
