@@ -277,6 +277,7 @@ async def provision_crowdstrike(customer_details: CrowdstrikeCustomerDetails, ke
     5. Retrieves the pipeline ID for the "CROWDSTRIKE" subscription.
     6. Connects the stream to the pipeline.
     7. Inserts the customer network connector metadata into the database.
+    8. Creates a directory for the customer to store the docker compose and falconhose cfg.
 
     Args:
         customer_details (CrowdstrikeCustomerDetails): The details of the Crowdstrike customer.
@@ -286,52 +287,52 @@ async def provision_crowdstrike(customer_details: CrowdstrikeCustomerDetails, ke
     Returns:
         None
     """
-    # if await validate_grafana_organization_id(customer_details.customer_code, session) is None:
-    #     raise HTTPException(status_code=404, detail="Grafana organization ID not found. Please provision Grafana for the customer first.")
-    # await provision_content_pack(customer_details)
-    # stream_id, index_id, content_pack_stream_id, content_pack_input_id = await get_stream_and_index_ids(customer_details)
-    # customer_network_connector_meta = await create_customer_network_connector_meta(customer_details, stream_id, index_id, content_pack_stream_id, content_pack_input_id, session)
-    # await assign_stream_to_index(stream_id=stream_id, index_id=index_id)
-    # pipeline_id = await get_pipeline_id(subscription="CROWDSTRIKE")
-    # await connect_stream_to_pipeline(
-    #     stream_and_pipeline=StreamConnectionToPipelineRequest(
-    #         stream_id=stream_id, pipeline_ids=pipeline_id
-    #     )
-    # )
-    # # Grafana Deployment
-    # customer_network_connector_meta.grafana_datasource_uid = (
-    #     await create_grafana_datasource(
-    #         customer_code=customer_details.customer_code,
-    #         session=session,
-    #     )
-    # ).datasource.uid
-    # grafana_folder = await create_grafana_folder(
-    #         organization_id=(
-    #             await get_customer_meta(
-    #                 customer_details.customer_code,
-    #                 session,
-    #             )
-    #         ).customer_meta.customer_meta_grafana_org_id,
-    #         folder_title="CROWDSTRIKE",
-    #     )
-    # await provision_dashboards(
-    #     DashboardProvisionRequest(
-    #         dashboards=[dashboard.name for dashboard in CrowdstrikeDashboard],
-    #         organizationId=(
-    #             await get_customer_meta(
-    #                 customer_details.customer_code,
-    #                 session,
-    #             )
-    #         ).customer_meta.customer_meta_grafana_org_id,
-    #         folderId=grafana_folder.id,
-    #         datasourceUid=customer_network_connector_meta.grafana_datasource_uid,
-    #     ),
-    # )
-    # customer_network_connector_meta.grafana_dashboard_folder_id = grafana_folder.uid
-    # await insert_into_customer_network_connectors_meta_table(
-    #     customer_network_connectors_meta=customer_network_connector_meta,
-    #     session=session,
-    # )
+    if await validate_grafana_organization_id(customer_details.customer_code, session) is None:
+        raise HTTPException(status_code=404, detail="Grafana organization ID not found. Please provision Grafana for the customer first.")
+    await provision_content_pack(customer_details)
+    stream_id, index_id, content_pack_stream_id, content_pack_input_id = await get_stream_and_index_ids(customer_details)
+    customer_network_connector_meta = await create_customer_network_connector_meta(customer_details, stream_id, index_id, content_pack_stream_id, content_pack_input_id, session)
+    await assign_stream_to_index(stream_id=stream_id, index_id=index_id)
+    pipeline_id = await get_pipeline_id(subscription="CROWDSTRIKE")
+    await connect_stream_to_pipeline(
+        stream_and_pipeline=StreamConnectionToPipelineRequest(
+            stream_id=stream_id, pipeline_ids=pipeline_id
+        )
+    )
+    # Grafana Deployment
+    customer_network_connector_meta.grafana_datasource_uid = (
+        await create_grafana_datasource(
+            customer_code=customer_details.customer_code,
+            session=session,
+        )
+    ).datasource.uid
+    grafana_folder = await create_grafana_folder(
+            organization_id=(
+                await get_customer_meta(
+                    customer_details.customer_code,
+                    session,
+                )
+            ).customer_meta.customer_meta_grafana_org_id,
+            folder_title="CROWDSTRIKE",
+        )
+    await provision_dashboards(
+        DashboardProvisionRequest(
+            dashboards=[dashboard.name for dashboard in CrowdstrikeDashboard],
+            organizationId=(
+                await get_customer_meta(
+                    customer_details.customer_code,
+                    session,
+                )
+            ).customer_meta.customer_meta_grafana_org_id,
+            folderId=grafana_folder.id,
+            datasourceUid=customer_network_connector_meta.grafana_datasource_uid,
+        ),
+    )
+    customer_network_connector_meta.grafana_dashboard_folder_id = grafana_folder.uid
+    await insert_into_customer_network_connectors_meta_table(
+        customer_network_connectors_meta=customer_network_connector_meta,
+        session=session,
+    )
     await create_customer_directory_if_needed(customer_name=customer_details.customer_name)
     file = await load_and_replace_docker_compose(customer_name=customer_details.customer_name)
     logger.info(f"file: {file}")
