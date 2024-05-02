@@ -2,7 +2,7 @@ name: Docker
 
 on:
     push:
-        branches: [main]
+        branches: [network-connectors]
 
 jobs:
     build-backend:
