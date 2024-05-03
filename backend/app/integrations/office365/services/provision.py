@@ -372,6 +372,8 @@ async def build_index_set_config(
     Returns:
         TimeBasedIndexSet: The configured time-based index set.
     """
+    # Lowercase the customer code since Graylog index sets must be lowercase
+    customer_code = customer_code.lower()
     return TimeBasedIndexSet(
         title=f"{(await get_customer(customer_code, session)).customer.customer_name} - Office365",
         description=f"{customer_code} - Office365",
@@ -763,6 +765,8 @@ async def create_grafana_datasource(
         GrafanaDataSourceCreationResponse: The response object containing the result of the datasource creation.
     """
     logger.info("Creating Grafana datasource")
+    # Lowercase the customer code since Graylog index sets must be lowercase
+    customer_code = customer_code.lower()
     grafana_client = await create_grafana_client("Grafana")
     grafana_url = await get_connector_attribute(
         connector_id=12,
@@ -919,7 +923,7 @@ async def provision_office365(
             organizationId=(await get_customer_meta(customer_code, session)).customer_meta.customer_meta_grafana_org_id,
             folderId=grafana_o365_folder_id,
             datasourceUid=office365_datasource_uid,
-            grafana_url=(await get_customer_default_settings_attribute(column_name='grafana_url', session=session)),
+            grafana_url=(await get_customer_default_settings_attribute(column_name='grafana_url', session=session)) or 'grafana.company.local',
         ),
     )
 
