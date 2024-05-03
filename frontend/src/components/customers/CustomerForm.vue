@@ -76,8 +76,17 @@ const formRef = ref<FormInst | null>(null)
 const rules: FormRules = {
 	customer_code: {
 		required: true,
-		message: "Please input code",
-		trigger: ["input", "blur"]
+		message: "Please input code. Code must be all lowercase and contain no spaces or special characters.",
+		trigger: ["input", "blur"],
+    validator: (rule, value) => {
+        if (value !== value.toLowerCase()) {
+            return Promise.reject('Code must be all lowercase')
+        } else if (!/^[a-z]+$/.test(value)) {
+            return Promise.reject('Code must not contain spaces or special characters')
+        } else {
+            return Promise.resolve()
+        }
+    }
 	},
 	customer_name: {
 		required: true,
