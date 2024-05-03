@@ -613,6 +613,7 @@ onBeforeMount(() => {
 	getSubscriptions()
 	getDashboards()
 })
+
 </script>
 
 <style lang="scss" scoped>

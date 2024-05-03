@@ -173,7 +173,7 @@ async def update_customer_meta_table(
         customer_name=request.customer_name,
         customer_meta_graylog_index=request.graylog_index_id,
         customer_meta_graylog_stream=request.graylog_stream_id,
-        customer_meta_grafana_org_id=request.dashboards_to_include.organizationId,
+        customer_meta_grafana_org_id=request.grafana_org_id,
         customer_meta_wazuh_group=request.customer_code,
         customer_meta_index_retention=str(request.hot_data_retention),
         customer_meta_wazuh_registration_port=request.wazuh_registration_port,
