@@ -594,9 +594,9 @@ async def create_office365_utc_rule(rule_title: str) -> None:
     rule_source = (
         f'rule "{rule_title}"\n'
         "when\n"
-        '  has_field("data_office_365_CreationTime")\n'
+        '  has_field("data_office365_CreationTime")\n'
         "then\n"
-        "  let creation_time = $message.data_office_365_CreationTime;\n"
+        "  let creation_time = $message.data_office365_CreationTime;\n"
         '  set_field("timestamp_utc", creation_time);\n'
         "end"
     )
