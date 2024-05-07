@@ -1,8 +1,8 @@
 <template>
-	<div class="customer-integrations">
+	<div class="customer-network-connectors">
 		<transition name="form-fade" mode="out-in">
 			<div v-if="showForm">
-				<CustomerIntegrationForm
+				<CustomerNetworkConnectorForm
 					:customerCode="customerCode"
 					:customerName="customerName"
 					:disabledIdsList="disabledIds"
@@ -16,17 +16,17 @@
 						<template #icon>
 							<Icon :name="AddIcon" :size="14"></Icon>
 						</template>
-						Add Integration
+						Add Network Connector
 					</n-button>
 				</div>
 
 				<n-spin :show="loading">
 					<div class="list p-7 pt-4">
 						<template v-if="list.length">
-							<CustomerIntegrationItem
-								v-for="integration of list"
-								:key="integration.id"
-								:integration="integration"
+							<CustomerNetworkConnectorItem
+								v-for="networkConnector of list"
+								:key="networkConnector.id"
+								:networkConnector="networkConnector"
 								@deployed="refreshList()"
 								@deleted="refreshList()"
 								embedded
@@ -34,7 +34,11 @@
 							/>
 						</template>
 						<template v-else>
-							<n-empty description="No integrations found" class="justify-center h-48" v-if="!loading" />
+							<n-empty
+								description="No network connectors found"
+								class="justify-center h-48"
+								v-if="!loading"
+							/>
 						</template>
 					</div>
 				</n-spin>
@@ -48,9 +52,9 @@ import { ref, onBeforeMount, computed } from "vue"
 import { useMessage, NSpin, NEmpty, NButton } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import Api from "@/api"
-import CustomerIntegrationForm from "./CustomerIntegrationForm.vue"
-import CustomerIntegrationItem from "./CustomerIntegrationItem.vue"
-import type { CustomerIntegration } from "@/types/integrations.d"
+import CustomerNetworkConnectorForm from "./CustomerNetworkConnectorForm.vue"
+import CustomerNetworkConnectorItem from "./CustomerNetworkConnectorItem.vue"
+import type { CustomerNetworkConnector } from "@/types/networkConnectors"
 
 const { customerCode, customerName } = defineProps<{
 	customerCode: string
@@ -62,17 +66,17 @@ const AddIcon = "carbon:add-alt"
 const message = useMessage()
 const showForm = ref(false)
 const loading = ref(false)
-const list = ref<CustomerIntegration[]>([])
-const disabledIds = computed(() => list.value.map(o => o.integration_service_id))
+const list = ref<CustomerNetworkConnector[]>([])
+const disabledIds = computed(() => list.value.map(o => o.network_connector_service_id))
 
-function getCustomerIntegrations() {
+function getCustomerNetworkConnectors() {
 	loading.value = true
 
-	Api.integrations
-		.getCustomerIntegrations(customerCode)
+	Api.networkConnectors
+		.getCustomerNetworkConnectors(customerCode)
 		.then(res => {
 			if (res.data.success) {
-				list.value = res.data?.available_integrations || []
+				list.value = res.data?.available_network_connectors || []
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
@@ -95,16 +99,16 @@ function closeForm() {
 
 function refreshList() {
 	closeForm()
-	getCustomerIntegrations()
+	getCustomerNetworkConnectors()
 }
 
 onBeforeMount(() => {
-	getCustomerIntegrations()
+	getCustomerNetworkConnectors()
 })
 </script>
 
 <style lang="scss" scoped>
-.customer-integrations {
+.customer-network-connectors {
 	.list {
 		container-type: inline-size;
 		min-height: 200px;

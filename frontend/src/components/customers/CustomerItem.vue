@@ -134,7 +134,10 @@
 						/>
 					</n-tab-pane>
 					<n-tab-pane name="Network Connectors" tab="Network Connectors" display-directive="show:lazy">
-						Network Connectors FORM...
+						<CustomerNetworkConnectors
+							:customerCode="customer.customer_code"
+							:customerName="customer.customer_name"
+						/>
 					</n-tab-pane>
 					<template #suffix>
 						<div class="pr-8 hover:text-primary-color cursor-pointer" @click="selectedTabsGroup = 'agents'">
@@ -191,6 +194,7 @@ import CustomerAgents from "./CustomerAgents.vue"
 import CustomerProvision from "./provision/CustomerProvision.vue"
 import CustomerHealthcheckList from "./healthcheck/CustomerHealthcheckList.vue"
 import CustomerIntegrations from "./integrations/CustomerIntegrations.vue"
+import CustomerNetworkConnectors from "./networkConnectors/CustomerNetworkConnectors.vue"
 import Api from "@/api"
 import { NAvatar, useMessage, NPopover, NModal, NTabs, NTabPane, NSpin, NScrollbar, NButton } from "naive-ui"
 import type { Customer, CustomerMeta } from "@/types/customers.d"

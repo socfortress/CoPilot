@@ -72,10 +72,10 @@ const loadingMimecastProvision = ref(false)
 const loadingDelete = ref(false)
 const loading = computed(() => loadingMimecastProvision.value || loadingOffice365Provision.value || loadingDelete.value)
 
-const isOffice365 = computed(() => serviceName.value === "Office365")
-const isMimecast = computed(() => serviceName.value === "Mimecast")
 const serviceName = computed(() => integration.integration_service_name)
 const customerCode = computed(() => integration.customer_code)
+const isOffice365 = computed(() => serviceName.value === "Office365")
+const isMimecast = computed(() => serviceName.value === "Mimecast")
 
 watch(loading, val => {
 	if (val) {
