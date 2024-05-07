@@ -1,12 +1,12 @@
 <template>
 	<div class="alert-actions flex gap-4 justify-end">
 		<n-button
-			v-if="isFortinet && !networkConnector.deployed"
 			:loading="loadingFortinetProvision"
-			@click="fortinetProvision()"
 			type="success"
+			v-if="isFortinet && !networkConnector.deployed"
 			:size="size"
 			secondary
+			@click="showFortinetForm = true"
 		>
 			<template #icon><Icon :name="DeployIcon"></Icon></template>
 			Deploy
@@ -25,11 +25,40 @@
 			</template>
 			Delete
 		</n-button>
+
+		<n-modal
+			v-model:show="showFortinetForm"
+			preset="card"
+			:style="{ maxWidth: 'min(420px, 90vw)', minHeight: 'min(300px, 90vh)', overflow: 'hidden' }"
+			title="Fortinet options"
+			:bordered="false"
+			content-class="flex flex-col"
+			segmented
+		>
+			<n-spin v-model:show="loadingFortinetProvision">
+				<FortinetForm v-model:options="fortinetOptions" />
+			</n-spin>
+
+			<template #footer>
+				<div class="flex justify-end">
+					<n-button
+						:loading="loadingFortinetProvision"
+						@click="fortinetProvision()"
+						type="success"
+						secondary
+						:disabled="!isFortinetFormValid"
+					>
+						<template #icon><Icon :name="DeployIcon"></Icon></template>
+						Deploy
+					</n-button>
+				</div>
+			</template>
+		</n-modal>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { NButton, useDialog, useMessage } from "naive-ui"
+import { NButton, NModal, NSpin, useDialog, useMessage } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import Api from "@/api"
 import { computed, h, ref } from "vue"
@@ -37,6 +66,7 @@ import { watch } from "vue"
 import type { Size } from "naive-ui/es/button/src/interface"
 import type { CustomerNetworkConnector } from "@/types/networkConnectors"
 import type { FortinetProvision } from "@/api/networkConnectors"
+import FortinetForm, { type FortinetModel } from "./provisions/FortinetForm.vue"
 
 const emit = defineEmits<{
 	(e: "startLoading"): void
@@ -64,6 +94,24 @@ const serviceName = computed(() => networkConnector.network_connector_service_na
 const customerCode = computed(() => networkConnector.customer_code)
 const isFortinet = computed(() => serviceName.value === "Fortinet")
 
+const showFortinetForm = ref(false)
+
+const fortinetOptions = ref<FortinetModel>({
+	protocol: "tcp",
+	hot_data_retention: 1,
+	index_replicas: 0
+})
+
+const isFortinetFormValid = computed(() => {
+	if (fortinetOptions.value.hot_data_retention === null) {
+		return false
+	}
+	if (fortinetOptions.value.index_replicas === null) {
+		return false
+	}
+	return true
+})
+
 watch(loading, val => {
 	if (val) {
 		emit("startLoading")
@@ -75,19 +123,19 @@ watch(loading, val => {
 function fortinetProvision() {
 	loadingFortinetProvision.value = true
 
-	const payload: FortinetProvision = {
-		tcp_enabled: true,
-		udp_enabled: true,
-		hot_data_retention: 1,
-		index_replicas: 1
+	const options: FortinetProvision = {
+		tcp_enabled: fortinetOptions.value.protocol === "tcp",
+		udp_enabled: fortinetOptions.value.protocol === "udp",
+		hot_data_retention: fortinetOptions.value.hot_data_retention,
+		index_replicas: fortinetOptions.value.index_replicas
 	}
 
 	Api.networkConnectors
-		.fortinetProvision(customerCode.value, serviceName.value, payload)
+		.fortinetProvision(customerCode.value, serviceName.value, options)
 		.then(res => {
 			if (res.data.success) {
 				emit("deployed")
-				message.success(res.data?.message || "Customer Network Connector successfully deployed.")
+				message.success(res.data?.message || "Fortinet customer provisioned successfully.")
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
