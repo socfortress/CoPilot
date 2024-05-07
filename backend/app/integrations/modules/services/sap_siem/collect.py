@@ -15,7 +15,7 @@ async def post_to_copilot_sap_module_collect(data: CollectSapSiemRequest):
     async with httpx.AsyncClient() as client:
         try:
             response = await client.post(
-                "http://127.0.0.1:5001/sap-siem/collect",
+                "http://copilot-sap-module/sap-siem/collect",
                 json=data.to_dict(),
                 timeout=120,
             )
@@ -35,7 +35,7 @@ async def post_to_copilot_sap_module_sap_siem_successful_user_login_with_differe
     async with httpx.AsyncClient() as client:
         try:
             response = await client.post(
-                "http://127.0.0.1:5001/sap-siem/successful_user_login_with_different_ip",
+                "http://copilot-sap-module/sap-siem/successful_user_login_with_different_ip",
                 json=data.dict(),
                 timeout=120,
             )
@@ -56,7 +56,7 @@ async def post_to_copilot_sap_module_same_user_failed_login_from_different_ip(da
     async with httpx.AsyncClient() as client:
         try:
             response = await client.post(
-                "http://127.0.0.1:5001/sap-siem/same_user_failed_login_from_different_ip",
+                "http://copilot-sap-module/sap-siem/same_user_failed_login_from_different_ip",
                 json=data.dict(),
                 timeout=120,
             )
@@ -76,7 +76,7 @@ async def post_to_copilot_sap_module_same_user_failed_login_from_different_geo_l
     async with httpx.AsyncClient() as client:
         try:
             response = await client.post(
-                "http://127.0.0.1:5001/sap-siem/same_user_failed_login_from_different_geo_location",
+                "http://copilot-sap-module/sap-siem/same_user_failed_login_from_different_geo_location",
                 json=data.dict(),
                 timeout=120,
             )
@@ -96,7 +96,7 @@ async def post_to_copilot_sap_module_same_user_successful_login_from_different_g
     async with httpx.AsyncClient() as client:
         try:
             response = await client.post(
-                "http://127.0.0.1:5001/sap-siem/same_user_successful_login_from_different_geo_location",
+                "http://copilot-sap-module/sap-siem/same_user_successful_login_from_different_geo_location",
                 json=data.dict(),
                 timeout=120,
             )
@@ -116,7 +116,7 @@ async def post_to_copilot_sap_module_brute_force_failed_logins_multiple_ips(data
     async with httpx.AsyncClient() as client:
         try:
             response = await client.post(
-                "http://127.0.0.1:5001/sap-siem/brute_force_failed_logins_multiple_ips",
+                "http://copilot-sap-module/sap-siem/brute_force_failed_logins_multiple_ips",
                 json=data.dict(),
                 timeout=120,
             )
@@ -136,7 +136,7 @@ async def post_to_copilot_sap_module_brute_force_failed_logins_same_ip(data: Inv
     async with httpx.AsyncClient() as client:
         try:
             response = await client.post(
-                "http://127.0.0.1:5001/sap-siem/brute_force_failed_logins_same_ip",
+                "http://copilot-sap-module/sap-siem/brute_force_failed_logins_same_ip",
                 json=data.dict(),
                 timeout=120,
             )
@@ -156,7 +156,7 @@ async def post_to_copilot_sap_module_successful_login_after_multiple_failed_logi
     async with httpx.AsyncClient() as client:
         try:
             response = await client.post(
-                "http://127.0.0.1:5001/sap-siem/successful_login_after_multiple_failed_logins",
+                "http://copilot-sap-module/sap-siem/successful_login_after_multiple_failed_logins",
                 json=data.dict(),
                 timeout=120,
             )
