@@ -26,7 +26,7 @@ from app.schedulers.services.invoke_sap_siem import (
 from app.schedulers.services.invoke_sap_siem import (
     invoke_sap_siem_integration_brute_force_failed_logins_same_ip,
 )
-from app.schedulers.services.invoke_sap_siem import invoke_sap_siem_integration_collect
+from app.schedulers.services.invoke_sap_siem import invoke_sap_siem_integration_collection
 from app.schedulers.services.invoke_sap_siem import (
     invoke_sap_siem_integration_multiple_logins_same_ip_analysis,
 )
@@ -196,7 +196,7 @@ def get_function_by_name(function_name: str):
         "invoke_office365_exchange_online_alert": invoke_office365_exchange_online_alert,
         "invoke_office365_threat_intel_alert": invoke_office365_threat_intel_alert,
         "invoke_suricata_monitoring_alert": invoke_suricata_monitoring_alert,
-        "invoke_sap_siem_integration_collection": invoke_sap_siem_integration_collect,
+        "invoke_sap_siem_integration_collection": invoke_sap_siem_integration_collection,
         "invoke_sap_siem_integration_suspicious_logins_analysis": invoke_sap_siem_integration_suspicious_logins_analysis,
         "invoke_sap_siem_integration_multiple_logins_same_ip_analysis": invoke_sap_siem_integration_multiple_logins_same_ip_analysis,
         "invoke_sap_siem_integration_successful_user_login_with_different_ip": invoke_sap_siem_integration_successful_user_login_with_different_ip,
