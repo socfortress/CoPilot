@@ -399,7 +399,7 @@ const rules: FormRules = {
 }
 
 function validateUrl(rule: FormItemRule, value: string) {
-	if (!value || !isURL(value)) {
+	if (!value || !isURL(value, { require_tld: false })) {
 		return new Error("Please input a valid URL")
 	}
 
@@ -613,7 +613,6 @@ onBeforeMount(() => {
 	getSubscriptions()
 	getDashboards()
 })
-
 </script>
 
 <style lang="scss" scoped>

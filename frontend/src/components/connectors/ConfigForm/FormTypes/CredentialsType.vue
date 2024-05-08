@@ -44,7 +44,7 @@ const validateUrl = (rule: FormItemRule, value: string) => {
 	if (!value) {
 		return new Error("Please input a valid URL")
 	}
-	if (!isURL(value)) {
+	if (!isURL(value, { require_tld: false })) {
 		return new Error("Please input a valid URL")
 	}
 
