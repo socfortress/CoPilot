@@ -8,6 +8,7 @@ from app.network_connectors.models.network_connectors import CustomerNetworkConn
 from app.stack_provisioning.graylog.schema.decommission import DecommissionNetworkContentPackResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.customer_provisioning.services.grafana import delete_grafana_dashboard_folder, delete_grafana_datasource
+from app.stack_provisioning.graylog.services.utils import set_deployed_flag
 
 
 async def uninstall_and_delete_content_pack(content_pack_id: str):
@@ -65,6 +66,13 @@ async def decommission_network_connector(
     # Delete the network connector meta from the session
     await session.delete(network_connector_meta)
     await session.commit()
+
+    await set_deployed_flag(
+        customer_code=network_connector_meta.customer_code,
+        network_connector_service_name=network_connector_meta.network_connector_name,
+        flag=False,
+        session=session,
+    )
 
     return DecommissionNetworkContentPackResponse(
         message=f"Network connector {network_connector_meta.network_connector_name} has been decommissioned. However, the indices still remain. If you want to remove the index set, do so within Graylog.",
