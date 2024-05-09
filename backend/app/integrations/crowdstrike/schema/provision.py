@@ -1,4 +1,3 @@
-from enum import Enum
 from typing import Any
 from typing import Dict
 
@@ -28,7 +27,6 @@ class ProvisionCrowdstrikeRequest(BaseModel):
         example=1,
         description="Number of replicas for the customer's Graylog instance",
     )
-
 
     # ensure the `integration_name` is always set to "Crowdstrike"
     @root_validator(pre=True)

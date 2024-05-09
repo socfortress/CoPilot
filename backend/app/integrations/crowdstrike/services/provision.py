@@ -1,47 +1,52 @@
-from sqlalchemy.ext.asyncio import AsyncSession
-from loguru import logger
-from datetime import datetime
 import json
 import os
+from datetime import datetime
+
 import aiofiles
 from fastapi import HTTPException
+from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.integrations.crowdstrike.schema.provision import CrowdstrikeCustomerDetails
-from app.integrations.crowdstrike.schema.provision import ProvisionCrowdstrikeAuthKeys
-from app.integrations.crowdstrike.schema.provision import ProvisionCrowdstrikeResponse
-from app.customer_provisioning.services.grafana import create_grafana_folder
-from app.customer_provisioning.schema.grafana import GrafanaDatasource
-from app.customer_provisioning.schema.grafana import GrafanaDataSourceCreationResponse
-from app.customer_provisioning.services.grafana import get_opensearch_version
-from app.stack_provisioning.graylog.schema.provision import ContentPackKeywords
 from app.connectors.grafana.schema.dashboards import CrowdstrikeDashboard
 from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
 from app.connectors.grafana.services.dashboards import provision_dashboards
 from app.connectors.grafana.utils.universal import create_grafana_client
-from app.utils import get_connector_attribute
-from app.stack_provisioning.graylog.schema.provision import (
-    ProvisionNetworkContentPackRequest,
+from app.connectors.graylog.services.collector import (
+    get_content_pack_id_by_content_pack_name,
 )
-from app.customer_provisioning.schema.graylog import StreamConnectionToPipelineRequest
-from app.stack_provisioning.graylog.services.provision import (
-    provision_content_pack_network_connector,
-)
-from app.customer_provisioning.services.graylog import get_pipeline_id, connect_stream_to_pipeline
-from app.connectors.graylog.services.collector import get_stream_id_by_stream_name, get_input_id_by_input_name, get_content_pack_id_by_content_pack_name
-from app.utils import get_customer_meta_attribute
-
+from app.connectors.graylog.services.collector import get_input_id_by_input_name
+from app.connectors.graylog.services.collector import get_stream_id_by_stream_name
+from app.connectors.graylog.services.streams import assign_stream_to_index
 from app.connectors.graylog.utils.universal import send_post_request
-from app.customer_provisioning.schema.graylog import GraylogIndexSetCreationResponse
-from app.customer_provisioning.schema.graylog import TimeBasedIndexSet
-from app.customer_provisioning.schema.provision import ProvisionNewCustomer
 from app.connectors.wazuh_indexer.services.monitoring import (
     output_shard_number_to_be_set_based_on_nodes,
 )
-from app.utils import get_connector_attribute
-from app.connectors.graylog.services.streams import assign_stream_to_index
-from app.network_connectors.models.network_connectors import CustomerNetworkConnectorsMeta
-from app.customers.routes.customers import get_customer
+from app.customer_provisioning.schema.grafana import GrafanaDatasource
+from app.customer_provisioning.schema.grafana import GrafanaDataSourceCreationResponse
+from app.customer_provisioning.schema.graylog import GraylogIndexSetCreationResponse
+from app.customer_provisioning.schema.graylog import StreamConnectionToPipelineRequest
+from app.customer_provisioning.schema.graylog import TimeBasedIndexSet
+from app.customer_provisioning.schema.provision import ProvisionNewCustomer
+from app.customer_provisioning.services.grafana import create_grafana_folder
+from app.customer_provisioning.services.grafana import get_opensearch_version
+from app.customer_provisioning.services.graylog import connect_stream_to_pipeline
+from app.customer_provisioning.services.graylog import get_pipeline_id
 from app.customers.routes.customers import get_customer_meta
+from app.integrations.crowdstrike.schema.provision import CrowdstrikeCustomerDetails
+from app.integrations.crowdstrike.schema.provision import ProvisionCrowdstrikeAuthKeys
+from app.integrations.crowdstrike.schema.provision import ProvisionCrowdstrikeResponse
+from app.network_connectors.models.network_connectors import (
+    CustomerNetworkConnectorsMeta,
+)
+from app.stack_provisioning.graylog.schema.provision import ContentPackKeywords
+from app.stack_provisioning.graylog.schema.provision import (
+    ProvisionNetworkContentPackRequest,
+)
+from app.stack_provisioning.graylog.services.provision import (
+    provision_content_pack_network_connector,
+)
+from app.utils import get_connector_attribute
+from app.utils import get_customer_meta_attribute
 
 
 #### ! GRAYLOG ! ####
@@ -121,6 +126,7 @@ async def create_index_set(
     index_set_config = await build_index_set_config(request)
     return await send_index_set_creation_request(index_set_config)
 
+
 async def provision_content_pack(customer_details):
     """
     Provisions a content pack for a customer.
@@ -143,6 +149,7 @@ async def provision_content_pack(customer_details):
         ),
     )
 
+
 async def get_stream_and_index_ids(customer_details):
     """
     Retrieves the stream ID and index ID for a given customer.
@@ -153,14 +160,21 @@ async def get_stream_and_index_ids(customer_details):
     Returns:
         tuple: A tuple containing the stream ID and index ID.
     """
-    stream_id = await get_stream_id_by_stream_name(stream_name=f'{customer_details.customer_name} - CROWDSTRIKE LOGS AND EVENTS')
+    stream_id = await get_stream_id_by_stream_name(stream_name=f"{customer_details.customer_name} - CROWDSTRIKE LOGS AND EVENTS")
     index_id = (await create_index_set(request=customer_details)).data.id
-    content_pack_stream_id = await get_content_pack_id_by_content_pack_name(content_pack_name=f'{customer_details.customer_name}_CROWDSTRIKE_STREAM')
-    if customer_details.protocal_type == 'TCP':
-        content_pack_input_id = await get_content_pack_id_by_content_pack_name(content_pack_name=f'{customer_details.customer_name}_CROWDSTRIKE_INPUT_TCP')
-    elif customer_details.protocal_type == 'UDP':
-        content_pack_input_id = await get_content_pack_id_by_content_pack_name(content_pack_name=f'{customer_details.customer_name}_CROWDSTRIKE_INPUT_SYSLOG_UDP')
+    content_pack_stream_id = await get_content_pack_id_by_content_pack_name(
+        content_pack_name=f"{customer_details.customer_name}_CROWDSTRIKE_STREAM",
+    )
+    if customer_details.protocal_type == "TCP":
+        content_pack_input_id = await get_content_pack_id_by_content_pack_name(
+            content_pack_name=f"{customer_details.customer_name}_CROWDSTRIKE_INPUT_TCP",
+        )
+    elif customer_details.protocal_type == "UDP":
+        content_pack_input_id = await get_content_pack_id_by_content_pack_name(
+            content_pack_name=f"{customer_details.customer_name}_CROWDSTRIKE_INPUT_SYSLOG_UDP",
+        )
     return stream_id, index_id, content_pack_stream_id, content_pack_input_id
+
 
 #### ! GRAFANA ! ####
 async def create_grafana_datasource(
@@ -227,7 +241,15 @@ async def create_grafana_datasource(
     )
     return GrafanaDataSourceCreationResponse(**results)
 
-async def create_customer_network_connector_meta(customer_details, stream_id, index_id, content_pack_stream_id, content_pack_input_id, session):
+
+async def create_customer_network_connector_meta(
+    customer_details,
+    stream_id,
+    index_id,
+    content_pack_stream_id,
+    content_pack_input_id,
+    session,
+):
     """
     Create a CustomerNetworkConnectorsMeta object with the provided details.
 
@@ -244,15 +266,22 @@ async def create_customer_network_connector_meta(customer_details, stream_id, in
         customer_code=customer_details.customer_code,
         network_connector_name="CROWDSTRIKE",
         graylog_stream_id=stream_id,
-        graylog_input_id=(await get_input_id_by_input_name(input_name=f'{customer_details.customer_name} - CROWDSTRIKE LOGS AND EVENTS')),
+        graylog_input_id=(await get_input_id_by_input_name(input_name=f"{customer_details.customer_name} - CROWDSTRIKE LOGS AND EVENTS")),
         graylog_pipeline_id=((await get_pipeline_id(subscription="CROWDSTRIKE"))[0]),
         graylog_content_pack_input_id=content_pack_input_id,
         graylog_content_pack_stream_id=content_pack_stream_id,
-        grafana_org_id=(await get_customer_meta_attribute(session=session, customer_code=customer_details.customer_code, column_name='customer_meta_grafana_org_id')),
+        grafana_org_id=(
+            await get_customer_meta_attribute(
+                session=session,
+                customer_code=customer_details.customer_code,
+                column_name="customer_meta_grafana_org_id",
+            )
+        ),
         graylog_index_id=index_id,
         grafana_dashboard_folder_id=None,
         grafana_datasource_uid=None,
     )
+
 
 async def validate_grafana_organization_id(customer_code, session):
     """
@@ -265,9 +294,14 @@ async def validate_grafana_organization_id(customer_code, session):
     Returns:
         int: The Grafana organization ID.
     """
-    return (await get_customer_meta_attribute(session=session, customer_code=customer_code, column_name='customer_meta_grafana_org_id'))
+    return await get_customer_meta_attribute(session=session, customer_code=customer_code, column_name="customer_meta_grafana_org_id")
 
-async def provision_crowdstrike(customer_details: CrowdstrikeCustomerDetails, keys: ProvisionCrowdstrikeAuthKeys, session: AsyncSession) -> ProvisionCrowdstrikeResponse:
+
+async def provision_crowdstrike(
+    customer_details: CrowdstrikeCustomerDetails,
+    keys: ProvisionCrowdstrikeAuthKeys,
+    session: AsyncSession,
+) -> ProvisionCrowdstrikeResponse:
     """
     Provisions a Crowdstrike customer by performing the following steps:
     1. Provisions the content pack for the customer.
@@ -294,14 +328,17 @@ async def provision_crowdstrike(customer_details: CrowdstrikeCustomerDetails, ke
         raise HTTPException(status_code=404, detail="Grafana organization ID not found. Please provision Grafana for the customer first.")
     await provision_content_pack(customer_details)
     stream_id, index_id, content_pack_stream_id, content_pack_input_id = await get_stream_and_index_ids(customer_details)
-    customer_network_connector_meta = await create_customer_network_connector_meta(customer_details, stream_id, index_id, content_pack_stream_id, content_pack_input_id, session)
+    customer_network_connector_meta = await create_customer_network_connector_meta(
+        customer_details,
+        stream_id,
+        index_id,
+        content_pack_stream_id,
+        content_pack_input_id,
+        session,
+    )
     await assign_stream_to_index(stream_id=stream_id, index_id=index_id)
     pipeline_id = await get_pipeline_id(subscription="CROWDSTRIKE")
-    await connect_stream_to_pipeline(
-        stream_and_pipeline=StreamConnectionToPipelineRequest(
-            stream_id=stream_id, pipeline_ids=pipeline_id
-        )
-    )
+    await connect_stream_to_pipeline(stream_and_pipeline=StreamConnectionToPipelineRequest(stream_id=stream_id, pipeline_ids=pipeline_id))
     # Grafana Deployment
     customer_network_connector_meta.grafana_datasource_uid = (
         await create_grafana_datasource(
@@ -310,14 +347,14 @@ async def provision_crowdstrike(customer_details: CrowdstrikeCustomerDetails, ke
         )
     ).datasource.uid
     grafana_folder = await create_grafana_folder(
-            organization_id=(
-                await get_customer_meta(
-                    customer_details.customer_code,
-                    session,
-                )
-            ).customer_meta.customer_meta_grafana_org_id,
-            folder_title="CROWDSTRIKE",
-        )
+        organization_id=(
+            await get_customer_meta(
+                customer_details.customer_code,
+                session,
+            )
+        ).customer_meta.customer_meta_grafana_org_id,
+        folder_title="CROWDSTRIKE",
+    )
     await provision_dashboards(
         DashboardProvisionRequest(
             dashboards=[dashboard.name for dashboard in CrowdstrikeDashboard],
@@ -338,7 +375,11 @@ async def provision_crowdstrike(customer_details: CrowdstrikeCustomerDetails, ke
     )
     await create_customer_directory_if_needed(customer_name=customer_details.customer_name)
     file = await load_and_replace_docker_compose(customer_name=customer_details.customer_name)
-    await save_uploaded_file(file=file, filename=f"{customer_details.customer_name}_docker-compose.yml", customer_name=customer_details.customer_name)
+    await save_uploaded_file(
+        file=file,
+        filename=f"{customer_details.customer_name}_docker-compose.yml",
+        customer_name=customer_details.customer_name,
+    )
     await load_and_replace_falconhose_cfg(customer_details=customer_details, keys=keys, session=session)
 
     return ProvisionCrowdstrikeResponse(
@@ -361,16 +402,17 @@ async def insert_into_customer_network_connectors_meta_table(
     Returns:
         None
     """
-    logger.info(f"Inserting customer network connectors meta into the database")
+    logger.info("Inserting customer network connectors meta into the database")
     session.add(customer_network_connectors_meta)
     await session.commit()
-    logger.info(f"Customer network connectors meta inserted successfully")
+    logger.info("Customer network connectors meta inserted successfully")
     return None
 
 
 # ! Add the docker-compose.yml file to the `data` folder
 project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
-UPLOAD_FOLDER = os.path.join(project_root, 'data')
+UPLOAD_FOLDER = os.path.join(project_root, "data")
+
 
 async def create_customer_directory_if_needed(customer_name: str):
     """
@@ -408,10 +450,11 @@ async def load_and_replace_docker_compose(customer_name: str):
     if " " in customer_name:
         customer_name = customer_name.replace(" ", "_")
     # Open the docker-compose.yml file and read the content
-    with open(os.path.join(parent_directory, 'templates', 'docker-compose.yml'), 'r') as file:
+    with open(os.path.join(parent_directory, "templates", "docker-compose.yml"), "r") as file:
         data = file.read()
     data = data.replace("CUSTOMER_NAME", customer_name)
     return data
+
 
 async def save_uploaded_file(file, filename, customer_name):
     """
@@ -433,7 +476,11 @@ async def save_uploaded_file(file, filename, customer_name):
     return os.path.join(customer_upload_folder, filename)
 
 
-async def load_and_replace_falconhose_cfg(customer_details: CrowdstrikeCustomerDetails, keys: ProvisionCrowdstrikeAuthKeys, session: AsyncSession):
+async def load_and_replace_falconhose_cfg(
+    customer_details: CrowdstrikeCustomerDetails,
+    keys: ProvisionCrowdstrikeAuthKeys,
+    session: AsyncSession,
+):
     """
     Load the falconhose.cfg file and replace the placeholders with the customer details.
 
@@ -451,7 +498,7 @@ async def load_and_replace_falconhose_cfg(customer_details: CrowdstrikeCustomerD
     connector_url = str(await get_connector_attribute(connector_id=3, column_name="connector_url", session=session))
     connector_url = connector_url.replace("https://", "").replace("http://", "").replace(":9000", "")
     # Open the falconhose.cfg file and read the content
-    with open(os.path.join(parent_directory, 'templates', 'cs.falconhoseclient.cfg'), 'r') as file:
+    with open(os.path.join(parent_directory, "templates", "cs.falconhoseclient.cfg"), "r") as file:
         data = file.read()
     data = data.replace("REPLACE_BASE_URL", keys.BASE_URL)
     data = data.replace("REPLACE_CLIENT_ID", keys.CLIENT_ID)
@@ -463,6 +510,6 @@ async def load_and_replace_falconhose_cfg(customer_details: CrowdstrikeCustomerD
     if " " in customer_details.customer_name:
         customer_details.customer_name = customer_details.customer_name.replace(" ", "_")
     customer_upload_folder = os.path.join(UPLOAD_FOLDER, customer_details.customer_name)
-    async with aiofiles.open(os.path.join(customer_upload_folder, 'cs.falconhoseclient.cfg'), "w") as f:
+    async with aiofiles.open(os.path.join(customer_upload_folder, "cs.falconhoseclient.cfg"), "w") as f:
         await f.write(data)
-    return os.path.join(customer_upload_folder, 'cs.falconhoseclient.cfg')
+    return os.path.join(customer_upload_folder, "cs.falconhoseclient.cfg")

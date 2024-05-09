@@ -1,8 +1,5 @@
 from datetime import datetime
 from datetime import timedelta
-from enum import Enum
-from typing import Dict
-from typing import List
 from typing import Optional
 
 from pydantic import BaseModel
@@ -55,6 +52,7 @@ class InvokeSapSiemRequest(BaseModel):
             values["lower_bound"] = lower_bound.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
             values["upper_bound"] = now.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
         return values
+
 
 class CustomerDetails(BaseModel):
     customer_code: str = Field(
@@ -147,14 +145,13 @@ class CollectSapSiemRequest(BaseModel):
             elif unit == "w":
                 lower_bound = now - timedelta(weeks=amount)
 
-            values["lower_bound"] = (
-                lower_bound.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
-            )
+            values["lower_bound"] = lower_bound.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
             values["upper_bound"] = now.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
         return values
 
     def to_dict(self):
         return self.dict()
+
 
 class InvokeSapSiemAnalysis(BaseModel):
     threshold: int = Field(

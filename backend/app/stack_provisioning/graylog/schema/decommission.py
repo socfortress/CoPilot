@@ -1,10 +1,11 @@
 from enum import Enum
 from typing import Any
-from loguru import logger
 
 from fastapi import HTTPException
+from loguru import logger
 from pydantic import BaseModel
 from pydantic import Field
+
 
 class AvailableNetworkConnectors(str, Enum):
     FORTINET = (
@@ -15,6 +16,7 @@ class AvailableNetworkConnectors(str, Enum):
         "The Crowdstrike Network Connector which includes Input, Stream, Pipeline Rules,"
         " Pipelines, and Lookup Tables for Crowdstrike logs and the SOCFortress SIEM stack."
     )
+
 
 class DecommissionNetworkContentPackRequest(BaseModel):
     network_connector: AvailableNetworkConnectors = Field(

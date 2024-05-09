@@ -199,6 +199,7 @@ async def delete_grafana_organization(organization_id: int):
         return organization_deleted
     return organization_deleted
 
+
 async def delete_grafana_dashboard_folder(organization_id: int, folder_uid: str):
     """
     Deletes a Grafana dashboard folder.
@@ -214,6 +215,7 @@ async def delete_grafana_dashboard_folder(organization_id: int, folder_uid: str)
     )
     logger.info(f"Folder deleted: {folder_deleted}")
     return folder_deleted
+
 
 async def delete_grafana_datasource(organization_id: int, datasource_uid: str):
     """

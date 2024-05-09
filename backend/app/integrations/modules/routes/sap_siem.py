@@ -1,38 +1,40 @@
-from typing import Optional
-
 from fastapi import APIRouter
 from fastapi import Depends
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.db_session import get_db
-from app.integrations.routes import find_customer_integration
-from app.integrations.modules.schema.sap_siem import InvokeSapSiemRequest, CustomerDetails
-from app.integrations.modules.schema.sap_siem import InvokeSapSiemRequest, CollectSapSiemRequest
-from app.integrations.modules.schema.sap_siem import InvokeSAPSiemResponse, InvokeSapSiemAnalysis
+from app.integrations.modules.schema.sap_siem import CollectSapSiemRequest
+from app.integrations.modules.schema.sap_siem import CustomerDetails
+from app.integrations.modules.schema.sap_siem import InvokeSapSiemAnalysis
+from app.integrations.modules.schema.sap_siem import InvokeSapSiemRequest
+from app.integrations.modules.schema.sap_siem import InvokeSAPSiemResponse
 from app.integrations.modules.schema.sap_siem import SapSiemAuthKeys
-from app.integrations.modules.services.sap_siem.collect import post_to_copilot_sap_module_collect, post_to_copilot_sap_module_sap_siem_successful_user_login_with_different_ip, post_to_copilot_sap_module_same_user_failed_login_from_different_ip, post_to_copilot_sap_module_same_user_failed_login_from_different_geo_location, post_to_copilot_sap_module_same_user_successful_login_from_different_geo_location, post_to_copilot_sap_module_brute_force_failed_logins_multiple_ips, post_to_copilot_sap_module_brute_force_failed_logins_same_ip, post_to_copilot_sap_module_successful_login_after_multiple_failed_logins
-from app.integrations.sap_siem.services.sap_siem_brute_force_same_ip import (
-    sap_siem_brute_force_failed_same_ip,
+from app.integrations.modules.services.sap_siem.collect import (
+    post_to_copilot_sap_module_brute_force_failed_logins_multiple_ips,
 )
-from app.integrations.sap_siem.services.sap_siem_brute_forced_failed_logins import (
-    sap_siem_brute_force_failed_multiple_ips,
+from app.integrations.modules.services.sap_siem.collect import (
+    post_to_copilot_sap_module_brute_force_failed_logins_same_ip,
 )
-from app.integrations.sap_siem.services.sap_siem_failed_same_user_different_geo_location import (
-    sap_siem_failed_same_user_diff_geo,
+from app.integrations.modules.services.sap_siem.collect import (
+    post_to_copilot_sap_module_collect,
 )
-from app.integrations.sap_siem.services.sap_siem_failed_same_user_from_different_ip import (
-    sap_siem_failed_same_user_diff_ip,
+from app.integrations.modules.services.sap_siem.collect import (
+    post_to_copilot_sap_module_same_user_failed_login_from_different_geo_location,
 )
-from app.integrations.sap_siem.services.sap_siem_successful_login_same_ip_after_multiple_failures import (
-    sap_siem_successful_login_after_failures,
+from app.integrations.modules.services.sap_siem.collect import (
+    post_to_copilot_sap_module_same_user_failed_login_from_different_ip,
 )
-from app.integrations.sap_siem.services.sap_siem_successful_same_user_different_geo_location import (
-    sap_siem_successful_same_user_diff_geo,
+from app.integrations.modules.services.sap_siem.collect import (
+    post_to_copilot_sap_module_same_user_successful_login_from_different_geo_location,
 )
-from app.integrations.sap_siem.services.sap_siem_successful_user_login_after_using_different_ip import (
-    sap_siem_successful_user_login_with_different_ip,
+from app.integrations.modules.services.sap_siem.collect import (
+    post_to_copilot_sap_module_sap_siem_successful_user_login_with_different_ip,
 )
+from app.integrations.modules.services.sap_siem.collect import (
+    post_to_copilot_sap_module_successful_login_after_multiple_failed_logins,
+)
+from app.integrations.routes import find_customer_integration
 from app.integrations.utils.utils import extract_auth_keys
 from app.integrations.utils.utils import get_customer_integration_response
 from app.utils import get_customer_meta_attribute
@@ -70,8 +72,33 @@ async def collect_sap_siem_route(sap_siem_request: InvokeSapSiemRequest, session
         for key in api_keys:
             await post_to_copilot_sap_module_collect(
                 data=CollectSapSiemRequest(
+                    auth_keys=SapSiemAuthKeys(
+                        API_KEY=key,
+                        SECRET_KEY=auth_keys.SECRET_KEY,
+                        USER_KEY=auth_keys.USER_KEY,
+                        API_DOMAIN=auth_keys.API_DOMAIN,
+                    ),
+                    customer_code=sap_siem_request.customer_code,
+                    integration_name=sap_siem_request.integration_name,
+                    threshold=sap_siem_request.threshold,
+                    time_range=sap_siem_request.time_range,
+                    customer_details=CustomerDetails(
+                        customer_code=sap_siem_request.customer_code,
+                        iris_customer_id=(
+                            await get_customer_meta_attribute(
+                                customer_code=sap_siem_request.customer_code,
+                                column_name="customer_meta_iris_customer_id",
+                                session=session,
+                            )
+                        ),
+                    ),
+                ),
+            )
+    else:
+        await post_to_copilot_sap_module_collect(
+            data=InvokeSapSiemRequest(
                 auth_keys=SapSiemAuthKeys(
-                    API_KEY=key,
+                    API_KEY=auth_keys.API_KEY,
                     SECRET_KEY=auth_keys.SECRET_KEY,
                     USER_KEY=auth_keys.USER_KEY,
                     API_DOMAIN=auth_keys.API_DOMAIN,
@@ -82,27 +109,10 @@ async def collect_sap_siem_route(sap_siem_request: InvokeSapSiemRequest, session
                 time_range=sap_siem_request.time_range,
                 customer_details=CustomerDetails(
                     customer_code=sap_siem_request.customer_code,
-                    iris_customer_id=(await get_customer_meta_attribute(customer_code=sap_siem_request.customer_code, column_name="customer_meta_iris_customer_id", session=session)),
+                    iris_customer_id=(await get_customer_meta_attribute(sap_siem_request.customer_code, "customer_meta_iris_customer_id")),
                 ),
-            ))
-    else:
-        await post_to_copilot_sap_module_collect(
-            data=InvokeSapSiemRequest(
-            auth_keys=SapSiemAuthKeys(
-                API_KEY=auth_keys.API_KEY,
-                SECRET_KEY=auth_keys.SECRET_KEY,
-                USER_KEY=auth_keys.USER_KEY,
-                API_DOMAIN=auth_keys.API_DOMAIN,
             ),
-            customer_code=sap_siem_request.customer_code,
-            integration_name=sap_siem_request.integration_name,
-            threshold=sap_siem_request.threshold,
-            time_range=sap_siem_request.time_range,
-            customer_details=CustomerDetails(
-                customer_code=sap_siem_request.customer_code,
-                iris_customer_id=(await get_customer_meta_attribute(sap_siem_request.customer_code, "customer_meta_iris_customer_id")),
-            ),
-        ))
+        )
 
     return InvokeSAPSiemResponse(success=True, message="SAP SIEM Events collected successfully.")
 
@@ -175,7 +185,6 @@ async def invoke_sap_siem_same_user_failed_login_from_different_geo_location_rou
             time_range=invoke_siem_analysis.time_range,
             iris_customer_id=invoke_siem_analysis.iris_customer_id,
         ),
-
     )
 
     return InvokeSAPSiemResponse(success=True, message="SAP SIEM Events collected successfully.")
@@ -217,7 +226,6 @@ async def invoke_sap_siem_same_user_successful_login_from_different_geo_location
             iris_customer_id=invoke_siem_analysis.iris_customer_id,
         ),
     )
-
 
     return InvokeSAPSiemResponse(success=True, message="SAP SIEM Events collected successfully.")
 

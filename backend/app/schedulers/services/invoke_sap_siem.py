@@ -5,15 +5,8 @@ from loguru import logger
 from sqlalchemy import select
 
 from app.db.db_session import get_db_session
-from app.integrations.modules.schema.sap_siem import InvokeSapSiemAnalysis
 from app.db.db_session import get_sync_db_session
 from app.integrations.models.customer_integration_settings import CustomerIntegrations
-from app.integrations.monitoring_alert.routes.monitoring_alert import (
-    run_sap_siem_multiple_logins_same_ip_analysis,
-)
-from app.integrations.monitoring_alert.routes.monitoring_alert import (
-    run_sap_siem_suspicious_logins_analysis,
-)
 from app.integrations.modules.routes.sap_siem import collect_sap_siem_route
 from app.integrations.modules.routes.sap_siem import (
     invoke_sap_siem_brute_force_failed_logins_route,
@@ -35,6 +28,13 @@ from app.integrations.modules.routes.sap_siem import (
 )
 from app.integrations.modules.routes.sap_siem import (
     invoke_sap_siem_successful_user_login_with_different_ip_route,
+)
+from app.integrations.modules.schema.sap_siem import InvokeSapSiemAnalysis
+from app.integrations.monitoring_alert.routes.monitoring_alert import (
+    run_sap_siem_multiple_logins_same_ip_analysis,
+)
+from app.integrations.monitoring_alert.routes.monitoring_alert import (
+    run_sap_siem_suspicious_logins_analysis,
 )
 from app.integrations.sap_siem.schema.sap_siem import InvokeSapSiemRequest
 from app.integrations.sap_siem.schema.sap_siem import InvokeSAPSiemResponse
@@ -179,7 +179,9 @@ async def invoke_sap_siem_integration_successful_user_login_with_different_ip() 
         customer_codes = [row.customer_code for row in result.scalars()]
         logger.info(f"customer_codes: {customer_codes}")
         for customer_code in customer_codes:
-            extra_data = (await get_scheduled_job_metadata("invoke_sap_siem_integration_successful_user_login_with_different_ip")).extra_data
+            extra_data = (
+                await get_scheduled_job_metadata("invoke_sap_siem_integration_successful_user_login_with_different_ip")
+            ).extra_data
             if extra_data is not None:
                 data_parts = extra_data.split(",")
                 for part in data_parts:
@@ -195,9 +197,8 @@ async def invoke_sap_siem_integration_successful_user_login_with_different_ip() 
                 invoke_siem_analysis=InvokeSapSiemAnalysis(
                     threshold=threshold,
                     time_range=time_range,
-                    iris_customer_id=(await get_customer_meta_attribute(customer_code, "customer_meta_iris_customer_id", session)
+                    iris_customer_id=(await get_customer_meta_attribute(customer_code, "customer_meta_iris_customer_id", session)),
                 ),
-                )
             )
     # Close the session
     await session.close()
@@ -249,9 +250,8 @@ async def invoke_sap_siem_integration_same_user_failed_login_from_different_ip()
                 invoke_siem_analysis=InvokeSapSiemAnalysis(
                     threshold=threshold,
                     time_range=time_range,
-                    iris_customer_id=(await get_customer_meta_attribute(customer_code, "customer_meta_iris_customer_id", session)
+                    iris_customer_id=(await get_customer_meta_attribute(customer_code, "customer_meta_iris_customer_id", session)),
                 ),
-                )
             )
     # Close the session
     await session.close()
@@ -305,9 +305,8 @@ async def invoke_sap_siem_integration_same_user_failed_login_from_different_geo_
                 invoke_siem_analysis=InvokeSapSiemAnalysis(
                     threshold=threshold,
                     time_range=time_range,
-                    iris_customer_id=(await get_customer_meta_attribute(customer_code, "customer_meta_iris_customer_id", session)
+                    iris_customer_id=(await get_customer_meta_attribute(customer_code, "customer_meta_iris_customer_id", session)),
                 ),
-                )
             )
     # Close the session
     await session.close()
@@ -364,9 +363,8 @@ async def invoke_sap_siem_integration_same_user_successful_login_from_different_
                 invoke_siem_analysis=InvokeSapSiemAnalysis(
                     threshold=threshold,
                     time_range=time_range,
-                    iris_customer_id=(await get_customer_meta_attribute(customer_code, "customer_meta_iris_customer_id", session)
+                    iris_customer_id=(await get_customer_meta_attribute(customer_code, "customer_meta_iris_customer_id", session)),
                 ),
-                )
             )
     # Close the session
     await session.close()
@@ -421,9 +419,8 @@ async def invoke_sap_siem_integration_brute_force_failed_logins() -> InvokeSAPSi
                 invoke_siem_analysis=InvokeSapSiemAnalysis(
                     threshold=threshold,
                     time_range=time_range,
-                    iris_customer_id=(await get_customer_meta_attribute(customer_code, "customer_meta_iris_customer_id", session)
+                    iris_customer_id=(await get_customer_meta_attribute(customer_code, "customer_meta_iris_customer_id", session)),
                 ),
-                )
             )
     # Close the session
     await session.close()
@@ -471,9 +468,8 @@ async def invoke_sap_siem_integration_brute_force_failed_logins_same_ip() -> Inv
                 invoke_siem_analysis=InvokeSapSiemAnalysis(
                     threshold=threshold,
                     time_range=time_range,
-                    iris_customer_id=(await get_customer_meta_attribute(customer_code, "customer_meta_iris_customer_id", session)
+                    iris_customer_id=(await get_customer_meta_attribute(customer_code, "customer_meta_iris_customer_id", session)),
                 ),
-                )
             )
     # Close the session
     await session.close()
@@ -525,9 +521,8 @@ async def invoke_sap_siem_integration_successful_login_after_multiple_failed_log
                 invoke_siem_analysis=InvokeSapSiemAnalysis(
                     threshold=threshold,
                     time_range=time_range,
-                    iris_customer_id=(await get_customer_meta_attribute(customer_code, "customer_meta_iris_customer_id", session)
+                    iris_customer_id=(await get_customer_meta_attribute(customer_code, "customer_meta_iris_customer_id", session)),
                 ),
-                )
             )
     # Close the session
     await session.close()

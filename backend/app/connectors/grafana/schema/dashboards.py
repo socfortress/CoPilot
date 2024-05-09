@@ -78,6 +78,7 @@ class HuntressDashboard(Enum):
 class CarbonBlackDashboard(Enum):
     CARBONBLACK_SUMMARY = ("CarbonBlack", "summary.json")
 
+
 class FortinetDashboard(Enum):
     FORTINET_SYSTEM_LOGS = ("Fortinet", "fortinet_system_logs.json")
     FORTINET_UTM_ANOMALIES = ("Fortinet", "fortinet_utm_anomalies.json")
@@ -90,6 +91,7 @@ class FortinetDashboard(Enum):
     FORTINET_UTM_VIRUS = ("Fortinet", "fortinet_utm_virus.json")
     FORTINET_UTM_WEBFILTER = ("Fortinet", "fortinet_utm_webfilter.json")
     FORTINET_VPN = ("Fortinet", "fortinet_vpn.json")
+
 
 class CrowdstrikeDashboard(Enum):
     CROWDSTRIKE_SUMMARY = ("Crowdstrike", "summary.json")

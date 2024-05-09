@@ -25,10 +25,14 @@ from sqlalchemy.orm import joinedload
 from app.auth.services.universal import find_user
 from app.auth.utils import AuthHandler
 from app.connectors.utils import get_connector_info_from_db
+from app.customer_provisioning.models.default_settings import (
+    CustomerProvisioningDefaultSettings,
+)
 from app.db.all_models import Connectors
 from app.db.db_session import get_db
 from app.db.db_session import get_db_session
 from app.db.db_session import get_session
+from app.db.universal_models import CustomersMeta
 from app.db.universal_models import LogEntry
 from app.integrations.alert_creation_settings.models.alert_creation_settings import (
     AlertCreationEventConfig,
@@ -39,8 +43,6 @@ from app.integrations.alert_creation_settings.models.alert_creation_settings imp
 from app.integrations.alert_creation_settings.models.alert_creation_settings import (
     EventOrder,
 )
-from app.db.universal_models import CustomersMeta
-from app.customer_provisioning.models.default_settings import CustomerProvisioningDefaultSettings
 
 
 ################## ! 422 VALIDATION ERROR TYPES FOR PYDANTIC VALUE ERROR RESPONSE ! ##################
@@ -637,6 +639,7 @@ async def get_connector_attribute(
         return getattr(connector, column_name, None)
     return None
 
+
 async def get_customer_meta_attribute(
     customer_code: str,
     column_name: str,
@@ -662,6 +665,7 @@ async def get_customer_meta_attribute(
         return getattr(customer, column_name, None)
     return None
 
+
 async def get_customer_default_settings_attribute(
     column_name: str,
     session: AsyncSession = Depends(get_session),
@@ -677,9 +681,7 @@ async def get_customer_default_settings_attribute(
     Returns:
         Optional[Any]: The value of the column, or None if the customer or column does not exist.
     """
-    result = await session.execute(
-        select(CustomerProvisioningDefaultSettings)
-    )
+    result = await session.execute(select(CustomerProvisioningDefaultSettings))
     settings = result.scalars().first()
 
     if settings:

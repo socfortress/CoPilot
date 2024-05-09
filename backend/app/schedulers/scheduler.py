@@ -26,7 +26,9 @@ from app.schedulers.services.invoke_sap_siem import (
 from app.schedulers.services.invoke_sap_siem import (
     invoke_sap_siem_integration_brute_force_failed_logins_same_ip,
 )
-from app.schedulers.services.invoke_sap_siem import invoke_sap_siem_integration_collection
+from app.schedulers.services.invoke_sap_siem import (
+    invoke_sap_siem_integration_collection,
+)
 from app.schedulers.services.invoke_sap_siem import (
     invoke_sap_siem_integration_multiple_logins_same_ip_analysis,
 )

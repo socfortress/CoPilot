@@ -5,8 +5,11 @@ from sqlalchemy.future import select
 
 from app.connectors.graylog.services.content_packs import get_content_packs
 from app.connectors.graylog.services.management import get_system_info
+from app.network_connectors.models.network_connectors import CustomerNetworkConnectors
+from app.network_connectors.models.network_connectors import (
+    CustomerNetworkConnectorsMeta,
+)
 from app.stack_provisioning.graylog.schema.provision import AvailableContentPacks
-from app.network_connectors.models.network_connectors import CustomerNetworkConnectorsMeta, CustomerNetworkConnectors
 
 
 async def get_graylog_version() -> str:
@@ -130,7 +133,10 @@ async def set_deployed_flag(customer_code: str, network_connector_service_name: 
     """
     # Retrieve the customer network connectors object for the customer code and network connector service name
     customer_network_connectors = await session.execute(
-        select(CustomerNetworkConnectors).filter_by(customer_code=customer_code, network_connector_service_name=network_connector_service_name)
+        select(CustomerNetworkConnectors).filter_by(
+            customer_code=customer_code,
+            network_connector_service_name=network_connector_service_name,
+        ),
     )
     customer_network_connectors = customer_network_connectors.scalars().first()
     # Update the deployed flag to True

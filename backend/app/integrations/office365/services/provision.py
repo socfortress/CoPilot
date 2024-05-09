@@ -32,8 +32,10 @@ from app.connectors.graylog.services.pipelines import create_pipeline_rule
 from app.connectors.graylog.services.pipelines import get_pipeline_id
 from app.connectors.graylog.services.pipelines import get_pipeline_rules
 from app.connectors.graylog.services.pipelines import get_pipelines
-from app.utils import get_customer_default_settings_attribute
 from app.connectors.graylog.utils.universal import send_post_request
+from app.connectors.wazuh_indexer.services.monitoring import (
+    output_shard_number_to_be_set_based_on_nodes,
+)
 from app.connectors.wazuh_manager.utils.universal import send_get_request
 from app.connectors.wazuh_manager.utils.universal import send_put_request
 from app.customer_provisioning.schema.grafana import GrafanaDatasource
@@ -54,9 +56,7 @@ from app.integrations.office365.schema.provision import PipelineTitles
 from app.integrations.office365.schema.provision import ProvisionOffice365AuthKeys
 from app.integrations.office365.schema.provision import ProvisionOffice365Response
 from app.utils import get_connector_attribute
-from app.connectors.wazuh_indexer.services.monitoring import (
-    output_shard_number_to_be_set_based_on_nodes,
-)
+from app.utils import get_customer_default_settings_attribute
 
 load_dotenv()
 
@@ -923,7 +923,8 @@ async def provision_office365(
             organizationId=(await get_customer_meta(customer_code, session)).customer_meta.customer_meta_grafana_org_id,
             folderId=grafana_o365_folder_id,
             datasourceUid=office365_datasource_uid,
-            grafana_url=(await get_customer_default_settings_attribute(column_name='grafana_url', session=session)) or 'grafana.company.local',
+            grafana_url=(await get_customer_default_settings_attribute(column_name="grafana_url", session=session))
+            or "grafana.company.local",
         ),
     )
 

@@ -1,13 +1,16 @@
-from sqlalchemy.ext.asyncio import AsyncSession
 from loguru import logger
-from datetime import datetime
-import json
-from fastapi import HTTPException
-from app.customer_provisioning.services.graylog import uninstall_content_pack, delete_content_pack
-from app.network_connectors.models.network_connectors import CustomerNetworkConnectorsMeta
-from app.stack_provisioning.graylog.schema.decommission import DecommissionNetworkContentPackResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.customer_provisioning.services.grafana import delete_grafana_dashboard_folder, delete_grafana_datasource
+
+from app.customer_provisioning.services.grafana import delete_grafana_dashboard_folder
+from app.customer_provisioning.services.grafana import delete_grafana_datasource
+from app.customer_provisioning.services.graylog import delete_content_pack
+from app.customer_provisioning.services.graylog import uninstall_content_pack
+from app.network_connectors.models.network_connectors import (
+    CustomerNetworkConnectorsMeta,
+)
+from app.stack_provisioning.graylog.schema.decommission import (
+    DecommissionNetworkContentPackResponse,
+)
 from app.stack_provisioning.graylog.services.utils import set_deployed_flag
 
 
@@ -21,6 +24,7 @@ async def uninstall_and_delete_content_pack(content_pack_id: str):
     await uninstall_content_pack(content_pack_id)
     await delete_content_pack(content_pack_id)
 
+
 async def delete_grafana_resources(organization_id: str, folder_uid: str, datasource_uid: str):
     """
     Deletes Grafana resources.
@@ -32,6 +36,7 @@ async def delete_grafana_resources(organization_id: str, folder_uid: str, dataso
     """
     await delete_grafana_dashboard_folder(organization_id=organization_id, folder_uid=folder_uid)
     await delete_grafana_datasource(organization_id=organization_id, datasource_uid=datasource_uid)
+
 
 async def decommission_network_connector(
     network_connector_meta: CustomerNetworkConnectorsMeta,
@@ -75,6 +80,10 @@ async def decommission_network_connector(
     )
 
     return DecommissionNetworkContentPackResponse(
-        message=f"Network connector {network_connector_meta.network_connector_name} has been decommissioned. However, the indices still remain. If you want to remove the index set, do so within Graylog.",
+        message=(
+            f"Network connector {network_connector_meta.network_connector_name} has been "
+            f"decommissioned. However, the indices still remain. If you want to remove the "
+            f"index set, do so within Graylog."
+        ),
         success=True,
     )

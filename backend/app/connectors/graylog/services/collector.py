@@ -278,6 +278,7 @@ async def get_input_id_by_input_name(input_name: str) -> str:
             detail=f"Failed to collect input ID key: {e}",
         )
 
+
 async def get_content_pack_id_by_content_pack_name(content_pack_name: str) -> str:
     """Get content pack ID from Graylog by content pack name.
 

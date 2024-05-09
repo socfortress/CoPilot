@@ -1,12 +1,13 @@
 # [Crowdstrike Integration](https://www.crowdstrike.com/blog/tech-center/integrate-with-your-siem)
 
-
 ## Prerequisites
+
 Before using the Falcon SIEM Connector, you’ll want to first define the API client and set its scope. Refer to this guide (https://www.crowdstrike.com/blog/tech-center/get-access-falcon-apis/) to getting access to the CrowdStrike API for setting up a new API client key. For the new API client, make sure the scope includes read access for Event streams.
 
 ![Crowdstrike API Settings](/images/crowdstrike/crowdstrike_api_settings.png)
 
 <!-- Running the Crowdstrike-Connector Container -->
+
 ## Configuration
 
 The configuration for our API creds and syslog forwarder settings are stored within `/opt/crowdstrike/etc/cs.falconhoseclient.cfg`. Adjust to make your changes. **NOTE that the `api_url` , `cliend_id` , `client_secret` , and `syslog_host` will need to be updated.** Below is an example, CoPilot will take care of this for you.
@@ -78,5 +79,3 @@ host = REPLACE_SYSLOG_HOST
 port = REPLACE_SYSLOG_PORT
 protocol = tcp
 ```
-
-

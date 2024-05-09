@@ -7,6 +7,7 @@ from fastapi import HTTPException
 from pydantic import BaseModel
 from pydantic import Field
 
+
 class AvailbleContentPacksOverview(str, Enum):
     SOCFORTRESS_WAZUH_CONTENT_PACK = (
         "The Wazuh Content Pack which includes Input, Stream, Pipeline Rules,"

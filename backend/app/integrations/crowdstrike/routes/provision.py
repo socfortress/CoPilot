@@ -8,10 +8,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
-from loguru import logger
+from app.integrations.crowdstrike.schema.provision import CrowdstrikeCustomerDetails
 from app.integrations.crowdstrike.schema.provision import ProvisionCrowdstrikeAuthKeys
 from app.integrations.crowdstrike.schema.provision import ProvisionCrowdstrikeRequest
-from app.integrations.crowdstrike.schema.provision import ProvisionCrowdstrikeResponse, CrowdstrikeCustomerDetails
+from app.integrations.crowdstrike.schema.provision import ProvisionCrowdstrikeResponse
 from app.integrations.crowdstrike.services.provision import provision_crowdstrike
 from app.integrations.routes import find_customer_integration
 from app.integrations.routes import get_customer_integrations_by_customer_code
@@ -112,7 +112,7 @@ async def provision_crowdstrike_route(
     crowdstrike_auth_keys = extract_crowdstrike_auth_keys(customer_integration)
 
     auth_keys = ProvisionCrowdstrikeAuthKeys(**crowdstrike_auth_keys)
-    #logger.info(f"Provisioning Crowdstrike for customer {provision_crowdstrike_request.customer_code} with auth keys: {auth_keys.dict()}")
+    # logger.info(f"Provisioning Crowdstrike for customer {provision_crowdstrike_request.customer_code} with auth keys: {auth_keys.dict()}")
 
     return await provision_crowdstrike(
         customer_details=CrowdstrikeCustomerDetails(

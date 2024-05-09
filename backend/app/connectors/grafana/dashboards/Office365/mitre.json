@@ -1,1781 +1,1737 @@
 {
-  "annotations": {
-    "list": [
-      {
-        "builtIn": 1,
-        "datasource": {
-          "type": "datasource",
-          "uid": "grafana"
-        },
-        "enable": true,
-        "hide": true,
-        "iconColor": "rgba(0, 211, 255, 1)",
-        "name": "Annotations & Alerts",
-        "target": {
-          "limit": 100,
-          "matchAny": false,
-          "tags": [],
-          "type": "dashboard"
-        },
-        "type": "dashboard"
-      }
-    ]
-  },
-  "editable": false,
-  "fiscalYearStartMonth": 0,
-  "graphTooltip": 0,
-  "id": null,
-  "links": [
-    {
-      "$$hashKey": "object:325",
-      "asDropdown": true,
-      "icon": "external link",
-      "includeVars": true,
-      "keepTime": true,
-      "tags": [
-        "O365"
-      ],
-      "targetBlank": true,
-      "type": "dashboards"
-    }
-  ],
-  "liveNow": false,
-  "panels": [
-    {
-      "datasource": {
-        "type": "grafana-opensearch-datasource",
-        "uid": "replace_datasource_uid"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "light-red",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "MITRE ENRICHED EVENTS"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "mode": "palette-classic"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "ALL EVENTS"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "mode": "palette-classic"
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 4,
-        "x": 0,
-        "y": 0
-      },
-      "id": 2,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "horizontal",
-        "reduceOptions": {
-          "calcs": [
-            "sum"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "text": {},
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "10.4.0",
-      "targets": [
-        {
-          "alias": "MITRE ENRICHED EVENTS",
-          "bucketAggs": [
-            {
-              "$$hashKey": "object:266",
-              "field": "timestamp",
-              "id": "2",
-              "settings": {
-                "interval": "auto",
-                "min_doc_count": 0,
-                "trimEdges": 0
-              },
-              "type": "date_histogram"
-            }
-          ],
-          "datasource": {
-            "type": "grafana-opensearch-datasource",
-            "uid": "replace_datasource_uid"
-          },
-          "metrics": [
-            {
-              "$$hashKey": "object:264",
-              "field": "select field",
-              "id": "1",
-              "type": "count"
-            }
-          ],
-          "query": "_exists_:rule_mitre_id AND data_office365_Workload:$workload AND rule_level:$rule_level",
-          "refId": "A",
-          "timeField": "timestamp"
-        },
-        {
-          "alias": "ALL EVENTS",
-          "bucketAggs": [
-            {
-              "field": "timestamp",
-              "id": "2",
-              "settings": {
-                "interval": "auto"
-              },
-              "type": "date_histogram"
-            }
-          ],
-          "datasource": {
-            "type": "grafana-opensearch-datasource",
-            "uid": "replace_datasource_uid"
-          },
-          "hide": false,
-          "metrics": [
-            {
-              "id": "1",
-              "type": "count"
-            }
-          ],
-          "query": "data_office365_Workload:$workload AND rule_level:$rule_level",
-          "refId": "B",
-          "timeField": "timestamp"
-        }
-      ],
-      "title": "MITRE ATT&CK EBRICHMENT",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "grafana-opensearch-datasource",
-        "uid": "replace_datasource_uid"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "light-red",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 4,
-        "x": 4,
-        "y": 0
-      },
-      "id": 35,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "sum"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "text": {},
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "10.4.0",
-      "targets": [
-        {
-          "bucketAggs": [
-            {
-              "$$hashKey": "object:266",
-              "field": "timestamp",
-              "id": "2",
-              "settings": {
-                "interval": "auto",
-                "min_doc_count": 0,
-                "trimEdges": 0
-              },
-              "type": "date_histogram"
-            }
-          ],
-          "datasource": {
-            "type": "grafana-opensearch-datasource",
-            "uid": "replace_datasource_uid"
-          },
-          "metrics": [
-            {
-              "$$hashKey": "object:264",
-              "field": "select field",
-              "id": "1",
-              "type": "count"
-            }
-          ],
-          "query": "rule_level:>=12 AND _exists_:rule_mitre_tactic AND data_office365_Workload:$workload",
-          "refId": "A",
-          "timeField": "timestamp"
-        }
-      ],
-      "title": "MITRE ATT&CK ALERTS",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "grafana-opensearch-datasource",
-        "uid": "replace_datasource_uid"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "light-red",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 4,
-        "x": 8,
-        "y": 0
-      },
-      "id": 12,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "sum"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "text": {},
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "10.4.0",
-      "targets": [
-        {
-          "bucketAggs": [
-            {
-              "$$hashKey": "object:161",
-              "field": "data_office365_ActorUserId",
-              "id": "2",
-              "settings": {
-                "min_doc_count": 1,
-                "order": "desc",
-                "orderBy": "_term",
-                "size": "10"
-              },
-              "type": "terms"
-            }
-          ],
-          "datasource": {
-            "type": "grafana-opensearch-datasource",
-            "uid": "replace_datasource_uid"
-          },
-          "metrics": [
-            {
-              "$$hashKey": "object:159",
-              "field": "data_office365_ActorUserId",
-              "id": "1",
-              "meta": {},
-              "settings": {},
-              "type": "cardinality"
-            }
-          ],
-          "query": "rule_level:>=12 AND _exists_:rule_mitre_tactic AND data_office365_Workload:$workload",
-          "refId": "A",
-          "timeField": "timestamp"
-        }
-      ],
-      "title": "ACCOUNTS AFFECTED",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "grafana-opensearch-datasource",
-        "uid": "replace_datasource_uid"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "inspect": false
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "light-red",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 6,
-        "x": 12,
-        "y": 0
-      },
-      "id": 13,
-      "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
-        },
-        "showHeader": true
-      },
-      "pluginVersion": "10.4.0",
-      "targets": [
-        {
-          "bucketAggs": [
-            {
-              "$$hashKey": "object:228",
-              "field": "data_office365_ActorUserId",
-              "id": "2",
-              "settings": {
-                "min_doc_count": 1,
-                "order": "desc",
-                "orderBy": "_term",
-                "size": "10"
-              },
-              "type": "terms"
-            }
-          ],
-          "datasource": {
-            "type": "grafana-opensearch-datasource",
-            "uid": "replace_datasource_uid"
-          },
-          "metrics": [
-            {
-              "$$hashKey": "object:226",
-              "field": "data_office365_ActorUserId",
-              "id": "1",
-              "meta": {},
-              "settings": {},
-              "type": "cardinality"
-            }
-          ],
-          "query": "rule_level:>=12 AND _exists_:rule_mitre_tactic AND data_office365_Workload:$workload",
-          "refId": "A",
-          "timeField": "timestamp"
-        }
-      ],
-      "title": "USERS/ACCOUNTS AFFECTED",
-      "type": "table"
-    },
-    {
-      "datasource": {
-        "type": "grafana-opensearch-datasource",
-        "uid": "replace_datasource_uid"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            }
-          },
-          "decimals": 0,
-          "mappings": [],
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 6,
-        "x": 18,
-        "y": 0
-      },
-      "id": 15,
-      "maxDataPoints": 3,
-      "options": {
-        "displayLabels": [],
-        "legend": {
-          "calcs": [],
-          "displayMode": "table",
-          "placement": "right",
-          "showLegend": true,
-          "values": [
-            "value"
-          ]
-        },
-        "pieType": "donut",
-        "reduceOptions": {
-          "calcs": [
-            "sum"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "text": {},
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "6.6.2",
-      "targets": [
-        {
-          "bucketAggs": [
-            {
-              "$$hashKey": "object:188",
-              "fake": true,
-              "field": "data_office365_Workload",
-              "id": "3",
-              "settings": {
-                "min_doc_count": 1,
-                "order": "desc",
-                "orderBy": "_count",
-                "size": "0"
-              },
-              "type": "terms"
-            },
-            {
-              "$$hashKey": "object:189",
-              "field": "timestamp",
-              "id": "2",
-              "settings": {
-                "interval": "auto",
-                "min_doc_count": 0,
-                "trimEdges": 0
-              },
-              "type": "date_histogram"
-            }
-          ],
-          "datasource": {
-            "type": "grafana-opensearch-datasource",
-            "uid": "replace_datasource_uid"
-          },
-          "metrics": [
-            {
-              "$$hashKey": "object:186",
-              "field": "select field",
-              "id": "1",
-              "type": "count"
-            }
-          ],
-          "query": "_exists_:rule_mitre_tactic AND data_office365_Workload:$workload AND rule_level:$rule_level",
-          "refId": "A",
-          "timeField": "timestamp"
-        }
-      ],
-      "title": "WORKLOADS",
-      "type": "piechart"
-    },
-    {
-      "datasource": {
-        "type": "grafana-opensearch-datasource",
-        "uid": "replace_datasource_uid"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            }
-          },
-          "decimals": 0,
-          "mappings": [],
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 11,
-        "w": 5,
-        "x": 0,
-        "y": 7
-      },
-      "id": 16,
-      "options": {
-        "displayLabels": [],
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "right",
-          "showLegend": false,
-          "values": [
-            "value"
-          ]
-        },
-        "pieType": "pie",
-        "reduceOptions": {
-          "calcs": [
-            "sum"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "text": {},
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "7.1.0",
-      "targets": [
-        {
-          "bucketAggs": [
-            {
-              "$$hashKey": "object:82",
-              "fake": true,
-              "field": "rule_mitre_tactic",
-              "id": "3",
-              "settings": {
-                "min_doc_count": 1,
-                "order": "desc",
-                "orderBy": "_count",
-                "size": "10"
-              },
-              "type": "terms"
-            },
-            {
-              "$$hashKey": "object:83",
-              "field": "timestamp",
-              "id": "2",
-              "settings": {
-                "interval": "auto",
-                "min_doc_count": 0,
-                "trimEdges": 0
-              },
-              "type": "date_histogram"
-            }
-          ],
-          "datasource": {
-            "type": "grafana-opensearch-datasource",
-            "uid": "replace_datasource_uid"
-          },
-          "metrics": [
-            {
-              "$$hashKey": "object:80",
-              "field": "select field",
-              "id": "1",
-              "type": "count"
-            }
-          ],
-          "query": "data_office365_Workload:$workload AND rule_level:$rule_level",
-          "refId": "A",
-          "timeField": "timestamp"
-        }
-      ],
-      "title": "MITRE ATT&CK TACTICS (TOP 10)",
-      "type": "piechart"
-    },
-    {
-      "datasource": {
-        "type": "grafana-opensearch-datasource",
-        "uid": "replace_datasource_uid"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "filterable": false,
-            "inspect": false
-          },
-          "mappings": [
-            {
-              "options": {
-                "mitre_attack": {
-                  "text": "Total"
-                }
-              },
-              "type": "value"
-            }
-          ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "rule_mitre_tactic"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 441
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 11,
-        "w": 8,
-        "x": 5,
-        "y": 7
-      },
-      "id": 28,
-      "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
-        },
-        "showHeader": true,
-        "sortBy": []
-      },
-      "pluginVersion": "10.4.0",
-      "targets": [
-        {
-          "bucketAggs": [
-            {
-              "$$hashKey": "object:615",
-              "fake": true,
-              "field": "rule_mitre_tactic",
-              "id": "4",
-              "settings": {
-                "min_doc_count": "1",
-                "order": "desc",
-                "orderBy": "_count",
-                "size": "0"
-              },
-              "type": "terms"
-            }
-          ],
-          "datasource": {
-            "type": "grafana-opensearch-datasource",
-            "uid": "replace_datasource_uid"
-          },
-          "metrics": [
-            {
-              "$$hashKey": "object:80",
-              "field": "select field",
-              "id": "1",
-              "type": "count"
-            }
-          ],
-          "query": "data_office365_Workload:$workload AND rule_level:$rule_level",
-          "refId": "A",
-          "timeField": "timestamp"
-        }
-      ],
-      "title": "MITRE ATT&CK TACTICS",
-      "transformations": [
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {},
-            "indexByName": {},
-            "renameByName": {
-              "rule_mitre_tactic": "MITRE TACTIC"
-            }
-          }
-        }
-      ],
-      "type": "table"
-    },
-    {
-      "datasource": {
-        "type": "grafana-opensearch-datasource",
-        "uid": "replace_datasource_uid"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "filterable": false,
-            "inspect": false
-          },
-          "mappings": [
-            {
-              "options": {
-                "mitre_attack": {
-                  "text": "Total"
-                }
-              },
-              "type": "value"
-            }
-          ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 22,
-        "w": 11,
-        "x": 13,
-        "y": 7
-      },
-      "id": 33,
-      "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
-        },
-        "showHeader": true
-      },
-      "pluginVersion": "10.4.0",
-      "targets": [
-        {
-          "bucketAggs": [
-            {
-              "$$hashKey": "object:615",
-              "fake": true,
-              "field": "rule_mitre_id",
-              "id": "4",
-              "settings": {
-                "min_doc_count": "1",
-                "order": "desc",
-                "orderBy": "_count",
-                "size": "0"
-              },
-              "type": "terms"
-            }
-          ],
-          "datasource": {
-            "type": "grafana-opensearch-datasource",
-            "uid": "replace_datasource_uid"
-          },
-          "metrics": [
-            {
-              "$$hashKey": "object:80",
-              "field": "select field",
-              "id": "1",
-              "type": "count"
-            }
-          ],
-          "query": "data_office365_Workload:$workload AND _exists_:rule_mitre_tactic AND rule_level:$rule_level",
-          "refId": "A",
-          "timeField": "timestamp"
-        }
-      ],
-      "title": "MITRE ATT&CK TECHNIQUES",
-      "transformations": [
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {},
-            "indexByName": {},
-            "renameByName": {
-              "rule_mitre_id": "MITRE ID"
-            }
-          }
-        }
-      ],
-      "transparent": true,
-      "type": "table"
-    },
-    {
-      "datasource": {
-        "type": "grafana-opensearch-datasource",
-        "uid": "replace_datasource_uid"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            }
-          },
-          "decimals": 0,
-          "mappings": [],
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 11,
-        "w": 5,
-        "x": 0,
-        "y": 18
-      },
-      "id": 29,
-      "options": {
-        "displayLabels": [],
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": false,
-          "values": [
-            "value"
-          ]
-        },
-        "pieType": "donut",
-        "reduceOptions": {
-          "calcs": [
-            "sum"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "text": {},
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "7.1.0",
-      "targets": [
-        {
-          "bucketAggs": [
-            {
-              "$$hashKey": "object:82",
-              "fake": true,
-              "field": "rule_mitre_technique",
-              "id": "3",
-              "settings": {
-                "min_doc_count": 1,
-                "order": "desc",
-                "orderBy": "_count",
-                "size": "10"
-              },
-              "type": "terms"
-            },
-            {
-              "$$hashKey": "object:83",
-              "field": "timestamp",
-              "id": "2",
-              "settings": {
-                "interval": "auto",
-                "min_doc_count": 0,
-                "trimEdges": 0
-              },
-              "type": "date_histogram"
-            }
-          ],
-          "datasource": {
-            "type": "grafana-opensearch-datasource",
-            "uid": "replace_datasource_uid"
-          },
-          "metrics": [
-            {
-              "$$hashKey": "object:80",
-              "field": "select field",
-              "id": "1",
-              "type": "count"
-            }
-          ],
-          "query": "data_office365_Workload:$workload AND _exists_:rule_mitre_tactic AND rule_level:$rule_level",
-          "refId": "A",
-          "timeField": "timestamp"
-        }
-      ],
-      "title": "MITRE ATT&CK TECHNIQUES (TOP 10)",
-      "type": "piechart"
-    },
-    {
-      "datasource": {
-        "type": "grafana-opensearch-datasource",
-        "uid": "replace_datasource_uid"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "filterable": false,
-            "inspect": false
-          },
-          "mappings": [
-            {
-              "options": {
-                "mitre_attack": {
-                  "text": "Total"
-                }
-              },
-              "type": "value"
-            }
-          ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "rule_mitre_technique"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 381
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 11,
-        "w": 8,
-        "x": 5,
-        "y": 18
-      },
-      "id": 30,
-      "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
-        },
-        "showHeader": true,
-        "sortBy": []
-      },
-      "pluginVersion": "10.4.0",
-      "targets": [
-        {
-          "bucketAggs": [
-            {
-              "$$hashKey": "object:615",
-              "fake": true,
-              "field": "rule_mitre_technique",
-              "id": "4",
-              "settings": {
-                "min_doc_count": "1",
-                "order": "desc",
-                "orderBy": "_count",
-                "size": "0"
-              },
-              "type": "terms"
-            }
-          ],
-          "datasource": {
-            "type": "grafana-opensearch-datasource",
-            "uid": "replace_datasource_uid"
-          },
-          "metrics": [
-            {
-              "$$hashKey": "object:80",
-              "field": "select field",
-              "id": "1",
-              "type": "count"
-            }
-          ],
-          "query": "data_office365_Workload:$workload AND _exists_:rule_mitre_tactic AND rule_level:$rule_level",
-          "refId": "A",
-          "timeField": "timestamp"
-        }
-      ],
-      "title": "MITRE ATT&CK TECHNIQUES",
-      "transformations": [
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {},
-            "indexByName": {},
-            "renameByName": {
-              "rule_mitre_technique": "MITRE TECHNIQUE"
-            }
-          }
-        }
-      ],
-      "type": "table"
-    },
-    {
-      "datasource": {
-        "type": "grafana-opensearch-datasource",
-        "uid": "replace_datasource_uid"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "inspect": false
-          },
-          "mappings": [
-            {
-              "options": {
-                "mitre_attack": {
-                  "text": "Total"
-                }
-              },
-              "type": "value"
-            }
-          ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "ACCOUNT"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 511
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 13,
-        "w": 9,
-        "x": 0,
-        "y": 29
-      },
-      "id": 17,
-      "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
-        },
-        "showHeader": true,
-        "sortBy": []
-      },
-      "pluginVersion": "10.4.0",
-      "targets": [
-        {
-          "bucketAggs": [
-            {
-              "$$hashKey": "object:82",
-              "fake": true,
-              "field": "data_office365_UserId",
-              "id": "3",
-              "settings": {
-                "min_doc_count": 1,
-                "order": "desc",
-                "orderBy": "_count",
-                "size": "10"
-              },
-              "type": "terms"
-            }
-          ],
-          "datasource": {
-            "type": "grafana-opensearch-datasource",
-            "uid": "replace_datasource_uid"
-          },
-          "metrics": [
-            {
-              "$$hashKey": "object:80",
-              "field": "select field",
-              "id": "1",
-              "type": "count"
-            }
-          ],
-          "query": "data_office365_Workload:$workload AND _exists_:rule_mitre_tactic AND rule_level:$rule_level",
-          "refId": "A",
-          "timeField": "timestamp"
-        }
-      ],
-      "title": "MITRE ATT&CK - TOP 10 ACCOUNTS",
-      "transformations": [
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {},
-            "indexByName": {},
-            "renameByName": {
-              "data_office365_UserId": "ACCOUNT"
-            }
-          }
-        }
-      ],
-      "transparent": true,
-      "type": "table"
-    },
-    {
-      "datasource": {
-        "type": "grafana-opensearch-datasource",
-        "uid": "replace_datasource_uid"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "bars",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "normal"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 13,
-        "w": 15,
-        "x": 9,
-        "y": 29
-      },
-      "id": 39,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "table",
-          "placement": "right",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "alias": "",
-          "bucketAggs": [
-            {
-              "field": "data_office365_Operation",
-              "id": "3",
-              "settings": {
-                "min_doc_count": "1",
-                "order": "desc",
-                "orderBy": "_count",
-                "size": "10"
-              },
-              "type": "terms"
-            },
-            {
-              "field": "timestamp",
-              "id": "2",
-              "settings": {
-                "interval": "auto"
-              },
-              "type": "date_histogram"
-            }
-          ],
-          "datasource": {
-            "type": "grafana-opensearch-datasource",
-            "uid": "replace_datasource_uid"
-          },
-          "metrics": [
-            {
-              "id": "1",
-              "type": "count"
-            }
-          ],
-          "query": "data_office365_Workload:$workload AND _exists_:rule_mitre_tactic AND rule_level:$rule_level",
-          "refId": "A",
-          "timeField": "timestamp"
-        }
-      ],
-      "title": "TOP 10 OPERATIONS - HISTOGRAM",
-      "transparent": true,
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "grafana-opensearch-datasource",
-        "uid": "replace_datasource_uid"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "inspect": false
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "timestamp"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "Date/Time"
-              },
-              {
-                "id": "unit",
-                "value": "time: YYYY-MM-DD HH:mm:ss"
-              },
-              {
-                "id": "custom.align"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "agent_name"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "AGENT"
-              },
-              {
-                "id": "unit",
-                "value": "short"
-              },
-              {
-                "id": "decimals",
-                "value": 2
-              },
-              {
-                "id": "custom.align"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "full_log"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "EVENT"
-              },
-              {
-                "id": "unit",
-                "value": "short"
-              },
-              {
-                "id": "decimals",
-                "value": 2
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "rule_groups"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "RULE GROUPS"
-              },
-              {
-                "id": "unit",
-                "value": "short"
-              },
-              {
-                "id": "decimals",
-                "value": 2
-              },
-              {
-                "id": "custom.align"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "rule_level"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "RULE LEVEL"
-              },
-              {
-                "id": "unit",
-                "value": "short"
-              },
-              {
-                "id": "decimals",
-                "value": -1
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "mode": "gradient",
-                  "type": "color-background"
-                }
-              },
-              {
-                "id": "custom.align"
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "#37872D"
-                    },
-                    {
-                      "color": "rgba(237, 129, 40, 0.89)",
-                      "value": 7
-                    },
-                    {
-                      "color": "rgba(245, 54, 54, 0.9)",
-                      "value": 12
-                    }
-                  ]
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "rule_description"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "RULE DESCRIPTION"
-              },
-              {
-                "id": "unit",
-                "value": "short"
-              },
-              {
-                "id": "decimals",
-                "value": 2
-              },
-              {
-                "id": "custom.align"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "EVENT ID"
-            },
-            "properties": [
-              {
-                "id": "links",
-                "value": [
-                  {
-                    "targetBlank": true,
-                    "title": "VIEW EVENT DETAILS",
-                    "url": "https://grafana.company.local/explore?left=%7B%22datasource%22:%22O365%22,%22queries%22:%5B%7B%22refId%22:%22A%22,%22query%22:%22_id:${__value.text}%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D,%22range%22:%7B%22from%22:%22now-6h%22,%22to%22:%22now%22%7D%7D"
-                  }
-                ]
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "MITRE ID"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 101
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "SRC IP"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 140
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 16,
-        "w": 24,
-        "x": 0,
-        "y": 42
-      },
-      "id": 27,
-      "options": {
-        "footer": {
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
-        },
-        "showHeader": true,
-        "sortBy": []
-      },
-      "pluginVersion": "9.0.0",
-      "targets": [
-        {
-          "bucketAggs": [],
-          "datasource": {
-            "type": "grafana-opensearch-datasource",
-            "uid": "replace_datasource_uid"
-          },
-          "metrics": [
-            {
-              "id": "1",
-              "settings": {
-                "size": "250"
-              },
-              "type": "raw_data"
-            }
-          ],
-          "query": "data_office365_Workload:$workload AND _exists_:rule_mitre_tactic AND rule_level:$rule_level",
-          "refId": "A",
-          "timeField": "timestamp"
-        }
-      ],
-      "title": "MITRE ATT&CK - TELEMETRY",
-      "transformations": [
-        {
-          "id": "filterFieldsByName",
-          "options": {
-            "include": {
-              "names": [
-                "timestamp",
-                "_id",
-                "rule_description",
-                "rule_level",
-                "rule_mitre_id",
-                "rule_mitre_tactic",
-                "rule_mitre_technique",
-                "syslog_level",
-                "data_office365_Workload",
-                "data_office365_CreationTime",
-                "data_office365_UserId",
-                "data_office365_ClientIP"
-              ]
-            }
-          }
-        },
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "agent_ip": true,
-              "timestamp": true
-            },
-            "indexByName": {
-              "_id": 2,
-              "data_office365_ClientIP": 4,
-              "data_office365_CreationTime": 0,
-              "data_office365_UserId": 3,
-              "data_office365_Workload": 5,
-              "rule_description": 6,
-              "rule_level": 7,
-              "rule_mitre_id": 8,
-              "rule_mitre_tactic": 9,
-              "rule_mitre_technique": 10,
-              "syslog_level": 11,
-              "timestamp": 1
-            },
-            "renameByName": {
-              "_id": "EVENT ID",
-              "agent_ip": "",
-              "data_office365_ClientIP": "SRC IP",
-              "data_office365_CreationTime": "EVENT TIME",
-              "data_office365_UserId": "ACCOUNT",
-              "data_office365_Workload": "WORKLOAD",
-              "rule_description": "",
-              "rule_mitre_id": "MITRE ID",
-              "rule_mitre_tactic": "TACTIC",
-              "rule_mitre_technique": "TECHNIQUE",
-              "syslog_level": "LEVEL",
-              "timestamp": "DATE/TIME"
-            }
-          }
-        }
-      ],
-      "type": "table"
-    }
-  ],
-  "refresh": "",
-  "schemaVersion": 39,
-  "tags": [
-    "O365"
-  ],
-  "templating": {
-    "list": [
-      {
-        "datasource": {
-          "type": "grafana-opensearch-datasource",
-          "uid": "replace_datasource_uid"
-        },
-        "filters": [],
-        "hide": 0,
-        "label": "Filters",
-        "name": "Filters",
-        "skipUrlSync": false,
-        "type": "adhoc"
-      },
-      {
-        "current": {
-          "selected": false,
-          "text": "All",
-          "value": "$__all"
-        },
-        "datasource": {
-          "type": "grafana-opensearch-datasource",
-          "uid": "replace_datasource_uid"
-        },
-        "definition": "{ \"find\": \"terms\", \"field\": \"data_office365_Workload\", \"query\": \"_exists_:rule_mitre_tactic\"}",
-        "hide": 0,
-        "includeAll": true,
-        "label": "WORKLOAD",
-        "multi": false,
-        "name": "workload",
-        "options": [],
-        "query": "{ \"find\": \"terms\", \"field\": \"data_office365_Workload\", \"query\": \"_exists_:rule_mitre_tactic\"}",
-        "refresh": 2,
-        "regex": "",
-        "skipUrlSync": false,
-        "sort": 0,
-        "tagValuesQuery": "",
-        "tagsQuery": "",
-        "type": "query",
-        "useTags": false
-      },
-      {
-        "current": {
-          "selected": false,
-          "text": "All",
-          "value": "$__all"
-        },
-        "datasource": {
-          "type": "grafana-opensearch-datasource",
-          "uid": "replace_datasource_uid"
-        },
-        "definition": "{ \"find\": \"terms\", \"field\": \"rule_level\", \"query\": \"\"}",
-        "hide": 0,
-        "includeAll": true,
-        "label": "Rule Level",
-        "multi": false,
-        "name": "rule_level",
-        "options": [],
-        "query": "{ \"find\": \"terms\", \"field\": \"rule_level\", \"query\": \"\"}",
-        "refresh": 2,
-        "regex": "",
-        "skipUrlSync": false,
-        "sort": 0,
-        "type": "query"
-      }
-    ]
-  },
-  "time": {
-    "from": "now-6h",
-    "to": "now"
-  },
-  "timepicker": {
-    "refresh_intervals": [
-      "10s",
-      "30s",
-      "1m",
-      "5m",
-      "15m",
-      "30m",
-      "1h",
-      "2h",
-      "1d"
-    ]
-  },
-  "timezone": "",
-  "title": "O365 - MITRE ATT&CK",
-  "weekStart": ""
+	"annotations": {
+		"list": [
+			{
+				"builtIn": 1,
+				"datasource": {
+					"type": "datasource",
+					"uid": "grafana"
+				},
+				"enable": true,
+				"hide": true,
+				"iconColor": "rgba(0, 211, 255, 1)",
+				"name": "Annotations & Alerts",
+				"target": {
+					"limit": 100,
+					"matchAny": false,
+					"tags": [],
+					"type": "dashboard"
+				},
+				"type": "dashboard"
+			}
+		]
+	},
+	"editable": false,
+	"fiscalYearStartMonth": 0,
+	"graphTooltip": 0,
+	"id": null,
+	"links": [
+		{
+			"$$hashKey": "object:325",
+			"asDropdown": true,
+			"icon": "external link",
+			"includeVars": true,
+			"keepTime": true,
+			"tags": ["O365"],
+			"targetBlank": true,
+			"type": "dashboards"
+		}
+	],
+	"liveNow": false,
+	"panels": [
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "light-red",
+								"value": null
+							}
+						]
+					}
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "MITRE ENRICHED EVENTS"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"mode": "palette-classic"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "ALL EVENTS"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"mode": "palette-classic"
+								}
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 4,
+				"x": 0,
+				"y": 0
+			},
+			"id": 2,
+			"options": {
+				"colorMode": "value",
+				"graphMode": "area",
+				"justifyMode": "auto",
+				"orientation": "horizontal",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"showPercentChange": false,
+				"text": {},
+				"textMode": "auto",
+				"wideLayout": true
+			},
+			"pluginVersion": "10.4.0",
+			"targets": [
+				{
+					"alias": "MITRE ENRICHED EVENTS",
+					"bucketAggs": [
+						{
+							"$$hashKey": "object:266",
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto",
+								"min_doc_count": 0,
+								"trimEdges": 0
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"$$hashKey": "object:264",
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "_exists_:rule_mitre_id AND data_office365_Workload:$workload AND rule_level:$rule_level",
+					"refId": "A",
+					"timeField": "timestamp"
+				},
+				{
+					"alias": "ALL EVENTS",
+					"bucketAggs": [
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"hide": false,
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "data_office365_Workload:$workload AND rule_level:$rule_level",
+					"refId": "B",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "MITRE ATT&CK EBRICHMENT",
+			"type": "stat"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "light-red",
+								"value": null
+							}
+						]
+					}
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 4,
+				"x": 4,
+				"y": 0
+			},
+			"id": 35,
+			"options": {
+				"colorMode": "value",
+				"graphMode": "area",
+				"justifyMode": "auto",
+				"orientation": "auto",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"showPercentChange": false,
+				"text": {},
+				"textMode": "auto",
+				"wideLayout": true
+			},
+			"pluginVersion": "10.4.0",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"$$hashKey": "object:266",
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto",
+								"min_doc_count": 0,
+								"trimEdges": 0
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"$$hashKey": "object:264",
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "rule_level:>=12 AND _exists_:rule_mitre_tactic AND data_office365_Workload:$workload",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "MITRE ATT&CK ALERTS",
+			"type": "stat"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "light-red",
+								"value": null
+							}
+						]
+					}
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 4,
+				"x": 8,
+				"y": 0
+			},
+			"id": 12,
+			"options": {
+				"colorMode": "value",
+				"graphMode": "area",
+				"justifyMode": "auto",
+				"orientation": "auto",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"showPercentChange": false,
+				"text": {},
+				"textMode": "auto",
+				"wideLayout": true
+			},
+			"pluginVersion": "10.4.0",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"$$hashKey": "object:161",
+							"field": "data_office365_ActorUserId",
+							"id": "2",
+							"settings": {
+								"min_doc_count": 1,
+								"order": "desc",
+								"orderBy": "_term",
+								"size": "10"
+							},
+							"type": "terms"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"$$hashKey": "object:159",
+							"field": "data_office365_ActorUserId",
+							"id": "1",
+							"meta": {},
+							"settings": {},
+							"type": "cardinality"
+						}
+					],
+					"query": "rule_level:>=12 AND _exists_:rule_mitre_tactic AND data_office365_Workload:$workload",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "ACCOUNTS AFFECTED",
+			"type": "stat"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"custom": {
+						"align": "auto",
+						"cellOptions": {
+							"type": "auto"
+						},
+						"inspect": false
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "light-red",
+								"value": null
+							}
+						]
+					}
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 6,
+				"x": 12,
+				"y": 0
+			},
+			"id": 13,
+			"options": {
+				"cellHeight": "sm",
+				"footer": {
+					"countRows": false,
+					"fields": "",
+					"reducer": ["sum"],
+					"show": false
+				},
+				"showHeader": true
+			},
+			"pluginVersion": "10.4.0",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"$$hashKey": "object:228",
+							"field": "data_office365_ActorUserId",
+							"id": "2",
+							"settings": {
+								"min_doc_count": 1,
+								"order": "desc",
+								"orderBy": "_term",
+								"size": "10"
+							},
+							"type": "terms"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"$$hashKey": "object:226",
+							"field": "data_office365_ActorUserId",
+							"id": "1",
+							"meta": {},
+							"settings": {},
+							"type": "cardinality"
+						}
+					],
+					"query": "rule_level:>=12 AND _exists_:rule_mitre_tactic AND data_office365_Workload:$workload",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "USERS/ACCOUNTS AFFECTED",
+			"type": "table"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "palette-classic"
+					},
+					"custom": {
+						"hideFrom": {
+							"legend": false,
+							"tooltip": false,
+							"viz": false
+						}
+					},
+					"decimals": 0,
+					"mappings": [],
+					"unit": "short"
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 6,
+				"x": 18,
+				"y": 0
+			},
+			"id": 15,
+			"maxDataPoints": 3,
+			"options": {
+				"displayLabels": [],
+				"legend": {
+					"calcs": [],
+					"displayMode": "table",
+					"placement": "right",
+					"showLegend": true,
+					"values": ["value"]
+				},
+				"pieType": "donut",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"text": {},
+				"tooltip": {
+					"mode": "single",
+					"sort": "none"
+				}
+			},
+			"pluginVersion": "6.6.2",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"$$hashKey": "object:188",
+							"fake": true,
+							"field": "data_office365_Workload",
+							"id": "3",
+							"settings": {
+								"min_doc_count": 1,
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "0"
+							},
+							"type": "terms"
+						},
+						{
+							"$$hashKey": "object:189",
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto",
+								"min_doc_count": 0,
+								"trimEdges": 0
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"$$hashKey": "object:186",
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "_exists_:rule_mitre_tactic AND data_office365_Workload:$workload AND rule_level:$rule_level",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "WORKLOADS",
+			"type": "piechart"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "palette-classic"
+					},
+					"custom": {
+						"hideFrom": {
+							"legend": false,
+							"tooltip": false,
+							"viz": false
+						}
+					},
+					"decimals": 0,
+					"mappings": [],
+					"unit": "short"
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 11,
+				"w": 5,
+				"x": 0,
+				"y": 7
+			},
+			"id": 16,
+			"options": {
+				"displayLabels": [],
+				"legend": {
+					"calcs": [],
+					"displayMode": "list",
+					"placement": "right",
+					"showLegend": false,
+					"values": ["value"]
+				},
+				"pieType": "pie",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"text": {},
+				"tooltip": {
+					"mode": "single",
+					"sort": "none"
+				}
+			},
+			"pluginVersion": "7.1.0",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"$$hashKey": "object:82",
+							"fake": true,
+							"field": "rule_mitre_tactic",
+							"id": "3",
+							"settings": {
+								"min_doc_count": 1,
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "10"
+							},
+							"type": "terms"
+						},
+						{
+							"$$hashKey": "object:83",
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto",
+								"min_doc_count": 0,
+								"trimEdges": 0
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"$$hashKey": "object:80",
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "data_office365_Workload:$workload AND rule_level:$rule_level",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "MITRE ATT&CK TACTICS (TOP 10)",
+			"type": "piechart"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"custom": {
+						"align": "auto",
+						"cellOptions": {
+							"type": "auto"
+						},
+						"filterable": false,
+						"inspect": false
+					},
+					"mappings": [
+						{
+							"options": {
+								"mitre_attack": {
+									"text": "Total"
+								}
+							},
+							"type": "value"
+						}
+					],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					}
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "rule_mitre_tactic"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 441
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 11,
+				"w": 8,
+				"x": 5,
+				"y": 7
+			},
+			"id": 28,
+			"options": {
+				"cellHeight": "sm",
+				"footer": {
+					"countRows": false,
+					"fields": "",
+					"reducer": ["sum"],
+					"show": false
+				},
+				"showHeader": true,
+				"sortBy": []
+			},
+			"pluginVersion": "10.4.0",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"$$hashKey": "object:615",
+							"fake": true,
+							"field": "rule_mitre_tactic",
+							"id": "4",
+							"settings": {
+								"min_doc_count": "1",
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "0"
+							},
+							"type": "terms"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"$$hashKey": "object:80",
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "data_office365_Workload:$workload AND rule_level:$rule_level",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "MITRE ATT&CK TACTICS",
+			"transformations": [
+				{
+					"id": "organize",
+					"options": {
+						"excludeByName": {},
+						"indexByName": {},
+						"renameByName": {
+							"rule_mitre_tactic": "MITRE TACTIC"
+						}
+					}
+				}
+			],
+			"type": "table"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"custom": {
+						"align": "auto",
+						"cellOptions": {
+							"type": "auto"
+						},
+						"filterable": false,
+						"inspect": false
+					},
+					"mappings": [
+						{
+							"options": {
+								"mitre_attack": {
+									"text": "Total"
+								}
+							},
+							"type": "value"
+						}
+					],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					}
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 22,
+				"w": 11,
+				"x": 13,
+				"y": 7
+			},
+			"id": 33,
+			"options": {
+				"cellHeight": "sm",
+				"footer": {
+					"countRows": false,
+					"fields": "",
+					"reducer": ["sum"],
+					"show": false
+				},
+				"showHeader": true
+			},
+			"pluginVersion": "10.4.0",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"$$hashKey": "object:615",
+							"fake": true,
+							"field": "rule_mitre_id",
+							"id": "4",
+							"settings": {
+								"min_doc_count": "1",
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "0"
+							},
+							"type": "terms"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"$$hashKey": "object:80",
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "data_office365_Workload:$workload AND _exists_:rule_mitre_tactic AND rule_level:$rule_level",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "MITRE ATT&CK TECHNIQUES",
+			"transformations": [
+				{
+					"id": "organize",
+					"options": {
+						"excludeByName": {},
+						"indexByName": {},
+						"renameByName": {
+							"rule_mitre_id": "MITRE ID"
+						}
+					}
+				}
+			],
+			"transparent": true,
+			"type": "table"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "palette-classic"
+					},
+					"custom": {
+						"hideFrom": {
+							"legend": false,
+							"tooltip": false,
+							"viz": false
+						}
+					},
+					"decimals": 0,
+					"mappings": [],
+					"unit": "short"
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 11,
+				"w": 5,
+				"x": 0,
+				"y": 18
+			},
+			"id": 29,
+			"options": {
+				"displayLabels": [],
+				"legend": {
+					"calcs": [],
+					"displayMode": "list",
+					"placement": "bottom",
+					"showLegend": false,
+					"values": ["value"]
+				},
+				"pieType": "donut",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"text": {},
+				"tooltip": {
+					"mode": "single",
+					"sort": "none"
+				}
+			},
+			"pluginVersion": "7.1.0",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"$$hashKey": "object:82",
+							"fake": true,
+							"field": "rule_mitre_technique",
+							"id": "3",
+							"settings": {
+								"min_doc_count": 1,
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "10"
+							},
+							"type": "terms"
+						},
+						{
+							"$$hashKey": "object:83",
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto",
+								"min_doc_count": 0,
+								"trimEdges": 0
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"$$hashKey": "object:80",
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "data_office365_Workload:$workload AND _exists_:rule_mitre_tactic AND rule_level:$rule_level",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "MITRE ATT&CK TECHNIQUES (TOP 10)",
+			"type": "piechart"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"custom": {
+						"align": "auto",
+						"cellOptions": {
+							"type": "auto"
+						},
+						"filterable": false,
+						"inspect": false
+					},
+					"mappings": [
+						{
+							"options": {
+								"mitre_attack": {
+									"text": "Total"
+								}
+							},
+							"type": "value"
+						}
+					],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					}
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "rule_mitre_technique"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 381
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 11,
+				"w": 8,
+				"x": 5,
+				"y": 18
+			},
+			"id": 30,
+			"options": {
+				"cellHeight": "sm",
+				"footer": {
+					"countRows": false,
+					"fields": "",
+					"reducer": ["sum"],
+					"show": false
+				},
+				"showHeader": true,
+				"sortBy": []
+			},
+			"pluginVersion": "10.4.0",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"$$hashKey": "object:615",
+							"fake": true,
+							"field": "rule_mitre_technique",
+							"id": "4",
+							"settings": {
+								"min_doc_count": "1",
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "0"
+							},
+							"type": "terms"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"$$hashKey": "object:80",
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "data_office365_Workload:$workload AND _exists_:rule_mitre_tactic AND rule_level:$rule_level",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "MITRE ATT&CK TECHNIQUES",
+			"transformations": [
+				{
+					"id": "organize",
+					"options": {
+						"excludeByName": {},
+						"indexByName": {},
+						"renameByName": {
+							"rule_mitre_technique": "MITRE TECHNIQUE"
+						}
+					}
+				}
+			],
+			"type": "table"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"custom": {
+						"align": "auto",
+						"cellOptions": {
+							"type": "auto"
+						},
+						"inspect": false
+					},
+					"mappings": [
+						{
+							"options": {
+								"mitre_attack": {
+									"text": "Total"
+								}
+							},
+							"type": "value"
+						}
+					],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					}
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "ACCOUNT"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 511
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 13,
+				"w": 9,
+				"x": 0,
+				"y": 29
+			},
+			"id": 17,
+			"options": {
+				"cellHeight": "sm",
+				"footer": {
+					"countRows": false,
+					"fields": "",
+					"reducer": ["sum"],
+					"show": false
+				},
+				"showHeader": true,
+				"sortBy": []
+			},
+			"pluginVersion": "10.4.0",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"$$hashKey": "object:82",
+							"fake": true,
+							"field": "data_office365_UserId",
+							"id": "3",
+							"settings": {
+								"min_doc_count": 1,
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "10"
+							},
+							"type": "terms"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"$$hashKey": "object:80",
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "data_office365_Workload:$workload AND _exists_:rule_mitre_tactic AND rule_level:$rule_level",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "MITRE ATT&CK - TOP 10 ACCOUNTS",
+			"transformations": [
+				{
+					"id": "organize",
+					"options": {
+						"excludeByName": {},
+						"indexByName": {},
+						"renameByName": {
+							"data_office365_UserId": "ACCOUNT"
+						}
+					}
+				}
+			],
+			"transparent": true,
+			"type": "table"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "palette-classic"
+					},
+					"custom": {
+						"axisBorderShow": false,
+						"axisCenteredZero": false,
+						"axisColorMode": "text",
+						"axisLabel": "",
+						"axisPlacement": "auto",
+						"barAlignment": 0,
+						"drawStyle": "bars",
+						"fillOpacity": 0,
+						"gradientMode": "none",
+						"hideFrom": {
+							"legend": false,
+							"tooltip": false,
+							"viz": false
+						},
+						"insertNulls": false,
+						"lineInterpolation": "linear",
+						"lineWidth": 1,
+						"pointSize": 5,
+						"scaleDistribution": {
+							"type": "linear"
+						},
+						"showPoints": "auto",
+						"spanNulls": false,
+						"stacking": {
+							"group": "A",
+							"mode": "normal"
+						},
+						"thresholdsStyle": {
+							"mode": "off"
+						}
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					}
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 13,
+				"w": 15,
+				"x": 9,
+				"y": 29
+			},
+			"id": 39,
+			"options": {
+				"legend": {
+					"calcs": [],
+					"displayMode": "table",
+					"placement": "right",
+					"showLegend": true
+				},
+				"tooltip": {
+					"mode": "single",
+					"sort": "none"
+				}
+			},
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "data_office365_Operation",
+							"id": "3",
+							"settings": {
+								"min_doc_count": "1",
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "10"
+							},
+							"type": "terms"
+						},
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "data_office365_Workload:$workload AND _exists_:rule_mitre_tactic AND rule_level:$rule_level",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "TOP 10 OPERATIONS - HISTOGRAM",
+			"transparent": true,
+			"type": "timeseries"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"custom": {
+						"align": "auto",
+						"cellOptions": {
+							"type": "auto"
+						},
+						"inspect": false
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green"
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					}
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "timestamp"
+						},
+						"properties": [
+							{
+								"id": "displayName",
+								"value": "Date/Time"
+							},
+							{
+								"id": "unit",
+								"value": "time: YYYY-MM-DD HH:mm:ss"
+							},
+							{
+								"id": "custom.align"
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "agent_name"
+						},
+						"properties": [
+							{
+								"id": "displayName",
+								"value": "AGENT"
+							},
+							{
+								"id": "unit",
+								"value": "short"
+							},
+							{
+								"id": "decimals",
+								"value": 2
+							},
+							{
+								"id": "custom.align"
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "full_log"
+						},
+						"properties": [
+							{
+								"id": "displayName",
+								"value": "EVENT"
+							},
+							{
+								"id": "unit",
+								"value": "short"
+							},
+							{
+								"id": "decimals",
+								"value": 2
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "rule_groups"
+						},
+						"properties": [
+							{
+								"id": "displayName",
+								"value": "RULE GROUPS"
+							},
+							{
+								"id": "unit",
+								"value": "short"
+							},
+							{
+								"id": "decimals",
+								"value": 2
+							},
+							{
+								"id": "custom.align"
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "rule_level"
+						},
+						"properties": [
+							{
+								"id": "displayName",
+								"value": "RULE LEVEL"
+							},
+							{
+								"id": "unit",
+								"value": "short"
+							},
+							{
+								"id": "decimals",
+								"value": -1
+							},
+							{
+								"id": "custom.cellOptions",
+								"value": {
+									"mode": "gradient",
+									"type": "color-background"
+								}
+							},
+							{
+								"id": "custom.align"
+							},
+							{
+								"id": "thresholds",
+								"value": {
+									"mode": "absolute",
+									"steps": [
+										{
+											"color": "#37872D"
+										},
+										{
+											"color": "rgba(237, 129, 40, 0.89)",
+											"value": 7
+										},
+										{
+											"color": "rgba(245, 54, 54, 0.9)",
+											"value": 12
+										}
+									]
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "rule_description"
+						},
+						"properties": [
+							{
+								"id": "displayName",
+								"value": "RULE DESCRIPTION"
+							},
+							{
+								"id": "unit",
+								"value": "short"
+							},
+							{
+								"id": "decimals",
+								"value": 2
+							},
+							{
+								"id": "custom.align"
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "EVENT ID"
+						},
+						"properties": [
+							{
+								"id": "links",
+								"value": [
+									{
+										"targetBlank": true,
+										"title": "VIEW EVENT DETAILS",
+										"url": "https://grafana.company.local/explore?left=%7B%22datasource%22:%22O365%22,%22queries%22:%5B%7B%22refId%22:%22A%22,%22query%22:%22_id:${__value.text}%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D,%22range%22:%7B%22from%22:%22now-6h%22,%22to%22:%22now%22%7D%7D"
+									}
+								]
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "MITRE ID"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 101
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "SRC IP"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 140
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 16,
+				"w": 24,
+				"x": 0,
+				"y": 42
+			},
+			"id": 27,
+			"options": {
+				"footer": {
+					"fields": "",
+					"reducer": ["sum"],
+					"show": false
+				},
+				"showHeader": true,
+				"sortBy": []
+			},
+			"pluginVersion": "9.0.0",
+			"targets": [
+				{
+					"bucketAggs": [],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"id": "1",
+							"settings": {
+								"size": "250"
+							},
+							"type": "raw_data"
+						}
+					],
+					"query": "data_office365_Workload:$workload AND _exists_:rule_mitre_tactic AND rule_level:$rule_level",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "MITRE ATT&CK - TELEMETRY",
+			"transformations": [
+				{
+					"id": "filterFieldsByName",
+					"options": {
+						"include": {
+							"names": [
+								"timestamp",
+								"_id",
+								"rule_description",
+								"rule_level",
+								"rule_mitre_id",
+								"rule_mitre_tactic",
+								"rule_mitre_technique",
+								"syslog_level",
+								"data_office365_Workload",
+								"data_office365_CreationTime",
+								"data_office365_UserId",
+								"data_office365_ClientIP"
+							]
+						}
+					}
+				},
+				{
+					"id": "organize",
+					"options": {
+						"excludeByName": {
+							"agent_ip": true,
+							"timestamp": true
+						},
+						"indexByName": {
+							"_id": 2,
+							"data_office365_ClientIP": 4,
+							"data_office365_CreationTime": 0,
+							"data_office365_UserId": 3,
+							"data_office365_Workload": 5,
+							"rule_description": 6,
+							"rule_level": 7,
+							"rule_mitre_id": 8,
+							"rule_mitre_tactic": 9,
+							"rule_mitre_technique": 10,
+							"syslog_level": 11,
+							"timestamp": 1
+						},
+						"renameByName": {
+							"_id": "EVENT ID",
+							"agent_ip": "",
+							"data_office365_ClientIP": "SRC IP",
+							"data_office365_CreationTime": "EVENT TIME",
+							"data_office365_UserId": "ACCOUNT",
+							"data_office365_Workload": "WORKLOAD",
+							"rule_description": "",
+							"rule_mitre_id": "MITRE ID",
+							"rule_mitre_tactic": "TACTIC",
+							"rule_mitre_technique": "TECHNIQUE",
+							"syslog_level": "LEVEL",
+							"timestamp": "DATE/TIME"
+						}
+					}
+				}
+			],
+			"type": "table"
+		}
+	],
+	"refresh": "",
+	"schemaVersion": 39,
+	"tags": ["O365"],
+	"templating": {
+		"list": [
+			{
+				"datasource": {
+					"type": "grafana-opensearch-datasource",
+					"uid": "replace_datasource_uid"
+				},
+				"filters": [],
+				"hide": 0,
+				"label": "Filters",
+				"name": "Filters",
+				"skipUrlSync": false,
+				"type": "adhoc"
+			},
+			{
+				"current": {
+					"selected": false,
+					"text": "All",
+					"value": "$__all"
+				},
+				"datasource": {
+					"type": "grafana-opensearch-datasource",
+					"uid": "replace_datasource_uid"
+				},
+				"definition": "{ \"find\": \"terms\", \"field\": \"data_office365_Workload\", \"query\": \"_exists_:rule_mitre_tactic\"}",
+				"hide": 0,
+				"includeAll": true,
+				"label": "WORKLOAD",
+				"multi": false,
+				"name": "workload",
+				"options": [],
+				"query": "{ \"find\": \"terms\", \"field\": \"data_office365_Workload\", \"query\": \"_exists_:rule_mitre_tactic\"}",
+				"refresh": 2,
+				"regex": "",
+				"skipUrlSync": false,
+				"sort": 0,
+				"tagValuesQuery": "",
+				"tagsQuery": "",
+				"type": "query",
+				"useTags": false
+			},
+			{
+				"current": {
+					"selected": false,
+					"text": "All",
+					"value": "$__all"
+				},
+				"datasource": {
+					"type": "grafana-opensearch-datasource",
+					"uid": "replace_datasource_uid"
+				},
+				"definition": "{ \"find\": \"terms\", \"field\": \"rule_level\", \"query\": \"\"}",
+				"hide": 0,
+				"includeAll": true,
+				"label": "Rule Level",
+				"multi": false,
+				"name": "rule_level",
+				"options": [],
+				"query": "{ \"find\": \"terms\", \"field\": \"rule_level\", \"query\": \"\"}",
+				"refresh": 2,
+				"regex": "",
+				"skipUrlSync": false,
+				"sort": 0,
+				"type": "query"
+			}
+		]
+	},
+	"time": {
+		"from": "now-6h",
+		"to": "now"
+	},
+	"timepicker": {
+		"refresh_intervals": ["10s", "30s", "1m", "5m", "15m", "30m", "1h", "2h", "1d"]
+	},
+	"timezone": "",
+	"title": "O365 - MITRE ATT&CK",
+	"weekStart": ""
 }

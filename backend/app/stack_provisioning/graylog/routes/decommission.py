@@ -1,24 +1,25 @@
 from fastapi import APIRouter
-from fastapi import Security
 from fastapi import Depends
-from loguru import logger
-from app.db.db_session import get_db
 from fastapi import HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import Security
+from loguru import logger
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.utils import AuthHandler
-from app.stack_provisioning.graylog.schema.provision import AvailableContentPacks
-from app.stack_provisioning.graylog.schema.provision import (
-    AvailableContentPacksResponse,
+from app.db.db_session import get_db
+from app.network_connectors.models.network_connectors import (
+    CustomerNetworkConnectorsMeta,
 )
-from app.stack_provisioning.graylog.schema.decommission import DecommissionNetworkContentPackResponse
-from app.stack_provisioning.graylog.schema.decommission import DecommissionNetworkContentPackRequest
-from app.stack_provisioning.graylog.services.provision import provision_content_pack
-from app.stack_provisioning.graylog.services.utils import does_content_pack_exist
-from app.stack_provisioning.graylog.services.utils import system_version_check
-from app.network_connectors.models.network_connectors import CustomerNetworkConnectorsMeta
-from app.stack_provisioning.graylog.services.decommission import decommission_network_connector
+from app.stack_provisioning.graylog.schema.decommission import (
+    DecommissionNetworkContentPackRequest,
+)
+from app.stack_provisioning.graylog.schema.decommission import (
+    DecommissionNetworkContentPackResponse,
+)
+from app.stack_provisioning.graylog.services.decommission import (
+    decommission_network_connector,
+)
 
 stack_decommissioning_graylog_router = APIRouter()
 
@@ -45,6 +46,7 @@ async def get_network_connectors_meta_by_customer_code_and_connector_name(
     )
     result = await session.execute(stmt)
     return result.scalars().first()
+
 
 @stack_decommissioning_graylog_router.post(
     "/graylog/decommission/network_connector",

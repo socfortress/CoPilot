@@ -5,7 +5,8 @@ from loguru import logger
 
 from app.connectors.graylog.schema.streams import GraylogStreamsResponse
 from app.connectors.graylog.schema.streams import Stream
-from app.connectors.graylog.utils.universal import send_get_request, send_put_request
+from app.connectors.graylog.utils.universal import send_get_request
+from app.connectors.graylog.utils.universal import send_put_request
 
 
 async def get_streams() -> GraylogStreamsResponse:
@@ -71,6 +72,7 @@ async def get_stream_ids() -> List[str]:
     except Exception as e:
         logger.error(f"Failed to collect streams: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to collect streams: {e}")
+
 
 async def assign_stream_to_index(stream_id: str, index_id: str) -> bool:
     """Assign a stream to an index.

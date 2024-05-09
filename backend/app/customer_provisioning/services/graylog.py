@@ -6,7 +6,8 @@ from loguru import logger
 
 from app.connectors.graylog.services.pipelines import get_pipelines
 from app.connectors.graylog.utils.universal import send_delete_request
-from app.connectors.graylog.utils.universal import send_post_request, send_get_request
+from app.connectors.graylog.utils.universal import send_get_request
+from app.connectors.graylog.utils.universal import send_post_request
 from app.customer_provisioning.schema.graylog import GraylogIndexSetCreationResponse
 from app.customer_provisioning.schema.graylog import StreamConnectionToPipelineRequest
 from app.customer_provisioning.schema.graylog import StreamConnectionToPipelineResponse
@@ -270,6 +271,7 @@ async def delete_index_set(index_set_id: str):
     )
     return response
 
+
 async def get_content_pack_installation_id(content_pack_id: str):
     """
     Retrieves the installation ID of a content pack.
@@ -284,7 +286,8 @@ async def get_content_pack_installation_id(content_pack_id: str):
     response = await send_get_request(
         endpoint=f"/api/system/content_packs/{content_pack_id}/installations",
     )
-    return response['data']['installations'][0]['_id']
+    return response["data"]["installations"][0]["_id"]
+
 
 async def uninstall_content_pack(content_pack_id: str):
     """
@@ -302,6 +305,7 @@ async def uninstall_content_pack(content_pack_id: str):
         endpoint=f"/api/system/content_packs/{content_pack_id}/installations/{installation_id}",
     )
     return response
+
 
 async def delete_content_pack(content_pack_id: str):
     """
