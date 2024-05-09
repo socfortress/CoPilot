@@ -7,13 +7,18 @@ from fastapi import HTTPException
 from pydantic import BaseModel
 from pydantic import Field
 
+class AvailbleContentPacksOverview(str, Enum):
+    SOCFORTRESS_WAZUH_CONTENT_PACK = (
+        "The Wazuh Content Pack which includes Input, Stream, Pipeline Rules,"
+        " Pipelines, and Lookup Tables for Wazuh logs and the SOCFortress SIEM stack."
+    )
+
 
 class AvailableContentPacks(str, Enum):
     SOCFORTRESS_WAZUH_CONTENT_PACK = (
         "The Wazuh Content Pack which includes Input, Stream, Pipeline Rules,"
         " Pipelines, and Lookup Tables for Wazuh logs and the SOCFortress SIEM stack."
     )
-    # ! COMMENTING OUT UNTIL READY ! #
     SOCFORTRESS_FORTINET_INPUT_SYSLOG_TCP = "The Fortinet Input Syslog TCP content pack"
     SOCFORTRESS_FORTINET_INPUT_SYSLOG_UDP = "The Fortinet Input Syslog UDP content pack"
     SOCFORTRESS_FORTINET_PROCESSING_PIPELINE = "The Fortinet Processing Pipeline content pack"

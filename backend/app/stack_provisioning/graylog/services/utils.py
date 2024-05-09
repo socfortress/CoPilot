@@ -6,7 +6,7 @@ from sqlalchemy.future import select
 from app.connectors.graylog.services.content_packs import get_content_packs
 from app.connectors.graylog.services.management import get_system_info
 from app.stack_provisioning.graylog.schema.provision import AvailableContentPacks
-from app.network_connectors.models.network_connectors import CustomerNetworkConnectorsMeta
+from app.network_connectors.models.network_connectors import CustomerNetworkConnectorsMeta, CustomerNetworkConnectors
 
 
 async def get_graylog_version() -> str:
@@ -114,3 +114,26 @@ async def insert_into_customer_network_connectors_meta_table(
     """
     await session.add(customer_network_connectors_meta)
     await session.commit()
+
+
+async def set_deployed_flag(customer_code: str, network_connector_service_name: str, flag: bool, session: AsyncSession) -> None:
+    """
+    Set the deployed flag to True for the specified customer code and for Fortinet.
+
+    Args:
+        customer_code (str): The customer code.
+        network_connector_service_name (str): The network connector service name.
+        session (AsyncSession): The async session object for database operations.
+
+    Returns:
+        None
+    """
+    # Retrieve the customer network connectors object for the customer code and network connector service name
+    customer_network_connectors = await session.execute(
+        select(CustomerNetworkConnectors).filter_by(customer_code=customer_code, network_connector_service_name=network_connector_service_name)
+    )
+    customer_network_connectors = customer_network_connectors.scalars().first()
+    # Update the deployed flag to True
+    customer_network_connectors.deployed = flag
+    await session.commit()
+    return None

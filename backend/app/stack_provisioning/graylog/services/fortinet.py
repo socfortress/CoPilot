@@ -3,6 +3,7 @@ from loguru import logger
 from datetime import datetime
 import json
 from fastapi import HTTPException
+from sqlalchemy.future import select
 
 from app.stack_provisioning.graylog.schema.fortinet import FortinetCustomerDetails
 from app.stack_provisioning.graylog.schema.fortinet import ProvisionFortinetKeys
@@ -37,8 +38,10 @@ from app.connectors.wazuh_indexer.services.monitoring import (
 from app.utils import get_connector_attribute
 from app.connectors.graylog.services.streams import assign_stream_to_index
 from app.network_connectors.models.network_connectors import CustomerNetworkConnectorsMeta
+from app.network_connectors.models.network_connectors import CustomerNetworkConnectors
 from app.customers.routes.customers import get_customer
 from app.customers.routes.customers import get_customer_meta
+from app.stack_provisioning.graylog.services.utils import set_deployed_flag
 
 
 #### ! GRAYLOG ! ####
@@ -302,17 +305,6 @@ async def provision_fortinet(customer_details: FortinetCustomerDetails, keys: Pr
             session=session,
         )
     ).datasource.uid
-    # customer_network_connector_meta.grafana_dashboard_folder_id = (
-    #     await create_grafana_folder(
-    #         organization_id=(
-    #             await get_customer_meta(
-    #                 customer_details.customer_code,
-    #                 session,
-    #             )
-    #         ).customer_meta.customer_meta_grafana_org_id,
-    #         folder_title="FORTINET",
-    #     )
-    # ).uid
     grafana_folder = await create_grafana_folder(
             organization_id=(
                 await get_customer_meta(
@@ -341,6 +333,8 @@ async def provision_fortinet(customer_details: FortinetCustomerDetails, keys: Pr
         session=session,
     )
 
+    await set_deployed_flag(customer_code=customer_details.customer_code, network_connector_service_name='Fortinet', flag=True, session=session)
+
     return ProvisionFortinetResponse(
         message="Fortinet customer provisioned successfully",
         success=True,
@@ -366,3 +360,4 @@ async def insert_into_customer_network_connectors_meta_table(
     await session.commit()
     logger.info(f"Customer network connectors meta inserted successfully")
     return None
+

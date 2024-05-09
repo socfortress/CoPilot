@@ -52,7 +52,7 @@ async def get_network_connectors_meta_by_customer_code_and_connector_name(
     description="Decommission the Network Connector for the customer",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def provision_content_pack_route(
+async def decommission_network_connector_route(
     decommission_request: DecommissionNetworkContentPackRequest,
     session: AsyncSession = Depends(get_db),
 ) -> DecommissionNetworkContentPackResponse:

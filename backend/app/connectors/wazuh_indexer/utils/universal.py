@@ -191,7 +191,7 @@ async def collect_indices() -> Indices:
     logger.info("Collecting indices from Elasticsearch")
     es = await create_wazuh_indexer_client("Wazuh-Indexer")
     try:
-        indices_dict = es.indices.get_alias("*")
+        indices_dict = es.indices.get_alias("*", expand_wildcards='open')
         indices_list = list(indices_dict.keys())
         # Check if the index is valid
         index_config = IndexConfigModel()
