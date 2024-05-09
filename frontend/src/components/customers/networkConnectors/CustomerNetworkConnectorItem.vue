@@ -27,6 +27,7 @@
 					hideDeleteButton
 					@deployed="emit('deployed')"
 					@deleted="emit('deleted')"
+					@decommissioned="emit('decommissioned')"
 				/>
 			</div>
 			<div class="footer-box flex justify-between items-center gap-4">
@@ -36,6 +37,7 @@
 					hideDeleteButton
 					@deployed="emit('deployed')"
 					@deleted="emit('deleted')"
+					@decommissioned="emit('decommissioned')"
 					:size="'small'"
 				/>
 			</div>
@@ -77,6 +79,7 @@ const { networkConnector, embedded } = toRefs(props)
 
 const emit = defineEmits<{
 	(e: "deployed"): void
+	(e: "decommissioned"): void
 	(e: "deleted"): void
 }>()
 

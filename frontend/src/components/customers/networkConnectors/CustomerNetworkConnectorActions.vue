@@ -1,6 +1,18 @@
 <template>
 	<div class="alert-actions flex gap-4 justify-end">
 		<n-button
+			:loading="loadingDecommission"
+			type="error"
+			v-if="networkConnector.deployed"
+			:size="size"
+			secondary
+			@click="decommissionNetworkConnector()"
+		>
+			<template #icon><Icon :name="DecommissionIcon"></Icon></template>
+			Decommission
+		</n-button>
+
+		<n-button
 			:loading="loadingFortinetProvision"
 			type="success"
 			v-if="isFortinet && !networkConnector.deployed"
@@ -72,6 +84,7 @@ const emit = defineEmits<{
 	(e: "startLoading"): void
 	(e: "stopLoading"): void
 	(e: "deployed"): void
+	(e: "decommissioned"): void
 	(e: "deleted"): void
 }>()
 
@@ -83,12 +96,14 @@ const { networkConnector, hideDeleteButton, size } = defineProps<{
 
 const DeployIcon = "carbon:deploy"
 const DeleteIcon = "ph:trash"
+const DecommissionIcon = "carbon:delete"
 
 const dialog = useDialog()
 const message = useMessage()
 const loadingFortinetProvision = ref(false)
 const loadingDelete = ref(false)
-const loading = computed(() => loadingFortinetProvision.value || loadingDelete.value)
+const loadingDecommission = ref(false)
+const loading = computed(() => loadingFortinetProvision.value || loadingDecommission.value || loadingDelete.value)
 
 const serviceName = computed(() => networkConnector.network_connector_service_name)
 const customerCode = computed(() => networkConnector.customer_code)
@@ -184,6 +199,27 @@ function deleteNetworkConnector() {
 		})
 		.finally(() => {
 			loadingDelete.value = false
+		})
+}
+
+function decommissionNetworkConnector() {
+	loadingDecommission.value = true
+
+	Api.networkConnectors
+		.decommissionNetworkConnector(customerCode.value, serviceName.value)
+		.then(res => {
+			if (res.data.success) {
+				emit("decommissioned")
+				message.success(res.data?.message || "Customer Network Connector successfully decommissioned.")
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			loadingDecommission.value = false
 		})
 }
 </script>

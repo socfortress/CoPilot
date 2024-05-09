@@ -29,6 +29,7 @@
 								:networkConnector="networkConnector"
 								@deployed="refreshList()"
 								@deleted="refreshList()"
+								@decommissioned="refreshList()"
 								embedded
 								class="item-appear item-appear-bottom item-appear-005 mb-2"
 							/>

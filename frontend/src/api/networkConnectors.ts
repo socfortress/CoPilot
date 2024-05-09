@@ -59,6 +59,12 @@ export default {
 			data: { customer_code: customerCode, network_connector_name: networkConnectorName }
 		})
 	},
+	decommissionNetworkConnector(customerCode: string, networkConnectorName: string) {
+		return HttpClient.post<FlaskBaseResponse>(`/stack_decommissioning/graylog/decommission/network_connector`, {
+			customer_code: customerCode,
+			network_connector: networkConnectorName
+		})
+	},
 
 	fortinetProvision(customerCode: string, networkConnectorName: string, props: FortinetProvision) {
 		const payload: FortinetProvisionPayload = {
