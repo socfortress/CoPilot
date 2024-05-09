@@ -198,3 +198,37 @@ async def delete_grafana_organization(organization_id: int):
         logger.info(f"Organization deleted: {organization_deleted}")
         return organization_deleted
     return organization_deleted
+
+
+async def delete_grafana_dashboard_folder(organization_id: int, folder_uid: str):
+    """
+    Deletes a Grafana dashboard folder.
+
+    Args:
+        folder_uid (str): The ID of the folder to delete.
+    """
+    logger.info("Deleting Grafana folder")
+    grafana_client = await create_grafana_client("Grafana")
+    grafana_client.user.switch_actual_user_organisation(organization_id)
+    folder_deleted = grafana_client.folder.delete_folder(
+        uid=folder_uid,
+    )
+    logger.info(f"Folder deleted: {folder_deleted}")
+    return folder_deleted
+
+
+async def delete_grafana_datasource(organization_id: int, datasource_uid: str):
+    """
+    Deletes a Grafana datasource.
+
+    Args:
+        datasource_uid (int): The ID of the datasource to delete.
+    """
+    logger.info("Deleting Grafana datasource")
+    grafana_client = await create_grafana_client("Grafana")
+    grafana_client.user.switch_actual_user_organisation(organization_id)
+    datasource_deleted = grafana_client.datasource.delete_datasource_by_uid(
+        datasource_uid=datasource_uid,
+    )
+    logger.info(f"Datasource deleted: {datasource_deleted}")
+    return datasource_deleted

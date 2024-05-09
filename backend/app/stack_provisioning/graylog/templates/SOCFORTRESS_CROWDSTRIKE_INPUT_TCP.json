@@ -1,0 +1,118 @@
+{
+	"v": 1,
+	"id": "REPLACE_UUID_GLOBAL",
+	"rev": 1,
+	"name": "customer_name_CROWDSTRIKE_INPUT_TCP",
+	"summary": "customer_name_CROWDSTRIKE_INPUT_TCP",
+	"description": "",
+	"vendor": "SOCFortress",
+	"url": "",
+	"parameters": [],
+	"entities": [
+		{
+			"v": "1",
+			"type": {
+				"name": "input",
+				"version": "1"
+			},
+			"id": "REPLACE_UUID_SPECIFIC",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "customer_name - CROWDSTRIKE LOGS AND EVENTS"
+				},
+				"configuration": {
+					"tls_key_file": {
+						"@type": "string",
+						"@value": ""
+					},
+					"port": {
+						"@type": "integer",
+						"@value": "SYSLOG_PORT"
+					},
+					"tls_enable": {
+						"@type": "boolean",
+						"@value": false
+					},
+					"use_null_delimiter": {
+						"@type": "boolean",
+						"@value": false
+					},
+					"recv_buffer_size": {
+						"@type": "integer",
+						"@value": 1048576
+					},
+					"tcp_keepalive": {
+						"@type": "boolean",
+						"@value": false
+					},
+					"use_full_names": {
+						"@type": "boolean",
+						"@value": false
+					},
+					"tls_client_auth_cert_file": {
+						"@type": "string",
+						"@value": ""
+					},
+					"bind_address": {
+						"@type": "string",
+						"@value": "0.0.0.0"
+					},
+					"tls_cert_file": {
+						"@type": "string",
+						"@value": ""
+					},
+					"max_message_size": {
+						"@type": "integer",
+						"@value": 2097152
+					},
+					"tls_client_auth": {
+						"@type": "string",
+						"@value": "disabled"
+					},
+					"timezone": {
+						"@type": "string",
+						"@value": "Etc/UTC"
+					},
+					"locale": {
+						"@type": "string",
+						"@value": ""
+					},
+					"number_worker_threads": {
+						"@type": "integer",
+						"@value": 8
+					},
+					"tls_key_password": {
+						"@type": "string",
+						"@value": ""
+					}
+				},
+				"static_fields": {
+					"syslog_type": {
+						"@type": "string",
+						"@value": "crowdstrike"
+					},
+					"syslog_customer": {
+						"@type": "string",
+						"@value": "customer_code"
+					}
+				},
+				"type": {
+					"@type": "string",
+					"@value": "org.graylog.plugins.cef.input.CEFTCPInput"
+				},
+				"global": {
+					"@type": "boolean",
+					"@value": false
+				},
+				"extractors": []
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		}
+	]
+}

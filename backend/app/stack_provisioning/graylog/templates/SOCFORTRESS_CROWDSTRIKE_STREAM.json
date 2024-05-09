@@ -1,0 +1,102 @@
+{
+	"v": 1,
+	"id": "REPLACE_UUID_GLOBAL",
+	"rev": 1,
+	"name": "customer_name_CROWDSTRIKE_STREAM",
+	"summary": "customer_name_CROWDSTRIKE_STREAM",
+	"description": "",
+	"vendor": "SOCFortress",
+	"url": "",
+	"parameters": [],
+	"entities": [
+		{
+			"v": "1",
+			"type": {
+				"name": "stream",
+				"version": "1"
+			},
+			"id": "REPLACE_UUID_SPECIFIC",
+			"data": {
+				"alarm_callbacks": [],
+				"outputs": [],
+				"remove_matches": {
+					"@type": "boolean",
+					"@value": true
+				},
+				"title": {
+					"@type": "string",
+					"@value": "customer_name - CROWDSTRIKE LOGS AND EVENTS"
+				},
+				"stream_rules": [
+					{
+						"type": {
+							"@type": "string",
+							"@value": "EXACT"
+						},
+						"field": {
+							"@type": "string",
+							"@value": "syslog_type"
+						},
+						"value": {
+							"@type": "string",
+							"@value": "crowdstrike"
+						},
+						"inverted": {
+							"@type": "boolean",
+							"@value": false
+						},
+						"description": {
+							"@type": "string",
+							"@value": ""
+						}
+					},
+					{
+						"type": {
+							"@type": "string",
+							"@value": "EXACT"
+						},
+						"field": {
+							"@type": "string",
+							"@value": "syslog_customer"
+						},
+						"value": {
+							"@type": "string",
+							"@value": "customer_code"
+						},
+						"inverted": {
+							"@type": "boolean",
+							"@value": false
+						},
+						"description": {
+							"@type": "string",
+							"@value": ""
+						}
+					}
+				],
+				"alert_conditions": [],
+				"matching_type": {
+					"@type": "string",
+					"@value": "AND"
+				},
+				"disabled": {
+					"@type": "boolean",
+					"@value": false
+				},
+				"description": {
+					"@type": "string",
+					"@value": "customer_name - CROWDSTRIKE LOGS AND EVENTS"
+				},
+				"default_stream": {
+					"@type": "boolean",
+					"@value": false
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		}
+	]
+}

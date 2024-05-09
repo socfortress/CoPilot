@@ -154,10 +154,6 @@ docker compose up -d
 
 Copilot is designed to be a single pane of glass for your security operations. Think of it as a hub for all your security tools. Copilot Connectors are the glue that binds your security tools to Copilot. We take advantage of the APIs and webhooks provided by your security tools to provide a seamless integration.
 
-## Related repositories
-
--   Provision Wazuh Worker Application: [https://github.com/socfortress/Customer-Provisioning-Worker](https://github.com/socfortress/Customer-Provisioning-Worker)
-
 ## Help
 
 You can reach us on [Discord](https://discord.gg/UN3pNBzaEQ) or by [📧](mailto:info@socfortress.co) if you have any question, issue or idea!

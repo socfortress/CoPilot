@@ -3,10 +3,10 @@ from fastapi import Security
 from loguru import logger
 
 from app.auth.utils import AuthHandler
-from app.stack_provisioning.graylog.schema.provision import AvailableContentPacks
 from app.stack_provisioning.graylog.schema.provision import (
     AvailableContentPacksResponse,
 )
+from app.stack_provisioning.graylog.schema.provision import AvailbleContentPacksOverview
 from app.stack_provisioning.graylog.schema.provision import ProvisionContentPackRequest
 from app.stack_provisioning.graylog.schema.provision import ProvisionGraylogResponse
 from app.stack_provisioning.graylog.services.provision import provision_content_pack
@@ -28,7 +28,7 @@ async def get_available_content_packs_route() -> AvailableContentPacksResponse:
     """
     logger.info("Getting available content packs...")
     return AvailableContentPacksResponse(
-        available_content_packs=[{"name": pack.name, "description": pack.value} for pack in AvailableContentPacks],
+        available_content_packs=[{"name": pack.name, "description": pack.value} for pack in AvailbleContentPacksOverview],
         success=True,
         message="Available content packs retrieved successfully",
     )

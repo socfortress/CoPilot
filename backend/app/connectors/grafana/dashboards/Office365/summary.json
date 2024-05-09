@@ -41,7 +41,7 @@
 	"panels": [
 		{
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
@@ -77,7 +77,6 @@
 				"y": 0
 			},
 			"id": 43,
-			"links": [],
 			"options": {
 				"colorMode": "value",
 				"graphMode": "area",
@@ -88,10 +87,12 @@
 					"fields": "",
 					"values": false
 				},
+				"showPercentChange": false,
 				"text": {},
-				"textMode": "auto"
+				"textMode": "auto",
+				"wideLayout": true
 			},
-			"pluginVersion": "10.2.0",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [
@@ -107,7 +108,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -127,7 +128,7 @@
 		},
 		{
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
@@ -240,7 +241,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -256,7 +257,6 @@
 				}
 			],
 			"title": "EVENTS BY WORKLOAD (Top 10)",
-			"transformations": [],
 			"type": "piechart"
 		},
 		{
@@ -342,7 +342,7 @@
 				},
 				"showHeader": true
 			},
-			"pluginVersion": "10.2.0",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [
@@ -360,7 +360,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -399,7 +399,7 @@
 		},
 		{
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
@@ -492,7 +492,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -508,12 +508,11 @@
 				}
 			],
 			"title": "EVENTS BY OPERATION (Top 10)",
-			"transformations": [],
 			"type": "piechart"
 		},
 		{
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
@@ -594,7 +593,7 @@
 				},
 				"showHeader": true
 			},
-			"pluginVersion": "10.2.0",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [
@@ -612,7 +611,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -652,7 +651,7 @@
 		},
 		{
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
@@ -701,7 +700,6 @@
 				"y": 7
 			},
 			"id": 16,
-			"links": [],
 			"options": {
 				"minVizHeight": 75,
 				"minVizWidth": 75,
@@ -713,9 +711,10 @@
 				},
 				"showThresholdLabels": false,
 				"showThresholdMarkers": true,
+				"sizing": "auto",
 				"text": {}
 			},
-			"pluginVersion": "10.2.0",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [
@@ -731,7 +730,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -768,7 +767,7 @@
 						"axisLabel": "",
 						"axisPlacement": "auto",
 						"barAlignment": 0,
-						"drawStyle": "line",
+						"drawStyle": "bars",
 						"fillOpacity": 0,
 						"gradientMode": "none",
 						"hideFrom": {
@@ -787,7 +786,7 @@
 						"spanNulls": false,
 						"stacking": {
 							"group": "A",
-							"mode": "none"
+							"mode": "normal"
 						},
 						"thresholdsStyle": {
 							"mode": "off"
@@ -816,7 +815,7 @@
 				"x": 4,
 				"y": 7
 			},
-			"id": 58,
+			"id": 57,
 			"options": {
 				"legend": {
 					"calcs": [],
@@ -857,7 +856,6 @@
 						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
-					"format": "table",
 					"metrics": [
 						{
 							"id": "1",
@@ -865,17 +863,17 @@
 						}
 					],
 					"query": "data_office365_Workload:$workload AND rule_level:$rule_level",
-					"queryType": "lucene",
 					"refId": "A",
 					"timeField": "timestamp"
 				}
 			],
 			"title": "TOP 10 WORKLOADS - HISTOGRAM",
+			"transparent": true,
 			"type": "timeseries"
 		},
 		{
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
@@ -911,7 +909,6 @@
 				"y": 14
 			},
 			"id": 51,
-			"links": [],
 			"options": {
 				"colorMode": "value",
 				"graphMode": "area",
@@ -922,10 +919,12 @@
 					"fields": "",
 					"values": false
 				},
+				"showPercentChange": false,
 				"text": {},
-				"textMode": "auto"
+				"textMode": "auto",
+				"wideLayout": true
 			},
-			"pluginVersion": "10.2.0",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [
@@ -942,7 +941,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -963,7 +962,7 @@
 		},
 		{
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
@@ -999,7 +998,6 @@
 				"y": 20
 			},
 			"id": 52,
-			"links": [],
 			"options": {
 				"colorMode": "value",
 				"graphMode": "area",
@@ -1010,10 +1008,12 @@
 					"fields": "",
 					"values": false
 				},
+				"showPercentChange": false,
 				"text": {},
-				"textMode": "auto"
+				"textMode": "auto",
+				"wideLayout": true
 			},
-			"pluginVersion": "10.2.0",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [
@@ -1030,7 +1030,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -1050,40 +1050,122 @@
 			"type": "stat"
 		},
 		{
-			"circleMaxSize": 30,
-			"circleMinSize": 2,
-			"colors": ["rgba(245, 54, 54, 0.9)", "rgba(237, 129, 40, 0.89)", "rgba(50, 172, 45, 0.97)"],
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
-			"decimals": 0,
-			"esMetric": "Count",
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"custom": {
+						"hideFrom": {
+							"legend": false,
+							"tooltip": false,
+							"viz": false
+						}
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "rgba(245, 54, 54, 0.9)",
+								"value": null
+							},
+							{
+								"color": "rgba(237, 129, 40, 0.89)",
+								"value": 0
+							},
+							{
+								"color": "rgba(50, 172, 45, 0.97)",
+								"value": 10
+							}
+						]
+					}
+				},
+				"overrides": []
+			},
 			"gridPos": {
 				"h": 12,
 				"w": 10,
 				"x": 4,
 				"y": 20
 			},
-			"hideEmpty": false,
-			"hideZero": false,
 			"id": 50,
-			"initialZoom": 1,
-			"locationData": "countries",
-			"mapCenter": "(0°, 0°)",
-			"mapCenterLatitude": 0,
-			"mapCenterLongitude": 0,
 			"maxDataPoints": 1,
-			"mouseWheelZoom": false,
-			"showLegend": true,
-			"stickyLabels": false,
-			"tableQueryOptions": {
-				"geohashField": "geohash",
-				"latitudeField": "latitude",
-				"longitudeField": "longitude",
-				"metricField": "metric",
-				"queryType": "geohash"
+			"options": {
+				"basemap": {
+					"name": "Basemap",
+					"type": "default"
+				},
+				"controls": {
+					"mouseWheelZoom": false,
+					"showAttribution": true,
+					"showDebug": false,
+					"showMeasure": false,
+					"showScale": false,
+					"showZoom": true
+				},
+				"layers": [
+					{
+						"config": {
+							"showLegend": true,
+							"style": {
+								"color": {
+									"fixed": "dark-green"
+								},
+								"opacity": 0.4,
+								"rotation": {
+									"fixed": 0,
+									"max": 360,
+									"min": -360,
+									"mode": "mod"
+								},
+								"size": {
+									"fixed": 5,
+									"max": 30,
+									"min": 2
+								},
+								"symbol": {
+									"fixed": "img/icons/marker/circle.svg",
+									"mode": "fixed"
+								},
+								"symbolAlign": {
+									"horizontal": "center",
+									"vertical": "center"
+								},
+								"textConfig": {
+									"fontSize": 12,
+									"offsetX": 0,
+									"offsetY": 0,
+									"textAlign": "center",
+									"textBaseline": "middle"
+								}
+							}
+						},
+						"location": {
+							"gazetteer": "public/gazetteer/countries.json",
+							"mode": "lookup"
+						},
+						"name": "Layer 0",
+						"tooltip": true,
+						"type": "markers"
+					}
+				],
+				"tooltip": {
+					"mode": "details"
+				},
+				"view": {
+					"allLayers": true,
+					"id": "zero",
+					"lat": 0,
+					"lon": 0,
+					"zoom": 1
+				}
 			},
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [
@@ -1111,7 +1193,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -1126,16 +1208,20 @@
 					"timeField": "timestamp"
 				}
 			],
-			"thresholds": "0,10",
 			"title": "AZURE AD - ALL AUTH EVENTS BY COUNTRY",
-			"type": "grafana-worldmap-panel",
-			"unitPlural": "",
-			"unitSingle": "",
-			"valueName": "total"
+			"transformations": [
+				{
+					"id": "reduce",
+					"options": {
+						"reducers": ["sum"]
+					}
+				}
+			],
+			"type": "geomap"
 		},
 		{
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
@@ -1229,7 +1315,7 @@
 				"showHeader": true,
 				"sortBy": []
 			},
-			"pluginVersion": "10.2.0",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [
@@ -1247,7 +1333,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -1288,7 +1374,7 @@
 		},
 		{
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
@@ -1324,7 +1410,6 @@
 				"y": 26
 			},
 			"id": 18,
-			"links": [],
 			"options": {
 				"colorMode": "value",
 				"graphMode": "area",
@@ -1335,10 +1420,12 @@
 					"fields": "",
 					"values": false
 				},
+				"showPercentChange": false,
 				"text": {},
-				"textMode": "auto"
+				"textMode": "auto",
+				"wideLayout": true
 			},
-			"pluginVersion": "10.2.0",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [
@@ -1355,7 +1442,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -1376,7 +1463,7 @@
 		},
 		{
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
@@ -1578,7 +1665,7 @@
 						"properties": [
 							{
 								"id": "custom.width",
-								"value": 206
+								"value": 332
 							}
 						]
 					},
@@ -1645,10 +1732,6 @@
 										"url": "https://grafana.company.local/explore?left=%7B%22datasource%22:%22O365%22,%22queries%22:%5B%7B%22refId%22:%22A%22,%22query%22:%22_id:${__value.text}%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D,%22range%22:%7B%22from%22:%22now-6h%22,%22to%22:%22now%22%7D%7D"
 									}
 								]
-							},
-							{
-								"id": "custom.width",
-								"value": 317
 							}
 						]
 					},
@@ -1661,30 +1744,6 @@
 							{
 								"id": "custom.width",
 								"value": 146
-							}
-						]
-					},
-					{
-						"matcher": {
-							"id": "byName",
-							"options": "RULE DESCRIPTION"
-						},
-						"properties": [
-							{
-								"id": "custom.width",
-								"value": 1105
-							}
-						]
-					},
-					{
-						"matcher": {
-							"id": "byName",
-							"options": "LEVEL"
-						},
-						"properties": [
-							{
-								"id": "custom.width",
-								"value": 112
 							}
 						]
 					}
@@ -1709,12 +1768,12 @@
 				"showHeader": true,
 				"sortBy": []
 			},
-			"pluginVersion": "10.2.0",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -1740,8 +1799,6 @@
 							"names": [
 								"timestamp",
 								"_id",
-								"data_office365_Operation",
-								"data_office365_Workload",
 								"rule_description",
 								"rule_mitre_id",
 								"rule_mitre_tactic",
@@ -2058,7 +2115,7 @@
 							"data_office365_ObjectId": true,
 							"data_office365_ObjectName": true,
 							"data_office365_ObjectType": true,
-							"data_office365_Operation": false,
+							"data_office365_Operation": true,
 							"data_office365_OperationDetails": true,
 							"data_office365_OperationScope": true,
 							"data_office365_OrgAppPermission_permissions": true,
@@ -2173,7 +2230,7 @@
 							"data_office365_VersionId": true,
 							"data_office365_WebId": true,
 							"data_office365_WorkSpaceName": true,
-							"data_office365_Workload": false,
+							"data_office365_Workload": true,
 							"data_office365_WorkspaceId": true,
 							"data_office365_YammerNetworkId": true,
 							"data_osquery_action": true,
@@ -2544,7 +2601,7 @@
 							"syscheck_win_perm_after_3_allowed": true,
 							"syscheck_win_perm_after_3_name": true,
 							"syslog_customer": true,
-							"syslog_level": false,
+							"syslog_level": true,
 							"syslog_tag": true,
 							"syslog_type": true,
 							"sysmon_event_description": true,
@@ -2552,7 +2609,7 @@
 							"threat_indicated": true,
 							"threat_names": true,
 							"time": true,
-							"timestamp": true,
+							"timestamp": false,
 							"true": true,
 							"user_name": true,
 							"win_registry_key": true,
@@ -2564,27 +2621,82 @@
 							"windows_logon_type": true
 						},
 						"indexByName": {
-							"_id": 1,
-							"data_office365_Operation": 4,
-							"data_office365_Workload": 3,
-							"rule_description": 2,
-							"rule_mitre_id": 6,
-							"rule_mitre_tactic": 7,
-							"rule_mitre_technique": 8,
-							"syslog_level": 5,
-							"timestamp": 0
+							"_id": 2,
+							"_index": 7,
+							"_type": 8,
+							"agent_id": 9,
+							"agent_name": 3,
+							"cluster_name": 10,
+							"cluster_node": 11,
+							"data_office365_Actor": 12,
+							"data_office365_ActorContextId": 13,
+							"data_office365_ActorIpAddress": 14,
+							"data_office365_ActorIpAddress_city_name": 15,
+							"data_office365_ActorIpAddress_country_code": 16,
+							"data_office365_ActorIpAddress_geolocation": 17,
+							"data_office365_ApplicationId": 18,
+							"data_office365_AzureActiveDirectoryEventType": 19,
+							"data_office365_ClientIP": 20,
+							"data_office365_ClientIP_city_name": 21,
+							"data_office365_ClientIP_country_code": 22,
+							"data_office365_ClientIP_geolocation": 23,
+							"data_office365_CreationTime": 0,
+							"data_office365_DeviceProperties": 24,
+							"data_office365_ErrorNumber": 25,
+							"data_office365_ExtendedProperties": 26,
+							"data_office365_Id": 27,
+							"data_office365_InterSystemsId": 28,
+							"data_office365_IntraSystemId": 29,
+							"data_office365_LogonError": 30,
+							"data_office365_ModifiedProperties": 31,
+							"data_office365_ObjectId": 32,
+							"data_office365_Operation": 33,
+							"data_office365_OrganizationId": 34,
+							"data_office365_RecordType": 35,
+							"data_office365_ResultStatus": 36,
+							"data_office365_Target": 37,
+							"data_office365_TargetContextId": 38,
+							"data_office365_UserId": 39,
+							"data_office365_UserKey": 40,
+							"data_office365_UserType": 41,
+							"data_office365_Version": 42,
+							"data_office365_Workload": 43,
+							"decoder_name": 44,
+							"gl2_accounted_message_size": 45,
+							"gl2_message_id": 46,
+							"gl2_processing_error": 47,
+							"gl2_remote_ip": 48,
+							"gl2_remote_port": 49,
+							"gl2_source_input": 50,
+							"gl2_source_node": 51,
+							"highlight": 52,
+							"id": 53,
+							"location": 54,
+							"manager_name": 55,
+							"message": 56,
+							"rule_description": 4,
+							"rule_firedtimes": 57,
+							"rule_group1": 58,
+							"rule_groups": 59,
+							"rule_id": 6,
+							"rule_level": 5,
+							"rule_mail": 60,
+							"sort": 61,
+							"source": 62,
+							"streams": 63,
+							"syslog_level": 64,
+							"syslog_type": 65,
+							"timestamp": 1,
+							"true": 66
 						},
 						"renameByName": {
 							"_id": "EVENT ID",
 							"data_office365_CreationTime": "EVENT TIME",
-							"data_office365_Operation": "OPERATION",
-							"data_office365_Workload": "WORKLOAD",
 							"rule_description": "DESCRIPTION",
 							"rule_id": "RULE ID",
 							"rule_mitre_id": "MITRE ID",
 							"rule_mitre_tactic": "MITRE TACTIC",
 							"rule_mitre_technique": "MITRE TECHNIQUE",
-							"syslog_level": "LEVEL",
 							"timestamp": "Date/Time"
 						}
 					}
@@ -2595,13 +2707,13 @@
 		}
 	],
 	"refresh": "",
-	"schemaVersion": 38,
+	"schemaVersion": 39,
 	"tags": ["O365"],
 	"templating": {
 		"list": [
 			{
 				"datasource": {
-					"type": "elasticsearch",
+					"type": "grafana-opensearch-datasource",
 					"uid": "replace_datasource_uid"
 				},
 				"filters": [],
@@ -2618,7 +2730,7 @@
 					"value": "$__all"
 				},
 				"datasource": {
-					"type": "elasticsearch",
+					"type": "grafana-opensearch-datasource",
 					"uid": "replace_datasource_uid"
 				},
 				"definition": "{ \"find\": \"terms\", \"field\": \"data_office365_Workload\", \"query\": \"\"}",
@@ -2645,7 +2757,7 @@
 					"value": "$__all"
 				},
 				"datasource": {
-					"type": "elasticsearch",
+					"type": "grafana-opensearch-datasource",
 					"uid": "replace_datasource_uid"
 				},
 				"definition": "{\"find\": \"terms\", \"field\": \"rule_level\", \"query\": \"\"}",

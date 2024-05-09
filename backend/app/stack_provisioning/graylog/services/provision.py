@@ -173,6 +173,7 @@ async def provision_content_pack(content_pack_request: ProvisionContentPackReque
     )
 
 
+# ! NETWORK CONNECTOR CONTENT PACKS PROVISIONING ! #
 async def filter_content_packs(content_packs, protocol_type):
     if protocol_type == "TCP":
         return [pack for pack in content_packs if "UDP" not in pack]
@@ -182,8 +183,8 @@ async def filter_content_packs(content_packs, protocol_type):
 
 
 async def process_content_pack(content_pack, content_pack_request):
-    if await does_content_pack_exist(content_pack):
-        logger.info(f"Content pack {content_pack} already exists")
+    content_pack_exists = await does_content_pack_exist(content_pack)
+    if content_pack_exists is True:
         return
     content_pack = load_content_pack_json(f"{content_pack}.json")
     replace_content_pack_keywords = ReplaceContentPackKeywords(

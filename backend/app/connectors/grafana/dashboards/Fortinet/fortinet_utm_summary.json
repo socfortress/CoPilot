@@ -1,0 +1,1221 @@
+{
+	"annotations": {
+		"list": [
+			{
+				"builtIn": 1,
+				"datasource": {
+					"type": "grafana",
+					"uid": "-- Grafana --"
+				},
+				"enable": true,
+				"hide": true,
+				"iconColor": "rgba(0, 211, 255, 1)",
+				"name": "Annotations & Alerts",
+				"target": {
+					"limit": 100,
+					"matchAny": false,
+					"tags": [],
+					"type": "dashboard"
+				},
+				"type": "dashboard"
+			}
+		]
+	},
+	"description": "FORTINET - UTM LOGS",
+	"editable": false,
+	"fiscalYearStartMonth": 0,
+	"graphTooltip": 0,
+	"id": null,
+	"iteration": 1657693378341,
+	"links": [
+		{
+			"asDropdown": true,
+			"icon": "external link",
+			"includeVars": true,
+			"keepTime": true,
+			"tags": ["FORTINET UTM"],
+			"targetBlank": true,
+			"title": "FORTINET UTM DASHBOARDS",
+			"tooltip": "",
+			"type": "dashboards",
+			"url": ""
+		}
+	],
+	"liveNow": false,
+	"panels": [
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "orange",
+								"value": null
+							}
+						]
+					},
+					"unit": "short"
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 4,
+				"x": 0,
+				"y": 0
+			},
+			"id": 2,
+			"options": {
+				"colorMode": "value",
+				"graphMode": "area",
+				"justifyMode": "auto",
+				"orientation": "auto",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"textMode": "auto"
+			},
+			"pluginVersion": "9.0.0",
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "type:utm AND devname:$firewall AND syslog_level:$severity",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "UTM EVENTS",
+			"type": "stat"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "blue",
+								"value": null
+							}
+						]
+					},
+					"unit": "short"
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 4,
+				"x": 4,
+				"y": 0
+			},
+			"id": 9,
+			"options": {
+				"colorMode": "value",
+				"graphMode": "area",
+				"justifyMode": "auto",
+				"orientation": "auto",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"textMode": "auto"
+			},
+			"pluginVersion": "9.0.0",
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "1y"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"field": "devname",
+							"id": "1",
+							"type": "cardinality"
+						}
+					],
+					"query": "type:utm AND devname:$firewall AND syslog_level:$severity",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "UTM EVENTS - FIREWALLS",
+			"type": "stat"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "palette-classic"
+					},
+					"custom": {
+						"hideFrom": {
+							"legend": false,
+							"tooltip": false,
+							"viz": false
+						}
+					},
+					"mappings": []
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 5,
+				"x": 8,
+				"y": 0
+			},
+			"id": 4,
+			"options": {
+				"legend": {
+					"displayMode": "hidden",
+					"placement": "right"
+				},
+				"pieType": "pie",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"tooltip": {
+					"mode": "single",
+					"sort": "none"
+				}
+			},
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "devname",
+							"id": "3",
+							"settings": {
+								"min_doc_count": "1",
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "15"
+							},
+							"type": "terms"
+						},
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "type:utm AND devname:$firewall AND syslog_level:$severity",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "UTM EVENTS BY FIREWALL",
+			"type": "piechart"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"custom": {
+						"align": "auto",
+						"displayMode": "auto",
+						"inspect": false
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					}
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "source"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 473
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 11,
+				"x": 13,
+				"y": 0
+			},
+			"id": 5,
+			"options": {
+				"footer": {
+					"fields": "",
+					"reducer": ["sum"],
+					"show": false
+				},
+				"showHeader": true,
+				"sortBy": []
+			},
+			"pluginVersion": "9.0.0",
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "devname",
+							"id": "3",
+							"settings": {
+								"min_doc_count": "1",
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "20"
+							},
+							"type": "terms"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "type:utm AND devname:$firewall AND syslog_level:$severity",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "UTM EVENTS BY FIREWALL",
+			"transformations": [
+				{
+					"id": "organize",
+					"options": {
+						"excludeByName": {},
+						"indexByName": {},
+						"renameByName": {
+							"devname": "FIREWALL"
+						}
+					}
+				}
+			],
+			"transparent": true,
+			"type": "table"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "palette-classic"
+					},
+					"custom": {
+						"hideFrom": {
+							"legend": false,
+							"tooltip": false,
+							"viz": false
+						}
+					},
+					"mappings": []
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 6,
+				"x": 0,
+				"y": 8
+			},
+			"id": 6,
+			"options": {
+				"legend": {
+					"displayMode": "table",
+					"placement": "right"
+				},
+				"pieType": "donut",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"tooltip": {
+					"mode": "single",
+					"sort": "none"
+				}
+			},
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "subtype",
+							"id": "3",
+							"settings": {
+								"min_doc_count": "1",
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "15"
+							},
+							"type": "terms"
+						},
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "type:utm AND devname:$firewall AND syslog_level:$severity",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "UTM EVENTS BY TYPE",
+			"type": "piechart"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "palette-classic"
+					},
+					"custom": {
+						"axisLabel": "",
+						"axisPlacement": "auto",
+						"barAlignment": 0,
+						"drawStyle": "bars",
+						"fillOpacity": 0,
+						"gradientMode": "none",
+						"hideFrom": {
+							"legend": false,
+							"tooltip": false,
+							"viz": false
+						},
+						"lineInterpolation": "linear",
+						"lineWidth": 1,
+						"pointSize": 5,
+						"scaleDistribution": {
+							"type": "linear"
+						},
+						"showPoints": "auto",
+						"spanNulls": false,
+						"stacking": {
+							"group": "A",
+							"mode": "none"
+						},
+						"thresholdsStyle": {
+							"mode": "off"
+						}
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					},
+					"unit": "short"
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 16,
+				"w": 18,
+				"x": 6,
+				"y": 8
+			},
+			"id": 7,
+			"options": {
+				"legend": {
+					"calcs": [],
+					"displayMode": "table",
+					"placement": "right"
+				},
+				"tooltip": {
+					"mode": "single",
+					"sort": "none"
+				}
+			},
+			"pluginVersion": "8.5.1",
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "devname",
+							"id": "3",
+							"settings": {
+								"min_doc_count": "1",
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "20"
+							},
+							"type": "terms"
+						},
+						{
+							"field": "timestamp",
+							"id": "4",
+							"settings": {
+								"interval": "5m",
+								"min_doc_count": "1",
+								"timeZone": "utc",
+								"trimEdges": "0"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "type:utm AND devname:$firewall AND syslog_level:$severity",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "UTM EVENTS BY FIREWALL - HISTOGRAM (TOP 20)",
+			"type": "timeseries"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "palette-classic"
+					},
+					"custom": {
+						"hideFrom": {
+							"legend": false,
+							"tooltip": false,
+							"viz": false
+						}
+					},
+					"mappings": []
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 6,
+				"x": 0,
+				"y": 16
+			},
+			"id": 8,
+			"options": {
+				"legend": {
+					"displayMode": "table",
+					"placement": "right"
+				},
+				"pieType": "donut",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"tooltip": {
+					"mode": "single",
+					"sort": "none"
+				}
+			},
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "profile",
+							"id": "3",
+							"settings": {
+								"min_doc_count": "1",
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "15"
+							},
+							"type": "terms"
+						},
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "type:utm AND devname:$firewall AND syslog_level:$severity",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "UTM EVENTS BY UTM PROFILE",
+			"type": "piechart"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "palette-classic"
+					},
+					"custom": {
+						"hideFrom": {
+							"legend": false,
+							"tooltip": false,
+							"viz": false
+						}
+					},
+					"mappings": []
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "notice"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "blue",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "information"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "green",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "warning"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "orange",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "alert"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "red",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "critical"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "dark-red",
+									"mode": "fixed"
+								}
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 6,
+				"x": 0,
+				"y": 24
+			},
+			"id": 11,
+			"options": {
+				"legend": {
+					"displayMode": "table",
+					"placement": "right"
+				},
+				"pieType": "donut",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"tooltip": {
+					"mode": "single",
+					"sort": "none"
+				}
+			},
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "syslog_level",
+							"id": "3",
+							"settings": {
+								"min_doc_count": "1",
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "15"
+							},
+							"type": "terms"
+						},
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "type:utm AND devname:$firewall AND syslog_level:$severity",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "UTM EVENTS BY SEVERITY",
+			"type": "piechart"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"custom": {
+						"align": "auto",
+						"displayMode": "auto",
+						"inspect": false
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green"
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					}
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "source"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 317
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 16,
+				"w": 18,
+				"x": 6,
+				"y": 24
+			},
+			"id": 10,
+			"options": {
+				"footer": {
+					"fields": "",
+					"reducer": ["sum"],
+					"show": false
+				},
+				"showHeader": true,
+				"sortBy": []
+			},
+			"pluginVersion": "9.0.0",
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "devname",
+							"id": "3",
+							"settings": {
+								"min_doc_count": "1",
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "20"
+							},
+							"type": "terms"
+						},
+						{
+							"field": "subtype",
+							"id": "4",
+							"settings": {
+								"min_doc_count": "1",
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "10"
+							},
+							"type": "terms"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "type:utm AND devname:$firewall AND syslog_level:$severity",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "UTM EVENTS BY FIREWALL AND TYPE",
+			"transformations": [
+				{
+					"id": "organize",
+					"options": {
+						"excludeByName": {},
+						"indexByName": {},
+						"renameByName": {
+							"devname": "FIREWALL",
+							"subtype": "LOG SUBTYPE"
+						}
+					}
+				}
+			],
+			"transparent": true,
+			"type": "table"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "palette-classic"
+					},
+					"custom": {
+						"hideFrom": {
+							"legend": false,
+							"tooltip": false,
+							"viz": false
+						}
+					},
+					"mappings": []
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "notice"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "blue",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "information"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "green",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "warning"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "orange",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "alert"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "red",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "block-url"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "orange",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "allow"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "green",
+									"mode": "fixed"
+								}
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 6,
+				"x": 0,
+				"y": 32
+			},
+			"id": 12,
+			"options": {
+				"legend": {
+					"displayMode": "table",
+					"placement": "right"
+				},
+				"pieType": "donut",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"tooltip": {
+					"mode": "single",
+					"sort": "none"
+				}
+			},
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "action",
+							"id": "3",
+							"settings": {
+								"min_doc_count": "1",
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "15"
+							},
+							"type": "terms"
+						},
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "type:utm AND devname:$firewall AND syslog_level:$severity",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "UTM EVENTS BY ACTION",
+			"type": "piechart"
+		}
+	],
+	"schemaVersion": 36,
+	"style": "dark",
+	"tags": ["FORTINET UTM"],
+	"templating": {
+		"list": [
+			{
+				"datasource": {
+					"type": "grafana-opensearch-datasource",
+					"uid": "replace_datasource_uid"
+				},
+				"filters": [],
+				"hide": 0,
+				"label": "Filters",
+				"name": "Filters",
+				"skipUrlSync": false,
+				"type": "adhoc"
+			},
+			{
+				"current": {
+					"selected": false,
+					"text": "All",
+					"value": "$__all"
+				},
+				"datasource": {
+					"type": "grafana-opensearch-datasource",
+					"uid": "replace_datasource_uid"
+				},
+				"definition": "{ \"find\": \"terms\", \"field\": \"devname\", \"query\": \"type:utm\"}",
+				"description": "PALO ALTO FIREWALL",
+				"hide": 0,
+				"includeAll": true,
+				"label": "Firewall",
+				"multi": false,
+				"name": "firewall",
+				"options": [],
+				"query": "{ \"find\": \"terms\", \"field\": \"devname\", \"query\": \"type:utm\"}",
+				"refresh": 1,
+				"regex": "",
+				"skipUrlSync": false,
+				"sort": 0,
+				"type": "query"
+			},
+			{
+				"current": {
+					"selected": false,
+					"text": "All",
+					"value": "$__all"
+				},
+				"datasource": {
+					"type": "grafana-opensearch-datasource",
+					"uid": "replace_datasource_uid"
+				},
+				"definition": "\t{ \"find\": \"terms\", \"field\": \"syslog_level\", \"query\": \"type:utm\"}",
+				"hide": 0,
+				"includeAll": true,
+				"label": "Severity",
+				"multi": false,
+				"name": "severity",
+				"options": [],
+				"query": "\t{ \"find\": \"terms\", \"field\": \"syslog_level\", \"query\": \"type:utm\"}",
+				"refresh": 2,
+				"regex": "",
+				"skipUrlSync": false,
+				"sort": 0,
+				"type": "query"
+			}
+		]
+	},
+	"time": {
+		"from": "now-6h",
+		"to": "now"
+	},
+	"timepicker": {},
+	"timezone": "",
+	"title": "FORTINET - UTM _SUMMARY",
+	"version": 3,
+	"weekStart": ""
+}

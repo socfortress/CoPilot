@@ -25,10 +25,14 @@ from sqlalchemy.orm import joinedload
 from app.auth.services.universal import find_user
 from app.auth.utils import AuthHandler
 from app.connectors.utils import get_connector_info_from_db
+from app.customer_provisioning.models.default_settings import (
+    CustomerProvisioningDefaultSettings,
+)
 from app.db.all_models import Connectors
 from app.db.db_session import get_db
 from app.db.db_session import get_db_session
 from app.db.db_session import get_session
+from app.db.universal_models import CustomersMeta
 from app.db.universal_models import LogEntry
 from app.integrations.alert_creation_settings.models.alert_creation_settings import (
     AlertCreationEventConfig,
@@ -633,6 +637,55 @@ async def get_connector_attribute(
 
     if connector:
         return getattr(connector, column_name, None)
+    return None
+
+
+async def get_customer_meta_attribute(
+    customer_code: str,
+    column_name: str,
+    session: AsyncSession = Depends(get_session),
+) -> Optional[Any]:
+    """
+    Retrieve the value of a specific column from a customer.
+
+    Args:
+        customer_code (str): The code of the customer.
+        column_name (str): The name of the column to retrieve.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_session).
+
+    Returns:
+        Optional[Any]: The value of the column, or None if the customer or column does not exist.
+    """
+    result = await session.execute(
+        select(CustomersMeta).filter(CustomersMeta.customer_code == customer_code),
+    )
+    customer = result.scalars().first()
+
+    if customer:
+        return getattr(customer, column_name, None)
+    return None
+
+
+async def get_customer_default_settings_attribute(
+    column_name: str,
+    session: AsyncSession = Depends(get_session),
+) -> Optional[Any]:
+    """
+    Retrieve the value of a specific column from a customer's default settings.
+
+    Args:
+        customer_code (str): The code of the customer.
+        column_name (str): The name of the column to retrieve.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_session).
+
+    Returns:
+        Optional[Any]: The value of the column, or None if the customer or column does not exist.
+    """
+    result = await session.execute(select(CustomerProvisioningDefaultSettings))
+    settings = result.scalars().first()
+
+    if settings:
+        return getattr(settings, column_name, None)
     return None
 
 

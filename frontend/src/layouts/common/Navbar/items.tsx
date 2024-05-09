@@ -14,7 +14,7 @@ const SOCIcon = "carbon:security"
 const HealthcheckIcon = "ph:heartbeat"
 const CustomersIcon = "carbon:user-multiple"
 const UsersIcon = "carbon:group-security"
-const IntegrationsIcon = "carbon:ibm-cloud-direct-link-2-dedicated"
+const ExternalServicesIcon = "carbon:ibm-cloud-direct-link-2-dedicated"
 const ReportCreationIcon = "carbon:report-data"
 const SchedulerIcon = "material-symbols:autoplay"
 
@@ -253,18 +253,37 @@ export default function getItems(mode: "vertical" | "horizontal", collapsed: boo
 			icon: renderIcon(UsersIcon)
 		},
 		{
-			label: () =>
-				h(
-					RouterLink,
-					{
-						to: {
-							name: "Integrations"
-						}
-					},
-					{ default: () => "Integrations" }
-				),
-			key: "Integrations",
-			icon: renderIcon(IntegrationsIcon)
+			label: "External Services",
+			key: "ExternalServices",
+			icon: renderIcon(ExternalServicesIcon),
+			children: [
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "ExternalServices-ThirdPartyIntegrations"
+								}
+							},
+							{ default: () => "3rd Party Integrations" }
+						),
+					key: "ExternalServices-ThirdPartyIntegrations"
+				},
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "ExternalServices-NetworkConnectors"
+								}
+							},
+							{ default: () => "Network Connectors" }
+						),
+					key: "ExternalServices-NetworkConnectors"
+				}
+			]
 		},
 		{
 			label: () =>

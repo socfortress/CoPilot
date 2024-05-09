@@ -1,8 +1,14 @@
 from fastapi import HTTPException
 from loguru import logger
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 
 from app.connectors.graylog.services.content_packs import get_content_packs
 from app.connectors.graylog.services.management import get_system_info
+from app.network_connectors.models.network_connectors import CustomerNetworkConnectors
+from app.network_connectors.models.network_connectors import (
+    CustomerNetworkConnectorsMeta,
+)
 from app.stack_provisioning.graylog.schema.provision import AvailableContentPacks
 
 
@@ -84,9 +90,56 @@ async def does_content_pack_exist(content_pack_name: str) -> bool:
         logger.info(f"Checking content pack {content_pack.name}")
         if content_pack.name == content_pack_name:
             logger.info(f"Content pack {content_pack_name} exists")
-            raise HTTPException(
-                status_code=400,
-                detail=f"Content pack {content_pack_name} already exists",
-            )
+            if "PROCESSING_PIPELINE" in content_pack.name:
+                return True
+            else:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Content pack {content_pack_name} already exists",
+                )
     logger.info(f"Content pack {content_pack_name} does not exist")
     return False
+
+
+async def insert_into_customer_network_connectors_meta_table(
+    customer_network_connectors_meta: CustomerNetworkConnectorsMeta,
+    session: AsyncSession,
+) -> None:
+    """
+    Insert the customer network connectors meta into the database.
+
+    Args:
+        customer_network_connectors_meta (CustomerNetworkConnectorsMeta): The customer network connectors meta to insert.
+        session (AsyncSession): The async session object for database operations.
+
+    Returns:
+        None
+    """
+    await session.add(customer_network_connectors_meta)
+    await session.commit()
+
+
+async def set_deployed_flag(customer_code: str, network_connector_service_name: str, flag: bool, session: AsyncSession) -> None:
+    """
+    Set the deployed flag to True for the specified customer code and for Fortinet.
+
+    Args:
+        customer_code (str): The customer code.
+        network_connector_service_name (str): The network connector service name.
+        session (AsyncSession): The async session object for database operations.
+
+    Returns:
+        None
+    """
+    # Retrieve the customer network connectors object for the customer code and network connector service name
+    customer_network_connectors = await session.execute(
+        select(CustomerNetworkConnectors).filter_by(
+            customer_code=customer_code,
+            network_connector_service_name=network_connector_service_name,
+        ),
+    )
+    customer_network_connectors = customer_network_connectors.scalars().first()
+    # Update the deployed flag to True
+    customer_network_connectors.deployed = flag
+    await session.commit()
+    return None

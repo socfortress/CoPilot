@@ -33,6 +33,9 @@ from app.connectors.graylog.services.pipelines import get_pipeline_id
 from app.connectors.graylog.services.pipelines import get_pipeline_rules
 from app.connectors.graylog.services.pipelines import get_pipelines
 from app.connectors.graylog.utils.universal import send_post_request
+from app.connectors.wazuh_indexer.services.monitoring import (
+    output_shard_number_to_be_set_based_on_nodes,
+)
 from app.connectors.wazuh_manager.utils.universal import send_get_request
 from app.connectors.wazuh_manager.utils.universal import send_put_request
 from app.customer_provisioning.schema.grafana import GrafanaDatasource
@@ -53,6 +56,7 @@ from app.integrations.office365.schema.provision import PipelineTitles
 from app.integrations.office365.schema.provision import ProvisionOffice365AuthKeys
 from app.integrations.office365.schema.provision import ProvisionOffice365Response
 from app.utils import get_connector_attribute
+from app.utils import get_customer_default_settings_attribute
 
 load_dotenv()
 
@@ -368,10 +372,12 @@ async def build_index_set_config(
     Returns:
         TimeBasedIndexSet: The configured time-based index set.
     """
+    # Lowercase the customer code since Graylog index sets must be lowercase
+    customer_code = customer_code.lower()
     return TimeBasedIndexSet(
         title=f"{(await get_customer(customer_code, session)).customer.customer_name} - Office365",
         description=f"{customer_code} - Office365",
-        index_prefix=f"office365_{customer_code}",
+        index_prefix=f"office365-{customer_code}",
         rotation_strategy_class="org.graylog2.indexer.rotation.strategies.TimeBasedRotationStrategy",
         rotation_strategy={
             "type": "org.graylog2.indexer.rotation.strategies.TimeBasedRotationStrategyConfig",
@@ -386,7 +392,7 @@ async def build_index_set_config(
         },
         creation_date=datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
         index_analyzer="standard",
-        shards=1,
+        shards=await output_shard_number_to_be_set_based_on_nodes(),
         replicas=0,
         index_optimization_max_num_segments=1,
         index_optimization_disabled=False,
@@ -588,9 +594,9 @@ async def create_office365_utc_rule(rule_title: str) -> None:
     rule_source = (
         f'rule "{rule_title}"\n'
         "when\n"
-        '  has_field("data_office_365_CreationTime")\n'
+        '  has_field("data_office365_CreationTime")\n'
         "then\n"
-        "  let creation_time = $message.data_office_365_CreationTime;\n"
+        "  let creation_time = $message.data_office365_CreationTime;\n"
         '  set_field("timestamp_utc", creation_time);\n'
         "end"
     )
@@ -759,6 +765,8 @@ async def create_grafana_datasource(
         GrafanaDataSourceCreationResponse: The response object containing the result of the datasource creation.
     """
     logger.info("Creating Grafana datasource")
+    # Lowercase the customer code since Graylog index sets must be lowercase
+    customer_code = customer_code.lower()
     grafana_client = await create_grafana_client("Grafana")
     grafana_url = await get_connector_attribute(
         connector_id=12,
@@ -779,7 +787,7 @@ async def create_grafana_datasource(
             column_name="connector_url",
             session=session,
         ),
-        database=f"office365_{customer_code}*",
+        database=f"office365-{customer_code}*",
         basicAuth=True,
         basicAuthUser=await get_connector_attribute(
             connector_id=1,
@@ -807,7 +815,7 @@ async def create_grafana_datasource(
                     ).format(grafana_url),
                 },
             ],
-            "database": f"office365_{customer_code}*",
+            "database": f"office365-{customer_code}*",
             "flavor": "opensearch",
             "includeFrozen": False,
             "logLevelField": "syslog_level",
@@ -915,6 +923,8 @@ async def provision_office365(
             organizationId=(await get_customer_meta(customer_code, session)).customer_meta.customer_meta_grafana_org_id,
             folderId=grafana_o365_folder_id,
             datasourceUid=office365_datasource_uid,
+            grafana_url=(await get_customer_default_settings_attribute(column_name="grafana_url", session=session))
+            or "grafana.company.local",
         ),
     )
 

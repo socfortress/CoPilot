@@ -85,8 +85,8 @@ import { useMessage, NFormItem, NInput, NSelect, NButton, NScrollbar, NSteps, NS
 import Icon from "@/components/common/Icon.vue"
 import Api from "@/api"
 import IntegrationsList from "@/components/integrations/IntegrationsList.vue"
-import type { AvailableIntegration } from "@/types/integrations.d"
 import type { NewIntegration } from "@/api/integrations"
+import type { ServiceItemData } from "@/components/services/types"
 
 interface AuthKeysInput {
 	key: string
@@ -115,7 +115,7 @@ const current = ref<number>(1)
 const currentStatus = ref<StepsProps["status"]>("process")
 const slideFormDirection = ref<"right" | "left">("right")
 
-const selectedIntegration = ref<AvailableIntegration | null>(null)
+const selectedIntegration = ref<ServiceItemData | null>(null)
 const authKeysForm = ref<AuthKeysInput[]>([])
 const apiTypeOptions = [
 	{ label: "Commercial", value: "commercial" },
@@ -127,7 +127,7 @@ watch(selectedIntegration, val => {
 	authKeysForm.value = []
 
 	if (val !== null) {
-		for (const ak of val.auth_keys) {
+		for (const ak of val.keys) {
 			authKeysForm.value.push({
 				key: ak.auth_key_name,
 				value: ak.auth_key_name === "API_TYPE" ? apiTypeOptions[0].value : "",
@@ -163,7 +163,7 @@ function submit() {
 		const payload: NewIntegration = {
 			customer_code: customerCode,
 			customer_name: customerName,
-			integration_name: selectedIntegration.value.integration_name,
+			integration_name: selectedIntegration.value.name,
 			integration_auth_keys: authKeysForm.value.map(o => ({
 				auth_key_name: o.key,
 				auth_value: o.value

@@ -1,0 +1,182 @@
+{
+	"v": 1,
+	"id": "e8336a90-fc5d-40b5-9988-6f2d31997964",
+	"rev": 1,
+	"name": "SOCFORTRESS_CROWDSTRIKE_PROCESSING_PIPELINE",
+	"summary": "SOCFORTRESS_CROWDSTRIKE_PROCESSING_PIPELINE",
+	"description": "",
+	"vendor": "SOCFortress",
+	"url": "",
+	"parameters": [],
+	"entities": [
+		{
+			"v": "1",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"id": "96fd8f92-220f-4b1b-b919-0a3673dda620",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "CROWDSTRIKE CREATE FIELD SYSLOG LEVEL - Info"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "CROWDSTRIKE CREATE FIELD SYSLOG LEVEL - Info"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"CROWDSTRIKE CREATE FIELD SYSLOG LEVEL - Info\"\nwhen has_field(\"severity\") AND to_long($message.severity) == 1\nthen\nset_field(\"syslog_level\", \"Info\");\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"v": "1",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"id": "c90a44d2-c749-440b-936d-6f647f4ecb12",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "CROWDSTRIKE CREATE FIELD SYSLOG LEVEL - Warning"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "CROWDSTRIKE CREATE FIELD SYSLOG LEVEL - Warning"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"CROWDSTRIKE CREATE FIELD SYSLOG LEVEL - Warning\"\nwhen has_field(\"severity\") AND to_long($message.severity) == 3\nthen\nset_field(\"syslog_level\", \"Warning\");\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"v": "1",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"id": "88be1e03-b6d4-4ab7-8d3e-4107ab05e702",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "Crowdstrike Timestamp Failsafe - UTC"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "Set Timestamp based upon `rt` field which is the time Crowdstrike ingested the message. This is a failsafe to catch if no other field names have been detected in the log that provide the timestamp value that the host assigned with the raw alert."
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"Crowdstrike Timestamp Failsafe - UTC\"\nwhen\n  ! has_field(\"timestamp_utc\")\nthen\n  let msg_timestamp = $message.rt;\n  set_field(\"timestamp_utc\", msg_timestamp);\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"v": "1",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"id": "b540613b-ba8a-4a7a-ad4f-70385df0880d",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "CROWDSTRIKE CREATE FIELD SYSLOG LEVEL - Notice"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "CROWDSTRIKE CREATE FIELD SYSLOG LEVEL - Notice"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"CROWDSTRIKE CREATE FIELD SYSLOG LEVEL - Notice\"\nwhen has_field(\"severity\") AND to_long($message.severity) == 2\nthen\nset_field(\"syslog_level\", \"Notice\");\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"v": "1",
+			"type": {
+				"name": "pipeline",
+				"version": "1"
+			},
+			"id": "aea01b0b-c5ab-4429-9104-2f735c68bf2a",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "CROWDSTRIKE PROCESSING PIPELINE"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "CROWDSTRIKE PROCESSING PIPELINE"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "pipeline \"CROWDSTRIKE PROCESSING PIPELINE\"\nstage 0 match either\nrule \"Crowdstrike Timestamp Failsafe - UTC\"\nrule \"CROWDSTRIKE CREATE FIELD SYSLOG LEVEL - Alert\"\nrule \"CROWDSTRIKE CREATE FIELD SYSLOG LEVEL - Info\"\nrule \"CROWDSTRIKE CREATE FIELD SYSLOG LEVEL - Notice\"\nrule \"CROWDSTRIKE CREATE FIELD SYSLOG LEVEL - Warning\"\nend"
+				},
+				"connected_streams": []
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		},
+		{
+			"v": "1",
+			"type": {
+				"name": "pipeline_rule",
+				"version": "1"
+			},
+			"id": "f0ebe352-2211-453f-959b-6267016b147e",
+			"data": {
+				"title": {
+					"@type": "string",
+					"@value": "CROWDSTRIKE CREATE FIELD SYSLOG LEVEL - Alert"
+				},
+				"description": {
+					"@type": "string",
+					"@value": "CROWDSTRIKE CREATE FIELD SYSLOG LEVEL - Alert"
+				},
+				"source": {
+					"@type": "string",
+					"@value": "rule \"CROWDSTRIKE CREATE FIELD SYSLOG LEVEL - Alert\"\nwhen has_field(\"severity\") AND to_long($message.severity) == 4\nthen\nset_field(\"syslog_level\", \"Alert\");\nend"
+				}
+			},
+			"constraints": [
+				{
+					"type": "server-version",
+					"version": ">=5.0.13+083613e"
+				}
+			]
+		}
+	]
+}

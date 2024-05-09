@@ -127,6 +127,8 @@ async def provision_fortinet_route(
             customer_name=customer_integration.customer_name,
             protocal_type=protocol_type,
             syslog_port=int(fortinet_keys["SYSLOG_PORT"]),
+            hot_data_retention=provision_fortinet_request.hot_data_retention,
+            index_replicas=provision_fortinet_request.index_replicas,
         ),
         keys=ProvisionFortinetKeys(**fortinet_keys),
         session=session,

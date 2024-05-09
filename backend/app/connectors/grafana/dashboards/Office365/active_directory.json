@@ -41,7 +41,7 @@
 	"panels": [
 		{
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
@@ -77,7 +77,6 @@
 				"y": 0
 			},
 			"id": 43,
-			"links": [],
 			"options": {
 				"colorMode": "value",
 				"graphMode": "area",
@@ -88,10 +87,12 @@
 					"fields": "",
 					"values": false
 				},
+				"showPercentChange": false,
 				"text": {},
-				"textMode": "auto"
+				"textMode": "auto",
+				"wideLayout": true
 			},
-			"pluginVersion": "9.3.6",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [
@@ -107,7 +108,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -127,7 +128,7 @@
 		},
 		{
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
@@ -220,7 +221,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -236,12 +237,11 @@
 				}
 			],
 			"title": "EVENTS BY OPERATION (Top 10)",
-			"transformations": [],
 			"type": "piechart"
 		},
 		{
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
@@ -251,7 +251,9 @@
 					},
 					"custom": {
 						"align": "auto",
-						"displayMode": "auto",
+						"cellOptions": {
+							"type": "auto"
+						},
 						"inspect": false
 					},
 					"mappings": [],
@@ -311,14 +313,16 @@
 			},
 			"id": 54,
 			"options": {
+				"cellHeight": "sm",
 				"footer": {
+					"countRows": false,
 					"fields": "",
 					"reducer": ["sum"],
 					"show": false
 				},
 				"showHeader": true
 			},
-			"pluginVersion": "9.3.6",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [
@@ -336,7 +340,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -375,7 +379,7 @@
 		},
 		{
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
@@ -411,7 +415,6 @@
 				"y": 0
 			},
 			"id": 59,
-			"links": [],
 			"options": {
 				"colorMode": "value",
 				"graphMode": "area",
@@ -422,10 +425,12 @@
 					"fields": "",
 					"values": false
 				},
+				"showPercentChange": false,
 				"text": {},
-				"textMode": "auto"
+				"textMode": "auto",
+				"wideLayout": true
 			},
-			"pluginVersion": "9.3.6",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [
@@ -442,7 +447,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -463,7 +468,7 @@
 		},
 		{
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
@@ -473,7 +478,9 @@
 					},
 					"custom": {
 						"align": "auto",
-						"displayMode": "auto",
+						"cellOptions": {
+							"type": "auto"
+						},
 						"inspect": false
 					},
 					"mappings": [],
@@ -533,14 +540,16 @@
 			},
 			"id": 60,
 			"options": {
+				"cellHeight": "sm",
 				"footer": {
+					"countRows": false,
 					"fields": "",
 					"reducer": ["sum"],
 					"show": false
 				},
 				"showHeader": true
 			},
-			"pluginVersion": "9.3.6",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [
@@ -558,7 +567,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -597,7 +606,7 @@
 		},
 		{
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
@@ -633,7 +642,6 @@
 				"y": 7
 			},
 			"id": 65,
-			"links": [],
 			"options": {
 				"colorMode": "value",
 				"graphMode": "area",
@@ -644,10 +652,12 @@
 					"fields": "",
 					"values": false
 				},
+				"showPercentChange": false,
 				"text": {},
-				"textMode": "auto"
+				"textMode": "auto",
+				"wideLayout": true
 			},
-			"pluginVersion": "9.3.6",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [
@@ -664,7 +674,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -685,7 +695,7 @@
 		},
 		{
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
@@ -793,7 +803,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -809,12 +819,11 @@
 				}
 			],
 			"title": "USERS ADDED EVENTS (Results)",
-			"transformations": [],
 			"type": "piechart"
 		},
 		{
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
@@ -824,7 +833,9 @@
 					},
 					"custom": {
 						"align": "auto",
-						"displayMode": "auto",
+						"cellOptions": {
+							"type": "auto"
+						},
 						"inspect": false
 					},
 					"mappings": [],
@@ -881,8 +892,10 @@
 						},
 						"properties": [
 							{
-								"id": "custom.displayMode",
-								"value": "color-text"
+								"id": "custom.cellOptions",
+								"value": {
+									"type": "color-text"
+								}
 							},
 							{
 								"id": "mappings",
@@ -914,14 +927,16 @@
 			},
 			"id": 67,
 			"options": {
+				"cellHeight": "sm",
 				"footer": {
+					"countRows": false,
 					"fields": "",
 					"reducer": ["sum"],
 					"show": false
 				},
 				"showHeader": true
 			},
-			"pluginVersion": "9.3.6",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [
@@ -939,7 +954,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -979,7 +994,7 @@
 		},
 		{
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
@@ -989,7 +1004,9 @@
 					},
 					"custom": {
 						"align": "auto",
-						"displayMode": "auto",
+						"cellOptions": {
+							"type": "auto"
+						},
 						"inspect": false
 					},
 					"mappings": [],
@@ -1046,8 +1063,10 @@
 						},
 						"properties": [
 							{
-								"id": "custom.displayMode",
-								"value": "color-text"
+								"id": "custom.cellOptions",
+								"value": {
+									"type": "color-text"
+								}
 							},
 							{
 								"id": "mappings",
@@ -1079,14 +1098,16 @@
 			},
 			"id": 68,
 			"options": {
+				"cellHeight": "sm",
 				"footer": {
+					"countRows": false,
 					"fields": "",
 					"reducer": ["sum"],
 					"show": false
 				},
 				"showHeader": true
 			},
-			"pluginVersion": "9.3.6",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [
@@ -1115,7 +1136,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -1156,7 +1177,7 @@
 		},
 		{
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
@@ -1192,7 +1213,6 @@
 				"y": 14
 			},
 			"id": 69,
-			"links": [],
 			"options": {
 				"colorMode": "value",
 				"graphMode": "area",
@@ -1203,10 +1223,12 @@
 					"fields": "",
 					"values": false
 				},
+				"showPercentChange": false,
 				"text": {},
-				"textMode": "auto"
+				"textMode": "auto",
+				"wideLayout": true
 			},
-			"pluginVersion": "9.3.6",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [
@@ -1223,7 +1245,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -1244,7 +1266,7 @@
 		},
 		{
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
@@ -1254,7 +1276,9 @@
 					},
 					"custom": {
 						"align": "auto",
-						"displayMode": "auto",
+						"cellOptions": {
+							"type": "auto"
+						},
 						"inspect": false
 					},
 					"mappings": [],
@@ -1311,8 +1335,10 @@
 						},
 						"properties": [
 							{
-								"id": "custom.displayMode",
-								"value": "color-text"
+								"id": "custom.cellOptions",
+								"value": {
+									"type": "color-text"
+								}
 							},
 							{
 								"id": "mappings",
@@ -1340,14 +1366,16 @@
 			},
 			"id": 70,
 			"options": {
+				"cellHeight": "sm",
 				"footer": {
+					"countRows": false,
 					"fields": "",
 					"reducer": ["sum"],
 					"show": false
 				},
 				"showHeader": true
 			},
-			"pluginVersion": "9.3.6",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [
@@ -1365,7 +1393,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -1405,7 +1433,7 @@
 		},
 		{
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
@@ -1415,7 +1443,9 @@
 					},
 					"custom": {
 						"align": "auto",
-						"displayMode": "auto",
+						"cellOptions": {
+							"type": "auto"
+						},
 						"inspect": false
 					},
 					"mappings": [],
@@ -1472,8 +1502,10 @@
 						},
 						"properties": [
 							{
-								"id": "custom.displayMode",
-								"value": "color-text"
+								"id": "custom.cellOptions",
+								"value": {
+									"type": "color-text"
+								}
 							},
 							{
 								"id": "mappings",
@@ -1501,14 +1533,16 @@
 			},
 			"id": 71,
 			"options": {
+				"cellHeight": "sm",
 				"footer": {
+					"countRows": false,
 					"fields": "",
 					"reducer": ["sum"],
 					"show": false
 				},
 				"showHeader": true
 			},
-			"pluginVersion": "9.3.6",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [
@@ -1537,7 +1571,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -1579,7 +1613,7 @@
 		},
 		{
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
@@ -1615,7 +1649,6 @@
 				"y": 14
 			},
 			"id": 73,
-			"links": [],
 			"options": {
 				"colorMode": "value",
 				"graphMode": "area",
@@ -1626,10 +1659,12 @@
 					"fields": "",
 					"values": false
 				},
+				"showPercentChange": false,
 				"text": {},
-				"textMode": "auto"
+				"textMode": "auto",
+				"wideLayout": true
 			},
-			"pluginVersion": "9.3.6",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [
@@ -1646,7 +1681,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -1667,7 +1702,7 @@
 		},
 		{
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
@@ -1677,7 +1712,9 @@
 					},
 					"custom": {
 						"align": "auto",
-						"displayMode": "auto",
+						"cellOptions": {
+							"type": "auto"
+						},
 						"inspect": false
 					},
 					"mappings": [],
@@ -1734,8 +1771,10 @@
 						},
 						"properties": [
 							{
-								"id": "custom.displayMode",
-								"value": "color-text"
+								"id": "custom.cellOptions",
+								"value": {
+									"type": "color-text"
+								}
 							},
 							{
 								"id": "mappings",
@@ -1763,14 +1802,16 @@
 			},
 			"id": 74,
 			"options": {
+				"cellHeight": "sm",
 				"footer": {
+					"countRows": false,
 					"fields": "",
 					"reducer": ["sum"],
 					"show": false
 				},
 				"showHeader": true
 			},
-			"pluginVersion": "9.3.6",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [
@@ -1799,7 +1840,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -1841,7 +1882,7 @@
 		},
 		{
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
@@ -1877,7 +1918,6 @@
 				"y": 21
 			},
 			"id": 61,
-			"links": [],
 			"options": {
 				"colorMode": "value",
 				"graphMode": "area",
@@ -1888,10 +1928,12 @@
 					"fields": "",
 					"values": false
 				},
+				"showPercentChange": false,
 				"text": {},
-				"textMode": "auto"
+				"textMode": "auto",
+				"wideLayout": true
 			},
-			"pluginVersion": "9.3.6",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [
@@ -1907,7 +1949,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -1926,40 +1968,122 @@
 			"type": "stat"
 		},
 		{
-			"circleMaxSize": 30,
-			"circleMinSize": 2,
-			"colors": ["rgba(245, 54, 54, 0.9)", "rgba(237, 129, 40, 0.89)", "rgba(50, 172, 45, 0.97)"],
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
-			"decimals": 0,
-			"esMetric": "Count",
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"custom": {
+						"hideFrom": {
+							"legend": false,
+							"tooltip": false,
+							"viz": false
+						}
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "rgba(245, 54, 54, 0.9)",
+								"value": null
+							},
+							{
+								"color": "rgba(237, 129, 40, 0.89)",
+								"value": 0
+							},
+							{
+								"color": "rgba(50, 172, 45, 0.97)",
+								"value": 10
+							}
+						]
+					}
+				},
+				"overrides": []
+			},
 			"gridPos": {
 				"h": 14,
 				"w": 10,
 				"x": 4,
 				"y": 21
 			},
-			"hideEmpty": false,
-			"hideZero": false,
 			"id": 62,
-			"initialZoom": 1,
-			"locationData": "countries",
-			"mapCenter": "(0°, 0°)",
-			"mapCenterLatitude": 0,
-			"mapCenterLongitude": 0,
 			"maxDataPoints": 1,
-			"mouseWheelZoom": false,
-			"showLegend": true,
-			"stickyLabels": false,
-			"tableQueryOptions": {
-				"geohashField": "geohash",
-				"latitudeField": "latitude",
-				"longitudeField": "longitude",
-				"metricField": "metric",
-				"queryType": "geohash"
+			"options": {
+				"basemap": {
+					"name": "Basemap",
+					"type": "default"
+				},
+				"controls": {
+					"mouseWheelZoom": false,
+					"showAttribution": true,
+					"showDebug": false,
+					"showMeasure": false,
+					"showScale": false,
+					"showZoom": true
+				},
+				"layers": [
+					{
+						"config": {
+							"showLegend": true,
+							"style": {
+								"color": {
+									"fixed": "dark-green"
+								},
+								"opacity": 0.4,
+								"rotation": {
+									"fixed": 0,
+									"max": 360,
+									"min": -360,
+									"mode": "mod"
+								},
+								"size": {
+									"fixed": 5,
+									"max": 30,
+									"min": 2
+								},
+								"symbol": {
+									"fixed": "img/icons/marker/circle.svg",
+									"mode": "fixed"
+								},
+								"symbolAlign": {
+									"horizontal": "center",
+									"vertical": "center"
+								},
+								"textConfig": {
+									"fontSize": 12,
+									"offsetX": 0,
+									"offsetY": 0,
+									"textAlign": "center",
+									"textBaseline": "middle"
+								}
+							}
+						},
+						"location": {
+							"gazetteer": "public/gazetteer/countries.json",
+							"mode": "lookup"
+						},
+						"name": "Layer 0",
+						"tooltip": true,
+						"type": "markers"
+					}
+				],
+				"tooltip": {
+					"mode": "details"
+				},
+				"view": {
+					"allLayers": true,
+					"id": "zero",
+					"lat": 0,
+					"lon": 0,
+					"zoom": 1
+				}
 			},
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [
@@ -1987,7 +2111,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -2002,16 +2126,20 @@
 					"timeField": "timestamp"
 				}
 			],
-			"thresholds": "0,10",
 			"title": "AUTHS NON TRUSTED SOURCE BY COUNTRY",
-			"type": "grafana-worldmap-panel",
-			"unitPlural": "",
-			"unitSingle": "",
-			"valueName": "total"
+			"transformations": [
+				{
+					"id": "reduce",
+					"options": {
+						"reducers": ["sum"]
+					}
+				}
+			],
+			"type": "geomap"
 		},
 		{
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
@@ -2021,7 +2149,9 @@
 					},
 					"custom": {
 						"align": "auto",
-						"displayMode": "auto",
+						"cellOptions": {
+							"type": "auto"
+						},
 						"inspect": false
 					},
 					"mappings": [],
@@ -2058,8 +2188,10 @@
 								"id": "custom.align"
 							},
 							{
-								"id": "custom.displayMode",
-								"value": "color-text"
+								"id": "custom.cellOptions",
+								"value": {
+									"type": "color-text"
+								}
 							}
 						]
 					},
@@ -2074,8 +2206,10 @@
 								"value": 377
 							},
 							{
-								"id": "custom.displayMode",
-								"value": "color-text"
+								"id": "custom.cellOptions",
+								"value": {
+									"type": "color-text"
+								}
 							}
 						]
 					},
@@ -2090,8 +2224,10 @@
 								"value": 166
 							},
 							{
-								"id": "custom.displayMode",
-								"value": "color-text"
+								"id": "custom.cellOptions",
+								"value": {
+									"type": "color-text"
+								}
 							}
 						]
 					},
@@ -2102,8 +2238,10 @@
 						},
 						"properties": [
 							{
-								"id": "custom.displayMode",
-								"value": "color-text"
+								"id": "custom.cellOptions",
+								"value": {
+									"type": "color-text"
+								}
 							}
 						]
 					}
@@ -2117,7 +2255,9 @@
 			},
 			"id": 63,
 			"options": {
+				"cellHeight": "sm",
 				"footer": {
+					"countRows": false,
 					"fields": "",
 					"reducer": ["sum"],
 					"show": false
@@ -2125,7 +2265,7 @@
 				"showHeader": true,
 				"sortBy": []
 			},
-			"pluginVersion": "9.3.6",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [
@@ -2165,7 +2305,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -2208,7 +2348,7 @@
 		},
 		{
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
@@ -2244,7 +2384,6 @@
 				"y": 28
 			},
 			"id": 64,
-			"links": [],
 			"options": {
 				"colorMode": "value",
 				"graphMode": "area",
@@ -2255,10 +2394,12 @@
 					"fields": "",
 					"values": false
 				},
+				"showPercentChange": false,
 				"text": {},
-				"textMode": "auto"
+				"textMode": "auto",
+				"wideLayout": true
 			},
-			"pluginVersion": "9.3.6",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [
@@ -2274,7 +2415,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -2294,7 +2435,7 @@
 		},
 		{
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
@@ -2343,8 +2484,9 @@
 				"y": 35
 			},
 			"id": 16,
-			"links": [],
 			"options": {
+				"minVizHeight": 75,
+				"minVizWidth": 75,
 				"orientation": "horizontal",
 				"reduceOptions": {
 					"calcs": ["max"],
@@ -2353,9 +2495,10 @@
 				},
 				"showThresholdLabels": false,
 				"showThresholdMarkers": true,
+				"sizing": "auto",
 				"text": {}
 			},
-			"pluginVersion": "9.3.6",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [
@@ -2371,7 +2514,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -2393,7 +2536,7 @@
 		},
 		{
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
@@ -2402,6 +2545,7 @@
 						"mode": "palette-classic"
 					},
 					"custom": {
+						"axisBorderShow": false,
 						"axisCenteredZero": false,
 						"axisColorMode": "text",
 						"axisLabel": "",
@@ -2415,6 +2559,7 @@
 							"tooltip": false,
 							"viz": false
 						},
+						"insertNulls": false,
 						"lineInterpolation": "linear",
 						"lineWidth": 1,
 						"pointSize": 5,
@@ -2492,7 +2637,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -2512,7 +2657,7 @@
 		},
 		{
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
@@ -2548,7 +2693,6 @@
 				"y": 42
 			},
 			"id": 51,
-			"links": [],
 			"options": {
 				"colorMode": "value",
 				"graphMode": "area",
@@ -2559,10 +2703,12 @@
 					"fields": "",
 					"values": false
 				},
+				"showPercentChange": false,
 				"text": {},
-				"textMode": "auto"
+				"textMode": "auto",
+				"wideLayout": true
 			},
-			"pluginVersion": "9.3.6",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [
@@ -2579,7 +2725,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -2600,7 +2746,7 @@
 		},
 		{
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
@@ -2636,7 +2782,6 @@
 				"y": 48
 			},
 			"id": 52,
-			"links": [],
 			"options": {
 				"colorMode": "value",
 				"graphMode": "area",
@@ -2647,10 +2792,12 @@
 					"fields": "",
 					"values": false
 				},
+				"showPercentChange": false,
 				"text": {},
-				"textMode": "auto"
+				"textMode": "auto",
+				"wideLayout": true
 			},
-			"pluginVersion": "9.3.6",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [
@@ -2667,7 +2814,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -2687,40 +2834,122 @@
 			"type": "stat"
 		},
 		{
-			"circleMaxSize": 30,
-			"circleMinSize": 2,
-			"colors": ["rgba(245, 54, 54, 0.9)", "rgba(237, 129, 40, 0.89)", "rgba(50, 172, 45, 0.97)"],
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
-			"decimals": 0,
-			"esMetric": "Count",
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"custom": {
+						"hideFrom": {
+							"legend": false,
+							"tooltip": false,
+							"viz": false
+						}
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "rgba(245, 54, 54, 0.9)",
+								"value": null
+							},
+							{
+								"color": "rgba(237, 129, 40, 0.89)",
+								"value": 0
+							},
+							{
+								"color": "rgba(50, 172, 45, 0.97)",
+								"value": 10
+							}
+						]
+					}
+				},
+				"overrides": []
+			},
 			"gridPos": {
 				"h": 12,
 				"w": 10,
 				"x": 4,
 				"y": 48
 			},
-			"hideEmpty": false,
-			"hideZero": false,
 			"id": 50,
-			"initialZoom": 1,
-			"locationData": "countries",
-			"mapCenter": "(0°, 0°)",
-			"mapCenterLatitude": 0,
-			"mapCenterLongitude": 0,
 			"maxDataPoints": 1,
-			"mouseWheelZoom": false,
-			"showLegend": true,
-			"stickyLabels": false,
-			"tableQueryOptions": {
-				"geohashField": "geohash",
-				"latitudeField": "latitude",
-				"longitudeField": "longitude",
-				"metricField": "metric",
-				"queryType": "geohash"
+			"options": {
+				"basemap": {
+					"name": "Basemap",
+					"type": "default"
+				},
+				"controls": {
+					"mouseWheelZoom": false,
+					"showAttribution": true,
+					"showDebug": false,
+					"showMeasure": false,
+					"showScale": false,
+					"showZoom": true
+				},
+				"layers": [
+					{
+						"config": {
+							"showLegend": true,
+							"style": {
+								"color": {
+									"fixed": "dark-green"
+								},
+								"opacity": 0.4,
+								"rotation": {
+									"fixed": 0,
+									"max": 360,
+									"min": -360,
+									"mode": "mod"
+								},
+								"size": {
+									"fixed": 5,
+									"max": 30,
+									"min": 2
+								},
+								"symbol": {
+									"fixed": "img/icons/marker/circle.svg",
+									"mode": "fixed"
+								},
+								"symbolAlign": {
+									"horizontal": "center",
+									"vertical": "center"
+								},
+								"textConfig": {
+									"fontSize": 12,
+									"offsetX": 0,
+									"offsetY": 0,
+									"textAlign": "center",
+									"textBaseline": "middle"
+								}
+							}
+						},
+						"location": {
+							"gazetteer": "public/gazetteer/countries.json",
+							"mode": "lookup"
+						},
+						"name": "Layer 0",
+						"tooltip": true,
+						"type": "markers"
+					}
+				],
+				"tooltip": {
+					"mode": "details"
+				},
+				"view": {
+					"allLayers": true,
+					"id": "zero",
+					"lat": 0,
+					"lon": 0,
+					"zoom": 1
+				}
 			},
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [
@@ -2748,7 +2977,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -2763,16 +2992,20 @@
 					"timeField": "timestamp"
 				}
 			],
-			"thresholds": "0,10",
 			"title": "AZURE AD - ALL AUTH EVENTS BY COUNTRY",
-			"type": "grafana-worldmap-panel",
-			"unitPlural": "",
-			"unitSingle": "",
-			"valueName": "total"
+			"transformations": [
+				{
+					"id": "reduce",
+					"options": {
+						"reducers": ["sum"]
+					}
+				}
+			],
+			"type": "geomap"
 		},
 		{
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
@@ -2782,7 +3015,9 @@
 					},
 					"custom": {
 						"align": "auto",
-						"displayMode": "auto",
+						"cellOptions": {
+							"type": "auto"
+						},
 						"filterable": true,
 						"inspect": false
 					},
@@ -2820,8 +3055,10 @@
 								"id": "custom.align"
 							},
 							{
-								"id": "custom.displayMode",
-								"value": "color-text"
+								"id": "custom.cellOptions",
+								"value": {
+									"type": "color-text"
+								}
 							}
 						]
 					},
@@ -2836,8 +3073,10 @@
 								"value": 377
 							},
 							{
-								"id": "custom.displayMode",
-								"value": "color-text"
+								"id": "custom.cellOptions",
+								"value": {
+									"type": "color-text"
+								}
 							}
 						]
 					},
@@ -2852,8 +3091,10 @@
 								"value": 326
 							},
 							{
-								"id": "custom.displayMode",
-								"value": "color-text"
+								"id": "custom.cellOptions",
+								"value": {
+									"type": "color-text"
+								}
 							},
 							{
 								"id": "links",
@@ -2877,7 +3118,9 @@
 			},
 			"id": 58,
 			"options": {
+				"cellHeight": "sm",
 				"footer": {
+					"countRows": false,
 					"fields": "",
 					"reducer": ["sum"],
 					"show": false
@@ -2885,7 +3128,7 @@
 				"showHeader": true,
 				"sortBy": []
 			},
-			"pluginVersion": "9.3.6",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [
@@ -2907,7 +3150,7 @@
 							"settings": {
 								"min_doc_count": "1",
 								"order": "desc",
-								"orderBy": "_term",
+								"orderBy": "_count",
 								"size": "10"
 							},
 							"type": "terms"
@@ -2925,7 +3168,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -2942,12 +3185,6 @@
 			],
 			"title": "FAILED AUTHS BY ACCOUNT AND ERROR",
 			"transformations": [
-				{
-					"id": "merge",
-					"options": {
-						"reducers": []
-					}
-				},
 				{
 					"id": "organize",
 					"options": {
@@ -2967,7 +3204,7 @@
 		},
 		{
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
@@ -3003,7 +3240,6 @@
 				"y": 54
 			},
 			"id": 18,
-			"links": [],
 			"options": {
 				"colorMode": "value",
 				"graphMode": "area",
@@ -3014,10 +3250,12 @@
 					"fields": "",
 					"values": false
 				},
+				"showPercentChange": false,
 				"text": {},
-				"textMode": "auto"
+				"textMode": "auto",
+				"wideLayout": true
 			},
-			"pluginVersion": "9.3.6",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [
@@ -3034,7 +3272,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -3055,7 +3293,7 @@
 		},
 		{
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
@@ -3089,17 +3327,21 @@
 			"id": 57,
 			"options": {
 				"displayMode": "gradient",
+				"maxVizHeight": 300,
 				"minVizHeight": 10,
 				"minVizWidth": 0,
+				"namePlacement": "auto",
 				"orientation": "horizontal",
 				"reduceOptions": {
 					"calcs": ["sum"],
 					"fields": "",
 					"values": false
 				},
-				"showUnfilled": true
+				"showUnfilled": true,
+				"sizing": "auto",
+				"valueMode": "color"
 			},
-			"pluginVersion": "9.3.6",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"alias": "",
@@ -3128,7 +3370,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -3147,7 +3389,7 @@
 		},
 		{
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
@@ -3181,17 +3423,21 @@
 			"id": 72,
 			"options": {
 				"displayMode": "gradient",
+				"maxVizHeight": 300,
 				"minVizHeight": 10,
 				"minVizWidth": 0,
+				"namePlacement": "auto",
 				"orientation": "horizontal",
 				"reduceOptions": {
 					"calcs": ["sum"],
 					"fields": "",
 					"values": false
 				},
-				"showUnfilled": true
+				"showUnfilled": true,
+				"sizing": "auto",
+				"valueMode": "color"
 			},
-			"pluginVersion": "9.3.6",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"alias": "",
@@ -3220,7 +3466,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -3239,7 +3485,7 @@
 		},
 		{
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
@@ -3249,7 +3495,9 @@
 					},
 					"custom": {
 						"align": "auto",
-						"displayMode": "auto",
+						"cellOptions": {
+							"type": "auto"
+						},
 						"filterable": true,
 						"inspect": false
 					},
@@ -3288,8 +3536,11 @@
 								"value": -1
 							},
 							{
-								"id": "custom.displayMode",
-								"value": "color-background"
+								"id": "custom.cellOptions",
+								"value": {
+									"mode": "gradient",
+									"type": "color-background"
+								}
 							},
 							{
 								"id": "custom.align"
@@ -3415,8 +3666,10 @@
 								]
 							},
 							{
-								"id": "custom.displayMode",
-								"value": "color-text"
+								"id": "custom.cellOptions",
+								"value": {
+									"type": "color-text"
+								}
 							}
 						]
 					},
@@ -3466,7 +3719,9 @@
 			},
 			"id": 27,
 			"options": {
+				"cellHeight": "sm",
 				"footer": {
+					"countRows": false,
 					"enablePagination": true,
 					"fields": "",
 					"reducer": ["sum"],
@@ -3475,12 +3730,12 @@
 				"showHeader": true,
 				"sortBy": []
 			},
-			"pluginVersion": "9.3.6",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -4089,14 +4344,13 @@
 		}
 	],
 	"refresh": false,
-	"schemaVersion": 37,
-	"style": "dark",
+	"schemaVersion": 39,
 	"tags": ["O365"],
 	"templating": {
 		"list": [
 			{
 				"datasource": {
-					"type": "elasticsearch",
+					"type": "grafana-opensearch-datasource",
 					"uid": "replace_datasource_uid"
 				},
 				"filters": [],
@@ -4113,7 +4367,7 @@
 					"value": "$__all"
 				},
 				"datasource": {
-					"type": "elasticsearch",
+					"type": "grafana-opensearch-datasource",
 					"uid": "replace_datasource_uid"
 				},
 				"definition": "{ \"find\": \"terms\", \"field\": \"data_office365_Operation\", \"query\": \"data_office365_Workload:AzureActiveDirectory\"}",
@@ -4140,7 +4394,7 @@
 					"value": "$__all"
 				},
 				"datasource": {
-					"type": "elasticsearch",
+					"type": "grafana-opensearch-datasource",
 					"uid": "replace_datasource_uid"
 				},
 				"definition": "{ \"find\": \"terms\", \"field\": \"rule_level\", \"query\": \"\"}",
@@ -4160,7 +4414,7 @@
 		]
 	},
 	"time": {
-		"from": "now-24h",
+		"from": "now-6h",
 		"to": "now"
 	},
 	"timepicker": {

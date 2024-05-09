@@ -207,9 +207,12 @@ async def run_job_manually(job_id: str, session: AsyncSession = Depends(get_db))
     try:
         # Retrieve the function associated with the job and run it
         job_function = get_function_by_name(job.name)  # Ensure this function maps job names to function objects
+        logger.info(f"Running job {job_id} manually")
         if asyncio.iscoroutinefunction(job_function):
+            logger.info(f"Running async job {job_id}")
             result = await job_function()  # Execute the function if it's async
         else:
+            logger.info(f"Running sync job {job_id}")
             result = job_function()  # Execute synchronously if not an async function
 
         return {"success": True, "message": "Job executed successfully", "result": result}

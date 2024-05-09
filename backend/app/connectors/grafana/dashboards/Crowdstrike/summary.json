@@ -1,0 +1,3624 @@
+{
+	"annotations": {
+		"list": [
+			{
+				"builtIn": 1,
+				"datasource": {
+					"type": "datasource",
+					"uid": "grafana"
+				},
+				"enable": true,
+				"hide": true,
+				"iconColor": "rgba(0, 211, 255, 1)",
+				"name": "Annotations & Alerts",
+				"target": {
+					"limit": 100,
+					"matchAny": false,
+					"tags": [],
+					"type": "dashboard"
+				},
+				"type": "dashboard"
+			}
+		]
+	},
+	"editable": false,
+	"fiscalYearStartMonth": 0,
+	"graphTooltip": 0,
+	"id": null,
+	"links": [
+		{
+			"asDropdown": true,
+			"icon": "external link",
+			"includeVars": true,
+			"keepTime": true,
+			"tags": ["EDR"],
+			"targetBlank": true,
+			"title": "",
+			"type": "dashboards"
+		}
+	],
+	"liveNow": false,
+	"panels": [
+		{
+			"collapsed": false,
+			"datasource": {
+				"type": "datasource",
+				"uid": "grafana"
+			},
+			"gridPos": {
+				"h": 1,
+				"w": 24,
+				"x": 0,
+				"y": 0
+			},
+			"id": 72,
+			"panels": [],
+			"title": "CROWDSTRIKE - SUMMARY",
+			"type": "row"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"fixedColor": "orange",
+						"mode": "fixed"
+					},
+					"mappings": [
+						{
+							"options": {
+								"match": "null",
+								"result": {
+									"text": "N/A"
+								}
+							},
+							"type": "special"
+						}
+					],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "blue",
+								"value": null
+							}
+						]
+					},
+					"unit": "short"
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 4,
+				"x": 0,
+				"y": 1
+			},
+			"id": 120,
+			"links": [],
+			"options": {
+				"colorMode": "value",
+				"graphMode": "area",
+				"justifyMode": "auto",
+				"orientation": "horizontal",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"text": {},
+				"textMode": "auto"
+			},
+			"pluginVersion": "9.2.4",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"$$hashKey": "object:50",
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto",
+								"min_doc_count": 0,
+								"trimEdges": 0
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "CROWDSTRIKE EDR - EVENTS",
+			"type": "stat"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"fixedColor": "orange",
+						"mode": "fixed"
+					},
+					"custom": {
+						"align": "auto",
+						"displayMode": "color-text",
+						"filterable": false,
+						"inspect": false
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					}
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "data_event_ComputerName"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 492
+							},
+							{
+								"id": "displayName",
+								"value": "CROWDSTRIKE AGENT"
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "CROWDSTRIKE AGENT"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 358
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 8,
+				"x": 4,
+				"y": 1
+			},
+			"id": 121,
+			"links": [],
+			"maxDataPoints": 3,
+			"options": {
+				"footer": {
+					"fields": "",
+					"reducer": ["sum"],
+					"show": false
+				},
+				"showHeader": true,
+				"sortBy": []
+			},
+			"pluginVersion": "9.2.4",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"$$hashKey": "object:73",
+							"fake": true,
+							"field": "dhost",
+							"id": "3",
+							"settings": {
+								"min_doc_count": 1,
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "0"
+							},
+							"type": "terms"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"$$hashKey": "object:71",
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "CROWDSTRIKE - AGENTS",
+			"transformations": [
+				{
+					"id": "organize",
+					"options": {
+						"excludeByName": {},
+						"indexByName": {},
+						"renameByName": {
+							"dhost": "AGENT"
+						}
+					}
+				}
+			],
+			"type": "table"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"fixedColor": "orange",
+						"mode": "fixed"
+					},
+					"custom": {
+						"align": "auto",
+						"displayMode": "color-text",
+						"filterable": false,
+						"inspect": false
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					}
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "data_event_ComputerName"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 492
+							},
+							{
+								"id": "displayName",
+								"value": "CROWDSTRIKE AGENT"
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "CROWDSTRIKE AGENT"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 358
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 12,
+				"x": 12,
+				"y": 1
+			},
+			"id": 123,
+			"links": [],
+			"maxDataPoints": 3,
+			"options": {
+				"footer": {
+					"fields": "",
+					"reducer": ["sum"],
+					"show": false
+				},
+				"showHeader": true,
+				"sortBy": []
+			},
+			"pluginVersion": "9.2.4",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"$$hashKey": "object:73",
+							"fake": true,
+							"field": "event_class_id",
+							"id": "3",
+							"settings": {
+								"min_doc_count": 1,
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "0"
+							},
+							"type": "terms"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"$$hashKey": "object:71",
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "CROWDSTRIKE EDR - EVENTS/TYPE",
+			"transformations": [
+				{
+					"id": "organize",
+					"options": {
+						"excludeByName": {},
+						"indexByName": {},
+						"renameByName": {
+							"data_metadata_eventType": "EVENT TYPE",
+							"event_class_id": "TYPE"
+						}
+					}
+				}
+			],
+			"type": "table"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "palette-classic"
+					},
+					"custom": {
+						"hideFrom": {
+							"legend": false,
+							"tooltip": false,
+							"viz": false
+						}
+					},
+					"decimals": 0,
+					"mappings": [],
+					"unit": "short"
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "1"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#FF9830",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "Alert"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#F2495C",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "Error"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#F2495C",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "Info"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#73BF69",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "NOTICE"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#5794F2",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "Notice"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#5794F2",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "Result"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#B877D9",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "Warning"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#FF9830",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "INFORMATION"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "green",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "WARNING"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "orange",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "ERROR"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "red",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "medium"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "orange",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "high"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "red",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "High"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "red",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "Medium"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "orange",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "Low"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "green",
+									"mode": "fixed"
+								}
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 4,
+				"x": 0,
+				"y": 8
+			},
+			"id": 68,
+			"links": [],
+			"maxDataPoints": 3,
+			"options": {
+				"displayLabels": [],
+				"legend": {
+					"calcs": [],
+					"displayMode": "list",
+					"placement": "right",
+					"showLegend": false,
+					"values": ["value"]
+				},
+				"pieType": "donut",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"text": {},
+				"tooltip": {
+					"mode": "single",
+					"sort": "none"
+				}
+			},
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"$$hashKey": "object:73",
+							"fake": true,
+							"field": "severity",
+							"id": "3",
+							"settings": {
+								"min_doc_count": 1,
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "0"
+							},
+							"type": "terms"
+						},
+						{
+							"$$hashKey": "object:74",
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto",
+								"min_doc_count": 0,
+								"trimEdges": 0
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"$$hashKey": "object:71",
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "CROWDSTRIKE EDR - SEVERITY LEVELS",
+			"type": "piechart"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"custom": {
+						"align": "auto",
+						"displayMode": "auto",
+						"filterable": false,
+						"inspect": false
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					}
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "SEVERITY"
+						},
+						"properties": [
+							{
+								"id": "mappings",
+								"value": [
+									{
+										"options": {
+											"High": {
+												"color": "red",
+												"index": 0
+											},
+											"Low": {
+												"color": "green",
+												"index": 2
+											},
+											"Medium": {
+												"color": "orange",
+												"index": 1
+											}
+										},
+										"type": "value"
+									}
+								]
+							},
+							{
+								"id": "custom.displayMode",
+								"value": "color-text"
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 6,
+				"x": 4,
+				"y": 8
+			},
+			"id": 135,
+			"links": [],
+			"maxDataPoints": 3,
+			"options": {
+				"footer": {
+					"fields": "",
+					"reducer": ["sum"],
+					"show": false
+				},
+				"showHeader": true,
+				"sortBy": []
+			},
+			"pluginVersion": "9.2.4",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"$$hashKey": "object:73",
+							"fake": true,
+							"field": "name",
+							"id": "3",
+							"settings": {
+								"min_doc_count": 1,
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "0"
+							},
+							"type": "terms"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"$$hashKey": "object:71",
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "CROWDSTRIKE EDR - EVENT GROUPS",
+			"transformations": [
+				{
+					"id": "organize",
+					"options": {
+						"excludeByName": {},
+						"indexByName": {},
+						"renameByName": {
+							"data_event_SeverityName": "SEVERITY",
+							"data_group": "Event Group",
+							"name": "NAME"
+						}
+					}
+				}
+			],
+			"type": "table"
+		},
+		{
+			"aliasColors": {},
+			"bars": true,
+			"dashLength": 10,
+			"dashes": false,
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fill": 1,
+			"fillGradient": 0,
+			"gridPos": {
+				"h": 7,
+				"w": 14,
+				"x": 10,
+				"y": 8
+			},
+			"hiddenSeries": false,
+			"id": 83,
+			"legend": {
+				"alignAsTable": true,
+				"avg": false,
+				"current": false,
+				"max": false,
+				"min": false,
+				"rightSide": true,
+				"show": true,
+				"total": false,
+				"values": false
+			},
+			"lines": false,
+			"linewidth": 1,
+			"links": [],
+			"maxDataPoints": 3,
+			"nullPointMode": "null",
+			"options": {
+				"alertThreshold": true
+			},
+			"percentage": false,
+			"pluginVersion": "9.2.4",
+			"pointradius": 2,
+			"points": false,
+			"renderer": "flot",
+			"seriesOverrides": [],
+			"spaceLength": 10,
+			"stack": true,
+			"steppedLine": false,
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "dhost",
+							"id": "4",
+							"settings": {
+								"min_doc_count": "1",
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "10"
+							},
+							"type": "terms"
+						},
+						{
+							"field": "timestamp",
+							"id": "5",
+							"settings": {
+								"interval": "auto",
+								"min_doc_count": "0",
+								"trimEdges": "0"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"$$hashKey": "object:71",
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"thresholds": [],
+			"timeRegions": [],
+			"title": "CROWDSTRIKE - EVENTS BY AGENT (HISTOGRAM)",
+			"tooltip": {
+				"shared": true,
+				"sort": 0,
+				"value_type": "individual"
+			},
+			"type": "graph",
+			"xaxis": {
+				"mode": "time",
+				"show": true,
+				"values": []
+			},
+			"yaxes": [
+				{
+					"format": "short",
+					"logBase": 1,
+					"show": true
+				},
+				{
+					"format": "short",
+					"logBase": 1,
+					"show": true
+				}
+			],
+			"yaxis": {
+				"align": false
+			}
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"custom": {
+						"align": "auto",
+						"displayMode": "auto",
+						"inspect": false
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					}
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "DATE/TIME"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 202
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "EVENT ID"
+						},
+						"properties": [
+							{
+								"id": "links",
+								"value": [
+									{
+										"targetBlank": true,
+										"title": "VIEW EVENT DETAILS",
+										"url": "https://paschoalotto.soc.gemina.io/explore?left=%5B%22now-6h%22,%22now%22,%22CROWDSTRIKE%22,%7B%22refId%22:%22A%22,%22query%22:%22_id:${__value.text}%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D"
+									}
+								]
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "SEVERITY"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 122
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "CROWDSTRIKE AGENT"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 157
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "USER ACCOUNT"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 239
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "SEVERITY"
+						},
+						"properties": [
+							{
+								"id": "custom.displayMode",
+								"value": "color-text"
+							},
+							{
+								"id": "mappings",
+								"value": [
+									{
+										"options": {
+											"High": {
+												"color": "red",
+												"index": 2
+											},
+											"Medium": {
+												"color": "orange",
+												"index": 1
+											},
+											"low": {
+												"color": "green",
+												"index": 0
+											}
+										},
+										"type": "value"
+									}
+								]
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "AGENT IP"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 173
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 10,
+				"w": 24,
+				"x": 0,
+				"y": 15
+			},
+			"id": 89,
+			"options": {
+				"footer": {
+					"fields": "",
+					"reducer": ["sum"],
+					"show": false
+				},
+				"showHeader": true,
+				"sortBy": []
+			},
+			"pluginVersion": "9.2.4",
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"id": "1",
+							"settings": {
+								"size": "500"
+							},
+							"type": "raw_data"
+						}
+					],
+					"query": "",
+					"queryType": "randomWalk",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "CROWDSTRIKE - EVENTS",
+			"transformations": [
+				{
+					"id": "organize",
+					"options": {
+						"excludeByName": {
+							"@metadata_beat": true,
+							"@metadata_type": true,
+							"@metadata_version": true,
+							"AccessedDocFileName": true,
+							"AccessedDocFilePath": true,
+							"CommandLine": true,
+							"ExeWrittenTimestamp": true,
+							"FalconHostLink": true,
+							"Offset": true,
+							"ParentProcessId": true,
+							"ProcessId": true,
+							"QuarantineFilePath": true,
+							"QuarantineFileSHA256": true,
+							"Timestamp": true,
+							"WrittenExeFileName": true,
+							"WrittenExeFilePath": true,
+							"_id": false,
+							"_index": true,
+							"_type": true,
+							"agent_ephemeral_id": true,
+							"agent_hostname": true,
+							"agent_id": true,
+							"agent_ip": false,
+							"agent_ip_city_name": true,
+							"agent_ip_country_code": true,
+							"agent_ip_geolocation": true,
+							"agent_labels_customer": true,
+							"agent_name": true,
+							"agent_type": true,
+							"agent_version": true,
+							"beats_type": true,
+							"c6a2": true,
+							"cat": true,
+							"cluster_name": true,
+							"cluster_node": true,
+							"collector_node_id": true,
+							"data_appCerts": true,
+							"data_appSha256": true,
+							"data_core_remedy_items_items": true,
+							"data_core_remedy_items_totalItems": true,
+							"data_customer_id": true,
+							"data_data_core_remedy_items_items": true,
+							"data_data_core_remedy_items_totalItems": true,
+							"data_data_created_at": true,
+							"data_data_endpoint_id": true,
+							"data_data_endpoint_java_id": true,
+							"data_data_endpoint_platform": true,
+							"data_data_endpoint_type": true,
+							"data_data_event_service_id": true,
+							"data_data_hmpa_exploit_app_name": true,
+							"data_data_hmpa_exploit_details": true,
+							"data_data_hmpa_exploit_family_id": true,
+							"data_data_hmpa_exploit_mitigation": true,
+							"data_data_hmpa_exploit_process_alias_path": true,
+							"data_data_hmpa_exploit_process_name": true,
+							"data_data_hmpa_exploit_process_path": true,
+							"data_data_hmpa_exploit_process_pid": true,
+							"data_data_hmpa_exploit_process_version": true,
+							"data_data_hmpa_exploit_thumbprint": true,
+							"data_data_hmpa_exploit_type": true,
+							"data_data_hmpa_exploit_uid": true,
+							"data_data_hmpa_exploit_version": true,
+							"data_data_hmpa_exploit_version_city_name": true,
+							"data_data_hmpa_exploit_version_country_code": true,
+							"data_data_hmpa_exploit_version_geolocation": true,
+							"data_data_inserted_at": true,
+							"data_data_source_app_id": true,
+							"data_data_source_info_ip": true,
+							"data_data_source_info_ip_city_name": true,
+							"data_data_source_info_ip_country_code": true,
+							"data_data_source_info_ip_geolocation": true,
+							"data_data_threat_id_counter": true,
+							"data_data_threat_id_date": true,
+							"data_data_threat_id_machineIdentifier": true,
+							"data_data_threat_id_processIdentifier": true,
+							"data_data_threat_id_time": true,
+							"data_data_threat_id_timeSecond": true,
+							"data_data_threat_id_timestamp": true,
+							"data_data_threat_status": true,
+							"data_data_user_match_id_counter": true,
+							"data_data_user_match_id_date": true,
+							"data_data_user_match_id_machineIdentifier": true,
+							"data_data_user_match_id_processIdentifier": true,
+							"data_data_user_match_id_time": true,
+							"data_data_user_match_id_timeSecond": true,
+							"data_data_user_match_id_timestamp": true,
+							"data_data_user_match_uuid": true,
+							"data_datastream": true,
+							"data_detection_identity_name": true,
+							"data_duid": true,
+							"data_end": true,
+							"data_endpoint_id": true,
+							"data_endpoint_type": true,
+							"data_event_AssociatedFile": true,
+							"data_event_AuditKeyValues": true,
+							"data_event_CommandLine": true,
+							"data_event_ComputerName": false,
+							"data_event_DetectDescription": true,
+							"data_event_DetectId": true,
+							"data_event_DetectName": true,
+							"data_event_DnsRequests": true,
+							"data_event_DocumentsAccessed": true,
+							"data_event_ExecutablesWritten": true,
+							"data_event_FalconHostLink": true,
+							"data_event_FileName": true,
+							"data_event_FilePath": true,
+							"data_event_GrandparentCommandLine": true,
+							"data_event_GrandparentImageFileName": true,
+							"data_event_HostGroups": true,
+							"data_event_IOCType": true,
+							"data_event_IOCValue": true,
+							"data_event_LocalIP": true,
+							"data_event_MACAddress": true,
+							"data_event_MD5String": true,
+							"data_event_MachineDomain": true,
+							"data_event_NetworkAccesses": true,
+							"data_event_Objective": true,
+							"data_event_OperationName": true,
+							"data_event_ParentCommandLine": true,
+							"data_event_ParentImageFileName": true,
+							"data_event_ParentProcessId": true,
+							"data_event_PatternDispositionDescription": true,
+							"data_event_PatternDispositionFlags_BlockingUnsupportedOrDisabled": true,
+							"data_event_PatternDispositionFlags_BootupSafeguardEnabled": true,
+							"data_event_PatternDispositionFlags_CriticalProcessDisabled": true,
+							"data_event_PatternDispositionFlags_Detect": true,
+							"data_event_PatternDispositionFlags_FsOperationBlocked": true,
+							"data_event_PatternDispositionFlags_HandleOperationDowngraded": true,
+							"data_event_PatternDispositionFlags_InddetMask": true,
+							"data_event_PatternDispositionFlags_Indicator": true,
+							"data_event_PatternDispositionFlags_KillActionFailed": true,
+							"data_event_PatternDispositionFlags_KillParent": true,
+							"data_event_PatternDispositionFlags_KillProcess": true,
+							"data_event_PatternDispositionFlags_KillSubProcess": true,
+							"data_event_PatternDispositionFlags_OperationBlocked": true,
+							"data_event_PatternDispositionFlags_PolicyDisabled": true,
+							"data_event_PatternDispositionFlags_ProcessBlocked": true,
+							"data_event_PatternDispositionFlags_QuarantineFile": true,
+							"data_event_PatternDispositionFlags_QuarantineMachine": true,
+							"data_event_PatternDispositionFlags_RegistryOperationBlocked": true,
+							"data_event_PatternDispositionFlags_Rooting": true,
+							"data_event_PatternDispositionFlags_SensorOnly": true,
+							"data_event_PatternDispositionFlags_SuspendParent": true,
+							"data_event_PatternDispositionFlags_SuspendProcess": true,
+							"data_event_PatternDispositionValue": true,
+							"data_event_ProcessEndTime": true,
+							"data_event_ProcessId": true,
+							"data_event_ProcessStartTime": true,
+							"data_event_QuarantineFiles": true,
+							"data_event_SHA1String": true,
+							"data_event_SHA256String": true,
+							"data_event_SensorId": true,
+							"data_event_ServiceName": true,
+							"data_event_Severity": true,
+							"data_event_Success": true,
+							"data_event_Tactic": true,
+							"data_event_Tags": true,
+							"data_event_Technique": true,
+							"data_event_UTCTimestamp": true,
+							"data_event_UserId": true,
+							"data_event_UserIp": true,
+							"data_event_UserIp_city_name": true,
+							"data_event_UserIp_country_code": true,
+							"data_event_UserIp_geolocation": true,
+							"data_event_UserName": true,
+							"data_event_service_event_id": true,
+							"data_filePath": true,
+							"data_group": true,
+							"data_id": true,
+							"data_metadata_customerIDString": true,
+							"data_metadata_eventCreationTime": true,
+							"data_metadata_offset": true,
+							"data_metadata_version": true,
+							"data_name": true,
+							"data_origin": true,
+							"data_rt": true,
+							"data_source_info_ip": true,
+							"data_source_info_ip_city_name": true,
+							"data_source_info_ip_country_code": true,
+							"data_source_info_ip_geolocation": true,
+							"data_threat": true,
+							"data_threat_cleanable": true,
+							"data_win_eventXML_binaryData": true,
+							"data_win_eventXML_binaryDataSize": true,
+							"data_win_eventXML_param1": true,
+							"data_win_eventdata_binary": true,
+							"data_win_eventdata_data": true,
+							"data_win_eventdata_domain": true,
+							"data_win_eventdata_imagePath": true,
+							"data_win_eventdata_sID": true,
+							"data_win_eventdata_serviceName": true,
+							"data_win_eventdata_serviceType": true,
+							"data_win_eventdata_startType": true,
+							"data_win_eventdata_user": true,
+							"data_win_system_channel": true,
+							"data_win_system_computer": true,
+							"data_win_system_eventID": true,
+							"data_win_system_eventRecordID": true,
+							"data_win_system_eventSourceName": true,
+							"data_win_system_keywords": true,
+							"data_win_system_level": true,
+							"data_win_system_opcode": true,
+							"data_win_system_processID": true,
+							"data_win_system_providerGuid": true,
+							"data_win_system_providerName": true,
+							"data_win_system_severityValue": true,
+							"data_win_system_systemTime": true,
+							"data_win_system_task": true,
+							"data_win_system_threadID": true,
+							"data_win_system_version": true,
+							"decoder_name": true,
+							"destinationTranslatedAddress": true,
+							"destinationTranslatedAddress_city_name": true,
+							"destinationTranslatedAddress_country_code": true,
+							"destinationTranslatedAddress_geolocation": true,
+							"deviceProcessName": true,
+							"device_product": true,
+							"device_vendor": true,
+							"device_version": true,
+							"dntdom": true,
+							"dpt": true,
+							"dst": true,
+							"dst_city_name": true,
+							"dst_country_code": true,
+							"dst_geolocation": true,
+							"duser": false,
+							"ecs_version": true,
+							"event_class_id": true,
+							"externalId": true,
+							"fileHash": true,
+							"filePath": true,
+							"fname": true,
+							"full_log": true,
+							"gl2_accounted_message_size": true,
+							"gl2_message_id": true,
+							"gl2_processing_error": true,
+							"gl2_remote_ip": true,
+							"gl2_remote_port": true,
+							"gl2_source_collector": true,
+							"gl2_source_input": true,
+							"gl2_source_node": true,
+							"highlight": true,
+							"host_name": true,
+							"id": true,
+							"location": true,
+							"log_file_path": true,
+							"log_offset": true,
+							"manager_name": true,
+							"message": true,
+							"msg": true,
+							"objective": true,
+							"outcome": true,
+							"patternDisposition": true,
+							"previous_output": true,
+							"rt": true,
+							"rule_description": true,
+							"rule_firedtimes": true,
+							"rule_frequency": true,
+							"rule_gdpr": true,
+							"rule_gpg13": true,
+							"rule_group1": true,
+							"rule_group2": true,
+							"rule_groups": true,
+							"rule_hipaa": true,
+							"rule_id": true,
+							"rule_level": true,
+							"rule_mail": true,
+							"rule_mitre_id": true,
+							"rule_mitre_tactic": true,
+							"rule_mitre_technique": true,
+							"rule_nist_800_53": true,
+							"rule_pci_dss": true,
+							"rule_tsc": true,
+							"severity": true,
+							"sort": true,
+							"source": true,
+							"spt": true,
+							"src_ip": true,
+							"src_ip_city_name": true,
+							"src_ip_country_code": true,
+							"src_ip_geolocation": true,
+							"streams": true,
+							"syslog_level": true,
+							"syslog_tag": true,
+							"syslog_type": true,
+							"tactic": true,
+							"technique": true,
+							"timestamp": false,
+							"true": true,
+							"user_name": true,
+							"win_system_eventID": true,
+							"windows_event_id": true,
+							"windows_event_severity": false
+						},
+						"indexByName": {
+							"_id": 1,
+							"_index": 6,
+							"_type": 7,
+							"agent_id": 8,
+							"agent_name": 3,
+							"data_event_AssociatedFile": 34,
+							"data_event_AuditKeyValues": 35,
+							"data_event_CommandLine": 36,
+							"data_event_ComputerName": 2,
+							"data_event_DetectDescription": 37,
+							"data_event_DetectId": 38,
+							"data_event_DetectName": 39,
+							"data_event_DnsRequests": 40,
+							"data_event_DocumentsAccessed": 41,
+							"data_event_ExecutablesWritten": 42,
+							"data_event_FalconHostLink": 43,
+							"data_event_FileName": 44,
+							"data_event_FilePath": 45,
+							"data_event_GrandparentCommandLine": 46,
+							"data_event_GrandparentImageFileName": 47,
+							"data_event_HostGroups": 48,
+							"data_event_IOCType": 49,
+							"data_event_IOCValue": 50,
+							"data_event_LocalIP": 51,
+							"data_event_MACAddress": 52,
+							"data_event_MD5String": 53,
+							"data_event_MachineDomain": 54,
+							"data_event_NetworkAccesses": 55,
+							"data_event_Objective": 56,
+							"data_event_OperationName": 57,
+							"data_event_ParentCommandLine": 58,
+							"data_event_ParentImageFileName": 59,
+							"data_event_ParentProcessId": 60,
+							"data_event_PatternDispositionDescription": 61,
+							"data_event_PatternDispositionFlags_BlockingUnsupportedOrDisabled": 62,
+							"data_event_PatternDispositionFlags_BootupSafeguardEnabled": 63,
+							"data_event_PatternDispositionFlags_CriticalProcessDisabled": 64,
+							"data_event_PatternDispositionFlags_Detect": 65,
+							"data_event_PatternDispositionFlags_FsOperationBlocked": 66,
+							"data_event_PatternDispositionFlags_HandleOperationDowngraded": 67,
+							"data_event_PatternDispositionFlags_InddetMask": 68,
+							"data_event_PatternDispositionFlags_Indicator": 69,
+							"data_event_PatternDispositionFlags_KillActionFailed": 70,
+							"data_event_PatternDispositionFlags_KillParent": 71,
+							"data_event_PatternDispositionFlags_KillProcess": 72,
+							"data_event_PatternDispositionFlags_KillSubProcess": 73,
+							"data_event_PatternDispositionFlags_OperationBlocked": 74,
+							"data_event_PatternDispositionFlags_PolicyDisabled": 75,
+							"data_event_PatternDispositionFlags_ProcessBlocked": 76,
+							"data_event_PatternDispositionFlags_QuarantineFile": 77,
+							"data_event_PatternDispositionFlags_QuarantineMachine": 78,
+							"data_event_PatternDispositionFlags_RegistryOperationBlocked": 79,
+							"data_event_PatternDispositionFlags_Rooting": 80,
+							"data_event_PatternDispositionFlags_SensorOnly": 81,
+							"data_event_PatternDispositionFlags_SuspendParent": 82,
+							"data_event_PatternDispositionFlags_SuspendProcess": 83,
+							"data_event_PatternDispositionValue": 84,
+							"data_event_ProcessEndTime": 85,
+							"data_event_ProcessId": 86,
+							"data_event_ProcessStartTime": 87,
+							"data_event_QuarantineFiles": 88,
+							"data_event_SHA1String": 89,
+							"data_event_SHA256String": 90,
+							"data_event_SensorId": 91,
+							"data_event_ServiceName": 92,
+							"data_event_Severity": 93,
+							"data_event_SeverityName": 4,
+							"data_event_Success": 94,
+							"data_event_Tactic": 95,
+							"data_event_Tags": 96,
+							"data_event_Technique": 97,
+							"data_event_UTCTimestamp": 98,
+							"data_event_UserId": 99,
+							"data_event_UserIp": 100,
+							"data_event_UserIp_city_name": 101,
+							"data_event_UserIp_country_code": 102,
+							"data_event_UserIp_geolocation": 103,
+							"data_event_UserName": 104,
+							"data_metadata_customerIDString": 105,
+							"data_metadata_eventCreationTime": 106,
+							"data_metadata_eventType": 5,
+							"data_metadata_offset": 107,
+							"data_metadata_version": 108,
+							"decoder_name": 9,
+							"gl2_accounted_message_size": 10,
+							"gl2_message_id": 11,
+							"gl2_processing_error": 31,
+							"gl2_remote_ip": 12,
+							"gl2_remote_port": 13,
+							"gl2_source_input": 14,
+							"gl2_source_node": 15,
+							"highlight": 16,
+							"id": 17,
+							"location": 18,
+							"manager_name": 19,
+							"message": 20,
+							"rule_description": 21,
+							"rule_firedtimes": 22,
+							"rule_group1": 32,
+							"rule_group2": 33,
+							"rule_groups": 23,
+							"rule_id": 24,
+							"rule_level": 25,
+							"rule_mail": 26,
+							"sort": 27,
+							"source": 28,
+							"streams": 29,
+							"syslog_type": 30,
+							"timestamp": 0
+						},
+						"renameByName": {
+							"_id": "EVENT ID",
+							"_index": "",
+							"agent_ip": "SRC IP",
+							"agent_name": "AGENT",
+							"data_data_source_info_ip": "AGENT IP",
+							"data_description": "EVENT DESCRIPTION",
+							"data_event_ComputerName": "CROWDSTRIKE AGENT",
+							"data_event_SeverityName": "SEVERITY",
+							"data_metadata_eventType": "EVENT TYPE",
+							"data_name": "EVENT",
+							"data_source_info_ip": "AGENT IP",
+							"data_suser": "USER ACCOUNT",
+							"data_type": "EVENT TYPE",
+							"data_win_system_message": "MESSAGE",
+							"data_win_system_providerGuid": "",
+							"dhost": "AGENT",
+							"duser": "USER",
+							"name": "EVENT TYPE",
+							"rule_level": "RULE LEVEL",
+							"syslog_level": "LEVEL",
+							"timestamp": "DATE/TIME",
+							"windows_event_severity": "EVENT LOG SEVERITY"
+						}
+					}
+				}
+			],
+			"transparent": true,
+			"type": "table"
+		},
+		{
+			"collapsed": true,
+			"datasource": {
+				"type": "datasource",
+				"uid": "grafana"
+			},
+			"gridPos": {
+				"h": 1,
+				"w": 24,
+				"x": 0,
+				"y": 25
+			},
+			"id": 76,
+			"panels": [
+				{
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"fieldConfig": {
+						"defaults": {
+							"color": {
+								"fixedColor": "orange",
+								"mode": "fixed"
+							},
+							"mappings": [
+								{
+									"options": {
+										"match": "null",
+										"result": {
+											"text": "N/A"
+										}
+									},
+									"type": "special"
+								}
+							],
+							"thresholds": {
+								"mode": "absolute",
+								"steps": [
+									{
+										"color": "blue"
+									}
+								]
+							},
+							"unit": "short"
+						},
+						"overrides": []
+					},
+					"gridPos": {
+						"h": 7,
+						"w": 4,
+						"x": 0,
+						"y": 26
+					},
+					"id": 86,
+					"links": [],
+					"options": {
+						"colorMode": "value",
+						"graphMode": "area",
+						"justifyMode": "auto",
+						"orientation": "horizontal",
+						"reduceOptions": {
+							"calcs": ["sum"],
+							"fields": "",
+							"values": false
+						},
+						"text": {},
+						"textMode": "auto"
+					},
+					"pluginVersion": "9.0.6",
+					"targets": [
+						{
+							"bucketAggs": [
+								{
+									"$$hashKey": "object:50",
+									"field": "timestamp",
+									"id": "2",
+									"settings": {
+										"interval": "auto",
+										"min_doc_count": 0,
+										"trimEdges": 0
+									},
+									"type": "date_histogram"
+								}
+							],
+							"datasource": {
+								"type": "grafana-opensearch-datasource",
+								"uid": "replace_datasource_uid"
+							},
+							"metrics": [
+								{
+									"$$hashKey": "object:48",
+									"field": "select field",
+									"id": "1",
+									"type": "count"
+								}
+							],
+							"query": "name:DetectionSummaryEvent",
+							"refId": "A",
+							"timeField": "timestamp"
+						}
+					],
+					"title": "DETECTION EVENTS",
+					"type": "stat"
+				},
+				{
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"fieldConfig": {
+						"defaults": {
+							"color": {
+								"fixedColor": "orange",
+								"mode": "fixed"
+							},
+							"custom": {
+								"align": "auto",
+								"displayMode": "color-text",
+								"filterable": false,
+								"inspect": false
+							},
+							"mappings": [],
+							"thresholds": {
+								"mode": "absolute",
+								"steps": [
+									{
+										"color": "green"
+									},
+									{
+										"color": "red",
+										"value": 80
+									}
+								]
+							}
+						},
+						"overrides": [
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "data_event_ComputerName"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 492
+									},
+									{
+										"id": "displayName",
+										"value": "CROWDSTRIKE AGENT"
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "CROWDSTRIKE AGENT"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 358
+									}
+								]
+							}
+						]
+					},
+					"gridPos": {
+						"h": 7,
+						"w": 8,
+						"x": 4,
+						"y": 26
+					},
+					"id": 124,
+					"links": [],
+					"maxDataPoints": 3,
+					"options": {
+						"footer": {
+							"fields": "",
+							"reducer": ["sum"],
+							"show": false
+						},
+						"showHeader": true,
+						"sortBy": []
+					},
+					"pluginVersion": "9.0.6",
+					"targets": [
+						{
+							"bucketAggs": [
+								{
+									"$$hashKey": "object:73",
+									"fake": true,
+									"field": "dhost",
+									"id": "3",
+									"settings": {
+										"min_doc_count": 1,
+										"order": "desc",
+										"orderBy": "_count",
+										"size": "0"
+									},
+									"type": "terms"
+								}
+							],
+							"datasource": {
+								"type": "grafana-opensearch-datasource",
+								"uid": "replace_datasource_uid"
+							},
+							"metrics": [
+								{
+									"$$hashKey": "object:71",
+									"field": "select field",
+									"id": "1",
+									"type": "count"
+								}
+							],
+							"query": "name:DetectionSummaryEvent",
+							"refId": "A",
+							"timeField": "timestamp"
+						}
+					],
+					"title": "DETECTION EVENTS BY AGENT",
+					"type": "table"
+				},
+				{
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"fieldConfig": {
+						"defaults": {
+							"color": {
+								"fixedColor": "orange",
+								"mode": "fixed"
+							},
+							"custom": {
+								"align": "auto",
+								"displayMode": "color-text",
+								"filterable": false,
+								"inspect": false
+							},
+							"mappings": [],
+							"thresholds": {
+								"mode": "absolute",
+								"steps": [
+									{
+										"color": "green"
+									},
+									{
+										"color": "red",
+										"value": 80
+									}
+								]
+							}
+						},
+						"overrides": [
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "data_name"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 492
+									},
+									{
+										"id": "displayName",
+										"value": "Blocked App"
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "CROWDSTRIKE AGENT"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 358
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "Blocked App"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 611
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "data_event_DetectDescription"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 741
+									}
+								]
+							}
+						]
+					},
+					"gridPos": {
+						"h": 7,
+						"w": 12,
+						"x": 12,
+						"y": 26
+					},
+					"id": 125,
+					"links": [],
+					"maxDataPoints": 3,
+					"options": {
+						"footer": {
+							"fields": "",
+							"reducer": ["sum"],
+							"show": false
+						},
+						"showHeader": true,
+						"sortBy": []
+					},
+					"pluginVersion": "9.0.6",
+					"targets": [
+						{
+							"bucketAggs": [
+								{
+									"$$hashKey": "object:73",
+									"fake": true,
+									"field": "msg",
+									"id": "3",
+									"settings": {
+										"min_doc_count": 1,
+										"order": "desc",
+										"orderBy": "_count",
+										"size": "0"
+									},
+									"type": "terms"
+								}
+							],
+							"datasource": {
+								"type": "grafana-opensearch-datasource",
+								"uid": "replace_datasource_uid"
+							},
+							"metrics": [
+								{
+									"$$hashKey": "object:71",
+									"field": "select field",
+									"id": "1",
+									"type": "count"
+								}
+							],
+							"query": "name:DetectionSummaryEvent",
+							"refId": "A",
+							"timeField": "timestamp"
+						}
+					],
+					"title": "DETECTION EVENTS BY DESCRIPTION",
+					"transformations": [
+						{
+							"id": "organize",
+							"options": {
+								"excludeByName": {},
+								"indexByName": {},
+								"renameByName": {
+									"data_event_DetectDescription": "DESCRIPTION"
+								}
+							}
+						}
+					],
+					"type": "table"
+				},
+				{
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"fieldConfig": {
+						"defaults": {
+							"color": {
+								"mode": "thresholds"
+							},
+							"custom": {
+								"align": "auto",
+								"displayMode": "auto",
+								"inspect": false
+							},
+							"mappings": [],
+							"thresholds": {
+								"mode": "absolute",
+								"steps": [
+									{
+										"color": "green"
+									},
+									{
+										"color": "red",
+										"value": 80
+									}
+								]
+							}
+						},
+						"overrides": [
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "DATE/TIME"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 202
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "EVENT ID"
+								},
+								"properties": [
+									{
+										"id": "links",
+										"value": [
+											{
+												"targetBlank": true,
+												"title": "VIEW EVENT DETAILS",
+												"url": "https://paschoalotto.soc.gemina.io/explore?left=%5B%22now-6h%22,%22now%22,%22CROWDSTRIKE%22,%7B%22refId%22:%22A%22,%22query%22:%22_id:${__value.text}%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D"
+											}
+										]
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "SEVERITY"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 100
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "CROWDSTRIKE AGENT"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 157
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "USER ACCOUNT"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 239
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "SEVERITY"
+								},
+								"properties": [
+									{
+										"id": "custom.displayMode",
+										"value": "color-text"
+									},
+									{
+										"id": "mappings",
+										"value": [
+											{
+												"options": {
+													"High": {
+														"color": "red",
+														"index": 2
+													},
+													"Medium": {
+														"color": "orange",
+														"index": 1
+													},
+													"low": {
+														"color": "green",
+														"index": 0
+													}
+												},
+												"type": "value"
+											}
+										]
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "AGENT IP"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 173
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "Offset"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 91
+									}
+								]
+							}
+						]
+					},
+					"gridPos": {
+						"h": 10,
+						"w": 24,
+						"x": 0,
+						"y": 33
+					},
+					"id": 136,
+					"options": {
+						"footer": {
+							"fields": "",
+							"reducer": ["sum"],
+							"show": false
+						},
+						"showHeader": true,
+						"sortBy": []
+					},
+					"pluginVersion": "9.0.6",
+					"targets": [
+						{
+							"alias": "",
+							"bucketAggs": [],
+							"datasource": {
+								"type": "grafana-opensearch-datasource",
+								"uid": "replace_datasource_uid"
+							},
+							"metrics": [
+								{
+									"id": "1",
+									"settings": {
+										"size": "500"
+									},
+									"type": "raw_data"
+								}
+							],
+							"query": "name:DetectionSummaryEvent",
+							"queryType": "randomWalk",
+							"refId": "A",
+							"timeField": "timestamp"
+						}
+					],
+					"title": "CROWDSTRIKE - DETECTION EVENTS",
+					"transformations": [
+						{
+							"id": "organize",
+							"options": {
+								"excludeByName": {
+									"@metadata_beat": true,
+									"@metadata_type": true,
+									"@metadata_version": true,
+									"CommandLine": true,
+									"FalconHostLink": true,
+									"ParentProcessId": true,
+									"ProcessId": true,
+									"_id": false,
+									"_index": true,
+									"_type": true,
+									"agent_ephemeral_id": true,
+									"agent_hostname": true,
+									"agent_id": true,
+									"agent_ip": false,
+									"agent_ip_city_name": true,
+									"agent_ip_country_code": true,
+									"agent_ip_geolocation": true,
+									"agent_labels_customer": true,
+									"agent_name": true,
+									"agent_type": true,
+									"agent_version": true,
+									"beats_type": true,
+									"cluster_name": true,
+									"cluster_node": true,
+									"collector_node_id": true,
+									"data_appCerts": true,
+									"data_appSha256": true,
+									"data_core_remedy_items_items": true,
+									"data_core_remedy_items_totalItems": true,
+									"data_customer_id": true,
+									"data_data_core_remedy_items_items": true,
+									"data_data_core_remedy_items_totalItems": true,
+									"data_data_created_at": true,
+									"data_data_endpoint_id": true,
+									"data_data_endpoint_java_id": true,
+									"data_data_endpoint_platform": true,
+									"data_data_endpoint_type": true,
+									"data_data_event_service_id": true,
+									"data_data_hmpa_exploit_app_name": true,
+									"data_data_hmpa_exploit_details": true,
+									"data_data_hmpa_exploit_family_id": true,
+									"data_data_hmpa_exploit_mitigation": true,
+									"data_data_hmpa_exploit_process_alias_path": true,
+									"data_data_hmpa_exploit_process_name": true,
+									"data_data_hmpa_exploit_process_path": true,
+									"data_data_hmpa_exploit_process_pid": true,
+									"data_data_hmpa_exploit_process_version": true,
+									"data_data_hmpa_exploit_thumbprint": true,
+									"data_data_hmpa_exploit_type": true,
+									"data_data_hmpa_exploit_uid": true,
+									"data_data_hmpa_exploit_version": true,
+									"data_data_hmpa_exploit_version_city_name": true,
+									"data_data_hmpa_exploit_version_country_code": true,
+									"data_data_hmpa_exploit_version_geolocation": true,
+									"data_data_inserted_at": true,
+									"data_data_source_app_id": true,
+									"data_data_source_info_ip": true,
+									"data_data_source_info_ip_city_name": true,
+									"data_data_source_info_ip_country_code": true,
+									"data_data_source_info_ip_geolocation": true,
+									"data_data_threat_id_counter": true,
+									"data_data_threat_id_date": true,
+									"data_data_threat_id_machineIdentifier": true,
+									"data_data_threat_id_processIdentifier": true,
+									"data_data_threat_id_time": true,
+									"data_data_threat_id_timeSecond": true,
+									"data_data_threat_id_timestamp": true,
+									"data_data_threat_status": true,
+									"data_data_user_match_id_counter": true,
+									"data_data_user_match_id_date": true,
+									"data_data_user_match_id_machineIdentifier": true,
+									"data_data_user_match_id_processIdentifier": true,
+									"data_data_user_match_id_time": true,
+									"data_data_user_match_id_timeSecond": true,
+									"data_data_user_match_id_timestamp": true,
+									"data_data_user_match_uuid": true,
+									"data_datastream": true,
+									"data_detection_identity_name": true,
+									"data_duid": true,
+									"data_end": true,
+									"data_endpoint_id": true,
+									"data_endpoint_type": true,
+									"data_event_AssociatedFile": true,
+									"data_event_AuditKeyValues": true,
+									"data_event_CommandLine": true,
+									"data_event_ComputerName": false,
+									"data_event_DetectDescription": true,
+									"data_event_DetectId": true,
+									"data_event_DetectName": false,
+									"data_event_DnsRequests": true,
+									"data_event_DocumentsAccessed": true,
+									"data_event_ExecutablesWritten": true,
+									"data_event_FalconHostLink": true,
+									"data_event_FileName": false,
+									"data_event_FilePath": true,
+									"data_event_GrandparentCommandLine": true,
+									"data_event_GrandparentImageFileName": true,
+									"data_event_HostGroups": true,
+									"data_event_IOCType": true,
+									"data_event_IOCValue": true,
+									"data_event_LocalIP": false,
+									"data_event_MACAddress": true,
+									"data_event_MD5String": true,
+									"data_event_MachineDomain": true,
+									"data_event_NetworkAccesses": true,
+									"data_event_Objective": true,
+									"data_event_OperationName": true,
+									"data_event_ParentCommandLine": true,
+									"data_event_ParentImageFileName": true,
+									"data_event_ParentProcessId": true,
+									"data_event_PatternDispositionDescription": true,
+									"data_event_PatternDispositionFlags_BlockingUnsupportedOrDisabled": true,
+									"data_event_PatternDispositionFlags_BootupSafeguardEnabled": true,
+									"data_event_PatternDispositionFlags_CriticalProcessDisabled": true,
+									"data_event_PatternDispositionFlags_Detect": true,
+									"data_event_PatternDispositionFlags_FsOperationBlocked": true,
+									"data_event_PatternDispositionFlags_HandleOperationDowngraded": true,
+									"data_event_PatternDispositionFlags_InddetMask": true,
+									"data_event_PatternDispositionFlags_Indicator": true,
+									"data_event_PatternDispositionFlags_KillActionFailed": true,
+									"data_event_PatternDispositionFlags_KillParent": true,
+									"data_event_PatternDispositionFlags_KillProcess": true,
+									"data_event_PatternDispositionFlags_KillSubProcess": true,
+									"data_event_PatternDispositionFlags_OperationBlocked": true,
+									"data_event_PatternDispositionFlags_PolicyDisabled": true,
+									"data_event_PatternDispositionFlags_ProcessBlocked": true,
+									"data_event_PatternDispositionFlags_QuarantineFile": true,
+									"data_event_PatternDispositionFlags_QuarantineMachine": true,
+									"data_event_PatternDispositionFlags_RegistryOperationBlocked": true,
+									"data_event_PatternDispositionFlags_Rooting": true,
+									"data_event_PatternDispositionFlags_SensorOnly": true,
+									"data_event_PatternDispositionFlags_SuspendParent": true,
+									"data_event_PatternDispositionFlags_SuspendProcess": true,
+									"data_event_PatternDispositionValue": true,
+									"data_event_ProcessEndTime": true,
+									"data_event_ProcessId": true,
+									"data_event_ProcessStartTime": true,
+									"data_event_QuarantineFiles": true,
+									"data_event_SHA1String": true,
+									"data_event_SHA256String": true,
+									"data_event_SensorId": true,
+									"data_event_ServiceName": true,
+									"data_event_Severity": true,
+									"data_event_Success": true,
+									"data_event_Tactic": true,
+									"data_event_Tags": true,
+									"data_event_Technique": true,
+									"data_event_UTCTimestamp": true,
+									"data_event_UserId": true,
+									"data_event_UserIp": true,
+									"data_event_UserIp_city_name": true,
+									"data_event_UserIp_country_code": true,
+									"data_event_UserIp_geolocation": true,
+									"data_event_UserName": false,
+									"data_event_service_event_id": true,
+									"data_filePath": true,
+									"data_group": true,
+									"data_id": true,
+									"data_metadata_customerIDString": true,
+									"data_metadata_eventCreationTime": true,
+									"data_metadata_eventType": true,
+									"data_metadata_offset": true,
+									"data_metadata_version": true,
+									"data_name": true,
+									"data_origin": true,
+									"data_rt": true,
+									"data_source_info_ip": true,
+									"data_source_info_ip_city_name": true,
+									"data_source_info_ip_country_code": true,
+									"data_source_info_ip_geolocation": true,
+									"data_threat": true,
+									"data_threat_cleanable": true,
+									"data_win_eventXML_binaryData": true,
+									"data_win_eventXML_binaryDataSize": true,
+									"data_win_eventXML_param1": true,
+									"data_win_eventdata_binary": true,
+									"data_win_eventdata_data": true,
+									"data_win_eventdata_domain": true,
+									"data_win_eventdata_imagePath": true,
+									"data_win_eventdata_sID": true,
+									"data_win_eventdata_serviceName": true,
+									"data_win_eventdata_serviceType": true,
+									"data_win_eventdata_startType": true,
+									"data_win_eventdata_user": true,
+									"data_win_system_channel": true,
+									"data_win_system_computer": true,
+									"data_win_system_eventID": true,
+									"data_win_system_eventRecordID": true,
+									"data_win_system_eventSourceName": true,
+									"data_win_system_keywords": true,
+									"data_win_system_level": true,
+									"data_win_system_opcode": true,
+									"data_win_system_processID": true,
+									"data_win_system_providerGuid": true,
+									"data_win_system_providerName": true,
+									"data_win_system_severityValue": true,
+									"data_win_system_systemTime": true,
+									"data_win_system_task": true,
+									"data_win_system_threadID": true,
+									"data_win_system_version": true,
+									"decoder_name": true,
+									"device_product": true,
+									"device_vendor": true,
+									"device_version": true,
+									"dntdom": true,
+									"ecs_version": true,
+									"event_class_id": true,
+									"externalId": true,
+									"fileHash": true,
+									"full_log": true,
+									"gl2_accounted_message_size": true,
+									"gl2_message_id": true,
+									"gl2_processing_error": true,
+									"gl2_remote_ip": true,
+									"gl2_remote_port": true,
+									"gl2_source_collector": true,
+									"gl2_source_input": true,
+									"gl2_source_node": true,
+									"highlight": true,
+									"host_name": true,
+									"id": true,
+									"location": true,
+									"log_file_path": true,
+									"log_offset": true,
+									"manager_name": true,
+									"message": true,
+									"name": true,
+									"objective": true,
+									"outcome": true,
+									"previous_output": true,
+									"rt": true,
+									"rule_description": true,
+									"rule_firedtimes": true,
+									"rule_frequency": true,
+									"rule_gdpr": true,
+									"rule_gpg13": true,
+									"rule_group1": true,
+									"rule_group2": true,
+									"rule_groups": true,
+									"rule_hipaa": true,
+									"rule_id": true,
+									"rule_level": true,
+									"rule_mail": true,
+									"rule_mitre_id": true,
+									"rule_mitre_tactic": true,
+									"rule_mitre_technique": true,
+									"rule_nist_800_53": true,
+									"rule_pci_dss": true,
+									"rule_tsc": true,
+									"sort": true,
+									"source": true,
+									"src_ip": true,
+									"src_ip_city_name": true,
+									"src_ip_country_code": true,
+									"src_ip_geolocation": true,
+									"streams": true,
+									"syslog_level": true,
+									"syslog_tag": true,
+									"syslog_type": true,
+									"timestamp": false,
+									"true": true,
+									"user_name": true,
+									"win_system_eventID": true,
+									"windows_event_id": true,
+									"windows_event_severity": false
+								},
+								"indexByName": {
+									"CommandLine": 16,
+									"FalconHostLink": 17,
+									"Offset": 18,
+									"ParentProcessId": 19,
+									"ProcessId": 20,
+									"_id": 1,
+									"_index": 2,
+									"_type": 3,
+									"device_product": 21,
+									"device_vendor": 22,
+									"device_version": 23,
+									"dhost": 24,
+									"dntdom": 25,
+									"duser": 26,
+									"event_class_id": 27,
+									"externalId": 28,
+									"fileHash": 29,
+									"filePath": 31,
+									"fname": 30,
+									"gl2_accounted_message_size": 4,
+									"gl2_message_id": 5,
+									"gl2_remote_ip": 6,
+									"gl2_remote_port": 7,
+									"gl2_source_input": 8,
+									"gl2_source_node": 9,
+									"highlight": 10,
+									"message": 11,
+									"msg": 32,
+									"name": 33,
+									"objective": 34,
+									"outcome": 35,
+									"patternDisposition": 36,
+									"rt": 37,
+									"severity": 38,
+									"sort": 12,
+									"source": 13,
+									"streams": 14,
+									"syslog_type": 15,
+									"tactic": 39,
+									"technique": 40,
+									"timestamp": 0
+								},
+								"renameByName": {
+									"_id": "EVENT ID",
+									"_index": "",
+									"agent_ip": "SRC IP",
+									"agent_name": "AGENT",
+									"data_data_source_info_ip": "AGENT IP",
+									"data_description": "EVENT DESCRIPTION",
+									"data_event_ComputerName": "CROWDSTRIKE AGENT",
+									"data_event_DetectName": "DETECTION NAME",
+									"data_event_FileName": "FILE NAME",
+									"data_event_LocalIP": "AGENT IP",
+									"data_event_SeverityName": "SEVERITY",
+									"data_event_UserName": "ACCOUNT",
+									"data_metadata_eventType": "EVENT TYPE",
+									"data_name": "EVENT",
+									"data_source_info_ip": "AGENT IP",
+									"data_suser": "USER ACCOUNT",
+									"data_type": "EVENT TYPE",
+									"data_win_system_message": "MESSAGE",
+									"data_win_system_providerGuid": "",
+									"dhost": "AGENT",
+									"dntdom": "",
+									"duser": "USER",
+									"filePath": "PATH",
+									"fname": "FILE",
+									"msg": "MSG",
+									"patternDisposition": "DISPOSITION",
+									"rule_level": "RULE LEVEL",
+									"severity": "SEVERITY",
+									"syslog_level": "LEVEL",
+									"tactic": "TACTIC",
+									"technique": "TECHNIQUE",
+									"timestamp": "DATE/TIME",
+									"windows_event_severity": "EVENT LOG SEVERITY"
+								}
+							}
+						}
+					],
+					"transparent": true,
+					"type": "table"
+				}
+			],
+			"title": "CROWDSTRIKE - DETECTIONS",
+			"type": "row"
+		},
+		{
+			"collapsed": true,
+			"gridPos": {
+				"h": 1,
+				"w": 24,
+				"x": 0,
+				"y": 26
+			},
+			"id": 144,
+			"panels": [
+				{
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"fieldConfig": {
+						"defaults": {
+							"color": {
+								"fixedColor": "blue",
+								"mode": "fixed"
+							},
+							"mappings": [
+								{
+									"options": {
+										"match": "null",
+										"result": {
+											"text": "N/A"
+										}
+									},
+									"type": "special"
+								}
+							],
+							"thresholds": {
+								"mode": "absolute",
+								"steps": [
+									{
+										"color": "blue"
+									}
+								]
+							},
+							"unit": "short"
+						},
+						"overrides": []
+					},
+					"gridPos": {
+						"h": 7,
+						"w": 4,
+						"x": 0,
+						"y": 44
+					},
+					"id": 145,
+					"links": [],
+					"options": {
+						"colorMode": "value",
+						"graphMode": "area",
+						"justifyMode": "auto",
+						"orientation": "horizontal",
+						"reduceOptions": {
+							"calcs": ["sum"],
+							"fields": "",
+							"values": false
+						},
+						"text": {},
+						"textMode": "auto"
+					},
+					"pluginVersion": "9.0.6",
+					"targets": [
+						{
+							"bucketAggs": [
+								{
+									"$$hashKey": "object:50",
+									"field": "timestamp",
+									"id": "2",
+									"settings": {
+										"interval": "auto",
+										"min_doc_count": 0,
+										"trimEdges": 0
+									},
+									"type": "date_histogram"
+								}
+							],
+							"datasource": {
+								"type": "grafana-opensearch-datasource",
+								"uid": "replace_datasource_uid"
+							},
+							"metrics": [
+								{
+									"$$hashKey": "object:48",
+									"field": "select field",
+									"id": "1",
+									"type": "count"
+								}
+							],
+							"query": "event_class_id:UserActivityAuditEvent",
+							"refId": "A",
+							"timeField": "timestamp"
+						}
+					],
+					"title": "USER ACTIVITY EVENTS",
+					"type": "stat"
+				},
+				{
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"fieldConfig": {
+						"defaults": {
+							"color": {
+								"fixedColor": "text",
+								"mode": "fixed"
+							},
+							"custom": {
+								"align": "auto",
+								"displayMode": "color-text",
+								"filterable": false,
+								"inspect": false
+							},
+							"mappings": [],
+							"thresholds": {
+								"mode": "absolute",
+								"steps": [
+									{
+										"color": "green"
+									},
+									{
+										"color": "red",
+										"value": 80
+									}
+								]
+							}
+						},
+						"overrides": [
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "data_event_ComputerName"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 492
+									},
+									{
+										"id": "displayName",
+										"value": "CROWDSTRIKE AGENT"
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "CROWDSTRIKE AGENT"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 358
+									}
+								]
+							}
+						]
+					},
+					"gridPos": {
+						"h": 7,
+						"w": 8,
+						"x": 4,
+						"y": 44
+					},
+					"id": 146,
+					"links": [],
+					"maxDataPoints": 3,
+					"options": {
+						"footer": {
+							"fields": "",
+							"reducer": ["sum"],
+							"show": false
+						},
+						"showHeader": true,
+						"sortBy": []
+					},
+					"pluginVersion": "9.0.6",
+					"targets": [
+						{
+							"bucketAggs": [
+								{
+									"$$hashKey": "object:73",
+									"fake": true,
+									"field": "duser",
+									"id": "3",
+									"settings": {
+										"min_doc_count": 1,
+										"order": "desc",
+										"orderBy": "_count",
+										"size": "0"
+									},
+									"type": "terms"
+								}
+							],
+							"datasource": {
+								"type": "grafana-opensearch-datasource",
+								"uid": "replace_datasource_uid"
+							},
+							"metrics": [
+								{
+									"$$hashKey": "object:71",
+									"field": "select field",
+									"id": "1",
+									"type": "count"
+								}
+							],
+							"query": "event_class_id:UserActivityAuditEvent",
+							"refId": "A",
+							"timeField": "timestamp"
+						}
+					],
+					"title": "USER ACTIVITY - EVENTS BY USER ID",
+					"transformations": [
+						{
+							"id": "organize",
+							"options": {
+								"excludeByName": {},
+								"indexByName": {},
+								"renameByName": {
+									"data_event_UserId": "USER ID"
+								}
+							}
+						}
+					],
+					"type": "table"
+				},
+				{
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"fieldConfig": {
+						"defaults": {
+							"color": {
+								"fixedColor": "text",
+								"mode": "fixed"
+							},
+							"custom": {
+								"align": "auto",
+								"displayMode": "color-text",
+								"filterable": false,
+								"inspect": false
+							},
+							"mappings": [],
+							"thresholds": {
+								"mode": "absolute",
+								"steps": [
+									{
+										"color": "green"
+									},
+									{
+										"color": "red",
+										"value": 80
+									}
+								]
+							}
+						},
+						"overrides": [
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "data_name"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 492
+									},
+									{
+										"id": "displayName",
+										"value": "Blocked App"
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "CROWDSTRIKE AGENT"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 358
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "Blocked App"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 611
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "data_event_DetectDescription"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 741
+									}
+								]
+							}
+						]
+					},
+					"gridPos": {
+						"h": 7,
+						"w": 12,
+						"x": 12,
+						"y": 44
+					},
+					"id": 147,
+					"links": [],
+					"maxDataPoints": 3,
+					"options": {
+						"footer": {
+							"fields": "",
+							"reducer": ["sum"],
+							"show": false
+						},
+						"showHeader": true,
+						"sortBy": []
+					},
+					"pluginVersion": "9.0.6",
+					"targets": [
+						{
+							"bucketAggs": [
+								{
+									"$$hashKey": "object:73",
+									"fake": true,
+									"field": "destinationTranslatedAddress",
+									"id": "3",
+									"settings": {
+										"min_doc_count": 1,
+										"order": "desc",
+										"orderBy": "_count",
+										"size": "0"
+									},
+									"type": "terms"
+								},
+								{
+									"field": "destinationTranslatedAddress_country_code",
+									"id": "4",
+									"settings": {
+										"min_doc_count": "1",
+										"order": "desc",
+										"orderBy": "_term",
+										"size": "10"
+									},
+									"type": "terms"
+								}
+							],
+							"datasource": {
+								"type": "grafana-opensearch-datasource",
+								"uid": "replace_datasource_uid"
+							},
+							"metrics": [
+								{
+									"$$hashKey": "object:71",
+									"field": "select field",
+									"id": "1",
+									"type": "count"
+								}
+							],
+							"query": "event_class_id:UserActivityAuditEvent",
+							"refId": "A",
+							"timeField": "timestamp"
+						}
+					],
+					"title": "USER ACTIVITY BY SRC IP",
+					"transformations": [
+						{
+							"id": "organize",
+							"options": {
+								"excludeByName": {},
+								"indexByName": {},
+								"renameByName": {
+									"data_event_DetectDescription": "DESCRIPTION",
+									"data_event_UserIp": "USER IP",
+									"data_event_UserIp_country_code": "COUNTRY",
+									"destinationTranslatedAddress": "IP ADDRESS",
+									"destinationTranslatedAddress_country_code": "COUNTRY"
+								}
+							}
+						}
+					],
+					"type": "table"
+				},
+				{
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"fieldConfig": {
+						"defaults": {
+							"color": {
+								"mode": "thresholds"
+							},
+							"custom": {
+								"align": "auto",
+								"displayMode": "auto",
+								"inspect": false
+							},
+							"mappings": [],
+							"thresholds": {
+								"mode": "absolute",
+								"steps": [
+									{
+										"color": "green"
+									},
+									{
+										"color": "red",
+										"value": 80
+									}
+								]
+							}
+						},
+						"overrides": [
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "DATE/TIME"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 202
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "EVENT ID"
+								},
+								"properties": [
+									{
+										"id": "links",
+										"value": [
+											{
+												"targetBlank": true,
+												"title": "VIEW EVENT DETAILS",
+												"url": "https://paschoalotto.soc.gemina.io/explore?left=%5B%22now-6h%22,%22now%22,%22CROWDSTRIKE%22,%7B%22refId%22:%22A%22,%22query%22:%22_id:${__value.text}%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D"
+											}
+										]
+									},
+									{
+										"id": "custom.width",
+										"value": 285
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "SEVERITY"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 122
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "CROWDSTRIKE AGENT"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 157
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "USER ACCOUNT"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 239
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "SEVERITY"
+								},
+								"properties": [
+									{
+										"id": "custom.displayMode",
+										"value": "color-text"
+									},
+									{
+										"id": "mappings",
+										"value": [
+											{
+												"options": {
+													"High": {
+														"color": "red",
+														"index": 2
+													},
+													"Medium": {
+														"color": "orange",
+														"index": 1
+													},
+													"low": {
+														"color": "green",
+														"index": 0
+													}
+												},
+												"type": "value"
+											}
+										]
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "AGENT IP"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 173
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "COUNTRY"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 123
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "USER"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 215
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "IP ADDRESS"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 186
+									}
+								]
+							}
+						]
+					},
+					"gridPos": {
+						"h": 10,
+						"w": 24,
+						"x": 0,
+						"y": 51
+					},
+					"id": 148,
+					"options": {
+						"footer": {
+							"fields": "",
+							"reducer": ["sum"],
+							"show": false
+						},
+						"showHeader": true,
+						"sortBy": []
+					},
+					"pluginVersion": "9.0.6",
+					"targets": [
+						{
+							"alias": "",
+							"bucketAggs": [],
+							"datasource": {
+								"type": "grafana-opensearch-datasource",
+								"uid": "replace_datasource_uid"
+							},
+							"metrics": [
+								{
+									"id": "1",
+									"settings": {
+										"size": "500"
+									},
+									"type": "raw_data"
+								}
+							],
+							"query": "event_class_id:UserActivityAuditEvent",
+							"queryType": "randomWalk",
+							"refId": "A",
+							"timeField": "timestamp"
+						}
+					],
+					"title": "CROWDSTRIKE - USER ACTIVITY EVENTS",
+					"transformations": [
+						{
+							"id": "organize",
+							"options": {
+								"excludeByName": {
+									"@metadata_beat": true,
+									"@metadata_type": true,
+									"@metadata_version": true,
+									"Offset": true,
+									"_id": false,
+									"_index": true,
+									"_type": true,
+									"agent_ephemeral_id": true,
+									"agent_hostname": true,
+									"agent_id": true,
+									"agent_ip": false,
+									"agent_ip_city_name": true,
+									"agent_ip_country_code": true,
+									"agent_ip_geolocation": true,
+									"agent_labels_customer": true,
+									"agent_name": true,
+									"agent_type": true,
+									"agent_version": true,
+									"beats_type": true,
+									"cat": true,
+									"cluster_name": true,
+									"cluster_node": true,
+									"collector_node_id": true,
+									"data_appCerts": true,
+									"data_appSha256": true,
+									"data_core_remedy_items_items": true,
+									"data_core_remedy_items_totalItems": true,
+									"data_customer_id": true,
+									"data_data_core_remedy_items_items": true,
+									"data_data_core_remedy_items_totalItems": true,
+									"data_data_created_at": true,
+									"data_data_endpoint_id": true,
+									"data_data_endpoint_java_id": true,
+									"data_data_endpoint_platform": true,
+									"data_data_endpoint_type": true,
+									"data_data_event_service_id": true,
+									"data_data_hmpa_exploit_app_name": true,
+									"data_data_hmpa_exploit_details": true,
+									"data_data_hmpa_exploit_family_id": true,
+									"data_data_hmpa_exploit_mitigation": true,
+									"data_data_hmpa_exploit_process_alias_path": true,
+									"data_data_hmpa_exploit_process_name": true,
+									"data_data_hmpa_exploit_process_path": true,
+									"data_data_hmpa_exploit_process_pid": true,
+									"data_data_hmpa_exploit_process_version": true,
+									"data_data_hmpa_exploit_thumbprint": true,
+									"data_data_hmpa_exploit_type": true,
+									"data_data_hmpa_exploit_uid": true,
+									"data_data_hmpa_exploit_version": true,
+									"data_data_hmpa_exploit_version_city_name": true,
+									"data_data_hmpa_exploit_version_country_code": true,
+									"data_data_hmpa_exploit_version_geolocation": true,
+									"data_data_inserted_at": true,
+									"data_data_source_app_id": true,
+									"data_data_source_info_ip": true,
+									"data_data_source_info_ip_city_name": true,
+									"data_data_source_info_ip_country_code": true,
+									"data_data_source_info_ip_geolocation": true,
+									"data_data_threat_id_counter": true,
+									"data_data_threat_id_date": true,
+									"data_data_threat_id_machineIdentifier": true,
+									"data_data_threat_id_processIdentifier": true,
+									"data_data_threat_id_time": true,
+									"data_data_threat_id_timeSecond": true,
+									"data_data_threat_id_timestamp": true,
+									"data_data_threat_status": true,
+									"data_data_user_match_id_counter": true,
+									"data_data_user_match_id_date": true,
+									"data_data_user_match_id_machineIdentifier": true,
+									"data_data_user_match_id_processIdentifier": true,
+									"data_data_user_match_id_time": true,
+									"data_data_user_match_id_timeSecond": true,
+									"data_data_user_match_id_timestamp": true,
+									"data_data_user_match_uuid": true,
+									"data_datastream": true,
+									"data_detection_identity_name": true,
+									"data_duid": true,
+									"data_end": true,
+									"data_endpoint_id": true,
+									"data_endpoint_type": true,
+									"data_event_AssociatedFile": true,
+									"data_event_AuditKeyValues": true,
+									"data_event_CommandLine": true,
+									"data_event_ComputerName": false,
+									"data_event_DetectDescription": true,
+									"data_event_DetectId": true,
+									"data_event_DetectName": false,
+									"data_event_DnsRequests": true,
+									"data_event_DocumentsAccessed": true,
+									"data_event_ExecutablesWritten": true,
+									"data_event_FalconHostLink": true,
+									"data_event_FileName": false,
+									"data_event_FilePath": true,
+									"data_event_GrandparentCommandLine": true,
+									"data_event_GrandparentImageFileName": true,
+									"data_event_HostGroups": true,
+									"data_event_IOCType": true,
+									"data_event_IOCValue": true,
+									"data_event_LocalIP": false,
+									"data_event_MACAddress": true,
+									"data_event_MD5String": true,
+									"data_event_MachineDomain": true,
+									"data_event_NetworkAccesses": true,
+									"data_event_Objective": true,
+									"data_event_OperationName": false,
+									"data_event_ParentCommandLine": true,
+									"data_event_ParentImageFileName": true,
+									"data_event_ParentProcessId": true,
+									"data_event_PatternDispositionDescription": true,
+									"data_event_PatternDispositionFlags_BlockingUnsupportedOrDisabled": true,
+									"data_event_PatternDispositionFlags_BootupSafeguardEnabled": true,
+									"data_event_PatternDispositionFlags_CriticalProcessDisabled": true,
+									"data_event_PatternDispositionFlags_Detect": true,
+									"data_event_PatternDispositionFlags_FsOperationBlocked": true,
+									"data_event_PatternDispositionFlags_HandleOperationDowngraded": true,
+									"data_event_PatternDispositionFlags_InddetMask": true,
+									"data_event_PatternDispositionFlags_Indicator": true,
+									"data_event_PatternDispositionFlags_KillActionFailed": true,
+									"data_event_PatternDispositionFlags_KillParent": true,
+									"data_event_PatternDispositionFlags_KillProcess": true,
+									"data_event_PatternDispositionFlags_KillSubProcess": true,
+									"data_event_PatternDispositionFlags_OperationBlocked": true,
+									"data_event_PatternDispositionFlags_PolicyDisabled": true,
+									"data_event_PatternDispositionFlags_ProcessBlocked": true,
+									"data_event_PatternDispositionFlags_QuarantineFile": true,
+									"data_event_PatternDispositionFlags_QuarantineMachine": true,
+									"data_event_PatternDispositionFlags_RegistryOperationBlocked": true,
+									"data_event_PatternDispositionFlags_Rooting": true,
+									"data_event_PatternDispositionFlags_SensorOnly": true,
+									"data_event_PatternDispositionFlags_SuspendParent": true,
+									"data_event_PatternDispositionFlags_SuspendProcess": true,
+									"data_event_PatternDispositionValue": true,
+									"data_event_ProcessEndTime": true,
+									"data_event_ProcessId": true,
+									"data_event_ProcessStartTime": true,
+									"data_event_QuarantineFiles": true,
+									"data_event_SHA1String": true,
+									"data_event_SHA256String": true,
+									"data_event_SensorId": true,
+									"data_event_ServiceName": false,
+									"data_event_Severity": true,
+									"data_event_Success": true,
+									"data_event_Tactic": true,
+									"data_event_Tags": true,
+									"data_event_Technique": true,
+									"data_event_UTCTimestamp": true,
+									"data_event_UserId": false,
+									"data_event_UserIp": false,
+									"data_event_UserIp_city_name": true,
+									"data_event_UserIp_country_code": false,
+									"data_event_UserIp_geolocation": true,
+									"data_event_UserName": false,
+									"data_event_service_event_id": true,
+									"data_filePath": true,
+									"data_group": true,
+									"data_id": true,
+									"data_metadata_customerIDString": true,
+									"data_metadata_eventCreationTime": true,
+									"data_metadata_eventType": true,
+									"data_metadata_offset": true,
+									"data_metadata_version": true,
+									"data_name": true,
+									"data_origin": true,
+									"data_rt": true,
+									"data_source_info_ip": true,
+									"data_source_info_ip_city_name": true,
+									"data_source_info_ip_country_code": true,
+									"data_source_info_ip_geolocation": true,
+									"data_threat": true,
+									"data_threat_cleanable": true,
+									"data_win_eventXML_binaryData": true,
+									"data_win_eventXML_binaryDataSize": true,
+									"data_win_eventXML_param1": true,
+									"data_win_eventdata_binary": true,
+									"data_win_eventdata_data": true,
+									"data_win_eventdata_domain": true,
+									"data_win_eventdata_imagePath": true,
+									"data_win_eventdata_sID": true,
+									"data_win_eventdata_serviceName": true,
+									"data_win_eventdata_serviceType": true,
+									"data_win_eventdata_startType": true,
+									"data_win_eventdata_user": true,
+									"data_win_system_channel": true,
+									"data_win_system_computer": true,
+									"data_win_system_eventID": true,
+									"data_win_system_eventRecordID": true,
+									"data_win_system_eventSourceName": true,
+									"data_win_system_keywords": true,
+									"data_win_system_level": true,
+									"data_win_system_opcode": true,
+									"data_win_system_processID": true,
+									"data_win_system_providerGuid": true,
+									"data_win_system_providerName": true,
+									"data_win_system_severityValue": true,
+									"data_win_system_systemTime": true,
+									"data_win_system_task": true,
+									"data_win_system_threadID": true,
+									"data_win_system_version": true,
+									"decoder_name": true,
+									"destinationTranslatedAddress_city_name": true,
+									"destinationTranslatedAddress_country_code": false,
+									"destinationTranslatedAddress_geolocation": true,
+									"deviceProcessName": true,
+									"device_product": true,
+									"device_vendor": true,
+									"device_version": true,
+									"ecs_version": true,
+									"event_class_id": true,
+									"full_log": true,
+									"gl2_accounted_message_size": true,
+									"gl2_message_id": true,
+									"gl2_processing_error": true,
+									"gl2_remote_ip": true,
+									"gl2_remote_port": true,
+									"gl2_source_collector": true,
+									"gl2_source_input": true,
+									"gl2_source_node": true,
+									"highlight": true,
+									"host_name": true,
+									"id": true,
+									"location": true,
+									"log_file_path": true,
+									"log_offset": true,
+									"manager_name": true,
+									"message": false,
+									"name": true,
+									"previous_output": true,
+									"rt": true,
+									"rule_description": true,
+									"rule_firedtimes": true,
+									"rule_frequency": true,
+									"rule_gdpr": true,
+									"rule_gpg13": true,
+									"rule_group1": true,
+									"rule_group2": true,
+									"rule_groups": true,
+									"rule_hipaa": true,
+									"rule_id": true,
+									"rule_level": true,
+									"rule_mail": true,
+									"rule_mitre_id": true,
+									"rule_mitre_tactic": true,
+									"rule_mitre_technique": true,
+									"rule_nist_800_53": true,
+									"rule_pci_dss": true,
+									"rule_tsc": true,
+									"sort": true,
+									"source": true,
+									"src_ip": true,
+									"src_ip_city_name": true,
+									"src_ip_country_code": true,
+									"src_ip_geolocation": true,
+									"streams": true,
+									"syslog_level": true,
+									"syslog_tag": true,
+									"syslog_type": true,
+									"timestamp": false,
+									"true": true,
+									"user_name": true,
+									"win_system_eventID": true,
+									"windows_event_id": true,
+									"windows_event_severity": false
+								},
+								"indexByName": {
+									"Offset": 21,
+									"_id": 1,
+									"_index": 8,
+									"_type": 9,
+									"cat": 5,
+									"destinationTranslatedAddress": 3,
+									"destinationTranslatedAddress_city_name": 22,
+									"destinationTranslatedAddress_country_code": 4,
+									"destinationTranslatedAddress_geolocation": 23,
+									"deviceProcessName": 24,
+									"device_product": 25,
+									"device_vendor": 26,
+									"device_version": 27,
+									"duser": 2,
+									"event_class_id": 28,
+									"gl2_accounted_message_size": 10,
+									"gl2_message_id": 11,
+									"gl2_remote_ip": 12,
+									"gl2_remote_port": 13,
+									"gl2_source_input": 14,
+									"gl2_source_node": 15,
+									"highlight": 16,
+									"message": 6,
+									"name": 29,
+									"rt": 30,
+									"severity": 7,
+									"sort": 17,
+									"source": 18,
+									"streams": 19,
+									"syslog_type": 20,
+									"timestamp": 0
+								},
+								"renameByName": {
+									"_id": "EVENT ID",
+									"_index": "",
+									"agent_ip": "SRC IP",
+									"agent_name": "AGENT",
+									"cat": "CATEGORY",
+									"data_data_source_info_ip": "AGENT IP",
+									"data_description": "EVENT DESCRIPTION",
+									"data_event_ComputerName": "CROWDSTRIKE AGENT",
+									"data_event_DetectName": "DETECTION NAME",
+									"data_event_FileName": "FILE NAME",
+									"data_event_LocalIP": "AGENT IP",
+									"data_event_OperationName": "OPERATION",
+									"data_event_ServiceName": "SERVICE",
+									"data_event_SeverityName": "SEVERITY",
+									"data_event_UserId": "USER ID",
+									"data_event_UserIp": "USER IP",
+									"data_event_UserIp_country_code": "COUNTRY",
+									"data_event_UserName": "ACCOUNT",
+									"data_metadata_eventType": "EVENT TYPE",
+									"data_name": "EVENT",
+									"data_source_info_ip": "AGENT IP",
+									"data_suser": "USER ACCOUNT",
+									"data_type": "EVENT TYPE",
+									"data_win_system_message": "MESSAGE",
+									"data_win_system_providerGuid": "",
+									"destinationTranslatedAddress": "IP ADDRESS",
+									"destinationTranslatedAddress_country_code": "COUNTRY",
+									"duser": "USER",
+									"message": "MESSAGE",
+									"rule_level": "RULE LEVEL",
+									"severity": "SEVERITY",
+									"syslog_level": "LEVEL",
+									"timestamp": "DATE/TIME",
+									"windows_event_severity": "EVENT LOG SEVERITY"
+								}
+							}
+						}
+					],
+					"transparent": true,
+					"type": "table"
+				}
+			],
+			"title": "CROWDSTRIKE - USER ACTIVITY (CROWDSTRIKE PORTAL)",
+			"type": "row"
+		}
+	],
+	"refresh": "",
+	"schemaVersion": 37,
+	"style": "dark",
+	"tags": ["EDR"],
+	"templating": {
+		"list": [
+			{
+				"datasource": {
+					"type": "grafana-opensearch-datasource",
+					"uid": "replace_datasource_uid"
+				},
+				"filters": [],
+				"hide": 0,
+				"label": "",
+				"name": "Filters",
+				"skipUrlSync": false,
+				"type": "adhoc"
+			},
+			{
+				"current": {
+					"selected": false,
+					"text": "All",
+					"value": "$__all"
+				},
+				"datasource": {
+					"type": "grafana-opensearch-datasource",
+					"uid": "replace_datasource_uid"
+				},
+				"definition": "{ \"find\": \"terms\", \"field\": \"dhost\", \"query\": \"\", \"size\": 1024}",
+				"hide": 0,
+				"includeAll": true,
+				"label": "CROWDSTRIKE AGENT",
+				"multi": false,
+				"name": "crowdstrike_agent",
+				"options": [],
+				"query": "{ \"find\": \"terms\", \"field\": \"dhost\", \"query\": \"\", \"size\": 1024}",
+				"refresh": 2,
+				"regex": "",
+				"skipUrlSync": false,
+				"sort": 2,
+				"tagValuesQuery": "",
+				"tagsQuery": "",
+				"type": "query",
+				"useTags": false
+			},
+			{
+				"current": {
+					"selected": false,
+					"text": "All",
+					"value": "$__all"
+				},
+				"datasource": {
+					"type": "grafana-opensearch-datasource",
+					"uid": "replace_datasource_uid"
+				},
+				"definition": "{ \"find\": \"terms\", \"field\": \"severity\", \"query\": \"\", \"size\": 1024}",
+				"hide": 0,
+				"includeAll": true,
+				"label": "CrowdStrike Severity",
+				"multi": false,
+				"name": "crowdstrike_severity",
+				"options": [],
+				"query": "{ \"find\": \"terms\", \"field\": \"severity\", \"query\": \"\", \"size\": 1024}",
+				"refresh": 2,
+				"regex": "",
+				"skipUrlSync": false,
+				"sort": 0,
+				"type": "query"
+			}
+		]
+	},
+	"time": {
+		"from": "now-24h",
+		"to": "now"
+	},
+	"timepicker": {
+		"refresh_intervals": ["10s", "30s", "1m", "5m", "15m", "30m", "1h", "2h", "1d"],
+		"time_options": ["5m", "15m", "1h", "6h", "12h", "24h", "2d", "7d", "30d"]
+	},
+	"timezone": "",
+	"title": "EDR - CROWDSTRIKE EVENTS AND ALERTS",
+	"version": 1,
+	"weekStart": ""
+}

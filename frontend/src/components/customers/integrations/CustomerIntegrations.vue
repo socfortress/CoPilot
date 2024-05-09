@@ -5,7 +5,7 @@
 				<CustomerIntegrationForm
 					:customerCode="customerCode"
 					:customerName="customerName"
-					:disabledIdsList="disabledIntegrationsIds"
+					:disabledIdsList="disabledIds"
 					@submitted="refreshList()"
 					@close="closeForm()"
 				/>
@@ -20,11 +20,11 @@
 					</n-button>
 				</div>
 
-				<n-spin :show="loadingIntegrations">
+				<n-spin :show="loading">
 					<div class="list p-7 pt-4">
-						<template v-if="integrationsList.length">
+						<template v-if="list.length">
 							<CustomerIntegrationItem
-								v-for="integration of integrationsList"
+								v-for="integration of list"
 								:key="integration.id"
 								:integration="integration"
 								@deployed="refreshList()"
@@ -34,11 +34,7 @@
 							/>
 						</template>
 						<template v-else>
-							<n-empty
-								description="No integrations found"
-								class="justify-center h-48"
-								v-if="!loadingIntegrations"
-							/>
+							<n-empty description="No integrations found" class="justify-center h-48" v-if="!loading" />
 						</template>
 					</div>
 				</n-spin>
@@ -65,18 +61,18 @@ const AddIcon = "carbon:add-alt"
 
 const message = useMessage()
 const showForm = ref(false)
-const loadingIntegrations = ref(false)
-const integrationsList = ref<CustomerIntegration[]>([])
-const disabledIntegrationsIds = computed(() => integrationsList.value.map(o => o.integration_service_id))
+const loading = ref(false)
+const list = ref<CustomerIntegration[]>([])
+const disabledIds = computed(() => list.value.map(o => o.integration_service_id))
 
 function getCustomerIntegrations() {
-	loadingIntegrations.value = true
+	loading.value = true
 
 	Api.integrations
 		.getCustomerIntegrations(customerCode)
 		.then(res => {
 			if (res.data.success) {
-				integrationsList.value = res.data?.available_integrations || []
+				list.value = res.data?.available_integrations || []
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
@@ -85,7 +81,7 @@ function getCustomerIntegrations() {
 			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
-			loadingIntegrations.value = false
+			loading.value = false
 		})
 }
 

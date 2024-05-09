@@ -1,0 +1,3858 @@
+{
+	"annotations": {
+		"list": [
+			{
+				"builtIn": 1,
+				"datasource": {
+					"type": "grafana",
+					"uid": "-- Grafana --"
+				},
+				"enable": true,
+				"hide": true,
+				"iconColor": "rgba(0, 211, 255, 1)",
+				"name": "Annotations & Alerts",
+				"target": {
+					"limit": 100,
+					"matchAny": false,
+					"tags": [],
+					"type": "dashboard"
+				},
+				"type": "dashboard"
+			}
+		]
+	},
+	"description": "FORTINET - VPN LOGS",
+	"editable": false,
+	"fiscalYearStartMonth": 0,
+	"graphTooltip": 0,
+	"id": null,
+	"links": [
+		{
+			"asDropdown": true,
+			"icon": "external link",
+			"includeVars": true,
+			"keepTime": true,
+			"tags": ["FORTINET VPN"],
+			"targetBlank": true,
+			"title": "FORTINET VPN DASHBOARDS",
+			"tooltip": "",
+			"type": "dashboards",
+			"url": ""
+		}
+	],
+	"liveNow": false,
+	"panels": [
+		{
+			"collapsed": false,
+			"gridPos": {
+				"h": 1,
+				"w": 24,
+				"x": 0,
+				"y": 0
+			},
+			"id": 30,
+			"panels": [],
+			"title": "VPN SUMMARY (SDWAN + FORTICLIENT)",
+			"type": "row"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "blue",
+								"value": null
+							}
+						]
+					},
+					"unit": "short"
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 4,
+				"x": 0,
+				"y": 1
+			},
+			"id": 2,
+			"options": {
+				"colorMode": "value",
+				"graphMode": "area",
+				"justifyMode": "auto",
+				"orientation": "auto",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"textMode": "auto"
+			},
+			"pluginVersion": "10.2.0",
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "type:event AND subtype:vpn AND devname:$firewall AND syslog_level:$severity",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "VPN EVENTS",
+			"type": "stat"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "orange",
+								"value": null
+							}
+						]
+					},
+					"unit": "short"
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 4,
+				"x": 4,
+				"y": 1
+			},
+			"id": 23,
+			"options": {
+				"colorMode": "value",
+				"graphMode": "area",
+				"justifyMode": "auto",
+				"orientation": "auto",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"textMode": "auto"
+			},
+			"pluginVersion": "10.2.0",
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "type:event AND subtype:vpn AND devname:$firewall AND syslog_level:$severity AND action:\"ssl-login-fail\"",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "VPN FAILED AUTHs (FORTICLIENT)",
+			"type": "stat"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "blue",
+								"value": null
+							}
+						]
+					},
+					"unit": "short"
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 4,
+				"x": 8,
+				"y": 1
+			},
+			"id": 9,
+			"options": {
+				"colorMode": "value",
+				"graphMode": "area",
+				"justifyMode": "auto",
+				"orientation": "auto",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"textMode": "auto"
+			},
+			"pluginVersion": "10.2.0",
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "365d"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"field": "devname",
+							"id": "1",
+							"type": "cardinality"
+						}
+					],
+					"query": "type:event AND subtype:vpn AND devname:$firewall AND syslog_level:$severity",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "VPN LOGS: FIREWALLS",
+			"type": "stat"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "palette-classic"
+					},
+					"custom": {
+						"hideFrom": {
+							"legend": false,
+							"tooltip": false,
+							"viz": false
+						}
+					},
+					"mappings": []
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 5,
+				"x": 12,
+				"y": 1
+			},
+			"id": 4,
+			"options": {
+				"legend": {
+					"displayMode": "list",
+					"placement": "right",
+					"showLegend": false
+				},
+				"pieType": "pie",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"tooltip": {
+					"mode": "single",
+					"sort": "none"
+				}
+			},
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "devname",
+							"id": "3",
+							"settings": {
+								"min_doc_count": "1",
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "15"
+							},
+							"type": "terms"
+						},
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "type:event AND subtype:vpn AND devname:$firewall AND syslog_level:$severity",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "VPN LOGS BY FIREWALL",
+			"type": "piechart"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"custom": {
+						"align": "auto",
+						"cellOptions": {
+							"type": "auto"
+						},
+						"inspect": false
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					}
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "source"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 473
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 7,
+				"x": 17,
+				"y": 1
+			},
+			"id": 5,
+			"options": {
+				"cellHeight": "sm",
+				"footer": {
+					"countRows": false,
+					"fields": "",
+					"reducer": ["sum"],
+					"show": false
+				},
+				"showHeader": true,
+				"sortBy": []
+			},
+			"pluginVersion": "10.2.0",
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "devname",
+							"id": "3",
+							"settings": {
+								"min_doc_count": "1",
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "20"
+							},
+							"type": "terms"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "type:event AND subtype:vpn AND devname:$firewall AND syslog_level:$severity",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "VPN LOGS BY FIREWALL",
+			"transformations": [
+				{
+					"id": "organize",
+					"options": {
+						"excludeByName": {},
+						"indexByName": {},
+						"renameByName": {
+							"devname": "FIREWALL"
+						}
+					}
+				}
+			],
+			"transparent": true,
+			"type": "table"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "palette-classic"
+					},
+					"custom": {
+						"hideFrom": {
+							"legend": false,
+							"tooltip": false,
+							"viz": false
+						}
+					},
+					"mappings": []
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "information"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "blue",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "notice"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "green",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "warning"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "orange",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "error"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "red",
+									"mode": "fixed"
+								}
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 6,
+				"x": 0,
+				"y": 9
+			},
+			"id": 11,
+			"options": {
+				"legend": {
+					"displayMode": "table",
+					"placement": "right",
+					"showLegend": true
+				},
+				"pieType": "donut",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"tooltip": {
+					"mode": "single",
+					"sort": "none"
+				}
+			},
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "syslog_level",
+							"id": "3",
+							"settings": {
+								"min_doc_count": "1",
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "15"
+							},
+							"type": "terms"
+						},
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "type:event AND subtype:vpn AND devname:$firewall AND syslog_level:$severity",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "VPN LOGS BY SEVERITY",
+			"type": "piechart"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "palette-classic"
+					},
+					"custom": {
+						"hideFrom": {
+							"legend": false,
+							"tooltip": false,
+							"viz": false
+						}
+					},
+					"mappings": []
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 5,
+				"x": 6,
+				"y": 9
+			},
+			"id": 24,
+			"options": {
+				"legend": {
+					"displayMode": "list",
+					"placement": "right",
+					"showLegend": false
+				},
+				"pieType": "pie",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"tooltip": {
+					"mode": "single",
+					"sort": "none"
+				}
+			},
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "tunneltype",
+							"id": "3",
+							"settings": {
+								"min_doc_count": "1",
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "15"
+							},
+							"type": "terms"
+						},
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "type:event AND subtype:vpn AND devname:$firewall AND syslog_level:$severity",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "VPN LOGS BY VPN TYPE",
+			"type": "piechart"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"custom": {
+						"align": "auto",
+						"cellOptions": {
+							"type": "auto"
+						},
+						"inspect": false
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					}
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "source"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 473
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 6,
+				"x": 11,
+				"y": 9
+			},
+			"id": 25,
+			"options": {
+				"cellHeight": "sm",
+				"footer": {
+					"countRows": false,
+					"fields": "",
+					"reducer": ["sum"],
+					"show": false
+				},
+				"showHeader": true,
+				"sortBy": []
+			},
+			"pluginVersion": "10.2.0",
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "tunneltype",
+							"id": "3",
+							"settings": {
+								"min_doc_count": "1",
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "20"
+							},
+							"type": "terms"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "type:event AND subtype:vpn AND devname:$firewall AND syslog_level:$severity",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "VPN LOGS BY VPN TYPE",
+			"transformations": [
+				{
+					"id": "organize",
+					"options": {
+						"excludeByName": {},
+						"indexByName": {},
+						"renameByName": {
+							"devname": "FIREWALL"
+						}
+					}
+				}
+			],
+			"transparent": true,
+			"type": "table"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "palette-classic"
+					},
+					"custom": {
+						"hideFrom": {
+							"legend": false,
+							"tooltip": false,
+							"viz": false
+						}
+					},
+					"mappings": []
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 8,
+				"w": 7,
+				"x": 17,
+				"y": 9
+			},
+			"id": 8,
+			"options": {
+				"legend": {
+					"displayMode": "table",
+					"placement": "right",
+					"showLegend": true
+				},
+				"pieType": "donut",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"tooltip": {
+					"mode": "single",
+					"sort": "none"
+				}
+			},
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "msg",
+							"id": "3",
+							"settings": {
+								"min_doc_count": "1",
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "15"
+							},
+							"type": "terms"
+						},
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "type:event AND subtype:vpn AND devname:$firewall AND syslog_level:$severity",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "VPN LOGS BY STATUS",
+			"type": "piechart"
+		},
+		{
+			"collapsed": true,
+			"gridPos": {
+				"h": 1,
+				"w": 24,
+				"x": 0,
+				"y": 17
+			},
+			"id": 28,
+			"panels": [
+				{
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"fieldConfig": {
+						"defaults": {
+							"color": {
+								"mode": "thresholds"
+							},
+							"mappings": [],
+							"thresholds": {
+								"mode": "absolute",
+								"steps": [
+									{
+										"color": "blue",
+										"value": null
+									}
+								]
+							},
+							"unit": "short"
+						},
+						"overrides": []
+					},
+					"gridPos": {
+						"h": 8,
+						"w": 4,
+						"x": 0,
+						"y": 18
+					},
+					"id": 31,
+					"options": {
+						"colorMode": "value",
+						"graphMode": "area",
+						"justifyMode": "auto",
+						"orientation": "auto",
+						"reduceOptions": {
+							"calcs": ["sum"],
+							"fields": "",
+							"values": false
+						},
+						"textMode": "auto"
+					},
+					"pluginVersion": "10.2.0",
+					"targets": [
+						{
+							"alias": "",
+							"bucketAggs": [
+								{
+									"field": "timestamp",
+									"id": "2",
+									"settings": {
+										"interval": "auto"
+									},
+									"type": "date_histogram"
+								}
+							],
+							"datasource": {
+								"type": "grafana-opensearch-datasource",
+								"uid": "replace_datasource_uid"
+							},
+							"metrics": [
+								{
+									"id": "1",
+									"type": "count"
+								}
+							],
+							"query": "type:event AND subtype:vpn AND tunneltype:ipsec AND devname:$firewall AND syslog_level:$severity",
+							"refId": "A",
+							"timeField": "timestamp"
+						}
+					],
+					"title": "SDWAN EVENTS",
+					"type": "stat"
+				},
+				{
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"fieldConfig": {
+						"defaults": {
+							"color": {
+								"mode": "palette-classic"
+							},
+							"custom": {
+								"hideFrom": {
+									"legend": false,
+									"tooltip": false,
+									"viz": false
+								}
+							},
+							"mappings": []
+						},
+						"overrides": [
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "information"
+								},
+								"properties": [
+									{
+										"id": "color",
+										"value": {
+											"fixedColor": "blue",
+											"mode": "fixed"
+										}
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "notice"
+								},
+								"properties": [
+									{
+										"id": "color",
+										"value": {
+											"fixedColor": "green",
+											"mode": "fixed"
+										}
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "warning"
+								},
+								"properties": [
+									{
+										"id": "color",
+										"value": {
+											"fixedColor": "orange",
+											"mode": "fixed"
+										}
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "alert"
+								},
+								"properties": [
+									{
+										"id": "color",
+										"value": {
+											"fixedColor": "red",
+											"mode": "fixed"
+										}
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "block-url"
+								},
+								"properties": [
+									{
+										"id": "color",
+										"value": {
+											"fixedColor": "orange",
+											"mode": "fixed"
+										}
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "passthrough"
+								},
+								"properties": [
+									{
+										"id": "color",
+										"value": {
+											"fixedColor": "green",
+											"mode": "fixed"
+										}
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "tunnel-stats"
+								},
+								"properties": [
+									{
+										"id": "color",
+										"value": {
+											"fixedColor": "blue",
+											"mode": "fixed"
+										}
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "tunnel-up"
+								},
+								"properties": [
+									{
+										"id": "color",
+										"value": {
+											"fixedColor": "green",
+											"mode": "fixed"
+										}
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "tunnel-down"
+								},
+								"properties": [
+									{
+										"id": "color",
+										"value": {
+											"fixedColor": "red",
+											"mode": "fixed"
+										}
+									}
+								]
+							}
+						]
+					},
+					"gridPos": {
+						"h": 8,
+						"w": 6,
+						"x": 4,
+						"y": 18
+					},
+					"id": 12,
+					"options": {
+						"legend": {
+							"displayMode": "table",
+							"placement": "right",
+							"showLegend": true
+						},
+						"pieType": "donut",
+						"reduceOptions": {
+							"calcs": ["sum"],
+							"fields": "",
+							"values": false
+						},
+						"tooltip": {
+							"mode": "single",
+							"sort": "none"
+						}
+					},
+					"targets": [
+						{
+							"alias": "",
+							"bucketAggs": [
+								{
+									"field": "action",
+									"id": "3",
+									"settings": {
+										"min_doc_count": "1",
+										"order": "desc",
+										"orderBy": "_count",
+										"size": "15"
+									},
+									"type": "terms"
+								},
+								{
+									"field": "timestamp",
+									"id": "2",
+									"settings": {
+										"interval": "auto"
+									},
+									"type": "date_histogram"
+								}
+							],
+							"datasource": {
+								"type": "grafana-opensearch-datasource",
+								"uid": "replace_datasource_uid"
+							},
+							"metrics": [
+								{
+									"id": "1",
+									"type": "count"
+								}
+							],
+							"query": "type:event AND subtype:vpn AND tunneltype:ipsec AND devname:$firewall AND syslog_level:$severity",
+							"refId": "A",
+							"timeField": "timestamp"
+						}
+					],
+					"title": "SDWAN - VPN LOGS BY ACTION",
+					"type": "piechart"
+				},
+				{
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"fieldConfig": {
+						"defaults": {
+							"color": {
+								"mode": "palette-classic"
+							},
+							"custom": {
+								"axisBorderShow": false,
+								"axisCenteredZero": false,
+								"axisColorMode": "text",
+								"axisLabel": "",
+								"axisPlacement": "auto",
+								"barAlignment": 0,
+								"drawStyle": "bars",
+								"fillOpacity": 0,
+								"gradientMode": "none",
+								"hideFrom": {
+									"legend": false,
+									"tooltip": false,
+									"viz": false
+								},
+								"insertNulls": false,
+								"lineInterpolation": "linear",
+								"lineWidth": 1,
+								"pointSize": 5,
+								"scaleDistribution": {
+									"type": "linear"
+								},
+								"showPoints": "auto",
+								"spanNulls": false,
+								"stacking": {
+									"group": "A",
+									"mode": "none"
+								},
+								"thresholdsStyle": {
+									"mode": "off"
+								}
+							},
+							"mappings": [],
+							"thresholds": {
+								"mode": "absolute",
+								"steps": [
+									{
+										"color": "green",
+										"value": null
+									},
+									{
+										"color": "red",
+										"value": 80
+									}
+								]
+							},
+							"unit": "short"
+						},
+						"overrides": []
+					},
+					"gridPos": {
+						"h": 8,
+						"w": 14,
+						"x": 10,
+						"y": 18
+					},
+					"id": 7,
+					"options": {
+						"legend": {
+							"calcs": [],
+							"displayMode": "table",
+							"placement": "right",
+							"showLegend": true
+						},
+						"tooltip": {
+							"mode": "single",
+							"sort": "none"
+						}
+					},
+					"pluginVersion": "8.5.1",
+					"targets": [
+						{
+							"alias": "",
+							"bucketAggs": [
+								{
+									"field": "devname",
+									"id": "3",
+									"settings": {
+										"min_doc_count": "1",
+										"order": "desc",
+										"orderBy": "_count",
+										"size": "20"
+									},
+									"type": "terms"
+								},
+								{
+									"field": "timestamp",
+									"id": "4",
+									"settings": {
+										"interval": "5m",
+										"min_doc_count": "1",
+										"timeZone": "utc",
+										"trimEdges": "0"
+									},
+									"type": "date_histogram"
+								}
+							],
+							"datasource": {
+								"type": "grafana-opensearch-datasource",
+								"uid": "replace_datasource_uid"
+							},
+							"metrics": [
+								{
+									"id": "1",
+									"type": "count"
+								}
+							],
+							"query": "type:event AND subtype:vpn AND tunneltype:ipsec AND devname:$firewall AND syslog_level:$severity",
+							"refId": "A",
+							"timeField": "timestamp"
+						}
+					],
+					"title": "SDWAN - VPN LOGS BY FIREWALL - HISTOGRAM (TOP 20)",
+					"type": "timeseries"
+				},
+				{
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"fieldConfig": {
+						"defaults": {
+							"color": {
+								"mode": "thresholds"
+							},
+							"custom": {
+								"hideFrom": {
+									"legend": false,
+									"tooltip": false,
+									"viz": false
+								}
+							},
+							"mappings": [],
+							"thresholds": {
+								"mode": "absolute",
+								"steps": [
+									{
+										"color": "rgba(245, 54, 54, 0.9)",
+										"value": null
+									},
+									{
+										"color": "rgba(237, 129, 40, 0.89)",
+										"value": 0
+									},
+									{
+										"color": "rgba(50, 172, 45, 0.97)",
+										"value": 10
+									}
+								]
+							}
+						},
+						"overrides": []
+					},
+					"gridPos": {
+						"h": 9,
+						"w": 8,
+						"x": 0,
+						"y": 26
+					},
+					"id": 20,
+					"maxDataPoints": 1,
+					"options": {
+						"basemap": {
+							"name": "Basemap",
+							"type": "default"
+						},
+						"controls": {
+							"mouseWheelZoom": false,
+							"showAttribution": true,
+							"showDebug": false,
+							"showMeasure": false,
+							"showScale": false,
+							"showZoom": true
+						},
+						"layers": [
+							{
+								"config": {
+									"showLegend": true,
+									"style": {
+										"color": {
+											"fixed": "dark-green"
+										},
+										"opacity": 0.4,
+										"rotation": {
+											"fixed": 0,
+											"max": 360,
+											"min": -360,
+											"mode": "mod"
+										},
+										"size": {
+											"fixed": 5,
+											"max": 30,
+											"min": 2
+										},
+										"symbol": {
+											"fixed": "img/icons/marker/circle.svg",
+											"mode": "fixed"
+										},
+										"symbolAlign": {
+											"horizontal": "center",
+											"vertical": "center"
+										},
+										"textConfig": {
+											"fontSize": 12,
+											"offsetX": 0,
+											"offsetY": 0,
+											"textAlign": "center",
+											"textBaseline": "middle"
+										}
+									}
+								},
+								"location": {
+									"gazetteer": "public/gazetteer/countries.json",
+									"mode": "lookup"
+								},
+								"name": "Layer 0",
+								"tooltip": true,
+								"type": "markers"
+							}
+						],
+						"tooltip": {
+							"mode": "details"
+						},
+						"view": {
+							"allLayers": true,
+							"id": "zero",
+							"lat": 0,
+							"lon": 0,
+							"zoom": 1
+						}
+					},
+					"pluginVersion": "10.2.0",
+					"targets": [
+						{
+							"alias": "",
+							"bucketAggs": [
+								{
+									"field": "remip_country_code",
+									"id": "3",
+									"settings": {
+										"min_doc_count": "1",
+										"order": "desc",
+										"orderBy": "_count",
+										"size": "0"
+									},
+									"type": "terms"
+								},
+								{
+									"field": "timestamp",
+									"id": "2",
+									"settings": {
+										"interval": "auto"
+									},
+									"type": "date_histogram"
+								}
+							],
+							"datasource": {
+								"type": "grafana-opensearch-datasource",
+								"uid": "replace_datasource_uid"
+							},
+							"metrics": [
+								{
+									"id": "1",
+									"type": "count"
+								}
+							],
+							"query": "type:event AND subtype:vpn AND tunneltype:ipsec AND devname:$firewall AND syslog_level:$severity",
+							"refId": "A",
+							"timeField": "timestamp"
+						}
+					],
+					"title": "SDWAN - REMOTE IP GeoIP",
+					"transformations": [
+						{
+							"id": "reduce",
+							"options": {
+								"reducers": ["sum"]
+							}
+						}
+					],
+					"type": "geomap"
+				},
+				{
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"fieldConfig": {
+						"defaults": {
+							"color": {
+								"mode": "thresholds"
+							},
+							"custom": {
+								"align": "auto",
+								"cellOptions": {
+									"type": "auto"
+								},
+								"inspect": false
+							},
+							"mappings": [],
+							"thresholds": {
+								"mode": "absolute",
+								"steps": [
+									{
+										"color": "green",
+										"value": null
+									},
+									{
+										"color": "red",
+										"value": 80
+									}
+								]
+							}
+						},
+						"overrides": [
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "COUNTRY"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 126
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "REMOTE IP"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 191
+									}
+								]
+							}
+						]
+					},
+					"gridPos": {
+						"h": 9,
+						"w": 7,
+						"x": 8,
+						"y": 26
+					},
+					"id": 21,
+					"maxDataPoints": 1,
+					"options": {
+						"cellHeight": "sm",
+						"footer": {
+							"countRows": false,
+							"fields": "",
+							"reducer": ["sum"],
+							"show": false
+						},
+						"showHeader": true,
+						"sortBy": []
+					},
+					"pluginVersion": "10.2.0",
+					"targets": [
+						{
+							"alias": "",
+							"bucketAggs": [
+								{
+									"field": "remip_country_code",
+									"id": "3",
+									"settings": {
+										"min_doc_count": "1",
+										"order": "desc",
+										"orderBy": "_count",
+										"size": "0"
+									},
+									"type": "terms"
+								},
+								{
+									"field": "remip",
+									"id": "4",
+									"settings": {
+										"min_doc_count": "1",
+										"order": "desc",
+										"orderBy": "_count",
+										"size": "10"
+									},
+									"type": "terms"
+								}
+							],
+							"datasource": {
+								"type": "grafana-opensearch-datasource",
+								"uid": "replace_datasource_uid"
+							},
+							"metrics": [
+								{
+									"id": "1",
+									"type": "count"
+								}
+							],
+							"query": "type:event AND subtype:vpn AND tunneltype:ipsec AND devname:$firewall AND syslog_level:$severity",
+							"refId": "A",
+							"timeField": "timestamp"
+						}
+					],
+					"title": "SDWAN - REMOTE IP AND GeoIP",
+					"transformations": [
+						{
+							"id": "organize",
+							"options": {
+								"excludeByName": {},
+								"indexByName": {},
+								"renameByName": {
+									"remip": "REMOTE IP",
+									"remip_country_code": "COUNTRY"
+								}
+							}
+						}
+					],
+					"type": "table"
+				},
+				{
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"fieldConfig": {
+						"defaults": {
+							"color": {
+								"mode": "thresholds"
+							},
+							"custom": {
+								"align": "auto",
+								"cellOptions": {
+									"type": "auto"
+								},
+								"inspect": false
+							},
+							"mappings": [],
+							"thresholds": {
+								"mode": "absolute",
+								"steps": [
+									{
+										"color": "green",
+										"value": null
+									},
+									{
+										"color": "red",
+										"value": 80
+									}
+								]
+							}
+						},
+						"overrides": [
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "COUNTRY"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 126
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "REMOTE IP"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 191
+									}
+								]
+							}
+						]
+					},
+					"gridPos": {
+						"h": 9,
+						"w": 9,
+						"x": 15,
+						"y": 26
+					},
+					"id": 32,
+					"maxDataPoints": 1,
+					"options": {
+						"cellHeight": "sm",
+						"footer": {
+							"countRows": false,
+							"fields": "",
+							"reducer": ["sum"],
+							"show": false
+						},
+						"showHeader": true,
+						"sortBy": []
+					},
+					"pluginVersion": "10.2.0",
+					"targets": [
+						{
+							"alias": "",
+							"bucketAggs": [
+								{
+									"field": "remip_country_code",
+									"id": "3",
+									"settings": {
+										"min_doc_count": "1",
+										"order": "desc",
+										"orderBy": "_count",
+										"size": "0"
+									},
+									"type": "terms"
+								},
+								{
+									"field": "action",
+									"id": "4",
+									"settings": {
+										"min_doc_count": "1",
+										"order": "desc",
+										"orderBy": "_count",
+										"size": "10"
+									},
+									"type": "terms"
+								}
+							],
+							"datasource": {
+								"type": "grafana-opensearch-datasource",
+								"uid": "replace_datasource_uid"
+							},
+							"metrics": [
+								{
+									"id": "1",
+									"type": "count"
+								}
+							],
+							"query": "type:event AND subtype:vpn AND tunneltype:ipsec AND devname:$firewall AND syslog_level:$severity",
+							"refId": "A",
+							"timeField": "timestamp"
+						}
+					],
+					"title": "SDWAN - REMOTE GeoIP AND ACTION",
+					"transformations": [
+						{
+							"id": "organize",
+							"options": {
+								"excludeByName": {},
+								"indexByName": {},
+								"renameByName": {
+									"action": "TUNNEL ACTION",
+									"remip": "REMOTE IP",
+									"remip_country_code": "COUNTRY"
+								}
+							}
+						}
+					],
+					"type": "table"
+				},
+				{
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"fieldConfig": {
+						"defaults": {
+							"color": {
+								"mode": "thresholds"
+							},
+							"custom": {
+								"align": "auto",
+								"cellOptions": {
+									"type": "auto"
+								},
+								"inspect": false
+							},
+							"mappings": [],
+							"thresholds": {
+								"mode": "absolute",
+								"steps": [
+									{
+										"color": "green",
+										"value": null
+									},
+									{
+										"color": "red",
+										"value": 80
+									}
+								]
+							}
+						},
+						"overrides": [
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "FIREWALL"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 126
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "ACTION"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 147
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "SEVERITY"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 109
+									},
+									{
+										"id": "custom.cellOptions",
+										"value": {
+											"type": "color-text"
+										}
+									},
+									{
+										"id": "mappings",
+										"value": [
+											{
+												"options": {
+													"alert": {
+														"color": "red",
+														"index": 3
+													},
+													"critical": {
+														"color": "dark-red",
+														"index": 4
+													},
+													"information": {
+														"color": "green",
+														"index": 1
+													},
+													"notice": {
+														"color": "blue",
+														"index": 0
+													},
+													"warning": {
+														"color": "orange",
+														"index": 2
+													}
+												},
+												"type": "value"
+											}
+										]
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "SRC IP"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 127
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "SRC PORT"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 87
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "IF IN"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 110
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "APP"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 131
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "DST IP"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 134
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "DST PORT"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 93
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "EVENT ID"
+								},
+								"properties": [
+									{
+										"id": "links",
+										"value": [
+											{
+												"targetBlank": true,
+												"title": "EVENT DETAILS",
+												"url": "https://grafana.mynetassist.local/explore?left=%7B%22datasource%22:%22FORTINET%22,%22queries%22:%5B%7B%22refId%22:%22A%22,%22query%22:%22_id:${__value.text}%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D,%22range%22:%7B%22from%22:%22now-1h%22,%22to%22:%22now%22%7D%7D"
+											}
+										]
+									},
+									{
+										"id": "custom.width",
+										"value": 400
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "SERVICE"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 95
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "DATE/TIME"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 188
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "PROFILE"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 234
+									}
+								]
+							}
+						]
+					},
+					"gridPos": {
+						"h": 15,
+						"w": 24,
+						"x": 0,
+						"y": 35
+					},
+					"id": 16,
+					"options": {
+						"cellHeight": "sm",
+						"footer": {
+							"countRows": false,
+							"fields": "",
+							"reducer": ["sum"],
+							"show": false
+						},
+						"showHeader": true,
+						"sortBy": []
+					},
+					"pluginVersion": "10.2.0",
+					"targets": [
+						{
+							"alias": "",
+							"bucketAggs": [],
+							"datasource": {
+								"type": "grafana-opensearch-datasource",
+								"uid": "replace_datasource_uid"
+							},
+							"metrics": [
+								{
+									"id": "1",
+									"settings": {
+										"size": "500"
+									},
+									"type": "raw_data"
+								}
+							],
+							"query": "type:event AND subtype:vpn AND tunneltype:ipsec AND devname:$firewall AND syslog_level:$severity",
+							"refId": "A",
+							"timeField": "timestamp"
+						}
+					],
+					"title": "SDWAN EVENTS",
+					"transformations": [
+						{
+							"id": "organize",
+							"options": {
+								"excludeByName": {
+									"_index": true,
+									"_type": true,
+									"alert_category": true,
+									"alert_definitions_version": true,
+									"alertlight": true,
+									"cat": true,
+									"catdesc": true,
+									"craction": true,
+									"crlevel": true,
+									"crscore": true,
+									"devid": true,
+									"direction": true,
+									"dstintf": true,
+									"dstintfrole": true,
+									"dstip_city_name": true,
+									"dstip_country_code": true,
+									"dstip_geolocation": true,
+									"eventtype": true,
+									"facility": true,
+									"facility_num": true,
+									"gl2_accounted_message_size": true,
+									"gl2_message_id": true,
+									"gl2_remote_ip": true,
+									"gl2_remote_port": true,
+									"gl2_source_input": true,
+									"gl2_source_node": true,
+									"group": true,
+									"highlight": true,
+									"hostname": true,
+									"hostname_city_name": true,
+									"hostname_country_code": true,
+									"hostname_geolocation": true,
+									"level": true,
+									"locip_city_name": true,
+									"locip_country_code": true,
+									"locip_geolocation": true,
+									"locport": true,
+									"logdesc": true,
+									"logver": true,
+									"message": true,
+									"method": true,
+									"msg": true,
+									"policyid": true,
+									"proto": true,
+									"rcvdbyte": true,
+									"remip_city_name": true,
+									"remip_country_code": true,
+									"remip_geolocation": true,
+									"remport": true,
+									"reqtype": true,
+									"sentbyte": true,
+									"sessionid": true,
+									"sort": true,
+									"source": true,
+									"srcintf": true,
+									"srcintfrole": true,
+									"srcip_city_name": true,
+									"srcip_country_code": true,
+									"srcip_geolocation": true,
+									"srcport": true,
+									"streams": true,
+									"subtype": true,
+									"syslog_type": true,
+									"tunneltype": true,
+									"type": true,
+									"user": true,
+									"vd": true
+								},
+								"indexByName": {
+									"_id": 1,
+									"_index": 11,
+									"_type": 12,
+									"action": 5,
+									"alert_category": 13,
+									"alert_definitions_version": 14,
+									"alert_signature": 15,
+									"app": 16,
+									"catdesc": 41,
+									"devname": 2,
+									"dstip": 17,
+									"dstport": 18,
+									"gl2_accounted_message_size": 31,
+									"gl2_message_id": 32,
+									"gl2_remote_ip": 33,
+									"gl2_remote_port": 34,
+									"gl2_source_input": 35,
+									"gl2_source_node": 36,
+									"message": 42,
+									"profile": 9,
+									"source": 3,
+									"srcip": 7,
+									"streams": 77,
+									"syslog_level": 6,
+									"syslog_type": 78,
+									"target_user_email": 79,
+									"timestamp": 0
+								},
+								"renameByName": {
+									"_id": "EVENT ID",
+									"action": "ACTION",
+									"alert_signature": "SIGNATURE",
+									"app": "APP",
+									"destination_location_name": "LOCATION",
+									"devname": "FIREWALL",
+									"dstip": "DST IP",
+									"dstport": "DST PORT",
+									"duration": "DURATION",
+									"event_log_name": "",
+									"http_method": "METHOD",
+									"http_user_agent_name": "HTTP AGENT",
+									"locip": "LOCAL IP",
+									"locip_country_code": "",
+									"network_interface_in": "IF IN",
+									"network_interface_out": "IF OUT",
+									"network_transport": "",
+									"profile": "PROFILE",
+									"remip": "REMOTE IP",
+									"rule_name": "RULE",
+									"service": "SERVICE",
+									"source": "",
+									"source_port": "SRC PORT",
+									"srcip": "SRC IP",
+									"syslog_level": "SEVERITY",
+									"timestamp": "DATE/TIME",
+									"url": "URL",
+									"user": "USER"
+								}
+							}
+						}
+					],
+					"transparent": true,
+					"type": "table"
+				}
+			],
+			"title": "SDWAN",
+			"type": "row"
+		},
+		{
+			"collapsed": true,
+			"gridPos": {
+				"h": 1,
+				"w": 24,
+				"x": 0,
+				"y": 18
+			},
+			"id": 34,
+			"panels": [
+				{
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"fieldConfig": {
+						"defaults": {
+							"color": {
+								"mode": "thresholds"
+							},
+							"mappings": [],
+							"thresholds": {
+								"mode": "absolute",
+								"steps": [
+									{
+										"color": "blue",
+										"value": null
+									}
+								]
+							},
+							"unit": "short"
+						},
+						"overrides": []
+					},
+					"gridPos": {
+						"h": 8,
+						"w": 4,
+						"x": 0,
+						"y": 19
+					},
+					"id": 39,
+					"options": {
+						"colorMode": "value",
+						"graphMode": "area",
+						"justifyMode": "auto",
+						"orientation": "auto",
+						"reduceOptions": {
+							"calcs": ["sum"],
+							"fields": "",
+							"values": false
+						},
+						"textMode": "auto"
+					},
+					"pluginVersion": "10.2.0",
+					"targets": [
+						{
+							"alias": "",
+							"bucketAggs": [
+								{
+									"field": "timestamp",
+									"id": "2",
+									"settings": {
+										"interval": "auto"
+									},
+									"type": "date_histogram"
+								}
+							],
+							"datasource": {
+								"type": "grafana-opensearch-datasource",
+								"uid": "replace_datasource_uid"
+							},
+							"metrics": [
+								{
+									"id": "1",
+									"type": "count"
+								}
+							],
+							"query": "type:event AND subtype:vpn AND tunneltype:\"ssl-tunnel\" AND devname:$firewall AND syslog_level:$severity",
+							"refId": "A",
+							"timeField": "timestamp"
+						}
+					],
+					"title": "FORTICLIENT EVENTS",
+					"type": "stat"
+				},
+				{
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"fieldConfig": {
+						"defaults": {
+							"color": {
+								"mode": "thresholds"
+							},
+							"mappings": [],
+							"thresholds": {
+								"mode": "absolute",
+								"steps": [
+									{
+										"color": "orange",
+										"value": null
+									}
+								]
+							},
+							"unit": "short"
+						},
+						"overrides": []
+					},
+					"gridPos": {
+						"h": 8,
+						"w": 4,
+						"x": 4,
+						"y": 19
+					},
+					"id": 40,
+					"options": {
+						"colorMode": "value",
+						"graphMode": "area",
+						"justifyMode": "auto",
+						"orientation": "auto",
+						"reduceOptions": {
+							"calcs": ["sum"],
+							"fields": "",
+							"values": false
+						},
+						"textMode": "auto"
+					},
+					"pluginVersion": "10.2.0",
+					"targets": [
+						{
+							"alias": "",
+							"bucketAggs": [
+								{
+									"field": "timestamp",
+									"id": "2",
+									"settings": {
+										"interval": "auto"
+									},
+									"type": "date_histogram"
+								}
+							],
+							"datasource": {
+								"type": "grafana-opensearch-datasource",
+								"uid": "replace_datasource_uid"
+							},
+							"metrics": [
+								{
+									"id": "1",
+									"type": "count"
+								}
+							],
+							"query": "type:event AND subtype:vpn AND devname:$firewall AND syslog_level:$severity AND action:\"ssl-login-fail\"",
+							"refId": "A",
+							"timeField": "timestamp"
+						}
+					],
+					"title": "VPN FAILED AUTHs (FORTICLIENT)",
+					"type": "stat"
+				},
+				{
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"fieldConfig": {
+						"defaults": {
+							"color": {
+								"mode": "thresholds"
+							},
+							"custom": {
+								"align": "auto",
+								"cellOptions": {
+									"type": "auto"
+								},
+								"inspect": false
+							},
+							"mappings": [],
+							"thresholds": {
+								"mode": "absolute",
+								"steps": [
+									{
+										"color": "orange",
+										"value": null
+									}
+								]
+							}
+						},
+						"overrides": [
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "USER"
+								},
+								"properties": [
+									{
+										"id": "color",
+										"value": {
+											"fixedColor": "orange",
+											"mode": "fixed"
+										}
+									},
+									{
+										"id": "custom.cellOptions",
+										"value": {
+											"type": "color-text"
+										}
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "Count"
+								},
+								"properties": [
+									{
+										"id": "color",
+										"value": {
+											"fixedColor": "orange",
+											"mode": "fixed"
+										}
+									},
+									{
+										"id": "custom.cellOptions",
+										"value": {
+											"type": "color-text"
+										}
+									}
+								]
+							}
+						]
+					},
+					"gridPos": {
+						"h": 8,
+						"w": 7,
+						"x": 8,
+						"y": 19
+					},
+					"id": 36,
+					"maxDataPoints": 1,
+					"options": {
+						"cellHeight": "sm",
+						"footer": {
+							"countRows": false,
+							"fields": "",
+							"reducer": ["sum"],
+							"show": false
+						},
+						"showHeader": true,
+						"sortBy": []
+					},
+					"pluginVersion": "10.2.0",
+					"targets": [
+						{
+							"alias": "",
+							"bucketAggs": [
+								{
+									"field": "user",
+									"id": "3",
+									"settings": {
+										"min_doc_count": "1",
+										"order": "desc",
+										"orderBy": "_count",
+										"size": "0"
+									},
+									"type": "terms"
+								}
+							],
+							"datasource": {
+								"type": "grafana-opensearch-datasource",
+								"uid": "replace_datasource_uid"
+							},
+							"metrics": [
+								{
+									"id": "1",
+									"type": "count"
+								}
+							],
+							"query": "type:event AND subtype:vpn AND devname:$firewall AND syslog_level:$severity AND action:\"ssl-login-fail\"",
+							"refId": "A",
+							"timeField": "timestamp"
+						}
+					],
+					"title": "FORTICLIENT - FAILED AUTHs BY USER",
+					"transformations": [
+						{
+							"id": "organize",
+							"options": {
+								"excludeByName": {},
+								"indexByName": {},
+								"renameByName": {
+									"remip": "REMOTE IP",
+									"remip_country_code": "COUNTRY",
+									"user": "USER"
+								}
+							}
+						}
+					],
+					"type": "table"
+				},
+				{
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"fieldConfig": {
+						"defaults": {
+							"color": {
+								"mode": "thresholds"
+							},
+							"custom": {
+								"align": "auto",
+								"cellOptions": {
+									"type": "auto"
+								},
+								"inspect": false
+							},
+							"mappings": [],
+							"thresholds": {
+								"mode": "absolute",
+								"steps": [
+									{
+										"color": "green",
+										"value": null
+									},
+									{
+										"color": "red",
+										"value": 80
+									}
+								]
+							}
+						},
+						"overrides": [
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "COUNTRY"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 126
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "REMOTE IP"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 191
+									}
+								]
+							}
+						]
+					},
+					"gridPos": {
+						"h": 8,
+						"w": 9,
+						"x": 15,
+						"y": 19
+					},
+					"id": 37,
+					"maxDataPoints": 1,
+					"options": {
+						"cellHeight": "sm",
+						"footer": {
+							"countRows": false,
+							"fields": "",
+							"reducer": ["sum"],
+							"show": false
+						},
+						"showHeader": true,
+						"sortBy": []
+					},
+					"pluginVersion": "10.2.0",
+					"targets": [
+						{
+							"alias": "",
+							"bucketAggs": [
+								{
+									"field": "user",
+									"id": "4",
+									"settings": {
+										"min_doc_count": "1",
+										"order": "desc",
+										"orderBy": "_count",
+										"size": "10"
+									},
+									"type": "terms"
+								},
+								{
+									"field": "duration",
+									"id": "5",
+									"settings": {
+										"min_doc_count": "1",
+										"order": "desc",
+										"orderBy": "_term",
+										"size": "10"
+									},
+									"type": "terms"
+								}
+							],
+							"datasource": {
+								"type": "grafana-opensearch-datasource",
+								"uid": "replace_datasource_uid"
+							},
+							"metrics": [
+								{
+									"id": "1",
+									"type": "count"
+								}
+							],
+							"query": "type:event AND subtype:vpn AND tunneltype:\"ssl-tunnel\" AND devname:$firewall AND syslog_level:$severity",
+							"refId": "A",
+							"timeField": "timestamp"
+						}
+					],
+					"title": "FORTICLIENT - USER AND DURATION",
+					"transformations": [
+						{
+							"id": "organize",
+							"options": {
+								"excludeByName": {},
+								"indexByName": {},
+								"renameByName": {
+									"duration": "DURATION",
+									"remip": "REMOTE IP",
+									"remip_country_code": "COUNTRY",
+									"user": "USER"
+								}
+							}
+						}
+					],
+					"type": "table"
+				},
+				{
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"fieldConfig": {
+						"defaults": {
+							"color": {
+								"mode": "thresholds"
+							},
+							"custom": {
+								"hideFrom": {
+									"legend": false,
+									"tooltip": false,
+									"viz": false
+								}
+							},
+							"mappings": [],
+							"thresholds": {
+								"mode": "absolute",
+								"steps": [
+									{
+										"color": "rgba(245, 54, 54, 0.9)",
+										"value": null
+									},
+									{
+										"color": "rgba(237, 129, 40, 0.89)",
+										"value": 0
+									},
+									{
+										"color": "rgba(50, 172, 45, 0.97)",
+										"value": 10
+									}
+								]
+							}
+						},
+						"overrides": []
+					},
+					"gridPos": {
+						"h": 9,
+						"w": 8,
+						"x": 0,
+						"y": 27
+					},
+					"id": 35,
+					"maxDataPoints": 1,
+					"options": {
+						"basemap": {
+							"name": "Basemap",
+							"type": "default"
+						},
+						"controls": {
+							"mouseWheelZoom": false,
+							"showAttribution": true,
+							"showDebug": false,
+							"showMeasure": false,
+							"showScale": false,
+							"showZoom": true
+						},
+						"layers": [
+							{
+								"config": {
+									"showLegend": true,
+									"style": {
+										"color": {
+											"fixed": "dark-green"
+										},
+										"opacity": 0.4,
+										"rotation": {
+											"fixed": 0,
+											"max": 360,
+											"min": -360,
+											"mode": "mod"
+										},
+										"size": {
+											"fixed": 5,
+											"max": 30,
+											"min": 2
+										},
+										"symbol": {
+											"fixed": "img/icons/marker/circle.svg",
+											"mode": "fixed"
+										},
+										"symbolAlign": {
+											"horizontal": "center",
+											"vertical": "center"
+										},
+										"textConfig": {
+											"fontSize": 12,
+											"offsetX": 0,
+											"offsetY": 0,
+											"textAlign": "center",
+											"textBaseline": "middle"
+										}
+									}
+								},
+								"location": {
+									"gazetteer": "public/gazetteer/countries.json",
+									"mode": "lookup"
+								},
+								"name": "Layer 0",
+								"tooltip": true,
+								"type": "markers"
+							}
+						],
+						"tooltip": {
+							"mode": "details"
+						},
+						"view": {
+							"allLayers": true,
+							"id": "zero",
+							"lat": 0,
+							"lon": 0,
+							"zoom": 1
+						}
+					},
+					"pluginVersion": "10.2.0",
+					"targets": [
+						{
+							"alias": "",
+							"bucketAggs": [
+								{
+									"field": "remip_country_code",
+									"id": "3",
+									"settings": {
+										"min_doc_count": "1",
+										"order": "desc",
+										"orderBy": "_count",
+										"size": "0"
+									},
+									"type": "terms"
+								},
+								{
+									"field": "timestamp",
+									"id": "2",
+									"settings": {
+										"interval": "auto"
+									},
+									"type": "date_histogram"
+								}
+							],
+							"datasource": {
+								"type": "grafana-opensearch-datasource",
+								"uid": "replace_datasource_uid"
+							},
+							"metrics": [
+								{
+									"id": "1",
+									"type": "count"
+								}
+							],
+							"query": "type:event AND subtype:vpn AND tunneltype:\"ssl-tunnel\" AND devname:$firewall AND syslog_level:$severity",
+							"refId": "A",
+							"timeField": "timestamp"
+						}
+					],
+					"title": "FORTICLIENT - REMOTE IP GeoIP",
+					"transformations": [
+						{
+							"id": "reduce",
+							"options": {
+								"reducers": ["sum"]
+							}
+						}
+					],
+					"type": "geomap"
+				},
+				{
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"fieldConfig": {
+						"defaults": {
+							"color": {
+								"mode": "thresholds"
+							},
+							"custom": {
+								"align": "auto",
+								"cellOptions": {
+									"type": "auto"
+								},
+								"inspect": false
+							},
+							"mappings": [],
+							"thresholds": {
+								"mode": "absolute",
+								"steps": [
+									{
+										"color": "green",
+										"value": null
+									},
+									{
+										"color": "red",
+										"value": 80
+									}
+								]
+							}
+						},
+						"overrides": [
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "COUNTRY"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 126
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "REMOTE IP"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 191
+									}
+								]
+							}
+						]
+					},
+					"gridPos": {
+						"h": 9,
+						"w": 7,
+						"x": 8,
+						"y": 27
+					},
+					"id": 41,
+					"maxDataPoints": 1,
+					"options": {
+						"cellHeight": "sm",
+						"footer": {
+							"countRows": false,
+							"fields": "",
+							"reducer": ["sum"],
+							"show": false
+						},
+						"showHeader": true,
+						"sortBy": []
+					},
+					"pluginVersion": "10.2.0",
+					"targets": [
+						{
+							"alias": "",
+							"bucketAggs": [
+								{
+									"field": "remip_country_code",
+									"id": "3",
+									"settings": {
+										"min_doc_count": "1",
+										"order": "desc",
+										"orderBy": "_count",
+										"size": "0"
+									},
+									"type": "terms"
+								},
+								{
+									"field": "remip",
+									"id": "4",
+									"settings": {
+										"min_doc_count": "1",
+										"order": "desc",
+										"orderBy": "_count",
+										"size": "10"
+									},
+									"type": "terms"
+								}
+							],
+							"datasource": {
+								"type": "grafana-opensearch-datasource",
+								"uid": "replace_datasource_uid"
+							},
+							"metrics": [
+								{
+									"id": "1",
+									"type": "count"
+								}
+							],
+							"query": "type:event AND subtype:vpn AND tunneltype:\"ssl-tunnel\" AND devname:$firewall AND syslog_level:$severity",
+							"refId": "A",
+							"timeField": "timestamp"
+						}
+					],
+					"title": "FORTICLIENT - REMOTE IP AND GeoIP",
+					"transformations": [
+						{
+							"id": "organize",
+							"options": {
+								"excludeByName": {},
+								"indexByName": {},
+								"renameByName": {
+									"remip": "REMOTE IP",
+									"remip_country_code": "COUNTRY"
+								}
+							}
+						}
+					],
+					"type": "table"
+				},
+				{
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"fieldConfig": {
+						"defaults": {
+							"color": {
+								"mode": "thresholds"
+							},
+							"custom": {
+								"align": "auto",
+								"cellOptions": {
+									"type": "auto"
+								},
+								"inspect": false
+							},
+							"mappings": [],
+							"thresholds": {
+								"mode": "absolute",
+								"steps": [
+									{
+										"color": "green",
+										"value": null
+									},
+									{
+										"color": "red",
+										"value": 80
+									}
+								]
+							}
+						},
+						"overrides": [
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "COUNTRY"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 126
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "REMOTE IP"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 191
+									}
+								]
+							}
+						]
+					},
+					"gridPos": {
+						"h": 9,
+						"w": 9,
+						"x": 15,
+						"y": 27
+					},
+					"id": 42,
+					"maxDataPoints": 1,
+					"options": {
+						"cellHeight": "sm",
+						"footer": {
+							"countRows": false,
+							"fields": "",
+							"reducer": ["sum"],
+							"show": false
+						},
+						"showHeader": true,
+						"sortBy": []
+					},
+					"pluginVersion": "10.2.0",
+					"targets": [
+						{
+							"alias": "",
+							"bucketAggs": [
+								{
+									"field": "remip_country_code",
+									"id": "3",
+									"settings": {
+										"min_doc_count": "1",
+										"order": "desc",
+										"orderBy": "_count",
+										"size": "0"
+									},
+									"type": "terms"
+								},
+								{
+									"field": "user",
+									"id": "4",
+									"settings": {
+										"min_doc_count": "1",
+										"order": "desc",
+										"orderBy": "_count",
+										"size": "10"
+									},
+									"type": "terms"
+								}
+							],
+							"datasource": {
+								"type": "grafana-opensearch-datasource",
+								"uid": "replace_datasource_uid"
+							},
+							"metrics": [
+								{
+									"id": "1",
+									"type": "count"
+								}
+							],
+							"query": "type:event AND subtype:vpn AND tunneltype:\"ssl-tunnel\" AND devname:$firewall AND syslog_level:$severity",
+							"refId": "A",
+							"timeField": "timestamp"
+						}
+					],
+					"title": "FORTICLIENT - REMOTE GeoIP AND USER",
+					"transformations": [
+						{
+							"id": "organize",
+							"options": {
+								"excludeByName": {},
+								"indexByName": {},
+								"renameByName": {
+									"remip": "REMOTE IP",
+									"remip_country_code": "COUNTRY",
+									"user": "USER"
+								}
+							}
+						}
+					],
+					"type": "table"
+				},
+				{
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"fieldConfig": {
+						"defaults": {
+							"color": {
+								"mode": "thresholds"
+							},
+							"mappings": [],
+							"thresholds": {
+								"mode": "absolute",
+								"steps": [
+									{
+										"color": "green",
+										"value": null
+									},
+									{
+										"color": "red",
+										"value": 80
+									}
+								]
+							}
+						},
+						"overrides": []
+					},
+					"gridPos": {
+						"h": 9,
+						"w": 10,
+						"x": 0,
+						"y": 36
+					},
+					"id": 13,
+					"options": {
+						"displayMode": "gradient",
+						"minVizHeight": 10,
+						"minVizWidth": 0,
+						"namePlacement": "auto",
+						"orientation": "horizontal",
+						"reduceOptions": {
+							"calcs": ["sum"],
+							"fields": "",
+							"values": false
+						},
+						"showUnfilled": true,
+						"valueMode": "color"
+					},
+					"pluginVersion": "10.2.0",
+					"targets": [
+						{
+							"alias": "",
+							"bucketAggs": [
+								{
+									"field": "user",
+									"id": "3",
+									"settings": {
+										"min_doc_count": "1",
+										"order": "desc",
+										"orderBy": "_count",
+										"size": "10"
+									},
+									"type": "terms"
+								},
+								{
+									"field": "timestamp",
+									"id": "4",
+									"settings": {
+										"interval": "auto",
+										"min_doc_count": "0",
+										"timeZone": "utc",
+										"trimEdges": "0"
+									},
+									"type": "date_histogram"
+								}
+							],
+							"datasource": {
+								"type": "grafana-opensearch-datasource",
+								"uid": "replace_datasource_uid"
+							},
+							"metrics": [
+								{
+									"id": "1",
+									"type": "count"
+								}
+							],
+							"query": "type:event AND subtype:vpn AND tunneltype:\"ssl-tunnel\" AND devname:$firewall AND syslog_level:$severity",
+							"refId": "A",
+							"timeField": "timestamp"
+						}
+					],
+					"title": "UTM EVENTS - VPN LOGS EVENTS BY USER (TOP 10)",
+					"transformations": [
+						{
+							"id": "organize",
+							"options": {
+								"excludeByName": {},
+								"indexByName": {},
+								"renameByName": {
+									"msg": "INDICATOR"
+								}
+							}
+						}
+					],
+					"transparent": true,
+					"type": "bargauge"
+				},
+				{
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"fieldConfig": {
+						"defaults": {
+							"color": {
+								"mode": "palette-classic"
+							},
+							"custom": {
+								"axisBorderShow": false,
+								"axisCenteredZero": false,
+								"axisColorMode": "text",
+								"axisLabel": "",
+								"axisPlacement": "auto",
+								"barAlignment": 0,
+								"drawStyle": "bars",
+								"fillOpacity": 0,
+								"gradientMode": "none",
+								"hideFrom": {
+									"legend": false,
+									"tooltip": false,
+									"viz": false
+								},
+								"insertNulls": false,
+								"lineInterpolation": "linear",
+								"lineWidth": 1,
+								"pointSize": 5,
+								"scaleDistribution": {
+									"type": "linear"
+								},
+								"showPoints": "auto",
+								"spanNulls": false,
+								"stacking": {
+									"group": "A",
+									"mode": "normal"
+								},
+								"thresholdsStyle": {
+									"mode": "off"
+								}
+							},
+							"mappings": [],
+							"thresholds": {
+								"mode": "absolute",
+								"steps": [
+									{
+										"color": "green",
+										"value": null
+									},
+									{
+										"color": "red",
+										"value": 80
+									}
+								]
+							},
+							"unit": "decbytes"
+						},
+						"overrides": []
+					},
+					"gridPos": {
+						"h": 9,
+						"w": 14,
+						"x": 10,
+						"y": 36
+					},
+					"id": 43,
+					"options": {
+						"legend": {
+							"calcs": ["mean"],
+							"displayMode": "table",
+							"placement": "right",
+							"showLegend": true
+						},
+						"tooltip": {
+							"mode": "single",
+							"sort": "none"
+						}
+					},
+					"pluginVersion": "8.5.1",
+					"targets": [
+						{
+							"alias": "BYTES RCVD",
+							"bucketAggs": [
+								{
+									"field": "timestamp",
+									"id": "4",
+									"settings": {
+										"interval": "auto",
+										"min_doc_count": "1",
+										"timeZone": "utc",
+										"trimEdges": "0"
+									},
+									"type": "date_histogram"
+								}
+							],
+							"datasource": {
+								"type": "grafana-opensearch-datasource",
+								"uid": "replace_datasource_uid"
+							},
+							"metrics": [
+								{
+									"field": "rcvdbyte",
+									"id": "1",
+									"type": "avg"
+								}
+							],
+							"query": "type:event AND subtype:vpn AND tunneltype:\"ssl-tunnel\" AND devname:$firewall AND syslog_level:$severity",
+							"refId": "A",
+							"timeField": "timestamp"
+						},
+						{
+							"alias": "BYTES SENT",
+							"bucketAggs": [
+								{
+									"field": "timestamp",
+									"id": "2",
+									"settings": {
+										"interval": "auto"
+									},
+									"type": "date_histogram"
+								}
+							],
+							"datasource": {
+								"type": "grafana-opensearch-datasource",
+								"uid": "replace_datasource_uid"
+							},
+							"hide": false,
+							"metrics": [
+								{
+									"field": "sentbyte",
+									"id": "1",
+									"type": "avg"
+								}
+							],
+							"query": "type:event AND subtype:vpn AND tunneltype:\"ssl-tunnel\" AND devname:$firewall AND syslog_level:$severity",
+							"refId": "B",
+							"timeField": "timestamp"
+						}
+					],
+					"title": "FORTICLIENT - VPN TRAFFIC",
+					"type": "timeseries"
+				},
+				{
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"fieldConfig": {
+						"defaults": {
+							"color": {
+								"mode": "thresholds"
+							},
+							"custom": {
+								"align": "auto",
+								"cellOptions": {
+									"type": "auto"
+								},
+								"inspect": false
+							},
+							"mappings": [],
+							"thresholds": {
+								"mode": "absolute",
+								"steps": [
+									{
+										"color": "green",
+										"value": null
+									},
+									{
+										"color": "red",
+										"value": 80
+									}
+								]
+							}
+						},
+						"overrides": [
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "FIREWALL"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 126
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "ACTION"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 147
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "SEVERITY"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 109
+									},
+									{
+										"id": "custom.cellOptions",
+										"value": {
+											"type": "color-text"
+										}
+									},
+									{
+										"id": "mappings",
+										"value": [
+											{
+												"options": {
+													"alert": {
+														"color": "red",
+														"index": 3
+													},
+													"critical": {
+														"color": "dark-red",
+														"index": 4
+													},
+													"information": {
+														"color": "green",
+														"index": 1
+													},
+													"notice": {
+														"color": "blue",
+														"index": 0
+													},
+													"warning": {
+														"color": "orange",
+														"index": 2
+													}
+												},
+												"type": "value"
+											}
+										]
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "SRC IP"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 127
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "SRC PORT"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 87
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "IF IN"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 110
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "APP"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 131
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "DST IP"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 134
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "DST PORT"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 93
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "EVENT ID"
+								},
+								"properties": [
+									{
+										"id": "links",
+										"value": [
+											{
+												"targetBlank": true,
+												"title": "EVENT DETAILS",
+												"url": "https://grafana.company.local/explore?left=%7B%22datasource%22:%22FORTINET%22,%22queries%22:%5B%7B%22refId%22:%22A%22,%22query%22:%22_id:${__value.text}%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D,%22range%22:%7B%22from%22:%22now-1h%22,%22to%22:%22now%22%7D%7D"
+											}
+										]
+									},
+									{
+										"id": "custom.width",
+										"value": 400
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "SERVICE"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 95
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "DATE/TIME"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 188
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "PROFILE"
+								},
+								"properties": [
+									{
+										"id": "custom.width",
+										"value": 234
+									}
+								]
+							}
+						]
+					},
+					"gridPos": {
+						"h": 15,
+						"w": 24,
+						"x": 0,
+						"y": 45
+					},
+					"id": 38,
+					"options": {
+						"cellHeight": "sm",
+						"footer": {
+							"countRows": false,
+							"fields": "",
+							"reducer": ["sum"],
+							"show": false
+						},
+						"showHeader": true,
+						"sortBy": []
+					},
+					"pluginVersion": "10.2.0",
+					"targets": [
+						{
+							"alias": "",
+							"bucketAggs": [],
+							"datasource": {
+								"type": "grafana-opensearch-datasource",
+								"uid": "replace_datasource_uid"
+							},
+							"metrics": [
+								{
+									"id": "1",
+									"settings": {
+										"size": "500"
+									},
+									"type": "raw_data"
+								}
+							],
+							"query": "type:event AND subtype:vpn AND tunneltype:\"ssl-tunnel\" AND devname:$firewall AND syslog_level:$severity",
+							"refId": "A",
+							"timeField": "timestamp"
+						}
+					],
+					"title": "FORTICLIENT EVENTS",
+					"transformations": [
+						{
+							"id": "organize",
+							"options": {
+								"excludeByName": {
+									"_index": true,
+									"_type": true,
+									"alert_category": true,
+									"alert_definitions_version": true,
+									"alertlight": true,
+									"cat": true,
+									"catdesc": true,
+									"craction": true,
+									"crlevel": true,
+									"crscore": true,
+									"devid": true,
+									"direction": true,
+									"dstintf": true,
+									"dstintfrole": true,
+									"dstip_city_name": true,
+									"dstip_country_code": true,
+									"dstip_geolocation": true,
+									"eventtype": true,
+									"facility": true,
+									"facility_num": true,
+									"gl2_accounted_message_size": true,
+									"gl2_message_id": true,
+									"gl2_remote_ip": true,
+									"gl2_remote_port": true,
+									"gl2_source_input": true,
+									"gl2_source_node": true,
+									"group": true,
+									"highlight": true,
+									"hostname": true,
+									"hostname_city_name": true,
+									"hostname_country_code": true,
+									"hostname_geolocation": true,
+									"level": true,
+									"locip_city_name": true,
+									"locip_country_code": true,
+									"locip_geolocation": true,
+									"locport": true,
+									"logdesc": true,
+									"logver": true,
+									"message": true,
+									"method": true,
+									"msg": true,
+									"policyid": true,
+									"proto": true,
+									"rcvdbyte": true,
+									"remip_city_name": true,
+									"remip_country_code": false,
+									"remip_geolocation": true,
+									"remport": true,
+									"reqtype": true,
+									"sentbyte": true,
+									"sessionid": true,
+									"sort": true,
+									"source": true,
+									"srcintf": true,
+									"srcintfrole": true,
+									"srcip_city_name": true,
+									"srcip_country_code": true,
+									"srcip_geolocation": true,
+									"srcport": true,
+									"streams": true,
+									"subtype": true,
+									"syslog_type": true,
+									"tunneltype": true,
+									"type": true,
+									"user": false,
+									"vd": true
+								},
+								"indexByName": {
+									"_id": 1,
+									"_index": 9,
+									"_type": 10,
+									"action": 7,
+									"devid": 20,
+									"devname": 2,
+									"duration": 21,
+									"facility": 22,
+									"facility_num": 23,
+									"gl2_accounted_message_size": 11,
+									"gl2_message_id": 12,
+									"gl2_remote_ip": 13,
+									"gl2_remote_port": 14,
+									"gl2_source_input": 15,
+									"gl2_source_node": 16,
+									"group": 24,
+									"highlight": 25,
+									"level": 26,
+									"logdesc": 27,
+									"logver": 28,
+									"message": 17,
+									"msg": 29,
+									"rcvdbyte": 30,
+									"remip": 4,
+									"remip_city_name": 31,
+									"remip_country_code": 5,
+									"remip_geolocation": 32,
+									"sentbyte": 33,
+									"sort": 34,
+									"source": 6,
+									"streams": 18,
+									"subtype": 35,
+									"syslog_level": 8,
+									"syslog_type": 19,
+									"timestamp": 0,
+									"tunneltype": 36,
+									"type": 37,
+									"user": 3,
+									"vd": 38
+								},
+								"renameByName": {
+									"_id": "EVENT ID",
+									"action": "ACTION",
+									"alert_signature": "SIGNATURE",
+									"app": "APP",
+									"destination_location_name": "LOCATION",
+									"devname": "FIREWALL",
+									"dstip": "DST IP",
+									"dstport": "DST PORT",
+									"duration": "DURATION",
+									"event_log_name": "",
+									"http_method": "METHOD",
+									"http_user_agent_name": "HTTP AGENT",
+									"locip": "LOCAL IP",
+									"locip_country_code": "",
+									"network_interface_in": "IF IN",
+									"network_interface_out": "IF OUT",
+									"network_transport": "",
+									"profile": "PROFILE",
+									"remip": "REMOTE IP",
+									"remip_country_code": "COUNTRY",
+									"rule_name": "RULE",
+									"service": "SERVICE",
+									"source": "",
+									"source_port": "SRC PORT",
+									"srcip": "SRC IP",
+									"syslog_level": "SEVERITY",
+									"timestamp": "DATE/TIME",
+									"url": "URL",
+									"user": "USER"
+								}
+							}
+						}
+					],
+					"transparent": true,
+					"type": "table"
+				}
+			],
+			"title": "FORTICLIENT",
+			"type": "row"
+		}
+	],
+	"refresh": "",
+	"schemaVersion": 38,
+	"tags": ["FORTINET UTM"],
+	"templating": {
+		"list": [
+			{
+				"datasource": {
+					"type": "grafana-opensearch-datasource",
+					"uid": "replace_datasource_uid"
+				},
+				"filters": [],
+				"hide": 0,
+				"label": "Filters",
+				"name": "Filters",
+				"skipUrlSync": false,
+				"type": "adhoc"
+			},
+			{
+				"current": {
+					"selected": false,
+					"text": "All",
+					"value": "$__all"
+				},
+				"datasource": {
+					"type": "grafana-opensearch-datasource",
+					"uid": "replace_datasource_uid"
+				},
+				"definition": "{ \"find\": \"terms\", \"field\": \"devname\", \"query\": \"type:event AND subtype:vpn\"}",
+				"description": "FORTINET FIREWALL",
+				"hide": 0,
+				"includeAll": true,
+				"label": "Firewall",
+				"multi": false,
+				"name": "firewall",
+				"options": [],
+				"query": "{ \"find\": \"terms\", \"field\": \"devname\", \"query\": \"type:event AND subtype:vpn\"}",
+				"refresh": 1,
+				"regex": "",
+				"skipUrlSync": false,
+				"sort": 0,
+				"type": "query"
+			},
+			{
+				"current": {
+					"selected": false,
+					"text": "All",
+					"value": "$__all"
+				},
+				"datasource": {
+					"type": "grafana-opensearch-datasource",
+					"uid": "replace_datasource_uid"
+				},
+				"definition": "{\"find\": \"terms\", \"field\": \"syslog_level\", \"query\": \"type:event AND subtype:vpn\"}",
+				"hide": 0,
+				"includeAll": true,
+				"label": "Severity",
+				"multi": false,
+				"name": "severity",
+				"options": [],
+				"query": "{\"find\": \"terms\", \"field\": \"syslog_level\", \"query\": \"type:event AND subtype:vpn\"}",
+				"refresh": 1,
+				"regex": "",
+				"skipUrlSync": false,
+				"sort": 0,
+				"type": "query"
+			}
+		]
+	},
+	"time": {
+		"from": "now-6h",
+		"to": "now"
+	},
+	"timepicker": {},
+	"timezone": "",
+	"title": "FORTINET - VPN LOGS",
+	"weekStart": ""
+}

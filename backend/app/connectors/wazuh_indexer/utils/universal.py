@@ -88,7 +88,7 @@ async def create_wazuh_indexer_client(connector_name: str) -> Elasticsearch:
             status_code=500,
             detail=f"No {connector_name} connector found in the database",
         )
-    if attributes["connector_url"] == "https://1.1.1.1:9200":
+    if attributes["connector_url"] == "https://127.1.1.1:9200":
         raise HTTPException(
             status_code=500,
             detail=f"Please update the {connector_name} connector URL",
@@ -191,7 +191,7 @@ async def collect_indices() -> Indices:
     logger.info("Collecting indices from Elasticsearch")
     es = await create_wazuh_indexer_client("Wazuh-Indexer")
     try:
-        indices_dict = es.indices.get_alias("*")
+        indices_dict = es.indices.get_alias("*", expand_wildcards="open")
         indices_list = list(indices_dict.keys())
         # Check if the index is valid
         index_config = IndexConfigModel()

@@ -608,7 +608,7 @@ async def get_customer_network_connectors_by_customer_code(
             ),
             joinedload(CustomerNetworkConnectors.network_connectors_subscriptions).subqueryload(
                 NetworkConnectorsSubscription.network_connectors_keys,
-            ),  # Load NetworkConnectorsAuthKeys
+            ),
         )
         .where(CustomerNetworkConnectors.customer_code == customer_code)
     )

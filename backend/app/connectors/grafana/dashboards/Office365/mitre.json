@@ -41,7 +41,7 @@
 	"panels": [
 		{
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
@@ -105,10 +105,12 @@
 					"fields": "",
 					"values": false
 				},
+				"showPercentChange": false,
 				"text": {},
-				"textMode": "auto"
+				"textMode": "auto",
+				"wideLayout": true
 			},
-			"pluginVersion": "9.2.0",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"alias": "MITRE ENRICHED EVENTS",
@@ -126,7 +128,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -154,7 +156,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"hide": false,
@@ -174,7 +176,7 @@
 		},
 		{
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
@@ -209,10 +211,12 @@
 					"fields": "",
 					"values": false
 				},
+				"showPercentChange": false,
 				"text": {},
-				"textMode": "auto"
+				"textMode": "auto",
+				"wideLayout": true
 			},
-			"pluginVersion": "9.2.0",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [
@@ -229,7 +233,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -250,7 +254,7 @@
 		},
 		{
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
@@ -285,10 +289,12 @@
 					"fields": "",
 					"values": false
 				},
+				"showPercentChange": false,
 				"text": {},
-				"textMode": "auto"
+				"textMode": "auto",
+				"wideLayout": true
 			},
-			"pluginVersion": "9.2.0",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [
@@ -306,7 +312,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -329,7 +335,7 @@
 		},
 		{
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
@@ -339,7 +345,9 @@
 					},
 					"custom": {
 						"align": "auto",
-						"displayMode": "auto",
+						"cellOptions": {
+							"type": "auto"
+						},
 						"inspect": false
 					},
 					"mappings": [],
@@ -363,14 +371,16 @@
 			},
 			"id": 13,
 			"options": {
+				"cellHeight": "sm",
 				"footer": {
+					"countRows": false,
 					"fields": "",
 					"reducer": ["sum"],
 					"show": false
 				},
 				"showHeader": true
 			},
-			"pluginVersion": "9.2.0",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [
@@ -388,7 +398,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -411,7 +421,7 @@
 		},
 		{
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
@@ -439,7 +449,6 @@
 				"y": 0
 			},
 			"id": 15,
-			"links": [],
 			"maxDataPoints": 3,
 			"options": {
 				"displayLabels": [],
@@ -492,7 +501,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -513,7 +522,7 @@
 		},
 		{
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
@@ -541,7 +550,6 @@
 				"y": 7
 			},
 			"id": 16,
-			"links": [],
 			"options": {
 				"displayLabels": [],
 				"legend": {
@@ -593,7 +601,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -614,14 +622,16 @@
 		},
 		{
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
 				"defaults": {
 					"custom": {
 						"align": "auto",
-						"displayMode": "auto",
+						"cellOptions": {
+							"type": "auto"
+						},
 						"filterable": false,
 						"inspect": false
 					},
@@ -671,9 +681,10 @@
 				"y": 7
 			},
 			"id": 28,
-			"links": [],
 			"options": {
+				"cellHeight": "sm",
 				"footer": {
+					"countRows": false,
 					"fields": "",
 					"reducer": ["sum"],
 					"show": false
@@ -681,7 +692,7 @@
 				"showHeader": true,
 				"sortBy": []
 			},
-			"pluginVersion": "9.2.0",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [
@@ -700,7 +711,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -733,14 +744,16 @@
 		},
 		{
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
 				"defaults": {
 					"custom": {
 						"align": "auto",
-						"displayMode": "auto",
+						"cellOptions": {
+							"type": "auto"
+						},
 						"filterable": false,
 						"inspect": false
 					},
@@ -777,16 +790,17 @@
 				"y": 7
 			},
 			"id": 33,
-			"links": [],
 			"options": {
+				"cellHeight": "sm",
 				"footer": {
+					"countRows": false,
 					"fields": "",
 					"reducer": ["sum"],
 					"show": false
 				},
 				"showHeader": true
 			},
-			"pluginVersion": "9.2.0",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [
@@ -805,7 +819,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -839,7 +853,7 @@
 		},
 		{
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
@@ -867,7 +881,6 @@
 				"y": 18
 			},
 			"id": 29,
-			"links": [],
 			"options": {
 				"displayLabels": [],
 				"legend": {
@@ -919,7 +932,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -940,14 +953,16 @@
 		},
 		{
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
 				"defaults": {
 					"custom": {
 						"align": "auto",
-						"displayMode": "auto",
+						"cellOptions": {
+							"type": "auto"
+						},
 						"filterable": false,
 						"inspect": false
 					},
@@ -997,9 +1012,10 @@
 				"y": 18
 			},
 			"id": 30,
-			"links": [],
 			"options": {
+				"cellHeight": "sm",
 				"footer": {
+					"countRows": false,
 					"fields": "",
 					"reducer": ["sum"],
 					"show": false
@@ -1007,7 +1023,7 @@
 				"showHeader": true,
 				"sortBy": []
 			},
-			"pluginVersion": "9.2.0",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [
@@ -1026,7 +1042,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -1059,7 +1075,7 @@
 		},
 		{
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
@@ -1069,7 +1085,9 @@
 					},
 					"custom": {
 						"align": "auto",
-						"displayMode": "auto",
+						"cellOptions": {
+							"type": "auto"
+						},
 						"inspect": false
 					},
 					"mappings": [
@@ -1119,7 +1137,9 @@
 			},
 			"id": 17,
 			"options": {
+				"cellHeight": "sm",
 				"footer": {
+					"countRows": false,
 					"fields": "",
 					"reducer": ["sum"],
 					"show": false
@@ -1127,7 +1147,7 @@
 				"showHeader": true,
 				"sortBy": []
 			},
-			"pluginVersion": "9.2.0",
+			"pluginVersion": "10.4.0",
 			"targets": [
 				{
 					"bucketAggs": [
@@ -1146,7 +1166,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -1180,7 +1200,7 @@
 		},
 		{
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
@@ -1189,6 +1209,7 @@
 						"mode": "palette-classic"
 					},
 					"custom": {
+						"axisBorderShow": false,
 						"axisCenteredZero": false,
 						"axisColorMode": "text",
 						"axisLabel": "",
@@ -1202,6 +1223,7 @@
 							"tooltip": false,
 							"viz": false
 						},
+						"insertNulls": false,
 						"lineInterpolation": "linear",
 						"lineWidth": 1,
 						"pointSize": 5,
@@ -1279,7 +1301,7 @@
 						}
 					],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -1299,7 +1321,7 @@
 		},
 		{
 			"datasource": {
-				"type": "elasticsearch",
+				"type": "grafana-opensearch-datasource",
 				"uid": "replace_datasource_uid"
 			},
 			"fieldConfig": {
@@ -1309,7 +1331,9 @@
 					},
 					"custom": {
 						"align": "auto",
-						"displayMode": "auto",
+						"cellOptions": {
+							"type": "auto"
+						},
 						"inspect": false
 					},
 					"mappings": [],
@@ -1431,8 +1455,11 @@
 								"value": -1
 							},
 							{
-								"id": "custom.displayMode",
-								"value": "color-background"
+								"id": "custom.cellOptions",
+								"value": {
+									"mode": "gradient",
+									"type": "color-background"
+								}
 							},
 							{
 								"id": "custom.align"
@@ -1546,7 +1573,7 @@
 				{
 					"bucketAggs": [],
 					"datasource": {
-						"type": "elasticsearch",
+						"type": "grafana-opensearch-datasource",
 						"uid": "replace_datasource_uid"
 					},
 					"metrics": [
@@ -1628,14 +1655,13 @@
 		}
 	],
 	"refresh": "",
-	"schemaVersion": 37,
-	"style": "dark",
+	"schemaVersion": 39,
 	"tags": ["O365"],
 	"templating": {
 		"list": [
 			{
 				"datasource": {
-					"type": "elasticsearch",
+					"type": "grafana-opensearch-datasource",
 					"uid": "replace_datasource_uid"
 				},
 				"filters": [],
@@ -1652,7 +1678,7 @@
 					"value": "$__all"
 				},
 				"datasource": {
-					"type": "elasticsearch",
+					"type": "grafana-opensearch-datasource",
 					"uid": "replace_datasource_uid"
 				},
 				"definition": "{ \"find\": \"terms\", \"field\": \"data_office365_Workload\", \"query\": \"_exists_:rule_mitre_tactic\"}",
@@ -1679,7 +1705,7 @@
 					"value": "$__all"
 				},
 				"datasource": {
-					"type": "elasticsearch",
+					"type": "grafana-opensearch-datasource",
 					"uid": "replace_datasource_uid"
 				},
 				"definition": "{ \"find\": \"terms\", \"field\": \"rule_level\", \"query\": \"\"}",
@@ -1707,7 +1733,5 @@
 	},
 	"timezone": "",
 	"title": "O365 - MITRE ATT&CK",
-	"uid": "Nipjnw37k",
-	"version": 1,
 	"weekStart": ""
 }

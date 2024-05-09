@@ -35,6 +35,7 @@ from app.routers import auth
 from app.routers import carbonblack
 from app.routers import connectors
 from app.routers import cortex
+from app.routers import crowdstrike
 from app.routers import customer_provisioning
 from app.routers import customers
 from app.routers import dfir_iris
@@ -139,6 +140,7 @@ api_router.include_router(license.router)
 api_router.include_router(modules.router)
 api_router.include_router(carbonblack.router)
 api_router.include_router(network_connectors.router)
+api_router.include_router(crowdstrike.router)
 
 # Include the APIRouter in the FastAPI app
 app.include_router(api_router)

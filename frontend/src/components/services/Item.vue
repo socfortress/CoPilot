@@ -1,12 +1,12 @@
 <template>
-	<div class="integration-item" :class="{ embedded, selectable, disabled }">
+	<div class="service-item" :class="{ embedded, selectable, disabled }">
 		<div class="px-4 py-3 flex flex-col gap-2">
 			<div class="header-box flex justify-between items-center">
 				<div class="flex items-center gap-2 cursor-pointer">
 					<div class="check-box mr-2" v-if="selectable">
 						<n-radio size="large" v-model:checked="checked" />
 					</div>
-					<div class="id">#{{ integration.id }}</div>
+					<div class="id">#{{ data.id }}</div>
 				</div>
 				<div class="actions">
 					<n-button size="small" @click.stop="showDetails = true">
@@ -18,16 +18,16 @@
 			</div>
 			<div class="main-box flex items-center gap-3">
 				<div class="content flex flex-col gap-1 grow">
-					<div class="title">{{ integration.integration_name }}</div>
+					<div class="title">{{ data.name }}</div>
 					<div class="description">
-						{{ integration.description }}
+						{{ data.description }}
 					</div>
 				</div>
 			</div>
 
 			<div class="badges-box flex flex-wrap items-center gap-3 mt-2">
 				<code class="py-1">Auth Keys:</code>
-				<Badge v-for="authKey of integration.auth_keys" :key="authKey.auth_key_name">
+				<Badge v-for="authKey of data.keys" :key="authKey.auth_key_name">
 					<template #value>{{ authKey.auth_key_name }}</template>
 				</Badge>
 			</div>
@@ -37,31 +37,32 @@
 			v-model:show="showDetails"
 			preset="card"
 			:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(400px, 90vh)', overflow: 'hidden' }"
-			:title="integration.integration_name"
+			:title="data.name"
 			:bordered="false"
 			segmented
 		>
-			<Markdown :source="integration.integration_details" />
+			<Markdown :source="data.details" />
 		</n-modal>
 	</div>
 </template>
 
 <script setup lang="ts">
-import Icon from "@/components/common/Icon.vue"
-import Badge from "@/components/common/Badge.vue"
 import { defineAsyncComponent, ref, toRefs } from "vue"
 import { NModal, NRadio, NButton } from "naive-ui"
-import type { AvailableIntegration } from "@/types/integrations.d"
+import Icon from "@/components/common/Icon.vue"
+import Badge from "@/components/common/Badge.vue"
+import type { ServiceItemData, ServiceItemType } from "./types"
 const Markdown = defineAsyncComponent(() => import("@/components/common/Markdown.vue"))
 
 const props = defineProps<{
-	integration: AvailableIntegration
+	data: ServiceItemData
+	type: ServiceItemType
 	embedded?: boolean
 	checked?: boolean
 	selectable?: boolean
 	disabled?: boolean
 }>()
-const { integration, embedded, checked, selectable, disabled } = toRefs(props)
+const { data, embedded, checked, selectable, disabled } = toRefs(props)
 
 const InfoIcon = "carbon:information"
 
@@ -69,7 +70,7 @@ const showDetails = ref(false)
 </script>
 
 <style lang="scss" scoped>
-.integration-item {
+.service-item {
 	border-radius: var(--border-radius);
 	background-color: var(--bg-color);
 	border: var(--border-small-050);

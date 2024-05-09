@@ -77,6 +77,7 @@ class ProvisionNewCustomer(BaseModel):
     wazuh_cluster_key: Optional[str] = Field("n/a", description="Password for the Wazuh cluster")
     wazuh_master_ip: Optional[str] = Field("n/a", description="IP address of the Wazuh master")
     grafana_url: str = Field(..., description="URL of the Grafana instance")
+    grafana_org_id: Optional[str] = Field("0", description="ID of the Grafana organization")
     only_insert_into_db: Optional[bool] = Field(
         False,
         description="Whether to only insert the customer into the database without provisioning any services",
