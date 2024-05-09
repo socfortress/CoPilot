@@ -1,7 +1,6 @@
 from enum import Enum
 from typing import Any
-from typing import List
-from typing import Optional
+from loguru import logger
 
 from fastapi import HTTPException
 from pydantic import BaseModel
@@ -31,6 +30,9 @@ class DecommissionNetworkContentPackRequest(BaseModel):
 
     def __init__(self, **data: Any):
         network_connector = data.get("network_connector")
+        if network_connector:
+            network_connector = network_connector.upper()
+            logger.info(f"Network Connector: {network_connector}")
         try:
             data["network_connector"] = AvailableNetworkConnectors[network_connector]
         except KeyError:
