@@ -47,11 +47,17 @@ class NodeAllocationResponse(BaseModel):
 
 
 class IndicesStats(BaseModel):
-    docs_count: str
+    docs_count: Optional[str] = Field(
+        'Docs count not found',
+        description="Number of documents in the index",
+    )
     health: str
     index: str
     replica_count: str
-    store_size: str
+    store_size: Optional[str] = Field(
+        'Store size not found',
+        description="Number of store size in the index",
+    )
 
 
 class IndicesStatsResponse(BaseModel):
