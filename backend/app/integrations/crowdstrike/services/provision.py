@@ -4,6 +4,9 @@ from datetime import datetime
 
 import aiofiles
 from fastapi import HTTPException
+from sqlalchemy import and_
+from sqlalchemy import update
+from app.integrations.schema import CustomerIntegrations
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -382,6 +385,11 @@ async def provision_crowdstrike(
     )
     await load_and_replace_falconhose_cfg(customer_details=customer_details, keys=keys, session=session)
 
+    await update_customer_integration_table(
+        customer_code=customer_details.customer_code,
+        session=session,
+    )
+
     return ProvisionCrowdstrikeResponse(
         message="Crowdstrike customer provisioned successfully",
         success=True,
@@ -513,3 +521,31 @@ async def load_and_replace_falconhose_cfg(
     async with aiofiles.open(os.path.join(customer_upload_folder, "cs.falconhoseclient.cfg"), "w") as f:
         await f.write(data)
     return os.path.join(customer_upload_folder, "cs.falconhoseclient.cfg")
+
+
+
+async def update_customer_integration_table(
+    customer_code: str,
+    session: AsyncSession,
+) -> None:
+    """
+    Updates the `customer_integrations` table to set the `deployed` column to True where the `customer_code`
+    matches the given customer code and the `integration_service_name` is "Crowdstrike".
+
+    Args:
+        customer_code (str): The customer code.
+        session (AsyncSession): The async session object for making HTTP requests.
+    """
+    await session.execute(
+        update(CustomerIntegrations)
+        .where(
+            and_(
+                CustomerIntegrations.customer_code == customer_code,
+                CustomerIntegrations.integration_service_name == "Crowdstrike",
+            ),
+        )
+        .values(deployed=True),
+    )
+    await session.commit()
+
+    return None
