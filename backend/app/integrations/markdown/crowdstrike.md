@@ -4,6 +4,8 @@
 
 Before using the Falcon SIEM Connector, you’ll want to first define the API client and set its scope. Refer to this guide (https://www.crowdstrike.com/blog/tech-center/get-access-falcon-apis/) to getting access to the CrowdStrike API for setting up a new API client key. For the new API client, make sure the scope includes read access for Event streams.
 
+### IMPORTANT: If you are in the Government cloud of Crowdstrike, you must open a support ticket with Crowdstrike so they can enable the Falcon SIEM Connector on their end.
+
 ![Crowdstrike API Settings](/images/crowdstrike/crowdstrike_api_settings.png)
 
 <!-- Running the Crowdstrike-Connector Container -->
@@ -16,7 +18,7 @@ The configuration for our API creds and syslog forwarder settings are stored wit
 [Settings]
 version = 3
 api_url = REPLACE_BASE_URL/sensors/entities/datafeed/v2
-request_token_url = https://api.crowdstrike.com/oauth2/token
+request_token_url = REPLACE_BASE_URL/oauth2/token
 app_id = SIEM-Connector-v2.0.0
 
 enable_correlation_id = false
@@ -79,3 +81,24 @@ host = REPLACE_SYSLOG_HOST
 port = REPLACE_SYSLOG_PORT
 protocol = tcp
 ```
+
+## Provisioning
+Once you have saved the Crowdstrike configuration for the customer, you are ready to deploy the integration. Navigate to the `Customers` tab and select the appropriate customer. The provisiong creates the necessary:
+
+* Graylog CEF Input
+* Graylog Stream
+* Graylog Index
+* Grafana Datasource
+* Grafana Dashboards
+* Crowdstrike Docker-Compose File
+
+## Deployment of Crowdstrike Container
+The Crowdstrike integration runs via a docker container. During provisioning, the following directory is created `/opt/CoPilot/data/data/CUSTOMER_NAME`. Within this directory will reside the `CUSTOMER_NAME_docker-compose.yml` and the `cs.falconhoseclient.cfg` files. These can be modified if desired but should already contain the details needed to collect logs for their Crowdstrike environment.
+
+Start the container with the below command:
+```bash
+docker compose -f /opt/CoPilot/data/data/CUSTOMER_NAME/CUSTOMER_NAME_docker-compose.yml up -d
+```
+
+You should now see the container running:
+![Crowdstrike Running Container](/images/crowdstrike/docker_ps.png)
