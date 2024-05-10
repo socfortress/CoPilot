@@ -15,12 +15,12 @@ from app.connectors.wazuh_manager.schema.rules import AllDisabledRuleResponse
 from app.connectors.wazuh_manager.schema.rules import RuleDisable
 from app.connectors.wazuh_manager.schema.rules import RuleDisableResponse
 from app.connectors.wazuh_manager.schema.rules import RuleEnable
-from app.connectors.wazuh_manager.schema.rules import RuleEnableResponse
+from app.connectors.wazuh_manager.schema.rules import RuleEnableResponse, RuleExcludeRequest
 from app.connectors.wazuh_manager.schema.rules import RuleExcludeResponse
 
 # from app.connectors.wazuh_manager.schema.rules import RuleExclude
 # from app.connectors.wazuh_manager.schema.rules import RuleExcludeResponse
-from app.connectors.wazuh_manager.services.rules import disable_rule
+from app.connectors.wazuh_manager.services.rules import disable_rule, post_to_copilot_ai_module
 from app.connectors.wazuh_manager.services.rules import enable_rule
 
 # from app.connectors.wazuh_manager.services.rules import exclude_rule
@@ -161,6 +161,5 @@ async def enable_wazuh_rule(
     response_model=RuleExcludeResponse,
     description="Retrieve recommended exclusion for a Wazuh Rule",
 )
-async def exclude_wazuh_rule() -> RuleExcludeResponse:
-    raise HTTPException(status_code=501, detail="Feature not yet ready")
-    return RuleExcludeResponse(success=False, message="Feature not yet ready")
+async def exclude_wazuh_rule(request: RuleExcludeRequest) -> RuleExcludeResponse:
+    return await post_to_copilot_ai_module(data=request)

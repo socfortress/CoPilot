@@ -5,6 +5,11 @@ from typing import Dict
 from typing import List
 from typing import Tuple
 from typing import Union
+import httpx
+from loguru import logger
+
+from app.connectors.wazuh_manager.schema.rules import RuleExcludeRequest
+from app.connectors.wazuh_manager.schema.rules import RuleExcludeResponse
 
 # import pcre2
 import xmltodict
@@ -15,7 +20,6 @@ from app.connectors.wazuh_manager.schema.rules import RuleDisable
 from app.connectors.wazuh_manager.schema.rules import RuleDisableResponse
 from app.connectors.wazuh_manager.schema.rules import RuleEnable
 from app.connectors.wazuh_manager.schema.rules import RuleEnableResponse
-from app.connectors.wazuh_manager.schema.rules import RuleExclude
 from app.connectors.wazuh_manager.schema.rules import RuleExcludeResponse
 from app.connectors.wazuh_manager.utils.universal import restart_service
 from app.connectors.wazuh_manager.utils.universal import send_get_request
@@ -243,92 +247,18 @@ async def enable_rule(rule: RuleEnable, previous_level: str) -> RuleEnableRespon
 
 
 ################# ! EXCLUDE RULE ! #################
-
-
-def make_pcre2_compatible(input_string: str) -> str:
+async def post_to_copilot_ai_module(data: RuleExcludeRequest) -> RuleExcludeResponse:
     """
-    Convert the input string to a PCRE2 compatible regex pattern.
-
-    Parameters:
-    - input_string (str): The input string to convert.
-
-    Returns:
-    - str: The PCRE2 compatible regex pattern.
-    """
-    # PCRE2 uses \\ to escape a backslash
-    return input_string.replace("\\", "\\\\")
-
-
-class RegexSpecialCharacters(Enum):
-    DOT = (".", "\.")
-    CARET = ("^", "\^")
-    DOLLAR = ("$", "\$")
-    STAR = ("*", "\*")
-    PLUS = ("+", "\+")
-    QUESTION = ("?", "\?")
-    CURLY_OPEN = ("{", "\{")
-    CURLY_CLOSE = ("}", "\}")
-    SQUARE_OPEN = ("[", "\[")
-    SQUARE_CLOSE = ("]", "\]")
-    SINGLE_BACKSLASH = ("\\", "\\\\")
-    DOUBLE_BACKSLASH = ("\\\\", "\\\\\\\\")
-    PIPE = ("|", "\|")
-    PAREN_OPEN = ("(", "\(")
-    PAREN_CLOSE = (")", "\)")
-    COLON = (":", "\:")
-    DASH = ("-", "\-")
-
-
-# Create a dictionary for easy lookup
-REGEX_REPLACE_DICT = {char.value[0]: char.value[1] for char in RegexSpecialCharacters}
-
-
-async def replace_special_chars(rule: RuleExclude):
-    for char, replacement in REGEX_REPLACE_DICT.items():
-        # Use Python's raw string notation for regular expressions
-        pattern = re.compile(re.escape(char))
-        input_string = pattern.sub(replacement, rule.input_value)
-        logger.info(f"Input String: {input_string}")
-    return input_string
-
-
-async def exclude_rule(rule: RuleExclude) -> RuleExcludeResponse:
-    """
-    Exclude a rule based on the provided input value and rule value.
+    Send a POST request to the copilot-ai-module Docker container.
 
     Args:
-        rule (RuleExclude): The rule to be excluded, containing the input value and rule value.
-
-    Returns:
-        RuleExcludeResponse: The response indicating the success or failure of excluding the rule, along with a recommended exclusion.
-
-    Raises:
-        Exception: If an error occurs while excluding the rule.
+        data (CollectHuntress): The data to send to the copilot-ai-module Docker container.
     """
-    # Function to replace special characters
-    # repr of the input string
-    input_string = repr(rule.input_value)
-    logger.info(f"Input String: {input_string}")
-    excluded_string = await replace_special_chars(rule)
-    logger.info(f"Excluded String: {excluded_string}")
-    return None
-    # try:
-    #     # Convert rule_value to a PCRE2 compatible regex pattern
-    #     pcre2_pattern = make_pcre2_compatible(rule.rule_value)
-
-    #     compiled_pattern = pcre2.compile(pcre2_pattern)
-    #     print(f"Compiled Pattern: {compiled_pattern}")  # Debugging line
-
-    #     print(f"Input Value: {rule.input_value}")  # Debugging line
-
-    #     match_data = compiled_pattern.match(rule.input_value)
-
-    #     if match_data:
-    #         return RuleExcludeResponse(success=True, message="Successfully excluded rule", recommended_exclusion=rule.input_value)
-    #     else:
-    #         return RuleExcludeResponse(success=False, message="Failed to exclude rule", recommended_exclusion="")
-
-    # except Exception as e:
-    #     print(f"Exception: {e}")  # Debugging line
-    #     logger.error(f"Failed to exclude rule: {e}")
-    #     return RuleExcludeResponse(success=False, message=f"Failed to exclude rule: {e}", recommended_exclusion="")
+    logger.info(f"Sending POST request to http://copilot-ai-module/wazuh-rule-exclusion with data: {data.dict()}")
+    async with httpx.AsyncClient() as client:
+        data = await client.post(
+            "http://127.0.0.1:5001/wazuh-rule-exclusion",
+            json=data.dict(),
+            timeout=120,
+        )
+    return RuleExcludeResponse(**data.json())
