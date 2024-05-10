@@ -162,4 +162,5 @@ async def enable_wazuh_rule(
     description="Retrieve recommended exclusion for a Wazuh Rule",
 )
 async def exclude_wazuh_rule(request: RuleExcludeRequest) -> RuleExcludeResponse:
+    raise HTTPException(status_code=501, detail="Not Implemented Yet")
     return await post_to_copilot_ai_module(data=request)
