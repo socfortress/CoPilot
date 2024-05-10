@@ -1,0 +1,8 @@
+version: "3.8"
+
+services:
+    crowdstrike-connector-SOCFORTRESS:
+        image: ghcr.io/socfortress/crowdstrike-connector
+        volumes:
+            - /opt/CoPilot/data/data/SOCFORTRESS/cs.falconhoseclient.cfg:/opt/crowdstrike/etc/cs.falconhoseclient.cfg
+        restart: unless-stopped

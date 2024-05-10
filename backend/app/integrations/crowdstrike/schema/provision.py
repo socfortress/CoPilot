@@ -1,5 +1,6 @@
 from typing import Any
 from typing import Dict
+from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
@@ -17,13 +18,13 @@ class ProvisionCrowdstrikeRequest(BaseModel):
         description="The integration name.",
         examples=["Crowdstrike"],
     )
-    hot_data_retention: int = Field(
-        ...,
+    hot_data_retention: Optional[int] = Field(
+        30,
         example=30,
         description="Number of days to retain hot data",
     )
-    index_replicas: int = Field(
-        ...,
+    index_replicas: Optional[int] = Field(
+        0,
         example=1,
         description="Number of replicas for the customer's Graylog instance",
     )
