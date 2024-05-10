@@ -24,7 +24,7 @@
 			Deploy
 		</n-button>
 
-    <n-button
+		<n-button
 			v-if="isCrowdstrike && !integration.deployed"
 			:loading="loadingCrowdstrikeProvision"
 			@click="crowdstrikeProvision()"
@@ -83,7 +83,13 @@ const loadingOffice365Provision = ref(false)
 const loadingMimecastProvision = ref(false)
 const loadingCrowdstrikeProvision = ref(false)
 const loadingDelete = ref(false)
-const loading = computed(() => loadingMimecastProvision.value || loadingCrowdstrikeProvision.value || loadingOffice365Provision.value || loadingDelete.value)
+const loading = computed(
+	() =>
+		loadingMimecastProvision.value ||
+		loadingCrowdstrikeProvision.value ||
+		loadingOffice365Provision.value ||
+		loadingDelete.value
+)
 
 const serviceName = computed(() => integration.integration_service_name)
 const customerCode = computed(() => integration.customer_code)

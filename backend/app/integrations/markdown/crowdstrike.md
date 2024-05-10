@@ -83,19 +83,22 @@ protocol = tcp
 ```
 
 ## Provisioning
+
 Once you have saved the Crowdstrike configuration for the customer, you are ready to deploy the integration. Navigate to the `Customers` tab and select the appropriate customer. The provisiong creates the necessary:
 
-* Graylog CEF Input
-* Graylog Stream
-* Graylog Index
-* Grafana Datasource
-* Grafana Dashboards
-* Crowdstrike Docker-Compose File
+-   Graylog CEF Input
+-   Graylog Stream
+-   Graylog Index
+-   Grafana Datasource
+-   Grafana Dashboards
+-   Crowdstrike Docker-Compose File
 
 ## Deployment of Crowdstrike Container
+
 The Crowdstrike integration runs via a docker container. During provisioning, the following directory is created `/opt/CoPilot/data/data/CUSTOMER_NAME`. Within this directory will reside the `CUSTOMER_NAME_docker-compose.yml` and the `cs.falconhoseclient.cfg` files. These can be modified if desired but should already contain the details needed to collect logs for their Crowdstrike environment.
 
 Start the container with the below command:
+
 ```bash
 docker compose -f /opt/CoPilot/data/data/CUSTOMER_NAME/CUSTOMER_NAME_docker-compose.yml up -d
 ```

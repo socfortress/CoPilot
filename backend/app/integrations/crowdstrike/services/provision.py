@@ -4,10 +4,9 @@ from datetime import datetime
 
 import aiofiles
 from fastapi import HTTPException
+from loguru import logger
 from sqlalchemy import and_
 from sqlalchemy import update
-from app.integrations.schema import CustomerIntegrations
-from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.connectors.grafana.schema.dashboards import CrowdstrikeDashboard
@@ -38,6 +37,7 @@ from app.customers.routes.customers import get_customer_meta
 from app.integrations.crowdstrike.schema.provision import CrowdstrikeCustomerDetails
 from app.integrations.crowdstrike.schema.provision import ProvisionCrowdstrikeAuthKeys
 from app.integrations.crowdstrike.schema.provision import ProvisionCrowdstrikeResponse
+from app.integrations.schema import CustomerIntegrations
 from app.network_connectors.models.network_connectors import (
     CustomerNetworkConnectorsMeta,
 )
@@ -521,7 +521,6 @@ async def load_and_replace_falconhose_cfg(
     async with aiofiles.open(os.path.join(customer_upload_folder, "cs.falconhoseclient.cfg"), "w") as f:
         await f.write(data)
     return os.path.join(customer_upload_folder, "cs.falconhoseclient.cfg")
-
 
 
 async def update_customer_integration_table(

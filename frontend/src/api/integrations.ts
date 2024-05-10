@@ -54,7 +54,7 @@ export default {
 			integration_name: integrationName
 		})
 	},
-    crowdstrikeProvision(customerCode: string, integrationName: string) {
+	crowdstrikeProvision(customerCode: string, integrationName: string) {
 		return HttpClient.post<FlaskBaseResponse>(`/crowdstrike/provision`, {
 			customer_code: customerCode,
 			integration_name: integrationName
