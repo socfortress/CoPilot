@@ -104,4 +104,4 @@ docker compose -f /opt/CoPilot/data/data/CUSTOMER_NAME/CUSTOMER_NAME_docker-comp
 ```
 
 You should now see the container running:
-![Crowdstrike Running Container](/images/crowdstrike/docker_ps.png)
+![Crowdstrike Running Container](/images/crowdstrike/docker_ps.PNG)

@@ -37,7 +37,7 @@ from app.customers.routes.customers import get_customer_meta
 from app.integrations.crowdstrike.schema.provision import CrowdstrikeCustomerDetails
 from app.integrations.crowdstrike.schema.provision import ProvisionCrowdstrikeAuthKeys
 from app.integrations.crowdstrike.schema.provision import ProvisionCrowdstrikeResponse
-from app.integrations.schema import CustomerIntegrations
+from app.integrations.models.customer_integration_settings import CustomerIntegrations
 from app.network_connectors.models.network_connectors import (
     CustomerNetworkConnectorsMeta,
 )
@@ -535,6 +535,7 @@ async def update_customer_integration_table(
         customer_code (str): The customer code.
         session (AsyncSession): The async session object for making HTTP requests.
     """
+    logger.info(f"Updating customer integrations table for customer {customer_code}")
     await session.execute(
         update(CustomerIntegrations)
         .where(
