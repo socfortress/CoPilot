@@ -99,7 +99,7 @@ async def provision_crowdstrike_route(
     Returns:
         ProvisionCrowdstrikeResponse: The response object containing the result of the provisioning.
     """
-    await is_feature_enabled(feature_name='CROWDSTRIKE', session=session)
+    await is_feature_enabled(feature_name="CROWDSTRIKE", session=session)
     customer_integration_response = await get_customer_integration_response(
         provision_crowdstrike_request.customer_code,
         session,

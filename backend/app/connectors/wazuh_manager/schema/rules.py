@@ -1,7 +1,7 @@
 from typing import List
 from typing import Optional
-from fastapi import HTTPException
 
+from fastapi import HTTPException
 from pydantic import BaseModel
 from pydantic import Field
 from pydantic import validator
@@ -43,6 +43,7 @@ class AllDisabledRuleResponse(BaseModel):
     disabled_rules: List[AllDisabledRule]
     success: bool
     message: str
+
 
 payload = {
     "data_win_system_eventRecordID": "521098",
@@ -99,6 +100,7 @@ payload = {
     "rule_group1": "windows",
     "data_win_system_opcode": "0",
 }
+
 
 class RuleExcludeRequest(BaseModel):
     integration: str = Field(..., example="wazuh-rule-exclusion")

@@ -1,15 +1,10 @@
-import re
-from enum import Enum
 from typing import Any
 from typing import Dict
 from typing import List
 from typing import Tuple
 from typing import Union
-import httpx
-from loguru import logger
 
-from app.connectors.wazuh_manager.schema.rules import RuleExcludeRequest
-from app.connectors.wazuh_manager.schema.rules import RuleExcludeResponse
+import httpx
 
 # import pcre2
 import xmltodict
@@ -20,6 +15,7 @@ from app.connectors.wazuh_manager.schema.rules import RuleDisable
 from app.connectors.wazuh_manager.schema.rules import RuleDisableResponse
 from app.connectors.wazuh_manager.schema.rules import RuleEnable
 from app.connectors.wazuh_manager.schema.rules import RuleEnableResponse
+from app.connectors.wazuh_manager.schema.rules import RuleExcludeRequest
 from app.connectors.wazuh_manager.schema.rules import RuleExcludeResponse
 from app.connectors.wazuh_manager.utils.universal import restart_service
 from app.connectors.wazuh_manager.utils.universal import send_get_request
@@ -255,6 +251,7 @@ async def post_to_copilot_ai_module(data: RuleExcludeRequest) -> RuleExcludeResp
         data (CollectHuntress): The data to send to the copilot-ai-module Docker container.
     """
     logger.info(f"Sending POST request to http://copilot-ai-module/wazuh-rule-exclusion with data: {data.dict()}")
+    raise HTTPException(status_code=501, detail="Not Implemented Yet")
     async with httpx.AsyncClient() as client:
         data = await client.post(
             "http://127.0.0.1:5001/wazuh-rule-exclusion",
