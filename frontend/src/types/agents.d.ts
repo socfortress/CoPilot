@@ -62,3 +62,43 @@ export enum VulnerabilityType {
 export type OutdatedWazuhAgents = Agent[]
 
 export type OutdatedVelociraptorAgents = Agent[]
+
+export interface AgentSca {
+	description: string
+	fail: number
+	start_scan: Date
+	references: string
+	name: string
+	pass: number
+	score: number
+	end_scan: Date
+	policy_id: string
+	total_checks: number
+	hash_file: string
+	invalid: number
+}
+
+export interface ScaPolicyResult {
+	description: string
+	id: number
+	reason: string
+	command: string
+	rationale: string
+	condition: "all" | "any" | "none"
+	title: string
+	result: "failed" | "not applicable" | "passed"
+	policy_id: string
+	remediation: string
+	compliance: ScaPolicyResultCompliance[]
+	rules: ScaPolicyResultRule[]
+}
+
+export interface ScaPolicyResultCompliance {
+	value: string
+	key: string
+}
+
+export interface ScaPolicyResultRule {
+	type: "command" | "directory" | "file" | "numeric" | string
+	rule: string
+}
