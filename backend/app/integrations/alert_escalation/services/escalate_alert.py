@@ -1,14 +1,10 @@
 from typing import Optional
-from typing import Set
 
 from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-# from app.integrations.alert_escalation.utils.universal import get_agent_data
-from app.agents.routes.agents import get_agent
-from app.agents.schema.agents import AgentsResponse
 from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
 from app.connectors.dfir_iris.utils.universal import initialize_client_and_alert
 from app.connectors.utils import get_connector_info_from_db
@@ -16,18 +12,15 @@ from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_cl
 from app.integrations.alert_creation_settings.models.alert_creation_settings import (
     AlertCreationSettings,
 )
-from app.integrations.alert_escalation.schema.escalate_alert import CreateAlertRequest, CustomerCodeKeys
+from app.integrations.alert_escalation.schema.escalate_alert import CreateAlertRequest
 from app.integrations.alert_escalation.schema.escalate_alert import CreateAlertResponse
+from app.integrations.alert_escalation.schema.escalate_alert import CustomerCodeKeys
 from app.integrations.alert_escalation.schema.escalate_alert import GenericAlertModel
 from app.integrations.alert_escalation.schema.escalate_alert import GenericSourceModel
 from app.integrations.alert_escalation.schema.escalate_alert import IrisAlertContext
 from app.integrations.alert_escalation.schema.escalate_alert import IrisAlertPayload
-from app.integrations.alert_escalation.schema.escalate_alert import IrisAsset
-from app.integrations.alert_escalation.schema.escalate_alert import IrisIoc
-from app.integrations.alert_escalation.schema.escalate_alert import ValidIocFields
-from app.integrations.utils.alerts import get_asset_type_id
-from app.integrations.utils.alerts import validate_ioc_type
-from app.utils import get_customer_alert_settings
+from app.integrations.alert_escalation.schema.escalate_alert import SourceFieldsToRemove
+from app.integrations.alert_escalation.schema.escalate_alert import SyslogLevelMapping
 
 
 async def fetch_settings(field: str, value: str, session: AsyncSession):
@@ -81,54 +74,6 @@ async def is_customer_code_valid(customer_code: str, session: AsyncSession) -> A
     )
 
 
-def valid_ioc_fields() -> Set[str]:
-    """
-    Getter for the set of valid IoC fields.
-    Returns
-    -------
-    Set[str]
-        The set of valid IoC fields.
-    """
-    return {field.value for field in ValidIocFields}
-
-
-async def construct_alert_source_link(
-    alert_details: GenericAlertModel,
-    session: AsyncSession,
-) -> str:
-    """
-    Construct the alert source link for the alert details.
-    Parameters
-    ----------
-    alert_details: CreateAlertRequest
-        The alert details.
-    Returns
-    -------
-    str
-        The alert source link.
-    """
-    # Check if the alert has a process id and that it is not "No process ID found"
-    if hasattr(alert_details, "process_id") and alert_details._source.process_id != "No process ID found":
-        query_string = f"%22query%22:%22process_id:%5C%22{alert_details._source.process_id}%5C%22%20AND%20"
-    else:
-        query_string = f"%22query%22:%22_id:%5C%22{alert_details._id}%5C%22%20AND%20"
-
-    grafana_url = (
-        await get_customer_alert_settings(
-            customer_code=alert_details._source.agent_labels_customer,
-            session=session,
-        )
-    ).grafana_url
-
-    return (
-        f"{grafana_url}/explore?left=%5B%22now-6h%22,%22now%22,%22WAZUH%22,%7B%22refId%22:%22A%22,"
-        f"{query_string}"
-        f"agent_name:%5C%22{alert_details._source.agent_name}%5C%22%22,"
-        "%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,"
-        "%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D"
-    )
-
-
 async def get_single_alert_details(
     alert_details: CreateAlertRequest,
 ) -> GenericAlertModel:
@@ -167,49 +112,21 @@ async def get_single_alert_details(
         )
 
 
-async def build_ioc_payload(alert_details: GenericAlertModel) -> Optional[IrisIoc]:
+async def set_alert_level(syslog_level: str):
     """
-    Builds an IoC payload based on the given alert details.
+    Sets the alert level based on the syslog level.
 
     Args:
-        alert_details (GenericAlertModel): The alert details.
+        syslog_level (str): The syslog level.
 
     Returns:
-        Optional[IrisIoc]: The IoC payload if an IoC is found in the alert, otherwise None.
+        int: The alert level.
     """
-    for field in valid_ioc_fields():
-        if hasattr(alert_details._source, field):
-            ioc_value = getattr(alert_details._source, field)
-            ioc_type = await validate_ioc_type(ioc_value=ioc_value)
-            return IrisIoc(
-                ioc_value=ioc_value,
-                ioc_description="IoC found in alert",
-                ioc_tlp_id=1,
-                ioc_type_id=ioc_type,
-            )
-    return None
-
-
-async def build_asset_payload(agent_data: AgentsResponse, alert_details) -> IrisAsset:
-    """
-    Builds the payload for an IrisAsset object based on the agent data and alert details.
-
-    Args:
-        agent_data (AgentsResponse): The response containing agent data.
-        alert_details: The details of the alert.
-
-    Returns:
-        IrisAsset: The constructed IrisAsset object.
-    """
-    if agent_data.success:
-        return IrisAsset(
-            asset_name=agent_data.agents[0].hostname,
-            asset_ip=agent_data.agents[0].ip_address,
-            asset_description=agent_data.agents[0].os,
-            asset_type_id=await get_asset_type_id(agent_data.agents[0].os),
-            asset_tags=f"agent_id:{agent_data.agents[0].agent_id}",
-        )
-    return IrisAsset()
+    for level in SyslogLevelMapping:
+        if level.name == syslog_level:
+            logger.info(f"Setting alert level to {level.value}")
+            return level.value
+    return 3
 
 
 async def build_alert_context_payload(
@@ -227,14 +144,21 @@ async def build_alert_context_payload(
     Returns:
         IrisAlertContext: The built alert context payload.
     """
+    # Convert the _source to a dictionary
+    source_dict = alert_details._source.to_dict()
+
+    # Remove fields that start with any prefix in SourceFieldsToRemove
+    for field in SourceFieldsToRemove:
+        source_dict = {k: v for k, v in source_dict.items() if not k.startswith(field.value)}
+
     return IrisAlertContext(
         customer_iris_id=customer_alert_creation_settings.iris_customer_id,
         customer_name=customer_alert_creation_settings.customer_name,
         customer_cases_index=customer_alert_creation_settings.iris_index,
         alert_id=alert_details._id,
         alert_name=alert_details.rule_description,
-        alert_level=alert_details.syslog_level,
-        all_other_data=alert_details._source.to_dict()
+        alert_level=await set_alert_level(alert_details.syslog_level),
+        **source_dict,
     )
 
 
@@ -322,6 +246,7 @@ async def add_alert_to_document(
             )
             return False
 
+
 async def get_customer_code(alert_details: dict):
     logger.info(f"Fetching customer code for alert {alert_details}")
 
@@ -362,6 +287,7 @@ async def build_alert_payload(
         alert_details=alert_details,
         customer_alert_creation_settings=customer_alert_creation_settings,
     )
+    logger.info(f"Context payload: {context_payload}")
     timefield = customer_alert_creation_settings.timefield
     # Get the timefield value from the alert_details
     if hasattr(alert_details, timefield):
@@ -370,12 +296,8 @@ async def build_alert_payload(
     try:
         return IrisAlertPayload(
             alert_title=alert_details._source.rule_description,
-            #alert_source_link=await construct_alert_source_link(
-            #     alert_details,
-            #     session=session,
-            # ),
             alert_description=alert_details._source.rule_description,
-            alert_source="CoPilot",
+            alert_source="CoPilot - Manual Escalation",
             alert_status_id=3,
             alert_severity_id=5,
             alert_customer_id=customer_alert_creation_settings.iris_customer_id,
@@ -389,6 +311,7 @@ async def build_alert_payload(
             status_code=500,
             detail=f"Failed to build alert payload: {e}",
         )
+
 
 async def create_alert(
     alert: CreateAlertRequest,
@@ -420,12 +343,32 @@ async def create_alert(
         customer_alert_creation_settings=customer_alert_creation_settings,
     )
     logger.info(f"Iris Alert Payload: {iris_alert_payload}")
-
-
-
-
-    raise HTTPException(
-        status_code=500,
-        detail="Failed to create alert in IRIS",
+    client, alert_client = await initialize_client_and_alert("DFIR-IRIS")
+    result = await fetch_and_validate_data(
+        client,
+        alert_client.add_alert,
+        iris_alert_payload.to_dict(),
     )
+    alert_id = result["data"]["alert_id"]
 
+    es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
+    iris_url = await add_alert_to_document(
+        es_client,
+        alert,
+        result["data"]["alert_id"],
+        session=session,
+    )
+    try:
+        alert_id = result["data"]["alert_id"]
+        return CreateAlertResponse(
+            alert_id=alert_id,
+            success=True,
+            message=f"Alert {alert_id} created successfully",
+            alert_url=iris_url,
+        )
+    except Exception as e:
+        logger.error(f"Failed to create alert {alert.alert_id}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to create alert for ID {alert.alert_id}: {e}",
+        )

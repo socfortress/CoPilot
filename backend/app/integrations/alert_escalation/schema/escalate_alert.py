@@ -1,17 +1,30 @@
 from enum import Enum
 from typing import Any
 from typing import Dict
-from typing import List
 from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Extra
 from pydantic import Field
 
+
 class CustomerCodeKeys(Enum):
     AGENT_LABELS_CUSTOMER = "agent_labels_customer"
     DATA_OFFICE365_ORGANIZATION_ID = "data_office365_OrganizationId"
     SYSLOG_CUSTOMER = "syslog_customer"
+
+
+class SyslogLevelMapping(Enum):
+    INFO = 1
+    NOTICE = 2
+    WARNING = 3
+    ALERT = 4
+
+
+class SourceFieldsToRemove(Enum):
+    GL2 = "gl2"
+    # Add more fields as needed
+
 
 class ValidIocFields(Enum):
     MISP_VALUE = "misp_value"
@@ -154,42 +167,9 @@ class IrisAlertContext(BaseModel):
         example="Intrusion Detected",
     )
     alert_level: int = Field(..., description="Severity level of the alert", example=3)
-    rule_id: str = Field(
-        ...,
-        description="ID of the rule that triggered the alert",
-        example="2001",
-    )
-    asset_name: str = Field(
-        ...,
-        description="Name of the affected asset",
-        example="Server01",
-    )
-    asset_ip: str = Field(
-        ...,
-        description="IP address of the affected asset",
-        example="192.168.1.1",
-    )
-    asset_type: int = Field(..., description="Type ID of the affected asset", example=1)
-    process_id: Optional[str] = Field(
-        "No process ID found",
-        description="Process ID involved in the alert",
-        example="4567",
-    )
-    rule_mitre_id: Optional[str] = Field(
-        "n/a",
-        description="MITRE ATT&CK ID of the rule",
-        example="T1234",
-    )
-    rule_mitre_tactic: Optional[str] = Field(
-        "n/a",
-        description="MITRE ATT&CK Tactic",
-        example="Execution",
-    )
-    rule_mitre_technique: Optional[str] = Field(
-        "n/a",
-        description="MITRE ATT&CK Technique",
-        example="Scripting",
-    )
+
+    class Config:
+        extra = Extra.allow
 
 
 class IrisAlertPayload(BaseModel):
@@ -204,7 +184,6 @@ class IrisAlertPayload(BaseModel):
         example="Intrusion Detected by Firewall",
     )
     alert_source: str = Field(..., description="Source of the alert", example="Wazuh")
-    assets: List[IrisAsset] = Field(..., description="List of affected assets")
     alert_status_id: int = Field(..., description="Status ID of the alert", example=3)
     alert_severity_id: int = Field(
         ...,
@@ -223,10 +202,6 @@ class IrisAlertPayload(BaseModel):
     alert_context: IrisAlertContext = Field(
         ...,
         description="Contextual information about the alert",
-    )
-    alert_iocs: Optional[List[IrisIoc]] = Field(
-        None,
-        description="List of IoCs related to the alert",
     )
 
     def to_dict(self):
