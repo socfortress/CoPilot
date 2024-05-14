@@ -198,7 +198,7 @@ async def delete_client(client_id: str) -> dict:
     Returns:
         dict: A dictionary containing the result of the deletion operation.
     """
-    universal_service = UniversalService()
+    universal_service = await UniversalService.create("Velociraptor")
     try:
         query = create_query(
             f"SELECT collect_client(client_id='server', artifacts=['Server.Utils.DeleteClient'], env=dict(ClientIdList='{client_id}',ReallyDoIt='Y')) FROM scope()",
@@ -219,7 +219,7 @@ async def ensure_client_deleted(client_id: str) -> dict:
     Returns:
         dict: The result of the deletion operation.
     """
-    universal_service = UniversalService()
+    universal_service = await UniversalService.create("Velociraptor")
     try:
         query = create_query(
             "SELECT collect_client(client_id='server', artifacts=['Server.Information.Clients'], env=dict()) FROM scope()",
