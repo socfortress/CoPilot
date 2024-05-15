@@ -116,17 +116,29 @@ class RuleExcludeRequest(BaseModel):
         return v
 
     @validator("prompt")
-    def check_rule_group1(cls, v):
-        if "rule_group1" not in v:
-            raise HTTPException(
-                status_code=400,
-                detail="Missing 'rule_group1' in prompt.",
-            )
-        if v["rule_group1"] != "windows":
-            raise HTTPException(
-                status_code=400,
-                detail="Invalid 'rule_group1'. Only 'windows' is supported.",
-            )
+    def check_rule_group(cls, v):
+        if "rule_group3" in v:
+            if "rule_group1" not in v and "rule_group3" not in v:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Missing 'rule_group1' or 'rule_group3' in prompt.",
+                )
+            if ("rule_group1" in v and v["rule_group1"] != "windows") and ("rule_group3" in v and v["rule_group3"] != "windows"):
+                raise HTTPException(
+                    status_code=400,
+                    detail="Invalid 'rule_group1' or 'rule_group3'. At least one must be 'windows'.",
+                )
+        else:
+            if "rule_group1" not in v:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Missing 'rule_group1' in prompt.",
+                )
+            if v["rule_group1"] != "windows":
+                raise HTTPException(
+                    status_code=400,
+                    detail="Invalid 'rule_group1'. Only 'windows' is supported.",
+                )
         return v
 
 
