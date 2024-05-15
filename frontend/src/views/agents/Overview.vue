@@ -46,7 +46,7 @@
 		</n-spin>
 		<n-card class="py-1 px-4 pb-4" content-style="padding:0">
 			<n-spin :show="loadingAgent">
-				<n-tabs type="line" animated default-value="Overview">
+				<n-tabs type="line" animated default-value="SCA">
 					<n-tab-pane name="Overview" tab="Overview" display-directive="show">
 						<div class="section">
 							<OverviewSection v-if="agent" :agent="agent" />
@@ -55,6 +55,11 @@
 					<n-tab-pane name="Vulnerabilities" tab="Vulnerabilities" display-directive="show:lazy">
 						<div class="section">
 							<VulnerabilitiesSection v-if="agent" :agent="agent" />
+						</div>
+					</n-tab-pane>
+					<n-tab-pane name="SCA" tab="SCA" display-directive="show:lazy">
+						<div class="section">
+							<ScaSection v-if="agent" :agent="agent" />
 						</div>
 					</n-tab-pane>
 					<n-tab-pane name="Cases" tab="Cases" display-directive="show:lazy">
@@ -114,6 +119,7 @@ import { AgentStatus, type Agent } from "@/types/agents.d"
 import { handleDeleteAgent, toggleAgentCritical } from "@/components/agents/utils"
 import { useRouter } from "vue-router"
 import VulnerabilitiesSection from "@/components/agents/VulnerabilitiesSection.vue"
+import ScaSection from "@/components/agents/ScaSection.vue"
 import AlertsList from "@/components/alerts/AlertsList.vue"
 import OverviewSection from "@/components/agents/OverviewSection.vue"
 import AgentCases from "@/components/agents/AgentCases.vue"

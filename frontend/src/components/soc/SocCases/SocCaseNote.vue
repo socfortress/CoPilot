@@ -55,7 +55,7 @@
 		<n-modal
 			v-model:show="showDetails"
 			preset="card"
-			content-style="padding:0px"
+			content-class="!p-0"
 			:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(600px, 90vh)', overflow: 'hidden' }"
 			:title="`Note: #${note.note_id} - ${note.note_details.note_uuid}`"
 			:bordered="false"
