@@ -15,7 +15,7 @@
 import { ref, onBeforeMount, toRefs } from "vue"
 import Api from "@/api"
 import { type Agent, type AgentVulnerabilities } from "@/types/agents.d"
-import VulnerabilityCard from "@/components/agents/VulnerabilityCard.vue"
+import VulnerabilityCard from "./VulnerabilityCard.vue"
 import { nanoid } from "nanoid"
 import { useMessage, NSpin, NEmpty } from "naive-ui"
 

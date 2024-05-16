@@ -68,6 +68,9 @@
 				/>
 			</div>
 		</n-tab-pane>
+		<n-tab-pane name="SCA Results" tab="SCA Results" display-directive="show">
+			<div class="p-7 pt-4">...SCA Results...</div>
+		</n-tab-pane>
 	</n-tabs>
 </template>
 
