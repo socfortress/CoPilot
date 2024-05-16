@@ -44,13 +44,7 @@
 				:item-count="total"
 				:simple="simpleMode"
 			/>
-			<n-popover
-				:show="showFilters"
-				trigger="manual"
-				overlap
-				placement="right"
-				style="padding-left: 0; padding-right: 0"
-			>
+			<n-popover :show="showFilters" trigger="manual" overlap placement="right" class="!px-0">
 				<template #trigger>
 					<div class="bg-color border-radius">
 						<n-badge :show="filtered" dot type="success" :offset="[-4, 0]">

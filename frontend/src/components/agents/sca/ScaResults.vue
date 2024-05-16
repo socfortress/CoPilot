@@ -38,10 +38,10 @@
 				:page-slot="pageSlot"
 				:show-size-picker="showSizePicker"
 				:page-sizes="pageSizes"
-				:item-count="total"
+				:item-count="itemsFiltered.length"
 				:simple="simpleMode"
 			/>
-			<n-popover overlap placement="right" style="padding-left: 0; padding-right: 0">
+			<n-popover overlap placement="right" class="!px-0">
 				<template #trigger>
 					<div class="bg-color border-radius">
 						<n-button size="small">
@@ -68,7 +68,7 @@
 		</div>
 		<div class="list my-3">
 			<template v-if="itemsPaginated.length">
-				<ScaResultItem v-for="stream of itemsPaginated" :key="stream.id" :stream="stream" class="mb-2" />
+				<ScaResultItem v-for="item of itemsPaginated" :key="item.id" :data="item" embedded class="mb-2" />
 			</template>
 			<template v-else>
 				<n-empty description="No items found" class="justify-center h-48" v-if="!loading" />
@@ -78,7 +78,7 @@
 			<n-pagination
 				v-model:page="currentPage"
 				:page-size="pageSize"
-				:item-count="total"
+				:item-count="itemsFiltered.length"
 				:page-slot="6"
 				:simple="simpleMode"
 				v-if="itemsPaginated.length > 3"
@@ -95,6 +95,7 @@ import Icon from "@/components/common/Icon.vue"
 import { useResizeObserver } from "@vueuse/core"
 import ScaResultItem from "./ScaResultItem.vue"
 import type { Agent, AgentSca, ScaPolicyResult } from "@/types/agents.d"
+import { watch } from "vue"
 
 const { sca, agent } = defineProps<{ sca: AgentSca; agent: Agent }>()
 
@@ -122,18 +123,24 @@ const resultOptions = [
 	{ label: "Failed", value: "failed" }
 ]
 
+const itemsFiltered = computed(() =>
+	resultsList.value.filter(o => {
+		if (!resultFilter.value) {
+			return true
+		}
+		return resultFilter.value === o.result
+	})
+)
+
 const itemsPaginated = computed(() => {
 	const from = (currentPage.value - 1) * pageSize.value
 	const to = currentPage.value * pageSize.value
 
-	return resultsList.value
-		.filter(o => {
-			if (!resultFilter.value) {
-				return true
-			}
-			return resultFilter.value === o.result
-		})
-		.slice(from, to)
+	return itemsFiltered.value.slice(from, to)
+})
+
+watch(resultFilter, () => {
+	currentPage.value = 1
 })
 
 function getSCAResults(agentId: string, policyId: string) {

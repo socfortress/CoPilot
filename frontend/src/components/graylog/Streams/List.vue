@@ -33,7 +33,7 @@
 				:item-count="total"
 				:simple="simpleMode"
 			/>
-			<n-popover overlap placement="right" style="padding-left: 0; padding-right: 0">
+			<n-popover overlap placement="right" class="!px-0">
 				<template #trigger>
 					<div class="bg-color border-radius">
 						<n-button size="small">
