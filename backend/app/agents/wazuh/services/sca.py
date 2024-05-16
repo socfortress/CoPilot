@@ -76,7 +76,7 @@ async def collect_agent_sca_policy_results(agent_id: str, policy_id: str):
         agent_id (str): The ID of the agent.
 
     Returns:
-        WazuhAgentVulnerabilitiesResponse: An object containing the collected sca.
+        WazuhAgentScaPolicyResultsResponse: An object containing the collected sca.
 
     Raises:
         HTTPException: If there is an error collecting the sca.
