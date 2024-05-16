@@ -69,7 +69,7 @@
 			:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(400px, 90vh)', overflow: 'hidden' }"
 			:title="selectedSca?.policy_id || ''"
 			:bordered="false"
-			segmented,
+			segmented
 			content-class="!p-0"
 		>
 			<ScaItem v-if="selectedSca" :sca="selectedSca"></ScaItem>

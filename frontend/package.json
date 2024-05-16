@@ -120,7 +120,7 @@
 		"vite-bundle-visualizer": "^1.2.1",
 		"vite-svg-loader": "^5.1.0",
 		"vitest": "^1.6.0",
-		"vue-tsc": "^2.0.17"
+		"vue-tsc": "^2.0.19"
 	},
 	"engines": {
 		"node": ">=18.0.0"
