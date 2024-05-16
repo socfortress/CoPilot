@@ -20,10 +20,13 @@ from app.agents.services.status import get_outdated_agents_velociraptor
 from app.agents.services.status import get_outdated_agents_wazuh
 from app.agents.services.sync import sync_agents
 from app.agents.velociraptor.services.agents import delete_agent_velociraptor
-from app.agents.wazuh.schema.agents import WazuhAgentVulnerabilitiesResponse, WazuhAgentScaResponse, WazuhAgentScaPolicyResultsResponse
+from app.agents.wazuh.schema.agents import WazuhAgentScaPolicyResultsResponse
+from app.agents.wazuh.schema.agents import WazuhAgentScaResponse
+from app.agents.wazuh.schema.agents import WazuhAgentVulnerabilitiesResponse
 from app.agents.wazuh.services.agents import delete_agent_wazuh
+from app.agents.wazuh.services.sca import collect_agent_sca
+from app.agents.wazuh.services.sca import collect_agent_sca_policy_results
 from app.agents.wazuh.services.vulnerabilities import collect_agent_vulnerabilities
-from app.agents.wazuh.services.sca import collect_agent_sca, collect_agent_sca_policy_results
 
 # App specific imports
 from app.auth.routes.auth import AuthHandler
@@ -387,6 +390,7 @@ async def get_agent_sca(agent_id: str) -> WazuhAgentScaResponse:
     logger.info(f"Fetching agent {agent_id} sca")
     return await collect_agent_sca(agent_id)
 
+
 @agents_router.get(
     "/{agent_id}/sca/{policy_id}",
     response_model=WazuhAgentScaPolicyResultsResponse,
@@ -404,7 +408,8 @@ async def get_agent_sca_policy_results(agent_id: str, policy_id: str) -> WazuhAg
         WazuhAgentScaPolicyResultsResponse: The response containing the agent sca.
     """
     logger.info(f"Fetching agent {agent_id} sca policy results")
-    return await collect_agent_sca_policy_results(agent_id,policy_id)
+    return await collect_agent_sca_policy_results(agent_id, policy_id)
+
 
 @agents_router.get(
     "/{agent_id}/soc_cases",

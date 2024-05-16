@@ -78,13 +78,16 @@ class WazuhAgentScaResponse(BaseModel):
     success: bool
     message: str
 
+
 class Compliance(BaseModel):
     value: str
     key: str
 
+
 class Rules(BaseModel):
     type: str
     rule: str
+
 
 class WazuhAgentScaPolicyResults(BaseModel):
     description: Optional[str] = Field(
@@ -105,6 +108,7 @@ class WazuhAgentScaPolicyResults(BaseModel):
     remediation: str
     compliance: List[Compliance]
     rules: List[Rules]
+
 
 class WazuhAgentScaPolicyResultsResponse(BaseModel):
     sca_policy_results: Optional[List[WazuhAgentScaPolicyResults]]

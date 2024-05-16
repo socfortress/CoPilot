@@ -3,8 +3,10 @@ from typing import List
 from fastapi import HTTPException
 from loguru import logger
 
+from app.agents.wazuh.schema.agents import WazuhAgentScaPolicyResults
+from app.agents.wazuh.schema.agents import WazuhAgentScaPolicyResultsResponse
+from app.agents.wazuh.schema.agents import WazuhAgentScaResponse
 from app.agents.wazuh.schema.agents import WazuhAgentScaResults
-from app.agents.wazuh.schema.agents import WazuhAgentScaResponse, WazuhAgentScaPolicyResults, WazuhAgentScaPolicyResultsResponse
 from app.connectors.wazuh_manager.utils.universal import send_get_request
 
 
