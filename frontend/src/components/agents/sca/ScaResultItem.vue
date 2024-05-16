@@ -57,69 +57,61 @@
 			:bordered="false"
 			segmented
 		>
-			test
-			<!--
-
-
-
 			<n-tabs type="line" animated :tabs-padding="24">
-				<n-tab-pane name="Details" tab="Details" display-directive="show" class="flex flex-col gap-4 !py-8">
+				<n-tab-pane
+					name="Overview"
+					tab="Overview"
+					display-directive="show:lazy"
+					class="flex flex-col gap-4 !py-8"
+				>
 					<div class="px-7">
 						<n-card content-class="bg-secondary-color" class="overflow-hidden">
 							<div class="flex justify-between gap-8 flex-wrap">
-								<n-statistic label="Checks" :value="sca.total_checks" tabular-nums />
-								<n-statistic label="Pass" :value="sca.pass" tabular-nums />
-								<n-statistic label="Fail" :value="sca.fail" tabular-nums />
-								<n-statistic label="Invalid" :value="sca.invalid" tabular-nums />
-								<n-statistic label="Score" :value="sca.score + '%'" tabular-nums />
+								<n-statistic label="Result" tabular-nums>
+									<span
+										class="uppercase"
+										:class="
+											data.result === 'failed'
+												? 'text-error-color'
+												: data.result === 'not applicable'
+													? 'text-warning-color'
+													: 'text-success-color'
+										"
+									>
+										{{ data.result }}
+									</span>
+								</n-statistic>
+								<n-statistic label="Condition" tabular-nums>
+									<span class="uppercase">{{ data.condition }}</span>
+								</n-statistic>
+								<n-statistic label="Compliance" :value="data.compliance.length" tabular-nums />
+								<n-statistic label="Rules" :value="data.rules.length" tabular-nums />
 							</div>
 						</n-card>
 					</div>
+
 					<div class="px-7">
-						<n-card content-class="bg-secondary-color" class="overflow-hidden">
-							<div class="flex justify-between gap-8 xs:!flex-row flex-col">
-								<n-statistic
-									class="grow"
-									label="Start scan"
-									:value="formatDate(sca.start_scan, dFormats.datetime).toString()"
-								/>
-								<n-statistic
-									class="grow"
-									label="End scan"
-									:value="formatDate(sca.end_scan, dFormats.datetime).toString()"
-								/>
+						<n-card content-class="bg-secondary-color !p-0" class="overflow-hidden">
+							<div
+								class="scrollbar-styled overflow-hidden"
+								v-shiki="{ theme: codeTheme, lang: 'shell', decode: true }"
+							>
+								<pre v-html="data.command"></pre>
 							</div>
 						</n-card>
 					</div>
+
 					<div class="grid gap-2 grid-auto-flow-200 px-7" v-if="properties">
 						<KVCard v-for="(value, key) of properties" :key="key">
 							<template #key>{{ key }}</template>
-							<template #value>
-								<template v-if="value && key === 'references'">
-									<a
-										:href="value"
-										target="_blank"
-										alt="references url"
-										rel="nofollow noopener noreferrer"
-										class="leading-6"
-									>
-										<span>
-											{{ value }}
-										</span>
-										<Icon :name="LinkIcon" :size="14" class="relative top-0.5 ml-2" />
-									</a>
-								</template>
-								<template v-else>
-									{{ value ?? "-" }}
-								</template>
-							</template>
+							<template #value>{{ value ?? "-" }}</template>
 						</KVCard>
 					</div>
 				</n-tab-pane>
-				<n-tab-pane name="Description" tab="Description" display-directive="show">
+				<n-tab-pane name="Description" tab="Description" display-directive="show:lazy">
 					<div class="p-7 pt-4">
 						<n-input
-							:value="sca.description"
+							:value="data.description"
 							type="textarea"
 							readonly
 							placeholder="Empty"
@@ -131,23 +123,72 @@
 						/>
 					</div>
 				</n-tab-pane>
-				<n-tab-pane name="SCA Results" tab="SCA Results" display-directive="show:lazy">
+				<n-tab-pane name="Rationale" tab="Rationale" display-directive="show:lazy">
 					<div class="p-7 pt-4">
-						<ScaResults :sca="sca" :agent="agent" />
+						<n-input
+							:value="data.rationale"
+							type="textarea"
+							readonly
+							placeholder="Empty"
+							size="large"
+							:autosize="{
+								minRows: 3,
+								maxRows: 18
+							}"
+						/>
 					</div>
 				</n-tab-pane>
+				<n-tab-pane name="Reason" tab="Reason" display-directive="show:lazy">
+					<div class="p-7 pt-4">
+						<n-input
+							:value="data.reason"
+							type="textarea"
+							readonly
+							placeholder="Empty"
+							size="large"
+							:autosize="{
+								minRows: 3,
+								maxRows: 18
+							}"
+						/>
+					</div>
+				</n-tab-pane>
+				<n-tab-pane name="Remediation" tab="Remediation" display-directive="show:lazy">
+					<div class="p-7 pt-4">
+						<n-input
+							:value="data.remediation"
+							type="textarea"
+							readonly
+							placeholder="Empty"
+							size="large"
+							:autosize="{
+								minRows: 3,
+								maxRows: 18
+							}"
+						/>
+					</div>
+				</n-tab-pane>
+				<n-tab-pane name="Compliance" tab="Compliance" display-directive="show:lazy">
+					<div class="p-7 pt-4">compliance</div>
+				</n-tab-pane>
+				<n-tab-pane name="Rules" tab="Rules" display-directive="show:lazy">
+					<div class="p-7 pt-4">rules</div>
+				</n-tab-pane>
 			</n-tabs>
-		-->
 		</n-modal>
 	</div>
 </template>
 
 <script setup lang="ts">
 import Icon from "@/components/common/Icon.vue"
+import vShiki from "@/directives/v-shiki"
+import _pick from "lodash/pick"
+import KVCard from "@/components/common/KVCard.vue"
 import Badge from "@/components/common/Badge.vue"
-import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
-import { NAvatar, useMessage, NPopover, NModal, NTabs, NTabPane, NSpin, NScrollbar, NButton } from "naive-ui"
+import { computed, ref } from "vue"
+import { NModal, NTabs, NTabPane, NStatistic, NInput, NCard, NButton } from "naive-ui"
 import type { ScaPolicyResult } from "@/types/agents"
+import { useThemeStore } from "@/stores/theme"
 
 const { data, embedded } = defineProps<{
 	data: ScaPolicyResult
@@ -155,14 +196,13 @@ const { data, embedded } = defineProps<{
 }>()
 
 const DetailsIcon = "carbon:settings-adjust"
-const UserTypeIcon = "solar:shield-user-linear"
-const ParentIcon = "material-symbols-light:supervisor-account-outline-rounded"
-const ArrowIcon = "carbon:arrow-left"
-const LocationIcon = "carbon:location"
-const PhoneIcon = "carbon:phone"
 
 const showDetails = ref(false)
-const selectedTabsGroup = ref<"customer" | "agents">("customer")
+const themeStore = useThemeStore()
+const codeTheme = computed(() => (themeStore.isThemeDark ? "dark" : "light"))
+const properties = computed(() => {
+	return _pick(data, ["id", "policy_id", "title"])
+})
 </script>
 
 <style lang="scss" scoped>

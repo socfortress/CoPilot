@@ -114,6 +114,9 @@
 .font-mono {
 	font-family: var(--font-family-mono);
 }
+.\!font-mono {
+	font-family: var(--font-family-mono) !important;
+}
 
 .text-primary-color {
 	color: var(--primary-color);

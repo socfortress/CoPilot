@@ -50,6 +50,7 @@
 		"detect-touch-device": "^1.1.6",
 		"echarts": "^5.5.0",
 		"file-saver": "^2.0.5",
+		"html-entities": "^2.5.2",
 		"jose": "^5.3.0",
 		"js-md5": "^0.8.3",
 		"lodash": "^4.17.21",
