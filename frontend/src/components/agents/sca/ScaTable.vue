@@ -72,7 +72,7 @@
 			segmented
 			content-class="!p-0"
 		>
-			<ScaItem v-if="selectedSca" :sca="selectedSca"></ScaItem>
+			<ScaItem v-if="selectedSca" :sca="selectedSca" :agent="agent"></ScaItem>
 		</n-modal>
 	</n-spin>
 </template>

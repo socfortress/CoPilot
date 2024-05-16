@@ -68,8 +68,10 @@
 				/>
 			</div>
 		</n-tab-pane>
-		<n-tab-pane name="SCA Results" tab="SCA Results" display-directive="show">
-			<div class="p-7 pt-4">...SCA Results...</div>
+		<n-tab-pane name="SCA Results" tab="SCA Results" display-directive="show:lazy">
+			<div class="p-7 pt-4">
+				<ScaResults :sca="sca" :agent="agent" />
+			</div>
 		</n-tab-pane>
 	</n-tabs>
 </template>
@@ -78,14 +80,14 @@
 import { NTabs, NTabPane, NInput, NStatistic, NCard } from "naive-ui"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
-import { type AgentSca } from "@/types/agents.d"
+import { type Agent, type AgentSca } from "@/types/agents.d"
 import KVCard from "@/components/common/KVCard.vue"
 import Icon from "@/components/common/Icon.vue"
 import { computed } from "vue"
+import ScaResults from "./ScaResults.vue"
 import _pick from "lodash/pick"
-import "@/assets/scss/vuesjv-override.scss"
 
-const { sca } = defineProps<{ sca: AgentSca }>()
+const { sca, agent } = defineProps<{ sca: AgentSca; agent: Agent }>()
 
 const dFormats = useSettingsStore().dateFormat
 const LinkIcon = "carbon:launch"
