@@ -60,7 +60,7 @@
 							:options="resultOptions"
 							clearable
 							placeholder="All"
-							class="!w-36"
+							class="!w-40"
 						/>
 					</div>
 				</div>

@@ -3,7 +3,6 @@
 		<div class="px-4 py-3 flex flex-col gap-2">
 			<div class="header-box flex items-center">
 				<div class="id">#{{ data.id }}</div>
-				<div class="result">{{ data.result }}</div>
 				<div class="grow"></div>
 				<div class="actions">
 					<n-button size="small" @click.stop="showDetails = true">
@@ -22,6 +21,16 @@
 			</div>
 
 			<div class="badges-box flex flex-wrap items-center gap-3 mt-2">
+				<Badge
+					type="splitted"
+					:color="
+						data.result === 'failed' ? 'danger' : data.result === 'not applicable' ? 'warning' : 'success'
+					"
+					class="uppercase"
+				>
+					<template #label>{{ data.result }}</template>
+				</Badge>
+
 				<Badge type="splitted">
 					<template #label>Compliance</template>
 					<template #value>{{ data.compliance?.length || "-" }}</template>

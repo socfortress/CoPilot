@@ -23,7 +23,7 @@ const { type, hintCursor, pointCursor, color, href, fluid } = defineProps<{
 	hintCursor?: boolean
 	pointCursor?: boolean
 	fluid?: boolean
-	color?: "danger" | "warning"
+	color?: "danger" | "warning" | "success"
 	href?: string
 }>()
 </script>
@@ -63,6 +63,10 @@ const { type, hintCursor, pointCursor, color, href, fluid } = defineProps<{
 		}
 	}
 
+	span:not(:last-child) {
+		border-right: var(--border-small-100);
+	}
+
 	&.splitted {
 		padding: 0px;
 		gap: 0;
@@ -74,7 +78,6 @@ const { type, hintCursor, pointCursor, color, href, fluid } = defineProps<{
 			line-height: 24px;
 
 			&:first-child {
-				border-right: var(--border-small-100);
 				background-color: var(--primary-005-color);
 				line-height: 1.1;
 				white-space: nowrap;
@@ -96,6 +99,14 @@ const { type, hintCursor, pointCursor, color, href, fluid } = defineProps<{
 			& > span {
 				&:first-child {
 					background-color: var(--secondary3-opacity-010-color);
+				}
+			}
+		}
+
+		&.success {
+			& > span {
+				&:first-child {
+					background-color: var(--success-005-color);
 				}
 			}
 		}
