@@ -41,8 +41,7 @@
 </template>
 
 <script lang="ts" setup>
-import { NButton, NCard, NUpload, NUploadDragger, NModal } from "naive-ui"
-import { type FileInfo } from "naive-ui/es/upload/src/interface"
+import { NButton, NCard, NUpload, NUploadDragger, NModal, type UploadSettledFileInfo } from "naive-ui"
 import { computed, ref, toRefs } from "vue"
 import { Cropper, CircleStencil, RectangleStencil, type CropperResult } from "vue-advanced-cropper"
 import "vue-advanced-cropper/dist/style.css"
@@ -90,7 +89,11 @@ function openCropper() {
 	img.value = ""
 }
 
-function setImage(data: { file: FileInfo; fileList: FileInfo[]; event: ProgressEvent | Event | undefined }): void {
+function setImage(data: {
+	file: UploadSettledFileInfo
+	fileList: UploadSettledFileInfo[]
+	event: ProgressEvent | Event | undefined
+}): void {
 	if (data?.file?.file) {
 		const reader = new FileReader()
 		reader.readAsDataURL(data.file.file)

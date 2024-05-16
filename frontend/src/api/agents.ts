@@ -1,6 +1,13 @@
 import { type FlaskBaseResponse } from "@/types/flask.d"
 import { HttpClient } from "./httpClient"
-import type { Agent, AgentVulnerabilities, OutdatedWazuhAgents, OutdatedVelociraptorAgents } from "@/types/agents.d"
+import type {
+	Agent,
+	AgentVulnerabilities,
+	OutdatedWazuhAgents,
+	OutdatedVelociraptorAgents,
+	AgentSca,
+	ScaPolicyResult
+} from "@/types/agents.d"
 
 export default {
 	getAgents(id?: string) {
@@ -26,6 +33,15 @@ export default {
 	getSocCases(id: string | number, signal?: AbortSignal) {
 		return HttpClient.get<FlaskBaseResponse & { case_ids: number[] }>(
 			`/agents/${id}/soc_cases`,
+			signal ? { signal } : {}
+		)
+	},
+	getSCA(id: string | number, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { sca: AgentSca[] }>(`/agents/${id}/sca`, signal ? { signal } : {})
+	},
+	getSCAResults(id: string | number, policyId: string, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { sca_policy_results: ScaPolicyResult[] }>(
+			`/agents/${id}/sca/${policyId}`,
 			signal ? { signal } : {}
 		)
 	},

@@ -56,3 +56,61 @@ class WazuhAgentVulnerabilitiesResponse(BaseModel):
     vulnerabilities: Optional[List[WazuhAgentVulnerabilities]]
     success: bool
     message: str
+
+
+class WazuhAgentScaResults(BaseModel):
+    description: str
+    fail: int
+    start_scan: str
+    references: str
+    name: str
+    pass_count: int = Field(..., alias="pass")
+    score: int
+    end_scan: str
+    policy_id: str
+    total_checks: int
+    hash_file: str
+    invalid: int
+
+
+class WazuhAgentScaResponse(BaseModel):
+    sca: Optional[List[WazuhAgentScaResults]]
+    success: bool
+    message: str
+
+
+class Compliance(BaseModel):
+    value: str
+    key: str
+
+
+class Rules(BaseModel):
+    type: str
+    rule: str
+
+
+class WazuhAgentScaPolicyResults(BaseModel):
+    description: Optional[str] = Field(
+        "Description not found",
+        description="Description of the issue",
+    )
+    id: int
+    reason: str
+    command: Optional[str] = Field(
+        "Command not found",
+        description="Command to run to fix the issue",
+    )
+    rationale: str
+    condition: str
+    title: str
+    result: str
+    policy_id: str
+    remediation: str
+    compliance: List[Compliance]
+    rules: List[Rules]
+
+
+class WazuhAgentScaPolicyResultsResponse(BaseModel):
+    sca_policy_results: Optional[List[WazuhAgentScaPolicyResults]]
+    success: bool
+    message: str

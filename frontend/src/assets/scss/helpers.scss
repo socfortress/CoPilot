@@ -103,12 +103,19 @@
 	background-color: var(--bg-color);
 }
 
+.bg-secondary-color {
+	background-color: var(--bg-secondary-color);
+}
+
 .border-radius {
 	border-radius: var(--border-radius);
 }
 
 .font-mono {
 	font-family: var(--font-family-mono);
+}
+.\!font-mono {
+	font-family: var(--font-family-mono) !important;
 }
 
 .text-primary-color {
@@ -123,11 +130,9 @@
 .text-secondary-color {
 	color: var(--fg-secondary-color);
 }
-
 .text-warning-color {
 	color: var(--warning-color);
 }
-
 .text-error-color {
 	color: var(--error-color);
 }

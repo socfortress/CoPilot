@@ -3,7 +3,11 @@
 		<div class="group">
 			<VulnerabilityCard :vulnerability="item" v-for="item of vulnerabilities" :key="item.id" />
 		</div>
-		<div v-if="!loading && !vulnerabilities.length">No vulnerabilities detected</div>
+		<n-empty
+			description="No vulnerabilities detected"
+			class="justify-center h-48"
+			v-if="!loading && !vulnerabilities.length"
+		/>
 	</n-spin>
 </template>
 
@@ -11,9 +15,9 @@
 import { ref, onBeforeMount, toRefs } from "vue"
 import Api from "@/api"
 import { type Agent, type AgentVulnerabilities } from "@/types/agents.d"
-import VulnerabilityCard from "@/components/agents/VulnerabilityCard.vue"
+import VulnerabilityCard from "./VulnerabilityCard.vue"
 import { nanoid } from "nanoid"
-import { useMessage, NSpin } from "naive-ui"
+import { useMessage, NSpin, NEmpty } from "naive-ui"
 
 const props = defineProps<{
 	agent: Agent

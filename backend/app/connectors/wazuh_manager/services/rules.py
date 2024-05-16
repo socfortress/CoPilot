@@ -251,10 +251,10 @@ async def post_to_copilot_ai_module(data: RuleExcludeRequest) -> RuleExcludeResp
         data (CollectHuntress): The data to send to the copilot-ai-module Docker container.
     """
     logger.info(f"Sending POST request to http://copilot-ai-module/wazuh-rule-exclusion with data: {data.dict()}")
-    raise HTTPException(status_code=501, detail="Not Implemented Yet")
+    # raise HTTPException(status_code=501, detail="Not Implemented Yet")
     async with httpx.AsyncClient() as client:
         data = await client.post(
-            "http://127.0.0.1:5001/wazuh-rule-exclusion",
+            "http://copilot-ai-module/wazuh-rule-exclusion",
             json=data.dict(),
             timeout=120,
         )

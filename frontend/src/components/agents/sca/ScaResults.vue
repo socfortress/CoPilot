@@ -18,8 +18,16 @@
 							<code>{{ total }}</code>
 						</div>
 						<div class="box">
-							Enabled:
-							<code>{{ totalEnabled }}</code>
+							Passed:
+							<code class="text-success-color">{{ totalPassed }}</code>
+						</div>
+						<div class="box">
+							Not applicable:
+							<code class="text-warning-color">{{ totalNA }}</code>
+						</div>
+						<div class="box">
+							Failed:
+							<code class="text-error-color">{{ totalFailed }}</code>
 						</div>
 					</div>
 				</n-popover>
@@ -30,7 +38,7 @@
 				:page-slot="pageSlot"
 				:show-size-picker="showSizePicker"
 				:page-sizes="pageSizes"
-				:item-count="total"
+				:item-count="itemsFiltered.length"
 				:simple="simpleMode"
 			/>
 			<n-popover overlap placement="right" class="!px-0">
@@ -45,26 +53,14 @@
 				</template>
 				<div class="py-1">
 					<div class="px-3">
-						<div class="text-secondary-color text-sm mb-1">Enabled:</div>
+						<div class="text-secondary-color text-sm mb-1">Result:</div>
 						<n-select
 							size="small"
-							v-model:value="enabledFilter"
-							:options="enabledOptions"
+							v-model:value="resultFilter"
+							:options="resultOptions"
 							clearable
 							placeholder="All"
-							class="!w-36"
-						/>
-					</div>
-					<n-divider class="!my-3" />
-					<div class="px-3">
-						<div class="text-secondary-color text-sm mb-1">Editable:</div>
-						<n-select
-							size="small"
-							v-model:value="editableFilter"
-							:options="editableOptions"
-							clearable
-							placeholder="All"
-							class="!w-36"
+							class="!w-40"
 						/>
 					</div>
 				</div>
@@ -72,7 +68,7 @@
 		</div>
 		<div class="list my-3">
 			<template v-if="itemsPaginated.length">
-				<StreamItem v-for="stream of itemsPaginated" :key="stream.id" :stream="stream" class="mb-2" />
+				<ScaResultItem v-for="item of itemsPaginated" :key="item.id" :data="item" embedded class="mb-2" />
 			</template>
 			<template v-else>
 				<n-empty description="No items found" class="justify-center h-48" v-if="!loading" />
@@ -82,8 +78,9 @@
 			<n-pagination
 				v-model:page="currentPage"
 				:page-size="pageSize"
-				:item-count="total"
+				:item-count="itemsFiltered.length"
 				:page-slot="6"
+				:simple="simpleMode"
 				v-if="itemsPaginated.length > 3"
 			/>
 		</div>
@@ -92,21 +89,26 @@
 
 <script setup lang="ts">
 import { ref, onBeforeMount, computed } from "vue"
-import { useMessage, NSpin, NPagination, NPopover, NButton, NSelect, NDivider, NEmpty } from "naive-ui"
+import { useMessage, NSpin, NPagination, NPopover, NButton, NSelect, NEmpty } from "naive-ui"
 import Api from "@/api"
-import StreamItem from "./Item.vue"
 import Icon from "@/components/common/Icon.vue"
-import type { Stream } from "@/types/graylog/stream.d"
 import { useResizeObserver } from "@vueuse/core"
+import ScaResultItem from "./ScaResultItem.vue"
+import type { Agent, AgentSca, ScaPolicyResult } from "@/types/agents.d"
+import { watch } from "vue"
+
+const { sca, agent } = defineProps<{ sca: AgentSca; agent: Agent }>()
 
 const FilterIcon = "carbon:filter-edit"
 const InfoIcon = "carbon:information"
 
 const message = useMessage()
 const loading = ref(false)
-const streams = ref<Stream[]>([])
-const total = ref(0)
-const totalEnabled = computed(() => streams.value.filter(o => !o.disabled).length)
+const resultsList = ref<ScaPolicyResult[]>([])
+const total = computed(() => resultsList.value.length)
+const totalFailed = computed(() => resultsList.value.filter(o => o.result === "failed").length)
+const totalNA = computed(() => resultsList.value.filter(o => o.result === "not applicable").length)
+const totalPassed = computed(() => resultsList.value.filter(o => o.result === "passed").length)
 const pageSize = ref(25)
 const currentPage = ref(1)
 const simpleMode = ref(false)
@@ -114,54 +116,41 @@ const showSizePicker = ref(true)
 const pageSizes = [10, 25, 50, 100]
 const header = ref()
 const pageSlot = ref(8)
-const enabledFilter = ref<null | number>(null)
-const editableFilter = ref<null | number>(null)
-const enabledOptions = [
-	{ label: "Enabled", value: 1 },
-	{ label: "Not Enabled", value: 0 }
+const resultFilter = ref<null | string>(null)
+const resultOptions = [
+	{ label: "Passed", value: "passed" },
+	{ label: "Not applicable", value: "not applicable" },
+	{ label: "Failed", value: "failed" }
 ]
-const editableOptions = [
-	{ label: "Editable", value: 1 },
-	{ label: "Not Editable", value: 0 }
-]
+
+const itemsFiltered = computed(() =>
+	resultsList.value.filter(o => {
+		if (!resultFilter.value) {
+			return true
+		}
+		return resultFilter.value === o.result
+	})
+)
 
 const itemsPaginated = computed(() => {
 	const from = (currentPage.value - 1) * pageSize.value
 	const to = currentPage.value * pageSize.value
 
-	return streams.value
-		.filter(o => {
-			switch (enabledFilter.value) {
-				case 1:
-					return o.disabled === false
-				case 0:
-					return o.disabled === true
-				default:
-					return true
-			}
-		})
-		.filter(o => {
-			switch (editableFilter.value) {
-				case 1:
-					return o.is_editable === true
-				case 0:
-					return o.is_editable === false
-				default:
-					return true
-			}
-		})
-		.slice(from, to)
+	return itemsFiltered.value.slice(from, to)
 })
 
-function getData() {
+watch(resultFilter, () => {
+	currentPage.value = 1
+})
+
+function getSCAResults(agentId: string, policyId: string) {
 	loading.value = true
 
-	Api.graylog
-		.getStreams()
+	Api.agents
+		.getSCAResults(agentId, policyId)
 		.then(res => {
 			if (res.data.success) {
-				streams.value = res.data.streams || []
-				total.value = res.data.total || 0
+				resultsList.value = res.data.sca_policy_results || []
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
@@ -183,7 +172,7 @@ useResizeObserver(header, entries => {
 })
 
 onBeforeMount(() => {
-	getData()
+	if (agent?.agent_id && sca?.policy_id) getSCAResults(agent.agent_id, sca.policy_id)
 })
 </script>
 

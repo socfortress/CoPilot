@@ -33,7 +33,7 @@ const props = defineProps<{ data: WazuhRuleExclude }>()
 const { data } = toRefs(props)
 
 const themeStore = useThemeStore()
-const codeTheme = computed(() => (themeStore.isThemeDark ? "slack-dark" : "slack-ochin"))
+const codeTheme = computed(() => (themeStore.isThemeDark ? "dark" : "light"))
 const wazuh_rule = computed(() => data.value.wazuh_rule.replace(/\\\\/gim, "\\\\\\\\"))
 </script>
 

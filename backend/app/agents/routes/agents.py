@@ -20,8 +20,12 @@ from app.agents.services.status import get_outdated_agents_velociraptor
 from app.agents.services.status import get_outdated_agents_wazuh
 from app.agents.services.sync import sync_agents
 from app.agents.velociraptor.services.agents import delete_agent_velociraptor
+from app.agents.wazuh.schema.agents import WazuhAgentScaPolicyResultsResponse
+from app.agents.wazuh.schema.agents import WazuhAgentScaResponse
 from app.agents.wazuh.schema.agents import WazuhAgentVulnerabilitiesResponse
 from app.agents.wazuh.services.agents import delete_agent_wazuh
+from app.agents.wazuh.services.sca import collect_agent_sca
+from app.agents.wazuh.services.sca import collect_agent_sca_policy_results
 from app.agents.wazuh.services.vulnerabilities import collect_agent_vulnerabilities
 
 # App specific imports
@@ -365,6 +369,46 @@ async def get_agent_vulnerabilities(agent_id: str) -> WazuhAgentVulnerabilitiesR
     """
     logger.info(f"Fetching agent {agent_id} vulnerabilities")
     return await collect_agent_vulnerabilities(agent_id)
+
+
+@agents_router.get(
+    "/{agent_id}/sca",
+    response_model=WazuhAgentScaResponse,
+    description="Get agent sca results",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_agent_sca(agent_id: str) -> WazuhAgentScaResponse:
+    """
+    Fetches the sca results of a specific agent.
+
+    Args:
+        agent_id (str): The ID of the agent.
+
+    Returns:
+        WazuhAgentScaResponse: The response containing the agent sca.
+    """
+    logger.info(f"Fetching agent {agent_id} sca")
+    return await collect_agent_sca(agent_id)
+
+
+@agents_router.get(
+    "/{agent_id}/sca/{policy_id}",
+    response_model=WazuhAgentScaPolicyResultsResponse,
+    description="Get agent sca results",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def get_agent_sca_policy_results(agent_id: str, policy_id: str) -> WazuhAgentScaPolicyResultsResponse:
+    """
+    Fetches the sca results of a specific agent.
+
+    Args:
+        agent_id (str): The ID of the agent.
+
+    Returns:
+        WazuhAgentScaPolicyResultsResponse: The response containing the agent sca.
+    """
+    logger.info(f"Fetching agent {agent_id} sca policy results")
+    return await collect_agent_sca_policy_results(agent_id, policy_id)
 
 
 @agents_router.get(
