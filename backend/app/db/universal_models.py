@@ -93,11 +93,11 @@ class Agents(SQLModel, table=True):
     label: str = Field(max_length=256)
     critical_asset: bool = Field(default=False)
     wazuh_last_seen: datetime
-    velociraptor_id: str = Field(max_length=256)
-    velociraptor_last_seen: datetime
+    velociraptor_id: Optional[str] = Field(max_length=256)
+    velociraptor_last_seen: Optional[datetime]
     wazuh_agent_version: str = Field(max_length=256)
     wazuh_agent_status: str = Field("not found", max_length=256)
-    velociraptor_agent_version: str = Field(max_length=256)
+    velociraptor_agent_version: Optional[str] = Field(max_length=256)
     customer_code: Optional[str] = Field(foreign_key="customers.customer_code", max_length=256)
     quarantined: bool = Field(default=False)
 
@@ -120,11 +120,11 @@ class Agents(SQLModel, table=True):
             wazuh_last_seen=wazuh_last_seen_value,
             wazuh_agent_version=wazuh_agent.wazuh_agent_version,
             wazuh_agent_status=wazuh_agent.wazuh_agent_status if wazuh_agent.wazuh_agent_status else "not found",
-            velociraptor_id=velociraptor_agent.client_id if velociraptor_agent.client_id else "n/a",
+            velociraptor_id=velociraptor_agent.client_id if velociraptor_agent and velociraptor_agent.client_id else None,
             velociraptor_last_seen=velociraptor_agent.client_last_seen_as_datetime
-            if velociraptor_agent.client_last_seen_as_datetime
-            else "1970-01-01T00:00:00+00:00",
-            velociraptor_agent_version=velociraptor_agent.client_version if velociraptor_agent.client_version else "n/a",
+            if velociraptor_agent and velociraptor_agent.client_last_seen_as_datetime
+            else None,
+            velociraptor_agent_version=velociraptor_agent.client_version if velociraptor_agent and velociraptor_agent.client_version else None,
             customer_code=customer_code,
         )
 
@@ -145,9 +145,9 @@ class Agents(SQLModel, table=True):
         self.wazuh_last_seen = wazuh_last_seen_value
         self.wazuh_agent_version = wazuh_agent.wazuh_agent_version
         self.wazuh_agent_status = wazuh_agent.wazuh_agent_status if wazuh_agent.wazuh_agent_status else "not found"
-        self.velociraptor_id = velociraptor_agent.client_id if velociraptor_agent.client_id else "n/a"
-        self.velociraptor_last_seen = velociraptor_agent.client_last_seen_as_datetime
-        self.velociraptor_agent_version = velociraptor_agent.client_version
+        self.velociraptor_id = velociraptor_agent.client_id if velociraptor_agent and velociraptor_agent.client_id else None
+        self.velociraptor_last_seen = velociraptor_agent.client_last_seen_as_datetime if velociraptor_agent and velociraptor_agent.client_last_seen_as_datetime else None
+        self.velociraptor_agent_version = velociraptor_agent.client_version if velociraptor_agent and velociraptor_agent.client_version else None
         self.customer_code = customer_code
 
 
