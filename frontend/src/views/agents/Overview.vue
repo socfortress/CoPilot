@@ -49,7 +49,7 @@
 				<n-tabs type="line" animated default-value="Overview">
 					<n-tab-pane name="Overview" tab="Overview" display-directive="show">
 						<div class="section">
-							<OverviewSection v-if="agent" :agent="agent" />
+							<OverviewSection v-if="agent" :agent="agent" @updated="getAgent()" />
 						</div>
 					</n-tab-pane>
 					<n-tab-pane name="Vulnerabilities" tab="Vulnerabilities" display-directive="show:lazy">
