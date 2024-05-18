@@ -12,8 +12,6 @@ declare module "*.svg" {
 	export default component
 }
 
-declare module "v-calendar"
-
 declare module "markdown-it-highlightjs/core" {
 	export { default } from "markdown-it-highlightjs/types/core.d.ts"
 }

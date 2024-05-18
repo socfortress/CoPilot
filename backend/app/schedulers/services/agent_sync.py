@@ -23,7 +23,7 @@ async def agent_sync():
     """
     logger.info("Synchronizing agents via scheduler...")
     async with get_db_session() as session:
-        await sync_all_agents(session=session)
+        await sync_all_agents()
 
         stmt = select(JobMetadata).where(JobMetadata.job_id == "agent_sync")
         result = await session.execute(stmt)

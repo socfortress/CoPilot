@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
+from loguru import logger
 from sqlalchemy import Column
 from sqlalchemy import Float
 from sqlalchemy import LargeBinary
@@ -93,11 +94,11 @@ class Agents(SQLModel, table=True):
     label: str = Field(max_length=256)
     critical_asset: bool = Field(default=False)
     wazuh_last_seen: datetime
-    velociraptor_id: str = Field(max_length=256)
-    velociraptor_last_seen: datetime
+    velociraptor_id: Optional[str] = Field(max_length=256)
+    velociraptor_last_seen: Optional[datetime]
     wazuh_agent_version: str = Field(max_length=256)
     wazuh_agent_status: str = Field("not found", max_length=256)
-    velociraptor_agent_version: str = Field(max_length=256)
+    velociraptor_agent_version: Optional[str] = Field(max_length=256)
     customer_code: Optional[str] = Field(foreign_key="customers.customer_code", max_length=256)
     quarantined: bool = Field(default=False)
 
@@ -120,11 +121,32 @@ class Agents(SQLModel, table=True):
             wazuh_last_seen=wazuh_last_seen_value,
             wazuh_agent_version=wazuh_agent.wazuh_agent_version,
             wazuh_agent_status=wazuh_agent.wazuh_agent_status if wazuh_agent.wazuh_agent_status else "not found",
-            velociraptor_id=velociraptor_agent.client_id if velociraptor_agent.client_id else "n/a",
+            velociraptor_id=velociraptor_agent.client_id if velociraptor_agent and velociraptor_agent.client_id else None,
             velociraptor_last_seen=velociraptor_agent.client_last_seen_as_datetime
-            if velociraptor_agent.client_last_seen_as_datetime
-            else "1970-01-01T00:00:00+00:00",
-            velociraptor_agent_version=velociraptor_agent.client_version if velociraptor_agent.client_version else "n/a",
+            if velociraptor_agent and velociraptor_agent.client_last_seen_as_datetime
+            else None,
+            velociraptor_agent_version=velociraptor_agent.client_version
+            if velociraptor_agent and velociraptor_agent.client_version
+            else None,
+            customer_code=customer_code,
+        )
+
+    @classmethod
+    def create_wazuh_agent_from_model(cls, wazuh_agent, customer_code):
+        if wazuh_agent.agent_last_seen == "Unknown":
+            wazuh_last_seen_value = "1970-01-01T00:00:00+00:00"
+        else:
+            wazuh_last_seen_value = wazuh_agent.agent_last_seen_as_datetime
+
+        return cls(
+            agent_id=wazuh_agent.agent_id,
+            hostname=wazuh_agent.agent_name,
+            ip_address=wazuh_agent.agent_ip,
+            os=wazuh_agent.agent_os,
+            label=wazuh_agent.agent_label,
+            wazuh_last_seen=wazuh_last_seen_value,
+            wazuh_agent_version=wazuh_agent.wazuh_agent_version,
+            wazuh_agent_status=wazuh_agent.wazuh_agent_status if wazuh_agent.wazuh_agent_status else "not found",
             customer_code=customer_code,
         )
 
@@ -145,10 +167,48 @@ class Agents(SQLModel, table=True):
         self.wazuh_last_seen = wazuh_last_seen_value
         self.wazuh_agent_version = wazuh_agent.wazuh_agent_version
         self.wazuh_agent_status = wazuh_agent.wazuh_agent_status if wazuh_agent.wazuh_agent_status else "not found"
-        self.velociraptor_id = velociraptor_agent.client_id if velociraptor_agent.client_id else "n/a"
-        self.velociraptor_last_seen = velociraptor_agent.client_last_seen_as_datetime
-        self.velociraptor_agent_version = velociraptor_agent.client_version
+        self.velociraptor_id = velociraptor_agent.client_id if velociraptor_agent and velociraptor_agent.client_id else None
+        self.velociraptor_last_seen = (
+            velociraptor_agent.client_last_seen_as_datetime
+            if velociraptor_agent and velociraptor_agent.client_last_seen_as_datetime
+            else None
+        )
+        self.velociraptor_agent_version = (
+            velociraptor_agent.client_version if velociraptor_agent and velociraptor_agent.client_version else None
+        )
         self.customer_code = customer_code
+
+    def update_wazuh_agent_from_model(self, wazuh_agent, customer_code):
+        if wazuh_agent.agent_last_seen == "Unknown" or wazuh_agent.agent_last_seen == "1970-01-01T00:00:00+00:00":
+            wazuh_last_seen_value = datetime.strptime(
+                "1970-01-01T00:00:00+00:00",
+                "%Y-%m-%dT%H:%M:%S%z",
+            )
+        else:
+            wazuh_last_seen_value = wazuh_agent.agent_last_seen_as_datetime
+
+        self.agent_id = wazuh_agent.agent_id
+        self.hostname = wazuh_agent.agent_name
+        self.ip_address = wazuh_agent.agent_ip
+        self.os = wazuh_agent.agent_os
+        self.label = wazuh_agent.agent_label
+        self.wazuh_last_seen = wazuh_last_seen_value
+        self.wazuh_agent_version = wazuh_agent.wazuh_agent_version
+        self.wazuh_agent_status = wazuh_agent.wazuh_agent_status if wazuh_agent.wazuh_agent_status else "not found"
+        self.customer_code = customer_code
+
+    def update_velociraptor_details(self, velociraptor_agent):
+        logger.info(f"Updating Velociraptor details for agent {self}")
+        self.velociraptor_id = velociraptor_agent.client_id if velociraptor_agent and velociraptor_agent.client_id else None
+        self.velociraptor_last_seen = (
+            velociraptor_agent.client_last_seen_as_datetime
+            if velociraptor_agent and velociraptor_agent.client_last_seen_as_datetime
+            else None
+        )
+        self.velociraptor_agent_version = (
+            velociraptor_agent.client_version if velociraptor_agent and velociraptor_agent.client_version else None
+        )
+        logger.info(f"Updated with Velociraptor details: {self}")
 
 
 class LogEntry(SQLModel, table=True):

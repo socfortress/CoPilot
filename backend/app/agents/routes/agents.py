@@ -18,7 +18,8 @@ from app.agents.schema.agents import OutdatedWazuhAgentsResponse
 from app.agents.schema.agents import SyncedAgentsResponse
 from app.agents.services.status import get_outdated_agents_velociraptor
 from app.agents.services.status import get_outdated_agents_wazuh
-from app.agents.services.sync import sync_agents
+from app.agents.services.sync import sync_agents_velociraptor
+from app.agents.services.sync import sync_agents_wazuh
 from app.agents.velociraptor.services.agents import delete_agent_velociraptor
 from app.agents.wazuh.schema.agents import WazuhAgentScaPolicyResultsResponse
 from app.agents.wazuh.schema.agents import WazuhAgentScaResponse
@@ -223,10 +224,7 @@ async def get_agent_by_hostname(
         Security(AuthHandler().require_any_scope("admin", "analyst", "scheduler")),
     ],
 )
-async def sync_all_agents(
-    # backgroud_tasks: BackgroundTasks,
-    session: AsyncSession = Depends(get_db),
-) -> SyncedAgentsResponse:
+async def sync_all_agents() -> SyncedAgentsResponse:
     """
     Sync all agents from Wazuh Manager.
 
@@ -241,10 +239,10 @@ async def sync_all_agents(
     - SyncedAgentsResponse: The response model indicating the success of the sync operation.
 
     """
-    logger.info("Syncing agents from Wazuh Manager")
-    # backgroud_tasks.add_task(sync_agents, session)
+    logger.info("Syncing agents as part of scheduled job")
     loop = asyncio.get_event_loop()
-    loop.create_task(sync_agents(session=session))
+    await loop.create_task(sync_agents_wazuh())
+    await loop.create_task(sync_agents_velociraptor())
     return SyncedAgentsResponse(
         success=True,
         message="Agents synced started successfully",
@@ -474,7 +472,51 @@ async def get_outdated_velociraptor_agents(
     return await get_outdated_agents_velociraptor(session)
 
 
-# ! TODO: FINISH THIS
+@agents_router.put(
+    "/{agent_id}/update",
+    response_model=AgentModifyResponse,
+    description="Update agent",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def update_agent(
+    agent_id: str,
+    velociraptor_id: str,
+    session: AsyncSession = Depends(get_db),
+) -> AgentModifyResponse:
+    """
+    Updates an agent's velociraptor_id
+
+    Args:
+        agent_id (str): The ID of the agent to be updated.
+        velociraptor_id (str): The new velociraptor_id of the agent.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        AgentModifyResponse: The response indicating the success or failure of the update.
+    """
+    logger.info(f"Updating agent {agent_id} with Velociraptor ID: {velociraptor_id}")
+    try:
+        result = await session.execute(select(Agents).filter(Agents.agent_id == agent_id))
+        agent = result.scalars().first()
+        if not agent:
+            raise HTTPException(status_code=404, detail=f"Agent with agent_id {agent_id} not found")
+        agent.velociraptor_id = velociraptor_id
+        await session.commit()
+        logger.info(f"Agent {agent_id} updated with Velociraptor ID: {velociraptor_id}")
+        return AgentModifyResponse(
+            success=True,
+            message=f"Agent {agent_id} updated with Velociraptor ID: {velociraptor_id}",
+        )
+    except Exception as e:
+        if not agent:
+            raise HTTPException(status_code=404, detail=f"Agent with agent_id {agent_id} not found")
+        logger.error(f"Failed to update agent {agent_id} with Velociraptor ID: {velociraptor_id}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to update agent {agent_id} with Velociraptor ID: {velociraptor_id}: {e}",
+        )
+
+
 @agents_router.delete(
     "/{agent_id}/delete",
     response_model=AgentModifyResponse,

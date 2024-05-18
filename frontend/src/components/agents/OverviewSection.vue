@@ -4,16 +4,18 @@
 			<KVCard v-for="item of propsSanitized" :key="item.key">
 				<template #key>{{ item.key }}</template>
 				<template #value>
-					<template v-if="item.key === 'customer_code'">
-						<code
-							class="cursor-pointer text-primary-color"
-							@click="gotoCustomer({ code: item.val })"
-							v-if="item.val && item.val !== '-'"
-						>
+					<template v-if="item.key === 'customer_code' && item.val !== '-'">
+						<code class="cursor-pointer text-primary-color" @click="gotoCustomer({ code: item.val })">
 							{{ item.val }}
 							<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
 						</code>
-						<span v-else>-</span>
+					</template>
+					<template v-else-if="item.key === 'velociraptor_id'">
+						<AgentVelociraptorIdForm
+							v-model:velociraptorId="item.val"
+							:agent="agent"
+							@updated="emit('updated')"
+						/>
 					</template>
 					<template v-else>
 						{{ item.val ?? "-" }}
@@ -32,6 +34,11 @@ import { useSettingsStore } from "@/stores/settings"
 import KVCard from "@/components/common/KVCard.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
+import AgentVelociraptorIdForm from "./AgentVelociraptorIdForm.vue"
+
+const emit = defineEmits<{
+	(e: "updated"): void
+}>()
 
 const props = defineProps<{
 	agent: Agent
@@ -46,11 +53,9 @@ const propsSanitized = computed(() => {
 	const obj = []
 	for (const key in agent.value) {
 		if (["wazuh_last_seen", "velociraptor_last_seen"].includes(key)) {
-			// @ts-ignore
-			obj.push({ key, val: formatDate(agent.value[key], dFormats.datetime) || "-" })
+			obj.push({ key, val: formatDate(Reflect.get(agent.value, key), dFormats.datetime) || "-" })
 		} else {
-			// @ts-ignore
-			obj.push({ key, val: agent.value[key] || "-" })
+			obj.push({ key, val: Reflect.get(agent.value, key) || "-" })
 		}
 	}
 
