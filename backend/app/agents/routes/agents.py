@@ -476,8 +476,51 @@ async def get_outdated_velociraptor_agents(
     logger.info("Fetching all outdated Velociraptor agents")
     return await get_outdated_agents_velociraptor(session)
 
+@agents_router.put(
+    "/{agent_id}/update",
+    response_model=AgentModifyResponse,
+    description="Update agent",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def update_agent(
+    agent_id: str,
+    velociraptor_id: str,
+    session: AsyncSession = Depends(get_db),
+) -> AgentModifyResponse:
+    """
+    Updates an agent's velociraptor_id
 
-# ! TODO: FINISH THIS
+    Args:
+        agent_id (str): The ID of the agent to be updated.
+        velociraptor_id (str): The new velociraptor_id of the agent.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        AgentModifyResponse: The response indicating the success or failure of the update.
+    """
+    logger.info(f"Updating agent {agent_id} with Velociraptor ID: {velociraptor_id}")
+    try:
+        result = await session.execute(select(Agents).filter(Agents.agent_id == agent_id))
+        agent = result.scalars().first()
+        if not agent:
+            raise HTTPException(status_code=404, detail=f"Agent with agent_id {agent_id} not found")
+        agent.velociraptor_id = velociraptor_id
+        await session.commit()
+        logger.info(f"Agent {agent_id} updated with Velociraptor ID: {velociraptor_id}")
+        return AgentModifyResponse(
+            success=True,
+            message=f"Agent {agent_id} updated with Velociraptor ID: {velociraptor_id}",
+        )
+    except Exception as e:
+        if not agent:
+            raise HTTPException(status_code=404, detail=f"Agent with agent_id {agent_id} not found")
+        logger.error(f"Failed to update agent {agent_id} with Velociraptor ID: {velociraptor_id}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to update agent {agent_id} with Velociraptor ID: {velociraptor_id}: {e}",
+        )
+
+
 @agents_router.delete(
     "/{agent_id}/delete",
     response_model=AgentModifyResponse,
