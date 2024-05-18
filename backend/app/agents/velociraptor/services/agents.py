@@ -20,6 +20,7 @@ def create_query(query: str) -> str:
     """
     return query
 
+
 async def collect_velociraptor_clients() -> list:
     """
     Collects all clients from Velociraptor.
@@ -90,6 +91,7 @@ async def collect_velociraptor_agent(agent_name: str) -> VelociraptorAgent:
         client_last_seen=client_last_seen,
         client_version=client_version,
     )
+
 
 async def collect_velociraptor_agent_via_client_id(client_id: str) -> VelociraptorAgent:
     """

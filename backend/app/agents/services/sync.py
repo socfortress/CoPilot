@@ -1,22 +1,23 @@
+from datetime import datetime
+from datetime import timezone
 from typing import List
 
 from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
-from datetime import datetime, timezone
 from sqlalchemy.future import select
 
 import app.agents.velociraptor.services.agents as velociraptor_services
 import app.agents.wazuh.services.agents as wazuh_services
-from app.agents.schema.agents import SyncedAgent, SyncedWazuhAgent
-from app.db.db_session import get_db_session
 from app.agents.schema.agents import SyncedAgentsResponse
-from app.agents.velociraptor.schema.agents import VelociraptorAgent, VelociraptorClients
+from app.agents.schema.agents import SyncedWazuhAgent
+from app.agents.velociraptor.schema.agents import VelociraptorAgent
+from app.agents.velociraptor.schema.agents import VelociraptorClients
 from app.agents.wazuh.schema.agents import WazuhAgent
 from app.agents.wazuh.schema.agents import WazuhAgentsList
 from app.connectors.models import Connectors
+from app.db.db_session import get_db_session
 from app.db.universal_models import Agents
-from sqlalchemy.orm import sessionmaker
 
 
 async def fetch_wazuh_agents() -> WazuhAgentsList:
@@ -36,6 +37,7 @@ async def fetch_wazuh_agents() -> WazuhAgentsList:
         success=collected_wazuh_agents.success,
         message=collected_wazuh_agents.message,
     )
+
 
 async def fetch_velociraptor_clients() -> VelociraptorClients:
     """
@@ -64,6 +66,7 @@ async def fetch_velociraptor_agent(agent_name: str) -> VelociraptorAgent:
         VelociraptorAgent: The fetched agent details.
     """
     return await velociraptor_services.collect_velociraptor_agent(agent_name)
+
 
 async def fetch_velociraptor_agent_via_client_id(client_id: str) -> VelociraptorAgent:
     """
@@ -104,6 +107,7 @@ async def add_wazuh_agent_in_db(
         await session.rollback()
         raise HTTPException(status_code=500, detail=str(e))
     logger.info(f"Agent {agent.agent_name} added to the database")
+
 
 async def update_wazuh_agent_in_db(
     session: AsyncSession,
@@ -173,6 +177,7 @@ async def get_velociraptor_agent(agent_name):
     except Exception as e:
         logger.error(f"Failed to collect Velociraptor Agent for {agent_name}: {e}")
         return None
+
 
 async def get_velociraptor_agent_by_client_id(client_id):
     """
@@ -254,6 +259,7 @@ async def sync_agents_wazuh() -> SyncedAgentsResponse:
         message="Agents synced successfully",
     )
 
+
 async def update_agent_with_velociraptor_in_db(
     session: AsyncSession,
     agent: Agents,
@@ -274,7 +280,8 @@ async def update_agent_with_velociraptor_in_db(
     agent.update_velociraptor_details(velociraptor_agent)
     session.add(agent)  # Add the updated agent back to the session
     await session.commit()  # Use the await keyword to commit asynchronously
-    logger.info(f"Agent updated with Velociraptor details in the database")
+    logger.info("Agent updated with Velociraptor details in the database")
+
 
 async def sync_agents_velociraptor() -> SyncedAgentsResponse:
     """
@@ -292,7 +299,7 @@ async def sync_agents_velociraptor() -> SyncedAgentsResponse:
     agents_added_list: List[VelociraptorAgent] = []
 
     velociraptor_clients = await fetch_velociraptor_clients()
-    velociraptor_clients = velociraptor_clients.clients if hasattr(velociraptor_clients, 'clients') else []
+    velociraptor_clients = velociraptor_clients.clients if hasattr(velociraptor_clients, "clients") else []
 
     async with get_db_session() as session:  # Create a new session here
         existing_agents_query = select(Agents)
@@ -303,12 +310,21 @@ async def sync_agents_velociraptor() -> SyncedAgentsResponse:
             logger.info(f"Collecting Velociraptor Agent for {agent.hostname}")
 
             try:
-                 # Build the velociraptor_agent where the hostname or `client_id` is that equal to the `agents`
-                velociraptor_agent = next((client for client in velociraptor_clients if client.os_info.hostname == agent.hostname or client.client_id == agent.velociraptor_id), None)
+                # Build the velociraptor_agent where the hostname or `client_id` is that equal to the `agents`
+                velociraptor_agent = next(
+                    (
+                        client
+                        for client in velociraptor_clients
+                        if client.os_info.hostname == agent.hostname or client.client_id == agent.velociraptor_id
+                    ),
+                    None,
+                )
                 # Convert Unix epoch timestamp to datetime
-                last_seen_at = datetime.fromtimestamp(int(velociraptor_agent.last_seen_at) / 1e6)  # Divide by 1e6 to convert from microseconds to seconds
-                 # Convert datetime to ISO 8601 format without fractional seconds
-                last_seen_at_iso = last_seen_at.replace(tzinfo=timezone.utc).isoformat(timespec='seconds')
+                last_seen_at = datetime.fromtimestamp(
+                    int(velociraptor_agent.last_seen_at) / 1e6,
+                )  # Divide by 1e6 to convert from microseconds to seconds
+                # Convert datetime to ISO 8601 format without fractional seconds
+                last_seen_at_iso = last_seen_at.replace(tzinfo=timezone.utc).isoformat(timespec="seconds")
                 velociraptor_agent = VelociraptorAgent(
                     velociraptor_id=velociraptor_agent.client_id,
                     velociraptor_last_seen=last_seen_at_iso,
@@ -335,4 +351,3 @@ async def sync_agents_velociraptor() -> SyncedAgentsResponse:
         message="Agents synced successfully",
         agents_added=agents_added_list,
     )
-

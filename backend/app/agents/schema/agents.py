@@ -17,6 +17,7 @@ class AgentsResponse(BaseModel):
 class SyncedAgent(WazuhAgent, VelociraptorAgent):
     pass
 
+
 class SyncedWazuhAgent(WazuhAgent):
     pass
 

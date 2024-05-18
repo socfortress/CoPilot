@@ -8,7 +8,6 @@ from fastapi import Security
 from loguru import logger
 from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import sessionmaker
 from sqlalchemy.future import select
 
 from app.agents.dfir_iris.services.cases import collect_agent_soc_cases
@@ -19,7 +18,8 @@ from app.agents.schema.agents import OutdatedWazuhAgentsResponse
 from app.agents.schema.agents import SyncedAgentsResponse
 from app.agents.services.status import get_outdated_agents_velociraptor
 from app.agents.services.status import get_outdated_agents_wazuh
-from app.agents.services.sync import sync_agents_wazuh, sync_agents_velociraptor
+from app.agents.services.sync import sync_agents_velociraptor
+from app.agents.services.sync import sync_agents_wazuh
 from app.agents.velociraptor.services.agents import delete_agent_velociraptor
 from app.agents.wazuh.schema.agents import WazuhAgentScaPolicyResultsResponse
 from app.agents.wazuh.schema.agents import WazuhAgentScaResponse
@@ -470,6 +470,7 @@ async def get_outdated_velociraptor_agents(
     """
     logger.info("Fetching all outdated Velociraptor agents")
     return await get_outdated_agents_velociraptor(session)
+
 
 @agents_router.put(
     "/{agent_id}/update",

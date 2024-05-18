@@ -1,12 +1,13 @@
 from datetime import datetime
-from typing import Optional, List
+from typing import List
+from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
 
 
 class VelociraptorAgent(BaseModel):
-    client_id: Optional[str] = Field('n/a', alias="velociraptor_id")
+    client_id: Optional[str] = Field("n/a", alias="velociraptor_id")
     client_last_seen: str = Field(..., alias="velociraptor_last_seen")
     client_version: str = Field(..., alias="velociraptor_agent_version")
 
@@ -25,6 +26,7 @@ class VelociraptorAgentInformation(BaseModel):
     build_time: str
     build_url: str
 
+
 class VelociraptorOSInfo(BaseModel):
     system: str
     hostname: str
@@ -32,6 +34,7 @@ class VelociraptorOSInfo(BaseModel):
     machine: str
     fqdn: str
     mac_addresses: List[str]
+
 
 class VelociraptorClient(BaseModel):
     client_id: str
@@ -46,6 +49,7 @@ class VelociraptorClient(BaseModel):
     last_hunt_timestamp: int
     last_event_table_version: int
     last_label_timestamp: int
+
 
 class VelociraptorClients(BaseModel):
     clients: List[VelociraptorClient]
