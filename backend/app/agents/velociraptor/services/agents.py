@@ -20,6 +20,20 @@ def create_query(query: str) -> str:
     """
     return query
 
+async def collect_velociraptor_clients() -> list:
+    """
+    Collects all clients from Velociraptor.
+
+    Returns:
+        list: A list of all clients.
+    """
+    velociraptor_service = await UniversalService.create("Velociraptor")
+    query = create_query(
+        "SELECT * FROM clients()",
+    )
+    flow = velociraptor_service.execute_query(query)
+    return flow["results"]
+
 
 async def collect_velociraptor_agent(agent_name: str) -> VelociraptorAgent:
     """
@@ -69,6 +83,62 @@ async def collect_velociraptor_agent(agent_name: str) -> VelociraptorAgent:
         )
     except Exception as e:
         logger.error(f"Failed to get client version for {agent_name}. Error: {e}")
+        client_version = "Unknown"
+
+    return VelociraptorAgent(
+        client_id=client_id,
+        client_last_seen=client_last_seen,
+        client_version=client_version,
+    )
+
+async def collect_velociraptor_agent_via_client_id(client_id: str) -> VelociraptorAgent:
+    """
+    Retrieves the client ID, last_seen_at and client version based on the agent name from Velociraptor.
+
+    Args:
+        agent_name (str): The name of the agent.
+
+    Returns:
+        str: The client ID if found, None otherwise.
+        str: The last seen at timestamp if found, Default timsetamp otherwise.
+    """
+    logger.info(f"Collecting agent {client_id} from Velociraptor")
+    velociraptor_service = await UniversalService.create("Velociraptor")
+    try:
+        client_id = await velociraptor_service.get_client_id_via_client_id(client_id)
+        client_id = client_id["results"][0]["client_id"]
+    except (KeyError, IndexError, TypeError) as e:
+        logger.error(f"Failed to get client ID for {client_id}. Error: {e}")
+        return VelociraptorAgent(
+            client_id="Unknown",
+            client_last_seen="Unknown",
+            client_version="Unknown",
+        )
+
+    try:
+        vql_last_seen_at = f"select last_seen_at from clients(search='host:{client_id}')"
+        last_seen_at = await velociraptor_service._get_last_seen_timestamp(
+            vql_last_seen_at,
+        )
+        client_last_seen = datetime.fromtimestamp(
+            int(last_seen_at) / 1000000,
+        ).strftime(
+            "%Y-%m-%dT%H:%M:%S+00:00",
+        )  # Converting to string format
+    except Exception as e:
+        logger.error(
+            f"Failed to get or convert last seen at for {client_id}. Error: {e}",
+        )
+        client_last_seen = "1970-01-01T00:00:00+00:00"
+
+    try:
+        vql_client_version = f"select * from clients(search='host:{client_id}')"
+        # client_version = UniversalService()._get_client_version(vql_client_version)
+        client_version = await velociraptor_service._get_client_version(
+            vql_client_version,
+        )
+    except Exception as e:
+        logger.error(f"Failed to get client version for {client_id}. Error: {e}")
         client_version = "Unknown"
 
     return VelociraptorAgent(

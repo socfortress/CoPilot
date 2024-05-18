@@ -270,6 +270,40 @@ class UniversalService:
                 "results": [{"client_id": None}],
             }
 
+    async def get_client_id_via_client_id(self, client_id: str):
+        """
+        Get the client_id associated with a given client_id.
+
+        Args:
+            client_id (str): The client_id to search for.
+
+        Returns:
+            dict: A dictionary with the success status, a message, and potentially the client_id.
+        """
+        # Formulate queries
+        try:
+            vql_client_id = f"select client_id,os_info from clients(search='client_id:{client_id}')"
+            vql_last_seen_at = f"select last_seen_at from clients(search='client_id:{client_id}')"
+
+            # Get the last seen timestamp
+            logger.info(f"Getting last seen at timestamp for {client_id}")
+
+            last_seen_at = await self._get_last_seen_timestamp(vql_last_seen_at)
+
+            logger.info(f"Last seen at timestamp for {client_id}: {last_seen_at}")
+
+            # if last_seen_at is longer than 30 seconds from now, return False
+            if await self._is_offline(last_seen_at):
+                return self.execute_query(vql_client_id)
+
+            return self.execute_query(vql_client_id)
+        except Exception as e:
+            return {
+                "success": False,
+                "message": f"Failed to get Client ID for {client_id}: {e}",
+                "results": [{"client_id": None}],
+            }
+
     async def _get_last_seen_timestamp(self, vql: str):
         """
         Executes the VQL query and returns the last_seen_at timestamp.

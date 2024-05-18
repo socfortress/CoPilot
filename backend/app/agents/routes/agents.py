@@ -8,6 +8,7 @@ from fastapi import Security
 from loguru import logger
 from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import sessionmaker
 from sqlalchemy.future import select
 
 from app.agents.dfir_iris.services.cases import collect_agent_soc_cases
@@ -18,7 +19,7 @@ from app.agents.schema.agents import OutdatedWazuhAgentsResponse
 from app.agents.schema.agents import SyncedAgentsResponse
 from app.agents.services.status import get_outdated_agents_velociraptor
 from app.agents.services.status import get_outdated_agents_wazuh
-from app.agents.services.sync import sync_agents
+from app.agents.services.sync import sync_agents, sync_agents_wazuh, sync_agents_velociraptor
 from app.agents.velociraptor.services.agents import delete_agent_velociraptor
 from app.agents.wazuh.schema.agents import WazuhAgentScaPolicyResultsResponse
 from app.agents.wazuh.schema.agents import WazuhAgentScaResponse
@@ -244,7 +245,9 @@ async def sync_all_agents(
     logger.info("Syncing agents from Wazuh Manager")
     # backgroud_tasks.add_task(sync_agents, session)
     loop = asyncio.get_event_loop()
-    loop.create_task(sync_agents(session=session))
+    #loop.create_task(sync_agents(session=session))
+    await loop.create_task(sync_agents_wazuh())
+    await loop.create_task(sync_agents_velociraptor())
     return SyncedAgentsResponse(
         success=True,
         message="Agents synced started successfully",
