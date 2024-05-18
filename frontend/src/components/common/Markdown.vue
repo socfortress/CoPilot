@@ -9,6 +9,7 @@
 </template>
 
 <script setup lang="ts">
+// TODO: replace highlightjs with shiki
 import { toRefs } from "vue"
 import markdownItHighlightjs from "markdown-it-highlightjs/core"
 import "@/assets/scss/hljs.scss"
