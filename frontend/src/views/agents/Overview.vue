@@ -46,7 +46,7 @@
 		</n-spin>
 		<n-card class="py-1 px-4 pb-4" content-style="padding:0">
 			<n-spin :show="loadingAgent">
-				<n-tabs type="line" animated default-value="SCA">
+				<n-tabs type="line" animated default-value="Overview">
 					<n-tab-pane name="Overview" tab="Overview" display-directive="show">
 						<div class="section">
 							<OverviewSection v-if="agent" :agent="agent" />
@@ -113,18 +113,17 @@
 
 <script setup lang="ts">
 import { ref, onBeforeMount, computed, nextTick } from "vue"
-import { useRoute } from "vue-router"
+import { useMessage, NSpin, NTooltip, NButton, NTabs, NTabPane, NCard, useDialog } from "naive-ui"
+import { useRoute, useRouter } from "vue-router"
 import Api from "@/api"
 import { AgentStatus, type Agent } from "@/types/agents.d"
 import { handleDeleteAgent, toggleAgentCritical } from "@/components/agents/utils"
-import { useRouter } from "vue-router"
 import VulnerabilitiesGrid from "@/components/agents/vulnerabilities/VulnerabilitiesGrid.vue"
 import ScaTable from "@/components/agents/sca/ScaTable.vue"
 import AlertsList from "@/components/alerts/AlertsList.vue"
 import OverviewSection from "@/components/agents/OverviewSection.vue"
 import AgentCases from "@/components/agents/AgentCases.vue"
 import AgentFlowList from "@/components/agents/agentFlow/AgentFlowList.vue"
-import { useMessage, NSpin, NTooltip, NButton, NTabs, NTabPane, NCard, useDialog } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import type { Artifact } from "@/types/artifacts.d"
 import ArtifactsCollect from "@/components/artifacts/ArtifactsCollect.vue"
