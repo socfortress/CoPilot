@@ -19,7 +19,7 @@ from app.agents.schema.agents import OutdatedWazuhAgentsResponse
 from app.agents.schema.agents import SyncedAgentsResponse
 from app.agents.services.status import get_outdated_agents_velociraptor
 from app.agents.services.status import get_outdated_agents_wazuh
-from app.agents.services.sync import sync_agents, sync_agents_wazuh, sync_agents_velociraptor
+from app.agents.services.sync import sync_agents_wazuh, sync_agents_velociraptor
 from app.agents.velociraptor.services.agents import delete_agent_velociraptor
 from app.agents.wazuh.schema.agents import WazuhAgentScaPolicyResultsResponse
 from app.agents.wazuh.schema.agents import WazuhAgentScaResponse
@@ -224,10 +224,7 @@ async def get_agent_by_hostname(
         Security(AuthHandler().require_any_scope("admin", "analyst", "scheduler")),
     ],
 )
-async def sync_all_agents(
-    # backgroud_tasks: BackgroundTasks,
-    session: AsyncSession = Depends(get_db),
-) -> SyncedAgentsResponse:
+async def sync_all_agents() -> SyncedAgentsResponse:
     """
     Sync all agents from Wazuh Manager.
 
@@ -242,10 +239,8 @@ async def sync_all_agents(
     - SyncedAgentsResponse: The response model indicating the success of the sync operation.
 
     """
-    logger.info("Syncing agents from Wazuh Manager")
-    # backgroud_tasks.add_task(sync_agents, session)
+    logger.info("Syncing agents as part of scheduled job")
     loop = asyncio.get_event_loop()
-    #loop.create_task(sync_agents(session=session))
     await loop.create_task(sync_agents_wazuh())
     await loop.create_task(sync_agents_velociraptor())
     return SyncedAgentsResponse(

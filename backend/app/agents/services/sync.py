@@ -77,60 +77,6 @@ async def fetch_velociraptor_agent_via_client_id(client_id: str) -> Velociraptor
     """
     return await velociraptor_services.collect_velociraptor_agent_via_client_id(client_id)
 
-# ! LOOK TO REMOVE ONCE DONE ! #
-async def add_agent_to_db(
-    session: AsyncSession,
-    agent: WazuhAgent,
-    client: VelociraptorAgent,
-    customer_code: str,
-):
-    """Add new agent to database.
-
-    Args:
-        session (AsyncSession): The asynchronous session object for database operations.
-        agent (WazuhAgent): The Wazuh agent object to be added.
-        client (VelociraptorAgent): The Velociraptor agent object associated with the Wazuh agent.
-        customer_code (str): The customer code for the agent.
-
-    Returns:
-        None
-
-    """
-    new_agent = Agents.create_from_model(agent, client, customer_code)
-    session.add(new_agent)
-    logger.info(f"Adding agent {agent.agent_name} to the database")
-    try:
-        await session.commit()  # Use the await keyword to commit asynchronously
-    except Exception as e:
-        logger.error(f"Failed to add agent {agent.agent_name} to the database: {e}")
-        await session.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
-    logger.info(f"Agent {agent.agent_name} added to the database")
-
-# ! LOOK TO REMOVE ONCE DONE ! #
-async def update_agent_in_db(
-    session: AsyncSession,
-    existing_agent: Agents,
-    agent: WazuhAgent,
-    client: VelociraptorAgent,
-    customer_code: str,
-):
-    """Update existing agent in database.
-
-    Args:
-        session (AsyncSession): The async session object for database operations.
-        existing_agent (Agents): The existing agent object in the database.
-        agent (WazuhAgent): The updated agent object.
-        client (VelociraptorAgent): The updated client object.
-        customer_code (str): The customer code associated with the agent.
-
-    Returns:
-        None
-
-    """
-    existing_agent.update_from_model(agent, client, customer_code)
-    await session.commit()  # Use the await keyword to commit asynchronously
-    logger.info(f"Agent {agent.agent_name} updated in the database")
 
 async def add_wazuh_agent_in_db(
     session: AsyncSession,
@@ -272,72 +218,6 @@ async def process_velociraptor_agent(session, agent, client_id=None):
     except Exception as e:
         logger.error(f"Failed to process agent {agent}: {e}")
         return None
-
-# ! LOOK TO REMOVE ONCE DONE ! #
-async def sync_agents(session: AsyncSession) -> SyncedAgentsResponse:
-    """
-    Synchronize agents from Wazuh and Velociraptor services.
-
-    This function fetches the list of Wazuh agents, collects the corresponding Velociraptor agent for each Wazuh agent,
-    and synchronizes the agents in the database. It returns a response indicating the success of the synchronization
-    operation and the list of agents that were added.
-
-    :param session: The database session to use for querying and updating agents.
-    :type session: AsyncSession
-    :return: The response indicating the success of the synchronization operation and the list of agents added.
-    :rtype: SyncedAgentsResponse
-    """
-    wazuh_agents_list = await fetch_wazuh_agents()
-    logger.info(f"Collected Wazuh Agents: {wazuh_agents_list}")
-
-    agents_added_list: List[WazuhAgent] = []
-
-    for wazuh_agent in wazuh_agents_list.agents:
-        logger.info(f"Collecting Velociraptor Agent for {wazuh_agent.agent_name}")
-
-        try:
-            velociraptor_agent = await process_velociraptor_agent(session, wazuh_agent)
-        except Exception as e:
-            logger.error(
-                f"Failed to collect Velociraptor Agent for {wazuh_agent.agent_name}: {e}",
-            )
-            continue
-
-        customer_code = extract_customer_code(wazuh_agent.agent_label)
-
-        # Asynchronously fetch the existing agent
-        existing_agent_query = select(Agents).filter(
-            Agents.hostname == wazuh_agent.agent_name,
-        )
-        result = await session.execute(existing_agent_query)
-        existing_agent = result.scalars().first()
-
-        if existing_agent:
-            await update_agent_in_db(
-                session,
-                existing_agent,
-                wazuh_agent,
-                velociraptor_agent,
-                customer_code,
-            )
-        else:
-            await add_agent_to_db(
-                session,
-                wazuh_agent,
-                velociraptor_agent,
-                customer_code,
-            )
-
-        # Combine the wazuh agent and velociraptor agent into one object
-        synced_agent = SyncedAgent(**wazuh_agent.dict(), **velociraptor_agent.dict())
-        agents_added_list.append(synced_agent)
-
-    logger.info(f"Agents Added List: {agents_added_list}")
-    return SyncedAgentsResponse(
-        success=True,
-        message="Agents synced successfully",
-        agents_added=agents_added_list,
-    )
 
 
 async def sync_agents_wazuh() -> SyncedAgentsResponse:
