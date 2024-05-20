@@ -27,7 +27,9 @@
 				</div>
 			-->
 			<div class="w-full">
-				<n-button type="primary" @click="signIn" class="!w-full" size="large">Sign in</n-button>
+				<n-button type="primary" @click="signIn" class="!w-full" size="large" :loading="loading">
+					Sign in
+				</n-button>
 			</div>
 		</div>
 	</n-form>

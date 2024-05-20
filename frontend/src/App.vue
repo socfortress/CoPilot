@@ -45,13 +45,17 @@ const layoutComponents = {
 	Blank
 }
 
+const mainStore = useMainStore()
+const themeStore = useThemeStore()
+const authStore = useAuthStore()
+
 const forceLayout = ref<Layout | null>(null)
-const forceRefresh = computed<number>(() => useMainStore().forceRefresh)
-const layout = computed<Layout>(() => useThemeStore().layout)
+const forceRefresh = computed<number>(() => mainStore.forceRefresh)
+const layout = computed<Layout>(() => themeStore.layout)
 const layoutComponent = computed<Component>(() => layoutComponents[forceLayout.value || layout.value])
-const routerTransition = computed<RouterTransition>(() => useThemeStore().routerTransition)
-const themeName = computed<ThemeName>(() => useThemeStore().themeName)
-const isLogged = computed(() => useAuthStore().isLogged)
+const routerTransition = computed<RouterTransition>(() => themeStore.routerTransition)
+const themeName = computed<ThemeName>(() => themeStore.themeName)
+const isLogged = computed(() => authStore.isLogged)
 
 function checkForcedLayout(route: RouteLocationNormalized) {
 	if (route.meta?.forceLayout) {

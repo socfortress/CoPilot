@@ -11,8 +11,8 @@
 									data.result === 'failed'
 										? 'text-error-color'
 										: data.result === 'not applicable'
-										? 'text-warning-color'
-										: 'text-success-color'
+											? 'text-warning-color'
+											: 'text-success-color'
 								"
 							>
 								{{ data.result }}
@@ -30,8 +30,8 @@
 			<div class="px-7">
 				<n-card content-class="bg-secondary-color !p-0" class="overflow-hidden">
 					<div
-						class="scrollbar-styled overflow-hidden"
-						v-shiki="{ theme: codeTheme, lang: 'shell', decode: true }"
+						class="scrollbar-styled overflow-hidden code-bg-transparent"
+						v-shiki="{ lang: 'shell', decode: true }"
 					>
 						<pre v-html="data.command"></pre>
 					</div>
@@ -143,17 +143,12 @@ import KVCard from "@/components/common/KVCard.vue"
 import { computed } from "vue"
 import { NTabs, NTabPane, NStatistic, NInput, NCard } from "naive-ui"
 import type { ScaPolicyResult } from "@/types/agents"
-import { useThemeStore } from "@/stores/theme"
 
 const { data } = defineProps<{
 	data: ScaPolicyResult
 }>()
 
-const themeStore = useThemeStore()
-const codeTheme = computed(() => (themeStore.isThemeDark ? "dark" : "light"))
 const properties = computed(() => {
 	return _pick(data, ["id", "policy_id", "title"])
 })
 </script>
-
-<style lang="scss" scoped></style>

@@ -23,6 +23,12 @@
 	}
 }
 
+.code-bg-transparent {
+	code {
+		background-color: transparent;
+	}
+}
+
 .item-appear {
 	&.item-appear-bottom {
 		animation: item-fade-bottom 0.3s forwards;

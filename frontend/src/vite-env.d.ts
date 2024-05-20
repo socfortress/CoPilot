@@ -11,11 +11,3 @@ declare module "*.svg" {
 	const component: DefineComponent
 	export default component
 }
-
-declare module "markdown-it-highlightjs/core" {
-	export { default } from "markdown-it-highlightjs/types/core.d.ts"
-}
-
-declare module "highlight.js/lib/core" {
-	export { default } from "highlight.js/types/index.d.ts"
-}

@@ -16,7 +16,7 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, onBeforeMount, watch } from "vue"
+import { computed,  watch } from "vue"
 import {
 	NGlobalStyle,
 	NConfigProvider,
@@ -29,19 +29,38 @@ import {
 import { useThemeStore } from "@/stores/theme"
 import { useWindowSize } from "@vueuse/core"
 import GlobalListener from "@/layouts/common/GlobalListener.vue"
+import type { ThemeName } from "@/types/theme.d"
 
 const { width } = useWindowSize()
 
-const theme = computed(() => useThemeStore().naiveTheme)
-const themeOverrides = computed<GlobalThemeOverrides>(() => useThemeStore().themeOverrides)
-const style = computed<CSSStyleDeclaration>(() => useThemeStore().style)
+const themeStore = useThemeStore()
 
-watch(style, () => {
-	setGlobalVars()
-})
-watch(width, () => {
-	useThemeStore().updateVars()
-})
+const theme = computed(() => themeStore.naiveTheme)
+const themeOverrides = computed<GlobalThemeOverrides>(() => themeStore.themeOverrides)
+const style = computed<CSSStyleDeclaration>(() => themeStore.style)
+const themeName = computed<ThemeName>(() => themeStore.themeName)
+
+watch(
+	style,
+	() => {
+		setGlobalVars()
+	},
+	{ immediate: true }
+)
+watch(
+	themeName,
+	(val, old) => {
+		setThemeName(val, old)
+	},
+	{ immediate: true }
+)
+watch(
+	width,
+	() => {
+		themeStore.updateVars()
+	},
+	{ immediate: true }
+)
 
 function setGlobalVars() {
 	const html = document.children[0] as HTMLElement
@@ -51,8 +70,11 @@ function setGlobalVars() {
 	}
 }
 
-onBeforeMount(() => {
-	useThemeStore().updateVars()
-	setGlobalVars()
-})
+function setThemeName(val: ThemeName, old?: ThemeName) {
+	const html = document.children[0] as HTMLElement
+	if (old) {
+		html.classList.remove(`theme-${old}`)
+	}
+	html.classList.add(`theme-${val}`)
+}
 </script>

@@ -21,7 +21,8 @@ from app.db.universal_models import Agents
 
 
 async def fetch_wazuh_agents() -> WazuhAgentsList:
-    """Fetch agents from Wazuh service.
+    """
+    Fetch agents from Wazuh service.
 
     This function retrieves a list of agents from the Wazuh service.
     It calls the `collect_wazuh_agents` function from the `wazuh_services` module
