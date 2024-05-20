@@ -72,7 +72,9 @@
 					</span>
 				</template>
 				<template #value>
-					<Markdown :source="dockerCompose" transparent />
+					<Suspense>
+						<Markdown :source="dockerCompose" codeBgTransparent />
+					</Suspense>
 				</template>
 			</KVCard>
 		</div>

@@ -41,7 +41,9 @@
 			:bordered="false"
 			segmented
 		>
-			<Markdown :source="data.details" />
+			<Suspense>
+				<Markdown :source="data.details" />
+			</Suspense>
 		</n-modal>
 	</div>
 </template>
