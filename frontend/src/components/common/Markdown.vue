@@ -1,38 +1,35 @@
 <template>
-	<vue-markdown-it
-		:source="source"
-		preset="commonmark"
-		:plugins="[[markdownItHighlightjs, { hljs, auto: true, code: true, inline: false, ignoreIllegals: true }]]"
-		class="markdown-style scrollbar-styled"
-		:class="{ transparent }"
-	/>
+	<Suspense>
+		<vue-markdown-it
+			:source="source"
+			preset="commonmark"
+			:plugins="[
+				[
+					fromHighlighter(highlighter, {
+						themes: codeThemes
+					})
+				]
+			]"
+			class="markdown-style scrollbar-styled"
+			:class="{ codeBgTransparent }"
+		/>
+	</Suspense>
 </template>
 
 <script setup lang="ts">
-// TODO: replace highlightjs with shiki
 import { toRefs } from "vue"
-import markdownItHighlightjs from "markdown-it-highlightjs/core"
-import "@/assets/scss/hljs.scss"
 import { VueMarkdownIt } from "@f3ve/vue-markdown-it"
+import { getHighlighter, codeThemes } from "@/utils/highlighter"
+import { fromHighlighter } from "@shikijs/markdown-it/core"
+import type { HighlighterGeneric } from "shiki/core"
 
-import hljs from "highlight.js/lib/core"
-import powershell from "highlight.js/lib/languages/powershell"
-import bash from "highlight.js/lib/languages/bash"
-import json from "highlight.js/lib/languages/json"
-import xml from "highlight.js/lib/languages/xml"
-import yaml from "highlight.js/lib/languages/yaml"
-
-hljs.registerLanguage("powershell", powershell)
-hljs.registerLanguage("bash", bash)
-hljs.registerLanguage("json", json)
-hljs.registerLanguage("xml", xml)
-hljs.registerLanguage("yaml", yaml)
+const highlighter: HighlighterGeneric<any, any> = (await getHighlighter()) as unknown as HighlighterGeneric<any, any>
 
 const props = defineProps<{
 	source: string
-	transparent?: boolean
+	codeBgTransparent?: boolean
 }>()
-const { source, transparent } = toRefs(props)
+const { source, codeBgTransparent } = toRefs(props)
 </script>
 
 <style lang="scss" scoped>
@@ -43,7 +40,7 @@ const { source, transparent } = toRefs(props)
 		}
 	}
 
-	&.transparent {
+	&.codeBgTransparent {
 		:deep() {
 			& > pre {
 				& > code {
