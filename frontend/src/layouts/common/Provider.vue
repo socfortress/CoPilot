@@ -16,7 +16,7 @@
 </template>
 
 <script lang="ts" setup>
-import { computed,  watch } from "vue"
+import { computed, watch } from "vue"
 import {
 	NGlobalStyle,
 	NConfigProvider,
