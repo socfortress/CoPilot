@@ -167,6 +167,10 @@ class IrisAlertContext(BaseModel):
         example="Intrusion Detected",
     )
     alert_level: int = Field(..., description="Severity level of the alert", example=3)
+    process_name: Optional[str] = Field(
+        "No process name found",
+        description="Name of the process",
+    )
 
     class Config:
         extra = Extra.allow

@@ -10,8 +10,8 @@ from app.db.db_session import get_db
 from app.middleware.license import get_license
 from app.middleware.license import is_feature_enabled
 from app.threat_intel.schema.socfortress import IoCResponse
-from app.threat_intel.schema.socfortress import SocfortressThreatIntelRequest
-from app.threat_intel.services.socfortress import socfortress_threat_intel_lookup
+from app.threat_intel.schema.socfortress import SocfortressThreatIntelRequest, SocfortressProcessNameAnalysisRequest, SocfortressProcessNameAnalysisResponse
+from app.threat_intel.services.socfortress import socfortress_threat_intel_lookup, socfortress_process_analysis_lookup
 from app.utils import get_connector_attribute
 
 # App specific imports
@@ -75,6 +75,39 @@ async def threat_intel_socfortress(
     logger.info("Running SOCFortress Threat Intel. Grabbing License")
 
     socfortress_lookup = await socfortress_threat_intel_lookup(
+        lincense_key=(await get_license(session)).license_key,
+        request=request,
+        session=session,
+    )
+    return socfortress_lookup
+
+@threat_intel_socfortress_router.post(
+    "/process_name",
+    response_model=SocfortressProcessNameAnalysisResponse,
+    description="SocFortress Process Name Evaluation",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def threat_intel_socfortress(
+    request: SocfortressProcessNameAnalysisRequest,
+    session: AsyncSession = Depends(get_db),
+):
+    """
+    Endpoint for SocFortress Process Name Evaluation.
+
+    This endpoint allows authorized users with 'admin' or 'analyst' scope to perform SocFortress process name evaluation.
+
+    Parameters:
+    - request: SocfortressThreatIntelRequest - The request payload containing the necessary information for the lookup.
+    - session: AsyncSession (optional) - The database session to use for the lookup.
+    - _key_exists: bool (optional) - A dependency to ensure the API key exists.
+
+    Returns:
+    - SocfortressProcessNameAnalysisResponse: The response model containing the results of the SocFortress process name analysis lookup.
+    """
+    await is_feature_enabled("PROCESS ANALYSIS", session=session)
+    logger.info("Running SOCFortress Process Name Analysis. Grabbing License")
+
+    socfortress_lookup = await socfortress_process_analysis_lookup(
         lincense_key=(await get_license(session)).license_key,
         request=request,
         session=session,

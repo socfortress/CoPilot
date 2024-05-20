@@ -1,4 +1,5 @@
 from typing import Optional
+import os
 
 from fastapi import HTTPException
 from loguru import logger
@@ -128,6 +129,22 @@ async def set_alert_level(syslog_level: str):
             return level.value
     return 3
 
+async def get_process_name(source_dict: dict) -> str:
+    """
+    Get the process name from the source dictionary.
+
+    Args:
+        source_dict (dict): The source dictionary.
+
+    Returns:
+        str: The process name.
+    """
+    # Get the last part of the process_image path
+    process_image = source_dict.get("process_image")
+    if process_image is None:
+        process_image = source_dict.get("data_win_eventdata_image")
+
+    return os.path.basename(process_image) if process_image else None
 
 async def build_alert_context_payload(
     alert_details: GenericAlertModel,
@@ -158,6 +175,7 @@ async def build_alert_context_payload(
         alert_id=alert_details._id,
         alert_name=alert_details.rule_description,
         alert_level=await set_alert_level(alert_details.syslog_level),
+        process_name=await get_process_name(source_dict),
         **source_dict,
     )
 
