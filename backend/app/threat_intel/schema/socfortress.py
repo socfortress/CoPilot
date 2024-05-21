@@ -103,7 +103,7 @@ class SocfortressProcessNameAnalysisAPIResponse(BaseModel):
     description: str
     intel: str
     truncated: TruncatedInfo
-    tags: List[TagInfo]
+    tags: Optional[List[TagInfo]] = None
 
 
 class SocfortressProcessNameAnalysisResponse(BaseModel):

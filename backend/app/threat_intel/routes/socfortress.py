@@ -104,7 +104,7 @@ async def threat_intel_socfortress(
     Returns:
     - SocfortressProcessNameAnalysisResponse: The response model containing the results of the SocFortress process name analysis lookup.
     """
-    await is_feature_enabled("PROCESS ANALYSIS", session=session)
+    #await is_feature_enabled("PROCESS ANALYSIS", session=session)
     logger.info("Running SOCFortress Process Name Analysis. Grabbing License")
 
     socfortress_lookup = await socfortress_process_analysis_lookup(

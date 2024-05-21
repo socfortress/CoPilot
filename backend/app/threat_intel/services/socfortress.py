@@ -161,7 +161,7 @@ async def invoke_socfortress_process_name_api(
         httpx.HTTPStatusError: If the API request fails with a non-successful status code.
     """
     headers = {"module-version": "your_module_version", "x-api-key": api_key}
-    params = {"value": f"{request.ioc_value}"}
+    params = {"value": f"{request.process_name}"}
     logger.info(f"Invoking Socfortress Process Name Analysis with params: {params}")
     async with httpx.AsyncClient() as client:
         response = await client.get(url, headers=headers, params=params)
@@ -209,7 +209,7 @@ async def get_process_analysis_response(
     Returns:
         SocfortressProcessNameAnalysisResponse: The response object containing the IoC data and success status.
     """
-    url = "https://intel.socfortress.co/process_name"
+    url = "http://10.255.255.28:5015/process_name"
     response_data = await invoke_socfortress_process_name_api(license_key, url, request)
 
     # Using .get() with default values
