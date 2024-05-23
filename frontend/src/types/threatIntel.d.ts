@@ -32,6 +32,7 @@ export interface EvaluationDataHash {
 
 export interface EvaluationDataNetwork {
 	port: string
+	/** percentage */
 	usage: number
 }
 
