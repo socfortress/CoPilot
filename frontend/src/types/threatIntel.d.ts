@@ -19,7 +19,9 @@ export interface EvaluationData {
 	network: EvaluationDataNetwork[]
 	description: string
 	intel: string
+	/** ignore */
 	truncated: EvaluationDataTruncated
+	/** ignore */
 	tags: EvaluationDataTag[]
 }
 
@@ -30,6 +32,7 @@ export interface EvaluationDataHash {
 
 export interface EvaluationDataNetwork {
 	port: string
+	/** percentage */
 	usage: number
 }
 

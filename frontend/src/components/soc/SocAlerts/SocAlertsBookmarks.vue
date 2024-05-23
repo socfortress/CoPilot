@@ -35,7 +35,7 @@
 import { ref, onBeforeMount, toRefs, onMounted, onBeforeUnmount } from "vue"
 import { useMessage, NSpin, NEmpty } from "naive-ui"
 import Api from "@/api"
-import SocAlertItem from "./SocAlertItem.vue"
+import SocAlertItem from "./SocAlertItem/SocAlertItem.vue"
 import type { SocAlert } from "@/types/soc/alert.d"
 import type { SocUser } from "@/types/soc/user.d"
 import axios from "axios"
