@@ -1,12 +1,7 @@
 <template>
 	<n-tabs type="line" animated :tabs-padding="24" v-if="alert">
 		<n-tab-pane name="Context" tab="Context" display-directive="show:lazy">
-			<div class="grid gap-2 grid-auto-flow-200 p-7 pt-4">
-				<KVCard v-for="(value, key) of alert.alert_context" :key="key">
-					<template #key>{{ key }}</template>
-					<template #value>{{ value ?? "-" }}</template>
-				</KVCard>
-			</div>
+			<SocAlertItemContext :alert="alert" class="p-7 pt-4" />
 		</n-tab-pane>
 		<n-tab-pane name="Note" tab="Note" display-directive="show:lazy">
 			<div class="p-7 pt-4">
@@ -99,6 +94,7 @@ import { SimpleJsonViewer } from "vue-sjv"
 import KVCard from "@/components/common/KVCard.vue"
 import SocAlertItemTimeline from "./SocAlertItemTimeline.vue"
 import SocAssignUser from "./SocAssignUser.vue"
+import SocAlertItemContext from "./SocAlertItemContext.vue"
 import SocAlertAssetsList from "../SocAlertAssets/SocAlertAssetsList.vue"
 import "@/assets/scss/vuesjv-override.scss"
 import { NTabs, NTabPane, NSpin } from "naive-ui"
