@@ -16,14 +16,12 @@
 						<span>#{{ alert.alert_id }} - {{ alert.alert_uuid }}</span>
 						<Icon :name="InfoIcon" :size="16"></Icon>
 					</div>
-					<Icon
-						v-if="!hideBookmarkAction"
-						:name="loadingBookmark ? LoadingIcon : isBookmark ? StarActiveIcon : StarIcon"
-						:size="16"
-						@click="toggleBookmark()"
-						class="toggler-bookmark"
-						:class="{ active: isBookmark }"
-					></Icon>
+					<SocAlertItemBookmarkToggler
+						v-if="!hideBookmarkAction && alert"
+						:alert="alert"
+						:isBookmark="isBookmark"
+						@bookmark="emit('bookmark', $event)"
+					/>
 				</div>
 				<div class="time">
 					<n-popover overlap placement="top-end" style="max-height: 240px" scrollable to="body">
@@ -36,7 +34,7 @@
 							</div>
 						</template>
 						<div class="flex flex-col py-2 px-1">
-							<SocAlertTimeline :alert="alert" />
+							<SocAlertItemTimeline :alert="alert" />
 						</div>
 					</n-popover>
 				</div>
@@ -194,107 +192,7 @@
 			:bordered="false"
 			segmented
 		>
-			<n-tabs type="line" animated :tabs-padding="24" v-if="alert">
-				<n-tab-pane name="Context" tab="Context" display-directive="show:lazy">
-					<div class="grid gap-2 grid-auto-flow-200 p-7 pt-4">
-						<KVCard v-for="(value, key) of alert.alert_context" :key="key">
-							<template #key>{{ key }}</template>
-							<template #value>{{ value ?? "-" }}</template>
-						</KVCard>
-					</div>
-				</n-tab-pane>
-				<n-tab-pane name="Note" tab="Note" display-directive="show:lazy">
-					<div class="p-7 pt-4">
-						{{ alert.alert_note ?? "No notes for this alert" }}
-					</div>
-				</n-tab-pane>
-				<n-tab-pane name="Customer" tab="Customer" display-directive="show:lazy">
-					<div class="grid gap-2 grid-auto-flow-200 p-7 pt-4">
-						<KVCard v-for="(value, key) of alert.customer" :key="key">
-							<template #key>{{ key }}</template>
-							<template #value>
-								<template v-if="key === 'customer_code' && value && value !== 'Customer Not Found'">
-									<code
-										class="cursor-pointer text-primary-color"
-										@click="gotoCustomer({ code: value })"
-									>
-										#{{ value }}
-										<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
-									</code>
-								</template>
-								<template v-else>
-									{{ value || "-" }}
-								</template>
-							</template>
-						</KVCard>
-					</div>
-				</n-tab-pane>
-				<n-tab-pane name="Owner" tab="Owner" display-directive="show:lazy">
-					<div class="grid gap-2 px-7 pt-4">
-						<Badge
-							type="active"
-							style="max-width: 145px"
-							class="cursor-pointer"
-							@click="gotoSocUsers(ownerId)"
-						>
-							<template #iconRight>
-								<Icon :name="LinkIcon" :size="14"></Icon>
-							</template>
-							<template #label>Go to users page</template>
-						</Badge>
-					</div>
-					<div class="grid gap-2 grid-auto-flow-200 p-7 pt-4">
-						<KVCard>
-							<template #key>user_login</template>
-							<template #value>
-								<SocAssignUser
-									:alert="alert"
-									:users="users"
-									v-slot="{ loading }"
-									@updated="updateAlert"
-								>
-									<div class="flex items-center gap-2 cursor-pointer text-primary-color">
-										<n-spin :size="16" :show="loading">
-											<Icon :name="EditIcon" :size="16"></Icon>
-										</n-spin>
-										<span>{{ ownerName || "Assign a user" }}</span>
-									</div>
-								</SocAssignUser>
-							</template>
-						</KVCard>
-						<KVCard v-if="alert.owner">
-							<template #key>user_name</template>
-							<template #value>
-								<span>#{{ alert.owner.id }}</span>
-								{{ alert.owner.user_name }}
-							</template>
-						</KVCard>
-						<KVCard v-if="alert.owner">
-							<template #key>user_email</template>
-							<template #value>
-								{{ alert.owner.user_email }}
-							</template>
-						</KVCard>
-					</div>
-				</n-tab-pane>
-				<n-tab-pane name="History" tab="History" display-directive="show:lazy">
-					<div class="p-7 pt-4">
-						<SocAlertTimeline :alert="alert" />
-					</div>
-				</n-tab-pane>
-				<n-tab-pane name="Details" tab="Details" display-directive="show:lazy">
-					<div class="p-7 pt-4">
-						<SimpleJsonViewer
-							class="vuesjv-override"
-							:model-value="socAlertDetail"
-							:initialExpandedDepth="1"
-						/>
-					</div>
-				</n-tab-pane>
-				<n-tab-pane name="Assets" tab="Assets" display-directive="show:lazy">
-					<SocAlertAssetsList v-if="alert" :alert-id="alert.alert_id" />
-				</n-tab-pane>
-			</n-tabs>
+			<SocAlertItemDetails v-if="alert" :alert="alert" :users="users" @updated="updateAlert" />
 		</n-modal>
 	</n-spin>
 </template>
@@ -306,13 +204,11 @@ import type { Alert } from "@/types/alerts.d"
 import Icon from "@/components/common/Icon.vue"
 import Badge from "@/components/common/Badge.vue"
 import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
-import { SimpleJsonViewer } from "vue-sjv"
-import KVCard from "@/components/common/KVCard.vue"
-import SocAlertTimeline from "./SocAlertTimeline.vue"
+import SocAlertItemTimeline from "./SocAlertItemTimeline.vue"
 import SocAssignUser from "./SocAssignUser.vue"
 import SocAlertItemActions from "./SocAlertItemActions.vue"
-import SocAlertAssetsList from "./SocAlertAssetsList.vue"
-import "@/assets/scss/vuesjv-override.scss"
+import SocAlertItemDetails from "./SocAlertItemDetails.vue"
+import SocAlertItemBookmarkToggler from "./SocAlertItemBookmarkToggler.vue"
 import Api from "@/api"
 import {
 	NCollapse,
@@ -320,8 +216,6 @@ import {
 	NCollapseItem,
 	NPopover,
 	NModal,
-	NTabs,
-	NTabPane,
 	NSpin,
 	NCheckbox,
 	NTooltip,
@@ -378,7 +272,6 @@ const CustomerIcon = "carbon:user"
 const StarActiveIcon = "carbon:star-filled"
 const OwnerIcon = "carbon:user-military"
 const StarIcon = "carbon:star"
-const EditIcon = "uil:edit-alt"
 const LoadingIcon = "eos-icons:loading"
 
 const showDetails = ref(false)
@@ -387,29 +280,13 @@ const loadingDelete = ref(false)
 const loadingData = ref(false)
 const loadingBookmark = ref(false)
 const message = useMessage()
-const { gotoCustomer, gotoSocUsers } = useGoto()
+const { gotoCustomer } = useGoto()
 
 const alert = ref(alertData.value || null)
-
 const alertObject = ref<Alert>({} as Alert)
-
 const loading = computed(() => loadingBookmark.value || loadingData.value || loadingDelete.value)
 const ownerName = computed(() => alert.value?.owner?.user_login)
-const ownerId = computed(() => alert.value?.owner?.id)
 const caseId = computed<number | null>(() => (alert.value?.cases?.length ? alert.value?.cases[0] : null))
-
-const socAlertDetail = computed<Partial<SocAlert>>(() => {
-	const clone: Partial<SocAlert> = JSON.parse(JSON.stringify(alert.value))
-
-	delete clone.alert_context
-	delete clone.alert_source_content
-	delete clone.customer
-	delete clone.modification_history
-	delete clone.alert_note
-	delete clone.alert_source_link
-
-	return clone
-})
 
 const dFormats = useSettingsStore().dateFormat
 
@@ -536,14 +413,6 @@ onBeforeMount(() => {
 				}
 			}
 
-			.toggler-bookmark {
-				&.active {
-					color: var(--primary-color);
-				}
-				&:hover {
-					color: var(--primary-color);
-				}
-			}
 			.time {
 				color: var(--fg-secondary-color);
 

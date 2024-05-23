@@ -92,7 +92,7 @@
 import { ref, onBeforeMount, watch, toRefs, nextTick, onBeforeUnmount, onMounted, computed } from "vue"
 import { useMessage, NSpin, NEmpty, NInput, useDialog, NButton, NPopover } from "naive-ui"
 import Api from "@/api"
-import SocAlertItem from "./SocAlertItem.vue"
+import SocAlertItem from "./SocAlertItem/SocAlertItem.vue"
 import type { SocAlert } from "@/types/soc/alert.d"
 import type { SocUser } from "@/types/soc/user.d"
 import type { AlertsFilter } from "@/api/soc"
