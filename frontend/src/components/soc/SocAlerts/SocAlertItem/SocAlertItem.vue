@@ -24,19 +24,7 @@
 					/>
 				</div>
 				<div class="time">
-					<n-popover overlap placement="top-end" style="max-height: 240px" scrollable to="body">
-						<template #trigger>
-							<div class="flex items-center gap-2 cursor-help">
-								<span>
-									{{ formatDate(alert.alert_creation_time) }}
-								</span>
-								<Icon :name="TimeIcon" :size="16"></Icon>
-							</div>
-						</template>
-						<div class="flex flex-col py-2 px-1">
-							<SocAlertItemTimeline :alert="alert" />
-						</div>
-					</n-popover>
+					<SocAlertItemTime :alert="alert" />
 				</div>
 			</div>
 			<div class="main-box flex justify-between gap-4">
@@ -72,85 +60,13 @@
 					</span>
 				</div>
 				<n-collapse-transition :show="!showBadgesToggle || showBadges">
-					<div class="badges-box flex flex-wrap items-center gap-3 mt-3">
-						<n-tooltip placement="top-start" trigger="hover">
-							<template #trigger>
-								<Badge type="splitted" hint-cursor>
-									<template #iconLeft>
-										<Icon :name="StatusIcon" :size="14"></Icon>
-									</template>
-									<template #label>Status</template>
-									<template #value>{{ alert.status?.status_name || "-" }}</template>
-								</Badge>
-							</template>
-							{{ alert.status.status_description }}
-						</n-tooltip>
-						<Badge type="splitted" :color="alert.severity?.severity_id === 5 ? 'danger' : undefined">
-							<template #iconLeft>
-								<Icon :name="SeverityIcon" :size="13"></Icon>
-							</template>
-							<template #label>Severity</template>
-							<template #value>{{ alert.severity?.severity_name || "-" }}</template>
-						</Badge>
-						<Badge type="splitted" class="hide-on-small">
-							<template #iconLeft>
-								<Icon :name="SourceIcon" :size="13"></Icon>
-							</template>
-							<template #label>Source</template>
-							<template #value>{{ alert.alert_source || "-" }}</template>
-						</Badge>
-						<Badge type="splitted" class="hide-on-small">
-							<template #iconLeft>
-								<Icon :name="CustomerIcon" :size="13"></Icon>
-							</template>
-							<template #label>Customer</template>
-							<template #value>
-								<template
-									v-if="
-										alert.customer?.customer_code &&
-										alert.customer.customer_code !== 'Customer Not Found'
-									"
-								>
-									<code
-										class="cursor-pointer text-primary-color"
-										@click="gotoCustomer({ code: alert.customer.customer_code })"
-									>
-										{{ alert.customer?.customer_name || alert.customer.customer_code || "-" }}
-										<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
-									</code>
-								</template>
-								<template v-else>
-									{{ alert.customer?.customer_name || "-" }}
-								</template>
-							</template>
-						</Badge>
-
-						<SocAssignUser :alert="alert" :users="users" v-slot="{ loading }" @updated="updateAlert">
-							<Badge type="active" class="cursor-pointer">
-								<template #iconLeft>
-									<n-spin :size="16" :show="loading">
-										<Icon :name="OwnerIcon" :size="16"></Icon>
-									</n-spin>
-								</template>
-								<template #label>Owner</template>
-								<template #value>{{ ownerName || "n/d" }}</template>
-							</Badge>
-						</SocAssignUser>
-
-						<Badge
-							v-if="alert.alert_source_link"
-							type="active"
-							:href="alert.alert_source_link"
-							target="_blank"
-							alt="Source link"
-							rel="nofollow noopener noreferrer"
-						>
-							<template #iconRight>
-								<Icon :name="LinkIcon" :size="14"></Icon>
-							</template>
-							<template #label>Source link</template>
-						</Badge>
-					</div>
+					<SocAlertItemBadges
+						class="badges-box"
+						v-if="alert"
+						:alert="alert"
+						:users="users"
+						@updated="updateAlert"
+					/>
 				</n-collapse-transition>
 			</div>
 
@@ -166,7 +82,9 @@
 					@deleted="deleted()"
 					@startDeleting="loadingDelete = true"
 				/>
-				<div class="time">{{ formatDate(alert.alert_creation_time) }}</div>
+				<div class="time">
+					<SocAlertItemTime :alert="alert" hide-timeline />
+				</div>
 			</div>
 		</div>
 		<n-collapse>
@@ -198,33 +116,19 @@
 </template>
 
 <script setup lang="ts">
-import AlertItem from "@/components/alerts/Alert.vue"
 import type { SocAlert } from "@/types/soc/alert.d"
 import type { Alert } from "@/types/alerts.d"
 import Icon from "@/components/common/Icon.vue"
-import Badge from "@/components/common/Badge.vue"
-import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
-import SocAlertItemTimeline from "./SocAlertItemTimeline.vue"
-import SocAssignUser from "./SocAssignUser.vue"
+import { computed, defineAsyncComponent, onBeforeMount, ref, toRefs, watch } from "vue"
 import SocAlertItemActions from "./SocAlertItemActions.vue"
-import SocAlertItemDetails from "./SocAlertItemDetails.vue"
+import SocAlertItemTime from "./SocAlertItemTime.vue"
 import SocAlertItemBookmarkToggler from "./SocAlertItemBookmarkToggler.vue"
 import Api from "@/api"
-import {
-	NCollapse,
-	useMessage,
-	NCollapseItem,
-	NPopover,
-	NModal,
-	NSpin,
-	NCheckbox,
-	NTooltip,
-	NCollapseTransition
-} from "naive-ui"
-import { useSettingsStore } from "@/stores/settings"
-import dayjs from "@/utils/dayjs"
+import { NCollapse, useMessage, NCollapseItem, NModal, NSpin, NCheckbox, NCollapseTransition } from "naive-ui"
 import type { SocUser } from "@/types/soc/user.d"
-import { useGoto } from "@/composables/useGoto"
+const SocAlertItemDetails = defineAsyncComponent(() => import("./SocAlertItemDetails.vue"))
+const SocAlertItemBadges = defineAsyncComponent(() => import("./SocAlertItemBadges.vue"))
+const AlertItem = defineAsyncComponent(() => import("@/components/alerts/Alert.vue"))
 
 const checked = defineModel<boolean>("checked", { default: false })
 
@@ -263,16 +167,6 @@ const {
 
 const ChevronIcon = "carbon:chevron-right"
 const InfoIcon = "carbon:information"
-const TimeIcon = "carbon:time"
-const LinkIcon = "carbon:launch"
-const StatusIcon = "fluent:status-20-regular"
-const SeverityIcon = "bi:shield-exclamation"
-const SourceIcon = "lucide:arrow-down-right-from-circle"
-const CustomerIcon = "carbon:user"
-const StarActiveIcon = "carbon:star-filled"
-const OwnerIcon = "carbon:user-military"
-const StarIcon = "carbon:star"
-const LoadingIcon = "eos-icons:loading"
 
 const showDetails = ref(false)
 const showBadges = ref(false)
@@ -280,43 +174,11 @@ const loadingDelete = ref(false)
 const loadingData = ref(false)
 const loadingBookmark = ref(false)
 const message = useMessage()
-const { gotoCustomer } = useGoto()
 
 const alert = ref(alertData.value || null)
 const alertObject = ref<Alert>({} as Alert)
 const loading = computed(() => loadingBookmark.value || loadingData.value || loadingDelete.value)
-const ownerName = computed(() => alert.value?.owner?.user_login)
 const caseId = computed<number | null>(() => (alert.value?.cases?.length ? alert.value?.cases[0] : null))
-
-const dFormats = useSettingsStore().dateFormat
-
-function formatDate(timestamp: string | number, utc: boolean = true): string {
-	return dayjs(timestamp).utc(utc).format(dFormats.datetimesec)
-}
-
-function toggleBookmark() {
-	if (alert.value?.alert_id) {
-		loadingBookmark.value = true
-
-		const method = isBookmark.value ? "removeAlertBookmark" : "addAlertBookmark"
-
-		Api.soc[method](alert.value.alert_id.toString())
-			.then(res => {
-				if (res.data.success) {
-					emit("bookmark", method === "removeAlertBookmark" ? false : true)
-					message.success(res.data?.message || "Stream started.")
-				} else {
-					message.warning(res.data?.message || "An error occurred. Please try again later.")
-				}
-			})
-			.catch(err => {
-				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-			})
-			.finally(() => {
-				loadingBookmark.value = false
-			})
-	}
-}
 
 function updateAlert(alertUpdated: SocAlert) {
 	const ownerObject = alertUpdated.owner
@@ -412,14 +274,6 @@ onBeforeMount(() => {
 					color: var(--primary-color);
 				}
 			}
-
-			.time {
-				color: var(--fg-secondary-color);
-
-				&:hover {
-					color: var(--primary-color);
-				}
-			}
 		}
 
 		.main-box {
@@ -447,12 +301,6 @@ onBeforeMount(() => {
 			font-size: 13px;
 			margin-top: 10px;
 			display: none;
-
-			.time {
-				font-family: var(--font-family-mono);
-				text-align: right;
-				color: var(--fg-secondary-color);
-			}
 		}
 	}
 
@@ -481,9 +329,11 @@ onBeforeMount(() => {
 					display: none;
 				}
 				.badges-box {
-					.badge {
-						&.hide-on-small {
-							display: none;
+					:deep() {
+						.badge {
+							&.hide-on-small {
+								display: none;
+							}
 						}
 					}
 				}
