@@ -1,6 +1,7 @@
 import json
 from typing import Optional
-from typing import Set
+from typing import Set, List
+import os
 
 from fastapi import HTTPException
 from loguru import logger
@@ -255,6 +256,25 @@ def construct_params(request: FilterAlertsRequest) -> dict:
     # Remove parameters that have a value of None
     return {k: v for k, v in params.items() if v is not None}
 
+async def get_process_name(source_dict: dict) -> List[str]:
+    """
+    Get the process name from the source dictionary.
+
+    Args:
+        source_dict (dict): The source dictionary.
+
+    Returns:
+        List[str]: The process name as a list.
+    """
+    # Get the last part of the process_image path
+    logger.info(f"Source dict: {source_dict}")
+    source = source_dict.get("_source", {})
+    process_image = source.get("process_image")
+    if process_image is None:
+        process_image = source.get("data_win_eventdata_image")
+
+    process_name = os.path.basename(process_image) if process_image else None
+    return [process_name] if process_name else ['No process name found']
 
 async def build_alert_context_payload(
     alert_details: CreateAlertRequest,
@@ -305,6 +325,7 @@ async def build_alert_context_payload(
             "rule_mitre_technique",
             "No rule mitre technique found",
         ),
+        process_name=alert_details.process_name
     )
 
 
@@ -410,6 +431,7 @@ async def create_alert_details(alert_details: WazuhAlertModel) -> CreateAlertReq
         timestamp=alert_details._source["timestamp"],
         timestamp_utc=alert_details._source.get("timestamp_utc", alert_details._source["timestamp"]),
         process_id=alert_details._source.get("process_id", "No process ID found"),
+        process_name=await get_process_name(alert_details.to_dict()),
     )
 
 
@@ -476,6 +498,22 @@ async def get_current_assets(client, alert_client, iris_alert_id):
     )
     return result["data"]["assets"]
 
+async def get_current_process_names(client, alert_client, iris_alert_id):
+    result = await fetch_and_validate_data(
+        client,
+        alert_client.get_alert,
+        iris_alert_id,
+    )
+    return result["data"]["alert_context"]["process_name"]
+
+async def get_current_alert_context(client, alert_client, iris_alert_id):
+    result = await fetch_and_validate_data(
+        client,
+        alert_client.get_alert,
+        iris_alert_id,
+    )
+    return result["data"]["alert_context"]
+
 
 async def update_alert_with_assets(client, alert_client, iris_alert_id, current_assets):
     await fetch_and_validate_data(
@@ -483,6 +521,24 @@ async def update_alert_with_assets(client, alert_client, iris_alert_id, current_
         alert_client.update_alert,
         iris_alert_id,
         {"assets": current_assets},
+    )
+
+async def update_alert_with_process_names(client, alert_client, iris_alert_id, current_process_names):
+    await fetch_and_validate_data(
+        client,
+        alert_client.update_alert,
+        iris_alert_id,
+        {"alert_context": {"process_name": current_process_names}},
+    )
+
+async def update_alert_context(client, alert_client, iris_alert_id, current_iris_alert_context, current_process_names):
+    alert_context = await current_iris_alert_context
+    alert_context['process_name'] = current_process_names
+    await fetch_and_validate_data(
+        client,
+        alert_client.update_alert,
+        iris_alert_id,
+        {"alert_context": alert_context},
     )
 
 
@@ -562,7 +618,20 @@ async def analyze_wazuh_alerts(
                 alert_client,
                 iris_alert_id,
             )
+            current_iris_alert_context = get_current_alert_context(
+                client,
+                alert_client,
+                iris_alert_id,
+            )
+            current_process_names = await get_current_process_names(
+                client,
+                alert_client,
+                iris_alert_id,
+            )
             alert_details = await create_alert_details(alert_details)
+            # Add the new `process_name` to the `current_process_names`` list
+            current_process_names.extend(alert_details.process_name)
+            logger.info(f"Current process names: {current_process_names}")
             agent_details = await get_agent_by_hostname(alert_details.agent_name, session)
             asset_payload = await build_asset_payload(
                 agent_data=agent_details,
@@ -576,6 +645,13 @@ async def analyze_wazuh_alerts(
                 alert_client,
                 iris_alert_id,
                 current_assets,
+            )
+            await update_alert_context(
+                client,
+                alert_client,
+                iris_alert_id,
+                current_iris_alert_context,
+                current_process_names,
             )
             await remove_alert_id(alert.alert_id, session)
             es_client = await create_wazuh_indexer_client("Wazuh-Indexer")

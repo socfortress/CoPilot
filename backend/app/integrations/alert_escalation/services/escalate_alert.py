@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 import os
 
 from fastapi import HTTPException
@@ -129,7 +129,7 @@ async def set_alert_level(syslog_level: str):
             return level.value
     return 3
 
-async def get_process_name(source_dict: dict) -> str:
+async def get_process_name(source_dict: dict) -> List[str]:
     """
     Get the process name from the source dictionary.
 
@@ -137,14 +137,15 @@ async def get_process_name(source_dict: dict) -> str:
         source_dict (dict): The source dictionary.
 
     Returns:
-        str: The process name.
+        List[str]: The process name as a list.
     """
     # Get the last part of the process_image path
     process_image = source_dict.get("process_image")
     if process_image is None:
         process_image = source_dict.get("data_win_eventdata_image")
 
-    return os.path.basename(process_image) if process_image else None
+    process_name = os.path.basename(process_image) if process_image else None
+    return [process_name] if process_name else []
 
 async def build_alert_context_payload(
     alert_details: GenericAlertModel,
