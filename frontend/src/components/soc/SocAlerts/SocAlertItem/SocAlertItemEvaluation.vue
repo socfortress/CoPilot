@@ -50,6 +50,10 @@
 						/>
 					</div>
 				</n-tab-pane>
+				<n-tab-pane name="Hashes" tab="Hashes" display-directive="show:lazy"></n-tab-pane>
+				<n-tab-pane name="Network" tab="Network" display-directive="show:lazy"></n-tab-pane>
+				<n-tab-pane name="Parents" tab="Parents" display-directive="show:lazy"></n-tab-pane>
+				<n-tab-pane name="Paths" tab="Paths" display-directive="show:lazy"></n-tab-pane>
 				<!--
 
 					<n-tab-pane name="Compliance" tab="Compliance" display-directive="show:lazy">
@@ -82,13 +86,14 @@
 			</n-tab-pane>
 		-->
 			</n-tabs>
+			<n-empty description="Evaluation not found" class="justify-center h-48" v-if="!loading && !evaluation" />
 		</n-spin>
 	</n-modal>
 </template>
 
 <script setup lang="ts">
 import Icon from "@/components/common/Icon.vue"
-import { useMessage, NModal, NSpin, NTabs, NTabPane, NStatistic, NInput, NCard } from "naive-ui"
+import { useMessage, NModal, NSpin, NTabs, NTabPane, NStatistic, NInput, NCard, NEmpty } from "naive-ui"
 import type { EvaluationData } from "@/types/threatIntel"
 import { computed, ref } from "vue"
 import Api from "@/api"

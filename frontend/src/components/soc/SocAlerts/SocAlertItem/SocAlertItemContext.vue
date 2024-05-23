@@ -4,7 +4,9 @@
 			<template #key>{{ key }}</template>
 			<template #value>
 				<template v-if="key === 'process_name' && value && value !== '-'">
-					<SocAlertItemEvaluation :process-name="value + ''" />
+					<div class="flex flex-wrap gap-2">
+						<SocAlertItemEvaluation v-for="pn of processNameList" :key="pn" :process-name="pn" />
+					</div>
 				</template>
 				<template v-else>
 					{{ value ?? "-" }}
@@ -17,10 +19,13 @@
 <script setup lang="ts">
 import type { SocAlert } from "@/types/soc/alert.d"
 import KVCard from "@/components/common/KVCard.vue"
-import { defineAsyncComponent } from "vue"
+import { computed, defineAsyncComponent } from "vue"
+import _split from "lodash/split"
 const SocAlertItemEvaluation = defineAsyncComponent(() => import("./SocAlertItemEvaluation.vue"))
 
 const { alert } = defineProps<{
 	alert: SocAlert
 }>()
+
+const processNameList = computed(() => _split(alert.alert_context?.process_name || "", ","))
 </script>
