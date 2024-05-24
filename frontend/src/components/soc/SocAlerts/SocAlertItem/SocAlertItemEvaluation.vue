@@ -8,12 +8,12 @@
 		v-model:show="showDetails"
 		preset="card"
 		content-class="!p-0"
-		:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(550px, 90vh)', overflow: 'hidden' }"
+		:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(550px, 90vh)' }"
 		:title="`Evaluation: ${processName}`"
 		:bordered="false"
 		segmented
 	>
-		<n-spin :show="loading" class="m- h-48">
+		<n-spin :show="loading" class="min-h-48">
 			<n-tabs type="line" animated :tabs-padding="24" v-if="evaluation">
 				<n-tab-pane
 					name="Overview"
@@ -50,41 +50,33 @@
 						/>
 					</div>
 				</n-tab-pane>
-				<n-tab-pane name="Hashes" tab="Hashes" display-directive="show:lazy"></n-tab-pane>
-				<n-tab-pane name="Network" tab="Network" display-directive="show:lazy"></n-tab-pane>
-				<n-tab-pane name="Parents" tab="Parents" display-directive="show:lazy"></n-tab-pane>
-				<n-tab-pane name="Paths" tab="Paths" display-directive="show:lazy"></n-tab-pane>
-				<!--
-
-					<n-tab-pane name="Compliance" tab="Compliance" display-directive="show:lazy">
-						<div class="p-7 pt-4 flex flex-col gap-1">
-							<n-card
-							content-class="bg-secondary-color flex flex-col gap-2"
-							class="overflow-hidden"
-							size="small"
-							v-for="item of data.compliance"
-							:key="item.key"
-							>
-							<div>{{ item.key }}</div>
-							<p>{{ item.value }}</p>
-						</n-card>
-					</div>
+				<n-tab-pane name="Hashes" tab="Hashes" display-directive="show:lazy">
+					<ListPercentage
+						class="p-7 pt-4"
+						:list="evaluation.hashes"
+						labelKey="hash"
+						percentageKey="percentage"
+					/>
 				</n-tab-pane>
-				<n-tab-pane name="Rules" tab="Rules" display-directive="show:lazy">
-					<div class="p-7 pt-4 flex flex-col gap-1">
-						<n-card
-						content-class="bg-secondary-color flex flex-col gap-2"
-						class="overflow-hidden"
-						size="small"
-						v-for="item of data.rules"
-						:key="item.type + item.rule"
-						>
-						<div>{{ item.type }}</div>
-						<p>{{ item.rule }}</p>
-					</n-card>
-				</div>
-			</n-tab-pane>
-		-->
+				<n-tab-pane name="Network" tab="Network" display-directive="show:lazy">
+					<ListPercentage class="p-7 pt-4" :list="evaluation.network" labelKey="port" percentageKey="usage" />
+				</n-tab-pane>
+				<n-tab-pane name="Parents" tab="Parents" display-directive="show:lazy">
+					<ListPercentage
+						class="p-7 pt-4"
+						:list="evaluation.parents"
+						labelKey="name"
+						percentageKey="percentage"
+					/>
+				</n-tab-pane>
+				<n-tab-pane name="Paths" tab="Paths" display-directive="show:lazy">
+					<ListPercentage
+						class="p-7 pt-4"
+						:list="evaluation.paths"
+						labelKey="directory"
+						percentageKey="percentage"
+					/>
+				</n-tab-pane>
 			</n-tabs>
 			<n-empty description="Evaluation not found" class="justify-center h-48" v-if="!loading && !evaluation" />
 		</n-spin>
@@ -95,9 +87,10 @@
 import Icon from "@/components/common/Icon.vue"
 import { useMessage, NModal, NSpin, NTabs, NTabPane, NStatistic, NInput, NCard, NEmpty } from "naive-ui"
 import type { EvaluationData } from "@/types/threatIntel"
-import { computed, ref } from "vue"
+import { computed, defineAsyncComponent, ref } from "vue"
 import Api from "@/api"
 import _toSafeInteger from "lodash/toSafeInteger"
+const ListPercentage = defineAsyncComponent(() => import("@/components/common/ListPercentage.vue"))
 
 const { processName } = defineProps<{
 	processName: string
@@ -122,7 +115,7 @@ function getEvaluation() {
 	loading.value = true
 
 	Api.threatIntel
-		.processNameEvaluation(processName)
+		.processNameEvaluation("cmd.exe" || processName)
 		.then(res => {
 			if (res.data.success) {
 				evaluation.value = res.data?.data || null
