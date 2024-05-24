@@ -115,7 +115,7 @@ function getEvaluation() {
 	loading.value = true
 
 	Api.threatIntel
-		.processNameEvaluation("cmd.exe" || processName)
+		.processNameEvaluation(processName)
 		.then(res => {
 			if (res.data.success) {
 				evaluation.value = res.data?.data || null
