@@ -69,7 +69,7 @@
 		"vue-i18n": "^9.13.1",
 		"vue-router": "^4.3.2",
 		"vue-sjv": "^0.0.6",
-		"vue3-apexcharts": "^1.5.2",
+		"vue3-apexcharts": "^1.5.3",
 		"vue3-marquee": "^4.2.0",
 		"vuedraggable": "^4.1.0"
 	},
@@ -93,7 +93,7 @@
 		"@vue/test-utils": "^2.4.6",
 		"@vue/tsconfig": "^0.5.1",
 		"autoprefixer": "^10.4.19",
-		"cypress": "^13.9.0",
+		"cypress": "^13.10.0",
 		"eslint": "^8.57.0",
 		"eslint-plugin-cypress": "^3.2.0",
 		"eslint-plugin-vue": "^9.26.0",

@@ -3,7 +3,10 @@ import { decode } from "html-entities"
 import { codeThemes, getHighlighter } from "@/utils/highlighter"
 
 const vShiki = {
-	created: async (el: HTMLElement, binding: { value: { lang?: string; decode?: boolean } }) => {
+	created: async (
+		el: HTMLElement,
+		binding: { value: { lang?: string; fallbackLang?: string; decode?: boolean } }
+	) => {
 		const code = binding?.value?.decode ? decode(el.children[0].innerHTML) : el.children[0].innerHTML
 
 		let flouriteDetect = null
@@ -14,7 +17,7 @@ const vShiki = {
 			}
 		}
 
-		const language = binding?.value?.lang || flouriteDetect || "text"
+		const language = binding?.value?.lang || flouriteDetect || binding?.value?.fallbackLang || "text"
 		const html = (await getHighlighter()).codeToHtml(code, {
 			lang: language,
 			themes: codeThemes

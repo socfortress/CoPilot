@@ -226,6 +226,14 @@ class WazuhSourceModel(BaseModel):
         None,
         description="The UTC timestamp of the alert.",
     )
+    process_image: Optional[str] = Field(
+        "n/a",
+        description="The process image of the alert.",
+    )
+    data_win_eventdata_image: Optional[str] = Field(
+        "n/a",
+        description="The image of the event data.",
+    )
 
     class Config:
         extra = Extra.allow
@@ -251,6 +259,9 @@ class WazuhAlertModel(BaseModel):
 
     class Config:
         extra = Extra.allow
+
+    def to_dict(self):
+        return self.dict(exclude_none=True)
 
 
 class SortOrder(Enum):
@@ -319,6 +330,10 @@ class WazuhIrisAlertContext(BaseModel):
         "n/a",
         description="MITRE ATT&CK Technique",
         example="Scripting",
+    )
+    process_name: Optional[List[str]] = Field(
+        example=["No process name found"],
+        description="Name of the process",
     )
 
 

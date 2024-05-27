@@ -1,6 +1,7 @@
 from enum import Enum
 from typing import Any
 from typing import Dict
+from typing import List
 from typing import Optional
 
 from pydantic import BaseModel
@@ -167,6 +168,10 @@ class IrisAlertContext(BaseModel):
         example="Intrusion Detected",
     )
     alert_level: int = Field(..., description="Severity level of the alert", example=3)
+    process_name: Optional[List[str]] = Field(
+        example=["No process name found"],
+        description="Name of the process",
+    )
 
     class Config:
         extra = Extra.allow

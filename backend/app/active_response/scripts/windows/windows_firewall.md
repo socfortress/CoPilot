@@ -20,7 +20,7 @@ Invoke-WebRequest -Uri "https://www.python.org/ftp/python/3.11.0/python-3.11.0-a
 ### Download Script Via PowerShell
 
 ```powershell
-Invoke-WebRequest -Uri "https://repo.socfortress.co/repository/socfortress/active-response/windows_firewall.exe" -OutFile "C:\Program Files (x86)\ossec-agent\active-response\bin\windows_firewall.exe"
+Invoke-WebRequest -Uri "https://repo.socfortress.co/repository/socfortress/active-response/windows_firewall.exe" -OutFile "C:\Program Files (x86)\ossec-agent\active-response\bin\windows_firewall.exe" -Credential (New-Object System.Management.Automation.PSCredential ("socfortress_installer", (ConvertTo-SecureString "6cV8uJqnQffDa3Upx" -AsPlainText -Force)))
 ```
 
 ## Wazuh Manager Configuration

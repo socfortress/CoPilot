@@ -1,6 +1,9 @@
+import httpx
 from fastapi import HTTPException
 from loguru import logger
 
+from app.connectors.velociraptor.schema.artifacts import ArtifactReccomendationRequest
+from app.connectors.velociraptor.schema.artifacts import ArtifactReccomendationResponse
 from app.connectors.velociraptor.schema.artifacts import Artifacts
 from app.connectors.velociraptor.schema.artifacts import ArtifactsResponse
 from app.connectors.velociraptor.schema.artifacts import CollectArtifactBody
@@ -267,3 +270,22 @@ async def quarantine_host(quarantine_body: QuarantineBody) -> QuarantineResponse
             status_code=500,
             detail=f"Failed to run artifact collection on {quarantine_body}: {err}",
         )
+
+
+################# ! ARTIFACT RECOMMENDATION ! #################
+async def post_to_copilot_ai_module(data: ArtifactReccomendationRequest) -> ArtifactReccomendationResponse:
+    """
+    Send a POST request to the copilot-ai-module Docker container.
+
+    Args:
+        data (ArtifactReccomendationRequest): The data to send to the copilot-ai-module Docker container.
+    """
+    logger.info(f"Sending POST request to http://copilot-ai-module/velociraptor-artifact-recommendation with data: {data.dict()}")
+    # raise HTTPException(status_code=501, detail="Not Implemented Yet")
+    async with httpx.AsyncClient() as client:
+        data = await client.post(
+            "http://127.0.0.1:5001/velociraptor-artifact-recommendation",
+            json=data.dict(),
+            timeout=120,
+        )
+    return ArtifactReccomendationResponse(**data.json())

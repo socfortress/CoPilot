@@ -254,7 +254,7 @@ import SocCaseAssetsList from "./SocCaseAssetsList.vue"
 import SocCaseNoteForm from "./SocCaseNoteForm.vue"
 import SocCaseNotesList from "./SocCaseNotesList.vue"
 import SocCaseItemActions from "./SocCaseItemActions.vue"
-import SocAlertItem from "../SocAlerts/SocAlertItem.vue"
+import SocAlertItem from "../SocAlerts/SocAlertItem/SocAlertItem.vue"
 import Api from "@/api"
 import {
 	useMessage,

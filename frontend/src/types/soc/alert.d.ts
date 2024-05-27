@@ -44,10 +44,12 @@ export interface AlertContext {
 	asset_type: number
 	customer_id?: string
 	process_id: string
+	process_name: string
 	rule_id: string
 	rule_mitre_id: string
 	rule_mitre_tactic: string
 	rule_mitre_technique: string
+	[key: string]: string | number | boolean
 }
 
 export enum AlertSource {

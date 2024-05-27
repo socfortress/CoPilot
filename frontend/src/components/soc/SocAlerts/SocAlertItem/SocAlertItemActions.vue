@@ -55,7 +55,7 @@ import { NButton, useDialog, useMessage, NModal } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import Api from "@/api"
 import { computed, ref, watch } from "vue"
-import SocCaseItem from "../SocCases/SocCaseItem.vue"
+import SocCaseItem from "@/components/soc/SocCases/SocCaseItem.vue"
 import type { Size } from "naive-ui/es/button/src/interface"
 
 const emit = defineEmits<{
