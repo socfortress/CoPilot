@@ -10,7 +10,12 @@ from app.connectors.utils import get_connector_info_from_db
 from app.db.db_session import get_db_session
 from app.threat_intel.schema.socfortress import IoCMapping
 from app.threat_intel.schema.socfortress import IoCResponse
-from app.threat_intel.schema.socfortress import SocfortressThreatIntelRequest, SocfortressProcessNameAnalysisRequest, SocfortressProcessNameAnalysisResponse, SocfortressProcessNameAnalysisAPIResponse
+from app.threat_intel.schema.socfortress import (
+    SocfortressProcessNameAnalysisAPIResponse,
+)
+from app.threat_intel.schema.socfortress import SocfortressProcessNameAnalysisRequest
+from app.threat_intel.schema.socfortress import SocfortressProcessNameAnalysisResponse
+from app.threat_intel.schema.socfortress import SocfortressThreatIntelRequest
 from app.utils import get_connector_attribute
 
 
@@ -141,10 +146,11 @@ async def invoke_socfortress_threat_intel_api(
         response = await client.get(url, headers=headers, params=params)
         return response.json()
 
+
 async def invoke_socfortress_process_name_api(
     api_key: str,
     url: str,
-    request: SocfortressThreatIntelRequest,
+    request: SocfortressProcessNameAnalysisRequest,
 ) -> dict:
     """
     Invokes the Socfortress Process Analysis API with the provided API key, URL, and request parameters.
@@ -152,7 +158,7 @@ async def invoke_socfortress_process_name_api(
     Args:
         api_key (str): The API key for authentication.
         url (str): The URL of the Socfortress Intel URL
-        request (SocfortressThreatIntelRequest): The request object containing the Process Name
+        request (SocfortressProcessNameAnalysisRequest): The request object containing the Process Name
 
     Returns:
         dict: The JSON response from the Process Name Analysis API.
@@ -162,7 +168,7 @@ async def invoke_socfortress_process_name_api(
     """
     headers = {"module-version": "your_module_version", "x-api-key": api_key}
     params = {"value": f"{request.process_name}"}
-    logger.info(f"Invoking Socfortress Process Name Analysis with params: {params}")
+    logger.info(f"Invoking Socfortress Process Name Analysis with params: {params} and headers: {headers} and url: {url}")
     async with httpx.AsyncClient() as client:
         response = await client.get(url, headers=headers, params=params)
         return response.json()
@@ -209,8 +215,15 @@ async def get_process_analysis_response(
     Returns:
         SocfortressProcessNameAnalysisResponse: The response object containing the IoC data and success status.
     """
-    url = "http://10.255.255.28:5015/process_name"
+    url = "https://processname.socfortress.co/search"
     response_data = await invoke_socfortress_process_name_api(license_key, url, request)
+
+    # If message is `Forbidden`, raise an HTTPException
+    if response_data.get("message") == "Forbidden":
+        raise HTTPException(
+            status_code=403,
+            detail="Forbidden access to the Socfortress Process Name Analysis API",
+        )
 
     # Using .get() with default values
     data = response_data.get("data", {})
@@ -241,13 +254,14 @@ async def socfortress_threat_intel_lookup(
         session=session,
     )
 
+
 async def socfortress_process_analysis_lookup(
     lincense_key: str,
     request: SocfortressProcessNameAnalysisRequest,
     session: AsyncSession,
 ) -> IoCResponse:
     """
-    Performs a threat intelligence lookup using the Socfortress service.
+    Performs a process analysis intelligence lookup using the Socfortress service.
 
     Args:
         request (SocfortressThreatIntelRequest): The request object containing the IoC to lookup.

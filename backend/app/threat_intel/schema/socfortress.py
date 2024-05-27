@@ -1,8 +1,8 @@
+from typing import List
 from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
-from typing import List
 
 
 class SocfortressThreatIntelRequest(BaseModel):
@@ -53,6 +53,7 @@ class SocfortressProcessNameAnalysisRequest(BaseModel):
         ...,
         description="The process name to evaluate.",
     )
+
 
 class Path(BaseModel):
     directory: str

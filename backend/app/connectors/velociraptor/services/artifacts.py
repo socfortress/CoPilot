@@ -1,7 +1,9 @@
+import httpx
 from fastapi import HTTPException
 from loguru import logger
-import httpx
 
+from app.connectors.velociraptor.schema.artifacts import ArtifactReccomendationRequest
+from app.connectors.velociraptor.schema.artifacts import ArtifactReccomendationResponse
 from app.connectors.velociraptor.schema.artifacts import Artifacts
 from app.connectors.velociraptor.schema.artifacts import ArtifactsResponse
 from app.connectors.velociraptor.schema.artifacts import CollectArtifactBody
@@ -9,7 +11,7 @@ from app.connectors.velociraptor.schema.artifacts import CollectArtifactResponse
 from app.connectors.velociraptor.schema.artifacts import QuarantineBody
 from app.connectors.velociraptor.schema.artifacts import QuarantineResponse
 from app.connectors.velociraptor.schema.artifacts import RunCommandBody
-from app.connectors.velociraptor.schema.artifacts import RunCommandResponse, ArtifactReccomendationRequest, ArtifactReccomendationResponse
+from app.connectors.velociraptor.schema.artifacts import RunCommandResponse
 from app.connectors.velociraptor.utils.universal import UniversalService
 
 
@@ -268,7 +270,6 @@ async def quarantine_host(quarantine_body: QuarantineBody) -> QuarantineResponse
             status_code=500,
             detail=f"Failed to run artifact collection on {quarantine_body}: {err}",
         )
-
 
 
 ################# ! ARTIFACT RECOMMENDATION ! #################

@@ -1,5 +1,6 @@
-from typing import Optional, List
 import os
+from typing import List
+from typing import Optional
 
 from fastapi import HTTPException
 from loguru import logger
@@ -129,6 +130,7 @@ async def set_alert_level(syslog_level: str):
             return level.value
     return 3
 
+
 async def get_process_name(source_dict: dict) -> List[str]:
     """
     Get the process name from the source dictionary.
@@ -146,6 +148,7 @@ async def get_process_name(source_dict: dict) -> List[str]:
 
     process_name = os.path.basename(process_image) if process_image else None
     return [process_name] if process_name else []
+
 
 async def build_alert_context_payload(
     alert_details: GenericAlertModel,

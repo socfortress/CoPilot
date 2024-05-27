@@ -118,8 +118,10 @@ class RunCommandResponse(BaseResponse):
 class QuarantineResponse(BaseResponse):
     pass  # If you have additional fields, you can define them here
 
+
 class ArtifactReccomendationRequest(BaseModel):
     artifacts: List[Artifacts] = Field(..., description="List of artifacts to be recommended")
+
 
 class ArtifactReccomendationResponse(BaseModel):
     message: str = Field(...)

@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.auth.utils import AuthHandler
+from app.connectors.velociraptor.schema.artifacts import ArtifactReccomendationRequest
 from app.connectors.velociraptor.schema.artifacts import ArtifactsResponse
 from app.connectors.velociraptor.schema.artifacts import CollectArtifactBody
 from app.connectors.velociraptor.schema.artifacts import CollectArtifactResponse
@@ -16,9 +17,10 @@ from app.connectors.velociraptor.schema.artifacts import OSPrefixEnum
 from app.connectors.velociraptor.schema.artifacts import OSPrefixModel
 from app.connectors.velociraptor.schema.artifacts import QuarantineBody
 from app.connectors.velociraptor.schema.artifacts import QuarantineResponse
-from app.connectors.velociraptor.schema.artifacts import RunCommandBody, ArtifactReccomendationRequest
+from app.connectors.velociraptor.schema.artifacts import RunCommandBody
 from app.connectors.velociraptor.schema.artifacts import RunCommandResponse
-from app.connectors.velociraptor.services.artifacts import get_artifacts, post_to_copilot_ai_module
+from app.connectors.velociraptor.services.artifacts import get_artifacts
+from app.connectors.velociraptor.services.artifacts import post_to_copilot_ai_module
 from app.connectors.velociraptor.services.artifacts import quarantine_host
 from app.connectors.velociraptor.services.artifacts import run_artifact_collection
 from app.connectors.velociraptor.services.artifacts import run_remote_command
@@ -401,9 +403,10 @@ async def quarantine(
 
     return quarantine_response
 
+
 @velociraptor_artifacts_router.post(
     "/velociraptor-artifact-recommendation",
-    description="Retrieve artifact to run based on alert. Invokes the `copilot-ai-module"
+    description="Retrieve artifact to run based on alert. Invokes the `copilot-ai-module",
 )
 async def get_artifact_recommendation():
     """
@@ -415,6 +418,8 @@ async def get_artifact_recommendation():
     logger.info("Fetching artifact recommendation based on alert")
     artifacts = await get_artifacts()
     logger.info(f"Artifacts: {artifacts.artifacts}")
-    return await post_to_copilot_ai_module(data=ArtifactReccomendationRequest(
-        artifacts=artifacts.artifacts,
-    ))
+    return await post_to_copilot_ai_module(
+        data=ArtifactReccomendationRequest(
+            artifacts=artifacts.artifacts,
+        ),
+    )

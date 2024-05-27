@@ -10,8 +10,11 @@ from app.db.db_session import get_db
 from app.middleware.license import get_license
 from app.middleware.license import is_feature_enabled
 from app.threat_intel.schema.socfortress import IoCResponse
-from app.threat_intel.schema.socfortress import SocfortressThreatIntelRequest, SocfortressProcessNameAnalysisRequest, SocfortressProcessNameAnalysisResponse
-from app.threat_intel.services.socfortress import socfortress_threat_intel_lookup, socfortress_process_analysis_lookup
+from app.threat_intel.schema.socfortress import SocfortressProcessNameAnalysisRequest
+from app.threat_intel.schema.socfortress import SocfortressProcessNameAnalysisResponse
+from app.threat_intel.schema.socfortress import SocfortressThreatIntelRequest
+from app.threat_intel.services.socfortress import socfortress_process_analysis_lookup
+from app.threat_intel.services.socfortress import socfortress_threat_intel_lookup
 from app.utils import get_connector_attribute
 
 # App specific imports
@@ -81,13 +84,14 @@ async def threat_intel_socfortress(
     )
     return socfortress_lookup
 
+
 @threat_intel_socfortress_router.post(
     "/process_name",
     response_model=SocfortressProcessNameAnalysisResponse,
     description="SocFortress Process Name Evaluation",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def threat_intel_socfortress(
+async def process_name_intel_socfortress(
     request: SocfortressProcessNameAnalysisRequest,
     session: AsyncSession = Depends(get_db),
 ):
@@ -104,7 +108,7 @@ async def threat_intel_socfortress(
     Returns:
     - SocfortressProcessNameAnalysisResponse: The response model containing the results of the SocFortress process name analysis lookup.
     """
-    #await is_feature_enabled("PROCESS ANALYSIS", session=session)
+    # await is_feature_enabled("PROCESS ANALYSIS", session=session)
     logger.info("Running SOCFortress Process Name Analysis. Grabbing License")
 
     socfortress_lookup = await socfortress_process_analysis_lookup(
