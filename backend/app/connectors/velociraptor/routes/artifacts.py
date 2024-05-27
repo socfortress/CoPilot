@@ -16,9 +16,9 @@ from app.connectors.velociraptor.schema.artifacts import OSPrefixEnum
 from app.connectors.velociraptor.schema.artifacts import OSPrefixModel
 from app.connectors.velociraptor.schema.artifacts import QuarantineBody
 from app.connectors.velociraptor.schema.artifacts import QuarantineResponse
-from app.connectors.velociraptor.schema.artifacts import RunCommandBody
+from app.connectors.velociraptor.schema.artifacts import RunCommandBody, ArtifactReccomendationRequest
 from app.connectors.velociraptor.schema.artifacts import RunCommandResponse
-from app.connectors.velociraptor.services.artifacts import get_artifacts
+from app.connectors.velociraptor.services.artifacts import get_artifacts, post_to_copilot_ai_module
 from app.connectors.velociraptor.services.artifacts import quarantine_host
 from app.connectors.velociraptor.services.artifacts import run_artifact_collection
 from app.connectors.velociraptor.services.artifacts import run_remote_command
@@ -400,3 +400,21 @@ async def quarantine(
     await update_agent_quarantine_status(session, quarantine_body, quarantine_response)
 
     return quarantine_response
+
+@velociraptor_artifacts_router.post(
+    "/velociraptor-artifact-recommendation",
+    description="Retrieve artifact to run based on alert. Invokes the `copilot-ai-module"
+)
+async def get_artifact_recommendation():
+    """
+    Retrieve the artifact to run based on the alert.
+
+    Returns:
+        str: The artifact to run based on the alert.
+    """
+    logger.info("Fetching artifact recommendation based on alert")
+    artifacts = await get_artifacts()
+    logger.info(f"Artifacts: {artifacts.artifacts}")
+    return await post_to_copilot_ai_module(data=ArtifactReccomendationRequest(
+        artifacts=artifacts.artifacts,
+    ))
