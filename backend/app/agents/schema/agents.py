@@ -52,3 +52,7 @@ class AgentUpdateCustomerCodeBody(BaseModel):
 class AgentUpdateCustomerCodeResponse(BaseModel):
     success: bool
     message: str
+
+class AgentWazuhUpgradeResponse(BaseModel):
+    success: bool
+    message: str

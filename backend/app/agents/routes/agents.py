@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.agents.dfir_iris.services.cases import collect_agent_soc_cases
-from app.agents.schema.agents import AgentModifyResponse
+from app.agents.schema.agents import AgentModifyResponse, AgentWazuhUpgradeResponse
 from app.agents.schema.agents import AgentsResponse
 from app.agents.schema.agents import OutdatedVelociraptorAgentsResponse
 from app.agents.schema.agents import OutdatedWazuhAgentsResponse
@@ -24,7 +24,7 @@ from app.agents.velociraptor.services.agents import delete_agent_velociraptor
 from app.agents.wazuh.schema.agents import WazuhAgentScaPolicyResultsResponse
 from app.agents.wazuh.schema.agents import WazuhAgentScaResponse
 from app.agents.wazuh.schema.agents import WazuhAgentVulnerabilitiesResponse
-from app.agents.wazuh.services.agents import delete_agent_wazuh
+from app.agents.wazuh.services.agents import delete_agent_wazuh, upgrade_wazuh_agent
 from app.agents.wazuh.services.sca import collect_agent_sca
 from app.agents.wazuh.services.sca import collect_agent_sca_policy_results
 from app.agents.wazuh.services.vulnerabilities import collect_agent_vulnerabilities
@@ -346,6 +346,44 @@ async def mark_agent_as_not_critical(
         raise HTTPException(
             status_code=500,
             detail=f"Failed to mark agent as not critical: {str(e)}",
+        )
+
+@agents_router.post(
+    "/{agent_id}/wazuh/upgrade",
+    response_model=AgentModifyResponse,
+    description="Upgrade wazuh agent",
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def upgrade_wazuh_agent_route(
+    agent_id: str,
+    session: AsyncSession = Depends(get_db),
+) -> AgentWazuhUpgradeResponse:
+    """
+    Upgrade Wazuh agent.
+
+    Args:
+        agent_id (str): The ID of the agent to be upgraded.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        AgentModifyResponse: The response indicating the success or failure of the operation.
+    """
+    logger.info(f"Upgrading Wazuh agent {agent_id}")
+    try:
+        result = await session.execute(select(Agents).filter(Agents.agent_id == agent_id))
+        agent = result.scalars().first()
+        if not agent:
+            raise HTTPException(status_code=404, detail=f"Agent with agent_id {agent_id} not found")
+        return await upgrade_wazuh_agent(agent_id)
+        return AgentWazuhUpgradeResponse(
+            success=True,
+            message=f"Agent {agent_id} upgraded successfully started. Upgrade may take a few minutes to complete.",
+        )
+    except Exception as e:
+        logger.error(f"Failed to upgrade Wazuh agent {agent_id}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to upgrade Wazuh agent {agent_id}: {e}",
         )
 
 
