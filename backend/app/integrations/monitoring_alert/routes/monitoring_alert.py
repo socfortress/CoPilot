@@ -7,6 +7,7 @@ from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.sql.expression import delete
 
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
@@ -152,7 +153,7 @@ async def invoke_monitoring_alert(
 
 
 @monitoring_alerts_router.delete(
-    "/{monitoring_alert_id}",
+    "/single_alert/{monitoring_alert_id}",
     response_model=MonitoringAlertsResponseModel,
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
@@ -185,6 +186,40 @@ async def delete_monitoring_alert(
         monitoring_alerts=[monitoring_alert],
         success=True,
         message="Monitoring alert deleted successfully",
+    )
+
+@monitoring_alerts_router.delete(
+    "/purge",
+    response_model=MonitoringAlertsResponseModel,
+    dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+)
+async def purge_monitoring_alerts(
+    session: AsyncSession = Depends(get_db),
+) -> MonitoringAlertsResponseModel:
+    """
+    Purge all monitoring alerts.
+
+    Args:
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_db).
+
+    Returns:
+        MonitoringAlertsResponseModel: The monitoring alerts that were purged.
+    """
+    logger.info("Purging monitoring alerts")
+
+    monitoring_alerts = await session.execute(select(MonitoringAlerts))
+    monitoring_alerts = monitoring_alerts.scalars().all()
+
+    if not monitoring_alerts:
+        raise HTTPException(status_code=404, detail="No monitoring alerts found")
+
+    await session.execute(delete(MonitoringAlerts))
+    await session.commit()
+
+    return MonitoringAlertsResponseModel(
+        monitoring_alerts=monitoring_alerts,
+        success=True,
+        message="Monitoring alerts purged successfully",
     )
 
 
