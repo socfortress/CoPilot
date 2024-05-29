@@ -3,11 +3,13 @@ import asyncio
 from fastapi import HTTPException
 from loguru import logger
 
-from app.agents.schema.agents import AgentModifyResponse, AgentWazuhUpgradeResponse
+from app.agents.schema.agents import AgentModifyResponse
+from app.agents.schema.agents import AgentWazuhUpgradeResponse
 from app.agents.wazuh.schema.agents import WazuhAgent
 from app.agents.wazuh.schema.agents import WazuhAgentsList
 from app.connectors.wazuh_manager.utils.universal import send_delete_request
-from app.connectors.wazuh_manager.utils.universal import send_get_request, send_put_request
+from app.connectors.wazuh_manager.utils.universal import send_get_request
+from app.connectors.wazuh_manager.utils.universal import send_put_request
 
 
 async def collect_wazuh_agents() -> WazuhAgentsList:
@@ -146,6 +148,7 @@ async def delete_agent_wazuh(agent_id: str) -> AgentModifyResponse:
             detail=f"Failed to delete agent {agent_id} from Wazuh Manager: {e}",
         )
 
+
 def handle_agent_upgrade_response(agent_upgraded: dict) -> AgentWazuhUpgradeResponse:
     """
     Handle the response from the agent upgrade request.
@@ -156,23 +159,24 @@ def handle_agent_upgrade_response(agent_upgraded: dict) -> AgentWazuhUpgradeResp
     Returns:
         AgentWazuhUpgradeResponse: The response indicating the status of the agent upgrade.
     """
-    data = agent_upgraded.get('data', {}).get('data', {})
-    total_failed_items = data.get('total_failed_items', 0)
+    data = agent_upgraded.get("data", {}).get("data", {})
+    total_failed_items = data.get("total_failed_items", 0)
 
     if total_failed_items == 0:
         # Upgrade was successful
         return AgentWazuhUpgradeResponse(
             success=True,
-            message=agent_upgraded.get('data', {}).get('message', 'Unknown error'),
+            message=agent_upgraded.get("data", {}).get("message", "Unknown error"),
         )
     else:
         # Upgrade failed
-        failed_items = data.get('failed_items', [{}])
-        error_message = failed_items[0].get('error', {}).get('message', 'Unknown error')
+        failed_items = data.get("failed_items", [{}])
+        error_message = failed_items[0].get("error", {}).get("message", "Unknown error")
         return AgentWazuhUpgradeResponse(
             success=False,
             message=error_message,
         )
+
 
 async def upgrade_wazuh_agent(agent_id: str) -> AgentWazuhUpgradeResponse:
     """Upgrade agent from Wazuh Manager.

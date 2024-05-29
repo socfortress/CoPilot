@@ -188,6 +188,7 @@ async def delete_monitoring_alert(
         message="Monitoring alert deleted successfully",
     )
 
+
 @monitoring_alerts_router.delete(
     "/purge",
     response_model=MonitoringAlertsResponseModel,

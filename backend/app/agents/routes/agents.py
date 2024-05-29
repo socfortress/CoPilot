@@ -11,8 +11,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.agents.dfir_iris.services.cases import collect_agent_soc_cases
-from app.agents.schema.agents import AgentModifyResponse, AgentWazuhUpgradeResponse
+from app.agents.schema.agents import AgentModifyResponse
 from app.agents.schema.agents import AgentsResponse
+from app.agents.schema.agents import AgentWazuhUpgradeResponse
 from app.agents.schema.agents import OutdatedVelociraptorAgentsResponse
 from app.agents.schema.agents import OutdatedWazuhAgentsResponse
 from app.agents.schema.agents import SyncedAgentsResponse
@@ -24,7 +25,8 @@ from app.agents.velociraptor.services.agents import delete_agent_velociraptor
 from app.agents.wazuh.schema.agents import WazuhAgentScaPolicyResultsResponse
 from app.agents.wazuh.schema.agents import WazuhAgentScaResponse
 from app.agents.wazuh.schema.agents import WazuhAgentVulnerabilitiesResponse
-from app.agents.wazuh.services.agents import delete_agent_wazuh, upgrade_wazuh_agent
+from app.agents.wazuh.services.agents import delete_agent_wazuh
+from app.agents.wazuh.services.agents import upgrade_wazuh_agent
 from app.agents.wazuh.services.sca import collect_agent_sca
 from app.agents.wazuh.services.sca import collect_agent_sca_policy_results
 from app.agents.wazuh.services.vulnerabilities import collect_agent_vulnerabilities
@@ -347,6 +349,7 @@ async def mark_agent_as_not_critical(
             status_code=500,
             detail=f"Failed to mark agent as not critical: {str(e)}",
         )
+
 
 @agents_router.post(
     "/{agent_id}/wazuh/upgrade",
