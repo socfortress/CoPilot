@@ -508,7 +508,7 @@ async def get_current_process_names(client, alert_client, iris_alert_id):
         alert_client.get_alert,
         iris_alert_id,
     )
-    return result["data"]["alert_context"]["process_name"]
+    return result.get("data", {}).get("alert_context", {}).get("process_name", [])
 
 
 async def get_current_alert_context(client, alert_client, iris_alert_id):
