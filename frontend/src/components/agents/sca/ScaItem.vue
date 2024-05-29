@@ -70,7 +70,7 @@
 		</n-tab-pane>
 		<n-tab-pane name="SCA Results" tab="SCA Results" display-directive="show:lazy">
 			<div class="p-7 pt-4">
-				<ScaResults :sca="sca" :agent="agent" />
+				<ScaResults :sca="sca" :agent />
 			</div>
 		</n-tab-pane>
 	</n-tabs>

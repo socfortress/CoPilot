@@ -11,11 +11,7 @@
 						</code>
 					</template>
 					<template v-else-if="item.key === 'velociraptor_id'">
-						<AgentVelociraptorIdForm
-							v-model:velociraptorId="item.val"
-							:agent="agent"
-							@updated="emit('updated')"
-						/>
+						<AgentVelociraptorIdForm v-model:velociraptorId="item.val" :agent @updated="emit('updated')" />
 					</template>
 					<template v-else>
 						{{ item.val ?? "-" }}

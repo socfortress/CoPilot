@@ -19,6 +19,20 @@
 						</div>
 					</div>
 				</n-popover>
+
+				<n-button
+					size="small"
+					type="error"
+					ghost
+					@click="handlePurge()"
+					:loading="loadingPurge"
+					v-if="monitoringAlerts.length"
+				>
+					<div class="flex items-center gap-2">
+						<Icon :name="TrashIcon" :size="16"></Icon>
+						<span class="hidden xs:block">Purge</span>
+					</div>
+				</n-button>
 			</div>
 			<n-pagination
 				v-model:page="currentPage"
@@ -61,14 +75,16 @@
 
 <script setup lang="ts">
 import { ref, onBeforeMount, computed } from "vue"
-import { useMessage, NSpin, NPopover, NButton, NEmpty, NPagination } from "naive-ui"
+import { useMessage, NSpin, NPopover, NButton, NEmpty, NPagination, useDialog } from "naive-ui"
 import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import { useResizeObserver } from "@vueuse/core"
 import Alert from "./Item.vue"
 import type { MonitoringAlert } from "@/types/monitoringAlerts.d"
 
+const dialog = useDialog()
 const message = useMessage()
+const loadingPurge = ref(false)
 const loading = ref(false)
 const monitoringAlerts = ref<MonitoringAlert[]>([])
 
@@ -87,6 +103,7 @@ const itemsPaginated = computed(() => {
 	return monitoringAlerts.value.slice(from, to)
 })
 
+const TrashIcon = "carbon:trash-can"
 const InfoIcon = "carbon:information"
 
 const total = computed<number>(() => {
@@ -112,6 +129,42 @@ function getData() {
 		})
 		.finally(() => {
 			loading.value = false
+		})
+}
+
+function handlePurge() {
+	dialog.warning({
+		title: "Confirm",
+		content: "This will remove ALL Pending Alerts, are you sure you want to proceed?",
+		positiveText: "Yes I'm sure",
+		negativeText: "Cancel",
+		onPositiveClick: () => {
+			purge()
+		},
+		onNegativeClick: () => {
+			message.info("Purge canceled")
+		}
+	})
+}
+
+function purge() {
+	loadingPurge.value = true
+
+	Api.monitoringAlerts
+		.purge()
+		.then(res => {
+			if (res.data.success) {
+				getData()
+				message.success(res.data?.message || "Pending Alerts purged successfully")
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			loadingPurge.value = false
 		})
 }
 

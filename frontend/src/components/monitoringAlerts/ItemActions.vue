@@ -109,7 +109,7 @@ function deleteAlert() {
 	loadingDelete.value = true
 
 	Api.monitoringAlerts
-		.delete(alert.id)
+		.deleteAlert(alert.id)
 		.then(res => {
 			if (res.data.success) {
 				emit("deleted")

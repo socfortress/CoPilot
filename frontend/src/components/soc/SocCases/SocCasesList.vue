@@ -20,7 +20,14 @@
 					</div>
 				</n-popover>
 
-				<n-button size="small" type="error" ghost @click="handlePurge()" :loading="loadingPurge">
+				<n-button
+					size="small"
+					type="error"
+					ghost
+					@click="handlePurge()"
+					:loading="loadingPurge"
+					v-if="casesList.length"
+				>
 					<div class="flex items-center gap-2">
 						<Icon :name="TrashIcon" :size="16"></Icon>
 						<span class="hidden xs:block">Purge</span>
