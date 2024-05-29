@@ -47,8 +47,8 @@
 				<div class="label text-secondary-color mt-2">Agent #{{ agent?.agent_id }}</div>
 			</div>
 			<div class="actions flex items-center justify-end grow">
-				<n-button type="primary" size="small" :loading="upgradingAgent" @click="upgradeWazuhAgent()">
-					Upgrade Agent
+				<n-button size="small" ghost type="primary" :loading="upgradingAgent" @click="upgradeWazuhAgent()">
+					Upgrade Wazuh Agent
 				</n-button>
 			</div>
 		</n-spin>
