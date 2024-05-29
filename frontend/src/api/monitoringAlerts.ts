@@ -52,7 +52,10 @@ export default {
 	invoke(alertId: number) {
 		return HttpClient.post<FlaskBaseResponse>(`/monitoring_alert/invoke/${alertId}`)
 	},
-	delete(alertId: number) {
+	deleteAlert(alertId: number) {
 		return HttpClient.delete<FlaskBaseResponse>(`/monitoring_alert/single_alert/${alertId}`)
+	},
+	purge() {
+		return HttpClient.delete<FlaskBaseResponse>(`/monitoring_alert/purge`)
 	}
 }
