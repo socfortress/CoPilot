@@ -9,9 +9,9 @@
 		"esbenp.prettier-vscode",
 		"ms-vscode.remtoe-remote-wsl",
 		"dbaeumer.vscode-eslint",
-		"Vue.volar",
 		"Gruntfuggly.todo-tree",
 		"usernamehw.errorlens",
-		"streetsidesoftware.code-spell-checker"
+		"streetsidesoftware.code-spell-checker",
+		"vue.volar"
 	]
 }

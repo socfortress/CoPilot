@@ -9,40 +9,48 @@
 		</div>
 		<n-spin
 			class="agent-header py-5 px-7 my-4"
+			content-class="flex justify-between gap-y-1 gap-x-6 flex-wrap items-start"
 			:class="{ critical: agent?.critical_asset, online: isOnline }"
 			:show="loadingAgent"
 		>
-			<div class="title">
-				<div class="critical" :class="{ active: agent?.critical_asset }" v-if="agent">
-					<n-tooltip>
-						Toggle Critical Assets
-						<template #trigger>
-							<n-button
-								text
-								:type="agent?.critical_asset ? 'warning' : 'default'"
-								circle
-								@click.stop="toggleCritical(agent.agent_id, agent.critical_asset)"
-							>
-								<template #icon>
-									<Icon :name="StarIcon"></Icon>
-								</template>
-							</n-button>
-						</template>
-					</n-tooltip>
+			<div class="info grow">
+				<div class="title">
+					<div class="critical" :class="{ active: agent?.critical_asset }" v-if="agent">
+						<n-tooltip>
+							Toggle Critical Assets
+							<template #trigger>
+								<n-button
+									text
+									:type="agent?.critical_asset ? 'warning' : 'default'"
+									circle
+									@click.stop="toggleCritical(agent.agent_id, agent.critical_asset)"
+								>
+									<template #icon>
+										<Icon :name="StarIcon"></Icon>
+									</template>
+								</n-button>
+							</template>
+						</n-tooltip>
+					</div>
+
+					<h1 v-if="agent?.hostname">
+						{{ agent?.hostname }}
+					</h1>
+
+					<span class="online-badge" v-if="isOnline">ONLINE</span>
+
+					<span class="quarantined-badge flex items-center gap-1" v-if="isQuarantined">
+						<Icon :name="QuarantinedIcon" :size="15"></Icon>
+						<span>QUARANTINED</span>
+					</span>
 				</div>
-
-				<h1 v-if="agent?.hostname">
-					{{ agent?.hostname }}
-				</h1>
-
-				<span class="online-badge" v-if="isOnline">ONLINE</span>
-
-				<span class="quarantined-badge flex items-center gap-1" v-if="isQuarantined">
-					<Icon :name="QuarantinedIcon" :size="15"></Icon>
-					<span>QUARANTINED</span>
-				</span>
+				<div class="label text-secondary-color mt-2">Agent #{{ agent?.agent_id }}</div>
 			</div>
-			<div class="label text-secondary-color mt-2">Agent #{{ agent?.agent_id }}</div>
+			<div class="actions flex items-center justify-end grow">
+				<n-button type="primary" size="small" :loading="upgradingAgent" @click="upgradeWazuhAgent()">
+					Upgrade Agent
+				</n-button>
+			</div>
 		</n-spin>
 		<n-card class="py-1 px-4 pb-4" content-style="padding:0">
 			<n-spin :show="loadingAgent">
@@ -142,6 +150,7 @@ const router = useRouter()
 const dialog = useDialog()
 const route = useRoute()
 const loadingAgent = ref(false)
+const upgradingAgent = ref(false)
 const agent = ref<Agent | null>(null)
 const agentId = ref<string | null>(null)
 
@@ -175,6 +184,28 @@ function getAgent() {
 			})
 			.finally(() => {
 				loadingAgent.value = false
+			})
+	}
+}
+
+function upgradeWazuhAgent() {
+	if (agentId.value) {
+		upgradingAgent.value = true
+
+		Api.agents
+			.upgradeWazuhAgent(agentId.value)
+			.then(res => {
+				if (res.data.success) {
+					message.success(res.data?.message || "Agent upgraded successfully")
+				} else {
+					message.error(res.data?.message || "An error occurred. Please try again later.")
+				}
+			})
+			.catch(err => {
+				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			})
+			.finally(() => {
+				upgradingAgent.value = false
 			})
 	}
 }

@@ -63,6 +63,9 @@ export default {
 			}
 		)
 	},
+	upgradeWazuhAgent(agentId: string) {
+		return HttpClient.post<FlaskBaseResponse>(`/agents/${agentId}/wazuh/upgrade`)
+	},
 
 	// IGNORE AT THE MOMENT !
 	agentsWazuhOutdated() {
