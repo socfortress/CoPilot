@@ -1,6 +1,8 @@
 import { HttpClient } from "./httpClient"
 import type { FlaskBaseResponse } from "@/types/flask.d"
-import type { Artifact, CollectResult, CommandResult, QuarantineResult } from "@/types/artifacts.d"
+import type { Artifact, CollectResult, CommandResult, QuarantineResult, Recommendation } from "@/types/artifacts.d"
+import type { OS } from "@/utils"
+import type { AlertContext } from "@/types/soc/alert"
 
 export interface ArtifactsQuery {
 	os?: "windows" | "linux" | "macos"
@@ -27,6 +29,11 @@ export interface QuarantineRequest {
 	artifact_name: "Windows.Remediation.Quarantine" | "Linux.Remediation.Quarantine"
 }
 
+export interface ArtifactRecommendationRequest {
+	os: OS
+	prompt: AlertContext
+}
+
 export default {
 	getAll(filters?: ArtifactsQuery) {
 		let url = "/artifacts"
@@ -48,5 +55,11 @@ export default {
 	},
 	quarantine(payload: QuarantineRequest) {
 		return HttpClient.post<FlaskBaseResponse & { results: QuarantineResult[] }>(`/artifacts/quarantine`, payload)
+	},
+	getArtifactRecommendation(payload: ArtifactRecommendationRequest) {
+		return HttpClient.post<FlaskBaseResponse & { recommendations: Recommendation[] }>(
+			`/artifacts/velociraptor-artifact-recommendation`,
+			payload
+		)
 	}
 }
