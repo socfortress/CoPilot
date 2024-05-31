@@ -103,8 +103,7 @@ import type { SupportedActiveResponse } from "@/types/activeResponse.d"
 import ActiveResponseItem from "./ActiveResponseItem.vue"
 import ActiveResponseInvokeForm from "./ActiveResponseInvokeForm.vue"
 import { iconFromOs } from "@/utils"
-
-type OS = "linux" | "windows" | "macos"
+import type { OsTypesLower } from "@/types/common"
 
 const emit = defineEmits<{
 	(e: "update:loading", value: boolean): void
@@ -126,7 +125,7 @@ const activeResponseList = ref<SupportedActiveResponse[]>([])
 const message = useMessage()
 const current = ref<number>(1)
 const currentStatus = ref<StepsProps["status"]>("process")
-const selectedOS = ref<OS | null>(null)
+const selectedOS = ref<OsTypesLower | null>(null)
 const selectedActiveResponse = ref<SupportedActiveResponse | null>(null)
 const activeResponseInvokeFormCTX = ref<{ reset: () => void } | null>(null)
 
@@ -186,7 +185,7 @@ function getActiveResponseList() {
 		})
 }
 
-function setOs(os: OS) {
+function setOs(os: OsTypesLower) {
 	selectedOS.value = os
 	next()
 }

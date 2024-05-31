@@ -4,6 +4,7 @@
 		content-class="expandable-text-popover"
 		scrollable
 		to="body"
+		display-directive="show"
 		:disabled="text.length < maxLength"
 	>
 		<template #trigger>

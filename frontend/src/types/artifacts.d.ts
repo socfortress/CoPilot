@@ -18,3 +18,9 @@ export interface QuarantineResult {
 	Time: string
 	Result: string
 }
+
+export interface Recommendation {
+	name: string
+	description: string
+	explanation: string
+}

@@ -11,7 +11,7 @@
 				<template #key>{{ key }}</template>
 				<template #value>
 					<template v-if="key === 'process_name'">
-						<template v-if="value && value !== '-' && value.toString()">
+						<template v-if="value && value !== '-' && value.toString() && processNameList.length">
 							<div class="flex flex-wrap gap-2">
 								<SocAlertItemEvaluation v-for="pn of processNameList" :key="pn" :process-name="pn" />
 							</div>
@@ -35,6 +35,7 @@ import Icon from "@/components/common/Icon.vue"
 import { computed, defineAsyncComponent, ref } from "vue"
 import _split from "lodash/split"
 import _compact from "lodash/compact"
+import _uniq from "lodash/uniq"
 const SocAlertItemEvaluation = defineAsyncComponent(() => import("./SocAlertItemEvaluation.vue"))
 const ExpandableText = defineAsyncComponent(() => import("@/components/common/ExpandableText.vue"))
 
@@ -45,7 +46,15 @@ const { alert } = defineProps<{
 const SearchIcon = "carbon:search"
 
 const textFilter = ref("")
-const processNameList = computed(() => _compact(_split(alert.alert_context?.process_name || "", ",")))
+const processNameList = computed(() =>
+	_uniq(
+		_compact(
+			_split(alert.alert_context?.process_name || "", ",").filter(
+				p => p.toLowerCase() !== "no process name found"
+			)
+		)
+	)
+)
 const contextNormalized = computed(() => {
 	const list = []
 	for (const key in alert.alert_context) {

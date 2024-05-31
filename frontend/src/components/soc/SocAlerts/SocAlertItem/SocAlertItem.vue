@@ -18,13 +18,13 @@
 					</div>
 					<SocAlertItemBookmarkToggler
 						v-if="!hideBookmarkAction && alert"
-						:alert="alert"
-						:isBookmark="isBookmark"
+						:alert
+						:isBookmark
 						@bookmark="emit('bookmark', $event)"
 					/>
 				</div>
 				<div class="time">
-					<SocAlertItemTime :alert="alert" />
+					<SocAlertItemTime :alert />
 				</div>
 			</div>
 			<div class="main-box flex justify-between gap-4">
@@ -40,7 +40,7 @@
 				<SocAlertItemActions
 					v-if="!hideSocCaseAction"
 					class="actions-box"
-					:caseId="caseId"
+					:caseId
 					:alertId="alert.alert_id"
 					@caseCreated="caseCreated($event)"
 					@deleted="deleted()"
@@ -60,13 +60,7 @@
 					</span>
 				</div>
 				<n-collapse-transition :show="!showBadgesToggle || showBadges">
-					<SocAlertItemBadges
-						class="badges-box"
-						v-if="alert"
-						:alert="alert"
-						:users="users"
-						@updated="updateAlert"
-					/>
+					<SocAlertItemBadges class="badges-box" v-if="alert" :alert :users @updated="updateAlert" />
 				</n-collapse-transition>
 			</div>
 
@@ -76,14 +70,14 @@
 					class="actions-box grow !flex-wrap !justify-start"
 					style="flex-direction: initial"
 					size="small"
-					:caseId="caseId"
+					:caseId
 					:alertId="alert.alert_id"
 					@caseCreated="caseCreated($event)"
 					@deleted="deleted()"
 					@startDeleting="loadingDelete = true"
 				/>
 				<div class="time">
-					<SocAlertItemTime :alert="alert" hide-timeline />
+					<SocAlertItemTime :alert hide-timeline />
 				</div>
 			</div>
 		</div>
@@ -97,7 +91,7 @@
 				<template #header>
 					<div class="py-3 -ml-2">Alert details</div>
 				</template>
-				<AlertItem :alert="alertObject" :hide-actions="true" class="-mt-4" />
+				<AlertItem :alert="alertObject" hide-actions class="-mt-4" />
 			</n-collapse-item>
 		</n-collapse>
 
@@ -106,11 +100,17 @@
 			preset="card"
 			content-class="!p-0"
 			:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(550px, 90vh)', overflow: 'hidden' }"
-			:title="`SOC Alert: #${alert?.alert_id} - ${alert?.alert_uuid}`"
 			:bordered="false"
+			display-directive="show"
 			segmented
 		>
-			<SocAlertItemDetails v-if="alert" :alert="alert" :users="users" @updated="updateAlert" />
+			<template #header>
+				<div class="whitespace-nowrap">SOC Alert: {{ alert?.alert_id }}</div>
+			</template>
+			<template #header-extra>
+				<SocAlertItemRecommendation v-if="alert" :alert />
+			</template>
+			<SocAlertItemDetails v-if="alert" :alert :users @updated="updateAlert" />
 		</n-modal>
 	</n-spin>
 </template>
@@ -128,6 +128,7 @@ import { NCollapse, useMessage, NCollapseItem, NModal, NSpin, NCheckbox, NCollap
 import type { SocUser } from "@/types/soc/user.d"
 const SocAlertItemDetails = defineAsyncComponent(() => import("./SocAlertItemDetails.vue"))
 const SocAlertItemBadges = defineAsyncComponent(() => import("./SocAlertItemBadges.vue"))
+const SocAlertItemRecommendation = defineAsyncComponent(() => import("./SocAlertItemRecommendation.vue"))
 const AlertItem = defineAsyncComponent(() => import("@/components/alerts/Alert.vue"))
 
 const checked = defineModel<boolean>("checked", { default: false })

@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.auth.utils import AuthHandler
+from app.connectors.velociraptor.schema.artifacts import ArtifactReccomendationAIRequest
 from app.connectors.velociraptor.schema.artifacts import ArtifactReccomendationRequest
 from app.connectors.velociraptor.schema.artifacts import ArtifactsResponse
 from app.connectors.velociraptor.schema.artifacts import CollectArtifactBody
@@ -408,7 +409,7 @@ async def quarantine(
     "/velociraptor-artifact-recommendation",
     description="Retrieve artifact to run based on alert. Invokes the `copilot-ai-module",
 )
-async def get_artifact_recommendation():
+async def get_artifact_recommendation(request: ArtifactReccomendationAIRequest):
     """
     Retrieve the artifact to run based on the alert.
 
@@ -421,5 +422,7 @@ async def get_artifact_recommendation():
     return await post_to_copilot_ai_module(
         data=ArtifactReccomendationRequest(
             artifacts=artifacts.artifacts,
+            os=request.os,
+            prompt=request.prompt,
         ),
     )
