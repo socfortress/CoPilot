@@ -284,7 +284,7 @@ async def post_to_copilot_ai_module(data: ArtifactReccomendationRequest) -> Arti
     # raise HTTPException(status_code=501, detail="Not Implemented Yet")
     async with httpx.AsyncClient() as client:
         data = await client.post(
-            "http://127.0.0.1:5001/velociraptor-artifact-recommendation",
+            "http://copilot-ai-module/velociraptor-artifact-recommendation",
             json=data.dict(),
             timeout=120,
         )
