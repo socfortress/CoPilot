@@ -9,8 +9,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from app.auth.utils import AuthHandler
+from app.connectors.velociraptor.schema.artifacts import ArtifactReccomendationAIRequest
 from app.connectors.velociraptor.schema.artifacts import ArtifactReccomendationRequest
-from app.connectors.velociraptor.schema.artifacts import ArtifactsResponse, ArtifactReccomendationAIRequest
+from app.connectors.velociraptor.schema.artifacts import ArtifactsResponse
 from app.connectors.velociraptor.schema.artifacts import CollectArtifactBody
 from app.connectors.velociraptor.schema.artifacts import CollectArtifactResponse
 from app.connectors.velociraptor.schema.artifacts import OSPrefixEnum

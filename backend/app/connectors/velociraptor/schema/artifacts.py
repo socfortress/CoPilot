@@ -118,6 +118,7 @@ class RunCommandResponse(BaseResponse):
 class QuarantineResponse(BaseResponse):
     pass  # If you have additional fields, you can define them here
 
+
 payload = {
     "data_win_system_eventRecordID": "521098",
     "data_win_eventdata_user": "WIN-HFOU106TD7K\\Administrator",
@@ -174,33 +175,29 @@ payload = {
     "data_win_system_opcode": "0",
 }
 
+
 class OS(str, Enum):
     Windows = "Windows"
     Linux = "Linux"
     MacOS = "MacOS"
 
+
 class ArtifactReccomendationAIRequest(BaseModel):
     os: OS = Field(..., description="Operating system of the client")
     prompt: dict = Field(..., example=payload)
+
 
 class ArtifactReccomendationRequest(BaseModel):
     artifacts: List[Artifacts] = Field(..., description="List of artifacts to be recommended")
     os: str = Field(..., description="Operating system of the client")
     prompt: dict = Field(..., example=payload)
 
+
 class VelociraptorArtifactRecommendation(BaseModel):
-    name: str = Field(
-        ...,
-        description="The name of the artifact."
-    )
-    description: str = Field(
-        ...,
-        description="A description of the artifact."
-    )
-    explanation: str = Field(
-        ...,
-        description="A detailed explanation of the purpose and why the artifact was selected."
-    )
+    name: str = Field(..., description="The name of the artifact.")
+    description: str = Field(..., description="A description of the artifact.")
+    explanation: str = Field(..., description="A detailed explanation of the purpose and why the artifact was selected.")
+
 
 class ArtifactReccomendationResponse(BaseModel):
     message: str = Field(...)
