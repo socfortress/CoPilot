@@ -1,11 +1,11 @@
 import { HttpClient } from "./httpClient"
 import type { FlaskBaseResponse } from "@/types/flask.d"
 import type { Artifact, CollectResult, CommandResult, QuarantineResult, Recommendation } from "@/types/artifacts.d"
-import type { OS } from "@/utils"
 import type { AlertContext } from "@/types/soc/alert"
+import type { OsTypesFull, OsTypesLower } from "@/types/common"
 
 export interface ArtifactsQuery {
-	os?: "windows" | "linux" | "macos"
+	os?: OsTypesLower
 	hostname?: string
 }
 
@@ -30,7 +30,7 @@ export interface QuarantineRequest {
 }
 
 export interface ArtifactRecommendationRequest {
-	os: OS
+	os: OsTypesFull
 	prompt: AlertContext
 }
 
