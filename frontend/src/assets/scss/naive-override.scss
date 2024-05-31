@@ -7,6 +7,16 @@
 	backdrop-filter: blur(20px);
 	max-width: 90%;
 	margin: 10vh auto;
+
+	.n-card-header {
+		flex-wrap: wrap-reverse;
+		gap: 12px;
+		justify-content: flex-end;
+
+		.n-card-header__main {
+			min-width: auto;
+		}
+	}
 }
 
 .n-image-preview-overlay {
