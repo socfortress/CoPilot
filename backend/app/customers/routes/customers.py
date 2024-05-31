@@ -448,7 +448,7 @@ async def update_customer_meta(
     response_model=CustomerMetaResponse,
     description="Delete customer meta by customer_code",
     dependencies=[Security(AuthHandler().require_any_scope("admin"))],
-    deprecated=True,
+    deprecated=False,
 )
 async def delete_customer_meta(
     customer_code: str,
