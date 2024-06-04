@@ -227,7 +227,7 @@ const router = createRouter({
 		{
 			path: "/register",
 			name: "Register",
-			component: () => import("@/views/auth/Login.vue"),
+			component: Login,
 			props: { formType: "signup" as FormType },
 			meta: { title: "Register", forceLayout: Layout.Blank, checkAuth: true, skipPin: true }
 		},

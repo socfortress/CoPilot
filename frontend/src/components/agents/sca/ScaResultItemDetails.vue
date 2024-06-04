@@ -11,8 +11,8 @@
 									data.result === 'failed'
 										? 'text-error-color'
 										: data.result === 'not applicable'
-										? 'text-warning-color'
-										: 'text-success-color'
+											? 'text-warning-color'
+											: 'text-success-color'
 								"
 							>
 								{{ data.result }}

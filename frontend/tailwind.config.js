@@ -1,6 +1,8 @@
-const plugin = require("tailwindcss/plugin")
-const tokens = require("./src/design-tokens.json")
-const _ = require("lodash")
+import { readFileSync } from "fs"
+import plugin from "tailwindcss/plugin.js"
+import _ from "lodash"
+const fileUrl = new URL("./src/design-tokens.json", import.meta.url)
+const tokens = JSON.parse(readFileSync(fileUrl))
 
 function getValue(origin, val) {
 	if (val && val.indexOf("{") === 0) {
