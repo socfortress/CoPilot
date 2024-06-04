@@ -1,4 +1,3 @@
-/** @type {import('tailwindcss').Config} */
 const plugin = require("tailwindcss/plugin")
 const tokens = require("./src/design-tokens.json")
 const _ = require("lodash")
@@ -12,7 +11,7 @@ function getValue(origin, val) {
 	return val
 }
 
-module.exports = {
+export default {
 	content: ["./index.html", "./src/**/*.{vue,js,ts,jsx,tsx}"],
 	darkMode: ["class"],
 	theme: {
