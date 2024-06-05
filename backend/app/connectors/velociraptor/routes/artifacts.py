@@ -417,38 +417,6 @@ async def get_artifact_recommendation(request: ArtifactReccomendationAIRequest):
         str: The artifact to run based on the alert.
     """
     logger.info("Fetching artifact recommendation based on alert")
-    # Hard-coded response for testing
-    return {
-        "message": "Successfully received test message.",
-        "success": True,
-        "recommendations": [
-            {
-                "name": "Windows.Analysis.EvidenceOfExecution",
-                "description": "Combines findings of several other collectors into an overview of all program execution artifacts.",
-                "explanation": "This artifact helps in identifying the execution of potentially malicious payloads by examining various sources of execution evidence on the system. It is crucial for understanding how and when the malware was executed."
-            },
-            {
-                "name": "Windows.Detection.Yara.Process",
-                "description": "Enables running Yara over processes in memory.",
-                "explanation": "By scanning processes in memory with Yara rules, this artifact can detect malicious patterns associated with the malware payload. This helps in identifying and analyzing the behavior of the malware in real-time."
-            },
-            {
-                "name": "Windows.EventLogs.EvtxHunter",
-                "description": "Hunts the Event Log message field for a regex value.",
-                "explanation": "This artifact is important for searching through Windows Event Logs for indicators of malicious activity. It helps in identifying any logs that contain signatures or patterns related to the detected malware payload."
-            },
-            {
-                "name": "Windows.Forensics.Prefetch",
-                "description": "Parses Windows prefetch files to determine when binaries were run.",
-                "explanation": "Prefetch files provide information on recently executed programs, which can be used to trace the execution of the malware payload. This helps in understanding the timeline and frequency of the malware's execution."
-            },
-            {
-                "name": "Windows.Forensics.Lnk",
-                "description": "Parses LNK shortcut files.",
-                "explanation": "LNK files can provide evidence of file access and execution related to the malware payload. By analyzing these shortcut files, investigators can uncover additional details about the malware's presence and activity on the system."
-            }
-        ]
-    }
     artifacts = await get_artifacts()
     logger.info(f"Artifacts: {artifacts.artifacts}")
     return await post_to_copilot_ai_module(
