@@ -89,16 +89,18 @@
 						<ArtifactsCollect
 							v-if="agent"
 							@loaded-artifacts="artifacts = $event"
-							:agent-hostname="agent.hostname"
-							:artifacts="artifacts"
+							:hostname="agent.hostname"
+							:artifacts
+							hide-hostname-field
 						/>
 					</n-tab-pane>
 					<n-tab-pane name="command" tab="Command" display-directive="show:lazy">
 						<ArtifactsCommand
 							v-if="agent"
 							@loaded-artifacts="artifacts = $event"
-							:agent-hostname="agent.hostname"
-							:artifacts="artifacts"
+							:hostname="agent.hostname"
+							:artifacts
+							hide-hostname-field
 						/>
 					</n-tab-pane>
 					<n-tab-pane name="quarantine" tab="Quarantine" display-directive="show:lazy">
@@ -106,8 +108,9 @@
 							v-if="agent"
 							@action-performed="getAgent()"
 							@loaded-artifacts="artifacts = $event"
-							:agent-hostname="agent.hostname"
-							:artifacts="artifacts"
+							:hostname="agent.hostname"
+							:artifacts
+							hide-hostname-field
 						/>
 					</n-tab-pane>
 					<n-tab-pane name="active-response" tab="Active Response" display-directive="show:lazy">
