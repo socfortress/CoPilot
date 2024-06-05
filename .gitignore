@@ -51,7 +51,6 @@ site/
 backend/file-store/api.config.yaml
 backend/data/api.config.yaml
 unplugin.components.d.ts
-package-lock.json
 *.checkpoint
 firewall.spec
 
