@@ -11,6 +11,8 @@ from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
 from app.connectors.dfir_iris.utils.universal import initialize_client_and_alert
 from app.connectors.utils import get_connector_info_from_db
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
+from app.db.universal_models import Agents
+from app.integrations.alert_creation.general.schema.alert import IrisAsset
 from app.integrations.alert_creation_settings.models.alert_creation_settings import (
     AlertCreationSettings,
 )
@@ -23,6 +25,7 @@ from app.integrations.alert_escalation.schema.escalate_alert import IrisAlertCon
 from app.integrations.alert_escalation.schema.escalate_alert import IrisAlertPayload
 from app.integrations.alert_escalation.schema.escalate_alert import SourceFieldsToRemove
 from app.integrations.alert_escalation.schema.escalate_alert import SyslogLevelMapping
+from app.integrations.utils.alerts import get_asset_type_id
 
 
 async def fetch_settings(field: str, value: str, session: AsyncSession):
@@ -131,6 +134,49 @@ async def set_alert_level(syslog_level: str):
     return 3
 
 
+def remove_process_name_if_osquery(source_dict: dict) -> None:
+    """
+    Remove the process_name field from the source dictionary if rule_group1 is 'osquery'.
+
+    Args:
+        source_dict (dict): The source dictionary.
+    """
+    rule_group1 = source_dict.get("rule_group1")
+    if rule_group1 == "osquery":
+        logger.info("Removing process_name field")
+        source_dict.pop("process_name", None)
+
+
+def get_process_image(source_dict: dict) -> str:
+    """
+    Get the process_image field from the source dictionary.
+
+    Args:
+        source_dict (dict): The source dictionary.
+
+    Returns:
+        str: The process image.
+    """
+    process_image = source_dict.get("process_image")
+    logger.info(f"Process image: {process_image}")
+    return process_image if process_image else source_dict.get("data_win_eventdata_image")
+
+
+def get_process_name_from_image(process_image: str) -> str:
+    """
+    Get the process name from the process image.
+
+    Args:
+        process_image (str): The process image.
+
+    Returns:
+        str: The process name.
+    """
+    process_name = os.path.basename(process_image) if process_image else None
+    logger.info(f"Process name: {process_name}")
+    return process_name
+
+
 async def get_process_name(source_dict: dict) -> List[str]:
     """
     Get the process name from the source dictionary.
@@ -141,12 +187,9 @@ async def get_process_name(source_dict: dict) -> List[str]:
     Returns:
         List[str]: The process name as a list.
     """
-    # Get the last part of the process_image path
-    process_image = source_dict.get("process_image")
-    if process_image is None:
-        process_image = source_dict.get("data_win_eventdata_image")
-
-    process_name = os.path.basename(process_image) if process_image else None
+    remove_process_name_if_osquery(source_dict)
+    process_image = get_process_image(source_dict)
+    process_name = get_process_name_from_image(process_image)
     return [process_name] if process_name else []
 
 
@@ -314,6 +357,9 @@ async def build_alert_payload(
     # Get the timefield value from the alert_details
     if hasattr(alert_details, timefield):
         alert_details.time_field = getattr(alert_details, timefield)
+    # Check if its part of _source
+    if hasattr(alert_details._source, timefield):
+        alert_details.time_field = getattr(alert_details._source, timefield)
     logger.info(f"Alert has context: {context_payload}")
     try:
         return IrisAlertPayload(
@@ -333,6 +379,75 @@ async def build_alert_payload(
             status_code=500,
             detail=f"Failed to build alert payload: {e}",
         )
+
+
+async def retrieve_agent_details_from_db(agent_name: str, session: AsyncSession):
+    """
+    Retrieve agent details from the database.
+
+    Args:
+        agent_name (str): The name of the agent.
+        session (AsyncSession): The database session.
+
+    Returns:
+        Agents: The agent details.
+    """
+    logger.info(f"Retrieving agent details for {agent_name}")
+    result = await session.execute(
+        select(Agents).where(Agents.hostname == agent_name),
+    )
+    agent = result.scalars().first()
+    if agent:
+        return agent
+    return None
+
+
+async def add_asset_to_iris_alert(alert_id: int, asset_details: Agents, iris_alert_payload: IrisAlertPayload, session: AsyncSession):
+    client, alert_client = await initialize_client_and_alert("DFIR-IRIS")
+    asset_data = {
+        "assets": [
+            dict(
+                IrisAsset(
+                    asset_name=asset_details.hostname,
+                    asset_ip=asset_details.ip_address,
+                    asset_description="",
+                    asset_type_id=await get_asset_type_id(asset_details.os),
+                    asset_tags=f"agent_id:{asset_details.agent_id}",
+                ).dict(),
+            ),
+        ],
+    }
+    logger.info(f"Adding asset to alert {alert_id} with asset data: {asset_data}")
+    await fetch_and_validate_data(
+        client,
+        alert_client.update_alert,
+        alert_id,
+        asset_data,
+    )
+
+
+async def add_asset_if_wazuh(alert_details: GenericAlertModel, alert_id: int, iris_alert_payload: IrisAlertPayload, session: AsyncSession):
+    """
+    Adds the asset to the alert if the alert is from Wazuh.
+
+    Args:
+        alert_details (GenericAlertModel): The details of the alert.
+        alert_id (int): The ID of the alert.
+        session (AsyncSession): The database session.
+    """
+    # Check if `agent_id` is present in the alert details and is not equal to `000`
+    if hasattr(alert_details._source, "agent_id") and alert_details._source.agent_id != "000":
+        logger.info(f"Adding asset to alert {alert_id}")
+        asset_details = await retrieve_agent_details_from_db(alert_details._source.agent_name, session)
+        if asset_details:
+            await add_asset_to_iris_alert(alert_id, asset_details, iris_alert_payload, session)
+            logger.info(f"Asset added to alert {alert_id}")
+            return None
+        else:
+            logger.error(f"Failed to retrieve asset details for {alert_details._source.agent_name}")
+            return None
+    logger.info(f"Alert {alert_id} is not from Wazuh. Skipping asset addition.")
+    return None
 
 
 async def create_alert(
@@ -372,6 +487,8 @@ async def create_alert(
         iris_alert_payload.to_dict(),
     )
     alert_id = result["data"]["alert_id"]
+
+    await add_asset_if_wazuh(alert_details, alert_id, iris_alert_payload, session)
 
     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
     iris_url = await add_alert_to_document(

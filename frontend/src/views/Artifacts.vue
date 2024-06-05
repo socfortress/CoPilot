@@ -8,24 +8,24 @@
 				<ArtifactsCollect
 					@loaded-agents="agents = $event"
 					@loaded-artifacts="artifacts = $event"
-					:agents="agents"
-					:artifacts="artifacts"
+					:agents
+					:artifacts
 				/>
 			</n-tab-pane>
 			<n-tab-pane name="command" tab="Command" display-directive="show:lazy">
 				<ArtifactsCommand
 					@loaded-agents="agents = $event"
 					@loaded-artifacts="artifacts = $event"
-					:agents="agents"
-					:artifacts="artifacts"
+					:agents
+					:artifacts
 				/>
 			</n-tab-pane>
 			<n-tab-pane name="quarantine" tab="Quarantine" display-directive="show:lazy">
 				<ArtifactsQuarantine
 					@loaded-agents="agents = $event"
 					@loaded-artifacts="artifacts = $event"
-					:agents="agents"
-					:artifacts="artifacts"
+					:agents
+					:artifacts
 				/>
 			</n-tab-pane>
 		</n-tabs>

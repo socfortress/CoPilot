@@ -209,5 +209,9 @@ class IrisAlertPayload(BaseModel):
         description="Contextual information about the alert",
     )
 
+    # Allow extra fields
+    class Config:
+        extra = Extra.allow
+
     def to_dict(self):
         return self.dict(exclude_none=True)

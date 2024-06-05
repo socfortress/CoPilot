@@ -1,7 +1,7 @@
 <template>
 	<div class="artifacts-collect">
 		<div class="header flex justify-end items-start gap-2">
-			<div class="info flex gap-5">
+			<div class="info flex gap-5" v-if="isDirty">
 				<n-popover overlap placement="bottom-start">
 					<template #trigger>
 						<div class="bg-color border-radius">
@@ -21,9 +21,8 @@
 				</n-popover>
 			</div>
 			<div class="grow flex items-center justify-end gap-2 flex-wrap">
-				<div class="grow basis-56">
+				<div class="grow basis-56" v-if="!hideHostnameField">
 					<n-select
-						v-if="!isFilterPreselected"
 						v-model:value="filters.hostname"
 						:options="agentHostnameOptions"
 						placeholder="Agent hostname"
@@ -46,10 +45,10 @@
 						:loading="loadingArtifacts"
 					/>
 				</div>
-				<div class="grow basis-56">
+				<div class="grow basis-56" v-if="!hideVelociraptorIdField">
 					<n-input
 						v-model:value="filters.velociraptor_id"
-						placeholder="Velociraptor id"
+						placeholder="Velociraptor ID"
 						clearable
 						:readonly="loading"
 						size="small"
@@ -94,7 +93,7 @@ import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import CollectItem from "./CollectItem.vue"
 import type { Agent } from "@/types/agents.d"
-import type { CollectRequest } from "@/api/artifacts"
+import type { ArtifactsQuery, CollectRequest } from "@/api/artifacts"
 import type { Artifact, CollectResult } from "@/types/artifacts.d"
 import { nanoid } from "nanoid"
 // import { collectResult } from "./mock"
@@ -108,8 +107,17 @@ const emit = defineEmits<{
 	(e: "loaded-artifacts", value: Artifact[]): void
 }>()
 
-const props = defineProps<{ agentHostname?: string; agents?: Agent[]; artifacts?: Artifact[] }>()
-const { agentHostname, agents, artifacts } = toRefs(props)
+const props = defineProps<{
+	hostname?: string
+	velociraptorId?: string
+	agents?: Agent[]
+	artifacts?: Artifact[]
+	artifactsFilter?: ArtifactsQuery
+	hideHostnameField?: boolean
+	hideVelociraptorIdField?: boolean
+}>()
+const { hostname, velociraptorId, agents, artifacts, artifactsFilter, hideHostnameField, hideVelociraptorIdField } =
+	toRefs(props)
 
 const message = useMessage()
 const loadingAgents = ref(false)
@@ -118,6 +126,7 @@ const loading = ref(false)
 const agentsList = ref<Agent[]>([])
 const artifactsList = ref<Artifact[]>([])
 const collectList = ref<CollectResultExt[]>([])
+const isDirty = ref(false)
 
 const InfoIcon = "carbon:information"
 
@@ -127,17 +136,13 @@ const total = computed<number>(() => {
 
 const filters = ref<Partial<CollectRequest>>({})
 
-const isFilterPreselected = computed(() => {
-	return !!agentHostname?.value
-})
-
 const areFiltersValid = computed(() => {
 	return !!filters.value.artifact_name && !!filters.value.hostname
 })
 
 const agentHostnameOptions = computed(() => {
-	if (agentHostname?.value) {
-		return [{ value: agentHostname.value, label: agentHostname.value }]
+	if (hostname?.value) {
+		return [{ value: hostname.value, label: hostname.value }]
 	}
 	return (agentsList.value || []).map(o => ({ value: o.hostname, label: o.hostname }))
 })
@@ -154,6 +159,8 @@ function getData() {
 			.collect(filters.value as CollectRequest)
 			.then(res => {
 				if (res.data.success) {
+					isDirty.value = true
+
 					collectList.value = (res.data?.results || []).map(o => {
 						o.___id = nanoid()
 						return o
@@ -201,7 +208,7 @@ function getArtifacts(cb?: (artifacts: Artifact[]) => void) {
 	loadingArtifacts.value = true
 
 	Api.artifacts
-		.getAll()
+		.getAll(artifactsFilter.value)
 		.then(res => {
 			if (res.data.success) {
 				artifactsList.value = res.data.artifacts || []
@@ -222,8 +229,12 @@ function getArtifacts(cb?: (artifacts: Artifact[]) => void) {
 }
 
 onBeforeMount(() => {
-	if (agentHostname?.value) {
-		filters.value.hostname = agentHostname.value
+	if (hostname?.value) {
+		filters.value.hostname = hostname.value
+	}
+
+	if (velociraptorId?.value) {
+		filters.value.velociraptor_id = velociraptorId.value
 	}
 
 	if (agents?.value?.length && !agentsList.value.length) {
@@ -235,7 +246,7 @@ onBeforeMount(() => {
 	}
 
 	nextTick(() => {
-		if (!agentsList.value.length && !agentHostname?.value) {
+		if (!agentsList.value.length && !hostname?.value) {
 			getAgents((agents: Agent[]) => {
 				emit("loaded-agents", agents)
 			})

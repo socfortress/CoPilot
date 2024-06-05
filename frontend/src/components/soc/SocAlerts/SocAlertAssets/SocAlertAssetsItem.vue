@@ -117,6 +117,17 @@
 						</template>
 					</div>
 				</n-tab-pane>
+				<n-tab-pane name="Artifact Collection" tab="Artifact Collection" display-directive="show:lazy">
+					<div class="p-7 pt-2">
+						<ArtifactsCollect
+							:hostname="asset.asset_name"
+							:artifacts-filter="{ hostname: asset.asset_name }"
+							hide-hostname-field
+							velociraptor-id="string"
+							hide-velociraptor-id-field
+						/>
+					</div>
+				</n-tab-pane>
 			</n-tabs>
 		</n-modal>
 	</div>
@@ -126,7 +137,7 @@
 import Icon from "@/components/common/Icon.vue"
 import KVCard from "@/components/common/KVCard.vue"
 import Badge from "@/components/common/Badge.vue"
-import { computed, ref } from "vue"
+import { computed, defineAsyncComponent, ref } from "vue"
 import { NModal, NTabs, NTabPane } from "naive-ui"
 import _omit from "lodash/omit"
 import dayjs from "@/utils/dayjs"
@@ -134,6 +145,7 @@ import { isUrlLike } from "@/utils"
 import type { SocAlertAsset } from "@/types/soc/asset.d"
 import { useSettingsStore } from "@/stores/settings"
 import { useGoto } from "@/composables/useGoto"
+const ArtifactsCollect = defineAsyncComponent(() => import("@/components/artifacts/ArtifactsCollect.vue"))
 
 const { asset } = defineProps<{ asset: SocAlertAsset }>()
 

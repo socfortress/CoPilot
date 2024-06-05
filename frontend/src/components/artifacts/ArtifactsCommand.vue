@@ -3,7 +3,7 @@
 		<div class="header flex items-start gap-2">
 			<div class="flex flex-col gap-2 w-full">
 				<div class="grow flex items-center gap-2 flex-wrap">
-					<div class="grow basis-56" v-if="!isFilterPreselected">
+					<div class="grow basis-56" v-if="!hideHostnameField">
 						<n-select
 							v-model:value="filters.hostname"
 							:options="agentHostnameOptions"
@@ -27,7 +27,7 @@
 							:loading="loadingArtifacts"
 						/>
 					</div>
-					<div class="grow basis-56">
+					<div class="grow basis-56" v-if="!hideVelociraptorIdField">
 						<n-input
 							v-model:value="filters.velociraptor_id"
 							placeholder="Velociraptor id"
@@ -132,8 +132,14 @@ const emit = defineEmits<{
 	(e: "loaded-artifacts", value: Artifact[]): void
 }>()
 
-const props = defineProps<{ agentHostname?: string; agents?: Agent[]; artifacts?: Artifact[] }>()
-const { agentHostname, agents, artifacts } = toRefs(props)
+const props = defineProps<{
+	hostname?: string
+	agents?: Agent[]
+	artifacts?: Artifact[]
+	hideHostnameField?: boolean
+	hideVelociraptorIdField?: boolean
+}>()
+const { hostname, agents, artifacts, hideHostnameField, hideVelociraptorIdField } = toRefs(props)
 
 const TimeIcon = "carbon:time"
 const StopWatchIcon = "quill:stopwatch"
@@ -159,17 +165,13 @@ const diffTime = computed(() => {
 
 const filters = ref<Partial<CommandRequest>>({})
 
-const isFilterPreselected = computed(() => {
-	return !!agentHostname?.value
-})
-
 const areFiltersValid = computed(() => {
 	return !!filters.value.artifact_name && !!filters.value.hostname && !!filters.value.command
 })
 
 const agentHostnameOptions = computed(() => {
-	if (agentHostname?.value) {
-		return [{ value: agentHostname.value, label: agentHostname.value }]
+	if (hostname?.value) {
+		return [{ value: hostname.value, label: hostname.value }]
 	}
 	return (agentsList.value || []).map(o => ({ value: o.hostname, label: o.hostname }))
 })
@@ -257,8 +259,8 @@ onBeforeMount(() => {
 		o => ({ name: o }) as Artifact
 	)
 
-	if (agentHostname?.value) {
-		filters.value.hostname = agentHostname.value
+	if (hostname?.value) {
+		filters.value.hostname = hostname.value
 	}
 
 	if (agents?.value?.length && !agentsList.value.length) {
@@ -270,7 +272,7 @@ onBeforeMount(() => {
 	}
 
 	nextTick(() => {
-		if (!agentsList.value.length && !agentHostname?.value) {
+		if (!agentsList.value.length && !hostname?.value) {
 			getAgents((agents: Agent[]) => {
 				emit("loaded-agents", agents)
 			})

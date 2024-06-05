@@ -1,9 +1,9 @@
-const process = require("node:process")
-const _ = require("lodash")
-const fs = require("fs-extra")
-const path = require("node:path")
-const os = require("node:os")
-const { intro, outro, select, spinner, isCancel, cancel, text } = require("@clack/prompts")
+import process from "node:process"
+import _ from "lodash"
+import fs from "fs-extra"
+import path from "node:path"
+import os from "node:os"
+import { intro, outro, select, spinner, isCancel, cancel, text } from "@clack/prompts"
 
 const GLOBAL_KEYS = ["border-radius", "line-heights", "font-sizes", "font-families"]
 const TYPO_KEYS = ["typo"]

@@ -61,3 +61,9 @@ backend/report.pdf
 
 backend/report.html
 backend/app/integrations/office365/services/wazuh_config.xml
+
+frontend/tsconfig.app.tsbuildinfo
+
+frontend/tsconfig.node.tsbuildinfo
+
+frontend/tsconfig.vitest.tsbuildinfo
