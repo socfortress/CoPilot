@@ -4,6 +4,7 @@ import uvicorn
 from dotenv import load_dotenv
 from fastapi import APIRouter
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from fastapi import HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
@@ -49,6 +50,7 @@ from app.routers import integrations
 from app.routers import license
 from app.routers import logs
 from app.routers import mimecast
+from app.routers import scoutsuite
 from app.routers import modules
 from app.routers import monitoring_alert
 from app.routers import network_connectors
@@ -141,9 +143,15 @@ api_router.include_router(modules.router)
 api_router.include_router(carbonblack.router)
 api_router.include_router(network_connectors.router)
 api_router.include_router(crowdstrike.router)
+api_router.include_router(scoutsuite.router)
 
 # Include the APIRouter in the FastAPI app
 app.include_router(api_router)
+
+app.mount("/scoutsuite-report",
+          StaticFiles(directory="scoutsuite-report"),
+          name="scoutsuite-report"
+          )
 
 
 @app.on_event("startup")
