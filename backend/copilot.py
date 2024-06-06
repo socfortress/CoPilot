@@ -148,11 +148,6 @@ api_router.include_router(scoutsuite.router)
 # Include the APIRouter in the FastAPI app
 app.include_router(api_router)
 
-app.mount("/scoutsuite-report",
-          StaticFiles(directory="scoutsuite-report"),
-          name="scoutsuite-report"
-          )
-
 
 @app.on_event("startup")
 async def init_db():
@@ -174,6 +169,15 @@ async def init_db():
     if not scheduler.running:
         logger.info("Scheduler is not running, starting now...")
         scheduler.start()
+
+# Create `scoutsuite-report` directory if it doesnt exist
+if not os.path.exists("scoutsuite-report"):
+    os.makedirs("scoutsuite-report")
+
+app.mount("/scoutsuite-report",
+          StaticFiles(directory="scoutsuite-report"),
+          name="scoutsuite-report"
+          )
 
 
 @app.get("/")

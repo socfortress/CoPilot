@@ -1,15 +1,20 @@
-from fastapi import APIRouter
-from fastapi import Depends
 from loguru import logger
 import subprocess
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.integrations.scoutsuite.schema.scoutsuite import ScoutSuiteReportOptionsResponse, ScoutSuiteReportResponse, AWSScoutSuiteReportRequest, ScoutSuiteReportOptions
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
+from app.integrations.scoutsuite.schema.scoutsuite import AWSScoutSuiteReportRequest
 
 
 async def generate_aws_report_background(request: AWSScoutSuiteReportRequest):
     logger.info("Generating AWS ScoutSuite report in the background")
-    # Construct the command
-    command = [
+
+    command = construct_command(request)
+    await run_command_in_background(command)
+
+
+def construct_command(request: AWSScoutSuiteReportRequest):
+    """Construct the scout command."""
+    return [
         "scout",
         "aws",
         "--access-key-id",
@@ -18,9 +23,12 @@ async def generate_aws_report_background(request: AWSScoutSuiteReportRequest):
         request.secret_access_key,
         "--report-name",
         request.report_name,
+        "--force",
     ]
 
-    # Run the command
+
+def run_command(command):
+    """Run the command and handle the output."""
     process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = process.communicate()
 
@@ -30,3 +38,10 @@ async def generate_aws_report_background(request: AWSScoutSuiteReportRequest):
 
     logger.info("ScoutSuite report generated successfully")
     return None
+
+
+async def run_command_in_background(command):
+    """Run the command in a separate thread."""
+    with ThreadPoolExecutor() as executor:
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(executor, lambda: run_command(command))
