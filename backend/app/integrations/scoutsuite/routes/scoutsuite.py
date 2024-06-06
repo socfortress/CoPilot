@@ -19,7 +19,10 @@ integration_scoutsuite_router = APIRouter()
 )
 async def get_report_generation_options():
     """
-    Get the available report generation options.
+    Retrieves the available report generation options for ScoutSuite.
+
+    Returns:
+        ScoutSuiteReportOptionsResponse: The response containing the available report generation options.
     """
     return ScoutSuiteReportOptionsResponse(
         options=[ScoutSuiteReportOptions.aws, ScoutSuiteReportOptions.azure, ScoutSuiteReportOptions.gcp],
@@ -35,6 +38,11 @@ async def get_report_generation_options():
 async def get_available_reports():
     """
     List all the `.html` files from the `scoutsuite-report` directory
+
+    Returns:
+        AvailableScoutSuiteReportsResponse: The response containing the list of available ScoutSuite reports.
+    Raises:
+        HTTPException: If the directory does not exist.
     """
     directory = "scoutsuite-report"
     full_path = os.path.abspath(directory)
