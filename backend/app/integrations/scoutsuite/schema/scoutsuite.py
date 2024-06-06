@@ -31,3 +31,8 @@ class AWSScoutSuiteReportRequest(BaseModel):
 class ScoutSuiteReportResponse(BaseModel):
     success: bool
     message: str
+
+class AvailableScoutSuiteReportsResponse(BaseModel):
+    success: bool
+    message: str
+    available_reports: List[str]
