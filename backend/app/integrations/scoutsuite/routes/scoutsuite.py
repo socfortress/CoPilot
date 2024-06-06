@@ -81,3 +81,30 @@ async def generate_aws_report(
     """
     background_tasks.add_task(generate_aws_report_background, request)
     return ScoutSuiteReportResponse(success=True, message="AWS ScoutSuite report generation started successfully. This will take a few minutes to complete. Check back in shortly.")
+
+
+@integration_scoutsuite_router.delete(
+    "/delete-report/{report_name}",
+    response_model=ScoutSuiteReportResponse,
+)
+async def delete_report(
+    report_name: str,
+):
+    """
+    Endpoint to delete a ScoutSuite report.
+
+    Args:
+        report_name (str): The name of the report to delete.
+    """
+    report_base_name = os.path.splitext(report_name)[0]
+    report_file_path = f"scoutsuite-report/{report_name}"
+    exceptions_file_path = f"scoutsuite-report/scoutsuite-results/scoutsuite_exceptions_{report_base_name}.js"
+    results_file_path = f"scoutsuite-report/scoutsuite-results/scoutsuite_results_{report_base_name}.js"
+
+    files_to_delete = [report_file_path, exceptions_file_path, results_file_path]
+
+    for file_path in files_to_delete:
+        if os.path.exists(file_path):
+            os.remove(file_path)
+
+    return ScoutSuiteReportResponse(success=True, message=f"Report {report_name} and associated files deleted successfully")
