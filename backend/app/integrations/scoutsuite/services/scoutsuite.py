@@ -24,6 +24,7 @@ def construct_aws_command(request: AWSScoutSuiteReportRequest):
         "--report-name",
         request.report_name,
         "--force",
+        "--no-browser",
     ]
 
 
