@@ -8,11 +8,11 @@ from app.integrations.scoutsuite.schema.scoutsuite import AWSScoutSuiteReportReq
 async def generate_aws_report_background(request: AWSScoutSuiteReportRequest):
     logger.info("Generating AWS ScoutSuite report in the background")
 
-    command = construct_command(request)
+    command = construct_aws_command(request)
     await run_command_in_background(command)
 
 
-def construct_command(request: AWSScoutSuiteReportRequest):
+def construct_aws_command(request: AWSScoutSuiteReportRequest):
     """Construct the scout command."""
     return [
         "scout",
