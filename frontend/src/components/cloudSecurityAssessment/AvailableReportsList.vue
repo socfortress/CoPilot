@@ -1,0 +1,1 @@
+<template>available-reports</template>

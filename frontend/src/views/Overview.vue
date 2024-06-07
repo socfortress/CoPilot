@@ -3,6 +3,7 @@
 		<div class="section justify-end sm:justify-between flex gap-3">
 			<div class="left-box hidden sm:flex gap-3">
 				<StackProvisioningButton size="small" type="primary" />
+				<CloudSecurityAssessmentButton size="small" type="primary" />
 			</div>
 			<div class="right-box hidden sm:flex gap-3">
 				<ActiveResponseWizardButton size="small" type="primary" />
@@ -62,6 +63,7 @@
 			<n-drawer-content title="Quick Actions" closable :native-scrollbar="false">
 				<div class="flex flex-col gap-3">
 					<StackProvisioningButton size="small" type="primary" />
+					<CloudSecurityAssessmentButton size="small" type="primary" />
 					<ActiveResponseWizardButton size="small" type="primary" />
 					<ThreatIntelButton size="small" type="primary" />
 				</div>
@@ -79,6 +81,7 @@ import IndicesMarquee from "@/components/indices/Marquee.vue"
 import ThreatIntelButton from "@/components/alerts/ThreatIntelButton.vue"
 import ActiveResponseWizardButton from "@/components/activeResponse/ActiveResponseWizardButton.vue"
 import StackProvisioningButton from "@/components/stackProvisioning/StackProvisioningButton.vue"
+import CloudSecurityAssessmentButton from "@/components/cloudSecurityAssessment/CloudSecurityAssessmentButton.vue"
 import AgentsCard from "@/components/overview/AgentsCard.vue"
 import HealthcheckCard from "@/components/overview/HealthcheckCard.vue"
 // import SocAlertsCard from "@/components/overview/SocAlertsCard.vue"
