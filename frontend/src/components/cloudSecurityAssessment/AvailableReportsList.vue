@@ -21,7 +21,7 @@
 				</n-popover>
 			</div>
 			<div class="actions flex gap-2 items-center">
-				<n-button size="small" type="primary">
+				<n-button size="small" type="primary" @click="showForm = true">
 					<template #icon>
 						<Icon :name="NewReportIcon" :size="15"></Icon>
 					</template>
@@ -45,22 +45,37 @@
 				</template>
 			</div>
 		</n-spin>
+
+		<n-modal
+			v-model:show="showForm"
+			display-directive="show"
+			preset="card"
+			:style="{ maxWidth: 'min(600px, 90vw)', minHeight: 'min(300px, 90vh)', overflow: 'hidden' }"
+			title="Generate Report"
+			:bordered="false"
+			segmented
+		>
+			<CreationReportForm @submitted="getReports()" @mounted="formCTX = $event" />
+		</n-modal>
 	</div>
 </template>
 <script setup lang="ts">
-import { computed, onBeforeMount, ref } from "vue"
-import { NSpin, NEmpty, NPopover, NButton, useMessage } from "naive-ui"
+import { computed, onBeforeMount, ref, watch } from "vue"
+import { NSpin, NEmpty, NPopover, NButton, NModal, useMessage } from "naive-ui"
 import type { ScoutSuiteReport } from "@/types/cloudSecurityAssessment.d"
 import Icon from "@/components/common/Icon.vue"
 import AvailableReportsItem from "./AvailableReportsItem.vue"
+import CreationReportForm from "./CreationReportForm.vue"
 import Api from "@/api"
 
 const InfoIcon = "carbon:information"
 const NewReportIcon = "carbon:fetch-upload-cloud"
 const message = useMessage()
+const showForm = ref(false)
 const loading = ref(false)
 const reportsList = ref<ScoutSuiteReport[]>([])
 const totalReports = computed(() => reportsList.value.length)
+const formCTX = ref<{ reset: () => void } | null>(null)
 
 function getReports() {
 	loading.value = true
@@ -81,6 +96,12 @@ function getReports() {
 			loading.value = false
 		})
 }
+
+watch(showForm, val => {
+	if (val) {
+		formCTX.value?.reset()
+	}
+})
 
 onBeforeMount(() => {
 	getReports()
