@@ -3,7 +3,7 @@ import { HttpClient } from "./httpClient"
 import type {
 	Customer,
 	CustomerAgentHealth,
-	CustomerDecomissionedData,
+	CustomerDecommissionedData,
 	CustomerMeta,
 	CustomerProvision,
 	CustomerProvisioningDefaultSettings
@@ -17,6 +17,7 @@ export interface CustomerAgentsHealthcheckQuery {
 }
 
 export interface ProvisioningDefaultSettingsPayload {
+	id: number
 	clusterName: string
 	clusterKey: string
 	masterIp: string
@@ -111,7 +112,7 @@ export default {
 		)
 	},
 	decommissionCustomer(code: string) {
-		return HttpClient.post<FlaskBaseResponse & { decomissioned_data: CustomerDecomissionedData }>(
+		return HttpClient.post<FlaskBaseResponse & { decomissioned_data: CustomerDecommissionedData }>(
 			`/customer_provisioning/decommission`,
 			{},
 			{
@@ -140,7 +141,7 @@ export default {
 		return HttpClient.post<
 			FlaskBaseResponse & { customer_provisioning_default_settings: CustomerProvisioningDefaultSettings }
 		>(`/customer_provisioning/default_settings`, {
-			id: 0,
+			id: payload.id,
 			cluster_name: payload.clusterName,
 			cluster_key: payload.clusterKey,
 			master_ip: payload.masterIp,
@@ -152,7 +153,7 @@ export default {
 		return HttpClient.put<
 			FlaskBaseResponse & { customer_provisioning_default_settings: CustomerProvisioningDefaultSettings }
 		>(`/customer_provisioning/default_settings`, {
-			id: 0,
+			id: payload.id,
 			cluster_name: payload.clusterName,
 			cluster_key: payload.clusterKey,
 			master_ip: payload.masterIp,
