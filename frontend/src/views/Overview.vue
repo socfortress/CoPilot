@@ -1,15 +1,15 @@
 <template>
 	<div class="page" ref="page">
-		<div class="section justify-end sm:justify-between flex gap-3">
-			<div class="left-box hidden sm:flex gap-3">
+		<div class="section justify-end md:justify-between flex gap-3">
+			<div class="left-box hidden md:flex gap-3">
 				<StackProvisioningButton size="small" type="primary" />
 				<CloudSecurityAssessmentButton size="small" type="primary" />
 			</div>
-			<div class="right-box hidden sm:flex gap-3">
+			<div class="right-box hidden md:flex gap-3">
 				<ActiveResponseWizardButton size="small" type="primary" />
 				<ThreatIntelButton size="small" type="primary" />
 			</div>
-			<div class="mobile-box block sm:hidden">
+			<div class="mobile-box block md:hidden">
 				<n-button size="small" type="primary" @click="showQuickActions = true">
 					<template #icon><Icon :name="QuickActionsIcon"></Icon></template>
 					Quick Actions
@@ -55,7 +55,7 @@
 
 		<n-drawer
 			v-model:show="showQuickActions"
-			:width="250"
+			:width="290"
 			style="max-width: 90vw"
 			:trap-focus="false"
 			display-directive="show"
