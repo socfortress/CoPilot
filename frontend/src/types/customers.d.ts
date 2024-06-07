@@ -86,7 +86,7 @@ export interface CustomerProvision {
 	dfir_iris_username: string
 }
 
-export interface CustomerDecomissionedData {
+export interface CustomerDecommissionedData {
 	agents_deleted: string[]
 	groups_deleted: string[]
 	stream_deleted: string

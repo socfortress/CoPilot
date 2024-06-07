@@ -111,7 +111,7 @@ async def create_admin_user(session: AsyncSession):
         session,
     ):  # The check function needs to be passed the session as well
         # Create the admin user
-        password_model = Password.generate(length=12)
+        password_model = Password.generate(length=24)
         admin_user = User(
             username="admin",
             password=password_model.hashed,  # Assuming you store the hashed password

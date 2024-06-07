@@ -4,6 +4,7 @@ import { isMobile as detectMobile } from "detect-touch-device"
 import { md5 } from "js-md5"
 import dayjs from "@/utils/dayjs"
 import type { OsTypesFull } from "@/types/common"
+import _trim from "lodash/trim"
 
 // Transform File Instance in base64 string
 export function file2Base64(blob: Blob): Promise<string> {
@@ -108,4 +109,8 @@ export function price(
 	const price = options.splitDecimal ? (amount / 100).toFixed(2) : amount
 
 	return `${symbol}${price}`
+}
+
+export function getBaseUrl() {
+	return _trim(import.meta.env.VITE_API_URL, "/")
 }

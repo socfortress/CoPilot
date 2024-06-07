@@ -20,6 +20,7 @@ import reporting from "./reporting"
 import license from "./license"
 import scheduler from "./scheduler"
 import networkConnectors from "./networkConnectors"
+import cloudSecurityAssessment from "./cloudSecurityAssessment"
 
 export default {
 	agents,
@@ -43,5 +44,6 @@ export default {
 	reporting,
 	license,
 	scheduler,
-	networkConnectors
+	networkConnectors,
+	cloudSecurityAssessment
 }

@@ -185,6 +185,12 @@ const router = createRouter({
 			meta: { title: "Scheduler", auth: true, roles: UserRole.All }
 		},
 		{
+			path: "/cloud-security-assessment",
+			name: "CloudSecurityAssessment",
+			component: () => import("@/views/CloudSecurityAssessment.vue"),
+			meta: { title: "Cloud Security Assessment", auth: true, roles: UserRole.All }
+		},
+		{
 			path: "/license",
 			meta: {
 				auth: true,

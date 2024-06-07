@@ -71,7 +71,7 @@ const loading = computed(() => loadingDefaultSettings.value || submittingDefault
 const message = useMessage()
 const form = ref<Omit<CustomerProvisioningDefaultSettings, "id">>(getClearForm())
 const formRef = ref<FormInst | null>(null)
-const isNew = ref(true)
+const entityId = ref(0)
 
 const rules: FormRules = {
 	cluster_name: {
@@ -146,14 +146,15 @@ function validate() {
 	})
 }
 
-function getClearForm(settings?: Omit<CustomerProvisioningDefaultSettings, "id">) {
-	return {
+function getClearForm(settings?: Partial<CustomerProvisioningDefaultSettings>) {
+	const payload = {
 		cluster_name: settings?.cluster_name || "",
 		cluster_key: settings?.cluster_key || "",
 		master_ip: settings?.master_ip || "",
 		grafana_url: settings?.grafana_url || "",
 		wazuh_worker_hostname: settings?.wazuh_worker_hostname || ""
 	}
+	return payload
 }
 
 function reset() {
@@ -170,9 +171,10 @@ function resetForm() {
 function submit() {
 	submittingDefaultSettings.value = true
 
-	const method = isNew.value ? "setProvisioningDefaultSettings" : "updateProvisioningDefaultSettings"
+	const method = entityId.value ? "updateProvisioningDefaultSettings" : "setProvisioningDefaultSettings"
 
 	const payload = {
+		id: entityId.value || 0,
 		clusterName: form.value.cluster_name,
 		clusterKey: form.value.cluster_key,
 		masterIp: form.value.master_ip,
@@ -183,7 +185,7 @@ function submit() {
 	Api.customers[method](payload)
 		.then(res => {
 			if (res.data.success) {
-				isNew.value = false
+				entityId.value = res.data.customer_provisioning_default_settings.id
 				message.success(res.data?.message || "Customer Provisioning Default Settings updated successfully")
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
@@ -224,7 +226,7 @@ function getProvisioningDefaultSettings() {
 		.getProvisioningDefaultSettings()
 		.then(res => {
 			if (res.data.success) {
-				isNew.value = false
+				entityId.value = res.data.customer_provisioning_default_settings.id || 0
 				setForm(res.data?.customer_provisioning_default_settings)
 			}
 		})
