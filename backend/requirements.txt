@@ -91,7 +91,7 @@ openpyxl==3.1.2
 ordered-set==4.1.0
 orjson==3.9.9
 packaging==23.2
-pandas==2.1.0
+pandas==2.0.3
 passlib==1.7.4
 pcre2==0.3.0
 pdfkit==1.0.0
