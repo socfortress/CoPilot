@@ -3,7 +3,7 @@
 		<n-form :label-width="80" :model="form" :rules="rules" ref="formRef">
 			<div class="flex flex-col gap-4">
 				<div class="flex flex-wrap gap-4">
-					<div v-for="(val, key) of form" :key="key" class="grow">
+					<div v-for="(_, key) of form" :key="key" class="grow">
 						<n-form-item :label="fieldsMeta[key].label" :path="key" class="grow">
 							<n-input
 								v-model:value.trim="form[key]"

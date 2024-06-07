@@ -5,7 +5,7 @@
 				<div class="title">General</div>
 				<div class="flex flex-col md:flex-row md:gap-6">
 					<n-form-item label="Date Format" path="dateFormat" class="basis-1/3">
-						<n-select v-model:value="formValue.dateFormat" :options="dateFormatsAvailables" />
+						<n-select v-model:value="formValue.dateFormat" :options="dateFormatsAvailable" />
 					</n-form-item>
 					<n-form-item label="Time Format" path="hours24" class="basis-1/3">
 						<n-radio-group v-model:value="formValue.hours24" name="radiogroup">
@@ -47,14 +47,11 @@ const settingsStore = useSettingsStore()
 
 const h24 = dayjs().format("HH:mm")
 const h12 = dayjs().format("h:mm a")
-const dateFormatsAvailables = settingsStore.dateFormatsAvailables.map(i => ({ label: i, value: i }))
+const dateFormatsAvailable = settingsStore.dateFormatsAvailable.map(i => ({ label: i, value: i }))
 const currentSateFormat = settingsStore.rawDateFormat
 const hours24 = settingsStore.hours24
 
 const formValue = ref({
-	username: "sigmund67",
-	email: "sigmund67@gmail.com",
-	name: "Margie Dibbert",
 	dateFormat: currentSateFormat,
 	hours24
 })

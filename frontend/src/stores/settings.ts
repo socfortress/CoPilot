@@ -17,7 +17,7 @@ export const useSettingsStore = defineStore("settings", {
 		}
 	},
 	getters: {
-		dateFormatsAvailables(state) {
+		dateFormatsAvailable(state) {
 			return state.dateFormats
 		},
 		hours24(state) {
