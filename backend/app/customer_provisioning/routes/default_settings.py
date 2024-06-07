@@ -64,7 +64,6 @@ async def create_customer_provisioning_default_settings(
 
     db.add(customer_provisioning_default_settings)
     await db.commit()
-    await db.refresh(customer_provisioning_default_settings)
     return CustomerProvisioningDefaultSettingsResponse(
         message="Customer Provisioning Default Settings created successfully",
         success=True,

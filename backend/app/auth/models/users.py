@@ -118,20 +118,18 @@ class Password(BaseModel):
         lowercase = string.ascii_lowercase
         uppercase = string.ascii_uppercase
         digits = string.digits
-        punctuation = string.punctuation
 
         # Ensure the password has at least one lowercase, one uppercase, one digit, and one symbol
         password_chars = [
             random.choice(lowercase),
             random.choice(uppercase),
             random.choice(digits),
-            random.choice(punctuation),
         ]
 
         # Fill the rest of the password length with a random mix of characters
         if length > 4:
             password_chars += random.choices(
-                lowercase + uppercase + digits + punctuation,
+                lowercase + uppercase + digits,
                 k=length - 4,
             )
 
