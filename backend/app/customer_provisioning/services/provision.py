@@ -293,10 +293,11 @@ async def provision_haproxy(
     """
     logger.info(f"Provisioning HAProxy {request}")
     api_endpoint = await get_connector_attribute(
-        connector_id=16,
+        connector_id=15,
         column_name="connector_url",
         session=session,
     )
+    logger.info(f"HAProxy API endpoint: {api_endpoint}")
     # Send the POST request to the Wazuh worker
     response = requests.post(
         url=f"{api_endpoint}/provision_worker/haproxy",
