@@ -23,7 +23,7 @@ RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys F23C5A6CF475977595C
 RUN apt-get update
 
 # Install Python 3.11, pip and venv
-RUN apt-get install -y python3.11 python3-pip python3.11-venv
+RUN apt-get install -y python3.11 python3-pip python3.11-venv python3-dev
 
 # Create a Python virtual environment and activate it
 RUN python3.11 -m venv /opt/venv
