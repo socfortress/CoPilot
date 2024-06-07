@@ -91,7 +91,7 @@ openpyxl==3.1.2
 ordered-set==4.1.0
 orjson==3.9.9
 packaging==23.2
-pandas==1.5.3
+pandas==1.0.1
 passlib==1.7.4
 pcre2==0.3.0
 pdfkit==1.0.0
@@ -119,7 +119,7 @@ pyparsing==3.1.1
 pyrsistent==0.19.3
 pytest==7.4.2
 pytest-playwright==0.4.4
-python-dateutil==2.8.1
+python-dateutil==2.8.0
 python-dotenv==1.0.0
 python-jose==3.3.0
 python-magic==0.4.27
