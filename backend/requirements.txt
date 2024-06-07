@@ -119,7 +119,7 @@ pyparsing==3.1.1
 pyrsistent==0.19.3
 pytest==7.4.2
 pytest-playwright==0.4.4
-python-dateutil==2.8.0
+python-dateutil==2.8.1
 python-dotenv==1.0.0
 python-jose==3.3.0
 python-magic==0.4.27
