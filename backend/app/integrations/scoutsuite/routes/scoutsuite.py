@@ -1,21 +1,30 @@
-from fastapi import APIRouter
-from fastapi import Depends
-from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import BackgroundTasks, HTTPException
 import os
+
+from fastapi import APIRouter
+from fastapi import BackgroundTasks
+from fastapi import HTTPException
 from loguru import logger
-from app.integrations.scoutsuite.schema.scoutsuite import ScoutSuiteReportOptionsResponse, ScoutSuiteReportResponse, AWSScoutSuiteReportRequest, ScoutSuiteReportOptions, AvailableScoutSuiteReportsResponse
-from app.integrations.scoutsuite.services.scoutsuite import generate_aws_report_background
 
-from app.db.db_session import get_db
-
+from app.integrations.scoutsuite.schema.scoutsuite import (
+    AvailableScoutSuiteReportsResponse,
+)
+from app.integrations.scoutsuite.schema.scoutsuite import AWSScoutSuiteReportRequest
+from app.integrations.scoutsuite.schema.scoutsuite import ScoutSuiteReportOptions
+from app.integrations.scoutsuite.schema.scoutsuite import (
+    ScoutSuiteReportOptionsResponse,
+)
+from app.integrations.scoutsuite.schema.scoutsuite import ScoutSuiteReportResponse
+from app.integrations.scoutsuite.services.scoutsuite import (
+    generate_aws_report_background,
+)
 
 integration_scoutsuite_router = APIRouter()
 
+
 @integration_scoutsuite_router.get(
-        "/report-generation-options",
-        response_model=ScoutSuiteReportOptionsResponse,
-        description="Get the available report generation options.",
+    "/report-generation-options",
+    response_model=ScoutSuiteReportOptionsResponse,
+    description="Get the available report generation options.",
 )
 async def get_report_generation_options():
     """
@@ -30,10 +39,11 @@ async def get_report_generation_options():
         message="ScoutSuite Report generation options retrieved successfully",
     )
 
+
 @integration_scoutsuite_router.get(
-        "/available-reports",
-        response_model=AvailableScoutSuiteReportsResponse,
-        description="Get the available ScoutSuite reports.",
+    "/available-reports",
+    response_model=AvailableScoutSuiteReportsResponse,
+    description="Get the available ScoutSuite reports.",
 )
 async def get_available_reports():
     """
@@ -53,14 +63,13 @@ async def get_available_reports():
         raise HTTPException(status_code=404, detail="Directory does not exist")
 
     files = os.listdir(directory)
-    html_files = [file for file in files if file.endswith('.html')]
+    html_files = [file for file in files if file.endswith(".html")]
 
     return AvailableScoutSuiteReportsResponse(
         available_reports=html_files,
         success=True,
         message="Available ScoutSuite reports retrieved successfully",
     )
-
 
 
 @integration_scoutsuite_router.post(
@@ -80,7 +89,10 @@ async def generate_aws_report(
         session (AsyncSession): The async session object for database operations.
     """
     background_tasks.add_task(generate_aws_report_background, request)
-    return ScoutSuiteReportResponse(success=True, message="AWS ScoutSuite report generation started successfully. This will take a few minutes to complete. Check back in shortly.")
+    return ScoutSuiteReportResponse(
+        success=True,
+        message="AWS ScoutSuite report generation started successfully. This will take a few minutes to complete. Check back in shortly.",
+    )
 
 
 @integration_scoutsuite_router.delete(

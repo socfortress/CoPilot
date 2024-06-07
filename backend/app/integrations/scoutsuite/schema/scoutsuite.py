@@ -1,17 +1,27 @@
-from pydantic import BaseModel, root_validator, Field
 from enum import Enum
-from fastapi import HTTPException
 from typing import List
+
+from fastapi import HTTPException
+from pydantic import BaseModel
+from pydantic import Field
+from pydantic import root_validator
+
 
 class ScoutSuiteReportOptions(str, Enum):
     aws = "aws"
     azure = "azure"
     gcp = "gcp"
 
+
 class ScoutSuiteReportOptionsResponse(BaseModel):
-    options: List[ScoutSuiteReportOptions] = Field(..., description="The available report generation options", example=["aws", "azure", "gcp"])
+    options: List[ScoutSuiteReportOptions] = Field(
+        ...,
+        description="The available report generation options",
+        example=["aws", "azure", "gcp"],
+    )
     success: bool
     message: str
+
 
 class AWSScoutSuiteReportRequest(BaseModel):
     report_type: str = Field(..., description="The type of report to generate", example="aws")
@@ -27,10 +37,10 @@ class AWSScoutSuiteReportRequest(BaseModel):
         return values
 
 
-
 class ScoutSuiteReportResponse(BaseModel):
     success: bool
     message: str
+
 
 class AvailableScoutSuiteReportsResponse(BaseModel):
     success: bool

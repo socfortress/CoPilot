@@ -1,7 +1,9 @@
-from loguru import logger
-import subprocess
 import asyncio
+import subprocess
 from concurrent.futures import ThreadPoolExecutor
+
+from loguru import logger
+
 from app.integrations.scoutsuite.schema.scoutsuite import AWSScoutSuiteReportRequest
 
 
