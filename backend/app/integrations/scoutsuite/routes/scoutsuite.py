@@ -25,7 +25,7 @@ async def get_report_generation_options():
         ScoutSuiteReportOptionsResponse: The response containing the available report generation options.
     """
     return ScoutSuiteReportOptionsResponse(
-        options=[ScoutSuiteReportOptions.aws, ScoutSuiteReportOptions.azure, ScoutSuiteReportOptions.gcp],
+        options=[ScoutSuiteReportOptions.aws],
         success=True,
         message="ScoutSuite Report generation options retrieved successfully",
     )
