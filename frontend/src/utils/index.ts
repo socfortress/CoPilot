@@ -109,3 +109,7 @@ export function price(
 
 	return `${symbol}${price}`
 }
+
+export function getBaseUrl() {
+	return import.meta.env.VITE_API_URL
+}
