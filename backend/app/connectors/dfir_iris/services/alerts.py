@@ -98,7 +98,7 @@ def construct_params(request: FilterAlertsRequest) -> dict:
     params = {
         "page": request.page,
         "per_page": request.per_page,
-        "sort": request.sort,
+        "sort": request.sort.value if request.sort else None,
         "alert_title": request.alert_title,
         # Add more parameters here as needed
     }
