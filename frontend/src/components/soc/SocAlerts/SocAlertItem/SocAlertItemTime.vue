@@ -3,7 +3,7 @@
 		<template #trigger>
 			<div class="time flex items-center gap-2" :class="{ hover: !hideTimeline }">
 				<span>
-					{{ formatDate(alert.alert_creation_time) }}
+					{{ formatDate(alert.alert_source_event_time) }}
 				</span>
 				<Icon :name="TimeIcon" :size="16" v-if="!hideTimeline"></Icon>
 			</div>
