@@ -17,7 +17,6 @@ from app.integrations.routes import find_customer_integration
 from app.integrations.routes import get_customer_integrations_by_customer_code
 from app.integrations.schema import CustomerIntegrations
 from app.integrations.schema import CustomerIntegrationsResponse
-from app.middleware.license import is_feature_enabled
 
 integration_crowdstrike_router = APIRouter()
 
@@ -99,7 +98,6 @@ async def provision_crowdstrike_route(
     Returns:
         ProvisionCrowdstrikeResponse: The response object containing the result of the provisioning.
     """
-    await is_feature_enabled(feature_name="CROWDSTRIKE", session=session)
     customer_integration_response = await get_customer_integration_response(
         provision_crowdstrike_request.customer_code,
         session,
@@ -114,7 +112,6 @@ async def provision_crowdstrike_route(
     crowdstrike_auth_keys = extract_crowdstrike_auth_keys(customer_integration)
 
     auth_keys = ProvisionCrowdstrikeAuthKeys(**crowdstrike_auth_keys)
-    # logger.info(f"Provisioning Crowdstrike for customer {provision_crowdstrike_request.customer_code} with auth keys: {auth_keys.dict()}")
 
     return await provision_crowdstrike(
         customer_details=CrowdstrikeCustomerDetails(
