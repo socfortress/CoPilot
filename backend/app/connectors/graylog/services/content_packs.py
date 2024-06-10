@@ -64,6 +64,14 @@ async def insert_content_pack(content_pack: ContentPack) -> bool:
             return True
         else:
             raise HTTPException(status_code=500, detail="Content pack insertion unsuccessful")
+    except HTTPException as e:
+        if "Content pack" in e.detail and "already found" in e.detail and "PROCESSING_PIPELINE" in content_pack["name"]:
+            logger.info("Content pack with PROCESSING_PIPELINE already exists, skipping")
+            return False
+        else:
+            error_msg = f"Failed to insert content pack: {e}"
+            logger.error(error_msg)
+            raise HTTPException(status_code=500, detail=error_msg)
     except KeyError as e:
         error_msg = f"Failed to insert content pack key: {e}"
         logger.error(error_msg)
