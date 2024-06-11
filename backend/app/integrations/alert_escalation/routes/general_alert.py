@@ -18,6 +18,7 @@ integration_general_alerts_router = APIRouter()
     response_model=CreateAlertResponse,
     description="Manually create an alert in IRIS from Copilot WebUI",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
+    deprecated=True,
 )
 async def create_alert_route(
     create_alert_request: CreateAlertRequest,

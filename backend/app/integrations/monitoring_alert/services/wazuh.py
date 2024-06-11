@@ -274,6 +274,8 @@ async def get_process_name(source_dict: dict) -> List[str]:
     process_image = source.get("process_image")
     if process_image is None:
         process_image = source.get("data_win_eventdata_image")
+    if process_image is None:
+        process_image = source.get("data_event_Image")
 
     process_name = os.path.basename(process_image) if process_image else None
     return [process_name] if process_name else ["No process name found"]
