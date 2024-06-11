@@ -158,8 +158,12 @@ def get_process_image(source_dict: dict) -> str:
         str: The process image.
     """
     process_image = source_dict.get("process_image")
+    if not process_image:
+        process_image = source_dict.get("data_win_eventdata_image")
+    if not process_image:
+        process_image = source_dict.get("data_event_Image")
     logger.info(f"Process image: {process_image}")
-    return process_image if process_image else source_dict.get("data_win_eventdata_image")
+    return process_image
 
 
 def get_process_name_from_image(process_image: str) -> str:
