@@ -156,7 +156,7 @@ async def invoke_active_response_route(
     # Append '0' to the command - This is required for Wazuh Active Response
     request.command = f"{request.command.value}0"
     # Create a dictionary with the request data
-    data_dict = {"command": request.command, "custom": request.custom, "arguments": request.arguments, "alert": request.alert}
+    data_dict = {"command": request.command, "arguments": request.arguments, "alert": request.alert}
     await send_put_request(
         endpoint=request.endpoint,
         data=json.dumps(data_dict),
