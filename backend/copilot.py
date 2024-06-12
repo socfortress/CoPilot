@@ -65,6 +65,7 @@ from app.routers import threat_intel
 from app.routers import velociraptor
 from app.routers import wazuh_indexer
 from app.routers import wazuh_manager
+from app.routers import nuclei
 from app.schedulers.scheduler import get_scheduler_instance
 from app.schedulers.scheduler import init_scheduler
 
@@ -144,6 +145,7 @@ api_router.include_router(carbonblack.router)
 api_router.include_router(network_connectors.router)
 api_router.include_router(crowdstrike.router)
 api_router.include_router(scoutsuite.router)
+api_router.include_router(nuclei.router)
 
 # Include the APIRouter in the FastAPI app
 app.include_router(api_router)
