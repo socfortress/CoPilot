@@ -22,6 +22,8 @@ class IndexConfigModel(BaseModel):
             "filebeat": True,
             ".tasks": True,
             ".task": True,
+            "wazuh-states-vulnerabilities": True,
+            ".plugins": True,
         },
         description="A dictionary containing index names to be skipped and their skip status.",
     )
