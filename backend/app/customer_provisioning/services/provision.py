@@ -53,9 +53,9 @@ async def provision_wazuh_customer(
     logger.info(f"Provisioning new customer {request}")
     # Initialize an empty dictionary to store the meta data
     provision_meta_data = {}
+    provision_meta_data["pipeline_ids"] = await get_pipeline_id(subscription="Wazuh")
     provision_meta_data["index_set_id"] = (await create_index_set(request)).data.id
     provision_meta_data["stream_id"] = (await create_event_stream(request, provision_meta_data["index_set_id"])).data.stream_id
-    provision_meta_data["pipeline_ids"] = await get_pipeline_id(subscription="Wazuh")
     stream_and_pipeline = StreamConnectionToPipelineRequest(
         stream_id=provision_meta_data["stream_id"],
         pipeline_ids=provision_meta_data["pipeline_ids"],

@@ -206,7 +206,7 @@ async def get_pipeline_id(subscription: str) -> str:
         logger.error(f"Failed to get pipeline ID for subscription {subscription}")
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to get pipeline ID for subscription {subscription}",
+            detail=f"Failed to get pipeline ID for subscription {subscription}. Please ensure you have installed the SOCFortress Wazuh Content Pack. See more at: https://youtu.be/euFrHP0VkD8?si=ajqjNobHvBjrTzAH",
         )
     else:
         logger.error(f"Failed to get pipelines: {pipelines_response.message}")
