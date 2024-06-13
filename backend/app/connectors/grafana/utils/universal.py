@@ -52,19 +52,21 @@ async def verify_grafana_credentials(attributes: Dict[str, Any]) -> Dict[str, An
 
     grafana_client = GrafanaApi.from_url(grafana_url)
     try:
-        create_org = grafana_client.organization.create_organization(
-            organization={
-                "name": "CoPilot Auth Test",
-            },
+        create_user = grafana_client.admin.create_user(
+            user={
+                "name": "test",
+                "email": "test@socfortress.co",
+                "login": "test",
+                "password": "this_is_a_test_user",
+                "OrgID": 1,
+            }
         )
-        logger.info(f"Create organization: {create_org}")
+        if create_user["message"] != "User created":
+            raise Exception(f"Failed to create user: {create_user['message']}")
 
-        create_org = GrafanaCreateOrganizationResponse(**create_org)
-
-        remove_org = grafana_client.organizations.delete_organization(
-            organization_id=create_org.orgId,
+        remove_user = grafana_client.admin.delete_user(
+            user_id=create_user["id"],
         )
-        logger.info(f"Remove organization: {remove_org}")
 
         logger.info(f"Connection to {grafana_url} successful")
         return {

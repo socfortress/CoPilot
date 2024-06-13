@@ -29,7 +29,21 @@ from app.integrations.alert_creation_settings.models.alert_creation_settings imp
     AlertCreationSettings,
 )
 from app.utils import get_connector_attribute
+from app.connectors.dfir_iris.utils.universal import verify_dfir_iris_connection
+from app.connectors.grafana.utils.universal import verify_grafana_connection
+from app.connectors.graylog.utils.universal import verify_graylog_connection
+from app.connectors.wazuh_manager.utils.universal import verify_wazuh_manager_connection
 
+
+async def verify_required_tools() -> None:
+    """
+    Verify the required tools for customer provisioning.
+    """
+    logger.info("Verifying required tools")
+    await verify_graylog_connection("Graylog")
+    await verify_wazuh_manager_connection("Wazuh-Manager")
+    await verify_grafana_connection("Grafana")
+    await verify_dfir_iris_connection("DFIR-IRIS")
 
 # ! MAIN FUNCTION ! #
 async def provision_wazuh_customer(
@@ -50,6 +64,8 @@ async def provision_wazuh_customer(
     Returns:
         CustomerProvisionResponse: The response object containing the provisioned customer's information
     """
+    await verify_required_tools()
+    return None
     logger.info(f"Provisioning new customer {request}")
     # Initialize an empty dictionary to store the meta data
     provision_meta_data = {}
