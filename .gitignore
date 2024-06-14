@@ -60,6 +60,7 @@ backend/app/integrations/office365/services/wazuh_config.xml
 
 frontend/src/unplugin.components.d.ts
 frontend/cypress/screenshots/
+frontend/cypress/downloads/
 frontend/tsconfig.app.tsbuildinfo
 frontend/tsconfig.node.tsbuildinfo
 frontend/tsconfig.vitest.tsbuildinfo
