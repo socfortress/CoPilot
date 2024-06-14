@@ -4,7 +4,7 @@ export interface EventDefinition {
 	description: string
 	field_spec: { [key: string]: EventDefinitionFieldSpec }
 	id: string
-	key_spec: any[]
+	key_spec: string[]
 	notification_settings: {
 		backlog_size: number
 		grace_period_ms: number
@@ -20,11 +20,17 @@ export interface EventDefinitionConfig {
 		expression: string | null
 	}
 	execute_every_ms: number
-	group_by: any[]
+	group_by: string[]
 	query: string
-	query_parameters: any[]
+	query_parameters: string[]
 	search_within_ms: number
-	series: any[]
+	series:
+		| string
+		| {
+				type: string
+				id: string
+				field: string
+		  }[]
 	streams: string[]
 	type: string
 }

@@ -24,7 +24,12 @@ export interface Connector {
 	authToken?: null
 	roles?: null
 	response?: null
-	history_logs: any[]
+	history_logs: {
+		id: number
+		connector_id: number
+		change_timestamp: string | Date
+		change_description: string
+	}[]
 }
 
 export enum ConnectorFormType {

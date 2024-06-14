@@ -171,11 +171,11 @@ const descriptionFull = computed(() => {
 })
 
 const properties = computed(() => {
-	const props = _omit<Record<string, any>>(asset, ["asset_description", "asset_type"])
+	const props = _omit(asset, ["asset_description", "asset_type"])
 	for (const key in props) {
-		const prop = props[key]
+		const prop = props[key as keyof typeof props]
 		if (prop && (key === "date_added" || key === "date_update")) {
-			props[key] = formatDate(prop, true)
+			props[key] = formatDate(prop.toString(), true)
 		}
 	}
 	return props

@@ -39,7 +39,7 @@ const message = useMessage()
 const loading = ref(false)
 const healthcheck = ref<InfluxDBAlert[]>([])
 
-const style = computed<{ [key: string]: any }>(() => useThemeStore().style)
+const style = computed(() => useThemeStore().style)
 
 const total = computed<number>(() => {
 	return healthcheck.value.length || 0

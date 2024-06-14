@@ -6,12 +6,16 @@
 			<div class="basis-2/3 truncate borde">{{ labelKey }}</div>
 			<div class="grow">{{ percentageKey }}</div>
 		</div>
-		<div class="flex gap-4 justify-between items-center" v-for="item of list" :key="item[labelKey]">
-			<div class="basis-2/3 truncate font-mono">{{ item[labelKey] }}</div>
+		<div
+			class="flex gap-4 justify-between items-center"
+			v-for="item of list"
+			:key="item[labelKey as keyof typeof item]"
+		>
+			<div class="basis-2/3 truncate font-mono">{{ item[labelKey as keyof typeof item] }}</div>
 			<div class="grow">
 				<n-progress
 					type="line"
-					:percentage="item[percentageKey]"
+					:percentage="parseInt(item[percentageKey as keyof typeof item], 10)"
 					:indicator-placement="'inside'"
 					:indicator-text-color="style['--bg-color']"
 					:color="style['--fg-color']"
@@ -25,18 +29,19 @@
 
 <script setup lang="ts">
 import { useThemeStore } from "@/stores/theme"
+import type { SafeAny } from "@/types/common.d"
 import { NEmpty, NProgress } from "naive-ui"
 import { computed } from "vue"
 
 const { list, labelKey, percentageKey } = defineProps<{
-	list: any[]
+	list: SafeAny[]
 	labelKey: string
 	percentageKey: string
 }>()
 
 const themeStore = useThemeStore()
 
-const style = computed<{ [key: string]: any }>(() => themeStore.style)
+const style = computed(() => themeStore.style)
 </script>
 
 <style scoped lang="scss">

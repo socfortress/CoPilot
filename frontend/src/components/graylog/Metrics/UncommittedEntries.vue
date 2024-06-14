@@ -45,7 +45,7 @@ const { value } = toRefs(props)
 const LinkIcon = "carbon:launch"
 const DangerIcon = "majesticons:exclamation-line"
 
-const style = computed<{ [key: string]: any }>(() => useThemeStore().style)
+const style = computed(() => useThemeStore().style)
 const isThemeDark = computed(() => useThemeStore().isThemeDark)
 const { gotoGraylogManagement } = useGoto()
 
@@ -53,7 +53,7 @@ const isWarning = computed<boolean>(() => {
 	return value.value > UNCOMMITTED_JOURNAL_ENTRIES_THRESHOLD
 })
 
-const series = ref<{ name: string; data: any }[]>([
+const series = ref<{ name: string; data: [Date, number][] }[]>([
 	{
 		name: "Entries",
 		data: []

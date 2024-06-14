@@ -1,13 +1,14 @@
 import { type FlaskBaseResponse } from "@/types/flask.d"
 import { HttpClient } from "./httpClient"
 import type { Log, LogEventType } from "@/types/logs.d"
+import type { SafeAny } from "@/types/common.d"
 
 export type LogsQueryTimeRange = `${number}${"h" | "d" | "w"}`
 export type LogsQueryEventType = `${LogEventType}`
 export type LogsQuery = { userId: string } | { timeRange: LogsQueryTimeRange } | { eventType: LogsQueryEventType }
 
 // Extraction of keys from the union type LogsQuery
-type KeysOfLogsQuery<T> = T extends { [K in keyof T]: any } ? keyof T : never
+type KeysOfLogsQuery<T> = T extends { [K in keyof T]: SafeAny } ? keyof T : never
 
 // Union of values extracted from keys
 export type LogsQueryTypes = KeysOfLogsQuery<LogsQuery>
@@ -17,7 +18,7 @@ export default {
 	getLogs(query?: LogsQuery) {
 		let method: "get" | "post" = "get"
 		let url = "logs"
-		let body: any = undefined
+		let body: { time_range: LogsQueryTimeRange } | undefined = undefined
 
 		if (query && "userId" in query) {
 			method = "get"

@@ -25,12 +25,12 @@ const { highlight } = toRefs(props)
 const message = useMessage()
 const loading = ref(false)
 const rules = ref<PipelineRule[]>([])
-const scrollContent = ref<(ScrollbarInst & { $el: any }) | null>(null)
+const scrollContent = ref<(ScrollbarInst & { $el: HTMLElement }) | null>(null)
 
 function scrollToItem(id: string) {
 	const element = document.getElementById(`rule-${id}`)
 	if (element && scrollContent.value) {
-		const wrap: HTMLElement = scrollContent.value.$el.nextSibling || scrollContent.value.$el.nextElementSibling
+		const wrap = (scrollContent.value.$el.nextSibling || scrollContent.value.$el.nextElementSibling) as HTMLElement
 		const middle = element.offsetTop - wrap.offsetHeight / 2
 		scrollContent.value?.scrollTo({ top: middle, behavior: "smooth" })
 	}

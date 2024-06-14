@@ -28,7 +28,7 @@ const useWrapper = computed(() => !!(props.bgColor || props.bgSize || props.bord
 const componentName = computed(() => (useWrapper.value ? NIconWrapper : NIcon))
 
 const options = computed(() => {
-	const opt: any = {}
+	const opt: Partial<{ size: number; color: string; borderRadius: number; iconColor: string; depth: number }> = {}
 	if (useWrapper.value) {
 		if (props.bgSize !== undefined) opt.size = props.bgSize
 		if (props.bgColor !== undefined) opt.color = props.bgColor

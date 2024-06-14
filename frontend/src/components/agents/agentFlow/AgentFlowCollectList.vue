@@ -33,17 +33,13 @@ import Api from "@/api"
 import type { CollectResult, FlowResult } from "@/types/flow.d"
 import { nanoid } from "nanoid"
 
-interface CollectResultExt extends CollectResult {
-	___id?: string
-}
-
 const { flow } = defineProps<{
 	flow: FlowResult
 }>()
 
 const message = useMessage()
 const loading = ref(false)
-const collectList = ref<CollectResultExt[]>([])
+const collectList = ref<CollectResult[]>([])
 
 function getData() {
 	loading.value = true

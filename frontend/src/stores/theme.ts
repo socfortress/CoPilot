@@ -53,7 +53,7 @@ export const useThemeStore = defineStore("theme", {
 					mobile: 70
 				}
 			}
-		} as { [key: string]: any },
+		},
 		toolbarHeight: 80,
 		viewPadding: 40,
 		headerBarHeight: 60,
@@ -98,8 +98,9 @@ export const useThemeStore = defineStore("theme", {
 				for (const k in primaryShades) {
 					const name = k as PrimaryShade
 					const shade = primaryShades[name]
-					// @ts-ignore
-					this.colors[theme][colorType + name] = shade
+					const colorsTheme = this.colors[theme]
+					const colorKey = (colorType + name) as keyof typeof colorsTheme
+					this.colors[theme][colorKey] = shade
 				}
 			}
 		},
@@ -128,13 +129,13 @@ export const useThemeStore = defineStore("theme", {
 		},
 		updateVars() {
 			for (const key in this.responsive.override) {
-				if (_get(this, key) && this.responsive.override[key]) {
+				if (_get(this, key) && key in this.responsive.override) {
 					_set(
 						this,
 						key,
 						window.innerWidth <= this.responsive.breakpoint
-							? this.responsive.override[key].mobile
-							: this.responsive.override[key].desk
+							? this.responsive.override[key as keyof typeof this.responsive.override].mobile
+							: this.responsive.override[key as keyof typeof this.responsive.override].desk
 					)
 				}
 			}
@@ -280,7 +281,7 @@ export const useThemeStore = defineStore("theme", {
 		naiveCommon(): ThemeCommonVars {
 			return { ...this.naiveTheme.common, ...this.themeOverrides.common }
 		},
-		style(state): CSSStyleDeclaration {
+		style(state): { [key: string]: string } {
 			const naive = this.naiveCommon
 
 			const bgColor = naive.baseColor
@@ -450,7 +451,7 @@ export const useThemeStore = defineStore("theme", {
 				"--secondary4-opacity-010-color": `${secondary4Opacity010}`,
 				"--secondary4-opacity-020-color": `${secondary4Opacity020}`,
 				"--secondary4-opacity-030-color": `${secondary4Opacity030}`
-			} as unknown as CSSStyleDeclaration
+			}
 		},
 		isThemeDark(state): boolean {
 			return state.themeName === ThemeEnum.Dark

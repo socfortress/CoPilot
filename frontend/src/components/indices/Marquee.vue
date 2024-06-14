@@ -57,7 +57,7 @@ watch(indices, val => {
 })
 
 const message = useMessage()
-const style = computed<{ [key: string]: any }>(() => useThemeStore().style)
+const style = computed(() => useThemeStore().style)
 const gradientColor = computed(() => style.value["--bg-color-rgb"].split(", "))
 const loading = computed(() => !list?.value || list.value === null)
 

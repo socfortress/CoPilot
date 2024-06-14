@@ -18,7 +18,7 @@ export interface CustomProvisionPayload {
 	alert_description: string
 	alert_priority: CustomProvisionPriority
 	search_query: string
-	streams: { [key: string]: any }
+	streams: string[]
 	custom_fields: {
 		name: string
 		value: string

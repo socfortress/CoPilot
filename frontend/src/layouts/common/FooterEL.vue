@@ -36,7 +36,7 @@ const props = defineProps<{
 	boxed: boolean
 }>()
 const { boxed } = toRefs(props)
-const style = computed<{ [key: string]: any }>(() => useThemeStore().style)
+const style = computed(() => useThemeStore().style)
 
 const year = ref(new Date().getFullYear())
 </script>

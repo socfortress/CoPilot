@@ -23,7 +23,10 @@ import { getHighlighter, codeThemes } from "@/utils/highlighter"
 import { fromHighlighter } from "@shikijs/markdown-it/core"
 import type { HighlighterGeneric } from "shiki/core"
 
-const highlighter: HighlighterGeneric<any, any> = (await getHighlighter()) as unknown as HighlighterGeneric<any, any>
+const highlighter: HighlighterGeneric<string, string> = (await getHighlighter()) as unknown as HighlighterGeneric<
+	string,
+	string
+>
 
 const props = defineProps<{
 	source: string

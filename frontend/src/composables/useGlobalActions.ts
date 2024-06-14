@@ -2,8 +2,9 @@ import { type MessageOptions } from "naive-ui"
 import type { MessageApiInjection, MessageReactive } from "naive-ui/es/message/src/MessageProvider"
 import type { NotificationApiInjection, NotificationReactive } from "naive-ui/es/notification/src/NotificationProvider"
 import type { NotificationOptions } from "naive-ui/es/notification/src/NotificationEnvironment"
+import type { Writable } from "type-fest"
 
-export type NotificationObject = NotificationOptions
+export type NotificationObject = Writable<NotificationOptions>
 
 interface InitPayload {
 	message: MessageApiInjection

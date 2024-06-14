@@ -26,7 +26,7 @@ const props = defineProps<{
 }>()
 const { indices } = toRefs(props)
 
-const style = computed<{ [key: string]: any }>(() => useThemeStore().style)
+const style = computed(() => useThemeStore().style)
 const loading = computed(() => !indices?.value || indices.value === null)
 const chartCtx = ref<ECharts | null>(null)
 
@@ -112,7 +112,7 @@ function getOptions() {
 					"#bae6fd"
 				],
 				tooltip: {
-					formatter: (params: any) => {
+					formatter: (params: { seriesName: string; name: string; value: number; percent: number }) => {
 						return `${params.seriesName}<hr/>${params.name}<br/><strong>${bytes(params.value)}</strong>  (${
 							params.percent
 						}%)`
@@ -149,7 +149,10 @@ function getOptions() {
 						}
 					}
 				},
-				labelLayout: function (params: any) {
+				labelLayout: function (params: {
+					labelLinePoints: Array<number[]>
+					labelRect: { x: number; width: number }
+				}) {
 					const isLeft = chartCtx.value ? params.labelRect.x < chartCtx.value.getWidth() / 2 : false
 					const points = params.labelLinePoints
 					// Update the end point.

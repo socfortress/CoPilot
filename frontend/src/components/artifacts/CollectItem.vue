@@ -64,7 +64,7 @@ onBeforeMount(() => {
 		}
 
 		if (prop.value && typeof prop.value === "string") {
-			prop.value = dayjs(value).isValid() ? formatDate(value, dFormats.datetimesec) : value.toString()
+			prop.value = dayjs(value).isValid() ? formatDate(value, dFormats.datetimesec).toString() : value.toString()
 		}
 
 		if (prop.value && typeof prop.value === "number") {

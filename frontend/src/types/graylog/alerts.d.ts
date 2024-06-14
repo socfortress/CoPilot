@@ -4,7 +4,7 @@ export interface AlertsQuery {
 	per_page: number
 	filter: {
 		alerts: "only"
-		event_definitions: any[]
+		event_definitions: AlertsEventDefinition[]
 	}
 	timerange: {
 		range: number // seconds
@@ -43,10 +43,10 @@ export interface AlertsEvent {
 	event_definition_id: string
 	event_definition_type: string
 	fields: { [key: string]: string }
-	group_by_fields: any
+	group_by_fields: object
 	id: string
 	key: null
-	key_tuple: any[]
+	key_tuple: string[]
 	message: string
 	origin_context: string
 	priority: number
@@ -71,7 +71,7 @@ export interface AlertsParameters {
 
 export interface AlertsParametersFilter {
 	alerts: string
-	event_definitions: any[]
+	event_definitions: AlertsEventDefinition[]
 }
 
 export interface AlertsParametersTimerange {
