@@ -40,6 +40,16 @@ async def verify_dfir_iris_credentials(attributes: Dict[str, Any]) -> Dict[str, 
             headers=headers,
             verify=False,
         )
+        # See if 401 is returned
+        if dfir_iris.status_code == 401:
+            logger.info(
+                f"Connection to {attributes['connector_url']} unauthorized",
+            )
+            logger.debug("DFIR-IRIS connection unauthorized")
+            return {
+                "connectionSuccessful": False,
+                "message": "DFIR-IRIS connection unauthorized",
+            }
         # See if 200 is returned
         if dfir_iris.status_code == 200:
             logger.info(
