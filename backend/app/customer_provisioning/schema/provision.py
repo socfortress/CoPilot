@@ -87,7 +87,7 @@ class ProvisionNewCustomer(BaseModel):
         description="ID of the DFIR Iris customer",
     )
     dfir_iris_username: Optional[str] = Field(
-        None,
+        "administrator",
         description="Username of the DFIR Iris customer",
     )
     graylog_index_id: Optional[str] = Field(
