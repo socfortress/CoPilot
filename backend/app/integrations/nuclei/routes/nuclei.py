@@ -5,7 +5,7 @@ from app.integrations.nuclei.schema.nuclei import NucleiReportCollectionResponse
 from app.integrations.nuclei.schema.nuclei import NucleiReportsAvailableResponse
 from app.integrations.nuclei.schema.nuclei import NucleiScanRequest
 from app.integrations.nuclei.schema.nuclei import NucleiScanResponse, DeleteNucleiReportResponse
-from app.integrations.nuclei.services.nuclei import post_to_copilot_nuclei_module, get_nuclei_reports_available, get_nuclei_report
+from app.integrations.nuclei.services.nuclei import post_to_copilot_nuclei_module, get_nuclei_reports_available, get_nuclei_report, delete_nuclei_report
 
 integration_nuclei_router = APIRouter()
 

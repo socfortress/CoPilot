@@ -61,7 +61,7 @@ async def delete_nuclei_report(host: str) -> DeleteNucleiReportResponse:
     Returns:
         DeleteNucleiReportResponse: The response containing the result of the deletion.
     """
-    logger.info(f"Sending DELETE request to http://copilot-nuclei-module/delete_report/{host}")
+    logger.info(f"Sending DELETE request to http://copilot-nuclei-module/report/{host}")
     async with httpx.AsyncClient() as client:
         response = await client.delete(f"http://10.255.255.5/report/{host}")
 
