@@ -21,6 +21,7 @@ import license from "./license"
 import scheduler from "./scheduler"
 import networkConnectors from "./networkConnectors"
 import cloudSecurityAssessment from "./cloudSecurityAssessment"
+import webVulnerabilityAssessment from "./webVulnerabilityAssessment"
 
 export default {
 	agents,
@@ -45,5 +46,6 @@ export default {
 	license,
 	scheduler,
 	networkConnectors,
-	cloudSecurityAssessment
+	cloudSecurityAssessment,
+	webVulnerabilityAssessment
 }
