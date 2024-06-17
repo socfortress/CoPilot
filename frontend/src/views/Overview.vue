@@ -1,15 +1,16 @@
 <template>
 	<div class="page" ref="page">
-		<div class="section justify-end md:justify-between flex gap-3">
-			<div class="left-box hidden md:flex gap-3">
+		<div class="section justify-end lg:justify-between flex gap-3">
+			<div class="left-box hidden lg:flex gap-3">
 				<StackProvisioningButton size="small" type="primary" />
 				<CloudSecurityAssessmentButton size="small" type="primary" />
+				<WebVulnerabilityAssessmentButton size="small" type="primary" />
 			</div>
-			<div class="right-box hidden md:flex gap-3">
+			<div class="right-box hidden lg:flex gap-3">
 				<ActiveResponseWizardButton size="small" type="primary" />
 				<ThreatIntelButton size="small" type="primary" />
 			</div>
-			<div class="mobile-box block md:hidden">
+			<div class="mobile-box block lg:hidden">
 				<n-button size="small" type="primary" @click="showQuickActions = true">
 					<template #icon><Icon :name="QuickActionsIcon"></Icon></template>
 					Quick Actions
@@ -55,7 +56,7 @@
 
 		<n-drawer
 			v-model:show="showQuickActions"
-			:width="290"
+			:width="300"
 			style="max-width: 90vw"
 			:trap-focus="false"
 			display-directive="show"
@@ -64,6 +65,7 @@
 				<div class="flex flex-col gap-3">
 					<StackProvisioningButton size="small" type="primary" />
 					<CloudSecurityAssessmentButton size="small" type="primary" />
+					<WebVulnerabilityAssessmentButton size="small" type="primary" />
 					<ActiveResponseWizardButton size="small" type="primary" />
 					<ThreatIntelButton size="small" type="primary" />
 				</div>
@@ -82,6 +84,7 @@ import ThreatIntelButton from "@/components/alerts/ThreatIntelButton.vue"
 import ActiveResponseWizardButton from "@/components/activeResponse/ActiveResponseWizardButton.vue"
 import StackProvisioningButton from "@/components/stackProvisioning/StackProvisioningButton.vue"
 import CloudSecurityAssessmentButton from "@/components/cloudSecurityAssessment/CloudSecurityAssessmentButton.vue"
+import WebVulnerabilityAssessmentButton from "@/components/webVulnerabilityAssessment/WebVulnerabilityAssessmentButton.vue"
 import AgentsCard from "@/components/overview/AgentsCard.vue"
 import HealthcheckCard from "@/components/overview/HealthcheckCard.vue"
 // import SocAlertsCard from "@/components/overview/SocAlertsCard.vue"
