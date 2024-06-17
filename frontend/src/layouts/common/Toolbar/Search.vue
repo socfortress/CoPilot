@@ -47,6 +47,8 @@ onMounted(() => {
 	border: none;
 
 	.search-command {
+		white-space: nowrap;
+
 		span {
 			line-height: 0;
 			position: relative;

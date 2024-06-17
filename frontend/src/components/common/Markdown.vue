@@ -2,7 +2,6 @@
 	<Suspense>
 		<vue-markdown-it
 			:source="source"
-			preset="commonmark"
 			:plugins="[
 				[
 					fromHighlighter(highlighter, {
@@ -22,6 +21,7 @@ import { VueMarkdownIt } from "@f3ve/vue-markdown-it"
 import { getHighlighter, codeThemes } from "@/utils/highlighter"
 import { fromHighlighter } from "@shikijs/markdown-it/core"
 import type { HighlighterGeneric } from "shiki/core"
+import "@/assets/scss/vue-md-it-override.scss"
 
 const highlighter: HighlighterGeneric<string, string> = (await getHighlighter()) as unknown as HighlighterGeneric<
 	string,
