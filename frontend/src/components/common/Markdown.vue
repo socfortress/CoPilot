@@ -11,6 +11,7 @@
 			]"
 			class="markdown-style scrollbar-styled"
 			:class="{ codeBgTransparent }"
+			@click="emit('click', $event)"
 		/>
 	</Suspense>
 </template>
@@ -27,6 +28,10 @@ const highlighter: HighlighterGeneric<string, string> = (await getHighlighter())
 	string,
 	string
 >
+
+const emit = defineEmits<{
+	(e: "click", value: PointerEvent): void
+}>()
 
 const props = defineProps<{
 	source: string
