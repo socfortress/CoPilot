@@ -4,7 +4,7 @@ from loguru import logger
 from app.integrations.nuclei.schema.nuclei import NucleiReportCollectionResponse
 from app.integrations.nuclei.schema.nuclei import NucleiReportsAvailableResponse
 from app.integrations.nuclei.schema.nuclei import NucleiScanRequest
-from app.integrations.nuclei.schema.nuclei import NucleiScanResponse
+from app.integrations.nuclei.schema.nuclei import NucleiScanResponse, DeleteNucleiReportResponse
 from app.integrations.nuclei.services.nuclei import post_to_copilot_nuclei_module, get_nuclei_reports_available, get_nuclei_report
 
 integration_nuclei_router = APIRouter()
@@ -28,3 +28,8 @@ async def post_test(
 ):
     logger.info(f"Running Nuclei Scan for {request.host}")
     return await post_to_copilot_nuclei_module(request)
+
+@integration_nuclei_router.delete("/delete_report/{host}", response_model=DeleteNucleiReportResponse)
+async def delete_report(host: str):
+    logger.info(f"Deleting Nuclei Report for {host}")
+    return await delete_nuclei_report(host)

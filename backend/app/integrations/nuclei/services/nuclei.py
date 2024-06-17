@@ -12,7 +12,7 @@ from fastapi import HTTPException
 from loguru import logger
 
 from app.integrations.nuclei.schema.nuclei import NucleiScanRequest
-from app.integrations.nuclei.schema.nuclei import NucleiScanResponse, NucleiReportsAvailableResponse, NucleiReportCollectionResponse
+from app.integrations.nuclei.schema.nuclei import NucleiScanResponse, NucleiReportsAvailableResponse, NucleiReportCollectionResponse, DeleteNucleiReportResponse
 
 
 async def get_nuclei_reports_available() -> NucleiReportsAvailableResponse:
@@ -50,6 +50,24 @@ async def get_nuclei_report(host: str, report: str = "index.md") -> NucleiReport
 
     response.raise_for_status()  # Raise an exception if the request was unsuccessful
     return NucleiReportCollectionResponse(**response.json())
+
+async def delete_nuclei_report(host: str) -> DeleteNucleiReportResponse:
+    """
+    Delete a specific Nuclei report.
+
+    Args:
+        host (str): The host to delete the report for.
+
+    Returns:
+        DeleteNucleiReportResponse: The response containing the result of the deletion.
+    """
+    logger.info(f"Sending DELETE request to http://copilot-nuclei-module/delete_report/{host}")
+    async with httpx.AsyncClient() as client:
+        response = await client.delete(f"http://10.255.255.5/report/{host}")
+
+    if response.status_code == 404:
+        raise HTTPException(status_code=404, detail="Nuclei report not found")
+    return DeleteNucleiReportResponse(**response.json())
 
 
 async def post_to_copilot_nuclei_module(data: NucleiScanRequest) -> NucleiScanResponse:

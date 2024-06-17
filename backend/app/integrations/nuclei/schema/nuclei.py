@@ -23,3 +23,7 @@ class NucleiReportCollectionResponse(BaseModel):
     markdown: str
     success: bool
     message: str
+
+class DeleteNucleiReportResponse(BaseModel):
+    success: bool
+    message: str
