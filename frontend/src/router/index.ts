@@ -188,7 +188,13 @@ const router = createRouter({
 			path: "/cloud-security-assessment",
 			name: "CloudSecurityAssessment",
 			component: () => import("@/views/CloudSecurityAssessment.vue"),
-			meta: { title: "Cloud Security Assessment", auth: true, roles: UserRole.All }
+			meta: { title: "Cloud Sec. Assess.", auth: true, roles: UserRole.All }
+		},
+		{
+			path: "/web-vulnerability-assessment",
+			name: "WebVulnerabilityAssessment",
+			component: () => import("@/views/WebVulnerabilityAssessment.vue"),
+			meta: { title: "Web Vuln. Assess.", auth: true, roles: UserRole.All }
 		},
 		{
 			path: "/license",
