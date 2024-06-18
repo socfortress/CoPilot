@@ -9,6 +9,7 @@ from app.integrations.scoutsuite.schema.scoutsuite import (
     AvailableScoutSuiteReportsResponse,
 )
 from app.integrations.scoutsuite.schema.scoutsuite import AWSScoutSuiteReportRequest
+from app.integrations.scoutsuite.schema.scoutsuite import AzureScoutSuiteReportRequest
 from app.integrations.scoutsuite.schema.scoutsuite import ScoutSuiteReportOptions
 from app.integrations.scoutsuite.schema.scoutsuite import (
     ScoutSuiteReportOptionsResponse,
@@ -16,6 +17,9 @@ from app.integrations.scoutsuite.schema.scoutsuite import (
 from app.integrations.scoutsuite.schema.scoutsuite import ScoutSuiteReportResponse
 from app.integrations.scoutsuite.services.scoutsuite import (
     generate_aws_report_background,
+)
+from app.integrations.scoutsuite.services.scoutsuite import (
+    generate_azure_report_background,
 )
 
 integration_scoutsuite_router = APIRouter()
@@ -92,6 +96,29 @@ async def generate_aws_report(
     return ScoutSuiteReportResponse(
         success=True,
         message="AWS ScoutSuite report generation started successfully. This will take a few minutes to complete. Check back in shortly.",
+    )
+
+
+@integration_scoutsuite_router.post(
+    "/generate-azure-report",
+    response_model=ScoutSuiteReportResponse,
+)
+async def generate_azure_report(
+    background_tasks: BackgroundTasks,
+    request: AzureScoutSuiteReportRequest,
+):
+    """
+    Endpoint to generate an Azure ScoutSuite report.
+
+    Args:
+        background_tasks (BackgroundTasks): The background tasks object.
+        request (AzureScoutSuiteReportRequest): The request object.
+        session (AsyncSession): The async session object for database operations.
+    """
+    background_tasks.add_task(generate_azure_report_background, request)
+    return ScoutSuiteReportResponse(
+        success=True,
+        message="Azure ScoutSuite report generation started successfully. This will take a few minutes to complete. Check back in shortly.",
     )
 
 

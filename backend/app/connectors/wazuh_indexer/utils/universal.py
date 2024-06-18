@@ -181,9 +181,37 @@ async def format_shards(shards):
     ]
 
 
-async def collect_indices() -> Indices:
+# async def collect_indices() -> Indices:
+#     """
+#     Collects the indices from Elasticsearch.
+
+#     Returns:
+#         dict: A dictionary containing the indices, shards, and indices stats.
+#     """
+#     logger.info("Collecting indices from Elasticsearch")
+#     es = await create_wazuh_indexer_client("Wazuh-Indexer")
+#     try:
+#         indices_dict = es.indices.get_alias("*", expand_wildcards="open")
+#         indices_list = list(indices_dict.keys())
+#         # Check if the index is valid
+#         index_config = IndexConfigModel()
+#         indices_list = [index for index in indices_list if index_config.is_valid_index(index)]
+#         return Indices(
+#             indices_list=indices_list,
+#             success=True,
+#             message="Indices collected successfully",
+#         )
+#     except Exception as e:
+#         logger.error(f"Failed to collect indices: {e}")
+#         raise HTTPException(status_code=500, detail=f"Failed to collect indices: {e}")
+
+
+async def collect_indices(all_indices: bool = False) -> Indices:
     """
     Collects the indices from Elasticsearch.
+
+    Args:
+        all_indices (bool, optional): If True, all indices are listed. If False, only valid indices are listed. Defaults to False.
 
     Returns:
         dict: A dictionary containing the indices, shards, and indices stats.
@@ -194,8 +222,9 @@ async def collect_indices() -> Indices:
         indices_dict = es.indices.get_alias("*", expand_wildcards="open")
         indices_list = list(indices_dict.keys())
         # Check if the index is valid
-        index_config = IndexConfigModel()
-        indices_list = [index for index in indices_list if index_config.is_valid_index(index)]
+        if not all_indices:
+            index_config = IndexConfigModel()
+            indices_list = [index for index in indices_list if index_config.is_valid_index(index)]
         return Indices(
             indices_list=indices_list,
             success=True,

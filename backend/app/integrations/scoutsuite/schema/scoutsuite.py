@@ -37,6 +37,21 @@ class AWSScoutSuiteReportRequest(BaseModel):
         return values
 
 
+class AzureScoutSuiteReportRequest(BaseModel):
+    report_type: str = Field(..., description="The type of report to generate", example="azure")
+    username: str = Field(..., description="The username used to auth to Azure", example="scoutsuite@socfortress.co")
+    password: str = Field(..., description="The password used to auth to Azure", example="EXAMPLE_PASSWORD")
+    tenant_id: str = Field(..., description="The tenant ID used to auth to Azure", example="EXAMPLE_TENANT_ID")
+    report_name: str = Field(..., description="The name of the report", example="aws-report")
+
+    @root_validator
+    def validate_report_type(cls, values):
+        report_type = values.get("report_type")
+        if report_type != ScoutSuiteReportOptions.azure:
+            raise HTTPException(status_code=400, detail="Invalid report type.")
+        return values
+
+
 class ScoutSuiteReportResponse(BaseModel):
     success: bool
     message: str

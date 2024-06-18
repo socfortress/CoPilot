@@ -1,11 +1,11 @@
 <template>
 	<n-spin :show="loading" class="creation-report-form">
-		<n-form :label-width="80" :model="form" :rules="rules" ref="formRef">
+		<n-form :model="baseForm" :rules="rules" ref="baseFormRef">
 			<div class="flex flex-col gap-2">
 				<div class="flex gap-4 items-start">
 					<n-form-item label="Type" path="report_type" class="w-32">
 						<n-select
-							v-model:value="form.report_type"
+							v-model:value="baseForm.report_type"
 							:options="reportTypeOptions"
 							placeholder="Select..."
 							clearable
@@ -14,32 +14,28 @@
 					</n-form-item>
 					<n-form-item label="Name" path="report_name" class="grow">
 						<n-input
-							v-model:value.trim="form.report_name"
+							v-model:value.trim="baseForm.report_name"
 							placeholder="Please insert Report Name"
 							clearable
 						/>
 					</n-form-item>
 				</div>
-				<div class="flex flex-col gap-2">
-					<n-form-item label="Access Key ID" path="access_key_id">
-						<n-input
-							v-model:value.trim="form.access_key_id"
-							placeholder="Please insert Access Key ID"
-							clearable
-						/>
-					</n-form-item>
-					<n-form-item label="Secret Access Key" path="secret_access_key">
-						<n-input
-							v-model:value.trim="form.secret_access_key"
-							placeholder="Please insert Secret Access Key"
-							type="password"
-							show-password-on="click"
-							clearable
-						/>
-					</n-form-item>
-				</div>
 
-				<div class="flex justify-between gap-4">
+				<AwsTypeForm
+					v-if="baseForm.report_type === ScoutSuiteReportType.AWS"
+					@model="typeForm = $event"
+					@valid="typeFormValid = $event"
+					@mounted="typeFormRef = $event"
+				/>
+
+				<AzureTypeForm
+					v-if="baseForm.report_type === ScoutSuiteReportType.Azure"
+					@model="typeForm = $event"
+					@valid="typeFormValid = $event"
+					@mounted="typeFormRef = $event"
+				/>
+
+				<div class="flex justify-between gap-4 mt-8">
 					<n-button @click="reset()" :disabled="loading">Reset</n-button>
 					<n-button
 						type="primary"
@@ -56,7 +52,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeMount, onMounted, ref } from "vue"
+import { computed, onBeforeMount, onMounted, ref, watch } from "vue"
 import Api from "@/api"
 import {
 	useMessage,
@@ -71,9 +67,18 @@ import {
 	type FormRules,
 	type MessageReactive
 } from "naive-ui"
-import type { ScoutSuiteReportPayload } from "@/types/cloudSecurityAssessment.d"
+import {
+	type ScoutSuiteAwsReportPayload,
+	type ScoutSuiteAzureReportPayload,
+	type ScoutSuiteReportPayload,
+	ScoutSuiteReportType
+} from "@/types/cloudSecurityAssessment.d"
+import AwsTypeForm from "./FormTypes/AwsTypeForm.vue"
+import AzureTypeForm from "./FormTypes/AzureTypeForm.vue"
+import type { ApiError, ApiCommonResponse } from "@/types/common"
 
-type FormPayload = Omit<ScoutSuiteReportPayload, "report_type"> & { report_type: string | null }
+type BaseFormPayload = Omit<ScoutSuiteReportPayload, "report_type"> & { report_type: ScoutSuiteReportType | null }
+type TypeFormPayload = ScoutSuiteAwsReportPayload | ScoutSuiteAzureReportPayload
 
 const emit = defineEmits<{
 	(e: "submitted"): void
@@ -89,10 +94,13 @@ const submitting = ref(false)
 const loadingOptions = ref(false)
 const loading = computed(() => submitting.value || loadingOptions.value)
 const message = useMessage()
-const form = ref<FormPayload>(getClearForm())
-const formRef = ref<FormInst | null>(null)
+const baseForm = ref<BaseFormPayload>(getClearBaseForm())
+const typeForm = ref<TypeFormPayload | null>(null)
+const typeFormValid = ref<boolean>(false)
+const baseFormRef = ref<FormInst | null>(null)
+const typeFormRef = ref<FormInst | null>(null)
 
-const availableTypes = ["aws"]
+const availableTypes = ["aws", "azure"]
 
 const reportTypeOptions = ref<{ label: string; value: string; disabled: boolean }[]>([])
 
@@ -100,16 +108,6 @@ const rules: FormRules = {
 	report_type: {
 		required: true,
 		message: "Please input the Report Type",
-		trigger: ["input", "blur"]
-	},
-	access_key_id: {
-		required: true,
-		message: "Please input the Access Key ID",
-		trigger: ["input", "blur"]
-	},
-	secret_access_key: {
-		required: true,
-		message: "Please input the Secret Access Key",
 		trigger: ["input", "blur"]
 	},
 	report_name: {
@@ -122,30 +120,48 @@ const rules: FormRules = {
 let validationMessage: MessageReactive | null = null
 
 const isValid = computed(() => {
-	if (!form.value.access_key_id) {
+	if (!baseForm.value.report_type) {
 		return false
 	}
-	if (!form.value.secret_access_key) {
+	if (!baseForm.value.report_name) {
 		return false
 	}
-	if (!form.value.report_type) {
-		return false
-	}
-	if (!form.value.report_name) {
+
+	if (!typeFormValid.value) {
 		return false
 	}
 
 	return true
 })
 
-function validate(cb?: () => void) {
-	if (!formRef.value) return
+watch(
+	() => baseForm.value.report_type,
+	() => {
+		typeForm.value = null
+		typeFormRef.value = null
+		typeFormValid.value = false
+	}
+)
 
-	formRef.value.validate((errors?: Array<FormValidationError>) => {
+function validate(cb?: () => void) {
+	if (!baseFormRef.value || !typeFormRef.value) return
+
+	baseFormRef.value.validate((errors?: Array<FormValidationError>) => {
 		if (!errors) {
 			validationMessage?.destroy()
 			validationMessage = null
-			if (cb) cb()
+			;(typeFormRef.value as FormInst).validate((errors?: Array<FormValidationError>) => {
+				if (!errors) {
+					validationMessage?.destroy()
+					validationMessage = null
+					if (cb) cb()
+				} else {
+					if (!validationMessage) {
+						validationMessage = message.warning("You must fill in the required fields correctly.")
+					}
+					return false
+				}
+			})
 		} else {
 			if (!validationMessage) {
 				validationMessage = message.warning("You must fill in the required fields correctly.")
@@ -155,11 +171,9 @@ function validate(cb?: () => void) {
 	})
 }
 
-function getClearForm(): FormPayload {
+function getClearBaseForm(): BaseFormPayload {
 	return {
 		report_type: null,
-		access_key_id: "",
-		secret_access_key: "",
 		report_name: ""
 	}
 }
@@ -167,29 +181,41 @@ function getClearForm(): FormPayload {
 function reset() {
 	if (!loading.value) {
 		resetForm()
-		formRef.value?.restoreValidation()
+		baseFormRef.value?.restoreValidation()
 	}
 }
 
 function resetForm() {
-	form.value = getClearForm()
+	baseForm.value = getClearBaseForm()
 }
 
 function submit() {
-	const method = form.value.report_type === "aws" ? "generateAwsScoutSuiteReport" : null
+	let apiCall: Promise<ApiCommonResponse> | null = null
 
-	if (!method) {
+	switch (baseForm.value.report_type) {
+		case ScoutSuiteReportType.AWS:
+			apiCall = Api.cloudSecurityAssessment.generateAwsScoutSuiteReport({
+				...baseForm.value,
+				report_type: ScoutSuiteReportType.AWS,
+				...(typeForm.value as ScoutSuiteAwsReportPayload)
+			})
+			break
+		case ScoutSuiteReportType.Azure:
+			apiCall = Api.cloudSecurityAssessment.generateAzureScoutSuiteReport({
+				...baseForm.value,
+				report_type: ScoutSuiteReportType.Azure,
+				...(typeForm.value as ScoutSuiteAzureReportPayload)
+			})
+			break
+	}
+
+	if (!apiCall) {
 		return
 	}
 
 	submitting.value = true
 
-	const payload: ScoutSuiteReportPayload = {
-		...form.value,
-		report_type: form.value.report_type || ""
-	}
-
-	Api.cloudSecurityAssessment[method](payload)
+	apiCall
 		.then(res => {
 			if (res.data.success) {
 				message.success(res.data?.message || `ScoutSuite report generation started successfully`, {
@@ -201,7 +227,7 @@ function submit() {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
 		})
-		.catch(err => {
+		.catch((err: ApiError) => {
 			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
 		})
 		.finally(() => {

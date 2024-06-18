@@ -1,15 +1,16 @@
+import globals from "globals"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
-import globals from "globals"
-
-import { FlatCompat } from "@eslint/eslintrc"
 import js from "@eslint/js"
 import pluginVue from "eslint-plugin-vue"
+import { FlatCompat } from "@eslint/eslintrc"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const compat = new FlatCompat({
-	baseDirectory: __dirname
+	baseDirectory: __dirname,
+	recommendedConfig: js.configs.recommended,
+	allConfig: js.configs.all
 })
 
 export default [
@@ -17,9 +18,12 @@ export default [
 		ignores: ["**/dist/*", "**/tests/*", "**/.gitignore", "**/vite-env.d.ts"]
 	},
 	...pluginVue.configs["flat/essential"],
-	js.configs.recommended,
-	...compat.extends("@vue/eslint-config-typescript/recommended"),
-	...compat.extends("@vue/eslint-config-prettier/skip-formatting"),
+	...compat.extends(
+		"eslint:recommended",
+		"@typescript-eslint/recommended",
+		"@vue/eslint-config-typescript/recommended",
+		"@vue/eslint-config-prettier/skip-formatting"
+	),
 	{
 		files: [
 			"**/*.vue",
@@ -42,7 +46,10 @@ export default [
 		},
 		rules: {
 			"vue/multi-word-component-names": "off",
-			"vue/no-setup-props-destructure": "off"
+			"vue/no-setup-props-destructure": "off",
+			"no-redeclare": "off",
+			"@typescript-eslint/no-redeclare": "error",
+			"@typescript-eslint/adjacent-overload-signatures": "error"
 		}
 	}
 ]
