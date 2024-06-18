@@ -1,11 +1,17 @@
+from typing import Callable
+
 import requests
 from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.connectors.dfir_iris.utils.universal import verify_dfir_iris_connection
 from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
 from app.connectors.grafana.services.dashboards import provision_dashboards
+from app.connectors.grafana.utils.universal import verify_grafana_connection
 from app.connectors.graylog.services.management import start_stream
+from app.connectors.graylog.utils.universal import verify_graylog_connection
+from app.connectors.wazuh_manager.utils.universal import verify_wazuh_manager_connection
 from app.customer_provisioning.schema.graylog import StreamConnectionToPipelineRequest
 from app.customer_provisioning.schema.provision import CustomerProvisionMeta
 from app.customer_provisioning.schema.provision import CustomerProvisionResponse
@@ -29,22 +35,16 @@ from app.integrations.alert_creation_settings.models.alert_creation_settings imp
     AlertCreationSettings,
 )
 from app.utils import get_connector_attribute
-from app.connectors.dfir_iris.utils.universal import verify_dfir_iris_connection
-from app.connectors.grafana.utils.universal import verify_grafana_connection
-from app.connectors.graylog.utils.universal import verify_graylog_connection
-from app.connectors.wazuh_manager.utils.universal import verify_wazuh_manager_connection
-from typing import Callable
-
-
 
 
 async def verify_connection(service_name: str, verify_connection_func: Callable) -> None:
     connection = await verify_connection_func(service_name)
-    if connection['connectionSuccessful'] is False:
+    if connection["connectionSuccessful"] is False:
         raise HTTPException(
             status_code=500,
             detail=f"Failed to connect to {service_name}. {service_name} connection must be established to proceed.",
         )
+
 
 async def verify_required_tools() -> None:
     """
@@ -55,6 +55,7 @@ async def verify_required_tools() -> None:
     await verify_connection("Wazuh-Manager", verify_wazuh_manager_connection)
     await verify_connection("Grafana", verify_grafana_connection)
     await verify_connection("DFIR-IRIS", verify_dfir_iris_connection)
+
 
 # ! MAIN FUNCTION ! #
 async def provision_wazuh_customer(
