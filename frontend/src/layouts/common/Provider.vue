@@ -37,7 +37,7 @@ const themeStore = useThemeStore()
 
 const theme = computed(() => themeStore.naiveTheme)
 const themeOverrides = computed<GlobalThemeOverrides>(() => themeStore.themeOverrides)
-const style = computed<CSSStyleDeclaration>(() => themeStore.style)
+const style = computed(() => themeStore.style)
 const themeName = computed<ThemeName>(() => themeStore.themeName)
 
 watch(

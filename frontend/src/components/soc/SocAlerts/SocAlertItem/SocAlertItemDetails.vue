@@ -14,7 +14,10 @@
 					<template #key>{{ key }}</template>
 					<template #value>
 						<template v-if="key === 'customer_code' && value && value !== 'Customer Not Found'">
-							<code class="cursor-pointer text-primary-color" @click="gotoCustomer({ code: value })">
+							<code
+								class="cursor-pointer text-primary-color"
+								@click="gotoCustomer({ code: value.toString() })"
+							>
 								#{{ value }}
 								<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
 							</code>

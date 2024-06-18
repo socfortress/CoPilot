@@ -179,7 +179,7 @@ const message = useMessage()
 const alert = ref(alertData.value || null)
 const alertObject = ref<Alert>({} as Alert)
 const loading = computed(() => loadingBookmark.value || loadingData.value || loadingDelete.value)
-const caseId = computed<number | null>(() => (alert.value?.cases?.length ? alert.value?.cases[0] : null))
+const caseId = computed(() => (alert.value?.cases?.length ? alert.value?.cases[0] : null))
 
 function updateAlert(alertUpdated: SocAlert) {
 	const ownerObject = alertUpdated.owner

@@ -98,10 +98,6 @@ import type { Artifact, CollectResult } from "@/types/artifacts.d"
 import { nanoid } from "nanoid"
 // import { collectResult } from "./mock"
 
-interface CollectResultExt extends CollectResult {
-	___id?: string
-}
-
 const emit = defineEmits<{
 	(e: "loaded-agents", value: Agent[]): void
 	(e: "loaded-artifacts", value: Artifact[]): void
@@ -125,7 +121,7 @@ const loadingArtifacts = ref(false)
 const loading = ref(false)
 const agentsList = ref<Agent[]>([])
 const artifactsList = ref<Artifact[]>([])
-const collectList = ref<CollectResultExt[]>([])
+const collectList = ref<CollectResult[]>([])
 const isDirty = ref(false)
 
 const InfoIcon = "carbon:information"

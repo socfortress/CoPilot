@@ -75,7 +75,7 @@ export interface FlowRequestSpecs {
 }
 
 export interface CollectResult {
-	[key: string]: any
+	[key: string]: string | number
 }
 
 export enum IPFamily {

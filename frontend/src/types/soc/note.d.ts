@@ -5,7 +5,7 @@ export interface SocNote {
 }
 
 export interface NoteDetails {
-	custom_attributes: { [key: string]: any }
+	custom_attributes: { [key: string]: string | number }
 	group_id: number
 	group_title: string
 	group_uuid: string
@@ -18,7 +18,7 @@ export interface NoteDetails {
 }
 
 export interface SocNewNote {
-	custom_attributes: { [key: string]: any }
+	custom_attributes: { [key: string]: string | number }
 	note_content: string
 	note_creationdate: string | Date
 	note_id: number

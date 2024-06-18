@@ -18,8 +18,8 @@ export default defineConfig(({ mode }) => {
 		plugins: [
 			vue({
 				script: {
-					defineModel: true
-					// propsDestructure: true
+					defineModel: true,
+					propsDestructure: false
 				}
 			}),
 			vueJsx(),

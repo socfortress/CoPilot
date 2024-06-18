@@ -52,7 +52,7 @@ export function exportPrimaryShades(color: string): { [key: string]: string } {
 	}
 }
 
-export function getTypeValue(origin: any, val: string) {
+export function getTypeValue(origin: object, val: string) {
 	if (val && val.indexOf("{") === 0) {
 		const path = val.replace("{", "").replace("}", "")
 		return _get(origin, path)

@@ -20,12 +20,12 @@ export interface SocAlert {
 	alert_tags: null | string
 	alert_title: string
 	alert_uuid: string
-	assets: any[]
-	cases: any[]
+	assets: object[]
+	cases: (string | number)[]
 	classification: string | null
-	comments: any[]
+	comments: object[]
 	customer: Customer
-	iocs: any[]
+	iocs: object[]
 	modification_history: { [key: string]: ModificationHistory }
 	owner: Owner | null
 	resolution_status: string | null
@@ -59,7 +59,7 @@ export enum AlertSource {
 
 export interface Customer {
 	customer_description: null | string
-	custom_attributes: { [key: string]: any } | null
+	custom_attributes: { [key: string]: string | number } | null
 	creation_date: string
 	customer_sla: null | string
 	customer_name: string
@@ -117,7 +117,7 @@ export interface SocAlertCaseResponse {
 	classification_id: number | null
 	close_date: DayFormatted
 	closing_note: string | null
-	custom_attributes: { [key: string]: any } | null
+	custom_attributes: { [key: string]: string | number } | null
 	modification_history: { [key: string]: ModificationHistory }
 	open_date: DayFormatted
 	owner_id: number

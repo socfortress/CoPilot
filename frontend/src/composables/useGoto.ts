@@ -3,7 +3,7 @@ import { useRouter } from "vue-router"
 export function useGoto() {
 	const router = useRouter()
 
-	function gotoCustomer(params?: { code?: string | number | { [key: string]: any }; action?: "add-customer" }) {
+	function gotoCustomer(params?: { code?: string | number; action?: "add-customer" }) {
 		if (params?.code) {
 			router.push({ name: "Customers", query: { code: params.code.toString() } })
 		} else if (params?.action) {

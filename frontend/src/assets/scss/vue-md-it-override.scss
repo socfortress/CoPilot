@@ -1,0 +1,48 @@
+.vue-md-it-wrapper {
+	img {
+		max-width: 100%;
+		width: 100%;
+		border: var(--border-small-100);
+		border-radius: var(--border-radius);
+	}
+
+	table {
+		--cell-padding: 8px 12px;
+
+		width: 100%;
+		border: var(--border-small-100);
+		border-radius: var(--border-radius);
+		text-align: left;
+		font-variant-numeric: tabular-nums;
+		border-collapse: separate;
+		border-spacing: 0;
+		overflow: hidden;
+
+		thead {
+			tr {
+				th {
+					white-space: nowrap;
+					text-align: left;
+					padding: var(--cell-padding);
+					background-color: var(--bg-secondary-color);
+				}
+			}
+		}
+
+		tbody {
+			tr {
+				td {
+					padding: var(--cell-padding);
+					background-color: var(--bg-color);
+					border-bottom: 1px solid var(--border-color);
+				}
+
+				&:last-child {
+					td {
+						border-bottom: 0;
+					}
+				}
+			}
+		}
+	}
+}

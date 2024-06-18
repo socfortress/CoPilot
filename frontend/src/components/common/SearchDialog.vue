@@ -115,7 +115,7 @@ const showSearchBox = ref(false)
 const search = ref("")
 const activeItem = ref<null | string | number>(null)
 const commandIcon = ref("⌘")
-const scrollContent = ref<(ScrollbarInst & { $el: any }) | null>(null)
+const scrollContent = ref<(ScrollbarInst & { $el: HTMLElement }) | null>(null)
 const { gotoCustomer, gotoSocAlerts, gotoAlerts, gotoConnectors } = useGoto()
 
 const groups = ref<Groups>([

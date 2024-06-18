@@ -2,7 +2,6 @@
 	<Suspense>
 		<vue-markdown-it
 			:source="source"
-			preset="commonmark"
 			:plugins="[
 				[
 					fromHighlighter(highlighter, {
@@ -12,6 +11,7 @@
 			]"
 			class="markdown-style scrollbar-styled"
 			:class="{ codeBgTransparent }"
+			@click="emit('click', $event)"
 		/>
 	</Suspense>
 </template>
@@ -22,8 +22,16 @@ import { VueMarkdownIt } from "@f3ve/vue-markdown-it"
 import { getHighlighter, codeThemes } from "@/utils/highlighter"
 import { fromHighlighter } from "@shikijs/markdown-it/core"
 import type { HighlighterGeneric } from "shiki/core"
+import "@/assets/scss/vue-md-it-override.scss"
 
-const highlighter: HighlighterGeneric<any, any> = (await getHighlighter()) as unknown as HighlighterGeneric<any, any>
+const highlighter: HighlighterGeneric<string, string> = (await getHighlighter()) as unknown as HighlighterGeneric<
+	string,
+	string
+>
+
+const emit = defineEmits<{
+	(e: "click", value: PointerEvent): void
+}>()
 
 const props = defineProps<{
 	source: string

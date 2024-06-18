@@ -18,7 +18,8 @@ export async function getHighlighter() {
 			import("shiki/langs/html.mjs"),
 			import("shiki/langs/scss.mjs"),
 			import("shiki/langs/css.mjs"),
-			import("shiki/langs/csharp.mjs")
+			import("shiki/langs/csharp.mjs"),
+			import("shiki/langs/http.mjs")
 		],
 		loadWasm: getWasm
 	})

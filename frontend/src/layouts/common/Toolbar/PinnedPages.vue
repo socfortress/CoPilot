@@ -1,6 +1,6 @@
 <template>
 	<div class="flex pinned-pages items-end">
-		<TransitionGroup name="anim" tag="div" class="latest-list flex items-center gap-4">
+		<TransitionGroup name="anim" tag="div" class="latest-list flex items-center gap-4 overflow-hidden">
 			<n-tag
 				round
 				:bordered="false"
@@ -9,7 +9,7 @@
 				:key="page.name"
 				@close="removeLatestPage(page.name)"
 			>
-				<span class="page-name" @click="gotoPage(page.name)">
+				<span class="page-name" @click="gotoPage(page.name)" :title="page.title">
 					{{ page.title }}
 				</span>
 				<template #icon>
@@ -22,7 +22,7 @@
 
 		<div class="divider" v-if="latestSanitized.length && pinned.length"></div>
 
-		<TransitionGroup name="anim" tag="div" class="pinned-list flex items-center gap-4">
+		<TransitionGroup name="anim" tag="div" class="pinned-list flex items-center gap-4 overflow-hidden">
 			<n-tag
 				round
 				:bordered="false"
@@ -31,7 +31,7 @@
 				:key="page.name"
 				@close="removePinnedPage(page.name)"
 			>
-				<div class="page-name" @click="gotoPage(page.name)">
+				<div class="page-name" @click="gotoPage(page.name)" :title="page.title">
 					{{ page.title }}
 				</div>
 			</n-tag>
@@ -110,10 +110,13 @@ router.afterEach(route => {
 <style lang="scss" scoped>
 .pinned-pages {
 	position: relative;
+	overflow-x: clip;
 
 	:deep() {
 		.n-tag {
 			background-color: transparent;
+			flex-shrink: 1;
+			overflow: hidden;
 
 			&.n-tag--round {
 				padding: 0;
@@ -121,6 +124,10 @@ router.afterEach(route => {
 			}
 			.n-tag__icon {
 				margin: 0 !important;
+			}
+			.n-tag__content {
+				overflow: hidden;
+				text-overflow: ellipsis;
 			}
 			.n-tag__close {
 				overflow: hidden;
@@ -142,12 +149,6 @@ router.afterEach(route => {
 					width: 14px;
 				}
 			}
-		}
-	}
-
-	.pinned-list {
-		.page-name {
-			color: var(--primary-color);
 		}
 	}
 
@@ -177,6 +178,8 @@ router.afterEach(route => {
 	.page-name {
 		cursor: pointer;
 		margin-left: 2px;
+		overflow: hidden;
+		text-overflow: ellipsis;
 
 		&:hover {
 			text-decoration: underline;
@@ -190,6 +193,12 @@ router.afterEach(route => {
 		margin-right: 2px;
 
 		&:hover {
+			color: var(--primary-color);
+		}
+	}
+
+	.pinned-list {
+		.page-name {
 			color: var(--primary-color);
 		}
 	}

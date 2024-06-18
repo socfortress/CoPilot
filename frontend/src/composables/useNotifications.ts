@@ -92,7 +92,6 @@ export function useNotifications() {
 				}
 
 				if (newItem.action) {
-					// @ts-ignore
 					notify.action = () =>
 						h(
 							NButton,

@@ -25,10 +25,10 @@ export interface Panel {
 		defaults: {
 			color: string
 			custom: string
-			mappings: any[]
+			mappings: object[]
 			thresholds: string
 		}
-		overrides: any[]
+		overrides: object[]
 	}
 	gridPos: null | {
 		h: number
@@ -37,7 +37,7 @@ export interface Panel {
 		y: number
 	}
 	id: number
-	options: null | { legend: any; tooltip: any }
+	options: null | { legend: object; tooltip: object }
 	title: string
 	type: null | string
 	collapsed: null | boolean
