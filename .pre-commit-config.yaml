@@ -51,14 +51,7 @@ repos:
           - id: prettier
 
     - repo: https://github.com/pre-commit/mirrors-eslint
-      rev: v8.41.0
+      rev: v8.5.0
       hooks:
           - id: eslint
             files: \.([cjt]sx?|[cm]ts|[cm]js|cvue)$ # *.js, *.jsx, *.ts, *.tsx and *.vue
-            additional_dependencies:
-                - "@rushstack/eslint-patch@1.2.0"
-                - eslint@8.41.0
-                - "@vue/eslint-config-prettier@7.1.0"
-                - "@vue/eslint-config-typescript@11.0.2"
-                - eslint-plugin-cypress@2.13.3
-                - eslint-plugin-vue@9.11.1
