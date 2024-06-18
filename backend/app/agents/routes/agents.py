@@ -29,7 +29,7 @@ from app.agents.wazuh.services.agents import delete_agent_wazuh
 from app.agents.wazuh.services.agents import upgrade_wazuh_agent
 from app.agents.wazuh.services.sca import collect_agent_sca
 from app.agents.wazuh.services.sca import collect_agent_sca_policy_results
-from app.agents.wazuh.services.vulnerabilities import collect_agent_vulnerabilities
+from app.agents.wazuh.services.vulnerabilities import collect_agent_vulnerabilities, collect_agent_vulnerabilities_new
 
 # App specific imports
 from app.auth.routes.auth import AuthHandler
@@ -408,6 +408,7 @@ async def get_agent_vulnerabilities(agent_id: str) -> WazuhAgentVulnerabilitiesR
     """
     logger.info(f"Fetching agent {agent_id} vulnerabilities")
     return await collect_agent_vulnerabilities(agent_id)
+    #return await collect_agent_vulnerabilities_new(agent_id)
 
 
 @agents_router.get(

@@ -36,12 +36,10 @@ class WazuhAgentsList(BaseModel):
 
 class WazuhAgentVulnerabilities(BaseModel):
     severity: Optional[str]
-    updated: Optional[str]
     version: Optional[str]
     type: Optional[str]
     name: Optional[str]
     external_references: Optional[List[str]]
-    condition: Optional[str]
     detection_time: Optional[str]
     cvss3_score: Optional[float]
     published: Optional[str]
@@ -49,7 +47,6 @@ class WazuhAgentVulnerabilities(BaseModel):
     cve: Optional[str]
     status: Optional[str]
     title: Optional[str]
-    cvss2_score: Optional[float]
 
 
 class WazuhAgentVulnerabilitiesResponse(BaseModel):
