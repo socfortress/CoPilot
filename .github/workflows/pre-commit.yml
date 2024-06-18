@@ -16,5 +16,5 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: "16.x"
-      - run: npm install
+      - run: cd frontend && npm install
       - uses: pre-commit/action@v3.0.0
