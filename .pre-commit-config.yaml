@@ -57,7 +57,6 @@ repos:
             files: \.([cjt]sx?|[cm]ts|[cm]js|cvue)$ # *.js, *.jsx, *.ts, *.tsx and *.vue
             args: ["--config", "frontend/eslint.config.js"]
             additional_dependencies:
-                - "@rushstack/eslint-patch@1.10.3"
                 - eslint@9.5.0
                 - "@vue/eslint-config-prettier@9.0.0"
                 - "@vue/eslint-config-typescript@13.0.0"
