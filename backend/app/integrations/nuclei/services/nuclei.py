@@ -1,18 +1,12 @@
-from typing import Any
-from typing import Dict
-from typing import List
-from typing import Tuple
-from typing import Union
-
 import httpx
-
-# import pcre2
-import xmltodict
 from fastapi import HTTPException
 from loguru import logger
 
+from app.integrations.nuclei.schema.nuclei import DeleteNucleiReportResponse
+from app.integrations.nuclei.schema.nuclei import NucleiReportCollectionResponse
+from app.integrations.nuclei.schema.nuclei import NucleiReportsAvailableResponse
 from app.integrations.nuclei.schema.nuclei import NucleiScanRequest
-from app.integrations.nuclei.schema.nuclei import NucleiScanResponse, NucleiReportsAvailableResponse, NucleiReportCollectionResponse, DeleteNucleiReportResponse
+from app.integrations.nuclei.schema.nuclei import NucleiScanResponse
 
 
 async def get_nuclei_reports_available() -> NucleiReportsAvailableResponse:
@@ -29,6 +23,7 @@ async def get_nuclei_reports_available() -> NucleiReportsAvailableResponse:
         raise HTTPException(status_code=404, detail="Nuclei reports not found")
     response.raise_for_status()  # Raise an exception if the request was unsuccessful
     return NucleiReportsAvailableResponse(**response.json())
+
 
 async def get_nuclei_report(host: str, report: str = "index.md") -> NucleiReportCollectionResponse:
     """
@@ -50,6 +45,7 @@ async def get_nuclei_report(host: str, report: str = "index.md") -> NucleiReport
 
     response.raise_for_status()  # Raise an exception if the request was unsuccessful
     return NucleiReportCollectionResponse(**response.json())
+
 
 async def delete_nuclei_report(host: str) -> DeleteNucleiReportResponse:
     """

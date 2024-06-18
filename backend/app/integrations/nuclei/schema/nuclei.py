@@ -24,6 +24,7 @@ class NucleiReportCollectionResponse(BaseModel):
     success: bool
     message: str
 
+
 class DeleteNucleiReportResponse(BaseModel):
     success: bool
     message: str

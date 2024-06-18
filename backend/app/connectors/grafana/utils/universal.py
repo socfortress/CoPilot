@@ -5,7 +5,6 @@ from fastapi import HTTPException
 from grafana_client import GrafanaApi
 from loguru import logger
 
-from app.connectors.grafana.schema.organization import GrafanaCreateOrganizationResponse
 from app.connectors.utils import get_connector_info_from_db
 from app.db.db_session import get_db_session
 
@@ -59,12 +58,12 @@ async def verify_grafana_credentials(attributes: Dict[str, Any]) -> Dict[str, An
                 "login": "test",
                 "password": "this_is_a_test_user",
                 "OrgID": 1,
-            }
+            },
         )
         if create_user["message"] != "User created":
             raise Exception(f"Failed to create user: {create_user['message']}")
 
-        remove_user = grafana_client.admin.delete_user(
+        grafana_client.admin.delete_user(
             user_id=create_user["id"],
         )
 
