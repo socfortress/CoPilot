@@ -205,6 +205,7 @@ async def format_shards(shards):
 #         logger.error(f"Failed to collect indices: {e}")
 #         raise HTTPException(status_code=500, detail=f"Failed to collect indices: {e}")
 
+
 async def collect_indices(all_indices: bool = False) -> Indices:
     """
     Collects the indices from Elasticsearch.

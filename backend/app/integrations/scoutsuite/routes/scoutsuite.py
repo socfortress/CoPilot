@@ -9,13 +9,17 @@ from app.integrations.scoutsuite.schema.scoutsuite import (
     AvailableScoutSuiteReportsResponse,
 )
 from app.integrations.scoutsuite.schema.scoutsuite import AWSScoutSuiteReportRequest
-from app.integrations.scoutsuite.schema.scoutsuite import ScoutSuiteReportOptions, AzureScoutSuiteReportRequest
+from app.integrations.scoutsuite.schema.scoutsuite import AzureScoutSuiteReportRequest
+from app.integrations.scoutsuite.schema.scoutsuite import ScoutSuiteReportOptions
 from app.integrations.scoutsuite.schema.scoutsuite import (
     ScoutSuiteReportOptionsResponse,
 )
 from app.integrations.scoutsuite.schema.scoutsuite import ScoutSuiteReportResponse
 from app.integrations.scoutsuite.services.scoutsuite import (
-    generate_aws_report_background, generate_azure_report_background
+    generate_aws_report_background,
+)
+from app.integrations.scoutsuite.services.scoutsuite import (
+    generate_azure_report_background,
 )
 
 integration_scoutsuite_router = APIRouter()
@@ -93,6 +97,7 @@ async def generate_aws_report(
         success=True,
         message="AWS ScoutSuite report generation started successfully. This will take a few minutes to complete. Check back in shortly.",
     )
+
 
 @integration_scoutsuite_router.post(
     "/generate-azure-report",

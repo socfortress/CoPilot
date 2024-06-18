@@ -36,6 +36,7 @@ class AWSScoutSuiteReportRequest(BaseModel):
             raise HTTPException(status_code=400, detail="Invalid report type.")
         return values
 
+
 class AzureScoutSuiteReportRequest(BaseModel):
     report_type: str = Field(..., description="The type of report to generate", example="azure")
     username: str = Field(..., description="The username used to auth to Azure", example="scoutsuite@socfortress.co")

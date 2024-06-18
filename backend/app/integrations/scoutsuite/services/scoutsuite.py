@@ -4,7 +4,8 @@ from concurrent.futures import ThreadPoolExecutor
 
 from loguru import logger
 
-from app.integrations.scoutsuite.schema.scoutsuite import AWSScoutSuiteReportRequest, AzureScoutSuiteReportRequest
+from app.integrations.scoutsuite.schema.scoutsuite import AWSScoutSuiteReportRequest
+from app.integrations.scoutsuite.schema.scoutsuite import AzureScoutSuiteReportRequest
 
 
 async def generate_aws_report_background(request: AWSScoutSuiteReportRequest):
@@ -29,11 +30,13 @@ def construct_aws_command(request: AWSScoutSuiteReportRequest):
         "--no-browser",
     ]
 
+
 async def generate_azure_report_background(request: AzureScoutSuiteReportRequest):
     logger.info("Generating Azure ScoutSuite report in the background")
 
     command = construct_azure_command(request)
     await run_command_in_background(command)
+
 
 def construct_azure_command(request: AzureScoutSuiteReportRequest):
     """Construct the scout command."""
