@@ -470,7 +470,7 @@ export const useThemeStore = defineStore("theme", {
 		}
 	},
 	persist: {
-		paths: ["layout", "themeName", "routerTransition", "boxed", "sidebar"]
+		paths: ["layout", "themeName", "routerTransition", "boxed", "sidebar.collapsed"]
 	}
 })
 
