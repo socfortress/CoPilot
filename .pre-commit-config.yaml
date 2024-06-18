@@ -55,3 +55,4 @@ repos:
       hooks:
           - id: eslint
             files: \.([cjt]sx?|[cm]ts|[cm]js|cvue)$ # *.js, *.jsx, *.ts, *.tsx and *.vue
+            args: ["--config", "frontend/eslint.config.js"]
