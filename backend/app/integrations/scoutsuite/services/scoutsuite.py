@@ -4,7 +4,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from loguru import logger
 
-from app.integrations.scoutsuite.schema.scoutsuite import AWSScoutSuiteReportRequest
+from app.integrations.scoutsuite.schema.scoutsuite import AWSScoutSuiteReportRequest, AzureScoutSuiteReportRequest
 
 
 async def generate_aws_report_background(request: AWSScoutSuiteReportRequest):
@@ -23,6 +23,30 @@ def construct_aws_command(request: AWSScoutSuiteReportRequest):
         request.access_key_id,
         "--secret-access-key",
         request.secret_access_key,
+        "--report-name",
+        request.report_name,
+        "--force",
+        "--no-browser",
+    ]
+
+async def generate_azure_report_background(request: AzureScoutSuiteReportRequest):
+    logger.info("Generating Azure ScoutSuite report in the background")
+
+    command = construct_azure_command(request)
+    await run_command_in_background(command)
+
+def construct_azure_command(request: AzureScoutSuiteReportRequest):
+    """Construct the scout command."""
+    return [
+        "scout",
+        "azure",
+        "--user-account",
+        "--tenant",
+        request.tenant_id,
+        "--username",
+        request.username,
+        "--password",
+        request.password,
         "--report-name",
         request.report_name,
         "--force",
