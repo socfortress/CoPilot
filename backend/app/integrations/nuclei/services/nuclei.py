@@ -24,7 +24,7 @@ async def get_nuclei_reports_available() -> NucleiReportsAvailableResponse:
     """
     logger.info("Sending GET request to http://copilot-nuclei-module/all_reports")
     async with httpx.AsyncClient() as client:
-        response = await client.get("http://10.255.255.5/all_reports")
+        response = await client.get("http://copilot-nuclei-module/all_reports")
     if response.status_code == 404:
         raise HTTPException(status_code=404, detail="Nuclei reports not found")
     response.raise_for_status()  # Raise an exception if the request was unsuccessful
@@ -43,7 +43,7 @@ async def get_nuclei_report(host: str, report: str = "index.md") -> NucleiReport
     """
     logger.info(f"Sending GET request to http://copilot-nuclei-module/report/{host}/{report}")
     async with httpx.AsyncClient() as client:
-        response = await client.get(f"http://10.255.255.5/report/{host}/{report}")
+        response = await client.get(f"http://copilot-nuclei-module/report/{host}/{report}")
 
     if response.status_code == 404:
         raise HTTPException(status_code=404, detail="Nuclei report not found")
@@ -63,7 +63,7 @@ async def delete_nuclei_report(host: str) -> DeleteNucleiReportResponse:
     """
     logger.info(f"Sending DELETE request to http://copilot-nuclei-module/report/{host}")
     async with httpx.AsyncClient() as client:
-        response = await client.delete(f"http://10.255.255.5/report/{host}")
+        response = await client.delete(f"http://copilot-nuclei-module/report/{host}")
 
     if response.status_code == 404:
         raise HTTPException(status_code=404, detail="Nuclei report not found")
@@ -81,7 +81,7 @@ async def post_to_copilot_nuclei_module(data: NucleiScanRequest) -> NucleiScanRe
     # raise HTTPException(status_code=501, detail="Not Implemented Yet")
     async with httpx.AsyncClient() as client:
         data = await client.post(
-            "http://10.255.255.5/scan",
+            "http://copilot-nuclei-module/scan",
             json=data.dict(),
             timeout=120,
         )
