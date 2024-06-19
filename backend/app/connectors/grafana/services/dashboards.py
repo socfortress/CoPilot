@@ -14,7 +14,7 @@ from app.connectors.grafana.schema.dashboards import HuntressDashboard
 from app.connectors.grafana.schema.dashboards import MimecastDashboard
 from app.connectors.grafana.schema.dashboards import Office365Dashboard
 from app.connectors.grafana.schema.dashboards import SapSiemDashboard
-from app.connectors.grafana.schema.dashboards import WazuhDashboard
+from app.connectors.grafana.schema.dashboards import WazuhDashboard, DuoDashboard
 from app.connectors.grafana.utils.universal import create_grafana_client
 
 
@@ -181,6 +181,7 @@ async def provision_dashboards(
         + list(CarbonBlackDashboard)
         + list(FortinetDashboard)
         + list(CrowdstrikeDashboard)
+        + list(DuoDashboard)
     }
 
     for dashboard_name in dashboard_request.dashboards:
