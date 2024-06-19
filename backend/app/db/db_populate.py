@@ -273,6 +273,7 @@ def get_available_integrations_list():
         ("Huntress", "Integrate Huntress with SOCFortress."),
         ("CarbonBlack", "Integrate CarbonBlack with SOCFortress."),
         ("Crowdstrike", "Integrate Crowdstrike with SOCFortress."),
+        ("DUO", "Integrate DUO with SOCFortress."),
         # ... Add more available integrations as needed ...
     ]
 
@@ -385,6 +386,9 @@ async def get_available_integrations_auth_keys_list(session: AsyncSession):
         ("Crowdstrike", "CLIENT_SECRET"),
         ("Crowdstrike", "BASE_URL"),
         ("Crowdstrike", "SYSLOG_PORT"),
+        ("DUO", "API_HOSTNAME"),
+        ("DUO", "INTEGRATION_KEY"),
+        ("DUO", "SECRET_KEY"),
         # ... Add more available integrations auth keys as needed ...
     ]
     logger.info("Getting available integrations auth keys.")
