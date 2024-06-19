@@ -30,7 +30,6 @@ from app.agents.wazuh.services.agents import upgrade_wazuh_agent
 from app.agents.wazuh.services.sca import collect_agent_sca
 from app.agents.wazuh.services.sca import collect_agent_sca_policy_results
 from app.agents.wazuh.services.vulnerabilities import collect_agent_vulnerabilities
-from app.agents.wazuh.services.vulnerabilities import collect_agent_vulnerabilities_new
 
 # App specific imports
 from app.auth.routes.auth import AuthHandler
@@ -39,6 +38,9 @@ from app.db.db_session import get_db
 # App specific imports
 # from app.db.db_session import session
 from app.db.universal_models import Agents
+
+# from app.agents.wazuh.services.vulnerabilities import collect_agent_vulnerabilities_new
+
 
 agents_router = APIRouter()
 

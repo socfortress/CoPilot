@@ -20,7 +20,6 @@ export default [
 	...pluginVue.configs["flat/essential"],
 	...compat.extends(
 		"eslint:recommended",
-		"@typescript-eslint/recommended",
 		"@vue/eslint-config-typescript/recommended",
 		"@vue/eslint-config-prettier/skip-formatting"
 	),
@@ -46,10 +45,7 @@ export default [
 		},
 		rules: {
 			"vue/multi-word-component-names": "off",
-			"vue/no-setup-props-destructure": "off",
-			"no-redeclare": "off",
-			"@typescript-eslint/no-redeclare": "error",
-			"@typescript-eslint/adjacent-overload-signatures": "error"
+			"vue/no-setup-props-destructure": "off"
 		}
 	}
 ]
