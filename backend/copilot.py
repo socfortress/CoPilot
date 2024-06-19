@@ -59,6 +59,7 @@ from app.routers import sap_siem
 from app.routers import scheduler
 from app.routers import scoutsuite
 from app.routers import shuffle
+from app.routers import duo
 from app.routers import smtp
 from app.routers import stack_provisioning
 from app.routers import sublime
@@ -146,6 +147,7 @@ api_router.include_router(network_connectors.router)
 api_router.include_router(crowdstrike.router)
 api_router.include_router(scoutsuite.router)
 api_router.include_router(nuclei.router)
+api_router.include_router(duo.router)
 
 # Include the APIRouter in the FastAPI app
 app.include_router(api_router)

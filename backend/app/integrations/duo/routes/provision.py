@@ -10,10 +10,10 @@ from app.integrations.utils.utils import get_customer_integration_response
 from app.schedulers.models.scheduler import CreateSchedulerRequest
 from app.schedulers.scheduler import add_scheduler_jobs
 
-integration_dup_provision_router = APIRouter()
+integration_duo_provision_router = APIRouter()
 
 
-@integration_dup_provision_router.post(
+@integration_duo_provision_router.post(
     "/provision",
     response_model=ProvisionDuoResponse,
     description="Provision a Duo integration.",
