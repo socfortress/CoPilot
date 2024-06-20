@@ -17,7 +17,7 @@ class ProvisionDuoRequest(BaseModel):
     time_interval: int = Field(
         15,
         description="The time interval for the scheduler.",
-        examples=[5],
+        examples=[15],
     )
     integration_name: str = Field(
         "Duo",

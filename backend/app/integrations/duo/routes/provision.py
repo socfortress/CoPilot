@@ -40,9 +40,9 @@ async def provision_duo_route(
     await provision_duo(provision_duo_request, session)
     await add_scheduler_jobs(
         CreateSchedulerRequest(
-            function_name="invoke_duo_integration_collection",
+            function_name="invoke_duo_integration_collect",
             time_interval=provision_duo_request.time_interval,
-            job_id="invoke_duo_integration_collection",
+            job_id="invoke_duo_integration_collect",
         ),
     )
     return ProvisionDuoResponse(
