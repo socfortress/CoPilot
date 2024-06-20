@@ -36,6 +36,7 @@
 				</div>
 			</n-tag>
 		</TransitionGroup>
+
 		<div class="bar"></div>
 	</div>
 </template>
@@ -110,7 +111,8 @@ router.afterEach(route => {
 <style lang="scss" scoped>
 .pinned-pages {
 	position: relative;
-	overflow-x: clip;
+	overflow: hidden;
+	padding: 8px 0;
 
 	:deep() {
 		.n-tag {
@@ -155,7 +157,7 @@ router.afterEach(route => {
 	.bar {
 		background-color: var(--bg-sidebar);
 		position: absolute;
-		bottom: -7px;
+		bottom: 0px;
 		border-radius: 6px;
 		left: 0;
 		width: 100%;
@@ -165,8 +167,9 @@ router.afterEach(route => {
 	.divider {
 		height: 8px;
 		width: 8px;
+		min-width: 8px;
 		position: relative;
-		top: 9px;
+		top: 10px;
 		z-index: 1;
 		border-radius: 50%;
 		border: 2px solid var(--bg-body);
