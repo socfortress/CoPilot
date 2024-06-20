@@ -44,6 +44,25 @@ async def event_shipper(message: EventShipperPayload) -> EventShipperPayloadResp
         message="Successfully sent test message to log shipper.",
     )
 
+async def send_json_test_message_to_event_shipper(message: EventShipperPayload) -> EventShipperPayloadResponse:
+    """
+    Sends a test message to the Graylog Input.
+    """
+    gelf_logger = await get_gelf_logger()
+
+    try:
+        await gelf_logger.tcp_handler(message=message)
+    except Exception as e:
+        logger.error(f"Failed to send test message to log shipper: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to send test message to log shipper: {e}",
+        )
+
+    return EventShipperPayloadResponse(
+        success=True,
+        message="Successfully sent test message to log shipper.",
+    )
 
 async def verify_event_shipper_healtcheck(attributes: Dict[str, Any]) -> Dict[str, Any]:
     """
@@ -56,7 +75,7 @@ async def verify_event_shipper_healtcheck(attributes: Dict[str, Any]) -> Dict[st
         f"Verifying the event shipper connection to {attributes['connector_url']}",
     )
 
-    # MAke a TCP connection to the Graylog Input
+    # Make a TCP connection to the Graylog Input
     try:
         reader, writer = await asyncio.open_connection(
             attributes["connector_url"],
@@ -64,6 +83,13 @@ async def verify_event_shipper_healtcheck(attributes: Dict[str, Any]) -> Dict[st
         )
         writer.close()
         await writer.wait_closed()
+        await send_json_test_message_to_event_shipper(
+            EventShipperPayload(
+                message="Healthcheck successful",
+                integration="event_shipper",
+                customer_code='n/a',
+            ),
+        )
         return {
             "connectionSuccessful": True,
             "message": "Event shipper healthcheck successful",
