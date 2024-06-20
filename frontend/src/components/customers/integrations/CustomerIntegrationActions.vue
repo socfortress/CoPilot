@@ -37,6 +37,18 @@
 		</n-button>
 
 		<n-button
+			v-if="isDuo && !integration.deployed"
+			:loading="loadingDuoProvision"
+			@click="duoProvision()"
+			type="success"
+			:size="size"
+			secondary
+		>
+			<template #icon><Icon :name="DeployIcon"></Icon></template>
+			Deploy
+		</n-button>
+
+		<n-button
 			:size="size"
 			type="error"
 			ghost
@@ -82,12 +94,14 @@ const message = useMessage()
 const loadingOffice365Provision = ref(false)
 const loadingMimecastProvision = ref(false)
 const loadingCrowdstrikeProvision = ref(false)
+const loadingDuoProvision = ref(false)
 const loadingDelete = ref(false)
 const loading = computed(
 	() =>
+		loadingOffice365Provision.value ||
 		loadingMimecastProvision.value ||
 		loadingCrowdstrikeProvision.value ||
-		loadingOffice365Provision.value ||
+		loadingDuoProvision.value ||
 		loadingDelete.value
 )
 
@@ -96,6 +110,7 @@ const customerCode = computed(() => integration.customer_code)
 const isOffice365 = computed(() => serviceName.value === "Office365")
 const isMimecast = computed(() => serviceName.value === "Mimecast")
 const isCrowdstrike = computed(() => serviceName.value === "Crowdstrike")
+const isDuo = computed(() => serviceName.value === "DUO")
 
 watch(loading, val => {
 	if (val) {
@@ -165,6 +180,27 @@ function crowdstrikeProvision() {
 		})
 		.finally(() => {
 			loadingCrowdstrikeProvision.value = false
+		})
+}
+
+function duoProvision() {
+	loadingDuoProvision.value = true
+
+	Api.integrations
+		.duoProvision(customerCode.value, serviceName.value)
+		.then(res => {
+			if (res.data.success) {
+				emit("deployed")
+				message.success(res.data?.message || "Customer integration successfully deployed.")
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			loadingDuoProvision.value = false
 		})
 }
 

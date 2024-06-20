@@ -97,6 +97,10 @@ class CrowdstrikeDashboard(Enum):
     CROWDSTRIKE_SUMMARY = ("Crowdstrike", "summary.json")
 
 
+class DuoDashboard(Enum):
+    DUO_AUTH = ("Duo", "duo_auth.json")
+
+
 class DashboardProvisionRequest(BaseModel):
     dashboards: List[str] = Field(
         ...,
@@ -128,6 +132,7 @@ class DashboardProvisionRequest(BaseModel):
             + list(CarbonBlackDashboard)
             + list(FortinetDashboard)
             + list(CrowdstrikeDashboard)
+            + list(DuoDashboard)
         }
         if e not in valid_dashboards:
             raise ValueError(f'Dashboard identifier "{e}" is not recognized.')

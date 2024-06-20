@@ -7,6 +7,7 @@ from loguru import logger
 from app.connectors.grafana.schema.dashboards import CarbonBlackDashboard
 from app.connectors.grafana.schema.dashboards import CrowdstrikeDashboard
 from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
+from app.connectors.grafana.schema.dashboards import DuoDashboard
 from app.connectors.grafana.schema.dashboards import FortinetDashboard
 from app.connectors.grafana.schema.dashboards import GrafanaDashboard
 from app.connectors.grafana.schema.dashboards import GrafanaDashboardResponse
@@ -181,6 +182,7 @@ async def provision_dashboards(
         + list(CarbonBlackDashboard)
         + list(FortinetDashboard)
         + list(CrowdstrikeDashboard)
+        + list(DuoDashboard)
     }
 
     for dashboard_name in dashboard_request.dashboards:
