@@ -44,6 +44,7 @@ async def event_shipper(message: EventShipperPayload) -> EventShipperPayloadResp
         message="Successfully sent test message to log shipper.",
     )
 
+
 async def send_json_test_message_to_event_shipper(message: EventShipperPayload) -> EventShipperPayloadResponse:
     """
     Sends a test message to the Graylog Input.
@@ -63,6 +64,7 @@ async def send_json_test_message_to_event_shipper(message: EventShipperPayload) 
         success=True,
         message="Successfully sent test message to log shipper.",
     )
+
 
 async def verify_event_shipper_healtcheck(attributes: Dict[str, Any]) -> Dict[str, Any]:
     """
@@ -87,7 +89,7 @@ async def verify_event_shipper_healtcheck(attributes: Dict[str, Any]) -> Dict[st
             EventShipperPayload(
                 message="Healthcheck successful",
                 integration="event_shipper",
-                customer_code='n/a',
+                customer_code="n/a",
             ),
         )
         return {
