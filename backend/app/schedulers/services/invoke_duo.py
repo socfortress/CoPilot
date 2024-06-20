@@ -40,13 +40,13 @@ async def invoke_duo_integration_collect() -> InvokeDuoResponse:
     await session.close()
     with get_sync_db_session() as session:
         # Synchronous ORM operations
-        job_metadata = session.query(JobMetadata).filter_by(job_id="invoke_duo_integration_collection").one_or_none()
+        job_metadata = session.query(JobMetadata).filter_by(job_id="invoke_duo_integration_collect").one_or_none()
         if job_metadata:
             job_metadata.last_success = datetime.utcnow()
             session.add(job_metadata)
             session.commit()
         else:
             # Handle the case where job_metadata does not exist
-            print("JobMetadata for 'invoke_duo_integration_collection' not found.")
+            print("JobMetadata for 'invoke_duo_integration_collect' not found.")
 
     return InvokeDuoResponse(success=True, message="Duo integration invoked.")
