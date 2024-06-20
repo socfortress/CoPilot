@@ -48,6 +48,12 @@ export default {
 		})
 	},
 
+	office365Provision(customerCode: string, integrationName: string) {
+		return HttpClient.post<FlaskBaseResponse>(`/office365/provision`, {
+			customer_code: customerCode,
+			integration_name: integrationName
+		})
+	},
 	mimecastProvision(customerCode: string, integrationName: string) {
 		return HttpClient.post<FlaskBaseResponse>(`/mimecast/provision`, {
 			customer_code: customerCode,
@@ -60,9 +66,10 @@ export default {
 			integration_name: integrationName
 		})
 	},
-	office365Provision(customerCode: string, integrationName: string) {
-		return HttpClient.post<FlaskBaseResponse>(`/office365/provision`, {
+	duoProvision(customerCode: string, integrationName: string) {
+		return HttpClient.post<FlaskBaseResponse>(`/duo/provision`, {
 			customer_code: customerCode,
+			time_interval: 15,
 			integration_name: integrationName
 		})
 	}
