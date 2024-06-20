@@ -12,7 +12,6 @@ from app.integrations.modules.services.duo import post_to_copilot_duo_module
 from app.integrations.routes import find_customer_integration
 from app.integrations.utils.utils import extract_auth_keys
 from app.integrations.utils.utils import get_customer_integration_response
-from app.middleware.license import get_license
 from app.utils import get_connector_attribute
 
 module_duo_router = APIRouter()
@@ -54,8 +53,8 @@ async def get_collect_duo_data(duo_request, session, auth_keys):
         integration_key=auth_keys.INTEGRATION_KEY,
         secret_key=auth_keys.SECRET_KEY,
         api_host=auth_keys.API_HOSTNAME,
-        api_endpoint='/admin/v2/logs/authentication',
-        range='15m'
+        api_endpoint="/admin/v2/logs/authentication",
+        range="15m",
     )
 
 
@@ -81,7 +80,6 @@ async def collect_duo_route(duo_request: InvokeDuoRequest, session: AsyncSession
             duo_request.integration_name,
             customer_integration_response,
         )
-
 
         auth_keys = await get_duo_auth_keys(customer_integration)
 

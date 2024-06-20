@@ -1,9 +1,9 @@
 from fastapi import APIRouter
 
+from app.integrations.modules.routes.duo import module_duo_router
 from app.integrations.modules.routes.huntress import module_huntress_router
 from app.integrations.modules.routes.mimecast import module_mimecast_router
 from app.integrations.modules.routes.sap_siem import module_sap_siem_router
-from app.integrations.modules.routes.duo import module_duo_router
 
 router = APIRouter()
 
@@ -30,5 +30,3 @@ router.include_router(
     prefix="/integrations/modules/duo",
     tags=["DUO"],
 )
-
-

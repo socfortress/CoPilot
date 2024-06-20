@@ -41,6 +41,7 @@ from app.routers import customer_provisioning
 from app.routers import customers
 from app.routers import dfir_iris
 from app.routers import dnstwist
+from app.routers import duo
 from app.routers import grafana
 from app.routers import graylog
 from app.routers import healthcheck
@@ -59,7 +60,6 @@ from app.routers import sap_siem
 from app.routers import scheduler
 from app.routers import scoutsuite
 from app.routers import shuffle
-from app.routers import duo
 from app.routers import smtp
 from app.routers import stack_provisioning
 from app.routers import sublime

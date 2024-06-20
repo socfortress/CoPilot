@@ -96,6 +96,7 @@ class FortinetDashboard(Enum):
 class CrowdstrikeDashboard(Enum):
     CROWDSTRIKE_SUMMARY = ("Crowdstrike", "summary.json")
 
+
 class DuoDashboard(Enum):
     DUO_AUTH = ("Duo", "duo_auth.json")
 

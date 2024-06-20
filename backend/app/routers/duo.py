@@ -1,8 +1,6 @@
 from fastapi import APIRouter
 
-from app.integrations.duo.routes.provision import (
-    integration_duo_provision_router,
-)
+from app.integrations.duo.routes.provision import integration_duo_provision_router
 
 # Instantiate the APIRouter
 router = APIRouter()
