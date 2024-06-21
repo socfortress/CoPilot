@@ -6,6 +6,7 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Security
 from loguru import logger
+from packaging import version
 from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -30,18 +31,17 @@ from app.agents.wazuh.services.agents import upgrade_wazuh_agent
 from app.agents.wazuh.services.sca import collect_agent_sca
 from app.agents.wazuh.services.sca import collect_agent_sca_policy_results
 from app.agents.wazuh.services.vulnerabilities import collect_agent_vulnerabilities
-from app.connectors.wazuh_manager.utils.universal import send_get_request
-from packaging import version
+from app.agents.wazuh.services.vulnerabilities import collect_agent_vulnerabilities_new
 
 # App specific imports
 from app.auth.routes.auth import AuthHandler
+from app.connectors.wazuh_manager.utils.universal import send_get_request
 from app.db.db_session import get_db
 
 # App specific imports
 # from app.db.db_session import session
 from app.db.universal_models import Agents
 
-from app.agents.wazuh.services.vulnerabilities import collect_agent_vulnerabilities_new
 
 async def get_wazuh_manager_version() -> str:
     """
@@ -64,6 +64,7 @@ async def get_wazuh_manager_version() -> str:
             detail=f"Failed to fetch Wazuh Manager version: {e}",
         )
 
+
 async def check_wazuh_manager_version() -> bool:
     """
     Checks the version of the Wazuh Manager.
@@ -77,6 +78,7 @@ async def check_wazuh_manager_version() -> bool:
     except Exception as e:
         logger.error(f"Failed to check Wazuh Manager version: {e}")
         return False
+
 
 agents_router = APIRouter()
 
@@ -450,6 +452,7 @@ async def get_agent_vulnerabilities(agent_id: str) -> WazuhAgentVulnerabilitiesR
     if wazuh_new is True:
         return await collect_agent_vulnerabilities_new(agent_id)
     return await collect_agent_vulnerabilities(agent_id)
+
 
 @agents_router.get(
     "/{agent_id}/sca",
