@@ -6,6 +6,7 @@ from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Security
 from loguru import logger
+from packaging import version
 from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -30,16 +31,53 @@ from app.agents.wazuh.services.agents import upgrade_wazuh_agent
 from app.agents.wazuh.services.sca import collect_agent_sca
 from app.agents.wazuh.services.sca import collect_agent_sca_policy_results
 from app.agents.wazuh.services.vulnerabilities import collect_agent_vulnerabilities
+from app.agents.wazuh.services.vulnerabilities import collect_agent_vulnerabilities_new
 
 # App specific imports
 from app.auth.routes.auth import AuthHandler
+from app.connectors.wazuh_manager.utils.universal import send_get_request
 from app.db.db_session import get_db
 
 # App specific imports
 # from app.db.db_session import session
 from app.db.universal_models import Agents
 
-# from app.agents.wazuh.services.vulnerabilities import collect_agent_vulnerabilities_new
+
+async def get_wazuh_manager_version() -> str:
+    """
+    Fetches the version of the Wazuh Manager.
+
+    Returns:
+        str: The version of the Wazuh Manager.
+
+    Raises:
+        HTTPException: If there is an error fetching the version of the Wazuh Manager.
+    """
+    try:
+        response = await send_get_request(endpoint="/")
+        logger.info(f"Fetched Wazuh Manager version: {response}")
+        return response["data"]["data"]["api_version"]
+    except Exception as e:
+        logger.error(f"Failed to fetch Wazuh Manager version: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to fetch Wazuh Manager version: {e}",
+        )
+
+
+async def check_wazuh_manager_version() -> bool:
+    """
+    Checks the version of the Wazuh Manager.
+
+    Returns:
+        bool: True if the version of the Wazuh Manager is 4.8.0 or higher, False otherwise.
+    """
+    try:
+        wazuh_manager_version = await get_wazuh_manager_version()
+        return version.parse(wazuh_manager_version) >= version.parse("4.8.0")
+    except Exception as e:
+        logger.error(f"Failed to check Wazuh Manager version: {e}")
+        return False
 
 
 agents_router = APIRouter()
@@ -410,8 +448,10 @@ async def get_agent_vulnerabilities(agent_id: str) -> WazuhAgentVulnerabilitiesR
         WazuhAgentVulnerabilitiesResponse: The response containing the agent vulnerabilities.
     """
     logger.info(f"Fetching agent {agent_id} vulnerabilities")
+    wazuh_new = await check_wazuh_manager_version()
+    if wazuh_new is True:
+        return await collect_agent_vulnerabilities_new(agent_id)
     return await collect_agent_vulnerabilities(agent_id)
-    # return await collect_agent_vulnerabilities_new(agent_id)
 
 
 @agents_router.get(

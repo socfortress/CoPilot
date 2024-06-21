@@ -13,6 +13,7 @@ from app.connectors.wazuh_manager.utils.universal import send_get_request
 async def collect_agent_vulnerabilities(agent_id: str):
     """
     Collect agent vulnerabilities from Wazuh Manager.
+    Used when Wazuh Manager is below 4.8.0
 
     Args:
         agent_id (str): The ID of the agent.
@@ -28,6 +29,7 @@ async def collect_agent_vulnerabilities(agent_id: str):
         endpoint=f"/vulnerability/{agent_id}",
     )
     if agent_vulnerabilities["success"] is False:
+        return None
         raise HTTPException(status_code=500, detail=agent_vulnerabilities["message"])
 
     processed_vulnerabilities = process_agent_vulnerabilities(
@@ -69,6 +71,17 @@ def process_agent_vulnerabilities(
 
 
 async def collect_agent_vulnerabilities_new(agent_id: str):
+    """
+    Collects vulnerabilities for a specific agent from the Wazuh Indexer Index.
+    Used when Wazuh-Manager is 4.8.0 or above.
+
+    Args:
+        agent_id (str): The ID of the agent for which to collect vulnerabilities.
+
+    Returns:
+        WazuhAgentVulnerabilitiesResponse: An object containing the collected vulnerabilities,
+        along with a success flag and a message indicating the success status.
+    """
     logger.info(f"Collecting agent {agent_id} vulnerabilities from Wazuh Indexer Index")
     es = await create_wazuh_indexer_client("Wazuh-Indexer")
     indices = await collect_indices(all_indices=True)
