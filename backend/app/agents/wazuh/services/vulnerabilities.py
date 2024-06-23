@@ -158,7 +158,7 @@ def process_single_vulnerability(vulnerability):
         architecture=vulnerability.get("package").get("architecture"),
         cve=vulnerability.get("vulnerability").get("id"),
         status=vulnerability.get("status"),
-        title=vulnerability.get("vulnerability").get("id"),
+        title=vulnerability.get("vulnerability").get("description"),
     )
 
 
