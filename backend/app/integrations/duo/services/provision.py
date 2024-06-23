@@ -50,7 +50,7 @@ async def build_index_set_config(
     return TimeBasedIndexSet(
         title=f"{(await get_customer(customer_code, session)).customer.customer_name} - DUO",
         description=f"{customer_code} - DUO",
-        index_prefix=f"duo-{customer_code}",
+        index_prefix=f"duo-{customer_code.lower()}-",
         rotation_strategy_class="org.graylog2.indexer.rotation.strategies.TimeBasedRotationStrategy",
         rotation_strategy={
             "type": "org.graylog2.indexer.rotation.strategies.TimeBasedRotationStrategyConfig",
