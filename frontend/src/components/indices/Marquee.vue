@@ -4,7 +4,7 @@
 			<n-spin :show="loading">
 				<Vue3Marquee
 					class="marquee-wrap"
-					:duration="200"
+					:duration="(list?.length || 0) * 1"
 					:pauseOnHover="true"
 					:clone="false"
 					:gradient="true"
