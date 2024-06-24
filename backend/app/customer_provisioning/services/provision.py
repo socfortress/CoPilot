@@ -21,7 +21,7 @@ from app.customer_provisioning.schema.wazuh_worker import ProvisionWorkerRequest
 from app.customer_provisioning.schema.wazuh_worker import ProvisionWorkerResponse
 from app.customer_provisioning.services.dfir_iris import add_user_to_all_customers
 from app.customer_provisioning.services.dfir_iris import create_customer
-from app.customer_provisioning.services.grafana import create_grafana_datasource
+from app.customer_provisioning.services.grafana import create_grafana_datasource, create_vulnerability_datasource
 from app.customer_provisioning.services.grafana import create_grafana_folder
 from app.customer_provisioning.services.grafana import create_grafana_organization
 from app.customer_provisioning.services.graylog import connect_stream_to_pipeline
@@ -35,6 +35,7 @@ from app.integrations.alert_creation_settings.models.alert_creation_settings imp
     AlertCreationSettings,
 )
 from app.utils import get_connector_attribute
+from app.agents.routes.agents import check_wazuh_manager_version
 
 
 async def verify_connection(service_name: str, verify_connection_func: Callable) -> None:
@@ -103,6 +104,15 @@ async def provision_wazuh_customer(
             session=session,
         )
     ).datasource.uid
+    # ! CREATE THE VULNERABILITY DATASOURCE IF WAZUH VERSION 4.8.0 OR HIGHER ! #
+    if check_wazuh_manager_version() is True:
+        logger.info("Creating vulnerability datasource since Wazuh version is 4.8.0 or higher")
+        await create_vulnerability_datasource(
+            request=request,
+            organization_id=provision_meta_data["grafana_organization_id"],
+            session=session,
+        )
+    logger.info("Creating EDR folder and dashboards")
     provision_meta_data["grafana_edr_folder_id"] = (
         await create_grafana_folder(
             organization_id=provision_meta_data["grafana_organization_id"],
