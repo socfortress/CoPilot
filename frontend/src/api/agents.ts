@@ -13,6 +13,8 @@ export interface AgentPayload {
 	velociraptor_id: string
 }
 
+export type VulnerabilitySeverityType = "Low" | "Medium" | "High" | "Critical"
+
 export default {
 	getAgents(agentId?: string) {
 		return HttpClient.get<FlaskBaseResponse & { agents: Agent[] }>(`/agents${agentId ? "/" + agentId : ""}`)
@@ -29,9 +31,9 @@ export default {
 	syncAgents() {
 		return HttpClient.post<FlaskBaseResponse>(`/agents/sync`)
 	},
-	agentVulnerabilities(agentId: string) {
+	agentVulnerabilities(agentId: string, severity: VulnerabilitySeverityType) {
 		return HttpClient.get<FlaskBaseResponse & { vulnerabilities: AgentVulnerabilities[] }>(
-			`/agents/${agentId}/vulnerabilities`
+			`/agents/${agentId}/vulnerabilities/${severity}`
 		)
 	},
 	getSocCases(agentId: string | number, signal?: AbortSignal) {
