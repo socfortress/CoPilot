@@ -114,6 +114,7 @@ async def create_grafana_datasource(
     )
     return GrafanaDataSourceCreationResponse(**results)
 
+
 async def create_vulnerability_datasource(
     request: ProvisionNewCustomer,
     organization_id: int,

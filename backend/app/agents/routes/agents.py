@@ -4,11 +4,11 @@ import asyncio
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi import Path
 from fastapi import Security
 from loguru import logger
 from packaging import version
 from sqlalchemy import delete
-from fastapi import Path
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
@@ -24,7 +24,8 @@ from app.agents.services.status import get_outdated_agents_wazuh
 from app.agents.services.sync import sync_agents_velociraptor
 from app.agents.services.sync import sync_agents_wazuh
 from app.agents.velociraptor.services.agents import delete_agent_velociraptor
-from app.agents.wazuh.schema.agents import WazuhAgentScaPolicyResultsResponse, VulnSeverity
+from app.agents.wazuh.schema.agents import VulnSeverity
+from app.agents.wazuh.schema.agents import WazuhAgentScaPolicyResultsResponse
 from app.agents.wazuh.schema.agents import WazuhAgentScaResponse
 from app.agents.wazuh.schema.agents import WazuhAgentVulnerabilitiesResponse
 from app.agents.wazuh.services.agents import delete_agent_wazuh
@@ -440,7 +441,7 @@ async def upgrade_wazuh_agent_route(
 )
 async def get_agent_vulnerabilities(
     agent_id: str,
-    vulnerability_severity: VulnSeverity = Path(..., description="The severity of the vulnerabilities to fetch.")
+    vulnerability_severity: VulnSeverity = Path(..., description="The severity of the vulnerabilities to fetch."),
 ) -> WazuhAgentVulnerabilitiesResponse:
     """
     Fetches the vulnerabilities of a specific agent.

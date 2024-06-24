@@ -1,16 +1,18 @@
 from datetime import datetime
+from enum import Enum
 from typing import List
 from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
-from enum import Enum
+
 
 class VulnSeverity(Enum):
     Low = "Low"
     Medium = "Medium"
     High = "High"
     Critical = "Critical"
+
 
 class WazuhAgent(BaseModel):
     agent_id: str = Field(..., alias="agent_id")

@@ -5,6 +5,7 @@ from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.agents.routes.agents import check_wazuh_manager_version
 from app.connectors.dfir_iris.utils.universal import verify_dfir_iris_connection
 from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
 from app.connectors.grafana.services.dashboards import provision_dashboards
@@ -21,9 +22,10 @@ from app.customer_provisioning.schema.wazuh_worker import ProvisionWorkerRequest
 from app.customer_provisioning.schema.wazuh_worker import ProvisionWorkerResponse
 from app.customer_provisioning.services.dfir_iris import add_user_to_all_customers
 from app.customer_provisioning.services.dfir_iris import create_customer
-from app.customer_provisioning.services.grafana import create_grafana_datasource, create_vulnerability_datasource
+from app.customer_provisioning.services.grafana import create_grafana_datasource
 from app.customer_provisioning.services.grafana import create_grafana_folder
 from app.customer_provisioning.services.grafana import create_grafana_organization
+from app.customer_provisioning.services.grafana import create_vulnerability_datasource
 from app.customer_provisioning.services.graylog import connect_stream_to_pipeline
 from app.customer_provisioning.services.graylog import create_event_stream
 from app.customer_provisioning.services.graylog import create_index_set
@@ -35,7 +37,6 @@ from app.integrations.alert_creation_settings.models.alert_creation_settings imp
     AlertCreationSettings,
 )
 from app.utils import get_connector_attribute
-from app.agents.routes.agents import check_wazuh_manager_version
 
 
 async def verify_connection(service_name: str, verify_connection_func: Callable) -> None:

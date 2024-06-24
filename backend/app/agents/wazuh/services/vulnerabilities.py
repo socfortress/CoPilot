@@ -104,34 +104,27 @@ def filter_vulnerabilities_indices(indices_list):
     return [index for index in indices_list if index.startswith("wazuh-states-vulnerabilities")]
 
 
-
 async def collect_vulnerabilities(es, vulnerabilities_indices, agent_id, vulnerability_severity="Critical"):
     agent_vulnerabilities = []
     for index in vulnerabilities_indices:
         query = {
-            "query": {
-                "bool": {
-                    "must": [
-                        {"match": {"agent.id": agent_id}},
-                        {"match": {"vulnerability.severity": vulnerability_severity}}
-                    ]
-                }
-            }
+            "query": {"bool": {"must": [{"match": {"agent.id": agent_id}}, {"match": {"vulnerability.severity": vulnerability_severity}}]}},
         }
-        page = es.search(index=index, body=query, scroll='2m')
-        sid = page['_scroll_id']
-        scroll_size = len(page['hits']['hits'])
+        page = es.search(index=index, body=query, scroll="2m")
+        sid = page["_scroll_id"]
+        scroll_size = len(page["hits"]["hits"])
 
         while scroll_size > 0:
-            for hit in page['hits']['hits']:
+            for hit in page["hits"]["hits"]:
                 vulnerability = hit["_source"]
                 agent_vulnerabilities.append(vulnerability)
 
-            page = es.scroll(scroll_id=sid, scroll='2m')
-            sid = page['_scroll_id']
-            scroll_size = len(page['hits']['hits'])
+            page = es.scroll(scroll_id=sid, scroll="2m")
+            sid = page["_scroll_id"]
+            scroll_size = len(page["hits"]["hits"])
 
     return agent_vulnerabilities
+
 
 def process_agent_vulnerabilities_new(agent_vulnerabilities: List[dict]) -> List[WazuhAgentVulnerabilities]:
     logger.info(f"Processing agent vulnerabilities: {agent_vulnerabilities}")
