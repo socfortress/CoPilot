@@ -10,7 +10,7 @@ from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_cl
 from app.connectors.wazuh_manager.utils.universal import send_get_request
 
 
-async def collect_agent_vulnerabilities(agent_id: str):
+async def collect_agent_vulnerabilities(agent_id: str, vulnerability_severity: str):
     """
     Collect agent vulnerabilities from Wazuh Manager.
     Used when Wazuh Manager is below 4.8.0
@@ -27,9 +27,9 @@ async def collect_agent_vulnerabilities(agent_id: str):
     logger.info(f"Collecting agent {agent_id} vulnerabilities from Wazuh Manager")
     agent_vulnerabilities = await send_get_request(
         endpoint=f"/vulnerability/{agent_id}",
+        params={"severity": vulnerability_severity},
     )
     if agent_vulnerabilities["success"] is False:
-        return None
         raise HTTPException(status_code=500, detail=agent_vulnerabilities["message"])
 
     processed_vulnerabilities = process_agent_vulnerabilities(
@@ -70,7 +70,7 @@ def process_agent_vulnerabilities(
         )
 
 
-async def collect_agent_vulnerabilities_new(agent_id: str):
+async def collect_agent_vulnerabilities_new(agent_id: str, vulnerability_severity: str):
     """
     Collects vulnerabilities for a specific agent from the Wazuh Indexer Index.
     Used when Wazuh-Manager is 4.8.0 or above.
@@ -89,7 +89,7 @@ async def collect_agent_vulnerabilities_new(agent_id: str):
 
     vulnerabilities_indices = filter_vulnerabilities_indices(indices.indices_list)
 
-    agent_vulnerabilities = await collect_vulnerabilities(es, vulnerabilities_indices, agent_id)
+    agent_vulnerabilities = await collect_vulnerabilities(es, vulnerabilities_indices, agent_id, vulnerability_severity)
 
     processed_vulnerabilities = process_agent_vulnerabilities_new(agent_vulnerabilities)
 
@@ -104,15 +104,25 @@ def filter_vulnerabilities_indices(indices_list):
     return [index for index in indices_list if index.startswith("wazuh-states-vulnerabilities")]
 
 
-async def collect_vulnerabilities(es, vulnerabilities_indices, agent_id):
+async def collect_vulnerabilities(es, vulnerabilities_indices, agent_id, vulnerability_severity="Critical"):
     agent_vulnerabilities = []
     for index in vulnerabilities_indices:
-        query = {"query": {"match": {"agent.id": agent_id}}}
-        response = es.search(index=index, body=query)
+        query = {
+            "query": {"bool": {"must": [{"match": {"agent.id": agent_id}}, {"match": {"vulnerability.severity": vulnerability_severity}}]}},
+        }
+        page = es.search(index=index, body=query, scroll="2m")
+        sid = page["_scroll_id"]
+        scroll_size = len(page["hits"]["hits"])
 
-        for hit in response["hits"]["hits"]:
-            vulnerability = hit["_source"]
-            agent_vulnerabilities.append(vulnerability)
+        while scroll_size > 0:
+            for hit in page["hits"]["hits"]:
+                vulnerability = hit["_source"]
+                agent_vulnerabilities.append(vulnerability)
+
+            page = es.scroll(scroll_id=sid, scroll="2m")
+            sid = page["_scroll_id"]
+            scroll_size = len(page["hits"]["hits"])
+
     return agent_vulnerabilities
 
 

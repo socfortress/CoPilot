@@ -5,6 +5,7 @@ from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.agents.routes.agents import check_wazuh_manager_version
 from app.connectors.dfir_iris.utils.universal import verify_dfir_iris_connection
 from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
 from app.connectors.grafana.services.dashboards import provision_dashboards
@@ -24,6 +25,7 @@ from app.customer_provisioning.services.dfir_iris import create_customer
 from app.customer_provisioning.services.grafana import create_grafana_datasource
 from app.customer_provisioning.services.grafana import create_grafana_folder
 from app.customer_provisioning.services.grafana import create_grafana_organization
+from app.customer_provisioning.services.grafana import create_vulnerability_datasource
 from app.customer_provisioning.services.graylog import connect_stream_to_pipeline
 from app.customer_provisioning.services.graylog import create_event_stream
 from app.customer_provisioning.services.graylog import create_index_set
@@ -103,6 +105,15 @@ async def provision_wazuh_customer(
             session=session,
         )
     ).datasource.uid
+    # ! CREATE THE VULNERABILITY DATASOURCE IF WAZUH VERSION 4.8.0 OR HIGHER ! #
+    if check_wazuh_manager_version() is True:
+        logger.info("Creating vulnerability datasource since Wazuh version is 4.8.0 or higher")
+        await create_vulnerability_datasource(
+            request=request,
+            organization_id=provision_meta_data["grafana_organization_id"],
+            session=session,
+        )
+    logger.info("Creating EDR folder and dashboards")
     provision_meta_data["grafana_edr_folder_id"] = (
         await create_grafana_folder(
             organization_id=provision_meta_data["grafana_organization_id"],

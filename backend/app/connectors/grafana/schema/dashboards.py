@@ -43,6 +43,7 @@ class WazuhDashboard(Enum):
     EDR_AV_MALWARE_IOC = ("Wazuh", "edr_av_malware_ioc.json")
     EDR_AGENT_INVENTORY = ("Wazuh", "edr_agent_inventory.json")
     EDR_AD_INVENOTRY = ("Wazuh", "edr_ad_inventory.json")
+    EDR_SYSTEM_VULNERABILITIES_NEW = ("Wazuh", "edr_system_vulnerabilities_new.json")
 
 
 class Office365Dashboard(Enum):

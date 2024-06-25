@@ -1,10 +1,10 @@
 <template>
-	<div class="flex pinned-pages items-end">
+	<div class="flex pinned-pages items-center gap-5">
 		<TransitionGroup name="anim" tag="div" class="latest-list flex items-center gap-4 overflow-hidden">
 			<n-tag
 				round
 				:bordered="false"
-				closable
+				:closable="false"
 				v-for="page of latestSanitized"
 				:key="page.name"
 				@close="removeLatestPage(page.name)"
@@ -20,24 +20,32 @@
 			</n-tag>
 		</TransitionGroup>
 
-		<div class="divider" v-if="latestSanitized.length && pinned.length"></div>
-
-		<TransitionGroup name="anim" tag="div" class="pinned-list flex items-center gap-4 overflow-hidden">
-			<n-tag
-				round
-				:bordered="false"
-				closable
-				v-for="page of pinned"
-				:key="page.name"
-				@close="removePinnedPage(page.name)"
-			>
-				<div class="page-name" @click="gotoPage(page.name)" :title="page.title">
-					{{ page.title }}
-				</div>
-			</n-tag>
-		</TransitionGroup>
-
-		<div class="bar"></div>
+		<Transition name="anim" tag="div" class="flex items-center">
+			<div v-if="pinned.length" class="flex items-center">
+				<n-popover :show-arrow="false" placement="bottom-end" trigger="hover">
+					<template #trigger>
+						<n-button size="small" class="!h-8">
+							<span class="flex items-center gap-3">
+								Shortcuts
+								<n-badge :value="pinned.length" :color="style['--divider-030-color']" />
+							</span>
+						</n-button>
+					</template>
+					<div class="flex flex-col gap-3 py-2 pr-1">
+						<div class="flex gap-2 items-center" v-for="page of pinned" :key="page.name">
+							<n-button size="small" text @click="removePinnedPage(page.name)">
+								<template #icon>
+									<Icon :size="20" :name="CloseIcon" class="opacity-55"></Icon>
+								</template>
+							</n-button>
+							<n-button size="small" text @click="gotoPage(page.name)" :title="page.title">
+								{{ page.title }}
+							</n-button>
+						</div>
+					</div>
+				</n-popover>
+			</div>
+		</Transition>
 	</div>
 </template>
 
@@ -45,11 +53,12 @@
 import { useRouter, type RouteLocationNormalized, type RouteRecordName } from "vue-router"
 import { type RemovableRef, useStorage } from "@vueuse/core"
 import { computed, type ComputedRef } from "vue"
-import { NTag } from "naive-ui"
+import { NTag, NPopover, NButton, NBadge } from "naive-ui"
 import _takeRight from "lodash/takeRight"
 import _split from "lodash/split"
 import _uniqBy from "lodash/uniqBy"
 import Icon from "@/components/common/Icon.vue"
+import { useThemeStore } from "@/stores/theme"
 
 interface Page {
 	name: RouteRecordName | string
@@ -58,7 +67,11 @@ interface Page {
 }
 
 const PinnedIcon = "tabler:pinned"
+const CloseIcon = "carbon:close"
 const router = useRouter()
+const themeStore = useThemeStore()
+
+const style = computed(() => themeStore.style)
 
 const removeLatestPage = (pageName: RouteRecordName | string) => {
 	latest.value = latest.value.filter(page => page.name !== pageName)
@@ -139,43 +152,21 @@ router.afterEach(route => {
 				transition: all 0.3s;
 			}
 
-			&:hover {
-				background-color: var(--bg-sidebar);
+			&.n-tag--closable {
+				&:hover {
+					background-color: var(--bg-sidebar);
 
-				&.n-tag--round {
-					padding: 0 calc(var(--n-height) / 3.6) 0 calc(var(--n-height) / 3.6);
-				}
-				.n-tag__close {
-					margin-left: 5px;
-					overflow: initial;
-					width: 14px;
+					&.n-tag--round {
+						padding: 0 calc(var(--n-height) / 3.6) 0 calc(var(--n-height) / 3.6);
+					}
+					.n-tag__close {
+						margin-left: 5px;
+						overflow: initial;
+						width: 14px;
+					}
 				}
 			}
 		}
-	}
-
-	.bar {
-		background-color: var(--bg-sidebar);
-		position: absolute;
-		bottom: 0px;
-		border-radius: 6px;
-		left: 0;
-		width: 100%;
-		height: 4px;
-	}
-
-	.divider {
-		height: 8px;
-		width: 8px;
-		min-width: 8px;
-		position: relative;
-		top: 10px;
-		z-index: 1;
-		border-radius: 50%;
-		border: 2px solid var(--bg-body);
-		opacity: 0.9;
-		background-color: var(--primary-color);
-		margin: 0 8px;
 	}
 
 	.page-name {
@@ -190,18 +181,13 @@ router.afterEach(route => {
 			text-decoration-color: var(--primary-color);
 		}
 	}
+
 	.icon-box {
 		cursor: pointer;
 		transition: color 0.3s;
 		margin-right: 2px;
 
 		&:hover {
-			color: var(--primary-color);
-		}
-	}
-
-	.pinned-list {
-		.page-name {
 			color: var(--primary-color);
 		}
 	}

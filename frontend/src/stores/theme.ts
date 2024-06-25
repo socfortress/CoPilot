@@ -258,7 +258,7 @@ export const useThemeStore = defineStore("theme", {
 			return _pick(state.colors[state.themeName], pick)
 		},
 		dividerColors(state): { [key: string]: string } {
-			const pick = ["divider005", "divider010", "divider020"]
+			const pick = ["divider005", "divider010", "divider020", "divider030"]
 			return _pick(state.colors[state.themeName], pick)
 		},
 		hoverColors(state): { [key: string]: string } {
@@ -332,7 +332,7 @@ export const useThemeStore = defineStore("theme", {
 			const borderRadius = state.borderRadius.base
 			const borderRadiusSmall = state.borderRadius.small
 
-			const { divider005, divider010, divider020 } = this.dividerColors
+			const { divider005, divider010, divider020, divider030 } = this.dividerColors
 			const { hover005, hover010, hover050 } = this.hoverColors
 			const { primary005, primary010, primary015, primary020, primary030, primary040, primary050, primary060 } =
 				this.primaryColors
@@ -416,6 +416,7 @@ export const useThemeStore = defineStore("theme", {
 				"--divider-005-color": `${divider005}`,
 				"--divider-010-color": `${divider010}`,
 				"--divider-020-color": `${divider020}`,
+				"--divider-030-color": `${divider030}`,
 
 				"--success-color": `${successColor}`,
 				"--error-color": `${errorColor}`,

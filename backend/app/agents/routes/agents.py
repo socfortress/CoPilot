@@ -4,6 +4,7 @@ import asyncio
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
+from fastapi import Path
 from fastapi import Security
 from loguru import logger
 from packaging import version
@@ -23,6 +24,7 @@ from app.agents.services.status import get_outdated_agents_wazuh
 from app.agents.services.sync import sync_agents_velociraptor
 from app.agents.services.sync import sync_agents_wazuh
 from app.agents.velociraptor.services.agents import delete_agent_velociraptor
+from app.agents.wazuh.schema.agents import VulnSeverity
 from app.agents.wazuh.schema.agents import WazuhAgentScaPolicyResultsResponse
 from app.agents.wazuh.schema.agents import WazuhAgentScaResponse
 from app.agents.wazuh.schema.agents import WazuhAgentVulnerabilitiesResponse
@@ -432,12 +434,15 @@ async def upgrade_wazuh_agent_route(
 
 
 @agents_router.get(
-    "/{agent_id}/vulnerabilities",
+    "/{agent_id}/vulnerabilities/{vulnerability_severity}",
     response_model=WazuhAgentVulnerabilitiesResponse,
     description="Get agent vulnerabilities",
     dependencies=[Security(AuthHandler().require_any_scope("admin", "analyst"))],
 )
-async def get_agent_vulnerabilities(agent_id: str) -> WazuhAgentVulnerabilitiesResponse:
+async def get_agent_vulnerabilities(
+    agent_id: str,
+    vulnerability_severity: VulnSeverity = Path(..., description="The severity of the vulnerabilities to fetch."),
+) -> WazuhAgentVulnerabilitiesResponse:
     """
     Fetches the vulnerabilities of a specific agent.
 
@@ -450,8 +455,9 @@ async def get_agent_vulnerabilities(agent_id: str) -> WazuhAgentVulnerabilitiesR
     logger.info(f"Fetching agent {agent_id} vulnerabilities")
     wazuh_new = await check_wazuh_manager_version()
     if wazuh_new is True:
-        return await collect_agent_vulnerabilities_new(agent_id)
-    return await collect_agent_vulnerabilities(agent_id)
+        logger.info("Wazuh Manager version is 4.8.0 or higher. Fetching vulnerabilities using new API")
+        return await collect_agent_vulnerabilities_new(agent_id, vulnerability_severity.value)
+    return await collect_agent_vulnerabilities(agent_id, vulnerability_severity.value)
 
 
 @agents_router.get(

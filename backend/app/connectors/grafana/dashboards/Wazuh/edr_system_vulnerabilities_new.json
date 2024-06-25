@@ -1,0 +1,2663 @@
+{
+	"annotations": {
+		"list": [
+			{
+				"builtIn": 1,
+				"datasource": {
+					"type": "datasource",
+					"uid": "grafana"
+				},
+				"enable": true,
+				"hide": true,
+				"iconColor": "rgba(0, 211, 255, 1)",
+				"name": "Annotations & Alerts",
+				"target": {
+					"limit": 100,
+					"matchAny": false,
+					"tags": [],
+					"type": "dashboard"
+				},
+				"type": "dashboard"
+			}
+		]
+	},
+	"editable": false,
+	"fiscalYearStartMonth": 0,
+	"graphTooltip": 0,
+	"id": null,
+	"links": [
+		{
+			"asDropdown": true,
+			"icon": "external link",
+			"includeVars": true,
+			"keepTime": true,
+			"tags": ["EDR"],
+			"targetBlank": true,
+			"title": "",
+			"type": "dashboards"
+		}
+	],
+	"liveNow": false,
+	"panels": [
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"gridPos": {
+				"h": 1,
+				"w": 24,
+				"x": 0,
+				"y": 0
+			},
+			"id": 58,
+			"title": "SYSTEM OS AND SOFTWARE VULNERABILITIES - SUMMARY",
+			"type": "row"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"mappings": [
+						{
+							"options": {
+								"match": "null",
+								"result": {
+									"text": "N/A"
+								}
+							},
+							"type": "special"
+						}
+					],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "dark-orange",
+								"value": null
+							}
+						]
+					},
+					"unit": "short"
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 4,
+				"x": 0,
+				"y": 1
+			},
+			"id": 43,
+			"links": [],
+			"options": {
+				"colorMode": "value",
+				"graphMode": "area",
+				"justifyMode": "auto",
+				"orientation": "horizontal",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"text": {},
+				"textMode": "auto",
+				"wideLayout": true
+			},
+			"pluginVersion": "10.2.3",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto",
+								"min_doc_count": 0,
+								"trimEdges": 0
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "agent.name:$agent_name",
+					"refId": "A",
+					"timeField": "vulnerability.detected_at"
+				}
+			],
+			"title": "VULNERABILITY EVENTS",
+			"type": "stat"
+		},
+		{
+			"columns": [],
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fontSize": "100%",
+			"gridPos": {
+				"h": 7,
+				"w": 8,
+				"x": 4,
+				"y": 1
+			},
+			"id": 31,
+			"showHeader": true,
+			"sort": {
+				"col": 0,
+				"desc": true
+			},
+			"styles": [
+				{
+					"alias": "Time",
+					"align": "auto",
+					"dateFormat": "YYYY-MM-DD HH:mm:ss",
+					"pattern": "Time",
+					"type": "date"
+				},
+				{
+					"alias": "",
+					"align": "auto",
+					"colorMode": "row",
+					"colors": ["rgba(50, 172, 45, 0.97)", "rgba(237, 129, 40, 0.89)", "#FA6400"],
+					"dateFormat": "YYYY-MM-DD HH:mm:ss",
+					"decimals": -1,
+					"mappingType": 1,
+					"pattern": "Count",
+					"thresholds": ["0", "1"],
+					"type": "number",
+					"unit": "short"
+				},
+				{
+					"alias": "AGENT",
+					"align": "auto",
+					"colors": ["rgba(245, 54, 54, 0.9)", "rgba(237, 129, 40, 0.89)", "rgba(50, 172, 45, 0.97)"],
+					"dateFormat": "YYYY-MM-DD HH:mm:ss",
+					"decimals": 2,
+					"mappingType": 1,
+					"pattern": "agent_name",
+					"thresholds": [],
+					"type": "number",
+					"unit": "short"
+				}
+			],
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"fake": true,
+							"field": "agent.name",
+							"id": "4",
+							"settings": {
+								"min_doc_count": 1,
+								"order": "desc",
+								"orderBy": "_term",
+								"size": "0"
+							},
+							"type": "terms"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "agent.name:$agent_name",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "AGENTS",
+			"transform": "table",
+			"type": "table-old"
+		},
+		{
+			"columns": [],
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fontSize": "100%",
+			"gridPos": {
+				"h": 7,
+				"w": 6,
+				"x": 12,
+				"y": 1
+			},
+			"id": 54,
+			"showHeader": true,
+			"sort": {
+				"col": 0,
+				"desc": true
+			},
+			"styles": [
+				{
+					"alias": "Time",
+					"align": "auto",
+					"dateFormat": "YYYY-MM-DD HH:mm:ss",
+					"pattern": "Time",
+					"type": "date"
+				},
+				{
+					"alias": "",
+					"align": "auto",
+					"colorMode": "row",
+					"colors": ["rgba(50, 172, 45, 0.97)", "rgba(237, 129, 40, 0.89)", "#FA6400"],
+					"dateFormat": "YYYY-MM-DD HH:mm:ss",
+					"decimals": -1,
+					"mappingType": 1,
+					"pattern": "Count",
+					"thresholds": ["0", "1"],
+					"type": "number",
+					"unit": "short"
+				},
+				{
+					"alias": "CVSS2",
+					"align": "auto",
+					"colors": ["rgba(245, 54, 54, 0.9)", "rgba(237, 129, 40, 0.89)", "rgba(50, 172, 45, 0.97)"],
+					"dateFormat": "YYYY-MM-DD HH:mm:ss",
+					"decimals": 2,
+					"mappingType": 1,
+					"pattern": "data_vulnerability_cvss_cvss2_base_score",
+					"thresholds": [],
+					"type": "number",
+					"unit": "short"
+				}
+			],
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"fake": true,
+							"field": "vulnerability.score.base",
+							"id": "4",
+							"settings": {
+								"min_doc_count": 1,
+								"order": "desc",
+								"orderBy": "_term",
+								"size": "0"
+							},
+							"type": "terms"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "agent.name:$agent_name",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "CVSS2 BASE SCORE",
+			"transform": "table",
+			"type": "table-old"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"custom": {
+						"align": "auto",
+						"cellOptions": {
+							"type": "auto"
+						},
+						"filterable": false,
+						"inspect": false
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					}
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "Time"
+						},
+						"properties": [
+							{
+								"id": "displayName",
+								"value": "Time"
+							},
+							{
+								"id": "unit",
+								"value": "time: YYYY-MM-DD HH:mm:ss"
+							},
+							{
+								"id": "custom.align"
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": ""
+						},
+						"properties": [
+							{
+								"id": "unit",
+								"value": "short"
+							},
+							{
+								"id": "decimals",
+								"value": 2
+							},
+							{
+								"id": "custom.align"
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "data_vulnerability_cve"
+						},
+						"properties": [
+							{
+								"id": "displayName",
+								"value": "CVE"
+							},
+							{
+								"id": "unit",
+								"value": "short"
+							},
+							{
+								"id": "decimals",
+								"value": -1
+							},
+							{
+								"id": "links",
+								"value": [
+									{
+										"targetBlank": true,
+										"title": "NVD - NIST DATABASE",
+										"url": "https://nvd.nist.gov/vuln/detail/${__value.text}"
+									}
+								]
+							},
+							{
+								"id": "custom.align",
+								"value": "left"
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "Unique Count"
+						},
+						"properties": [
+							{
+								"id": "displayName",
+								"value": "HITS"
+							},
+							{
+								"id": "unit",
+								"value": "short"
+							},
+							{
+								"id": "decimals",
+								"value": -1
+							},
+							{
+								"id": "custom.align"
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "EPSS"
+						},
+						"properties": [
+							{
+								"id": "links",
+								"value": [
+									{
+										"targetBlank": true,
+										"title": "Exploit Prediction Scoring System",
+										"url": "https://www.first.org/epss/"
+									}
+								]
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 6,
+				"x": 18,
+				"y": 1
+			},
+			"id": 47,
+			"options": {
+				"cellHeight": "sm",
+				"footer": {
+					"countRows": false,
+					"fields": "",
+					"reducer": ["sum"],
+					"show": false
+				},
+				"showHeader": true
+			},
+			"pluginVersion": "10.2.3",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"fake": true,
+							"field": "vulnerability.id",
+							"id": "7",
+							"settings": {
+								"min_doc_count": 1,
+								"order": "desc",
+								"orderBy": "_term",
+								"size": "10"
+							},
+							"type": "terms"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"field": "vulnerability.id",
+							"id": "1",
+							"meta": {},
+							"settings": {},
+							"type": "cardinality"
+						}
+					],
+					"query": "agent.name:$agent_name",
+					"refId": "A",
+					"timeField": "vulnerability.detected_at"
+				}
+			],
+			"title": "CVEs",
+			"transformations": [
+				{
+					"id": "organize",
+					"options": {
+						"excludeByName": {},
+						"includeByName": {},
+						"indexByName": {},
+						"renameByName": {
+							"data_vulnerability_cve": "CVE",
+							"epss_epss": "EPSS",
+							"vulnerability.id": "CVE"
+						}
+					}
+				}
+			],
+			"type": "table"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					}
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 9,
+				"w": 17,
+				"x": 0,
+				"y": 8
+			},
+			"id": 37,
+			"options": {
+				"displayMode": "gradient",
+				"maxVizHeight": 300,
+				"minVizHeight": 10,
+				"minVizWidth": 0,
+				"namePlacement": "auto",
+				"orientation": "horizontal",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"showUnfilled": true,
+				"sizing": "auto",
+				"text": {},
+				"valueMode": "color"
+			},
+			"pluginVersion": "10.2.3",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"fake": true,
+							"field": "package.name",
+							"id": "6",
+							"settings": {
+								"min_doc_count": 1,
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "15"
+							},
+							"type": "terms"
+						},
+						{
+							"fake": true,
+							"field": "timestamp",
+							"id": "5",
+							"settings": {
+								"interval": "auto",
+								"min_doc_count": 0,
+								"trimEdges": 0
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"field": "type",
+							"id": "1",
+							"meta": {},
+							"settings": {},
+							"type": "count"
+						}
+					],
+					"query": "agent.name:$agent_name",
+					"refId": "A",
+					"timeField": "vulnerability.detected_at"
+				}
+			],
+			"title": "VULNERABLE SOFTWARE / PACKAGE",
+			"type": "bargauge"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "palette-classic"
+					},
+					"custom": {
+						"hideFrom": {
+							"legend": false,
+							"tooltip": false,
+							"viz": false
+						}
+					},
+					"decimals": 0,
+					"mappings": [],
+					"unit": "short"
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "Critical"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#C4162A",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "High"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#F2495C",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "Low"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#5794F2",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "Medium"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#FF9830",
+									"mode": "fixed"
+								}
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 9,
+				"w": 7,
+				"x": 17,
+				"y": 8
+			},
+			"id": 45,
+			"links": [],
+			"maxDataPoints": 3,
+			"options": {
+				"legend": {
+					"calcs": [],
+					"displayMode": "table",
+					"placement": "right",
+					"showLegend": true,
+					"values": ["value"]
+				},
+				"pieType": "donut",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"tooltip": {
+					"mode": "single",
+					"sort": "none"
+				}
+			},
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"fake": true,
+							"field": "vulnerability.severity",
+							"id": "3",
+							"settings": {
+								"min_doc_count": 1,
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "0"
+							},
+							"type": "terms"
+						},
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto",
+								"min_doc_count": 0,
+								"trimEdges": 0
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "agent.name:$agent_name",
+					"refId": "A",
+					"timeField": "vulnerability.detected_at"
+				}
+			],
+			"title": "VULNERABILITY LEVELS",
+			"type": "piechart"
+		},
+		{
+			"collapsed": false,
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"gridPos": {
+				"h": 1,
+				"w": 24,
+				"x": 0,
+				"y": 17
+			},
+			"id": 60,
+			"panels": [],
+			"title": "SYSTEM OS AND SOFTWARE VULNERABILITIES - ENTRIES",
+			"type": "row"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"custom": {
+						"align": "auto",
+						"cellOptions": {
+							"type": "auto"
+						},
+						"filterable": false,
+						"inspect": false
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					}
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "Time"
+						},
+						"properties": [
+							{
+								"id": "displayName",
+								"value": "Time"
+							},
+							{
+								"id": "unit",
+								"value": "time: YYYY-MM-DD HH:mm:ss"
+							},
+							{
+								"id": "custom.align"
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": ""
+						},
+						"properties": [
+							{
+								"id": "unit",
+								"value": "short"
+							},
+							{
+								"id": "decimals",
+								"value": 2
+							},
+							{
+								"id": "custom.align"
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "data_vulnerability_package_name"
+						},
+						"properties": [
+							{
+								"id": "displayName",
+								"value": "PACKAGE NAME"
+							},
+							{
+								"id": "unit",
+								"value": "short"
+							},
+							{
+								"id": "decimals",
+								"value": -1
+							},
+							{
+								"id": "custom.align",
+								"value": "left"
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "Unique Count"
+						},
+						"properties": [
+							{
+								"id": "displayName",
+								"value": "HITS"
+							},
+							{
+								"id": "unit",
+								"value": "short"
+							},
+							{
+								"id": "decimals",
+								"value": -1
+							},
+							{
+								"id": "custom.align"
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "data_vulnerability_package_condition"
+						},
+						"properties": [
+							{
+								"id": "displayName",
+								"value": "CONDITION"
+							},
+							{
+								"id": "unit",
+								"value": "short"
+							},
+							{
+								"id": "decimals",
+								"value": 2
+							},
+							{
+								"id": "custom.align"
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "CONDITION"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 378
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 11,
+				"w": 9,
+				"x": 0,
+				"y": 18
+			},
+			"id": 53,
+			"options": {
+				"cellHeight": "sm",
+				"footer": {
+					"countRows": false,
+					"fields": "",
+					"reducer": ["sum"],
+					"show": false
+				},
+				"showHeader": true,
+				"sortBy": []
+			},
+			"pluginVersion": "10.2.3",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"fake": true,
+							"field": "package.name",
+							"id": "8",
+							"settings": {
+								"min_doc_count": 1,
+								"order": "desc",
+								"orderBy": "_term",
+								"size": "10"
+							},
+							"type": "terms"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"field": "package.description",
+							"id": "1",
+							"meta": {},
+							"settings": {},
+							"type": "cardinality"
+						}
+					],
+					"query": "agent.name:$agent_name",
+					"refId": "A",
+					"timeField": "vulnerability.detected_at"
+				}
+			],
+			"title": "SOFTWARE / PACKAGE",
+			"transformations": [
+				{
+					"id": "merge",
+					"options": {
+						"reducers": []
+					}
+				}
+			],
+			"type": "table"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "palette-classic"
+					},
+					"custom": {
+						"axisBorderShow": false,
+						"axisCenteredZero": false,
+						"axisColorMode": "text",
+						"axisLabel": "",
+						"axisPlacement": "auto",
+						"barAlignment": 0,
+						"drawStyle": "line",
+						"fillOpacity": 0,
+						"gradientMode": "none",
+						"hideFrom": {
+							"legend": false,
+							"tooltip": false,
+							"viz": false
+						},
+						"insertNulls": false,
+						"lineInterpolation": "linear",
+						"lineWidth": 1,
+						"pointSize": 5,
+						"scaleDistribution": {
+							"type": "linear"
+						},
+						"showPoints": "auto",
+						"spanNulls": false,
+						"stacking": {
+							"group": "A",
+							"mode": "none"
+						},
+						"thresholdsStyle": {
+							"mode": "off"
+						}
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					}
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 11,
+				"w": 15,
+				"x": 9,
+				"y": 18
+			},
+			"id": 72,
+			"options": {
+				"legend": {
+					"calcs": [],
+					"displayMode": "table",
+					"placement": "right",
+					"showLegend": true
+				},
+				"tooltip": {
+					"mode": "single",
+					"sort": "none"
+				}
+			},
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "agent.name",
+							"id": "3",
+							"settings": {
+								"min_doc_count": "1",
+								"order": "desc",
+								"orderBy": "_term",
+								"size": "10"
+							},
+							"type": "terms"
+						},
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "agent.name:$agent_name",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "VULNERABILITY EVENTS - HISTOGRAM",
+			"type": "timeseries"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"custom": {
+						"align": "auto",
+						"cellOptions": {
+							"type": "auto"
+						},
+						"inspect": false
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green"
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					}
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "data_vulnerability_package_name"
+						},
+						"properties": [
+							{
+								"id": "displayName",
+								"value": "PACKAGE"
+							},
+							{
+								"id": "custom.align"
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "data_vulnerability_package_condition"
+						},
+						"properties": [
+							{
+								"id": "displayName",
+								"value": "STATUS"
+							},
+							{
+								"id": "unit",
+								"value": "short"
+							},
+							{
+								"id": "decimals",
+								"value": -1
+							},
+							{
+								"id": "custom.align"
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "data_vulnerability_cve"
+						},
+						"properties": [
+							{
+								"id": "displayName",
+								"value": "CVE"
+							},
+							{
+								"id": "unit",
+								"value": "kbytes"
+							},
+							{
+								"id": "decimals",
+								"value": -1
+							},
+							{
+								"id": "custom.align"
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "agent_name"
+						},
+						"properties": [
+							{
+								"id": "displayName",
+								"value": "AGENT"
+							},
+							{
+								"id": "unit",
+								"value": "short"
+							},
+							{
+								"id": "decimals",
+								"value": 2
+							},
+							{
+								"id": "custom.align"
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "data_vulnerability_title"
+						},
+						"properties": [
+							{
+								"id": "displayName",
+								"value": "CVE TITLE"
+							},
+							{
+								"id": "unit",
+								"value": "short"
+							},
+							{
+								"id": "decimals",
+								"value": 2
+							},
+							{
+								"id": "custom.align"
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "data_vulnerability_severity"
+						},
+						"properties": [
+							{
+								"id": "displayName",
+								"value": "SEVERITY"
+							},
+							{
+								"id": "unit",
+								"value": "short"
+							},
+							{
+								"id": "decimals",
+								"value": 2
+							},
+							{
+								"id": "custom.align"
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "epss_epss"
+						},
+						"properties": [
+							{
+								"id": "displayName",
+								"value": "EPSS"
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "AGENT"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 183
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "CVE"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 183
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "timestamp"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 200
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "SEVERITY"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 174
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "CVE TITLE"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 736
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 12,
+				"w": 24,
+				"x": 0,
+				"y": 29
+			},
+			"id": 48,
+			"options": {
+				"cellHeight": "sm",
+				"footer": {
+					"countRows": false,
+					"fields": "",
+					"reducer": ["sum"],
+					"show": false
+				},
+				"showHeader": true,
+				"sortBy": []
+			},
+			"pluginVersion": "10.2.3",
+			"targets": [
+				{
+					"bucketAggs": [],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"id": "1",
+							"settings": {
+								"size": "500"
+							},
+							"type": "raw_data"
+						}
+					],
+					"query": "agent.name:$agent_name",
+					"refId": "A",
+					"timeField": "vulnerability.detected_at"
+				}
+			],
+			"title": "SYSTEM VULNERABILITIES - DETAILS",
+			"transformations": [
+				{
+					"id": "filterFieldsByName",
+					"options": {
+						"byVariable": false,
+						"include": {
+							"names": [
+								"agent.name",
+								"package.name",
+								"vulnerability.description",
+								"vulnerability.id",
+								"vulnerability.severity",
+								"vulnerability.detected_at"
+							]
+						}
+					}
+				},
+				{
+					"id": "organize",
+					"options": {
+						"excludeByName": {},
+						"includeByName": {},
+						"indexByName": {
+							"agent.name": 1,
+							"package.name": 3,
+							"vulnerability.description": 5,
+							"vulnerability.detected_at": 0,
+							"vulnerability.id": 2,
+							"vulnerability.severity": 4
+						},
+						"renameByName": {
+							"agent.name": "AGENT",
+							"package.name": "PACKAGE",
+							"vulnerability.description": "DESCRIPTION",
+							"vulnerability.detected_at": "DETECTED AT",
+							"vulnerability.id": "CVE",
+							"vulnerability.severity": "SEVERITY"
+						}
+					}
+				}
+			],
+			"type": "table"
+		},
+		{
+			"collapsed": true,
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"gridPos": {
+				"h": 1,
+				"w": 24,
+				"x": 0,
+				"y": 41
+			},
+			"id": 62,
+			"panels": [
+				{
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"fieldConfig": {
+						"defaults": {
+							"mappings": [
+								{
+									"options": {
+										"match": "null",
+										"result": {
+											"text": "N/A"
+										}
+									},
+									"type": "special"
+								}
+							],
+							"thresholds": {
+								"mode": "absolute",
+								"steps": [
+									{
+										"color": "dark-orange"
+									}
+								]
+							},
+							"unit": "short"
+						},
+						"overrides": []
+					},
+					"gridPos": {
+						"h": 7,
+						"w": 4,
+						"x": 0,
+						"y": 27
+					},
+					"id": 63,
+					"links": [],
+					"options": {
+						"colorMode": "value",
+						"graphMode": "area",
+						"justifyMode": "auto",
+						"orientation": "horizontal",
+						"reduceOptions": {
+							"calcs": ["sum"],
+							"fields": "",
+							"values": false
+						},
+						"text": {},
+						"textMode": "auto"
+					},
+					"pluginVersion": "10.0.3",
+					"targets": [
+						{
+							"bucketAggs": [
+								{
+									"field": "timestamp",
+									"id": "2",
+									"settings": {
+										"interval": "auto",
+										"min_doc_count": 0,
+										"trimEdges": 0
+									},
+									"type": "date_histogram"
+								}
+							],
+							"datasource": {
+								"type": "grafana-opensearch-datasource",
+								"uid": "replace_datasource_uid"
+							},
+							"metrics": [
+								{
+									"field": "select field",
+									"id": "1",
+									"type": "count"
+								}
+							],
+							"query": "rule_group2:snyk AND agent_name:$agent_name",
+							"refId": "A",
+							"timeField": "timestamp"
+						}
+					],
+					"title": "VULNERABILITY EVENTS",
+					"type": "stat"
+				},
+				{
+					"columns": [],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"fontSize": "100%",
+					"gridPos": {
+						"h": 7,
+						"w": 8,
+						"x": 4,
+						"y": 27
+					},
+					"id": 64,
+					"showHeader": true,
+					"sort": {
+						"col": 0,
+						"desc": true
+					},
+					"styles": [
+						{
+							"$$hashKey": "object:108",
+							"alias": "Time",
+							"align": "auto",
+							"dateFormat": "YYYY-MM-DD HH:mm:ss",
+							"pattern": "Time",
+							"type": "date"
+						},
+						{
+							"$$hashKey": "object:109",
+							"alias": "",
+							"align": "auto",
+							"colorMode": "row",
+							"colors": ["rgba(50, 172, 45, 0.97)", "rgba(237, 129, 40, 0.89)", "#FA6400"],
+							"dateFormat": "YYYY-MM-DD HH:mm:ss",
+							"decimals": -1,
+							"mappingType": 1,
+							"pattern": "Count",
+							"thresholds": ["0", "1"],
+							"type": "number",
+							"unit": "short"
+						},
+						{
+							"$$hashKey": "object:110",
+							"alias": "AGENT",
+							"align": "auto",
+							"colors": ["rgba(245, 54, 54, 0.9)", "rgba(237, 129, 40, 0.89)", "rgba(50, 172, 45, 0.97)"],
+							"dateFormat": "YYYY-MM-DD HH:mm:ss",
+							"decimals": 2,
+							"mappingType": 1,
+							"pattern": "agent_name",
+							"thresholds": [],
+							"type": "number",
+							"unit": "short"
+						}
+					],
+					"targets": [
+						{
+							"bucketAggs": [
+								{
+									"fake": true,
+									"field": "agent_name",
+									"id": "4",
+									"settings": {
+										"min_doc_count": 1,
+										"order": "desc",
+										"orderBy": "_term",
+										"size": "0"
+									},
+									"type": "terms"
+								}
+							],
+							"datasource": {
+								"type": "grafana-opensearch-datasource",
+								"uid": "replace_datasource_uid"
+							},
+							"metrics": [
+								{
+									"field": "select field",
+									"id": "1",
+									"type": "count"
+								}
+							],
+							"query": "rule_group2:snyk AND agent_name:$agent_name",
+							"refId": "A",
+							"timeField": "timestamp"
+						}
+					],
+					"title": "DOCKER HOST",
+					"transform": "table",
+					"type": "table-old"
+				},
+				{
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"fieldConfig": {
+						"defaults": {
+							"color": {
+								"mode": "thresholds"
+							},
+							"custom": {
+								"align": "auto",
+								"cellOptions": {
+									"type": "auto"
+								},
+								"filterable": false,
+								"inspect": false
+							},
+							"mappings": [],
+							"thresholds": {
+								"mode": "absolute",
+								"steps": [
+									{
+										"color": "green"
+									},
+									{
+										"color": "red",
+										"value": 80
+									}
+								]
+							}
+						},
+						"overrides": [
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "Time"
+								},
+								"properties": [
+									{
+										"id": "displayName",
+										"value": "Time"
+									},
+									{
+										"id": "unit",
+										"value": "time: YYYY-MM-DD HH:mm:ss"
+									},
+									{
+										"id": "custom.align"
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": ""
+								},
+								"properties": [
+									{
+										"id": "unit",
+										"value": "short"
+									},
+									{
+										"id": "decimals",
+										"value": 2
+									},
+									{
+										"id": "custom.align"
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "data_vulnerability_cve"
+								},
+								"properties": [
+									{
+										"id": "displayName",
+										"value": "CVE"
+									},
+									{
+										"id": "unit",
+										"value": "short"
+									},
+									{
+										"id": "decimals",
+										"value": -1
+									},
+									{
+										"id": "links",
+										"value": [
+											{
+												"targetBlank": true,
+												"title": "NVD - NIST DATABASE",
+												"url": "https://nvd.nist.gov/vuln/detail/$__cell"
+											}
+										]
+									},
+									{
+										"id": "custom.align",
+										"value": "left"
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "Unique Count"
+								},
+								"properties": [
+									{
+										"id": "displayName",
+										"value": "HITS"
+									},
+									{
+										"id": "unit",
+										"value": "short"
+									},
+									{
+										"id": "decimals",
+										"value": -1
+									},
+									{
+										"id": "custom.align"
+									}
+								]
+							}
+						]
+					},
+					"gridPos": {
+						"h": 7,
+						"w": 6,
+						"x": 12,
+						"y": 27
+					},
+					"id": 71,
+					"options": {
+						"cellHeight": "sm",
+						"footer": {
+							"countRows": false,
+							"fields": "",
+							"reducer": ["sum"],
+							"show": false
+						},
+						"showHeader": true
+					},
+					"pluginVersion": "10.0.3",
+					"targets": [
+						{
+							"bucketAggs": [
+								{
+									"fake": true,
+									"field": "data_dockerBaseImage",
+									"id": "7",
+									"settings": {
+										"min_doc_count": 1,
+										"order": "desc",
+										"orderBy": "_term",
+										"size": "10"
+									},
+									"type": "terms"
+								}
+							],
+							"datasource": {
+								"type": "grafana-opensearch-datasource",
+								"uid": "replace_datasource_uid"
+							},
+							"metrics": [
+								{
+									"field": "data_dockerBaseImage",
+									"id": "1",
+									"meta": {},
+									"settings": {},
+									"type": "cardinality"
+								}
+							],
+							"query": "rule_group2:snyk AND agent_name:$agent_name",
+							"refId": "A",
+							"timeField": "timestamp"
+						}
+					],
+					"title": "DOCKER BASE IMAGE",
+					"transformations": [
+						{
+							"id": "merge",
+							"options": {
+								"reducers": []
+							}
+						}
+					],
+					"type": "table"
+				},
+				{
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"fieldConfig": {
+						"defaults": {
+							"color": {
+								"mode": "thresholds"
+							},
+							"custom": {
+								"align": "auto",
+								"cellOptions": {
+									"type": "auto"
+								},
+								"filterable": false,
+								"inspect": false
+							},
+							"mappings": [],
+							"thresholds": {
+								"mode": "absolute",
+								"steps": [
+									{
+										"color": "green"
+									},
+									{
+										"color": "red",
+										"value": 80
+									}
+								]
+							}
+						},
+						"overrides": [
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "Time"
+								},
+								"properties": [
+									{
+										"id": "displayName",
+										"value": "Time"
+									},
+									{
+										"id": "unit",
+										"value": "time: YYYY-MM-DD HH:mm:ss"
+									},
+									{
+										"id": "custom.align"
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": ""
+								},
+								"properties": [
+									{
+										"id": "unit",
+										"value": "short"
+									},
+									{
+										"id": "decimals",
+										"value": 2
+									},
+									{
+										"id": "custom.align"
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "data_vulnerability_cve"
+								},
+								"properties": [
+									{
+										"id": "displayName",
+										"value": "CVE"
+									},
+									{
+										"id": "unit",
+										"value": "short"
+									},
+									{
+										"id": "decimals",
+										"value": -1
+									},
+									{
+										"id": "links",
+										"value": [
+											{
+												"targetBlank": true,
+												"title": "NVD - NIST DATABASE",
+												"url": "https://nvd.nist.gov/vuln/detail/$__cell"
+											}
+										]
+									},
+									{
+										"id": "custom.align",
+										"value": "left"
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "Unique Count"
+								},
+								"properties": [
+									{
+										"id": "displayName",
+										"value": "HITS"
+									},
+									{
+										"id": "unit",
+										"value": "short"
+									},
+									{
+										"id": "decimals",
+										"value": -1
+									},
+									{
+										"id": "custom.align"
+									}
+								]
+							}
+						]
+					},
+					"gridPos": {
+						"h": 7,
+						"w": 6,
+						"x": 18,
+						"y": 27
+					},
+					"id": 65,
+					"options": {
+						"cellHeight": "sm",
+						"footer": {
+							"countRows": false,
+							"fields": "",
+							"reducer": ["sum"],
+							"show": false
+						},
+						"showHeader": true
+					},
+					"pluginVersion": "10.0.3",
+					"targets": [
+						{
+							"bucketAggs": [
+								{
+									"fake": true,
+									"field": "data_identifiers_CVE",
+									"id": "7",
+									"settings": {
+										"min_doc_count": 1,
+										"order": "desc",
+										"orderBy": "_term",
+										"size": "10"
+									},
+									"type": "terms"
+								}
+							],
+							"datasource": {
+								"type": "grafana-opensearch-datasource",
+								"uid": "replace_datasource_uid"
+							},
+							"metrics": [
+								{
+									"field": "data_identifiers_CVE",
+									"id": "1",
+									"meta": {},
+									"settings": {},
+									"type": "cardinality"
+								}
+							],
+							"query": "rule_group2:snyk AND agent_name:$agent_name",
+							"refId": "A",
+							"timeField": "timestamp"
+						}
+					],
+					"title": "CVEs",
+					"transformations": [
+						{
+							"id": "merge",
+							"options": {
+								"reducers": []
+							}
+						}
+					],
+					"type": "table"
+				},
+				{
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"fieldConfig": {
+						"defaults": {
+							"mappings": [],
+							"thresholds": {
+								"mode": "absolute",
+								"steps": [
+									{
+										"color": "green"
+									},
+									{
+										"color": "red",
+										"value": 80
+									}
+								]
+							}
+						},
+						"overrides": []
+					},
+					"gridPos": {
+						"h": 11,
+						"w": 17,
+						"x": 0,
+						"y": 34
+					},
+					"id": 67,
+					"options": {
+						"displayMode": "gradient",
+						"minVizHeight": 10,
+						"minVizWidth": 0,
+						"orientation": "vertical",
+						"reduceOptions": {
+							"calcs": ["sum"],
+							"fields": "",
+							"values": false
+						},
+						"showUnfilled": true,
+						"text": {},
+						"valueMode": "color"
+					},
+					"pluginVersion": "10.0.3",
+					"targets": [
+						{
+							"bucketAggs": [
+								{
+									"fake": true,
+									"field": "data_packageName",
+									"id": "6",
+									"settings": {
+										"min_doc_count": 1,
+										"order": "desc",
+										"orderBy": "_count",
+										"size": "15"
+									},
+									"type": "terms"
+								},
+								{
+									"fake": true,
+									"field": "timestamp",
+									"id": "5",
+									"settings": {
+										"interval": "auto",
+										"min_doc_count": 0,
+										"trimEdges": 0
+									},
+									"type": "date_histogram"
+								}
+							],
+							"datasource": {
+								"type": "grafana-opensearch-datasource",
+								"uid": "replace_datasource_uid"
+							},
+							"metrics": [
+								{
+									"field": "type",
+									"id": "1",
+									"meta": {},
+									"settings": {},
+									"type": "count"
+								}
+							],
+							"query": "rule_group2:snyk AND agent_name:$agent_name",
+							"refId": "A",
+							"timeField": "timestamp"
+						}
+					],
+					"title": "VULNERABLE SOFTWARE / PACKAGE",
+					"type": "bargauge"
+				},
+				{
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"fieldConfig": {
+						"defaults": {
+							"color": {
+								"mode": "palette-classic"
+							},
+							"custom": {
+								"hideFrom": {
+									"legend": false,
+									"tooltip": false,
+									"viz": false
+								}
+							},
+							"decimals": 0,
+							"mappings": [],
+							"unit": "short"
+						},
+						"overrides": [
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "Critical"
+								},
+								"properties": [
+									{
+										"id": "color",
+										"value": {
+											"fixedColor": "#C4162A",
+											"mode": "fixed"
+										}
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "High"
+								},
+								"properties": [
+									{
+										"id": "color",
+										"value": {
+											"fixedColor": "#F2495C",
+											"mode": "fixed"
+										}
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "Low"
+								},
+								"properties": [
+									{
+										"id": "color",
+										"value": {
+											"fixedColor": "#5794F2",
+											"mode": "fixed"
+										}
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "Medium"
+								},
+								"properties": [
+									{
+										"id": "color",
+										"value": {
+											"fixedColor": "#FF9830",
+											"mode": "fixed"
+										}
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "high"
+								},
+								"properties": [
+									{
+										"id": "color",
+										"value": {
+											"fixedColor": "red",
+											"mode": "fixed"
+										}
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "medium"
+								},
+								"properties": [
+									{
+										"id": "color",
+										"value": {
+											"fixedColor": "orange",
+											"mode": "fixed"
+										}
+									}
+								]
+							}
+						]
+					},
+					"gridPos": {
+						"h": 11,
+						"w": 7,
+						"x": 17,
+						"y": 34
+					},
+					"id": 66,
+					"links": [],
+					"maxDataPoints": 3,
+					"options": {
+						"legend": {
+							"calcs": [],
+							"displayMode": "table",
+							"placement": "right",
+							"showLegend": true,
+							"values": ["value"]
+						},
+						"pieType": "donut",
+						"reduceOptions": {
+							"calcs": ["sum"],
+							"fields": "",
+							"values": false
+						},
+						"tooltip": {
+							"mode": "single",
+							"sort": "none"
+						}
+					},
+					"targets": [
+						{
+							"bucketAggs": [
+								{
+									"fake": true,
+									"field": "data_nvdSeverity",
+									"id": "3",
+									"settings": {
+										"min_doc_count": 1,
+										"order": "desc",
+										"orderBy": "_count",
+										"size": "0"
+									},
+									"type": "terms"
+								},
+								{
+									"field": "timestamp",
+									"id": "2",
+									"settings": {
+										"interval": "auto",
+										"min_doc_count": 0,
+										"trimEdges": 0
+									},
+									"type": "date_histogram"
+								}
+							],
+							"datasource": {
+								"type": "grafana-opensearch-datasource",
+								"uid": "replace_datasource_uid"
+							},
+							"metrics": [
+								{
+									"field": "select field",
+									"id": "1",
+									"type": "count"
+								}
+							],
+							"query": "rule_group2:snyk AND agent_name:$agent_name",
+							"refId": "A",
+							"timeField": "timestamp"
+						}
+					],
+					"title": "VULNERABILITY LEVELS",
+					"type": "piechart"
+				}
+			],
+			"title": "DOCKER IMAGES VULNERABILITIES - SUMMARY",
+			"type": "row"
+		},
+		{
+			"collapsed": true,
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"gridPos": {
+				"h": 1,
+				"w": 24,
+				"x": 0,
+				"y": 42
+			},
+			"id": 70,
+			"panels": [
+				{
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"fieldConfig": {
+						"defaults": {
+							"color": {
+								"mode": "thresholds"
+							},
+							"custom": {
+								"align": "auto",
+								"cellOptions": {
+									"type": "auto"
+								}
+							},
+							"mappings": [],
+							"thresholds": {
+								"mode": "absolute",
+								"steps": [
+									{
+										"color": "green"
+									},
+									{
+										"color": "red",
+										"value": 80
+									}
+								]
+							}
+						},
+						"overrides": [
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "data_vulnerability_package_name"
+								},
+								"properties": [
+									{
+										"id": "displayName",
+										"value": "PACKAGE"
+									},
+									{
+										"id": "custom.align"
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "data_vulnerability_package_condition"
+								},
+								"properties": [
+									{
+										"id": "displayName",
+										"value": "STATUS"
+									},
+									{
+										"id": "unit",
+										"value": "short"
+									},
+									{
+										"id": "decimals",
+										"value": -1
+									},
+									{
+										"id": "custom.align"
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "data_vulnerability_cve"
+								},
+								"properties": [
+									{
+										"id": "displayName",
+										"value": "CVE"
+									},
+									{
+										"id": "unit",
+										"value": "kbytes"
+									},
+									{
+										"id": "decimals",
+										"value": -1
+									},
+									{
+										"id": "custom.align"
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "agent_name"
+								},
+								"properties": [
+									{
+										"id": "displayName",
+										"value": "AGENT"
+									},
+									{
+										"id": "unit",
+										"value": "short"
+									},
+									{
+										"id": "decimals",
+										"value": 2
+									},
+									{
+										"id": "custom.align"
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "data_vulnerability_title"
+								},
+								"properties": [
+									{
+										"id": "displayName",
+										"value": "CVE TITLE"
+									},
+									{
+										"id": "unit",
+										"value": "short"
+									},
+									{
+										"id": "decimals",
+										"value": 2
+									},
+									{
+										"id": "custom.align"
+									}
+								]
+							},
+							{
+								"matcher": {
+									"id": "byName",
+									"options": "data_vulnerability_severity"
+								},
+								"properties": [
+									{
+										"id": "displayName",
+										"value": "SEVERITY"
+									},
+									{
+										"id": "unit",
+										"value": "short"
+									},
+									{
+										"id": "decimals",
+										"value": 2
+									},
+									{
+										"id": "custom.align"
+									}
+								]
+							}
+						]
+					},
+					"gridPos": {
+						"h": 12,
+						"w": 24,
+						"x": 0,
+						"y": 46
+					},
+					"id": 68,
+					"options": {
+						"footer": {
+							"fields": "",
+							"reducer": ["sum"],
+							"show": false
+						},
+						"showHeader": true
+					},
+					"pluginVersion": "8.3.3",
+					"targets": [
+						{
+							"bucketAggs": [],
+							"datasource": {
+								"type": "grafana-opensearch-datasource",
+								"uid": "replace_datasource_uid"
+							},
+							"metrics": [
+								{
+									"id": "1",
+									"settings": {
+										"size": "500"
+									},
+									"type": "raw_data"
+								}
+							],
+							"query": "rule_group2:snyk AND agent_name:$agent_name",
+							"refId": "A",
+							"timeField": "timestamp"
+						}
+					],
+					"title": "SYSTEM VULNERABILITIES - DETAILS",
+					"transformations": [
+						{
+							"id": "filterFieldsByName",
+							"options": {
+								"include": {
+									"names": [
+										"timestamp",
+										"agent_name",
+										"data_dockerBaseImage",
+										"data_name",
+										"data_nearestFixedInVersion",
+										"data_nvdSeverity",
+										"data_malicious",
+										"data_identifiers_CWE",
+										"data_identifiers_CVE",
+										"data_cvssScore"
+									]
+								}
+							}
+						},
+						{
+							"id": "organize",
+							"options": {
+								"excludeByName": {},
+								"indexByName": {
+									"agent_name": 1,
+									"data_cvssScore": 7,
+									"data_dockerBaseImage": 2,
+									"data_identifiers_CVE": 4,
+									"data_identifiers_CWE": 5,
+									"data_malicious": 8,
+									"data_name": 3,
+									"data_nearestFixedInVersion": 9,
+									"data_nvdSeverity": 6,
+									"timestamp": 0
+								},
+								"renameByName": {
+									"agent_name": "DOCKER HOST",
+									"data_cvssScore": "SCORE",
+									"data_dockerBaseImage": "CONTAINER BASE IMAGE",
+									"data_identifiers_CVE": "CVE",
+									"data_identifiers_CWE": "CWE",
+									"data_malicious": "MALICIOUS",
+									"data_name": "IMAGE",
+									"data_nearestFixedInVersion": "FIXED IN",
+									"data_nvdSeverity": "NVD SEVERITY",
+									"timestamp": "DATE/TIME"
+								}
+							}
+						}
+					],
+					"transparent": true,
+					"type": "table"
+				}
+			],
+			"title": "DOCKER IMAGES VULNERABILITIES - ENTRIES",
+			"type": "row"
+		}
+	],
+	"refresh": "",
+	"schemaVersion": 39,
+	"tags": ["EDR"],
+	"templating": {
+		"list": [
+			{
+				"current": {
+					"selected": false,
+					"text": "All",
+					"value": "$__all"
+				},
+				"datasource": {
+					"type": "grafana-opensearch-datasource",
+					"uid": "replace_datasource_uid"
+				},
+				"definition": "{ \"find\": \"terms\", \"field\": \"agent_name\", \"query\": \"rule_groups:vulnerability-detector\"}",
+				"hide": 0,
+				"includeAll": true,
+				"label": "Agent",
+				"multi": false,
+				"name": "agent_name",
+				"options": [],
+				"query": "{ \"find\": \"terms\", \"field\": \"agent_name\", \"query\": \"rule_groups:vulnerability-detector\"}",
+				"refresh": 2,
+				"regex": "",
+				"skipUrlSync": false,
+				"sort": 2,
+				"tagValuesQuery": "",
+				"tagsQuery": "",
+				"type": "query",
+				"useTags": false
+			},
+			{
+				"datasource": {
+					"type": "grafana-opensearch-datasource",
+					"uid": "replace_datasource_uid"
+				},
+				"filters": [],
+				"hide": 0,
+				"name": "Filters",
+				"skipUrlSync": false,
+				"type": "adhoc"
+			}
+		]
+	},
+	"time": {
+		"from": "now-30d",
+		"to": "now"
+	},
+	"timepicker": {
+		"refresh_intervals": ["5s", "10s", "30s", "1m", "5m", "15m", "30m", "1h", "2h", "1d"],
+		"time_options": ["5m", "15m", "1h", "6h", "12h", "24h", "2d", "7d", "30d"]
+	},
+	"timezone": "",
+	"title": "EDR - SYSTEM VULNERABILITIES - WAZUH 4.8 and ABOVE",
+	"weekStart": ""
+}
