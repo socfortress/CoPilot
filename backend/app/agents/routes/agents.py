@@ -455,6 +455,7 @@ async def get_agent_vulnerabilities(
     logger.info(f"Fetching agent {agent_id} vulnerabilities")
     wazuh_new = await check_wazuh_manager_version()
     if wazuh_new is True:
+        logger.info("Wazuh Manager version is 4.8.0 or higher. Fetching vulnerabilities using new API")
         return await collect_agent_vulnerabilities_new(agent_id, vulnerability_severity.value)
     return await collect_agent_vulnerabilities(agent_id, vulnerability_severity.value)
 
