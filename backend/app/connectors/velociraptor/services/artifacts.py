@@ -112,6 +112,7 @@ async def run_artifact_collection(
     """
     velociraptor_service = await UniversalService.create("Velociraptor")
     try:
+        # ! Can specify org_id with org_id='OL680' ! #
         query = create_query(
             f"SELECT collect_client(client_id='{collect_artifact_body.velociraptor_id}', artifacts=['{collect_artifact_body.artifact_name}']) FROM scope()",
         )

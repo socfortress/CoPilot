@@ -53,3 +53,54 @@ class VelociraptorClient(BaseModel):
 
 class VelociraptorClients(BaseModel):
     clients: List[VelociraptorClient]
+
+
+class Version(BaseModel):
+    name: str
+    version: str
+    commit: str
+    build_time: str
+    ci_build_url: str
+    compiler: str
+
+
+class Installer(BaseModel):
+    service_name: str
+    install_path: str
+    service_description: Optional[str] = None
+
+
+class LocalBuffer(BaseModel):
+    memory_size: int
+    disk_size: int
+    filename_linux: str
+    filename_windows: str
+    filename_darwin: str
+
+
+class ClientConfig(BaseModel):
+    server_urls: List[str]
+    ca_certificate: str
+    nonce: str
+    writeback_darwin: str
+    writeback_linux: str
+    writeback_windows: str
+    tempdir_windows: str
+    max_poll: int
+    nanny_max_connection_delay: int
+    windows_installer: Installer
+    darwin_installer: Installer
+    version: Version
+    use_self_signed_ssl: bool
+    pinned_server_name: str
+    max_upload_size: int
+    local_buffer: LocalBuffer
+
+
+class Organization(BaseModel):
+    Name: str
+    OrgId: str
+    _client_config: ClientConfig
+
+class VelociraptorOrganizations(BaseModel):
+    organizations: List[Organization]

@@ -12,7 +12,7 @@ import app.agents.wazuh.services.agents as wazuh_services
 from app.agents.schema.agents import SyncedAgentsResponse
 from app.agents.schema.agents import SyncedWazuhAgent
 from app.agents.velociraptor.schema.agents import VelociraptorAgent
-from app.agents.velociraptor.schema.agents import VelociraptorClients
+from app.agents.velociraptor.schema.agents import VelociraptorClients, VelociraptorOrganizations
 from app.agents.wazuh.schema.agents import WazuhAgent
 from app.agents.wazuh.schema.agents import WazuhAgentsList
 from app.connectors.models import Connectors
@@ -40,7 +40,7 @@ async def fetch_wazuh_agents() -> WazuhAgentsList:
     )
 
 
-async def fetch_velociraptor_clients() -> VelociraptorClients:
+async def fetch_velociraptor_clients(org_id: str) -> VelociraptorClients:
     """
     Fetches clients from Velociraptor service.
 
@@ -50,9 +50,25 @@ async def fetch_velociraptor_clients() -> VelociraptorClients:
     Returns:
         VelociraptorClientsList: The fetched clients.
     """
-    collected_velociraptor_agents = await velociraptor_services.collect_velociraptor_clients()
+    collected_velociraptor_agents = await velociraptor_services.collect_velociraptor_clients(org_id=org_id)
     return VelociraptorClients(
         clients=collected_velociraptor_agents,
+    )
+
+async def fetch_velociraptor_organizations() -> VelociraptorOrganizations:
+    """
+    Fetches organizations from Velociraptor service.
+
+    Args:
+        None
+
+    Returns:
+        VelociraptorOrgsList: The fetched orgs.
+    """
+    collected_velociraptor_orgs = await velociraptor_services.collect_velociraptor_organizations()
+    logger.info(f"Collected Velociraptor Orgs: {collected_velociraptor_orgs}")
+    return VelociraptorOrganizations(
+        organizations=collected_velociraptor_orgs,
     )
 
 
@@ -298,8 +314,12 @@ async def sync_agents_velociraptor() -> SyncedAgentsResponse:
     :rtype: SyncedAgentsResponse
     """
     agents_added_list: List[VelociraptorAgent] = []
+    velo_orgs = await fetch_velociraptor_organizations()
+    logger.info(f"Collected Velociraptor Orgs: {velo_orgs}")
+    return None
 
     velociraptor_clients = await fetch_velociraptor_clients()
+    logger.info(f"Collected Velociraptor Clients: {velociraptor_clients}")
     velociraptor_clients = velociraptor_clients.clients if hasattr(velociraptor_clients, "clients") else []
 
     async with get_db_session() as session:  # Create a new session here
