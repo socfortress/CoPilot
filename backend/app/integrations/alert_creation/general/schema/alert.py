@@ -14,6 +14,7 @@ class ValidIocFields(Enum):
     OPENCTI_VALUE = "opencti_value"
     THREAT_INTEL_VALUE = "threat_intel_value"
 
+
 class RawGenericSourceModel(BaseModel):
     timestamp: str = Field(..., description="The timestamp of the alert.")
     timestamp_utc: Optional[str] = Field(

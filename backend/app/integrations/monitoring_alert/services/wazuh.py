@@ -9,11 +9,8 @@ from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.routes.agents import get_agent_by_hostname
-from app.integrations.alert_escalation.schema.escalate_alert import SourceFieldsToRemove
 from app.agents.schema.agents import AgentsResponse
-from app.integrations.alert_escalation.schema.escalate_alert import GenericAlertModel
 from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
-from app.integrations.alert_escalation.schema.escalate_alert import GenericSourceModel
 from app.connectors.dfir_iris.utils.universal import initialize_client_and_alert
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
 from app.db.universal_models import CustomersMeta
@@ -24,6 +21,7 @@ from app.integrations.alert_creation.general.schema.alert import ValidIocFields
 from app.integrations.alert_creation.general.services.alert_multi_exclude import (
     AlertDetailsService,
 )
+from app.integrations.alert_escalation.schema.escalate_alert import GenericSourceModel
 from app.integrations.alert_escalation.schema.general_alert import (
     CreateAlertRequest as AddAlertRequest,
 )
@@ -32,7 +30,7 @@ from app.integrations.alert_escalation.services.general_alert import (
 )
 from app.integrations.monitoring_alert.models.monitoring_alert import MonitoringAlerts
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
-    AlertAnalysisResponse, WazuhSourceFieldsToRemove
+    AlertAnalysisResponse,
 )
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
     FilterAlertsRequest,
@@ -43,6 +41,9 @@ from app.integrations.monitoring_alert.schema.monitoring_alert import (
 )
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
     WazuhIrisAlertPayload,
+)
+from app.integrations.monitoring_alert.schema.monitoring_alert import (
+    WazuhSourceFieldsToRemove,
 )
 from app.integrations.monitoring_alert.utils.db_operations import remove_alert_id
 from app.integrations.utils.alerts import get_asset_type_id
@@ -451,7 +452,6 @@ async def create_alert_details(alert_details: WazuhAlertModel) -> CreateAlertReq
         process_name=await get_process_name(alert_details.to_dict()),
         _source=GenericSourceModel(**alert_details._source),
     )
-
 
 
 async def create_and_update_alert_in_iris(
