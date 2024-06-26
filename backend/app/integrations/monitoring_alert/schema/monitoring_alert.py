@@ -13,6 +13,15 @@ from pydantic import validator
 from app.integrations.alert_creation.general.schema.alert import IrisAsset
 from app.integrations.alert_creation.general.schema.alert import IrisIoc
 
+class WazuhSourceFieldsToRemove(Enum):
+    GL2 = "gl2"
+    RULE_MITRE_TACTIC = "rule_mitre_tactic"
+    RULE_MITRE_ID = "rule_mitre_id"
+    RULE_MITRE_TECHNIQUE = "rule_mitre_technique"
+    RULE_ID = "rule_id"
+    MESSAGE = "message"
+    # Add more fields as needed
+
 
 class MonitoringAlertsRequestModel(BaseModel):
     id: Optional[int] = None
@@ -335,6 +344,9 @@ class WazuhIrisAlertContext(BaseModel):
         example=["No process name found"],
         description="Name of the process",
     )
+
+    class Config:
+        extra = Extra.allow
 
 
 class WazuhIrisAlertPayload(BaseModel):

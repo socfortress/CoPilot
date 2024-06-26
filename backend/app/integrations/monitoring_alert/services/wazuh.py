@@ -9,8 +9,11 @@ from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.routes.agents import get_agent_by_hostname
+from app.integrations.alert_escalation.schema.escalate_alert import SourceFieldsToRemove
 from app.agents.schema.agents import AgentsResponse
+from app.integrations.alert_escalation.schema.escalate_alert import GenericAlertModel
 from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
+from app.integrations.alert_escalation.schema.escalate_alert import GenericSourceModel
 from app.connectors.dfir_iris.utils.universal import initialize_client_and_alert
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
 from app.db.universal_models import CustomersMeta
@@ -29,7 +32,7 @@ from app.integrations.alert_escalation.services.general_alert import (
 )
 from app.integrations.monitoring_alert.models.monitoring_alert import MonitoringAlerts
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
-    AlertAnalysisResponse,
+    AlertAnalysisResponse, WazuhSourceFieldsToRemove
 )
 from app.integrations.monitoring_alert.schema.monitoring_alert import (
     FilterAlertsRequest,
@@ -297,6 +300,13 @@ async def build_alert_context_payload(
     Returns:
         WazuhIrisAlertContext: The built alert context payload.
     """
+    # Convert the _source to a dictionary
+    source_dict = alert_details._source.to_dict()
+
+    # Remove fields that start with any prefix in SourceFieldsToRemove
+    for field in WazuhSourceFieldsToRemove:
+        source_dict = {k: v for k, v in source_dict.items() if not k.startswith(field.value)}
+
     return WazuhIrisAlertContext(
         customer_iris_id=(
             await get_customer_alert_settings(
@@ -331,6 +341,7 @@ async def build_alert_context_payload(
             "No rule mitre technique found",
         ),
         process_name=alert_details.process_name,
+        **source_dict,
     )
 
 
@@ -423,6 +434,7 @@ async def create_alert_details(alert_details: WazuhAlertModel) -> CreateAlertReq
     Returns:
         CreateAlertRequest: The alert details object.
     """
+    logger.info(f"Creating alert details for alert: {alert_details}")
     return CreateAlertRequest(
         index=alert_details._index,
         id=alert_details._id,
@@ -437,7 +449,9 @@ async def create_alert_details(alert_details: WazuhAlertModel) -> CreateAlertReq
         timestamp_utc=alert_details._source.get("timestamp_utc", alert_details._source["timestamp"]),
         process_id=alert_details._source.get("process_id", "No process ID found"),
         process_name=await get_process_name(alert_details.to_dict()),
+        _source=GenericSourceModel(**alert_details._source),
     )
+
 
 
 async def create_and_update_alert_in_iris(
@@ -456,6 +470,7 @@ async def create_and_update_alert_in_iris(
     """
     logger.info("Alert does not exist in IRIS. Creating alert.")
     alert_details = await create_alert_details(alert_details)
+    logger.info(f"Alert details: {alert_details}")
     agent_details = await get_agent_by_hostname(alert_details.agent_name, session)
     ioc_payload = await build_ioc_payload(alert_details)
     iris_alert_payload = await build_alert_payload(
