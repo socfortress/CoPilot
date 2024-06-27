@@ -125,7 +125,7 @@ async def run_artifact_collection(
                 f"FROM scope()"
             ),
         )
-        flow = velociraptor_service.execute_query(query)
+        flow = velociraptor_service.execute_query(query, org_id=collect_artifact_body.velociraptor_org)
         logger.info(f"Successfully ran artifact collection on {flow}")
 
         artifact_key = get_artifact_key(analyzer_body=collect_artifact_body)
@@ -133,12 +133,13 @@ async def run_artifact_collection(
         flow_id = flow["results"][0][artifact_key]["flow_id"]
         logger.info(f"Extracted flow_id: {flow_id}")
 
-        completed = velociraptor_service.watch_flow_completion(flow_id)
+        completed = velociraptor_service.watch_flow_completion(flow_id, org_id=collect_artifact_body.velociraptor_org)
         logger.info(f"Successfully watched flow completion on {completed}")
 
         results = velociraptor_service.read_collection_results(
             client_id=collect_artifact_body.velociraptor_id,
             flow_id=flow_id,
+            org_id=collect_artifact_body.velociraptor_org,
             artifact=collect_artifact_body.artifact_name,
         )
 
@@ -186,7 +187,7 @@ async def run_remote_command(run_command_body: RunCommandBody) -> RunCommandResp
                 "FROM scope()"
             ),
         )
-        flow = velociraptor_service.execute_query(query)
+        flow = velociraptor_service.execute_query(query, org_id=run_command_body.velociraptor_org)
         logger.info(f"Successfully ran artifact collection on {flow}")
 
         artifact_key = get_artifact_key(analyzer_body=run_command_body)
@@ -194,12 +195,13 @@ async def run_remote_command(run_command_body: RunCommandBody) -> RunCommandResp
         flow_id = flow["results"][0][artifact_key]["flow_id"]
         logger.info(f"Extracted flow_id: {flow_id}")
 
-        completed = velociraptor_service.watch_flow_completion(flow_id)
+        completed = velociraptor_service.watch_flow_completion(flow_id, org_id=run_command_body.velociraptor_org)
         logger.info(f"Successfully watched flow completion on {completed}")
 
         results = velociraptor_service.read_collection_results(
             client_id=run_command_body.velociraptor_id,
             flow_id=flow_id,
+            org_id=run_command_body.velociraptor_org,
             artifact=run_command_body.artifact_name,
         )
 
@@ -250,7 +252,7 @@ async def quarantine_host(quarantine_body: QuarantineBody) -> QuarantineResponse
                     "FROM scope()"
                 ),
             )
-        flow = velociraptor_service.execute_query(query)
+        flow = velociraptor_service.execute_query(query, org_id=quarantine_body.velociraptor_org)
         logger.info(f"Successfully ran artifact collection on {flow}")
 
         artifact_key = get_artifact_key(analyzer_body=quarantine_body)
@@ -258,12 +260,13 @@ async def quarantine_host(quarantine_body: QuarantineBody) -> QuarantineResponse
         flow_id = flow["results"][0][artifact_key]["flow_id"]
         logger.info(f"Extracted flow_id: {flow_id}")
 
-        completed = velociraptor_service.watch_flow_completion(flow_id)
+        completed = velociraptor_service.watch_flow_completion(flow_id, org_id=quarantine_body.velociraptor_org)
         logger.info(f"Successfully watched flow completion on {completed}")
 
         results = velociraptor_service.read_collection_results(
             client_id=quarantine_body.velociraptor_id,
             flow_id=flow_id,
+            org_id=quarantine_body.velociraptor_org,
             artifact=quarantine_body.artifact_name,
         )
 

@@ -21,7 +21,7 @@ def create_query(query: str) -> str:
     return query
 
 
-async def get_flows(velociraptor_id: str) -> FlowResponse:
+async def get_flows(velociraptor_id: str, velociraptor_org: str = "root") -> FlowResponse:
     """
     Get all artifacts from Velociraptor.
 
@@ -33,7 +33,7 @@ async def get_flows(velociraptor_id: str) -> FlowResponse:
     query = create_query(
         f"SELECT * FROM flows(client_id='{velociraptor_id}')",
     )
-    all_flows = velociraptor_service.execute_query(query)
+    all_flows = velociraptor_service.execute_query(query, org_id=velociraptor_org)
     logger.info(f"all_flows: {all_flows}")
     flows = [FlowClientSession(**flow) for flow in all_flows["results"]]
     logger.info(f"flows: {flows}")
@@ -59,7 +59,7 @@ async def get_flows(velociraptor_id: str) -> FlowResponse:
         )
 
 
-async def get_flow(retrieve_flow_request: RetrieveFlowRequest):
+async def get_flow(retrieve_flow_request: RetrieveFlowRequest, velociraptor_org: str = "root"):
     """
     Get all artifacts from Velociraptor.
 
@@ -71,7 +71,7 @@ async def get_flow(retrieve_flow_request: RetrieveFlowRequest):
     query = create_query(
         f"SELECT * FROM flow_results(client_id='{retrieve_flow_request.client_id}', flow_id='{retrieve_flow_request.session_id}')",
     )
-    flow_results = velociraptor_service.execute_query(query)
+    flow_results = velociraptor_service.execute_query(query, org_id=velociraptor_org)
     logger.info(f"flow_results: {flow_results}")
     try:
         if flow_results["success"]:

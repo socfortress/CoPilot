@@ -141,7 +141,7 @@ class UniversalService:
 
     # ! Modify this to use AsyncSessionLocal End
 
-    def create_vql_request(self, vql: str):
+    def create_vql_request(self, vql: str, org_id: str = "root"):
         """
         Creates a VQLCollectorArgs object with given VQL query.
 
@@ -153,6 +153,7 @@ class UniversalService:
         """
         return api_pb2.VQLCollectorArgs(
             max_wait=1,
+            org_id=org_id,
             Query=[
                 api_pb2.VQLRequest(
                     Name="VQLRequest",
@@ -161,7 +162,7 @@ class UniversalService:
             ],
         )
 
-    def execute_query(self, vql: str):
+    def execute_query(self, vql: str, org_id: str = "root"):
         """
         Executes a VQL query and returns the results.
 
@@ -173,7 +174,7 @@ class UniversalService:
         """
         logger.info(f"Executing query: {vql}")
 
-        client_request = self.create_vql_request(vql)
+        client_request = self.create_vql_request(vql, org_id)
 
         try:
             results = []
@@ -202,7 +203,7 @@ class UniversalService:
             logger.error(f"Failed to execute query: {e}")
             raise HTTPException(status_code=500, detail=f"Failed to execute query: {e}")
 
-    def watch_flow_completion(self, flow_id: str):
+    def watch_flow_completion(self, flow_id: str, org_id: str = "root"):
         """
         Watch for the completion of a flow.
 
@@ -213,14 +214,14 @@ class UniversalService:
             dict: A dictionary with the success status and a message.
         """
         vql = f"SELECT * FROM watch_monitoring(artifact='System.Flow.Completion') WHERE FlowId='{flow_id}' LIMIT 1"
-        # vql = f"SELECT * FROM query(org_id='OL680', query='SELECT * FROM watch_monitoring(artifact='System.Flow.Completion') WHERE FlowId='{flow_id}' LIMIT 1')"
         logger.info(f"Watching flow {flow_id} for completion")
-        return self.execute_query(vql)
+        return self.execute_query(vql, org_id)
 
     def read_collection_results(
         self,
         client_id: str,
         flow_id: str,
+        org_id: str = "root",
         artifact: str = "Generic.Client.Info/BasicInformation",
     ):
         """
@@ -235,7 +236,7 @@ class UniversalService:
             dict: A dictionary with the success status, a message, and potentially the results.
         """
         vql = f"SELECT * FROM source(client_id='{client_id}', flow_id='{flow_id}', artifact='{artifact}')"
-        return self.execute_query(vql)
+        return self.execute_query(vql, org_id)
 
     async def get_client_id(self, client_name: str):
         """
