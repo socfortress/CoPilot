@@ -10,6 +10,7 @@ class VelociraptorAgent(BaseModel):
     client_id: Optional[str] = Field("n/a", alias="velociraptor_id")
     client_last_seen: str = Field(..., alias="velociraptor_last_seen")
     client_version: str = Field(..., alias="velociraptor_agent_version")
+    client_org: str = Field(..., alias="velociraptor_org")
 
     @property
     def client_last_seen_as_datetime(self):

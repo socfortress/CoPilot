@@ -350,6 +350,7 @@ async def sync_agents_velociraptor() -> SyncedAgentsResponse:
                         velociraptor_id=velociraptor_agent.client_id,
                         velociraptor_last_seen=last_seen_at_iso,
                         velociraptor_agent_version=velociraptor_agent.agent_information.version,
+                        velociraptor_org=org.OrgId,
                     )
 
                 except Exception as e:
