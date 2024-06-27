@@ -227,6 +227,7 @@ async def get_process_analysis_response(
 
     # Using .get() with default values
     data = response_data.get("data", {})
+    logger.info(f"Data {data}")
     success = response_data.get("success", False)
     message = response_data.get("message", "No message provided")
 
