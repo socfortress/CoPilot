@@ -12,7 +12,8 @@ import app.agents.wazuh.services.agents as wazuh_services
 from app.agents.schema.agents import SyncedAgentsResponse
 from app.agents.schema.agents import SyncedWazuhAgent
 from app.agents.velociraptor.schema.agents import VelociraptorAgent
-from app.agents.velociraptor.schema.agents import VelociraptorClients, VelociraptorOrganizations
+from app.agents.velociraptor.schema.agents import VelociraptorClients
+from app.agents.velociraptor.schema.agents import VelociraptorOrganizations
 from app.agents.wazuh.schema.agents import WazuhAgent
 from app.agents.wazuh.schema.agents import WazuhAgentsList
 from app.connectors.models import Connectors
@@ -54,6 +55,7 @@ async def fetch_velociraptor_clients(org_id: str) -> VelociraptorClients:
     return VelociraptorClients(
         clients=collected_velociraptor_agents,
     )
+
 
 async def fetch_velociraptor_organizations() -> VelociraptorOrganizations:
     """
@@ -317,7 +319,6 @@ async def sync_agents_velociraptor() -> SyncedAgentsResponse:
     velo_orgs = await fetch_velociraptor_organizations()
     logger.info(f"Collected Velociraptor Orgs: {velo_orgs}")
     for org in velo_orgs.organizations:
-
         velociraptor_clients = await fetch_velociraptor_clients(org_id=org.OrgId)
         logger.info(f"Collected Velociraptor Clients: {velociraptor_clients}")
         velociraptor_clients = velociraptor_clients.clients if hasattr(velociraptor_clients, "clients") else []

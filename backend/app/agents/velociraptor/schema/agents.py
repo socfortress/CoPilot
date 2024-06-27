@@ -103,5 +103,6 @@ class Organization(BaseModel):
     OrgId: str
     _client_config: ClientConfig
 
+
 class VelociraptorOrganizations(BaseModel):
     organizations: List[Organization]

@@ -39,6 +39,7 @@ async def collect_velociraptor_clients(org_id: str) -> list:
     logger.info(f"Successfully ran artifact collection on {flow}")
     return flow["results"]
 
+
 async def collect_velociraptor_organizations() -> list:
     """
     Collects all organizations from Velociraptor.

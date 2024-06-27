@@ -125,6 +125,7 @@ async def get_velociraptor_id(session: AsyncSession, hostname: str) -> str:
     logger.info(f"velociraptor_id for hostname {hostname} is {agent.velociraptor_id}")
     return agent.velociraptor_id
 
+
 async def get_velociraptor_org(session: AsyncSession, hostname: str) -> str:
     """
     Retrieves the velociraptor_org associated with the given hostname.

@@ -103,7 +103,6 @@ class Agents(SQLModel, table=True):
     quarantined: bool = Field(default=False)
     velociraptor_org: Optional[str] = Field(max_length=256)
 
-
     customer: Optional[Customers] = Relationship(back_populates="agents")
 
     @classmethod

@@ -63,7 +63,10 @@ def get_artifact_key(analyzer_body: CollectArtifactBody) -> str:
             f"env=dict(Command='{analyzer_body.command}'))"
         )
     else:
-        return f"collect_client(org_id='{analyzer_body.velociraptor_org}', client_id='{analyzer_body.velociraptor_id}', " f"artifacts=['{analyzer_body.artifact_name}'])"
+        return (
+            f"collect_client(org_id='{analyzer_body.velociraptor_org}', client_id='{analyzer_body.velociraptor_id}', "
+            f"artifacts=['{analyzer_body.artifact_name}'])"
+        )
 
 
 async def get_artifacts() -> ArtifactsResponse:
@@ -114,7 +117,13 @@ async def run_artifact_collection(
     try:
         # ! Can specify org_id with org_id='OL680' ! #
         query = create_query(
-            f"SELECT collect_client(org_id='{collect_artifact_body.velociraptor_org}', client_id='{collect_artifact_body.velociraptor_id}', artifacts=['{collect_artifact_body.artifact_name}']) FROM scope()",
+            (
+                f"SELECT collect_client("
+                f"org_id='{collect_artifact_body.velociraptor_org}', "
+                f"client_id='{collect_artifact_body.velociraptor_id}', "
+                f"artifacts=['{collect_artifact_body.artifact_name}']) "
+                f"FROM scope()"
+            ),
         )
         flow = velociraptor_service.execute_query(query)
         logger.info(f"Successfully ran artifact collection on {flow}")
