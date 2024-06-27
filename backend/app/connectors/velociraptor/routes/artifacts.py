@@ -125,6 +125,39 @@ async def get_velociraptor_id(session: AsyncSession, hostname: str) -> str:
     logger.info(f"velociraptor_id for hostname {hostname} is {agent.velociraptor_id}")
     return agent.velociraptor_id
 
+async def get_velociraptor_org(session: AsyncSession, hostname: str) -> str:
+    """
+    Retrieves the velociraptor_org associated with the given hostname.
+
+    Args:
+        session (AsyncSession): The database session.
+        hostname (str): The hostname of the agent.
+
+    Returns:
+        str: The velociraptor_org associated with the hostname.
+
+    Raises:
+        HTTPException: If the agent with the given hostname is not found or if the velociraptor_org is not available.
+    """
+    logger.info(f"Getting velociraptor_org from hostname {hostname}")
+    result = await session.execute(select(Agents).filter(Agents.hostname == hostname))
+    agent = result.scalars().first()
+
+    if not agent:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Agent with hostname {hostname} not found",
+        )
+
+    if agent.velociraptor_org is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Velociraptor ORG for hostname {hostname} is not available",
+        )
+
+    logger.info(f"velociraptor_org for hostname {hostname} is {agent.velociraptor_org}")
+    return agent.velociraptor_org
+
 
 async def update_agent_quarantine_status(
     session: AsyncSession,
@@ -321,6 +354,11 @@ async def collect_artifact(
         collect_artifact_body.hostname,
     )
 
+    collect_artifact_body.velociraptor_org = await get_velociraptor_org(
+        session,
+        collect_artifact_body.hostname,
+    )
+
     # Assuming run_artifact_collection is an async function and takes a session as a parameter
     return await run_artifact_collection(collect_artifact_body)
 
@@ -355,6 +393,11 @@ async def run_command(
         )
     # Add the velociraptor_id to the run_command_body object
     run_command_body.velociraptor_id = await get_velociraptor_id(
+        session,
+        run_command_body.hostname,
+    )
+
+    run_command_body.velociraptor_org = await get_velociraptor_org(
         session,
         run_command_body.hostname,
     )
@@ -396,6 +439,12 @@ async def quarantine(
         session,
         quarantine_body.hostname,
     )
+
+    quarantine_body.velociraptor_org = await get_velociraptor_org(
+        session,
+        quarantine_body.hostname,
+    )
+
     # Quarantine the host
     quarantine_response = await quarantine_host(quarantine_body)
 

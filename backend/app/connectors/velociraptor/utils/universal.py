@@ -213,6 +213,7 @@ class UniversalService:
             dict: A dictionary with the success status and a message.
         """
         vql = f"SELECT * FROM watch_monitoring(artifact='System.Flow.Completion') WHERE FlowId='{flow_id}' LIMIT 1"
+        #vql = f"SELECT * FROM query(org_id='OL680', query='SELECT * FROM watch_monitoring(artifact='System.Flow.Completion') WHERE FlowId='{flow_id}' LIMIT 1')"
         logger.info(f"Watching flow {flow_id} for completion")
         return self.execute_query(vql)
 
