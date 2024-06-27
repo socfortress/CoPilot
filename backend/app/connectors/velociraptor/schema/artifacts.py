@@ -73,6 +73,7 @@ class QuarantineArtifactsEnum(str, Enum):
 class BaseBody(BaseModel):
     hostname: str = Field(..., description="Name of the client")
     velociraptor_id: Optional[str] = Field(None, description="Client ID of the client")
+    velociraptor_org: Optional[str] = Field(None, description="Organization of the client")
 
 
 class CollectArtifactBody(BaseBody):

@@ -21,7 +21,7 @@ def create_query(query: str) -> str:
     return query
 
 
-async def collect_velociraptor_clients() -> list:
+async def collect_velociraptor_clients(org_id: str) -> list:
     """
     Collects all clients from Velociraptor.
 
@@ -29,10 +29,30 @@ async def collect_velociraptor_clients() -> list:
         list: A list of all clients.
     """
     velociraptor_service = await UniversalService.create("Velociraptor")
+    # query = create_query(
+    #     "SELECT * FROM clients()",
+    # )
     query = create_query(
-        "SELECT * FROM clients()",
+        f"SELECT * FROM query(org_id='{org_id}', query='SELECT * FROM clients()')",
     )
     flow = velociraptor_service.execute_query(query)
+    logger.info(f"Successfully ran artifact collection on {flow}")
+    return flow["results"]
+
+
+async def collect_velociraptor_organizations() -> list:
+    """
+    Collects all organizations from Velociraptor.
+
+    Returns:
+        list: A list of all organizations.
+    """
+    velociraptor_service = await UniversalService.create("Velociraptor")
+    query = create_query(
+        "SELECT * FROM orgs()",
+    )
+    flow = velociraptor_service.execute_query(query)
+    logger.info(f"Successfully ran artifact collection on {flow}")
     return flow["results"]
 
 

@@ -46,24 +46,27 @@ def get_artifact_key(analyzer_body: CollectArtifactBody) -> str:
 
     if action == "quarantine":
         return (
-            f'collect_client(client_id="{analyzer_body.velociraptor_id}", '
+            f'collect_client(org_id="{analyzer_body.velociraptor_org}", client_id="{analyzer_body.velociraptor_id}", '
             f'artifacts=["{analyzer_body.artifact_name}"], '
             f"spec=dict(`{analyzer_body.artifact_name}`=dict()))"
         )
     elif action == "remove_quarantine":
         return (
-            f'collect_client(client_id="{analyzer_body.velociraptor_id}", '
+            f'collect_client(org_id="{analyzer_body.velociraptor_org}", client_id="{analyzer_body.velociraptor_id}", '
             f'artifacts=["{analyzer_body.artifact_name}"], '
             f'spec=dict(`{analyzer_body.artifact_name}`=dict(`RemovePolicy`="Y")))'
         )
     elif command is not None:
         return (
-            f"collect_client(client_id='{analyzer_body.velociraptor_id}', "
+            f"collect_client(org_id='{analyzer_body.velociraptor_org}', client_id='{analyzer_body.velociraptor_id}', "
             f"urgent=true, artifacts=['{analyzer_body.artifact_name}'], "
             f"env=dict(Command='{analyzer_body.command}'))"
         )
     else:
-        return f"collect_client(client_id='{analyzer_body.velociraptor_id}', " f"artifacts=['{analyzer_body.artifact_name}'])"
+        return (
+            f"collect_client(org_id='{analyzer_body.velociraptor_org}', client_id='{analyzer_body.velociraptor_id}', "
+            f"artifacts=['{analyzer_body.artifact_name}'])"
+        )
 
 
 async def get_artifacts() -> ArtifactsResponse:
@@ -112,8 +115,15 @@ async def run_artifact_collection(
     """
     velociraptor_service = await UniversalService.create("Velociraptor")
     try:
+        # ! Can specify org_id with org_id='OL680' ! #
         query = create_query(
-            f"SELECT collect_client(client_id='{collect_artifact_body.velociraptor_id}', artifacts=['{collect_artifact_body.artifact_name}']) FROM scope()",
+            (
+                f"SELECT collect_client("
+                f"org_id='{collect_artifact_body.velociraptor_org}', "
+                f"client_id='{collect_artifact_body.velociraptor_id}', "
+                f"artifacts=['{collect_artifact_body.artifact_name}']) "
+                f"FROM scope()"
+            ),
         )
         flow = velociraptor_service.execute_query(query)
         logger.info(f"Successfully ran artifact collection on {flow}")
@@ -170,7 +180,7 @@ async def run_remote_command(run_command_body: RunCommandBody) -> RunCommandResp
         logger.info(f"Running remote command on {run_command_body}")
         query = create_query(
             (
-                f"SELECT collect_client(client_id='{run_command_body.velociraptor_id}', "
+                f"SELECT collect_client(org_id='{run_command_body.velociraptor_org}', client_id='{run_command_body.velociraptor_id}', "
                 f"urgent=true, artifacts=['{run_command_body.artifact_name}'], "
                 f"env=dict(Command='{run_command_body.command}')) "
                 "FROM scope()"
@@ -225,7 +235,7 @@ async def quarantine_host(quarantine_body: QuarantineBody) -> QuarantineResponse
         if quarantine_body.action == "quarantine":
             query = create_query(
                 (
-                    f'SELECT collect_client(client_id="{quarantine_body.velociraptor_id}", '
+                    f'SELECT collect_client(org_id="{quarantine_body.velociraptor_org}", client_id="{quarantine_body.velociraptor_id}", '
                     f'artifacts=["{quarantine_body.artifact_name}"], '
                     f"spec=dict(`{quarantine_body.artifact_name}`=dict())) "
                     "FROM scope()"
@@ -234,7 +244,7 @@ async def quarantine_host(quarantine_body: QuarantineBody) -> QuarantineResponse
         else:
             query = create_query(
                 (
-                    f'SELECT collect_client(client_id="{quarantine_body.velociraptor_id}", '
+                    f'SELECT collect_client(org_id="{quarantine_body.velociraptor_org}", client_id="{quarantine_body.velociraptor_id}", '
                     f'artifacts=["{quarantine_body.artifact_name}"], '
                     f'spec=dict(`{quarantine_body.artifact_name}`=dict(`RemovePolicy`="Y"))) '
                     "FROM scope()"

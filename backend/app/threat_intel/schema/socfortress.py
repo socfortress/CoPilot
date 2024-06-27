@@ -1,8 +1,10 @@
+import os
 from typing import List
 from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
+from pydantic import validator
 
 
 class SocfortressThreatIntelRequest(BaseModel):
@@ -53,6 +55,10 @@ class SocfortressProcessNameAnalysisRequest(BaseModel):
         ...,
         description="The process name to evaluate.",
     )
+
+    @validator("process_name", pre=True)
+    def extract_filename(cls, v):
+        return os.path.basename(v)
 
 
 class Path(BaseModel):

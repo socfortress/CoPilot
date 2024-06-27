@@ -101,6 +101,7 @@ class Agents(SQLModel, table=True):
     velociraptor_agent_version: Optional[str] = Field(max_length=256)
     customer_code: Optional[str] = Field(foreign_key="customers.customer_code", max_length=256)
     quarantined: bool = Field(default=False)
+    velociraptor_org: Optional[str] = Field(max_length=256)
 
     customer: Optional[Customers] = Relationship(back_populates="agents")
 
@@ -129,6 +130,7 @@ class Agents(SQLModel, table=True):
             if velociraptor_agent and velociraptor_agent.client_version
             else None,
             customer_code=customer_code,
+            velociraptor_org=velociraptor_agent.client_org if velociraptor_agent and velociraptor_agent.client_org else None,
         )
 
     @classmethod
@@ -177,6 +179,7 @@ class Agents(SQLModel, table=True):
             velociraptor_agent.client_version if velociraptor_agent and velociraptor_agent.client_version else None
         )
         self.customer_code = customer_code
+        self.velociraptor_org = velociraptor_agent.client_org if velociraptor_agent and velociraptor_agent.client_org else None
 
     def update_wazuh_agent_from_model(self, wazuh_agent, customer_code):
         if wazuh_agent.agent_last_seen == "Unknown" or wazuh_agent.agent_last_seen == "1970-01-01T00:00:00+00:00":
@@ -209,6 +212,7 @@ class Agents(SQLModel, table=True):
             velociraptor_agent.client_version if velociraptor_agent and velociraptor_agent.client_version else None
         )
         logger.info(f"Updated with Velociraptor details: {self}")
+        self.velociraptor_org = velociraptor_agent.client_org if velociraptor_agent and velociraptor_agent.client_org else None
 
 
 class LogEntry(SQLModel, table=True):

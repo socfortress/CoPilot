@@ -13,6 +13,7 @@ from app.agents.schema.agents import SyncedAgentsResponse
 from app.agents.schema.agents import SyncedWazuhAgent
 from app.agents.velociraptor.schema.agents import VelociraptorAgent
 from app.agents.velociraptor.schema.agents import VelociraptorClients
+from app.agents.velociraptor.schema.agents import VelociraptorOrganizations
 from app.agents.wazuh.schema.agents import WazuhAgent
 from app.agents.wazuh.schema.agents import WazuhAgentsList
 from app.connectors.models import Connectors
@@ -40,7 +41,7 @@ async def fetch_wazuh_agents() -> WazuhAgentsList:
     )
 
 
-async def fetch_velociraptor_clients() -> VelociraptorClients:
+async def fetch_velociraptor_clients(org_id: str) -> VelociraptorClients:
     """
     Fetches clients from Velociraptor service.
 
@@ -50,9 +51,26 @@ async def fetch_velociraptor_clients() -> VelociraptorClients:
     Returns:
         VelociraptorClientsList: The fetched clients.
     """
-    collected_velociraptor_agents = await velociraptor_services.collect_velociraptor_clients()
+    collected_velociraptor_agents = await velociraptor_services.collect_velociraptor_clients(org_id=org_id)
     return VelociraptorClients(
         clients=collected_velociraptor_agents,
+    )
+
+
+async def fetch_velociraptor_organizations() -> VelociraptorOrganizations:
+    """
+    Fetches organizations from Velociraptor service.
+
+    Args:
+        None
+
+    Returns:
+        VelociraptorOrgsList: The fetched orgs.
+    """
+    collected_velociraptor_orgs = await velociraptor_services.collect_velociraptor_organizations()
+    logger.info(f"Collected Velociraptor Orgs: {collected_velociraptor_orgs}")
+    return VelociraptorOrganizations(
+        organizations=collected_velociraptor_orgs,
     )
 
 
@@ -298,53 +316,57 @@ async def sync_agents_velociraptor() -> SyncedAgentsResponse:
     :rtype: SyncedAgentsResponse
     """
     agents_added_list: List[VelociraptorAgent] = []
+    velo_orgs = await fetch_velociraptor_organizations()
+    logger.info(f"Collected Velociraptor Orgs: {velo_orgs}")
+    for org in velo_orgs.organizations:
+        velociraptor_clients = await fetch_velociraptor_clients(org_id=org.OrgId)
+        logger.info(f"Collected Velociraptor Clients: {velociraptor_clients}")
+        velociraptor_clients = velociraptor_clients.clients if hasattr(velociraptor_clients, "clients") else []
 
-    velociraptor_clients = await fetch_velociraptor_clients()
-    velociraptor_clients = velociraptor_clients.clients if hasattr(velociraptor_clients, "clients") else []
+        async with get_db_session() as session:  # Create a new session here
+            existing_agents_query = select(Agents)
+            result = await session.execute(existing_agents_query)
+            existing_agents = result.scalars().all()
 
-    async with get_db_session() as session:  # Create a new session here
-        existing_agents_query = select(Agents)
-        result = await session.execute(existing_agents_query)
-        existing_agents = result.scalars().all()
+            for agent in existing_agents:
+                logger.info(f"Collecting Velociraptor Agent for {agent.hostname}")
 
-        for agent in existing_agents:
-            logger.info(f"Collecting Velociraptor Agent for {agent.hostname}")
+                try:
+                    # Build the velociraptor_agent where the hostname or `client_id` is that equal to the `agents`
+                    velociraptor_agent = next(
+                        (
+                            client
+                            for client in velociraptor_clients
+                            if client.os_info.hostname == agent.hostname or client.client_id == agent.velociraptor_id
+                        ),
+                        None,
+                    )
+                    # Convert Unix epoch timestamp to datetime
+                    last_seen_at = datetime.fromtimestamp(
+                        int(velociraptor_agent.last_seen_at) / 1e6,
+                    )  # Divide by 1e6 to convert from microseconds to seconds
+                    # Convert datetime to ISO 8601 format without fractional seconds
+                    last_seen_at_iso = last_seen_at.replace(tzinfo=timezone.utc).isoformat(timespec="seconds")
+                    velociraptor_agent = VelociraptorAgent(
+                        velociraptor_id=velociraptor_agent.client_id,
+                        velociraptor_last_seen=last_seen_at_iso,
+                        velociraptor_agent_version=velociraptor_agent.agent_information.version,
+                        velociraptor_org=org.OrgId,
+                    )
 
-            try:
-                # Build the velociraptor_agent where the hostname or `client_id` is that equal to the `agents`
-                velociraptor_agent = next(
-                    (
-                        client
-                        for client in velociraptor_clients
-                        if client.os_info.hostname == agent.hostname or client.client_id == agent.velociraptor_id
-                    ),
-                    None,
-                )
-                # Convert Unix epoch timestamp to datetime
-                last_seen_at = datetime.fromtimestamp(
-                    int(velociraptor_agent.last_seen_at) / 1e6,
-                )  # Divide by 1e6 to convert from microseconds to seconds
-                # Convert datetime to ISO 8601 format without fractional seconds
-                last_seen_at_iso = last_seen_at.replace(tzinfo=timezone.utc).isoformat(timespec="seconds")
-                velociraptor_agent = VelociraptorAgent(
-                    velociraptor_id=velociraptor_agent.client_id,
-                    velociraptor_last_seen=last_seen_at_iso,
-                    velociraptor_agent_version=velociraptor_agent.agent_information.version,
-                )
+                except Exception as e:
+                    logger.error(
+                        f"Failed to collect Velociraptor Agent for {agent.hostname}: {e}",
+                    )
+                    continue
 
-            except Exception as e:
-                logger.error(
-                    f"Failed to collect Velociraptor Agent for {agent.hostname}: {e}",
-                )
-                continue
+                if velociraptor_agent:
+                    # Update the agent with the Velociraptor client's details
+                    await update_agent_with_velociraptor_in_db(session, agent, velociraptor_agent)
+                    agents_added_list.append(velociraptor_agent)
 
-            if velociraptor_agent:
-                # Update the agent with the Velociraptor client's details
-                await update_agent_with_velociraptor_in_db(session, agent, velociraptor_agent)
-                agents_added_list.append(velociraptor_agent)
-
-    # Close the session
-    await session.close()
+        # Close the session
+        await session.close()
 
     logger.info(f"Agents Added List: {agents_added_list}")
     return SyncedAgentsResponse(
