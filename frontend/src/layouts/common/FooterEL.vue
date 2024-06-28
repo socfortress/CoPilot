@@ -3,7 +3,7 @@
 		<div class="wrap flex items-center justify-end gap-3">
 			<div class="copy">
 				Made with
-				<Icon :size="22" :color="style['--primary-color']" class="mx-1">
+				<Icon :size="22" :color="style['primary-color']" class="mx-1">
 					<BrainIcon />
 				</Icon>
 				By

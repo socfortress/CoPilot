@@ -66,7 +66,7 @@ function setGlobalVars() {
 	const html = document.children[0] as HTMLElement
 	const { style: htmlStyle } = html
 	for (const key in style.value) {
-		htmlStyle.setProperty(key, style.value[key])
+		htmlStyle.setProperty("--" + key, style.value[key])
 	}
 }
 

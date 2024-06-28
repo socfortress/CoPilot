@@ -16,7 +16,7 @@
 					:iconName="HealthcheckIcon"
 					boxed
 					:boxSize="30"
-					:color="criticalTotal ? style['--warning-color'] : undefined"
+					:color="criticalTotal ? style['warning-color'] : undefined"
 				></CardStatsIcon>
 			</template>
 		</CardStatsDouble>

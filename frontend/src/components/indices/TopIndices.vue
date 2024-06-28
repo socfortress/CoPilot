@@ -63,10 +63,10 @@ function getOptions() {
 			left: "left",
 			type: "scroll",
 			textStyle: {
-				color: style.value["--fg-color"]
+				color: style.value["fg-color"]
 			},
 			pageTextStyle: {
-				color: style.value["--fg-color"]
+				color: style.value["fg-color"]
 			}
 		},
 		grid: {
@@ -86,13 +86,13 @@ function getOptions() {
 					show: false
 				},
 				itemStyle: {
-					borderColor: style.value["--bg-color"],
+					borderColor: style.value["bg-color"],
 					borderWidth: 2
 				},
 				data: [
-					{ value: green, name: "Green", itemStyle: { color: style.value["--success-color"] } },
-					{ value: yellow, name: "Yellow", itemStyle: { color: style.value["--warning-color"] } },
-					{ value: red, name: "Red", itemStyle: { color: style.value["--error-color"] } }
+					{ value: green, name: "Green", itemStyle: { color: style.value["success-color"] } },
+					{ value: yellow, name: "Yellow", itemStyle: { color: style.value["warning-color"] } },
+					{ value: red, name: "Red", itemStyle: { color: style.value["error-color"] } }
 				]
 			},
 			{
@@ -139,13 +139,13 @@ function getOptions() {
 					//alignTo: "edge",
 					rich: {
 						name: {
-							color: style.value["--fg-color"],
+							color: style.value["fg-color"],
 							fontSize: window.innerWidth > 1000 ? 13 : 11
 						},
 						per: {
 							fontSize: window.innerWidth > 1000 ? 13 : 11,
 							fontWeight: "bold",
-							color: style.value["--fg-color"]
+							color: style.value["fg-color"]
 						}
 					}
 				},
@@ -165,7 +165,7 @@ function getOptions() {
 					}
 				},
 				itemStyle: {
-					borderColor: style.value["--bg-color"],
+					borderColor: style.value["bg-color"],
 					borderWidth: 1
 				},
 				data: sizeData

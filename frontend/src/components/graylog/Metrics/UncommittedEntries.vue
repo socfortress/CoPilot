@@ -94,7 +94,7 @@ function getOptions() {
 		xaxis: {
 			type: "datetime"
 		},
-		colors: [style.value["--primary-color"]],
+		colors: [style.value["primary-color"]],
 		tooltip: {
 			x: {
 				formatter: (time: number) => {
@@ -107,7 +107,7 @@ function getOptions() {
 				}
 			},
 			style: {
-				fontFamily: style.value["--font-family-mono"]
+				fontFamily: style.value["font-family-mono"]
 			},
 			theme: isThemeDark.value ? "dark" : "light"
 		}
