@@ -9,6 +9,16 @@ export interface ThreatIntelResponse {
 	virustotal_url: string | null
 }
 
+export interface EpssScore {
+	cve: string
+	/** a float (0.000680000) */
+	epss: string
+	/** a float (0.299330000) */
+	percentile: string
+	/** a date (2024-06-27) */
+	date: string | Date
+}
+
 export interface EvaluationData {
 	rank: number
 	host_prev: string
