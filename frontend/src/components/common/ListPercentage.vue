@@ -17,9 +17,9 @@
 					type="line"
 					:percentage="parseInt(item[percentageKey as keyof typeof item], 10)"
 					:indicator-placement="'inside'"
-					:indicator-text-color="style['--bg-color']"
-					:color="style['--fg-color']"
-					:rail-color="style['--divider-020-color']"
+					:indicator-text-color="style['bg-color']"
+					:color="style['fg-color']"
+					:rail-color="style['divider-020-color']"
 					class="font-mono font-bold"
 				/>
 			</div>
