@@ -2,9 +2,9 @@ from fastapi import APIRouter
 from fastapi import Security
 from loguru import logger
 
-
 from app.auth.utils import AuthHandler
-from app.threat_intel.schema.epss import EpssThreatIntelRequest, EpssThreatIntelResponse
+from app.threat_intel.schema.epss import EpssThreatIntelRequest
+from app.threat_intel.schema.epss import EpssThreatIntelResponse
 from app.threat_intel.services.epss import collect_epss_score
 
 # App specific imports

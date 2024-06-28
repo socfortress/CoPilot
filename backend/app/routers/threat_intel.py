@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
-from app.threat_intel.routes.socfortress import threat_intel_socfortress_router
 from app.threat_intel.routes.epss import threat_intel_epss_router
+from app.threat_intel.routes.socfortress import threat_intel_socfortress_router
 
 # Instantiate the APIRouter
 router = APIRouter()

@@ -1,7 +1,11 @@
-from fastapi import HTTPException
-from app.threat_intel.schema.epss import EpssThreatIntelRequest, EpssThreatIntelResponse, EpssData
 import httpx
+from fastapi import HTTPException
 from loguru import logger
+
+from app.threat_intel.schema.epss import EpssData
+from app.threat_intel.schema.epss import EpssThreatIntelRequest
+from app.threat_intel.schema.epss import EpssThreatIntelResponse
+
 
 async def invoke_epss_api(
     url: str,
@@ -27,6 +31,7 @@ async def invoke_epss_api(
     async with httpx.AsyncClient() as client:
         response = await client.get(url, headers=headers, params=params)
         return response.json()
+
 
 async def collect_epss_score(
     request: EpssThreatIntelRequest,

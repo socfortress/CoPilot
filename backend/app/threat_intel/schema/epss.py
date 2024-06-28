@@ -1,9 +1,8 @@
-from typing import Optional
 from typing import List
+from typing import Optional
 
 from pydantic import BaseModel
 from pydantic import Field
-
 
 
 class EpssThreatIntelRequest(BaseModel):
@@ -12,11 +11,13 @@ class EpssThreatIntelRequest(BaseModel):
         description="The CVE to evaluate.",
     )
 
+
 class EpssData(BaseModel):
     cve: str
     epss: str
     percentile: str
     date: str
+
 
 class EpssApiResponse(BaseModel):
     status: str
@@ -31,6 +32,7 @@ class EpssApiResponse(BaseModel):
 
     def to_dict(self):
         return self.dict()
+
 
 class EpssThreatIntelResponse(BaseModel):
     data: Optional[List[EpssData]] = Field(None, description="The data for the IoC")
