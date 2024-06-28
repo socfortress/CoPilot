@@ -1,4 +1,4 @@
-import os
+import re
 from typing import List
 from typing import Optional
 
@@ -58,7 +58,8 @@ class SocfortressProcessNameAnalysisRequest(BaseModel):
 
     @validator("process_name", pre=True)
     def extract_filename(cls, v):
-        return os.path.basename(v)
+        match = re.search(r"[^\\]+$", v)
+        return match.group() if match else v
 
 
 class Path(BaseModel):
