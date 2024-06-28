@@ -20,28 +20,36 @@
 			</n-tag>
 		</TransitionGroup>
 
-		<Transition name="anim" tag="div" class="flex items-center">
+		<Transition name="anim" tag="div" class="flex items-center shortcuts-container">
 			<div v-if="pinned.length" class="flex items-center">
-				<n-popover :show-arrow="false" placement="bottom-end" trigger="hover">
+				<n-popover :show-arrow="false" placement="bottom-end" trigger="hover" class="!p-1">
 					<template #trigger>
 						<n-button size="small" class="!h-8">
 							<span class="flex items-center gap-3">
 								Shortcuts
-								<n-badge :value="pinned.length" :color="style['--divider-030-color']" />
+								<n-badge :value="pinned.length" :color="style['divider-030-color']" />
 							</span>
 						</n-button>
 					</template>
-					<div class="flex flex-col gap-3 py-2 pr-1">
-						<div class="flex gap-2 items-center" v-for="page of pinned" :key="page.name">
-							<n-button size="small" text @click="removePinnedPage(page.name)">
-								<template #icon>
-									<Icon :size="20" :name="CloseIcon" class="opacity-55"></Icon>
-								</template>
-							</n-button>
-							<n-button size="small" text @click="gotoPage(page.name)" :title="page.title">
-								{{ page.title }}
-							</n-button>
-						</div>
+					<div class="flex flex-col">
+						<n-button
+							size="small"
+							quaternary
+							@click="gotoPage(page.name)"
+							v-for="page of pinned"
+							:key="page.name"
+							class="!justify-start"
+						>
+							<template #icon>
+								<Icon
+									:size="20"
+									:name="CloseIcon"
+									class="opacity-50 hover:text-red-500 hover:opacity-100"
+									@click.stop="removePinnedPage(page.name)"
+								></Icon>
+							</template>
+							{{ page.title }}
+						</n-button>
 					</div>
 				</n-popover>
 			</div>
@@ -126,6 +134,9 @@ router.afterEach(route => {
 	position: relative;
 	overflow: hidden;
 	padding: 8px 0;
+	container-type: inline-size;
+	justify-content: flex-end;
+	width: 100%;
 
 	:deep() {
 		.n-tag {
@@ -206,6 +217,18 @@ router.afterEach(route => {
 
 	.anim-leave-active {
 		position: absolute;
+	}
+
+	@container (max-width: 460px) {
+		.latest-list {
+			display: none;
+		}
+	}
+
+	@container (max-width: 140px) {
+		.shortcuts-container {
+			display: none;
+		}
 	}
 }
 </style>
