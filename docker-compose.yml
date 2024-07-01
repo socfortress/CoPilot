@@ -34,6 +34,9 @@ services:
         volumes:
             - mysql-data:/var/lib/mysql
 
+    copilot-nuclei-module:
+        image: ghcr.io/socfortress/copilot-nuclei-module:latest
+
 volumes:
     mysql-data:
 
