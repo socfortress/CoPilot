@@ -301,5 +301,12 @@ async def post_to_copilot_ai_module(data: ArtifactReccomendationRequest) -> Arti
             json=data.dict(),
             timeout=120,
         )
-        logger.info(f"Response from copilot-ai-module: {data.json()}")
+        response_data = data.json()
+        logger.info(f"Response from copilot-ai-module: {response_data}")
+
+        if not response_data.get('success'):
+            raise HTTPException(
+                status_code=400,
+                detail=response_data.get('message', 'Request to copilot-ai-module was not successful'),
+            )
     return ArtifactReccomendationResponse(**data.json())
