@@ -301,4 +301,11 @@ async def post_to_copilot_ai_module(data: ArtifactReccomendationRequest) -> Arti
             json=data.dict(),
             timeout=120,
         )
+        data_json = data.json()
+        if data_json.success is False:
+            logger.error(f"Failed to get artifact recommendation: {data_json.message}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to get artifact recommendation: {data_json.message}",
+            )
     return ArtifactReccomendationResponse(**data.json())
