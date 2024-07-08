@@ -17,27 +17,13 @@ Triggered when a model breach occurs. Models define conditions that alert the sy
 ## System Status Alert
 Informs operators of system health, traffic changes, and errors. Includes host details, event severity, and useful investigation links. Notifications are sent for active and resolved events.
 
-
-## API Request Format
-Requests are made in the format:
-
-```
-https://[appliance-IP]/[endpoint]' -H "DTAPI-Token: [token]" -H "DTAPI-Date: [date]" -H "DTAPI-Signature: [signature]
-```
-
-
-## Required Headers
-- **DTAPI-Date**: Date-time within 30 minutes of the instance server time.
-- **DTAPI-Token**: Public token from user account settings or the Threat Visualizer System Config page.
-- **DTAPI-Signature**: HMAC-SHA1 hash of the public and private tokens, date-time, API endpoint, and request parameters.
-
 ## Acquiring the API Token Pair
 An API token pair is required for each Master instance.
 
 ### Per-user Token
 API tokens can only be created by local users with granted API access permissions.
 
-1. Navigate to the Permissions Admin page (Main Menu > Admin) on the Threat Visualizer.
+1. Navigate to the Permissions Admin page (Main Menu - Admin) on the Threat Visualizer.
 2. Locate the user and enable "API Access".
 3. Log in as the user intended for API access, navigate to Account Settings, and generate new API tokens.
 4. Record the Public and Private tokens securely.
@@ -46,7 +32,7 @@ API tokens can only be created by local users with granted API access permission
 Requires access to the System Config page and appropriate permissions.
 
 1. Navigate to the System Config page on the Threat Visualizer.
-2. Select “Settings” and generate new API tokens.
+2. Select "Settings" and generate new API tokens.
 3. Record the Public and Private tokens securely.
 
 ## Token Usage
