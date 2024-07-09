@@ -5,7 +5,7 @@ from fastapi import HTTPException
 from loguru import logger
 
 from app.connectors.grafana.schema.dashboards import CarbonBlackDashboard
-from app.connectors.grafana.schema.dashboards import CrowdstrikeDashboard
+from app.connectors.grafana.schema.dashboards import CrowdstrikeDashboard, DarktraceDashboard
 from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
 from app.connectors.grafana.schema.dashboards import DuoDashboard
 from app.connectors.grafana.schema.dashboards import FortinetDashboard
@@ -183,6 +183,7 @@ async def provision_dashboards(
         + list(FortinetDashboard)
         + list(CrowdstrikeDashboard)
         + list(DuoDashboard)
+        + list(DarktraceDashboard)
     }
 
     for dashboard_name in dashboard_request.dashboards:
