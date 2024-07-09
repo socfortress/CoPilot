@@ -23,7 +23,7 @@ async def invoke_darktrace_integration_collect() -> InvokeDarktraceResponse:
     customer_codes = []
     async with get_db_session() as session:
         stmt = select(CustomerIntegrations).where(
-            CustomerIntegrations.integration_service_name == "DUO",
+            CustomerIntegrations.integration_service_name == "Darktrace",
         )
         result = await session.execute(stmt)
         customer_codes = [row.customer_code for row in result.scalars()]
