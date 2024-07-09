@@ -36,10 +36,10 @@
 		"@fontsource/lexend": "^5.0.20",
 		"@fontsource/public-sans": "^5.0.18",
 		"@popperjs/core": "^2.11.8",
-		"@shikijs/markdown-it": "^1.9.1",
+		"@shikijs/markdown-it": "^1.10.3",
 		"@vueuse/components": "^10.11.0",
 		"@vueuse/core": "^10.11.0",
-		"apexcharts": "^3.49.2",
+		"apexcharts": "^3.50.0",
 		"bytes": "^3.1.2",
 		"colord": "^2.9.3",
 		"crypto-js": "^4.2.0",
@@ -48,7 +48,7 @@
 		"echarts": "^5.5.1",
 		"file-saver": "^2.0.5",
 		"html-entities": "^2.5.2",
-		"jose": "^5.6.2",
+		"jose": "^5.6.3",
 		"js-md5": "^0.8.3",
 		"lodash": "^4.17.21",
 		"mitt": "^3.0.1",
@@ -57,7 +57,7 @@
 		"pinia": "^2.1.7",
 		"pinia-plugin-persistedstate": "^3.2.1",
 		"secure-ls": "^2.0.0",
-		"shiki": "^1.9.1",
+		"shiki": "^1.10.3",
 		"validator": "^13.12.0",
 		"vue": "^3.4.31",
 		"vue-advanced-cropper": "^2.8.9",
@@ -79,7 +79,7 @@
 		"@types/inquirer": "^9.0.7",
 		"@types/jsdom": "^21.1.7",
 		"@types/lodash": "^4.17.6",
-		"@types/node": "^20.14.9",
+		"@types/node": "^20.14.10",
 		"@types/validator": "^13.12.0",
 		"@vitejs/plugin-vue": "^5.0.5",
 		"@vitejs/plugin-vue-jsx": "^4.0.0",
@@ -88,51 +88,51 @@
 		"@vue/test-utils": "^2.4.6",
 		"@vue/tsconfig": "^0.5.1",
 		"autoprefixer": "^10.4.19",
-		"cypress": "^13.12.0",
-		"eslint": "^9.5.0",
+		"cypress": "^13.13.0",
+		"eslint": "^9.6.0",
 		"eslint-plugin-cypress": "^3.3.0",
-		"eslint-plugin-vue": "^9.26.0",
+		"eslint-plugin-vue": "^9.27.0",
 		"flourite": "^1.3.0",
 		"fs-extra": "^11.2.0",
-		"globals": "^15.6.0",
+		"globals": "^15.8.0",
 		"jsdom": "^24.1.0",
 		"json5": "^2.2.3",
-		"npm-run-all2": "^6.2.0",
+		"npm-run-all2": "^6.2.2",
 		"picocolors": "^1.0.1",
-		"postcss": "^8.4.38",
+		"postcss": "^8.4.39",
 		"prettier": "^3.3.2",
 		"sass": "^1.77.6",
 		"start-server-and-test": "^2.0.4",
 		"tailwind-config-viewer": "^2.0.4",
 		"tailwindcss": "^3.4.4",
-		"taze": "^0.13.9",
-		"type-fest": "^4.20.1",
+		"taze": "^0.14.2",
+		"type-fest": "^4.21.0",
 		"unplugin-vue-components": "^0.27.2",
-		"vite": "^5.3.2",
+		"vite": "^5.3.3",
 		"vite-bundle-analyzer": "^0.10.3",
 		"vite-bundle-visualizer": "^1.2.1",
-		"vite-plugin-vue-devtools": "^7.3.4",
+		"vite-plugin-vue-devtools": "^7.3.5",
 		"vite-svg-loader": "^5.1.0",
-		"vitest": "^1.6.0",
-		"vue-tsc": "^2.0.22"
+		"vitest": "^2.0.1",
+		"vue-tsc": "^2.0.26"
 	},
 	"optionalDependencies": {
-		"@rollup/rollup-linux-x64-gnu": "^4.18.0"
+		"@rollup/rollup-linux-x64-gnu": "^4.18.1"
 	},
 	"overrides": {
 		"@vue/eslint-config-typescript": {
-			"eslint": "^9.5.0"
+			"eslint": "^9.6.0"
 		},
 		"@typescript-eslint/type-utils": {
-			"eslint": "^9.5.0"
+			"eslint": "^9.6.0"
 		},
 		"@typescript-eslint/utils": {
-			"eslint": "^9.5.0"
+			"eslint": "^9.6.0"
 		},
 		"secure-ls": {
 			"crypto-js": "^4.2.0"
 		},
-		"ws": "^8.17.1"
+		"ws": "^8.18.0"
 	},
 	"engines": {
 		"node": ">=18.0.0"
