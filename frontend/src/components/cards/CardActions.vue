@@ -8,13 +8,13 @@
 			<div class="subtitle" v-if="!hideSubtitle && subtitle">{{ subtitle }}</div>
 		</template>
 		<template #header-extra>
-			<n-dropdown :options="menuOptions" placement="bottom-end" @select="menuSelect" v-if="!hideMenu">
-				<Icon :size="20" :name="MenuIcon" class="ml-3" />
+			<n-dropdown :options="menuOptions" placement="bottom-end" to="body" @select="menuSelect" v-if="!hideMenu">
+				<Icon :size="20" :name="MenuIcon" />
 			</n-dropdown>
 		</template>
 		<template #default>
 			<div class="overflow-hidden w-full">
-				<n-scrollbar x-scrollable style="width: 100%">
+				<n-scrollbar x-scrollable class="!w-full" trigger="none">
 					<slot></slot>
 				</n-scrollbar>
 			</div>
@@ -71,7 +71,7 @@ const menuOptions = computed(() =>
 					key: "reload",
 					icon: renderIcon(ReloadIcon)
 				}
-		  ]
+			]
 		: [
 				{
 					label: "Collapse",
@@ -83,7 +83,7 @@ const menuOptions = computed(() =>
 					key: "reload",
 					icon: renderIcon(ReloadIcon)
 				}
-		  ]
+			]
 )
 
 function menuSelect(key: string) {

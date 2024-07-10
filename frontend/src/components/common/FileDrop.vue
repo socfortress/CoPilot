@@ -10,10 +10,6 @@
 <script lang="ts" setup>
 import { toRefs } from "vue"
 
-defineOptions({
-	name: "FileDrop"
-})
-
 const props = withDefaults(
 	defineProps<{
 		accept: string

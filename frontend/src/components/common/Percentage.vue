@@ -1,6 +1,6 @@
 <template>
 	<div
-		class="percentage flex items-center"
+		class="percentage flex items-center gap-2"
 		:class="[
 			{
 				color: useColor,
@@ -10,14 +10,14 @@
 			direction
 		]"
 	>
-		<span class="progress mr-3" v-if="progress && progress === 'line'">
+		<span class="progress" v-if="progress && progress === 'line'">
 			<n-progress
 				type="line"
 				:status="direction === 'up' ? 'success' : 'error'"
 				:percentage="value"
 				:show-indicator="false"
 				:stroke-width="18"
-				style="width: 50px"
+				class="!w-12"
 			/>
 		</span>
 		<span v-if="icon && icon === 'arrow'" class="flex items-center percentage-icon">
@@ -28,14 +28,14 @@
 			{{ direction === "up" ? "+" : "-" }}
 		</span>
 		<span>{{ value }}%</span>
-		<span class="progress ml-3 flex items-center" v-if="progress && progress === 'circle'">
+		<span class="progress flex items-center" v-if="progress && progress === 'circle'">
 			<n-progress
 				type="circle"
 				:status="direction === 'up' ? 'success' : 'error'"
 				:percentage="value"
 				:show-indicator="false"
 				:stroke-width="18"
-				style="width: 22px"
+				class="!w-5"
 			/>
 		</span>
 	</div>
@@ -45,9 +45,6 @@
 import { toRefs } from "vue"
 import { NProgress } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
-
-const ChevronUp = "tabler:chevron-up"
-const ChevronDown = "tabler:chevron-down"
 
 export interface PercentageProps {
 	value: number
@@ -67,6 +64,9 @@ const props = withDefaults(defineProps<PercentageProps>(), {
 	progress: false
 })
 const { value, useColor, useBackground, useOpacity, icon, progress, direction } = toRefs(props)
+
+const ChevronUp = "tabler:chevron-up"
+const ChevronDown = "tabler:chevron-down"
 </script>
 
 <style scoped lang="scss">

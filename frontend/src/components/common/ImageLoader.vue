@@ -18,18 +18,14 @@
 </template>
 
 <script setup lang="ts">
+import { ref, watch } from "vue"
+
 export interface ImageEvent {
 	height: number
 }
 export interface ImageLoadEvent extends Event {
 	path?: HTMLElement[]
 }
-
-import { ref, watch } from "vue"
-
-defineOptions({
-	name: "ImageLoader"
-})
 
 const emit = defineEmits(["image-error", "image-loading", "image-loaded", "image-fallback"])
 
