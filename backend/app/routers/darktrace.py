@@ -1,6 +1,8 @@
 from fastapi import APIRouter
 
-from app.integrations.darktrace.routes.provision import integration_darktrace_provision_router
+from app.integrations.darktrace.routes.provision import (
+    integration_darktrace_provision_router,
+)
 
 # Instantiate the APIRouter
 router = APIRouter()

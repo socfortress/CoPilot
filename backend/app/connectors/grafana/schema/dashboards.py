@@ -101,6 +101,7 @@ class CrowdstrikeDashboard(Enum):
 class DuoDashboard(Enum):
     DUO_AUTH = ("Duo", "duo_auth.json")
 
+
 class DarktraceDashboard(Enum):
     DARKTRACE_SUMMARY = ("Darktrace", "summary.json")
 

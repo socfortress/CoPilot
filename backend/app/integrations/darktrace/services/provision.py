@@ -6,8 +6,8 @@ from sqlalchemy import and_
 from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
 from app.connectors.grafana.schema.dashboards import DarktraceDashboard
+from app.connectors.grafana.schema.dashboards import DashboardProvisionRequest
 from app.connectors.grafana.services.dashboards import provision_dashboards
 from app.connectors.grafana.utils.universal import create_grafana_client
 from app.connectors.graylog.services.management import start_stream

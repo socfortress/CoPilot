@@ -39,10 +39,10 @@ from app.routers import cortex
 from app.routers import crowdstrike
 from app.routers import customer_provisioning
 from app.routers import customers
+from app.routers import darktrace
 from app.routers import dfir_iris
 from app.routers import dnstwist
 from app.routers import duo
-from app.routers import darktrace
 from app.routers import grafana
 from app.routers import graylog
 from app.routers import healthcheck
