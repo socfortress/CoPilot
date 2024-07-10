@@ -146,8 +146,8 @@ import { computed, ref } from "vue"
 import {
 	type FormInst,
 	type FormValidationError,
-	useMessage,
 	type FormRules,
+	useMessage,
 	NForm,
 	NFormItem,
 	NInput,
@@ -177,15 +177,15 @@ interface ModelType {
 	*/
 }
 
+const emit = defineEmits<{
+	(e: "goto-signin"): void
+}>()
+
 const ArrowRightIcon = "carbon:arrow-right"
 const ArrowLeftIcon = "carbon:arrow-left"
 // const ImageIcon = "carbon:image"
 // const RemoveImageIcon = "carbon:no-image"
 const UserAddIcon = "carbon:user-admin"
-
-const emit = defineEmits<{
-	(e: "goto-signin"): void
-}>()
 
 const wizardCurrent = ref(1)
 const loading = ref(false)

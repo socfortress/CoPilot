@@ -18,12 +18,11 @@
 
 <script lang="ts" setup>
 import { ref } from "vue"
-
 import {
 	type FormInst,
 	type FormValidationError,
-	useMessage,
 	type FormRules,
+	useMessage,
 	NForm,
 	NFormItem,
 	NInput,
