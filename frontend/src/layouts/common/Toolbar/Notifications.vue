@@ -1,5 +1,5 @@
 <template>
-	<n-popover :show-arrow="false" placement="bottom" content-style="padding:0" style="width: 280px">
+	<n-popover :show-arrow="false" placement="bottom" content-class="!p-0 w-72">
 		<template #trigger>
 			<n-badge :show="hasUnread" dot :color="primaryColor">
 				<Icon :name="BellIcon" :size="21" class="trigger-icon"></Icon>
@@ -9,9 +9,9 @@
 			<n-text strong depth="1">Notifications</n-text>
 		</template>
 		<template #default>
-			<NotificationsList :max-items="MAX_ITEMS" style="max-height: 50vh">
+			<NotificationsList :max-items="MAX_ITEMS" class="max-h-50vh">
 				<template #last>
-					<div class="p-4 flex justify-center" v-if="list.length > MAX_ITEMS">
+					<div class="flex justify-center p-4" v-if="list.length > MAX_ITEMS">
 						<n-button text @click="showDrawer = true">View all</n-button>
 					</div>
 				</template>
@@ -22,8 +22,8 @@
 		</template>
 	</n-popover>
 
-	<n-drawer v-model:show="showDrawer" :width="400" style="max-width: 90vw" :trap-focus="false">
-		<n-drawer-content title="Notifications" closable body-content-style="padding:0">
+	<n-drawer v-model:show="showDrawer" :width="400" class="max-w-90vw" :trap-focus="false">
+		<n-drawer-content title="Notifications" closable body-content-class="!p-0">
 			<NotificationsList />
 			<template #footer>
 				<NotificationsToolbar />
@@ -44,7 +44,9 @@ import { useHealthchecksNotify } from "@/composables/useHealthchecksNotify"
 
 const BellIcon = "ph:bell"
 
-const primaryColor = computed(() => useThemeStore().primaryColor)
+const themeStore = useThemeStore()
+
+const primaryColor = computed(() => themeStore.primaryColor)
 const hasUnread = useNotifications().hasUnread
 
 const showDrawer = ref(false)

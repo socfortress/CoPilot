@@ -26,21 +26,15 @@ import { onBeforeMount, ref } from "vue"
 import { useRouter, useRoute } from "vue-router"
 import Icon from "@/components/common/Icon.vue"
 
-const HomeIcon = "fluent:home-24-regular"
-
 interface Page {
 	name: string
 	path: string
 	key: string
 }
 
-defineOptions({
-	name: "Breadcrumb"
-})
-
+const HomeIcon = "fluent:home-24-regular"
 const router = useRouter()
 const route = useRoute()
-
 const items = ref<Page[]>([])
 
 function goto(page: Partial<Page>) {

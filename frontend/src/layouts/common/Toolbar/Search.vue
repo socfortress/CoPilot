@@ -1,6 +1,6 @@
 <template>
 	<div class="flex items-center search-btn" @click="openBox">
-		<Icon :name="SearchIcon" :size="16"></Icon>
+		<Icon :name="SearchIcon" :size="16" class="search-btn-icon"></Icon>
 		<span>Search</span>
 		<n-text code class="search-command">
 			<span :class="{ win: commandIcon === 'CTRL' }">{{ commandIcon }}</span>
@@ -17,11 +17,6 @@ import Icon from "@/components/common/Icon.vue"
 import { useSearchDialog } from "@/composables/useSearchDialog"
 
 const SearchIcon = "ion:search-outline"
-
-defineOptions({
-	name: "Search"
-})
-
 const commandIcon = ref("⌘")
 
 function openBox() {
@@ -42,7 +37,7 @@ onMounted(() => {
 	height: 32px;
 	cursor: pointer;
 	padding: 4px 10px;
-	padding-right: 5px;
+	padding-right: 6px;
 	outline: none;
 	border: none;
 
@@ -96,13 +91,37 @@ onMounted(() => {
 	}
 
 	@media (max-width: 1000px) {
-		padding-right: 10px;
+		padding-right: 8px !important;
+		padding-left: 8px !important;
 
 		& > span {
 			display: none;
 		}
 		& > .n-text--code {
 			display: none;
+		}
+	}
+}
+
+.direction-rtl {
+	.search-btn {
+		padding-right: 10px;
+		padding-left: 6px;
+
+		.search-btn-icon {
+			transform: rotateY(180deg);
+		}
+
+		:deep() {
+			& > code {
+				border-top-left-radius: 10px;
+				border-bottom-left-radius: 10px;
+				padding-left: 10px;
+
+				border-top-right-radius: var(--n-code-border-radius);
+				border-bottom-right-radius: var(--n-code-border-radius);
+				padding-right: 0.35em;
+			}
 		}
 	}
 }
