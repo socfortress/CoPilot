@@ -2,7 +2,7 @@
 	/* Works on Firefox */
 
 	scrollbar-width: thin;
-	scrollbar-color: var(--hover-010-color) var(--bg-sidebar);
+	scrollbar-color: var(--hover-010-color) var(--bg-secondary-color);
 
 	/* Works on Chrome, Edge, and Safari */
 	&::-webkit-scrollbar,
@@ -12,14 +12,14 @@
 
 	&::-webkit-scrollbar-track,
 	::-webkit-scrollbar-track {
-		background: var(--bg-sidebar);
+		background: var(--bg-secondary-color);
 	}
 
 	&::-webkit-scrollbar-thumb,
 	::-webkit-scrollbar-thumb {
 		background-color: var(--hover-010-color);
 		border-radius: 20px;
-		border: 2px solid var(--bg-sidebar);
+		border: 2px solid var(--bg-secondary-color);
 	}
 }
 
