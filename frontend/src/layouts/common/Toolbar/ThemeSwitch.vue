@@ -23,12 +23,8 @@ const Sunny = "ion:sunny"
 const Moon = "ion:moon"
 const SunnyOutline = "ion:sunny-outline"
 const MoonOutline = "ion:moon-outline"
-
-defineOptions({
-	name: "ThemeSwitch"
-})
-
-const isThemeDark = computed<boolean>(() => useThemeStore().isThemeDark)
+const themeStore = useThemeStore()
+const isThemeDark = computed<boolean>(() => themeStore.isThemeDark)
 
 function toggleTheme(event?: MouseEvent) {
 	const isAppearanceTransition =
@@ -38,7 +34,7 @@ function toggleTheme(event?: MouseEvent) {
 		!window.matchMedia("(prefers-reduced-motion: reduce)").matches
 
 	if (!isAppearanceTransition || !event) {
-		useThemeStore().toggleTheme()
+		themeStore.toggleTheme()
 		return
 	}
 
@@ -48,7 +44,7 @@ function toggleTheme(event?: MouseEvent) {
 
 	// @ts-expect-error: Transition API
 	const transition = document.startViewTransition(async () => {
-		useThemeStore().toggleTheme()
+		themeStore.toggleTheme()
 		await nextTick()
 	})
 

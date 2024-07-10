@@ -20,9 +20,43 @@ export default {
 		extend: {
 			screens: {
 				xs: "460px"
+			},
+			height: {
+				0.75: "0.1875rem",
+				150: "37.5rem",
+				"60vh": "60vh"
+			},
+			width: {
+				5.5: "1.375rem",
+				150: "37.5rem"
+			},
+			spacing: {
+				"20vh": "20vh",
+				"50vw": "50vw"
+			},
+			maxHeight: {
+				"50vh": "50vh"
+			},
+			maxWidth: {
+				"90vw": "90vw"
 			}
 		}
 	},
+	safelist: [
+		"p-4",
+		"!p-1",
+		"flex",
+		"flex-col",
+		"!justify-start",
+		"opacity-50",
+		"hover:text-red-500",
+		"hover:opacity-100",
+		"items-center",
+		"gap-5",
+		"w-72",
+		"max-h-50vh",
+		"max-w-90vw"
+	],
 	plugins: [
 		plugin(function ({ addBase, theme }) {
 			addBase({

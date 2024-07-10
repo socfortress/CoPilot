@@ -37,12 +37,11 @@
 
 <script lang="ts" setup>
 import { ref } from "vue"
-
 import {
 	type FormInst,
 	type FormValidationError,
-	useMessage,
 	type FormRules,
+	useMessage,
 	NForm,
 	NFormItem,
 	NInput,
@@ -71,6 +70,7 @@ const model = ref<ModelType>({
 	username: "",
 	password: ""
 })
+const authStore = useAuthStore()
 
 const rules: FormRules = {
 	username: [
@@ -100,7 +100,7 @@ function signIn(e: Event) {
 				password: model.value.password
 			}
 
-			useAuthStore()
+			authStore
 				.login(payload)
 				.then(() => {
 					router.push({ path: "/", replace: true })

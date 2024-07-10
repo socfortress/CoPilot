@@ -1,6 +1,6 @@
 <template>
 	<div class="page">
-		<n-card class="header flex flex-col" content-style="padding:0">
+		<n-card class="header flex flex-col" content-class="!p-0">
 			<div class="user-info flex flex-wrap">
 				<div class="propic">
 					<n-avatar :size="100" :src="userPic" round />
@@ -22,7 +22,7 @@
 						<div class="item">
 							<n-tooltip placement="top">
 								<template #trigger>
-									<div class="item-wrap">
+									<div class="tooltip-wrap">
 										<Icon :name="RoleIcon"></Icon>
 										<span>{{ userRole }}</span>
 									</div>
@@ -31,7 +31,7 @@
 							</n-tooltip>
 						</div>
 						<div class="item" v-if="userEmail">
-							<div class="item-wrap">
+							<div class="tooltip-wrap">
 								<Icon :name="EmailIcon"></Icon>
 								<span>{{ userEmail }}</span>
 							</div>
@@ -59,7 +59,7 @@
 			</div>
 		</n-card>
 		<div class="main">
-			<n-tabs :tab-style="{ display: 'none' }" v-model:value="tabActive" animated>
+			<n-tabs tab-class="!hidden" v-model:value="tabActive" animated>
 				<n-tab-pane name="settings">
 					<ProfileSettings />
 				</n-tab-pane>
@@ -84,11 +84,12 @@ const EditIcon = "uil:image-edit"
 const EmailIcon = "carbon:email"
 
 const tabActive = ref("settings")
+const authStore = useAuthStore()
 
-const userRole = useAuthStore().userRoleName
-const userName = useAuthStore().userName
-const userEmail = useAuthStore().userEmail
-const userPic = ref(useAuthStore().userPic)
+const userRole = authStore.userRoleName
+const userName = authStore.userName
+const userEmail = authStore.userEmail
+const userPic = ref(authStore.userPic)
 
 function setCroppedImage(result: ImageCropperResult) {
 	const canvas = result.canvas as HTMLCanvasElement
@@ -141,14 +142,11 @@ function setCroppedImage(result: ImageCropperResult) {
 					gap: 24px;
 
 					.item {
-						.item-wrap {
+						.tooltip-wrap {
 							display: flex;
 							align-items: center;
-
-							span {
-								line-height: 1;
-								margin-left: 8px;
-							}
+							gap: 8px;
+							line-height: 1;
 						}
 					}
 				}

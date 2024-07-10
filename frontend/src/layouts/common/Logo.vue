@@ -17,10 +17,6 @@
 import { useThemeStore } from "@/stores/theme"
 import { computed, toRefs } from "vue"
 
-defineOptions({
-	name: "Logo"
-})
-
 const props = withDefaults(
 	defineProps<{
 		mini: boolean
@@ -30,8 +26,9 @@ const props = withDefaults(
 )
 const { mini, dark } = toRefs(props)
 
-const isDark = computed<boolean>(() => dark.value || useThemeStore().isThemeDark)
-const isLight = computed<boolean>(() => !dark.value || useThemeStore().isThemeLight)
+const themeStore = useThemeStore()
+const isDark = computed<boolean>(() => dark.value ?? themeStore.isThemeDark)
+const isLight = computed<boolean>(() => !dark.value || themeStore.isThemeLight)
 </script>
 
 <style lang="scss" scoped>

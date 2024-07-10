@@ -6,14 +6,14 @@ import { onBeforeMount, onBeforeUnmount } from "vue"
 // at the moment this worker around permit to hide Layout Footer
 
 export function useHideLayoutFooter() {
-	const store = useThemeStore()
+	const themeStore = useThemeStore()
 
-	if (store.isFooterShown) {
+	if (themeStore.isFooterShown) {
 		onBeforeMount(() => {
-			store.setFooterShow(false)
+			themeStore.setFooterShow(false)
 		})
 		onBeforeUnmount(() => {
-			store.setFooterShow(true)
+			themeStore.setFooterShow(true)
 		})
 	}
 }

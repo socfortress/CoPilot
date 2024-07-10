@@ -9,11 +9,11 @@
 		>
 			<div class="icon-box">
 				<Icon :name="AlertIcon" :size="21" v-if="item.category === 'alert'"></Icon>
-				<n-tooltip trigger="hover" style="padding: 0" placement="right" v-if="!item.read">
+				<n-tooltip trigger="hover" class="!p-0" content-class="!p-0" placement="right" v-if="!item.read">
 					<template #trigger>
 						<div class="read-badge" @click.stop="setRead(item.id)"></div>
 					</template>
-					Set as read
+					<div class="px-3 py-2">Set as read</div>
 				</n-tooltip>
 			</div>
 			<div class="content grow">
@@ -78,11 +78,12 @@ function formatDatetime(date: Date | string) {
 .notifications-list {
 	.item {
 		position: relative;
-		padding: 14px 0;
+		padding: 14px 12px;
+		gap: 4px;
 
 		.icon-box {
-			width: 70px;
-			min-width: 70px;
+			width: 45px;
+			min-width: 45px;
 			display: flex;
 			justify-content: center;
 			position: relative;
@@ -100,7 +101,7 @@ function formatDatetime(date: Date | string) {
 			.read-badge {
 				position: absolute;
 				top: 5px;
-				left: 14px;
+				left: 0px;
 				width: 10px;
 				height: 10px;
 				border-radius: 50%;
@@ -110,7 +111,7 @@ function formatDatetime(date: Date | string) {
 		}
 
 		.content {
-			padding-right: 20px;
+			padding: 0 8px;
 			font-size: 14px;
 
 			.title {
@@ -200,6 +201,17 @@ function formatDatetime(date: Date | string) {
 				&:hover {
 					opacity: 1;
 				}
+			}
+		}
+	}
+}
+
+.direction-rtl {
+	.notifications-list {
+		.item {
+			.delete-btn {
+				right: unset;
+				left: 8px;
 			}
 		}
 	}

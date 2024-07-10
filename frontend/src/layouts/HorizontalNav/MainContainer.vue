@@ -5,7 +5,7 @@
 			<div class="view" :class="[{ boxed }, `route-${routeName}`]">
 				<slot></slot>
 			</div>
-			<FooterEL :boxed="boxed" v-if="footerShown" />
+			<MainFooter :boxed="boxed" v-if="footerShown" />
 		</n-scrollbar>
 	</div>
 </template>
@@ -15,20 +15,17 @@ import { computed, ref, onMounted } from "vue"
 import { NScrollbar } from "naive-ui"
 import { useRoute, useRouter } from "vue-router"
 import Toolbar from "@/layouts/common/Toolbar/index.vue"
-import FooterEL from "@/layouts/common/FooterEL.vue"
+import MainFooter from "@/layouts/common/MainFooter.vue"
 import { useThemeStore } from "@/stores/theme"
 
-defineOptions({
-	name: "MainContainer"
-})
-
+const themeStore = useThemeStore()
 const router = useRouter()
 const route = useRoute()
 const routeName = computed<string>(() => route.name?.toString() || "")
-const sidebarCollapsed = computed<boolean>(() => useThemeStore().sidebar.collapsed)
-const footerShown = computed(() => useThemeStore().isFooterShown)
-const boxed = computed<boolean>(() => useThemeStore().isBoxed)
-const toolbarBoxed = computed(() => useThemeStore().isToolbarBoxed)
+const sidebarCollapsed = computed<boolean>(() => themeStore.sidebar.collapsed)
+const footerShown = computed(() => themeStore.isFooterShown)
+const boxed = computed<boolean>(() => themeStore.isBoxed)
+const toolbarBoxed = computed(() => themeStore.isToolbarBoxed)
 const scrollbar = ref()
 
 onMounted(() => {
@@ -82,22 +79,16 @@ onMounted(() => {
 	}
 
 	@media (max-width: $sidebar-bp) {
-		padding-left: 0px;
+		transition: all var(--sidebar-anim-ease) var(--sidebar-anim-duration);
 
 		.view {
 			padding-top: calc(var(--view-padding) / 2);
 		}
 
-		&.sidebar-collapsed {
-			padding-left: 0px;
-		}
-
-		transition: all var(--sidebar-anim-ease) var(--sidebar-anim-duration);
-
 		&.sidebar-opened {
 			//transform: scale(0.8) translateX(100%) rotateY(35deg);
-			transform-origin: center left;
-			border-radius: 16px;
+			//transform-origin: center left;
+			//border-radius: 16px;
 			overflow: hidden;
 			opacity: 0.5;
 		}
@@ -106,7 +97,7 @@ onMounted(() => {
 	@media (min-width: ($sidebar-bp + 1px)) {
 		:deep() {
 			header.toolbar {
-				.logo {
+				.logo-box {
 					display: none;
 				}
 			}

@@ -17,13 +17,10 @@ const LogoutIcon = "ion:log-out-outline"
 const LogsIcon = "carbon:cloud-logging"
 const ContactIcon = "ic:outline-alternate-email"
 
-defineOptions({
-	name: "Avatar"
-})
-
 const router = useRouter()
+const authStore = useAuthStore()
 
-const userPic = useAuthStore().userPic
+const userPic = authStore.userPic
 
 const options = ref([
 	{

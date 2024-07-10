@@ -8,10 +8,6 @@
 
 <script lang="ts" setup>
 import MainContainer from "./MainContainer.vue"
-
-defineOptions({
-	name: "VerticalNav"
-})
 </script>
 
 <style lang="scss" scoped>

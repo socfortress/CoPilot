@@ -445,11 +445,6 @@ onBeforeMount(() => {
 
 <style lang="scss" scoped>
 .soc-case-item {
-	&:not(.embedded) {
-		border-radius: var(--border-radius);
-		background-color: var(--bg-color);
-		border: var(--border-small-050);
-	}
 	border-top: var(--border-small-050);
 	transition: all 0.2s var(--bezier-ease);
 	min-height: 100px;
@@ -506,6 +501,10 @@ onBeforeMount(() => {
 	}
 
 	&:not(.embedded) {
+		border-radius: var(--border-radius);
+		background-color: var(--bg-color);
+		border: var(--border-small-050);
+
 		&:hover {
 			border-color: var(--primary-color);
 		}

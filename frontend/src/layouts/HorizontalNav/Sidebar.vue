@@ -24,13 +24,10 @@ import SidebarHeader from "./SidebarHeader.vue"
 import SidebarFooter from "./SidebarFooter.vue"
 import { useThemeStore } from "@/stores/theme"
 
-defineOptions({
-	name: "Sidebar"
-})
-
+const themeStore = useThemeStore()
 const sidebar = ref(null)
 const sidebarHovered = useElementHover(sidebar)
-const sidebarCollapsed = computed<boolean>(() => useThemeStore().sidebar.collapsed)
+const sidebarCollapsed = computed<boolean>(() => themeStore.sidebar.collapsed)
 const sidebarClosed = computed<boolean>(() => !sidebarHovered.value && sidebarCollapsed.value)
 
 function clickListener() {
@@ -38,7 +35,7 @@ function clickListener() {
 		onClickOutside(sidebar, e => {
 			if (!sidebarCollapsed.value) {
 				e.stopPropagation()
-				useThemeStore().closeSidebar()
+				themeStore.closeSidebar()
 			}
 		})
 	}
@@ -74,7 +71,7 @@ onMounted(() => {
 	left: 0;
 	//bottom: 0;
 	//border-right:var(--border-small-100);
-	padding-right: 1px;
+	//padding-right: 1px;
 	width: var(--sidebar-open-width);
 	height: 100vh;
 	height: 100svh;
@@ -86,14 +83,13 @@ onMounted(() => {
 		box-shadow var(--sidebar-anim-ease) var(--sidebar-anim-duration),
 		color 0.3s var(--bezier-ease) 0s,
 		background-color 0.3s var(--bezier-ease) 0s;
+	z-index: -1;
+	transition: all 0.3s var(--bezier-ease) 0s;
+	transform: translateX(-100%);
 
 	.sidebar-wrap {
 		overflow: hidden;
 	}
-
-	z-index: -1;
-	transition: all 0.3s var(--bezier-ease) 0s;
-	transform: translateX(-100%);
 
 	@media (max-width: $sidebar-bp) {
 		&.opened {
@@ -105,6 +101,21 @@ onMounted(() => {
 
 	:deep(.n-scrollbar-rail) {
 		opacity: 0.15;
+	}
+}
+
+.direction-rtl {
+	.sidebar {
+		left: unset;
+		right: 0;
+
+		@media (max-width: $sidebar-bp) {
+			transform: translateX(100%);
+
+			&.opened {
+				transform: translateX(0%);
+			}
+		}
 	}
 }
 </style>

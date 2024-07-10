@@ -10,13 +10,8 @@ import Icon from "@/components/common/Icon.vue"
 import { useFullscreenSwitch } from "@/composables/useFullscreenSwitch"
 
 const { isFullscreen, toggle } = useFullscreenSwitch()
-
 const OpenIcon = "fluent:full-screen-maximize-24-regular"
 const CloseIcon = "fluent:full-screen-minimize-24-regular"
-
-defineOptions({
-	name: "FullscreenSwitch"
-})
 
 function toggleFullscreen(e?: MouseEvent) {
 	toggle()

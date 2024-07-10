@@ -14,11 +14,8 @@ import Navbar from "@/layouts/common/Navbar/index.vue"
 import Logo from "@/layouts/common/Logo.vue"
 import { useThemeStore } from "@/stores/theme"
 
-defineOptions({
-	name: "HeaderBar"
-})
-
-const isDark = computed<boolean>(() => useThemeStore().isThemeDark)
+const themeStore = useThemeStore()
+const isDark = computed<boolean>(() => themeStore.isThemeDark)
 </script>
 
 <style lang="scss" scoped>
@@ -42,6 +39,19 @@ const isDark = computed<boolean>(() => useThemeStore().isThemeDark)
 
 	@media (max-width: $sidebar-bp) {
 		display: none;
+	}
+}
+
+.direction-rtl {
+	.header-bar {
+		direction: rtl;
+		padding-left: 0;
+		padding-right: var(--view-padding);
+
+		.nav {
+			margin-right: 0;
+			margin-left: var(--view-padding);
+		}
 	}
 }
 </style>

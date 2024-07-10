@@ -12,7 +12,9 @@ import { computed, h, type VNodeChild } from "vue"
 
 const MultiLanguageIcon = "ion:language-outline"
 
-const { getAvailableLocales, getLocale, setLocale, t } = useStoreI18n()
+const storeI18n = useStoreI18n()
+
+const { getAvailableLocales, getLocale, setLocale, t } = storeI18n
 
 const list = computed(() =>
 	getAvailableLocales().map(i => ({

@@ -1,13 +1,6 @@
 <template>
 	<n-modal v-model:show="showSearchBox" class="search-box-modal">
-		<n-card
-			style="width: 600px"
-			content-style="padding: 0;"
-			:bordered="false"
-			size="huge"
-			role="dialog"
-			aria-modal="true"
-		>
+		<n-card content-class="!p-0" class="!w-150" :bordered="false" size="huge" role="dialog" aria-modal="true">
 			<div class="search-box" @keydown.up="prevItem()" @keydown.down="nextItem()">
 				<div class="search-input flex items-center">
 					<Icon :name="SearchIcon" :size="16"></Icon>
@@ -16,7 +9,7 @@
 					<Icon :name="CloseIcon" :size="20" @click="closeBox()" class="cursor-pointer"></Icon>
 				</div>
 				<n-divider />
-				<n-scrollbar style="height: 400px" ref="scrollContent">
+				<n-scrollbar class="!h-96" ref="scrollContent">
 					<div class="conten-wrap">
 						<div class="group" v-for="group of filteredGroups" :key="group.name">
 							<div class="group-title">{{ group.name }}</div>
@@ -31,7 +24,7 @@
 								>
 									<div class="icon">
 										<n-avatar v-if="item.iconImage" round :size="28" :src="item.iconImage" />
-										<Icon :name="item.iconName" v-if="item.iconName" :size="18"></Icon>
+										<Icon :name="item.iconName" v-if="item.iconName" :size="16"></Icon>
 									</div>
 									<div class="title grow">
 										<Highlighter
@@ -52,13 +45,13 @@
 				</n-scrollbar>
 				<n-divider />
 				<div class="hint-bar flex items-center justify-center">
-					<div class="hint flex items-center justify-center">
+					<div class="hint flex items-center justify-center gap-1">
 						<div class="icon">
 							<Icon :name="ArrowEnterIcon" :size="12"></Icon>
 						</div>
 						<span class="label">to select</span>
 					</div>
-					<div class="hint flex items-center justify-center">
+					<div class="hint flex items-center justify-center gap-1">
 						<div class="icon">
 							<Icon :name="ArrowSortIcon" :size="12"></Icon>
 						</div>
@@ -83,18 +76,6 @@ import Icon from "@/components/common/Icon.vue"
 import { emitter } from "@/emitter"
 import { useGoto } from "@/composables/useGoto"
 
-const SearchIcon = "ion:search-outline"
-const ArrowEnterIcon = "fluent:arrow-enter-left-24-regular"
-const ArrowSortIcon = "fluent:arrow-sort-24-regular"
-const FullScreenIcon = "fluent:full-screen-maximize-24-regular"
-const DarkModeIcon = "ion:moon-outline"
-const CloseIcon = "carbon:close"
-
-const ConnectorsIcon = "carbon:hybrid-networking"
-const AlertsIcon = "carbon:warning-hex"
-const SocAlertsIcon = "carbon:security"
-const CustomerIcon = "carbon:user-follow"
-
 interface GroupItem {
 	iconName: string | null
 	iconImage: string | null
@@ -109,7 +90,19 @@ interface Group {
 	name: string
 	items: GroupItem[]
 }
+
 type Groups = Group[]
+
+const SearchIcon = "ion:search-outline"
+const ArrowEnterIcon = "fluent:arrow-enter-left-24-regular"
+const ArrowSortIcon = "fluent:arrow-sort-24-regular"
+const FullScreenIcon = "fluent:full-screen-maximize-24-regular"
+const DarkModeIcon = "ion:moon-outline"
+const CloseIcon = "carbon:close"
+const ConnectorsIcon = "carbon:hybrid-networking"
+const AlertsIcon = "carbon:warning-hex"
+const SocAlertsIcon = "carbon:security"
+const CustomerIcon = "carbon:user-follow"
 
 const showSearchBox = ref(false)
 const search = ref("")
@@ -393,6 +386,7 @@ onMounted(() => {
 			font-size: 12px;
 			gap: 20px;
 			padding: 10px 0;
+
 			.icon {
 				background-color: var(--code-color);
 				width: 18px;
@@ -400,7 +394,6 @@ onMounted(() => {
 				padding-top: 1px;
 				text-align: center;
 				border-radius: 4px;
-				margin-right: 5px;
 				display: flex;
 				align-items: center;
 				justify-content: center;

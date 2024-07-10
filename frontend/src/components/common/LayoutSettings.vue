@@ -24,7 +24,7 @@
 							/>
 							<n-color-picker v-model:value="lightColor" :modes="['hex']" :show-alpha="false" v-else />
 						</div>
-						<div class="palette flex justify-between">
+						<div class="palette flex justify-around mt-3">
 							<n-button text v-for="color of palette" :key="color.light" @click="setPrimary(color)">
 								<template #icon>
 									<Icon
@@ -76,14 +76,16 @@
 						</div>
 						<div class="flex items-center gap-2">
 							<div class="basis-1/2">
-								<n-button
+								<!--
+									<n-button
 									class="!w-full"
 									@click="layout = Layout.VerticalNav"
 									:type="layout === Layout.VerticalNav ? 'primary' : 'default'"
 									:disabled="isMobileView"
-								>
-									Vertical
-								</n-button>
+									>
+										Vertical
+									</n-button>
+								-->
 							</div>
 							<div class="basis-1/2">
 								<n-button
@@ -102,14 +104,14 @@
 							<div class="flex justify-between items-center">
 								<div class="switch-label">
 									View boxed
-									<span v-if="isMobileView" class="text-secondary-color">(desktop only)</span>
+									<span v-if="isMobileView" class="text-secondary-color px-1">desktop only</span>
 								</div>
 								<n-switch v-model:value="boxed" :disabled="isMobileView" size="small" />
 							</div>
 							<div class="flex justify-between items-center">
 								<div class="switch-label">
 									Toolbar boxed
-									<span v-if="isMobileView" class="text-secondary-color">(desktop only)</span>
+									<span v-if="isMobileView" class="text-secondary-color px-1">desktop only</span>
 								</div>
 								<n-switch
 									v-model:value="toolbarBoxed"
@@ -120,6 +122,13 @@
 							<div class="flex justify-between items-center">
 								<div class="switch-label">Footer visible</div>
 								<n-switch v-model:value="footerShown" size="small" />
+							</div>
+							<div class="flex justify-between items-center">
+								<div class="switch-label">
+									RTL
+									<span class="text-secondary-color px-1">beta</span>
+								</div>
+								<n-switch v-model:value="rtl" size="small" />
 							</div>
 						</div>
 					</div>
@@ -154,9 +163,15 @@ import { computed, ref } from "vue"
 import { NColorPicker, NButton, NSelect, useOsTheme, NScrollbar, NSwitch } from "naive-ui"
 import { useThemeStore } from "@/stores/theme"
 import Icon from "@/components/common/Icon.vue"
-
 import { Layout, RouterTransition, ThemeEnum } from "@/types/theme.d"
 import { useWindowSize } from "@vueuse/core"
+
+interface ColorPalette {
+	light: string
+	dark: string
+}
+
+type Palette = ColorPalette[]
 
 const SettingsIcon = "carbon:settings-adjust"
 const CloseIcon = "carbon:close"
@@ -166,19 +181,9 @@ const LightOutlineIcon = "ion:sunny-outline"
 const DarkOutlineIcon = "ion:moon-outline"
 const ColorIcon = "carbon:circle-solid"
 
-interface ColorPalette {
-	light: string
-	dark: string
-}
-
-type Palette = ColorPalette[]
-
-const store = useThemeStore()
-
+const themeStore = useThemeStore()
 const { width: winWidth } = useWindowSize()
-
 const isMobileView = computed<boolean>(() => winWidth.value < 700)
-
 const open = ref(false)
 const transitionOptions = [
 	{
@@ -204,43 +209,48 @@ const transitionOptions = [
 ]
 
 const layout = computed({
-	get: () => store.layout,
-	set: val => store.setLayout(val)
+	get: () => themeStore.layout,
+	set: val => themeStore.setLayout(val)
 })
 
 const routerTransition = computed({
-	get: () => store.routerTransition,
-	set: val => store.setRouterTransition(val)
+	get: () => themeStore.routerTransition,
+	set: val => themeStore.setRouterTransition(val)
 })
 
 const theme = computed({
-	get: () => store.themeName,
-	set: val => store.setTheme(val)
+	get: () => themeStore.themeName,
+	set: val => themeStore.setTheme(val)
 })
 
 const darkColor = computed({
-	get: () => store.darkPrimaryColor,
-	set: val => store.setColor(ThemeEnum.Dark, "primary", val)
+	get: () => themeStore.darkPrimaryColor,
+	set: val => themeStore.setColor(ThemeEnum.Dark, "primary", val)
 })
 
 const lightColor = computed({
-	get: () => store.lightPrimaryColor,
-	set: val => store.setColor(ThemeEnum.Light, "primary", val)
+	get: () => themeStore.lightPrimaryColor,
+	set: val => themeStore.setColor(ThemeEnum.Light, "primary", val)
+})
+
+const rtl = computed({
+	get: () => themeStore.isRTL,
+	set: val => themeStore.setRTL(val)
 })
 
 const boxed = computed({
-	get: () => store.isBoxed,
-	set: val => store.setBoxed(val)
+	get: () => themeStore.isBoxed,
+	set: val => themeStore.setBoxed(val)
 })
 
 const toolbarBoxed = computed({
-	get: () => store.isToolbarBoxed,
-	set: val => store.setToolbarBoxed(val)
+	get: () => themeStore.isToolbarBoxed,
+	set: val => themeStore.setToolbarBoxed(val)
 })
 
 const footerShown = computed({
-	get: () => store.isFooterShown,
-	set: val => store.setFooterShow(val)
+	get: () => themeStore.isFooterShown,
+	set: val => themeStore.setFooterShow(val)
 })
 
 const palette = ref<Palette>([
@@ -252,25 +262,24 @@ const palette = ref<Palette>([
 ])
 
 function setPrimary(color: ColorPalette) {
-	store.setColor(ThemeEnum.Dark, "primary", color.dark)
-	store.setColor(ThemeEnum.Light, "primary", color.light)
+	themeStore.setColor(ThemeEnum.Dark, "primary", color.dark)
+	themeStore.setColor(ThemeEnum.Light, "primary", color.light)
 }
 
 function reset() {
-	store.setColor(ThemeEnum.Dark, "primary", "#00E19B")
-	store.setColor(ThemeEnum.Light, "primary", "#00B27B")
-	store.setTheme(useOsTheme().value || ThemeEnum.Light)
-	store.setLayout(Layout.VerticalNav)
-	store.setRouterTransition(RouterTransition.FadeUp)
-	store.setBoxed(true)
-	store.setToolbarBoxed(true)
-	store.setFooterShow(true)
+	themeStore.setColor(ThemeEnum.Dark, "primary", "#00E19B")
+	themeStore.setColor(ThemeEnum.Light, "primary", "#00B27B")
+	themeStore.setTheme(useOsTheme().value || ThemeEnum.Light)
+	themeStore.setLayout(Layout.HorizontalNav)
+	themeStore.setRouterTransition(RouterTransition.FadeUp)
+	themeStore.setRTL(false)
+	themeStore.setBoxed(true)
+	themeStore.setToolbarBoxed(true)
+	themeStore.setFooterShow(true)
 }
 </script>
 
 <style scoped lang="scss">
-@import "@/assets/scss/common.scss";
-
 .layout-settings {
 	position: fixed;
 	right: 10px;
@@ -290,11 +299,13 @@ function reset() {
 		width: 100%;
 		height: 100%;
 		position: absolute;
+		will-change: opacity;
 	}
 	.ls-form {
 		position: absolute;
 		height: 100%;
 		width: 100%;
+		will-change: opacity;
 
 		.ls-header {
 			border-bottom: var(--border-small-050);
@@ -303,7 +314,6 @@ function reset() {
 			font-weight: 700;
 			padding: 10px 14px;
 			line-height: 1;
-			padding-right: 8px;
 			transition: all 0.3s;
 
 			.ls-icon {
@@ -375,14 +385,6 @@ function reset() {
 							}
 						}
 					}
-
-					.palette {
-						margin: 8px 0;
-						margin-bottom: 6px;
-						padding: 0 4px;
-						width: 94%;
-						margin-left: 3%;
-					}
 				}
 
 				&.ls-boxed-selection {
@@ -405,7 +407,7 @@ function reset() {
 
 	&.open {
 		width: 230px;
-		height: 615px;
+		height: 645px;
 		right: 16px;
 		border-radius: var(--border-radius);
 		max-height: 90vh;
@@ -425,7 +427,38 @@ function reset() {
 	.anim-enter-from,
 	.anim-leave-to {
 		opacity: 0;
-		transform: translateY(1%);
+		// transform: translateY(1%);
+	}
+}
+
+.direction-rtl {
+	.layout-settings {
+		right: unset;
+		left: 10px;
+
+		.ls-form {
+			.ls-header {
+				direction: rtl;
+			}
+
+			:deep() {
+				.n-color-picker {
+					.n-color-picker-trigger {
+						.n-color-picker-trigger__fill {
+							.n-color-picker-trigger__value {
+								margin-left: unset !important;
+								margin-right: 44px;
+							}
+						}
+					}
+				}
+			}
+		}
+
+		&.open {
+			right: unset;
+			left: 16px;
+		}
 	}
 }
 </style>

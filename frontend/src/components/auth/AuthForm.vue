@@ -37,24 +37,23 @@ import Logo from "@/layouts/common/Logo.vue"
 import { NButton } from "naive-ui"
 import { ref, onBeforeMount, computed } from "vue"
 import { useRouter } from "vue-router"
-import type { FormType } from "./types"
+import type { FormType } from "./types.d"
 
 const props = defineProps<{
 	type?: FormType
 	useOnlyRouter?: boolean
 }>()
 
-const router = useRouter()
-
 const typeRef = ref<FormType>("signin")
-
-const isDark = computed<boolean>(() => useThemeStore().isThemeDark)
+const router = useRouter()
+const themeStore = useThemeStore()
+const isDark = computed<boolean>(() => themeStore.isThemeDark)
 const title = computed<string>(() =>
 	typeRef.value === "signin"
 		? "SOCFortress CoPilot"
 		: typeRef.value === "signup"
-		? "SOCFortress CoPilot"
-		: "Forgot Password"
+			? "SOCFortress CoPilot"
+			: "Forgot Password"
 )
 
 function gotoSignIn() {
@@ -63,12 +62,14 @@ function gotoSignIn() {
 	}
 	router.replace({ name: "Login" })
 }
+
 function gotoSignUp() {
 	if (!props.useOnlyRouter) {
 		typeRef.value = "signup"
 	}
 	router.replace({ name: "Register" })
 }
+
 function gotoForgotPassword() {
 	if (!props.useOnlyRouter) {
 		typeRef.value = "forgotpassword"

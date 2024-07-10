@@ -31,26 +31,26 @@ import Icon from "@/components/common/Icon.vue"
 import { Icon as Iconify } from "@iconify/vue"
 import Logo from "@/layouts/common/Logo.vue"
 
-const CircleRegular = "fa6-regular:circle"
-const DotCircleRegular = "fa6-regular:circle-dot"
-const CloseOutline = "fa6-regular:circle-xmark"
-
 const props = defineProps<{
 	logoMini?: boolean
 }>()
 const { logoMini } = toRefs(props)
 
+const CircleRegular = "fa6-regular:circle"
+const DotCircleRegular = "fa6-regular:circle-dot"
+const CloseOutline = "carbon:chevron-left"
+const themeStore = useThemeStore()
 const showPin = computed<boolean>(() => !logoMini.value)
 const sidebarCollapsed = computed({
 	get(): boolean {
-		return useThemeStore().sidebar.collapsed
+		return themeStore.sidebar.collapsed
 	},
 	set() {
-		useThemeStore().toggleSidebar()
+		themeStore.toggleSidebar()
 	}
 })
-const isDark = computed<boolean>(() => useThemeStore().isThemeDark)
-const isLight = computed(() => useThemeStore().isThemeLight)
+const isDark = computed<boolean>(() => themeStore.isThemeDark)
+const isLight = computed(() => themeStore.isThemeLight)
 </script>
 
 <style lang="scss" scoped>
@@ -113,11 +113,18 @@ const isLight = computed(() => useThemeStore().isThemeLight)
 		:deep() {
 			.n-icon {
 				cursor: pointer;
-				opacity: 0.3;
-				transition: opacity var(--sidebar-anim-ease) var(--sidebar-anim-duration);
+
+				.i-large {
+					opacity: 0.3;
+					transition: opacity var(--sidebar-anim-ease) var(--sidebar-anim-duration);
+				}
 
 				&:hover {
 					opacity: 1;
+
+					.i-large {
+						opacity: 1;
+					}
 				}
 			}
 		}
@@ -140,6 +147,18 @@ const isLight = computed(() => useThemeStore().isThemeLight)
 		&.fade-enter-from,
 		&.fade-leave-to {
 			opacity: 0;
+		}
+	}
+}
+
+.direction-rtl {
+	.sidebar-header {
+		.sidebar-pin {
+			.i-small {
+				svg {
+					transform: rotateY(180deg);
+				}
+			}
 		}
 	}
 }
