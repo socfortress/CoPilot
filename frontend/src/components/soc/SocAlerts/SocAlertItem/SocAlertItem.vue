@@ -253,11 +253,6 @@ onBeforeMount(() => {
 
 <style lang="scss" scoped>
 .soc-alert-item {
-	&:not(.embedded) {
-		border-radius: var(--border-radius);
-		background-color: var(--bg-color);
-		border: var(--border-small-050);
-	}
 	transition: all 0.2s var(--bezier-ease);
 
 	.soc-alert-info {
@@ -311,6 +306,10 @@ onBeforeMount(() => {
 	}
 
 	&:not(.embedded) {
+		border-radius: var(--border-radius);
+		background-color: var(--bg-color);
+		border: var(--border-small-050);
+
 		&:hover,
 		&.highlight {
 			border-color: var(--primary-color);

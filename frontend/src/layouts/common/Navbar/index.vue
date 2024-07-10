@@ -46,7 +46,7 @@ const expandedKeys = ref<string[] | undefined>(undefined)
 
 const themeStore = useThemeStore()
 
-const menuOptions = computed<MenuMixedOption[]>(() => getItems(mode.value, collapsed.value))
+const menuOptions = computed<MenuMixedOption[]>(() => getItems())
 const collapsedWidth = computed<number>(() => themeStore.sidebar.closeWidth)
 const sidebarCollapsed = computed<boolean>(() => themeStore.sidebar.collapsed)
 
