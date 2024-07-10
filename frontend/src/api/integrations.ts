@@ -72,5 +72,12 @@ export default {
 			time_interval: 15,
 			integration_name: integrationName
 		})
+	},
+	darktraceProvision(customerCode: string, integrationName: string) {
+		return HttpClient.post<FlaskBaseResponse>(`/darktrace/provision`, {
+			customer_code: customerCode,
+			time_interval: 15,
+			integration_name: integrationName
+		})
 	}
 }

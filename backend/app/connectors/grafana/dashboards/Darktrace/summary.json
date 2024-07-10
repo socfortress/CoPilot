@@ -1,0 +1,1658 @@
+{
+	"annotations": {
+		"list": [
+			{
+				"builtIn": 1,
+				"datasource": {
+					"type": "grafana",
+					"uid": "-- Grafana --"
+				},
+				"enable": true,
+				"hide": true,
+				"iconColor": "rgba(0, 211, 255, 1)",
+				"name": "Annotations & Alerts",
+				"type": "dashboard"
+			}
+		]
+	},
+	"description": "DARKTRACE - SUMMARY",
+	"editable": false,
+	"fiscalYearStartMonth": 0,
+	"graphTooltip": 0,
+	"id": null,
+	"links": [],
+	"liveNow": false,
+	"panels": [
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"mappings": [
+						{
+							"options": {
+								"match": "null",
+								"result": {
+									"text": "N/A"
+								}
+							},
+							"type": "special"
+						}
+					],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "orange",
+								"value": null
+							}
+						]
+					},
+					"unit": "locale",
+					"unitScale": true
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 4,
+				"x": 0,
+				"y": 0
+			},
+			"id": 1,
+			"links": [],
+			"options": {
+				"colorMode": "value",
+				"graphMode": "area",
+				"justifyMode": "auto",
+				"orientation": "horizontal",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"showPercentChange": false,
+				"text": {},
+				"textMode": "auto",
+				"wideLayout": true
+			},
+			"pluginVersion": "10.3.3",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto",
+								"min_doc_count": 0,
+								"trimEdges": 0
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "model_now_actions_alert:true AND source:$source",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "ALERTS",
+			"type": "stat"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"mappings": [
+						{
+							"options": {
+								"match": "null",
+								"result": {
+									"text": "N/A"
+								}
+							},
+							"type": "special"
+						}
+					],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "blue",
+								"value": null
+							}
+						]
+					},
+					"unit": "none",
+					"unitScale": true
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 4,
+				"x": 4,
+				"y": 0
+			},
+			"id": 2,
+			"links": [],
+			"maxDataPoints": 100,
+			"options": {
+				"colorMode": "value",
+				"graphMode": "none",
+				"justifyMode": "auto",
+				"orientation": "horizontal",
+				"reduceOptions": {
+					"calcs": ["max"],
+					"fields": "",
+					"values": false
+				},
+				"showPercentChange": false,
+				"text": {},
+				"textMode": "auto",
+				"wideLayout": true
+			},
+			"pluginVersion": "10.3.3",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"$$hashKey": "object:235",
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "365d",
+								"min_doc_count": 0,
+								"trimEdges": 0
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"$$hashKey": "object:233",
+							"field": "source",
+							"id": "1",
+							"meta": {},
+							"settings": {},
+							"type": "cardinality"
+						}
+					],
+					"query": "source:$source",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "SENSORS",
+			"type": "stat"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"custom": {
+						"align": "auto",
+						"cellOptions": {
+							"type": "auto"
+						},
+						"inspect": false
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "dark-orange",
+								"value": null
+							}
+						]
+					},
+					"unitScale": true
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "Time"
+						},
+						"properties": [
+							{
+								"id": "displayName",
+								"value": "Time"
+							},
+							{
+								"id": "unit",
+								"value": "time: YYYY-MM-DD HH:mm:ss"
+							},
+							{
+								"id": "custom.align"
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "Count"
+						},
+						"properties": [
+							{
+								"id": "displayName",
+								"value": "EVENTS"
+							},
+							{
+								"id": "unit",
+								"value": "short"
+							},
+							{
+								"id": "decimals",
+								"value": -1
+							},
+							{
+								"id": "custom.cellOptions",
+								"value": {
+									"mode": "gradient",
+									"type": "color-background"
+								}
+							},
+							{
+								"id": "custom.align"
+							},
+							{
+								"id": "thresholds",
+								"value": {
+									"mode": "absolute",
+									"steps": [
+										{
+											"color": "dark-orange",
+											"value": null
+										}
+									]
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "agent_name"
+						},
+						"properties": [
+							{
+								"id": "displayName",
+								"value": "AGENT"
+							},
+							{
+								"id": "custom.cellOptions",
+								"value": {
+									"mode": "gradient",
+									"type": "color-background"
+								}
+							},
+							{
+								"id": "custom.align"
+							},
+							{
+								"id": "links",
+								"value": [
+									{
+										"targetBlank": true,
+										"title": "VIEW EVENTS",
+										"url": "https://grafana.company.local/explore?left=%5B%22now-1h%22,%22now%22,%22DARKTRECE%22,%7B%22refId%22:%22A%22,%22query%22:%22agent_name:${__value.text}%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D"
+									}
+								]
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "Count"
+						},
+						"properties": [
+							{
+								"id": "displayName",
+								"value": "ALERTS"
+							},
+							{
+								"id": "unit",
+								"value": "short"
+							},
+							{
+								"id": "decimals",
+								"value": 0
+							},
+							{
+								"id": "custom.align"
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 7,
+				"x": 8,
+				"y": 0
+			},
+			"id": 3,
+			"options": {
+				"cellHeight": "sm",
+				"footer": {
+					"countRows": false,
+					"fields": "",
+					"reducer": ["sum"],
+					"show": false
+				},
+				"showHeader": true
+			},
+			"pluginVersion": "10.3.3",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"fake": true,
+							"field": "source",
+							"id": "4",
+							"settings": {
+								"min_doc_count": 1,
+								"order": "desc",
+								"orderBy": "_term",
+								"size": "0"
+							},
+							"type": "terms"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "model_now_actions_alert:true AND source:$source",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "ALERTS BY SENSOR",
+			"transformations": [
+				{
+					"id": "organize",
+					"options": {
+						"excludeByName": {},
+						"includeByName": {},
+						"indexByName": {},
+						"renameByName": {
+							"source": "Sensor"
+						}
+					}
+				}
+			],
+			"type": "table"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"custom": {
+						"align": "auto",
+						"cellOptions": {
+							"type": "auto"
+						},
+						"inspect": false
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "dark-orange",
+								"value": null
+							}
+						]
+					},
+					"unitScale": true
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "Time"
+						},
+						"properties": [
+							{
+								"id": "displayName",
+								"value": "Time"
+							},
+							{
+								"id": "unit",
+								"value": "time: YYYY-MM-DD HH:mm:ss"
+							},
+							{
+								"id": "custom.align"
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "Count"
+						},
+						"properties": [
+							{
+								"id": "displayName",
+								"value": "EVENTS"
+							},
+							{
+								"id": "unit",
+								"value": "short"
+							},
+							{
+								"id": "decimals",
+								"value": -1
+							},
+							{
+								"id": "custom.cellOptions",
+								"value": {
+									"type": "color-background"
+								}
+							},
+							{
+								"id": "custom.align"
+							},
+							{
+								"id": "thresholds",
+								"value": {
+									"mode": "absolute",
+									"steps": [
+										{
+											"color": "dark-orange",
+											"value": null
+										}
+									]
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "rule_groups"
+						},
+						"properties": [
+							{
+								"id": "displayName",
+								"value": "ALERTS BY TYPE"
+							},
+							{
+								"id": "unit",
+								"value": "short"
+							},
+							{
+								"id": "decimals",
+								"value": -1
+							},
+							{
+								"id": "custom.cellOptions",
+								"value": {
+									"type": "color-background"
+								}
+							},
+							{
+								"id": "custom.align"
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "model_now_name"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 768
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 7,
+				"w": 9,
+				"x": 15,
+				"y": 0
+			},
+			"id": 4,
+			"options": {
+				"cellHeight": "sm",
+				"footer": {
+					"countRows": false,
+					"fields": "",
+					"reducer": ["sum"],
+					"show": false
+				},
+				"showHeader": true,
+				"sortBy": []
+			},
+			"pluginVersion": "10.3.3",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"fake": true,
+							"field": "model_now_name",
+							"id": "4",
+							"settings": {
+								"min_doc_count": 1,
+								"order": "desc",
+								"orderBy": "_term",
+								"size": "0"
+							},
+							"type": "terms"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "model_now_actions_alert:true AND source:$source",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "ALERTS BY CATEGORY",
+			"transformations": [
+				{
+					"id": "organize",
+					"options": {
+						"excludeByName": {},
+						"includeByName": {},
+						"indexByName": {},
+						"renameByName": {
+							"model_now_name": "Name"
+						}
+					}
+				}
+			],
+			"type": "table"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"mappings": [
+						{
+							"options": {
+								"match": "null",
+								"result": {
+									"text": "N/A"
+								}
+							},
+							"type": "special"
+						}
+					],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "blue",
+								"value": null
+							}
+						]
+					},
+					"unit": "locale",
+					"unitScale": true
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 9,
+				"w": 4,
+				"x": 0,
+				"y": 7
+			},
+			"id": 8,
+			"links": [],
+			"options": {
+				"colorMode": "value",
+				"graphMode": "area",
+				"justifyMode": "auto",
+				"orientation": "horizontal",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"showPercentChange": false,
+				"text": {},
+				"textMode": "auto",
+				"wideLayout": true
+			},
+			"pluginVersion": "10.3.3",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto",
+								"min_doc_count": "1",
+								"trimEdges": 0
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"field": "device_hostname",
+							"id": "1",
+							"type": "cardinality"
+						}
+					],
+					"query": "source:$source",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "DEVICES - TOTAL",
+			"type": "stat"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"custom": {
+						"align": "auto",
+						"cellOptions": {
+							"type": "auto"
+						},
+						"inspect": false
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "dark-orange",
+								"value": null
+							}
+						]
+					},
+					"unitScale": true
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "Time"
+						},
+						"properties": [
+							{
+								"id": "displayName",
+								"value": "Time"
+							},
+							{
+								"id": "unit",
+								"value": "time: YYYY-MM-DD HH:mm:ss"
+							},
+							{
+								"id": "custom.align"
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "Count"
+						},
+						"properties": [
+							{
+								"id": "displayName",
+								"value": "EVENTS"
+							},
+							{
+								"id": "unit",
+								"value": "short"
+							},
+							{
+								"id": "decimals",
+								"value": -1
+							},
+							{
+								"id": "custom.cellOptions",
+								"value": {
+									"type": "color-background"
+								}
+							},
+							{
+								"id": "custom.align"
+							},
+							{
+								"id": "thresholds",
+								"value": {
+									"mode": "absolute",
+									"steps": [
+										{
+											"color": "dark-orange",
+											"value": null
+										}
+									]
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "rule_groups"
+						},
+						"properties": [
+							{
+								"id": "displayName",
+								"value": "ALERTS BY TYPE"
+							},
+							{
+								"id": "unit",
+								"value": "short"
+							},
+							{
+								"id": "decimals",
+								"value": -1
+							},
+							{
+								"id": "custom.cellOptions",
+								"value": {
+									"type": "color-background"
+								}
+							},
+							{
+								"id": "custom.align"
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "model_now_name"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 768
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 9,
+				"w": 11,
+				"x": 4,
+				"y": 7
+			},
+			"id": 9,
+			"options": {
+				"cellHeight": "sm",
+				"footer": {
+					"countRows": false,
+					"fields": "",
+					"reducer": ["sum"],
+					"show": false
+				},
+				"showHeader": true,
+				"sortBy": []
+			},
+			"pluginVersion": "10.3.3",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"fake": true,
+							"field": "device_hostname",
+							"id": "4",
+							"settings": {
+								"min_doc_count": 1,
+								"order": "desc",
+								"orderBy": "_term",
+								"size": "0"
+							},
+							"type": "terms"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "source:$source",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "EVENTS BY DEVICE",
+			"transformations": [
+				{
+					"id": "organize",
+					"options": {
+						"excludeByName": {},
+						"includeByName": {},
+						"indexByName": {},
+						"renameByName": {
+							"device_hostname": "Device",
+							"model_now_name": "Name"
+						}
+					}
+				}
+			],
+			"type": "table"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "palette-classic"
+					},
+					"custom": {
+						"hideFrom": {
+							"legend": false,
+							"tooltip": false,
+							"viz": false
+						}
+					},
+					"decimals": 0,
+					"mappings": [],
+					"unit": "short",
+					"unitScale": true
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "1"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#C8F2C2",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "2"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#96D98D",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "3"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#56A64B",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "4"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#37872D",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "5"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#FFF899",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "7"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#F2CC0C",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "9"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#FF9830",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "10"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#FF9830",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "12"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#F2495C",
+									"mode": "fixed"
+								}
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "13"
+						},
+						"properties": [
+							{
+								"id": "color",
+								"value": {
+									"fixedColor": "#FF7383",
+									"mode": "fixed"
+								}
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 9,
+				"w": 9,
+				"x": 15,
+				"y": 7
+			},
+			"id": 10,
+			"links": [],
+			"maxDataPoints": 3,
+			"options": {
+				"displayLabels": [],
+				"legend": {
+					"calcs": [],
+					"displayMode": "table",
+					"placement": "right",
+					"showLegend": true,
+					"values": ["value", "percent"]
+				},
+				"pieType": "donut",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"text": {},
+				"tooltip": {
+					"mode": "single",
+					"sort": "none"
+				}
+			},
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"$$hashKey": "object:235",
+							"fake": true,
+							"field": "device_os",
+							"id": "3",
+							"settings": {
+								"min_doc_count": 1,
+								"order": "desc",
+								"orderBy": "_count",
+								"size": "10"
+							},
+							"type": "terms"
+						},
+						{
+							"$$hashKey": "object:236",
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto",
+								"min_doc_count": 0,
+								"trimEdges": 0
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"$$hashKey": "object:233",
+							"field": "select field",
+							"id": "1",
+							"meta": {},
+							"settings": {},
+							"type": "count"
+						}
+					],
+					"query": "source:$source",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "DEVICES BY OS",
+			"type": "piechart"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"mappings": [
+						{
+							"options": {
+								"match": "null",
+								"result": {
+									"text": "N/A"
+								}
+							},
+							"type": "special"
+						}
+					],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "blue",
+								"value": null
+							}
+						]
+					},
+					"unit": "locale",
+					"unitScale": true
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 9,
+				"w": 4,
+				"x": 0,
+				"y": 16
+			},
+			"id": 5,
+			"links": [],
+			"options": {
+				"colorMode": "value",
+				"graphMode": "area",
+				"justifyMode": "auto",
+				"orientation": "horizontal",
+				"reduceOptions": {
+					"calcs": ["sum"],
+					"fields": "",
+					"values": false
+				},
+				"showPercentChange": false,
+				"text": {},
+				"textMode": "auto",
+				"wideLayout": true
+			},
+			"pluginVersion": "10.3.3",
+			"targets": [
+				{
+					"bucketAggs": [
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "auto",
+								"min_doc_count": 0,
+								"trimEdges": 0
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"field": "select field",
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "source:$source",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "EVENTS - TOTAL",
+			"type": "stat"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "palette-classic"
+					},
+					"custom": {
+						"axisBorderShow": false,
+						"axisCenteredZero": false,
+						"axisColorMode": "text",
+						"axisLabel": "",
+						"axisPlacement": "auto",
+						"barAlignment": 0,
+						"drawStyle": "bars",
+						"fillOpacity": 0,
+						"gradientMode": "none",
+						"hideFrom": {
+							"legend": false,
+							"tooltip": false,
+							"viz": false
+						},
+						"insertNulls": false,
+						"lineInterpolation": "linear",
+						"lineWidth": 1,
+						"pointSize": 5,
+						"scaleDistribution": {
+							"type": "linear"
+						},
+						"showPoints": "auto",
+						"spanNulls": false,
+						"stacking": {
+							"group": "A",
+							"mode": "normal"
+						},
+						"thresholdsStyle": {
+							"mode": "off"
+						}
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					},
+					"unitScale": true
+				},
+				"overrides": []
+			},
+			"gridPos": {
+				"h": 9,
+				"w": 20,
+				"x": 4,
+				"y": 16
+			},
+			"id": 6,
+			"options": {
+				"legend": {
+					"calcs": [],
+					"displayMode": "table",
+					"placement": "right",
+					"showLegend": true
+				},
+				"tooltip": {
+					"mode": "single",
+					"sort": "none"
+				}
+			},
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [
+						{
+							"field": "source",
+							"id": "3",
+							"settings": {
+								"min_doc_count": "1",
+								"order": "desc",
+								"orderBy": "_term",
+								"size": "10"
+							},
+							"type": "terms"
+						},
+						{
+							"field": "timestamp",
+							"id": "2",
+							"settings": {
+								"interval": "5m"
+							},
+							"type": "date_histogram"
+						}
+					],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"metrics": [
+						{
+							"id": "1",
+							"type": "count"
+						}
+					],
+					"query": "source:$source",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "EVENTS BY SENSOR - HISTOGRAM",
+			"transparent": true,
+			"type": "timeseries"
+		},
+		{
+			"datasource": {
+				"type": "grafana-opensearch-datasource",
+				"uid": "replace_datasource_uid"
+			},
+			"fieldConfig": {
+				"defaults": {
+					"color": {
+						"mode": "thresholds"
+					},
+					"custom": {
+						"align": "auto",
+						"cellOptions": {
+							"type": "auto"
+						},
+						"filterable": true,
+						"inspect": false
+					},
+					"mappings": [],
+					"thresholds": {
+						"mode": "absolute",
+						"steps": [
+							{
+								"color": "green",
+								"value": null
+							},
+							{
+								"color": "red",
+								"value": 80
+							}
+						]
+					},
+					"unitScale": true
+				},
+				"overrides": [
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "DATE/TIME"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 196
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "SENSOR"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 203
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "ALERT"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 120
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "CATEGORY"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 162
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "DESCRIPTION"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 749
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "NAME"
+						},
+						"properties": [
+							{
+								"id": "custom.width",
+								"value": 508
+							}
+						]
+					},
+					{
+						"matcher": {
+							"id": "byName",
+							"options": "EVENT ID"
+						},
+						"properties": [
+							{
+								"id": "links",
+								"value": [
+									{
+										"targetBlank": true,
+										"title": "EVENT DETAILS",
+										"url": "https://grafana.company.local/explore?left=%7B%22datasource%22:%22DARKTRACE%22,%22queries%22:%5B%7B%22refId%22:%22A%22,%22query%22:%22_id:${__value.text}%22,%22alias%22:%22%22,%22metrics%22:%5B%7B%22id%22:%221%22,%22type%22:%22logs%22,%22settings%22:%7B%22limit%22:%22500%22%7D%7D%5D,%22bucketAggs%22:%5B%5D,%22timeField%22:%22timestamp%22%7D%5D,%22range%22:%7B%22from%22:%22now-6h%22,%22to%22:%22now%22%7D%7D"
+									}
+								]
+							}
+						]
+					}
+				]
+			},
+			"gridPos": {
+				"h": 17,
+				"w": 24,
+				"x": 0,
+				"y": 25
+			},
+			"id": 7,
+			"options": {
+				"cellHeight": "sm",
+				"footer": {
+					"countRows": false,
+					"enablePagination": true,
+					"fields": "",
+					"reducer": ["sum"],
+					"show": false
+				},
+				"showHeader": true,
+				"sortBy": []
+			},
+			"pluginVersion": "10.3.3",
+			"targets": [
+				{
+					"alias": "",
+					"bucketAggs": [],
+					"datasource": {
+						"type": "grafana-opensearch-datasource",
+						"uid": "replace_datasource_uid"
+					},
+					"format": "table",
+					"metrics": [
+						{
+							"id": "1",
+							"settings": {
+								"order": "desc",
+								"size": "500",
+								"useTimeRange": true
+							},
+							"type": "raw_data"
+						}
+					],
+					"query": "",
+					"queryType": "lucene",
+					"refId": "A",
+					"timeField": "timestamp"
+				}
+			],
+			"title": "EVENTS",
+			"transformations": [
+				{
+					"id": "filterFieldsByName",
+					"options": {
+						"include": {
+							"names": [
+								"timestamp",
+								"_id",
+								"model_now_actions_alert",
+								"model_now_category",
+								"model_now_description",
+								"model_now_mitre_techniques",
+								"model_now_name",
+								"source",
+								"model_now_mitre_tactics"
+							]
+						}
+					}
+				},
+				{
+					"id": "organize",
+					"options": {
+						"excludeByName": {},
+						"includeByName": {},
+						"indexByName": {
+							"_id": 1,
+							"model_now_actions_alert": 3,
+							"model_now_category": 4,
+							"model_now_description": 6,
+							"model_now_mitre_tactics": 7,
+							"model_now_mitre_techniques": 8,
+							"model_now_name": 5,
+							"source": 2,
+							"timestamp": 0
+						},
+						"renameByName": {
+							"_id": "EVENT ID",
+							"model_now_actions_alert": "ALERT",
+							"model_now_category": "CATEGORY",
+							"model_now_description": "DESCRIPTION",
+							"model_now_mitre_tactics": "MITRE TACTICS",
+							"model_now_mitre_techniques": "MITRE TECHNIQUES",
+							"model_now_name": "NAME",
+							"source": "SENSOR",
+							"timestamp": "DATE/TIME"
+						}
+					}
+				}
+			],
+			"transparent": true,
+			"type": "table"
+		}
+	],
+	"refresh": "",
+	"schemaVersion": 39,
+	"tags": ["DARKTRACE"],
+	"templating": {
+		"list": [
+			{
+				"datasource": {
+					"type": "grafana-opensearch-datasource",
+					"uid": "replace_datasource_uid"
+				},
+				"filters": [],
+				"hide": 0,
+				"label": "Filters",
+				"name": "Filters",
+				"skipUrlSync": false,
+				"type": "adhoc"
+			},
+			{
+				"current": {
+					"selected": true,
+					"text": "All",
+					"value": "$__all"
+				},
+				"datasource": {
+					"type": "grafana-opensearch-datasource",
+					"uid": "replace_datasource_uid"
+				},
+				"definition": "{ \"find\": \"terms\", \"field\": \"source\", \"query\": \"*\"}",
+				"hide": 0,
+				"includeAll": true,
+				"label": "Source",
+				"multi": false,
+				"name": "source",
+				"options": [],
+				"query": "{ \"find\": \"terms\", \"field\": \"source\", \"query\": \"*\"}",
+				"refresh": 1,
+				"regex": "",
+				"skipUrlSync": false,
+				"sort": 0,
+				"type": "query"
+			}
+		]
+	},
+	"time": {
+		"from": "now-24h",
+		"to": "now"
+	},
+	"timepicker": {},
+	"timezone": "",
+	"title": "DARKTRACE EVENTS AND ALERTS",
+	"version": 11,
+	"weekStart": ""
+}

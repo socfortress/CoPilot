@@ -274,6 +274,7 @@ def get_available_integrations_list():
         ("CarbonBlack", "Integrate CarbonBlack with SOCFortress."),
         ("Crowdstrike", "Integrate Crowdstrike with SOCFortress."),
         ("DUO", "Integrate DUO with SOCFortress."),
+        ("Darktrace", "Integrate Darktrace with SOCFortress."),
         # ... Add more available integrations as needed ...
     ]
 
@@ -389,6 +390,10 @@ async def get_available_integrations_auth_keys_list(session: AsyncSession):
         ("DUO", "API_HOSTNAME"),
         ("DUO", "INTEGRATION_KEY"),
         ("DUO", "SECRET_KEY"),
+        ("Darktrace", "PUBLIC_TOKEN"),
+        ("Darktrace", "PRIVATE_TOKEN"),
+        ("Darktrace", "HOST"),
+        ("Darktrace", "PORT"),
         # ... Add more available integrations auth keys as needed ...
     ]
     logger.info("Getting available integrations auth keys.")

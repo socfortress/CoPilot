@@ -102,6 +102,10 @@ class DuoDashboard(Enum):
     DUO_AUTH = ("Duo", "duo_auth.json")
 
 
+class DarktraceDashboard(Enum):
+    DARKTRACE_SUMMARY = ("Darktrace", "summary.json")
+
+
 class DashboardProvisionRequest(BaseModel):
     dashboards: List[str] = Field(
         ...,
@@ -134,6 +138,7 @@ class DashboardProvisionRequest(BaseModel):
             + list(FortinetDashboard)
             + list(CrowdstrikeDashboard)
             + list(DuoDashboard)
+            + list(DarktraceDashboard)
         }
         if e not in valid_dashboards:
             raise ValueError(f'Dashboard identifier "{e}" is not recognized.')
