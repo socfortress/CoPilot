@@ -77,7 +77,7 @@ load_dotenv()
 server_ip = os.getenv("SERVER_IP", "localhost")
 environment = os.getenv("ENVIRONMENT", "PRODUCTION")
 
-# ! Not needed for now
+# Not needed for now
 # ssl_keyfile = os.path.join(os.path.dirname(__file__), "../nginx/server.key")
 # ssl_certfile = os.path.join(os.path.dirname(__file__), "../nginx/server.crt")
 
