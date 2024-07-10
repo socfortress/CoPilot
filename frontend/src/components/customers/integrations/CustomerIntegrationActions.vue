@@ -1,49 +1,6 @@
 <template>
 	<div class="alert-actions flex gap-4 justify-end">
-		<n-button
-			v-if="isOffice365 && !integration.deployed"
-			:loading="loadingOffice365Provision"
-			@click="office365Provision()"
-			type="success"
-			:size="size"
-			secondary
-		>
-			<template #icon><Icon :name="DeployIcon"></Icon></template>
-			Deploy
-		</n-button>
-
-		<n-button
-			v-if="isMimecast && !integration.deployed"
-			:loading="loadingMimecastProvision"
-			@click="mimecastProvision()"
-			type="success"
-			:size="size"
-			secondary
-		>
-			<template #icon><Icon :name="DeployIcon"></Icon></template>
-			Deploy
-		</n-button>
-
-		<n-button
-			v-if="isCrowdstrike && !integration.deployed"
-			:loading="loadingCrowdstrikeProvision"
-			@click="crowdstrikeProvision()"
-			type="success"
-			:size="size"
-			secondary
-		>
-			<template #icon><Icon :name="DeployIcon"></Icon></template>
-			Deploy
-		</n-button>
-
-		<n-button
-			v-if="isDuo && !integration.deployed"
-			:loading="loadingDuoProvision"
-			@click="duoProvision()"
-			type="success"
-			:size="size"
-			secondary
-		>
+		<n-button v-if="isDeployEnabled" :loading="loading" @click="provision()" type="success" :size="size" secondary>
 			<template #icon><Icon :name="DeployIcon"></Icon></template>
 			Deploy
 		</n-button>
@@ -65,13 +22,13 @@
 </template>
 
 <script setup lang="ts">
+import { computed, h, ref, watch } from "vue"
 import { NButton, useDialog, useMessage } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import Api from "@/api"
-import { computed, h, ref } from "vue"
-import { watch } from "vue"
 import type { CustomerIntegration } from "@/types/integrations.d"
 import type { Size } from "naive-ui/es/button/src/interface"
+import type { ApiCommonResponse } from "@/types/common"
 
 const emit = defineEmits<{
 	(e: "startLoading"): void
@@ -91,26 +48,22 @@ const DeleteIcon = "ph:trash"
 
 const dialog = useDialog()
 const message = useMessage()
-const loadingOffice365Provision = ref(false)
-const loadingMimecastProvision = ref(false)
-const loadingCrowdstrikeProvision = ref(false)
-const loadingDuoProvision = ref(false)
-const loadingDelete = ref(false)
-const loading = computed(
-	() =>
-		loadingOffice365Provision.value ||
-		loadingMimecastProvision.value ||
-		loadingCrowdstrikeProvision.value ||
-		loadingDuoProvision.value ||
-		loadingDelete.value
-)
 
+const loadingProvision = ref(false)
+const loadingDelete = ref(false)
+const loading = computed(() => loadingProvision.value || loadingDelete.value)
 const serviceName = computed(() => integration.integration_service_name)
 const customerCode = computed(() => integration.customer_code)
 const isOffice365 = computed(() => serviceName.value === "Office365")
 const isMimecast = computed(() => serviceName.value === "Mimecast")
 const isCrowdstrike = computed(() => serviceName.value === "Crowdstrike")
 const isDuo = computed(() => serviceName.value === "DUO")
+const isDarktrace = computed(() => serviceName.value === "Darktrace")
+const isDeployEnabled = computed(
+	() =>
+		(isOffice365.value || isMimecast.value || isCrowdstrike.value || isDuo.value || isDarktrace.value) &&
+		!integration.deployed
+)
 
 watch(loading, val => {
 	if (val) {
@@ -120,11 +73,32 @@ watch(loading, val => {
 	}
 })
 
-function office365Provision() {
-	loadingOffice365Provision.value = true
+function provision() {
+	let apiCall: Promise<ApiCommonResponse> | null = null
 
-	Api.integrations
-		.office365Provision(customerCode.value, serviceName.value)
+	if (isOffice365.value) {
+		apiCall = Api.integrations.office365Provision(customerCode.value, serviceName.value)
+	}
+	if (isMimecast.value) {
+		apiCall = Api.integrations.mimecastProvision(customerCode.value, serviceName.value)
+	}
+	if (isCrowdstrike.value) {
+		apiCall = Api.integrations.crowdstrikeProvision(customerCode.value, serviceName.value)
+	}
+	if (isDuo.value) {
+		apiCall = Api.integrations.duoProvision(customerCode.value, serviceName.value)
+	}
+	if (isDarktrace.value) {
+		apiCall = Api.integrations.darktraceProvision(customerCode.value, serviceName.value)
+	}
+
+	if (!apiCall) {
+		return
+	}
+
+	loadingProvision.value = true
+
+	apiCall
 		.then(res => {
 			if (res.data.success) {
 				emit("deployed")
@@ -137,70 +111,7 @@ function office365Provision() {
 			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
-			loadingOffice365Provision.value = false
-		})
-}
-
-function mimecastProvision() {
-	loadingMimecastProvision.value = true
-
-	Api.integrations
-		.mimecastProvision(customerCode.value, serviceName.value)
-		.then(res => {
-			if (res.data.success) {
-				emit("deployed")
-				message.success(res.data?.message || "Customer integration successfully deployed.")
-			} else {
-				message.warning(res.data?.message || "An error occurred. Please try again later.")
-			}
-		})
-		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-		})
-		.finally(() => {
-			loadingMimecastProvision.value = false
-		})
-}
-
-function crowdstrikeProvision() {
-	loadingCrowdstrikeProvision.value = true
-
-	Api.integrations
-		.crowdstrikeProvision(customerCode.value, serviceName.value)
-		.then(res => {
-			if (res.data.success) {
-				emit("deployed")
-				message.success(res.data?.message || "Customer integration successfully deployed.")
-			} else {
-				message.warning(res.data?.message || "An error occurred. Please try again later.")
-			}
-		})
-		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-		})
-		.finally(() => {
-			loadingCrowdstrikeProvision.value = false
-		})
-}
-
-function duoProvision() {
-	loadingDuoProvision.value = true
-
-	Api.integrations
-		.duoProvision(customerCode.value, serviceName.value)
-		.then(res => {
-			if (res.data.success) {
-				emit("deployed")
-				message.success(res.data?.message || "Customer integration successfully deployed.")
-			} else {
-				message.warning(res.data?.message || "An error occurred. Please try again later.")
-			}
-		})
-		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-		})
-		.finally(() => {
-			loadingDuoProvision.value = false
+			loadingProvision.value = false
 		})
 }
 
