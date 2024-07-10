@@ -10,12 +10,6 @@ import { NMenu } from "naive-ui"
 import { useThemeStore } from "@/stores/theme"
 import { renderIcon } from "@/utils"
 
-const ContactIcon = "ic:outline-alternate-email"
-
-defineOptions({
-	name: "SidebarFooter"
-})
-
 const props = withDefaults(
 	defineProps<{
 		collapsed?: boolean
@@ -24,6 +18,7 @@ const props = withDefaults(
 )
 const { collapsed } = toRefs(props)
 
+const ContactIcon = "ic:outline-alternate-email"
 const menuOptions = ref([
 	{
 		label: () =>
@@ -40,8 +35,8 @@ const menuOptions = ref([
 		icon: renderIcon(ContactIcon)
 	}
 ])
-
-const collapsedWidth = computed<number>(() => useThemeStore().sidebar.closeWidth - 16)
+const themeStore = useThemeStore()
+const collapsedWidth = computed<number>(() => themeStore.sidebar.closeWidth - 16)
 </script>
 
 <style lang="scss" scoped>

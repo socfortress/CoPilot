@@ -14,14 +14,11 @@ import { NScrollbar } from "naive-ui"
 import { useRoute, useRouter } from "vue-router"
 import { useThemeStore } from "@/stores/theme"
 
-defineOptions({
-	name: "MainContainer"
-})
-
+const themeStore = useThemeStore()
 const router = useRouter()
 const route = useRoute()
 const routeName = computed<string>(() => route.name?.toString() || "")
-const boxed = computed(() => useThemeStore().isBoxed)
+const boxed = computed(() => themeStore.isBoxed)
 const scrollbar = ref()
 
 onMounted(() => {

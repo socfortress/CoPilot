@@ -28,16 +28,13 @@ import Icon from "@/components/common/Icon.vue"
 import BrainIcon from "@/assets/icons/brain-icon.svg"
 import { useThemeStore } from "@/stores/theme"
 
-defineOptions({
-	name: "FooterEL"
-})
-
 const props = defineProps<{
 	boxed: boolean
 }>()
 const { boxed } = toRefs(props)
-const style = computed(() => useThemeStore().style)
 
+const themeStore = useThemeStore()
+const style = computed(() => themeStore.style)
 const year = ref(new Date().getFullYear())
 </script>
 

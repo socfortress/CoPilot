@@ -1,6 +1,6 @@
 <template>
 	<transition name="loading-fade">
-		<div class="splash-screen-loading-box" v-if="loading">
+		<div class="splash-screen-loading-box" v-if="show">
 			<n-spin :size="80" />
 		</div>
 	</transition>
@@ -11,9 +11,9 @@ import { NSpin } from "naive-ui"
 import { toRefs } from "vue"
 
 const props = defineProps<{
-	loading: boolean
+	show: boolean
 }>()
-const { loading } = toRefs(props)
+const { show } = toRefs(props)
 </script>
 
 <style scoped lang="scss">
