@@ -24,6 +24,7 @@ export const useThemeStore = defineStore("theme", {
 		themeName: osTheme.value || ThemeEnum.Dark,
 		routerTransition: RouterTransition.FadeUp,
 		routerTransitionDuration: 0.3,
+		rtl: false,
 		boxed: {
 			enabled: false,
 			toolbar: true,
@@ -67,6 +68,9 @@ export const useThemeStore = defineStore("theme", {
 	actions: {
 		setLayout(layout: Layout): void {
 			this.layout = layout
+		},
+		setRTL(rtl: boolean): void {
+			this.rtl = rtl
 		},
 		setBoxed(boxed: boolean): void {
 			this.boxed.enabled = boxed
@@ -313,6 +317,7 @@ export const useThemeStore = defineStore("theme", {
 			const buttonColorSecondaryPressed = naive.buttonColor2Pressed
 
 			const bgSidebar = this.sidebarBackground
+			const bgSidebarRGB = hex2rgb(bgSidebar).join(", ")
 			const bgBody = this.bodyBackground
 			const bgBodyRGB = hex2rgb(bgBody).join(", ")
 
@@ -362,15 +367,16 @@ export const useThemeStore = defineStore("theme", {
 			const secondary4RGB = hex2rgb(secondary4).join(", ")
 
 			return {
-				"bg-sidebar": `${bgSidebar}`,
 				"bg-body": `${bgBody}`,
 				"bg-body-rgb": `${bgBodyRGB}`,
+				"bg-sidebar": `${bgSidebar}`,
+				"bg-sidebar-rgb": `${bgSidebarRGB}`,
 
 				"fg-color": `${fgColor}`,
 				"fg-secondary-color": `${fgSecondaryColor}`,
 				"bg-color": `${bgColor}`,
-				"bg-secondary-color": `${bgSecondaryColor}`,
 				"bg-color-rgb": `${bgColorRGB}`,
+				"bg-secondary-color": `${bgSecondaryColor}`,
 
 				"border-color": `${borderColor}`,
 				"bezier-ease": `${bezierEase}`,
@@ -462,6 +468,9 @@ export const useThemeStore = defineStore("theme", {
 		},
 		isBoxed(state): boolean {
 			return state.boxed.enabled
+		},
+		isRTL(state): boolean {
+			return state.rtl
 		},
 		isFooterShown(state): boolean {
 			return state.footer.show
