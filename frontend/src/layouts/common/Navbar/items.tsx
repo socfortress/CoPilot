@@ -18,8 +18,7 @@ const ExternalServicesIcon = "carbon:ibm-cloud-direct-link-2-dedicated"
 const ReportCreationIcon = "carbon:report-data"
 const SchedulerIcon = "material-symbols:autoplay"
 
-/*eslint @typescript-eslint/no-unused-vars: "off"*/
-export default function getItems(mode: "vertical" | "horizontal", collapsed: boolean): MenuMixedOption[] {
+export default function getItems(): MenuMixedOption[] {
 	return [
 		{
 			label: () =>

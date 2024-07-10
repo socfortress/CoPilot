@@ -29,13 +29,6 @@ import { computed, onBeforeMount, ref, toRefs } from "vue"
 import { useRouter, useRoute, type RouteRecordNormalized } from "vue-router"
 import _uniq from "lodash/uniq"
 
-defineOptions({
-	name: "Navbar"
-})
-
-const route = useRoute()
-const router = useRouter()
-
 const props = withDefaults(
 	defineProps<{
 		mode?: "vertical" | "horizontal"
@@ -45,13 +38,17 @@ const props = withDefaults(
 )
 const { mode, collapsed } = toRefs(props)
 
+const route = useRoute()
+const router = useRouter()
 const selectedKey = ref<string | null>(null)
 const menu = ref<MenuInst | null>(null)
 const expandedKeys = ref<string[] | undefined>(undefined)
 
+const themeStore = useThemeStore()
+
 const menuOptions = computed<MenuMixedOption[]>(() => getItems(mode.value, collapsed.value))
-const collapsedWidth = computed<number>(() => useThemeStore().sidebar.closeWidth)
-const sidebarCollapsed = computed<boolean>(() => useThemeStore().sidebar.collapsed)
+const collapsedWidth = computed<number>(() => themeStore.sidebar.closeWidth)
+const sidebarCollapsed = computed<boolean>(() => themeStore.sidebar.collapsed)
 
 function setMenuKey(matched: RouteRecordNormalized[]) {
 	for (const match of matched) {
@@ -72,7 +69,7 @@ onBeforeMount(() => {
 			setMenuKey(route.matched)
 
 			if (window.innerWidth <= 700 && !sidebarCollapsed.value) {
-				useThemeStore().closeSidebar()
+				themeStore.closeSidebar()
 			}
 		}
 	})
@@ -100,6 +97,15 @@ function handleUpdateExpandedKeys(value: string[]) {
 	}
 
 	:deep() {
+		.n-menu-item {
+			.n-menu-item-content {
+				gap: 8px;
+
+				.n-menu-item-content__icon {
+					margin-right: 0 !important;
+				}
+			}
+		}
 		.n-menu-item-content,
 		.n-menu-item-group {
 			.item-badge {
@@ -117,7 +123,6 @@ function handleUpdateExpandedKeys(value: string[]) {
 				:nth-child(2) {
 					color: var(--fg-color);
 					background: var(--hover-005-color);
-					margin-right: 10px;
 					height: 22px;
 					line-height: 24px;
 					border-radius: 15px;
@@ -158,18 +163,57 @@ function handleUpdateExpandedKeys(value: string[]) {
 		}
 
 		.n-submenu-children {
+			--dash-width: 12px;
+			--dash-height: 2px;
+			--dash-offset: 43px;
+
+			position: relative;
+
+			&::before {
+				content: "";
+				display: block;
+				background-color: var(--divider-010-color);
+				width: var(--dash-height);
+				position: absolute;
+				top: 0px;
+				bottom: 20px;
+				left: var(--dash-offset);
+			}
+
 			.n-menu-item-content {
 				&::after {
 					content: "";
 					display: block;
-					opacity: 0.1;
-					background-color: var(--fg-color);
-					width: 12px;
-					height: 2px;
+					background-color: var(--divider-010-color);
+					width: var(--dash-width);
+					height: var(--dash-height);
 					position: absolute;
-					top: 50%;
-					left: 38px;
-					margin-top: -1px;
+					top: calc(50% - calc(ar(--dash-height) / 2));
+					left: calc(var(--dash-offset) + var(--dash-height));
+				}
+			}
+
+			.n-menu-item-group {
+				.n-menu-item-group-title {
+					padding-left: 64px !important;
+				}
+			}
+
+			.n-submenu-children {
+				&::before {
+					display: none;
+				}
+				.n-menu-item-content {
+					&::after {
+						width: calc(var(--dash-width) * 3);
+						background: repeating-linear-gradient(
+							90deg,
+							var(--divider-010-color) 0px,
+							var(--divider-010-color) 5px,
+							transparent 5px,
+							transparent 8px
+						);
+					}
 				}
 			}
 		}
@@ -179,6 +223,16 @@ function handleUpdateExpandedKeys(value: string[]) {
 				.n-menu-item-content-header {
 					overflow: initial;
 				}
+			}
+		}
+	}
+}
+
+.direction-rtl {
+	.nav {
+		:deep() {
+			.n-submenu-children {
+				--dash-offset: 39px;
 			}
 		}
 	}
