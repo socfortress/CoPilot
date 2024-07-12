@@ -9,6 +9,7 @@ from app.stack_provisioning.graylog.schema.provision import (
 from app.stack_provisioning.graylog.schema.provision import AvailbleContentPacksOverview
 from app.stack_provisioning.graylog.schema.provision import ProvisionContentPackRequest
 from app.stack_provisioning.graylog.schema.provision import ProvisionGraylogResponse
+from app.stack_provisioning.graylog.services.provision import check_pipeline_rules
 from app.stack_provisioning.graylog.services.provision import provision_content_pack
 from app.stack_provisioning.graylog.services.utils import does_content_pack_exist
 from app.stack_provisioning.graylog.services.utils import system_version_check
@@ -50,6 +51,7 @@ async def provision_content_pack_route(
     await system_version_check(compatible_version="5.0.13+083613e")
     await does_content_pack_exist(content_pack_name=content_pack_request.content_pack_name.name)
     await provision_content_pack(content_pack_request)
+    await check_pipeline_rules()
     return ProvisionGraylogResponse(
         success=True,
         message=f"{content_pack_request.content_pack_name.name} Content Pack provisioned successfully",

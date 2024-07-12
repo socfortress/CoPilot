@@ -1,12 +1,18 @@
 import json
+from enum import Enum
 from pathlib import Path
+from typing import List
 from uuid import uuid4
 
 from fastapi import HTTPException
 from loguru import logger
 
+from app.connectors.graylog.schema.pipelines import CreatePipelineRule
+from app.connectors.graylog.schema.pipelines import PipelineRulesResponse
 from app.connectors.graylog.services.content_packs import insert_content_pack
 from app.connectors.graylog.services.content_packs import install_content_pack
+from app.connectors.graylog.services.pipelines import create_pipeline_rule
+from app.connectors.graylog.services.pipelines import get_pipeline_rules
 from app.stack_provisioning.graylog.schema.provision import AvailableContentPacks
 from app.stack_provisioning.graylog.schema.provision import ProvisionContentPackRequest
 from app.stack_provisioning.graylog.schema.provision import ProvisionGraylogResponse
@@ -170,6 +176,67 @@ async def provision_content_pack(content_pack_request: ProvisionContentPackReque
     return ProvisionGraylogResponse(
         success=True,
         message=f"{content_pack_request.content_pack_name.name} Content Pack provisioned successfully",
+    )
+
+
+class PipelineRuleTitles(Enum):
+    ETW = "Set Syslog Level to ALERT for ETW Registry"
+
+
+async def check_pipeline_rules() -> None:
+    """
+    Checks if the pipeline rules exist in Graylog. If they don't, create them.
+    """
+    pipeline_rules = await get_pipeline_rules()
+    non_existing_rules = await pipeline_rules_exists(pipeline_rules)
+    if non_existing_rules:
+        logger.info(f"Creating pipeline rules: {non_existing_rules}")
+        await create_pipeline_rules(non_existing_rules)
+
+
+async def pipeline_rules_exists(pipeline_rules: PipelineRulesResponse) -> List[str]:
+    """
+    Checks if the pipeline rules exist in Graylog and returns a list of non-existing pipeline rules.
+    """
+    return [
+        rule_title.value
+        for rule_title in PipelineRuleTitles
+        if not any(rule.title == rule_title.value for rule in pipeline_rules.pipeline_rules)
+    ]
+
+
+async def create_pipeline_rules(non_existing_rules: List[str]) -> None:
+    """
+    Creates the given pipeline rules.
+    """
+    rule_creators = {
+        "Set Syslog Level to ALERT for ETW Registry": create_etw_rule,
+    }
+
+    for rule_title in non_existing_rules:
+        logger.info(f"Creating pipeline rule {rule_title}.")
+        await rule_creators[rule_title](rule_title)
+
+
+async def create_etw_rule(rule_title: str) -> None:
+    """
+    Creates the 'Set Syslog Level to ALERT for ETW Registry' pipeline rule.
+    """
+    rule_source = (
+        f'rule "{rule_title}"\n'
+        "when\n"
+        '  has_field("syscheck_path") &&\n'
+        '  starts_with(to_string($message.syscheck_path), "HKEY_LOCAL_MACHINE\\\\SYSTEM\\\\CurrentControlSet\\\\Control\\\\WMI\\\\Autologger\\\\EventLog")\n'
+        "then\n"
+        '  set_field("syslog_level", "ALERT");\n'
+        "end"
+    )
+    await create_pipeline_rule(
+        CreatePipelineRule(
+            title=rule_title,
+            description=rule_title,
+            source=rule_source,
+        ),
     )
 
 

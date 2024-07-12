@@ -69,3 +69,8 @@ class CreatePipeline(BaseModel):
     title: str
     description: str
     source: str
+
+
+class ModifyPipeline(BaseModel):
+    pipeline_id: str
+    source: str
