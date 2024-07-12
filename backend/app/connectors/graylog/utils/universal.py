@@ -271,7 +271,7 @@ async def send_put_request(
     Returns:
         Dict[str, Any]: The response from the PUT request.
     """
-    logger.info(f"Sending PUT request to {endpoint}")
+    logger.info(f"Sending PUT request to {endpoint} with payload {data}")
     async with get_db_session() as session:  # This will correctly enter the context manager
         attributes = await get_connector_info_from_db(connector_name, session)
     if attributes is None:

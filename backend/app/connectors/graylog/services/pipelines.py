@@ -4,11 +4,13 @@ from loguru import logger
 from app.connectors.graylog.schema.pipelines import CreatePipeline
 from app.connectors.graylog.schema.pipelines import CreatePipelineRule
 from app.connectors.graylog.schema.pipelines import GraylogPipelinesResponse
+from app.connectors.graylog.schema.pipelines import ModifyPipeline
 from app.connectors.graylog.schema.pipelines import Pipeline
 from app.connectors.graylog.schema.pipelines import PipelineRule
 from app.connectors.graylog.schema.pipelines import PipelineRulesResponse
 from app.connectors.graylog.utils.universal import send_get_request
 from app.connectors.graylog.utils.universal import send_post_request
+from app.connectors.graylog.utils.universal import send_put_request
 from app.customer_provisioning.schema.graylog import StreamConnectionToPipelineRequest
 from app.customer_provisioning.schema.graylog import StreamConnectionToPipelineResponse
 
@@ -142,6 +144,17 @@ async def create_pipeline_graylog(pipeline: CreatePipeline) -> None:
         "source": pipeline.source,
     }
     await send_post_request(endpoint=endpoint, data=data)
+
+
+async def modify_pipeline_graylog(pipeline: ModifyPipeline) -> None:
+    """
+    Modifies a pipeline with the given title in Graylog.
+    """
+    endpoint = f"/api/system/pipelines/pipeline/{pipeline.pipeline_id}"
+    data = {
+        "source": pipeline.source,
+    }
+    await send_put_request(endpoint=endpoint, data=data)
 
 
 async def get_pipeline_id(subscription: str) -> str:
