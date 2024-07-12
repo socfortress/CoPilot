@@ -24,6 +24,7 @@ services:
 
     copilot-mysql:
         image: mysql:5.7
+        #image: mysql:8.0.38-debian - For MySQL 8 - Need to test further
         environment:
             MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
             MYSQL_DATABASE: copilot
