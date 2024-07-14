@@ -122,6 +122,7 @@ async def add_connectors(async_engine):
     ) as session:  # Create an AsyncSession, not just a connection
         async with session.begin():  # Start a transaction
             await add_connectors_if_not_exist(session)
+    logger.info("Connectors added successfully")
 
 
 async def create_tables(async_engine):
