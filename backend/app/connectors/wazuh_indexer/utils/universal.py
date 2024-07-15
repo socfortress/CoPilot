@@ -477,6 +477,7 @@ class LogsQueryBuilder:
     def build(self):
         return self.query
 
+
 async def get_index_mappings_key_names(index_id: str):
     """
     Get the mappings of an index.

@@ -21,6 +21,16 @@ from app.db.universal_models import Agents
 from app.db.universal_models import Customers
 from app.db.universal_models import CustomersMeta
 from app.db.universal_models import LogEntry
+from app.incidents.models import Alert
+from app.incidents.models import AlertContext
+from app.incidents.models import AlertTag
+from app.incidents.models import AlertToTag
+from app.incidents.models import Asset
+from app.incidents.models import AssetFieldName
+from app.incidents.models import Case
+from app.incidents.models import CaseAlertLink
+from app.incidents.models import Comment
+from app.incidents.models import FieldName
 from app.integrations.alert_creation_settings.models.alert_creation_settings import (
     AlertCreationSettings,
 )
@@ -40,10 +50,6 @@ from app.network_connectors.models.network_connectors import (
     NetworkConnectorsSubscription,
 )
 from app.schedulers.models.scheduler import JobMetadata
-from app.incidents.models import (
-    Alert, Comment, Asset, AlertContext, FieldName, AssetFieldName, Case, CaseAlertLink, AlertTag, AlertToTag
-)
-
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

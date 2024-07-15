@@ -1,32 +1,51 @@
-from sqlalchemy.orm import selectinload
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
+from typing import List
+
+from fastapi import HTTPException
 from sqlalchemy import update
 from sqlalchemy.exc import IntegrityError
-from fastapi import HTTPException
-from typing import List
-from app.incidents.models import (
-    Alert, Comment, Asset, AlertContext, FieldName, AssetFieldName, Case, CaseAlertLink, AlertTag, AlertToTag, TimestampFieldName
-)
-from app.incidents.schema.db_operations import CaseAlertLinkCreate, CaseCreate, AlertTagCreate, AlertTagBase, CommentCreate, AssetCreate, CommentBase, AssetBase, AlertOut, AlertCreate, AlertContextCreate, CaseOut
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
+
+from app.incidents.models import Alert
+from app.incidents.models import AlertContext
+from app.incidents.models import AlertTag
+from app.incidents.models import AlertToTag
+from app.incidents.models import Asset
+from app.incidents.models import AssetFieldName
+from app.incidents.models import Case
+from app.incidents.models import CaseAlertLink
+from app.incidents.models import Comment
+from app.incidents.models import FieldName
+from app.incidents.models import TimestampFieldName
+from app.incidents.schema.db_operations import AlertContextCreate
+from app.incidents.schema.db_operations import AlertCreate
+from app.incidents.schema.db_operations import AlertOut
+from app.incidents.schema.db_operations import AlertTagBase
+from app.incidents.schema.db_operations import AlertTagCreate
+from app.incidents.schema.db_operations import AssetBase
+from app.incidents.schema.db_operations import AssetCreate
+from app.incidents.schema.db_operations import CaseAlertLinkCreate
+from app.incidents.schema.db_operations import CaseCreate
+from app.incidents.schema.db_operations import CaseOut
+from app.incidents.schema.db_operations import CommentBase
+from app.incidents.schema.db_operations import CommentCreate
+
 
 async def get_field_names(source: str, session: AsyncSession):
-    result = await session.execute(
-        select(FieldName.field_name).where(FieldName.source == source).distinct()
-    )
+    result = await session.execute(select(FieldName.field_name).where(FieldName.source == source).distinct())
     return result.scalars().all()
+
 
 async def get_asset_names(source: str, session: AsyncSession):
-    result = await session.execute(
-        select(AssetFieldName.field_name).where(AssetFieldName.source == source).distinct()
-    )
+    result = await session.execute(select(AssetFieldName.field_name).where(AssetFieldName.source == source).distinct())
     return result.scalars().all()
 
+
 async def get_timefield_names(source: str, session: AsyncSession):
-    result = await session.execute(
-        select(TimestampFieldName.field_name).where(TimestampFieldName.source == source).distinct()
-    )
+    result = await session.execute(select(TimestampFieldName.field_name).where(TimestampFieldName.source == source).distinct())
     return result.scalars().all()
+
 
 async def add_field_name(source: str, field_name: str, session: AsyncSession):
     result = await session.execute(select(FieldName).where((FieldName.source == source) & (FieldName.field_name == field_name)))
@@ -35,43 +54,51 @@ async def add_field_name(source: str, field_name: str, session: AsyncSession):
         field = FieldName(source=source, field_name=field_name)
         session.add(field)
 
+
 async def add_asset_name(source: str, asset_name: str, session: AsyncSession):
-    result = await session.execute(select(AssetFieldName).where((AssetFieldName.source == source) & (AssetFieldName.field_name == asset_name)))
+    result = await session.execute(
+        select(AssetFieldName).where((AssetFieldName.source == source) & (AssetFieldName.field_name == asset_name)),
+    )
     existing_asset = result.scalars().first()
     if existing_asset is None:
         asset = AssetFieldName(source=source, field_name=asset_name)
         session.add(asset)
 
+
 async def add_timefield_name(source: str, timefield_name: str, session: AsyncSession):
-    result = await session.execute(select(TimestampFieldName).where((TimestampFieldName.source == source) & (TimestampFieldName.field_name == timefield_name)))
+    result = await session.execute(
+        select(TimestampFieldName).where((TimestampFieldName.source == source) & (TimestampFieldName.field_name == timefield_name)),
+    )
     existing_timefield = result.scalars().first()
     if existing_timefield is None:
         timefield = TimestampFieldName(source=source, field_name=timefield_name)
         session.add(timefield)
 
+
 async def delete_field_name(source: str, field_name: str, session: AsyncSession):
-    field = await session.execute(
-        select(FieldName).where((FieldName.source == source) & (FieldName.field_name == field_name))
-    )
+    field = await session.execute(select(FieldName).where((FieldName.source == source) & (FieldName.field_name == field_name)))
     field = field.scalar_one_or_none()
     if field:
         await session.delete(field)
 
+
 async def delete_asset_name(source: str, asset_name: str, session: AsyncSession):
     asset = await session.execute(
-        select(AssetFieldName).where((AssetFieldName.source == source) & (AssetFieldName.field_name == asset_name))
+        select(AssetFieldName).where((AssetFieldName.source == source) & (AssetFieldName.field_name == asset_name)),
     )
     asset = asset.scalar_one_or_none()
     if asset:
         await session.delete(asset)
 
+
 async def delete_timefield_name(source: str, timefield_name: str, session: AsyncSession):
     timefield = await session.execute(
-        select(TimestampFieldName).where((TimestampFieldName.source == source) & (TimestampFieldName.field_name == timefield_name))
+        select(TimestampFieldName).where((TimestampFieldName.source == source) & (TimestampFieldName.field_name == timefield_name)),
     )
     timefield = timefield.scalar_one_or_none()
     if timefield:
         await session.delete(timefield)
+
 
 async def create_alert(alert: AlertCreate, db: AsyncSession) -> Alert:
     db_alert = Alert(**alert.dict())
@@ -84,6 +111,7 @@ async def create_alert(alert: AlertCreate, db: AsyncSession) -> Alert:
         await db.rollback()
         raise HTTPException(status_code=400, detail="Alert already exists")
     return db_alert
+
 
 async def create_comment(comment: CommentCreate, db: AsyncSession) -> Comment:
     # Check if the alert exists
@@ -99,6 +127,7 @@ async def create_comment(comment: CommentCreate, db: AsyncSession) -> Comment:
     except IntegrityError:
         raise HTTPException(status_code=400, detail="Comment already exists")
     return db_comment
+
 
 async def create_asset(asset: AssetCreate, db: AsyncSession) -> Asset:
     # Check if the alert exists
@@ -121,6 +150,7 @@ async def create_asset(asset: AssetCreate, db: AsyncSession) -> Asset:
         raise HTTPException(status_code=400, detail="Asset already exists")
     return db_asset
 
+
 async def create_alert_tag(alert_tag: AlertTagCreate, db: AsyncSession) -> AlertTag:
     # Create the AlertTag instance
     db_alert_tag = AlertTag(**alert_tag.dict())
@@ -137,6 +167,7 @@ async def create_alert_tag(alert_tag: AlertTagCreate, db: AsyncSession) -> Alert
         await db.rollback()
         raise HTTPException(status_code=400, detail="Alert tag already exists")
     return db_alert_tag
+
 
 async def create_alert_context(alert_context: AlertContextCreate, db: AsyncSession) -> AlertContext:
     db_alert_context = AlertContext(**alert_context.dict())
@@ -157,8 +188,8 @@ async def list_alerts(db: AsyncSession) -> List[AlertOut]:
             selectinload(Alert.comments),
             selectinload(Alert.assets),
             selectinload(Alert.cases),
-            selectinload(Alert.tags).selectinload(AlertToTag.tag)
-        )
+            selectinload(Alert.tags).selectinload(AlertToTag.tag),
+        ),
     )
     alerts = result.scalars().all()
     alerts_out = []
@@ -178,7 +209,7 @@ async def list_alerts(db: AsyncSession) -> List[AlertOut]:
             assigned_to=alert.assigned_to,
             comments=comments,
             assets=assets,
-            tags=tags
+            tags=tags,
         )
         alerts_out.append(alert_out)
     return alerts_out
@@ -195,6 +226,7 @@ async def create_case(case: CaseCreate, db: AsyncSession) -> Case:
         await db.rollback()
         raise HTTPException(status_code=400, detail="Case already exists")
     return db_case
+
 
 async def create_case_alert_link(case_alert_link: CaseAlertLinkCreate, db: AsyncSession) -> CaseAlertLink:
     # Check if the case exists
@@ -223,8 +255,8 @@ async def list_cases(db: AsyncSession) -> List[CaseOut]:
         select(Case).options(
             selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.comments),
             selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.assets),
-            selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.tags).selectinload(AlertToTag.tag)
-        )
+            selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.tags).selectinload(AlertToTag.tag),
+        ),
     )
     cases = result.scalars().all()
     cases_out = []
@@ -247,15 +279,11 @@ async def list_cases(db: AsyncSession) -> List[CaseOut]:
                 assigned_to=alert.assigned_to,
                 comments=comments,
                 assets=assets,
-                tags=tags
+                tags=tags,
             )
             alerts_out.append(alert_out)
         case_out = CaseOut(
-            id=case.id,
-            case_name=case.case_name,
-            case_description=case.case_description,
-            assigned_to=case.assigned_to,
-            alerts=alerts_out
+            id=case.id, case_name=case.case_name, case_description=case.case_description, assigned_to=case.assigned_to, alerts=alerts_out,
         )
         cases_out.append(case_out)
     return cases_out

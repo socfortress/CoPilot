@@ -1,15 +1,21 @@
-from pydantic import BaseModel
 from datetime import datetime
-from typing import List, Optional, Dict
 from enum import Enum
+from typing import Dict
+from typing import List
+from typing import Optional
+
+from pydantic import BaseModel
+
 
 class MappingsResponse(BaseModel):
     available_mappings: List[str]
     success: bool
     message: str
 
+
 class ValidSources(str, Enum):
-    WAZUH = 'wazuh'
+    WAZUH = "wazuh"
+
 
 class FieldAndAssetNames(BaseModel):
     field_names: List[str]
@@ -28,15 +34,18 @@ class AlertCreate(BaseModel):
     source: str
     assigned_to: str
 
+
 class CommentCreate(BaseModel):
     alert_id: int
     comment: str
     user_name: str
     created_at: datetime
 
+
 class AlertContextCreate(BaseModel):
     source: str
     context: Dict
+
 
 class CaseCreate(BaseModel):
     case_name: str
@@ -44,6 +53,7 @@ class CaseCreate(BaseModel):
     case_creation_time: datetime
     case_status: str
     assigned_to: str
+
 
 class CaseAlertLinkCreate(BaseModel):
     case_id: int
@@ -60,12 +70,15 @@ class AssetCreate(BaseModel):
     index_name: str
     index_id: str
 
+
 class AlertTagBase(BaseModel):
     tag: str
+
 
 class AlertTagCreate(BaseModel):
     alert_id: int
     tag: str
+
 
 class CommentBase(BaseModel):
     user_name: str
@@ -73,6 +86,7 @@ class CommentBase(BaseModel):
     id: int
     comment: str
     created_at: datetime
+
 
 class AssetBase(BaseModel):
     asset_name: str
@@ -84,6 +98,7 @@ class AssetBase(BaseModel):
     alert_context_id: int
     velociraptor_id: str
     index_name: str
+
 
 class AlertOut(BaseModel):
     id: int

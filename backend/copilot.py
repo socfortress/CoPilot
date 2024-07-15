@@ -45,9 +45,9 @@ from app.routers import dnstwist
 from app.routers import duo
 from app.routers import grafana
 from app.routers import graylog
-from app.routers import incidents
 from app.routers import healthcheck
 from app.routers import huntress
+from app.routers import incidents
 from app.routers import influxdb
 from app.routers import integrations
 from app.routers import license

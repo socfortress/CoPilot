@@ -1,8 +1,17 @@
-from sqlmodel import SQLModel, Field, Relationship, Column, JSON, Text
-from typing import Optional, List, Dict
 from datetime import datetime
+from typing import Dict
+from typing import List
+from typing import Optional
 from uuid import uuid4
-from sqlalchemy import PrimaryKeyConstraint, ForeignKey
+
+from sqlalchemy import ForeignKey
+from sqlalchemy import PrimaryKeyConstraint
+from sqlmodel import JSON
+from sqlmodel import Column
+from sqlmodel import Field
+from sqlmodel import Relationship
+from sqlmodel import SQLModel
+from sqlmodel import Text
 
 
 class Alert(SQLModel, table=True):
@@ -21,6 +30,7 @@ class Alert(SQLModel, table=True):
     assets: List["Asset"] = Relationship(back_populates="alert")
     cases: List["CaseAlertLink"] = Relationship(back_populates="alert")
     tags: List["AlertToTag"] = Relationship(back_populates="alert")
+
 
 class AlertTag(SQLModel, table=True):
     __tablename__ = "incident_management_alerttag"
@@ -75,7 +85,6 @@ class Asset(SQLModel, table=True):
     alert_context: AlertContext = Relationship(back_populates="assets")
 
 
-
 class FieldName(SQLModel, table=True):
     __tablename__ = "incident_management_fieldname"
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -88,6 +97,7 @@ class AssetFieldName(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     source: str = Field(max_length=50, nullable=False)
     field_name: str = Field(max_length=100, nullable=False)
+
 
 class TimestampFieldName(SQLModel, table=True):
     __tablename__ = "incident_management_timestampfieldname"
@@ -116,6 +126,4 @@ class CaseAlertLink(SQLModel, table=True):
     case: Case = Relationship(back_populates="alerts")
     alert: Alert = Relationship(back_populates="cases")
 
-    __table_args__ = (
-        PrimaryKeyConstraint('case_id', 'alert_id'),
-    )
+    __table_args__ = (PrimaryKeyConstraint("case_id", "alert_id"),)

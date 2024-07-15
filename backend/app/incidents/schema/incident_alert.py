@@ -1,4 +1,6 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
+from pydantic import Field
+
 
 class CreateAlertRequest(BaseModel):
     index_name: str = Field(
@@ -6,6 +8,7 @@ class CreateAlertRequest(BaseModel):
         description="The name of the index to search alerts for.",
     )
     alert_id: str = Field(..., description="The alert id.")
+
 
 class CreateAlertResponse(BaseModel):
     success: bool
