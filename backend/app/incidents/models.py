@@ -89,6 +89,12 @@ class AssetFieldName(SQLModel, table=True):
     source: str = Field(max_length=50, nullable=False)
     field_name: str = Field(max_length=100, nullable=False)
 
+class TimestampFieldName(SQLModel, table=True):
+    __tablename__ = "incident_management_timestampfieldname"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    source: str = Field(max_length=50, nullable=False)
+    field_name: str = Field(max_length=100, nullable=False)
+
 
 class Case(SQLModel, table=True):
     __tablename__ = "incident_management_case"
