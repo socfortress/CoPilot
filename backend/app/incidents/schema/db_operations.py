@@ -1,10 +1,20 @@
 from pydantic import BaseModel
 from datetime import datetime
 from typing import List, Optional, Dict
+from enum import Enum
+
+class MappingsResponse(BaseModel):
+    available_mappings: List[str]
+    success: bool
+    message: str
+
+class ValidSources(str, Enum):
+    WAZUH = 'wazuh'
 
 class FieldAndAssetNames(BaseModel):
     field_names: List[str]
     asset_names: List[str]
+    source: ValidSources
 
 
 class AlertCreate(BaseModel):

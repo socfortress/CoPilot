@@ -1,6 +1,7 @@
 from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy import update
 from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
 from typing import List
@@ -8,6 +9,48 @@ from app.incidents.models import (
     Alert, Comment, Asset, AlertContext, FieldName, AssetFieldName, Case, CaseAlertLink, AlertTag, AlertToTag
 )
 from app.incidents.schema.db_operations import CaseAlertLinkCreate, CaseCreate, AlertTagCreate, AlertTagBase, CommentCreate, AssetCreate, CommentBase, AssetBase, AlertOut, AlertCreate, AlertContextCreate, CaseOut
+
+async def get_field_names(source: str, session: AsyncSession):
+    result = await session.execute(
+        select(FieldName.field_name).where(FieldName.source == source).distinct()
+    )
+    return result.scalars().all()
+
+async def get_asset_names(source: str, session: AsyncSession):
+    result = await session.execute(
+        select(AssetFieldName.field_name).where(AssetFieldName.source == source).distinct()
+    )
+    return result.scalars().all()
+
+async def add_field_name(source: str, field_name: str, session: AsyncSession):
+    result = await session.execute(select(FieldName).where((FieldName.source == source) & (FieldName.field_name == field_name)))
+    existing_field = result.scalars().first()
+    if existing_field is None:
+        field = FieldName(source=source, field_name=field_name)
+        session.add(field)
+
+async def add_asset_name(source: str, asset_name: str, session: AsyncSession):
+    result = await session.execute(select(AssetFieldName).where((AssetFieldName.source == source) & (AssetFieldName.field_name == asset_name)))
+    existing_asset = result.scalars().first()
+    if existing_asset is None:
+        asset = AssetFieldName(source=source, field_name=asset_name)
+        session.add(asset)
+
+async def delete_field_name(source: str, field_name: str, session: AsyncSession):
+    field = await session.execute(
+        select(FieldName).where((FieldName.source == source) & (FieldName.field_name == field_name))
+    )
+    field = field.scalar_one_or_none()
+    if field:
+        await session.delete(field)
+
+async def delete_asset_name(source: str, asset_name: str, session: AsyncSession):
+    asset = await session.execute(
+        select(AssetFieldName).where((AssetFieldName.source == source) & (AssetFieldName.field_name == asset_name))
+    )
+    asset = asset.scalar_one_or_none()
+    if asset:
+        await session.delete(asset)
 
 async def create_alert(alert: AlertCreate, db: AsyncSession) -> Alert:
     db_alert = Alert(**alert.dict())
