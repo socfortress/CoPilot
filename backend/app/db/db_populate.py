@@ -160,8 +160,10 @@ async def add_connectors_if_not_exist(session: AsyncSession):
         None
     """
     connector_list = get_connectors_list()
+    logger.info("Checking for existence of connectors.")
 
     for connector_data in connector_list:
+        logger.info(f"Checking for existence of connector {connector_data['connector_name']}")
         query = select(Connectors).where(
             Connectors.connector_name == connector_data["connector_name"],
         )

@@ -45,6 +45,7 @@ from app.routers import dnstwist
 from app.routers import duo
 from app.routers import grafana
 from app.routers import graylog
+from app.routers import incidents
 from app.routers import healthcheck
 from app.routers import huntress
 from app.routers import influxdb
@@ -149,6 +150,7 @@ api_router.include_router(crowdstrike.router)
 api_router.include_router(scoutsuite.router)
 api_router.include_router(nuclei.router)
 api_router.include_router(duo.router)
+api_router.include_router(incidents.router)
 api_router.include_router(darktrace.router)
 
 # Include the APIRouter in the FastAPI app
