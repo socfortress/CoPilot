@@ -7,7 +7,7 @@ from typing import List
 from app.incidents.models import (
     Alert, Comment, Asset, AlertContext, FieldName, AssetFieldName, Case, CaseAlertLink, AlertTag, AlertToTag
 )
-from app.incidents.schema.db_operations import AlertTagCreate, AlertTagBase, CommentCreate, AssetCreate, CommentBase, AssetBase, AlertOut, AlertCreate, AlertContextCreate
+from app.incidents.schema.db_operations import CaseAlertLinkCreate, CaseCreate, AlertTagCreate, AlertTagBase, CommentCreate, AssetCreate, CommentBase, AssetBase, AlertOut, AlertCreate, AlertContextCreate, CaseOut
 
 async def create_alert(alert: AlertCreate, db: AsyncSession) -> Alert:
     db_alert = Alert(**alert.dict())
@@ -118,3 +118,77 @@ async def list_alerts(db: AsyncSession) -> List[AlertOut]:
         alerts_out.append(alert_out)
     return alerts_out
 
+
+async def create_case(case: CaseCreate, db: AsyncSession) -> Case:
+    db_case = Case(**case.dict())
+    db.add(db_case)
+    try:
+        await db.flush()
+        await db.refresh(db_case)
+        await db.commit()
+    except IntegrityError:
+        await db.rollback()
+        raise HTTPException(status_code=400, detail="Case already exists")
+    return db_case
+
+async def create_case_alert_link(case_alert_link: CaseAlertLinkCreate, db: AsyncSession) -> CaseAlertLink:
+    # Check if the case exists
+    result = await db.execute(select(Case).where(Case.id == case_alert_link.case_id))
+    case = result.scalars().first()
+    if not case:
+        raise HTTPException(status_code=404, detail="Case not found")
+
+    # Check if the alert exists
+    result = await db.execute(select(Alert).where(Alert.id == case_alert_link.alert_id))
+    alert = result.scalars().first()
+    if not alert:
+        raise HTTPException(status_code=404, detail="Alert not found")
+
+    db_case_alert_link = CaseAlertLink(**case_alert_link.dict())
+    db.add(db_case_alert_link)
+    try:
+        await db.commit()
+    except IntegrityError:
+        raise HTTPException(status_code=400, detail="Case alert link already exists")
+    return db_case_alert_link
+
+
+async def list_cases(db: AsyncSession) -> List[CaseOut]:
+    result = await db.execute(
+        select(Case).options(
+            selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.comments),
+            selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.assets),
+            selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.tags).selectinload(AlertToTag.tag)
+        )
+    )
+    cases = result.scalars().all()
+    cases_out = []
+    for case in cases:
+        alerts_out = []
+        for case_alert_link in case.alerts:
+            alert = case_alert_link.alert
+            comments = [CommentBase(**comment.__dict__) for comment in alert.comments]
+            assets = [AssetBase(**asset.__dict__) for asset in alert.assets]
+            tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
+            alert_out = AlertOut(
+                id=alert.id,
+                alert_creation_time=alert.alert_creation_time,
+                time_closed=alert.time_closed,
+                alert_name=alert.alert_name,
+                alert_description=alert.alert_description,
+                status=alert.status,
+                customer_code=alert.customer_code,
+                source=alert.source,
+                comments=comments,
+                assets=assets,
+                tags=tags
+            )
+            alerts_out.append(alert_out)
+        case_out = CaseOut(
+            id=case.id,
+            case_name=case.case_name,
+            case_description=case.case_description,
+            alerts=alerts_out
+        )
+        cases_out.append(case_out)
+    return cases_out
