@@ -41,7 +41,7 @@ from app.network_connectors.models.network_connectors import (
 )
 from app.schedulers.models.scheduler import JobMetadata
 from app.incidents.models import (
-    Alert, Comment, Asset, AlertContext, FieldName, AssetFieldName, Case, CaseAlertLink
+    Alert, Comment, Asset, AlertContext, FieldName, AssetFieldName, Case, CaseAlertLink, AlertTag, AlertToTag
 )
 
 

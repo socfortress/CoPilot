@@ -27,6 +27,7 @@ class AlertContextCreate(BaseModel):
     context: Dict
 
 
+
 class AssetCreate(BaseModel):
     alert_linked: int
     asset_name: str
@@ -36,6 +37,13 @@ class AssetCreate(BaseModel):
     customer_code: str
     index_name: str
     index_id: str
+
+class AlertTagBase(BaseModel):
+    tag: str
+
+class AlertTagCreate(BaseModel):
+    alert_id: int
+    tag: str
 
 class CommentBase(BaseModel):
     user_name: str
@@ -66,3 +74,4 @@ class AlertOut(BaseModel):
     source: str
     comments: List[CommentBase] = []
     assets: List[AssetBase] = []
+    tags: List[AlertTagBase] = []

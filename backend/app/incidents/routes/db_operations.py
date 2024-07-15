@@ -9,10 +9,10 @@ from app.auth.utils import AuthHandler
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.db_session import get_db
 from app.incidents.models import (
-    Alert, Comment, Asset, AlertContext, FieldName, AssetFieldName, Case, CaseAlertLink
+    Alert, Comment, Asset, AlertContext, FieldName, AssetFieldName, Case, CaseAlertLink, AlertTag
 )
-from app.incidents.schema.db_operations import CommentCreate, AssetCreate, CommentBase, AssetBase, AlertOut, FieldAndAssetNames, AlertCreate, AlertContextCreate
-from app.incidents.services.db_operations import create_alert, create_comment, create_asset, list_alerts, create_alert_context
+from app.incidents.schema.db_operations import CommentCreate, AssetCreate, CommentBase, AssetBase, AlertOut, FieldAndAssetNames, AlertCreate, AlertContextCreate, AlertTagCreate
+from app.incidents.services.db_operations import create_alert, create_comment, create_asset, list_alerts, create_alert_context, create_alert_tag
 
 incidents_db_operations_router = APIRouter()
 
@@ -45,6 +45,10 @@ async def create_alert_context_endpoint(alert_context: AlertContextCreate, db: A
 @incidents_db_operations_router.post("/alert/asset", response_model=Asset)
 async def create_asset_endpoint(asset: AssetCreate, db: AsyncSession = Depends(get_db)):
     return await create_asset(asset, db)
+
+@incidents_db_operations_router.post("/alert/tag", response_model=AlertTag)
+async def create_alert_tag_endpoint(alert_tag: AlertTagCreate, db: AsyncSession = Depends(get_db)):
+    return await create_alert_tag(alert_tag, db)
 
 @incidents_db_operations_router.get("/alerts/", response_model=List[AlertOut])
 async def list_alerts_endpoint(db: AsyncSession = Depends(get_db)):

@@ -19,6 +19,23 @@ class Alert(SQLModel, table=True):
     comments: List["Comment"] = Relationship(back_populates="alert")
     assets: List["Asset"] = Relationship(back_populates="alert")
     cases: List["CaseAlertLink"] = Relationship(back_populates="alert")
+    tags: List["AlertToTag"] = Relationship(back_populates="alert")
+
+class AlertTag(SQLModel, table=True):
+    __tablename__ = "incident_management_alerttag"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    tag: str = Field(max_length=50, nullable=False)
+
+    alerts: List["AlertToTag"] = Relationship(back_populates="tag")
+
+
+class AlertToTag(SQLModel, table=True):
+    __tablename__ = "incident_management_alert_to_tag"
+    alert_id: int = Field(foreign_key="incident_management_alert.id", primary_key=True)
+    tag_id: int = Field(foreign_key="incident_management_alerttag.id", primary_key=True)
+
+    alert: Alert = Relationship(back_populates="tags")
+    tag: AlertTag = Relationship(back_populates="alerts")
 
 
 class Comment(SQLModel, table=True):
