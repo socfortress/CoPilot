@@ -25,6 +25,7 @@ class AlertCreate(BaseModel):
     customer_code: str
     time_closed: Optional[datetime]
     source: str
+    assigned_to: str
 
 class CommentCreate(BaseModel):
     alert_id: int
@@ -39,6 +40,9 @@ class AlertContextCreate(BaseModel):
 class CaseCreate(BaseModel):
     case_name: str
     case_description: str
+    case_creation_time: datetime
+    case_status: str
+    assigned_to: str
 
 class CaseAlertLinkCreate(BaseModel):
     case_id: int
@@ -89,6 +93,7 @@ class AlertOut(BaseModel):
     status: str
     customer_code: str
     source: str
+    assigned_to: str
     comments: List[CommentBase] = []
     assets: List[AssetBase] = []
     tags: List[AlertTagBase] = []
@@ -98,4 +103,5 @@ class CaseOut(BaseModel):
     id: int
     case_name: str
     case_description: str
+    assigned_to: str
     alerts: List[AlertOut]

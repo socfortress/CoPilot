@@ -154,6 +154,7 @@ async def list_alerts(db: AsyncSession) -> List[AlertOut]:
             status=alert.status,
             customer_code=alert.customer_code,
             source=alert.source,
+            assigned_to=alert.assigned_to,
             comments=comments,
             assets=assets,
             tags=tags
@@ -222,6 +223,7 @@ async def list_cases(db: AsyncSession) -> List[CaseOut]:
                 status=alert.status,
                 customer_code=alert.customer_code,
                 source=alert.source,
+                assigned_to=alert.assigned_to,
                 comments=comments,
                 assets=assets,
                 tags=tags
@@ -231,6 +233,7 @@ async def list_cases(db: AsyncSession) -> List[CaseOut]:
             id=case.id,
             case_name=case.case_name,
             case_description=case.case_description,
+            assigned_to=case.assigned_to,
             alerts=alerts_out
         )
         cases_out.append(case_out)
