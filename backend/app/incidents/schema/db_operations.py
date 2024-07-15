@@ -14,6 +14,7 @@ class ValidSources(str, Enum):
 class FieldAndAssetNames(BaseModel):
     field_names: List[str]
     asset_names: List[str]
+    timefield_name: str
     source: ValidSources
 
 

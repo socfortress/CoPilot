@@ -6,7 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from fastapi import HTTPException
 from typing import List
 from app.incidents.models import (
-    Alert, Comment, Asset, AlertContext, FieldName, AssetFieldName, Case, CaseAlertLink, AlertTag, AlertToTag
+    Alert, Comment, Asset, AlertContext, FieldName, AssetFieldName, Case, CaseAlertLink, AlertTag, AlertToTag, TimestampFieldName
 )
 from app.incidents.schema.db_operations import CaseAlertLinkCreate, CaseCreate, AlertTagCreate, AlertTagBase, CommentCreate, AssetCreate, CommentBase, AssetBase, AlertOut, AlertCreate, AlertContextCreate, CaseOut
 
@@ -19,6 +19,12 @@ async def get_field_names(source: str, session: AsyncSession):
 async def get_asset_names(source: str, session: AsyncSession):
     result = await session.execute(
         select(AssetFieldName.field_name).where(AssetFieldName.source == source).distinct()
+    )
+    return result.scalars().all()
+
+async def get_timefield_names(source: str, session: AsyncSession):
+    result = await session.execute(
+        select(TimestampFieldName.field_name).where(TimestampFieldName.source == source).distinct()
     )
     return result.scalars().all()
 
@@ -36,6 +42,13 @@ async def add_asset_name(source: str, asset_name: str, session: AsyncSession):
         asset = AssetFieldName(source=source, field_name=asset_name)
         session.add(asset)
 
+async def add_timefield_name(source: str, timefield_name: str, session: AsyncSession):
+    result = await session.execute(select(TimestampFieldName).where((TimestampFieldName.source == source) & (TimestampFieldName.field_name == timefield_name)))
+    existing_timefield = result.scalars().first()
+    if existing_timefield is None:
+        timefield = TimestampFieldName(source=source, field_name=timefield_name)
+        session.add(timefield)
+
 async def delete_field_name(source: str, field_name: str, session: AsyncSession):
     field = await session.execute(
         select(FieldName).where((FieldName.source == source) & (FieldName.field_name == field_name))
@@ -51,6 +64,14 @@ async def delete_asset_name(source: str, asset_name: str, session: AsyncSession)
     asset = asset.scalar_one_or_none()
     if asset:
         await session.delete(asset)
+
+async def delete_timefield_name(source: str, timefield_name: str, session: AsyncSession):
+    timefield = await session.execute(
+        select(TimestampFieldName).where((TimestampFieldName.source == source) & (TimestampFieldName.field_name == timefield_name))
+    )
+    timefield = timefield.scalar_one_or_none()
+    if timefield:
+        await session.delete(timefield)
 
 async def create_alert(alert: AlertCreate, db: AsyncSession) -> Alert:
     db_alert = Alert(**alert.dict())
