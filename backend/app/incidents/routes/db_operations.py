@@ -63,7 +63,7 @@ async def get_wazuh_fields_and_assets(index_id: str, session: AsyncSession = Dep
 
 
 @incidents_db_operations_router.get("/fields-assets-and-timefield")
-async def get_wazuh_fields_and_assets(source: str, session: AsyncSession = Depends(get_db)):
+async def get_source_fields_and_assets(source: str, session: AsyncSession = Depends(get_db)):
     field_names = await get_field_names(source, session)
     asset_names = await get_asset_names(source, session)
     timefield_names = await get_timefield_names(source, session)

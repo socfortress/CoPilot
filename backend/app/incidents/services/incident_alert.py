@@ -11,16 +11,19 @@ from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
 from app.connectors.dfir_iris.utils.universal import initialize_client_and_alert
 from app.connectors.utils import get_connector_info_from_db
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
+from app.incidents.services.db_operations import get_asset_names
+from app.incidents.services.db_operations import get_field_names
+from app.incidents.services.db_operations import get_timefield_names
 from app.db.universal_models import Agents
 from app.incidents.schema.incident_alert import CreateAlertRequest
-from app.incidents.schema.incident_alert import CreateAlertResponse
+from app.incidents.schema.incident_alert import CreateAlertResponse, FieldNames, ValidSyslogType
 from app.integrations.alert_creation.general.schema.alert import IrisAsset
 from app.integrations.alert_creation_settings.models.alert_creation_settings import (
     AlertCreationSettings,
 )
 from app.integrations.alert_escalation.schema.escalate_alert import CustomerCodeKeys
-from app.integrations.alert_escalation.schema.escalate_alert import GenericAlertModel
-from app.integrations.alert_escalation.schema.escalate_alert import GenericSourceModel
+from app.incidents.schema.incident_alert import GenericAlertModel
+from app.incidents.schema.incident_alert import GenericSourceModel
 from app.integrations.alert_escalation.schema.escalate_alert import IrisAlertContext
 from app.integrations.alert_escalation.schema.escalate_alert import IrisAlertPayload
 from app.integrations.alert_escalation.schema.escalate_alert import SourceFieldsToRemove
@@ -108,6 +111,7 @@ async def get_single_alert_details(
             _version=alert["_version"],
             rule_description=source_model.rule_description,
             syslog_level=source_model.syslog_level,
+            syslog_type=source_model.syslog_type,
         )
     except Exception as e:
         logger.debug(f"Failed to collect alert details: {e}")
@@ -453,6 +457,40 @@ async def add_asset_if_wazuh(alert_details: GenericAlertModel, alert_id: int, ir
     logger.info(f"Alert {alert_id} is not from Wazuh. Skipping asset addition.")
     return None
 
+async def validate_syslog_type(syslog_type: str) -> bool:
+    """
+    Validate the syslog type.
+
+    Args:
+        syslog_type (str): The syslog type.
+
+    Returns:
+        bool: True if the syslog type is valid, False otherwise.
+    """
+    for syslog in ValidSyslogType:
+        if syslog.value == syslog_type:
+            return True
+    raise HTTPException(
+        status_code=400,
+        detail=f"Invalid syslog type: {syslog_type}. Must be one of {', '.join([syslog.value for syslog in ValidSyslogType])}",
+    )
+
+async def get_all_field_names(syslog_type: str, session: AsyncSession) -> FieldNames:
+    """
+    Get the field names for the given syslog type.
+
+    Args:
+        syslog_type (str): The syslog type.
+        session (AsyncSession): The database session.
+
+    Returns:
+        FieldNames: The field names.
+    """
+    return FieldNames(
+        field_names=await get_field_names(syslog_type, session),
+        asset_names=await get_asset_names(syslog_type, session),
+        timefield_names=await get_timefield_names(syslog_type, session),
+    )
 
 async def create_alert(
     alert: CreateAlertRequest,
@@ -471,14 +509,17 @@ async def create_alert(
     Raises:
         HTTPException: If there is an error creating the alert.
     """
-    logger.info(f"Creating alert {alert.alert_id} in IRIS")
+    logger.info(f"Creating alert {alert.alert_id} in CoPilot")
     alert_details = await get_single_alert_details(alert_details=alert)
     logger.info(f"Alert details: {alert_details}")
-
+    await validate_syslog_type(alert_details.syslog_type)
     customer_code = await get_customer_code(dict(alert_details._source))
     logger.info(f"Customer code: {customer_code}")
     customer_alert_creation_settings = await is_customer_code_valid(customer_code=customer_code, session=session)
     logger.info(f"Customer creation settings: {customer_alert_creation_settings}")
+    field_names = await get_all_field_names(alert_details.syslog_type, session)
+    logger.info(f'Field Names {field_names}')
+    return None
     iris_alert_payload = await build_alert_payload(
         alert_details=alert_details,
         customer_alert_creation_settings=customer_alert_creation_settings,
