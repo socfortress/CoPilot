@@ -39,7 +39,7 @@ from app.incidents.services.db_operations import add_field_name
 from app.incidents.services.db_operations import add_timefield_name, add_alert_title_name
 from app.incidents.services.db_operations import create_alert
 from app.incidents.services.db_operations import create_alert_context
-from app.incidents.services.db_operations import create_alert_tag
+from app.incidents.services.db_operations import create_alert_tag, get_alert_context_by_id
 from app.incidents.services.db_operations import create_asset
 from app.incidents.services.db_operations import create_case
 from app.incidents.services.db_operations import create_case_alert_link
@@ -121,6 +121,10 @@ async def create_comment_endpoint(comment: CommentCreate, db: AsyncSession = Dep
 @incidents_db_operations_router.post("/alert/context", response_model=AlertContext)
 async def create_alert_context_endpoint(alert_context: AlertContextCreate, db: AsyncSession = Depends(get_db)):
     return await create_alert_context(alert_context, db)
+
+@incidents_db_operations_router.get("/alert/context/{alert_context_id}", response_model=AlertContext)
+async def get_alert_context_by_id_endpoint(alert_context_id: int, db: AsyncSession = Depends(get_db)):
+    return await get_alert_context_by_id(alert_context_id, db)
 
 
 @incidents_db_operations_router.post("/alert/asset", response_model=Asset)

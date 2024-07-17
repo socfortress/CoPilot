@@ -318,3 +318,11 @@ async def list_cases(db: AsyncSession) -> List[CaseOut]:
         )
         cases_out.append(case_out)
     return cases_out
+
+
+async def get_alert_context_by_id(alert_context_id: int, db: AsyncSession) -> AlertContext:
+    result = await db.execute(select(AlertContext).where(AlertContext.id == alert_context_id))
+    alert_context = result.scalars().first()
+    if not alert_context:
+        raise HTTPException(status_code=404, detail="Alert context not found")
+    return alert_context
