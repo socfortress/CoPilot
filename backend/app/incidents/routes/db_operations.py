@@ -90,7 +90,7 @@ async def create_wazuh_fields_and_assets(names: FieldAndAssetNames, session: Asy
 
     await session.commit()
 
-    return {"message": "Field names and asset names created successfully"}
+    return {"message": "Field names and asset names created successfully", "success": True}
 
 
 @incidents_db_operations_router.delete("/delete-fields-assets-title-and-timefield")
@@ -106,7 +106,7 @@ async def delete_wazuh_fields_and_assets(names: FieldAndAssetNames, session: Asy
 
     await session.commit()
 
-    return {"message": "Field names and asset names deleted successfully"}
+    return {"message": "Field names and asset names deleted successfully", "success": True}
 
 
 @incidents_db_operations_router.post("/alert/", response_model=Alert)
