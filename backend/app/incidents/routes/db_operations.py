@@ -47,7 +47,7 @@ from app.incidents.services.db_operations import create_comment
 from app.incidents.services.db_operations import delete_asset_name
 from app.incidents.services.db_operations import delete_field_name
 from app.incidents.services.db_operations import delete_timefield_name, delete_alert_title_name
-from app.incidents.services.db_operations import get_asset_names
+from app.incidents.services.db_operations import get_asset_names, validate_source_exists
 from app.incidents.services.db_operations import get_field_names
 from app.incidents.services.db_operations import get_timefield_names, get_alert_title_names
 from app.incidents.services.db_operations import list_alerts
@@ -64,8 +64,7 @@ async def get_wazuh_fields_and_assets(index_id: str, session: AsyncSession = Dep
 
 @incidents_db_operations_router.get("/fields-assets-title-and-timefield", response_model=FieldAndAssetNamesResponse)
 async def get_source_fields_and_assets(source: str, session: AsyncSession = Depends(get_db)):
-    asset_name = await get_asset_names(source, session)
-    logger.info(f'asset name: {asset_name}')
+    await validate_source_exists(source, session)
     return FieldAndAssetNamesResponse(
         field_names=await get_field_names(source, session),
         asset_name=await get_asset_names(source, session),

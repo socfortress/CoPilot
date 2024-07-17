@@ -31,6 +31,16 @@ from app.incidents.schema.db_operations import CaseOut
 from app.incidents.schema.db_operations import CommentBase
 from app.incidents.schema.db_operations import CommentCreate
 
+async def validate_source_exists(source: str, session: AsyncSession):
+    # Check each of the FieldName tables and ensure each contains at least one entry for the source
+    field_names = await get_field_names(source, session)
+    asset_names = await get_asset_names(source, session)
+    timefield_names = await get_timefield_names(source, session)
+    alert_title_names = await get_alert_title_names(source, session)
+
+    if not field_names or not asset_names or not timefield_names or not alert_title_names:
+        raise HTTPException(status_code=400, detail="Source does not exist")
+
 
 async def get_field_names(source: str, session: AsyncSession):
     result = await session.execute(select(FieldName.field_name).where(FieldName.source == source).distinct())
