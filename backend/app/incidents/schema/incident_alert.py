@@ -92,3 +92,8 @@ class GenericAlertModel(BaseModel):
 
     class Config:
         extra = Extra.allow
+
+class CreatedAlertPayload(BaseModel):
+    alert_context_payload: dict
+    asset_payload: dict
+    timefield_payload: dict

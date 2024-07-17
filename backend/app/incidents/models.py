@@ -105,6 +105,12 @@ class TimestampFieldName(SQLModel, table=True):
     source: str = Field(max_length=50, nullable=False)
     field_name: str = Field(max_length=100, nullable=False)
 
+class AlertTitleFieldName(SQLModel, table=True):
+    __tablename__ = "incident_management_alerttitlefieldname"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    source: str = Field(max_length=50, nullable=False)
+    field_name: str = Field(max_length=100, nullable=False)
+
 
 class Case(SQLModel, table=True):
     __tablename__ = "incident_management_case"

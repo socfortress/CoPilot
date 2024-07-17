@@ -3,8 +3,9 @@ from enum import Enum
 from typing import Dict
 from typing import List
 from typing import Optional
+from fastapi import HTTPException
 
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 
 
 class MappingsResponse(BaseModel):
@@ -18,10 +19,16 @@ class ValidSources(str, Enum):
 
 
 class FieldAndAssetNames(BaseModel):
-    field_names: List[str]
-    asset_names: List[str]
-    timefield_name: str
+    field_names: Optional[List[str]] = []
+    asset_names: Optional[List[str]] = []
+    timefield_name: Optional[str] = None
     source: ValidSources
+
+    @validator('asset_names', 'timefield_name')
+    def validate_single_value(cls, value):
+        if isinstance(value, list) and len(value) > 1:
+            raise HTTPException(status_code=400, detail="Only one value is allowed for asset_names and timefield_name")
+        return value
 
 
 class AlertCreate(BaseModel):
