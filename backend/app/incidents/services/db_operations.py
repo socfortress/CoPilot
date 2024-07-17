@@ -10,6 +10,7 @@ from sqlalchemy.orm import selectinload
 from app.incidents.models import Alert
 from app.incidents.models import AlertContext
 from app.incidents.models import AlertTag
+from app.incidents.models import AlertTitleFieldName
 from app.incidents.models import AlertToTag
 from app.incidents.models import Asset
 from app.incidents.models import AssetFieldName
@@ -17,7 +18,7 @@ from app.incidents.models import Case
 from app.incidents.models import CaseAlertLink
 from app.incidents.models import Comment
 from app.incidents.models import FieldName
-from app.incidents.models import TimestampFieldName, AlertTitleFieldName
+from app.incidents.models import TimestampFieldName
 from app.incidents.schema.db_operations import AlertContextCreate
 from app.incidents.schema.db_operations import AlertCreate
 from app.incidents.schema.db_operations import AlertOut
@@ -30,6 +31,7 @@ from app.incidents.schema.db_operations import CaseCreate
 from app.incidents.schema.db_operations import CaseOut
 from app.incidents.schema.db_operations import CommentBase
 from app.incidents.schema.db_operations import CommentCreate
+
 
 async def validate_source_exists(source: str, session: AsyncSession):
     # Check each of the FieldName tables and ensure each contains at least one entry for the source
@@ -55,6 +57,7 @@ async def get_asset_names(source: str, session: AsyncSession):
 async def get_timefield_names(source: str, session: AsyncSession):
     result = await session.execute(select(TimestampFieldName.field_name).where(TimestampFieldName.source == source).distinct())
     return result.scalars().first()
+
 
 async def get_alert_title_names(source: str, session: AsyncSession):
     result = await session.execute(select(AlertTitleFieldName.field_name).where(AlertTitleFieldName.source == source).distinct())
@@ -87,6 +90,7 @@ async def add_timefield_name(source: str, timefield_name: str, session: AsyncSes
     if existing_timefield is None:
         timefield = TimestampFieldName(source=source, field_name=timefield_name)
         session.add(timefield)
+
 
 async def add_alert_title_name(source: str, alert_title_name: str, session: AsyncSession):
     result = await session.execute(
@@ -121,6 +125,7 @@ async def delete_timefield_name(source: str, timefield_name: str, session: Async
     timefield = timefield.scalar_one_or_none()
     if timefield:
         await session.delete(timefield)
+
 
 async def delete_alert_title_name(source: str, alert_title_name: str, session: AsyncSession):
     alert_title = await session.execute(
@@ -314,7 +319,11 @@ async def list_cases(db: AsyncSession) -> List[CaseOut]:
             )
             alerts_out.append(alert_out)
         case_out = CaseOut(
-            id=case.id, case_name=case.case_name, case_description=case.case_description, assigned_to=case.assigned_to, alerts=alerts_out,
+            id=case.id,
+            case_name=case.case_name,
+            case_description=case.case_description,
+            assigned_to=case.assigned_to,
+            alerts=alerts_out,
         )
         cases_out.append(case_out)
     return cases_out

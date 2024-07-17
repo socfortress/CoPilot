@@ -3,9 +3,8 @@ from enum import Enum
 from typing import Dict
 from typing import List
 from typing import Optional
-from fastapi import HTTPException
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel
 
 
 class MappingsResponse(BaseModel):
@@ -24,6 +23,7 @@ class FieldAndAssetNames(BaseModel):
     timefield_name: str
     alert_title_name: str
     source: ValidSources
+
 
 class FieldAndAssetNamesResponse(BaseModel):
     field_names: List[str]

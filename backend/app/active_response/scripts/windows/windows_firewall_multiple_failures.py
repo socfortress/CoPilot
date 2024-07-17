@@ -106,7 +106,7 @@ def extract_alert_info(msg, argv):
     try:
         alert = msg.alert["parameters"]["alert"]
         action = "block"
-        '''Extract the IP'''
+        """Extract the IP"""
         ip = alert["data"]["win"]["eventdata"]["ipAddress"]
     except KeyError as e:
         write_debug_file(argv[0], f"Missing key in alert message: {str(e)}")

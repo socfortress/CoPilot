@@ -28,30 +28,36 @@ from app.incidents.schema.db_operations import AlertTagCreate
 from app.incidents.schema.db_operations import AssetBase
 from app.incidents.schema.db_operations import AssetCreate
 from app.incidents.schema.db_operations import CaseAlertLinkCreate
-from app.incidents.schema.db_operations import CaseCreate, FieldAndAssetNamesResponse
+from app.incidents.schema.db_operations import CaseCreate
 from app.incidents.schema.db_operations import CaseOut
 from app.incidents.schema.db_operations import CommentBase
 from app.incidents.schema.db_operations import CommentCreate
 from app.incidents.schema.db_operations import FieldAndAssetNames
+from app.incidents.schema.db_operations import FieldAndAssetNamesResponse
 from app.incidents.schema.db_operations import MappingsResponse
+from app.incidents.services.db_operations import add_alert_title_name
 from app.incidents.services.db_operations import add_asset_name
 from app.incidents.services.db_operations import add_field_name
-from app.incidents.services.db_operations import add_timefield_name, add_alert_title_name
+from app.incidents.services.db_operations import add_timefield_name
 from app.incidents.services.db_operations import create_alert
 from app.incidents.services.db_operations import create_alert_context
-from app.incidents.services.db_operations import create_alert_tag, get_alert_context_by_id
+from app.incidents.services.db_operations import create_alert_tag
 from app.incidents.services.db_operations import create_asset
 from app.incidents.services.db_operations import create_case
 from app.incidents.services.db_operations import create_case_alert_link
 from app.incidents.services.db_operations import create_comment
+from app.incidents.services.db_operations import delete_alert_title_name
 from app.incidents.services.db_operations import delete_asset_name
 from app.incidents.services.db_operations import delete_field_name
-from app.incidents.services.db_operations import delete_timefield_name, delete_alert_title_name
-from app.incidents.services.db_operations import get_asset_names, validate_source_exists
+from app.incidents.services.db_operations import delete_timefield_name
+from app.incidents.services.db_operations import get_alert_context_by_id
+from app.incidents.services.db_operations import get_alert_title_names
+from app.incidents.services.db_operations import get_asset_names
 from app.incidents.services.db_operations import get_field_names
-from app.incidents.services.db_operations import get_timefield_names, get_alert_title_names
+from app.incidents.services.db_operations import get_timefield_names
 from app.incidents.services.db_operations import list_alerts
 from app.incidents.services.db_operations import list_cases
+from app.incidents.services.db_operations import validate_source_exists
 
 incidents_db_operations_router = APIRouter()
 
@@ -121,6 +127,7 @@ async def create_comment_endpoint(comment: CommentCreate, db: AsyncSession = Dep
 @incidents_db_operations_router.post("/alert/context", response_model=AlertContext)
 async def create_alert_context_endpoint(alert_context: AlertContextCreate, db: AsyncSession = Depends(get_db)):
     return await create_alert_context(alert_context, db)
+
 
 @incidents_db_operations_router.get("/alert/context/{alert_context_id}", response_model=AlertContext)
 async def get_alert_context_by_id_endpoint(alert_context_id: int, db: AsyncSession = Depends(get_db)):

@@ -8,8 +8,10 @@ from pydantic import BaseModel
 from pydantic import Extra
 from pydantic import Field
 
+
 class ValidSyslogType(str, Enum):
-    WAZUH = 'wazuh'
+    WAZUH = "wazuh"
+
 
 class CreateAlertRequest(BaseModel):
     index_name: str = Field(
@@ -23,6 +25,7 @@ class CreateAlertResponse(BaseModel):
     success: bool
     message: str
     alert_id: int = Field(..., description="The alert id as created in CoPilot.")
+
 
 class FieldNames(BaseModel):
     field_names: List[str]
@@ -93,6 +96,7 @@ class GenericAlertModel(BaseModel):
 
     class Config:
         extra = Extra.allow
+
 
 class CreatedAlertPayload(BaseModel):
     alert_context_payload: dict

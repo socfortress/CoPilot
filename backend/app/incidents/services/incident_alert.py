@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 from typing import List
 from typing import Optional
 
@@ -11,21 +12,26 @@ from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
 from app.connectors.dfir_iris.utils.universal import initialize_client_and_alert
 from app.connectors.utils import get_connector_info_from_db
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
-from app.incidents.services.db_operations import get_asset_names, get_alert_title_names
+from app.db.universal_models import Agents
+from app.incidents.models import Alert
+from app.incidents.models import AlertContext
+from app.incidents.models import Asset
+from app.incidents.schema.incident_alert import CreateAlertRequest
+from app.incidents.schema.incident_alert import CreateAlertResponse
+from app.incidents.schema.incident_alert import CreatedAlertPayload
+from app.incidents.schema.incident_alert import FieldNames
+from app.incidents.schema.incident_alert import GenericAlertModel
+from app.incidents.schema.incident_alert import GenericSourceModel
+from app.incidents.schema.incident_alert import ValidSyslogType
+from app.incidents.services.db_operations import get_alert_title_names
+from app.incidents.services.db_operations import get_asset_names
 from app.incidents.services.db_operations import get_field_names
 from app.incidents.services.db_operations import get_timefield_names
-from app.db.universal_models import Agents
-from datetime import datetime
-from app.incidents.models import AlertContext, Asset, Alert
-from app.incidents.schema.incident_alert import CreateAlertRequest
-from app.incidents.schema.incident_alert import CreateAlertResponse, FieldNames, ValidSyslogType, CreatedAlertPayload
 from app.integrations.alert_creation.general.schema.alert import IrisAsset
 from app.integrations.alert_creation_settings.models.alert_creation_settings import (
     AlertCreationSettings,
 )
 from app.integrations.alert_escalation.schema.escalate_alert import CustomerCodeKeys
-from app.incidents.schema.incident_alert import GenericAlertModel
-from app.incidents.schema.incident_alert import GenericSourceModel
 from app.integrations.alert_escalation.schema.escalate_alert import IrisAlertContext
 from app.integrations.alert_escalation.schema.escalate_alert import IrisAlertPayload
 from app.integrations.alert_escalation.schema.escalate_alert import SourceFieldsToRemove
@@ -459,6 +465,7 @@ async def add_asset_if_wazuh(alert_details: GenericAlertModel, alert_id: int, ir
     logger.info(f"Alert {alert_id} is not from Wazuh. Skipping asset addition.")
     return None
 
+
 async def validate_syslog_type(syslog_type: str) -> bool:
     """
     Validate the syslog type.
@@ -476,6 +483,7 @@ async def validate_syslog_type(syslog_type: str) -> bool:
         status_code=400,
         detail=f"Invalid syslog type: {syslog_type}. Must be one of {', '.join([syslog.value for syslog in ValidSyslogType])}",
     )
+
 
 async def get_all_field_names(syslog_type: str, session: AsyncSession) -> FieldNames:
     """
@@ -495,7 +503,10 @@ async def get_all_field_names(syslog_type: str, session: AsyncSession) -> FieldN
         alert_title_name=await get_alert_title_names(syslog_type, session),
     )
 
-async def build_alert_payload(syslog_type: str, index_name: str, index_id: str, alert_payload: dict, session: AsyncSession) -> CreatedAlertPayload:
+
+async def build_alert_payload(
+    syslog_type: str, index_name: str, index_id: str, alert_payload: dict, session: AsyncSession,
+) -> CreatedAlertPayload:
     """
     Build the alert payload based on the syslog type and the alert payload.
 
@@ -543,8 +554,14 @@ async def create_alert_full(alert_payload: CreatedAlertPayload, customer_code: s
         HTTPException: If there is an error creating the alert.
     """
     alert_id = (await create_alert_in_copilot(alert_payload=alert_payload, customer_code=customer_code, session=session)).id
-    alert_context_id = (await create_alert_context_payload(source=alert_payload.source, alert_payload=alert_payload.alert_context_payload, session=session)).id
-    asset_id = (await create_asset_context_payload(customer_code=customer_code, asset_payload=alert_payload, alert_context_id=alert_context_id, alert_id=alert_id, session=session)).id
+    alert_context_id = (
+        await create_alert_context_payload(source=alert_payload.source, alert_payload=alert_payload.alert_context_payload, session=session)
+    ).id
+    asset_id = (
+        await create_asset_context_payload(
+            customer_code=customer_code, asset_payload=alert_payload, alert_context_id=alert_context_id, alert_id=alert_id, session=session,
+        )
+    ).id
     logger.info(f"Creating alert for customer code {customer_code} with alert context ID {alert_context_id} and asset ID {asset_id}")
 
 
@@ -577,6 +594,7 @@ async def create_alert_in_copilot(alert_payload: CreatedAlertPayload, customer_c
     await session.commit()
     return alert
 
+
 async def create_alert_context_payload(source: str, alert_payload: dict, session: AsyncSession) -> AlertContext:
     """
     Build the alert context payload based on the valid field names and the alert payload. Then
@@ -592,7 +610,10 @@ async def create_alert_context_payload(source: str, alert_payload: dict, session
     await session.commit()
     return alert_context
 
-async def create_asset_context_payload(customer_code: str, asset_payload: CreatedAlertPayload, alert_context_id: int, alert_id: int, session: AsyncSession) -> Asset:
+
+async def create_asset_context_payload(
+    customer_code: str, asset_payload: CreatedAlertPayload, alert_context_id: int, alert_id: int, session: AsyncSession,
+) -> Asset:
     """
     Build the asset context payload based on the valid field names and the asset payload. Then
     create the asset context in the database.
@@ -611,6 +632,7 @@ async def create_asset_context_payload(customer_code: str, asset_payload: Create
     session.add(asset_context)
     await session.commit()
     return asset_context
+
 
 async def create_alert(
     alert: CreateAlertRequest,
@@ -637,8 +659,10 @@ async def create_alert(
     logger.info(f"Customer code: {customer_code}")
     customer_alert_creation_settings = await is_customer_code_valid(customer_code=customer_code, session=session)
     logger.info(f"Customer creation settings: {customer_alert_creation_settings}")
-    alert_payload = await build_alert_payload(alert_details.syslog_type, alert_details._index, alert_details._id, alert_details._source.to_dict(), session)
-    logger.info(f'Alert PAyload {alert_payload}')
+    alert_payload = await build_alert_payload(
+        alert_details.syslog_type, alert_details._index, alert_details._id, alert_details._source.to_dict(), session,
+    )
+    logger.info(f"Alert PAyload {alert_payload}")
     await create_alert_full(alert_payload, customer_code, session)
     return None
     iris_alert_payload = await build_alert_payload(
