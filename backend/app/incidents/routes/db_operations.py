@@ -28,7 +28,7 @@ from app.incidents.schema.db_operations import AlertTagCreate
 from app.incidents.schema.db_operations import AssetBase
 from app.incidents.schema.db_operations import AssetCreate
 from app.incidents.schema.db_operations import CaseAlertLinkCreate
-from app.incidents.schema.db_operations import CaseCreate
+from app.incidents.schema.db_operations import CaseCreate, FieldAndAssetNamesResponse
 from app.incidents.schema.db_operations import CaseOut
 from app.incidents.schema.db_operations import CommentBase
 from app.incidents.schema.db_operations import CommentCreate
@@ -36,7 +36,7 @@ from app.incidents.schema.db_operations import FieldAndAssetNames
 from app.incidents.schema.db_operations import MappingsResponse
 from app.incidents.services.db_operations import add_asset_name
 from app.incidents.services.db_operations import add_field_name
-from app.incidents.services.db_operations import add_timefield_name
+from app.incidents.services.db_operations import add_timefield_name, add_alert_title_name
 from app.incidents.services.db_operations import create_alert
 from app.incidents.services.db_operations import create_alert_context
 from app.incidents.services.db_operations import create_alert_tag
@@ -46,54 +46,63 @@ from app.incidents.services.db_operations import create_case_alert_link
 from app.incidents.services.db_operations import create_comment
 from app.incidents.services.db_operations import delete_asset_name
 from app.incidents.services.db_operations import delete_field_name
-from app.incidents.services.db_operations import delete_timefield_name
+from app.incidents.services.db_operations import delete_timefield_name, delete_alert_title_name
 from app.incidents.services.db_operations import get_asset_names
 from app.incidents.services.db_operations import get_field_names
-from app.incidents.services.db_operations import get_timefield_names
+from app.incidents.services.db_operations import get_timefield_names, get_alert_title_names
 from app.incidents.services.db_operations import list_alerts
 from app.incidents.services.db_operations import list_cases
 
 incidents_db_operations_router = APIRouter()
 
 
-@incidents_db_operations_router.get("/mappings/fields-assets-and-timefield", response_model=MappingsResponse)
+@incidents_db_operations_router.get("/mappings/fields-assets-title-and-timefield", response_model=MappingsResponse)
 async def get_wazuh_fields_and_assets(index_id: str, session: AsyncSession = Depends(get_db)):
     index_mapping = await get_index_mappings_key_names(index_id)
     return MappingsResponse(available_mappings=index_mapping, success=True, message="Field names and asset names retrieved successfully")
 
 
-@incidents_db_operations_router.get("/fields-assets-and-timefield")
+@incidents_db_operations_router.get("/fields-assets-title-and-timefield", response_model=FieldAndAssetNamesResponse)
 async def get_source_fields_and_assets(source: str, session: AsyncSession = Depends(get_db)):
-    field_names = await get_field_names(source, session)
-    asset_names = await get_asset_names(source, session)
-    timefield_names = await get_timefield_names(source, session)
-    return {"field_names": field_names, "asset_names": asset_names, "timefield_names": timefield_names}
+    asset_name = await get_asset_names(source, session)
+    logger.info(f'asset name: {asset_name}')
+    return FieldAndAssetNamesResponse(
+        field_names=await get_field_names(source, session),
+        asset_name=await get_asset_names(source, session),
+        timefield_name=await get_timefield_names(source, session),
+        alert_title_name=await get_alert_title_names(source, session),
+        source=source,
+        success=True,
+        message="Field names and asset names retrieved successfully",
+    )
 
 
-@incidents_db_operations_router.post("/fields-assets-and-timefield")
+@incidents_db_operations_router.post("/fields-assets-title-and-timefield")
 async def create_wazuh_fields_and_assets(names: FieldAndAssetNames, session: AsyncSession = Depends(get_db)):
     for field_name in names.field_names:
         await add_field_name(names.source, field_name, session)
 
-    for asset_name in names.asset_names:
-        await add_asset_name(names.source, asset_name, session)
+    await add_asset_name(names.source, names.asset_name, session)
 
     await add_timefield_name(names.source, names.timefield_name, session)
+
+    await add_alert_title_name(names.source, names.alert_title_name, session)
 
     await session.commit()
 
     return {"message": "Field names and asset names created successfully"}
 
 
-@incidents_db_operations_router.delete("/delete-fields-assets-and-timefield")
+@incidents_db_operations_router.delete("/delete-fields-assets-title-and-timefield")
 async def delete_wazuh_fields_and_assets(names: FieldAndAssetNames, session: AsyncSession = Depends(get_db)):
     for field_name in names.field_names:
         await delete_field_name(names.source, field_name, session)
 
-    for asset_name in names.asset_names:
-        await delete_asset_name(names.source, asset_name, session)
+    await delete_asset_name(names.source, names.asset_name, session)
 
     await delete_timefield_name(names.source, names.timefield_name, session)
+
+    await delete_alert_title_name(names.source, names.alert_title_name, session)
 
     await session.commit()
 

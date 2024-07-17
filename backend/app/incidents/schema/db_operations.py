@@ -19,16 +19,20 @@ class ValidSources(str, Enum):
 
 
 class FieldAndAssetNames(BaseModel):
-    field_names: Optional[List[str]] = []
-    asset_names: Optional[List[str]] = []
-    timefield_name: Optional[str] = None
+    field_names: List[str]
+    asset_name: str
+    timefield_name: str
+    alert_title_name: str
     source: ValidSources
 
-    @validator('asset_names', 'timefield_name')
-    def validate_single_value(cls, value):
-        if isinstance(value, list) and len(value) > 1:
-            raise HTTPException(status_code=400, detail="Only one value is allowed for asset_names and timefield_name")
-        return value
+class FieldAndAssetNamesResponse(BaseModel):
+    field_names: List[str]
+    asset_name: str
+    timefield_name: str
+    alert_title_name: str
+    source: ValidSources
+    success: bool
+    message: str
 
 
 class AlertCreate(BaseModel):
