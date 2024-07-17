@@ -101,26 +101,26 @@ class CommentBase(BaseModel):
 
 class AssetBase(BaseModel):
     asset_name: str
-    agent_id: str
+    agent_id: Optional[str] = None
     customer_code: str
     index_id: str
     alert_linked: int
     id: int
     alert_context_id: int
-    velociraptor_id: str
+    velociraptor_id: Optional[str] = None
     index_name: str
 
 
 class AlertOut(BaseModel):
     id: int
     alert_creation_time: datetime
-    time_closed: datetime
+    time_closed: Optional[datetime] = None
     alert_name: str
     alert_description: str
     status: str
     customer_code: str
     source: str
-    assigned_to: str
+    assigned_to: Optional[str] = None
     comments: List[CommentBase] = []
     assets: List[AssetBase] = []
     tags: List[AlertTagBase] = []

@@ -11,11 +11,12 @@ from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
 from app.connectors.dfir_iris.utils.universal import initialize_client_and_alert
 from app.connectors.utils import get_connector_info_from_db
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
-from app.incidents.services.db_operations import get_asset_names
+from app.incidents.services.db_operations import get_asset_names, get_alert_title_names
 from app.incidents.services.db_operations import get_field_names
 from app.incidents.services.db_operations import get_timefield_names
 from app.db.universal_models import Agents
-from app.incidents.models import AlertContext, Asset
+from datetime import datetime
+from app.incidents.models import AlertContext, Asset, Alert
 from app.incidents.schema.incident_alert import CreateAlertRequest
 from app.incidents.schema.incident_alert import CreateAlertResponse, FieldNames, ValidSyslogType, CreatedAlertPayload
 from app.integrations.alert_creation.general.schema.alert import IrisAsset
@@ -489,11 +490,12 @@ async def get_all_field_names(syslog_type: str, session: AsyncSession) -> FieldN
     """
     return FieldNames(
         field_names=await get_field_names(syslog_type, session),
-        asset_names=await get_asset_names(syslog_type, session),
-        timefield_names=await get_timefield_names(syslog_type, session),
+        asset_name=await get_asset_names(syslog_type, session),
+        timefield_name=await get_timefield_names(syslog_type, session),
+        alert_title_name=await get_alert_title_names(syslog_type, session),
     )
 
-async def build_alert_payload(syslog_type: str, alert_payload: dict, session: AsyncSession) -> CreatedAlertPayload:
+async def build_alert_payload(syslog_type: str, index_name: str, index_id: str, alert_payload: dict, session: AsyncSession) -> CreatedAlertPayload:
     """
     Build the alert payload based on the syslog type and the alert payload.
 
@@ -506,24 +508,80 @@ async def build_alert_payload(syslog_type: str, alert_payload: dict, session: As
         dict: The built alert payload.
     """
     field_names = await get_all_field_names(syslog_type, session)
-    # logger.info(f'Field Names {field_names}')
-    # alert_context_payload = {field: alert_payload[field] for field in field_names.field_names if field in alert_payload}
-    # asset_payload = {field: alert_payload[field] for field in field_names.asset_names if field in alert_payload}
-    # timefield_payload = {field: alert_payload[field] for field in field_names.timefield_names if field in alert_payload}
-    # logger.info(f'Alert Context Payload {alert_context_payload}, Asset Payload {asset_payload}, Timefield Payload {timefield_payload}')
+    # Validate that the field_names exist in the alert_payload
+    for field_name in [field_names.asset_name, field_names.timefield_name, field_names.alert_title_name]:
+        if field_name not in alert_payload:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Field name {field_name} not found in alert payload",
+            )
+
     return CreatedAlertPayload(
         alert_context_payload={field: alert_payload[field] for field in field_names.field_names if field in alert_payload},
-        asset_payload={field: alert_payload[field] for field in field_names.asset_names if field in alert_payload},
-        timefield_payload={field: alert_payload[field] for field in field_names.timefield_names if field in alert_payload}
+        asset_payload=alert_payload[field_names.asset_name] if field_names.asset_name in alert_payload else None,
+        timefield_payload=alert_payload[field_names.timefield_name] if field_names.timefield_name in alert_payload else None,
+        alert_title_payload=alert_payload[field_names.alert_title_name] if field_names.alert_title_name in alert_payload else None,
+        source=syslog_type,
+        index_name=index_name,
+        index_id=index_id,
     )
 
 
-async def create_alert_context_payload(source: str, alert_payload: dict, field_names: FieldNames, session: AsyncSession) -> AlertContext:
+async def create_alert_full(alert_payload: CreatedAlertPayload, customer_code: str, session: AsyncSession) -> Alert:
+    """
+    Create an alert in CoPilot.
+
+    Args:
+        alert_payload (dict): The alert payload.
+        customer_code (str): The customer code.
+        session (AsyncSession): The database session.
+
+    Returns:
+        CreateAlertResponse: The response object containing the created alert details.
+
+    Raises:
+        HTTPException: If there is an error creating the alert.
+    """
+    alert_id = (await create_alert_in_copilot(alert_payload=alert_payload, customer_code=customer_code, session=session)).id
+    alert_context_id = (await create_alert_context_payload(source=alert_payload.source, alert_payload=alert_payload.alert_context_payload, session=session)).id
+    asset_id = (await create_asset_context_payload(customer_code=customer_code, asset_payload=alert_payload, alert_context_id=alert_context_id, alert_id=alert_id, session=session)).id
+    logger.info(f"Creating alert for customer code {customer_code} with alert context ID {alert_context_id} and asset ID {asset_id}")
+
+
+async def create_alert_in_copilot(alert_payload: CreatedAlertPayload, customer_code: str, session: AsyncSession) -> Alert:
+    """
+    Create an alert in CoPilot.
+
+    Args:
+        alert_payload (dict): The alert payload.
+        customer_code (str): The customer code.
+
+    Returns:
+        CreateAlertResponse: The response object containing the created alert details.
+
+    Raises:
+        HTTPException: If there is an error creating the alert.
+    """
+    logger.info(f"Creating alert for customer code {customer_code} with payload {alert_payload}")
+    alert = Alert(
+        alert_name=alert_payload.alert_title_payload,
+        alert_description=alert_payload.alert_title_payload,
+        status="OPEN",
+        alert_creation_time=datetime.utcnow(),
+        customer_code=customer_code,
+        source=alert_payload.source,
+        assigned_to=None,
+    )
+    # Commit it to the database
+    session.add(alert)
+    await session.commit()
+    return alert
+
+async def create_alert_context_payload(source: str, alert_payload: dict, session: AsyncSession) -> AlertContext:
     """
     Build the alert context payload based on the valid field names and the alert payload. Then
     create the alert context in the database.
     """
-    alert_payload = {field: alert_payload[field] for field in field_names.field_names if field in alert_payload}
     logger.info(f"Creating alert context for source {source} with payload {alert_payload}")
     alert_context = AlertContext(
         source=source,
@@ -534,15 +592,20 @@ async def create_alert_context_payload(source: str, alert_payload: dict, field_n
     await session.commit()
     return alert_context
 
-async def create_asset_context_payload(source: str, asset_payload: dict, field_names: FieldNames, session: AsyncSession) -> Asset:
+async def create_asset_context_payload(customer_code: str, asset_payload: CreatedAlertPayload, alert_context_id: int, alert_id: int, session: AsyncSession) -> Asset:
     """
     Build the asset context payload based on the valid field names and the asset payload. Then
     create the asset context in the database.
     """
-    asset_hostname = {field: asset_payload[field] for field in field_names.asset_names if field in asset_payload}
-    logger.info(f"Creating asset context for source {source} with payload {asset_payload}")
     asset_context = Asset(
-
+        alert_linked=alert_id,
+        asset_name=asset_payload.asset_payload,
+        alert_context_id=alert_context_id,
+        agent_id=(await retrieve_agent_details_from_db(asset_payload.asset_payload, session)).agent_id,
+        velociraptor_id=(await retrieve_agent_details_from_db(asset_payload.asset_payload, session)).velociraptor_id,
+        customer_code=customer_code,
+        index_name=asset_payload.index_name,
+        index_id=asset_payload.index_id,
     )
     # Commit it to the database
     session.add(asset_context)
@@ -574,13 +637,9 @@ async def create_alert(
     logger.info(f"Customer code: {customer_code}")
     customer_alert_creation_settings = await is_customer_code_valid(customer_code=customer_code, session=session)
     logger.info(f"Customer creation settings: {customer_alert_creation_settings}")
-    alert_payload = await build_alert_payload(alert_details.syslog_type, alert_details._source.to_dict(), session)
+    alert_payload = await build_alert_payload(alert_details.syslog_type, alert_details._index, alert_details._id, alert_details._source.to_dict(), session)
     logger.info(f'Alert PAyload {alert_payload}')
-    return None
-    field_names = await get_all_field_names(alert_details.syslog_type, session)
-    logger.info(f'Field Names {field_names}')
-    alert_context_id = (await create_alert_context_payload(alert_details.syslog_type, alert_details._source.to_dict(), field_names, session)).id
-    logger.info(f'Alert Context ID {alert_context_id}')
+    await create_alert_full(alert_payload, customer_code, session)
     return None
     iris_alert_payload = await build_alert_payload(
         alert_details=alert_details,

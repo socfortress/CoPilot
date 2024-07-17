@@ -26,8 +26,9 @@ class CreateAlertResponse(BaseModel):
 
 class FieldNames(BaseModel):
     field_names: List[str]
-    asset_names: List[str]
-    timefield_names: List[str]
+    asset_name: str
+    timefield_name: str
+    alert_title_name: str
 
 
 class GenericSourceModel(BaseModel):
@@ -95,5 +96,9 @@ class GenericAlertModel(BaseModel):
 
 class CreatedAlertPayload(BaseModel):
     alert_context_payload: dict
-    asset_payload: dict
-    timefield_payload: dict
+    asset_payload: str
+    timefield_payload: str
+    alert_title_payload: str
+    source: str
+    index_name: Optional[str] = None
+    index_id: Optional[str] = None
