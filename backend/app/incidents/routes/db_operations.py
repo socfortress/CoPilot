@@ -140,6 +140,23 @@ async def delete_wazuh_fields_and_assets(names: FieldAndAssetNames, session: Asy
 
     return {"message": "Field names and asset names deleted successfully", "success": True}
 
+@incidents_db_operations_router.delete("/field_name/{field_name}/{source}")
+async def delete_field_name_endpoint(field_name: str, source: str, db: AsyncSession = Depends(get_db)):
+    return await delete_field_name(source, field_name, db)
+
+@incidents_db_operations_router.delete("/asset_name/{asset_name}/{source}")
+async def delete_asset_name_endpoint(asset_name: str, source: str, db: AsyncSession = Depends(get_db)):
+    return await delete_asset_name(source, asset_name, db)
+
+@incidents_db_operations_router.delete("/timefield_name/{timefield_name}/{source}")
+async def delete_timefield_name_endpoint(timefield_name: str, source: str, db: AsyncSession = Depends(get_db)):
+    return await delete_timefield_name(source, timefield_name, db)
+
+@incidents_db_operations_router.delete("/alert_title_name/{alert_title_name}/{source}")
+async def delete_alert_title_name_endpoint(alert_title_name: str, source: str, db: AsyncSession = Depends(get_db)):
+    return await delete_alert_title_name(source, alert_title_name, db)
+
+
 
 @incidents_db_operations_router.post("/alert", response_model=Alert)
 async def create_alert_endpoint(alert: AlertCreate, db: AsyncSession = Depends(get_db)):
