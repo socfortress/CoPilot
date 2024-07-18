@@ -6,6 +6,8 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
+from sqlalchemy import delete
+from loguru import logger
 
 from app.incidents.models import Alert
 from app.incidents.models import AlertContext
@@ -433,12 +435,58 @@ async def list_alerts_by_asset_name(asset_name: str, db: AsyncSession) -> List[A
         alerts_out.append(alert_out)
     return alerts_out
 
-# ! TODO ! #
+async def delete_comments(alert_id: int, db: AsyncSession):
+    result = await db.execute(select(Comment).where(Comment.alert_id == alert_id))
+    comments = result.scalars().all()
+    for comment in comments:
+        await db.execute(delete(Comment).where(Comment.id == comment.id))
+
+async def delete_assets(alert_id: int, db: AsyncSession):
+    result = await db.execute(select(Asset).where(Asset.alert_linked == alert_id))
+    assets = result.scalars().all()
+    for asset in assets:
+        await db.execute(delete(Asset).where(Asset.id == asset.id))
+        context_result = await db.execute(select(Asset).where(Asset.alert_context_id == asset.alert_context_id))
+        if not context_result.scalars().all():
+            await db.execute(delete(AlertContext).where(AlertContext.id == asset.alert_context_id))
+
+async def delete_tags(alert_id: int, db: AsyncSession):
+    result = await db.execute(select(AlertToTag).where(AlertToTag.alert_id == alert_id))
+    alert_to_tags = result.scalars().all()
+    for alert_to_tag in alert_to_tags:
+        await db.execute(delete(AlertToTag).where((AlertToTag.alert_id == alert_to_tag.alert_id) & (AlertToTag.tag_id == alert_to_tag.tag_id)))
+
 async def delete_alert(alert_id: int, db: AsyncSession):
-    result = await db.execute(select(Alert).where(Alert.id == alert_id))
+    """
+    Delete an alert from the database.
+
+    Args:
+        alert_id (int): The ID of the alert to be deleted.
+        db (AsyncSession): The database session.
+
+    Raises:
+        HTTPException: If the alert is not found or there is an error deleting the alert.
+
+    """
+    result = await db.execute(
+        select(Alert).options(
+            selectinload(Alert.comments),
+            selectinload(Alert.assets).selectinload(Asset.alert_context),
+            selectinload(Alert.tags)
+        ).where(Alert.id == alert_id)
+    )
     alert = result.scalars().first()
     if not alert:
         raise HTTPException(status_code=404, detail="Alert not found")
-    db.delete(alert)
-    await db.commit()
-    return alert
+
+    await delete_comments(alert_id, db)
+    await delete_assets(alert_id, db)
+    await delete_tags(alert_id, db)
+
+    await db.execute(delete(Alert).where(Alert.id == alert.id))
+
+    try:
+        await db.commit()
+    except IntegrityError:
+        await db.rollback()
+        raise HTTPException(status_code=400, detail="Error deleting alert")

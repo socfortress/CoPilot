@@ -51,7 +51,7 @@ from app.incidents.services.db_operations import delete_asset_name
 from app.incidents.services.db_operations import delete_field_name
 from app.incidents.services.db_operations import delete_timefield_name
 from app.incidents.services.db_operations import get_alert_context_by_id
-from app.incidents.services.db_operations import get_alert_title_names
+from app.incidents.services.db_operations import get_alert_title_names, delete_alert
 from app.incidents.services.db_operations import get_asset_names
 from app.incidents.services.db_operations import get_field_names
 from app.incidents.services.db_operations import get_timefield_names
@@ -161,6 +161,10 @@ async def create_case_alert_link_endpoint(case_alert_link: CaseAlertLinkCreate, 
 @incidents_db_operations_router.get("/alerts/", response_model=List[AlertOut])
 async def list_alerts_endpoint(db: AsyncSession = Depends(get_db)):
     return await list_alerts(db)
+
+@incidents_db_operations_router.delete("/alert/{alert_id}")
+async def delete_alert_endpoint(alert_id: int, db: AsyncSession = Depends(get_db)):
+    return await delete_alert(alert_id, db)
 
 @incidents_db_operations_router.get("/alerts/status/{status}", response_model=List[AlertOut])
 async def list_alerts_by_status_endpoint(status: AlertStatus, db: AsyncSession = Depends(get_db)):
