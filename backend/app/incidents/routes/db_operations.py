@@ -114,12 +114,12 @@ async def delete_wazuh_fields_and_assets(names: FieldAndAssetNames, session: Asy
     return {"message": "Field names and asset names deleted successfully", "success": True}
 
 
-@incidents_db_operations_router.post("/alert/", response_model=Alert)
+@incidents_db_operations_router.post("/alert", response_model=Alert)
 async def create_alert_endpoint(alert: AlertCreate, db: AsyncSession = Depends(get_db)):
     return await create_alert(alert, db)
 
 
-@incidents_db_operations_router.post("/alert/comment/", response_model=Comment)
+@incidents_db_operations_router.post("/alert/comment", response_model=Comment)
 async def create_comment_endpoint(comment: CommentCreate, db: AsyncSession = Depends(get_db)):
     return await create_comment(comment, db)
 
@@ -158,7 +158,7 @@ async def create_case_alert_link_endpoint(case_alert_link: CaseAlertLinkCreate, 
     return await create_case_alert_link(case_alert_link, db)
 
 
-@incidents_db_operations_router.get("/alerts/", response_model=List[AlertOut])
+@incidents_db_operations_router.get("/alerts", response_model=List[AlertOut])
 async def list_alerts_endpoint(db: AsyncSession = Depends(get_db)):
     return await list_alerts(db)
 
@@ -177,6 +177,6 @@ async def list_alerts_by_asset_name_endpoint(asset_name: str, db: AsyncSession =
     return await list_alerts_by_asset_name(asset_name, db)
 
 
-@incidents_db_operations_router.get("/cases/", response_model=List[CaseOut])
+@incidents_db_operations_router.get("/cases", response_model=List[CaseOut])
 async def list_cases_endpoint(db: AsyncSession = Depends(get_db)):
     return await list_cases(db)
