@@ -33,7 +33,7 @@ from app.incidents.schema.db_operations import CaseOut
 from app.incidents.schema.db_operations import CommentBase
 from app.incidents.schema.db_operations import CommentCreate
 from app.incidents.schema.db_operations import FieldAndAssetNames
-from app.incidents.schema.db_operations import FieldAndAssetNamesResponse
+from app.incidents.schema.db_operations import FieldAndAssetNamesResponse, AlertOutResponse
 from app.incidents.schema.db_operations import MappingsResponse
 from app.incidents.services.db_operations import add_alert_title_name
 from app.incidents.services.db_operations import add_asset_name
@@ -158,9 +158,9 @@ async def create_case_alert_link_endpoint(case_alert_link: CaseAlertLinkCreate, 
     return await create_case_alert_link(case_alert_link, db)
 
 
-@incidents_db_operations_router.get("/alerts", response_model=List[AlertOut])
+@incidents_db_operations_router.get("/alerts", response_model=AlertOutResponse)
 async def list_alerts_endpoint(db: AsyncSession = Depends(get_db)):
-    return await list_alerts(db)
+    return AlertOutResponse(alerts=await list_alerts(db), success=True, message="Alerts retrieved successfully")
 
 @incidents_db_operations_router.delete("/alert/{alert_id}")
 async def delete_alert_endpoint(alert_id: int, db: AsyncSession = Depends(get_db)):

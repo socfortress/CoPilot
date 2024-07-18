@@ -128,6 +128,10 @@ class AlertOut(BaseModel):
     assets: List[AssetBase] = []
     tags: List[AlertTagBase] = []
 
+class AlertOutResponse(BaseModel):
+    alerts: List[AlertOut]
+    success: bool
+    message: str
 
 class CaseOut(BaseModel):
     id: int
