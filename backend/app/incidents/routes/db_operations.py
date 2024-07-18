@@ -32,7 +32,7 @@ from app.incidents.schema.db_operations import CaseCreate
 from app.incidents.schema.db_operations import CaseOut
 from app.incidents.schema.db_operations import CommentBase
 from app.incidents.schema.db_operations import CommentCreate
-from app.incidents.schema.db_operations import FieldAndAssetNames
+from app.incidents.schema.db_operations import FieldAndAssetNames, ConfiguredSourcesResponse
 from app.incidents.schema.db_operations import FieldAndAssetNamesResponse, AlertOutResponse
 from app.incidents.schema.db_operations import MappingsResponse
 from app.incidents.services.db_operations import add_alert_title_name
@@ -61,6 +61,12 @@ from app.incidents.services.db_operations import validate_source_exists
 
 incidents_db_operations_router = APIRouter()
 
+@incidents_db_operations_router.get("/configured/sources", response_model=ConfiguredSourcesResponse)
+async def get_configured_sources(session: AsyncSession = Depends(get_db)):
+    query = select(FieldName.source).distinct()
+    result = await session.execute(query)
+    #return [row[0] for row in result]
+    return ConfiguredSourcesResponse(sources=[row[0] for row in result], success=True, message="Configured sources retrieved successfully")
 
 @incidents_db_operations_router.get("/mappings/fields-assets-title-and-timefield", response_model=MappingsResponse)
 async def get_wazuh_fields_and_assets(index_id: str, session: AsyncSession = Depends(get_db)):

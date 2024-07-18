@@ -6,6 +6,11 @@ from typing import Optional
 
 from pydantic import BaseModel
 
+class ConfiguredSourcesResponse(BaseModel):
+    sources: List[str]
+    success: bool
+    message:str
+
 class MappingsResponse(BaseModel):
     available_mappings: List[str]
     success: bool
