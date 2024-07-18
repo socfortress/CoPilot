@@ -67,6 +67,28 @@ async def get_configured_sources(session: AsyncSession = Depends(get_db)):
     result = await session.execute(query)
     return ConfiguredSourcesResponse(sources=[row[0] for row in result], success=True, message="Configured sources retrieved successfully")
 
+@incidents_db_operations_router.delete("/configured/sources/{source}")
+async def delete_configured_source(source: str, session: AsyncSession = Depends(get_db)):
+    # Fully deletes the configured sources `field_names`, `asset_name`, timefield_name`, alert_title_name`
+    field_names = await get_field_names(source, session)
+    asset_name = await get_asset_names(source, session)
+    timefield_name = await get_timefield_names(source, session)
+    alert_title_name = await get_alert_title_names(source, session)
+
+    for field_name in field_names:
+        await delete_field_name(source, field_name, session)
+
+    await delete_asset_name(source, asset_name, session)
+
+    await delete_timefield_name(source, timefield_name, session)
+
+    await delete_alert_title_name(source, alert_title_name, session)
+
+    await session.commit()
+
+    return {"message": f"Configured source {source} deleted successfully", "success": True}
+
+
 @incidents_db_operations_router.get("/mappings/fields-assets-title-and-timefield", response_model=MappingsResponse)
 async def get_wazuh_fields_and_assets(index_id: str, session: AsyncSession = Depends(get_db)):
     index_mapping = await get_index_mappings_key_names(index_id)
