@@ -6,7 +6,6 @@ from typing import Optional
 
 from pydantic import BaseModel
 
-
 class MappingsResponse(BaseModel):
     available_mappings: List[str]
     success: bool
@@ -16,6 +15,10 @@ class MappingsResponse(BaseModel):
 class ValidSources(str, Enum):
     WAZUH = "wazuh"
 
+class AlertStatus(str, Enum):
+    OPEN = "OPEN"
+    CLOSED = "CLOSED"
+    IN_PROGRESS = "IN_PROGRESS"
 
 class FieldAndAssetNames(BaseModel):
     field_names: List[str]

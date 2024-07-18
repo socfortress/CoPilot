@@ -36,3 +36,5 @@ async def create_alert_route(
     """
     logger.info(f"Creating alert {create_alert_request.alert_id} in CoPilot")
     return await create_alert(create_alert_request, session)
+
+

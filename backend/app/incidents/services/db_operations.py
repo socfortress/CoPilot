@@ -335,3 +335,110 @@ async def get_alert_context_by_id(alert_context_id: int, db: AsyncSession) -> Al
     if not alert_context:
         raise HTTPException(status_code=404, detail="Alert context not found")
     return alert_context
+
+async def list_alerts_by_tag(tag: str, db: AsyncSession) -> List[AlertOut]:
+    result = await db.execute(
+        select(Alert).join(AlertToTag).join(AlertTag).where(AlertTag.tag == tag).options(
+            selectinload(Alert.comments),
+            selectinload(Alert.assets),
+            selectinload(Alert.cases),
+            selectinload(Alert.tags).selectinload(AlertToTag.tag),
+        ),
+    )
+    alerts = result.scalars().all()
+    alerts_out = []
+    for alert in alerts:
+        comments = [CommentBase(**comment.__dict__) for comment in alert.comments]
+        assets = [AssetBase(**asset.__dict__) for asset in alert.assets]
+        tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
+        alert_out = AlertOut(
+            id=alert.id,
+            alert_creation_time=alert.alert_creation_time,
+            time_closed=alert.time_closed,
+            alert_name=alert.alert_name,
+            alert_description=alert.alert_description,
+            status=alert.status,
+            customer_code=alert.customer_code,
+            source=alert.source,
+            assigned_to=alert.assigned_to,
+            comments=comments,
+            assets=assets,
+            tags=tags,
+        )
+        alerts_out.append(alert_out)
+    return alerts_out
+
+
+async def list_alert_by_status(status: str, db: AsyncSession) -> List[AlertOut]:
+    result = await db.execute(
+        select(Alert).where(Alert.status == status).options(
+            selectinload(Alert.comments),
+            selectinload(Alert.assets),
+            selectinload(Alert.cases),
+            selectinload(Alert.tags).selectinload(AlertToTag.tag),
+        ),
+    )
+    alerts = result.scalars().all()
+    alerts_out = []
+    for alert in alerts:
+        comments = [CommentBase(**comment.__dict__) for comment in alert.comments]
+        assets = [AssetBase(**asset.__dict__) for asset in alert.assets]
+        tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
+        alert_out = AlertOut(
+            id=alert.id,
+            alert_creation_time=alert.alert_creation_time,
+            time_closed=alert.time_closed,
+            alert_name=alert.alert_name,
+            alert_description=alert.alert_description,
+            status=alert.status,
+            customer_code=alert.customer_code,
+            source=alert.source,
+            assigned_to=alert.assigned_to,
+            comments=comments,
+            assets=assets,
+            tags=tags,
+        )
+        alerts_out.append(alert_out)
+    return alerts_out
+
+async def list_alerts_by_asset_name(asset_name: str, db: AsyncSession) -> List[AlertOut]:
+    result = await db.execute(
+        select(Alert).join(Asset).where(Asset.asset_name == asset_name).options(
+            selectinload(Alert.comments),
+            selectinload(Alert.assets),
+            selectinload(Alert.cases),
+            selectinload(Alert.tags).selectinload(AlertToTag.tag),
+        ),
+    )
+    alerts = result.scalars().all()
+    alerts_out = []
+    for alert in alerts:
+        comments = [CommentBase(**comment.__dict__) for comment in alert.comments]
+        assets = [AssetBase(**asset.__dict__) for asset in alert.assets]
+        tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
+        alert_out = AlertOut(
+            id=alert.id,
+            alert_creation_time=alert.alert_creation_time,
+            time_closed=alert.time_closed,
+            alert_name=alert.alert_name,
+            alert_description=alert.alert_description,
+            status=alert.status,
+            customer_code=alert.customer_code,
+            source=alert.source,
+            assigned_to=alert.assigned_to,
+            comments=comments,
+            assets=assets,
+            tags=tags,
+        )
+        alerts_out.append(alert_out)
+    return alerts_out
+
+# ! TODO ! #
+async def delete_alert(alert_id: int, db: AsyncSession):
+    result = await db.execute(select(Alert).where(Alert.id == alert_id))
+    alert = result.scalars().first()
+    if not alert:
+        raise HTTPException(status_code=404, detail="Alert not found")
+    db.delete(alert)
+    await db.commit()
+    return alert

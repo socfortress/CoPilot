@@ -21,7 +21,7 @@ from app.incidents.models import Case
 from app.incidents.models import CaseAlertLink
 from app.incidents.models import Comment
 from app.incidents.models import FieldName
-from app.incidents.schema.db_operations import AlertContextCreate
+from app.incidents.schema.db_operations import AlertContextCreate, AlertStatus
 from app.incidents.schema.db_operations import AlertCreate
 from app.incidents.schema.db_operations import AlertOut
 from app.incidents.schema.db_operations import AlertTagCreate
@@ -39,12 +39,12 @@ from app.incidents.services.db_operations import add_alert_title_name
 from app.incidents.services.db_operations import add_asset_name
 from app.incidents.services.db_operations import add_field_name
 from app.incidents.services.db_operations import add_timefield_name
-from app.incidents.services.db_operations import create_alert
+from app.incidents.services.db_operations import create_alert, list_alerts_by_asset_name
 from app.incidents.services.db_operations import create_alert_context
-from app.incidents.services.db_operations import create_alert_tag
+from app.incidents.services.db_operations import create_alert_tag, list_alerts_by_tag
 from app.incidents.services.db_operations import create_asset
 from app.incidents.services.db_operations import create_case
-from app.incidents.services.db_operations import create_case_alert_link
+from app.incidents.services.db_operations import create_case_alert_link, list_alert_by_status
 from app.incidents.services.db_operations import create_comment
 from app.incidents.services.db_operations import delete_alert_title_name
 from app.incidents.services.db_operations import delete_asset_name
@@ -143,6 +143,10 @@ async def create_asset_endpoint(asset: AssetCreate, db: AsyncSession = Depends(g
 async def create_alert_tag_endpoint(alert_tag: AlertTagCreate, db: AsyncSession = Depends(get_db)):
     return await create_alert_tag(alert_tag, db)
 
+@incidents_db_operations_router.get("/alert/tag/{tag}", response_model=List[AlertOut])
+async def list_alerts_by_tag_endpoint(tag: str, db: AsyncSession = Depends(get_db)):
+    return await list_alerts_by_tag(tag, db)
+
 
 @incidents_db_operations_router.post("/case/create", response_model=Case)
 async def create_case_endpoint(case: CaseCreate, db: AsyncSession = Depends(get_db)):
@@ -157,6 +161,16 @@ async def create_case_alert_link_endpoint(case_alert_link: CaseAlertLinkCreate, 
 @incidents_db_operations_router.get("/alerts/", response_model=List[AlertOut])
 async def list_alerts_endpoint(db: AsyncSession = Depends(get_db)):
     return await list_alerts(db)
+
+@incidents_db_operations_router.get("/alerts/status/{status}", response_model=List[AlertOut])
+async def list_alerts_by_status_endpoint(status: AlertStatus, db: AsyncSession = Depends(get_db)):
+    if status not in AlertStatus:
+        raise HTTPException(status_code=400, detail="Invalid status")
+    return await list_alert_by_status(status.value, db)
+
+@incidents_db_operations_router.get("/alerts/asset/{asset_name}", response_model=List[AlertOut])
+async def list_alerts_by_asset_name_endpoint(asset_name: str, db: AsyncSession = Depends(get_db)):
+    return await list_alerts_by_asset_name(asset_name, db)
 
 
 @incidents_db_operations_router.get("/cases/", response_model=List[CaseOut])
