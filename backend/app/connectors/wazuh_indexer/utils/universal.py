@@ -478,17 +478,17 @@ class LogsQueryBuilder:
         return self.query
 
 
-async def get_index_mappings_key_names(index_id: str):
+async def get_index_mappings_key_names(index_name: str):
     """
     Get the mappings of an index.
 
     Args:
-        index_id (str): The ID of the index.
+        index_name (str): The Name of the index.
 
     Returns:
         list: The field names of the index.
     """
     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
-    mappings = es_client.indices.get_mapping(index=index_id)
+    mappings = es_client.indices.get_mapping(index=index_name)
     # return only the field names
-    return list(mappings[index_id]["mappings"]["properties"].keys())
+    return list(mappings[index_name]["mappings"]["properties"].keys())

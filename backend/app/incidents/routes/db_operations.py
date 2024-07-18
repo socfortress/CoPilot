@@ -90,8 +90,8 @@ async def delete_configured_source(source: str, session: AsyncSession = Depends(
 
 
 @incidents_db_operations_router.get("/mappings/fields-assets-title-and-timefield", response_model=MappingsResponse)
-async def get_wazuh_fields_and_assets(index_id: str, session: AsyncSession = Depends(get_db)):
-    index_mapping = await get_index_mappings_key_names(index_id)
+async def get_wazuh_fields_and_assets(index_name: str, session: AsyncSession = Depends(get_db)):
+    index_mapping = await get_index_mappings_key_names(index_name)
     return MappingsResponse(available_mappings=index_mapping, success=True, message="Field names and asset names retrieved successfully")
 
 
