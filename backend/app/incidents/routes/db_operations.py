@@ -65,7 +65,6 @@ incidents_db_operations_router = APIRouter()
 async def get_configured_sources(session: AsyncSession = Depends(get_db)):
     query = select(FieldName.source).distinct()
     result = await session.execute(query)
-    #return [row[0] for row in result]
     return ConfiguredSourcesResponse(sources=[row[0] for row in result], success=True, message="Configured sources retrieved successfully")
 
 @incidents_db_operations_router.get("/mappings/fields-assets-title-and-timefield", response_model=MappingsResponse)
