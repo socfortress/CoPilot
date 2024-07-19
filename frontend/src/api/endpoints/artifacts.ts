@@ -1,4 +1,4 @@
-import { HttpClient } from "./httpClient"
+import { HttpClient } from "../httpClient"
 import type { FlaskBaseResponse } from "@/types/flask.d"
 import type { Artifact, CollectResult, CommandResult, QuarantineResult, Recommendation } from "@/types/artifacts.d"
 import type { AlertContext } from "@/types/soc/alert"

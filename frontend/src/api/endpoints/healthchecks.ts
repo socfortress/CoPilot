@@ -1,5 +1,5 @@
 import { type FlaskBaseResponse } from "@/types/flask.d"
-import { HttpClient } from "./httpClient"
+import { HttpClient } from "../httpClient"
 import type { InfluxDBAlert } from "@/types/healthchecks.d"
 
 export default {

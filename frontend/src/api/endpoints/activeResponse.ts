@@ -1,5 +1,5 @@
 import { type FlaskBaseResponse } from "@/types/flask.d"
-import { HttpClient } from "./httpClient"
+import { HttpClient } from "../httpClient"
 import type { ActiveResponseDetails, SupportedActiveResponse } from "@/types/activeResponse.d"
 
 export type InvokeRequestAction = "block" | "unblock"

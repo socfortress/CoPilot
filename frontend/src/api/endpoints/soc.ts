@@ -1,5 +1,5 @@
 import { type FlaskBaseResponse } from "@/types/flask.d"
-import { HttpClient } from "./httpClient"
+import { HttpClient } from "../httpClient"
 import type { SocAlert, SocAlertCaseResponse } from "@/types/soc/alert.d"
 import type { SocCase, SocCaseExt } from "@/types/soc/case.d"
 import type { SocAlertAsset, SocCaseAsset, SocCaseAssetsState } from "@/types/soc/asset.d"
@@ -97,7 +97,7 @@ export default {
 							time_unit: payload?.unit || "days"
 						}
 						/*eslint no-mixed-spaces-and-tabs: "off"*/
-				  }
+					}
 				: undefined
 		)
 	},

@@ -1,5 +1,5 @@
 import { type FlaskBaseResponse } from "@/types/flask.d"
-import { HttpClient } from "./httpClient"
+import { HttpClient } from "../httpClient"
 import type { Log, LogEventType } from "@/types/logs.d"
 import type { SafeAny } from "@/types/common.d"
 

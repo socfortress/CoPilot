@@ -1,6 +1,6 @@
 import { type FlaskBaseResponse } from "@/types/flask.d"
 import type { Connector, ConnectorRequestPayload } from "@/types/connectors.d"
-import { HttpClient } from "./httpClient"
+import { HttpClient } from "../httpClient"
 
 export default {
 	getAll() {

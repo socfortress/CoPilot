@@ -1,4 +1,4 @@
-import { HttpClient } from "./httpClient"
+import { HttpClient } from "../httpClient"
 import type { FlaskBaseResponse } from "@/types/flask.d"
 import type { Message, ThroughputMetric } from "@/types/graylog/index.d"
 import type { Alerts, AlertsQuery } from "@/types/graylog/alerts.d"
