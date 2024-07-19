@@ -127,6 +127,34 @@ const router = createRouter({
 			]
 		},
 		{
+			path: "/incident-management",
+			redirect: "/incident-management/alerts",
+			meta: {
+				auth: true,
+				roles: UserRole.All
+			},
+			children: [
+				{
+					path: "sources",
+					name: "IncidentManagement-Sources",
+					component: () => import("@/views/incidentManagement/Sources.vue"),
+					meta: { title: "Incident Sources" }
+				},
+				{
+					path: "alerts",
+					name: "IncidentManagement-Alerts",
+					component: () => import("@/views/incidentManagement/Alerts.vue"),
+					meta: { title: "Incident Alerts" }
+				},
+				{
+					path: "cases",
+					name: "IncidentManagement-Cases",
+					component: () => import("@/views/incidentManagement/Cases.vue"),
+					meta: { title: "Incident Cases" }
+				}
+			]
+		},
+		{
 			path: "/healthcheck",
 			name: "Healthcheck",
 			component: () => import("@/views/Healthcheck.vue"),

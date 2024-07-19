@@ -3,6 +3,8 @@ import { h } from "vue"
 import { RouterLink } from "vue-router"
 import { type MenuMixedOption } from "naive-ui/es/menu/src/interface"
 
+import IncidentManagementIcon from "@/assets/icons/alert-settings-icon.svg"
+
 const OverviewIcon = "carbon:dashboard"
 const IndiciesIcon = "ph:list-magnifying-glass"
 const AgentsIcon = "carbon:network-3"
@@ -10,7 +12,7 @@ const ConnectorsIcon = "carbon:hybrid-networking"
 const GraylogIcon = "majesticons:pulse-line"
 const AlertsIcon = "carbon:warning-hex"
 const ArtifactsIcon = "carbon:document-multiple-01"
-const SOCIcon = "carbon:security"
+const SocIcon = "carbon:security"
 const HealthcheckIcon = "ph:heartbeat"
 const CustomersIcon = "carbon:user-multiple"
 const UsersIcon = "carbon:group-security"
@@ -152,8 +154,8 @@ export default function getItems(): MenuMixedOption[] {
 		},
 		{
 			label: "SOC",
-			key: "SOC",
-			icon: renderIcon(SOCIcon),
+			key: "Soc",
+			icon: renderIcon(SocIcon),
 			children: [
 				{
 					label: () =>
@@ -206,6 +208,52 @@ export default function getItems(): MenuMixedOption[] {
 							{ default: () => "Pending Alerts" }
 						),
 					key: "Soc-PendingAlerts"
+				}
+			]
+		},
+		{
+			label: "Incident Management",
+			key: "IncidentManagement",
+			icon: renderIcon(IncidentManagementIcon),
+			children: [
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "IncidentManagement-Sources"
+								}
+							},
+							{ default: () => "Sources" }
+						),
+					key: "IncidentManagement-Sources"
+				},
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "IncidentManagement-Alerts"
+								}
+							},
+							{ default: () => "Alerts" }
+						),
+					key: "IncidentManagement-Alerts"
+				},
+				{
+					label: () =>
+						h(
+							RouterLink,
+							{
+								to: {
+									name: "IncidentManagement-Cases"
+								}
+							},
+							{ default: () => "Cases" }
+						),
+					key: "IncidentManagement-Cases"
 				}
 			]
 		},
