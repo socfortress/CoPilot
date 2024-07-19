@@ -58,8 +58,6 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
-@import "@/assets/scss/functions.scss";
-
 .toolbar {
 	position: sticky;
 	top: 0;
@@ -70,9 +68,8 @@ onMounted(() => {
 	padding: 0 var(--view-padding);
 	z-index: 3;
 	overflow: hidden;
-	background: var(--bg-body);
 
-	&::before {
+	&::after {
 		content: "";
 		width: 100%;
 		height: 100%;
@@ -80,27 +77,14 @@ onMounted(() => {
 		display: block;
 		top: 0;
 		left: 0;
-		z-index: -1;
+		z-index: -2;
 		backdrop-filter: blur(20px);
-		// mask-image: scrimGradient(#000);
 		mask-image: linear-gradient(
 			to bottom,
-			hsl(0, 0%, 0%) 0%,
-			hsla(0, 0%, 0%, 0.979) 0.6%,
-			hsla(0, 0%, 0%, 0.962) 2.2%,
-			hsla(0, 0%, 0%, 0.946) 4.9%,
-			hsla(0, 0%, 0%, 0.929) 8.6%,
-			hsla(0, 0%, 0%, 0.91) 13.3%,
-			hsla(0, 0%, 0%, 0.884) 18.8%,
-			hsla(0, 0%, 0%, 0.851) 25.1%,
-			hsla(0, 0%, 0%, 0.806) 32.3%,
-			hsla(0, 0%, 0%, 0.749) 40.2%,
-			hsla(0, 0%, 0%, 0.677) 48.7%,
-			hsla(0, 0%, 0%, 0.587) 57.9%,
-			hsla(0, 0%, 0%, 0.476) 67.7%,
-			hsla(0, 0%, 0%, 0.343) 78%,
-			hsla(0, 0%, 0%, 0.185) 88.8%,
-			hsla(0, 0%, 0%, 0) 100%
+			rgba(0, 0, 0, 1) 0%,
+			rgba(0, 0, 0, 0.96) 70%,
+			rgba(0, 0, 0, 0.8) 80%,
+			rgba(0, 0, 0, 0) 100%
 		);
 	}
 
@@ -109,9 +93,12 @@ onMounted(() => {
 		overflow: hidden;
 		width: 100%;
 		max-width: 100%;
+		position: relative;
+		z-index: 0;
 
 		.bubble {
 			background-color: var(--bg-sidebar);
+			border: var(--border-small-050);
 			color: var(--fg-color);
 			border-radius: 50px;
 			padding: 6px;
@@ -143,45 +130,65 @@ onMounted(() => {
 	}
 
 	&.gradient-bg-sidebar {
-		background-color: var(--bg-sidebar);
-		background: linear-gradient(
-			to bottom,
-			rgba(var(--bg-sidebar-rgb), 1) 0%,
-			rgba(var(--bg-sidebar-rgb), 0.945) 8.6%,
-			rgba(var(--bg-sidebar-rgb), 0.888) 16.2%,
-			rgba(var(--bg-sidebar-rgb), 0.83) 22.9%,
-			rgba(var(--bg-sidebar-rgb), 0.769) 28.9%,
-			rgba(var(--bg-sidebar-rgb), 0.707) 34.4%,
-			rgba(var(--bg-sidebar-rgb), 0.644) 39.5%,
-			rgba(var(--bg-sidebar-rgb), 0.578) 44.5%,
-			rgba(var(--bg-sidebar-rgb), 0.511) 49.5%,
-			rgba(var(--bg-sidebar-rgb), 0.443) 54.7%,
-			rgba(var(--bg-sidebar-rgb), 0.373) 60.3%,
-			rgba(var(--bg-sidebar-rgb), 0.301) 66.4%,
-			rgba(var(--bg-sidebar-rgb), 0.228) 73.3%,
-			rgba(var(--bg-sidebar-rgb), 0.153) 81%,
-			rgba(var(--bg-sidebar-rgb), 0.077) 89.9%,
-			rgba(var(--bg-sidebar-rgb), 0) 100%
-		);
+		&::before {
+			content: "";
+			width: 100%;
+			height: 100%;
+			position: absolute;
+			display: block;
+			top: 0;
+			left: 0;
+			z-index: -1;
+			background-color: var(--bg-sidebar);
+			background: linear-gradient(
+				to bottom,
+				rgba(var(--bg-sidebar-rgb), 1) 0%,
+				rgba(var(--bg-sidebar-rgb), 0.945) 8.6%,
+				rgba(var(--bg-sidebar-rgb), 0.888) 16.2%,
+				rgba(var(--bg-sidebar-rgb), 0.83) 22.9%,
+				rgba(var(--bg-sidebar-rgb), 0.769) 28.9%,
+				rgba(var(--bg-sidebar-rgb), 0.707) 34.4%,
+				rgba(var(--bg-sidebar-rgb), 0.644) 39.5%,
+				rgba(var(--bg-sidebar-rgb), 0.578) 44.5%,
+				rgba(var(--bg-sidebar-rgb), 0.511) 49.5%,
+				rgba(var(--bg-sidebar-rgb), 0.443) 54.7%,
+				rgba(var(--bg-sidebar-rgb), 0.373) 60.3%,
+				rgba(var(--bg-sidebar-rgb), 0.301) 66.4%,
+				rgba(var(--bg-sidebar-rgb), 0.228) 73.3%,
+				rgba(var(--bg-sidebar-rgb), 0.153) 81%,
+				rgba(var(--bg-sidebar-rgb), 0.077) 89.9%,
+				rgba(var(--bg-sidebar-rgb), 0) 100%
+			);
+		}
 	}
 	&.gradient-bg-body {
-		background-color: var(--bg-body);
-		background: linear-gradient(
-			to bottom,
-			rgba(var(--bg-body-rgb), 1) 0%,
-			rgba(var(--bg-body-rgb), 0.738) 19%,
-			rgba(var(--bg-body-rgb), 0.541) 34%,
-			rgba(var(--bg-body-rgb), 0.382) 47%,
-			rgba(var(--bg-body-rgb), 0.278) 56.5%,
-			rgba(var(--bg-body-rgb), 0.194) 65%,
-			rgba(var(--bg-body-rgb), 0.126) 73%,
-			rgba(var(--bg-body-rgb), 0.075) 80.2%,
-			rgba(var(--bg-body-rgb), 0.042) 86.1%,
-			rgba(var(--bg-body-rgb), 0.021) 91%,
-			rgba(var(--bg-body-rgb), 0.008) 95.2%,
-			rgba(var(--bg-body-rgb), 0.002) 98.2%,
-			rgba(var(--bg-body-rgb), 0) 100%
-		);
+		&::before {
+			content: "";
+			width: 100%;
+			height: 100%;
+			position: absolute;
+			display: block;
+			top: 0;
+			left: 0;
+			z-index: -1;
+			background-color: var(--bg-body);
+			background: linear-gradient(
+				to bottom,
+				rgba(var(--bg-body-rgb), 1) 0%,
+				rgba(var(--bg-body-rgb), 0.738) 19%,
+				rgba(var(--bg-body-rgb), 0.541) 34%,
+				rgba(var(--bg-body-rgb), 0.382) 47%,
+				rgba(var(--bg-body-rgb), 0.278) 56.5%,
+				rgba(var(--bg-body-rgb), 0.194) 65%,
+				rgba(var(--bg-body-rgb), 0.126) 73%,
+				rgba(var(--bg-body-rgb), 0.075) 80.2%,
+				rgba(var(--bg-body-rgb), 0.042) 86.1%,
+				rgba(var(--bg-body-rgb), 0.021) 91%,
+				rgba(var(--bg-body-rgb), 0.008) 95.2%,
+				rgba(var(--bg-body-rgb), 0.002) 98.2%,
+				rgba(var(--bg-body-rgb), 0) 100%
+			);
+		}
 	}
 }
 

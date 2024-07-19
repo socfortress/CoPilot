@@ -1,6 +1,12 @@
 <template>
-	<n-config-provider :rtl="rtlOptions" :theme="theme" :theme-overrides="themeOverrides" preflight-style-disabled>
-		<n-loading-bar-provider container-class="h-0.75">
+	<n-config-provider
+		:rtl="rtlOptions"
+		:theme="theme"
+		:theme-overrides="themeOverrides"
+		preflight-style-disabled
+		inline-theme-disabled
+	>
+		<n-loading-bar-provider container-class="!h-0.75">
 			<n-message-provider>
 				<n-notification-provider>
 					<n-dialog-provider>
@@ -68,27 +74,31 @@ watch(
 
 // This function allows you to utilize the values in the style object as variables within your CSS/SCSS code like: var(-–bg-color)
 function setGlobalVars() {
-	const html = document.children[0] as HTMLElement
-	const body = document.getElementsByTagName("body")?.[0]
-	if (isRTL.value && body) {
-		body.classList.add("direction-rtl")
-		body.classList.remove("direction-ltr")
-	} else {
-		body.classList.remove("direction-rtl")
-		body.classList.add("direction-ltr")
-	}
-	//html.dir = isRTL.value ? "rtl" : "ltr"
-	const { style: htmlStyle } = html
-	for (const key in style.value) {
-		htmlStyle.setProperty("--" + key, style.value[key])
+	if (document) {
+		const html = document.children[0] as HTMLElement
+		const body = document.getElementsByTagName("body")?.[0]
+		if (isRTL.value && body) {
+			body.classList.add("direction-rtl")
+			body.classList.remove("direction-ltr")
+		} else {
+			body.classList.remove("direction-rtl")
+			body.classList.add("direction-ltr")
+		}
+		//html.dir = isRTL.value ? "rtl" : "ltr"
+		const { style: htmlStyle } = html
+		for (const key in style.value) {
+			htmlStyle.setProperty("--" + key, style.value[key])
+		}
 	}
 }
 
 function setThemeName(val: ThemeName, old?: ThemeName) {
-	const html = document.children[0] as HTMLElement
-	if (old) {
-		html.classList.remove(`theme-${old}`)
+	if (document) {
+		const html = document.children[0] as HTMLElement
+		if (old) {
+			html.classList.remove(`theme-${old}`)
+		}
+		html.classList.add(`theme-${val}`)
 	}
-	html.classList.add(`theme-${val}`)
 }
 </script>
