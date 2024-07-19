@@ -418,6 +418,7 @@ async def retrieve_agent_details_from_db(agent_name: str, session: AsyncSession)
     return None
 
 
+
 async def add_asset_to_iris_alert(alert_id: int, asset_details: Agents, iris_alert_payload: IrisAlertPayload, session: AsyncSession):
     client, alert_client = await initialize_client_and_alert("DFIR-IRIS")
     asset_data = {
@@ -618,12 +619,16 @@ async def create_asset_context_payload(
     Build the asset context payload based on the valid field names and the asset payload. Then
     create the asset context in the database.
     """
+    agent_details = await retrieve_agent_details_from_db(asset_payload.asset_payload, session)
+    agent_id = agent_details.agent_id if agent_details else None
+    velociraptor_id = agent_details.velociraptor_id if agent_details else None
+
     asset_context = Asset(
         alert_linked=alert_id,
         asset_name=asset_payload.asset_payload,
         alert_context_id=alert_context_id,
-        agent_id=(await retrieve_agent_details_from_db(asset_payload.asset_payload, session)).agent_id,
-        velociraptor_id=(await retrieve_agent_details_from_db(asset_payload.asset_payload, session)).velociraptor_id,
+        agent_id=agent_id,
+        velociraptor_id=velociraptor_id,
         customer_code=customer_code,
         index_name=asset_payload.index_name,
         index_id=asset_payload.index_id,
