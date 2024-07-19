@@ -55,7 +55,8 @@ export default {
 		"gap-5",
 		"w-72",
 		"max-h-50vh",
-		"max-w-90vw"
+		"max-w-90vw",
+		"!h-0.75"
 	],
 	plugins: [
 		plugin(function ({ addBase, theme }) {

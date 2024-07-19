@@ -1,16 +1,7 @@
 import { defineStore, acceptHMRUpdate } from "pinia"
-import {
-	type ColorAction,
-	type ColorKey,
-	type ColorType,
-	type ThemeColor,
-	type ThemeName,
-	Layout,
-	RouterTransition,
-	ThemeEnum
-} from "@/types/theme.d"
+import { type ColorType, type ThemeName, Layout, RouterTransition, ThemeEnum } from "@/types/theme.d"
 import { type GlobalThemeOverrides, type ThemeCommonVars, darkTheme, lightTheme, useOsTheme } from "naive-ui"
-import { exportPrimaryShades, exposure, getTypeValue, hex2rgb, type PrimaryShade } from "@/utils/theme"
+import { exportPrimaryShades, getThemeColors, getTypeValue, hex2rgb, type PrimaryShade } from "@/utils/theme"
 import _get from "lodash/get"
 import _set from "lodash/set"
 import _pick from "lodash/pick"
@@ -486,26 +477,4 @@ export const useThemeStore = defineStore("theme", {
 
 if (import.meta.hot) {
 	import.meta.hot.accept(acceptHMRUpdate(useThemeStore, import.meta.hot))
-}
-
-function getThemeColors(colors: Record<ColorType, string>) {
-	const colorActions: ColorAction[] = [
-		{ scene: "", handler: color => color },
-		{ scene: "Suppl", handler: color => exposure(color, 0.1) },
-		{ scene: "Hover", handler: color => exposure(color, 0.05) },
-		{ scene: "Pressed", handler: color => exposure(color, -0.2) }
-	]
-
-	const themeColor: ThemeColor = {}
-
-	for (const colorType in colors) {
-		const colorValue = colors[colorType as ColorType]
-
-		colorActions.forEach(action => {
-			const colorKey: ColorKey = `${colorType as ColorType}Color${action.scene}`
-			themeColor[colorKey] = action.handler(colorValue)
-		})
-	}
-
-	return themeColor
 }
