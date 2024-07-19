@@ -37,7 +37,7 @@ from app.integrations.alert_escalation.schema.escalate_alert import IrisAlertPay
 from app.integrations.alert_escalation.schema.escalate_alert import SourceFieldsToRemove
 from app.integrations.alert_escalation.schema.escalate_alert import SyslogLevelMapping
 from app.integrations.utils.alerts import get_asset_type_id
-
+from app.incidents.routes.db_operations import get_configured_sources
 
 async def fetch_settings(field: str, value: str, session: AsyncSession):
     """
@@ -112,14 +112,17 @@ async def get_single_alert_details(
     try:
         alert = es_client.get(index=alert_details.index_name, id=alert_details.alert_id)
         source_model = GenericSourceModel(**alert["_source"])
+        syslog_type = getattr(source_model, 'syslog_type', None)
+        if syslog_type is None:
+            syslog_type = getattr(source_model, 'integration', None)
+        if syslog_type is None:
+            raise HTTPException(status_code=400, detail="Neither syslog_type nor integration field found in source_model")
         return GenericAlertModel(
             _source=source_model,
             _id=alert["_id"],
             _index=alert["_index"],
             _version=alert["_version"],
-            rule_description=source_model.rule_description,
-            syslog_level=source_model.syslog_level,
-            syslog_type=source_model.syslog_type,
+            syslog_type=syslog_type,
         )
     except Exception as e:
         logger.debug(f"Failed to collect alert details: {e}")
@@ -467,23 +470,16 @@ async def add_asset_if_wazuh(alert_details: GenericAlertModel, alert_id: int, ir
     return None
 
 
-async def validate_syslog_type(syslog_type: str) -> bool:
+async def validate_syslog_type_source(source: str, session: AsyncSession) -> bool:
     """
-    Validate the syslog type.
-
-    Args:
-        syslog_type (str): The syslog type.
-
-    Returns:
-        bool: True if the syslog type is valid, False otherwise.
+    Invoke the `get_configured_sources` to ensure the `source` has been configured
     """
-    for syslog in ValidSyslogType:
-        if syslog.value == syslog_type:
-            return True
-    raise HTTPException(
-        status_code=400,
-        detail=f"Invalid syslog type: {syslog_type}. Must be one of {', '.join([syslog.value for syslog in ValidSyslogType])}",
-    )
+    sources = await get_configured_sources(session)
+    if source not in sources.sources:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Syslog type {source} is not configured in the system",
+        )
 
 
 async def get_all_field_names(syslog_type: str, session: AsyncSession) -> FieldNames:
@@ -659,7 +655,7 @@ async def create_alert(
     logger.info(f"Creating alert {alert.alert_id} in CoPilot")
     alert_details = await get_single_alert_details(alert_details=alert)
     logger.info(f"Alert details: {alert_details}")
-    await validate_syslog_type(alert_details.syslog_type)
+    await validate_syslog_type_source(alert_details.syslog_type, session)
     customer_code = await get_customer_code(dict(alert_details._source))
     logger.info(f"Customer code: {customer_code}")
     customer_alert_creation_settings = await is_customer_code_valid(customer_code=customer_code, session=session)
