@@ -51,11 +51,13 @@
 			display-directive="show"
 			preset="card"
 			:style="{ maxWidth: 'min(600px, 90vw)', minHeight: 'min(300px, 90vh)', overflow: 'hidden' }"
-			title="Generate Report"
+			title="Set Source Configuration"
 			:bordered="false"
 			segmented
 		>
+			<!--
 			<CreationReportForm @submitted="getConfiguredSources()" @mounted="formCTX = $event" />
+			-->
 		</n-modal>
 	</div>
 </template>
@@ -64,7 +66,7 @@ import { computed, onBeforeMount, ref, watch } from "vue"
 import { NSpin, NEmpty, NPopover, NButton, NModal, useMessage } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import ConfiguredSourceItem from "./ConfiguredSourceItem.vue"
-import CreationReportForm from "./CreationReportForm.vue"
+// import CreationReportForm from "./CreationReportForm.vue"
 import type { SourceName } from "@/types/incidentManagement.d"
 import Api from "@/api"
 
