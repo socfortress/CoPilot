@@ -5,7 +5,7 @@
 				<n-select v-model:value="severity" :options="severityOptions" class="max-w-48" />
 			</n-form-item>
 		</div>
-		<div class="group">
+		<div class="group gap-4 grid grid-auto-fill-200">
 			<VulnerabilityCard :vulnerability="item" v-for="item of vulnerabilities" :key="item.id" hide-tooltip />
 		</div>
 		<n-empty
@@ -78,24 +78,3 @@ onBeforeMount(() => {
 	if (agent?.value?.agent_id) getVulnerabilities(agent.value.agent_id)
 })
 </script>
-
-<style lang="scss" scoped>
-.vulnerabilities-section {
-	container-type: inline-size;
-	min-height: 100px;
-
-	.group {
-		@apply gap-4;
-		width: 100%;
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
-		grid-auto-flow: row dense;
-	}
-
-	@container (max-width: 500px) {
-		.group {
-			grid-template-columns: repeat(auto-fit, 100%);
-		}
-	}
-}
-</style>

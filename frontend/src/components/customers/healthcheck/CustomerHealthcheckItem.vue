@@ -72,7 +72,7 @@
 			:bordered="false"
 			segmented
 		>
-			<div class="grid gap-2 grid-auto-flow-200 px-7 py-6">
+			<div class="grid gap-2 grid-auto-fit-200 px-7 py-6">
 				<KVCard v-for="(value, key) of healthData" :key="key">
 					<template #key>{{ key }}</template>
 					<template #value>{{ value || "-" }}</template>

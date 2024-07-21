@@ -69,7 +69,7 @@
 		>
 			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane name="Info" tab="Info" display-directive="show">
-					<div class="grid gap-2 grid-auto-flow-200 p-7 pt-4" v-if="properties">
+					<div class="grid gap-2 grid-auto-fit-200 p-7 pt-4" v-if="properties">
 						<KVCard v-for="(value, key) of properties" :key="key">
 							<template #key>{{ key }}</template>
 							<template #value>
@@ -92,7 +92,7 @@
 					</div>
 				</n-tab-pane>
 				<n-tab-pane name="Type" tab="Type" display-directive="show">
-					<div class="grid gap-2 grid-auto-flow-250 p-7 pt-4" v-if="assetType">
+					<div class="grid gap-2 grid-auto-fit-250 p-7 pt-4" v-if="assetType">
 						<KVCard v-for="(value, key) of assetType" :key="key">
 							<template #key>{{ key }}</template>
 							<template #value>{{ value || "-" }}</template>

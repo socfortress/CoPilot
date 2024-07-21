@@ -23,7 +23,7 @@
 				</n-button>
 			</div>
 
-			<div class="grid gap-2 grid-auto-flow-200 p-7 pt-4">
+			<div class="grid gap-2 grid-auto-fit-200 p-7 pt-4">
 				<KVCard v-for="(value, key) of customer" :key="key">
 					<template #key>{{ key }}</template>
 					<template #value>{{ value || "-" }}</template>

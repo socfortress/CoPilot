@@ -1,6 +1,6 @@
 <template>
 	<div class="overview-section">
-		<div class="property-group">
+		<div class="property-group gap-2 grid grid-auto-fit-250">
 			<KVCard v-for="item of propsSanitized" :key="item.key">
 				<template #key>{{ item.key }}</template>
 				<template #value>
@@ -58,23 +58,3 @@ const propsSanitized = computed(() => {
 	return obj
 })
 </script>
-
-<style lang="scss" scoped>
-.overview-section {
-	container-type: inline-size;
-
-	.property-group {
-		width: 100%;
-		display: grid;
-		@apply gap-2;
-		grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-		grid-auto-flow: row dense;
-	}
-
-	@container (max-width: 500px) {
-		.property-group {
-			grid-template-columns: repeat(auto-fit, 100%);
-		}
-	}
-}
-</style>

@@ -77,7 +77,7 @@
 
 		<div class="create-box flex flex-col gap-2" v-if="creationEnabled">
 			<n-form :label-width="80" :model="creationForm" :rules="rules" ref="formRef">
-				<div class="grid gap-2 grid-auto-flow-200">
+				<div class="grid gap-2 grid-auto-fit-200">
 					<n-form-item label="Name" path="name">
 						<n-input v-model:value.trim="creationForm.name" placeholder="Input name..." clearable />
 					</n-form-item>

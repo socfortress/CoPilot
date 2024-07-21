@@ -28,7 +28,7 @@
 					</div>
 				</n-card>
 			</div>
-			<div class="grid gap-2 grid-auto-flow-200 px-7" v-if="properties">
+			<div class="grid gap-2 grid-auto-fit-200 px-7" v-if="properties">
 				<KVCard v-for="(value, key) of properties" :key="key">
 					<template #key>{{ key }}</template>
 					<template #value>

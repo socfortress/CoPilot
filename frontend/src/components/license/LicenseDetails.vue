@@ -18,7 +18,7 @@
 					</span>
 				</template>
 				<template #value>
-					<div v-if="features.length" class="grid gap-2 grid-auto-flow-200">
+					<div v-if="features.length" class="grid gap-2 grid-auto-fit-200">
 						<KVCard v-for="feature of features" :key="feature">
 							<template #value>
 								<span class="flex gap-3 items-center">

@@ -9,7 +9,7 @@
 			</div>
 		</n-tab-pane>
 		<n-tab-pane name="Customer" tab="Customer" display-directive="show:lazy">
-			<div class="grid gap-2 grid-auto-flow-200 p-7 pt-4">
+			<div class="grid gap-2 grid-auto-fit-200 p-7 pt-4">
 				<KVCard v-for="(value, key) of alert.customer" :key="key">
 					<template #key>{{ key }}</template>
 					<template #value>
@@ -38,7 +38,7 @@
 					<template #label>Go to users page</template>
 				</Badge>
 			</div>
-			<div class="grid gap-2 grid-auto-flow-200 p-7 pt-4">
+			<div class="grid gap-2 grid-auto-fit-200 p-7 pt-4">
 				<KVCard>
 					<template #key>user_login</template>
 					<template #value>

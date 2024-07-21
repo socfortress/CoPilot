@@ -6,7 +6,7 @@
 			</template>
 		</n-input>
 
-		<div class="grid gap-2 grid-auto-flow-200">
+		<div class="grid gap-2 grid-auto-fit-200">
 			<KVCard v-for="{ value, key } of contextFiltered" :key="key">
 				<template #key>{{ key }}</template>
 				<template #value>
