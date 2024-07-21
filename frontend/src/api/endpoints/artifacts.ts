@@ -1,8 +1,8 @@
 import { HttpClient } from "../httpClient"
 import type { FlaskBaseResponse } from "@/types/flask.d"
 import type { Artifact, CollectResult, CommandResult, QuarantineResult, Recommendation } from "@/types/artifacts.d"
-import type { AlertContext } from "@/types/soc/alert"
-import type { OsTypesFull, OsTypesLower } from "@/types/common"
+import type { AlertContext } from "@/types/soc/alert.d"
+import type { OsTypesFull, OsTypesLower } from "@/types/common.d"
 
 export interface ArtifactsQuery {
 	os?: OsTypesLower

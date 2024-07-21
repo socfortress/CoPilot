@@ -53,7 +53,7 @@
 import { computed, onBeforeMount, ref, toRefs, watch } from "vue"
 import { NSpin, NForm, NFormItem, NInputGroup, NInputNumber, NSelect, useMessage } from "naive-ui"
 import Api from "@/api"
-import type { Dashboard, Org, Panel } from "@/types/reporting"
+import type { Dashboard, Org, Panel } from "@/types/reporting.d"
 import type { ReportTimeRange, RowPanelTimeUnit } from "@/api/endpoints/reporting"
 import { useStorage } from "@vueuse/core"
 

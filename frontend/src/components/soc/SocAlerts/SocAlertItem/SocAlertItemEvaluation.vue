@@ -86,7 +86,7 @@
 <script setup lang="ts">
 import Icon from "@/components/common/Icon.vue"
 import { useMessage, NModal, NSpin, NTabs, NTabPane, NStatistic, NInput, NCard, NEmpty } from "naive-ui"
-import type { EvaluationData } from "@/types/threatIntel"
+import type { EvaluationData } from "@/types/threatIntel.d"
 import { computed, defineAsyncComponent, ref } from "vue"
 import Api from "@/api"
 import _toSafeInteger from "lodash/toSafeInteger"

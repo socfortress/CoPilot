@@ -22,7 +22,7 @@ import { ref } from "vue"
 import { NScrollbar } from "naive-ui"
 import LicenseFeatures from "./LicenseFeatures.vue"
 import LicenseDetails from "./LicenseDetails.vue"
-import type { License, LicenseKey } from "@/types/license"
+import type { License, LicenseKey } from "@/types/license.d"
 
 const emit = defineEmits<{
 	(e: "licenseKeyLoaded", value: LicenseKey): void

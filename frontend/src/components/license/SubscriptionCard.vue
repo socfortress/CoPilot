@@ -79,7 +79,7 @@ import Icon from "@/components/common/Icon.vue"
 import { ref, toRefs } from "vue"
 import { NSpin, NModal, NButton, NPopconfirm, useMessage } from "naive-ui"
 import Api from "@/api"
-import type { License, SubscriptionFeature } from "@/types/license"
+import type { License, SubscriptionFeature } from "@/types/license.d"
 import { price } from "@/utils"
 import type { CancelSubscriptionPayload } from "@/api/endpoints/license"
 

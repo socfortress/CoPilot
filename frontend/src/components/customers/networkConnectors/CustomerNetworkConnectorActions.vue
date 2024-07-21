@@ -76,7 +76,7 @@ import Api from "@/api"
 import { computed, h, ref } from "vue"
 import { watch } from "vue"
 import type { Size } from "naive-ui/es/button/src/interface"
-import type { CustomerNetworkConnector } from "@/types/networkConnectors"
+import type { CustomerNetworkConnector } from "@/types/networkConnectors.d"
 import type { FortinetProvision } from "@/api/endpoints/networkConnectors"
 import FortinetForm, { type FortinetModel } from "./provisions/FortinetForm.vue"
 

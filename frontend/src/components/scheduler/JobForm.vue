@@ -47,7 +47,7 @@ import {
 import _trim from "lodash/trim"
 import _get from "lodash/get"
 import type { UpdateJobPayload } from "@/api/endpoints/scheduler"
-import type { Job } from "@/types/scheduler"
+import type { Job } from "@/types/scheduler.d"
 
 const props = defineProps<{ job: Job }>()
 const { job } = toRefs(props)

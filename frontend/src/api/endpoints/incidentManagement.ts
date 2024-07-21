@@ -1,12 +1,14 @@
 import { type FlaskBaseResponse } from "@/types/flask.d"
 import { HttpClient } from "../httpClient"
-import type { SourceConfiguration } from "@/types/incidentManagement.d"
+import type { SourceConfiguration, SourceName } from "@/types/incidentManagement.d"
 
 export type SourceConfigurationPayload = SourceConfiguration
 
 export default {
 	getConfiguredSources() {
-		return HttpClient.get<FlaskBaseResponse & { sources: string[] }>(`/incidents/db_operations/configured/sources`)
+		return HttpClient.get<FlaskBaseResponse & { sources: SourceName[] }>(
+			`/incidents/db_operations/configured/sources`
+		)
 	},
 	getAvailableMappings(indexName: string) {
 		return HttpClient.get<FlaskBaseResponse & { available_mappings: string[] }>(
@@ -19,7 +21,7 @@ export default {
 	setSourceConfiguration(payload: SourceConfigurationPayload) {
 		return HttpClient.post<FlaskBaseResponse>(`/incidents/db_operations/fields-assets-title-and-timefield`, payload)
 	},
-	getSourceConfiguration(source: string) {
+	getSourceConfiguration(source: SourceName) {
 		return HttpClient.get<FlaskBaseResponse & SourceConfiguration>(
 			`/incidents/db_operations/fields-assets-title-and-timefield`,
 			{
@@ -27,7 +29,7 @@ export default {
 			}
 		)
 	},
-	deleteSourceConfiguration(source: string) {
+	deleteSourceConfiguration(source: SourceName) {
 		return HttpClient.delete<FlaskBaseResponse & SourceConfiguration>(
 			`/incidents/db_operations/configured/sources/${source}`
 		)

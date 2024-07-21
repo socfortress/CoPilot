@@ -55,7 +55,7 @@ import Icon from "@/components/common/Icon.vue"
 import Api from "@/api"
 import CustomerNetworkConnectorForm from "./CustomerNetworkConnectorForm.vue"
 import CustomerNetworkConnectorItem from "./CustomerNetworkConnectorItem.vue"
-import type { CustomerNetworkConnector } from "@/types/networkConnectors"
+import type { CustomerNetworkConnector } from "@/types/networkConnectors.d"
 
 const { customerCode, customerName } = defineProps<{
 	customerCode: string

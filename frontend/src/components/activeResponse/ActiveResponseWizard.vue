@@ -103,7 +103,7 @@ import type { SupportedActiveResponse } from "@/types/activeResponse.d"
 import ActiveResponseItem from "./ActiveResponseItem.vue"
 import ActiveResponseInvokeForm from "./ActiveResponseInvokeForm.vue"
 import { iconFromOs } from "@/utils"
-import type { OsTypesLower } from "@/types/common"
+import type { OsTypesLower } from "@/types/common.d"
 
 const emit = defineEmits<{
 	(e: "update:loading", value: boolean): void

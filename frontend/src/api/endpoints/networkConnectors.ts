@@ -1,6 +1,6 @@
 import { type FlaskBaseResponse } from "@/types/flask.d"
 import { HttpClient } from "../httpClient"
-import type { CustomerNetworkConnector, NetworkConnector } from "@/types/networkConnectors"
+import type { CustomerNetworkConnector, NetworkConnector } from "@/types/networkConnectors.d"
 
 export interface NewNetworkConnector {
 	customer_code: string

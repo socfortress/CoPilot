@@ -71,9 +71,9 @@ import type { Size } from "naive-ui/es/button/src/interface"
 import { computed, ref } from "vue"
 import Api from "@/api"
 import _uniqBy from "lodash/uniqBy"
-import type { SocAlert } from "@/types/soc/alert"
-import type { OsTypesFull } from "@/types/common"
-import type { Recommendation } from "@/types/artifacts"
+import type { SocAlert } from "@/types/soc/alert.d"
+import type { OsTypesFull } from "@/types/common.d"
+import type { Recommendation } from "@/types/artifacts.d"
 
 interface RecommendationStore {
 	os: OsTypesFull

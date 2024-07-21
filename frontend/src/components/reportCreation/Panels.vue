@@ -200,7 +200,7 @@
 <script setup lang="ts">
 import { ref, computed, toRefs, watch, onMounted } from "vue"
 import { NButton, NSpin, NScrollbar, NTooltip, NDrawer, NDrawerContent, NPopover, NSwitch, useMessage } from "naive-ui"
-import type { Dashboard, Org, Panel } from "@/types/reporting"
+import type { Dashboard, Org, Panel } from "@/types/reporting.d"
 import Icon from "@/components/common/Icon.vue"
 import PrintSettings, { type PrintSettingsData } from "./PrintSettings.vue"
 import draggable from "vuedraggable"

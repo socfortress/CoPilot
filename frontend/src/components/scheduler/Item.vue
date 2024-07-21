@@ -42,7 +42,7 @@
 import Icon from "@/components/common/Icon.vue"
 import Badge from "@/components/common/Badge.vue"
 import { NTooltip } from "naive-ui"
-import type { Job } from "@/types/scheduler"
+import type { Job } from "@/types/scheduler.d"
 import { formatDate } from "@/utils"
 import { useSettingsStore } from "@/stores/settings"
 import JobActions from "./JobActions.vue"

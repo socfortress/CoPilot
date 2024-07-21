@@ -3,7 +3,7 @@ import { type Component, h } from "vue"
 import { isMobile as detectMobile } from "detect-touch-device"
 import { md5 } from "js-md5"
 import dayjs from "@/utils/dayjs"
-import type { OsTypesFull } from "@/types/common"
+import type { OsTypesFull } from "@/types/common.d"
 import _trim from "lodash/trim"
 
 // Transform File Instance in base64 string

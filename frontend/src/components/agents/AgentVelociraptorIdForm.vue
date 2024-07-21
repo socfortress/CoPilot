@@ -33,7 +33,7 @@ import { onBeforeMount, ref, toRefs } from "vue"
 import Api from "@/api"
 import { useMessage, NInput, NButton, NInputGroup } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
-import type { Agent } from "@/types/agents"
+import type { Agent } from "@/types/agents.d"
 
 const velociraptorId = defineModel<string>("velociraptorId", { default: "" })
 

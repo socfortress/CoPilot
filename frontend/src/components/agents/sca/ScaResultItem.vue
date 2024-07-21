@@ -67,7 +67,7 @@ import Icon from "@/components/common/Icon.vue"
 import Badge from "@/components/common/Badge.vue"
 import { ref } from "vue"
 import { NModal, NButton } from "naive-ui"
-import type { ScaPolicyResult } from "@/types/agents"
+import type { ScaPolicyResult } from "@/types/agents.d"
 import ScaResultItemDetails from "./ScaResultItemDetails.vue"
 
 const { data, embedded } = defineProps<{

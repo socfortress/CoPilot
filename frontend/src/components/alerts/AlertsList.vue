@@ -132,7 +132,7 @@
 <script setup lang="ts">
 // MOCK
 // import { alerts_summary } from "./mock"
-// import type { AlertsSummary } from "@/types/alerts"
+// import type { AlertsSummary } from "@/types/alerts.d"
 
 import { ref, onBeforeMount, toRefs, computed, nextTick, onMounted, onBeforeUnmount } from "vue"
 import { useMessage, NSpin, NPopover, NButton, NEmpty, NDrawer, NDrawerContent, NSelect } from "naive-ui"

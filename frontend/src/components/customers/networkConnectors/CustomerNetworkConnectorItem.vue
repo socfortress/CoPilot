@@ -69,7 +69,7 @@ import { NModal, NButton } from "naive-ui"
 import CustomerNetworkConnectorActions from "./CustomerNetworkConnectorActions.vue"
 import KVCard from "@/components/common/KVCard.vue"
 import _uniqBy from "lodash/uniqBy"
-import type { CustomerNetworkConnector } from "@/types/networkConnectors"
+import type { CustomerNetworkConnector } from "@/types/networkConnectors.d"
 
 const props = defineProps<{
 	networkConnector: CustomerNetworkConnector

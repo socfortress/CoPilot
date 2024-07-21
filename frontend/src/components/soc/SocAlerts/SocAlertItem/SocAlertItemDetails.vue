@@ -102,7 +102,7 @@ import SocAlertAssetsList from "../SocAlertAssets/SocAlertAssetsList.vue"
 import "@/assets/scss/vuesjv-override.scss"
 import { NTabs, NTabPane, NSpin } from "naive-ui"
 import { useGoto } from "@/composables/useGoto"
-import type { SocUser } from "@/types/soc/user"
+import type { SocUser } from "@/types/soc/user.d"
 
 const emit = defineEmits<{
 	(e: "updated", value: SocAlert): void
