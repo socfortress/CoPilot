@@ -84,7 +84,7 @@ import Api from "@/api"
 import Icon from "@/components/common/Icon.vue"
 import QuarantineItem from "./QuarantineItem.vue"
 import type { Agent } from "@/types/agents.d"
-import type { QuarantineRequest } from "@/api/artifacts"
+import type { QuarantineRequest } from "@/api/endpoints/artifacts"
 import type { Artifact, QuarantineResult } from "@/types/artifacts.d"
 // import { quarantineResult } from "./mock"
 

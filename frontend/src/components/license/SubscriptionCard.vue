@@ -81,7 +81,7 @@ import { NSpin, NModal, NButton, NPopconfirm, useMessage } from "naive-ui"
 import Api from "@/api"
 import type { License, SubscriptionFeature } from "@/types/license"
 import { price } from "@/utils"
-import type { CancelSubscriptionPayload } from "@/api/license"
+import type { CancelSubscriptionPayload } from "@/api/endpoints/license"
 
 const emit = defineEmits<{
 	(e: "deleted"): void

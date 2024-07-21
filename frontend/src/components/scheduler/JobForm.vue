@@ -46,7 +46,7 @@ import {
 } from "naive-ui"
 import _trim from "lodash/trim"
 import _get from "lodash/get"
-import type { UpdateJobPayload } from "@/api/scheduler"
+import type { UpdateJobPayload } from "@/api/endpoints/scheduler"
 import type { Job } from "@/types/scheduler"
 
 const props = defineProps<{ job: Job }>()

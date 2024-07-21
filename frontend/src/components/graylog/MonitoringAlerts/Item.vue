@@ -106,7 +106,7 @@ import {
 	type FormValidationError
 } from "naive-ui"
 import Api from "@/api"
-import type { ProvisionsMonitoringAlertParams } from "@/api/monitoringAlerts"
+import type { ProvisionsMonitoringAlertParams } from "@/api/endpoints/monitoringAlerts"
 
 const emit = defineEmits<{
 	(e: "provisioned"): void

@@ -85,7 +85,7 @@ import { useMessage, NFormItem, NInput, NSelect, NButton, NScrollbar, NSteps, NS
 import Icon from "@/components/common/Icon.vue"
 import Api from "@/api"
 import IntegrationsList from "@/components/integrations/IntegrationsList.vue"
-import type { NewIntegration } from "@/api/integrations"
+import type { NewIntegration } from "@/api/endpoints/integrations"
 import type { ServiceItemData } from "@/components/services/types"
 
 interface AuthKeysInput {

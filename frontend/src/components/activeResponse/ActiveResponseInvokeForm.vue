@@ -45,7 +45,7 @@ import { computed, onMounted, ref } from "vue"
 import { watch } from "vue"
 import type { SupportedActiveResponse } from "@/types/activeResponse.d"
 import isIP from "validator/es/lib/isIP"
-import type { InvokeRequest, InvokeRequestAction } from "@/api/activeResponse"
+import type { InvokeRequest, InvokeRequestAction } from "@/api/endpoints/activeResponse"
 import Api from "@/api"
 
 interface InvokeForm {

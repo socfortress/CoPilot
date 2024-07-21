@@ -23,7 +23,7 @@ import { type Agent, type AgentVulnerabilities } from "@/types/agents.d"
 import VulnerabilityCard from "./VulnerabilityCard.vue"
 import { nanoid } from "nanoid"
 import { useMessage, NSpin, NEmpty, NFormItem, NSelect } from "naive-ui"
-import type { VulnerabilitySeverityType } from "@/api/agents"
+import type { VulnerabilitySeverityType } from "@/api/endpoints/agents"
 
 const props = defineProps<{
 	agent: Agent

@@ -132,7 +132,7 @@ import _cloneDeep from "lodash/cloneDeep"
 import Icon from "@/components/common/Icon.vue"
 import ArtifactItem from "./ArtifactItem.vue"
 import type { Agent } from "@/types/agents.d"
-import type { ArtifactsQuery } from "@/api/artifacts"
+import type { ArtifactsQuery } from "@/api/endpoints/artifacts"
 import type { Artifact } from "@/types/artifacts.d"
 import { useResizeObserver } from "@vueuse/core"
 

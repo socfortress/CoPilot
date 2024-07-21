@@ -56,7 +56,7 @@ import NextTooltip from "./NextTooltip.vue"
 import type { Job } from "@/types/scheduler"
 import type { Size } from "naive-ui/es/button/src/interface"
 import Api from "@/api"
-import type { UpdateJobPayload } from "@/api/scheduler"
+import type { UpdateJobPayload } from "@/api/endpoints/scheduler"
 
 const props = defineProps<{ job: Job; size?: Size; inline?: boolean }>()
 const { job, size, inline } = toRefs(props)

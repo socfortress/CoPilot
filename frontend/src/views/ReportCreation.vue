@@ -26,7 +26,7 @@ import { NAlert } from "naive-ui"
 import ReportWizard from "@/components/reportCreation/Wizard.vue"
 import ReportPanels from "@/components/reportCreation/Panels.vue"
 import type { Dashboard, Org, Panel } from "@/types/reporting.d"
-import type { ReportTimeRange } from "@/api/reporting"
+import type { ReportTimeRange } from "@/api/endpoints/reporting"
 import Icon from "@/components/common/Icon.vue"
 import LicenseFeatureOverlay from "@/components/license/LicenseFeatureOverlay.vue"
 

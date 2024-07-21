@@ -126,7 +126,7 @@ import { useResizeObserver } from "@vueuse/core"
 import LogsFilters from "./LogsFilters.vue"
 import LogItem from "./LogItem.vue"
 import { LogEventType, type Log } from "@/types/logs.d"
-import type { LogsQuery, LogsQueryTimeRange, LogsQueryTypes, LogsQueryValues } from "@/api/logs"
+import type { LogsQuery, LogsQueryTimeRange, LogsQueryTypes, LogsQueryValues } from "@/api/endpoints/logs"
 import type { AuthUser } from "@/types/auth.d"
 
 interface LogExt extends Log {

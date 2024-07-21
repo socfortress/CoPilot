@@ -164,7 +164,7 @@ import {
 import _trim from "lodash/trim"
 import _get from "lodash/get"
 import _toSafeInteger from "lodash/toSafeInteger"
-import { type CustomProvisionPayload, CustomProvisionPriority } from "@/api/monitoringAlerts"
+import { type CustomProvisionPayload, CustomProvisionPriority } from "@/api/endpoints/monitoringAlerts"
 import Icon from "@/components/common/Icon.vue"
 
 interface CustomProvisionForm {
