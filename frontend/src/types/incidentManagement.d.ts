@@ -1,3 +1,5 @@
+export type SourceName = string
+
 export interface SourceConfiguration {
 	field_names: string[]
 	asset_name: string
