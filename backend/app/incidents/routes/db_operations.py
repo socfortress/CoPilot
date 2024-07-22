@@ -22,20 +22,28 @@ from app.incidents.models import Case
 from app.incidents.models import CaseAlertLink
 from app.incidents.models import Comment
 from app.incidents.models import FieldName
-from app.incidents.schema.db_operations import AlertContextCreate, AlertResponse, AlertContextResponse
-from app.incidents.schema.db_operations import AlertCreate, AlertTagResponse, CaseOutResponse
-from app.incidents.schema.db_operations import AlertOut, CaseResponse, CaseAlertLinkResponse
+from app.incidents.schema.db_operations import AlertContextCreate
+from app.incidents.schema.db_operations import AlertContextResponse
+from app.incidents.schema.db_operations import AlertCreate
+from app.incidents.schema.db_operations import AlertOut
 from app.incidents.schema.db_operations import AlertOutResponse
+from app.incidents.schema.db_operations import AlertResponse
 from app.incidents.schema.db_operations import AlertStatus
-from app.incidents.schema.db_operations import AlertTagCreate, AssetResponse
+from app.incidents.schema.db_operations import AlertTagCreate
+from app.incidents.schema.db_operations import AlertTagResponse
 from app.incidents.schema.db_operations import AssetBase
-from app.incidents.schema.db_operations import AssetCreate, CommentResponse
+from app.incidents.schema.db_operations import AssetCreate
+from app.incidents.schema.db_operations import AssetResponse
 from app.incidents.schema.db_operations import AssignedToAlert
 from app.incidents.schema.db_operations import CaseAlertLinkCreate
+from app.incidents.schema.db_operations import CaseAlertLinkResponse
 from app.incidents.schema.db_operations import CaseCreate
 from app.incidents.schema.db_operations import CaseOut
+from app.incidents.schema.db_operations import CaseOutResponse
+from app.incidents.schema.db_operations import CaseResponse
 from app.incidents.schema.db_operations import CommentBase
 from app.incidents.schema.db_operations import CommentCreate
+from app.incidents.schema.db_operations import CommentResponse
 from app.incidents.schema.db_operations import ConfiguredSourcesResponse
 from app.incidents.schema.db_operations import FieldAndAssetNames
 from app.incidents.schema.db_operations import FieldAndAssetNamesResponse
@@ -198,17 +206,25 @@ async def update_assigned_to_endpoint(assigned_to: AssignedToAlert, db: AsyncSes
     user_names = [user.username for user in all_users]
     if assigned_to.assigned_to not in user_names:
         raise HTTPException(status_code=400, detail="User does not exist")
-    return AlertResponse(alert=await update_alert_assigned_to(assigned_to.alert_id, assigned_to.assigned_to, db), success=True, message="Alert assigned to user successfully")
+    return AlertResponse(
+        alert=await update_alert_assigned_to(assigned_to.alert_id, assigned_to.assigned_to, db),
+        success=True,
+        message="Alert assigned to user successfully",
+    )
 
 
 @incidents_db_operations_router.post("/alert/context", response_model=AlertContextResponse)
 async def create_alert_context_endpoint(alert_context: AlertContextCreate, db: AsyncSession = Depends(get_db)):
-    return AlertContextResponse(alert_context=await create_alert_context(alert_context, db), success=True, message="Alert context created successfully")
+    return AlertContextResponse(
+        alert_context=await create_alert_context(alert_context, db), success=True, message="Alert context created successfully",
+    )
 
 
 @incidents_db_operations_router.get("/alert/context/{alert_context_id}", response_model=AlertContextResponse)
 async def get_alert_context_by_id_endpoint(alert_context_id: int, db: AsyncSession = Depends(get_db)):
-    return AlertContextResponse(alert_context=await get_alert_context_by_id(alert_context_id, db), success=True, message="Alert context retrieved successfully")
+    return AlertContextResponse(
+        alert_context=await get_alert_context_by_id(alert_context_id, db), success=True, message="Alert context retrieved successfully",
+    )
 
 
 @incidents_db_operations_router.post("/alert/asset", response_model=AssetResponse)
@@ -223,13 +239,15 @@ async def create_alert_tag_endpoint(alert_tag: AlertTagCreate, db: AsyncSession 
 
 @incidents_db_operations_router.get("/alert/tag/{tag}", response_model=AlertOutResponse)
 async def list_alerts_by_tag_endpoint(tag: str, db: AsyncSession = Depends(get_db)):
-    #return await list_alerts_by_tag(tag, db)
+    # return await list_alerts_by_tag(tag, db)
     return AlertOutResponse(alerts=await list_alerts_by_tag(tag, db), success=True, message="Alerts retrieved successfully")
 
 
 @incidents_db_operations_router.delete("/alert/tag", response_model=AlertTagResponse)
 async def delete_alert_tag_endpoint(alert_tag: AlertTagCreate, db: AsyncSession = Depends(get_db)):
-    return AlertTagResponse(alert_tag=await delete_alert_tag(alert_tag.alert_id, alert_tag.tag, db), success=True, message="Alert tag deleted successfully")
+    return AlertTagResponse(
+        alert_tag=await delete_alert_tag(alert_tag.alert_id, alert_tag.tag, db), success=True, message="Alert tag deleted successfully",
+    )
 
 
 @incidents_db_operations_router.post("/case/create", response_model=CaseResponse)
@@ -239,7 +257,9 @@ async def create_case_endpoint(case: CaseCreate, db: AsyncSession = Depends(get_
 
 @incidents_db_operations_router.post("/case/alert-link", response_model=CaseAlertLinkResponse)
 async def create_case_alert_link_endpoint(case_alert_link: CaseAlertLinkCreate, db: AsyncSession = Depends(get_db)):
-    return CaseAlertLinkResponse(case_alert_link=await create_case_alert_link(case_alert_link, db), success=True, message="Case alert link created successfully")
+    return CaseAlertLinkResponse(
+        case_alert_link=await create_case_alert_link(case_alert_link, db), success=True, message="Case alert link created successfully",
+    )
 
 
 @incidents_db_operations_router.get("/alerts", response_model=AlertOutResponse)
