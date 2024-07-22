@@ -569,6 +569,64 @@ async def create_alert_full(alert_payload: CreatedAlertPayload, customer_code: s
     ).id
     logger.info(f"Creating alert for customer code {customer_code} with alert context ID {alert_context_id} and asset ID {asset_id}")
 
+async def does_assit_exist(alert_payload: CreatedAlertPayload, alert_id: int, session: AsyncSession) -> bool:
+    """
+    Check if the asset exists for the given alert payload.
+
+    Args:
+        alert_payload (dict): The alert payload.
+        alert_id (int): The alert ID.
+        session (AsyncSession): The database session.
+
+    Returns:
+        bool: True if the asset exists, None otherwise.
+    """
+    logger.info(f"Checking if an asset exists for alert ID {alert_id} with asset name {alert_payload.asset_payload}")
+    result = await session.execute(
+        select(Asset).where(
+            Asset.alert_linked == alert_id,
+            Asset.asset_name == alert_payload.asset_payload,
+        ),
+    )
+    asset = result.scalars().first()
+    if asset:
+        logger.info(f"Asset exists for alert ID {alert_id} with asset name {alert_payload.asset_payload}")
+        return True
+    logger.info(f"No asset exists for alert ID {alert_id} with asset name {alert_payload.asset_payload}")
+    return False
+
+async def add_asset_to_copilot_alert(alert_payload: CreatedAlertPayload, alert_id: int, customer_code: str, session: AsyncSession) -> None:
+    """
+    Add the asset to the alert in CoPilot.
+
+    Args:
+        alert_payload (dict): The alert payload.
+        alert_id (int): The alert ID.
+        session (AsyncSession): The database session.
+    """
+    if await does_assit_exist(alert_payload, alert_id, session):
+        return None
+    agent_details = await retrieve_agent_details_from_db(alert_payload.asset_payload, session)
+    alert_context_id = (
+        await create_alert_context_payload(source=alert_payload.source, alert_payload=alert_payload.alert_context_payload, session=session)
+    ).id
+    agent_id = agent_details.agent_id if agent_details else None
+    velociraptor_id = agent_details.velociraptor_id if agent_details else None
+    asset_context = Asset(
+        alert_linked=alert_id,
+        asset_name=alert_payload.asset_payload,
+        alert_context_id=alert_context_id,
+        agent_id=agent_id,
+        velociraptor_id=velociraptor_id,
+        customer_code=customer_code,
+        index_name=alert_payload.index_name,
+        index_id=alert_payload.index_id,
+    )
+    # Commit it to the database
+    session.add(asset_context)
+    await session.commit()
+    return asset_context
+
 
 async def create_alert_in_copilot(alert_payload: CreatedAlertPayload, customer_code: str, session: AsyncSession) -> Alert:
     """
@@ -646,6 +704,33 @@ async def create_asset_context_payload(
     await session.commit()
     return asset_context
 
+async def open_alert_exists(alert_payload: CreatedAlertPayload, customer_code: str, session: AsyncSession) -> bool:
+    """
+    Check if an open alert exists for the given alert payload.
+
+    Args:
+        alert_payload (dict): The alert payload.
+        customer_code (str): The customer code.
+
+    Returns:
+        bool: True if an open alert exists, None otherwise.
+    """
+    logger.info(f"Checking if an open alert exists for customer code {customer_code} with alert title {alert_payload.alert_title_payload}")
+    result = await session.execute(
+        select(Alert).where(
+            Alert.customer_code == customer_code,
+            Alert.alert_name == alert_payload.alert_title_payload,
+            Alert.status == "OPEN",
+        ),
+    )
+    alert = result.scalars().first()
+    if alert:
+        logger.info(f"Open alert exists for customer code {customer_code} with alert title {alert_payload.alert_title_payload}")
+        return alert.id
+    logger.info(f"No open alert exists for customer code {customer_code} with alert title {alert_payload.alert_title_payload}")
+    return None
+
+
 
 async def create_alert(
     alert: CreateAlertRequest,
@@ -680,6 +765,11 @@ async def create_alert(
         session,
     )
     logger.info(f"Alert PAyload {alert_payload}")
+    existing_alert = await open_alert_exists(alert_payload, customer_code, session)
+    if existing_alert:
+        logger.info(f"Open alert exists for customer code {customer_code} with alert title {alert_payload.alert_title_payload} and alert ID {existing_alert}")
+        await add_asset_to_copilot_alert(alert_payload, existing_alert, customer_code, session)
+        return None
     await create_alert_full(alert_payload, customer_code, session)
     return None
     iris_alert_payload = await build_alert_payload(
