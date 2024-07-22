@@ -3,6 +3,7 @@ from enum import Enum
 from typing import Dict
 from typing import List
 from typing import Optional
+from app.incidents.models import Alert, Comment, AlertContext, Asset, AlertTag, Case, CaseAlertLink
 
 from pydantic import BaseModel
 
@@ -33,6 +34,40 @@ class UpdateAlertStatus(BaseModel):
     alert_id: int
     status: AlertStatus
 
+class AlertResponse(BaseModel):
+    alert: Alert
+    success: bool
+    message: str
+
+class CommentResponse(BaseModel):
+    comment: Comment
+    success: bool
+    message: str
+
+class AlertContextResponse(BaseModel):
+    alert_context: AlertContext
+    success: bool
+    message: str
+
+class AssetResponse(BaseModel):
+    asset: Asset
+    success: bool
+    message: str
+
+class AlertTagResponse(BaseModel):
+    alert_tag: AlertTag
+    success: bool
+    message: str
+
+class CaseResponse(BaseModel):
+    case: Case
+    success: bool
+    message: str
+
+class CaseAlertLinkResponse(BaseModel):
+    case_alert_link: CaseAlertLink
+    success: bool
+    message: str
 
 class FieldAndAssetNames(BaseModel):
     field_names: List[str]
@@ -160,3 +195,8 @@ class CaseOut(BaseModel):
     case_description: str
     assigned_to: str
     alerts: List[AlertOut]
+
+class CaseOutResponse(BaseModel):
+    cases: List[CaseOut]
+    success: bool
+    message: str
