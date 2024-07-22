@@ -30,15 +30,15 @@
 				</span>
 			</div>
 			<div class="badges-box flex flex-wrap items-center gap-3 mt-4">
-				<Badge type="splitted">
+				<Badge type="splitted" color="primary">
 					<template #label>State</template>
 					<template #value>{{ flow.state || "-" }}</template>
 				</Badge>
-				<Badge type="splitted">
+				<Badge type="splitted" color="primary">
 					<template #label>Status</template>
 					<template #value>{{ flow.status || "-" }}</template>
 				</Badge>
-				<Badge type="splitted">
+				<Badge type="splitted" color="primary">
 					<template #label>Exec. time</template>
 					<template #value>{{ executionDuration }}</template>
 				</Badge>

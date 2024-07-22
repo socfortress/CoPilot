@@ -29,11 +29,11 @@
 				{{ stat.error_message }}
 			</div>
 			<div class="badges-box flex flex-wrap items-center gap-3 mt-1">
-				<Badge type="splitted">
+				<Badge type="splitted" color="primary">
 					<template #label>Status</template>
 					<template #value>{{ stat.status || "-" }}</template>
 				</Badge>
-				<Badge type="splitted">
+				<Badge type="splitted" color="primary">
 					<template #label>Duration</template>
 					<template #value>{{ duration }}</template>
 				</Badge>

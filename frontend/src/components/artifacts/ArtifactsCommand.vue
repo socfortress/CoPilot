@@ -54,7 +54,7 @@
 					<div class="badges-box flex gap-2 flex-wrap grow">
 						<n-tooltip trigger="hover" v-if="commandTime">
 							<template #trigger>
-								<Badge type="splitted" hint-cursor>
+								<Badge type="splitted" color="primary" hint-cursor>
 									<template #iconLeft>
 										<Icon :name="TimeIcon"></Icon>
 									</template>
@@ -72,7 +72,7 @@
 							Last request time / last response time
 						</n-tooltip>
 
-						<Badge type="splitted" v-if="diffTime">
+						<Badge type="splitted" color="primary" v-if="diffTime">
 							<template #iconLeft>
 								<Icon :name="StopWatchIcon" :size="15"></Icon>
 							</template>

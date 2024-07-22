@@ -47,7 +47,7 @@
 						<div class="badges-box flex flex-wrap items-center gap-3 mt-4">
 							<Badge
 								type="splitted"
-								:color="baseInfo.state_name === StateName.Open ? 'warning' : undefined"
+								:color="baseInfo.state_name === StateName.Open ? 'warning' : 'primary'"
 							>
 								<template #iconLeft>
 									<Icon :name="StatusIcon" :size="14"></Icon>
@@ -55,14 +55,14 @@
 								<template #label>State</template>
 								<template #value>{{ baseInfo.state_name }}</template>
 							</Badge>
-							<Badge type="splitted">
+							<Badge type="splitted" color="primary">
 								<template #iconLeft>
 									<Icon :name="OwnerIcon" :size="16"></Icon>
 								</template>
 								<template #label>Owner</template>
 								<template #value>{{ baseInfo.owner }}</template>
 							</Badge>
-							<Badge type="splitted">
+							<Badge type="splitted" color="primary">
 								<template #iconLeft>
 									<Icon :name="CustomerIcon" :size="13"></Icon>
 								</template>

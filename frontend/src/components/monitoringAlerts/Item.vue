@@ -27,7 +27,7 @@
 							<template #label>Customer #{{ alert.customer_code }}</template>
 						</Badge>
 
-						<Badge type="splitted">
+						<Badge type="splitted" color="primary">
 							<template #label>Source</template>
 							<template #value>{{ alert.alert_source }}</template>
 						</Badge>

@@ -33,15 +33,15 @@
 					</div>
 
 					<div class="badges-box flex flex-wrap items-center gap-3 mt-4">
-						<Badge type="splitted">
+						<Badge type="splitted" color="primary">
 							<template #label>Status</template>
 							<template #value>{{ asset.analysis_status }}</template>
 						</Badge>
-						<Badge type="splitted">
+						<Badge type="splitted" color="primary">
 							<template #label>Type</template>
 							<template #value>{{ asset.asset_type }}</template>
 						</Badge>
-						<Badge type="splitted" v-for="tag of tags" :key="tag.key">
+						<Badge type="splitted" color="primary" v-for="tag of tags" :key="tag.key">
 							<template #label>{{ tag.key }}</template>
 							<template #value v-if="tag.value !== undefined">{{ tag.value || "-" }}</template>
 						</Badge>

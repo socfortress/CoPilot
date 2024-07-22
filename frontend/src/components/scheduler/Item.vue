@@ -18,7 +18,7 @@
 				<div class="title">{{ job.name }}</div>
 				<div class="description mt-1">{{ job.description }}</div>
 				<div class="badges-box flex flex-wrap items-center gap-3 mt-4">
-					<Badge type="splitted">
+					<Badge type="splitted" color="primary">
 						<template #label>Interval</template>
 						<template #value>
 							{{ job.time_interval }} {{ job.time_interval === 1 ? "minute" : "minutes" }}

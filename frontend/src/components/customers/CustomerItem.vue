@@ -29,7 +29,7 @@
 			</div>
 
 			<div class="badges-box flex flex-wrap items-center gap-3 mt-2">
-				<Badge type="splitted">
+				<Badge type="splitted" color="primary">
 					<template #iconLeft>
 						<Icon :name="UserTypeIcon" :size="14"></Icon>
 					</template>
@@ -39,7 +39,7 @@
 
 				<n-popover trigger="hover" :disabled="addressLabel === '-'">
 					<template #trigger>
-						<Badge type="splitted" :class="{ 'cursor-help': addressLabel !== '-' }">
+						<Badge type="splitted" color="primary" :class="{ 'cursor-help': addressLabel !== '-' }">
 							<template #iconLeft>
 								<Icon :name="LocationIcon" :size="13"></Icon>
 							</template>
@@ -77,14 +77,14 @@
 					</div>
 				</n-popover>
 
-				<Badge type="splitted">
+				<Badge type="splitted" color="primary">
 					<template #iconLeft>
 						<Icon :name="PhoneIcon" :size="13"></Icon>
 					</template>
 					<template #value>{{ customerInfo?.phone || "-" }}</template>
 				</Badge>
 
-				<Badge type="splitted" v-if="customerInfo?.parent_customer_code">
+				<Badge type="splitted" color="primary" v-if="customerInfo?.parent_customer_code">
 					<template #iconLeft>
 						<Icon :name="ParentIcon" :size="13"></Icon>
 					</template>

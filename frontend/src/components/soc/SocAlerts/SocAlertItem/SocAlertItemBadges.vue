@@ -2,7 +2,7 @@
 	<div class="flex flex-wrap items-center gap-3 mt-3">
 		<n-tooltip placement="top-start" trigger="hover">
 			<template #trigger>
-				<Badge type="splitted" hint-cursor>
+				<Badge type="splitted" color="primary" hint-cursor>
 					<template #iconLeft>
 						<Icon :name="StatusIcon" :size="14"></Icon>
 					</template>
@@ -12,21 +12,21 @@
 			</template>
 			{{ alert.status.status_description }}
 		</n-tooltip>
-		<Badge type="splitted" :color="alert.severity?.severity_id === 5 ? 'danger' : undefined">
+		<Badge type="splitted" :color="alert.severity?.severity_id === 5 ? 'danger' : 'primary'">
 			<template #iconLeft>
 				<Icon :name="SeverityIcon" :size="13"></Icon>
 			</template>
 			<template #label>Severity</template>
 			<template #value>{{ alert.severity?.severity_name || "-" }}</template>
 		</Badge>
-		<Badge type="splitted" class="hide-on-small">
+		<Badge type="splitted" color="primary" class="hide-on-small">
 			<template #iconLeft>
 				<Icon :name="SourceIcon" :size="13"></Icon>
 			</template>
 			<template #label>Source</template>
 			<template #value>{{ alert.alert_source || "-" }}</template>
 		</Badge>
-		<Badge type="splitted" class="hide-on-small">
+		<Badge type="splitted" color="primary" class="hide-on-small">
 			<template #iconLeft>
 				<Icon :name="CustomerIcon" :size="13"></Icon>
 			</template>

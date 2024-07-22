@@ -33,14 +33,14 @@
 					</div>
 
 					<div class="badges-box flex flex-wrap items-center gap-3 mt-4">
-						<Badge type="splitted" v-if="asset.date_added">
+						<Badge type="splitted" color="primary" v-if="asset.date_added">
 							<template #iconLeft>
 								<Icon :name="ClockIcon" :size="14"></Icon>
 							</template>
 							<template #label>Added</template>
 							<template #value>{{ formatDate(asset.date_added) }}</template>
 						</Badge>
-						<Badge type="splitted" v-if="asset.date_update">
+						<Badge type="splitted" color="primary" v-if="asset.date_update">
 							<template #iconLeft>
 								<Icon :name="ClockIcon" :size="14"></Icon>
 							</template>

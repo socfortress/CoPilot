@@ -15,7 +15,7 @@
 				<div class="rule-groups">{{ alert._source.rule_groups }}</div>
 
 				<div class="badges-box flex flex-wrap items-center gap-3" v-if="alert._id">
-					<Badge type="splitted">
+					<Badge type="splitted" color="primary">
 						<template #iconLeft>
 							<Icon :name="TargetIcon" :size="13" class="!opacity-80"></Icon>
 						</template>
@@ -32,7 +32,7 @@
 
 					<n-popover overlap placement="bottom-start">
 						<template #trigger>
-							<Badge type="splitted" hint-cursor>
+							<Badge type="splitted" color="primary" hint-cursor>
 								<template #iconLeft>
 									<Icon :name="AgentIcon" :size="13" class="!opacity-80"></Icon>
 								</template>
@@ -73,19 +73,19 @@
 							</div>
 						</div>
 					</n-popover>
-					<Badge type="splitted">
+					<Badge type="splitted" color="primary">
 						<template #label>syslog</template>
 						<template #value>{{ alert._source.syslog_type }} / {{ alert._source.syslog_level }}</template>
 					</Badge>
-					<Badge type="splitted" class="hide-on-small">
+					<Badge type="splitted" color="primary" class="hide-on-small">
 						<template #label>manager</template>
 						<template #value>{{ alert._source.manager_name }}</template>
 					</Badge>
-					<Badge type="splitted" class="hide-on-small">
+					<Badge type="splitted" color="primary" class="hide-on-small">
 						<template #label>decoder</template>
 						<template #value>{{ alert._source.decoder_name }}</template>
 					</Badge>
-					<Badge type="splitted" class="hide-on-small">
+					<Badge type="splitted" color="primary" class="hide-on-small">
 						<template #label>source</template>
 						<template #value>{{ alert._source.source }}</template>
 					</Badge>
