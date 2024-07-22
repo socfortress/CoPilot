@@ -46,6 +46,10 @@ class FieldAndAssetNamesResponse(BaseModel):
     success: bool
     message: str
 
+class AssignedToAlert(BaseModel):
+    alert_id: int
+    assigned_to: str
+
 
 class AlertCreate(BaseModel):
     alert_name: str

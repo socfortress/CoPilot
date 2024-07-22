@@ -159,6 +159,15 @@ async def update_alert_status(update_alert_status: UpdateAlertStatus, db: AsyncS
     await db.commit()
     return alert
 
+async def update_alert_assigned_to(alert_id: int, assigned_to: str, db: AsyncSession) -> Alert:
+    result = await db.execute(select(Alert).where(Alert.id == alert_id))
+    alert = result.scalars().first()
+    if not alert:
+        raise HTTPException(status_code=404, detail="Alert not found")
+    alert.assigned_to = assigned_to
+    await db.commit()
+    return alert
+
 async def create_comment(comment: CommentCreate, db: AsyncSession) -> Comment:
     # Check if the alert exists
     result = await db.execute(select(Alert).options(selectinload(Alert.comments)).where(Alert.id == comment.alert_id))

@@ -21,7 +21,7 @@ from app.incidents.models import Case
 from app.incidents.models import CaseAlertLink
 from app.incidents.models import Comment
 from app.incidents.models import FieldName
-from app.incidents.schema.db_operations import AlertContextCreate, AlertStatus, UpdateAlertStatus
+from app.incidents.schema.db_operations import AlertContextCreate, AlertStatus, UpdateAlertStatus, AssignedToAlert
 from app.incidents.schema.db_operations import AlertCreate
 from app.incidents.schema.db_operations import AlertOut
 from app.incidents.schema.db_operations import AlertTagCreate
@@ -29,6 +29,7 @@ from app.incidents.schema.db_operations import AssetBase
 from app.incidents.schema.db_operations import AssetCreate
 from app.incidents.schema.db_operations import CaseAlertLinkCreate
 from app.incidents.schema.db_operations import CaseCreate
+from app.auth.services.universal import select_all_users
 from app.incidents.schema.db_operations import CaseOut
 from app.incidents.schema.db_operations import CommentBase
 from app.incidents.schema.db_operations import CommentCreate
@@ -36,7 +37,7 @@ from app.incidents.schema.db_operations import FieldAndAssetNames, ConfiguredSou
 from app.incidents.schema.db_operations import FieldAndAssetNamesResponse, AlertOutResponse
 from app.incidents.schema.db_operations import MappingsResponse
 from app.incidents.services.db_operations import add_alert_title_name
-from app.incidents.services.db_operations import add_asset_name, delete_alert_tag
+from app.incidents.services.db_operations import add_asset_name, delete_alert_tag, update_alert_assigned_to
 from app.incidents.services.db_operations import add_field_name
 from app.incidents.services.db_operations import add_timefield_name
 from app.incidents.services.db_operations import create_alert, list_alerts_by_asset_name, update_alert_status
@@ -170,6 +171,14 @@ async def update_alert_status_endpoint(alert_status: UpdateAlertStatus, db: Asyn
 @incidents_db_operations_router.post("/alert/comment", response_model=Comment)
 async def create_comment_endpoint(comment: CommentCreate, db: AsyncSession = Depends(get_db)):
     return await create_comment(comment, db)
+
+@incidents_db_operations_router.put("/alert/assigned-to", response_model=Alert)
+async def update_assigned_to_endpoint(assigned_to: AssignedToAlert, db: AsyncSession = Depends(get_db)):
+    all_users = await select_all_users()
+    user_names = [user.username for user in all_users]
+    if assigned_to.assigned_to not in user_names:
+        raise HTTPException(status_code=400, detail="User does not exist")
+    return await update_alert_assigned_to(alert_id=assigned_to.alert_id, assigned_to=assigned_to.assigned_to, db=db)
 
 
 @incidents_db_operations_router.post("/alert/context", response_model=AlertContext)
