@@ -21,7 +21,7 @@ from app.incidents.models import Case
 from app.incidents.models import CaseAlertLink
 from app.incidents.models import Comment
 from app.incidents.models import FieldName
-from app.incidents.schema.db_operations import AlertContextCreate, AlertStatus
+from app.incidents.schema.db_operations import AlertContextCreate, AlertStatus, UpdateAlertStatus
 from app.incidents.schema.db_operations import AlertCreate
 from app.incidents.schema.db_operations import AlertOut
 from app.incidents.schema.db_operations import AlertTagCreate
@@ -36,10 +36,10 @@ from app.incidents.schema.db_operations import FieldAndAssetNames, ConfiguredSou
 from app.incidents.schema.db_operations import FieldAndAssetNamesResponse, AlertOutResponse
 from app.incidents.schema.db_operations import MappingsResponse
 from app.incidents.services.db_operations import add_alert_title_name
-from app.incidents.services.db_operations import add_asset_name
+from app.incidents.services.db_operations import add_asset_name, delete_alert_tag
 from app.incidents.services.db_operations import add_field_name
 from app.incidents.services.db_operations import add_timefield_name
-from app.incidents.services.db_operations import create_alert, list_alerts_by_asset_name
+from app.incidents.services.db_operations import create_alert, list_alerts_by_asset_name, update_alert_status
 from app.incidents.services.db_operations import create_alert_context
 from app.incidents.services.db_operations import create_alert_tag, list_alerts_by_tag
 from app.incidents.services.db_operations import create_asset
@@ -162,6 +162,10 @@ async def delete_alert_title_name_endpoint(alert_title_name: str, source: str, d
 async def create_alert_endpoint(alert: AlertCreate, db: AsyncSession = Depends(get_db)):
     return await create_alert(alert, db)
 
+@incidents_db_operations_router.put("/alert/status", response_model=Alert)
+async def update_alert_status_endpoint(alert_status: UpdateAlertStatus, db: AsyncSession = Depends(get_db)):
+    return await update_alert_status(alert_status, db)
+
 
 @incidents_db_operations_router.post("/alert/comment", response_model=Comment)
 async def create_comment_endpoint(comment: CommentCreate, db: AsyncSession = Depends(get_db)):
@@ -190,6 +194,11 @@ async def create_alert_tag_endpoint(alert_tag: AlertTagCreate, db: AsyncSession 
 @incidents_db_operations_router.get("/alert/tag/{tag}", response_model=List[AlertOut])
 async def list_alerts_by_tag_endpoint(tag: str, db: AsyncSession = Depends(get_db)):
     return await list_alerts_by_tag(tag, db)
+
+@incidents_db_operations_router.delete("/alert/tag", response_model=AlertTag)
+async def delete_alert_tag_endpoint(alert_tag: AlertTagCreate, db: AsyncSession = Depends(get_db)):
+    return await delete_alert_tag(alert_id=alert_tag.alert_id, tag=alert_tag.tag, db=db)
+
 
 
 @incidents_db_operations_router.post("/case/create", response_model=Case)

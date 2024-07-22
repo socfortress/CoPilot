@@ -25,6 +25,10 @@ class AlertStatus(str, Enum):
     CLOSED = "CLOSED"
     IN_PROGRESS = "IN_PROGRESS"
 
+class UpdateAlertStatus(BaseModel):
+    alert_id: int
+    status: AlertStatus
+
 class FieldAndAssetNames(BaseModel):
     field_names: List[str]
     asset_name: str

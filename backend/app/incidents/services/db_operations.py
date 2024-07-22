@@ -23,7 +23,7 @@ from app.incidents.models import FieldName
 from app.incidents.models import TimestampFieldName
 from app.incidents.schema.db_operations import AlertContextCreate
 from app.incidents.schema.db_operations import AlertCreate
-from app.incidents.schema.db_operations import AlertOut
+from app.incidents.schema.db_operations import AlertOut, UpdateAlertStatus
 from app.incidents.schema.db_operations import AlertTagBase
 from app.incidents.schema.db_operations import AlertTagCreate
 from app.incidents.schema.db_operations import AssetBase
@@ -150,6 +150,14 @@ async def create_alert(alert: AlertCreate, db: AsyncSession) -> Alert:
         raise HTTPException(status_code=400, detail="Alert already exists")
     return db_alert
 
+async def update_alert_status(update_alert_status: UpdateAlertStatus, db: AsyncSession) -> Alert:
+    result = await db.execute(select(Alert).where(Alert.id == update_alert_status.alert_id))
+    alert = result.scalars().first()
+    if not alert:
+        raise HTTPException(status_code=404, detail="Alert not found")
+    alert.status = update_alert_status.status
+    await db.commit()
+    return alert
 
 async def create_comment(comment: CommentCreate, db: AsyncSession) -> Comment:
     # Check if the alert exists
@@ -206,6 +214,32 @@ async def create_alert_tag(alert_tag: AlertTagCreate, db: AsyncSession) -> Alert
         raise HTTPException(status_code=400, detail="Alert tag already exists")
     return db_alert_tag
 
+async def delete_alert_tag(alert_id: int, tag: str, db: AsyncSession):
+    result = await db.execute(
+        select(AlertTag).where(AlertTag.tag == tag)
+    )
+    alert_tag = result.scalars().first()
+    if not alert_tag:
+        raise HTTPException(status_code=404, detail="Alert tag not found")
+
+    result = await db.execute(
+        select(AlertToTag).where((AlertToTag.alert_id == alert_id) & (AlertToTag.tag_id == alert_tag.id))
+    )
+    alert_to_tag = result.scalars().first()
+    if not alert_to_tag:
+        raise HTTPException(status_code=404, detail="Alert to tag link not found")
+
+    await db.execute(
+        delete(AlertToTag).where((AlertToTag.alert_id == alert_id) & (AlertToTag.tag_id == alert_tag.id))
+    )
+
+    try:
+        await db.commit()
+    except IntegrityError:
+        await db.rollback()
+        raise HTTPException(status_code=400, detail="Error deleting alert tag")
+
+    return alert_tag
 
 async def create_alert_context(alert_context: AlertContextCreate, db: AsyncSession) -> AlertContext:
     db_alert_context = AlertContext(**alert_context.dict())
