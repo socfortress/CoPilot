@@ -239,7 +239,6 @@ async def create_alert_tag_endpoint(alert_tag: AlertTagCreate, db: AsyncSession 
 
 @incidents_db_operations_router.get("/alert/tag/{tag}", response_model=AlertOutResponse)
 async def list_alerts_by_tag_endpoint(tag: str, db: AsyncSession = Depends(get_db)):
-    # return await list_alerts_by_tag(tag, db)
     return AlertOutResponse(alerts=await list_alerts_by_tag(tag, db), success=True, message="Alerts retrieved successfully")
 
 
