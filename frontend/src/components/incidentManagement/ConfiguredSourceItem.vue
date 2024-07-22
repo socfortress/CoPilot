@@ -18,23 +18,37 @@
 				</n-popconfirm>
 			</div>
 		</div>
+
+		<n-modal
+			v-model:show="showDetails"
+			display-directive="show"
+			preset="card"
+			:style="{ maxWidth: 'min(600px, 90vw)', minHeight: 'min(300px, 90vh)', overflow: 'hidden' }"
+			title="Source Configuration"
+			:bordered="false"
+			segmented
+		>
+			<SourceConfigurationDetails :source />
+		</n-modal>
 	</n-spin>
 </template>
 
 <script setup lang="ts">
 import Api from "@/api"
 import { ref } from "vue"
-import { useMessage, NPopconfirm, NSpin } from "naive-ui"
+import SourceConfigurationDetails from "./SourceConfigurationDetails.vue"
+import { useMessage, NPopconfirm, NSpin, NModal } from "naive-ui"
 import type { SourceName } from "@/types/incidentManagement.d"
 
 const emit = defineEmits<{
 	(e: "deleted"): void
-	(e: "open"): void
 }>()
 
 const { source } = defineProps<{ source: SourceName }>()
+
 const message = useMessage()
 const canceling = ref(false)
+const showDetails = ref(false)
 const showConfirm = ref(false)
 
 function deleteSourceConfiguration() {
@@ -59,7 +73,7 @@ function deleteSourceConfiguration() {
 }
 
 function openConfiguredSource() {
-	emit("open")
+	showDetails.value = true
 }
 </script>
 
