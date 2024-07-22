@@ -13,8 +13,6 @@
 	overflow: hidden;
 	display: flex;
 	flex-direction: column;
-	flex-basis: 140px;
-	flex-grow: 1;
 
 	.key {
 		border-bottom: var(--border-small-050);
