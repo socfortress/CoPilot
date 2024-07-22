@@ -97,7 +97,7 @@ export default {
 							time_unit: payload?.unit || "days"
 						}
 						/*eslint no-mixed-spaces-and-tabs: "off"*/
-					}
+				  }
 				: undefined
 		)
 	},

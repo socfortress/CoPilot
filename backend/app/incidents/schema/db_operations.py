@@ -6,10 +6,12 @@ from typing import Optional
 
 from pydantic import BaseModel
 
+
 class ConfiguredSourcesResponse(BaseModel):
     sources: List[str]
     success: bool
-    message:str
+    message: str
+
 
 class MappingsResponse(BaseModel):
     available_mappings: List[str]
@@ -20,14 +22,17 @@ class MappingsResponse(BaseModel):
 class ValidSources(str, Enum):
     WAZUH = "wazuh"
 
+
 class AlertStatus(str, Enum):
     OPEN = "OPEN"
     CLOSED = "CLOSED"
     IN_PROGRESS = "IN_PROGRESS"
 
+
 class UpdateAlertStatus(BaseModel):
     alert_id: int
     status: AlertStatus
+
 
 class FieldAndAssetNames(BaseModel):
     field_names: List[str]
@@ -45,6 +50,7 @@ class FieldAndAssetNamesResponse(BaseModel):
     source: ValidSources
     success: bool
     message: str
+
 
 class AssignedToAlert(BaseModel):
     alert_id: int
@@ -141,10 +147,12 @@ class AlertOut(BaseModel):
     assets: List[AssetBase] = []
     tags: List[AlertTagBase] = []
 
+
 class AlertOutResponse(BaseModel):
     alerts: List[AlertOut]
     success: bool
     message: str
+
 
 class CaseOut(BaseModel):
     id: int

@@ -1,13 +1,13 @@
 from typing import List
 
 from fastapi import HTTPException
+from loguru import logger
+from sqlalchemy import delete
 from sqlalchemy import update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
-from sqlalchemy import delete
-from loguru import logger
 
 from app.incidents.models import Alert
 from app.incidents.models import AlertContext
@@ -23,7 +23,7 @@ from app.incidents.models import FieldName
 from app.incidents.models import TimestampFieldName
 from app.incidents.schema.db_operations import AlertContextCreate
 from app.incidents.schema.db_operations import AlertCreate
-from app.incidents.schema.db_operations import AlertOut, UpdateAlertStatus
+from app.incidents.schema.db_operations import AlertOut
 from app.incidents.schema.db_operations import AlertTagBase
 from app.incidents.schema.db_operations import AlertTagCreate
 from app.incidents.schema.db_operations import AssetBase
@@ -33,6 +33,7 @@ from app.incidents.schema.db_operations import CaseCreate
 from app.incidents.schema.db_operations import CaseOut
 from app.incidents.schema.db_operations import CommentBase
 from app.incidents.schema.db_operations import CommentCreate
+from app.incidents.schema.db_operations import UpdateAlertStatus
 
 
 async def validate_source_exists(source: str, session: AsyncSession):
@@ -150,6 +151,7 @@ async def create_alert(alert: AlertCreate, db: AsyncSession) -> Alert:
         raise HTTPException(status_code=400, detail="Alert already exists")
     return db_alert
 
+
 async def update_alert_status(update_alert_status: UpdateAlertStatus, db: AsyncSession) -> Alert:
     result = await db.execute(select(Alert).where(Alert.id == update_alert_status.alert_id))
     alert = result.scalars().first()
@@ -159,6 +161,7 @@ async def update_alert_status(update_alert_status: UpdateAlertStatus, db: AsyncS
     await db.commit()
     return alert
 
+
 async def update_alert_assigned_to(alert_id: int, assigned_to: str, db: AsyncSession) -> Alert:
     result = await db.execute(select(Alert).where(Alert.id == alert_id))
     alert = result.scalars().first()
@@ -167,6 +170,7 @@ async def update_alert_assigned_to(alert_id: int, assigned_to: str, db: AsyncSes
     alert.assigned_to = assigned_to
     await db.commit()
     return alert
+
 
 async def create_comment(comment: CommentCreate, db: AsyncSession) -> Comment:
     # Check if the alert exists
@@ -223,24 +227,19 @@ async def create_alert_tag(alert_tag: AlertTagCreate, db: AsyncSession) -> Alert
         raise HTTPException(status_code=400, detail="Alert tag already exists")
     return db_alert_tag
 
+
 async def delete_alert_tag(alert_id: int, tag: str, db: AsyncSession):
-    result = await db.execute(
-        select(AlertTag).where(AlertTag.tag == tag)
-    )
+    result = await db.execute(select(AlertTag).where(AlertTag.tag == tag))
     alert_tag = result.scalars().first()
     if not alert_tag:
         raise HTTPException(status_code=404, detail="Alert tag not found")
 
-    result = await db.execute(
-        select(AlertToTag).where((AlertToTag.alert_id == alert_id) & (AlertToTag.tag_id == alert_tag.id))
-    )
+    result = await db.execute(select(AlertToTag).where((AlertToTag.alert_id == alert_id) & (AlertToTag.tag_id == alert_tag.id)))
     alert_to_tag = result.scalars().first()
     if not alert_to_tag:
         raise HTTPException(status_code=404, detail="Alert to tag link not found")
 
-    await db.execute(
-        delete(AlertToTag).where((AlertToTag.alert_id == alert_id) & (AlertToTag.tag_id == alert_tag.id))
-    )
+    await db.execute(delete(AlertToTag).where((AlertToTag.alert_id == alert_id) & (AlertToTag.tag_id == alert_tag.id)))
 
     try:
         await db.commit()
@@ -249,6 +248,7 @@ async def delete_alert_tag(alert_id: int, tag: str, db: AsyncSession):
         raise HTTPException(status_code=400, detail="Error deleting alert tag")
 
     return alert_tag
+
 
 async def create_alert_context(alert_context: AlertContextCreate, db: AsyncSession) -> AlertContext:
     db_alert_context = AlertContext(**alert_context.dict())
@@ -381,9 +381,14 @@ async def get_alert_context_by_id(alert_context_id: int, db: AsyncSession) -> Al
         raise HTTPException(status_code=404, detail="Alert context not found")
     return alert_context
 
+
 async def list_alerts_by_tag(tag: str, db: AsyncSession) -> List[AlertOut]:
     result = await db.execute(
-        select(Alert).join(AlertToTag).join(AlertTag).where(AlertTag.tag == tag).options(
+        select(Alert)
+        .join(AlertToTag)
+        .join(AlertTag)
+        .where(AlertTag.tag == tag)
+        .options(
             selectinload(Alert.comments),
             selectinload(Alert.assets),
             selectinload(Alert.cases),
@@ -416,7 +421,9 @@ async def list_alerts_by_tag(tag: str, db: AsyncSession) -> List[AlertOut]:
 
 async def list_alert_by_status(status: str, db: AsyncSession) -> List[AlertOut]:
     result = await db.execute(
-        select(Alert).where(Alert.status == status).options(
+        select(Alert)
+        .where(Alert.status == status)
+        .options(
             selectinload(Alert.comments),
             selectinload(Alert.assets),
             selectinload(Alert.cases),
@@ -445,10 +452,14 @@ async def list_alert_by_status(status: str, db: AsyncSession) -> List[AlertOut]:
         )
         alerts_out.append(alert_out)
     return alerts_out
+
 
 async def list_alerts_by_asset_name(asset_name: str, db: AsyncSession) -> List[AlertOut]:
     result = await db.execute(
-        select(Alert).join(Asset).where(Asset.asset_name == asset_name).options(
+        select(Alert)
+        .join(Asset)
+        .where(Asset.asset_name == asset_name)
+        .options(
             selectinload(Alert.comments),
             selectinload(Alert.assets),
             selectinload(Alert.cases),
@@ -478,9 +489,12 @@ async def list_alerts_by_asset_name(asset_name: str, db: AsyncSession) -> List[A
         alerts_out.append(alert_out)
     return alerts_out
 
+
 async def list_alert_by_assigned_to(assigned_to: str, db: AsyncSession) -> List[AlertOut]:
     result = await db.execute(
-        select(Alert).where(Alert.assigned_to == assigned_to).options(
+        select(Alert)
+        .where(Alert.assigned_to == assigned_to)
+        .options(
             selectinload(Alert.comments),
             selectinload(Alert.assets),
             selectinload(Alert.cases),
@@ -509,12 +523,14 @@ async def list_alert_by_assigned_to(assigned_to: str, db: AsyncSession) -> List[
         )
         alerts_out.append(alert_out)
     return alerts_out
+
 
 async def delete_comments(alert_id: int, db: AsyncSession):
     result = await db.execute(select(Comment).where(Comment.alert_id == alert_id))
     comments = result.scalars().all()
     for comment in comments:
         await db.execute(delete(Comment).where(Comment.id == comment.id))
+
 
 async def delete_assets(alert_id: int, db: AsyncSession):
     result = await db.execute(select(Asset).where(Asset.alert_linked == alert_id))
@@ -525,11 +541,15 @@ async def delete_assets(alert_id: int, db: AsyncSession):
         if not context_result.scalars().all():
             await db.execute(delete(AlertContext).where(AlertContext.id == asset.alert_context_id))
 
+
 async def delete_tags(alert_id: int, db: AsyncSession):
     result = await db.execute(select(AlertToTag).where(AlertToTag.alert_id == alert_id))
     alert_to_tags = result.scalars().all()
     for alert_to_tag in alert_to_tags:
-        await db.execute(delete(AlertToTag).where((AlertToTag.alert_id == alert_to_tag.alert_id) & (AlertToTag.tag_id == alert_to_tag.tag_id)))
+        await db.execute(
+            delete(AlertToTag).where((AlertToTag.alert_id == alert_to_tag.alert_id) & (AlertToTag.tag_id == alert_to_tag.tag_id)),
+        )
+
 
 async def delete_alert(alert_id: int, db: AsyncSession):
     """
@@ -544,11 +564,9 @@ async def delete_alert(alert_id: int, db: AsyncSession):
 
     """
     result = await db.execute(
-        select(Alert).options(
-            selectinload(Alert.comments),
-            selectinload(Alert.assets).selectinload(Asset.alert_context),
-            selectinload(Alert.tags)
-        ).where(Alert.id == alert_id)
+        select(Alert)
+        .options(selectinload(Alert.comments), selectinload(Alert.assets).selectinload(Asset.alert_context), selectinload(Alert.tags))
+        .where(Alert.id == alert_id),
     )
     alert = result.scalars().first()
     if not alert:

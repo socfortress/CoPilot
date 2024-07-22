@@ -16,6 +16,7 @@ from app.db.universal_models import Agents
 from app.incidents.models import Alert
 from app.incidents.models import AlertContext
 from app.incidents.models import Asset
+from app.incidents.routes.db_operations import get_configured_sources
 from app.incidents.schema.incident_alert import CreateAlertRequest
 from app.incidents.schema.incident_alert import CreateAlertResponse
 from app.incidents.schema.incident_alert import CreatedAlertPayload
@@ -37,7 +38,7 @@ from app.integrations.alert_escalation.schema.escalate_alert import IrisAlertPay
 from app.integrations.alert_escalation.schema.escalate_alert import SourceFieldsToRemove
 from app.integrations.alert_escalation.schema.escalate_alert import SyslogLevelMapping
 from app.integrations.utils.alerts import get_asset_type_id
-from app.incidents.routes.db_operations import get_configured_sources
+
 
 async def fetch_settings(field: str, value: str, session: AsyncSession):
     """
@@ -112,9 +113,9 @@ async def get_single_alert_details(
     try:
         alert = es_client.get(index=alert_details.index_name, id=alert_details.alert_id)
         source_model = GenericSourceModel(**alert["_source"])
-        syslog_type = getattr(source_model, 'syslog_type', None)
+        syslog_type = getattr(source_model, "syslog_type", None)
         if syslog_type is None:
-            syslog_type = getattr(source_model, 'integration', None)
+            syslog_type = getattr(source_model, "integration", None)
         if syslog_type is None:
             raise HTTPException(status_code=400, detail="Neither syslog_type nor integration field found in source_model")
         return GenericAlertModel(
@@ -421,7 +422,6 @@ async def retrieve_agent_details_from_db(agent_name: str, session: AsyncSession)
     return None
 
 
-
 async def add_asset_to_iris_alert(alert_id: int, asset_details: Agents, iris_alert_payload: IrisAlertPayload, session: AsyncSession):
     client, alert_client = await initialize_client_and_alert("DFIR-IRIS")
     asset_data = {
@@ -502,7 +502,11 @@ async def get_all_field_names(syslog_type: str, session: AsyncSession) -> FieldN
 
 
 async def build_alert_payload(
-    syslog_type: str, index_name: str, index_id: str, alert_payload: dict, session: AsyncSession,
+    syslog_type: str,
+    index_name: str,
+    index_id: str,
+    alert_payload: dict,
+    session: AsyncSession,
 ) -> CreatedAlertPayload:
     """
     Build the alert payload based on the syslog type and the alert payload.
@@ -556,7 +560,11 @@ async def create_alert_full(alert_payload: CreatedAlertPayload, customer_code: s
     ).id
     asset_id = (
         await create_asset_context_payload(
-            customer_code=customer_code, asset_payload=alert_payload, alert_context_id=alert_context_id, alert_id=alert_id, session=session,
+            customer_code=customer_code,
+            asset_payload=alert_payload,
+            alert_context_id=alert_context_id,
+            alert_id=alert_id,
+            session=session,
         )
     ).id
     logger.info(f"Creating alert for customer code {customer_code} with alert context ID {alert_context_id} and asset ID {asset_id}")
@@ -609,7 +617,11 @@ async def create_alert_context_payload(source: str, alert_payload: dict, session
 
 
 async def create_asset_context_payload(
-    customer_code: str, asset_payload: CreatedAlertPayload, alert_context_id: int, alert_id: int, session: AsyncSession,
+    customer_code: str,
+    asset_payload: CreatedAlertPayload,
+    alert_context_id: int,
+    alert_id: int,
+    session: AsyncSession,
 ) -> Asset:
     """
     Build the asset context payload based on the valid field names and the asset payload. Then
@@ -661,7 +673,11 @@ async def create_alert(
     customer_alert_creation_settings = await is_customer_code_valid(customer_code=customer_code, session=session)
     logger.info(f"Customer creation settings: {customer_alert_creation_settings}")
     alert_payload = await build_alert_payload(
-        alert_details.syslog_type, alert_details._index, alert_details._id, alert_details._source.to_dict(), session,
+        alert_details.syslog_type,
+        alert_details._index,
+        alert_details._id,
+        alert_details._source.to_dict(),
+        session,
     )
     logger.info(f"Alert PAyload {alert_payload}")
     await create_alert_full(alert_payload, customer_code, session)
