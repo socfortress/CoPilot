@@ -478,6 +478,38 @@ async def list_alerts_by_asset_name(asset_name: str, db: AsyncSession) -> List[A
         alerts_out.append(alert_out)
     return alerts_out
 
+async def list_alert_by_assigned_to(assigned_to: str, db: AsyncSession) -> List[AlertOut]:
+    result = await db.execute(
+        select(Alert).where(Alert.assigned_to == assigned_to).options(
+            selectinload(Alert.comments),
+            selectinload(Alert.assets),
+            selectinload(Alert.cases),
+            selectinload(Alert.tags).selectinload(AlertToTag.tag),
+        ),
+    )
+    alerts = result.scalars().all()
+    alerts_out = []
+    for alert in alerts:
+        comments = [CommentBase(**comment.__dict__) for comment in alert.comments]
+        assets = [AssetBase(**asset.__dict__) for asset in alert.assets]
+        tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
+        alert_out = AlertOut(
+            id=alert.id,
+            alert_creation_time=alert.alert_creation_time,
+            time_closed=alert.time_closed,
+            alert_name=alert.alert_name,
+            alert_description=alert.alert_description,
+            status=alert.status,
+            customer_code=alert.customer_code,
+            source=alert.source,
+            assigned_to=alert.assigned_to,
+            comments=comments,
+            assets=assets,
+            tags=tags,
+        )
+        alerts_out.append(alert_out)
+    return alerts_out
+
 async def delete_comments(alert_id: int, db: AsyncSession):
     result = await db.execute(select(Comment).where(Comment.alert_id == alert_id))
     comments = result.scalars().all()

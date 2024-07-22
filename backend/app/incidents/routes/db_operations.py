@@ -53,7 +53,7 @@ from app.incidents.services.db_operations import delete_field_name
 from app.incidents.services.db_operations import delete_timefield_name
 from app.incidents.services.db_operations import get_alert_context_by_id
 from app.incidents.services.db_operations import get_alert_title_names, delete_alert
-from app.incidents.services.db_operations import get_asset_names
+from app.incidents.services.db_operations import get_asset_names, list_alert_by_assigned_to
 from app.incidents.services.db_operations import get_field_names
 from app.incidents.services.db_operations import get_timefield_names
 from app.incidents.services.db_operations import list_alerts
@@ -233,6 +233,10 @@ async def list_alerts_by_status_endpoint(status: AlertStatus, db: AsyncSession =
     if status not in AlertStatus:
         raise HTTPException(status_code=400, detail="Invalid status")
     return await list_alert_by_status(status.value, db)
+
+@incidents_db_operations_router.get("/alerts/assigned-to/{assigned_to}", response_model=List[AlertOut])
+async def list_alerts_by_assigned_to_endpoint(assigned_to: str, db: AsyncSession = Depends(get_db)):
+    return await list_alert_by_assigned_to(assigned_to, db)
 
 @incidents_db_operations_router.get("/alerts/asset/{asset_name}", response_model=List[AlertOut])
 async def list_alerts_by_asset_name_endpoint(asset_name: str, db: AsyncSession = Depends(get_db)):
