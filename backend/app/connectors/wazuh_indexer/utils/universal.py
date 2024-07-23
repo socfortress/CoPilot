@@ -492,3 +492,14 @@ async def get_index_mappings_key_names(index_name: str):
     mappings = es_client.indices.get_mapping(index=index_name)
     # return only the field names
     return list(mappings[index_name]["mappings"]["properties"].keys())
+
+async def return_graylog_events_index_names():
+    """
+    Return the index names of the Graylog events.
+
+    Returns:
+        list: The index names of the Graylog events.
+    """
+    es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
+    indices = es_client.indices.get_alias("gl-events*")
+    return list(indices.keys())
