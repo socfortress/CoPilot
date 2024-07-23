@@ -8,8 +8,3 @@ export interface Message {
 export interface MessageExtended extends Message {
 	id?: string
 }
-
-export interface ThroughputMetric {
-	metric: string
-	value: number
-}

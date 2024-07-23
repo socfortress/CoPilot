@@ -14,7 +14,7 @@
 </template>
 
 <script setup lang="ts">
-import { type Message } from "@/types/graylog/index.d"
+import { type Message } from "@/types/graylog/messages.d"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
 

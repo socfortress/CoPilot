@@ -49,7 +49,7 @@ import Api from "@/api"
 import MessageItem from "./Item.vue"
 import Icon from "@/components/common/Icon.vue"
 import { nanoid } from "nanoid"
-import type { MessageExtended } from "@/types/graylog/index.d"
+import type { MessageExtended } from "@/types/graylog/messages.d"
 
 const InfoIcon = "carbon:information"
 
