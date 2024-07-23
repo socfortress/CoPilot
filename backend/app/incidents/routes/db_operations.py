@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.services.universal import select_all_users
 from app.auth.utils import AuthHandler
-from app.connectors.wazuh_indexer.utils.universal import get_index_mappings_key_names
+from app.connectors.wazuh_indexer.utils.universal import get_index_mappings_key_names, get_index_source
 from app.db.db_session import get_db
 from app.incidents.models import Alert
 from app.incidents.models import AlertContext
@@ -44,7 +44,7 @@ from app.incidents.schema.db_operations import CaseResponse
 from app.incidents.schema.db_operations import CommentBase
 from app.incidents.schema.db_operations import CommentCreate
 from app.incidents.schema.db_operations import CommentResponse
-from app.incidents.schema.db_operations import ConfiguredSourcesResponse
+from app.incidents.schema.db_operations import ConfiguredSourcesResponse, AvailableSourcesResponse
 from app.incidents.schema.db_operations import FieldAndAssetNames
 from app.incidents.schema.db_operations import FieldAndAssetNamesResponse
 from app.incidents.schema.db_operations import MappingsResponse
@@ -83,6 +83,9 @@ from app.incidents.services.db_operations import validate_source_exists
 
 incidents_db_operations_router = APIRouter()
 
+@incidents_db_operations_router.get("/available-source/{index_name}", response_model=AvailableSourcesResponse)
+async def get_available_source_values(index_name: str, session: AsyncSession = Depends(get_db)):
+    return AvailableSourcesResponse(source=await get_index_source(index_name), success=True, message="Source retrieved successfully")
 
 @incidents_db_operations_router.get("/configured/sources", response_model=ConfiguredSourcesResponse)
 async def get_configured_sources(session: AsyncSession = Depends(get_db)):
