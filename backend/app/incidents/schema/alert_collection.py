@@ -35,3 +35,6 @@ class AlertPayloadItem(BaseModel):
 
 class AlertsPayload(BaseModel):
     alerts: List[AlertPayloadItem]
+    success: Optional[bool] = True
+    message: Optional[str] = "Success"
+

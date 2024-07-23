@@ -10,7 +10,7 @@ from typing import List
 from app.incidents.schema.incident_alert import CreateAlertRequest
 from app.incidents.schema.incident_alert import CreateAlertResponse, IndexNamesResponse
 from app.incidents.services.incident_alert import create_alert
-from app.incidents.schema.alert_collection import AlertsPayload, AlertPayloadItem
+from app.incidents.schema.alert_collection import AlertsPayload, AlertPayloadItem, Source
 from app.connectors.wazuh_indexer.utils.universal import return_graylog_events_index_names
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
 from app.incidents.services.alert_collection import get_graylog_event_indices, get_alerts_not_created_in_copilot
@@ -41,10 +41,8 @@ async def get_alerts_not_created_route() -> AlertsPayload:
     Get alerts not created in CoPilot. Get all the results from the list of indices, where `copilot_alert_id` does not exist.
 
     Returns:
-        List[dict]: The list of alerts not created in CoPilot.
+        List[AlertPayloadItem]: The list of alerts that have not been created in CoPilot.
     """
-    #alerts = await get_alerts_not_created_in_copilot()
-    #return alerts
     return await get_alerts_not_created_in_copilot()
 
 
