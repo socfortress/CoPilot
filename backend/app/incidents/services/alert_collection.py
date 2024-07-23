@@ -41,13 +41,6 @@ async def construct_query():
         }
     }
 
-# async def fetch_alerts_for_index(es_client, index, query):
-#     """
-#     Fetches alerts for a given index that match the query.
-#     """
-#     response = es_client.search(index=index, body=query)
-#     return [AlertPayloadItem(**hit) for hit in response['hits']['hits']]
-
 async def fetch_alerts_for_index(es_client, index, query):
     """
     Fetches alerts for a given index that match the query using the Elasticsearch scroll API.
