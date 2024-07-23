@@ -30,20 +30,18 @@
 			</div>
 		</div>
 		<n-spin :show="loading" class="min-h-32">
-			<div class="list gap-4 grid grid-auto-fill-250">
-				<template v-if="configuredSourcesList.length">
-					<ConfiguredSourceItem
-						v-for="source of configuredSourcesList"
-						:key="source"
-						:source
-						class="item-appear item-appear-bottom item-appear-005"
-						@deleted="getConfiguredSources()"
-					/>
-				</template>
-				<template v-else>
-					<n-empty description="No items found" class="justify-center h-48" v-if="!loading" />
-				</template>
+			<div class="list gap-4 grid grid-auto-fill-250" v-if="configuredSourcesList.length">
+				<ConfiguredSourceItem
+					v-for="source of configuredSourcesList"
+					:key="source"
+					:source
+					class="item-appear item-appear-bottom item-appear-005"
+					@deleted="getConfiguredSources()"
+				/>
 			</div>
+			<template v-else>
+				<n-empty description="No items found" class="justify-center h-48" v-if="!loading" />
+			</template>
 		</n-spin>
 
 		<n-modal
