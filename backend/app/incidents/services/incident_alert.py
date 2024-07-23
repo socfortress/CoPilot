@@ -568,6 +568,7 @@ async def create_alert_full(alert_payload: CreatedAlertPayload, customer_code: s
         )
     ).id
     logger.info(f"Creating alert for customer code {customer_code} with alert context ID {alert_context_id} and asset ID {asset_id}")
+    return alert_id
 
 async def does_assit_exist(alert_payload: CreatedAlertPayload, alert_id: int, session: AsyncSession) -> bool:
     """
@@ -764,14 +765,13 @@ async def create_alert(
         alert_details._source.to_dict(),
         session,
     )
-    logger.info(f"Alert PAyload {alert_payload}")
+    logger.info(f"Alert Payload {alert_payload}")
     existing_alert = await open_alert_exists(alert_payload, customer_code, session)
     if existing_alert:
         logger.info(f"Open alert exists for customer code {customer_code} with alert title {alert_payload.alert_title_payload} and alert ID {existing_alert}")
         await add_asset_to_copilot_alert(alert_payload, existing_alert, customer_code, session)
-        return None
-    await create_alert_full(alert_payload, customer_code, session)
-    return None
+        return existing_alert
+    return await create_alert_full(alert_payload, customer_code, session)
     iris_alert_payload = await build_alert_payload(
         alert_details=alert_details,
         customer_alert_creation_settings=customer_alert_creation_settings,
