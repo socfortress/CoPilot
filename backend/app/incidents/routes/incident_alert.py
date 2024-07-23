@@ -46,8 +46,6 @@ async def get_alerts_not_created_route() -> AlertsPayload:
     return await get_alerts_not_created_in_copilot()
 
 
-
-
 @incidents_alerts_router.post(
     "/create/manual",
     response_model=CreateAlertResponse,
@@ -71,3 +69,31 @@ async def create_alert_route(
     """
     logger.info(f"Creating alert {create_alert_request.alert_id} in CoPilot")
     return await create_alert(create_alert_request, session)
+
+
+@incidents_alerts_router.post(
+    "/create/auto",
+    response_model=CreateAlertResponse,
+    description="Is invoked by the scheduler to create an incident alert in CoPilot",
+)
+async def create_alert_auto_route(
+    session: AsyncSession = Depends(get_db),
+) -> CreateAlertResponse:
+    """
+    Create an incident alert in CoPilot. Automatically create an incident alert within CoPilot.
+    Used via the Alerts, for automatic incident alert creation.
+
+    Args:
+        create_alert_request (CreateAlertRequest): The request object containing the details of the alert to be created.
+        session (AsyncSession, optional): The database session. Defaults to Depends(get_session).
+
+    Returns:
+        CreateAlertResponse: The response object containing the result of the alert creation.
+    """
+    alerts = await get_alerts_not_created_in_copilot()
+    if not alerts.alerts:
+        return CreateAlertResponse(success=False, message="No alerts to create")
+    for alert in alerts.alerts:
+        create_alert_request = CreateAlertRequest(index_name=alert.source.original_alert_index_name, alert_id=alert.source.original_alert_id)
+        logger.info(f"Creating alert {create_alert_request.alert_id} in CoPilot")
+        await create_alert(create_alert_request, session)
