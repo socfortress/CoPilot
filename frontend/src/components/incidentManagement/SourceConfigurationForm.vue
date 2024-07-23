@@ -3,6 +3,14 @@
 		<n-form :model="form" :rules="rules" ref="formRef">
 			<div class="flex flex-col gap-8">
 				<div class="flex flex-col gap-2">
+					<n-form-item label="Source" path="source" v-if="showSourceField">
+						<n-input
+							v-model:value.trim="form.source"
+							placeholder="Please insert Source"
+							clearable
+							:disabled="disableSourceField"
+						/>
+					</n-form-item>
 					<n-form-item label="Field names" path="field_names">
 						<n-select
 							v-model:value="form.field_names"
@@ -38,7 +46,7 @@
 				</div>
 				<div class="flex justify-between gap-3">
 					<div>
-						<slot name="actions"></slot>
+						<slot name="additionalActions"></slot>
 					</div>
 					<div class="flex gap-3 items-center">
 						<n-button @click="reset()" :disabled="loading">Reset</n-button>
@@ -74,7 +82,7 @@ import {
 	type MessageReactive,
 	type FormItemRule
 } from "naive-ui"
-import type { SourceConfiguration } from "@/types/incidentManagement.d"
+import type { SourceConfiguration, SourceName } from "@/types/incidentManagement.d"
 import type { SourceConfigurationPayload } from "@/api/endpoints/incidentManagement"
 
 const emit = defineEmits<{
@@ -90,19 +98,25 @@ const emit = defineEmits<{
 
 const props = defineProps<{
 	sourceConfiguration?: SourceConfiguration
+	showSourceField?: boolean
+	disableSourceField?: boolean
 }>()
 const { sourceConfiguration } = toRefs(props)
 
 const submitting = ref(false)
 const loadingFieldNames = ref(false)
-const loading = computed(() => submitting.value || loadingFieldNames.value)
+const loading = computed(() => loadingFieldNames.value)
 const message = useMessage()
 const form = ref<SourceConfigurationPayload>(getSourceConfigurationForm())
 const formRef = ref<FormInst | null>(null)
-
 const fieldNamesOptions = ref<{ label: string; value: string }[]>([])
 
 const rules: FormRules = {
+	source: {
+		required: true,
+		message: "Please input the Source",
+		trigger: ["input", "blur"]
+	},
 	field_names: {
 		required: true,
 		validator: validateAtLeastOne,
@@ -143,6 +157,18 @@ const isValid = computed(() => {
 watch(sourceConfiguration, () => {
 	reset()
 })
+
+watch(
+	() => form.value.source,
+	val => {
+		if (val) {
+			form.value.field_names = []
+			getAvailableMappings(val)
+		} else {
+			fieldNamesOptions.value = []
+		}
+	}
+)
 
 function validateAtLeastOne(rule: FormItemRule, value: string[]) {
 	if (!value || !value.length) {
@@ -204,11 +230,11 @@ function toggleSubmittingFlag(status?: boolean) {
 	return submitting.value
 }
 
-function getAvailableMappings() {
+function getAvailableMappings(sourceName?: SourceName) {
 	loadingFieldNames.value = true
 
 	Api.incidentManagement
-		.getAvailableMappings(sourceConfiguration.value?.source || "")
+		.getAvailableMappings(sourceName || sourceConfiguration.value?.source || "")
 		.then(res => {
 			if (res.data.success) {
 				fieldNamesOptions.value = (res.data?.available_mappings || []).map(o => ({

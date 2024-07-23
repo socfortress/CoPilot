@@ -1,17 +1,16 @@
 <template>
 	<n-spin :show="loading || submitting" class="min-h-20">
-		<div class="header-box flex justify-between mb-4" v-if="!editing">
-			<h3>{{ source }}</h3>
-			<div class="actions flex gap-2 items-center">
-				<n-button size="small" @click="setEditMode()">
-					<template #icon>
-						<Icon :name="EditIcon" :size="16"></Icon>
-					</template>
-					Edit
-				</n-button>
-			</div>
-		</div>
 		<SourceConfigurationViewer v-if="sourceConfiguration" v-show="!editing" :sourceConfiguration />
+
+		<div class="flex gap-2 justify-end items-center mt-4" v-if="!editing && !loading">
+			<n-button size="small" @click="setEditMode()">
+				<template #icon>
+					<Icon :name="EditIcon" :size="16"></Icon>
+				</template>
+				Edit
+			</n-button>
+		</div>
+
 		<SourceConfigurationForm
 			v-if="sourceConfiguration"
 			v-show="editing"
@@ -19,7 +18,7 @@
 			@mounted="formCTX = $event"
 			@submitted="setSourceConfiguration($event)"
 		>
-			<template #actions>
+			<template #additionalActions>
 				<n-button @click="setViewMode()">
 					<template #icon>
 						<Icon :name="ArrowIcon" :size="16"></Icon>
@@ -112,5 +111,3 @@ onBeforeMount(() => {
 	getSourceConfiguration()
 })
 </script>
-
-<style lang="scss" scoped></style>

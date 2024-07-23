@@ -24,7 +24,7 @@
 			display-directive="show"
 			preset="card"
 			:style="{ maxWidth: 'min(600px, 90vw)', minHeight: 'min(300px, 90vh)', overflow: 'hidden' }"
-			title="Source Configuration"
+			:title="source"
 			:bordered="false"
 			segmented
 		>

@@ -21,7 +21,7 @@
 				</n-popover>
 			</div>
 			<div class="actions flex gap-2 items-center">
-				<n-button size="small" type="primary" @click="showForm = true">
+				<n-button size="small" type="primary" @click="showWizard = true">
 					<template #icon>
 						<Icon :name="NewSourceConfigurationIcon" :size="15"></Icon>
 					</template>
@@ -47,17 +47,16 @@
 		</n-spin>
 
 		<n-modal
-			v-model:show="showForm"
+			v-model:show="showWizard"
 			display-directive="show"
 			preset="card"
-			:style="{ maxWidth: 'min(600px, 90vw)', minHeight: 'min(300px, 90vh)', overflow: 'hidden' }"
+			:style="{ maxWidth: 'min(600px, 90vw)', minHeight: 'min(200px, 90vh)', overflow: 'hidden' }"
 			title="Create Source Configuration"
 			:bordered="false"
+			content-class="flex flex-col !p-0"
 			segmented
 		>
-			<!--
-			<CreationReportForm @submitted="getConfiguredSources()" @mounted="formCTX = $event" />
-			-->
+			<SourceConfigurationWizard @submitted="getConfiguredSources()" />
 		</n-modal>
 	</div>
 </template>
@@ -66,14 +65,14 @@ import { computed, onBeforeMount, ref, watch } from "vue"
 import { NSpin, NEmpty, NPopover, NButton, NModal, useMessage } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import ConfiguredSourceItem from "./ConfiguredSourceItem.vue"
-// import CreationReportForm from "./CreationReportForm.vue"
+import SourceConfigurationWizard from "./SourceConfigurationWizard.vue"
 import type { SourceName } from "@/types/incidentManagement.d"
 import Api from "@/api"
 
 const InfoIcon = "carbon:information"
 const NewSourceConfigurationIcon = "carbon:fetch-upload-cloud"
 const message = useMessage()
-const showForm = ref(false)
+const showWizard = ref(false)
 const loading = ref(false)
 const configuredSourcesList = ref<SourceName[]>([])
 const totalConfiguredSources = computed(() => configuredSourcesList.value.length)
@@ -99,7 +98,7 @@ function getConfiguredSources() {
 		})
 }
 
-watch(showForm, val => {
+watch(showWizard, val => {
 	if (val) {
 		formCTX.value?.reset()
 	}
