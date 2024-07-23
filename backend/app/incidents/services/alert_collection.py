@@ -108,3 +108,17 @@ async def get_original_alert_index_name(origin_context: str):
     except IndexError:  # In case the origin_context does not follow the expected pattern
         return None
 
+
+async def add_copilot_alert_id(index_data: CreateAlertRequest, alert_id: int):
+    """
+    Add the CoPilot alert ID to the Graylog event.
+    """
+    es_client = await create_wazuh_indexer_client('Wazuh-Indexer')
+    body = {
+        "doc": {
+            "copilot_alert_id": alert_id
+        }
+    }
+    es_client.update(index=index_data.index_name, id=index_data.alert_id, body=body)
+    logger.info(f"Added CoPilot alert ID {alert_id} to Graylog event {index_data.alert_id} in index {index_data.index_name}")
+
