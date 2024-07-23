@@ -13,7 +13,7 @@ from app.incidents.services.incident_alert import create_alert
 from app.incidents.schema.alert_collection import AlertsPayload, AlertPayloadItem, Source
 from app.connectors.wazuh_indexer.utils.universal import return_graylog_events_index_names
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
-from app.incidents.services.alert_collection import get_graylog_event_indices, get_alerts_not_created_in_copilot
+from app.incidents.services.alert_collection import get_graylog_event_indices, get_alerts_not_created_in_copilot, get_original_alert_id, get_original_alert_index_name
 
 incidents_alerts_router = APIRouter()
 
@@ -94,6 +94,7 @@ async def create_alert_auto_route(
     if not alerts.alerts:
         return CreateAlertResponse(success=False, message="No alerts to create")
     for alert in alerts.alerts:
-        create_alert_request = CreateAlertRequest(index_name=alert.source.original_alert_index_name, alert_id=alert.source.original_alert_id)
+        logger.info(f"Creating alert {alert} in CoPilot")
+        create_alert_request = CreateAlertRequest(index_name=await get_original_alert_index_name(origin_context=alert.source.origin_context), alert_id=await get_original_alert_id(alert.source.origin_context))
         logger.info(f"Creating alert {create_alert_request.alert_id} in CoPilot")
-        await create_alert(create_alert_request, session)
+        #await create_alert(create_alert_request, session)

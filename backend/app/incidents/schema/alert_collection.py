@@ -37,12 +37,13 @@ class Source(BaseModel):
             parts = origin_context.split(':')
             if len(parts) == 6:
                 _, _, _, _, index_name, alert_id = parts
-                if 'original_alert_id' in kwargs['field'].name:
+                if kwargs['field'].name == 'original_alert_id':
                     return alert_id
-                elif 'original_alert_index_name' in kwargs['field'].name:
+                elif kwargs['field'].name == 'original_alert_index_name':
                     return index_name
         except Exception as e:
-            return None
+            # Consider logging the exception to understand what's going wrong
+            print(f"Error parsing origin_context: {e}")
         return v
 
 class AlertPayloadItem(BaseModel):

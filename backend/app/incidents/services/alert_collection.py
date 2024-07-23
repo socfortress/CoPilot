@@ -86,3 +86,25 @@ async def get_alerts_not_created_in_copilot() -> AlertsPayload:
 
     logger.info(f"Alerts not created: {len(alerts_not_created)} alerts found")
     return AlertsPayload(alerts=alerts_not_created)
+
+
+async def get_original_alert_id(origin_context: str):
+    """
+    Get the original alert id from the origin context.
+    """
+    # Assuming the ID is the last part after the last colon and before the last underscore
+    try:
+        return origin_context.split(':')[-1].split('_')[-1]
+    except IndexError:  # In case the origin_context does not follow the expected pattern
+        return None
+
+async def get_original_alert_index_name(origin_context: str):
+    """
+    Get the original alert index name from the origin context.
+    """
+    # Assuming the index name is the part after 'es:' and before the next colon
+    try:
+        return origin_context.split('es:')[-1].split(':')[0]
+    except IndexError:  # In case the origin_context does not follow the expected pattern
+        return None
+
