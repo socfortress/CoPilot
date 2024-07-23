@@ -36,7 +36,7 @@
 import { ref, onBeforeMount, computed, watch, nextTick, onBeforeUnmount } from "vue"
 import { useMessage, NButton, NSelect } from "naive-ui"
 import Api from "@/api"
-import type { ThroughputMetric } from "@/types/graylog/index.d"
+import type { ThroughputMetric } from "@/types/graylog/metrics.d"
 import Icon from "@/components/common/Icon.vue"
 import UncommittedEntries from "@/components/graylog/Metrics/UncommittedEntries.vue"
 import MetricsList from "@/components/graylog/Metrics/List.vue"
