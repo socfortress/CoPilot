@@ -83,6 +83,10 @@ class CaseAlertLinkResponse(BaseModel):
     success: bool
     message: str
 
+class AvailableUsersResponse(BaseModel):
+    available_users: List[str]
+    success: bool
+    message: str
 
 class FieldAndAssetNames(BaseModel):
     field_names: List[str]

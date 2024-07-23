@@ -27,7 +27,7 @@ from app.incidents.schema.db_operations import AlertContextResponse
 from app.incidents.schema.db_operations import AlertCreate
 from app.incidents.schema.db_operations import AlertOut
 from app.incidents.schema.db_operations import AlertOutResponse
-from app.incidents.schema.db_operations import AlertResponse
+from app.incidents.schema.db_operations import AlertResponse, AvailableUsersResponse
 from app.incidents.schema.db_operations import AlertStatus
 from app.incidents.schema.db_operations import AlertTagCreate
 from app.incidents.schema.db_operations import AlertTagResponse
@@ -199,6 +199,10 @@ async def update_alert_status_endpoint(alert_status: UpdateAlertStatus, db: Asyn
 async def create_comment_endpoint(comment: CommentCreate, db: AsyncSession = Depends(get_db)):
     return CommentResponse(comment=await create_comment(comment, db), success=True, message="Comment created successfully")
 
+@incidents_db_operations_router.get("/alert/available-users", response_model=AvailableUsersResponse)
+async def get_available_users(db: AsyncSession = Depends(get_db)):
+    all_users = await select_all_users()
+    return AvailableUsersResponse(available_users=[user.username for user in all_users], success=True, message="Available users retrieved successfully")
 
 @incidents_db_operations_router.put("/alert/assigned-to", response_model=AlertResponse)
 async def update_assigned_to_endpoint(assigned_to: AssignedToAlert, db: AsyncSession = Depends(get_db)):
