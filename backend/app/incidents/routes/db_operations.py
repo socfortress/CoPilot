@@ -106,6 +106,8 @@ async def delete_configured_source(source: str, session: AsyncSession = Depends(
     timefield_name = await get_timefield_names(source, session)
     alert_title_name = await get_alert_title_names(source, session)
 
+    logger.info(f"Field names found: {field_names}, Asset name found: {asset_name}, Timefield name found: {timefield_name}, Alert title name found: {alert_title_name}")
+
     for field_name in field_names:
         await delete_field_name(source, field_name, session)
 
@@ -114,6 +116,8 @@ async def delete_configured_source(source: str, session: AsyncSession = Depends(
     await delete_timefield_name(source, timefield_name, session)
 
     await delete_alert_title_name(source, alert_title_name, session)
+
+    logger.info(f"Field names and asset names deleted successfully for source {source}. Committing changes to the database")
 
     await session.commit()
 

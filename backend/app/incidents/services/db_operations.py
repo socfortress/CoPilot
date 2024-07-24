@@ -168,6 +168,7 @@ async def replace_alert_title_name(source: str, alert_title_name: str, session: 
 
 
 async def delete_field_name(source: str, field_name: str, session: AsyncSession):
+    logger.info(f"Deleting field name {field_name} for source {source}")
     field = await session.execute(select(FieldName).where((FieldName.source == source) & (FieldName.field_name == field_name)))
     field = field.scalar_one_or_none()
     if field:
@@ -175,6 +176,7 @@ async def delete_field_name(source: str, field_name: str, session: AsyncSession)
 
 
 async def delete_asset_name(source: str, asset_name: str, session: AsyncSession):
+    logger.info(f"Deleting asset name {asset_name} for source {source}")
     asset = await session.execute(
         select(AssetFieldName).where((AssetFieldName.source == source) & (AssetFieldName.field_name == asset_name)),
     )
@@ -184,6 +186,7 @@ async def delete_asset_name(source: str, asset_name: str, session: AsyncSession)
 
 
 async def delete_timefield_name(source: str, timefield_name: str, session: AsyncSession):
+    logger.info(f"Deleting timefield name {timefield_name} for source {source}")
     timefield = await session.execute(
         select(TimestampFieldName).where((TimestampFieldName.source == source) & (TimestampFieldName.field_name == timefield_name)),
     )
@@ -193,6 +196,7 @@ async def delete_timefield_name(source: str, timefield_name: str, session: Async
 
 
 async def delete_alert_title_name(source: str, alert_title_name: str, session: AsyncSession):
+    logger.info(f"Deleting alert title name {alert_title_name} for source {source}")
     alert_title = await session.execute(
         select(AlertTitleFieldName).where((AlertTitleFieldName.source == source) & (AlertTitleFieldName.field_name == alert_title_name)),
     )
