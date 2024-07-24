@@ -42,10 +42,12 @@
 
 						<div v-else-if="current === 2" class="px-7 grow flex flex-col pb-7" style="min-height: 401px">
 							<SourceConfigurationForm
-								v-if="sourceConfiguration"
-								:sourceConfiguration
-								disable-source-field
+								v-if="sourceConfigurationPayload"
+								:sourceConfigurationPayload
 								show-source-field
+								disable-source-field
+								show-index-name-field
+								disable-index-name-field
 								@mounted="formCTX = $event"
 								@submitted="createSourceConfiguration($event)"
 							>
@@ -75,6 +77,7 @@ import { onBeforeMount } from "vue"
 import SourceConfigurationForm from "./SourceConfigurationForm.vue"
 import type { ApiError } from "@/types/common.d"
 import type { SourceConfiguration } from "@/types/incidentManagement.d"
+import type { SourceConfigurationPayload } from "@/api/endpoints/incidentManagement"
 
 const emit = defineEmits<{
 	(e: "update:loading", value: boolean): void
@@ -98,7 +101,7 @@ const current = ref<number>(1)
 const currentStatus = ref<StepsProps["status"]>("process")
 const formCTX = ref<{ reset: () => void; toggleSubmittingFlag: () => boolean } | null>(null)
 const selectedIndex = ref<string | null>(null)
-const sourceConfiguration = ref<SourceConfiguration | null>(null)
+const sourceConfigurationPayload = ref<SourceConfigurationPayload | null>(null)
 const indexNamesOptions = ref<{ label: string; value: string }[]>([])
 
 watch(loading, val => {
@@ -127,19 +130,20 @@ function reset() {
 		slideFormDirection.value = "right"
 		current.value = 1
 		selectedIndex.value = null
-		sourceConfiguration.value = null
+		sourceConfigurationPayload.value = null
 		formCTX.value?.reset()
 	}
 }
 
 function setSourceConfiguration(indexName: string | null) {
 	if (indexName) {
-		sourceConfiguration.value = {
+		sourceConfigurationPayload.value = {
 			field_names: [],
 			asset_name: "",
 			timefield_name: "",
 			alert_title_name: "",
-			source: indexName
+			source: "",
+			index_name: indexName
 		}
 		next()
 	}

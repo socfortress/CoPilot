@@ -3,12 +3,24 @@
 		<n-form :model="form" :rules="rules" ref="formRef">
 			<div class="flex flex-col gap-8">
 				<div class="flex flex-col gap-2">
+					<n-form-item label="Index name" path="index_name" v-if="showIndexNameField">
+						<n-select
+							v-model:value="form.index_name"
+							:options="indexNamesOptions"
+							placeholder="Select..."
+							clearable
+							to="body"
+							:disabled="disableIndexNameField"
+							:loading="loadingIndexNames"
+						/>
+					</n-form-item>
 					<n-form-item label="Source" path="source" v-if="showSourceField">
 						<n-input
 							v-model:value.trim="form.source"
 							placeholder="Please insert Source"
 							clearable
 							:disabled="disableSourceField"
+							:loading="loadingSource"
 						/>
 					</n-form-item>
 					<n-form-item label="Field names" path="field_names">
@@ -19,6 +31,7 @@
 							clearable
 							multiple
 							to="body"
+							:disabled="!form.index_name"
 							:loading="loadingFieldNames"
 						/>
 					</n-form-item>
@@ -84,6 +97,7 @@ import {
 } from "naive-ui"
 import type { SourceConfiguration, SourceName } from "@/types/incidentManagement.d"
 import type { SourceConfigurationPayload } from "@/api/endpoints/incidentManagement"
+import { watchDebounced } from "@vueuse/core"
 
 const emit = defineEmits<{
 	(e: "submitted", value: SourceConfiguration): void
@@ -97,19 +111,24 @@ const emit = defineEmits<{
 }>()
 
 const props = defineProps<{
-	sourceConfiguration?: SourceConfiguration
+	sourceConfigurationPayload?: SourceConfigurationPayload
 	showSourceField?: boolean
 	disableSourceField?: boolean
+	showIndexNameField?: boolean
+	disableIndexNameField?: boolean
 }>()
-const { sourceConfiguration } = toRefs(props)
+const { sourceConfigurationPayload } = toRefs(props)
 
 const submitting = ref(false)
+const loadingSource = ref(false)
+const loadingIndexNames = ref(false)
 const loadingFieldNames = ref(false)
-const loading = computed(() => loadingFieldNames.value)
+const loading = computed(() => loadingFieldNames.value || loadingIndexNames.value || loadingSource.value)
 const message = useMessage()
 const form = ref<SourceConfigurationPayload>(getSourceConfigurationForm())
 const formRef = ref<FormInst | null>(null)
 const fieldNamesOptions = ref<{ label: string; value: string }[]>([])
+const indexNamesOptions = ref<{ label: string; value: string }[]>([])
 
 const rules: FormRules = {
 	source: {
@@ -146,7 +165,8 @@ const isValid = computed(() => {
 		!form.value.field_names.length ||
 		!form.value.asset_name ||
 		!form.value.timefield_name ||
-		!form.value.alert_title_name
+		!form.value.alert_title_name ||
+		!form.value.source
 	) {
 		return false
 	}
@@ -154,20 +174,36 @@ const isValid = computed(() => {
 	return true
 })
 
-watch(sourceConfiguration, () => {
+watch(sourceConfigurationPayload, () => {
 	reset()
+	init()
 })
 
 watch(
-	() => form.value.source,
+	() => form.value.index_name,
 	val => {
 		if (val) {
 			form.value.field_names = []
 			getAvailableMappings(val)
+
+			if (!form.value.source) {
+				getSourceByIndex(val)
+			}
 		} else {
 			fieldNamesOptions.value = []
 		}
 	}
+)
+
+watchDebounced(
+	() => form.value.source,
+	val => {
+		if (val) {
+			form.value.index_name = undefined
+			getAvailableIndices(val)
+		}
+	},
+	{ debounce: 500 }
 )
 
 function validateAtLeastOne(rule: FormItemRule, value: string[]) {
@@ -197,11 +233,12 @@ function validate(cb?: () => void) {
 
 function getSourceConfigurationForm(): SourceConfigurationPayload {
 	return {
-		field_names: sourceConfiguration.value?.field_names || [],
-		asset_name: sourceConfiguration.value?.asset_name || "",
-		timefield_name: sourceConfiguration.value?.timefield_name || "",
-		alert_title_name: sourceConfiguration.value?.alert_title_name || "",
-		source: sourceConfiguration.value?.source || ""
+		field_names: sourceConfigurationPayload.value?.field_names || [],
+		asset_name: sourceConfigurationPayload.value?.asset_name || "",
+		timefield_name: sourceConfigurationPayload.value?.timefield_name || "",
+		alert_title_name: sourceConfigurationPayload.value?.alert_title_name || "",
+		source: sourceConfigurationPayload.value?.source || "",
+		index_name: sourceConfigurationPayload.value?.index_name || ""
 	}
 }
 
@@ -230,11 +267,11 @@ function toggleSubmittingFlag(status?: boolean) {
 	return submitting.value
 }
 
-function getAvailableMappings(sourceName?: SourceName) {
+function getAvailableMappings(indexName: string) {
 	loadingFieldNames.value = true
 
 	Api.incidentManagement
-		.getAvailableMappings(sourceName || sourceConfiguration.value?.source || "")
+		.getAvailableMappings(indexName)
 		.then(res => {
 			if (res.data.success) {
 				fieldNamesOptions.value = (res.data?.available_mappings || []).map(o => ({
@@ -253,8 +290,64 @@ function getAvailableMappings(sourceName?: SourceName) {
 		})
 }
 
+function getAvailableIndices(source: SourceName) {
+	loadingIndexNames.value = true
+
+	Api.incidentManagement
+		.getAvailableIndices(source)
+		.then(res => {
+			if (res.data.success) {
+				indexNamesOptions.value = (res.data?.indices || []).map(o => ({
+					label: o,
+					value: o
+				}))
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			loadingIndexNames.value = false
+		})
+}
+
+function getSourceByIndex(indexName: string) {
+	loadingSource.value = true
+
+	Api.incidentManagement
+		.getSourceByIndex(indexName)
+		.then(res => {
+			if (res.data.success) {
+				form.value.source = res.data.source
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+		.finally(() => {
+			loadingSource.value = false
+		})
+}
+
+function init() {
+	if (sourceConfigurationPayload.value?.index_name) {
+		getAvailableMappings(sourceConfigurationPayload.value.index_name)
+
+		if (!sourceConfigurationPayload.value?.source) {
+			getSourceByIndex(sourceConfigurationPayload.value.index_name)
+		}
+	}
+	if (sourceConfigurationPayload.value?.source) {
+		getAvailableIndices(sourceConfigurationPayload.value.source)
+	}
+}
+
 onBeforeMount(() => {
-	getAvailableMappings()
+	init()
 })
 
 onMounted(() => {
