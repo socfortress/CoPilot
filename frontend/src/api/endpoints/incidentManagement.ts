@@ -2,7 +2,7 @@ import { type FlaskBaseResponse } from "@/types/flask.d"
 import { HttpClient } from "../httpClient"
 import type { SourceConfiguration, SourceName } from "@/types/incidentManagement.d"
 
-export type SourceConfigurationPayload = SourceConfiguration
+export type SourceConfigurationPayload = SourceConfiguration & { index_name?: string }
 
 export default {
 	getConfiguredSources() {
@@ -16,6 +16,16 @@ export default {
 			{
 				params: { index_name: indexName }
 			}
+		)
+	},
+	getSourceByIndex(indexName: string) {
+		return HttpClient.get<FlaskBaseResponse & { source: SourceName }>(
+			`/incidents/db_operations/available-source/${indexName}`
+		)
+	},
+	getAvailableIndices(source: SourceName) {
+		return HttpClient.get<FlaskBaseResponse & { indices: string[] }>(
+			`/incidents/db_operations/available-indices/${source}`
 		)
 	},
 	setSourceConfiguration(payload: SourceConfigurationPayload) {
