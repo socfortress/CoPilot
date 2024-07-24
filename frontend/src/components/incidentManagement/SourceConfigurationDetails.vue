@@ -14,7 +14,8 @@
 		<SourceConfigurationForm
 			v-if="sourceConfiguration"
 			v-show="editing"
-			:sourceConfiguration
+			:sourceConfigurationPayload="sourceConfiguration"
+			show-index-name-field
 			@mounted="formCTX = $event"
 			@submitted="setSourceConfiguration($event)"
 		>

@@ -124,8 +124,8 @@ function prev() {
 	formCTX.value?.reset()
 }
 
-function reset() {
-	if (!submitting.value) {
+function reset(force?: boolean) {
+	if (!submitting.value || force) {
 		currentStatus.value = "process"
 		slideFormDirection.value = "right"
 		current.value = 1
@@ -180,7 +180,7 @@ function createSourceConfiguration(payload: SourceConfiguration) {
 		.then(res => {
 			if (res.data.success) {
 				message.success(res.data?.message || `Source Configuration sent successfully`)
-				prev()
+				reset(true)
 				emit("submitted")
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")

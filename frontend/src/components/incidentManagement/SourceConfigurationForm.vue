@@ -19,6 +19,7 @@
 							v-model:value.trim="form.source"
 							placeholder="Please insert Source"
 							clearable
+							@update:value="resetIndexAvailable()"
 							:disabled="disableSourceField"
 							:loading="loadingSource"
 						/>
@@ -97,7 +98,6 @@ import {
 } from "naive-ui"
 import type { SourceConfiguration, SourceName } from "@/types/incidentManagement.d"
 import type { SourceConfigurationPayload } from "@/api/endpoints/incidentManagement"
-import { watchDebounced } from "@vueuse/core"
 
 const emit = defineEmits<{
 	(e: "submitted", value: SourceConfiguration): void
@@ -185,26 +185,17 @@ watch(
 		if (val) {
 			form.value.field_names = []
 			getAvailableMappings(val)
-
-			if (!form.value.source) {
-				getSourceByIndex(val)
-			}
+			getSourceByIndex(val)
 		} else {
 			fieldNamesOptions.value = []
 		}
 	}
 )
 
-watchDebounced(
-	() => form.value.source,
-	val => {
-		if (val) {
-			form.value.index_name = undefined
-			getAvailableIndices(val)
-		}
-	},
-	{ debounce: 500 }
-)
+function resetIndexAvailable() {
+	form.value.index_name = null
+	getAvailableIndices(form.value.source)
+}
 
 function validateAtLeastOne(rule: FormItemRule, value: string[]) {
 	if (!value || !value.length) {
@@ -238,7 +229,7 @@ function getSourceConfigurationForm(): SourceConfigurationPayload {
 		timefield_name: sourceConfigurationPayload.value?.timefield_name || "",
 		alert_title_name: sourceConfigurationPayload.value?.alert_title_name || "",
 		source: sourceConfigurationPayload.value?.source || "",
-		index_name: sourceConfigurationPayload.value?.index_name || ""
+		index_name: sourceConfigurationPayload.value?.index_name || undefined
 	}
 }
 
@@ -265,6 +256,10 @@ function toggleSubmittingFlag(status?: boolean) {
 	}
 
 	return submitting.value
+}
+
+function resetSource() {
+	form.value.source = ""
 }
 
 function getAvailableMappings(indexName: string) {
@@ -302,10 +297,12 @@ function getAvailableIndices(source: SourceName) {
 					value: o
 				}))
 			} else {
+				resetSource()
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
 		})
 		.catch(err => {
+			resetSource()
 			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
@@ -322,10 +319,12 @@ function getSourceByIndex(indexName: string) {
 			if (res.data.success) {
 				form.value.source = res.data.source
 			} else {
+				resetSource()
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
 		})
 		.catch(err => {
+			resetSource()
 			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
 		})
 		.finally(() => {

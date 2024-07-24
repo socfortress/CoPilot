@@ -2,7 +2,7 @@ import { type FlaskBaseResponse } from "@/types/flask.d"
 import { HttpClient } from "../httpClient"
 import type { SourceConfiguration, SourceName } from "@/types/incidentManagement.d"
 
-export type SourceConfigurationPayload = SourceConfiguration & { index_name?: string }
+export type SourceConfigurationPayload = SourceConfiguration & { index_name?: string | null }
 
 export default {
 	getConfiguredSources() {
