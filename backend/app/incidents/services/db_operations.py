@@ -84,7 +84,6 @@ async def add_asset_name(source: str, asset_name: str, session: AsyncSession):
         asset = AssetFieldName(source=source, field_name=asset_name)
         session.add(asset)
 
-
 async def add_timefield_name(source: str, timefield_name: str, session: AsyncSession):
     result = await session.execute(
         select(TimestampFieldName).where((TimestampFieldName.source == source) & (TimestampFieldName.field_name == timefield_name)),
@@ -95,6 +94,7 @@ async def add_timefield_name(source: str, timefield_name: str, session: AsyncSes
         session.add(timefield)
 
 
+
 async def add_alert_title_name(source: str, alert_title_name: str, session: AsyncSession):
     result = await session.execute(
         select(AlertTitleFieldName).where((AlertTitleFieldName.source == source) & (AlertTitleFieldName.field_name == alert_title_name)),
@@ -103,6 +103,68 @@ async def add_alert_title_name(source: str, alert_title_name: str, session: Asyn
     if existing_alert_title is None:
         alert_title = AlertTitleFieldName(source=source, field_name=alert_title_name)
         session.add(alert_title)
+
+async def replace_field_name(source: str, field_names: List[str], session: AsyncSession):
+    # First delete all the field names for this source, then add the new field names
+    result = await session.execute(select(FieldName).where(FieldName.source == source))
+    fields = result.scalars().all()
+
+    # Delete all the field names for this source
+    for field in fields:
+        await session.delete(field)
+
+    # Add the new field names
+    for field_name in field_names:
+        await add_field_name(source, field_name, session)
+
+    # Commit the changes
+    await session.commit()
+
+
+
+
+
+async def replace_asset_name(source: str, asset_name: str, session: AsyncSession):
+    # Load the current asset for this source from the DB, then delete it and replace it with `asset_name`
+    result = await session.execute(
+        select(AssetFieldName).where(AssetFieldName.source == source)
+    )
+    assets = result.scalars().all()
+
+    # Assuming you want to update the field_name for all assets matching the source
+    for asset in assets:
+        asset.field_name = asset_name
+
+    # Commit the changes
+    await session.commit()
+
+async def replace_timefield_name(source: str, timefield_name: str, session: AsyncSession):
+    # Load the current timefield for this source from the DB, then delete it and replace it with `timefield_name`
+    result = await session.execute(
+        select(TimestampFieldName).where(TimestampFieldName.source == source)
+    )
+    timefields = result.scalars().all()
+
+    # Assuming you want to update the field_name for all timefields matching the source
+    for timefield in timefields:
+        timefield.field_name = timefield_name
+
+    # Commit the changes
+    await session.commit()
+
+async def replace_alert_title_name(source: str, alert_title_name: str, session: AsyncSession):
+    # Load the current alert_title for this source from the DB, then delete it and replace it with `alert_title_name`
+    result = await session.execute(
+        select(AlertTitleFieldName).where(AlertTitleFieldName.source == source)
+    )
+    alert_titles = result.scalars().all()
+
+    # Assuming you want to update the field_name for all alert_titles matching the source
+    for alert_title in alert_titles:
+        alert_title.field_name = alert_title_name
+
+    # Commit the changes
+    await session.commit()
 
 
 async def delete_field_name(source: str, field_name: str, session: AsyncSession):

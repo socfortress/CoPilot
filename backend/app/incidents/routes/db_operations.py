@@ -79,7 +79,7 @@ from app.incidents.services.db_operations import list_alerts_by_tag
 from app.incidents.services.db_operations import list_cases
 from app.incidents.services.db_operations import update_alert_assigned_to
 from app.incidents.services.db_operations import update_alert_status
-from app.incidents.services.db_operations import validate_source_exists
+from app.incidents.services.db_operations import validate_source_exists, replace_asset_name, replace_alert_title_name, replace_timefield_name, replace_field_name
 
 incidents_db_operations_router = APIRouter()
 
@@ -151,7 +151,22 @@ async def create_wazuh_fields_and_assets(names: FieldAndAssetNames, session: Asy
 
     await add_alert_title_name(names.source, names.alert_title_name, session)
 
+    logger.info(f"Field names and asset names created successfully for source {names.source}")
+
     await session.commit()
+
+    return {"message": "Field names and asset names created successfully", "success": True}
+
+@incidents_db_operations_router.put("/fields-assets-title-and-timefield")
+async def update_fields_and_assets(names: FieldAndAssetNames, session: AsyncSession = Depends(get_db)):
+
+    await replace_field_name(names.source, names.field_names, session)
+
+    await replace_asset_name(names.source, names.asset_name, session)
+
+    await replace_timefield_name(names.source, names.timefield_name, session)
+
+    await replace_alert_title_name(names.source, names.alert_title_name, session)
 
     return {"message": "Field names and asset names created successfully", "success": True}
 
