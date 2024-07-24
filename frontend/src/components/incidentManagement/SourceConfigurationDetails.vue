@@ -3,7 +3,7 @@
 		<SourceConfigurationViewer v-if="sourceConfiguration" v-show="!editing" :sourceConfiguration />
 
 		<div class="flex gap-2 justify-end items-center mt-4" v-if="!editing && !loading">
-			<n-button size="small" @click="setEditMode()">
+			<n-button @click="setEditMode()">
 				<template #icon>
 					<Icon :name="EditIcon" :size="16"></Icon>
 				</template>

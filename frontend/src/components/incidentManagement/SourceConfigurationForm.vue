@@ -25,6 +25,15 @@
 							:loading="loadingSource"
 						/>
 					</n-form-item>
+
+					<n-alert v-if="isSourceNotAllowed" title="Source already exists" type="warning" class="mb-5">
+						A configuration for
+						<strong>"{{ form.source }}"</strong>
+						already exists. Please select a different
+						<strong>Index name</strong>
+						to proceed.
+					</n-alert>
+
 					<n-form-item label="Field names" path="field_names">
 						<n-select
 							v-model:value="form.field_names"
@@ -34,7 +43,7 @@
 							filterable
 							multiple
 							to="body"
-							:disabled="!form.index_name"
+							:disabled="!isFieldEnabled"
 							:loading="loadingAvailableMappings"
 						/>
 					</n-form-item>
@@ -46,7 +55,7 @@
 							clearable
 							filterable
 							to="body"
-							:disabled="!form.index_name"
+							:disabled="!isFieldEnabled"
 							:loading="loadingAvailableMappings"
 						/>
 					</n-form-item>
@@ -58,7 +67,7 @@
 							clearable
 							filterable
 							to="body"
-							:disabled="!form.index_name"
+							:disabled="!isFieldEnabled"
 							:loading="loadingAvailableMappings"
 						/>
 					</n-form-item>
@@ -70,7 +79,7 @@
 							clearable
 							filterable
 							to="body"
-							:disabled="!form.index_name"
+							:disabled="!isFieldEnabled"
 							:loading="loadingAvailableMappings"
 						/>
 					</n-form-item>
@@ -100,13 +109,14 @@
 import { computed, onBeforeMount, onMounted, ref, toRefs, watch } from "vue"
 import Api from "@/api"
 import {
-	useMessage,
 	NForm,
 	NFormItem,
 	NInput,
 	NButton,
 	NSpin,
 	NSelect,
+	NAlert,
+	useMessage,
 	type FormValidationError,
 	type FormInst,
 	type FormRules,
@@ -114,6 +124,7 @@ import {
 	type FormItemRule
 } from "naive-ui"
 import type { SourceConfiguration, SourceName, SourceConfigurationModel } from "@/types/incidentManagement.d"
+import _intersection from "lodash/intersection"
 
 const emit = defineEmits<{
 	(e: "submitted", value: SourceConfiguration): void
@@ -132,8 +143,16 @@ const props = defineProps<{
 	disableSourceField?: boolean
 	showIndexNameField?: boolean
 	disableIndexNameField?: boolean
+	disabledSources?: SourceName[]
 }>()
-const { sourceConfigurationModel } = toRefs(props)
+const {
+	sourceConfigurationModel,
+	showSourceField,
+	disableSourceField,
+	showIndexNameField,
+	disableIndexNameField,
+	disabledSources
+} = toRefs(props)
 
 const submitting = ref(false)
 const loadingSource = ref(false)
@@ -176,13 +195,19 @@ const rules: FormRules = {
 
 let validationMessage: MessageReactive | null = null
 
+const isSourceNotAllowed = computed(
+	() => form.value.source && disabledSources.value?.length && disabledSources.value.includes(form.value.source)
+)
+const isFieldEnabled = computed(() => form.value.index_name && !isSourceNotAllowed.value)
+
 const isValid = computed(() => {
 	if (
 		!form.value.field_names.length ||
 		!form.value.asset_name ||
 		!form.value.timefield_name ||
 		!form.value.alert_title_name ||
-		!form.value.source
+		!form.value.source ||
+		isSourceNotAllowed.value
 	) {
 		return false
 	}
@@ -199,7 +224,6 @@ watch(
 	() => form.value.index_name,
 	val => {
 		if (val) {
-			form.value.field_names = []
 			getAvailableMappings(val)
 			getSourceByIndex(val)
 		} else {
@@ -262,6 +286,22 @@ function resetForm() {
 	form.value = getSourceConfigurationForm()
 }
 
+function sanitizeFields() {
+	const availableMappings = availableMappingsOptions.value.map(o => o.value)
+
+	form.value.field_names = _intersection(availableMappings, form.value.field_names)
+
+	if (form.value.asset_name && !availableMappings.includes(form.value.asset_name)) {
+		form.value.asset_name = null
+	}
+	if (form.value.timefield_name && !availableMappings.includes(form.value.timefield_name)) {
+		form.value.timefield_name = null
+	}
+	if (form.value.alert_title_name && !availableMappings.includes(form.value.alert_title_name)) {
+		form.value.alert_title_name = null
+	}
+}
+
 function submit() {
 	const payload: SourceConfiguration = {
 		field_names: form.value?.field_names || [],
@@ -298,6 +338,7 @@ function getAvailableMappings(indexName: string) {
 					label: o,
 					value: o
 				}))
+				sanitizeFields()
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}

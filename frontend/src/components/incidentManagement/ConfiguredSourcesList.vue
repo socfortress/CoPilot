@@ -54,7 +54,7 @@
 			content-class="flex flex-col !p-0"
 			segmented
 		>
-			<SourceConfigurationWizard @submitted="getConfiguredSources()" />
+			<SourceConfigurationWizard @submitted="getConfiguredSources()" :disabledSources="configuredSourcesList" />
 		</n-modal>
 	</div>
 </template>

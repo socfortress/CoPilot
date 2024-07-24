@@ -48,6 +48,7 @@
 								disable-source-field
 								show-index-name-field
 								disable-index-name-field
+								:disabledSources
 								@mounted="formCTX = $event"
 								@submitted="createSourceConfiguration($event)"
 							>
@@ -69,14 +70,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from "vue"
+import { computed, onMounted, ref, toRefs, watch } from "vue"
 import { NSteps, NStep, useMessage, NScrollbar, NButton, NSpin, NSelect, type StepsProps } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import Api from "@/api"
 import { onBeforeMount } from "vue"
 import SourceConfigurationForm from "./SourceConfigurationForm.vue"
 import type { ApiError } from "@/types/common.d"
-import type { SourceConfiguration, SourceConfigurationModel } from "@/types/incidentManagement.d"
+import type { SourceConfiguration, SourceConfigurationModel, SourceName } from "@/types/incidentManagement.d"
 
 const emit = defineEmits<{
 	(e: "update:loading", value: boolean): void
@@ -88,6 +89,9 @@ const emit = defineEmits<{
 		}
 	): void
 }>()
+
+const props = defineProps<{ disabledSources?: SourceName[] }>()
+const { disabledSources } = toRefs(props)
 
 const ArrowLeftIcon = "carbon:arrow-left"
 const ArrowRightIcon = "carbon:arrow-right"
