@@ -2,8 +2,6 @@ import { type FlaskBaseResponse } from "@/types/flask.d"
 import { HttpClient } from "../httpClient"
 import type { SourceConfiguration, SourceName } from "@/types/incidentManagement.d"
 
-export type SourceConfigurationPayload = SourceConfiguration & { index_name?: string | null }
-
 export default {
 	getConfiguredSources() {
 		return HttpClient.get<FlaskBaseResponse & { sources: SourceName[] }>(
@@ -28,8 +26,11 @@ export default {
 			`/incidents/db_operations/available-indices/${source}`
 		)
 	},
-	setSourceConfiguration(payload: SourceConfigurationPayload) {
+	createSourceConfiguration(payload: SourceConfiguration) {
 		return HttpClient.post<FlaskBaseResponse>(`/incidents/db_operations/fields-assets-title-and-timefield`, payload)
+	},
+	updateSourceConfiguration(payload: SourceConfiguration) {
+		return HttpClient.put<FlaskBaseResponse>(`/incidents/db_operations/fields-assets-title-and-timefield`, payload)
 	},
 	getSourceConfiguration(source: SourceName) {
 		return HttpClient.get<FlaskBaseResponse & SourceConfiguration>(

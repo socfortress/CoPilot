@@ -14,10 +14,10 @@
 		<SourceConfigurationForm
 			v-if="sourceConfiguration"
 			v-show="editing"
-			:sourceConfigurationPayload="sourceConfiguration"
+			:sourceConfigurationModel="sourceConfiguration"
 			show-index-name-field
 			@mounted="formCTX = $event"
-			@submitted="setSourceConfiguration($event)"
+			@submitted="updateSourceConfiguration($event)"
 		>
 			<template #additionalActions>
 				<n-button @click="setViewMode()">
@@ -86,11 +86,11 @@ function setViewMode() {
 	editing.value = false
 }
 
-function setSourceConfiguration(payload: SourceConfiguration) {
+function updateSourceConfiguration(payload: SourceConfiguration) {
 	submitting.value = formCTX.value?.toggleSubmittingFlag() || true
 
 	Api.incidentManagement
-		.setSourceConfiguration(payload)
+		.updateSourceConfiguration(payload)
 		.then(res => {
 			if (res.data.success) {
 				message.success(res.data?.message || `Source Configuration sent successfully`)

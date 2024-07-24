@@ -42,8 +42,8 @@
 
 						<div v-else-if="current === 2" class="px-7 grow flex flex-col pb-7" style="min-height: 401px">
 							<SourceConfigurationForm
-								v-if="sourceConfigurationPayload"
-								:sourceConfigurationPayload
+								v-if="sourceConfigurationModel"
+								:sourceConfigurationModel
 								show-source-field
 								disable-source-field
 								show-index-name-field
@@ -76,8 +76,7 @@ import Api from "@/api"
 import { onBeforeMount } from "vue"
 import SourceConfigurationForm from "./SourceConfigurationForm.vue"
 import type { ApiError } from "@/types/common.d"
-import type { SourceConfiguration } from "@/types/incidentManagement.d"
-import type { SourceConfigurationPayload } from "@/api/endpoints/incidentManagement"
+import type { SourceConfiguration, SourceConfigurationModel } from "@/types/incidentManagement.d"
 
 const emit = defineEmits<{
 	(e: "update:loading", value: boolean): void
@@ -101,7 +100,7 @@ const current = ref<number>(1)
 const currentStatus = ref<StepsProps["status"]>("process")
 const formCTX = ref<{ reset: () => void; toggleSubmittingFlag: () => boolean } | null>(null)
 const selectedIndex = ref<string | null>(null)
-const sourceConfigurationPayload = ref<SourceConfigurationPayload | null>(null)
+const sourceConfigurationModel = ref<SourceConfigurationModel | null>(null)
 const indexNamesOptions = ref<{ label: string; value: string }[]>([])
 
 watch(loading, val => {
@@ -130,18 +129,18 @@ function reset(force?: boolean) {
 		slideFormDirection.value = "right"
 		current.value = 1
 		selectedIndex.value = null
-		sourceConfigurationPayload.value = null
+		sourceConfigurationModel.value = null
 		formCTX.value?.reset()
 	}
 }
 
 function setSourceConfiguration(indexName: string | null) {
 	if (indexName) {
-		sourceConfigurationPayload.value = {
+		sourceConfigurationModel.value = {
 			field_names: [],
-			asset_name: "",
-			timefield_name: "",
-			alert_title_name: "",
+			asset_name: null,
+			timefield_name: null,
+			alert_title_name: null,
 			source: "",
 			index_name: indexName
 		}
@@ -176,7 +175,7 @@ function createSourceConfiguration(payload: SourceConfiguration) {
 	submitting.value = formCTX.value?.toggleSubmittingFlag() || true
 
 	Api.incidentManagement
-		.setSourceConfiguration(payload)
+		.createSourceConfiguration(payload)
 		.then(res => {
 			if (res.data.success) {
 				message.success(res.data?.message || `Source Configuration sent successfully`)

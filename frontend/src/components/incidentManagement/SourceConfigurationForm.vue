@@ -9,6 +9,7 @@
 							:options="indexNamesOptions"
 							placeholder="Select..."
 							clearable
+							filterable
 							to="body"
 							:disabled="disableIndexNameField"
 							:loading="loadingIndexNames"
@@ -27,34 +28,50 @@
 					<n-form-item label="Field names" path="field_names">
 						<n-select
 							v-model:value="form.field_names"
-							:options="fieldNamesOptions"
+							:options="availableMappingsOptions"
 							placeholder="Select..."
 							clearable
+							filterable
 							multiple
 							to="body"
 							:disabled="!form.index_name"
-							:loading="loadingFieldNames"
+							:loading="loadingAvailableMappings"
 						/>
 					</n-form-item>
 					<n-form-item label="Asset name" path="asset_name">
-						<n-input
-							v-model:value.trim="form.asset_name"
-							placeholder="Please insert Asset name"
+						<n-select
+							v-model:value="form.asset_name"
+							:options="availableMappingsOptions"
+							placeholder="Select..."
 							clearable
+							filterable
+							to="body"
+							:disabled="!form.index_name"
+							:loading="loadingAvailableMappings"
 						/>
 					</n-form-item>
 					<n-form-item label="Timefield name" path="timefield_name">
-						<n-input
-							v-model:value.trim="form.timefield_name"
-							placeholder="Please insert Timefield name"
+						<n-select
+							v-model:value="form.timefield_name"
+							:options="availableMappingsOptions"
+							placeholder="Select..."
 							clearable
+							filterable
+							to="body"
+							:disabled="!form.index_name"
+							:loading="loadingAvailableMappings"
 						/>
 					</n-form-item>
 					<n-form-item label="Alert title name" path="alert_title_name">
-						<n-input
-							v-model:value.trim="form.alert_title_name"
-							placeholder="Please insert Alert title name"
+						<n-select
+							v-model:value="form.alert_title_name"
+							:options="availableMappingsOptions"
+							placeholder="Select..."
 							clearable
+							filterable
+							to="body"
+							:disabled="!form.index_name"
+							:loading="loadingAvailableMappings"
 						/>
 					</n-form-item>
 				</div>
@@ -96,8 +113,7 @@ import {
 	type MessageReactive,
 	type FormItemRule
 } from "naive-ui"
-import type { SourceConfiguration, SourceName } from "@/types/incidentManagement.d"
-import type { SourceConfigurationPayload } from "@/api/endpoints/incidentManagement"
+import type { SourceConfiguration, SourceName, SourceConfigurationModel } from "@/types/incidentManagement.d"
 
 const emit = defineEmits<{
 	(e: "submitted", value: SourceConfiguration): void
@@ -111,23 +127,23 @@ const emit = defineEmits<{
 }>()
 
 const props = defineProps<{
-	sourceConfigurationPayload?: SourceConfigurationPayload
+	sourceConfigurationModel?: SourceConfigurationModel
 	showSourceField?: boolean
 	disableSourceField?: boolean
 	showIndexNameField?: boolean
 	disableIndexNameField?: boolean
 }>()
-const { sourceConfigurationPayload } = toRefs(props)
+const { sourceConfigurationModel } = toRefs(props)
 
 const submitting = ref(false)
 const loadingSource = ref(false)
 const loadingIndexNames = ref(false)
-const loadingFieldNames = ref(false)
-const loading = computed(() => loadingFieldNames.value || loadingIndexNames.value || loadingSource.value)
+const loadingAvailableMappings = ref(false)
+const loading = computed(() => loadingAvailableMappings.value || loadingIndexNames.value || loadingSource.value)
 const message = useMessage()
-const form = ref<SourceConfigurationPayload>(getSourceConfigurationForm())
+const form = ref<SourceConfigurationModel>(getSourceConfigurationForm())
 const formRef = ref<FormInst | null>(null)
-const fieldNamesOptions = ref<{ label: string; value: string }[]>([])
+const availableMappingsOptions = ref<{ label: string; value: string }[]>([])
 const indexNamesOptions = ref<{ label: string; value: string }[]>([])
 
 const rules: FormRules = {
@@ -174,7 +190,7 @@ const isValid = computed(() => {
 	return true
 })
 
-watch(sourceConfigurationPayload, () => {
+watch(sourceConfigurationModel, () => {
 	reset()
 	init()
 })
@@ -187,14 +203,16 @@ watch(
 			getAvailableMappings(val)
 			getSourceByIndex(val)
 		} else {
-			fieldNamesOptions.value = []
+			availableMappingsOptions.value = []
 		}
 	}
 )
 
 function resetIndexAvailable() {
 	form.value.index_name = null
-	getAvailableIndices(form.value.source)
+	if (form.value.source) {
+		getAvailableIndices(form.value.source)
+	}
 }
 
 function validateAtLeastOne(rule: FormItemRule, value: string[]) {
@@ -222,14 +240,14 @@ function validate(cb?: () => void) {
 	})
 }
 
-function getSourceConfigurationForm(): SourceConfigurationPayload {
+function getSourceConfigurationForm(): SourceConfigurationModel {
 	return {
-		field_names: sourceConfigurationPayload.value?.field_names || [],
-		asset_name: sourceConfigurationPayload.value?.asset_name || "",
-		timefield_name: sourceConfigurationPayload.value?.timefield_name || "",
-		alert_title_name: sourceConfigurationPayload.value?.alert_title_name || "",
-		source: sourceConfigurationPayload.value?.source || "",
-		index_name: sourceConfigurationPayload.value?.index_name || undefined
+		field_names: sourceConfigurationModel.value?.field_names || [],
+		asset_name: sourceConfigurationModel.value?.asset_name || null,
+		timefield_name: sourceConfigurationModel.value?.timefield_name || null,
+		alert_title_name: sourceConfigurationModel.value?.alert_title_name || null,
+		source: sourceConfigurationModel.value?.source || "",
+		index_name: sourceConfigurationModel.value?.index_name || null
 	}
 }
 
@@ -245,7 +263,14 @@ function resetForm() {
 }
 
 function submit() {
-	emit("submitted", form.value)
+	const payload: SourceConfiguration = {
+		field_names: form.value?.field_names || [],
+		asset_name: form.value?.asset_name || "",
+		timefield_name: form.value?.timefield_name || "",
+		alert_title_name: form.value?.alert_title_name || "",
+		source: form.value?.source || ""
+	}
+	emit("submitted", payload)
 }
 
 function toggleSubmittingFlag(status?: boolean) {
@@ -263,13 +288,13 @@ function resetSource() {
 }
 
 function getAvailableMappings(indexName: string) {
-	loadingFieldNames.value = true
+	loadingAvailableMappings.value = true
 
 	Api.incidentManagement
 		.getAvailableMappings(indexName)
 		.then(res => {
 			if (res.data.success) {
-				fieldNamesOptions.value = (res.data?.available_mappings || []).map(o => ({
+				availableMappingsOptions.value = (res.data?.available_mappings || []).map(o => ({
 					label: o,
 					value: o
 				}))
@@ -281,7 +306,7 @@ function getAvailableMappings(indexName: string) {
 			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
-			loadingFieldNames.value = false
+			loadingAvailableMappings.value = false
 		})
 }
 
@@ -333,15 +358,15 @@ function getSourceByIndex(indexName: string) {
 }
 
 function init() {
-	if (sourceConfigurationPayload.value?.index_name) {
-		getAvailableMappings(sourceConfigurationPayload.value.index_name)
+	if (sourceConfigurationModel.value?.index_name) {
+		getAvailableMappings(sourceConfigurationModel.value.index_name)
 
-		if (!sourceConfigurationPayload.value?.source) {
-			getSourceByIndex(sourceConfigurationPayload.value.index_name)
+		if (!sourceConfigurationModel.value?.source) {
+			getSourceByIndex(sourceConfigurationModel.value.index_name)
 		}
 	}
-	if (sourceConfigurationPayload.value?.source) {
-		getAvailableIndices(sourceConfigurationPayload.value.source)
+	if (sourceConfigurationModel.value?.source) {
+		getAvailableIndices(sourceConfigurationModel.value.source)
 	}
 }
 
