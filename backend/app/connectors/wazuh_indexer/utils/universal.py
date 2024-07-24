@@ -4,7 +4,7 @@ from typing import Any
 from typing import Dict
 from typing import Iterable
 from typing import Tuple
-
+import re
 from elasticsearch7 import Elasticsearch
 from fastapi import HTTPException
 from loguru import logger
@@ -526,3 +526,30 @@ async def get_index_source(index_name: str):
                 return hit['_source']['integration']  # Return the value of 'integration' if 'syslog_type' equals 'integration'
             return hit['_source']['syslog_type']  # Return the value of 'syslog_type' for other cases
     raise HTTPException(status_code=404, detail=f"Source not found in index {index_name}")
+
+async def get_available_indices_via_source(source: str):
+    """
+    Get the available indices based on the source using regex matching.
+
+    Args:
+        source (str): The regex pattern for the source of the index.
+
+    Returns:
+        list: The available indices based on the source regex match.
+    """
+    es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
+    try:
+        indices = es_client.indices.get_alias("*")
+        logger.info(f"Indices: {indices.keys()}")
+        available_indices = []
+        source_pattern = re.compile(source)  # Compile the regex pattern for the source
+        exclude_patterns = [re.compile("wazuh-monitoring"), re.compile("wazuh-statistics")]
+        for index in indices.keys():
+            if source_pattern.search(index) and not any(exclude.search(index) for exclude in exclude_patterns):
+                available_indices.append(index)
+    except Exception as e:
+        logger.error(f"An error occurred: {e}")
+        available_indices = []
+
+    logger.info(f"Available indices: {available_indices}")
+    return available_indices

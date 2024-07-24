@@ -19,6 +19,11 @@ class AvailableSourcesResponse(BaseModel):
     success: bool
     message: str
 
+class AvailableIndicesResponse(BaseModel):
+    indices: List[str]
+    success: bool
+    message: str
+
 class ConfiguredSourcesResponse(BaseModel):
     sources: List[str]
     success: bool
