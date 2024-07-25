@@ -45,7 +45,10 @@ async def fetch_alerts_for_index(es_client, index, query):
     """
     # Start the initial search request
     response = es_client.search(
-        index=index, body=query, scroll="2m", size=1000,  # Keep the search context open for 2 minutes  # Number of results per "page"
+        index=index,
+        body=query,
+        scroll="2m",
+        size=1000,  # Keep the search context open for 2 minutes  # Number of results per "page"
     )
     scroll_id = response["_scroll_id"]
     hits = response["hits"]["hits"]

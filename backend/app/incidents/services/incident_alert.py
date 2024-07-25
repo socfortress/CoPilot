@@ -1,10 +1,11 @@
 import os
 from datetime import datetime
+from typing import Any
+from typing import Dict
 from typing import List
 
 from fastapi import HTTPException
 from loguru import logger
-from typing import Dict, Any
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
@@ -170,7 +171,6 @@ def get_process_name_from_image(process_image: str) -> str:
     return process_name
 
 
-
 async def construct_soc_alert_url(root_url: str, soc_alert_id: int) -> str:
     """Constructs the full URL for the SOC alert.
 
@@ -270,6 +270,7 @@ async def get_process_name(source_dict: dict) -> List[str]:
     process_name = get_process_name_from_image(process_image)
     return [process_name] if process_name else []
 
+
 async def build_alert_context_payload(alert_payload: dict, field_names: Any) -> Dict[str, Any]:
     """
     Build the alert context payload.
@@ -283,8 +284,9 @@ async def build_alert_context_payload(alert_payload: dict, field_names: Any) -> 
     """
     process_name = await get_process_name(alert_payload)
     alert_context_payload = {field: alert_payload[field] for field in field_names.field_names if field in alert_payload}
-    alert_context_payload['process_name'] = process_name
+    alert_context_payload["process_name"] = process_name
     return alert_context_payload
+
 
 async def build_alert_payload(
     syslog_type: str,

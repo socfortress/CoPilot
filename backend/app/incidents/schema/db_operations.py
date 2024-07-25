@@ -53,6 +53,7 @@ class UpdateAlertStatus(BaseModel):
     alert_id: int
     status: AlertStatus
 
+
 class UpdateCaseStatus(BaseModel):
     case_id: int
     status: AlertStatus
@@ -128,6 +129,7 @@ class AssignedToAlert(BaseModel):
     alert_id: int
     assigned_to: str
 
+
 class AssignedToCase(BaseModel):
     case_id: int
     assigned_to: str
@@ -162,6 +164,7 @@ class CaseCreate(BaseModel):
     case_creation_time: datetime
     case_status: str
     assigned_to: str
+
 
 class CaseCreateFromAlert(BaseModel):
     alert_id: int

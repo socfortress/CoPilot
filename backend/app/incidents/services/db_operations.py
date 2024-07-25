@@ -28,12 +28,13 @@ from app.incidents.schema.db_operations import AlertTagBase
 from app.incidents.schema.db_operations import AlertTagCreate
 from app.incidents.schema.db_operations import AssetBase
 from app.incidents.schema.db_operations import AssetCreate
-from app.incidents.schema.db_operations import CaseAlertLinkCreate, UpdateCaseStatus
+from app.incidents.schema.db_operations import CaseAlertLinkCreate
 from app.incidents.schema.db_operations import CaseCreate
 from app.incidents.schema.db_operations import CaseOut
 from app.incidents.schema.db_operations import CommentBase
 from app.incidents.schema.db_operations import CommentCreate
 from app.incidents.schema.db_operations import UpdateAlertStatus
+from app.incidents.schema.db_operations import UpdateCaseStatus
 
 
 async def validate_source_exists(source: str, session: AsyncSession):
@@ -221,6 +222,7 @@ async def update_alert_status(update_alert_status: UpdateAlertStatus, db: AsyncS
     await db.commit()
     return alert
 
+
 async def update_case_status(update_case_status: UpdateCaseStatus, db: AsyncSession) -> Case:
     result = await db.execute(select(Case).where(Case.id == update_case_status.case_id))
     case = result.scalars().first()
@@ -239,7 +241,6 @@ async def update_case_assigned_to(case_id: int, assigned_to: str, db: AsyncSessi
     case.assigned_to = assigned_to
     await db.commit()
     return case
-
 
 
 async def update_alert_assigned_to(alert_id: int, assigned_to: str, db: AsyncSession) -> Alert:
@@ -342,6 +343,7 @@ async def create_alert_context(alert_context: AlertContextCreate, db: AsyncSessi
         raise HTTPException(status_code=400, detail="Alert context already exists")
     return db_alert_context
 
+
 async def get_alert_by_id(alert_id: int, db: AsyncSession) -> AlertOut:
     result = await db.execute(
         select(Alert)
@@ -350,7 +352,7 @@ async def get_alert_by_id(alert_id: int, db: AsyncSession) -> AlertOut:
             selectinload(Alert.comments),
             selectinload(Alert.assets),
             selectinload(Alert.tags).selectinload(AlertToTag.tag),
-        )
+        ),
     )
     alert = result.scalars().first()
     if not alert:
@@ -423,13 +425,16 @@ async def create_case(case: CaseCreate, db: AsyncSession) -> Case:
         raise HTTPException(status_code=400, detail="Case already exists")
     return db_case
 
+
 async def create_case_from_alert(alert_id: int, db: AsyncSession) -> Case:
     logger.info(f"Creating case from alert {alert_id}")
     result = await db.execute(select(Alert).where(Alert.id == alert_id))
     alert = result.scalars().first()
     if not alert:
         raise HTTPException(status_code=404, detail="Alert not found")
-    case = Case(case_name=alert.alert_name, case_description=alert.alert_description, case_status=alert.status, assigned_to=alert.assigned_to)
+    case = Case(
+        case_name=alert.alert_name, case_description=alert.alert_description, case_status=alert.status, assigned_to=alert.assigned_to,
+    )
     db.add(case)
     try:
         await db.flush()
@@ -462,9 +467,12 @@ async def create_case_alert_link(case_alert_link: CaseAlertLinkCreate, db: Async
         raise HTTPException(status_code=400, detail="Case alert link already exists")
     return db_case_alert_link
 
+
 async def get_case_by_id(case_id: int, db: AsyncSession) -> CaseOut:
     result = await db.execute(
-        select(Case).where(Case.id == case_id).options(
+        select(Case)
+        .where(Case.id == case_id)
+        .options(
             selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.comments),
             selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.assets),
             selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.tags).selectinload(AlertToTag.tag),
@@ -546,6 +554,7 @@ async def list_cases(db: AsyncSession) -> List[CaseOut]:
         cases_out.append(case_out)
     return cases_out
 
+
 async def list_cases_by_status(status: str, db: AsyncSession) -> List[CaseOut]:
     result = await db.execute(
         select(Case)
@@ -590,6 +599,7 @@ async def list_cases_by_status(status: str, db: AsyncSession) -> List[CaseOut]:
         cases_out.append(case_out)
     return cases_out
 
+
 async def list_cases_by_assigned_to(assigned_to: str, db: AsyncSession) -> List[CaseOut]:
     result = await db.execute(
         select(Case)
@@ -633,6 +643,7 @@ async def list_cases_by_assigned_to(assigned_to: str, db: AsyncSession) -> List[
         )
         cases_out.append(case_out)
     return cases_out
+
 
 async def get_alert_context_by_id(alert_context_id: int, db: AsyncSession) -> AlertContext:
     result = await db.execute(select(AlertContext).where(AlertContext.id == alert_context_id))
@@ -845,8 +856,6 @@ async def delete_alert(alert_id: int, db: AsyncSession):
         raise HTTPException(status_code=400, detail="Error deleting alert")
 
 
-
-
 async def delete_case(case_id: int, db: AsyncSession):
     """
     Delete a case from the database.
@@ -860,9 +869,7 @@ async def delete_case(case_id: int, db: AsyncSession):
 
     """
     result = await db.execute(
-        select(Case)
-        .options(selectinload(Case.alerts))
-        .where(Case.id == case_id),
+        select(Case).options(selectinload(Case.alerts)).where(Case.id == case_id),
     )
     case = result.scalars().first()
     if not case:
