@@ -27,16 +27,18 @@ async def get_graylog_event_indices() -> IndexNamesResponse:
 
 async def construct_query():
     """
-    Constructs the query to find alerts where `copilot_alert_id` does not exist.
+    Constructs the query to find alerts where `fields.COPILOT_ALERT_ID` is NONE.
     """
     return {
         "query": {
             "bool": {
-                "must_not": {
-                    "exists": {
-                        "field": "copilot_alert_id"
+                "must": [
+                    {
+                        "term": {
+                            "fields.COPILOT_ALERT_ID": "NONE"
+                        }
                     }
-                }
+                ]
             }
         }
     }
@@ -116,7 +118,9 @@ async def add_copilot_alert_id(index_data: CreateAlertRequest, alert_id: int):
     es_client = await create_wazuh_indexer_client('Wazuh-Indexer')
     body = {
         "doc": {
-            "copilot_alert_id": alert_id
+            "fields": {
+                "COPILOT_ALERT_ID": f'{alert_id}'
+            }
         }
     }
     es_client.update(index=index_data.index_name, id=index_data.alert_id, body=body)

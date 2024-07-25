@@ -5,7 +5,7 @@ class Fields(BaseModel):
     ALERT_ID: Optional[str] = None
     ALERT_SOURCE: Optional[str] = None
     CUSTOMER_CODE: Optional[str] = None
-    test: Optional[str] = None
+    COPILOT_ALERT_ID: Optional[str] = None
 
 class Source(BaseModel):
     id: str

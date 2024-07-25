@@ -3,6 +3,7 @@ from fastapi import Depends
 from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import HTTPException
 
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
@@ -91,8 +92,8 @@ async def create_alert_auto_route(
         CreateAlertResponse: The response object containing the result of the alert creation.
     """
     alerts = await get_alerts_not_created_in_copilot()
-    if not alerts.alerts:
-        return CreateAlertResponse(success=False, message="No alerts to create")
+    if len(alerts.alerts) == 0:
+        raise HTTPException(status_code=404, detail="No alerts found to create in CoPilot")
     for alert in alerts.alerts:
         logger.info(f"Creating alert {alert} in CoPilot")
         create_alert_request = CreateAlertRequest(index_name=await get_original_alert_index_name(origin_context=alert.source.origin_context), alert_id=await get_original_alert_id(alert.source.origin_context))
