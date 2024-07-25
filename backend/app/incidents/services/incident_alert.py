@@ -4,6 +4,7 @@ from typing import List
 
 from fastapi import HTTPException
 from loguru import logger
+from typing import Dict, Any
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
@@ -169,21 +170,6 @@ def get_process_name_from_image(process_image: str) -> str:
     return process_name
 
 
-async def get_process_name(source_dict: dict) -> List[str]:
-    """
-    Get the process name from the source dictionary.
-
-    Args:
-        source_dict (dict): The source dictionary.
-
-    Returns:
-        List[str]: The process name as a list.
-    """
-    remove_process_name_if_osquery(source_dict)
-    process_image = get_process_image(source_dict)
-    process_name = get_process_name_from_image(process_image)
-    return [process_name] if process_name else []
-
 
 async def construct_soc_alert_url(root_url: str, soc_alert_id: int) -> str:
     """Constructs the full URL for the SOC alert.
@@ -269,6 +255,37 @@ async def get_all_field_names(syslog_type: str, session: AsyncSession) -> FieldN
     )
 
 
+async def get_process_name(source_dict: dict) -> List[str]:
+    """
+    Get the process name from the source dictionary.
+
+    Args:
+        source_dict (dict): The source dictionary.
+
+    Returns:
+        List[str]: The process name as a list.
+    """
+    remove_process_name_if_osquery(source_dict)
+    process_image = get_process_image(source_dict)
+    process_name = get_process_name_from_image(process_image)
+    return [process_name] if process_name else []
+
+async def build_alert_context_payload(alert_payload: dict, field_names: Any) -> Dict[str, Any]:
+    """
+    Build the alert context payload.
+
+    Args:
+        alert_payload (dict): The alert payload.
+        field_names (Any): The field names.
+
+    Returns:
+        dict: The alert context payload.
+    """
+    process_name = await get_process_name(alert_payload)
+    alert_context_payload = {field: alert_payload[field] for field in field_names.field_names if field in alert_payload}
+    alert_context_payload['process_name'] = process_name
+    return alert_context_payload
+
 async def build_alert_payload(
     syslog_type: str,
     index_name: str,
@@ -297,7 +314,7 @@ async def build_alert_payload(
             )
 
     return CreatedAlertPayload(
-        alert_context_payload={field: alert_payload[field] for field in field_names.field_names if field in alert_payload},
+        alert_context_payload=await build_alert_context_payload(alert_payload, field_names),
         asset_payload=alert_payload[field_names.asset_name] if field_names.asset_name in alert_payload else None,
         timefield_payload=alert_payload[field_names.timefield_name] if field_names.timefield_name in alert_payload else None,
         alert_title_payload=alert_payload[field_names.alert_title_name] if field_names.alert_title_name in alert_payload else None,
