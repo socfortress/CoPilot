@@ -1,9 +1,9 @@
 <template>
 	<div class="page">
-		<NetworkConnectorsList />
+		<AlertsList />
 	</div>
 </template>
 
 <script setup lang="ts">
-import NetworkConnectorsList from "@/components/networkConnectors/NetworkConnectorsList.vue"
+import AlertsList from "@/components/incidentManagement/alerts/AlertsList.vue"
 </script>
