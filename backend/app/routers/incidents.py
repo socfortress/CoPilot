@@ -7,4 +7,4 @@ from app.incidents.routes.incident_alert import incidents_alerts_router
 router = APIRouter()
 
 router.include_router(incidents_db_operations_router, prefix="/incidents/db_operations", tags=["incidents"])
-router.include_router(incidents_alerts_router, prefix="/incidents/alerts", tags=["incidents"])
+router.include_router(incidents_alerts_router, prefix="/incidents/alerts", tags=["incidents-alerts"])

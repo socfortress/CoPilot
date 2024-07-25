@@ -53,6 +53,10 @@ class UpdateAlertStatus(BaseModel):
     alert_id: int
     status: AlertStatus
 
+class UpdateCaseStatus(BaseModel):
+    case_id: int
+    status: AlertStatus
+
 
 class AlertResponse(BaseModel):
     alert: Alert
@@ -122,6 +126,10 @@ class FieldAndAssetNamesResponse(BaseModel):
 
 class AssignedToAlert(BaseModel):
     alert_id: int
+    assigned_to: str
+
+class AssignedToCase(BaseModel):
+    case_id: int
     assigned_to: str
 
 
@@ -230,7 +238,8 @@ class CaseOut(BaseModel):
     case_name: str
     case_description: str
     assigned_to: Optional[str] = None
-    alerts: List[AlertOut]
+    alerts: Optional[List[AlertOut]] = []
+    case_status: Optional[str] = None
 
 
 class CaseOutResponse(BaseModel):

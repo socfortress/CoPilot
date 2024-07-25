@@ -28,7 +28,7 @@ from app.incidents.schema.db_operations import AlertTagBase
 from app.incidents.schema.db_operations import AlertTagCreate
 from app.incidents.schema.db_operations import AssetBase
 from app.incidents.schema.db_operations import AssetCreate
-from app.incidents.schema.db_operations import CaseAlertLinkCreate
+from app.incidents.schema.db_operations import CaseAlertLinkCreate, UpdateCaseStatus
 from app.incidents.schema.db_operations import CaseCreate
 from app.incidents.schema.db_operations import CaseOut
 from app.incidents.schema.db_operations import CommentBase
@@ -221,6 +221,26 @@ async def update_alert_status(update_alert_status: UpdateAlertStatus, db: AsyncS
     await db.commit()
     return alert
 
+async def update_case_status(update_case_status: UpdateCaseStatus, db: AsyncSession) -> Case:
+    result = await db.execute(select(Case).where(Case.id == update_case_status.case_id))
+    case = result.scalars().first()
+    if not case:
+        raise HTTPException(status_code=404, detail="Case not found")
+    case.case_status = update_case_status.status
+    await db.commit()
+    return case
+
+
+async def update_case_assigned_to(case_id: int, assigned_to: str, db: AsyncSession) -> Case:
+    result = await db.execute(select(Case).where(Case.id == case_id))
+    case = result.scalars().first()
+    if not case:
+        raise HTTPException(status_code=404, detail="Case not found")
+    case.assigned_to = assigned_to
+    await db.commit()
+    return case
+
+
 
 async def update_alert_assigned_to(alert_id: int, assigned_to: str, db: AsyncSession) -> Alert:
     result = await db.execute(select(Alert).where(Alert.id == alert_id))
@@ -322,6 +342,41 @@ async def create_alert_context(alert_context: AlertContextCreate, db: AsyncSessi
         raise HTTPException(status_code=400, detail="Alert context already exists")
     return db_alert_context
 
+async def get_alert_by_id(alert_id: int, db: AsyncSession) -> AlertOut:
+    result = await db.execute(
+        select(Alert)
+        .where(Alert.id == alert_id)
+        .options(
+            selectinload(Alert.comments),
+            selectinload(Alert.assets),
+            selectinload(Alert.tags).selectinload(AlertToTag.tag),
+        )
+    )
+    alert = result.scalars().first()
+    if not alert:
+        raise HTTPException(status_code=404, detail="Alert not found")
+
+    comments = [CommentBase(**comment.__dict__) for comment in alert.comments]
+    assets = [AssetBase(**asset.__dict__) for asset in alert.assets]
+    tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
+
+    alert_out = AlertOut(
+        id=alert.id,
+        alert_creation_time=alert.alert_creation_time,
+        time_closed=alert.time_closed,
+        alert_name=alert.alert_name,
+        alert_description=alert.alert_description,
+        status=alert.status,
+        customer_code=alert.customer_code,
+        source=alert.source,
+        assigned_to=alert.assigned_to,
+        comments=comments,
+        assets=assets,
+        tags=tags,
+    )
+
+    return alert_out
+
 
 async def list_alerts(db: AsyncSession) -> List[AlertOut]:
     result = await db.execute(
@@ -407,6 +462,47 @@ async def create_case_alert_link(case_alert_link: CaseAlertLinkCreate, db: Async
         raise HTTPException(status_code=400, detail="Case alert link already exists")
     return db_case_alert_link
 
+async def get_case_by_id(case_id: int, db: AsyncSession) -> CaseOut:
+    result = await db.execute(
+        select(Case).where(Case.id == case_id).options(
+            selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.comments),
+            selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.assets),
+            selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.tags).selectinload(AlertToTag.tag),
+        ),
+    )
+    case = result.scalars().first()
+    if not case:
+        raise HTTPException(status_code=404, detail="Case not found")
+    alerts_out = []
+    for case_alert_link in case.alerts:
+        alert = case_alert_link.alert
+        comments = [CommentBase(**comment.__dict__) for comment in alert.comments]
+        assets = [AssetBase(**asset.__dict__) for asset in alert.assets]
+        tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
+        alert_out = AlertOut(
+            id=alert.id,
+            alert_creation_time=alert.alert_creation_time,
+            time_closed=alert.time_closed,
+            alert_name=alert.alert_name,
+            alert_description=alert.alert_description,
+            status=alert.status,
+            customer_code=alert.customer_code,
+            source=alert.source,
+            assigned_to=alert.assigned_to,
+            comments=comments,
+            assets=assets,
+            tags=tags,
+        )
+        alerts_out.append(alert_out)
+    case_out = CaseOut(
+        id=case.id,
+        case_name=case.case_name,
+        case_description=case.case_description,
+        assigned_to=case.assigned_to,
+        alerts=alerts_out,
+    )
+    return case_out
+
 
 async def list_cases(db: AsyncSession) -> List[CaseOut]:
     result = await db.execute(
@@ -450,6 +546,93 @@ async def list_cases(db: AsyncSession) -> List[CaseOut]:
         cases_out.append(case_out)
     return cases_out
 
+async def list_cases_by_status(status: str, db: AsyncSession) -> List[CaseOut]:
+    result = await db.execute(
+        select(Case)
+        .where(Case.case_status == status)
+        .options(
+            selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.comments),
+            selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.assets),
+            selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.tags).selectinload(AlertToTag.tag),
+        ),
+    )
+    cases = result.scalars().all()
+    cases_out = []
+    for case in cases:
+        alerts_out = []
+        for case_alert_link in case.alerts:
+            alert = case_alert_link.alert
+            comments = [CommentBase(**comment.__dict__) for comment in alert.comments]
+            assets = [AssetBase(**asset.__dict__) for asset in alert.assets]
+            tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
+            alert_out = AlertOut(
+                id=alert.id,
+                alert_creation_time=alert.alert_creation_time,
+                time_closed=alert.time_closed,
+                alert_name=alert.alert_name,
+                alert_description=alert.alert_description,
+                status=alert.status,
+                customer_code=alert.customer_code,
+                source=alert.source,
+                assigned_to=alert.assigned_to,
+                comments=comments,
+                assets=assets,
+                tags=tags,
+            )
+            alerts_out.append(alert_out)
+        case_out = CaseOut(
+            id=case.id,
+            case_name=case.case_name,
+            case_description=case.case_description,
+            assigned_to=case.assigned_to,
+            alerts=alerts_out,
+        )
+        cases_out.append(case_out)
+    return cases_out
+
+async def list_cases_by_assigned_to(assigned_to: str, db: AsyncSession) -> List[CaseOut]:
+    result = await db.execute(
+        select(Case)
+        .where(Case.assigned_to == assigned_to)
+        .options(
+            selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.comments),
+            selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.assets),
+            selectinload(Case.alerts).selectinload(CaseAlertLink.alert).selectinload(Alert.tags).selectinload(AlertToTag.tag),
+        ),
+    )
+    cases = result.scalars().all()
+    cases_out = []
+    for case in cases:
+        alerts_out = []
+        for case_alert_link in case.alerts:
+            alert = case_alert_link.alert
+            comments = [CommentBase(**comment.__dict__) for comment in alert.comments]
+            assets = [AssetBase(**asset.__dict__) for asset in alert.assets]
+            tags = [AlertTagBase(**alert_to_tag.tag.__dict__) for alert_to_tag in alert.tags]
+            alert_out = AlertOut(
+                id=alert.id,
+                alert_creation_time=alert.alert_creation_time,
+                time_closed=alert.time_closed,
+                alert_name=alert.alert_name,
+                alert_description=alert.alert_description,
+                status=alert.status,
+                customer_code=alert.customer_code,
+                source=alert.source,
+                assigned_to=alert.assigned_to,
+                comments=comments,
+                assets=assets,
+                tags=tags,
+            )
+            alerts_out.append(alert_out)
+        case_out = CaseOut(
+            id=case.id,
+            case_name=case.case_name,
+            case_description=case.case_description,
+            assigned_to=case.assigned_to,
+            alerts=alerts_out,
+        )
+        cases_out.append(case_out)
+    return cases_out
 
 async def get_alert_context_by_id(alert_context_id: int, db: AsyncSession) -> AlertContext:
     result = await db.execute(select(AlertContext).where(AlertContext.id == alert_context_id))
@@ -660,3 +843,35 @@ async def delete_alert(alert_id: int, db: AsyncSession):
     except IntegrityError:
         await db.rollback()
         raise HTTPException(status_code=400, detail="Error deleting alert")
+
+
+
+
+async def delete_case(case_id: int, db: AsyncSession):
+    """
+    Delete a case from the database.
+
+    Args:
+        case_id (int): The ID of the case to be deleted.
+        db (AsyncSession): The database session.
+
+    Raises:
+        HTTPException: If the case is not found or there is an error deleting the case.
+
+    """
+    result = await db.execute(
+        select(Case)
+        .options(selectinload(Case.alerts))
+        .where(Case.id == case_id),
+    )
+    case = result.scalars().first()
+    if not case:
+        raise HTTPException(status_code=404, detail="Case not found")
+
+    await db.execute(delete(Case).where(Case.id == case.id))
+
+    try:
+        await db.commit()
+    except IntegrityError:
+        await db.rollback()
+        raise HTTPException(status_code=400, detail="Error deleting case")

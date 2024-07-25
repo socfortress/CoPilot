@@ -40,7 +40,7 @@ from app.incidents.schema.db_operations import AssetCreate
 from app.incidents.schema.db_operations import AssetResponse
 from app.incidents.schema.db_operations import AssignedToAlert
 from app.incidents.schema.db_operations import AvailableIndicesResponse
-from app.incidents.schema.db_operations import AvailableSourcesResponse
+from app.incidents.schema.db_operations import AvailableSourcesResponse, UpdateCaseStatus
 from app.incidents.schema.db_operations import AvailableUsersResponse
 from app.incidents.schema.db_operations import CaseAlertLinkCreate
 from app.incidents.schema.db_operations import CaseAlertLinkResponse
@@ -48,7 +48,7 @@ from app.incidents.schema.db_operations import CaseCreate
 from app.incidents.schema.db_operations import CaseOut
 from app.incidents.schema.db_operations import CaseOutResponse
 from app.incidents.schema.db_operations import CaseResponse
-from app.incidents.schema.db_operations import CommentBase
+from app.incidents.schema.db_operations import CommentBase, AssignedToCase
 from app.incidents.schema.db_operations import CommentCreate
 from app.incidents.schema.db_operations import CommentResponse
 from app.incidents.schema.db_operations import ConfiguredSourcesResponse
@@ -56,18 +56,18 @@ from app.incidents.schema.db_operations import FieldAndAssetNames
 from app.incidents.schema.db_operations import FieldAndAssetNamesResponse
 from app.incidents.schema.db_operations import MappingsResponse
 from app.incidents.schema.db_operations import UpdateAlertStatus
-from app.incidents.services.db_operations import add_alert_title_name
-from app.incidents.services.db_operations import add_asset_name
+from app.incidents.services.db_operations import add_alert_title_name, get_alert_by_id
+from app.incidents.services.db_operations import add_asset_name, list_cases_by_status, update_case_assigned_to
 from app.incidents.services.db_operations import add_field_name
 from app.incidents.services.db_operations import add_timefield_name
 from app.incidents.services.db_operations import create_alert
 from app.incidents.services.db_operations import create_alert_context
 from app.incidents.services.db_operations import create_alert_tag
-from app.incidents.services.db_operations import create_asset
-from app.incidents.services.db_operations import create_case, create_case_from_alert
-from app.incidents.services.db_operations import create_case_alert_link
+from app.incidents.services.db_operations import create_asset, get_case_by_id
+from app.incidents.services.db_operations import create_case, create_case_from_alert, list_cases_by_assigned_to
+from app.incidents.services.db_operations import create_case_alert_link, update_case_status
 from app.incidents.services.db_operations import create_comment
-from app.incidents.services.db_operations import delete_alert
+from app.incidents.services.db_operations import delete_alert, delete_case
 from app.incidents.services.db_operations import delete_alert_tag
 from app.incidents.services.db_operations import delete_alert_title_name
 from app.incidents.services.db_operations import delete_asset_name
@@ -228,7 +228,6 @@ async def delete_timefield_name_endpoint(timefield_name: str, source: str, db: A
 async def delete_alert_title_name_endpoint(alert_title_name: str, source: str, db: AsyncSession = Depends(get_db)):
     return await delete_alert_title_name(source, alert_title_name, db)
 
-
 @incidents_db_operations_router.post("/alert", response_model=Alert)
 async def create_alert_endpoint(alert: AlertCreate, db: AsyncSession = Depends(get_db)):
     return await create_alert(alert, db)
@@ -336,6 +335,10 @@ async def create_case_from_alert_endpoint(alert_id: CaseCreateFromAlert, db: Asy
 async def list_alerts_endpoint(db: AsyncSession = Depends(get_db)):
     return AlertOutResponse(alerts=await list_alerts(db), success=True, message="Alerts retrieved successfully")
 
+@incidents_db_operations_router.get("/alert/{alert_id}", response_model=AlertOutResponse)
+async def get_alert_by_id_endpoint(alert_id: int, db: AsyncSession = Depends(get_db)):
+    return AlertOutResponse(alerts=[await get_alert_by_id(alert_id, db)], success=True, message="Alert retrieved successfully")
+
 
 @incidents_db_operations_router.delete("/alert/{alert_id}")
 async def delete_alert_endpoint(alert_id: int, db: AsyncSession = Depends(get_db)):
@@ -363,3 +366,34 @@ async def list_alerts_by_asset_name_endpoint(asset_name: str, db: AsyncSession =
 @incidents_db_operations_router.get("/cases", response_model=CaseOutResponse)
 async def list_cases_endpoint(db: AsyncSession = Depends(get_db)):
     return CaseOutResponse(cases=await list_cases(db), success=True, message="Cases retrieved successfully")
+
+@incidents_db_operations_router.get("/case/{case_id}", response_model=CaseOutResponse)
+async def get_case_by_id_endpoint(case_id: int, db: AsyncSession = Depends(get_db)):
+    return CaseOutResponse(cases=[await get_case_by_id(case_id, db)], success=True, message="Case retrieved successfully")
+
+@incidents_db_operations_router.put("/case/status", response_model=CaseOutResponse)
+async def update_case_status_endpoint(case_status: UpdateCaseStatus, db: AsyncSession = Depends(get_db)):
+    return CaseOutResponse(cases=[await update_case_status(case_status, db)], success=True, message="Case status updated successfully")
+
+@incidents_db_operations_router.put("/case/assigned-to", response_model=CaseOutResponse)
+async def update_case_assigned_to_endpoint(assigned_to: AssignedToCase, db: AsyncSession = Depends(get_db)):
+    all_users = await select_all_users()
+    user_names = [user.username for user in all_users]
+    if assigned_to.assigned_to not in user_names:
+        raise HTTPException(status_code=400, detail="User does not exist")
+    return CaseOutResponse(cases=[await update_case_assigned_to(assigned_to.case_id, assigned_to.assigned_to, db)], success=True, message="Case assigned to user successfully")
+
+@incidents_db_operations_router.delete("/case/{case_id}")
+async def delete_case_endpoint(case_id: int, db: AsyncSession = Depends(get_db)):
+    await delete_case(case_id, db)
+    return {"message": "Case deleted successfully", "success": True}
+
+@incidents_db_operations_router.get("/case/status/{status}", response_model=CaseOutResponse)
+async def list_cases_by_status_endpoint(status: AlertStatus, db: AsyncSession = Depends(get_db)):
+    if status not in AlertStatus:
+        raise HTTPException(status_code=400, detail="Invalid status")
+    return CaseOutResponse(cases=await list_cases_by_status(status.value, db), success=True, message="Cases retrieved successfully")
+
+@incidents_db_operations_router.get("/case/assigned-to/{assigned_to}", response_model=CaseOutResponse)
+async def list_cases_by_assigned_to_endpoint(assigned_to: str, db: AsyncSession = Depends(get_db)):
+    return CaseOutResponse(cases=await list_cases_by_assigned_to(assigned_to, db), success=True, message="Cases retrieved successfully")
