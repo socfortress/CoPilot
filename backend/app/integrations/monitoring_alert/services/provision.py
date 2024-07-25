@@ -361,6 +361,16 @@ async def provision_wazuh_monitoring_alert(
                         ),
                     ],
                 ),
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(
+                            type="template-v1",
+                            template="NONE",
+                            require_values=True,
+                        ),
+                    ],
+                ),
             },
             key_spec=[],
             notification_settings=GraylogAlertProvisionNotificationSettings(
@@ -477,6 +487,16 @@ async def provision_suricata_monitoring_alert(
                         GraylogAlertProvisionProvider(
                             type="template-v1",
                             template="SURICATA",
+                            require_values=True,
+                        ),
+                    ],
+                ),
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(
+                            type="template-v1",
+                            template="NONE",
                             require_values=True,
                         ),
                     ],
@@ -601,6 +621,16 @@ async def provision_office365_exchange_online_alert(
                         ),
                     ],
                 ),
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(
+                            type="template-v1",
+                            template="NONE",
+                            require_values=True,
+                        ),
+                    ],
+                ),
             },
             key_spec=[],
             notification_settings=GraylogAlertProvisionNotificationSettings(
@@ -721,6 +751,16 @@ async def provision_office365_threat_intel_alert(
                         ),
                     ],
                 ),
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
+                    data_type="string",
+                    providers=[
+                        GraylogAlertProvisionProvider(
+                            type="template-v1",
+                            template="NONE",
+                            require_values=True,
+                        ),
+                    ],
+                ),
             },
             key_spec=[],
             notification_settings=GraylogAlertProvisionNotificationSettings(
@@ -808,18 +848,30 @@ async def provision_custom_alert(request: CustomMonitoringAlertProvisionModel) -
                 ),
                 event_limit=1000,
             ),
-            field_spec={
-                custom_field.name: GraylogAlertProvisionFieldSpecItem(
+            field_spec = {
+                **{
+                    custom_field.name: GraylogAlertProvisionFieldSpecItem(
+                        data_type="string",
+                        providers=[
+                            GraylogAlertProvisionProvider(
+                                type="template-v1",
+                                template=f"${{source.{custom_field.value}}}" if custom_field.name != "CUSTOMER_CODE" else custom_field.value,
+                                require_values=True,
+                            ),
+                        ],
+                    )
+                    for custom_field in request.custom_fields
+                },
+                "COPILOT_ALERT_ID": GraylogAlertProvisionFieldSpecItem(
                     data_type="string",
                     providers=[
                         GraylogAlertProvisionProvider(
                             type="template-v1",
-                            template=f"${{source.{custom_field.value}}}" if custom_field.name != "CUSTOMER_CODE" else custom_field.value,
+                            template="NONE",
                             require_values=True,
                         ),
                     ],
-                )
-                for custom_field in request.custom_fields
+                ),
             },
             key_spec=[],
             notification_settings=GraylogAlertProvisionNotificationSettings(
