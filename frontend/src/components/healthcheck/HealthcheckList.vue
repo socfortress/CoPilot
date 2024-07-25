@@ -35,13 +35,13 @@
 			/>
 		</div>
 		<n-spin :show="loading">
-			<div class="list my-3">
+			<div class="list flex flex-col gap-2 my-3">
 				<template v-if="healthcheckList.length">
 					<HealthcheckItem
 						v-for="alert of itemsPaginated"
 						:key="alert.checkID + alert.time"
 						:alert="alert"
-						class="item-appear item-appear-bottom item-appear-005 mb-2"
+						class="item-appear item-appear-bottom item-appear-005"
 					/>
 				</template>
 				<template v-else>

@@ -84,14 +84,14 @@
 			</n-popover>
 		</div>
 		<n-spin :show="loading">
-			<div class="list my-3">
+			<div class="list flex flex-col gap-2 my-3">
 				<template v-if="casesList.length">
 					<SocCaseItem
 						v-for="caseData of itemsPaginated"
 						:key="caseData.case_id"
 						:caseData="caseData"
 						@deleted="getData()"
-						class="item-appear item-appear-bottom item-appear-005 mb-2"
+						class="item-appear item-appear-bottom item-appear-005"
 					/>
 				</template>
 				<template v-else>

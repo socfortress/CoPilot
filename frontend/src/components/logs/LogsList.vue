@@ -68,14 +68,14 @@
 			</n-popover>
 		</div>
 		<n-spin :show="loading">
-			<div class="list my-3">
+			<div class="list flex flex-col gap-2 my-3">
 				<template v-if="logsList.length">
 					<LogItem
 						v-for="log of itemsPaginated"
 						:key="log.id"
 						:log="log"
 						:users="usersList"
-						class="item-appear item-appear-bottom item-appear-005 mb-2"
+						class="item-appear item-appear-bottom item-appear-005"
 					/>
 				</template>
 				<template v-else>

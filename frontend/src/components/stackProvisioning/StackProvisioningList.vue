@@ -1,9 +1,9 @@
 <template>
 	<div class="stack-provisioning-list">
 		<n-spin :show="loading">
-			<div class="list my-3">
+			<div class="list flex flex-col gap-2 my-3">
 				<template v-if="list.length">
-					<StackProvisioningItem v-for="item of list" :key="item.name" :content-pack="item" class="mb-2" />
+					<StackProvisioningItem v-for="item of list" :key="item.name" :content-pack="item" />
 				</template>
 				<template v-else>
 					<n-empty description="No items found" class="justify-center h-48" v-if="!loading" />

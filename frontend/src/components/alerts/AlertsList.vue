@@ -43,13 +43,13 @@
 		<n-spin :show="loading">
 			<template #description>Alerts are being fetched, this may take up to 1 minute.</template>
 
-			<div class="list my-3">
+			<div class="list flex flex-col gap-2 my-3">
 				<template v-if="alertsSummaryList.length">
 					<AlertsSummaryItem
 						v-for="alertsSummary of alertsSummaryList"
 						:key="alertsSummary.index_name"
 						:alertsSummary="alertsSummary"
-						class="item-appear item-appear-bottom item-appear-005 mb-2"
+						class="item-appear item-appear-bottom item-appear-005"
 					/>
 				</template>
 				<template v-else>
