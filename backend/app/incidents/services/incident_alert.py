@@ -539,7 +539,6 @@ async def create_alert(
     """
     logger.info(f"Creating alert {alert.alert_id} in CoPilot")
     alert_details = await get_single_alert_details(alert_details=alert)
-    logger.info(f"Alert details: {alert_details}")
     await validate_syslog_type_source(alert_details.syslog_type, session)
     customer_code = await get_customer_code(dict(alert_details._source))
     logger.info(f"Customer code: {customer_code}")
@@ -552,7 +551,6 @@ async def create_alert(
         alert_details._source.to_dict(),
         session,
     )
-    logger.info(f"Alert Payload {alert_payload}")
     existing_alert = await open_alert_exists(alert_payload, customer_code, session)
     if existing_alert:
         logger.info(
