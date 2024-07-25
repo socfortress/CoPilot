@@ -1,10 +1,11 @@
+import re
 from datetime import datetime
 from datetime import timedelta
 from typing import Any
 from typing import Dict
 from typing import Iterable
 from typing import Tuple
-import re
+
 from elasticsearch7 import Elasticsearch
 from fastapi import HTTPException
 from loguru import logger
@@ -493,6 +494,7 @@ async def get_index_mappings_key_names(index_name: str):
     # return only the field names
     return list(mappings[index_name]["mappings"]["properties"].keys())
 
+
 async def return_graylog_events_index_names():
     """
     Return the index names of the Graylog events.
@@ -504,28 +506,21 @@ async def return_graylog_events_index_names():
     indices = es_client.indices.get_alias("gl-events*")
     return list(indices.keys())
 
+
 async def get_index_source(index_name: str):
     """
     Get the 10 latest results from the index and search for where the source contains a field name of `syslog_type` or `integration`
     """
     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
-    query = {
-        "size": 10,
-        "query": {
-            "bool": {
-                "must": [
-                    {"exists": {"field": "syslog_type"}}
-                ]
-            }
-        }
-    }
+    query = {"size": 10, "query": {"bool": {"must": [{"exists": {"field": "syslog_type"}}]}}}
     response = es_client.search(index=index_name, body=query)
-    for hit in response['hits']['hits']:  # Loop through each hit in the response
-        if 'syslog_type' in hit['_source']:  # Check if 'syslog_type' exists in the source of the hit
-            if hit['_source']['syslog_type'] == 'integration' and 'integration' in hit['_source']:
-                return hit['_source']['integration']  # Return the value of 'integration' if 'syslog_type' equals 'integration'
-            return hit['_source']['syslog_type']  # Return the value of 'syslog_type' for other cases
+    for hit in response["hits"]["hits"]:  # Loop through each hit in the response
+        if "syslog_type" in hit["_source"]:  # Check if 'syslog_type' exists in the source of the hit
+            if hit["_source"]["syslog_type"] == "integration" and "integration" in hit["_source"]:
+                return hit["_source"]["integration"]  # Return the value of 'integration' if 'syslog_type' equals 'integration'
+            return hit["_source"]["syslog_type"]  # Return the value of 'syslog_type' for other cases
     raise HTTPException(status_code=404, detail=f"Source not found in index {index_name}")
+
 
 async def get_available_indices_via_source(source: str):
     """

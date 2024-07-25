@@ -14,15 +14,18 @@ from app.incidents.models import Case
 from app.incidents.models import CaseAlertLink
 from app.incidents.models import Comment
 
+
 class AvailableSourcesResponse(BaseModel):
     source: str
     success: bool
     message: str
 
+
 class AvailableIndicesResponse(BaseModel):
     indices: List[str]
     success: bool
     message: str
+
 
 class ConfiguredSourcesResponse(BaseModel):
     sources: List[str]
@@ -92,10 +95,12 @@ class CaseAlertLinkResponse(BaseModel):
     success: bool
     message: str
 
+
 class AvailableUsersResponse(BaseModel):
     available_users: List[str]
     success: bool
     message: str
+
 
 class FieldAndAssetNames(BaseModel):
     field_names: List[str]

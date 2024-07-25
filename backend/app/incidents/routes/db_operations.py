@@ -11,7 +11,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.services.universal import select_all_users
 from app.auth.utils import AuthHandler
-from app.connectors.wazuh_indexer.utils.universal import get_index_mappings_key_names, get_index_source, get_available_indices_via_source
+from app.connectors.wazuh_indexer.utils.universal import (
+    get_available_indices_via_source,
+)
+from app.connectors.wazuh_indexer.utils.universal import get_index_mappings_key_names
+from app.connectors.wazuh_indexer.utils.universal import get_index_source
 from app.db.db_session import get_db
 from app.incidents.models import Alert
 from app.incidents.models import AlertContext
@@ -27,7 +31,7 @@ from app.incidents.schema.db_operations import AlertContextResponse
 from app.incidents.schema.db_operations import AlertCreate
 from app.incidents.schema.db_operations import AlertOut
 from app.incidents.schema.db_operations import AlertOutResponse
-from app.incidents.schema.db_operations import AlertResponse, AvailableUsersResponse
+from app.incidents.schema.db_operations import AlertResponse
 from app.incidents.schema.db_operations import AlertStatus
 from app.incidents.schema.db_operations import AlertTagCreate
 from app.incidents.schema.db_operations import AlertTagResponse
@@ -35,16 +39,19 @@ from app.incidents.schema.db_operations import AssetBase
 from app.incidents.schema.db_operations import AssetCreate
 from app.incidents.schema.db_operations import AssetResponse
 from app.incidents.schema.db_operations import AssignedToAlert
+from app.incidents.schema.db_operations import AvailableIndicesResponse
+from app.incidents.schema.db_operations import AvailableSourcesResponse
+from app.incidents.schema.db_operations import AvailableUsersResponse
 from app.incidents.schema.db_operations import CaseAlertLinkCreate
 from app.incidents.schema.db_operations import CaseAlertLinkResponse
 from app.incidents.schema.db_operations import CaseCreate
 from app.incidents.schema.db_operations import CaseOut
 from app.incidents.schema.db_operations import CaseOutResponse
 from app.incidents.schema.db_operations import CaseResponse
-from app.incidents.schema.db_operations import CommentBase, AvailableIndicesResponse
+from app.incidents.schema.db_operations import CommentBase
 from app.incidents.schema.db_operations import CommentCreate
 from app.incidents.schema.db_operations import CommentResponse
-from app.incidents.schema.db_operations import ConfiguredSourcesResponse, AvailableSourcesResponse
+from app.incidents.schema.db_operations import ConfiguredSourcesResponse
 from app.incidents.schema.db_operations import FieldAndAssetNames
 from app.incidents.schema.db_operations import FieldAndAssetNamesResponse
 from app.incidents.schema.db_operations import MappingsResponse
@@ -77,19 +84,28 @@ from app.incidents.services.db_operations import list_alerts
 from app.incidents.services.db_operations import list_alerts_by_asset_name
 from app.incidents.services.db_operations import list_alerts_by_tag
 from app.incidents.services.db_operations import list_cases
+from app.incidents.services.db_operations import replace_alert_title_name
+from app.incidents.services.db_operations import replace_asset_name
+from app.incidents.services.db_operations import replace_field_name
+from app.incidents.services.db_operations import replace_timefield_name
 from app.incidents.services.db_operations import update_alert_assigned_to
 from app.incidents.services.db_operations import update_alert_status
-from app.incidents.services.db_operations import validate_source_exists, replace_asset_name, replace_alert_title_name, replace_timefield_name, replace_field_name
+from app.incidents.services.db_operations import validate_source_exists
 
 incidents_db_operations_router = APIRouter()
+
 
 @incidents_db_operations_router.get("/available-source/{index_name}", response_model=AvailableSourcesResponse)
 async def get_available_source_values(index_name: str, session: AsyncSession = Depends(get_db)):
     return AvailableSourcesResponse(source=await get_index_source(index_name), success=True, message="Source retrieved successfully")
 
+
 @incidents_db_operations_router.get("/available-indices/{source}", response_model=AvailableIndicesResponse)
 async def get_available_indices(source: str, session: AsyncSession = Depends(get_db)):
-    return AvailableIndicesResponse(indices=await get_available_indices_via_source(source), success=True, message="Indices retrieved successfully")
+    return AvailableIndicesResponse(
+        indices=await get_available_indices_via_source(source), success=True, message="Indices retrieved successfully",
+    )
+
 
 @incidents_db_operations_router.get("/configured/sources", response_model=ConfiguredSourcesResponse)
 async def get_configured_sources(session: AsyncSession = Depends(get_db)):
@@ -106,7 +122,9 @@ async def delete_configured_source(source: str, session: AsyncSession = Depends(
     timefield_name = await get_timefield_names(source, session)
     alert_title_name = await get_alert_title_names(source, session)
 
-    logger.info(f"Field names found: {field_names}, Asset name found: {asset_name}, Timefield name found: {timefield_name}, Alert title name found: {alert_title_name}")
+    logger.info(
+        f"Field names found: {field_names}, Asset name found: {asset_name}, Timefield name found: {timefield_name}, Alert title name found: {alert_title_name}",
+    )
 
     for field_name in field_names:
         await delete_field_name(source, field_name, session)
@@ -161,9 +179,9 @@ async def create_wazuh_fields_and_assets(names: FieldAndAssetNames, session: Asy
 
     return {"message": "Field names and asset names created successfully", "success": True}
 
+
 @incidents_db_operations_router.put("/fields-assets-title-and-timefield")
 async def update_fields_and_assets(names: FieldAndAssetNames, session: AsyncSession = Depends(get_db)):
-
     await replace_field_name(names.source, names.field_names, session)
 
     await replace_asset_name(names.source, names.asset_name, session)
@@ -225,10 +243,14 @@ async def update_alert_status_endpoint(alert_status: UpdateAlertStatus, db: Asyn
 async def create_comment_endpoint(comment: CommentCreate, db: AsyncSession = Depends(get_db)):
     return CommentResponse(comment=await create_comment(comment, db), success=True, message="Comment created successfully")
 
+
 @incidents_db_operations_router.get("/alert/available-users", response_model=AvailableUsersResponse)
 async def get_available_users(db: AsyncSession = Depends(get_db)):
     all_users = await select_all_users()
-    return AvailableUsersResponse(available_users=[user.username for user in all_users], success=True, message="Available users retrieved successfully")
+    return AvailableUsersResponse(
+        available_users=[user.username for user in all_users], success=True, message="Available users retrieved successfully",
+    )
+
 
 @incidents_db_operations_router.put("/alert/assigned-to", response_model=AlertResponse)
 async def update_assigned_to_endpoint(assigned_to: AssignedToAlert, db: AsyncSession = Depends(get_db)):
@@ -246,14 +268,18 @@ async def update_assigned_to_endpoint(assigned_to: AssignedToAlert, db: AsyncSes
 @incidents_db_operations_router.post("/alert/context", response_model=AlertContextResponse)
 async def create_alert_context_endpoint(alert_context: AlertContextCreate, db: AsyncSession = Depends(get_db)):
     return AlertContextResponse(
-        alert_context=await create_alert_context(alert_context, db), success=True, message="Alert context created successfully",
+        alert_context=await create_alert_context(alert_context, db),
+        success=True,
+        message="Alert context created successfully",
     )
 
 
 @incidents_db_operations_router.get("/alert/context/{alert_context_id}", response_model=AlertContextResponse)
 async def get_alert_context_by_id_endpoint(alert_context_id: int, db: AsyncSession = Depends(get_db)):
     return AlertContextResponse(
-        alert_context=await get_alert_context_by_id(alert_context_id, db), success=True, message="Alert context retrieved successfully",
+        alert_context=await get_alert_context_by_id(alert_context_id, db),
+        success=True,
+        message="Alert context retrieved successfully",
     )
 
 
@@ -275,7 +301,9 @@ async def list_alerts_by_tag_endpoint(tag: str, db: AsyncSession = Depends(get_d
 @incidents_db_operations_router.delete("/alert/tag", response_model=AlertTagResponse)
 async def delete_alert_tag_endpoint(alert_tag: AlertTagCreate, db: AsyncSession = Depends(get_db)):
     return AlertTagResponse(
-        alert_tag=await delete_alert_tag(alert_tag.alert_id, alert_tag.tag, db), success=True, message="Alert tag deleted successfully",
+        alert_tag=await delete_alert_tag(alert_tag.alert_id, alert_tag.tag, db),
+        success=True,
+        message="Alert tag deleted successfully",
     )
 
 
@@ -287,7 +315,9 @@ async def create_case_endpoint(case: CaseCreate, db: AsyncSession = Depends(get_
 @incidents_db_operations_router.post("/case/alert-link", response_model=CaseAlertLinkResponse)
 async def create_case_alert_link_endpoint(case_alert_link: CaseAlertLinkCreate, db: AsyncSession = Depends(get_db)):
     return CaseAlertLinkResponse(
-        case_alert_link=await create_case_alert_link(case_alert_link, db), success=True, message="Case alert link created successfully",
+        case_alert_link=await create_case_alert_link(case_alert_link, db),
+        success=True,
+        message="Case alert link created successfully",
     )
 
 

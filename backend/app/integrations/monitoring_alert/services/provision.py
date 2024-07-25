@@ -848,14 +848,16 @@ async def provision_custom_alert(request: CustomMonitoringAlertProvisionModel) -
                 ),
                 event_limit=1000,
             ),
-            field_spec = {
+            field_spec={
                 **{
                     custom_field.name: GraylogAlertProvisionFieldSpecItem(
                         data_type="string",
                         providers=[
                             GraylogAlertProvisionProvider(
                                 type="template-v1",
-                                template=f"${{source.{custom_field.value}}}" if custom_field.name != "CUSTOMER_CODE" else custom_field.value,
+                                template=f"${{source.{custom_field.value}}}"
+                                if custom_field.name != "CUSTOMER_CODE"
+                                else custom_field.value,
                                 require_values=True,
                             ),
                         ],

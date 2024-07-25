@@ -7,7 +7,6 @@ from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
 from app.db.universal_models import Agents
 from app.incidents.models import Alert
@@ -20,17 +19,14 @@ from app.incidents.schema.incident_alert import CreatedAlertPayload
 from app.incidents.schema.incident_alert import FieldNames
 from app.incidents.schema.incident_alert import GenericAlertModel
 from app.incidents.schema.incident_alert import GenericSourceModel
-
 from app.incidents.services.db_operations import get_alert_title_names
 from app.incidents.services.db_operations import get_asset_names
 from app.incidents.services.db_operations import get_field_names
 from app.incidents.services.db_operations import get_timefield_names
-
 from app.integrations.alert_creation_settings.models.alert_creation_settings import (
     AlertCreationSettings,
 )
 from app.integrations.alert_escalation.schema.escalate_alert import CustomerCodeKeys
-
 
 
 async def fetch_settings(field: str, value: str, session: AsyncSession):
@@ -204,7 +200,6 @@ async def construct_soc_alert_url(root_url: str, soc_alert_id: int) -> str:
     return f"{root_url}{url_path}"
 
 
-
 async def get_customer_code(alert_details: dict):
     logger.info(f"Fetching customer code for alert {alert_details}")
 
@@ -241,7 +236,6 @@ async def retrieve_agent_details_from_db(agent_name: str, session: AsyncSession)
     if agent:
         return agent
     return None
-
 
 
 async def validate_syslog_type_source(source: str, session: AsyncSession) -> bool:
@@ -344,6 +338,7 @@ async def create_alert_full(alert_payload: CreatedAlertPayload, customer_code: s
     logger.info(f"Creating alert for customer code {customer_code} with alert context ID {alert_context_id} and asset ID {asset_id}")
     return alert_id
 
+
 async def does_assit_exist(alert_payload: CreatedAlertPayload, alert_id: int, session: AsyncSession) -> bool:
     """
     Check if the asset exists for the given alert payload.
@@ -369,6 +364,7 @@ async def does_assit_exist(alert_payload: CreatedAlertPayload, alert_id: int, se
         return True
     logger.info(f"No asset exists for alert ID {alert_id} with asset name {alert_payload.asset_payload}")
     return False
+
 
 async def add_asset_to_copilot_alert(alert_payload: CreatedAlertPayload, alert_id: int, customer_code: str, session: AsyncSession) -> None:
     """
@@ -479,6 +475,7 @@ async def create_asset_context_payload(
     await session.commit()
     return asset_context
 
+
 async def open_alert_exists(alert_payload: CreatedAlertPayload, customer_code: str, session: AsyncSession) -> bool:
     """
     Check if an open alert exists for the given alert payload.
@@ -504,7 +501,6 @@ async def open_alert_exists(alert_payload: CreatedAlertPayload, customer_code: s
         return alert.id
     logger.info(f"No open alert exists for customer code {customer_code} with alert title {alert_payload.alert_title_payload}")
     return None
-
 
 
 async def create_alert(
@@ -542,8 +538,9 @@ async def create_alert(
     logger.info(f"Alert Payload {alert_payload}")
     existing_alert = await open_alert_exists(alert_payload, customer_code, session)
     if existing_alert:
-        logger.info(f"Open alert exists for customer code {customer_code} with alert title {alert_payload.alert_title_payload} and alert ID {existing_alert}")
+        logger.info(
+            f"Open alert exists for customer code {customer_code} with alert title {alert_payload.alert_title_payload} and alert ID {existing_alert}",
+        )
         await add_asset_to_copilot_alert(alert_payload, existing_alert, customer_code, session)
         return existing_alert
     return await create_alert_full(alert_payload, customer_code, session)
-

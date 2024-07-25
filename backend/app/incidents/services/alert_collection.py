@@ -1,18 +1,24 @@
+from typing import List
+
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import Security
 from loguru import logger
+from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.utils import AuthHandler
-from app.db.db_session import get_db
-from pydantic import ValidationError
-from typing import List
-from app.incidents.schema.incident_alert import CreateAlertRequest
-from app.incidents.schema.incident_alert import CreateAlertResponse, IndexNamesResponse
-from app.connectors.wazuh_indexer.utils.universal import return_graylog_events_index_names
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
-from app.incidents.schema.alert_collection import AlertsPayload, AlertPayloadItem, Source
+from app.connectors.wazuh_indexer.utils.universal import (
+    return_graylog_events_index_names,
+)
+from app.db.db_session import get_db
+from app.incidents.schema.alert_collection import AlertPayloadItem
+from app.incidents.schema.alert_collection import AlertsPayload
+from app.incidents.schema.alert_collection import Source
+from app.incidents.schema.incident_alert import CreateAlertRequest
+from app.incidents.schema.incident_alert import CreateAlertResponse
+from app.incidents.schema.incident_alert import IndexNamesResponse
 
 
 async def get_graylog_event_indices() -> IndexNamesResponse:
@@ -22,26 +28,16 @@ async def get_graylog_event_indices() -> IndexNamesResponse:
     Returns:
         List[str]: The list of Graylog event indices.
     """
-    #return await return_graylog_events_index_names()
+    # return await return_graylog_events_index_names()
     return IndexNamesResponse(index_names=await return_graylog_events_index_names(), success=True, message="Success")
+
 
 async def construct_query():
     """
     Constructs the query to find alerts where `fields.COPILOT_ALERT_ID` is NONE.
     """
-    return {
-        "query": {
-            "bool": {
-                "must": [
-                    {
-                        "term": {
-                            "fields.COPILOT_ALERT_ID": "NONE"
-                        }
-                    }
-                ]
-            }
-        }
-    }
+    return {"query": {"bool": {"must": [{"term": {"fields.COPILOT_ALERT_ID": "NONE"}}]}}}
+
 
 async def fetch_alerts_for_index(es_client, index, query):
     """
@@ -49,28 +45,23 @@ async def fetch_alerts_for_index(es_client, index, query):
     """
     # Start the initial search request
     response = es_client.search(
-        index=index,
-        body=query,
-        scroll='2m',  # Keep the search context open for 2 minutes
-        size=1000  # Number of results per "page"
+        index=index, body=query, scroll="2m", size=1000,  # Keep the search context open for 2 minutes  # Number of results per "page"
     )
-    scroll_id = response['_scroll_id']
-    hits = response['hits']['hits']
+    scroll_id = response["_scroll_id"]
+    hits = response["hits"]["hits"]
 
     # Keep fetching results while there are still results to fetch
-    while len(response['hits']['hits']):
-        response = es_client.scroll(
-            scroll_id=scroll_id,
-            scroll='2m'  # Extend the scroll context for another 2 minutes
-        )
+    while len(response["hits"]["hits"]):
+        response = es_client.scroll(scroll_id=scroll_id, scroll="2m")  # Extend the scroll context for another 2 minutes
         # Update the scroll ID in case it changes
-        scroll_id = response['_scroll_id']
-        hits.extend(response['hits']['hits'])
+        scroll_id = response["_scroll_id"]
+        hits.extend(response["hits"]["hits"])
 
     # Close the scroll context
     es_client.clear_scroll(scroll_id=scroll_id)
 
     return [AlertPayloadItem(**hit) for hit in hits]
+
 
 async def get_alerts_not_created_in_copilot() -> AlertsPayload:
     """
@@ -78,7 +69,7 @@ async def get_alerts_not_created_in_copilot() -> AlertsPayload:
     """
     indices = await return_graylog_events_index_names()
     logger.info(f"Indices: {indices}")
-    es_client = await create_wazuh_indexer_client('Wazuh-Indexer')
+    es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
     query = await construct_query()
 
     alerts_not_created = []
@@ -96,9 +87,10 @@ async def get_original_alert_id(origin_context: str):
     """
     # Assuming the ID is the last part after the last colon and before the last underscore
     try:
-        return origin_context.split(':')[-1].split('_')[-1]
+        return origin_context.split(":")[-1].split("_")[-1]
     except IndexError:  # In case the origin_context does not follow the expected pattern
         return None
+
 
 async def get_original_alert_index_name(origin_context: str):
     """
@@ -106,7 +98,7 @@ async def get_original_alert_index_name(origin_context: str):
     """
     # Assuming the index name is the part after 'es:' and before the next colon
     try:
-        return origin_context.split('es:')[-1].split(':')[0]
+        return origin_context.split("es:")[-1].split(":")[0]
     except IndexError:  # In case the origin_context does not follow the expected pattern
         return None
 
@@ -115,14 +107,7 @@ async def add_copilot_alert_id(index_data: CreateAlertRequest, alert_id: int):
     """
     Add the CoPilot alert ID to the Graylog event.
     """
-    es_client = await create_wazuh_indexer_client('Wazuh-Indexer')
-    body = {
-        "doc": {
-            "fields": {
-                "COPILOT_ALERT_ID": f'{alert_id}'
-            }
-        }
-    }
+    es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
+    body = {"doc": {"fields": {"COPILOT_ALERT_ID": f"{alert_id}"}}}
     es_client.update(index=index_data.index_name, id=index_data.alert_id, body=body)
     logger.info(f"Added CoPilot alert ID {alert_id} to Graylog event {index_data.alert_id} in index {index_data.index_name}")
-

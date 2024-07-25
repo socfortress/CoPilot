@@ -1,18 +1,25 @@
+from typing import List
+
 from fastapi import APIRouter
 from fastapi import Depends
+from fastapi import HTTPException
 from fastapi import Security
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import HTTPException
 
 from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
-from typing import List
-from app.incidents.schema.incident_alert import CreateAlertRequest
-from app.incidents.schema.incident_alert import CreateAlertResponse, IndexNamesResponse, AutoCreateAlertResponse
-from app.incidents.services.incident_alert import create_alert
 from app.incidents.schema.alert_collection import AlertsPayload
-from app.incidents.services.alert_collection import get_graylog_event_indices, get_alerts_not_created_in_copilot, get_original_alert_id, get_original_alert_index_name, add_copilot_alert_id
+from app.incidents.schema.incident_alert import AutoCreateAlertResponse
+from app.incidents.schema.incident_alert import CreateAlertRequest
+from app.incidents.schema.incident_alert import CreateAlertResponse
+from app.incidents.schema.incident_alert import IndexNamesResponse
+from app.incidents.services.alert_collection import add_copilot_alert_id
+from app.incidents.services.alert_collection import get_alerts_not_created_in_copilot
+from app.incidents.services.alert_collection import get_graylog_event_indices
+from app.incidents.services.alert_collection import get_original_alert_id
+from app.incidents.services.alert_collection import get_original_alert_index_name
+from app.incidents.services.incident_alert import create_alert
 
 incidents_alerts_router = APIRouter()
 
@@ -30,6 +37,7 @@ async def get_index_names_route() -> IndexNamesResponse:
         List[str]: The list of Graylog event indices.
     """
     return await get_graylog_event_indices()
+
 
 @incidents_alerts_router.get(
     "/alerts/not-created",
@@ -94,10 +102,12 @@ async def create_alert_auto_route(
         raise HTTPException(status_code=404, detail="No alerts found to create in CoPilot")
     for alert in alerts.alerts:
         logger.info(f"Creating alert {alert} in CoPilot")
-        create_alert_request = CreateAlertRequest(index_name=await get_original_alert_index_name(origin_context=alert.source.origin_context), alert_id=await get_original_alert_id(alert.source.origin_context))
+        create_alert_request = CreateAlertRequest(
+            index_name=await get_original_alert_index_name(origin_context=alert.source.origin_context),
+            alert_id=await get_original_alert_id(alert.source.origin_context),
+        )
         logger.info(f"Creating alert {create_alert_request.alert_id} in CoPilot")
         alert_id = await create_alert(create_alert_request, session)
         # ! ADD THE COPILOT ALERT ID TO GRAYLOG EVENT INDEX # !
         await add_copilot_alert_id(index_data=CreateAlertRequest(index_name=alert.index, alert_id=alert.id), alert_id=alert_id)
     return AutoCreateAlertResponse(success=True, message=f"{len(alerts.alerts)} alerts created in CoPilot")
-
