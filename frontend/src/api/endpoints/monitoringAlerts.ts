@@ -1,16 +1,10 @@
 import { type FlaskBaseResponse } from "@/types/flask.d"
 import { HttpClient } from "../httpClient"
-import type { AvailableMonitoringAlert, MonitoringAlert } from "@/types/monitoringAlerts.d"
+import type { AvailableMonitoringAlert, CustomProvisionPriority, MonitoringAlert } from "@/types/monitoringAlerts.d"
 
 export interface ProvisionsMonitoringAlertParams {
 	searchWithinLast: number
 	executeEvery: number
-}
-
-export enum CustomProvisionPriority {
-	"LOW" = 1,
-	"MEDIUM" = 2,
-	"HIGH" = 3
 }
 
 export interface CustomProvisionPayload {

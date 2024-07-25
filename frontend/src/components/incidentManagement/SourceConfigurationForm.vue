@@ -123,7 +123,7 @@ import {
 	type MessageReactive,
 	type FormItemRule
 } from "naive-ui"
-import type { SourceConfiguration, SourceName, SourceConfigurationModel } from "@/types/incidentManagement.d"
+import type { SourceConfiguration, SourceName, SourceConfigurationModel } from "@/types/incidentManagement/sources.d"
 import _intersection from "lodash/intersection"
 
 const emit = defineEmits<{

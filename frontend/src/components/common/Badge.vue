@@ -65,6 +65,7 @@ const { type, hintCursor, pointCursor, color, href, fluid } = defineProps<{
 
 	span:not(:last-child) {
 		border-right: var(--border-small-100);
+		padding-right: 8px;
 	}
 
 	&.splitted {
@@ -79,7 +80,6 @@ const { type, hintCursor, pointCursor, color, href, fluid } = defineProps<{
 
 			&:first-child {
 				background-color: var(--divider-005-color);
-				line-height: 1.1;
 				white-space: nowrap;
 			}
 			&:last-child {

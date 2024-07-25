@@ -77,7 +77,7 @@ import Api from "@/api"
 import { onBeforeMount } from "vue"
 import SourceConfigurationForm from "./SourceConfigurationForm.vue"
 import type { ApiError } from "@/types/common.d"
-import type { SourceConfiguration, SourceConfigurationModel, SourceName } from "@/types/incidentManagement.d"
+import type { SourceConfiguration, SourceConfigurationModel, SourceName } from "@/types/incidentManagement/sources.d"
 
 const emit = defineEmits<{
 	(e: "update:loading", value: boolean): void

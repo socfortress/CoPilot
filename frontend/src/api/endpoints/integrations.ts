@@ -21,6 +21,7 @@ export interface NewIntegrationPayload extends NewIntegration {
 }
 
 export default {
+	// #region Integrations
 	getAvailableIntegrations() {
 		return HttpClient.get<FlaskBaseResponse & { available_integrations: AvailableIntegration[] }>(
 			`/integrations/available_integrations`
@@ -47,7 +48,9 @@ export default {
 			data: { customer_code: customerCode, integration_name: integrationName }
 		})
 	},
+	// #endregion
 
+	// #region Provision
 	office365Provision(customerCode: string, integrationName: string) {
 		return HttpClient.post<FlaskBaseResponse>(`/office365/provision`, {
 			customer_code: customerCode,
@@ -80,4 +83,5 @@ export default {
 			integration_name: integrationName
 		})
 	}
+	// #endregion
 }

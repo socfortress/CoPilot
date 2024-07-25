@@ -38,7 +38,7 @@ import Api from "@/api"
 import { ref } from "vue"
 import SourceConfigurationDetails from "./SourceConfigurationDetails.vue"
 import { useMessage, NPopconfirm, NSpin, NModal } from "naive-ui"
-import type { SourceName } from "@/types/incidentManagement.d"
+import type { SourceName } from "@/types/incidentManagement/sources.d"
 
 const emit = defineEmits<{
 	(e: "deleted"): void

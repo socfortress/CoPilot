@@ -1,3 +1,5 @@
+import type { SafeAny } from "@/types/common.d"
+
 export interface Log {
 	event_type: LogEventType
 	user_id: number | null
@@ -19,3 +21,14 @@ export enum LogMethod {
 	Options = "OPTIONS",
 	Post = "POST"
 }
+
+export type LogsQueryTimeRange = `${number}${"h" | "d" | "w"}`
+export type LogsQueryEventType = `${LogEventType}`
+export type LogsQuery = { userId: string } | { timeRange: LogsQueryTimeRange } | { eventType: LogsQueryEventType }
+
+// Extraction of keys from the union type LogsQuery
+type KeysOfLogsQuery<T> = T extends { [K in keyof T]: SafeAny } ? keyof T : never
+
+// Union of values extracted from keys
+export type LogsQueryTypes = KeysOfLogsQuery<LogsQuery>
+export type LogsQueryValues = string | LogsQueryTimeRange | LogsQueryEventType

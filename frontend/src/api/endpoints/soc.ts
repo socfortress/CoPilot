@@ -21,6 +21,7 @@ export interface AlertsFilter {
 type TimeUnit = "hours" | "days" | "weeks"
 
 export default {
+	// #region Alerts
 	getAlerts(filters?: Partial<AlertsFilter>, signal?: AbortSignal) {
 		return HttpClient.post<FlaskBaseResponse & { alerts: SocAlert[] }>(
 			`/soc/alerts`,
@@ -72,6 +73,46 @@ export default {
 	createCase(alertId: string) {
 		return HttpClient.post<FlaskBaseResponse & { case: SocAlertCaseResponse }>(`/soc/alerts/create_case/${alertId}`)
 	},
+	// #endregion
+
+	// #region Assets
+	getAssetsByCase(caseId: string) {
+		return HttpClient.get<FlaskBaseResponse & { assets: SocCaseAsset[]; state: SocCaseAssetsState }>(
+			`/soc/assets/${caseId}`
+		)
+	},
+	// #endregion
+
+	// #region Notes
+	getNotesByCase(caseId: string | number, payload: { searchTerm?: string }, signal?: AbortSignal) {
+		return HttpClient.get<FlaskBaseResponse & { notes: SocNote[] }>(`/soc/notes/${caseId}`, {
+			params: {
+				search_term: payload.searchTerm || "%"
+			},
+			signal
+		})
+	},
+	createCaseNote(caseId: string | number, payload?: { title?: string; content?: string }) {
+		return HttpClient.post<FlaskBaseResponse & { note: SocNewNote }>(`/soc/notes/${caseId}`, {
+			note_title: payload?.title || "",
+			note_content: payload?.content || ""
+		})
+	},
+	// #endregion
+
+	// #region Users
+	getUsers() {
+		return HttpClient.get<FlaskBaseResponse & { users: SocUser[] }>(`/soc/users`)
+	},
+	assignUserToAlert(alertId: string, userId: string) {
+		return HttpClient.post<FlaskBaseResponse & { alert: SocAlert }>(`/soc/users/assign/${alertId}/${userId}`)
+	},
+	removeUserAlertAssign(alertId: string, userId: string) {
+		return HttpClient.delete<FlaskBaseResponse & { alert: SocAlert }>(`/soc/users/assign/${alertId}/${userId}`)
+	},
+	// #endregion
+
+	// #region Cases
 	getCases(payload?: string | CasesFilter) {
 		let apiMethod: "get" | "post" = "get"
 		let url = `/soc/cases`
@@ -113,34 +154,6 @@ export default {
 			}
 		)
 	},
-	getAssetsByCase(caseId: string) {
-		return HttpClient.get<FlaskBaseResponse & { assets: SocCaseAsset[]; state: SocCaseAssetsState }>(
-			`/soc/assets/${caseId}`
-		)
-	},
-	getNotesByCase(caseId: string | number, payload: { searchTerm?: string }, signal?: AbortSignal) {
-		return HttpClient.get<FlaskBaseResponse & { notes: SocNote[] }>(`/soc/notes/${caseId}`, {
-			params: {
-				search_term: payload.searchTerm || "%"
-			},
-			signal
-		})
-	},
-	createCaseNote(caseId: string | number, payload?: { title?: string; content?: string }) {
-		return HttpClient.post<FlaskBaseResponse & { note: SocNewNote }>(`/soc/notes/${caseId}`, {
-			note_title: payload?.title || "",
-			note_content: payload?.content || ""
-		})
-	},
-	getUsers() {
-		return HttpClient.get<FlaskBaseResponse & { users: SocUser[] }>(`/soc/users`)
-	},
-	assignUserToAlert(alertId: string, userId: string) {
-		return HttpClient.post<FlaskBaseResponse & { alert: SocAlert }>(`/soc/users/assign/${alertId}/${userId}`)
-	},
-	removeUserAlertAssign(alertId: string, userId: string) {
-		return HttpClient.delete<FlaskBaseResponse & { alert: SocAlert }>(`/soc/users/assign/${alertId}/${userId}`)
-	},
 	closeCase(caseId: string) {
 		return HttpClient.put<FlaskBaseResponse & { case: SocAlertCaseResponse }>(`/soc/cases/close/${caseId}`)
 	},
@@ -153,4 +166,5 @@ export default {
 	purgeAllCases() {
 		return HttpClient.delete<FlaskBaseResponse>(`/soc/cases/purge`)
 	}
+	// #endregion
 }

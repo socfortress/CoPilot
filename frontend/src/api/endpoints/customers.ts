@@ -26,6 +26,7 @@ export interface ProvisioningDefaultSettingsPayload {
 }
 
 export default {
+	// #region Customer
 	getCustomers(code?: string) {
 		return HttpClient.get<FlaskBaseResponse & { customers?: Customer[]; customer?: Customer }>(
 			`/customers${code ? "/" + code : ""}`
@@ -95,6 +96,9 @@ export default {
 			}
 		})
 	},
+	// #endregion
+
+	// #region Customer Provisioning
 	newCustomerProvision(provision: CustomerProvision, code: string) {
 		return HttpClient.post<FlaskBaseResponse & { customer_meta: CustomerMeta; wazuh_worker_provisioned: boolean }>(
 			`/customer_provisioning/provision`,
@@ -161,4 +165,5 @@ export default {
 			wazuh_worker_hostname: payload.wazuhWorkerHostname
 		})
 	}
+	// #endregion
 }
