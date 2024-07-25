@@ -102,7 +102,7 @@ class FieldAndAssetNames(BaseModel):
     asset_name: str
     timefield_name: str
     alert_title_name: str
-    source: ValidSources
+    source: str
 
 
 class FieldAndAssetNamesResponse(BaseModel):
@@ -110,7 +110,7 @@ class FieldAndAssetNamesResponse(BaseModel):
     asset_name: str
     timefield_name: str
     alert_title_name: str
-    source: ValidSources
+    source: str
     success: bool
     message: str
 
