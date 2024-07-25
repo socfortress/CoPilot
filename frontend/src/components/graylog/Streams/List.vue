@@ -70,9 +70,9 @@
 				</div>
 			</n-popover>
 		</div>
-		<div class="list my-3">
+		<div class="list flex flex-col gap-2 my-3">
 			<template v-if="itemsPaginated.length">
-				<StreamItem v-for="stream of itemsPaginated" :key="stream.id" :stream="stream" class="mb-2" />
+				<StreamItem v-for="stream of itemsPaginated" :key="stream.id" :stream="stream" />
 			</template>
 			<template v-else>
 				<n-empty description="No items found" class="justify-center h-48" v-if="!loading" />

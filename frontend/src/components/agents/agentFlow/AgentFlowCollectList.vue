@@ -8,14 +8,14 @@
 				</div>
 			</div>
 		</div>
-		<div class="list my-3">
+		<div class="list flex flex-col gap-4 my-3">
 			<template v-if="collectList.length">
 				<CollectItem
 					v-for="item of collectList"
 					:key="item.___id"
 					:collect="item"
 					embedded
-					class="mb-4 item-appear item-appear-bottom item-appear-005"
+					class="item-appear item-appear-bottom item-appear-005"
 				/>
 			</template>
 			<template v-else>

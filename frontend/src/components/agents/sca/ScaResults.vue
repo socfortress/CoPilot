@@ -66,9 +66,9 @@
 				</div>
 			</n-popover>
 		</div>
-		<div class="list my-3">
+		<div class="list flex flex-col gap-2 my-3">
 			<template v-if="itemsPaginated.length">
-				<ScaResultItem v-for="item of itemsPaginated" :key="item.id" :data="item" embedded class="mb-2" />
+				<ScaResultItem v-for="item of itemsPaginated" :key="item.id" :data="item" embedded />
 			</template>
 			<template v-else>
 				<n-empty description="No items found" class="justify-center h-48" v-if="!loading" />

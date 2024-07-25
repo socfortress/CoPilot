@@ -5,5 +5,5 @@
 </template>
 
 <script setup lang="ts">
-import ConfiguredSourcesList from "@/components/incidentManagement/ConfiguredSourcesList.vue"
+import ConfiguredSourcesList from "@/components/incidentManagement/sources/ConfiguredSourcesList.vue"
 </script>

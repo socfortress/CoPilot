@@ -29,14 +29,13 @@
 				style="width: 110px"
 			/>
 		</div>
-		<div class="list my-3">
+		<div class="list flex flex-col gap-2 my-3">
 			<template v-if="itemsPaginated.length">
 				<EventItem
 					v-for="event of itemsPaginated"
 					:key="event.id"
 					:event="event"
 					:highlight="event.id === highlight"
-					class="mb-2"
 				/>
 			</template>
 			<template v-else>

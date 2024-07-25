@@ -50,14 +50,13 @@
 				</div>
 			</n-popover>
 		</div>
-		<div class="list my-3">
+		<div class="list flex flex-col gap-2 my-3">
 			<template v-if="alertsEvents.length">
 				<AlertsEventItem
 					v-for="alertsEvent of alertsEvents"
 					:key="alertsEvent.event.id"
 					:alertsEvent="alertsEvent"
 					@click-event="gotoEventsPage($event)"
-					class="mb-2"
 				/>
 			</template>
 			<template v-else>

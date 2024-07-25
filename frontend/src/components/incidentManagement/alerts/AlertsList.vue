@@ -1,5 +1,5 @@
 <template>
-	<div class="soc-cases-list">
+	<div class="alerts-list">
 		<div class="header flex items-center justify-end gap-2" ref="header">
 			<div class="info grow flex gap-2">
 				<n-popover overlap placement="bottom-start">
@@ -19,20 +19,6 @@
 						</div>
 					</div>
 				</n-popover>
-
-				<n-button
-					size="small"
-					type="error"
-					ghost
-					@click="handlePurge()"
-					:loading="loadingPurge"
-					v-if="casesList.length"
-				>
-					<div class="flex items-center gap-2">
-						<Icon :name="TrashIcon" :size="16"></Icon>
-						<span class="hidden xs:block">Purge</span>
-					</div>
-				</n-button>
 			</div>
 			<n-pagination
 				v-model:page="currentPage"
@@ -57,42 +43,48 @@
 				</template>
 				<div class="py-1 flex flex-col gap-2">
 					<div class="px-3">
-						<small>Cases older then:</small>
-					</div>
-					<div class="px-3">
 						<n-input-group>
 							<n-select
-								v-model:value="filters.unit"
-								:options="unitOptions"
-								placeholder="Time unit"
+								v-model:value="filters.type"
+								:options="typeOptions"
+								placeholder="Filter by..."
 								clearable
-								class="!w-28"
+								class="!w-36"
 							/>
-							<n-input-number
-								v-model:value="filters.olderThan"
+
+							<n-select
+								v-if="filters.type === 'status'"
+								v-model:value="filters.value"
+								:options="statusOptions"
+								placeholder="Value..."
 								clearable
-								placeholder="Time"
-								class="!w-32"
+								class="!w-56"
+							/>
+							<n-input
+								v-else
+								v-model:value="filters.value"
+								placeholder="Value..."
+								clearable
+								class="!w-56"
 							/>
 						</n-input-group>
 					</div>
 					<div class="px-3 flex justify-end gap-2">
 						<n-button size="small" @click="showFilters = false" secondary>Close</n-button>
-						<n-button size="small" @click="getData()" type="primary" secondary>Submit</n-button>
+						<n-button size="small" @click="getData()" type="primary" secondary :loading>Submit</n-button>
 					</div>
 				</div>
 			</n-popover>
 		</div>
 		<n-spin :show="loading">
 			<div class="list flex flex-col gap-2 my-3">
-				<template v-if="casesList.length">
-					<SocCaseItem
-						v-for="caseData of itemsPaginated"
-						:key="caseData.case_id"
-						:caseData="caseData"
-						@deleted="getData()"
+				<template v-if="alertsList.length">
+					<pre
+						v-for="alert of itemsPaginated"
+						:key="alert.id"
 						class="item-appear item-appear-bottom item-appear-005"
-					/>
+						>{{ alert }}</pre
+					>
 				</template>
 				<template v-else>
 					<n-empty description="No items found" class="justify-center h-48" v-if="!loading" />
@@ -123,25 +115,24 @@ import {
 	NPagination,
 	NInputGroup,
 	NBadge,
-	NInputNumber,
-	useDialog
+	NInput
 } from "naive-ui"
 import Api from "@/api"
 import _cloneDeep from "lodash/cloneDeep"
-import _orderBy from "lodash/orderBy"
 import Icon from "@/components/common/Icon.vue"
 import { useResizeObserver } from "@vueuse/core"
-import type { CasesFilter } from "@/api/endpoints/soc"
-import type { DateFormatted, SocCase } from "@/types/soc/case.d"
-import SocCaseItem from "./SocCaseItem.vue"
-import dayjs from "@/utils/dayjs"
+import type { Alert, AlertStatus } from "@/types/incidentManagement/alerts.d"
+import type { AlertsFilter } from "@/api/endpoints/incidentManagement"
 
-const dialog = useDialog()
+export interface AlertsListFilter {
+	type: "status" | "assetName" | "assignedTo"
+	value: string | AlertStatus
+}
+
 const message = useMessage()
-const loadingPurge = ref(false)
 const loading = ref(false)
 const showFilters = ref(false)
-const casesList = ref<SocCase[]>([])
+const alertsList = ref<Alert[]>([])
 
 const pageSize = ref(25)
 const currentPage = ref(1)
@@ -155,37 +146,33 @@ const itemsPaginated = computed(() => {
 	const from = (currentPage.value - 1) * pageSize.value
 	const to = currentPage.value * pageSize.value
 
-	const list = _orderBy(
-		casesList.value.map(o => {
-			o.case_open_date = dayjs(o.case_open_date).format("YYYY/MM/DD") as DateFormatted
-			return o
-		}),
-		["case_open_date"],
-		["desc"]
-	)
-
-	return list.slice(from, to)
+	return alertsList.value.slice(from, to)
 })
 
 const FilterIcon = "carbon:filter-edit"
 const InfoIcon = "carbon:information"
-const TrashIcon = "carbon:trash-can"
 
 const total = computed<number>(() => {
-	return casesList.value.length || 0
+	return alertsList.value.length || 0
 })
 
-const filters = ref<Partial<CasesFilter>>({})
-const lastFilters = ref<Partial<CasesFilter>>({})
+const filters = ref<Partial<AlertsListFilter>>({})
+const lastFilters = ref<Partial<AlertsListFilter>>({})
 
 const filtered = computed<boolean>(() => {
-	return !!filters.value.unit && !!filters.value.olderThan
+	return !!filters.value.type && !!filters.value.value
 })
 
-const unitOptions = [
-	{ label: "Hours", value: "hours" },
-	{ label: "Days", value: "days" },
-	{ label: "Weeks", value: "weeks" }
+const typeOptions = [
+	{ label: "Status", value: "status" },
+	{ label: "Asset Name", value: "assetName" },
+	{ label: "Assigned To", value: "assignedTo" }
+]
+
+const statusOptions = [
+	{ label: "Open", value: "OPEN" },
+	{ label: "Closed", value: "CLOSED" },
+	{ label: "In progress", value: "IN_PROGRESS" }
 ]
 
 watch(showFilters, val => {
@@ -194,64 +181,41 @@ watch(showFilters, val => {
 	}
 })
 
+watch(
+	() => filters.value.type,
+	() => {
+		filters.value.value = undefined
+	}
+)
+
 function getData() {
 	showFilters.value = false
 	loading.value = true
 
 	lastFilters.value = _cloneDeep(filters.value)
 
-	Api.soc
-		.getCases(filtered?.value ? (lastFilters.value as CasesFilter) : undefined)
+	let query: AlertsFilter | undefined = undefined
+	if (filtered.value) {
+		// @ts-expect-error filters properties infer are ignored
+		query = { [filters.value.type]: filters.value.value }
+	}
+
+	Api.incidentManagement
+		.getAlertsList(query)
 		.then(res => {
 			if (res.data.success) {
-				casesList.value = res.data?.cases || res.data?.cases_breached || []
+				alertsList.value = res.data?.alerts || []
 			} else {
 				message.warning(res.data?.message || "An error occurred. Please try again later.")
 			}
 		})
 		.catch(err => {
-			casesList.value = []
+			alertsList.value = []
 
 			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
 		})
 		.finally(() => {
 			loading.value = false
-		})
-}
-
-function handlePurge() {
-	dialog.warning({
-		title: "Confirm",
-		content: "This will remove ALL cases, are you sure you want to proceed?",
-		positiveText: "Yes I'm sure",
-		negativeText: "Cancel",
-		onPositiveClick: () => {
-			purge()
-		},
-		onNegativeClick: () => {
-			message.info("Purge canceled")
-		}
-	})
-}
-
-function purge() {
-	loadingPurge.value = true
-
-	Api.soc
-		.purgeAllCases()
-		.then(res => {
-			if (res.data.success) {
-				getData()
-				message.success(res.data?.message || "SOC Cases purged successfully")
-			} else {
-				message.warning(res.data?.message || "An error occurred. Please try again later.")
-			}
-		})
-		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-		})
-		.finally(() => {
-			loadingPurge.value = false
 		})
 }
 
@@ -269,7 +233,7 @@ onBeforeMount(() => {
 </script>
 
 <style lang="scss" scoped>
-.soc-cases-list {
+.alerts-list {
 	.list {
 		container-type: inline-size;
 		min-height: 200px;
