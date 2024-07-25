@@ -13,6 +13,8 @@ export interface Alert {
 	tags: AlertTag[]
 }
 
+export type AlertStatus = "OPEN" | "CLOSED" | "IN_PROGRESS"
+
 export interface AlertAsset {
 	id: number
 	agent_id: string
@@ -35,4 +37,16 @@ export interface AlertComment {
 
 export interface AlertTag {
 	tag: string
+}
+
+export interface AlertContext {
+	id: number
+	source: string
+	context: AlertContextDetails
+}
+
+export interface AlertContextDetails {
+	rule_description: string
+	data_win_eventdata_image: string
+	data_win_eventdata_parentImage: string
 }
