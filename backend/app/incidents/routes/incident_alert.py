@@ -9,9 +9,9 @@ from app.auth.utils import AuthHandler
 from app.db.db_session import get_db
 from typing import List
 from app.incidents.schema.incident_alert import CreateAlertRequest
-from app.incidents.schema.incident_alert import CreateAlertResponse, IndexNamesResponse
+from app.incidents.schema.incident_alert import CreateAlertResponse, IndexNamesResponse, AutoCreateAlertResponse
 from app.incidents.services.incident_alert import create_alert
-from app.incidents.schema.alert_collection import AlertsPayload, AlertPayloadItem, Source
+from app.incidents.schema.alert_collection import AlertsPayload
 from app.connectors.wazuh_indexer.utils.universal import return_graylog_events_index_names
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
 from app.incidents.services.alert_collection import get_graylog_event_indices, get_alerts_not_created_in_copilot, get_original_alert_id, get_original_alert_index_name, add_copilot_alert_id
@@ -79,7 +79,7 @@ async def create_alert_route(
 )
 async def create_alert_auto_route(
     session: AsyncSession = Depends(get_db),
-) -> CreateAlertResponse:
+) -> AutoCreateAlertResponse:
     """
     Create an incident alert in CoPilot. Automatically create an incident alert within CoPilot.
     Used via the Alerts, for automatic incident alert creation.
@@ -101,4 +101,5 @@ async def create_alert_auto_route(
         alert_id = await create_alert(create_alert_request, session)
         # ! ADD THE COPILOT ALERT ID TO GRAYLOG EVENT INDEX # !
         await add_copilot_alert_id(index_data=CreateAlertRequest(index_name=alert.index, alert_id=alert.id), alert_id=alert_id)
+    return AutoCreateAlertResponse(success=True, message=f"{len(alerts.alerts)} alerts created in CoPilot")
 

@@ -26,6 +26,10 @@ class CreateAlertResponse(BaseModel):
     message: str
     alert_id: int = Field(..., description="The alert id as created in CoPilot.")
 
+class AutoCreateAlertResponse(BaseModel):
+    success: bool
+    message: str
+
 class IndexNamesResponse(BaseModel):
     index_names: List[str]
     success: bool
