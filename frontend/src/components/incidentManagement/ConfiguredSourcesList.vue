@@ -64,7 +64,7 @@ import { NSpin, NEmpty, NPopover, NButton, NModal, useMessage } from "naive-ui"
 import Icon from "@/components/common/Icon.vue"
 import ConfiguredSourceItem from "./ConfiguredSourceItem.vue"
 import SourceConfigurationWizard from "./SourceConfigurationWizard.vue"
-import type { SourceName } from "@/types/incidentManagement.d"
+import type { SourceName } from "@/types/incidentManagement/sources.d"
 import Api from "@/api"
 
 const InfoIcon = "carbon:information"

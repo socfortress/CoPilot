@@ -42,7 +42,7 @@
 <script setup lang="ts">
 import Badge from "@/components/common/Badge.vue"
 import KVCard from "@/components/common/KVCard.vue"
-import type { SourceConfiguration } from "@/types/incidentManagement.d"
+import type { SourceConfiguration } from "@/types/incidentManagement/sources.d"
 
 const { sourceConfiguration, showSource } = defineProps<{
 	sourceConfiguration: SourceConfiguration

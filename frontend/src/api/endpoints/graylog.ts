@@ -10,6 +10,7 @@ import type { GraylogIndex } from "@/types/graylog/indices"
 import type { ThroughputMetric } from "@/types/graylog/metrics.d"
 
 export default {
+	// #region Messages
 	getMessages(page?: number) {
 		return HttpClient.get<FlaskBaseResponse & { graylog_messages: Message[]; total_messages: number }>(
 			`/graylog/messages`,
@@ -20,6 +21,9 @@ export default {
 			}
 		)
 	},
+	// #endregion
+
+	// #region Event
 	getAlerts(query: AlertsQuery) {
 		return HttpClient.post<FlaskBaseResponse & { alerts: Alerts }>(`/graylog/event/alerts`, query)
 	},
@@ -28,6 +32,9 @@ export default {
 			`/graylog/event/definitions`
 		)
 	},
+	// #endregion
+
+	// #region Stream
 	getStreams() {
 		return HttpClient.get<FlaskBaseResponse & { streams: Stream[]; total: number }>(`/graylog/streams`)
 	},
@@ -41,6 +48,9 @@ export default {
 			stream_id: streamId
 		})
 	},
+	// #endregion
+
+	// #region Inputs
 	getInputs() {
 		return HttpClient.get<
 			FlaskBaseResponse & { configured_inputs: ConfiguredInput[]; running_inputs: RunningInput[] }
@@ -62,11 +72,17 @@ export default {
 			input_id: inputId
 		})
 	},
+	// #endregion
+
+	// #region Metrics
 	getMetrics() {
 		return HttpClient.get<
 			FlaskBaseResponse & { throughput_metrics: ThroughputMetric[]; uncommitted_journal_entries: number }
 		>(`/graylog/metrics`)
 	},
+	// #endregion
+
+	// #region Pipelines
 	getPipelines() {
 		return HttpClient.get<FlaskBaseResponse & { pipelines: Pipeline[] }>(`/graylog/pipelines`)
 	},
@@ -76,6 +92,9 @@ export default {
 	getPipelinesRules() {
 		return HttpClient.get<FlaskBaseResponse & { pipeline_rules: PipelineRule[] }>(`/graylog/pipeline/rules`)
 	},
+	// #endregion
+
+	// #region Indices
 	getIndices() {
 		return HttpClient.get<FlaskBaseResponse & { indices: GraylogIndex[] }>(`/graylog/indices`)
 	},
@@ -84,4 +103,5 @@ export default {
 			data: { index_name: indexName }
 		})
 	}
+	// #endregion
 }

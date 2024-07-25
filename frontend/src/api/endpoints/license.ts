@@ -60,6 +60,7 @@ export default {
 		return HttpClient.post<FlaskBaseResponse & { docker_compose: string }>(`/license/retrieve-docker-compose`)
 	},
 	// TODO: remove, deprecated
+	/** @deprecated */
 	extendLicense(period: number) {
 		return HttpClient.post<FlaskBaseResponse>(
 			`/license/extend_license`,
@@ -70,6 +71,7 @@ export default {
 		)
 	},
 	// TODO: remove, deprecated
+	/** @deprecated */
 	createLicense({ name, email, companyName }: NewLicensePayload) {
 		return HttpClient.post<FlaskBaseResponse>(`/license/create_new_key`, {
 			product_id: 24355,

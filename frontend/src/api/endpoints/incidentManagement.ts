@@ -1,8 +1,9 @@
 import { type FlaskBaseResponse } from "@/types/flask.d"
 import { HttpClient } from "../httpClient"
-import type { SourceConfiguration, SourceName } from "@/types/incidentManagement.d"
+import type { SourceConfiguration, SourceName } from "@/types/incidentManagement/sources.d"
 
 export default {
+	// #region Sources
 	getConfiguredSources() {
 		return HttpClient.get<FlaskBaseResponse & { sources: SourceName[] }>(
 			`/incidents/db_operations/configured/sources`
@@ -45,4 +46,8 @@ export default {
 			`/incidents/db_operations/configured/sources/${source}`
 		)
 	}
+	// #endregion
+
+	// #region Alerts
+	// #endregion
 }

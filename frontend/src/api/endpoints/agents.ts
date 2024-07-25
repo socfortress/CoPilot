@@ -70,12 +70,14 @@ export default {
 	},
 
 	// IGNORE AT THE MOMENT !
+	/** @deprecated */
 	agentsWazuhOutdated() {
 		return HttpClient.get<FlaskBaseResponse & { outdated_wazuh_agents: OutdatedWazuhAgents }>(
 			`/agents/wazuh/outdated`
 		) // Include the outdated Wazuh agents
 	},
 	// IGNORE AT THE MOMENT !
+	/** @deprecated */
 	agentsVelociraptorOutdated() {
 		return HttpClient.get<FlaskBaseResponse & { outdated_velociraptor_agents: OutdatedVelociraptorAgents }>(
 			`/agents/velociraptor/outdated`

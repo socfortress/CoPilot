@@ -10,3 +10,9 @@ export interface MonitoringAlert {
 	customer_code: string
 	alert_source: string
 }
+
+export enum CustomProvisionPriority {
+	"LOW" = 1,
+	"MEDIUM" = 2,
+	"HIGH" = 3
+}

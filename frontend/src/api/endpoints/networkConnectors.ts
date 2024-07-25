@@ -33,6 +33,7 @@ export interface FortinetProvisionPayload extends FortinetProvision {
 }
 
 export default {
+	// #region Network Connector
 	getAvailableNetworkConnectors() {
 		return HttpClient.get<FlaskBaseResponse & { network_connector_keys: NetworkConnector[] }>(
 			`/network_connectors/available_network_connectors`
@@ -65,7 +66,9 @@ export default {
 			network_connector: networkConnectorName
 		})
 	},
+	// #endregion
 
+	// #region Provision
 	fortinetProvision(customerCode: string, networkConnectorName: string, props: FortinetProvision) {
 		const payload: FortinetProvisionPayload = {
 			...props,
@@ -74,4 +77,5 @@ export default {
 		}
 		return HttpClient.post<FlaskBaseResponse>(`/stack_provisioning/graylog/provision/fortinet`, payload)
 	}
+	// #endregion
 }

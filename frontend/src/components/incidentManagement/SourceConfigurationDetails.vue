@@ -35,7 +35,7 @@
 import Api from "@/api"
 import { onBeforeMount, ref } from "vue"
 import { useMessage, NSpin, NButton } from "naive-ui"
-import type { SourceConfiguration, SourceName } from "@/types/incidentManagement.d"
+import type { SourceConfiguration, SourceName } from "@/types/incidentManagement/sources.d"
 import SourceConfigurationViewer from "./SourceConfigurationViewer.vue"
 import SourceConfigurationForm from "./SourceConfigurationForm.vue"
 import Icon from "@/components/common/Icon.vue"
