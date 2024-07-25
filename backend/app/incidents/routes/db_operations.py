@@ -30,7 +30,7 @@ from app.incidents.schema.db_operations import AlertContextCreate
 from app.incidents.schema.db_operations import AlertContextResponse
 from app.incidents.schema.db_operations import AlertCreate
 from app.incidents.schema.db_operations import AlertOut
-from app.incidents.schema.db_operations import AlertOutResponse
+from app.incidents.schema.db_operations import AlertOutResponse, CaseCreateFromAlert
 from app.incidents.schema.db_operations import AlertResponse
 from app.incidents.schema.db_operations import AlertStatus
 from app.incidents.schema.db_operations import AlertTagCreate
@@ -64,7 +64,7 @@ from app.incidents.services.db_operations import create_alert
 from app.incidents.services.db_operations import create_alert_context
 from app.incidents.services.db_operations import create_alert_tag
 from app.incidents.services.db_operations import create_asset
-from app.incidents.services.db_operations import create_case
+from app.incidents.services.db_operations import create_case, create_case_from_alert
 from app.incidents.services.db_operations import create_case_alert_link
 from app.incidents.services.db_operations import create_comment
 from app.incidents.services.db_operations import delete_alert
@@ -318,6 +318,17 @@ async def create_case_alert_link_endpoint(case_alert_link: CaseAlertLinkCreate, 
         case_alert_link=await create_case_alert_link(case_alert_link, db),
         success=True,
         message="Case alert link created successfully",
+    )
+
+@incidents_db_operations_router.post("/case/from-alert", response_model=CaseAlertLinkResponse)
+async def create_case_from_alert_endpoint(alert_id: CaseCreateFromAlert, db: AsyncSession = Depends(get_db)):
+    case = await create_case_from_alert(alert_id.alert_id, db)
+    if case is None:
+        return CaseResponse(case=None, success=False, message="Case not created")
+    return CaseAlertLinkResponse(
+        case_alert_link=await create_case_alert_link(CaseAlertLinkCreate(case_id=case.id, alert_id=alert_id.alert_id), db),
+        success=True,
+        message="Case created from alert successfully",
     )
 
 

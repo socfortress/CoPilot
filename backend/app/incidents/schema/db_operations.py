@@ -155,6 +155,9 @@ class CaseCreate(BaseModel):
     case_status: str
     assigned_to: str
 
+class CaseCreateFromAlert(BaseModel):
+    alert_id: int
+
 
 class CaseAlertLinkCreate(BaseModel):
     case_id: int
@@ -226,7 +229,7 @@ class CaseOut(BaseModel):
     id: int
     case_name: str
     case_description: str
-    assigned_to: str
+    assigned_to: Optional[str] = None
     alerts: List[AlertOut]
 
 

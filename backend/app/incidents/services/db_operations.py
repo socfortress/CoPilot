@@ -368,6 +368,23 @@ async def create_case(case: CaseCreate, db: AsyncSession) -> Case:
         raise HTTPException(status_code=400, detail="Case already exists")
     return db_case
 
+async def create_case_from_alert(alert_id: int, db: AsyncSession) -> Case:
+    logger.info(f"Creating case from alert {alert_id}")
+    result = await db.execute(select(Alert).where(Alert.id == alert_id))
+    alert = result.scalars().first()
+    if not alert:
+        raise HTTPException(status_code=404, detail="Alert not found")
+    case = Case(case_name=alert.alert_name, case_description=alert.alert_description, case_status=alert.status, assigned_to=alert.assigned_to)
+    db.add(case)
+    try:
+        await db.flush()
+        await db.refresh(case)
+        await db.commit()
+    except IntegrityError:
+        await db.rollback()
+        raise HTTPException(status_code=400, detail="Case already exists")
+    return case
+
 
 async def create_case_alert_link(case_alert_link: CaseAlertLinkCreate, db: AsyncSession) -> CaseAlertLink:
     # Check if the case exists
