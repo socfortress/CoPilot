@@ -32,7 +32,7 @@
 					</div>
 
 					<div class="badges-box flex flex-wrap items-center gap-3">
-						<AlertStatusSwitch :alert v-slot="{ loading: loadingStatus }" @updated="getAlert(alert.id)">
+						<AlertStatusSwitch :alert v-slot="{ loading: loadingStatus }" @updated="updateAlert($event)">
 							<Badge
 								type="splitted"
 								class="cursor-pointer"
@@ -63,7 +63,7 @@
 							:alert
 							:users="availableUsers"
 							v-slot="{ loading: loadingAssignee }"
-							@updated="getAlert(alert.id)"
+							@updated="updateAlert($event)"
 						>
 							<Badge
 								type="splitted"
@@ -170,6 +170,7 @@ const { alertData, alertId, availableUsers } = toRefs(props)
 
 const emit = defineEmits<{
 	(e: "delete"): void
+	(e: "update", value: Alert): void
 }>()
 
 const InfoIcon = "carbon:information"
@@ -185,6 +186,11 @@ const loading = ref(false)
 const showDetails = ref(false)
 const dFormats = useSettingsStore().dateFormat
 const alert = ref<Alert | null>(null)
+
+function updateAlert(updatedAlert: Alert) {
+	alert.value = updatedAlert
+	emit("update", updatedAlert)
+}
 
 function getAlert(alertId: number) {
 	loading.value = true

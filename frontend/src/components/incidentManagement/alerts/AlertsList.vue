@@ -129,6 +129,7 @@
 						:availableUsers
 						class="item-appear item-appear-bottom item-appear-005"
 						@delete="getData()"
+						@update="updateAlert($event)"
 					/>
 				</template>
 				<template v-else>
@@ -253,6 +254,13 @@ function resetFilters() {
 	filters.value.type = undefined
 	showFilters.value = false
 	getData()
+}
+
+function updateAlert(updatedAlert: Alert) {
+	const alertIndex = alertsList.value.findIndex(o => o.id === updatedAlert.id)
+	if (alertIndex !== -1) {
+		alertsList.value[alertIndex] = updatedAlert
+	}
 }
 
 function getData() {
