@@ -1,8 +1,8 @@
 <template>
 	<div class="alerts-list">
 		<div class="header flex items-center justify-end gap-2" ref="header">
-			<div class="info grow flex gap-2">
-				<n-popover overlap placement="bottom-start">
+			<div class="info grow flex gap-2 lg:hidden">
+				<n-popover overlap placement="left">
 					<template #trigger>
 						<div class="bg-color border-radius">
 							<n-button size="small" class="!cursor-help">
@@ -17,8 +17,33 @@
 							Total :
 							<code>{{ total }}</code>
 						</div>
+						<div class="box text-error-color">
+							Open :
+							<code>{{ statusOpenTotal }}</code>
+						</div>
+						<div class="box text-warning-color">
+							In Progress :
+							<code>{{ statusInProgressTotal }}</code>
+						</div>
+						<div class="box text-success-color">
+							Close :
+							<code>{{ statusCloseTotal }}</code>
+						</div>
 					</div>
 				</n-popover>
+			</div>
+			<div class="info grow lg:flex gap-2 hidden text-sm">
+				Total :
+				<code>{{ total }}</code>
+				<span>/</span>
+				<span class="text-secondary-color">Open :</span>
+				<code class="text-error-color">{{ statusOpenTotal }}</code>
+				<span>/</span>
+				<span class="text-secondary-color">In Progress :</span>
+				<code class="text-warning-color">{{ statusInProgressTotal }}</code>
+				<span>/</span>
+				<span class="text-secondary-color">Close :</span>
+				<code class="text-success-color">{{ statusCloseTotal }}</code>
 			</div>
 			<n-pagination
 				v-model:page="currentPage"
@@ -103,6 +128,7 @@
 						:alertData="alert"
 						:availableUsers
 						class="item-appear item-appear-bottom item-appear-005"
+						@delete="getData()"
 					/>
 				</template>
 				<template v-else>
@@ -178,6 +204,15 @@ const InfoIcon = "carbon:information"
 
 const total = computed<number>(() => {
 	return alertsList.value.length || 0
+})
+const statusOpenTotal = computed<number>(() => {
+	return alertsList.value.filter(o => o.status === "OPEN").length || 0
+})
+const statusInProgressTotal = computed<number>(() => {
+	return alertsList.value.filter(o => o.status === "IN_PROGRESS").length || 0
+})
+const statusCloseTotal = computed<number>(() => {
+	return alertsList.value.filter(o => o.status === "CLOSED").length || 0
 })
 
 const filters = ref<Partial<AlertsListFilter>>({})
