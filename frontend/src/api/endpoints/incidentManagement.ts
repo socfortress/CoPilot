@@ -65,6 +65,9 @@ export default {
 
 		return HttpClient.get<FlaskBaseResponse & { alerts: Alert[] }>(url)
 	},
+	getAlert(alertId: number) {
+		return HttpClient.get<FlaskBaseResponse & { alerts: Alert[] }>(`/incidents/db_operations/alert/${alertId}`)
+	},
 	getAvailableUsers() {
 		return HttpClient.get<FlaskBaseResponse & { available_users: string[] }>(
 			`/incidents/db_operations/alert/available-users`

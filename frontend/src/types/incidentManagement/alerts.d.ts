@@ -6,7 +6,7 @@ export interface Alert {
 	assigned_to: null | string
 	customer_code: string
 	source: string
-	status: string
+	status: AlertStatus
 	time_closed: Date | null
 	comments: AlertComment[]
 	assets: AlertAsset[]
