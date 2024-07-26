@@ -293,6 +293,10 @@ export const useThemeStore = defineStore("theme", {
 			const errorColor = naive.errorColor
 			const warningColor = naive.warningColor
 			const infoColor = naive.infoColor
+			const successColorRGB = hex2rgb(successColor).join(", ")
+			const errorColorRGB = hex2rgb(errorColor).join(", ")
+			const warningColorRGB = hex2rgb(warningColor).join(", ")
+			const infoColorRGB = hex2rgb(infoColor).join(", ")
 
 			const { success005, warning005, error005, info005 } = state.colors[state.themeName]
 
@@ -423,6 +427,10 @@ export const useThemeStore = defineStore("theme", {
 				"error-005-color": `${error005}`,
 				"warning-005-color": `${warning005}`,
 				"info-005-color": `${info005}`,
+				"success-color-rgb": `${successColorRGB}`,
+				"error-color-rgb": `${errorColorRGB}`,
+				"warning-color-rgb": `${warningColorRGB}`,
+				"info-color-rgb": `${infoColorRGB}`,
 
 				"secondary1-color": `${secondary1}`,
 				"secondary1-color-rgb": `${secondary1RGB}`,
