@@ -57,6 +57,16 @@
 								v-model:value="filters.value"
 								:options="statusOptions"
 								placeholder="Value..."
+								:disabled="!filters.type"
+								clearable
+								class="!w-56"
+							/>
+							<n-select
+								v-else-if="filters.type === 'assignedTo'"
+								v-model:value="filters.value"
+								:options="usersOptions"
+								placeholder="Value..."
+								:disabled="!filters.type"
 								clearable
 								class="!w-56"
 							/>
@@ -64,14 +74,22 @@
 								v-else
 								v-model:value="filters.value"
 								placeholder="Value..."
+								:disabled="!filters.type"
 								clearable
 								class="!w-56"
 							/>
 						</n-input-group>
 					</div>
-					<div class="px-3 flex justify-end gap-2">
-						<n-button size="small" @click="showFilters = false" secondary>Close</n-button>
-						<n-button size="small" @click="getData()" type="primary" secondary :loading>Submit</n-button>
+					<div class="px-3 flex justify-between gap-2">
+						<div class="flex justify-start gap-2">
+							<n-button size="small" @click="showFilters = false" quaternary>Close</n-button>
+						</div>
+						<div class="flex justify-end gap-2">
+							<n-button size="small" @click="resetFilters()" secondary>Reset</n-button>
+							<n-button size="small" @click="getData()" type="primary" secondary :loading>
+								Submit
+							</n-button>
+						</div>
 					</div>
 				</div>
 			</n-popover>
@@ -79,12 +97,13 @@
 		<n-spin :show="loading">
 			<div class="list flex flex-col gap-2 my-3">
 				<template v-if="alertsList.length">
-					<pre
+					<AlertItem
 						v-for="alert of itemsPaginated"
 						:key="alert.id"
+						:alertData="alert"
+						:availableUsers
 						class="item-appear item-appear-bottom item-appear-005"
-						>{{ alert }}</pre
-					>
+					/>
 				</template>
 				<template v-else>
 					<n-empty description="No items found" class="justify-center h-48" v-if="!loading" />
@@ -119,10 +138,12 @@ import {
 } from "naive-ui"
 import Api from "@/api"
 import _cloneDeep from "lodash/cloneDeep"
+import _orderBy from "lodash/orderBy"
 import Icon from "@/components/common/Icon.vue"
 import { useResizeObserver } from "@vueuse/core"
 import type { Alert, AlertStatus } from "@/types/incidentManagement/alerts.d"
 import type { AlertsFilter } from "@/api/endpoints/incidentManagement"
+import AlertItem from "./AlertItem.vue"
 
 export interface AlertsListFilter {
 	type: "status" | "assetName" | "assignedTo"
@@ -133,6 +154,7 @@ const message = useMessage()
 const loading = ref(false)
 const showFilters = ref(false)
 const alertsList = ref<Alert[]>([])
+const availableUsers = ref<string[]>([])
 
 const pageSize = ref(25)
 const currentPage = ref(1)
@@ -146,7 +168,9 @@ const itemsPaginated = computed(() => {
 	const from = (currentPage.value - 1) * pageSize.value
 	const to = currentPage.value * pageSize.value
 
-	return alertsList.value.slice(from, to)
+	const list = _orderBy(alertsList.value, ["alert_creation_time", "time_closed"], ["desc", "desc"])
+
+	return list.slice(from, to)
 })
 
 const FilterIcon = "carbon:filter-edit"
@@ -175,6 +199,8 @@ const statusOptions = [
 	{ label: "In progress", value: "IN_PROGRESS" }
 ]
 
+const usersOptions = computed(() => availableUsers.value.map(o => ({ label: o, value: o })))
+
 watch(showFilters, val => {
 	if (!val) {
 		filters.value = _cloneDeep(lastFilters.value)
@@ -187,6 +213,12 @@ watch(
 		filters.value.value = undefined
 	}
 )
+
+function resetFilters() {
+	filters.value.type = undefined
+	showFilters.value = false
+	getData()
+}
 
 function getData() {
 	showFilters.value = false
@@ -219,6 +251,21 @@ function getData() {
 		})
 }
 
+function getAvailableUsers() {
+	Api.incidentManagement
+		.getAvailableUsers()
+		.then(res => {
+			if (res.data.success) {
+				availableUsers.value = res.data?.available_users || []
+			} else {
+				message.warning(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+		})
+}
+
 useResizeObserver(header, entries => {
 	const entry = entries[0]
 	const { width } = entry.contentRect
@@ -229,6 +276,7 @@ useResizeObserver(header, entries => {
 
 onBeforeMount(() => {
 	getData()
+	getAvailableUsers()
 })
 </script>
 
