@@ -148,7 +148,7 @@
 
 				<div class="footer-box px-7 py-4 flex justify-between">
 					<n-button secondary :loading @click="createCase()">
-						<template #icon><Icon :name="TrashIcon" /></template>
+						<template #icon><Icon :name="DangerIcon" /></template>
 						Create case
 					</n-button>
 					<n-button type="error" secondary :loading @click="handleDelete()">
@@ -162,7 +162,11 @@
 					<AlertTimeline :alert />
 				</div>
 			</n-tab-pane>
-			<n-tab-pane name="Assets" tab="Assets" display-directive="show:lazy"></n-tab-pane>
+			<n-tab-pane name="Assets" tab="Assets" display-directive="show:lazy">
+				<div class="p-7 pt-4 flex flex-col gap-2">
+					<AlertAsset :asset embedded v-for="asset of alert.assets" :key="asset.id" />
+				</div>
+			</n-tab-pane>
 			<n-tab-pane name="Comments" tab="Comments" display-directive="show:lazy"></n-tab-pane>
 			<n-tab-pane name="Tags" tab="Tags" display-directive="show:lazy"></n-tab-pane>
 		</n-tabs>
@@ -197,7 +201,7 @@ import AlertAssignUser from "./AlertAssignUser.vue"
 import AlertStatusSwitch from "./AlertStatusSwitch.vue"
 import AlertStatusIcon from "./AlertStatusIcon.vue"
 import AlertAssigneeIcon from "./AlertAssigneeIcon.vue"
-import AlertItemDetails from "./AlertItemDetails.vue"
+import AlertAsset from "./AlertAsset.vue"
 import { handleDeleteAlert } from "./utils"
 import type { Alert } from "@/types/incidentManagement/alerts.d"
 
@@ -213,6 +217,7 @@ const TrashIcon = "carbon:trash-can"
 const InfoIcon = "carbon:information"
 const LinkIcon = "carbon:launch"
 const TimeIcon = "carbon:time"
+const DangerIcon = "majesticons:exclamation-line"
 const EditIcon = "uil:edit-alt"
 const CommentsIcon = "carbon:chat"
 const AssetsIcon = "carbon:document-security"

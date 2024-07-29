@@ -85,15 +85,19 @@
 							</Badge>
 						</AlertAssignUser>
 
-						<Badge
-							type="active"
-							class="cursor-pointer !hidden sm:!flex"
-							@click="gotoCustomer({ code: alert.customer_code })"
-						>
-							<template #iconRight>
-								<Icon :name="LinkIcon" :size="14"></Icon>
+						<Badge type="splitted" class="!hidden sm:!flex">
+							<template #label>Customer</template>
+							<template #value>
+								<div class="flex items-center h-full">
+									<code
+										class="cursor-pointer text-primary-color leading-none"
+										@click.stop="gotoCustomer({ code: alert.customer_code })"
+									>
+										#{{ alert.customer_code }}
+										<Icon :name="LinkIcon" :size="14" class="top-0.5 relative" />
+									</code>
+								</div>
 							</template>
-							<template #label>Customer #{{ alert.customer_code }}</template>
 						</Badge>
 					</div>
 				</div>
@@ -161,7 +165,7 @@
 					v-if="alert"
 					:alertData="alert"
 					:availableUsers
-					@delete="emit('delete')"
+					@delete="emitDelete()"
 					@updated="updateAlert($event)"
 				/>
 			</n-card>
@@ -243,7 +247,7 @@ function handleDelete() {
 				loading.value = true
 			},
 			cbSuccess: () => {
-				emit("delete")
+				emitDelete()
 			},
 			cbAfter: () => {
 				loading.value = false
@@ -252,6 +256,11 @@ function handleDelete() {
 			dialog
 		})
 	}
+}
+
+function emitDelete() {
+	showDetails.value = false
+	emit("delete")
 }
 
 onBeforeMount(() => {
