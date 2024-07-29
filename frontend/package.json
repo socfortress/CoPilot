@@ -36,7 +36,7 @@
 		"@fontsource/lexend": "^5.0.20",
 		"@fontsource/public-sans": "^5.0.18",
 		"@popperjs/core": "^2.11.8",
-		"@shikijs/markdown-it": "^1.11.1",
+		"@shikijs/markdown-it": "^1.12.0",
 		"@vueuse/components": "^10.11.0",
 		"@vueuse/core": "^10.11.0",
 		"apexcharts": "^3.51.0",
@@ -54,10 +54,10 @@
 		"mitt": "^3.0.1",
 		"naive-ui": "^2.39.0",
 		"password-validator": "^5.3.0",
-		"pinia": "^2.1.7",
+		"pinia": "^2.2.0",
 		"pinia-plugin-persistedstate": "^3.2.1",
 		"secure-ls": "^2.0.0",
-		"shiki": "^1.11.1",
+		"shiki": "^1.12.0",
 		"validator": "^13.12.0",
 		"vue": "^3.4.34",
 		"vue-advanced-cropper": "^2.8.9",
@@ -79,9 +79,9 @@
 		"@types/inquirer": "^9.0.7",
 		"@types/jsdom": "^21.1.7",
 		"@types/lodash": "^4.17.7",
-		"@types/node": "^20.14.12",
+		"@types/node": "^20.14.13",
 		"@types/validator": "^13.12.0",
-		"@vitejs/plugin-vue": "^5.1.0",
+		"@vitejs/plugin-vue": "^5.1.1",
 		"@vitejs/plugin-vue-jsx": "^4.0.0",
 		"@vue/eslint-config-prettier": "^9.0.0",
 		"@vue/eslint-config-typescript": "^13.0.0",
@@ -89,7 +89,7 @@
 		"@vue/tsconfig": "^0.5.1",
 		"autoprefixer": "^10.4.19",
 		"cypress": "^13.13.1",
-		"eslint": "^9.7.0",
+		"eslint": "^9.8.0",
 		"eslint-plugin-cypress": "^3.4.0",
 		"eslint-plugin-vue": "^9.27.0",
 		"flourite": "^1.3.0",
@@ -102,13 +102,13 @@
 		"postcss": "^8.4.40",
 		"prettier": "^3.3.3",
 		"sass": "^1.77.8",
-		"start-server-and-test": "^2.0.4",
+		"start-server-and-test": "^2.0.5",
 		"tailwind-config-viewer": "^2.0.4",
-		"tailwindcss": "^3.4.6",
+		"tailwindcss": "^3.4.7",
 		"taze": "^0.16.1",
 		"type-fest": "^4.23.0",
 		"unplugin-vue-components": "^0.27.3",
-		"vite": "^5.3.4",
+		"vite": "^5.3.5",
 		"vite-bundle-analyzer": "^0.10.3",
 		"vite-bundle-visualizer": "^1.2.1",
 		"vite-plugin-vue-devtools": "^7.3.7",
@@ -117,17 +117,17 @@
 		"vue-tsc": "^2.0.29"
 	},
 	"optionalDependencies": {
-		"@rollup/rollup-linux-x64-gnu": "^4.19.0"
+		"@rollup/rollup-linux-x64-gnu": "^4.19.1"
 	},
 	"overrides": {
 		"@vue/eslint-config-typescript": {
-			"eslint": "^9.7.0"
+			"eslint": "^9.8.0"
 		},
 		"@typescript-eslint/type-utils": {
-			"eslint": "^9.7.0"
+			"eslint": "^9.8.0"
 		},
 		"@typescript-eslint/utils": {
-			"eslint": "^9.7.0"
+			"eslint": "^9.8.0"
 		},
 		"secure-ls": {
 			"crypto-js": "^4.2.0"
