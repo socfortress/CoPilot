@@ -107,19 +107,31 @@
 							<template #value>{{ formatDate(alert.alert_creation_time, dFormats.datetime) }}</template>
 						</Badge>
 
-						<Badge type="splitted" class="!hidden xs:!flex">
-							<template #iconLeft>
-								<Icon :name="AssetsIcon" :size="16" />
+						<n-tooltip trigger="hover">
+							<template #trigger>
+								<Badge type="splitted" class="!hidden xs:!flex">
+									<template #iconLeft>
+										<Icon :name="AssetsIcon" :size="16" />
+									</template>
+									<template #value>
+										{{ alert.assets?.length || 0 }}
+									</template>
+								</Badge>
 							</template>
-							<template #value>{{ alert.assets?.length || 0 }}</template>
-						</Badge>
+							Assets
+						</n-tooltip>
 
-						<Badge type="splitted" class="!hidden xs:!flex">
-							<template #iconLeft>
-								<Icon :name="CommentsIcon" :size="16" />
+						<n-tooltip trigger="hover">
+							<template #trigger>
+								<Badge type="splitted" class="!hidden xs:!flex">
+									<template #iconLeft>
+										<Icon :name="CommentsIcon" :size="16" />
+									</template>
+									<template #value>{{ alert.comments?.length || 0 }}</template>
+								</Badge>
 							</template>
-							<template #value>{{ alert.comments?.length || 0 }}</template>
-						</Badge>
+							Comments
+						</n-tooltip>
 
 						<span v-for="tag of alert.tags" :key="tag.tag" class="text-secondary-color">
 							#{{ tag.tag }}
@@ -134,27 +146,32 @@
 
 		<n-modal
 			v-model:show="showDetails"
-			preset="card"
-			content-class="!p-0"
-			:style="{ maxWidth: 'min(850px, 90vw)', minHeight: 'min(300px, 90vh)', overflow: 'hidden' }"
-			:title="alert?.alert_name"
-			:bordered="false"
-			segmented
+			:style="{ maxWidth: 'min(850px, 90vw)', minHeight: 'min(540px, 90vh)', overflow: 'hidden' }"
 		>
-			<AlertItemDetails
-				v-if="alert"
-				:alertData="alert"
-				:availableUsers
-				@delete="emit('delete')"
-				@updated="updateAlert($event)"
-			/>
+			<n-card
+				content-class="flex flex-col !p-0"
+				:title="alert?.alert_name"
+				closable
+				@close="showDetails = false"
+				:bordered="false"
+				segmented
+				role="modal"
+			>
+				<AlertItemDetails
+					v-if="alert"
+					:alertData="alert"
+					:availableUsers
+					@delete="emit('delete')"
+					@updated="updateAlert($event)"
+				/>
+			</n-card>
 		</n-modal>
 	</div>
 </template>
 
 <script setup lang="ts">
 import { onBeforeMount, ref, toRefs } from "vue"
-import { NModal, NPopover, NButton, NSpin, useMessage, useDialog } from "naive-ui"
+import { NModal, NPopover, NButton, NSpin, NTooltip, NCard, useMessage, useDialog } from "naive-ui"
 import { useSettingsStore } from "@/stores/settings"
 import { useGoto } from "@/composables/useGoto"
 import { formatDate } from "@/utils"

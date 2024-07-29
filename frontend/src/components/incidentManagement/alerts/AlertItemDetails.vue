@@ -1,125 +1,152 @@
 <template>
-	<n-spin :show="loading">
-		<n-tabs type="line" animated :tabs-padding="24" v-if="alert">
-			<n-tab-pane name="Overview" tab="Overview" display-directive="show:lazy" class="flex flex-col gap-4 !pt-4">
-				<div class="px-7 flex sm:flex-row flex-col gap-4">
-					<n-card content-class="bg-secondary-color" class="overflow-hidden">
-						<div class="flex justify-between gap-8 flex-wrap">
-							<n-statistic label="Status">
-								<AlertStatusSwitch
-									:alert
-									v-slot="{ loading: loadingStatus }"
-									@updated="updateAlert($event)"
-								>
-									<Badge
-										type="splitted"
-										class="cursor-pointer"
-										bright
-										:color="
-											alert.status === 'OPEN'
-												? 'danger'
-												: alert.status === 'IN_PROGRESS'
-													? 'warning'
-													: 'success'
-										"
+	<n-spin :show="loading" class="flex flex-col grow" content-class="flex flex-col grow">
+		<n-tabs
+			type="line"
+			animated
+			:tabs-padding="24"
+			v-if="alert"
+			class="grow"
+			pane-wrapper-class="flex flex-col grow"
+		>
+			<n-tab-pane
+				name="Overview"
+				tab="Overview"
+				display-directive="show:lazy"
+				class="flex flex-col gap-4 !pt-4 grow justify-between"
+			>
+				<div class="content-box flex flex-col gap-4">
+					<div class="px-7 flex sm:flex-row flex-col gap-4">
+						<KVCard
+							:color="
+								alert.status === 'OPEN'
+									? 'danger'
+									: alert.status === 'IN_PROGRESS'
+										? 'warning'
+										: 'success'
+							"
+							size="lg"
+							class="grow w-full"
+						>
+							<template #key>
+								<div class="flex gap-2 items-center">
+									<AlertStatusIcon :status="alert.status" />
+									<span>Status</span>
+								</div>
+							</template>
+							<template #value>
+								<div class="flex">
+									<AlertStatusSwitch
+										:alert
+										v-slot="{ loading: loadingStatus }"
+										@updated="updateAlert($event)"
 									>
-										<template #iconLeft>
+										<div
+											class="flex gap-3 items-center"
+											:class="{
+												'cursor-not-allowed': loadingStatus,
+												'cursor-pointer': !loadingStatus
+											}"
+										>
+											<span>{{ alert.status || "n/d" }}</span>
 											<n-spin
-												:size="12"
+												:size="14"
 												:show="loadingStatus"
 												content-class="flex flex-col justify-center"
 											>
-												<AlertStatusIcon :status="alert.status" />
+												<Icon :name="EditIcon" />
 											</n-spin>
-										</template>
-										<template #label>Status</template>
-										<template #value>{{ alert.status || "n/d" }}</template>
-									</Badge>
-								</AlertStatusSwitch>
-							</n-statistic>
-						</div>
-					</n-card>
-					<n-card content-class="bg-secondary-color" class="overflow-hidden">
-						<div class="flex justify-between gap-8 flex-wrap">
-							<n-statistic label="Assigned to">
-								<AlertAssignUser
-									:alert
-									:users="availableUsers"
-									v-slot="{ loading: loadingAssignee }"
-									@updated="updateAlert($event)"
-								>
-									<Badge
-										type="splitted"
-										class="cursor-pointer"
-										bright
-										:color="alert.assigned_to ? 'success' : undefined"
+										</div>
+									</AlertStatusSwitch>
+								</div>
+							</template>
+						</KVCard>
+
+						<KVCard :color="alert.assigned_to ? 'success' : undefined" size="lg" class="grow w-full">
+							<template #key>
+								<div class="flex gap-2 items-center">
+									<AlertAssigneeIcon :assignee="alert.assigned_to" />
+									<span>Assigned to</span>
+								</div>
+							</template>
+							<template #value>
+								<div class="flex">
+									<AlertAssignUser
+										:alert
+										:users="availableUsers"
+										v-slot="{ loading: loadingAssignee }"
+										@updated="updateAlert($event)"
 									>
-										<template #iconLeft>
+										<div
+											class="flex gap-3 items-center"
+											:class="{
+												'cursor-not-allowed': loadingAssignee,
+												'cursor-pointer': !loadingAssignee
+											}"
+										>
+											<span>{{ alert.assigned_to || "n/d" }}</span>
 											<n-spin
-												:size="12"
+												:size="14"
 												:show="loadingAssignee"
 												content-class="flex flex-col justify-center"
 											>
-												<AlertAssigneeIcon :assignee="alert.assigned_to" />
+												<Icon :name="EditIcon" />
 											</n-spin>
-										</template>
-										<template #label>Assignee</template>
-										<template #value>{{ alert.assigned_to || "n/d" }}</template>
-									</Badge>
-								</AlertAssignUser>
-							</n-statistic>
-						</div>
-					</n-card>
+										</div>
+									</AlertAssignUser>
+								</div>
+							</template>
+						</KVCard>
+					</div>
+
+					<div class="px-7">
+						<KVCard>
+							<template #key>description</template>
+							<template #value>{{ alert.alert_description ?? "-" }}</template>
+						</KVCard>
+					</div>
+
+					<div class="px-7 grid gap-2 grid-auto-fit-250">
+						<KVCard>
+							<template #key>id</template>
+							<template #value>#{{ alert.id }}</template>
+						</KVCard>
+
+						<KVCard>
+							<template #key>source</template>
+							<template #value>{{ alert.source ?? "-" }}</template>
+						</KVCard>
+
+						<KVCard>
+							<template #key>customer code</template>
+							<template #value>
+								<code
+									class="cursor-pointer text-primary-color"
+									@click="gotoCustomer({ code: alert.customer_code })"
+								>
+									{{ alert.customer_code }}
+									<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
+								</code>
+							</template>
+						</KVCard>
+
+						<KVCard>
+							<template #key>assets</template>
+							<template #value>{{ alert.assets.length }}</template>
+						</KVCard>
+
+						<KVCard>
+							<template #key>comments</template>
+							<template #value>{{ alert.comments.length }}</template>
+						</KVCard>
+
+						<KVCard>
+							<template #key>tags</template>
+							<template #value>{{ tags || "-" }}</template>
+						</KVCard>
+					</div>
 				</div>
 
-				<div class="px-7">
-					<KVCard>
-						<template #key>description</template>
-						<template #value>{{ alert.alert_description ?? "-" }}</template>
-					</KVCard>
-				</div>
-
-				<div class="px-7 grid gap-2 grid-auto-fit-250">
-					<KVCard>
-						<template #key>id</template>
-						<template #value>#{{ alert.id }}</template>
-					</KVCard>
-
-					<KVCard>
-						<template #key>source</template>
-						<template #value>{{ alert.source ?? "-" }}</template>
-					</KVCard>
-
-					<KVCard>
-						<template #key>customer code</template>
-						<template #value>
-							<code
-								class="cursor-pointer text-primary-color"
-								@click="gotoCustomer({ code: alert.customer_code })"
-							>
-								{{ alert.customer_code }}
-								<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
-							</code>
-						</template>
-					</KVCard>
-
-					<KVCard>
-						<template #key>assets</template>
-						<template #value>{{ alert.assets.length }}</template>
-					</KVCard>
-
-					<KVCard>
-						<template #key>comments</template>
-						<template #value>{{ alert.comments.length }}</template>
-					</KVCard>
-
-					<KVCard>
-						<template #key>tags</template>
-						<template #value>{{ tags || "-" }}</template>
-					</KVCard>
-				</div>
-
-				<div class="px-7 py-4 flex justify-between actions-box">
+				<div class="footer-box px-7 py-4 flex justify-between">
 					<n-button secondary :loading @click="createCase()">
 						<template #icon><Icon :name="TrashIcon" /></template>
 						Create case
@@ -186,6 +213,7 @@ const TrashIcon = "carbon:trash-can"
 const InfoIcon = "carbon:information"
 const LinkIcon = "carbon:launch"
 const TimeIcon = "carbon:time"
+const EditIcon = "uil:edit-alt"
 const CommentsIcon = "carbon:chat"
 const AssetsIcon = "carbon:document-security"
 
@@ -256,7 +284,7 @@ onBeforeMount(() => {
 </script>
 
 <style lang="scss" scoped>
-.actions-box {
+.footer-box {
 	border-top: var(--border-small-100);
 	background-color: var(--bg-secondary-color);
 }
