@@ -109,16 +109,16 @@
 
 						<Badge type="splitted" class="!hidden xs:!flex">
 							<template #iconLeft>
-								<Icon :name="CommentsIcon" :size="16" />
+								<Icon :name="AssetsIcon" :size="16" />
 							</template>
-							<template #value>{{ alert.comments?.length || 0 }}</template>
+							<template #value>{{ alert.assets?.length || 0 }}</template>
 						</Badge>
 
 						<Badge type="splitted" class="!hidden xs:!flex">
 							<template #iconLeft>
-								<Icon :name="AssetsIcon" :size="16" />
+								<Icon :name="CommentsIcon" :size="16" />
 							</template>
-							<template #value>{{ alert.assets?.length || 0 }}</template>
+							<template #value>{{ alert.comments?.length || 0 }}</template>
 						</Badge>
 
 						<span v-for="tag of alert.tags" :key="tag.tag" class="text-secondary-color">
@@ -136,12 +136,18 @@
 			v-model:show="showDetails"
 			preset="card"
 			content-class="!p-0"
-			:style="{ maxWidth: 'min(900px, 90vw)', minHeight: 'min(600px, 90vh)', overflow: 'hidden' }"
+			:style="{ maxWidth: 'min(850px, 90vw)', minHeight: 'min(300px, 90vh)', overflow: 'hidden' }"
 			:title="alert?.alert_name"
 			:bordered="false"
 			segmented
 		>
-			<AlertItemDetails :alert v-if="alert" @delete="emit('delete')" />
+			<AlertItemDetails
+				v-if="alert"
+				:alertData="alert"
+				:availableUsers
+				@delete="emit('delete')"
+				@updated="updateAlert($event)"
+			/>
 		</n-modal>
 	</div>
 </template>

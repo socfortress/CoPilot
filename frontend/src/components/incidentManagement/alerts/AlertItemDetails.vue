@@ -1,142 +1,144 @@
 <template>
 	<n-spin :show="loading">
-		<!--
-		<n-tabs type="line" animated :tabs-padding="24">
-			<n-tab-pane name="Overview" tab="Overview" display-directive="show:lazy" class="flex flex-col gap-4 !py-8">
-				<div class="px-7">
+		<n-tabs type="line" animated :tabs-padding="24" v-if="alert">
+			<n-tab-pane name="Overview" tab="Overview" display-directive="show:lazy" class="flex flex-col gap-4 !pt-4">
+				<div class="px-7 flex sm:flex-row flex-col gap-4">
 					<n-card content-class="bg-secondary-color" class="overflow-hidden">
 						<div class="flex justify-between gap-8 flex-wrap">
-							<n-statistic label="Result" tabular-nums>
-								<span
-									class="uppercase"
-									:class="
-										data.result === 'failed'
-											? 'text-error-color'
-											: data.result === 'not applicable'
-												? 'text-warning-color'
-												: 'text-success-color'
-									"
+							<n-statistic label="Status">
+								<AlertStatusSwitch
+									:alert
+									v-slot="{ loading: loadingStatus }"
+									@updated="updateAlert($event)"
 								>
-									{{ data.result }}
-								</span>
+									<Badge
+										type="splitted"
+										class="cursor-pointer"
+										bright
+										:color="
+											alert.status === 'OPEN'
+												? 'danger'
+												: alert.status === 'IN_PROGRESS'
+													? 'warning'
+													: 'success'
+										"
+									>
+										<template #iconLeft>
+											<n-spin
+												:size="12"
+												:show="loadingStatus"
+												content-class="flex flex-col justify-center"
+											>
+												<AlertStatusIcon :status="alert.status" />
+											</n-spin>
+										</template>
+										<template #label>Status</template>
+										<template #value>{{ alert.status || "n/d" }}</template>
+									</Badge>
+								</AlertStatusSwitch>
 							</n-statistic>
-							<n-statistic label="Condition" tabular-nums>
-								<span class="uppercase">{{ data.condition }}</span>
+						</div>
+					</n-card>
+					<n-card content-class="bg-secondary-color" class="overflow-hidden">
+						<div class="flex justify-between gap-8 flex-wrap">
+							<n-statistic label="Assigned to">
+								<AlertAssignUser
+									:alert
+									:users="availableUsers"
+									v-slot="{ loading: loadingAssignee }"
+									@updated="updateAlert($event)"
+								>
+									<Badge
+										type="splitted"
+										class="cursor-pointer"
+										bright
+										:color="alert.assigned_to ? 'success' : undefined"
+									>
+										<template #iconLeft>
+											<n-spin
+												:size="12"
+												:show="loadingAssignee"
+												content-class="flex flex-col justify-center"
+											>
+												<AlertAssigneeIcon :assignee="alert.assigned_to" />
+											</n-spin>
+										</template>
+										<template #label>Assignee</template>
+										<template #value>{{ alert.assigned_to || "n/d" }}</template>
+									</Badge>
+								</AlertAssignUser>
 							</n-statistic>
-							<n-statistic label="Compliance" :value="data.compliance.length" tabular-nums />
-							<n-statistic label="Rules" :value="data.rules.length" tabular-nums />
 						</div>
 					</n-card>
 				</div>
 
 				<div class="px-7">
-					<n-card content-class="bg-secondary-color !p-0" class="overflow-hidden">
-						<div
-							class="scrollbar-styled overflow-hidden code-bg-transparent"
-							v-shiki="{ lang: 'shell', decode: true }"
-						>
-							<pre v-html="data.command"></pre>
-						</div>
-					</n-card>
-				</div>
-
-				<div class="grid gap-2 grid-auto-fit-200 px-7" v-if="properties">
-					<KVCard v-for="(value, key) of properties" :key="key">
-						<template #key>{{ key }}</template>
-						<template #value>{{ value ?? "-" }}</template>
+					<KVCard>
+						<template #key>description</template>
+						<template #value>{{ alert.alert_description ?? "-" }}</template>
 					</KVCard>
 				</div>
+
+				<div class="px-7 grid gap-2 grid-auto-fit-250">
+					<KVCard>
+						<template #key>id</template>
+						<template #value>#{{ alert.id }}</template>
+					</KVCard>
+
+					<KVCard>
+						<template #key>source</template>
+						<template #value>{{ alert.source ?? "-" }}</template>
+					</KVCard>
+
+					<KVCard>
+						<template #key>customer code</template>
+						<template #value>
+							<code
+								class="cursor-pointer text-primary-color"
+								@click="gotoCustomer({ code: alert.customer_code })"
+							>
+								{{ alert.customer_code }}
+								<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
+							</code>
+						</template>
+					</KVCard>
+
+					<KVCard>
+						<template #key>assets</template>
+						<template #value>{{ alert.assets.length }}</template>
+					</KVCard>
+
+					<KVCard>
+						<template #key>comments</template>
+						<template #value>{{ alert.comments.length }}</template>
+					</KVCard>
+
+					<KVCard>
+						<template #key>tags</template>
+						<template #value>{{ tags || "-" }}</template>
+					</KVCard>
+				</div>
+
+				<div class="px-7 py-4 flex justify-between actions-box">
+					<n-button secondary :loading @click="createCase()">
+						<template #icon><Icon :name="TrashIcon" /></template>
+						Create case
+					</n-button>
+					<n-button type="error" secondary :loading @click="handleDelete()">
+						<template #icon><Icon :name="TrashIcon" /></template>
+						Delete
+					</n-button>
+				</div>
 			</n-tab-pane>
-			<n-tab-pane name="Description" tab="Description" display-directive="show:lazy">
+			<n-tab-pane name="Timeline" tab="Timeline" display-directive="show:lazy">
 				<div class="p-7 pt-4">
-					<n-input
-						:value="data.description"
-						type="textarea"
-						readonly
-						placeholder="Empty"
-						size="large"
-						:autosize="{
-							minRows: 3,
-							maxRows: 18
-						}"
-					/>
+					<AlertTimeline :alert />
 				</div>
 			</n-tab-pane>
-			<n-tab-pane name="Rationale" tab="Rationale" display-directive="show:lazy">
-				<div class="p-7 pt-4">
-					<n-input
-						:value="data.rationale"
-						type="textarea"
-						readonly
-						placeholder="Empty"
-						size="large"
-						:autosize="{
-							minRows: 3,
-							maxRows: 18
-						}"
-					/>
-				</div>
-			</n-tab-pane>
-			<n-tab-pane name="Reason" tab="Reason" display-directive="show:lazy">
-				<div class="p-7 pt-4">
-					<n-input
-						:value="data.reason"
-						type="textarea"
-						readonly
-						placeholder="Empty"
-						size="large"
-						:autosize="{
-							minRows: 3,
-							maxRows: 18
-						}"
-					/>
-				</div>
-			</n-tab-pane>
-			<n-tab-pane name="Remediation" tab="Remediation" display-directive="show:lazy">
-				<div class="p-7 pt-4">
-					<n-input
-						:value="data.remediation"
-						type="textarea"
-						readonly
-						placeholder="Empty"
-						size="large"
-						:autosize="{
-							minRows: 3,
-							maxRows: 18
-						}"
-					/>
-				</div>
-			</n-tab-pane>
-			<n-tab-pane name="Compliance" tab="Compliance" display-directive="show:lazy">
-				<div class="p-7 pt-4 flex flex-col gap-1">
-					<n-card
-						content-class="bg-secondary-color flex flex-col gap-2"
-						class="overflow-hidden"
-						size="small"
-						v-for="item of data.compliance"
-						:key="item.key"
-					>
-						<div>{{ item.key }}</div>
-						<p>{{ item.value }}</p>
-					</n-card>
-				</div>
-			</n-tab-pane>
-			<n-tab-pane name="Rules" tab="Rules" display-directive="show:lazy">
-				<div class="p-7 pt-4 flex flex-col gap-1">
-					<n-card
-						content-class="bg-secondary-color flex flex-col gap-2"
-						class="overflow-hidden"
-						size="small"
-						v-for="item of data.rules"
-						:key="item.type + item.rule"
-					>
-						<div>{{ item.type }}</div>
-						<p>{{ item.rule }}</p>
-					</n-card>
-				</div>
-			</n-tab-pane>
+			<n-tab-pane name="Assets" tab="Assets" display-directive="show:lazy"></n-tab-pane>
+			<n-tab-pane name="Comments" tab="Comments" display-directive="show:lazy"></n-tab-pane>
+			<n-tab-pane name="Tags" tab="Tags" display-directive="show:lazy"></n-tab-pane>
 		</n-tabs>
-		-->
 	</n-spin>
 </template>
 
@@ -177,8 +179,10 @@ const { alertData, alertId, availableUsers } = toRefs(props)
 
 const emit = defineEmits<{
 	(e: "delete"): void
+	(e: "update", value: Alert): void
 }>()
 
+const TrashIcon = "carbon:trash-can"
 const InfoIcon = "carbon:information"
 const LinkIcon = "carbon:launch"
 const TimeIcon = "carbon:time"
@@ -191,6 +195,17 @@ const message = useMessage()
 const loading = ref(false)
 const dFormats = useSettingsStore().dateFormat
 const alert = ref<Alert | null>(null)
+
+const tags = computed(() => (alert.value?.tags?.length ? alert.value.tags.map(o => "#" + o.tag).join(", ") : ""))
+
+function updateAlert(updatedAlert: Alert) {
+	alert.value = updatedAlert
+	emit("update", updatedAlert)
+}
+
+function createCase() {
+	// TODO: to implement
+}
 
 function getAlert(alertId: number) {
 	loading.value = true
@@ -239,3 +254,10 @@ onBeforeMount(() => {
 	}
 })
 </script>
+
+<style lang="scss" scoped>
+.actions-box {
+	border-top: var(--border-small-100);
+	background-color: var(--bg-secondary-color);
+}
+</style>
