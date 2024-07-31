@@ -1,9 +1,11 @@
 import { type FlaskBaseResponse } from "@/types/flask.d"
 import { HttpClient } from "../httpClient"
 import type { SourceConfiguration, SourceName } from "@/types/incidentManagement/sources.d"
-import type { Alert, AlertContext, AlertStatus } from "@/types/incidentManagement/alerts.d"
+import type { Alert, AlertComment, AlertContext, AlertStatus } from "@/types/incidentManagement/alerts.d"
 
 export type AlertsFilter = { status: AlertStatus } | { assetName: string } | { assignedTo: string }
+
+export type AlertCommentPayload = Omit<AlertComment, "id">
 
 export default {
 	// #region Sources
@@ -96,6 +98,12 @@ export default {
 	getAlertContext(alertContextId: number) {
 		return HttpClient.get<FlaskBaseResponse & { alert_context: AlertContext }>(
 			`/incidents/db_operations/alert/context/${alertContextId}`
+		)
+	},
+	newAlertComment(payload: AlertCommentPayload) {
+		return HttpClient.post<FlaskBaseResponse & { comment: AlertComment }>(
+			`/incidents/db_operations/alert/comment`,
+			payload
 		)
 	}
 	// #endregion
