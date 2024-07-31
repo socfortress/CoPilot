@@ -1,5 +1,5 @@
 from typing import List
-
+from datetime import datetime
 from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy import delete
@@ -214,6 +214,7 @@ async def set_sigma_query_active(rule_name: str, active: bool, db: AsyncSession)
     query = await get_existing_query(rule_name, db)
     if query:
         query.active = active
+        query.last_updated = datetime.now()
         await db.commit()
     else:
         raise HTTPException(
@@ -226,6 +227,7 @@ async def update_sigma_time_interval(rule_name: str, time_interval: str, db: Asy
     query = await get_existing_query(rule_name, db)
     if query:
         query.time_interval = time_interval
+        query.last_updated = datetime.now()
         await db.commit()
     else:
         raise HTTPException(
