@@ -222,3 +222,15 @@ async def set_sigma_query_active(rule_name: str, active: bool, db: AsyncSession)
         )
     return None
 
+async def update_sigma_time_interval(rule_name: str, time_interval: str, db: AsyncSession):
+    query = await get_existing_query(rule_name, db)
+    if query:
+        query.time_interval = time_interval
+        await db.commit()
+    else:
+        raise HTTPException(
+            status_code=404,
+            detail="The Sigma rule does not exist.",
+        )
+    return None
+

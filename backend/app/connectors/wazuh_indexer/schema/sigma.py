@@ -124,3 +124,23 @@ class SigmaQueryGenerationResponse(BaseModel):
 class UpdateSigmaActive(BaseModel):
     rule_name: str
     active: bool
+
+class UpdateSigmaTimeInterval(BaseModel):
+    rule_name: str
+    time_interval: str
+
+    @validator("time_interval")
+    def validate_time_interval(cls, time_interval: str) -> str:
+        """
+        Validates the time interval.
+
+        Args:
+            time_interval (str): The time interval.
+
+        Returns:
+            str: The validated time interval.
+        """
+        if not re.match(r'^\d+[mhd]$', time_interval):
+            raise ValueError("The time interval must be in the format of minutes (e.g., '1m'), hours (e.g., '1h'), or days (e.g., '1d').")
+
+        return time_interval

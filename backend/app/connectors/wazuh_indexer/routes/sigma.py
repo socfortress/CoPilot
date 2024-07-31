@@ -18,8 +18,8 @@ from app.connectors.wazuh_indexer.utils.universal import (
     get_available_indices_via_source,
 )
 from app.db.db_session import get_db
-from app.connectors.wazuh_indexer.schema.sigma import SigmaQueryOutResponse, CreateSigmaQuery, DownloadSigmaRulesRequest, BulkUploadToDBResponse, UpdateSigmaActive
-from app.connectors.wazuh_indexer.services.sigma.sigma_db_operations import list_sigma_queries, create_sigma_query, add_sigma_queries_to_db, delete_sigma_rule, set_sigma_query_active, list_active_sigma_queries
+from app.connectors.wazuh_indexer.schema.sigma import SigmaQueryOutResponse, CreateSigmaQuery, DownloadSigmaRulesRequest, BulkUploadToDBResponse, UpdateSigmaActive, UpdateSigmaTimeInterval
+from app.connectors.wazuh_indexer.services.sigma.sigma_db_operations import list_sigma_queries, create_sigma_query, add_sigma_queries_to_db, delete_sigma_rule, set_sigma_query_active, list_active_sigma_queries, update_sigma_time_interval
 from app.connectors.wazuh_indexer.services.sigma.sigma_download import download_and_extract_zip, keep_only_folder_directory, find_yaml_files
 from app.connectors.wazuh_indexer.services.sigma.generate_query import create_sigma_query_from_rule
 
@@ -159,6 +159,31 @@ async def set_sigma_query_active_endpoint(
     return SigmaQueryOutResponse(
         success=True,
         message=f"Successfully set the active status of the Sigma query: {request.rule_name} to {request.active}",
+    )
+
+@wazuh_indexer_sigma_router.put(
+    "/queries/set-time-interval",
+    response_model=SigmaQueryOutResponse
+)
+async def set_sigma_query_time_interval_endpoint(
+    request: UpdateSigmaTimeInterval,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Sets the time interval of a Sigma query.
+
+    Args:
+        db (AsyncSession): The database session.
+        rule_name (str): The rule name to set active.
+        time_interval (str): The time interval to set.
+
+    Returns:
+        SigmaQueryOutResponse: The Sigma queries response.
+    """
+    await update_sigma_time_interval(request.rule_name, request.time_interval, db)
+    return SigmaQueryOutResponse(
+        success=True,
+        message=f"Successfully set the time interval of the Sigma query: {request.rule_name} to {request.time_interval}",
     )
 
 @wazuh_indexer_sigma_router.delete(
