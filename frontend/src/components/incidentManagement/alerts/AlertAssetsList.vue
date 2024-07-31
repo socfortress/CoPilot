@@ -4,7 +4,7 @@
 			<AlertAssetItem :asset embedded v-for="asset of assets" :key="asset.id" />
 		</template>
 		<template v-else>
-			<n-empty description="No items found" class="justify-center h-48" />
+			<n-empty description="No assets found" class="justify-center h-48" />
 		</template>
 	</div>
 </template>

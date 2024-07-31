@@ -25,7 +25,7 @@
 			</n-tab-pane>
 			<n-tab-pane name="Comments" tab="Comments" display-directive="show:lazy">
 				<div class="p-7 pt-4">
-					<AlertCommentsList :comments="alert.comments" />
+					<AlertCommentsList :comments="alert.comments" :alertId="alert.id" />
 				</div>
 			</n-tab-pane>
 			<n-tab-pane name="Tags" tab="Tags" display-directive="show:lazy"></n-tab-pane>
@@ -62,7 +62,7 @@ import AlertStatusSwitch from "./AlertStatusSwitch.vue"
 import AlertStatusIcon from "./AlertStatusIcon.vue"
 import AlertAssigneeIcon from "./AlertAssigneeIcon.vue"
 import AlertAssetsList from "./AlertAssetsList.vue"
-import AlertCommentsList from "./AlertAssetsList.vue"
+import AlertCommentsList from "./AlertCommentsList.vue"
 import AlertItemOverview from "./AlertItemOverview.vue"
 import type { Alert } from "@/types/incidentManagement/alerts.d"
 

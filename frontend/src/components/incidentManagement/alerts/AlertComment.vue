@@ -1,192 +1,83 @@
 <template>
-	<div class="alert-asset-item" :class="{ embedded }">
-		<div class="flex flex-col cursor-pointer" @click="showDetails = true">
-			<div class="main-box flex flex-col gap-3 px-5 py-3">
-				<div class="content flex flex-col gap-1 grow">
-					<div class="title">
-						{{ asset.asset_name }}
-					</div>
-				</div>
-
-				<div class="badges-box flex flex-wrap items-center gap-3">
-					<Badge type="splitted">
-						<template #label>Index</template>
-						<template #value>
-							<div class="flex items-center h-full">
-								<code
-									class="cursor-pointer text-primary-color leading-none"
-									@click.stop="gotoIndex(asset.index_name)"
-								>
-									{{ asset.index_name }}
-									<Icon :name="LinkIcon" :size="14" class="top-0.5 relative" />
-								</code>
-							</div>
-						</template>
-					</Badge>
-
-					<Badge type="splitted">
-						<template #label>Agent</template>
-						<template #value>
-							<div class="flex items-center h-full">
-								<code
-									class="cursor-pointer text-primary-color leading-none"
-									@click.stop="gotoAgent(asset.agent_id)"
-								>
-									{{ asset.agent_id }}
-									<Icon :name="LinkIcon" :size="14" class="top-0.5 relative" />
-								</code>
-							</div>
-						</template>
-					</Badge>
-				</div>
-			</div>
+	<div class="alert-comment-item flex gap-3" :class="{ embedded }">
+		<div class="user-pic" v-if="userPic">
+			<n-avatar round :size="32" :src="userPic" />
 		</div>
-
-		<n-modal
-			v-model:show="showDetails"
-			preset="card"
-			content-class="!p-0"
-			:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(550px, 90vh)', overflow: 'hidden' }"
-			:title="asset.asset_name"
-			:bordered="false"
-			segmented
-		>
-			<n-tabs type="line" animated :tabs-padding="24">
-				<n-tab-pane name="Info" tab="Info" display-directive="show">
-					<div class="grid gap-2 grid-auto-fit-200 p-7 pt-4">
-						<KVCard v-for="(value, key) of asset" :key="key">
-							<template #key>{{ key }}</template>
-							<template #value>
-								<div v-if="key === 'id'">#{{ value }}</div>
-								<div v-else-if="key === 'customer_code'">
-									<code
-										class="cursor-pointer text-primary-color"
-										@click.stop="gotoCustomer({ code: asset.customer_code })"
-									>
-										#{{ asset.customer_code }}
-										<Icon :name="LinkIcon" :size="14" class="top-0.5 relative" />
-									</code>
-								</div>
-								<div v-else-if="key === 'agent_id'">
-									<code
-										class="cursor-pointer text-primary-color"
-										@click.stop="gotoAgent(asset.agent_id)"
-									>
-										{{ asset.agent_id }}
-										<Icon :name="LinkIcon" :size="14" class="top-0.5 relative" />
-									</code>
-								</div>
-								<div v-else-if="key === 'index_name'">
-									<code
-										class="cursor-pointer text-primary-color"
-										@click.stop="gotoIndex(asset.index_name)"
-									>
-										{{ asset.index_name }}
-										<Icon :name="LinkIcon" :size="14" class="top-0.5 relative" />
-									</code>
-								</div>
-								<div v-else>{{ value === "" ? "-" : (value ?? "-") }}</div>
-							</template>
-						</KVCard>
-					</div>
-				</n-tab-pane>
-				<n-tab-pane name="Context" tab="Context" display-directive="show">
-					<n-spin :show="loading" class="min-h-40">
-						<div class="p-7 pt-4" v-if="alertContext">
-							<div class="flex flex-wrap gap-3 mb-4">
-								<Badge type="splitted">
-									<template #label>id</template>
-									<template #value>#{{ alertContext.id }}</template>
-								</Badge>
-								<Badge type="splitted">
-									<template #label>source</template>
-									<template #value>{{ alertContext.source }}</template>
-								</Badge>
-							</div>
-
-							<n-card content-class="bg-secondary-color !p-0" class="overflow-hidden">
-								<div
-									class="scrollbar-styled overflow-hidden code-bg-transparent"
-									v-shiki="{ lang: 'json', decode: false }"
-								>
-									<pre>{{ alertContext.context }}</pre>
-								</div>
-							</n-card>
-						</div>
-					</n-spin>
-				</n-tab-pane>
-			</n-tabs>
-		</n-modal>
+		<div class="comment grow flex flex-col gap-1">
+			<div class="user flex gap-3 items-center">
+				<div class="user-name">{{ comment.user_name }}</div>
+				<div class="comment-time">{{ formatDate(comment.created_at) }}</div>
+			</div>
+			<div class="comment-message" v-html="message"></div>
+		</div>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { ref, toRefs, watch } from "vue"
-import { NModal, NSpin, NCard, NTabs, NTabPane, useMessage } from "naive-ui"
-import Api from "@/api"
-import vShiki from "@/directives/v-shiki"
-import KVCard from "@/components/common/KVCard.vue"
-import Icon from "@/components/common/Icon.vue"
-import Badge from "@/components/common/Badge.vue"
-import { useGoto } from "@/composables/useGoto"
-import type { AlertAsset, AlertContext } from "@/types/incidentManagement/alerts.d"
+import { onBeforeMount, ref, toRefs } from "vue"
+import { NAvatar } from "naive-ui"
+import { getAvatar, getNameInitials } from "@/utils"
+import { useSettingsStore } from "@/stores/settings"
+import dayjs from "@/utils/dayjs"
+import type { AlertComment } from "@/types/incidentManagement/alerts.d"
 
-const props = defineProps<{ asset: AlertAsset; embedded?: boolean }>()
-const { asset, embedded } = toRefs(props)
+const props = defineProps<{ comment: AlertComment; embedded?: boolean }>()
+const { comment, embedded } = toRefs(props)
 
-const LinkIcon = "carbon:launch"
-const { gotoAgent, gotoIndex, gotoCustomer } = useGoto()
-const message = useMessage()
-const loading = ref(false)
-const showDetails = ref(false)
-const alertContext = ref<AlertContext | null>(null)
+const dFormats = useSettingsStore().dateFormat
+const userPic = ref("")
+const message = ref(comment.value.comment.replace(/\n/gim, "<br/>"))
 
-watch(showDetails, val => {
-	if (val && !alertContext.value) {
-		getAlertContext(asset.value.alert_context_id)
-	}
-})
+const formatDate = (date: Date) => {
+	const datejs = dayjs(date)
+	if (!datejs.isValid()) return date
 
-function getAlertContext(alertContextId: number) {
-	loading.value = true
-
-	Api.incidentManagement
-		.getAlertContext(alertContextId)
-		.then(res => {
-			if (res.data.success) {
-				alertContext.value = res.data?.alert_context || null
-			} else {
-				message.warning(res.data?.message || "An error occurred. Please try again later.")
-			}
-		})
-		.catch(err => {
-			message.error(err.response?.data?.message || "An error occurred. Please try again later.")
-		})
-		.finally(() => {
-			loading.value = false
-		})
+	return datejs.format(dFormats.datetime)
 }
+
+onBeforeMount(() => {
+	const initials = getNameInitials(comment.value.user_name)
+	userPic.value = getAvatar({ seed: initials, text: initials, size: 64 })
+})
 </script>
 
 <style lang="scss" scoped>
-.alert-asset-item {
-	border-radius: var(--border-radius);
-	background-color: var(--bg-color);
-	transition: all 0.2s var(--bezier-ease);
-	border: var(--border-small-050);
-	overflow: hidden;
+.alert-comment-item {
+	width: 100%;
 
-	.main-box {
-		.content {
-			word-break: break-word;
+	.user-pic {
+		padding-top: 4px;
+	}
+
+	.comment {
+		.user {
+			margin-left: 2px;
+
+			.user-name {
+				font-weight: 600;
+			}
+
+			.comment-time {
+				font-size: 11px;
+				color: var(--fg-secondary-color);
+				font-family: var(--font-family-mono);
+			}
+		}
+
+		.comment-message {
+			border-radius: var(--border-radius);
+			background-color: var(--bg-color);
+			border: var(--border-small-050);
+			padding: 6px 10px;
 		}
 	}
 
 	&.embedded {
-		background-color: var(--bg-secondary-color);
-	}
-	&:hover {
-		box-shadow: 0px 0px 0px 1px var(--primary-color);
+		.comment {
+			.comment-message {
+				background-color: var(--bg-secondary-color);
+			}
+		}
 	}
 }
 </style>
