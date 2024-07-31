@@ -22,6 +22,7 @@ from app.connectors.wazuh_indexer.schema.sigma import SigmaQueryOutResponse, Cre
 from app.connectors.wazuh_indexer.services.sigma.sigma_db_operations import list_sigma_queries, create_sigma_query, add_sigma_queries_to_db, delete_sigma_rule, set_sigma_query_active, list_active_sigma_queries, update_sigma_time_interval
 from app.connectors.wazuh_indexer.services.sigma.sigma_download import download_and_extract_zip, keep_only_folder_directory, find_yaml_files
 from app.connectors.wazuh_indexer.services.sigma.generate_query import create_sigma_query_from_rule
+from app.connectors.wazuh_indexer.services.sigma.execute_query import execute_query
 
 wazuh_indexer_sigma_router = APIRouter()
 
@@ -134,7 +135,30 @@ async def upload_sigma_queries_to_db_endpoint(
     await add_sigma_queries_to_db(db)
     return BulkUploadToDBResponse(success=True, message="Successfully uploaded the Sigma queries to the database.")
 
+@wazuh_indexer_sigma_router.post(
+    "/run-active-queries",
+    response_model=SigmaQueryOutResponse
+)
+async def run_active_sigma_queries_endpoint(
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Runs the active Sigma queries.
 
+    Args:
+        db (AsyncSession): The database session.
+
+    Returns:
+        SigmaQueryOutResponse: The Sigma queries response.
+    """
+    active_sigma_queries = await list_active_sigma_queries(db)
+    for query in active_sigma_queries:
+        logger.info(f"Running Sigma query: {query.rule_name}")
+        response = await execute_query(query.rule_query, query.time_interval)
+    return SigmaQueryOutResponse(
+        success=True,
+        message="Successfully ran the active Sigma queries.",
+    )
 
 @wazuh_indexer_sigma_router.put(
     "/queries/set-active",

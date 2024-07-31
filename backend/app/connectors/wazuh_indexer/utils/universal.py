@@ -74,7 +74,7 @@ async def verify_wazuh_indexer_connection(connector_name: str) -> str:
     return await verify_wazuh_indexer_credentials(attributes)
 
 
-async def create_wazuh_indexer_client(connector_name: str) -> Elasticsearch:
+async def create_wazuh_indexer_client(connector_name: str = 'Wazuh-Indexer') -> Elasticsearch:
     """
     Returns an Elasticsearch client for the Wazuh Indexer service.
 
