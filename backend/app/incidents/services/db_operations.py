@@ -821,6 +821,14 @@ async def delete_tags(alert_id: int, db: AsyncSession):
             delete(AlertToTag).where((AlertToTag.alert_id == alert_to_tag.alert_id) & (AlertToTag.tag_id == alert_to_tag.tag_id)),
         )
 
+async def is_alert_linked_to_case(alert_id: int, db: AsyncSession) -> bool:
+    result = await db.execute(select(CaseAlertLink).where(CaseAlertLink.alert_id == alert_id))
+    linked_cases = result.scalars().all()
+
+    if linked_cases:
+        raise HTTPException(status_code=400, detail="Alert is linked to a case, and cannot be deleted")
+    return False
+
 
 async def delete_alert(alert_id: int, db: AsyncSession):
     """
@@ -834,6 +842,7 @@ async def delete_alert(alert_id: int, db: AsyncSession):
         HTTPException: If the alert is not found or there is an error deleting the alert.
 
     """
+    logger.info(f"Deleting alert {alert_id}")
     result = await db.execute(
         select(Alert)
         .options(selectinload(Alert.comments), selectinload(Alert.assets).selectinload(Asset.alert_context), selectinload(Alert.tags))
@@ -875,6 +884,10 @@ async def delete_case(case_id: int, db: AsyncSession):
     if not case:
         raise HTTPException(status_code=404, detail="Case not found")
 
+    # Delete entries from CaseAlertLink table
+    await db.execute(delete(CaseAlertLink).where(CaseAlertLink.case_id == case_id))
+
+    # Delete the case
     await db.execute(delete(Case).where(Case.id == case.id))
 
     try:

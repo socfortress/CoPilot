@@ -64,7 +64,7 @@ from app.incidents.services.db_operations import add_asset_name
 from app.incidents.services.db_operations import add_field_name
 from app.incidents.services.db_operations import add_timefield_name
 from app.incidents.services.db_operations import create_alert
-from app.incidents.services.db_operations import create_alert_context
+from app.incidents.services.db_operations import create_alert_context, is_alert_linked_to_case
 from app.incidents.services.db_operations import create_alert_tag
 from app.incidents.services.db_operations import create_asset
 from app.incidents.services.db_operations import create_case
@@ -360,6 +360,7 @@ async def get_alert_by_id_endpoint(alert_id: int, db: AsyncSession = Depends(get
 
 @incidents_db_operations_router.delete("/alert/{alert_id}")
 async def delete_alert_endpoint(alert_id: int, db: AsyncSession = Depends(get_db)):
+    await is_alert_linked_to_case(alert_id, db)
     await delete_alert(alert_id, db)
     return {"message": "Alert deleted successfully", "success": True}
 
