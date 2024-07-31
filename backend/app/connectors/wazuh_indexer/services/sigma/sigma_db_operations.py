@@ -170,3 +170,22 @@ async def add_sigma_queries_to_db(db: AsyncSession):
         await process_sigma_file(file, db)
     return None
 
+async def delete_sigma_rule(rule_name: str, db: AsyncSession):
+    query = await get_existing_query(rule_name, db)
+    if query:
+        try:
+            await db.delete(query)
+            await db.commit()
+        except Exception as e:
+            logger.error(f"Failed to delete the Sigma query: {e}")
+            raise HTTPException(
+                status_code=400,
+                detail="Failed to delete the Sigma query.",
+            )
+    else:
+        raise HTTPException(
+            status_code=404,
+            detail="The Sigma rule does not exist.",
+        )
+    return None
+

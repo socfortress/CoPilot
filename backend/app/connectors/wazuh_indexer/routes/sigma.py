@@ -19,7 +19,7 @@ from app.connectors.wazuh_indexer.utils.universal import (
 )
 from app.db.db_session import get_db
 from app.connectors.wazuh_indexer.schema.sigma import SigmaQueryOutResponse, CreateSigmaQuery, DownloadSigmaRulesRequest, BulkUploadToDBResponse
-from app.connectors.wazuh_indexer.services.sigma.sigma_db_operations import list_sigma_queries, create_sigma_query, add_sigma_queries_to_db
+from app.connectors.wazuh_indexer.services.sigma.sigma_db_operations import list_sigma_queries, create_sigma_query, add_sigma_queries_to_db, delete_sigma_rule
 from app.connectors.wazuh_indexer.services.sigma.sigma_download import download_and_extract_zip, keep_only_folder_directory, find_yaml_files
 from app.connectors.wazuh_indexer.services.sigma.generate_query import create_sigma_query_from_rule
 
@@ -113,4 +113,28 @@ async def create_sigma_query_endpoint(
         sigma_queries=[await create_sigma_query(sigma_query, db)],
         success=True,
         message="Successfully created the Sigma query.",
+    )
+
+@wazuh_indexer_sigma_router.delete(
+    "/queries/delete",
+    response_model=SigmaQueryOutResponse
+)
+async def delete_sigma_rule_endpoint(
+    rule_name: str = Query(...),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Deletes a Sigma query.
+
+    Args:
+        db (AsyncSession): The database session.
+        rule_name (str): The rule name to delete.
+
+    Returns:
+        SigmaQueryOutResponse: The Sigma queries response.
+    """
+    await delete_sigma_rule(rule_name, db)
+    return SigmaQueryOutResponse(
+        success=True,
+        message=f"Successfully deleted the Sigma query: {rule_name}",
     )
