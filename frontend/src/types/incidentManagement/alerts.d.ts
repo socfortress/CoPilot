@@ -36,6 +36,7 @@ export interface AlertComment {
 }
 
 export interface AlertTag {
+	id?: number
 	tag: string
 }
 

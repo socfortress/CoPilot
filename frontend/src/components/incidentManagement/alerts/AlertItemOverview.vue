@@ -124,17 +124,29 @@
 
 					<KVCard>
 						<template #key>tags</template>
-						<template #value>{{ tags || "-" }}</template>
+						<template #value>
+							<div class="flex flex-wrap gap-2">
+								<n-tag
+									closable
+									@close="deleteTag(tag)"
+									v-for="{ tag } of alert.tags"
+									:key="tag"
+									size="small"
+								>
+									{{ tag }}
+								</n-tag>
+							</div>
+						</template>
 					</KVCard>
 				</div>
 			</div>
 
 			<div class="footer-box px-7 py-4 flex justify-between">
-				<n-button secondary :loading @click="createCase()">
+				<n-button secondary @click="createCase()">
 					<template #icon><Icon :name="DangerIcon" /></template>
 					Create case
 				</n-button>
-				<n-button type="error" secondary :loading @click="handleDelete()">
+				<n-button type="error" secondary @click="handleDelete()">
 					<template #icon><Icon :name="TrashIcon" /></template>
 					Delete
 				</n-button>
@@ -144,8 +156,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, toRefs, computed } from "vue"
-import { NButton, NSpin, useMessage, useDialog } from "naive-ui"
+import { ref, toRefs } from "vue"
+import { NButton, NSpin, NTag, useMessage, useDialog } from "naive-ui"
 import AlertAssignUser from "./AlertAssignUser.vue"
 import AlertStatusSwitch from "./AlertStatusSwitch.vue"
 import AlertStatusIcon from "./AlertStatusIcon.vue"
@@ -154,6 +166,7 @@ import KVCard from "@/components/common/KVCard.vue"
 import Icon from "@/components/common/Icon.vue"
 import { useGoto } from "@/composables/useGoto"
 import { handleDeleteAlert } from "./utils"
+import Api from "@/api"
 import type { Alert } from "@/types/incidentManagement/alerts.d"
 
 const props = defineProps<{ alert: Alert; availableUsers?: string[] }>()
@@ -173,7 +186,6 @@ const { gotoCustomer } = useGoto()
 const dialog = useDialog()
 const message = useMessage()
 const loading = ref(false)
-const tags = computed(() => (alert.value?.tags?.length ? alert.value.tags.map(o => "#" + o.tag).join(", ") : ""))
 
 function updateAlert(updatedAlert: Alert) {
 	emit("updated", updatedAlert)
@@ -200,6 +212,33 @@ function handleDelete() {
 			dialog
 		})
 	}
+}
+
+function deleteTag(tag: string) {
+	loading.value = true
+
+	Api.incidentManagement
+		.deleteAlertTag(alert.value.id, tag)
+		.then(res => {
+			if (res.data.success) {
+				message.success("Alert tag was successfully deleted.")
+
+				alert.value.tags = alert.value.tags.filter(o => o.tag !== tag)
+				updateAlert(alert.value)
+			} else {
+				message.error(res.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.catch(err => {
+			if (err.response?.status === 401) {
+				message.error(err.response?.data?.message || "Alert tag Delete returned Unauthorized.")
+			} else {
+				message.error(err.response?.data?.message || "An error occurred. Please try again later.")
+			}
+		})
+		.finally(() => {
+			loading.value = false
+		})
 }
 </script>
 

@@ -1,7 +1,7 @@
 import { type FlaskBaseResponse } from "@/types/flask.d"
 import { HttpClient } from "../httpClient"
 import type { SourceConfiguration, SourceName } from "@/types/incidentManagement/sources.d"
-import type { Alert, AlertComment, AlertContext, AlertStatus } from "@/types/incidentManagement/alerts.d"
+import type { Alert, AlertComment, AlertContext, AlertStatus, AlertTag } from "@/types/incidentManagement/alerts.d"
 
 export type AlertsFilter = { status: AlertStatus } | { assetName: string } | { assignedTo: string }
 
@@ -88,7 +88,7 @@ export default {
 		})
 	},
 	deleteAlertTag(alertId: number, tag: string) {
-		return HttpClient.delete<FlaskBaseResponse>(`/incidents/db_operations/alert/tag`, {
+		return HttpClient.delete<FlaskBaseResponse & { alert_tag: AlertTag }>(`/incidents/db_operations/alert/tag`, {
 			data: { alert_id: alertId, tag }
 		})
 	},
