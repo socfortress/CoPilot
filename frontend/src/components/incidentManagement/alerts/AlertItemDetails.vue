@@ -8,153 +8,9 @@
 			class="grow"
 			pane-wrapper-class="flex flex-col grow"
 		>
-			<n-tab-pane
-				name="Overview"
-				tab="Overview"
-				display-directive="show:lazy"
-				class="flex flex-col gap-4 !pt-4 grow justify-between"
-			>
-				<div class="content-box flex flex-col gap-4">
-					<div class="px-7 flex sm:flex-row flex-col gap-4">
-						<KVCard
-							:color="
-								alert.status === 'OPEN'
-									? 'danger'
-									: alert.status === 'IN_PROGRESS'
-										? 'warning'
-										: 'success'
-							"
-							size="lg"
-							class="grow w-full"
-						>
-							<template #key>
-								<div class="flex gap-2 items-center">
-									<AlertStatusIcon :status="alert.status" />
-									<span>Status</span>
-								</div>
-							</template>
-							<template #value>
-								<div class="flex">
-									<AlertStatusSwitch
-										:alert
-										v-slot="{ loading: loadingStatus }"
-										@updated="updateAlert($event)"
-									>
-										<div
-											class="flex gap-3 items-center"
-											:class="{
-												'cursor-not-allowed': loadingStatus,
-												'cursor-pointer': !loadingStatus
-											}"
-										>
-											<span>{{ alert.status || "n/d" }}</span>
-											<n-spin
-												:size="14"
-												:show="loadingStatus"
-												content-class="flex flex-col justify-center"
-											>
-												<Icon :name="EditIcon" />
-											</n-spin>
-										</div>
-									</AlertStatusSwitch>
-								</div>
-							</template>
-						</KVCard>
-
-						<KVCard :color="alert.assigned_to ? 'success' : undefined" size="lg" class="grow w-full">
-							<template #key>
-								<div class="flex gap-2 items-center">
-									<AlertAssigneeIcon :assignee="alert.assigned_to" />
-									<span>Assigned to</span>
-								</div>
-							</template>
-							<template #value>
-								<div class="flex">
-									<AlertAssignUser
-										:alert
-										:users="availableUsers"
-										v-slot="{ loading: loadingAssignee }"
-										@updated="updateAlert($event)"
-									>
-										<div
-											class="flex gap-3 items-center"
-											:class="{
-												'cursor-not-allowed': loadingAssignee,
-												'cursor-pointer': !loadingAssignee
-											}"
-										>
-											<span>{{ alert.assigned_to || "n/d" }}</span>
-											<n-spin
-												:size="14"
-												:show="loadingAssignee"
-												content-class="flex flex-col justify-center"
-											>
-												<Icon :name="EditIcon" />
-											</n-spin>
-										</div>
-									</AlertAssignUser>
-								</div>
-							</template>
-						</KVCard>
-					</div>
-
-					<div class="px-7">
-						<KVCard>
-							<template #key>description</template>
-							<template #value>{{ alert.alert_description ?? "-" }}</template>
-						</KVCard>
-					</div>
-
-					<div class="px-7 grid gap-2 grid-auto-fit-250">
-						<KVCard>
-							<template #key>id</template>
-							<template #value>#{{ alert.id }}</template>
-						</KVCard>
-
-						<KVCard>
-							<template #key>source</template>
-							<template #value>{{ alert.source ?? "-" }}</template>
-						</KVCard>
-
-						<KVCard>
-							<template #key>customer code</template>
-							<template #value>
-								<code
-									class="cursor-pointer text-primary-color"
-									@click="gotoCustomer({ code: alert.customer_code })"
-								>
-									{{ alert.customer_code }}
-									<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
-								</code>
-							</template>
-						</KVCard>
-
-						<KVCard>
-							<template #key>assets</template>
-							<template #value>{{ alert.assets.length }}</template>
-						</KVCard>
-
-						<KVCard>
-							<template #key>comments</template>
-							<template #value>{{ alert.comments.length }}</template>
-						</KVCard>
-
-						<KVCard>
-							<template #key>tags</template>
-							<template #value>{{ tags || "-" }}</template>
-						</KVCard>
-					</div>
-				</div>
-
-				<div class="footer-box px-7 py-4 flex justify-between">
-					<n-button secondary :loading @click="createCase()">
-						<template #icon><Icon :name="DangerIcon" /></template>
-						Create case
-					</n-button>
-					<n-button type="error" secondary :loading @click="handleDelete()">
-						<template #icon><Icon :name="TrashIcon" /></template>
-						Delete
-					</n-button>
+			<n-tab-pane name="Overview" tab="Overview" display-directive="show:lazy" class="flex flex-col grow">
+				<div class="pt-1">
+					<AlertItemOverview :alert :availableUsers @update="updateAlert($event)" @delete="emit('delete')" />
 				</div>
 			</n-tab-pane>
 			<n-tab-pane name="Timeline" tab="Timeline" display-directive="show:lazy">
@@ -163,11 +19,15 @@
 				</div>
 			</n-tab-pane>
 			<n-tab-pane name="Assets" tab="Assets" display-directive="show:lazy">
-				<div class="p-7 pt-4 flex flex-col gap-2">
-					<AlertAsset :asset embedded v-for="asset of alert.assets" :key="asset.id" />
+				<div class="p-7 pt-4">
+					<AlertAssetsList :assets="alert.assets" />
 				</div>
 			</n-tab-pane>
-			<n-tab-pane name="Comments" tab="Comments" display-directive="show:lazy"></n-tab-pane>
+			<n-tab-pane name="Comments" tab="Comments" display-directive="show:lazy">
+				<div class="p-7 pt-4">
+					<AlertCommentsList :comments="alert.comments" />
+				</div>
+			</n-tab-pane>
 			<n-tab-pane name="Tags" tab="Tags" display-directive="show:lazy"></n-tab-pane>
 		</n-tabs>
 	</n-spin>
@@ -201,8 +61,9 @@ import AlertAssignUser from "./AlertAssignUser.vue"
 import AlertStatusSwitch from "./AlertStatusSwitch.vue"
 import AlertStatusIcon from "./AlertStatusIcon.vue"
 import AlertAssigneeIcon from "./AlertAssigneeIcon.vue"
-import AlertAsset from "./AlertAsset.vue"
-import { handleDeleteAlert } from "./utils"
+import AlertAssetsList from "./AlertAssetsList.vue"
+import AlertCommentsList from "./AlertAssetsList.vue"
+import AlertItemOverview from "./AlertItemOverview.vue"
 import type { Alert } from "@/types/incidentManagement/alerts.d"
 
 const props = defineProps<{ alertData?: Alert; alertId?: number; availableUsers?: string[] }>()
@@ -236,10 +97,6 @@ function updateAlert(updatedAlert: Alert) {
 	emit("update", updatedAlert)
 }
 
-function createCase() {
-	// TODO: to implement
-}
-
 function getAlert(alertId: number) {
 	loading.value = true
 
@@ -260,25 +117,6 @@ function getAlert(alertId: number) {
 		})
 }
 
-function handleDelete() {
-	if (alert.value) {
-		handleDeleteAlert({
-			alert: alert.value,
-			cbBefore: () => {
-				loading.value = true
-			},
-			cbSuccess: () => {
-				emit("delete")
-			},
-			cbAfter: () => {
-				loading.value = false
-			},
-			message,
-			dialog
-		})
-	}
-}
-
 onBeforeMount(() => {
 	if (alertId.value) {
 		getAlert(alertId.value)
@@ -287,10 +125,3 @@ onBeforeMount(() => {
 	}
 })
 </script>
-
-<style lang="scss" scoped>
-.footer-box {
-	border-top: var(--border-small-100);
-	background-color: var(--bg-secondary-color);
-}
-</style>
