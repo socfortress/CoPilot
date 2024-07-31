@@ -114,3 +114,22 @@ export function price(
 export function getBaseUrl() {
 	return _trim(import.meta.env.VITE_API_URL, "/")
 }
+
+export function getNameInitials(name: string, cap?: number) {
+	let initials = name.slice(0, 2)
+
+	if (name.indexOf(" ") !== -1) {
+		initials = name
+			.split(" ")
+			.map(chunk => chunk[0])
+			.join()
+	}
+
+	return (cap ? initials.slice(0, cap) : initials).toUpperCase()
+}
+
+export function getAvatar(params: { seed: string; text?: string; size?: number; format?: "png" | "svg" }) {
+	const format: "png" | "svg" = params.text ? "svg" : params.format || "svg"
+
+	return `https://avatar.vercel.sh/${params.seed}.${format}?text=${params.text || ""}&size=${params.size || 32}`
+}
