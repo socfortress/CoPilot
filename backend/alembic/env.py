@@ -51,6 +51,7 @@ from app.network_connectors.models.network_connectors import (
     NetworkConnectorsSubscription,
 )
 from app.schedulers.models.scheduler import JobMetadata
+from app.connectors.wazuh_indexer.models.sigma import SigmaQuery
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
