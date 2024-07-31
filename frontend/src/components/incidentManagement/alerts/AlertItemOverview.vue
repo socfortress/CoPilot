@@ -160,8 +160,8 @@ const props = defineProps<{ alert: Alert; availableUsers?: string[] }>()
 const { alert, availableUsers } = toRefs(props)
 
 const emit = defineEmits<{
-	(e: "delete"): void
-	(e: "update", value: Alert): void
+	(e: "deleted"): void
+	(e: "updated", value: Alert): void
 }>()
 
 const TrashIcon = "carbon:trash-can"
@@ -176,7 +176,7 @@ const loading = ref(false)
 const tags = computed(() => (alert.value?.tags?.length ? alert.value.tags.map(o => "#" + o.tag).join(", ") : ""))
 
 function updateAlert(updatedAlert: Alert) {
-	emit("update", updatedAlert)
+	emit("updated", updatedAlert)
 }
 
 function createCase() {
@@ -191,7 +191,7 @@ function handleDelete() {
 				loading.value = true
 			},
 			cbSuccess: () => {
-				emit("delete")
+				emit("deleted")
 			},
 			cbAfter: () => {
 				loading.value = false

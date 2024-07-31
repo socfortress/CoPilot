@@ -10,7 +10,12 @@
 		>
 			<n-tab-pane name="Overview" tab="Overview" display-directive="show:lazy" class="flex flex-col grow">
 				<div class="pt-1">
-					<AlertItemOverview :alert :availableUsers @update="updateAlert($event)" @delete="emit('delete')" />
+					<AlertItemOverview
+						:alert
+						:availableUsers
+						@updated="updateAlert($event)"
+						@deleted="emit('deleted')"
+					/>
 				</div>
 			</n-tab-pane>
 			<n-tab-pane name="Timeline" tab="Timeline" display-directive="show:lazy">
@@ -25,76 +30,50 @@
 			</n-tab-pane>
 			<n-tab-pane name="Comments" tab="Comments" display-directive="show:lazy">
 				<div class="p-7 pt-4">
-					<AlertCommentsList :comments="alert.comments" :alertId="alert.id" />
+					<AlertCommentsList
+						:comments="alert.comments"
+						:alertId="alert.id"
+						@updated="updateComments($event)"
+					/>
 				</div>
 			</n-tab-pane>
-			<n-tab-pane name="Tags" tab="Tags" display-directive="show:lazy"></n-tab-pane>
 		</n-tabs>
 	</n-spin>
 </template>
 
 <script setup lang="ts">
-import { onBeforeMount, ref, toRefs, computed } from "vue"
-import {
-	NTabs,
-	NTabPane,
-	NStatistic,
-	NInput,
-	NCard,
-	NModal,
-	NPopover,
-	NButton,
-	NSpin,
-	useMessage,
-	useDialog
-} from "naive-ui"
-import KVCard from "@/components/common/KVCard.vue"
-import { useSettingsStore } from "@/stores/settings"
-import { useGoto } from "@/composables/useGoto"
-import { formatDate } from "@/utils"
+import { onBeforeMount, ref, toRefs } from "vue"
+import { NTabs, NTabPane, NSpin, useMessage } from "naive-ui"
 import _clone from "lodash/cloneDeep"
 import Api from "@/api"
-import Icon from "@/components/common/Icon.vue"
-import Badge from "@/components/common/Badge.vue"
 import AlertTimeline from "./AlertTimeline.vue"
-import AlertAssignUser from "./AlertAssignUser.vue"
-import AlertStatusSwitch from "./AlertStatusSwitch.vue"
-import AlertStatusIcon from "./AlertStatusIcon.vue"
-import AlertAssigneeIcon from "./AlertAssigneeIcon.vue"
 import AlertAssetsList from "./AlertAssetsList.vue"
 import AlertCommentsList from "./AlertCommentsList.vue"
 import AlertItemOverview from "./AlertItemOverview.vue"
-import type { Alert } from "@/types/incidentManagement/alerts.d"
+import type { Alert, AlertComment } from "@/types/incidentManagement/alerts.d"
 
 const props = defineProps<{ alertData?: Alert; alertId?: number; availableUsers?: string[] }>()
 const { alertData, alertId, availableUsers } = toRefs(props)
 
 const emit = defineEmits<{
-	(e: "delete"): void
-	(e: "update", value: Alert): void
+	(e: "deleted"): void
+	(e: "updated", value: Alert): void
 }>()
 
-const TrashIcon = "carbon:trash-can"
-const InfoIcon = "carbon:information"
-const LinkIcon = "carbon:launch"
-const TimeIcon = "carbon:time"
-const DangerIcon = "majesticons:exclamation-line"
-const EditIcon = "uil:edit-alt"
-const CommentsIcon = "carbon:chat"
-const AssetsIcon = "carbon:document-security"
-
-const { gotoCustomer } = useGoto()
-const dialog = useDialog()
 const message = useMessage()
 const loading = ref(false)
-const dFormats = useSettingsStore().dateFormat
 const alert = ref<Alert | null>(null)
-
-const tags = computed(() => (alert.value?.tags?.length ? alert.value.tags.map(o => "#" + o.tag).join(", ") : ""))
 
 function updateAlert(updatedAlert: Alert) {
 	alert.value = updatedAlert
-	emit("update", updatedAlert)
+	emit("updated", updatedAlert)
+}
+
+function updateComments(comments: AlertComment[]) {
+	if (alert.value) {
+		alert.value.comments = comments
+		emit("updated", alert.value)
+	}
 }
 
 function getAlert(alertId: number) {

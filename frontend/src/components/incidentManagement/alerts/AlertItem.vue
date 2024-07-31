@@ -165,7 +165,7 @@
 					v-if="alert"
 					:alertData="alert"
 					:availableUsers
-					@delete="emitDelete()"
+					@deleted="emitDelete()"
 					@updated="updateAlert($event)"
 				/>
 			</n-card>
@@ -196,8 +196,8 @@ const props = defineProps<{ alertData?: Alert; alertId?: number; availableUsers?
 const { alertData, alertId, availableUsers } = toRefs(props)
 
 const emit = defineEmits<{
-	(e: "delete"): void
-	(e: "update", value: Alert): void
+	(e: "deleted"): void
+	(e: "updated", value: Alert): void
 }>()
 
 const InfoIcon = "carbon:information"
@@ -216,7 +216,7 @@ const alert = ref<Alert | null>(null)
 
 function updateAlert(updatedAlert: Alert) {
 	alert.value = updatedAlert
-	emit("update", updatedAlert)
+	emit("updated", updatedAlert)
 }
 
 function getAlert(alertId: number) {
@@ -260,7 +260,7 @@ function handleDelete() {
 
 function emitDelete() {
 	showDetails.value = false
-	emit("delete")
+	emit("deleted")
 }
 
 onBeforeMount(() => {

@@ -49,6 +49,10 @@ import _trim from "lodash/trim"
 const props = defineProps<{ comments: AlertComment[]; alertId: number }>()
 const { comments, alertId } = toRefs(props)
 
+const emit = defineEmits<{
+	(e: "updated", value: AlertComment[]): void
+}>()
+
 const CommentsIcon = "carbon:chat"
 const commentsList = ref<AlertComment[]>(comments.value)
 const commentMessage = ref<string | null>(null)
@@ -76,6 +80,7 @@ function submit() {
 				if (res.data.success) {
 					reset()
 					commentsList.value.push(res.data.comment)
+					emit("updated", commentsList.value)
 				} else {
 					message.warning(res.data?.message || "An error occurred. Please try again later.")
 				}

@@ -128,8 +128,8 @@
 						:alertData="alert"
 						:availableUsers
 						class="item-appear item-appear-bottom item-appear-005"
-						@delete="getData()"
-						@update="updateAlert($event)"
+						@deleted="getData()"
+						@updated="updateAlert($event)"
 					/>
 				</template>
 				<template v-else>
