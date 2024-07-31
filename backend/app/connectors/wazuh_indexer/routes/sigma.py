@@ -14,14 +14,34 @@ from app.auth.utils import AuthHandler
 from app.connectors.wazuh_indexer.utils.universal import (
     get_available_indices_via_source,
 )
-from app.connectors.wazuh_indexer.utils.universal import get_index_mappings_key_names
-from app.connectors.wazuh_indexer.utils.universal import get_index_source
 from app.db.db_session import get_db
 from app.connectors.wazuh_indexer.schema.sigma import SigmaQueryOutResponse, CreateSigmaQuery
 from app.connectors.wazuh_indexer.services.sigma_db_operations import list_sigma_queries, create_sigma_query
+from app.connectors.wazuh_indexer.services.sigma_download import download_and_extract_zip, keep_only_windows_directory
 
 
 wazuh_indexer_sigma_router = APIRouter()
+
+@wazuh_indexer_sigma_router.post(
+    "/download",
+    response_model=SigmaQueryOutResponse
+)
+async def download_sigma_queries_endpoint(
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Downloads the Sigma queries from the Wazuh repository.
+
+    Args:
+        db (AsyncSession): The database session.
+
+    Returns:
+        SigmaQueryOutResponse: The Sigma queries response.
+    """
+    # Define the URL to download the Sigma queries from
+    sigma_url = "https://github.com/SigmaHQ/sigma/releases/download/r2024-07-17/sigma_all_rules.zip"
+    await download_and_extract_zip(sigma_url)
+    await keep_only_windows_directory()
 
 @wazuh_indexer_sigma_router.get(
     "/queries/available",

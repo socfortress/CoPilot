@@ -57,6 +57,7 @@ backend/report.pdf
 backend/report.html
 backend/scoutsuite-report
 backend/app/integrations/office365/services/wazuh_config.xml
+backend/app/connectors/wazuh_indexer/sigma_artifacts
 
 frontend/src/unplugin.components.d.ts
 frontend/cypress/screenshots/
