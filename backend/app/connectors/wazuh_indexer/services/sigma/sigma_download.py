@@ -49,7 +49,7 @@ async def download_and_extract_zip(url: str) -> None:
     # Remove the downloaded zip file
     os.remove(local_zip_path)
 
-async def keep_only_windows_directory(directory: str = "app/connectors/wazuh_indexer/sigma_artifacts/rules"):
+async def keep_only_folder_directory(folder: str, directory: str = "app/connectors/wazuh_indexer/sigma_artifacts/rules"):
     """
     Removes all directories except the Windows directory from the specified directory.
 
@@ -57,8 +57,30 @@ async def keep_only_windows_directory(directory: str = "app/connectors/wazuh_ind
         directory (str): The directory to clean up.
     """
     for item in os.listdir(directory):
-        if item != "windows":
+        if item != folder:
             item_path = os.path.join(directory, item)
             if os.path.isdir(item_path):
                 logger.info(f"Removing directory and its contents: {item_path}")
                 shutil.rmtree(item_path)
+
+async def find_yaml_files(directory: str = "app/connectors/wazuh_indexer/sigma_artifacts/rules/windows") -> List[str]:
+    """
+    Finds all YAML files in the specified directory.
+
+    Args:
+        directory (str): The directory to search for YAML files.
+
+    Returns:
+        List[str]: A list of YAML file paths.
+    """
+    yaml_files = []
+
+    for root, _, files in os.walk(directory):
+        for file in files:
+            if file.endswith(".yml"):
+                #yaml_files.append(os.path.join(root, file))
+                #logger.info(f"Found YAML file: {file}")
+                full_path = os.path.join(root, file)
+                yaml_files.append(full_path)
+
+    return yaml_files

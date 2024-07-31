@@ -128,6 +128,7 @@ python-multipart==0.0.6
 pytz==2023.3.post1
 pyvelociraptor==0.1.8
 PyYAML==6.0.1
+pySigma==0.11.9
 reactivex==4.0.4
 redis==4.6.0
 regex==2023.10.3

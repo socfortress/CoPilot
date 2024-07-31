@@ -10,6 +10,22 @@ from pydantic import Field
 from pydantic import validator
 from datetime import datetime
 
+class DownloadSigmaRulesRequest(BaseModel):
+    url: str = Field(
+        "https://github.com/SigmaHQ/sigma/releases/download/r2024-07-17/sigma_all_rules.zip",
+        title="URL",
+        description="The URL to download the Sigma rules from.",
+    )
+    folder: str = Field(
+        "windows",
+        title="Folder",
+        description="The folder of Sigma rules to download.",
+    )
+
+class BulkUploadToDBResponse(BaseModel):
+    success: bool
+    message: str
+
 class SigmaQueriesOut(BaseModel):
     """
     Represents the Sigma queries output.
@@ -86,3 +102,20 @@ class CreateSigmaQuery(BaseModel):
             raise ValueError("The time interval must be in the format of minutes (e.g., '1m'), hours (e.g., '1h'), or days (e.g., '1d').")
 
         return time_interval
+
+
+class QueryString(BaseModel):
+    query: str
+    analyze_wildcard: bool
+
+class MustItem(BaseModel):
+    query_string: QueryString
+
+class BoolQuery(BaseModel):
+    must: List[MustItem]
+
+class Query(BaseModel):
+    bool: BoolQuery
+
+class SigmaQueryGenerationResponse(BaseModel):
+    query: Query
