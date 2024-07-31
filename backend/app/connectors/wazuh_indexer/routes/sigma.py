@@ -18,13 +18,81 @@ from app.connectors.wazuh_indexer.utils.universal import (
     get_available_indices_via_source,
 )
 from app.db.db_session import get_db
-from app.connectors.wazuh_indexer.schema.sigma import SigmaQueryOutResponse, CreateSigmaQuery, DownloadSigmaRulesRequest, BulkUploadToDBResponse
-from app.connectors.wazuh_indexer.services.sigma.sigma_db_operations import list_sigma_queries, create_sigma_query, add_sigma_queries_to_db, delete_sigma_rule
+from app.connectors.wazuh_indexer.schema.sigma import SigmaQueryOutResponse, CreateSigmaQuery, DownloadSigmaRulesRequest, BulkUploadToDBResponse, UpdateSigmaActive
+from app.connectors.wazuh_indexer.services.sigma.sigma_db_operations import list_sigma_queries, create_sigma_query, add_sigma_queries_to_db, delete_sigma_rule, set_sigma_query_active, list_active_sigma_queries
 from app.connectors.wazuh_indexer.services.sigma.sigma_download import download_and_extract_zip, keep_only_folder_directory, find_yaml_files
 from app.connectors.wazuh_indexer.services.sigma.generate_query import create_sigma_query_from_rule
 
 wazuh_indexer_sigma_router = APIRouter()
 
+@wazuh_indexer_sigma_router.get(
+    "/queries/available",
+    response_model=SigmaQueryOutResponse
+)
+async def get_sigma_queries_endpoint(
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Retrieves a list of Sigma queries.
+
+    Args:
+        db (AsyncSession): The database session.
+
+    Returns:
+        List[SigmaQuery]: A list of Sigma queries.
+    """
+    return SigmaQueryOutResponse(
+        sigma_queries=await list_sigma_queries(db),
+        success=True,
+        message="Successfully retrieved the Sigma queries.",
+    )
+
+@wazuh_indexer_sigma_router.get(
+    "/queries/active",
+    response_model=SigmaQueryOutResponse
+)
+async def get_active_sigma_queries_endpoint(
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Retrieves a list of active Sigma queries.
+
+    Args:
+        db (AsyncSession): The database session.
+
+    Returns:
+        List[SigmaQuery]: A list of Sigma queries.
+    """
+    return SigmaQueryOutResponse(
+        sigma_queries=await list_active_sigma_queries(db),
+        success=True,
+        message="Successfully retrieved the active Sigma queries.",
+    )
+
+@wazuh_indexer_sigma_router.post(
+    "/queries/create",
+    response_model=SigmaQueryOutResponse
+)
+async def create_sigma_query_endpoint(
+    sigma_query: CreateSigmaQuery,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Creates a Sigma query.
+
+    Args:
+        db (AsyncSession): The database session.
+        sigma_query (CreateSigmaQuery): The Sigma query creation request.
+
+    Returns:
+        SigmaQuery: The created Sigma query.
+    """
+    logger.info(f"Creating Sigma query: {sigma_query.dict()}")
+    return SigmaQueryOutResponse(
+        sigma_queries=[await create_sigma_query(sigma_query, db)],
+        success=True,
+        message="Successfully created the Sigma query.",
+    )
 
 @wazuh_indexer_sigma_router.post(
     "/download",
@@ -68,51 +136,29 @@ async def upload_sigma_queries_to_db_endpoint(
 
 
 
-@wazuh_indexer_sigma_router.get(
-    "/queries/available",
+@wazuh_indexer_sigma_router.put(
+    "/queries/set-active",
     response_model=SigmaQueryOutResponse
 )
-async def get_sigma_queries_endpoint(
+async def set_sigma_query_active_endpoint(
+    request: UpdateSigmaActive,
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Retrieves a list of Sigma queries.
+    Sets the active status of a Sigma query.
 
     Args:
         db (AsyncSession): The database session.
+        rule_name (str): The rule name to set active.
+        active (bool): The active status to set.
 
     Returns:
-        List[SigmaQuery]: A list of Sigma queries.
+        SigmaQueryOutResponse: The Sigma queries response.
     """
+    await set_sigma_query_active(request.rule_name, request.active, db)
     return SigmaQueryOutResponse(
-        sigma_queries=await list_sigma_queries(db),
         success=True,
-        message="Successfully retrieved the Sigma queries.",
-    )
-
-@wazuh_indexer_sigma_router.post(
-    "/queries/create",
-    response_model=SigmaQueryOutResponse
-)
-async def create_sigma_query_endpoint(
-    sigma_query: CreateSigmaQuery,
-    db: AsyncSession = Depends(get_db),
-):
-    """
-    Creates a Sigma query.
-
-    Args:
-        db (AsyncSession): The database session.
-        sigma_query (CreateSigmaQuery): The Sigma query creation request.
-
-    Returns:
-        SigmaQuery: The created Sigma query.
-    """
-    logger.info(f"Creating Sigma query: {sigma_query.dict()}")
-    return SigmaQueryOutResponse(
-        sigma_queries=[await create_sigma_query(sigma_query, db)],
-        success=True,
-        message="Successfully created the Sigma query.",
+        message=f"Successfully set the active status of the Sigma query: {request.rule_name} to {request.active}",
     )
 
 @wazuh_indexer_sigma_router.delete(

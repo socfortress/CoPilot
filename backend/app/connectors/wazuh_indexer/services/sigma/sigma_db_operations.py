@@ -92,6 +92,24 @@ async def list_sigma_queries(
 
     return sigma_queries
 
+async def list_active_sigma_queries(
+    db: AsyncSession,
+) -> List[SigmaQuery]:
+    """
+    Retrieves a list of active Sigma queries.
+
+    Args:
+        db (AsyncSession): The database session.
+
+    Returns:
+        List[SigmaQuery]: A list of active Sigma queries.
+    """
+    # Retrieve the active Sigma queries
+    sigma_queries = await db.execute(select(SigmaQuery).filter_by(active=True))
+    sigma_queries = sigma_queries.scalars().all()
+
+    return sigma_queries
+
 async def create_sigma_query(
     sigma_query: CreateSigmaQuery,
     db: AsyncSession,
@@ -185,6 +203,18 @@ async def delete_sigma_rule(rule_name: str, db: AsyncSession):
     query = await get_existing_query(rule_name, db)
     if query:
         await delete_query_from_db(query, db)
+    else:
+        raise HTTPException(
+            status_code=404,
+            detail="The Sigma rule does not exist.",
+        )
+    return None
+
+async def set_sigma_query_active(rule_name: str, active: bool, db: AsyncSession):
+    query = await get_existing_query(rule_name, db)
+    if query:
+        query.active = active
+        await db.commit()
     else:
         raise HTTPException(
             status_code=404,

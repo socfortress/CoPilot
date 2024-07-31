@@ -119,3 +119,8 @@ class Query(BaseModel):
 
 class SigmaQueryGenerationResponse(BaseModel):
     query: Query
+
+
+class UpdateSigmaActive(BaseModel):
+    rule_name: str
+    active: bool
