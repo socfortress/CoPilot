@@ -9,6 +9,7 @@ import re
 from fastapi import Security
 import os
 from loguru import logger
+from datetime import datetime, timedelta
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -19,7 +20,7 @@ from app.connectors.wazuh_indexer.utils.universal import (
 )
 from app.db.db_session import get_db
 from app.connectors.wazuh_indexer.schema.sigma import SigmaQueryOutResponse, CreateSigmaQuery, DownloadSigmaRulesRequest, BulkUploadToDBResponse, UpdateSigmaActive, UpdateSigmaTimeInterval, RunActiveSigmaQueries
-from app.connectors.wazuh_indexer.services.sigma.sigma_db_operations import list_sigma_queries, create_sigma_query, add_sigma_queries_to_db, delete_sigma_rule, set_sigma_query_active, list_active_sigma_queries, update_sigma_time_interval
+from app.connectors.wazuh_indexer.services.sigma.sigma_db_operations import list_sigma_queries, create_sigma_query, add_sigma_queries_to_db, delete_sigma_rule, set_sigma_query_active, list_active_sigma_queries, update_sigma_time_interval, parse_time_interval
 from app.connectors.wazuh_indexer.services.sigma.sigma_download import download_and_extract_zip, keep_only_folder_directory, find_yaml_files
 from app.connectors.wazuh_indexer.services.sigma.generate_query import create_sigma_query_from_rule
 from app.connectors.wazuh_indexer.services.sigma.execute_query import execute_query
@@ -153,8 +154,13 @@ async def run_active_sigma_queries_endpoint(
     """
     active_sigma_queries = await list_active_sigma_queries(db)
     for query in active_sigma_queries:
-        logger.info(f"Running Sigma query: {query.rule_name}")
-        response = await execute_query(RunActiveSigmaQueries(query=query.rule_query, time_interval=query.time_interval, rule_name=query.rule_name, index="new-wazuh*"), session=db)
+        time_interval_delta = parse_time_interval(query.time_interval)
+        if datetime.now() - query.last_execution_time >= time_interval_delta:
+            logger.info(f"Running Sigma query: {query.rule_name}")
+            response = await execute_query(RunActiveSigmaQueries(query=query.rule_query, time_interval=query.time_interval, last_execution_time=query.last_execution_time, rule_name=query.rule_name, index="new-wazuh*"), session=db)
+            # Update the last execution time to the current time and commit the changes
+            query.last_execution_time = datetime.now()
+            await db.commit()
     return SigmaQueryOutResponse(
         success=True,
         message="Successfully ran the active Sigma queries.",

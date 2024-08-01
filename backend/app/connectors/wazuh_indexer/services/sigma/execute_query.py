@@ -3,6 +3,7 @@ from typing import List
 from typing import Optional
 
 from fastapi import HTTPException
+from datetime import datetime
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -47,7 +48,9 @@ async def create_alert_payload(sigma_rule_name, syslog_type, index_name, index_i
         index_id=index_id,
     )
 
-async def format_opensearch_query(query: str, time_interval: str) -> dict:
+async def format_opensearch_query(query: str, time_interval: str, last_execution_time: datetime) -> dict:
+    logger.info(f"Last execution time: {last_execution_time}")
+    formatted_last_execution_time = last_execution_time.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
     return {
         "query": {
             "bool": {
@@ -74,7 +77,8 @@ async def format_opensearch_query(query: str, time_interval: str) -> dict:
                     {
                         "range": {
                             "timestamp": {
-                                "from": f"now-{time_interval}",
+                                #"from": f"now-{time_interval}",
+                                "from": formatted_last_execution_time,
                                 "to": "now",
                                 "include_lower": True,
                                 "include_upper": False,
@@ -100,6 +104,7 @@ async def send_query_to_opensearch(es_client, query: dict, rule_name: str, index
         return []
 
 async def process_hits(hits, rule_name, session: AsyncSession):
+    logger.info(f"Processing number of hits: {len(hits)}")
     results = []
     for hit in hits:
         doc_id = hit["_id"]
@@ -127,7 +132,7 @@ async def process_hits(hits, rule_name, session: AsyncSession):
 
 async def execute_query(payload: RunActiveSigmaQueries, session: AsyncSession = None):
     client = await create_wazuh_indexer_client()
-    formatted_query = await format_opensearch_query(payload.query, payload.time_interval)
+    formatted_query = await format_opensearch_query(payload.query, payload.time_interval, payload.last_execution_time)
     logger.info(f"Executing query: {formatted_query}")
     results = await send_query_to_opensearch(client, formatted_query, payload.rule_name, index=payload.index, session=session)
     logger.info(f"Results: {results}")
