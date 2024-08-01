@@ -55,7 +55,12 @@
 									</n-spin>
 								</template>
 								<template #label>Status</template>
-								<template #value>{{ alert.status || "n/d" }}</template>
+								<template #value>
+									<div class="flex gap-2 items-center">
+										{{ alert.status || "n/d" }}
+										<Icon :name="EditIcon" :size="13" />
+									</div>
+								</template>
 							</Badge>
 						</AlertStatusSwitch>
 
@@ -81,7 +86,12 @@
 									</n-spin>
 								</template>
 								<template #label>Assignee</template>
-								<template #value>{{ alert.assigned_to || "n/d" }}</template>
+								<template #value>
+									<div class="flex gap-2 items-center">
+										{{ alert.assigned_to || "n/d" }}
+										<Icon :name="EditIcon" :size="13" />
+									</div>
+								</template>
 							</Badge>
 						</AlertAssignUser>
 
@@ -203,6 +213,7 @@ const emit = defineEmits<{
 const InfoIcon = "carbon:information"
 const LinkIcon = "carbon:launch"
 const TimeIcon = "carbon:time"
+const EditIcon = "uil:edit-alt"
 const CommentsIcon = "carbon:chat"
 const AssetsIcon = "carbon:document-security"
 
