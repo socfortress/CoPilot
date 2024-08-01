@@ -47,10 +47,19 @@
 			preset="card"
 			content-class="!p-0"
 			:style="{ maxWidth: 'min(800px, 90vw)', minHeight: 'min(550px, 90vh)', overflow: 'hidden' }"
-			:title="asset.asset_name"
 			:bordered="false"
 			segmented
 		>
+			<template #header>
+				<div class="min-h-8">
+					{{ asset.asset_name }}
+				</div>
+			</template>
+			<template #header-extra>
+				<div class="min-h-8">
+					<ArtifactRecommendation v-if="alertContext" :context="alertContext.context" />
+				</div>
+			</template>
 			<n-tabs type="line" animated :tabs-padding="24">
 				<n-tab-pane name="Info" tab="Info" display-directive="show">
 					<div class="grid gap-2 grid-auto-fit-200 p-7 pt-4">
@@ -115,13 +124,39 @@
 						</div>
 					</n-spin>
 				</n-tab-pane>
+				<n-tab-pane
+					name="Investigate"
+					tab="Investigate"
+					display-directive="show:lazy"
+					v-if="isInvestigationAvailable"
+				>
+					<div class="p-7 pt-4">
+						<div class="flex flex-wrap gap-2">
+							<ThreatIntelProcessEvaluationProvider
+								v-for="pn of processNameList"
+								:key="pn"
+								:process-name="pn"
+								v-slot="{ openEvaluation }"
+							>
+								<n-card
+									@click="openEvaluation()"
+									size="small"
+									content-class="bg-secondary-color"
+									class="overflow-hidden hover:border-primary-color cursor-pointer"
+								>
+									{{ pn }}
+								</n-card>
+							</ThreatIntelProcessEvaluationProvider>
+						</div>
+					</div>
+				</n-tab-pane>
 			</n-tabs>
 		</n-modal>
 	</div>
 </template>
 
 <script setup lang="ts">
-import { ref, toRefs, watch } from "vue"
+import { computed, defineAsyncComponent, ref, toRefs, watch } from "vue"
 import { NModal, NSpin, NCard, NTabs, NTabPane, useMessage } from "naive-ui"
 import Api from "@/api"
 import vShiki from "@/directives/v-shiki"
@@ -129,6 +164,10 @@ import KVCard from "@/components/common/KVCard.vue"
 import Icon from "@/components/common/Icon.vue"
 import Badge from "@/components/common/Badge.vue"
 import { useGoto } from "@/composables/useGoto"
+const ArtifactRecommendation = defineAsyncComponent(() => import("@/components/artifacts/ArtifactRecommendation.vue"))
+const ThreatIntelProcessEvaluationProvider = defineAsyncComponent(
+	() => import("@/components/threatIntel/ThreatIntelProcessEvaluationProvider.vue")
+)
 import type { AlertAsset, AlertContext } from "@/types/incidentManagement/alerts.d"
 
 const props = defineProps<{ asset: AlertAsset; embedded?: boolean }>()
@@ -140,6 +179,8 @@ const message = useMessage()
 const loading = ref(false)
 const showDetails = ref(false)
 const alertContext = ref<AlertContext | null>(null)
+const processNameList = computed<string[]>(() => alertContext.value?.context?.["process_name"] || [])
+const isInvestigationAvailable = computed(() => processNameList.value.length)
 
 watch(showDetails, val => {
 	if (val && !alertContext.value) {
