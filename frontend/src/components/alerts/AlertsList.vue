@@ -134,10 +134,10 @@
 // import { alerts_summary } from "./mock"
 // import type { AlertsSummary } from "@/types/alerts.d"
 
-import { ref, onBeforeMount, toRefs, computed, nextTick, onMounted, onBeforeUnmount } from "vue"
+import { ref, onBeforeMount, toRefs, computed, nextTick, onMounted, onBeforeUnmount, defineAsyncComponent } from "vue"
 import { useMessage, NSpin, NPopover, NButton, NEmpty, NDrawer, NDrawerContent, NSelect } from "naive-ui"
 import Api from "@/api"
-import ThreatIntelButton from "./ThreatIntelButton.vue"
+const ThreatIntelButton = defineAsyncComponent(() => import("@/components/threatIntel/ThreatIntelButton.vue"))
 import AlertsStats, { type AlertsStatsCTX } from "./AlertsStats.vue"
 import AlertsFilters from "./AlertsFilters.vue"
 import AlertsSummaryItem, { type AlertsSummaryExt } from "./AlertsSummary.vue"

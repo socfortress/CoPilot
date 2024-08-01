@@ -67,10 +67,10 @@
 import { ref, computed, onMounted } from "vue"
 import { useMessage, NSpin, NButton, NInput } from "naive-ui"
 import Api from "@/api"
-import _trim from "lodash/trim"
-import type { ThreatIntelResponse } from "@/types/threatIntel.d"
 import { useSettingsStore } from "@/stores/settings"
 import { formatDate } from "@/utils"
+import _trim from "lodash/trim"
+import type { ThreatIntelResponse } from "@/types/threatIntel.d"
 
 const emit = defineEmits<{
 	(
@@ -83,12 +83,10 @@ const emit = defineEmits<{
 
 const message = useMessage()
 const dFormats = useSettingsStore().dateFormat
-
 const loading = ref(false)
 const iocValue = ref<string>("")
 const response = ref<ThreatIntelResponse | null>(null)
 const error = ref<string>("")
-
 const isValid = computed(() => {
 	return !!_trim(iocValue.value)
 })

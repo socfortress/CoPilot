@@ -24,6 +24,7 @@
 					:options="osOptions"
 					class="!w-32"
 					placeholder="Select OS"
+					:disabled="loading"
 				/>
 				<n-button
 					size="small"
@@ -65,23 +66,22 @@
 </template>
 
 <script setup lang="ts">
-import Icon from "@/components/common/Icon.vue"
-import { useMessage, NModal, NSpin, NEmpty, NButton, NDivider, NSelect, NCard } from "naive-ui"
-import type { Size } from "naive-ui/es/button/src/interface"
 import { computed, ref } from "vue"
+import { useMessage, NModal, NSpin, NEmpty, NButton, NDivider, NSelect, NCard } from "naive-ui"
+import Icon from "@/components/common/Icon.vue"
 import Api from "@/api"
 import _uniqBy from "lodash/uniqBy"
-import type { SocAlert } from "@/types/soc/alert.d"
 import type { OsTypesFull } from "@/types/common.d"
 import type { Recommendation } from "@/types/artifacts.d"
+import type { Size } from "naive-ui/es/button/src/interface"
 
 interface RecommendationStore {
 	os: OsTypesFull
 	recommendation: Recommendation[]
 }
 
-const { alert, size } = defineProps<{
-	alert: SocAlert
+const { context, size } = defineProps<{
+	context: string | object
 	size?: Size
 }>()
 
@@ -107,13 +107,13 @@ function openRecommendations() {
 }
 
 function getRecommendations() {
-	if (selectedOs.value !== null && alert) {
+	if (selectedOs.value !== null && context) {
 		loading.value = true
 
 		const requestedOs = selectedOs.value
 
 		Api.artifacts
-			.getArtifactRecommendation({ os: requestedOs, prompt: alert.alert_context })
+			.getArtifactRecommendation({ os: requestedOs, prompt: context })
 			.then(res => {
 				if (res.data.success) {
 					recommendationsStore.value.push({

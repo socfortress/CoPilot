@@ -75,12 +75,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue"
+import { defineAsyncComponent, ref } from "vue"
 import { NButton, NDrawer, NDrawerContent } from "naive-ui"
 import ClusterHealth from "@/components/indices/ClusterHealth.vue"
 import NodeAllocation from "@/components/indices/NodeAllocation.vue"
 import IndicesMarquee from "@/components/indices/Marquee.vue"
-import ThreatIntelButton from "@/components/alerts/ThreatIntelButton.vue"
+const ThreatIntelButton = defineAsyncComponent(() => import("@/components/threatIntel/ThreatIntelButton.vue"))
 import ActiveResponseWizardButton from "@/components/activeResponse/ActiveResponseWizardButton.vue"
 import StackProvisioningButton from "@/components/stackProvisioning/StackProvisioningButton.vue"
 import CloudSecurityAssessmentButton from "@/components/cloudSecurityAssessment/CloudSecurityAssessmentButton.vue"

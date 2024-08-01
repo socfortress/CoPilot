@@ -50,4 +50,5 @@ export interface AlertContextDetails {
 	rule_description: string
 	data_win_eventdata_image: string
 	data_win_eventdata_parentImage: string
+	process_name: string[]
 }

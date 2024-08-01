@@ -46,11 +46,11 @@
 import { ref, onBeforeMount } from "vue"
 import { useMessage, NSpin, NEmpty, NCard, NStatistic } from "naive-ui"
 import Api from "@/api"
-import type { EpssScore } from "@/types/threatIntel.d"
-import { formatDate } from "@/utils"
 import KVCard from "@/components/common/KVCard.vue"
-import { nanoid } from "nanoid"
 import { useSettingsStore } from "@/stores/settings"
+import { formatDate } from "@/utils"
+import { nanoid } from "nanoid"
+import type { EpssScore } from "@/types/threatIntel.d"
 
 interface EpssScoreExt extends EpssScore {
 	___id?: string

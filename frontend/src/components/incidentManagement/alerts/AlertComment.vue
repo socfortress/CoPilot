@@ -6,7 +6,7 @@
 		<div class="comment grow flex flex-col gap-1">
 			<div class="user flex gap-3 items-center">
 				<div class="user-name">{{ comment.user_name }}</div>
-				<div class="comment-time">{{ formatDate(comment.created_at) }}</div>
+				<div class="comment-time">{{ formatDate(comment.created_at, dFormats.datetime) }}</div>
 			</div>
 			<div class="comment-message" v-html="message"></div>
 		</div>
@@ -18,7 +18,7 @@ import { onBeforeMount, ref, toRefs } from "vue"
 import { NAvatar } from "naive-ui"
 import { getAvatar, getNameInitials } from "@/utils"
 import { useSettingsStore } from "@/stores/settings"
-import dayjs from "@/utils/dayjs"
+import { formatDate } from "@/utils"
 import type { AlertComment } from "@/types/incidentManagement/alerts.d"
 
 const props = defineProps<{ comment: AlertComment; embedded?: boolean }>()
@@ -27,13 +27,6 @@ const { comment, embedded } = toRefs(props)
 const dFormats = useSettingsStore().dateFormat
 const userPic = ref("")
 const message = ref(comment.value.comment.replace(/\n/gim, "<br/>"))
-
-const formatDate = (date: Date) => {
-	const datejs = dayjs(date)
-	if (!datejs.isValid()) return date
-
-	return datejs.format(dFormats.datetime)
-}
 
 onBeforeMount(() => {
 	const initials = getNameInitials(comment.value.user_name)
