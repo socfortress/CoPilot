@@ -46,6 +46,24 @@ class SigmaQueryOutResponse(BaseModel):
     success: bool
     message: str
 
+class RunActiveSigmaQueries(BaseModel):
+    query: str = Field(
+        ...,
+        description="The query to run.",
+    )
+    time_interval: str = Field(
+        ...,
+        description="The time interval to run the query for.",
+    )
+    rule_name: str = Field(
+        ...,
+        description="The name of the rule.",
+    )
+    index: str = Field(
+        "wazuh*",
+        description="The index to run the query on.",
+    )
+
 class CreateSigmaQuery(BaseModel):
     """
     Represents the Sigma query creation request.
