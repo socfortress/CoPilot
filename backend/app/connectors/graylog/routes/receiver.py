@@ -15,6 +15,7 @@ graylog_receiver_router = APIRouter()
 ################## ! GRAYLOG FORWARDER ! ##################
 # ! This function is meant to receive a JSON payload from Shuffle (or another tool)
 # ! and forward it to a Graylog server.
+# ! Payload must include `customer_code` and `integration` fields.
 @graylog_receiver_router.post(
     "/receiver",
     description="Forward a message to Graylog",
