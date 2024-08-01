@@ -153,3 +153,12 @@
 .text-success-color {
 	color: var(--success-color);
 }
+
+.border-primary-color {
+	border-color: var(--primary-color) !important;
+}
+.hover\:border-primary-color {
+	&:hover {
+		border-color: var(--primary-color) !important;
+	}
+}
