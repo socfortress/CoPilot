@@ -1,8 +1,5 @@
 <template>
-	<code class="cursor-pointer text-primary-color" @click="openEvaluation()">
-		{{ processName }}
-		<Icon :name="LinkIcon" :size="13" class="relative top-0.5" />
-	</code>
+	<slot :openEvaluation />
 
 	<n-modal
 		v-model:show="showDetails"
@@ -84,19 +81,17 @@
 </template>
 
 <script setup lang="ts">
-import Icon from "@/components/common/Icon.vue"
-import { useMessage, NModal, NSpin, NTabs, NTabPane, NStatistic, NInput, NCard, NEmpty } from "naive-ui"
-import type { EvaluationData } from "@/types/threatIntel.d"
 import { computed, defineAsyncComponent, ref } from "vue"
+import { useMessage, NModal, NSpin, NTabs, NTabPane, NStatistic, NInput, NCard, NEmpty } from "naive-ui"
 import Api from "@/api"
-import _toSafeInteger from "lodash/toSafeInteger"
 const ListPercentage = defineAsyncComponent(() => import("@/components/common/ListPercentage.vue"))
+import _toSafeInteger from "lodash/toSafeInteger"
+import type { EvaluationData } from "@/types/threatIntel.d"
 
 const { processName } = defineProps<{
 	processName: string
 }>()
 
-const LinkIcon = "carbon:launch"
 const evaluation = ref<EvaluationData | null>(null)
 const showDetails = ref<boolean>(false)
 const loading = ref<boolean>(false)
