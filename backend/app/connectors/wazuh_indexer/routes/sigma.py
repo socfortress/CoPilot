@@ -137,6 +137,31 @@ async def upload_sigma_queries_to_db_endpoint(
     return BulkUploadToDBResponse(success=True, message="Successfully uploaded the Sigma queries to the database.")
 
 @wazuh_indexer_sigma_router.post(
+    "/activate-all-queries",
+    response_model=SigmaQueryOutResponse
+)
+async def activate_all_sigma_queries_endpoint(
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Activates all Sigma queries.
+
+
+    Args:
+        db (AsyncSession): The database session.
+
+    Returns:
+        SigmaQueryOutResponse: The Sigma queries response.
+    """
+    sigma_queries = await list_sigma_queries(db)
+    for query in sigma_queries:
+        await set_sigma_query_active(query.rule_name, True, db)
+    return SigmaQueryOutResponse(
+        success=True,
+        message="Successfully activated all Sigma queries.",
+    )
+
+@wazuh_indexer_sigma_router.post(
     "/run-active-queries",
     response_model=SigmaQueryOutResponse
 )
