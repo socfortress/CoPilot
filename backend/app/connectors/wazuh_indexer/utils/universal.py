@@ -565,5 +565,5 @@ async def resize_wazuh_index_fields():
         logger.info("Successfully resized the Wazuh index fields")
     except Exception as e:
         logger.error(f"An error occurred: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to resize the Wazuh index fields: {e}")
+        return None
 
