@@ -20,6 +20,6 @@ class SigmaQuery(SQLModel, table=True):
     rule_name: str = Field(sa_column=Text, nullable=False)
     rule_query: str = Field(sa_column=Text, nullable=False)
     active: bool = Field(default=False)
-    time_interval: str = Field(default="1m", nullable=False)
+    time_interval: str = Field(default="5m", nullable=False)
     last_updated: datetime = Field(default_factory=datetime.utcnow)
     last_execution_time: Optional[datetime] = Field(default_factory=datetime.utcnow)

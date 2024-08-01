@@ -14,6 +14,7 @@ from app.db.db_session import sync_engine
 from app.schedulers.models.scheduler import CreateSchedulerRequest
 from app.schedulers.models.scheduler import JobMetadata
 from app.schedulers.services.agent_sync import agent_sync
+from app.schedulers.services.wazuh_index_resize import resize_wazuh_index_fields
 from app.schedulers.services.invoke_carbonblack import (
     invoke_carbonblack_integration_collect,
 )
@@ -129,6 +130,12 @@ async def initialize_job_metadata():
                 "function": agent_sync,
                 "description": "Synchronizes agents with the Wazuh Manager and Velociraptor server.",
             },
+            {
+                "job_id": "wazuh_index_fields_resize",
+                "time_interval": 1,
+                "function": resize_wazuh_index_fields,
+                "description": "Resizes the Wazuh index fields.",
+            }
             # {"job_id": "invoke_mimecast_integration", "time_interval": 5, "function": invoke_mimecast_integration}
         ]
         for job in known_jobs:
@@ -196,6 +203,7 @@ def get_function_by_name(function_name: str):
     """
     function_map = {
         "agent_sync": agent_sync,
+        "wazuh_index_fields_resize": resize_wazuh_index_fields,
         "invoke_mimecast_integration": invoke_mimecast_integration,
         "invoke_mimecast_integration_ttp": invoke_mimecast_integration_ttp,
         "invoke_wazuh_monitoring_alert": invoke_wazuh_monitoring_alert,

@@ -18,6 +18,7 @@ from app.connectors.wazuh_indexer.services.monitoring import (
     output_shard_number_to_be_set_based_on_nodes,
 )
 from app.connectors.wazuh_indexer.services.monitoring import shards
+from app.connectors.wazuh_indexer.utils.universal import resize_wazuh_index_fields
 
 wazuh_indexer_router = APIRouter()
 
@@ -147,3 +148,21 @@ async def get_output_shard_number_to_be_set_based_on_nodes_route() -> int:
         return output_shard_number_to_be_set_based_on_nodes_response
     else:
         raise HTTPException(status_code=500, detail="Failed to retrieve output_shard_number_to_be_set_based_on_nodes.")
+
+@wazuh_indexer_router.get(
+    "/resize_wazuh_index_fields",
+    description="Resize Wazuh Index fields",
+)
+async def resize_wazuh_index_fields_route():
+    """
+    Resize Wazuh Index fields.
+
+    This endpoint resizes the Wazuh Index fields.
+
+    Returns:
+        str: A string representing the resize Wazuh Index fields response.
+
+    Raises:
+        HTTPException: An exception with a 500 status code is raised if the Wazuh Index fields cannot be resized.
+    """
+    return await resize_wazuh_index_fields()

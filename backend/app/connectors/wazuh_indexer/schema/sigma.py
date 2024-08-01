@@ -55,6 +55,7 @@ class RunActiveSigmaQueries(BaseModel):
         ...,
         description="The time interval to run the query for.",
     )
+    last_execution_time: datetime = None
     rule_name: str = Field(
         ...,
         description="The name of the rule.",

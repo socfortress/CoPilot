@@ -1,5 +1,5 @@
 from typing import List
-from datetime import datetime
+from datetime import datetime, timedelta
 from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy import delete
@@ -18,6 +18,22 @@ from app.connectors.wazuh_indexer.services.sigma.generate_query import create_si
 from app.connectors.wazuh_indexer.models.sigma import SigmaQuery
 from app.connectors.wazuh_indexer.schema.sigma import CreateSigmaQuery
 
+def parse_time_interval(interval: str) -> timedelta:
+        match = re.match(r"(\d+)([smhd])", interval)
+        if not match:
+            raise ValueError(f"Invalid time interval format: {interval}")
+        value, unit = match.groups()
+        value = int(value)
+        if unit == 's':
+            return timedelta(seconds=value)
+        elif unit == 'm':
+            return timedelta(minutes=value)
+        elif unit == 'h':
+            return timedelta(hours=value)
+        elif unit == 'd':
+            return timedelta(days=value)
+        else:
+            raise ValueError(f"Invalid time unit: {unit}")
 
 def check_level(file_path):
     delete_file = False
