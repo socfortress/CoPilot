@@ -525,6 +525,7 @@ async def open_alert_exists(alert_payload: CreatedAlertPayload, customer_code: s
 async def create_alert(
     alert: CreateAlertRequest,
     session: AsyncSession,
+    simga_alert: str = None,
 ) -> CreateAlertResponse:
     """
     Creates an alert in IRIS.
@@ -553,6 +554,9 @@ async def create_alert(
         alert_details._source.to_dict(),
         session,
     )
+    if simga_alert is not None:
+        return await create_alert_full(alert_payload, customer_code, session)
+
     existing_alert = await open_alert_exists(alert_payload, customer_code, session)
     if existing_alert:
         logger.info(

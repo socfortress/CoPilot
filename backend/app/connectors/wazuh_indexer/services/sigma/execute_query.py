@@ -6,6 +6,7 @@ from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from elasticsearch7 import ElasticsearchException
 
 from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
 from app.connectors.dfir_iris.utils.universal import initialize_client_and_alert
@@ -55,16 +56,35 @@ async def format_opensearch_query(query: str, time_interval: str) -> dict:
     }
     return query
 
-async def send_query_to_opensearch(es_client, query: dict) -> List[dict]:
+async def send_query_to_opensearch(es_client, query: dict, rule_name: str, index: str = 'wazuh*') -> List[dict]:
     try:
-        response = es_client.search(index="new-wazuh*", body=query)
+        # ! Make sure to change index to `wazuh*` after testing ! #
+        response = es_client.search(index=index, body=query)
         logger.info(f"Response: {response}")
-        return response["hits"]["hits"]
+        hits = response["hits"]["hits"]
+        for hit in hits:
+            doc_id = hit["_id"]
+            index = hit["_index"]
+            update_body = {
+                "doc": {
+                    "sigma_alert": rule_name
+                }
+            }
+            try:
+                es_client.update(index=index, id=doc_id, body=update_body)
+            except ElasticsearchException as e:
+                es_client.indices.put_settings(index=index, body={"index.blocks.write": None})
+                logger.info(f"Removed write block from index: {index}")
+                es_client.update(index=index, id=doc_id, body=update_body)
+                # Reenable write block
+                es_client.indices.put_settings(index=index, body={"index.blocks.write": True})
+                logger.info(f"Reenabled write block for index: {index}")
+        return hits
     except Exception as e:
         logger.error(f"Error executing query: {e}")
         return []
 
-async def execute_query(query: str, time_interval: str):
+async def execute_query(query: str, time_interval: str, rule_name: str, index: str = 'wazuh*'):
     """
     Executes a query against the Wazuh Indexer.
 
@@ -78,7 +98,7 @@ async def execute_query(query: str, time_interval: str):
     client = await create_wazuh_indexer_client()
     query = await format_opensearch_query(query, time_interval)
     logger.info(f"Executing query: {query}")
-    results = await send_query_to_opensearch(client, query)
+    results = await send_query_to_opensearch(client, query, rule_name, index=index)
     logger.info(f"Results: {results}")
 
     return None

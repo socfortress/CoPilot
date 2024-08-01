@@ -140,6 +140,7 @@ async def upload_sigma_queries_to_db_endpoint(
     response_model=SigmaQueryOutResponse
 )
 async def run_active_sigma_queries_endpoint(
+    index: str = 'new-wazuh*',
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -154,7 +155,7 @@ async def run_active_sigma_queries_endpoint(
     active_sigma_queries = await list_active_sigma_queries(db)
     for query in active_sigma_queries:
         logger.info(f"Running Sigma query: {query.rule_name}")
-        response = await execute_query(query.rule_query, query.time_interval)
+        response = await execute_query(query.rule_query, query.time_interval, query.rule_name, index=index)
     return SigmaQueryOutResponse(
         success=True,
         message="Successfully ran the active Sigma queries.",
