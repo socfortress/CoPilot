@@ -41,7 +41,7 @@ def check_level(file_path):
         for line in file:
             if line.startswith("level:"):
                 level = line.split(":")[1].strip()
-                if level not in ["critical"]:
+                if level not in ["high", "critical"]:
                     delete_file = True
                     break
     if delete_file:

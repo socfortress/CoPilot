@@ -29,8 +29,8 @@ ecs_windows_variable_mappings = {
         ("category", "image_load", "file.pe.company"),
     ),
     "OriginalFileName": (
-        ("category", "process_creation", "process.pe.original_file_name"),
-        #("category", "process_creation", "data_win_eventdata_image"),
+        ("category", "process_creation", "data_win_eventdata_image"),
+        ("category", "process_creation", "data_win_eventdata_image"),
         ("category", "image_load", "file.pe.original_file_name"),
     ),
     "CommandLine": (

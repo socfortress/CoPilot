@@ -264,3 +264,27 @@ async def delete_sigma_rule_endpoint(
         success=True,
         message=f"Successfully deleted the Sigma query: {rule_name}",
     )
+
+@wazuh_indexer_sigma_router.delete(
+    "/queries/delete-all",
+    response_model=SigmaQueryOutResponse
+)
+async def delete_all_sigma_rules_endpoint(
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Deletes all Sigma queries.
+
+    Args:
+        db (AsyncSession): The database session.
+
+    Returns:
+        SigmaQueryOutResponse: The Sigma queries response.
+    """
+    sigma_queries = await list_sigma_queries(db)
+    for query in sigma_queries:
+        await delete_sigma_rule(query.rule_name, db)
+    return SigmaQueryOutResponse(
+        success=True,
+        message="Successfully deleted all Sigma queries.",
+    )
