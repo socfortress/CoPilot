@@ -9,6 +9,7 @@ from alembic import context
 # from app.db.all_models import *
 from app.auth.models.users import User
 from app.connectors.models import Connectors
+from app.connectors.wazuh_indexer.models.sigma import SigmaQuery
 
 # from app.integrations.sap_siem.models.sap_siem import SapSiemMultipleLogins
 from app.customer_provisioning.models.default_settings import (
@@ -51,7 +52,6 @@ from app.network_connectors.models.network_connectors import (
     NetworkConnectorsSubscription,
 )
 from app.schedulers.models.scheduler import JobMetadata
-from app.connectors.wazuh_indexer.models.sigma import SigmaQuery
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

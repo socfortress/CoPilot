@@ -1,13 +1,16 @@
-from app.connectors.wazuh_indexer.services.sigma.opensearch import OpensearchLuceneBackend
-
-from app.connectors.wazuh_indexer.services.sigma.sysmon import sysmon_pipeline
-from app.connectors.wazuh_indexer.services.sigma.windows import ecs_windows
-from app.connectors.wazuh_indexer.schema.sigma import SigmaQueryGenerationResponse
-from loguru import logger
-
 import json
+
+from loguru import logger
 from sigma.collection import SigmaCollection
 from sigma.processing.resolver import ProcessingPipelineResolver
+
+from app.connectors.wazuh_indexer.schema.sigma import SigmaQueryGenerationResponse
+from app.connectors.wazuh_indexer.services.sigma.opensearch import (
+    OpensearchLuceneBackend,
+)
+from app.connectors.wazuh_indexer.services.sigma.sysmon import sysmon_pipeline
+from app.connectors.wazuh_indexer.services.sigma.windows import ecs_windows
+
 
 async def create_sigma_query_from_rule(rule: str) -> SigmaQueryGenerationResponse:
     # Create our pipeline resolver
@@ -22,8 +25,9 @@ async def create_sigma_query_from_rule(rule: str) -> SigmaQueryGenerationRespons
 
     # Instantiate backend, using our resolved pipeline
     # and some backend parameter
-    backend = OpensearchLuceneBackend(resolved_pipeline, index_names=['logs-*-*', 'beats-*'], monitor_interval=10, monitor_interval_unit="MINUTES")
-
+    backend = OpensearchLuceneBackend(
+        resolved_pipeline, index_names=["logs-*-*", "beats-*"], monitor_interval=10, monitor_interval_unit="MINUTES",
+    )
 
     rules = SigmaCollection.from_yaml(rule)
 

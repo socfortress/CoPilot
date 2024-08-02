@@ -14,7 +14,6 @@ from app.db.db_session import sync_engine
 from app.schedulers.models.scheduler import CreateSchedulerRequest
 from app.schedulers.models.scheduler import JobMetadata
 from app.schedulers.services.agent_sync import agent_sync
-from app.schedulers.services.wazuh_index_resize import resize_wazuh_index_fields
 from app.schedulers.services.invoke_carbonblack import (
     invoke_carbonblack_integration_collect,
 )
@@ -61,6 +60,7 @@ from app.schedulers.services.monitoring_alert import (
 from app.schedulers.services.monitoring_alert import invoke_office365_threat_intel_alert
 from app.schedulers.services.monitoring_alert import invoke_suricata_monitoring_alert
 from app.schedulers.services.monitoring_alert import invoke_wazuh_monitoring_alert
+from app.schedulers.services.wazuh_index_resize import resize_wazuh_index_fields
 
 
 def scheduler_listener(event):
@@ -135,7 +135,7 @@ async def initialize_job_metadata():
                 "time_interval": 1,
                 "function": resize_wazuh_index_fields,
                 "description": "Resizes the Wazuh index fields.",
-            }
+            },
             # {"job_id": "invoke_mimecast_integration", "time_interval": 5, "function": invoke_mimecast_integration}
         ]
         for job in known_jobs:

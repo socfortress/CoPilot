@@ -64,7 +64,7 @@ from app.incidents.services.db_operations import add_asset_name
 from app.incidents.services.db_operations import add_field_name
 from app.incidents.services.db_operations import add_timefield_name
 from app.incidents.services.db_operations import create_alert
-from app.incidents.services.db_operations import create_alert_context, is_alert_linked_to_case
+from app.incidents.services.db_operations import create_alert_context
 from app.incidents.services.db_operations import create_alert_tag
 from app.incidents.services.db_operations import create_asset
 from app.incidents.services.db_operations import create_case
@@ -85,6 +85,7 @@ from app.incidents.services.db_operations import get_asset_names
 from app.incidents.services.db_operations import get_case_by_id
 from app.incidents.services.db_operations import get_field_names
 from app.incidents.services.db_operations import get_timefield_names
+from app.incidents.services.db_operations import is_alert_linked_to_case
 from app.incidents.services.db_operations import list_alert_by_assigned_to
 from app.incidents.services.db_operations import list_alert_by_status
 from app.incidents.services.db_operations import list_alerts

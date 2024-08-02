@@ -1,36 +1,72 @@
+import os
+import re
+from datetime import datetime
+from datetime import timedelta
 from typing import List
 
+import yaml
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import Query
-import yaml
-import re
 from fastapi import Security
-import os
 from loguru import logger
-from datetime import datetime, timedelta
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.services.universal import select_all_users
 from app.auth.utils import AuthHandler
+from app.connectors.wazuh_indexer.schema.sigma import BulkUploadToDBResponse
+from app.connectors.wazuh_indexer.schema.sigma import CreateSigmaQuery
+from app.connectors.wazuh_indexer.schema.sigma import DownloadSigmaRulesRequest
+from app.connectors.wazuh_indexer.schema.sigma import RunActiveSigmaQueries
+from app.connectors.wazuh_indexer.schema.sigma import SigmaQueryOutResponse
+from app.connectors.wazuh_indexer.schema.sigma import UpdateSigmaActive
+from app.connectors.wazuh_indexer.schema.sigma import UpdateSigmaTimeInterval
+from app.connectors.wazuh_indexer.services.sigma.execute_query import execute_query
+from app.connectors.wazuh_indexer.services.sigma.generate_query import (
+    create_sigma_query_from_rule,
+)
+from app.connectors.wazuh_indexer.services.sigma.sigma_db_operations import (
+    add_sigma_queries_to_db,
+)
+from app.connectors.wazuh_indexer.services.sigma.sigma_db_operations import (
+    create_sigma_query,
+)
+from app.connectors.wazuh_indexer.services.sigma.sigma_db_operations import (
+    delete_sigma_rule,
+)
+from app.connectors.wazuh_indexer.services.sigma.sigma_db_operations import (
+    list_active_sigma_queries,
+)
+from app.connectors.wazuh_indexer.services.sigma.sigma_db_operations import (
+    list_sigma_queries,
+)
+from app.connectors.wazuh_indexer.services.sigma.sigma_db_operations import (
+    parse_time_interval,
+)
+from app.connectors.wazuh_indexer.services.sigma.sigma_db_operations import (
+    set_sigma_query_active,
+)
+from app.connectors.wazuh_indexer.services.sigma.sigma_db_operations import (
+    update_sigma_time_interval,
+)
+from app.connectors.wazuh_indexer.services.sigma.sigma_download import (
+    download_and_extract_zip,
+)
+from app.connectors.wazuh_indexer.services.sigma.sigma_download import find_yaml_files
+from app.connectors.wazuh_indexer.services.sigma.sigma_download import (
+    keep_only_folder_directory,
+)
 from app.connectors.wazuh_indexer.utils.universal import (
     get_available_indices_via_source,
 )
 from app.db.db_session import get_db
-from app.connectors.wazuh_indexer.schema.sigma import SigmaQueryOutResponse, CreateSigmaQuery, DownloadSigmaRulesRequest, BulkUploadToDBResponse, UpdateSigmaActive, UpdateSigmaTimeInterval, RunActiveSigmaQueries
-from app.connectors.wazuh_indexer.services.sigma.sigma_db_operations import list_sigma_queries, create_sigma_query, add_sigma_queries_to_db, delete_sigma_rule, set_sigma_query_active, list_active_sigma_queries, update_sigma_time_interval, parse_time_interval
-from app.connectors.wazuh_indexer.services.sigma.sigma_download import download_and_extract_zip, keep_only_folder_directory, find_yaml_files
-from app.connectors.wazuh_indexer.services.sigma.generate_query import create_sigma_query_from_rule
-from app.connectors.wazuh_indexer.services.sigma.execute_query import execute_query
 
 wazuh_indexer_sigma_router = APIRouter()
 
-@wazuh_indexer_sigma_router.get(
-    "/queries/available",
-    response_model=SigmaQueryOutResponse
-)
+
+@wazuh_indexer_sigma_router.get("/queries/available", response_model=SigmaQueryOutResponse)
 async def get_sigma_queries_endpoint(
     db: AsyncSession = Depends(get_db),
 ):
@@ -49,10 +85,8 @@ async def get_sigma_queries_endpoint(
         message="Successfully retrieved the Sigma queries.",
     )
 
-@wazuh_indexer_sigma_router.get(
-    "/queries/active",
-    response_model=SigmaQueryOutResponse
-)
+
+@wazuh_indexer_sigma_router.get("/queries/active", response_model=SigmaQueryOutResponse)
 async def get_active_sigma_queries_endpoint(
     db: AsyncSession = Depends(get_db),
 ):
@@ -71,10 +105,8 @@ async def get_active_sigma_queries_endpoint(
         message="Successfully retrieved the active Sigma queries.",
     )
 
-@wazuh_indexer_sigma_router.post(
-    "/queries/create",
-    response_model=SigmaQueryOutResponse
-)
+
+@wazuh_indexer_sigma_router.post("/queries/create", response_model=SigmaQueryOutResponse)
 async def create_sigma_query_endpoint(
     sigma_query: CreateSigmaQuery,
     db: AsyncSession = Depends(get_db),
@@ -95,6 +127,7 @@ async def create_sigma_query_endpoint(
         success=True,
         message="Successfully created the Sigma query.",
     )
+
 
 @wazuh_indexer_sigma_router.post(
     "/download",
@@ -117,10 +150,8 @@ async def download_sigma_queries_endpoint(
     await keep_only_folder_directory(folder=request.folder)
     return {"message": "Successfully downloaded the Sigma queries.", "success": True}
 
-@wazuh_indexer_sigma_router.post(
-    "/bulk-upload-to-db",
-    response_model=BulkUploadToDBResponse
-)
+
+@wazuh_indexer_sigma_router.post("/bulk-upload-to-db", response_model=BulkUploadToDBResponse)
 async def upload_sigma_queries_to_db_endpoint(
     db: AsyncSession = Depends(get_db),
 ):
@@ -136,10 +167,8 @@ async def upload_sigma_queries_to_db_endpoint(
     await add_sigma_queries_to_db(db)
     return BulkUploadToDBResponse(success=True, message="Successfully uploaded the Sigma queries to the database.")
 
-@wazuh_indexer_sigma_router.post(
-    "/activate-all-queries",
-    response_model=SigmaQueryOutResponse
-)
+
+@wazuh_indexer_sigma_router.post("/activate-all-queries", response_model=SigmaQueryOutResponse)
 async def activate_all_sigma_queries_endpoint(
     db: AsyncSession = Depends(get_db),
 ):
@@ -161,10 +190,8 @@ async def activate_all_sigma_queries_endpoint(
         message="Successfully activated all Sigma queries.",
     )
 
-@wazuh_indexer_sigma_router.post(
-    "/deactivate-all-queries",
-    response_model=SigmaQueryOutResponse
-)
+
+@wazuh_indexer_sigma_router.post("/deactivate-all-queries", response_model=SigmaQueryOutResponse)
 async def deactivate_all_sigma_queries_endpoint(
     db: AsyncSession = Depends(get_db),
 ):
@@ -185,10 +212,8 @@ async def deactivate_all_sigma_queries_endpoint(
         message="Successfully deactivated all Sigma queries.",
     )
 
-@wazuh_indexer_sigma_router.post(
-    "/run-active-queries",
-    response_model=SigmaQueryOutResponse
-)
+
+@wazuh_indexer_sigma_router.post("/run-active-queries", response_model=SigmaQueryOutResponse)
 async def run_active_sigma_queries_endpoint(
     db: AsyncSession = Depends(get_db),
 ):
@@ -212,7 +237,16 @@ async def run_active_sigma_queries_endpoint(
         # Check if the current time is less than the last execution time
         if current_time < query.last_execution_time or current_time - query.last_execution_time >= time_interval_delta:
             logger.info(f"Running Sigma query: {query.rule_name}")
-            await execute_query(RunActiveSigmaQueries(query=query.rule_query, time_interval=query.time_interval, last_execution_time=query.last_execution_time, rule_name=query.rule_name, index="new-wazuh*"), session=db)
+            await execute_query(
+                RunActiveSigmaQueries(
+                    query=query.rule_query,
+                    time_interval=query.time_interval,
+                    last_execution_time=query.last_execution_time,
+                    rule_name=query.rule_name,
+                    index="new-wazuh*",
+                ),
+                session=db,
+            )
             # Update the last execution time to the current time and commit the changes
             query.last_execution_time = current_time
             await db.commit()
@@ -225,10 +259,8 @@ async def run_active_sigma_queries_endpoint(
         message="Successfully ran the active Sigma queries.",
     )
 
-@wazuh_indexer_sigma_router.put(
-    "/queries/set-active",
-    response_model=SigmaQueryOutResponse
-)
+
+@wazuh_indexer_sigma_router.put("/queries/set-active", response_model=SigmaQueryOutResponse)
 async def set_sigma_query_active_endpoint(
     request: UpdateSigmaActive,
     db: AsyncSession = Depends(get_db),
@@ -250,10 +282,8 @@ async def set_sigma_query_active_endpoint(
         message=f"Successfully set the active status of the Sigma query: {request.rule_name} to {request.active}",
     )
 
-@wazuh_indexer_sigma_router.put(
-    "/queries/set-time-interval",
-    response_model=SigmaQueryOutResponse
-)
+
+@wazuh_indexer_sigma_router.put("/queries/set-time-interval", response_model=SigmaQueryOutResponse)
 async def set_sigma_query_time_interval_endpoint(
     request: UpdateSigmaTimeInterval,
     db: AsyncSession = Depends(get_db),
@@ -275,10 +305,8 @@ async def set_sigma_query_time_interval_endpoint(
         message=f"Successfully set the time interval of the Sigma query: {request.rule_name} to {request.time_interval}",
     )
 
-@wazuh_indexer_sigma_router.delete(
-    "/queries/delete",
-    response_model=SigmaQueryOutResponse
-)
+
+@wazuh_indexer_sigma_router.delete("/queries/delete", response_model=SigmaQueryOutResponse)
 async def delete_sigma_rule_endpoint(
     rule_name: str = Query(...),
     db: AsyncSession = Depends(get_db),
@@ -299,10 +327,8 @@ async def delete_sigma_rule_endpoint(
         message=f"Successfully deleted the Sigma query: {rule_name}",
     )
 
-@wazuh_indexer_sigma_router.delete(
-    "/queries/delete-all",
-    response_model=SigmaQueryOutResponse
-)
+
+@wazuh_indexer_sigma_router.delete("/queries/delete-all", response_model=SigmaQueryOutResponse)
 async def delete_all_sigma_rules_endpoint(
     db: AsyncSession = Depends(get_db),
 ):

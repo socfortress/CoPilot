@@ -149,6 +149,7 @@ async def get_output_shard_number_to_be_set_based_on_nodes_route() -> int:
     else:
         raise HTTPException(status_code=500, detail="Failed to retrieve output_shard_number_to_be_set_based_on_nodes.")
 
+
 @wazuh_indexer_router.get(
     "/resize_wazuh_index_fields",
     description="Resize Wazuh Index fields",

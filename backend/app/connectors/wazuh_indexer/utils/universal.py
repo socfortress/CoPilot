@@ -5,8 +5,8 @@ from typing import Any
 from typing import Dict
 from typing import Iterable
 from typing import Tuple
-import requests
 
+import requests
 from elasticsearch7 import Elasticsearch
 from fastapi import HTTPException
 from loguru import logger
@@ -75,7 +75,7 @@ async def verify_wazuh_indexer_connection(connector_name: str) -> str:
     return await verify_wazuh_indexer_credentials(attributes)
 
 
-async def create_wazuh_indexer_client(connector_name: str = 'Wazuh-Indexer') -> Elasticsearch:
+async def create_wazuh_indexer_client(connector_name: str = "Wazuh-Indexer") -> Elasticsearch:
     """
     Returns an Elasticsearch client for the Wazuh Indexer service.
 
@@ -550,15 +550,14 @@ async def get_available_indices_via_source(source: str):
     logger.info(f"Available indices: {available_indices}")
     return available_indices
 
+
 async def resize_wazuh_index_fields():
     """
     Resize the Wazuh index fields to the correct size.
     """
     es_client = await create_wazuh_indexer_client("Wazuh-Indexer")
 
-    settings = {
-        "index.mapping.total_fields.limit": 2000
-    }
+    settings = {"index.mapping.total_fields.limit": 2000}
 
     try:
         es_client.indices.put_settings(index="wazuh*", body=settings)
@@ -566,4 +565,3 @@ async def resize_wazuh_index_fields():
     except Exception as e:
         logger.error(f"An error occurred: {e}")
         return None
-

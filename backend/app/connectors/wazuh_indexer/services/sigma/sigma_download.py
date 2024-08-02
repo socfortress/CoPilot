@@ -1,5 +1,9 @@
+import os
+import shutil
+import zipfile
 from typing import List
 
+import requests
 from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy import delete
@@ -8,13 +12,10 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
-import requests
-import shutil
-import zipfile
-import os
 
 from app.connectors.wazuh_indexer.models.sigma import SigmaQuery
 from app.connectors.wazuh_indexer.schema.sigma import CreateSigmaQuery
+
 
 async def download_and_extract_zip(url: str) -> None:
     """
@@ -24,7 +25,7 @@ async def download_and_extract_zip(url: str) -> None:
         url (str): The URL of the zipped folder.
         extract_to (str): The directory to extract the contents to. Defaults to the current directory.
     """
-    #local_zip_path = os.path.join(extract_to, "sigma_all_rules.zip")
+    # local_zip_path = os.path.join(extract_to, "sigma_all_rules.zip")
     directory = "app/connectors/wazuh_indexer/sigma_artifacts"
     full_path = os.path.abspath(directory)
 
@@ -49,6 +50,7 @@ async def download_and_extract_zip(url: str) -> None:
     # Remove the downloaded zip file
     os.remove(local_zip_path)
 
+
 async def keep_only_folder_directory(folder: str, directory: str = "app/connectors/wazuh_indexer/sigma_artifacts/rules"):
     """
     Removes all directories except the Windows directory from the specified directory.
@@ -62,6 +64,7 @@ async def keep_only_folder_directory(folder: str, directory: str = "app/connecto
             if os.path.isdir(item_path):
                 logger.info(f"Removing directory and its contents: {item_path}")
                 shutil.rmtree(item_path)
+
 
 async def find_yaml_files(directory: str = "app/connectors/wazuh_indexer/sigma_artifacts/rules/windows") -> List[str]:
     """
@@ -78,8 +81,8 @@ async def find_yaml_files(directory: str = "app/connectors/wazuh_indexer/sigma_a
     for root, _, files in os.walk(directory):
         for file in files:
             if file.endswith(".yml"):
-                #yaml_files.append(os.path.join(root, file))
-                #logger.info(f"Found YAML file: {file}")
+                # yaml_files.append(os.path.join(root, file))
+                # logger.info(f"Found YAML file: {file}")
                 full_path = os.path.join(root, file)
                 yaml_files.append(full_path)
 

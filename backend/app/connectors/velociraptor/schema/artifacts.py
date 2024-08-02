@@ -193,6 +193,7 @@ class ArtifactReccomendationRequest(BaseModel):
     os: str = Field(..., description="Operating system of the client")
     prompt: dict = Field(..., example=payload)
 
+
 class VelociraptorArtifactRecommendation(BaseModel):
     name: str = Field(..., description="The name of the artifact.")
     description: str = Field(..., description="A description of the artifact.")

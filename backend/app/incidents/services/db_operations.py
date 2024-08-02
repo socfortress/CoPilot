@@ -433,7 +433,10 @@ async def create_case_from_alert(alert_id: int, db: AsyncSession) -> Case:
     if not alert:
         raise HTTPException(status_code=404, detail="Alert not found")
     case = Case(
-        case_name=alert.alert_name, case_description=alert.alert_description, case_status=alert.status, assigned_to=alert.assigned_to,
+        case_name=alert.alert_name,
+        case_description=alert.alert_description,
+        case_status=alert.status,
+        assigned_to=alert.assigned_to,
     )
     db.add(case)
     try:
@@ -820,6 +823,7 @@ async def delete_tags(alert_id: int, db: AsyncSession):
         await db.execute(
             delete(AlertToTag).where((AlertToTag.alert_id == alert_to_tag.alert_id) & (AlertToTag.tag_id == alert_to_tag.tag_id)),
         )
+
 
 async def is_alert_linked_to_case(alert_id: int, db: AsyncSession) -> bool:
     result = await db.execute(select(CaseAlertLink).where(CaseAlertLink.alert_id == alert_id))

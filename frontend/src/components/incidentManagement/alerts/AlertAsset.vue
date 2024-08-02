@@ -94,7 +94,7 @@
 										<Icon :name="LinkIcon" :size="14" class="top-0.5 relative" />
 									</code>
 								</div>
-								<div v-else>{{ value === "" ? "-" : (value ?? "-") }}</div>
+								<div v-else>{{ value === "" ? "-" : value ?? "-" }}</div>
 							</template>
 						</KVCard>
 					</div>

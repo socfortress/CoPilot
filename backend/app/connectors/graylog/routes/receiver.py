@@ -1,7 +1,5 @@
 from fastapi import APIRouter
-
 from loguru import logger
-
 
 from app.integrations.utils.event_shipper import event_shipper
 from app.integrations.utils.schema import EventShipperPayload

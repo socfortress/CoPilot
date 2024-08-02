@@ -1,5 +1,10 @@
+import os
+import re
+from datetime import datetime
+from datetime import timedelta
 from typing import List
-from datetime import datetime, timedelta
+
+import yaml
 from fastapi import HTTPException
 from loguru import logger
 from sqlalchemy import delete
@@ -8,36 +13,42 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
-import os
-import yaml
-import re
-
-from app.connectors.wazuh_indexer.services.sigma.sigma_download import download_and_extract_zip, keep_only_folder_directory, find_yaml_files
-from app.connectors.wazuh_indexer.services.sigma.generate_query import create_sigma_query_from_rule
 
 from app.connectors.wazuh_indexer.models.sigma import SigmaQuery
 from app.connectors.wazuh_indexer.schema.sigma import CreateSigmaQuery
+from app.connectors.wazuh_indexer.services.sigma.generate_query import (
+    create_sigma_query_from_rule,
+)
+from app.connectors.wazuh_indexer.services.sigma.sigma_download import (
+    download_and_extract_zip,
+)
+from app.connectors.wazuh_indexer.services.sigma.sigma_download import find_yaml_files
+from app.connectors.wazuh_indexer.services.sigma.sigma_download import (
+    keep_only_folder_directory,
+)
+
 
 def parse_time_interval(interval: str) -> timedelta:
-        match = re.match(r"(\d+)([smhd])", interval)
-        if not match:
-            raise ValueError(f"Invalid time interval format: {interval}")
-        value, unit = match.groups()
-        value = int(value)
-        if unit == 's':
-            return timedelta(seconds=value)
-        elif unit == 'm':
-            return timedelta(minutes=value)
-        elif unit == 'h':
-            return timedelta(hours=value)
-        elif unit == 'd':
-            return timedelta(days=value)
-        else:
-            raise ValueError(f"Invalid time unit: {unit}")
+    match = re.match(r"(\d+)([smhd])", interval)
+    if not match:
+        raise ValueError(f"Invalid time interval format: {interval}")
+    value, unit = match.groups()
+    value = int(value)
+    if unit == "s":
+        return timedelta(seconds=value)
+    elif unit == "m":
+        return timedelta(minutes=value)
+    elif unit == "h":
+        return timedelta(hours=value)
+    elif unit == "d":
+        return timedelta(days=value)
+    else:
+        raise ValueError(f"Invalid time unit: {unit}")
+
 
 def check_level(file_path):
     delete_file = False
-    with open(file_path, "r", encoding='utf-8') as file:
+    with open(file_path, "r", encoding="utf-8") as file:
         for line in file:
             if line.startswith("level:"):
                 level = line.split(":")[1].strip()
@@ -50,6 +61,7 @@ def check_level(file_path):
         return False
     return True
 
+
 def validate_title(title):
     # Check if title is a string
     if not isinstance(title, str):
@@ -60,35 +72,37 @@ def validate_title(title):
         return False
 
     # Check if title contains only allowed characters
-    pattern = re.compile(r'^[a-zA-Z0-9,.\-_/ ]*$')
+    pattern = re.compile(r"^[a-zA-Z0-9,.\-_/ ]*$")
     if not pattern.match(title):
         return False
 
     return True
 
+
 async def extract_title(file_path):
     # Load the YAML file
-    with open(file_path, 'r', encoding='utf-8') as file:
+    with open(file_path, "r", encoding="utf-8") as file:
         data = yaml.safe_load(file)
 
     # Extract the title field
-    title = data.get('title', '')
+    title = data.get("title", "")
 
     # Validate the title
     if not validate_title(title):
         # Remove disallowed characters
-        cleaned_title = re.sub(r'[^a-zA-Z0-9,.\-_/ ]', '', title)
+        cleaned_title = re.sub(r"[^a-zA-Z0-9,.\-_/ ]", "", title)
 
         # Update the title field in the YAML data
-        data['title'] = cleaned_title
+        data["title"] = cleaned_title
 
         # Write the updated YAML data back to the file
-        with open(file_path, 'w', encoding='utf-8') as file:
+        with open(file_path, "w", encoding="utf-8") as file:
             yaml.safe_dump(data, file)
 
         return cleaned_title
 
     return title
+
 
 async def list_sigma_queries(
     db: AsyncSession,
@@ -108,6 +122,7 @@ async def list_sigma_queries(
 
     return sigma_queries
 
+
 async def list_active_sigma_queries(
     db: AsyncSession,
 ) -> List[SigmaQuery]:
@@ -125,6 +140,7 @@ async def list_active_sigma_queries(
     sigma_queries = sigma_queries.scalars().all()
 
     return sigma_queries
+
 
 async def create_sigma_query(
     sigma_query: CreateSigmaQuery,
@@ -162,19 +178,23 @@ async def create_sigma_query(
 
     return new_sigma_query
 
+
 async def read_sigma_rule(file: str) -> str:
-    with open(file, "r", encoding='utf-8') as f:
+    with open(file, "r", encoding="utf-8") as f:
         return f.read()
+
 
 async def get_existing_query(rule_name: str, db: AsyncSession):
     result = await db.execute(select(SigmaQuery).filter_by(rule_name=rule_name))
     return result.scalars().first()
+
 
 async def update_sigma_query(existing_query: SigmaQuery, new_query: CreateSigmaQuery, db: AsyncSession):
     existing_query.rule_query = new_query.rule_query
     existing_query.active = new_query.active
     existing_query.time_interval = new_query.time_interval
     await db.commit()
+
 
 async def process_sigma_file(file: str, db: AsyncSession):
     rule = await read_sigma_rule(file)
@@ -196,6 +216,7 @@ async def process_sigma_file(file: str, db: AsyncSession):
         logger.info(f"Creating new Sigma query: {title}")
         await create_sigma_query(new_query, db)
 
+
 async def add_sigma_queries_to_db(db: AsyncSession):
     yaml_files = list(await find_yaml_files())
     # Only add the CRITICAL Severity SIGMA files
@@ -203,6 +224,7 @@ async def add_sigma_queries_to_db(db: AsyncSession):
     for file in sigma_files:
         await process_sigma_file(file, db)
     return None
+
 
 async def delete_query_from_db(query, db: AsyncSession):
     try:
@@ -215,6 +237,7 @@ async def delete_query_from_db(query, db: AsyncSession):
             detail="Failed to delete the Sigma query.",
         )
 
+
 async def delete_sigma_rule(rule_name: str, db: AsyncSession):
     query = await get_existing_query(rule_name, db)
     if query:
@@ -225,6 +248,7 @@ async def delete_sigma_rule(rule_name: str, db: AsyncSession):
             detail="The Sigma rule does not exist.",
         )
     return None
+
 
 async def set_sigma_query_active(rule_name: str, active: bool, db: AsyncSession):
     query = await get_existing_query(rule_name, db)
@@ -239,6 +263,7 @@ async def set_sigma_query_active(rule_name: str, active: bool, db: AsyncSession)
         )
     return None
 
+
 async def update_sigma_time_interval(rule_name: str, time_interval: str, db: AsyncSession):
     query = await get_existing_query(rule_name, db)
     if query:
@@ -251,4 +276,3 @@ async def update_sigma_time_interval(rule_name: str, time_interval: str, db: Asy
             detail="The Sigma rule does not exist.",
         )
     return None
-

@@ -1,21 +1,28 @@
 import os
+from datetime import datetime
 from typing import List
 from typing import Optional
 
+from elasticsearch7 import ElasticsearchException
 from fastapi import HTTPException
-from datetime import datetime
 from loguru import logger
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from elasticsearch7 import ElasticsearchException
 
 from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
 from app.connectors.dfir_iris.utils.universal import initialize_client_and_alert
 from app.connectors.utils import get_connector_info_from_db
-from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
-from app.incidents.services.incident_alert import get_all_field_names, build_alert_context_payload, open_alert_exists, add_asset_to_copilot_alert, create_alert_full, get_customer_code, is_customer_code_valid, add_asset_to_copilot_alert
-from app.incidents.schema.incident_alert import CreatedAlertPayload
 from app.connectors.wazuh_indexer.schema.sigma import RunActiveSigmaQueries
+from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
+from app.incidents.schema.incident_alert import CreatedAlertPayload
+from app.incidents.services.incident_alert import add_asset_to_copilot_alert
+from app.incidents.services.incident_alert import build_alert_context_payload
+from app.incidents.services.incident_alert import create_alert_full
+from app.incidents.services.incident_alert import get_all_field_names
+from app.incidents.services.incident_alert import get_customer_code
+from app.incidents.services.incident_alert import is_customer_code_valid
+from app.incidents.services.incident_alert import open_alert_exists
+
 
 async def build_alert_payload(
     sigma_rule_name: str,
@@ -29,6 +36,7 @@ async def build_alert_payload(
     validate_field_names(field_names, alert_payload)
     return await create_alert_payload(sigma_rule_name, syslog_type, index_name, index_id, alert_payload, field_names)
 
+
 def validate_field_names(field_names, alert_payload):
     for field_name in [field_names.asset_name, field_names.timefield_name, field_names.alert_title_name]:
         if field_name not in alert_payload:
@@ -37,20 +45,22 @@ def validate_field_names(field_names, alert_payload):
                 detail=f"Field name {field_name} not found in alert payload",
             )
 
+
 async def create_alert_payload(sigma_rule_name, syslog_type, index_name, index_id, alert_payload, field_names):
     return CreatedAlertPayload(
         alert_context_payload=await build_alert_context_payload(alert_payload, field_names),
         asset_payload=alert_payload.get(field_names.asset_name),
         timefield_payload=alert_payload.get(field_names.timefield_name),
-        alert_title_payload='SIGMA Alert: ' + sigma_rule_name,
+        alert_title_payload="SIGMA Alert: " + sigma_rule_name,
         source=syslog_type,
         index_name=index_name,
         index_id=index_id,
     )
 
+
 async def format_opensearch_query(query: str, time_interval: str, last_execution_time: datetime) -> dict:
     logger.info(f"Last execution time: {last_execution_time}")
-    formatted_last_execution_time = last_execution_time.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+    formatted_last_execution_time = last_execution_time.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
     return {
         "query": {
             "bool": {
@@ -71,29 +81,32 @@ async def format_opensearch_query(query: str, time_interval: str, last_execution
                             "escape": False,
                             "auto_generate_synonyms_phrase_query": True,
                             "fuzzy_transpositions": True,
-                            "boost": 1
-                        }
+                            "boost": 1,
+                        },
                     },
                     {
                         "range": {
                             "timestamp": {
-                                #"from": f"now-{time_interval}",
+                                # "from": f"now-{time_interval}",
                                 "from": formatted_last_execution_time,
                                 "to": "now",
                                 "include_lower": True,
                                 "include_upper": False,
-                                "boost": 1
-                            }
-                        }
-                    }
+                                "boost": 1,
+                            },
+                        },
+                    },
                 ],
                 "adjust_pure_negative": True,
-                "boost": 1
-            }
-        }
+                "boost": 1,
+            },
+        },
     }
 
-async def send_query_to_opensearch(es_client, query: dict, rule_name: str, index: str = 'wazuh*', session: AsyncSession = None) -> List[dict]:
+
+async def send_query_to_opensearch(
+    es_client, query: dict, rule_name: str, index: str = "wazuh*", session: AsyncSession = None,
+) -> List[dict]:
     try:
         response = es_client.search(index=index, body=query)
         logger.info(f"Response: {response}")
@@ -102,6 +115,7 @@ async def send_query_to_opensearch(es_client, query: dict, rule_name: str, index
     except Exception as e:
         logger.error(f"Error executing query: {e}")
         return []
+
 
 async def process_hits(hits, rule_name, session: AsyncSession):
     logger.info(f"Processing number of hits: {len(hits)}")
@@ -123,12 +137,15 @@ async def process_hits(hits, rule_name, session: AsyncSession):
         existing_alert = await open_alert_exists(alert_payload, customer_code, session)
         if existing_alert:
             logger.info(f"Alert already exists: {existing_alert}")
-            await add_asset_to_copilot_alert(alert_payload=alert_payload, alert_id=existing_alert, customer_code=customer_code, session=session)
+            await add_asset_to_copilot_alert(
+                alert_payload=alert_payload, alert_id=existing_alert, customer_code=customer_code, session=session,
+            )
             results.append(existing_alert)
         else:
             new_alert = await create_alert_full(alert_payload=alert_payload, customer_code=customer_code, session=session)
             results.append(new_alert)
     return results
+
 
 async def execute_query(payload: RunActiveSigmaQueries, session: AsyncSession = None):
     client = await create_wazuh_indexer_client()
