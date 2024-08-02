@@ -162,6 +162,30 @@ async def activate_all_sigma_queries_endpoint(
     )
 
 @wazuh_indexer_sigma_router.post(
+    "/deactivate-all-queries",
+    response_model=SigmaQueryOutResponse
+)
+async def deactivate_all_sigma_queries_endpoint(
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Deactivates all Sigma queries.
+
+    Args:
+        db (AsyncSession): The database session.
+
+    Returns:
+        SigmaQueryOutResponse: The Sigma queries response.
+    """
+    sigma_queries = await list_sigma_queries(db)
+    for query in sigma_queries:
+        await set_sigma_query_active(query.rule_name, False, db)
+    return SigmaQueryOutResponse(
+        success=True,
+        message="Successfully deactivated all Sigma queries.",
+    )
+
+@wazuh_indexer_sigma_router.post(
     "/run-active-queries",
     response_model=SigmaQueryOutResponse
 )
@@ -180,12 +204,22 @@ async def run_active_sigma_queries_endpoint(
     active_sigma_queries = await list_active_sigma_queries(db)
     for query in active_sigma_queries:
         time_interval_delta = parse_time_interval(query.time_interval)
-        if datetime.now() - query.last_execution_time >= time_interval_delta:
+        logger.info(f"Time interval delta: {time_interval_delta}")
+        current_time = datetime.now()
+        logger.info(f"Current time: {current_time}")
+        logger.info(f"Last execution time: {query.last_execution_time}")
+
+        # Check if the current time is less than the last execution time
+        if current_time < query.last_execution_time or current_time - query.last_execution_time >= time_interval_delta:
             logger.info(f"Running Sigma query: {query.rule_name}")
-            response = await execute_query(RunActiveSigmaQueries(query=query.rule_query, time_interval=query.time_interval, last_execution_time=query.last_execution_time, rule_name=query.rule_name, index="new-wazuh*"), session=db)
+            await execute_query(RunActiveSigmaQueries(query=query.rule_query, time_interval=query.time_interval, last_execution_time=query.last_execution_time, rule_name=query.rule_name, index="new-wazuh*"), session=db)
             # Update the last execution time to the current time and commit the changes
-            query.last_execution_time = datetime.now()
+            query.last_execution_time = current_time
             await db.commit()
+        else:
+            time_comparison = current_time - query.last_execution_time
+            logger.info(f"Time comparison: {time_comparison}")
+            logger.info(f"Skipping Sigma query because the time interval has not passed: {query.rule_name}")
     return SigmaQueryOutResponse(
         success=True,
         message="Successfully ran the active Sigma queries.",

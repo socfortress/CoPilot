@@ -185,7 +185,7 @@ async def process_sigma_file(file: str, db: AsyncSession):
         rule_name=title,
         rule_query=query.query.bool.must[0].query_string.query,
         active=False,
-        time_interval="1m",
+        time_interval="5m",
     )
 
     existing_query = await get_existing_query(title, db)
