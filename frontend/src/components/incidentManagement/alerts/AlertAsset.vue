@@ -52,7 +52,7 @@
 		>
 			<template #header>
 				<div class="min-h-8">
-					{{ asset.asset_name }}
+					{{ assetNameTruncated }}
 				</div>
 			</template>
 			<template #header-extra>
@@ -150,6 +150,17 @@
 						</div>
 					</div>
 				</n-tab-pane>
+				<n-tab-pane name="Artifact Collection" tab="Artifact Collection" display-directive="show:lazy">
+					<div class="p-7 pt-2">
+						<ArtifactsCollect
+							:hostname="asset.asset_name"
+							:artifacts-filter="{ hostname: asset.asset_name }"
+							hide-hostname-field
+							velociraptor-id="string"
+							hide-velociraptor-id-field
+						/>
+					</div>
+				</n-tab-pane>
 			</n-tabs>
 		</n-modal>
 	</div>
@@ -164,10 +175,12 @@ import KVCard from "@/components/common/KVCard.vue"
 import Icon from "@/components/common/Icon.vue"
 import Badge from "@/components/common/Badge.vue"
 import { useGoto } from "@/composables/useGoto"
+import _truncate from "lodash/truncate"
 const ArtifactRecommendation = defineAsyncComponent(() => import("@/components/artifacts/ArtifactRecommendation.vue"))
 const ThreatIntelProcessEvaluationProvider = defineAsyncComponent(
 	() => import("@/components/threatIntel/ThreatIntelProcessEvaluationProvider.vue")
 )
+const ArtifactsCollect = defineAsyncComponent(() => import("@/components/artifacts/ArtifactsCollect.vue"))
 import type { AlertAsset, AlertContext } from "@/types/incidentManagement/alerts.d"
 
 const props = defineProps<{ asset: AlertAsset; embedded?: boolean }>()
@@ -178,6 +191,7 @@ const { gotoAgent, gotoIndex, gotoCustomer } = useGoto()
 const message = useMessage()
 const loading = ref(false)
 const showDetails = ref(false)
+const assetNameTruncated = computed(() => _truncate(asset.value.asset_name, { length: 50 }))
 const alertContext = ref<AlertContext | null>(null)
 const processNameList = computed<string[]>(() => alertContext.value?.context?.["process_name"] || [])
 const isInvestigationAvailable = computed(() => processNameList.value.length)

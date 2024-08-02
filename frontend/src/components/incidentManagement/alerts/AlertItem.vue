@@ -164,7 +164,7 @@
 		>
 			<n-card
 				content-class="flex flex-col !p-0"
-				:title="alert?.alert_name"
+				:title="alertNameTruncated"
 				closable
 				@close="showDetails = false"
 				:bordered="false"
@@ -184,7 +184,7 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeMount, ref, toRefs } from "vue"
+import { computed, onBeforeMount, ref, toRefs } from "vue"
 import { NModal, NPopover, NButton, NSpin, NTooltip, NCard, useMessage, useDialog } from "naive-ui"
 import { useSettingsStore } from "@/stores/settings"
 import { useGoto } from "@/composables/useGoto"
@@ -200,6 +200,7 @@ import AlertStatusIcon from "./AlertStatusIcon.vue"
 import AlertAssigneeIcon from "./AlertAssigneeIcon.vue"
 import AlertItemDetails from "./AlertItemDetails.vue"
 import { handleDeleteAlert } from "./utils"
+import _truncate from "lodash/truncate"
 import type { Alert } from "@/types/incidentManagement/alerts.d"
 
 const props = defineProps<{ alertData?: Alert; alertId?: number; availableUsers?: string[] }>()
@@ -224,6 +225,7 @@ const loading = ref(false)
 const showDetails = ref(false)
 const dFormats = useSettingsStore().dateFormat
 const alert = ref<Alert | null>(null)
+const alertNameTruncated = computed(() => _truncate(alert.value?.alert_name, { length: 50 }))
 
 function updateAlert(updatedAlert: Alert) {
 	alert.value = updatedAlert
