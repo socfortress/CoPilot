@@ -12,48 +12,48 @@ from sigma.processing.pipeline import ProcessingItem, ProcessingPipeline
 
 ecs_windows_variable_mappings = {
     "FileVersion": (
-        ("category", "process_creation", "process.pe.file_version"),
-        ("category", "image_load", "file.pe.file_version"),
+        ("category", "process_creation", "data_win_eventdata_fileVersion"),
+        ("category", "image_load", "data_win_eventdata_fileVersion"),
     ),
     "Description": (
-        ("category", "process_creation", "process.pe.description"),
-        ("category", "image_load", "file.pe.description"),
+        ("category", "process_creation", "data_win_eventdata_description"),
+        ("category", "image_load", "data_win_eventdata_description"),
         ("category", "sysmon_error", "winlog.event_data.Description"),
     ),
     "Product": (
-        ("category", "process_creation", "process.pe.product"),
-        ("category", "image_load", "file.pe.product"),
+        ("category", "process_creation", "data_win_eventdata_product"),
+        ("category", "image_load", "data_win_eventdata_product"),
     ),
     "Company": (
-        ("category", "process_creation", "process.pe.company"),
-        ("category", "image_load", "file.pe.company"),
+        ("category", "process_creation", "data_win_eventdata_company"),
+        ("category", "image_load", "data_win_eventdata_company"),
     ),
     "OriginalFileName": (
         ("category", "process_creation", "data_win_eventdata_image"),
         ("category", "process_creation", "data_win_eventdata_image"),
-        ("category", "image_load", "file.pe.original_file_name"),
+        ("category", "image_load", "data_win_eventdata_originalFileName"),
     ),
     "CommandLine": (
         ("category", "process_creation", "data_win_eventdata_commandLine"),
         ("service", "security", "data_win_eventdata_commandLine"),
         ("service", "powershell-classic", "powershell.command.value"),
     ),
-    "Protocol": (("category", "network_connection", "network.transport"),),
-    "Initiated": (("category", "network_connection", "network.direction"),),
+    "Protocol": (("category", "network_connection", "data_win_eventdata_protocol"),),
+    "Initiated": (("category", "network_connection", "data_win_eventdata_initiated"),),
     "Signature": (
-        ("category", "driver_loaded", "file.code_signature.subject_name"),
-        ("category", "image_loaded", "file.code_signature.subject_name"),
+        ("category", "driver_loaded", "data_win_eventdata_signatureSubjectName"),
+        ("category", "image_loaded", "data_win_eventdata_signatureSubjectName"),
     ),
     "EngineVersion": (("service", "powershell-classic", "powershell.engine.version"),),
     "HostVersion": (
         ("service", "powershell-classic", "powershell.process.executable_version"),
     ),
-    "SubjectLogonId": (("service", "security", "winlog.logon.id"),),
-    "ServiceName": (("service", "security", "service.name"),),
-    "SubjectDomainName": (("service", "security", "user.domain"),),
-    "SubjectUserName": (("service", "security", "user.name"),),
-    "SubjectUserSid": (("service", "security", "user.id"),),
-    "TargetLogonId": (("service", "security", "winlog.logon.id"),),
+    "SubjectLogonId": (("service", "security", "data_win_eventdata_subjectLogonId"),),
+    "ServiceName": (("service", "security", "data_win_eventdata_serviceName"),),
+    "SubjectDomainName": (("service", "security", "data_win_eventdata_subjectDomainName"),),
+    "SubjectUserName": (("service", "security", "data_win_eventdata_subjectUserName"),),
+    "SubjectUserSid": (("service", "security", "data_win_eventdata_subjectUserSid"),),
+    "TargetLogonId": (("service", "security", "data_win_eventdata_targetLogonId"),),
 }
 
 
