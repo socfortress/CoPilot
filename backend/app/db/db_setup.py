@@ -101,7 +101,7 @@ def apply_migrations():
     # Apply migrations to the latest revision
     try:
         command.upgrade(alembic_cfg, "head")
-    except Exception as e:  # Catch any type of exception
+    except Exception as e:  # Catch any exception
         logger.error(f"Error applying migrations: {e}")
         raise e
 
