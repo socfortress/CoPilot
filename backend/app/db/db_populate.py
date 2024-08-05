@@ -81,7 +81,7 @@ def get_connectors_list():
             "Connection to Wazuh-Manager. Default is wazuh-wui:wazuh-wui",
         ),
         ("Graylog", "5.0.7", "username_password", "Connection to Graylog."),
-        ("Shuffle", "1.1.0", "api_key", "Connection to Shuffle.", "WORKFLOW_ID"),
+        ("Shuffle", "1.1.0", "api_key", "Connection to Shuffle.", "SHUFFLE_WORKFLOW_ID"),
         ("DFIR-IRIS", "2.0", "api_key", "Connection to DFIR-IRIS."),
         (
             "Velociraptor",
