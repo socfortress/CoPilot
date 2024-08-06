@@ -25,7 +25,7 @@ from app.incidents.models import AssetFieldName
 from app.incidents.models import Case
 from app.incidents.models import CaseAlertLink
 from app.incidents.models import Comment
-from app.incidents.models import FieldName
+from app.incidents.models import FieldName, Notification
 from app.incidents.schema.db_operations import AlertContextCreate
 from app.incidents.schema.db_operations import AlertContextResponse
 from app.incidents.schema.db_operations import AlertCreate
@@ -41,7 +41,7 @@ from app.incidents.schema.db_operations import AssetResponse
 from app.incidents.schema.db_operations import AssignedToAlert
 from app.incidents.schema.db_operations import AssignedToCase
 from app.incidents.schema.db_operations import AvailableIndicesResponse
-from app.incidents.schema.db_operations import AvailableSourcesResponse
+from app.incidents.schema.db_operations import AvailableSourcesResponse, NotificationResponse
 from app.incidents.schema.db_operations import AvailableUsersResponse
 from app.incidents.schema.db_operations import CaseAlertLinkCreate
 from app.incidents.schema.db_operations import CaseAlertLinkResponse
@@ -50,7 +50,7 @@ from app.incidents.schema.db_operations import CaseCreateFromAlert
 from app.incidents.schema.db_operations import CaseOut
 from app.incidents.schema.db_operations import CaseOutResponse
 from app.incidents.schema.db_operations import CaseResponse
-from app.incidents.schema.db_operations import CommentBase
+from app.incidents.schema.db_operations import CommentBase, PutNotification
 from app.incidents.schema.db_operations import CommentCreate
 from app.incidents.schema.db_operations import CommentResponse
 from app.incidents.schema.db_operations import ConfiguredSourcesResponse
@@ -102,10 +102,20 @@ from app.incidents.services.db_operations import update_alert_assigned_to
 from app.incidents.services.db_operations import update_alert_status
 from app.incidents.services.db_operations import update_case_assigned_to
 from app.incidents.services.db_operations import update_case_status
-from app.incidents.services.db_operations import validate_source_exists
+from app.incidents.services.db_operations import validate_source_exists, get_customer_notification, put_customer_notification
+from app.db.universal_models import Customers
+from app.customer_provisioning.routes.provision import check_customer_exists
 
 incidents_db_operations_router = APIRouter()
 
+@incidents_db_operations_router.get("/notification/{customer_code}", response_model=NotificationResponse)
+async def get_customer_notification_endpoint(customer_code: str, _customer: Customers = Depends(check_customer_exists), db: AsyncSession = Depends(get_db)):
+    return NotificationResponse(notifications=await get_customer_notification(customer_code, db), success=True, message="Notification retrieved successfully")
+
+@incidents_db_operations_router.put("/notification", response_model=NotificationResponse)
+async def put_customer_notification_endpoint(notification: PutNotification, _customer: Customers = Depends(check_customer_exists), db: AsyncSession = Depends(get_db)):
+    await put_customer_notification(notification, db)
+    return NotificationResponse(notifications=await get_customer_notification(notification.customer_code, db), success=True, message="Notification updated successfully")
 
 @incidents_db_operations_router.get("/available-source/{index_name}", response_model=AvailableSourcesResponse)
 async def get_available_source_values(index_name: str, session: AsyncSession = Depends(get_db)):

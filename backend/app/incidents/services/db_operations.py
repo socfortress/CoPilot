@@ -19,7 +19,7 @@ from app.incidents.models import AssetFieldName
 from app.incidents.models import Case
 from app.incidents.models import CaseAlertLink
 from app.incidents.models import Comment
-from app.incidents.models import FieldName
+from app.incidents.models import FieldName, Notification
 from app.incidents.models import TimestampFieldName
 from app.incidents.schema.db_operations import AlertContextCreate
 from app.incidents.schema.db_operations import AlertCreate
@@ -28,7 +28,7 @@ from app.incidents.schema.db_operations import AlertTagBase
 from app.incidents.schema.db_operations import AlertTagCreate
 from app.incidents.schema.db_operations import AssetBase
 from app.incidents.schema.db_operations import AssetCreate
-from app.incidents.schema.db_operations import CaseAlertLinkCreate
+from app.incidents.schema.db_operations import CaseAlertLinkCreate, PutNotification
 from app.incidents.schema.db_operations import CaseCreate
 from app.incidents.schema.db_operations import CaseOut
 from app.incidents.schema.db_operations import CommentBase
@@ -66,6 +66,25 @@ async def get_timefield_names(source: str, session: AsyncSession):
 async def get_alert_title_names(source: str, session: AsyncSession):
     result = await session.execute(select(AlertTitleFieldName.field_name).where(AlertTitleFieldName.source == source).distinct())
     return result.scalars().first()
+
+
+async def get_customer_notification(customer_code: str, session: AsyncSession):
+    result = await session.execute(select(Notification).where(Notification.customer_code == customer_code))
+    notification = result.scalars().first()
+    logger.info(f"Notification: {notification}")
+    return [notification] if notification is not None else []
+
+async def put_customer_notification(notification: PutNotification, session: AsyncSession):
+    result = await session.execute(select(Notification).where(Notification.customer_code == notification.customer_code))
+    existing_notification = result.scalars().first()
+    if existing_notification is None:
+        new_notification = Notification(**notification.dict())
+        session.add(new_notification)
+    else:
+        existing_notification.customer_code = notification.customer_code
+        existing_notification.shuffle_workflow_id = notification.shuffle_workflow_id
+        existing_notification.enabled = notification.enabled
+    await session.commit()
 
 
 async def add_field_name(source: str, field_name: str, session: AsyncSession):

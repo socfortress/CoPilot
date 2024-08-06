@@ -249,3 +249,19 @@ class CaseOutResponse(BaseModel):
     cases: List[CaseOut]
     success: bool
     message: str
+
+class Notification(BaseModel):
+    id: int
+    customer_code: str
+    shuffle_workflow_id: str
+    enabled: bool
+
+class NotificationResponse(BaseModel):
+    notifications: Optional[List[Notification]] = []
+    success: bool
+    message: str
+
+class PutNotification(BaseModel):
+    customer_code: str
+    shuffle_workflow_id: str
+    enabled: bool
