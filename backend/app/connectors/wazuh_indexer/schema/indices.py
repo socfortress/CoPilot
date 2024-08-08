@@ -24,6 +24,7 @@ class IndexConfigModel(BaseModel):
             ".task": True,
             "wazuh-states-vulnerabilities": True,
             ".plugins": True,
+            ".ql": True,
         },
         description="A dictionary containing index names to be skipped and their skip status.",
     )
