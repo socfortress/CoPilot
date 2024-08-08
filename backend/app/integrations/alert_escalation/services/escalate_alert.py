@@ -10,6 +10,7 @@ from sqlalchemy.future import select
 from app.connectors.dfir_iris.utils.universal import fetch_and_validate_data
 from app.connectors.dfir_iris.utils.universal import initialize_client_and_alert
 from app.connectors.utils import get_connector_info_from_db
+from app.integrations.monitoring_alert.services.wazuh import handle_customer_notifications
 from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_client
 from app.db.universal_models import Agents
 from app.integrations.alert_creation.general.schema.alert import IrisAsset
@@ -491,6 +492,11 @@ async def create_alert(
         iris_alert_payload.to_dict(),
     )
     alert_id = result["data"]["alert_id"]
+    await handle_customer_notifications(
+        customer_code=customer_code,
+        alert_payload=iris_alert_payload,
+        session=session,
+    )
 
     await add_asset_if_wazuh(alert_details, alert_id, iris_alert_payload, session)
 
