@@ -13,6 +13,9 @@ from app.connectors.wazuh_indexer.utils.universal import create_wazuh_indexer_cl
 from app.db.universal_models import Agents
 from app.incidents.models import Alert
 from app.incidents.models import AlertContext
+from app.connectors.shuffle.services.integrations import execute_workflow
+from app.incidents.services.db_operations import get_customer_notification
+from app.connectors.shuffle.schema.integrations import ExecuteWorkflowRequest
 from app.incidents.models import Asset
 from app.incidents.routes.db_operations import get_configured_sources
 from app.incidents.schema.incident_alert import CreateAlertRequest
@@ -325,6 +328,18 @@ async def build_alert_payload(
         index_id=index_id,
     )
 
+async def handle_customer_notifications(customer_code: str, alert_payload: CreatedAlertPayload, session: AsyncSession):
+    customer_notifications = await get_customer_notification(customer_code, session)
+    if customer_notifications and customer_notifications[0].enabled:
+        logger.info(f"Executing workflow for customer code {customer_code}")
+        await execute_workflow(ExecuteWorkflowRequest(
+            workflow_id=customer_notifications[0].shuffle_workflow_id,
+            execution_arguments={
+                "customer_code": customer_code,
+                "alert_context_payload": alert_payload.alert_context_payload,
+            },
+            start="",
+        ))
 
 async def create_alert_full(alert_payload: CreatedAlertPayload, customer_code: str, session: AsyncSession) -> Alert:
     """
@@ -355,6 +370,8 @@ async def create_alert_full(alert_payload: CreatedAlertPayload, customer_code: s
         )
     ).id
     logger.info(f"Creating alert for customer code {customer_code} with alert context ID {alert_context_id} and asset ID {asset_id}")
+    await handle_customer_notifications(customer_code, alert_payload, session)
+
     return alert_id
 
 
