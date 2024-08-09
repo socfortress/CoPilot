@@ -20,6 +20,7 @@ from app.schedulers.services.invoke_carbonblack import (
 from app.schedulers.services.invoke_darktrace import (
     invoke_darktrace_integration_collect,
 )
+from app.schedulers.services.invoke_alert_creation import invoke_alert_creation_collect
 from app.schedulers.services.invoke_duo import invoke_duo_integration_collect
 from app.schedulers.services.invoke_huntress import invoke_huntress_integration_collect
 from app.schedulers.services.invoke_mimecast import invoke_mimecast_integration
@@ -136,6 +137,12 @@ async def initialize_job_metadata():
                 "function": resize_wazuh_index_fields,
                 "description": "Resizes the Wazuh index fields.",
             },
+            {
+                "job_id": "invoke_alert_creation_collect",
+                "time_interval": 5,
+                "function": invoke_alert_creation_collect,
+                "description": "Invokes alert creation collection.",
+            }
             # {"job_id": "invoke_mimecast_integration", "time_interval": 5, "function": invoke_mimecast_integration}
         ]
         for job in known_jobs:
@@ -204,6 +211,7 @@ def get_function_by_name(function_name: str):
     function_map = {
         "agent_sync": agent_sync,
         "wazuh_index_fields_resize": resize_wazuh_index_fields,
+        "invoke_alert_creation_collect": invoke_alert_creation_collect,
         "invoke_mimecast_integration": invoke_mimecast_integration,
         "invoke_mimecast_integration_ttp": invoke_mimecast_integration_ttp,
         "invoke_wazuh_monitoring_alert": invoke_wazuh_monitoring_alert,

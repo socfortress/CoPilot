@@ -48,7 +48,7 @@ class FieldNames(BaseModel):
 class GenericSourceModel(BaseModel):
     timestamp: str = Field(..., description="The timestamp of the alert.")
     timestamp_utc: Optional[str] = Field(
-        ...,
+        None,
         description="The UTC timestamp of the alert.",
     )
     rule_description: Optional[str] = Field(

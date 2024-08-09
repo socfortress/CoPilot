@@ -89,7 +89,8 @@ async def create_alert_auto_route(
 ) -> AutoCreateAlertResponse:
     """
     Create an incident alert in CoPilot. Automatically create an incident alert within CoPilot.
-    Used via the Alerts, for automatic incident alert creation.
+    This queries the `gl-events-*` indices for alerts that have not been created in CoPilot.
+    It is important to note that Graylog must be configured for the alerts.
 
     Args:
         create_alert_request (CreateAlertRequest): The request object containing the details of the alert to be created.
