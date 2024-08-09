@@ -16,7 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.services.universal import select_all_users
 from app.auth.utils import AuthHandler
-from app.connectors.wazuh_indexer.schema.sigma import BulkUploadToDBResponse
+from app.connectors.wazuh_indexer.schema.sigma import BulkUploadToDBResponse, SigmaRuleUploadRequest
 from app.connectors.wazuh_indexer.schema.sigma import CreateSigmaQuery
 from app.connectors.wazuh_indexer.schema.sigma import DownloadSigmaRulesRequest
 from app.connectors.wazuh_indexer.schema.sigma import RunActiveSigmaQueries
@@ -153,6 +153,7 @@ async def download_sigma_queries_endpoint(
 
 @wazuh_indexer_sigma_router.post("/bulk-upload-to-db", response_model=BulkUploadToDBResponse)
 async def upload_sigma_queries_to_db_endpoint(
+    request: SigmaRuleUploadRequest,
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -164,7 +165,7 @@ async def upload_sigma_queries_to_db_endpoint(
     Returns:
         SigmaQueryOutResponse: The Sigma queries response.
     """
-    await add_sigma_queries_to_db(db)
+    await add_sigma_queries_to_db(request, db)
     return BulkUploadToDBResponse(success=True, message="Successfully uploaded the Sigma queries to the database.")
 
 

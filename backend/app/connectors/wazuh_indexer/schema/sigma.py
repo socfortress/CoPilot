@@ -10,6 +10,19 @@ from pydantic import BaseModel
 from pydantic import Field
 from pydantic import validator
 
+class SigmaRulesLevel(str, Enum):
+    """
+    Represents the Sigma rules level.
+    """
+    high = "high"
+    critical = "critical"
+
+class SigmaRuleUploadRequest(BaseModel):
+    rule_levels: List[SigmaRulesLevel] = Field(
+        ...,
+        description="The Sigma rule levels to upload.",
+    )
+
 
 class DownloadSigmaRulesRequest(BaseModel):
     url: str = Field(

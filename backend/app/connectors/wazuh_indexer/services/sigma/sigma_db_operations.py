@@ -15,7 +15,7 @@ from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 
 from app.connectors.wazuh_indexer.models.sigma import SigmaQuery
-from app.connectors.wazuh_indexer.schema.sigma import CreateSigmaQuery
+from app.connectors.wazuh_indexer.schema.sigma import CreateSigmaQuery, SigmaRuleUploadRequest
 from app.connectors.wazuh_indexer.services.sigma.generate_query import (
     create_sigma_query_from_rule,
 )
@@ -46,13 +46,13 @@ def parse_time_interval(interval: str) -> timedelta:
         raise ValueError(f"Invalid time unit: {unit}")
 
 
-def check_level(file_path):
+def check_level(rule_levels: list, file_path):
     delete_file = False
     with open(file_path, "r", encoding="utf-8") as file:
         for line in file:
             if line.startswith("level:"):
                 level = line.split(":")[1].strip()
-                if level not in ["high", "critical"]:
+                if level not in rule_levels:
                     delete_file = True
                     break
     if delete_file:
@@ -217,10 +217,10 @@ async def process_sigma_file(file: str, db: AsyncSession):
         await create_sigma_query(new_query, db)
 
 
-async def add_sigma_queries_to_db(db: AsyncSession):
+async def add_sigma_queries_to_db(request: SigmaRuleUploadRequest, db: AsyncSession):
     yaml_files = list(await find_yaml_files())
     # Only add the CRITICAL Severity SIGMA files
-    sigma_files = [file for file in yaml_files if check_level(file)]
+    sigma_files = [file for file in yaml_files if check_level(request.rule_levels, file)]
     for file in sigma_files:
         await process_sigma_file(file, db)
     return None
