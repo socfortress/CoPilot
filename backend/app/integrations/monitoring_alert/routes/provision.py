@@ -68,13 +68,14 @@ async def invoke_provision_wazuh_monitoring_alert(
 ):
     # Provision the Wazuh monitoring alert
     await provision_wazuh_monitoring_alert(request)
-    await add_scheduler_jobs(
-        CreateSchedulerRequest(
-            function_name="invoke_wazuh_monitoring_alert",
-            time_interval=5,
-            job_id="invoke_wazuh_monitoring_alert",
-        ),
-    )
+    # ! No longer needed since we have the invoke_alert_creation_collect scheduled job ! #
+    # await add_scheduler_jobs(
+    #     CreateSchedulerRequest(
+    #         function_name="invoke_wazuh_monitoring_alert",
+    #         time_interval=5,
+    #         job_id="invoke_wazuh_monitoring_alert",
+    #     ),
+    # )
 
 
 async def invoke_provision_suricata_monitoring_alert(
