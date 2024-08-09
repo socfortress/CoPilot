@@ -377,11 +377,11 @@ async def provision_wazuh_monitoring_alert(
                 grace_period_ms=0,
                 backlog_size=None,
             ),
-            notifications=[
-                GraylogAlertProvisionNotification(
-                    notification_id=notification_id,
-                ),
-            ],
+            # notifications=[
+            #     GraylogAlertProvisionNotification(
+            #         notification_id=notification_id,
+            #     ),
+            # ],
             alert=True,
         ),
     )
@@ -507,11 +507,11 @@ async def provision_suricata_monitoring_alert(
                 grace_period_ms=0,
                 backlog_size=None,
             ),
-            notifications=[
-                GraylogAlertProvisionNotification(
-                    notification_id=notification_id,
-                ),
-            ],
+            # notifications=[
+            #     GraylogAlertProvisionNotification(
+            #         notification_id=notification_id,
+            #     ),
+            # ],
             alert=True,
         ),
     )
@@ -637,11 +637,11 @@ async def provision_office365_exchange_online_alert(
                 grace_period_ms=0,
                 backlog_size=None,
             ),
-            notifications=[
-                GraylogAlertProvisionNotification(
-                    notification_id=notification_id,
-                ),
-            ],
+            # notifications=[
+            #     GraylogAlertProvisionNotification(
+            #         notification_id=notification_id,
+            #     ),
+            # ],
             alert=True,
         ),
     )
@@ -767,11 +767,11 @@ async def provision_office365_threat_intel_alert(
                 grace_period_ms=0,
                 backlog_size=None,
             ),
-            notifications=[
-                GraylogAlertProvisionNotification(
-                    notification_id=notification_id,
-                ),
-            ],
+            # notifications=[
+            #     GraylogAlertProvisionNotification(
+            #         notification_id=notification_id,
+            #     ),
+            # ],
             alert=True,
         ),
     )
@@ -880,11 +880,11 @@ async def provision_custom_alert(request: CustomMonitoringAlertProvisionModel) -
                 grace_period_ms=0,
                 backlog_size=None,
             ),
-            notifications=[
-                GraylogAlertProvisionNotification(
-                    notification_id=notification_id,
-                ),
-            ],
+            # notifications=[
+            #     GraylogAlertProvisionNotification(
+            #         notification_id=notification_id,
+            #     ),
+            # ],
             alert=True,
         ),
     )
